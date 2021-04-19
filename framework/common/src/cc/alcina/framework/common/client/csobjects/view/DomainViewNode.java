@@ -1,9 +1,13 @@
 package cc.alcina.framework.common.client.csobjects.view;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 
+import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasEntity;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 
 public class DomainViewNode<E extends Entity> implements HasEntity<E> {
@@ -13,22 +17,6 @@ public class DomainViewNode<E extends Entity> implements HasEntity<E> {
 
 	private TreePath treePath;
 
-	public TreePath getTreePath() {
-		return this.treePath;
-	}
-
-	public void setTreePath(TreePath treePath) {
-		this.treePath = treePath;
-	}
-
-	public DomainViewNode getParent() {
-		return this.parent;
-	}
-
-	public void setParent(DomainViewNode parent) {
-		this.parent = parent;
-	}
-
 	private Set<? extends DomainViewNode<?>> children = new LightSet<>();
 
 	public Set<? extends DomainViewNode<?>> getChildren() {
@@ -37,6 +25,14 @@ public class DomainViewNode<E extends Entity> implements HasEntity<E> {
 
 	public E getEntity() {
 		return this.entity;
+	}
+
+	public DomainViewNode getParent() {
+		return this.parent;
+	}
+
+	public TreePath getTreePath() {
+		return this.treePath;
 	}
 
 	@Override
@@ -52,13 +48,45 @@ public class DomainViewNode<E extends Entity> implements HasEntity<E> {
 		this.entity = entity;
 	}
 
+	public void setParent(DomainViewNode parent) {
+		this.parent = parent;
+	}
+
+	public void setTreePath(TreePath treePath) {
+		this.treePath = treePath;
+	}
+
+	public static class Request<D extends BindableSearchDefinition & DomainViewSearchDefinition> {
+		public D searchDefinition;
+
+		public List<TreePath> paths = new ArrayList<>();
+
+		/*
+		 * Non-null if waitPolicy == WAIT_FOR_DELTAS
+		 */
+		public DomainTransformCommitPosition since;
+
+		public Type type;
+
+		public WaitPolicy waitPolicy;
+	}
+
+	public static class Response {
+		public List<Transform> transforms = new ArrayList<>();
+
+		public boolean clearExisting;
+	}
+
+	public static class Transform {
+	}
+
 	/*
-	 * For request typing
+	 * For request return type specification
 	 */
 	public static abstract class Type {
 	}
 
-	public static class Request{
-		domainvi
+	public static enum WaitPolicy {
+		RETURN_NODES, WAIT_FOR_DELTAS, CANCEL_WAITS;
 	}
 }

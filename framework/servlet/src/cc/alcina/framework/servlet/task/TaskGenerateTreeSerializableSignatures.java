@@ -72,7 +72,7 @@ public class TaskGenerateTreeSerializableSignatures
 		try {
 			Reachables reachables = new SerializerOptions.Reachables();
 			FlatTreeSerializer.serialize(serializable,
-					new SerializerOptions().withDefaults(false)
+					new SerializerOptions().withElideDefaults(false)
 							.withShortPaths(true).withTestSerialized(true)
 							.withTestSerializedReachables(reachables));
 			while (reachables.pending.size() > 0) {
@@ -82,7 +82,7 @@ public class TaskGenerateTreeSerializableSignatures
 				itr.remove();
 				reachables.traversed.add(clazz);
 				FlatTreeSerializer.serialize(Reflections.newInstance(clazz),
-						new SerializerOptions().withDefaults(false)
+						new SerializerOptions().withElideDefaults(false)
 								.withShortPaths(true).withTestSerialized(true)
 								.withTestSerializedReachables(reachables));
 			}
@@ -107,12 +107,12 @@ public class TaskGenerateTreeSerializableSignatures
 				}
 			});
 			serializedDefaults = FlatTreeSerializer.serialize(serializable,
-					new SerializerOptions().withDefaults(false)
+					new SerializerOptions().withElideDefaults(false)
 							.withShortPaths(false).withTestSerialized(true));
 		} catch (RuntimeException e) {
 			Ax.simpleExceptionOut(e);
 			serializedDefaults = FlatTreeSerializer.serialize(serializable,
-					new SerializerOptions().withDefaults(false)
+					new SerializerOptions().withElideDefaults(false)
 							.withShortPaths(false).withTestSerialized(false));
 			Ax.out(serializedDefaults);
 			throw e;

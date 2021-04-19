@@ -6,6 +6,10 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -21,6 +25,16 @@ public interface HasPermissionsValidation {
 					return "Access not permitted to "
 							+ CommonUtils.simpleClassName(hpv.getClass());
 				}
+			}
+			TypeSerialization typeSerialization = Reflections.classLookup()
+					.getAnnotationForClass(hpv.getClass(),
+							TypeSerialization.class);
+			if (typeSerialization != null) {
+				// serialization-with-test checks valid type membership
+				SerializerOptions options = new FlatTreeSerializer.SerializerOptions()
+						.withTestSerialized(true).withTopLevelTypeInfo(true);
+				FlatTreeSerializer.serialize((TreeSerializable) hpv, options);
+				return null;
 			}
 			List<Class> permissibleChildClasses = new ArrayList<Class>();
 			PermissibleChildClasses pcc = Reflections.classLookup()

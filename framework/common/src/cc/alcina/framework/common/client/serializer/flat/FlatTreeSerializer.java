@@ -180,7 +180,7 @@ public class FlatTreeSerializer {
 			TreeSerializable checkObject = deserialize(object.getClass(),
 					serialized, deserializerOptions);
 			SerializerOptions checkOptions = new SerializerOptions()
-					.withDefaults(options.defaults)
+					.withElideDefaults(options.elideDefaults)
 					.withShortPaths(options.shortPaths)
 					.withSingleLine(options.singleLine)
 					.withTopLevelTypeInfo(options.topLevelTypeInfo);
@@ -337,10 +337,10 @@ public class FlatTreeSerializer {
 				String segmentPath = segment;
 				int index = 1;
 				boolean lastSegment = idx == segments.length - 1;
-				if (segment.matches("(.+?)(\\d+)")) {
-					segmentPath = segment.replaceFirst("(.+?)(\\d+)", "$1");
+				if (segment.matches("(.+?)-(\\d+)")) {
+					segmentPath = segment.replaceFirst("(.+?)-(\\d+)", "$1");
 					index = Integer.parseInt(
-							segment.replaceFirst("(.+?)(\\d+)", "$2")) + 1;
+							segment.replaceFirst("(.+?)-(\\d+)", "$2")) + 1;
 				}
 				boolean resolved = false;
 				Set<String> seenPossibleBranchesThisSegment = new LinkedHashSet<>();
@@ -529,7 +529,8 @@ public class FlatTreeSerializer {
 		Function<? super Class, ? extends String> keyMapper = clazz -> {
 			TypeSerialization typeSerialization = Reflections.classLookup()
 					.getAnnotationForClass(clazz, TypeSerialization.class);
-			if (typeSerialization != null) {
+			if (typeSerialization != null
+					&& !typeSerialization.value().isEmpty()) {
 				return typeSerialization.value();
 			} else {
 				return clazz.getName();
@@ -641,7 +642,7 @@ public class FlatTreeSerializer {
 			Object value = cursor.value;
 			if (isLeafValue(value)) {
 				if (!Objects.equals(value, cursor.defaultValue)
-						|| !state.serializerOptions.defaults) {
+						|| !state.serializerOptions.elideDefaults) {
 					cursor.putValue(state);
 				}
 				state.mergeableNode = cursor;
@@ -866,7 +867,7 @@ public class FlatTreeSerializer {
 	}
 
 	public static class SerializerOptions {
-		boolean defaults;
+		boolean elideDefaults;
 
 		boolean shortPaths;
 
@@ -880,8 +881,8 @@ public class FlatTreeSerializer {
 
 		Reachables reachables;
 
-		public SerializerOptions withDefaults(boolean defaults) {
-			this.defaults = defaults;
+		public SerializerOptions withElideDefaults(boolean elideDefaults) {
+			this.elideDefaults = elideDefaults;
 			return this;
 		}
 
@@ -951,7 +952,8 @@ public class FlatTreeSerializer {
 				return index == 1 || mergeLeafValuePaths ? ""
 						: CommonUtils.padTwo(index - 1);
 			}
-			String strIndex = index == 1 ? "" : CommonUtils.padTwo(index - 1);
+			String strIndex = index == 1 ? ""
+					: "-" + CommonUtils.padTwo(index - 1);
 			String shortenedClassName = null;
 			if (path != null) {
 				if (path.parent.propertySerialization != null) {
@@ -980,7 +982,7 @@ public class FlatTreeSerializer {
 				return index == 1 || mergeLeafValuePaths ? ""
 						: String.valueOf(index - 1);
 			}
-			String leafIndex = index == 1 ? "" : "" + (index - 1);
+			String leafIndex = index == 1 ? "" : "-" + (index - 1);
 			return clazz.getName().replace(".", "_") + leafIndex;
 		}
 	}
