@@ -31,7 +31,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
@@ -79,6 +78,7 @@ import cc.alcina.framework.common.client.util.DurationCounter;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.Multiset;
+import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -247,8 +247,13 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public <V> V callWithEntityManager(Function<EntityManager, V> call) {
-		return call.apply(getEntityManager());
+	public <V> V
+			callWithEntityManager(ThrowingFunction<EntityManager, V> call) {
+		try {
+			return call.apply(getEntityManager());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	@Override

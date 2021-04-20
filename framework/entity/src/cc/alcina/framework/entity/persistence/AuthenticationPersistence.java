@@ -8,7 +8,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 
@@ -17,11 +16,11 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.Iid;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -31,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -164,8 +164,7 @@ public class AuthenticationPersistence {
 	}
 
 	public ClientInstance getClientInstance(long clientInstanceId) {
-		return PersistentImpl.find(ClientInstance.class,
-				clientInstanceId);
+		return PersistentImpl.find(ClientInstance.class, clientInstanceId);
 	}
 
 	public Iid getIid(String instanceId) {
@@ -221,7 +220,8 @@ public class AuthenticationPersistence {
 		});
 	}
 
-	private <V> V callWithEntityManager(Function<EntityManager, V> function) {
+	private <V> V
+			callWithEntityManager(ThrowingFunction<EntityManager, V> function) {
 		return CommonPersistenceProvider.get().getCommonPersistence()
 				.callWithEntityManager(function);
 	}
@@ -234,12 +234,10 @@ public class AuthenticationPersistence {
 		List<Entity> createdObjects = new ArrayList<>();
 		Iid iid = (Iid) Ax.first(em.createQuery(Ax.format(
 				"select iid from %s iid where instanceId = '%s'",
-				PersistentImpl
-						.getImplementationSimpleClassName(Iid.class),
+				PersistentImpl.getImplementationSimpleClassName(Iid.class),
 				iidUid)).getResultList());
 		if (iid == null) {
-			iid = PersistentImpl
-					.getNewImplementationInstance(Iid.class);
+			iid = PersistentImpl.getNewImplementationInstance(Iid.class);
 			iid.setInstanceId(iidUid);
 			em.persist(iid);
 			createdObjects.add(iid);
@@ -247,9 +245,8 @@ public class AuthenticationPersistence {
 		AuthenticationSession authenticationSession = (AuthenticationSession) Ax
 				.first(em.createQuery(Ax.format(
 						"select authenticationSession from %s authenticationSession where sessionId = '%s'",
-						PersistentImpl
-								.getImplementationSimpleClassName(
-										AuthenticationSession.class),
+						PersistentImpl.getImplementationSimpleClassName(
+								AuthenticationSession.class),
 						authenticationSessionUid)).getResultList());
 		if (authenticationSession == null) {
 			authenticationSession = PersistentImpl
@@ -304,8 +301,8 @@ public class AuthenticationPersistence {
 		List<Entity> createdDetached = new ArrayList<>();
 	}
 
-	public static class BootstrapInstanceCreator
-			implements Function<EntityManager, BootstrapCreationResult> {
+	public static class BootstrapInstanceCreator implements
+			ThrowingFunction<EntityManager, BootstrapCreationResult> {
 		private String hostName;
 
 		public BootstrapInstanceCreator() {

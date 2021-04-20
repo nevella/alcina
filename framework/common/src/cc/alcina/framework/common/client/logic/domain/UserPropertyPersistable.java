@@ -6,9 +6,10 @@ import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 
 public interface UserPropertyPersistable
-		extends Serializable, SourcesPropertyChangeEvents {
+		extends Serializable, SourcesPropertyChangeEvents, TreeSerializable {
 	@AlcinaTransient
 	/*
 	 * repeat the annotation in the implementation method

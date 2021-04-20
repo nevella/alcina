@@ -17,7 +17,6 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 
@@ -35,6 +34,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.LongPair;
+import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.persistence.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.persistence.metric.InternalMetric;
 import cc.alcina.framework.entity.persistence.transform.TransformCache;
@@ -50,7 +50,7 @@ import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 public interface CommonPersistenceLocal {
 	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl);
 
-	public <V> V callWithEntityManager(Function<EntityManager, V> call);
+	public <V> V callWithEntityManager(ThrowingFunction<EntityManager, V> call);
 
 	public <T> T ensureObject(T t, String key, String value) throws Exception;
 

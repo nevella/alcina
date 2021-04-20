@@ -18,6 +18,8 @@ import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.domain.LockUtils;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -68,10 +70,15 @@ public class PropertiesDomain {
 	private <P extends UserPropertyPersistable> P
 			getLegacyProperties(Class<P> clazz, IUser user) {
 		try {
-			WrappedObject<? extends WrapperPersistable> wrappedObject = Registry
-					.impl(WrappedObjectProvider.class).getObjectWrapperForUser(
-							(Class<? extends WrapperPersistable>) clazz, 0L,
-							null);
+			LooseContext
+					.pushWithTrue(WrappedObjectProvider.CONTEXT_DO_NOT_CREATE);
+			WrappedObject<? extends WrapperPersistable> wrappedObject = CommonPersistenceProvider
+					.get().getCommonPersistence()
+					.callWithEntityManager(em -> Registry
+							.impl(WrappedObjectProvider.class)
+							.getObjectWrapperForUser(
+									(Class<? extends WrapperPersistable>) clazz,
+									0L, em));
 			if (wrappedObject != null) {
 				logger.info("Loaded legacy property - {} {}", clazz, user);
 				return (P) wrappedObject.getObject();
@@ -82,6 +89,8 @@ public class PropertiesDomain {
 			logger.warn("Issue with legacy property - {} {}", clazz, user);
 			logger.warn("Issue with legacy property: {}", e);
 			return null;
+		} finally {
+			LooseContext.pop();
 		}
 	}
 
