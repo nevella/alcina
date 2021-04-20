@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.logic.domain;
 
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
 import java.io.Serializable;
 
 import com.google.common.base.Preconditions;
@@ -18,7 +20,8 @@ public interface UserPropertyPersistable
 
 	public void setUserPropertySupport(UserPropertyPersistable.Support support);
 
-	public static class Support implements Serializable {
+	public static class Support
+			implements Serializable, PropertyChangeListener {
 		private UserPropertyPersistable persistable;
 
 		private UserProperty property;
@@ -33,10 +36,16 @@ public interface UserPropertyPersistable
 			this.property = property;
 		}
 
+		public void ensureListeners() {
+			persistable.setUserPropertySupport(this);
+			persistable.removePropertyChangeListener(this);
+			persistable.addPropertyChangeListener(this);
+		}
+
 		public synchronized UserPropertyPersistable getPersistable() {
 			if (persistable == null) {
 				persistable = property.deserialize();
-				setupListener();
+				ensureListeners();
 			}
 			return this.persistable;
 		}
@@ -45,17 +54,16 @@ public interface UserPropertyPersistable
 			return this.property;
 		}
 
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			property.serializeObject(persistable);
+		}
+
 		public void setPersistable(UserPropertyPersistable persistable) {
 			Preconditions.checkState(this.persistable == null);
 			this.persistable = persistable;
 			property.serializeObject(persistable);
-			setupListener();
-		}
-
-		private void setupListener() {
-			persistable.setUserPropertySupport(this);
-			persistable.addPropertyChangeListener(
-					evt -> property.serializeObject(persistable));
+			ensureListeners();
 		}
 	}
 }

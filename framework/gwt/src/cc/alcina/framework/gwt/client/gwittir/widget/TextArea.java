@@ -43,7 +43,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.SimpleComparator;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 
 @SuppressWarnings("deprecation")
@@ -61,6 +61,8 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 	private String old;
 
 	private boolean ensureAllLinesVisible;
+
+	private String emptyValue = null;
 
 	public TextArea() {
 		this(false);
@@ -237,7 +239,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 	@Override
 	public String getValue() {
 		try {
-			return this.base.getText().length() == 0 ? null
+			return this.base.getText().length() == 0 ? emptyValue
 					: this.base.getText();
 		} catch (RuntimeException re) {
 			GWT.log("" + this.base, re);
@@ -388,7 +390,10 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 
 	@Override
 	public void setValue(String value) {
-		setStyleName("empty", CommonUtils.isNullOrEmpty(value));
+		if (Ax.isBlank(value)) {
+			setStyleName("empty", true);
+			emptyValue = value;
+		}
 		String old = this.getValue();
 		this.setText(value);
 		if (ensureAllLinesVisible) {

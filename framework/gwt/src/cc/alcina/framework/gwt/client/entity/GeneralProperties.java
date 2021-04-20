@@ -94,6 +94,9 @@ public class GeneralProperties extends WrapperPersistable
 	@AlcinaTransient
 	@XmlTransient
 	public UserPropertyPersistable.Support getUserPropertySupport() {
+		if (this.userPropertySupport != null) {
+			this.userPropertySupport.ensureListeners();
+		}
 		return this.userPropertySupport;
 	}
 

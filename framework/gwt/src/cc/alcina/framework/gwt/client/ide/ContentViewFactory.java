@@ -224,6 +224,8 @@ public class ContentViewFactory {
 
 	private GridFormCellRenderer cellRenderer;
 
+	private boolean doNotRegister;
+
 	public ContentViewFactory
 			actionListener(PermissibleActionListener actionListener) {
 		this.actionListener = actionListener;
@@ -332,7 +334,8 @@ public class ContentViewFactory {
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		List<Field> fieldList = new ArrayList<>(Arrays.asList(GwittirBridge
 				.get().fieldsForReflectedObjectAndSetupWidgetFactory(bean,
-						factory, editable, false, null, editableFieldFilter,new AnnotationLocation.DefaultResolver())));
+						factory, editable, false, null, editableFieldFilter,
+						new AnnotationLocation.DefaultResolver())));
 		if (fieldFilter != null) {
 			fieldList.removeIf(f -> !fieldFilter.test(f));
 		}
@@ -393,7 +396,7 @@ public class ContentViewFactory {
 				cp.setInitialObjects(list);
 				// this could be more elegant - need to register this before
 				// "prepareforedit.."
-				if (provisional) {
+				if (provisional && !doNotRegister) {
 					TransformManager.get().registerProvisionalObject(list);
 				}
 				if (bean instanceof Entity && !doNotPrepare) {
@@ -405,7 +408,7 @@ public class ContentViewFactory {
 					supportingObjects.addAll(additional);
 				}
 				supportingObjects.addAll(list);
-				cp.setObjects(supportingObjects);
+				cp.setObjects(supportingObjects, doNotRegister);
 			}
 		}
 		return cp;
@@ -502,7 +505,7 @@ public class ContentViewFactory {
 			cp.add(sp);
 			cp.setOkButton(sp.okButton);
 			cp.setProvisionalObjects(cloned);
-			cp.setObjects(beans);
+			cp.setObjects(beans, doNotRegister);
 		}
 		if (editable && endRowButtonClickedHandler != null) {
 			table.addEndRowClickedHandler(endRowButtonClickedHandler);
@@ -626,6 +629,10 @@ public class ContentViewFactory {
 		return cancelButton;
 	}
 
+	public boolean isDoNotRegister() {
+		return this.doNotRegister;
+	}
+
 	public boolean isEditable() {
 		return this.editable;
 	}
@@ -692,6 +699,10 @@ public class ContentViewFactory {
 
 	public void setCellRenderer(GridFormCellRenderer cellRenderer) {
 		this.cellRenderer = cellRenderer;
+	}
+
+	public void setDoNotRegister(boolean doNotRegister) {
+		this.doNotRegister = doNotRegister;
 	}
 
 	public void setEndRowButtonClickedHandler(
@@ -847,8 +858,7 @@ public class ContentViewFactory {
 				}
 				BoundWidgetProvider provider = field.getCellProvider() != null
 						? field.getCellProvider()
-						: factory.getWidgetProvider(
-								null);
+						: factory.getWidgetProvider(null);
 				if (provider instanceof HasMaxWidth) {
 					HasMaxWidth hmw = (HasMaxWidth) provider;
 					if (hmw.isForceColumnWidth() && hmw.getMaxWidth() != 0) {
@@ -996,6 +1006,8 @@ public class ContentViewFactory {
 
 		boolean autoSave;
 
+		private boolean doNotRegister;
+
 		public PaneWrapperWithObjects() {
 			getElement().getStyle().setProperty("position", "relative");
 			preDetachFocus.setVisible(false);
@@ -1115,14 +1127,15 @@ public class ContentViewFactory {
 			this.initialObjects = initialObjects;
 		}
 
-		public void setObjects(Collection objects) {
+		public void setObjects(Collection objects, boolean doNotRegister) {
+			this.doNotRegister = doNotRegister;
 			if (isProvisionalObjects()) {
-				if (this.objects != null) {
+				if (this.objects != null && !doNotRegister) {
 					TransformManager.get()
 							.deregisterProvisionalObjects(objects);
 				}
 				this.objects = objects;
-				if (this.objects != null) {
+				if (this.objects != null && !doNotRegister) {
 					TransformManager.get().registerProvisionalObject(objects);
 				}
 			}
@@ -1280,7 +1293,7 @@ public class ContentViewFactory {
 		@Override
 		protected void onAttach() {
 			super.onAttach();
-			if (objects != null) {
+			if (objects != null && !doNotRegister) {
 				TransformManager.get().registerProvisionalObjects(objects);
 			}
 		}
@@ -1378,7 +1391,8 @@ public class ContentViewFactory {
 								PropertyPermissions.class,
 								right.property.getName());
 						if (pp != null) {
-							if (!PermissionsManager.get().isPermitted(right.object, pp.write())) {
+							if (!PermissionsManager.get()
+									.isPermitted(right.object, pp.write())) {
 								SourcesPropertyChangeEvents left = b
 										.getLeft().object;
 								if (left instanceof HasEnabled

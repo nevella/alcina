@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.logic.domain;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.persistence.Lob;
@@ -19,6 +20,9 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CloneHelper;
+import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
@@ -37,6 +41,12 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
  * UserProperty.key value rather than an id ref/foreign key. This means a
  * possible breach of "referential integrity", (quotes intended) - this is once
  * place where the tradeoff comes down on the side of avoiding the constraint.
+ * 
+ * Editing notes - the tm-registered object should be the userProperty -
+ * UserPropertyPersistable.getUserPropertySupport().getProperty(). The
+ * UserPropertyPersistable object will not be transaction-aware (it's
+ * effectively a snapshot - writeable only within the snapshot-creation tx).
+ * TODO - check this with a precondition server side
  */
 public abstract class UserProperty<T extends UserProperty>
 		extends VersionableEntity<T> implements HasIUser {
@@ -89,6 +99,14 @@ public abstract class UserProperty<T extends UserProperty>
 	private String value;
 
 	private UserPropertyPersistable.Support userPropertySupport;
+
+	public UserProperty copy() {
+		UserProperty copy = new CloneHelper().shallowishBeanClone(this);
+		copy.userPropertySupport = new UserPropertyPersistable.Support(copy);
+		// no need to set copy.userPropertySupport.persistable, since it'll be
+		// generated on demand
+		return copy;
+	}
 
 	public <UPP extends UserPropertyPersistable> UPP deserialize() {
 		Class clazz = null;
@@ -152,14 +170,20 @@ public abstract class UserProperty<T extends UserProperty>
 		propertyChangeSupport().firePropertyChange("key", old_key, key);
 	}
 
-	public void setUserPropertySupport(
-			UserPropertyPersistable.Support userPropertySupport) {
-		this.userPropertySupport = userPropertySupport;
-	}
-
 	public void setValue(String value) {
 		String old_value = this.value;
 		this.value = value;
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
+		if (!Objects.equals(old_value, value) && Ax.notBlank(value)) {
+			if (userPropertySupport != null
+					&& userPropertySupport.getPersistable() != null) {
+				if (userPropertySupport != null
+						&& userPropertySupport.getPersistable() != null) {
+					new CloneHelper().copyBeanProperties(deserialize(),
+							userPropertySupport.getPersistable(),
+							DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING);
+				}
+			}
+		}
 	}
 }

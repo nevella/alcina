@@ -126,11 +126,11 @@ public class OkCancelDialogBox extends GlassDialogBox {
 	}
 
 	private void cancel() {
-		OkCancelDialogBox.this.hide();
 		if (vetoableActionListener != null) {
 			vetoableActionListener.vetoableAction(
 					new PermissibleActionEvent(this, CancelAction.INSTANCE));
 		}
+		OkCancelDialogBox.this.hide();
 	}
 
 	// for subclasses
