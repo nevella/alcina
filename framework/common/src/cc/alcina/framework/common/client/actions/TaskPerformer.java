@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.lock.JobResource;
 
 /**
  * 

@@ -17,6 +17,8 @@ public interface HasPermissionsValidation {
 	public String validatePermissions();
 
 	public static class DefaultValidation {
+		public static boolean validateWithFlatTreeSerializer = false;
+
 		public static String validatePermissions(HasPermissionsValidation hpv,
 				Collection children) {
 			if (hpv instanceof Permissible) {
@@ -29,7 +31,7 @@ public interface HasPermissionsValidation {
 			TypeSerialization typeSerialization = Reflections.classLookup()
 					.getAnnotationForClass(hpv.getClass(),
 							TypeSerialization.class);
-			if (typeSerialization != null) {
+			if (typeSerialization != null && validateWithFlatTreeSerializer) {
 				// serialization-with-test checks valid type membership
 				SerializerOptions options = new FlatTreeSerializer.SerializerOptions()
 						.withTestSerialized(true).withTopLevelTypeInfo(true);

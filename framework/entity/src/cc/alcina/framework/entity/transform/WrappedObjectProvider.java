@@ -25,6 +25,12 @@ import cc.alcina.framework.entity.persistence.WrappedObject;
  * @author Nick Reddel
  */
 public interface WrappedObjectProvider {
+	public static final String CONTEXT_ENTITY_MANAGER = WrappedObjectProvider.class
+			.getName() + ".CONTEXT_ENTITY_MANAGER";
+
+	public static final String CONTEXT_DO_NOT_CREATE = WrappedObjectProvider.class
+			.getName() + ".CONTEXT_DO_NOT_CREATE";
+
 	public List<Class> getJaxbSubclasses();
 
 	public <T extends WrapperPersistable> WrappedObject<T>

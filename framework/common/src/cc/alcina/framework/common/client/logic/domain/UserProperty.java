@@ -88,6 +88,8 @@ public abstract class UserProperty<T extends UserProperty>
 
 	private String value;
 
+	private UserPropertyPersistable.Support userPropertySupport;
+
 	public <UPP extends UserPropertyPersistable> UPP deserialize() {
 		Class clazz = null;
 		if (category != null) {
@@ -98,6 +100,15 @@ public abstract class UserProperty<T extends UserProperty>
 		}
 		return (UPP) TransformManager.resolveMaybeDeserialize(null, getValue(),
 				null, clazz);
+	}
+
+	public synchronized UserPropertyPersistable.Support
+			ensureUserPropertySupport() {
+		if (userPropertySupport == null) {
+			userPropertySupport = new UserPropertyPersistable.Support(
+					domainIdentity());
+		}
+		return this.userPropertySupport;
 	}
 
 	@Lob
@@ -139,6 +150,11 @@ public abstract class UserProperty<T extends UserProperty>
 		String old_key = this.key;
 		this.key = key;
 		propertyChangeSupport().firePropertyChange("key", old_key, key);
+	}
+
+	public void setUserPropertySupport(
+			UserPropertyPersistable.Support userPropertySupport) {
+		this.userPropertySupport = userPropertySupport;
 	}
 
 	public void setValue(String value) {

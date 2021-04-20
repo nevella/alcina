@@ -9,6 +9,7 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.lock.Lockable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 
 public class LockUtils {
@@ -65,7 +66,7 @@ public class LockUtils {
 		return obtainClassStringKeyLock(LockUtils.class, key);
 	}
 
-	public static class ClassStringKeyLock {
+	public static class ClassStringKeyLock implements Lockable {
 		Class clazz;
 
 		String key;
@@ -76,6 +77,11 @@ public class LockUtils {
 			this.clazz = clazz;
 			this.key = key;
 			this.lock = new ReentrantLock();
+		}
+
+		@Override
+		public void acquire() {
+			lock();
 		}
 
 		@Override
@@ -94,6 +100,11 @@ public class LockUtils {
 
 		public void lock() {
 			this.lock.lock();
+		}
+
+		@Override
+		public void release() {
+			unlock();
 		}
 
 		public void unlock() {

@@ -1,17 +1,11 @@
-package cc.alcina.framework.common.client.actions;
+package cc.alcina.framework.common.client.lock;
 
 import java.util.Collections;
 import java.util.List;
 
-public interface JobResource {
-	void acquire();
-
+public interface JobResource extends Lockable {
 	default List<JobResource> asSingleton() {
 		return Collections.singletonList(this);
-	}
-
-	default String getPath() {
-		return "";
 	}
 
 	default boolean isSharedWithChildren() {
@@ -21,6 +15,4 @@ public interface JobResource {
 	default boolean isSharedWithSubsequents() {
 		return false;
 	}
-
-	void release();
 }
