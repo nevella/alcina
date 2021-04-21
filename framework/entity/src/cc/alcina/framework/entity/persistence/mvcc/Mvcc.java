@@ -7,13 +7,13 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.domain.DomainDescriptor;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
 import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
 
 public class Mvcc {
@@ -51,14 +51,14 @@ public class Mvcc {
 	@SuppressWarnings("unused")
 	private DomainStore domainStore;
 
-	DomainDescriptor domainDescriptor;
+	DomainStoreDescriptor domainDescriptor;
 
 	@SuppressWarnings("unused")
 	private DetachedEntityCache cache;
 
 	private ClassTransformer classTransformer;
 
-	public Mvcc(DomainStore domainStore, DomainDescriptor domainDescriptor,
+	public Mvcc(DomainStore domainStore, DomainStoreDescriptor domainDescriptor,
 			DetachedEntityCache cache) {
 		Transactions.ensureInitialised();
 		this.domainStore = domainStore;

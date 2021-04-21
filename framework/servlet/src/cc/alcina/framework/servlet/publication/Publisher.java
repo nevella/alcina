@@ -3,24 +3,35 @@ package cc.alcina.framework.servlet.publication;
 import java.io.InputStream;
 import java.util.Date;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
+import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.NonRootPublicationRequest;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.KryoUtils;
+import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 import cc.alcina.framework.servlet.publication.FormatConverter.FormatConversionModel;
@@ -52,6 +63,11 @@ import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
 public class Publisher {
 	public static final String CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT = Publisher.class
 			.getName() + ".CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT";
+
+	public static boolean useWrappedObjectSerialization() {
+		return ResourceUtilities.is(Publisher.class,
+				"useWrappedObjectSerialization");
+	}
 
 	private PublicationContext ctx;
 
@@ -85,11 +101,10 @@ public class Publisher {
 
 	private void persist(ContentDefinition contentDefinition,
 			DeliveryModel deliveryModel, Long publicationUserId,
-			Publication original,
-			PublicationContentPersister publicationContentPersister,
-			PublicationResult result) {
-		Publication publication = publicationContentPersister
-				.newPublicationInstance();
+			Publication original, PublicationResult result) {
+		PublicationPersister persister = PublicationPersister.get();
+		ctx.publication = persister.newPublicationInstance();
+		Publication publication = ctx.publication;
 		if (contentDefinition instanceof HasId) {
 			HasId hasId = (HasId) contentDefinition;
 			hasId.setId(0);
@@ -100,16 +115,24 @@ public class Publisher {
 			hasId.setId(0);
 			// force new
 		}
-		publication.setContentDefinition(contentDefinition);
-		publication.setDeliveryModel(deliveryModel);
+		if (useWrappedObjectSerialization()) {
+			publication.setContentDefinition(contentDefinition);
+			publication.setDeliveryModel(deliveryModel);
+		} else {
+			Definition definition = deliveryModel.provideDefinition();
+			Preconditions.checkArgument(definition
+					.provideContentDefinition() == contentDefinition
+					&& definition.provideDeliveryModel() == deliveryModel);
+			publication.setDefinition(definition);
+			publication.setDefinitionDescription(definition.toString());
+		}
 		publication.setUser(PermissionsManager.get().getUser());
 		publication.setPublicationDate(new Date());
 		publication.setOriginalPublication(original);
 		publication.setUserPublicationId(publicationUserId);
 		publication.setPublicationUid(SEUtilities.generateId());
 		publication.setPublicationType(contentDefinition.getPublicationType());
-		long id = Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence().merge(publication);
+		long id = persister.persist(publication);
 		result.publicationId = id;
 		result.publicationUid = publication.getPublicationUid();
 	}
@@ -143,21 +166,20 @@ public class Publisher {
 		long publicationUserId = 0;
 		boolean forPublication = !deliveryModel.isNoPersistence()
 				&& deliveryModel.provideContentDeliveryType().isRepublishable();
-		PublicationContentPersister publicationContentPersister = Registry
-				.implOrNull(PublicationContentPersister.class);
 		PublicationContent publicationContent = cmh.getPublicationContent();
 		ctx.publicationContent = publicationContent;
 		result.publicationUid = deliveryModel.getPublicationUid();
-		if (forPublication && publicationContentPersister != null
-				&& !AppPersistenceBase.isInstanceReadOnly() && !Ax.isTest()) {
+		PublicationPersister persister = PublicationPersister.get();
+		boolean persistPublication = forPublication
+				&& !AppPersistenceBase.isInstanceReadOnly();
+		if (persistPublication) {
 			IUser user = PermissionsManager.get().getUser();
 			if (user == null) {
 				user = UserlandProvider.get().getSystemUser();
 			}
-			publicationUserId = Registry.impl(PublicationPersistence.class)
-					.getNextPublicationIdForUser(user);
+			publicationUserId = persister.getNextPublicationIdForUser(user);
 			persist(contentDefinition, deliveryModel, publicationUserId,
-					original, publicationContentPersister, result);
+					original, result);
 			ctx.getVisitorOrNoop()
 					.afterPublicationPersistence(result.publicationId);
 		} else {
@@ -175,10 +197,9 @@ public class Publisher {
 		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
 				publicationId, publicationUserId);
 		ctx.renderedContent = crh.results;
-		if (crh.getResults().persist && publicationContentPersister != null
-				&& publicationId > 0) {
-			publicationContentPersister.persistContentRendererResults(
-					crh.getResults(), publicationId);
+		if (crh.getResults().persist && ctx.publication != null) {
+			persister.persistContentRendererResults(crh.getResults(),
+					ctx.publication);
 		}
 		ContentWrapper cw = (ContentWrapper) Registry.get().instantiateSingle(
 				ContentWrapper.class, publicationContent.getClass());
@@ -218,14 +239,12 @@ public class Publisher {
 						deliveryModel.provideContentDeliveryType().getClass());
 		String token = deliverer.deliver(ctx, convertedContent, deliveryModel,
 				fc);
-		if (forPublication && publicationContentPersister != null
-				&& !AppPersistenceBase.isInstanceReadOnly() && !Ax.isTest()) {
+		if (persistPublication) {
 			postDeliveryPersistence(publicationId);
 			crh.getResults().htmlContent = cw.wrappedContent;
-			if (crh.getResults().persist && publicationContentPersister != null
-					&& result.publicationId != 0) {
-				publicationContentPersister.persistContentRendererResults(
-						crh.getResults(), result.publicationId);
+			if (crh.getResults().persist && ctx.publication != null) {
+				persister.persistContentRendererResults(crh.getResults(),
+						ctx.publication);
 			}
 		}
 		result.content = null;
@@ -234,13 +253,67 @@ public class Publisher {
 		return result;
 	}
 
-	public interface PublicationContentPersister {
-		public ContentRendererResults
-				getContentRendererResults(long publicationId);
+	@RegistryLocation(registryPoint = PublicationPersister.class, implementationType = ImplementationType.SINGLETON)
+	public static class PublicationPersister {
+		public static Publisher.PublicationPersister get() {
+			return Registry.impl(Publisher.PublicationPersister.class);
+		}
 
-		public Publication newPublicationInstance();
+		public ContentRendererResults
+				getContentRendererResults(Publication publication) {
+			if (publication.getSerializedPublication() != null) {
+				return KryoUtils.deserializeFromBase64(
+						publication.domain().ensurePopulated()
+								.getSerializedPublication(),
+						ContentRendererResults.class);
+			}
+			return null;
+		}
+
+		public long getNextPublicationIdForUser(IUser user) {
+			boolean wasMuted = MetricLogging.get().isMuted();
+			try {
+				MetricLogging.get().setMuted(false);
+				return MethodContext.instance()
+						.withMetricKey(
+								"publication-getNextPublicationIdForUser")
+						.call(() -> CommonPersistenceProvider.get()
+								.getCommonPersistence()
+								.getNextPublicationIdForUser(user));
+			} finally {
+				MetricLogging.get().setMuted(wasMuted);
+			}
+		}
+
+		public Publication newPublicationInstance() {
+			if (useWrappedObjectSerialization()) {
+				return PersistentImpl
+						.getNewImplementationInstance(Publication.class);
+			} else {
+				return PersistentImpl.create(Publication.class);
+			}
+		}
+
+		public long persist(Publication publication) {
+			if (useWrappedObjectSerialization()) {
+				return Registry.impl(CommonPersistenceProvider.class)
+						.getCommonPersistence().merge(publication);
+			} else {
+				Transaction.commit();
+				return publication.getId();
+			}
+		}
 
 		public void persistContentRendererResults(
-				ContentRendererResults results, long publicationId);
+				ContentRendererResults results, Publication publication) {
+			publication.setSerializedPublication(
+					KryoUtils.serializeToBase64(results));
+			if (useWrappedObjectSerialization()) {
+				Registry.impl(CommonPersistenceProvider.class)
+						.getCommonPersistence().merge(publication);
+			} else {
+				Transaction.commit();
+			}
+		}
 	}
 }

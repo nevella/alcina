@@ -26,21 +26,24 @@ import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
+import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringMap;
 
 /**
  * 
  * @author Nick Reddel
  */
 public abstract class ContentRequestBase<CD extends ContentDefinition>
-		extends WrapperPersistable
-		implements GwtMultiplePersistable, DeliveryModel, TreeSerializable {
+		extends WrapperPersistable implements GwtMultiplePersistable,
+		DeliveryModel, TreeSerializable, Definition {
 	static final long serialVersionUID = -1L;
 
 	private String outputFormat = FormatConversionTarget.HTML.serializedForm();
@@ -100,6 +103,8 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 	private String publicDescription;
 
 	private Map<String, String> properties = new LinkedHashMap<String, String>();
+
+	private String propertiesSerialized;
 
 	public transient List<MailInlineImage> images = new ArrayList<>();
 
@@ -191,12 +196,18 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 	}
 
 	@Override
+	@AlcinaTransient
 	public Map<String, String> getProperties() {
 		return this.properties;
 	}
 
+	public String getPropertiesSerialized() {
+		return this.propertiesSerialized;
+	}
+
 	@Override
 	@Transient
+	@AlcinaTransient
 	public PropertyChangeListener[] getPropertyChangeListeners() {
 		return this.propertyChangeSupport().getPropertyChangeListeners();
 	}
@@ -277,6 +288,17 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 	}
 
 	@Override
+	public void onAfterTreeDeserialize() {
+		StringMap.fromPropertyString(propertiesSerialized)
+				.forEach((k, v) -> properties.put(k, v));
+	}
+
+	@Override
+	public void onBeforeTreeSerialize() {
+		propertiesSerialized = new StringMap(properties).toPropertyString();
+	}
+
+	@Override
 	public List<MailAttachment> provideAttachments() {
 		if (attachments == null) {
 			attachments = new ArrayList<>();
@@ -285,8 +307,23 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 	}
 
 	@Override
+	public ContentDefinition provideContentDefinition() {
+		return contentDefinition;
+	}
+
+	@Override
 	public ContentDeliveryType provideContentDeliveryType() {
 		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
+	}
+
+	@Override
+	public Definition provideDefinition() {
+		return this;
+	}
+
+	@Override
+	public DeliveryModel provideDeliveryModel() {
+		return this;
 	}
 
 	@Override
@@ -442,6 +479,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 
 	public void setProperties(Map<String, String> properties) {
 		this.properties = properties;
+	}
+
+	public void setPropertiesSerialized(String propertiesSerialized) {
+		this.propertiesSerialized = propertiesSerialized;
 	}
 
 	public void setPublicationRange(PublicationRange publicationRange) {

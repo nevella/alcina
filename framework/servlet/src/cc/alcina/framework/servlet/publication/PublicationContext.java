@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
+import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.Ax;
@@ -79,6 +80,8 @@ public class PublicationContext {
 	public ContentRendererResults renderedContent;
 
 	public FormatConversionModel formatConversionModel;
+
+	public Publication publication;
 
 	public String getContextInfoForPublicationException() {
 		String xmlForm = "Unable to serialize publication request";

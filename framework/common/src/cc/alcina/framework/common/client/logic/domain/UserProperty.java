@@ -101,7 +101,8 @@ public abstract class UserProperty<T extends UserProperty>
 	private UserPropertyPersistable.Support userPropertySupport;
 
 	public UserProperty copy() {
-		UserProperty copy = new CloneHelper().shallowishBeanClone(this);
+		UserProperty copy = new CloneHelper()
+				.shallowishBeanClone(domainIdentity());
 		copy.userPropertySupport = new UserPropertyPersistable.Support(copy);
 		// no need to set copy.userPropertySupport.persistable, since it'll be
 		// generated on demand

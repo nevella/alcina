@@ -146,7 +146,8 @@ public class FlatTreeSerializer {
 		T instance = Reflections.newInstance(clazz);
 		Node node = new Node(null, instance, null);
 		new FlatTreeSerializer(state).deserialize(node);
-		return (T) node.value;
+		instance.onAfterTreeDeserialize();
+		return instance;
 	}
 
 	public static <T extends TreeSerializable> T deserialize(String value) {
@@ -163,6 +164,7 @@ public class FlatTreeSerializer {
 		if (object == null) {
 			return null;
 		}
+		object.onBeforeTreeSerialize();
 		State state = new State();
 		state.serializerOptions = options;
 		Node node = new Node(null, object, Reflections.classLookup()
