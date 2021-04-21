@@ -296,8 +296,10 @@ public class Publisher {
 
 		public long persist(Publication publication) {
 			if (useWrappedObjectSerialization()) {
-				return Registry.impl(CommonPersistenceProvider.class)
+				long id = Registry.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence().merge(publication);
+				publication.setId(id);
+				return id;
 			} else {
 				Transaction.commit();
 				return publication.getId();
