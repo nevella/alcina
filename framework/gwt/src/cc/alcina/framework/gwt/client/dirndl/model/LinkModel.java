@@ -13,9 +13,11 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
@@ -31,7 +33,7 @@ import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
-//FIXME - ert.dirndl.2 - baseplace should implement a  'link provider' interface
+//FIXME - dirndl.2 - baseplace should implement a  'link provider' interface
 // and various subtypes should be subclasses...
 @Bean
 public class LinkModel {
@@ -45,6 +47,14 @@ public class LinkModel {
 
 	private String text;
 
+	public LinkModel() {
+	}
+
+	public LinkModel(Entity entity) {
+		withPlace(EntityPlace.forEntity(entity));
+		withText(TextProvider.get().getObjectName(entity));
+	}
+
 	public void addTo(List<LinkModel> actions) {
 		actions.add(this);
 	}
@@ -55,6 +65,10 @@ public class LinkModel {
 
 	public BasePlace getPlace() {
 		return this.place;
+	}
+
+	public String getText() {
+		return text;
 	}
 
 	public boolean isPrimaryAction() {
@@ -93,10 +107,6 @@ public class LinkModel {
 	public LinkModel withWithoutLink(boolean withoutLink) {
 		this.withoutLink = withoutLink;
 		return this;
-	}
-
-	public String getText() {
-		return text;
 	}
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = LinkModel.class)
