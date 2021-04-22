@@ -21,12 +21,11 @@ public class LuxButton extends Composite implements HasClickHandlers {
 
 	private boolean performingAsync = false;
 
-	private boolean active = false;
+	private Boolean active;
 
 	public LuxButton() {
 		initWidget(panel);
 		LuxButtonStyle.LUX_BUTTON.addTo(this);
-		LuxButtonStyle.LUX_BUTTON_INACTIVE.addTo(this);
 	}
 
 	@Override
@@ -36,7 +35,7 @@ public class LuxButton extends Composite implements HasClickHandlers {
 
 	public void setActive(boolean active) {
 		// Only update if the active state changes
-		if (this.active != active) {
+		if (this.active == null || this.active != active) {
 			this.active = active;
 			if (active) {
 				LuxButtonStyle.LUX_BUTTON_INACTIVE.removeFrom(this);
