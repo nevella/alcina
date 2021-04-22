@@ -169,7 +169,7 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 
 		public void generateFile(GeneratedUnitType unitType) {
 			String template = ResourceUtilities
-					.readClazzp(unitType.templateRelativePath());
+					.readRelativeResource(unitType.templateRelativePath());
 			String out = replaceLookup.replaceSubstrings(template);
 			String outPath = unitType.outputPath(this);
 			outPath = outPath.replace("/persistent/", "/");

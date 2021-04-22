@@ -163,10 +163,10 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			List<Job> threadData = JobRegistry.get().getThreadData(job);
 			job.domain().ensurePopulated();
 			DomDoc doc = DomDoc.basicHtmlDoc();
-			String css = ResourceUtilities.readClazzp("res/TaskListJobs.css");
+			String css = ResourceUtilities.readRelativeResource("res/TaskListJobs.css");
 			doc.xpath("//head").node().builder().tag("style").text(css)
 					.append();
-			css = ResourceUtilities.readClazzp("res/TaskLogJobDetails.css");
+			css = ResourceUtilities.readRelativeResource("res/TaskLogJobDetails.css");
 			doc.xpath("//head").node().builder().tag("style").text(css)
 					.append();
 			DomNode body = doc.html().body();

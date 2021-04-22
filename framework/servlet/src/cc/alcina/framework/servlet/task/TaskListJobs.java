@@ -109,7 +109,7 @@ public class TaskListJobs extends AbstractTaskPerformer {
 	@Override
 	protected void run0() throws Exception {
 		DomDoc doc = DomDoc.basicHtmlDoc();
-		String css = ResourceUtilities.readClazzp("res/TaskListJobs.css");
+		String css = ResourceUtilities.readRelativeResource("res/TaskListJobs.css");
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
 		{
 			Stream<QueueStat> queues = JobRegistry.get().getActiveQueueStats();

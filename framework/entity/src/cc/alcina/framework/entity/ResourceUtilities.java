@@ -590,7 +590,7 @@ public class ResourceUtilities {
 		}
 	}
 
-	public static String readClazzp(String path) {
+	public static String readRelativeResource(String path) {
 		return readClassPathResourceAsString(getCallerClass(), path);
 	}
 

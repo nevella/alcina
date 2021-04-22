@@ -61,7 +61,7 @@ public class RdbProxies {
 		String modelXml = null;
 		try {
 			modelXml = ResourceUtilities
-					.readClazzp("../schema/rdb/rdbEndpointSchema.xml");
+					.readRelativeResource("../schema/rdb/rdbEndpointSchema.xml");
 		} catch (Exception e) {
 			if (!CommonUtils.hasCauseOfClass(e, NullPointerException.class)) {
 				e.printStackTrace();
