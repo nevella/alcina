@@ -172,7 +172,12 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					LooseContext.set(
 							ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
 							clientInstance);
-					params.context.forEach((k, v) -> LooseContext.set(k, v));
+					params.context.forEach((k, v) -> {
+						if (!k.matches(
+								"cc.alcina.framework.entity.KryoUtils.*")) {
+							LooseContext.set(k, v);
+						}
+					});
 					out = method.invoke(invocationTarget, args);
 				} finally {
 					LooseContext.pop();

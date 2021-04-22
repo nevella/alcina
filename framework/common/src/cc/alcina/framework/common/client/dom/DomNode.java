@@ -1094,6 +1094,7 @@ public class DomNode {
 		}
 
 		public void setProperty(String key, String value) {
+			key = jsToDom(key);
 			StringMap styles = new StringMap();
 			// t0tes naive
 			if (has("style")) {
@@ -1108,6 +1109,26 @@ public class DomNode {
 					styles.entrySet().stream().map(
 							e -> Ax.format("%s:%s", e.getKey(), e.getValue()))
 							.collect(Collectors.joining("; ")));
+		}
+
+		private String jsToDom(String key) {
+			if (key.equals(key.toLowerCase())) {
+				return key;
+			}
+			StringBuilder builder = new StringBuilder();
+			/*
+			 * Could use a regex...
+			 */
+			for (int idx = 0; idx < key.length(); idx++) {
+				char c = key.charAt(idx);
+				if (c >= 'A' && c <= 'Z') {
+					builder.append('-');
+					builder.append(String.valueOf(c).toLowerCase());
+				} else {
+					builder.append(c);
+				}
+			}
+			return builder.toString();
 		}
 	}
 
