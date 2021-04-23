@@ -414,7 +414,7 @@ public class DevConsoleCommandTransforms {
 				sql1 = String.format(sql1, dtrName, filter);
 				Statement ps = conn.createStatement();
 				System.out.println(console.breakAndPad(1, 80, sql1, 0));
-				ids = SqlUtils.toIdList(ps, sql1, "id", false);
+				ids = SqlUtils.toIdSet(ps, sql1, "id", false);
 				ps.close();
 				List<String> args = new ArrayList<String>(Arrays.asList(argv));
 				args.add("dtr");

@@ -62,7 +62,7 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 						"select dtrq.id from %s "
 								+ "dtrq where id>=%s and id<%s order by id",
 						dtrTableName, lastId, lastId + SLICE_SIZE);
-				Set<Long> rqIds = SqlUtils.toIdList(stmt, rSql, "id", false);
+				Set<Long> rqIds = SqlUtils.toIdSet(stmt, rSql, "id", false);
 				for (Long id : rqIds) {
 					DomainTransformRequestPersistent request = DomainStore
 							.writableStore().loadTransformRequest(id);
