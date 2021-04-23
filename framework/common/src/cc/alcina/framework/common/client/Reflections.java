@@ -19,12 +19,12 @@ public class Reflections {
 		return get().classLookup;
 	}
 
-	public static String getApplicationName() {
-		return get().applicationName;
+	public static <T> Class<T> forName(String fqn) {
+		return fqn == null ? null : classLookup().getClassForName(fqn);
 	}
 
-	public static <T> Class<T> forName(String fqn) {
-		return classLookup().getClassForName(fqn);
+	public static String getApplicationName() {
+		return get().applicationName;
 	}
 
 	public static <T> T newInstance(Class<T> clazz) {
