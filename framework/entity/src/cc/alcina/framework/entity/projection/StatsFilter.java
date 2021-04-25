@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.projection;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -24,6 +26,8 @@ import org.objenesis.Objenesis;
 import org.objenesis.ObjenesisStd;
 import org.objenesis.instantiator.ObjectInstantiator;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Output;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -34,9 +38,35 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 
 public class StatsFilter extends CollectionProjectionFilter {
+	public static void dumpGraphStats(Object resultObject) {
+		try {
+			StatsFilter statsFilter = new StatsFilter().dumpPaths();
+			// statsFilter.bypassGwtTransient();
+			statsFilter.getGraphStats(resultObject, new Class[] {},
+					new Class[] {}, StatsFilterSortKey.CLASSNAME, true);
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			MetricLogging.get().start("serialize-jvm");
+			ObjectOutputStream oos = new ObjectOutputStream(out);
+			oos.writeObject(resultObject);
+			oos.close();
+			MetricLogging.get().end("serialize-jvm");
+			MetricLogging.get().start("serialize-kryo");
+			Kryo kryo = new Kryo();
+			ByteArrayOutputStream baos = new ByteArrayOutputStream();
+			Output output = new Output(baos);
+			kryo.writeObject(output, resultObject);
+			output.flush();
+			MetricLogging.get().end("serialize-kryo");
+			System.out.format("\njava-ser size:%s\n\n", out.size());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	StatsFilter.MultiIdentityMap ownerMap = new StatsFilter.MultiIdentityMap();
 
 	StatsFilter.MultiIdentityMap owneeMap = new StatsFilter.MultiIdentityMap();
@@ -497,6 +527,20 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 	}
 
+	static class MultiIdentityMap
+			extends IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
+		public void add(Object o1, Object o2) {
+			ensureKey(o1);
+			get(o1).put(o2, o2);
+		}
+
+		public void ensureKey(Object o1) {
+			if (!containsKey(o1)) {
+				put(o1, new IdentityHashMap<Object, Object>());
+			}
+		}
+	}
+
 	class StatsItem {
 		int size;
 
@@ -523,20 +567,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 		public int size() {
 			return size;
-		}
-	}
-
-	static class MultiIdentityMap
-			extends IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
-		public void add(Object o1, Object o2) {
-			ensureKey(o1);
-			get(o1).put(o2, o2);
-		}
-	
-		public void ensureKey(Object o1) {
-			if (!containsKey(o1)) {
-				put(o1, new IdentityHashMap<Object, Object>());
-			}
 		}
 	}
 }

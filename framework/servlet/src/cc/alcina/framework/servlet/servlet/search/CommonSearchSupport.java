@@ -116,13 +116,13 @@ public class CommonSearchSupport {
 				GroupingHandler groupingHandler = Registry.impl(
 						GroupingHandler.class,
 						searchContext.groupingParameters.getClass());
-				searchContext.modelSearchResults.groupedResult = groupingHandler
+				searchContext.modelSearchResults.setGroupedResult(groupingHandler
 						.process(searchContext.queried,
-								searchContext.groupingParameters, def);
+								searchContext.groupingParameters, def));
 				groupingHandler.sort(
-						searchContext.modelSearchResults.groupedResult,
+						searchContext.modelSearchResults.getGroupedResult(),
 						searchContext.groupingParameters);
-				searchContext.modelSearchResults.queriedResultObjects = new ArrayList<>();
+				searchContext.modelSearchResults.setQueriedResultObjects(new ArrayList<>());
 				if (customSearchHandler.isPresent()) {
 					customSearchHandler.get().beforeProjection(searchContext);
 				}
@@ -133,12 +133,12 @@ public class CommonSearchSupport {
 							.project(searchContext.modelSearchResults);
 				}
 			}
-			searchContext.modelSearchResults.def = def;
-			searchContext.modelSearchResults.pageNumber = def.getPageNumber();
-			searchContext.modelSearchResults.recordCount = rows.size();
-			searchContext.modelSearchResults.transformLogPosition = DomainStore
+			searchContext.modelSearchResults.setDef(def);
+			searchContext.modelSearchResults.setPageNumber(def.getPageNumber());
+			searchContext.modelSearchResults.setRecordCount(rows.size());
+			searchContext.modelSearchResults.setTransformLogPosition(DomainStore
 					.stores().writableStore().getPersistenceEvents().getQueue()
-					.getTransformCommitPosition();
+					.getTransformCommitPosition());
 			return searchContext.modelSearchResults;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -152,19 +152,19 @@ public class CommonSearchSupport {
 			SearchResultsBase searchResultsBase,
 			BindableSearchDefinition toSearchDefinition) {
 		ModelSearchResults result = new ModelSearchResults();
-		result.queriedResultObjects = searchResultsBase.getResults();
-		result.pageNumber = toSearchDefinition.getPageNumber();
-		result.def = toSearchDefinition;
-		result.recordCount = searchResultsBase.getTotalResultCount();
-		result.resultClassName = toSearchDefinition.queriedBindableClass()
-				.getName();
+		result.setQueriedResultObjects(searchResultsBase.getResults());
+		result.setPageNumber(toSearchDefinition.getPageNumber());
+		result.setDef(toSearchDefinition);
+		result.setRecordCount(searchResultsBase.getTotalResultCount());
+		result.setResultClassName(toSearchDefinition.queriedBindableClass()
+				.getName());
 		return result;
 	}
 
 	private ModelSearchResults getModelSearchResults(
 			List<? extends Entity> queried, EntitySearchDefinition def) {
 		ModelSearchResults<?> modelSearchResults = new ModelSearchResults();
-		modelSearchResults.def = def;
+		modelSearchResults.setDef(def);
 		if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
 		} else {
 			if (def == null) {
@@ -172,9 +172,9 @@ public class CommonSearchSupport {
 				Entity first = CommonUtils.first(queried);
 				queried.clear();
 				List untyped = queried;
-				modelSearchResults.rawEntity = first;
-				modelSearchResults.resultClassName = Optional.ofNullable(first)
-						.map(e -> e.entityClass().getName()).orElse(null);
+				modelSearchResults.setRawEntity(first);
+				modelSearchResults.setResultClassName(Optional.ofNullable(first)
+						.map(e -> e.entityClass().getName()).orElse(null));
 				if (first != null) {
 					untyped.add(project(first, modelSearchResults, true));
 				}
@@ -182,14 +182,14 @@ public class CommonSearchSupport {
 				queried = project(queried, modelSearchResults,
 						def.isReturnSingleDataObjectImplementations());
 				List<EntityPlace> filterPlaces = def.provideFilterPlaces();
-				modelSearchResults.filteringEntities = (List) filterPlaces
+				modelSearchResults.setFilteringEntities((List) filterPlaces
 						.stream().map(EntityPlace::asLocator).map(Domain::find)
-						.collect(Collectors.toList());
+						.collect(Collectors.toList()));
 				/*
 				 * Just get non-entity properties, essentially - for things like
 				 * breadcrumbs client-side
 				 */
-				Set<Entity> alsoProject = modelSearchResults.filteringEntities
+				Set<Entity> alsoProject = modelSearchResults.getFilteringEntities()
 						.stream().map(Entity.Ownership::getOwningEntities)
 						.flatMap(Collection::stream)
 						.collect(Collectors.toSet());
@@ -203,7 +203,7 @@ public class CommonSearchSupport {
 							return null;
 						}
 						if (original instanceof Entity
-								&& !(modelSearchResults.filteringEntities
+								&& !(modelSearchResults.getFilteringEntities()
 										.contains(original))
 								&& !(alsoProject.contains(original))) {
 							return null;
@@ -212,12 +212,12 @@ public class CommonSearchSupport {
 								graphProjection);
 					}
 				};
-				modelSearchResults.filteringEntities = GraphProjections
+				modelSearchResults.setFilteringEntities(GraphProjections
 						.defaultProjections().dataFilter(dataFilter)
-						.project(modelSearchResults.filteringEntities);
+						.project(modelSearchResults.getFilteringEntities()));
 			}
 		}
-		modelSearchResults.queriedResultObjects = (List) queried;
+		modelSearchResults.setQueriedResultObjects((List) queried);
 		return modelSearchResults;
 	}
 
@@ -230,7 +230,7 @@ public class CommonSearchSupport {
 		Class<? extends Bindable> projectedClass = projector
 				.getProjectedClass(modelSearchResults);
 		if (projectedClass != null) {
-			modelSearchResults.resultClassName = projectedClass.getName();
+			modelSearchResults.setResultClassName(projectedClass.getName());
 		}
 		return projector.project(object);
 	}

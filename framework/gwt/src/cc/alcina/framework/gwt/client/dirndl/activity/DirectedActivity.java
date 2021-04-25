@@ -89,8 +89,14 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	public DirectedActivity() {
 	}
 
+	
 	public P getPlace() {
 		return this.place;
+	}
+	
+	public <DA extends DirectedActivity> DA withPlace(P place) {
+		setPlace(place);
+		return (DA) this;
 	}
 
 	@Override

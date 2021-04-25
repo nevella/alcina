@@ -202,7 +202,7 @@ public class DomainStoreTransformSequencer
 
 	private synchronized void publishUnpublishedPositions(
 			List<DomainTransformCommitPosition> positions) {
-		positions.removeIf(p -> publishedIds.containsKey(p.commitRequestId));
+		positions.removeIf(p -> publishedIds.containsKey(p.getCommitRequestId()));
 		unpublishedPositions.addAll(positions);
 		if (unpublishedPositions.isEmpty()) {
 			return;
@@ -210,9 +210,9 @@ public class DomainStoreTransformSequencer
 		loaderDatabase.getStore().getPersistenceEvents().getQueue()
 				.onSequencedCommitPositions(unpublishedPositions);
 		unpublishedPositions
-				.forEach(p -> pendingRequestIds.remove(p.commitRequestId));
+				.forEach(p -> pendingRequestIds.remove(p.getCommitRequestId()));
 		unpublishedPositions
-				.forEach(p -> publishedIds.put(p.commitRequestId, true));
+				.forEach(p -> publishedIds.put(p.getCommitRequestId(), true));
 		highestVisiblePosition = Ax.last(unpublishedPositions);
 		unpublishedPositions.clear();
 		synchronized (unpublishedPositions) {
@@ -261,7 +261,7 @@ public class DomainStoreTransformSequencer
 						highestVisiblePosition);
 			}
 		}
-		Timestamp highestVisible = highestVisiblePosition.commitTimestamp;
+		Timestamp highestVisible = highestVisiblePosition.getCommitTimestamp();
 		/*
 		 * Go back a little, to handle concurrent writes to
 		 * transactionCommitTime
@@ -299,14 +299,14 @@ public class DomainStoreTransformSequencer
 					DomainTransformCommitPosition position = new DomainTransformCommitPosition(
 							id, timestamp);
 					DomainTransformCommitPosition existing = visiblePositions
-							.get(position.commitRequestId);
+							.get(position.getCommitRequestId());
 					if (existing != null) {
-						if (!existing.commitTimestamp.equals(timestamp)) {
+						if (!existing.getCommitTimestamp().equals(timestamp)) {
 							logger.warn(
 									"Different timestamps for positions:\nDB: {}\nExisting: {}",
 									timestamp, existing);
 						}
-						pendingRequestIds.remove(existing.commitRequestId);
+						pendingRequestIds.remove(existing.getCommitRequestId());
 					} else {
 						positions.add(position);
 					}
@@ -317,7 +317,7 @@ public class DomainStoreTransformSequencer
 			throw sqlex;
 		}
 		positions.forEach(position -> visiblePositions
-				.put(position.commitRequestId, position));
+				.put(position.getCommitRequestId(), position));
 		positions.sort(Comparator.naturalOrder());
 		unpublishedPositions.addAll(positions);
 		if (positions.size() > 0) {

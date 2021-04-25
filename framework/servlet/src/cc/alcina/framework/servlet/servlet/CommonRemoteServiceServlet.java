@@ -31,6 +31,7 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
@@ -84,8 +85,12 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
+import cc.alcina.framework.common.client.remote.DevRemoteServiceAsync.DevRemoteServicePayload;
+import cc.alcina.framework.common.client.remote.DevRemoteServiceHandler;
+import cc.alcina.framework.common.client.remote.DevRpcRemoteService;
 import cc.alcina.framework.common.client.remote.SearchRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -135,7 +140,8 @@ import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
  *
  */
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
-		implements CommonRemoteService, SearchRemoteService {
+		implements CommonRemoteService, SearchRemoteService,
+		DevRpcRemoteService, DevRemoteServiceHandler {
 	public static final String UA_NULL_SERVER = "null/server";
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
@@ -210,6 +216,31 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private AlcinaServletContext alcinaServletContext = new AlcinaServletContext()
 			.withRootPermissions(false);
+
+	@Override
+	public String devRpc(String encodedRpcPayload) {
+		try {
+			Preconditions.checkState(ResourceUtilities
+					.is(CommonRemoteServiceServlet.class, "devRpcEnabled"));
+			DevRemoteServicePayload payload = AlcinaBeanSerializer
+					.deserializeHolder(encodedRpcPayload);
+			DevRemoteServiceHandler handler = Registry.impl(
+					DevRemoteServiceHandler.class,
+					payload.getAsyncInterfaceClass());
+			Class[] methodArgumentTypes = (Class[]) payload
+					.getMethodArgumentTypes().toArray(
+							new Class[payload.getMethodArgumentTypes().size()]);
+			Object[] methodArguments = (Object[]) payload.getMethodArguments()
+					.toArray(new Object[payload.getMethodArguments().size()]);
+			Method method = handler.getClass()
+					.getMethod(payload.getMethodName(), methodArgumentTypes);
+			method.setAccessible(true);
+			Object result = method.invoke(handler, methodArguments);
+			return AlcinaBeanSerializer.serializeHolder(result);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
 	@WebMethod(readonlyPermitted = true)
 	public <T extends Entity> T getItemById(String className, Long id)

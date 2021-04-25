@@ -36,4 +36,6 @@ public interface DomainProjection<T extends Entity>
 	default boolean isIgnoreForIndexing(EntityCollation entityCollation) {
 		return false;
 	}
+	
+	
 }

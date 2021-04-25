@@ -75,7 +75,7 @@ public class BasicGridPublisher {
 				ModelSearchResults modelSearchResults = Registry
 						.impl(CommonRemoteServletProvider.class)
 						.getCommonRemoteServiceServlet().searchModel(bdef);
-				publicationContent.resultRows = modelSearchResults.queriedResultObjects;
+				publicationContent.resultRows = modelSearchResults.getQueriedResultObjects();
 			} else {
 				throw new UnsupportedOperationException();
 			}

@@ -12,13 +12,16 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
  */
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class EntityLocator implements Serializable {
+@Bean
+public class EntityLocator implements Serializable, TreeSerializable {
 	static final transient long serialVersionUID = 1L;
 
 	public static EntityLocator instanceLocator(Entity entity) {
@@ -40,8 +43,7 @@ public class EntityLocator implements Serializable {
 			return new EntityLocator();
 		}
 		String[] parts = v.split("/");
-		return new EntityLocator(
-				Reflections.forName(parts[2]),
+		return new EntityLocator(Reflections.forName(parts[2]),
 				Long.parseLong(parts[0]), Long.parseLong(parts[1]));
 	}
 
@@ -75,6 +77,7 @@ public class EntityLocator implements Serializable {
 	@JsonIgnore
 	public long localId;
 
+	@JsonIgnore
 	public long clientInstanceId;
 
 	private transient int hash;

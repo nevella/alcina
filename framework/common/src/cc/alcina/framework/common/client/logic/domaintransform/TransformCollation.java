@@ -54,9 +54,14 @@ public class TransformCollation {
 				.map(EntityCollation::getLocator).collect(Collectors.toSet());
 	}
 
-	public <E extends Entity> boolean has(Class<E> clazz) {
+	public <E extends Entity> boolean has(Class<E>... classes) {
 		ensureLookups();
-		return perClass.containsKey(clazz);
+		for(Class clazz:classes){
+			if(perClass.containsKey(clazz)){
+				return true;
+			}
+		}
+		return false;
 	}
 
 	public boolean isCreatedAndDeleted(DomainTransformEvent event) {

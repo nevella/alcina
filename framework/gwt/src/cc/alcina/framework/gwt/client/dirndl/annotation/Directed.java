@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -20,36 +21,46 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Target({ ElementType.TYPE, ElementType.METHOD })
+@Inherited
 @ClientVisible
 public @interface Directed {
-	public String cssClass() default "";
+	public Behaviour[] behaviours() default {};
 
-	public String tag() default "";
+	public Binding[] bindings() default {};
+
+	public String cssClass() default "";
 
 	public Class<? extends DirectedNodeRenderer> renderer() default ModelClassNodeRenderer.class;
 
-	public Behaviour[] behaviours() default {};
-	public Binding[] bindings() default {};
-	
-	
+	public String tag() default "";
 
 	@RegistryLocation(registryPoint = DirectedResolver.class, implementationType = ImplementationType.INSTANCE)
 	@ClientInstantiable
 	public static class DirectedResolver implements Directed {
 		protected TreeResolver<Directed> resolver;
 
-		public DirectedResolver(DirectedResolver childResolver) {
-			resolver = createResolver(childResolver.resolver);
+		public DirectedResolver() {
 		}
 
-		
-
-		public DirectedResolver() {
+		public DirectedResolver(DirectedResolver childResolver) {
+			resolver = createResolver(childResolver.resolver);
 		}
 
 		@Override
 		public Class<? extends Annotation> annotationType() {
 			return Directed.class;
+		}
+
+		@Override
+		public Behaviour[] behaviours() {
+			Function<Directed, Behaviour[]> function = Directed::behaviours;
+			return resolver.resolve(function, "behaviours", new Behaviour[0]);
+		}
+
+		@Override
+		public Binding[] bindings() {
+			Function<Directed, Binding[]> function = Directed::bindings;
+			return resolver.resolve(function, "bindings", new Binding[0]);
 		}
 
 		@Override
@@ -65,11 +76,6 @@ public @interface Directed {
 					ModelClassNodeRenderer.class);
 		}
 
-		protected TreeResolver<Directed>
-				createResolver(TreeResolver<Directed> resolver) {
-			return new TreeResolver<Directed>(resolver);
-		}
-
 		public void setLocation(AnnotationLocation annotationLocation) {
 			Directed leafValue = annotationLocation
 					.getAnnotation(Directed.class);
@@ -83,15 +89,9 @@ public @interface Directed {
 			return resolver.resolve(function, "tag", "");
 		}
 
-		@Override
-		public Behaviour[] behaviours() {
-			Function<Directed, Behaviour[]> function = Directed::behaviours;
-			return resolver.resolve(function, "behaviours", new Behaviour[0]);
-		}
-		@Override
-		public Binding[] bindings() {
-			Function<Directed, Binding[]> function = Directed::bindings;
-			return resolver.resolve(function, "bindings", new Binding[0]);
+		protected TreeResolver<Directed>
+				createResolver(TreeResolver<Directed> resolver) {
+			return new TreeResolver<Directed>(resolver);
 		}
 	}
 }

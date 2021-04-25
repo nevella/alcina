@@ -73,6 +73,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
@@ -118,6 +119,7 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 
 /**
@@ -1784,5 +1786,9 @@ public class DomainStore implements IDomainStore {
 		protected void performDeleteObject(Entity entity) {
 			super.performDeleteObject(entity);
 		}
+	}
+
+	public DomainTransformCommitPosition getTransformCommitPosition() {
+		return getPersistenceEvents().getQueue().getTransformCommitPosition();
 	}
 }

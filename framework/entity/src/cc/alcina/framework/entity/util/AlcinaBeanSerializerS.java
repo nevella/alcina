@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.util;
 
 import java.beans.PropertyDescriptor;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -110,6 +111,9 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		}
 		if (type == Date.class) {
 			return new Date(Long.parseLong(o.toString()));
+		}
+		if (type == Timestamp.class) {
+			return new Timestamp(Long.parseLong(o.toString()));
 		}
 		if (type.isEnum()) {
 			return Enum.valueOf(type, o.toString());
@@ -253,7 +257,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		if (type == Class.class) {
 			return ((Class) value).getName();
 		}
-		if (type == Date.class) {
+		if (type == Date.class || type == Timestamp.class) {
 			return (String.valueOf(((Date) value).getTime()));
 		}
 		if (type.isArray() && type.getComponentType() == byte.class) {
@@ -384,20 +388,23 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	}
 
 	@Override
-	protected Class getClassMaybeAbbreviated(String cns) {
+	protected Class getClassMaybeAbbreviated(String className) {
 		try {
 			Class clazz = null;
-			if (abbrevLookup.containsKey(cns)) {
-				return abbrevLookup.get(cns);
+			if (abbrevLookup.containsKey(className)) {
+				return abbrevLookup.get(className);
 			} else {
-				Class resolved = resolvedClassLookup.get(cns);
+				Class resolved = resolvedClassLookup.get(className);
 				if (resolved == null) {
-					try {
-						clazz = classLoader.loadClass(cns);
-					} catch (Exception e) {
-						clazz = Reflections.forName(cns);
+					clazz = CommonUtils.stdAndPrimitivesMap.get(className);
+					if (clazz == null) {
+						try {
+							clazz = classLoader.loadClass(className);
+						} catch (Exception e) {
+							clazz = Reflections.forName(className);
+						}
 					}
-					resolvedClassLookup.put(cns, clazz);
+					resolvedClassLookup.put(className, clazz);
 					return clazz;
 				} else {
 					return resolved;

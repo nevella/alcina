@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.util;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -80,6 +81,10 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		}
 		if (type == Date.class) {
 			return new Date(Long.parseLong(jsonValue.isString().stringValue()));
+		}
+		if (type == Timestamp.class) {
+			return new Timestamp(
+					Long.parseLong(jsonValue.isString().stringValue()));
 		}
 		if (type.isEnum()) {
 			return Enum.valueOf(type, jsonValue.isString().stringValue());
@@ -225,7 +230,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		if (type == Boolean.class || type == boolean.class) {
 			return JSONBoolean.getInstance((Boolean) value);
 		}
-		if (type == Date.class) {
+		if (type == Date.class || type == Timestamp.class) {
 			return new JSONString(String.valueOf(((Date) value).getTime()));
 		}
 		if (value instanceof Collection) {

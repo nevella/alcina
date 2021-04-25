@@ -23,6 +23,7 @@ import com.totsp.gwittir.client.beans.Property;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -157,6 +158,10 @@ public class FlatTreeSerializer {
 	public static String serialize(TreeSerializable object) {
 		return serialize(object, new SerializerOptions()
 				.withTopLevelTypeInfo(true).withShortPaths(true));
+	}
+	public static String serializeElided(TreeSerializable object) {
+		return serialize(object, new SerializerOptions()
+				.withTopLevelTypeInfo(true).withShortPaths(true).withElideDefaults(true));
 	}
 
 	public static String serialize(TreeSerializable object,
@@ -1345,4 +1350,6 @@ public class FlatTreeSerializer {
 			}
 		}
 	}
+
+	
 }

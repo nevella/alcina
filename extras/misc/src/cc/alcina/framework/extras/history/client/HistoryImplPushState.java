@@ -13,12 +13,16 @@
  */
 package cc.alcina.framework.extras.history.client;
 
+import java.util.Objects;
+
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.HistoryImpl;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
+import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.BasePlace.HrefProvider;
 
 /**
  * Extends GWT's {@link HistoryImpl} and adds HTML5 pushState support.
@@ -40,16 +44,23 @@ public class HistoryImplPushState extends HistoryImpl {
 	 * Add the given token to the history using pushState.
 	 */
 	private static native void pushState(final String token) /*-{
-																var state = {
-																historyToken : token
-																};
-																$wnd.history.pushState(state, $doc.title, token);
-																}-*/;
+    var state = {
+      historyToken : token
+    };
+    $wnd.history.pushState(state, $doc.title, token);
+	}-*/;
+
+	private static native void replaceState(final String token) /*-{
+    var state = {
+      historyToken : token
+    };
+    $wnd.history.replaceState(state, $doc.title, token);
+	}-*/;
 
 	@Override
 	public native String decodeFragment(String encodedFragment) /*-{
-																return decodeURI(encodedFragment.replace("%23", "#"));
-																}-*/;
+    return decodeURI(encodedFragment.replace("%23", "#"));
+	}-*/;
 
 	@Override
 	public boolean init() {
@@ -86,29 +97,35 @@ public class HistoryImplPushState extends HistoryImpl {
 		if (!newPushStateToken.startsWith("/")) {
 			newPushStateToken = "/" + newPushStateToken;
 		}
-		pushState(newPushStateToken);
+		if (!Objects.equals(newPushStateToken, lastPushed)) {
+			pushState(newPushStateToken);
+			lastPushed = newPushStateToken;
+		}
 	}
+
+	private String lastPushed = null;
 
 	/**
 	 * Initialize an event handler that gets executed when the token changes.
 	 */
 	private native void initPopStateHandler() /*-{
-												var that = this;
-												var oldHandler = $wnd.onpopstate;
-												$wnd.onpopstate = $entry(function(e) {
-												if (e.state && e.state.historyToken) {
-												that.@cc.alcina.framework.extras.history.client.HistoryImplPushState::onPopState(Ljava/lang/String;)(e.state.historyToken);
-												}
-												if (oldHandler) {
-												oldHandler(e);
-												}
-												});
-												}-*/;
+    var that = this;
+    var oldHandler = $wnd.onpopstate;
+    $wnd.onpopstate = $entry(function(e) {
+      if (e.state && e.state.historyToken) {
+        that.@cc.alcina.framework.extras.history.client.HistoryImplPushState::onPopState(Ljava/lang/String;)(e.state.historyToken);
+      }
+      if (oldHandler) {
+        oldHandler(e);
+      }
+    });
+	}-*/;
 
 	/**
 	 * Called from native JavaScript when an old history state was popped.
 	 */
 	private void onPopState(final String historyToken) {
+		lastPushed=null;
 		updateHistoryToken(historyToken);
 		fireHistoryChangedImpl(getToken());
 	}
@@ -128,5 +145,13 @@ public class HistoryImplPushState extends HistoryImpl {
 			token += "?" + queryString;
 		}
 		setToken(token);
+	}
+
+	public static class HrefProviderPushState extends BasePlace.HrefProvider {
+		public String toHrefString(BasePlace basePlace) {
+			String path = "/" + BasePlace.tokenFor(basePlace);
+			path = CodeServerParameterHelper.append(path);
+			return path;
+		}
 	}
 }

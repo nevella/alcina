@@ -1,36 +1,39 @@
 package cc.alcina.framework.common.client.csobjects.view;
 
-import java.io.Serializable;
-
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-public class TreePath implements Serializable {
+public class TreePath extends Model {
 	public static TreePath from(String path) {
-		TreePath root = new TreePath();
-		TreePath cursor = null;
-		for (String segment : path.split(".")) {
+		TreePath cursor = new TreePath();
+		for (String segment : path.split("\\.")) {
 			TreePath parent = cursor;
 			cursor = new TreePath();
 			cursor.parent = parent;
 			cursor.fromSegment(segment);
 		}
-		return root;
+		return cursor;
 	}
 
 	private TreePath parent;
 
 	private transient String cached;
 
-	private String segment;
+	private String segment = "";
 
 	private transient EntityLocator locator;
 
 	private transient String discriminator;
 
 	private String path;
+
+	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof TreePath && toString().equals(obj.toString());
+	}
 
 	public String getDiscriminator() {
 		return this.discriminator;
@@ -52,8 +55,22 @@ public class TreePath implements Serializable {
 		return this.segment;
 	}
 
+	@Override
+	public int hashCode() {
+		return toString().hashCode();
+	}
+
+	public boolean provideIsEmpty() {
+		return toString().isEmpty();
+	}
+
+	public void putDiscriminator(Object object) {
+		setDiscriminator(CommonUtils.friendlyConstant(object, "-"));
+	}
+
 	public void setDiscriminator(String discriminator) {
 		this.discriminator = discriminator;
+		refreshSegment();
 	}
 
 	public void setLocator(EntityLocator locator) {
@@ -71,33 +88,34 @@ public class TreePath implements Serializable {
 
 	public void setSegment(String segment) {
 		this.segment = segment;
-		cached = null;
 	}
 
 	@Override
 	public String toString() {
 		if (cached == null) {
-			cached = parent == null ? segment
+			cached = parent == null || parent.toString().isEmpty() ? segment
 					: parent.toString() + "." + segment;
 		}
 		return cached;
 	}
 
 	private void fromSegment(String segment) {
-		String[] parts = segment.split(",");
 		locator = new EntityLocator();
-		locator.id = Long.parseLong(parts[0]);
-		if (parts.length > 0) {
-			discriminator = parts[1];
+		if (segment.matches("\\d+")) {
+			locator.id = Long.parseLong(segment);
+		} else {
+			discriminator = segment;
 		}
+		refreshSegment();
 	}
 
 	private void refreshSegment() {
 		cached = null;
-		Preconditions.checkState(locator.id != 0);
-		segment = String.valueOf(locator.id);
-		if (discriminator != null) {
-			segment += "," + CommonUtils.friendlyConstant(discriminator, "-");
+		Preconditions.checkState(discriminator == null ^ locator == null);
+		if (discriminator == null) {
+			segment = String.valueOf(locator.id);
+		} else {
+			segment = discriminator;
 		}
 	}
 }

@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
 
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -15,11 +17,13 @@ public class DomainUpdate implements Serializable {
 
 	public DomainTransformCommitPosition commitPosition;
 
+	@ClientInstantiable
+	@Introspectable
 	public static class DomainTransformCommitPosition
 			implements Serializable, Comparable<DomainTransformCommitPosition> {
-		public Timestamp commitTimestamp;
+		private Timestamp commitTimestamp;
 
-		public Long commitRequestId;
+		private Long commitRequestId;
 
 		public DomainTransformCommitPosition() {
 		}
@@ -51,6 +55,22 @@ public class DomainUpdate implements Serializable {
 			} else {
 				return false;
 			}
+		}
+
+		public Long getCommitRequestId() {
+			return commitRequestId;
+		}
+
+		public Timestamp getCommitTimestamp() {
+			return commitTimestamp;
+		}
+
+		public void setCommitRequestId(Long commitRequestId) {
+			this.commitRequestId = commitRequestId;
+		}
+
+		public void setCommitTimestamp(Timestamp commitTimestamp) {
+			this.commitTimestamp = commitTimestamp;
 		}
 
 		@Override

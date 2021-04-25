@@ -53,6 +53,10 @@ public class ActivityManager
 
 	private Activity currentActivity = NULL_ACTIVITY;
 
+	public Activity getCurrentActivity() {
+		return this.currentActivity;
+	}
+
 	private AcceptsOneWidget display;
 
 	private boolean startingNext = false;

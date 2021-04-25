@@ -567,14 +567,14 @@ public class DomainStoreDataProvider<T extends Entity>
 				return;
 			}
 			cleanup();
-			transformLogPosition = result.transformLogPosition;
-			results = (List) result.queriedResultObjects;
+			transformLogPosition = result.getTransformLogPosition();
+			results = (List) result.getQueriedResultObjects();
 			if (reverseResults) {
 				Collections.reverse(results);
 			}
 			allResults.addAll(results);
-			resultsDelta(result.recordCount, this.fSearchRange.i1, true);
-			groupedResult = result.groupedResult;
+			resultsDelta(result.getRecordCount(), this.fSearchRange.i1, true);
+			groupedResult = result.getGroupedResult();
 			sortOrFireGroupedResults(null);
 		}
 

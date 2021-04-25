@@ -270,10 +270,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 		DomainTransformCommitPosition highestVisibleCommitPosition = transformSequencer.highestVisiblePosition;
 		warmupTransaction.toDomainCommitting(
-				highestVisibleCommitPosition.commitTimestamp, store,
+				highestVisibleCommitPosition.getCommitTimestamp(), store,
 				store.applyTxToGraphCounter.getAndIncrement(), 0L);
 		store.getPersistenceEvents().getQueue().setMuteEventsOnOrBefore(
-				highestVisibleCommitPosition.commitTimestamp);
+				highestVisibleCommitPosition.getCommitTimestamp());
 		// get non-many-many obj
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {

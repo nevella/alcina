@@ -176,7 +176,7 @@ public class TableModel extends Model {
 				return model;
 			}
 			node.pushResolver(ModalResolver.multiple(true));
-			BindableSearchDefinition def = activity.getSearchResults().def;
+			BindableSearchDefinition def = activity.getSearchResults().getDef();
 			String sortFieldName = def.getSearchOrders()
 					.provideSearchOrderFieldName();
 			SortDirection sortDirection = def.getSearchOrders()
@@ -194,7 +194,7 @@ public class TableModel extends Model {
 								.equals(sortFieldName) ? sortDirection : null;
 						return new TableColumn(field, fieldDirection);
 					}).forEach(model.header.columns::add);
-			activity.getSearchResults().queriedResultObjects.stream()
+			activity.getSearchResults().getQueriedResultObjects().stream()
 					.map(bindable -> new TableRow(model, bindable))
 					.forEach(model.rows::add);
 			// add actions if editable and adjunct

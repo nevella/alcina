@@ -10,27 +10,67 @@ import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 
+@ClientInstantiable
 public class ModelSearchResults<B extends IsBindable & SearchResult>
 		implements Serializable {
-	public List<B> queriedResultObjects;
+	private List<B> queriedResultObjects;
 
-	public String resultClassName;
+	private String resultClassName;
 
-	public GroupedResult groupedResult;
+	private GroupedResult groupedResult;
 
-	public int recordCount;
+	private int recordCount;
 
-	public BindableSearchDefinition def;
+	private BindableSearchDefinition def;
 
-	public int pageNumber;
+	private int pageNumber;
 
-	public DomainTransformCommitPosition transformLogPosition;
+	private DomainTransformCommitPosition transformLogPosition;
 
-	public transient Entity rawEntity;
+	private transient Entity rawEntity;
 
-	public List<Entity> filteringEntities = new ArrayList<>();
+	private List<Entity> filteringEntities = new ArrayList<>();
+
+	public BindableSearchDefinition getDef() {
+		return def;
+	}
+
+	public List<Entity> getFilteringEntities() {
+		return filteringEntities;
+	}
+
+	public GroupedResult getGroupedResult() {
+		return groupedResult;
+	}
+
+	public int getPageNumber() {
+		return pageNumber;
+	}
+
+	public List<B> getQueriedResultObjects() {
+		return queriedResultObjects;
+	}
+
+	@AlcinaTransient
+	public Entity getRawEntity() {
+		return rawEntity;
+	}
+
+	public int getRecordCount() {
+		return recordCount;
+	}
+
+	public String getResultClassName() {
+		return resultClassName;
+	}
+
+	public DomainTransformCommitPosition getTransformLogPosition() {
+		return transformLogPosition;
+	}
 
 	public Entity provideFilteringEntity(EntityLocator locator) {
 		return filteringEntities.stream().filter(locator::matches).findFirst()
@@ -51,5 +91,42 @@ public class ModelSearchResults<B extends IsBindable & SearchResult>
 					.queriedEntityClass();
 		}
 		return Reflections.forName(resultClassName);
+	}
+
+	public void setDef(BindableSearchDefinition def) {
+		this.def = def;
+	}
+
+	public void setFilteringEntities(List<Entity> filteringEntities) {
+		this.filteringEntities = filteringEntities;
+	}
+
+	public void setGroupedResult(GroupedResult groupedResult) {
+		this.groupedResult = groupedResult;
+	}
+
+	public void setPageNumber(int pageNumber) {
+		this.pageNumber = pageNumber;
+	}
+
+	public void setQueriedResultObjects(List<B> queriedResultObjects) {
+		this.queriedResultObjects = queriedResultObjects;
+	}
+
+	public void setRawEntity(Entity rawEntity) {
+		this.rawEntity = rawEntity;
+	}
+
+	public void setRecordCount(int recordCount) {
+		this.recordCount = recordCount;
+	}
+
+	public void setResultClassName(String resultClassName) {
+		this.resultClassName = resultClassName;
+	}
+
+	public void setTransformLogPosition(
+			DomainTransformCommitPosition transformLogPosition) {
+		this.transformLogPosition = transformLogPosition;
 	}
 }

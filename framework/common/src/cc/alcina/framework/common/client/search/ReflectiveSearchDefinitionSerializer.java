@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -110,7 +111,7 @@ public class ReflectiveSearchDefinitionSerializer
 	@Override
 	public <SD extends SearchDefinition> SD deserialize(
 			Class<? extends SearchDefinition> clazz, String serializedDef) {
-		if (clazz != null && serializedDef.contains("=")
+		if (clazz != null && (serializedDef.contains("=")||serializedDef.isEmpty())
 				&& canFlatTreeSerialize(clazz)) {
 			try {
 				return (SD) FlatTreeSerializer.deserialize(clazz, serializedDef,
@@ -174,9 +175,8 @@ public class ReflectiveSearchDefinitionSerializer
 
 	private boolean
 			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
-		return Reflections.classLookup()
-				.getPropertyReflector(defClass, "criteriaGroups")
-				.getAnnotation(PropertySerialization.class) != null;
+		return Reflections.classLookup().getAnnotationForClass(defClass,
+				TypeSerialization.class) != null;
 	}
 
 	private void ensureLookups() {
@@ -209,6 +209,7 @@ public class ReflectiveSearchDefinitionSerializer
 				return FlatTreeSerializer.serialize(def,
 						new SerializerOptions().withTopLevelTypeInfo(false)
 								.withShortPaths(true).withSingleLine(true)
+								.withElideDefaults(true)
 								.withTestSerialized(true));
 			} catch (Exception e) {
 				if (!LooseContext

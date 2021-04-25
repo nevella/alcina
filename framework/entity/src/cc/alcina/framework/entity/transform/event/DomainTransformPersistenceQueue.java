@@ -492,7 +492,7 @@ public class DomainTransformPersistenceQueue {
 						requestId);
 			}
 			if (event.commitPosition != null) {
-				Timestamp transactionCommitTime = event.commitPosition.commitTimestamp;
+				Timestamp transactionCommitTime = event.commitPosition.getCommitTimestamp();
 				if (transactionCommitTime.before(muteEventsOnOrBefore)
 						|| transactionCommitTime.equals(muteEventsOnOrBefore)) {
 					request.setEvents(new ArrayList<>());
@@ -528,7 +528,7 @@ public class DomainTransformPersistenceQueue {
 
 		static Event committed(DomainTransformCommitPosition commitPosition) {
 			Event event = new Event().withType(Type.COMMIT);
-			event.requestId = commitPosition.commitRequestId;
+			event.requestId = commitPosition.getCommitRequestId();
 			event.commitPosition = commitPosition;
 			return event;
 		}
@@ -688,7 +688,7 @@ public class DomainTransformPersistenceQueue {
 			if (transformCommitPosition == null) {
 				return false;
 			}
-			int dir = transformCommitPosition.commitTimestamp
+			int dir = transformCommitPosition.getCommitTimestamp()
 					.compareTo(timestamp);
 			if (dir < 0) {
 				return false;
@@ -713,7 +713,7 @@ public class DomainTransformPersistenceQueue {
 			if (transformCommitPosition == null) {
 				return false;
 			}
-			int dir = transformCommitPosition.commitTimestamp
+			int dir = transformCommitPosition.getCommitTimestamp()
 					.compareTo(timestamp);
 			return dir <= 0;
 		}

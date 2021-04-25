@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -70,7 +71,7 @@ public class CommonUtils {
 	static {
 		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
 				Byte.class, Integer.class, Boolean.class, Character.class,
-				Date.class, String.class };
+				Date.class, String.class, Timestamp.class };
 		for (Class std : stds) {
 			stdClassMap.put(std.getName(), std);
 		}
@@ -266,6 +267,13 @@ public class CommonUtils {
 			}
 		}
 		return false;
+	}
+
+	public static boolean containsIgnoreCase(String string, String contains) {
+		if (string == null || contains == null) {
+			return false;
+		}
+		return string.toLowerCase().contains(contains.toLowerCase());
 	}
 
 	public static boolean containsWithNull(Object obj, String lcText) {
@@ -883,16 +891,6 @@ public class CommonUtils {
 		}
 	}
 
-	public static boolean isOrHasSuperClass(Class clazz, Class superClass) {
-		while (clazz != null && clazz != Object.class) {
-			if (clazz == superClass) {
-				return true;
-			}
-			clazz = clazz.getSuperclass();
-		}
-		return false;
-	}
-
 	public static String highlightForLog(String template, Object... args) {
 		String inner = format(template, args);
 		String star = padStringLeft("", 40, "*");
@@ -1015,6 +1013,16 @@ public class CommonUtils {
 			if (clazz == c) {
 				return true;
 			}
+		}
+		return false;
+	}
+
+	public static boolean isOrHasSuperClass(Class clazz, Class superClass) {
+		while (clazz != null && clazz != Object.class) {
+			if (clazz == superClass) {
+				return true;
+			}
+			clazz = clazz.getSuperclass();
 		}
 		return false;
 	}
@@ -2001,12 +2009,5 @@ public class CommonUtils {
 
 	public static interface YearResolver {
 		int getYear(Date d);
-	}
-
-	public static boolean containsIgnoreCase(String string, String contains) {
-		if (string == null || contains == null) {
-			return false;
-		}
-		return string.toLowerCase().contains(contains.toLowerCase());
 	}
 }
