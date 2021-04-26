@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.csobjects.ServerControlParams;
 
 public class ServerControlAction
 		extends RemoteActionWithParameters<ServerControlParams>
-		implements Serializable {
+		implements Serializable, SynchronousAction {
 	public ServerControlAction() {
 		setParameters(new ServerControlParams());
 	}
