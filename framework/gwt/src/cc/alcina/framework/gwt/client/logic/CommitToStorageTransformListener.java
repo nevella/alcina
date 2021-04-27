@@ -349,6 +349,7 @@ public class CommitToStorageTransformListener extends StateListenable
 		request.setRequestId(requestId);
 		request.setClientInstance(PermissionsManager.get().getClientInstance());
 		synchronized (collectionsMonitor) {
+			customProcessTransformQueue(transformQueue);
 			request.getEvents().addAll(transformQueue);
 			lastCommitSize = transformQueue.size();
 			request.getEventIdsToIgnore().addAll(eventIdsToIgnore);
@@ -405,6 +406,11 @@ public class CommitToStorageTransformListener extends StateListenable
 		} else {
 			commitRemote(request, commitRemoteCallback);
 		}
+	}
+
+	protected void customProcessTransformQueue(
+			List<DomainTransformEvent> transformQueue) {
+		// for outré subclassed persistence
 	}
 
 	protected boolean canTransitionToOnline() {
