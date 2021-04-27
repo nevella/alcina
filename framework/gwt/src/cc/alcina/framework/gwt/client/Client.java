@@ -115,7 +115,10 @@ public abstract class Client {
 	protected abstract void createPlaceController();
 
 	public static class Init {
+		public static long startTime;
+
 		public static void preRegistry() {
+			startTime = System.currentTimeMillis();
 			LiSet liSet = new LiSet();
 			CommonUtils.setSupplier = () -> new LightSet();
 			LocalDom.mutations.setDisabled(true);

@@ -61,16 +61,9 @@ public abstract class BasePlace extends Place implements Serializable {
 	public String toHrefString() {
 		return HrefProvider.get().toHrefString(this);
 	}
-	
-	@RegistryLocation(registryPoint=HrefProvider.class,implementationType = ImplementationType.SINGLETON)
-	public static class HrefProvider{
-		public static BasePlace.HrefProvider get(){
-			return Registry.impl(BasePlace.HrefProvider.class);
-		}
 
-		public String toHrefString(BasePlace basePlace) {
-			return "#" + BasePlace.tokenFor(basePlace);
-		}
+	public String toNameString() {
+		return toString();
 	}
 
 	@Override
@@ -96,7 +89,15 @@ public abstract class BasePlace extends Place implements Serializable {
 		}
 	}
 
-	public String toNameString() {
-		return toString();
+	@RegistryLocation(registryPoint = HrefProvider.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class HrefProvider {
+		public static BasePlace.HrefProvider get() {
+			return Registry.impl(BasePlace.HrefProvider.class);
+		}
+
+		public String toHrefString(BasePlace basePlace) {
+			return "#" + BasePlace.tokenFor(basePlace);
+		}
 	}
 }

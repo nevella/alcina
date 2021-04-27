@@ -27,8 +27,6 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	private StringMap params;
 
-	boolean added = false;
-
 	public P copyPlace(P place) {
 		String token = getToken(place);
 		return getPlace(token);
@@ -79,7 +77,6 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	public String getToken(P place) {
 		tokenBuilder = new StringBuilder();
 		params = null;
-		added = false;
 		addTokenPart(getPrefix());
 		getToken0(place);
 		if (params != null && !params.isEmpty()) {
@@ -135,11 +132,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		if (part == null) {
 			return;
 		}
-		if (added) {
+		if (tokenBuilder.length() > 0) {
 			tokenBuilder.append("/");
 		}
 		tokenBuilder.append(part);
-		added = true;
 	}
 
 	protected List<String> encodedValues() {

@@ -50,6 +50,12 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return getToken(place1).equals(getToken(place2));
 	}
 
+	public Class<? extends Entity>
+			getEntityClass(Class<? extends EntityPlace> placeClass) {
+		return ((EntityPlaceTokenizer) tokenizersByPlace.get(placeClass))
+				.getModelClass();
+	}
+
 	@Override
 	public Place getPlace(String token) {
 		return getPlace(token, false);
@@ -71,7 +77,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			return "";
 		}
 		String token = tokenizersByPlace.get(place.getClass()).getToken(place);
-		return getAppPrefix() + token;
+		return getAppPrefix().isEmpty() ? "" : getAppPrefix() + "/" + token;
 	}
 
 	public synchronized BasePlaceTokenizer getTokenizer(Place place) {
@@ -118,6 +124,9 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	protected synchronized Place getPlace(String i_token, boolean copy) {
+		if (i_token.startsWith("/")) {
+			i_token = i_token.substring(1);
+		}
 		if (i_token.startsWith(getAppPrefix())) {
 			i_token = i_token.substring(getAppPrefix().length());
 		}
@@ -133,6 +142,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix
 				.getAndEnsure(top).stream()
 				.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		if (!o_tokenizer.isPresent() && tokenizersByPrefix.containsKey("")) {
+			o_tokenizer = tokenizersByPrefix.getAndEnsure("").stream()
+					.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		}
 		if (!o_tokenizer.isPresent() && top.length() > 1 && split.length > 1) {
 			top = split[0] + "/" + split[1];
 			o_tokenizer = tokenizersByPrefix.getAndEnsure(top).stream()
@@ -147,11 +160,5 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		}
 		lastPlace = place;
 		return place;
-	}
-
-	public Class<? extends Entity>
-			getEntityClass(Class<? extends EntityPlace> placeClass) {
-		return ((EntityPlaceTokenizer) tokenizersByPlace.get(placeClass))
-				.getModelClass();
 	}
 }

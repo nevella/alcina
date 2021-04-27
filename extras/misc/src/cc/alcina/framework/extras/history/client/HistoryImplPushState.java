@@ -22,7 +22,6 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.place.BasePlace;
-import cc.alcina.framework.gwt.client.place.BasePlace.HrefProvider;
 
 /**
  * Extends GWT's {@link HistoryImpl} and adds HTML5 pushState support.
@@ -56,6 +55,8 @@ public class HistoryImplPushState extends HistoryImpl {
     };
     $wnd.history.replaceState(state, $doc.title, token);
 	}-*/;
+
+	private String lastPushed = null;
 
 	@Override
 	public native String decodeFragment(String encodedFragment) /*-{
@@ -103,8 +104,6 @@ public class HistoryImplPushState extends HistoryImpl {
 		}
 	}
 
-	private String lastPushed = null;
-
 	/**
 	 * Initialize an event handler that gets executed when the token changes.
 	 */
@@ -125,7 +124,7 @@ public class HistoryImplPushState extends HistoryImpl {
 	 * Called from native JavaScript when an old history state was popped.
 	 */
 	private void onPopState(final String historyToken) {
-		lastPushed=null;
+		lastPushed = null;
 		updateHistoryToken(historyToken);
 		fireHistoryChangedImpl(getToken());
 	}
@@ -148,6 +147,7 @@ public class HistoryImplPushState extends HistoryImpl {
 	}
 
 	public static class HrefProviderPushState extends BasePlace.HrefProvider {
+		@Override
 		public String toHrefString(BasePlace basePlace) {
 			String path = "/" + BasePlace.tokenFor(basePlace);
 			path = CodeServerParameterHelper.append(path);
