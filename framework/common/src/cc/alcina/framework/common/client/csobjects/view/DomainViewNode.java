@@ -66,6 +66,10 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 		BREADTH_FIRST, DEPTH_FIRST, IMMEDIATE_ONLY, NONE;
 	}
 
+	public enum DefaultReturnTypes implements ReturnType {
+		DEFAULT
+	}
+
 	public static abstract class EntityNode<E extends Entity>
 			extends DomainViewNode<E> implements HasEntity {
 		private E entity;
@@ -97,7 +101,7 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 		 */
 		private DomainTransformCommitPosition since;
 
-		private Class<? extends ReturnType> returnType;
+		private ReturnType returnType;
 
 		private WaitPolicy waitPolicy;
 
@@ -111,7 +115,7 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 			return this.elements;
 		}
 
-		public Class<? extends ReturnType> getReturnType() {
+		public ReturnType getReturnType() {
 			return this.returnType;
 		}
 
@@ -135,7 +139,7 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 			this.elements = elements;
 		}
 
-		public void setReturnType(Class<? extends ReturnType> returnType) {
+		public void setReturnType(ReturnType returnType) {
 			this.returnType = returnType;
 		}
 
@@ -210,7 +214,7 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 	/*
 	 * For request return type specification
 	 */
-	public static abstract class ReturnType {
+	public interface ReturnType {
 	}
 
 	public static class Top extends DomainViewNode {
