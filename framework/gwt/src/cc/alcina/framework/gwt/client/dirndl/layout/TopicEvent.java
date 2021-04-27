@@ -16,34 +16,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.BehaviourBinding;
 
 public class TopicEvent<T> extends NodeEvent {
-	public Class<? extends NodeTopic> topic;
-
-	public T payload;
-
-	public Context context;
-
-	public TopicEvent() {
-	}
-
-	private TopicEvent(Context context) {
-		this.context = context;
-	}
-
-	@Override
-	protected HandlerRegistration bind0(Widget widget) {
-		return widget.addAttachHandler(evt -> {
-			if (!evt.isAttached()) {
-				unbind();
-			}
-		});
-	}
-
-	/*
-	 * Indicates topic event will be fired from code, not an annotation
-	 */
-	public static class CodeTopic extends NodeTopic {
-	}
-
 	public static void fire(Context context, Class<? extends NodeTopic> topic,
 			Class<? extends Function> payloadTransformer,
 			boolean programmatic) {
@@ -71,10 +43,38 @@ public class TopicEvent<T> extends NodeEvent {
 		 * Bubble
 		 */
 		Node cursor = context.node.parent;
-		while (cursor != null) {
+		while (cursor != null && !context.cancelBubble) {
 			cursor.fireEvent(topicEvent);
 			cursor = cursor.parent;
 		}
+	}
+
+	public Class<? extends NodeTopic> topic;
+
+	public T payload;
+
+	public Context context;
+
+	public TopicEvent() {
+	}
+
+	private TopicEvent(Context context) {
+		this.context = context;
+	}
+
+	@Override
+	protected HandlerRegistration bind0(Widget widget) {
+		return widget.addAttachHandler(evt -> {
+			if (!evt.isAttached()) {
+				unbind();
+			}
+		});
+	}
+
+	/*
+	 * Indicates topic event will be fired from code, not an annotation
+	 */
+	public static class CodeTopic extends NodeTopic {
 	}
 
 	public static class TopicListeners {

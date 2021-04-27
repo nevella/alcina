@@ -86,6 +86,8 @@ public abstract class NodeEvent {
 
 		public TopicListeners topicListeners;
 
+		public boolean cancelBubble;
+
 		public Context() {
 		}
 
