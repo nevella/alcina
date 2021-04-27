@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 @RegistryLocation(registryPoint = DomainViews.class, implementationType = ImplementationType.SINGLETON)
 public abstract class DomainViews {
@@ -223,6 +224,36 @@ public abstract class DomainViews {
 			public boolean test(Object t) {
 				return true;
 			}
+		}
+	}
+
+	static class ViewsEvent {
+		ModelChange modelChange = new ModelChange();
+
+		PathChange pathChange = new PathChange();
+
+		Type type;
+
+		static class ModelChange {
+			Transaction preCommit;
+
+			Transaction commit;
+
+			Request request;
+		}
+
+		static class PathChange {
+			TreePath path;
+
+			Type type;
+
+			static enum Type {
+				ADD, REMOVE, CHANGE;
+			}
+		}
+
+		static enum Type {
+			MODEL_CHANGE, PATH_CHANGE;
 		}
 	}
 }

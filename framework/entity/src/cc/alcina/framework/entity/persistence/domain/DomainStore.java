@@ -119,7 +119,6 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
-import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 
 /**
@@ -187,6 +186,11 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 		return domainStores;
+	}
+
+	public static Topic<DomainTransformPersistenceEvent>
+			topicBeforeDomainCommitted() {
+		return Topic.local();
 	}
 
 	public static Topic<DomainStoreUpdateException> topicUpdateException() {
@@ -346,6 +350,10 @@ public class DomainStore implements IDomainStore {
 
 	public DomainStorePersistenceListener getPersistenceListener() {
 		return this.persistenceListener;
+	}
+
+	public DomainTransformCommitPosition getTransformCommitPosition() {
+		return getPersistenceEvents().getQueue().getTransformCommitPosition();
 	}
 
 	public DomainStoreTransformSequencer getTransformSequencer() {
@@ -888,6 +896,7 @@ public class DomainStore implements IDomainStore {
 					}
 				}
 			}
+			topicBeforeDomainCommitted().publish(persistenceEvent);
 			Transaction.current().toDomainCommitted();
 		} catch (Exception e) {
 			logger.warn("post process exception - pre final", e);
@@ -1715,11 +1724,6 @@ public class DomainStore implements IDomainStore {
 	class SubgraphTransformManagerPostProcess extends SubgraphTransformManager {
 		private LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver;
 
-		public Entity getObjectForCreationTransform(DomainTransformEvent dte,
-				boolean ignoreSource) {
-			return super.getObject(dte, ignoreSource);
-		}
-
 		@Override
 		public Entity getObject(DomainTransformEvent dte,
 				boolean ignoreSource) {
@@ -1727,6 +1731,11 @@ public class DomainStore implements IDomainStore {
 				// avoid fallback to lazy loader
 				return null;
 			}
+			return super.getObject(dte, ignoreSource);
+		}
+
+		public Entity getObjectForCreationTransform(DomainTransformEvent dte,
+				boolean ignoreSource) {
 			return super.getObject(dte, ignoreSource);
 		}
 
@@ -1786,9 +1795,5 @@ public class DomainStore implements IDomainStore {
 		protected void performDeleteObject(Entity entity) {
 			super.performDeleteObject(entity);
 		}
-	}
-
-	public DomainTransformCommitPosition getTransformCommitPosition() {
-		return getPersistenceEvents().getQueue().getTransformCommitPosition();
 	}
 }
