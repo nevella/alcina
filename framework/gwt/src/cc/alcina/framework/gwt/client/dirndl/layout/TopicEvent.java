@@ -43,7 +43,7 @@ public class TopicEvent<T> extends NodeEvent {
 		 * Bubble
 		 */
 		Node cursor = context.node.parent;
-		while (cursor != null && !context.cancelBubble) {
+		while (cursor != null && !topicEvent.cancelBubble) {
 			cursor.fireEvent(topicEvent);
 			cursor = cursor.parent;
 		}
@@ -54,6 +54,8 @@ public class TopicEvent<T> extends NodeEvent {
 	public T payload;
 
 	public Context context;
+
+	public boolean cancelBubble;
 
 	public TopicEvent() {
 	}

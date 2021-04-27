@@ -23,14 +23,25 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.LabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.ToggleButtonClicked;
 
-@Directed(tag = "div", cssClass = "dl-tree")
+@Directed(tag = "div", cssClass = "dl-tree", bindings = {
+		@Binding(from = "hideRoot", type = Type.CSS_CLASS, literal = "hide-root") })
 public class TreeModel extends Model {
+	private boolean hideRoot;
+
 	// does this need to be non-null?Placeholder for Dirndl/listener?
 	private NodeModel root = new NodeModel();
 
 	@Directed
 	public NodeModel getRoot() {
 		return this.root;
+	}
+
+	public boolean isHideRoot() {
+		return this.hideRoot;
+	}
+
+	public void setHideRoot(boolean hideRoot) {
+		this.hideRoot = hideRoot;
 	}
 
 	public void setRoot(NodeModel root) {
@@ -95,7 +106,7 @@ public class TreeModel extends Model {
 		public void onEvent(Context eventContext) {
 			if (eventContext.topicEvent.topic == ToggleButtonClicked.class) {
 				setOpen(!isOpen());
-				eventContext.cancelBubble = true;
+				eventContext.topicEvent.cancelBubble = true;
 			} else {
 				// TODO - fire selection event
 			}
