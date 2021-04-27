@@ -77,7 +77,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			return "";
 		}
 		String token = tokenizersByPlace.get(place.getClass()).getToken(place);
-		return getAppPrefix().isEmpty() ? "" : getAppPrefix() + "/" + token;
+		return getAppPrefix().isEmpty() ? token : getAppPrefix() + "/" + token;
 	}
 
 	public synchronized BasePlaceTokenizer getTokenizer(Place place) {
