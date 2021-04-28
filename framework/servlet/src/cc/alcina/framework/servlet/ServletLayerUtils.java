@@ -101,8 +101,8 @@ public class ServletLayerUtils {
 				.ofNullable(request.getHeader("X-Forwarded-Proto"))
 				.orElse(request.getScheme());
 		String host = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
-				.orElse(request.getScheme());
-		return Ax.format("%s://%s/", "");
+				.orElse(request.getServerName());
+		return Ax.format("%s://%s/", protocol, host);
 	}
 
 	public static void setAppServletInitialised(boolean appServletInitialised) {
