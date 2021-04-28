@@ -100,8 +100,8 @@ import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
+import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
@@ -224,8 +224,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	protected EntityLocatorMap userSessionEntityMap;
 
 	private EntityManager entityManager;
-
-	private boolean listenToFoundObjects;
 
 	private IdentityHashMap<Entity, Entity> listeningTo = new IdentityHashMap<Entity, Entity>();
 
@@ -481,9 +479,6 @@ public class ThreadlocalTransformManager extends TransformManager
 				// basically, transform events should (must) always have refs to
 				// "real" objects, not wrappers
 				t = ensureNonProxy(t);
-				if (listenToFoundObjects) {
-					listenTo(t);
-				}
 				if (localId != 0 && t != null) {
 					localIdToEntityMap.put(localId, t);
 				}
@@ -610,10 +605,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public boolean isListeningTo(SourcesPropertyChangeEvents spce) {
 		return listeningTo.containsKey(spce);
-	}
-
-	public boolean isListenToFoundObjects() {
-		return listenToFoundObjects;
 	}
 
 	@Override
@@ -828,7 +819,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	 *
 	 */
 	public <T extends Entity> T registerDomainObject(T entity) {
-		if (Ax.isTest()
+		if (Ax.isTest() && !Mvcc.isMvccObject(entity)
 				&& DomainStore.writableStore().isCached(entity.entityClass())
 				&& !DomainStore.writableStore().getCache().contains(entity)) {
 			/*
@@ -918,10 +909,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	public void
 			setIgnoreTransformPermissions(boolean ignoreTransformPermissions) {
 		this.ignoreTransformPermissions = ignoreTransformPermissions;
-	}
-
-	public void setListenToFoundObjects(boolean registerFoundObjects) {
-		this.listenToFoundObjects = registerFoundObjects;
 	}
 
 	// dev-only
@@ -1117,17 +1104,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		return explicitlyPermittedTransforms.contains(evt);
 	}
 
-	// FIXME - mvcc.wrap - inline this to single call site
 	private void listenTo(Entity entity) {
-		if (entity instanceof MvccObject && entity.getId() != 0) {
-			MvccObjectVersions versions = ((MvccObject) entity)
-					.__getMvccVersions__();
-			if (versions == null || versions.getBaseObject() == entity) {
-				// ignore - registration is handled on write (on the appropriate
-				// version)
-				return;
-			}
-		}
 		if (!listeningTo.containsKey(entity)) {
 			listeningTo.put(entity, entity);
 			entity.addPropertyChangeListener(this);

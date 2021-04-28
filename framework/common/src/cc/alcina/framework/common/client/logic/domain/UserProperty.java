@@ -53,28 +53,36 @@ public abstract class UserProperty<T extends UserProperty>
 	public static final transient String CONTEXT_NO_COMMIT = UserProperty.class
 			.getName() + ".CONTEXT_NO_COMMIT";
 
-	public static <P extends UserProperty> P byId(long id) {
+	public static <P extends UserProperty<?>> P byId(long id) {
 		return Domain.find(implementation(), id);
 	}
 
-	public static <P extends UserProperty> Optional<P> byKey(String key) {
+	public static <P extends UserProperty<?>> Optional<P> byKey(String key) {
 		return byUserKey(PermissionsManager.get().getUser(), key);
 	}
 
-	public static <P extends UserProperty> Optional<P> byUserClass(IUser user,
-			Class<? extends UserPropertyPersistable> clazz) {
+	public static <P extends UserProperty<?>> Optional<P> byUserClass(
+			IUser user, Class<? extends UserPropertyPersistable> clazz) {
 		return byUserKey(user, clazz.getName());
 	}
 
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	public static <P extends UserProperty> Optional<P> byUserKey(IUser user,
+	public static <P extends UserProperty<?>> Optional<P> byUserKey(IUser user,
 			String key) {
 		return (Optional<P>) Domain.query(implementation()).filter("user", user)
 				.filter("key", key).optional();
 	}
 
+	public static <T, P extends UserProperty<?>> P ensure(Class<T> clazz) {
+		UserProperty<?> property = ensure(clazz.getName());
+		if (property.getValue() == null) {
+			property.serializeObject(Reflections.newInstance(clazz));
+		}
+		return (P) property;
+	}
+
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	public static <P extends UserProperty> P ensure(IUser user, String key) {
+	public static <P extends UserProperty<?>> P ensure(IUser user, String key) {
 		Optional<P> existing = byUserKey(user, key);
 		return existing.orElseGet(() -> {
 			P created = Domain.create(implementation());
@@ -88,7 +96,7 @@ public abstract class UserProperty<T extends UserProperty>
 		return ensure(PermissionsManager.get().getUser(), key);
 	}
 
-	private static <P extends UserProperty> Class<P> implementation() {
+	private static <P extends UserProperty<?>> Class<P> implementation() {
 		return (Class<P>) PersistentImpl.getImplementation(UserProperty.class);
 	}
 
@@ -109,7 +117,7 @@ public abstract class UserProperty<T extends UserProperty>
 		return copy;
 	}
 
-	public <UPP extends UserPropertyPersistable> UPP deserialize() {
+	public <V> V deserialize() {
 		Class clazz = null;
 		if (category != null) {
 			try {
@@ -117,7 +125,7 @@ public abstract class UserProperty<T extends UserProperty>
 			} catch (Exception e) {
 			}
 		}
-		return (UPP) TransformManager.resolveMaybeDeserialize(null, getValue(),
+		return (V) TransformManager.resolveMaybeDeserialize(null, getValue(),
 				null, clazz);
 	}
 

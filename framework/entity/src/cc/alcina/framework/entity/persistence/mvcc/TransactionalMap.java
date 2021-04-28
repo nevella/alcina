@@ -196,13 +196,15 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			/*
 			 * https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8161372
 			 */
-			if (concurrent.get(transactionalKey) == null) {
-				concurrent.computeIfAbsent(transactionalKey,
-						k -> new TransactionalValue(key,
-								ObjectWrapper.of(value), currentTransaction));
-			}
 			TransactionalValue transactionalValue = (TransactionalValue) concurrent
 					.get(transactionalKey);
+			if (transactionalValue == null) {
+				transactionalValue = (TransactionalValue) concurrent
+						.computeIfAbsent(transactionalKey,
+								k -> new TransactionalValue(key,
+										ObjectWrapper.of(value),
+										currentTransaction));
+			}
 			transactionalValue.put(value);
 			if (!hasExisting) {
 				sizeMetadata.delta(1);
@@ -223,14 +225,15 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		} else {
 			ensureConcurrent(currentTransaction);
 			Object transactionalKey = wrapTransactionalKey(key);
-			if (concurrent.get(transactionalKey) == null) {
-				concurrent.computeIfAbsent(transactionalKey,
-						k -> new TransactionalValue((K) key,
-								ObjectWrapper.of(REMOVED_VALUE_MARKER),
-								currentTransaction));
-			}
-			TransactionalValue transactionalValue = (TransactionalValue) concurrent
+			TransactionalValue transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 					.get(transactionalKey);
+			if (transactionalValue == null) {
+				transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
+						.computeIfAbsent(transactionalKey,
+								k -> new TransactionalValue((K) key,
+										ObjectWrapper.of(REMOVED_VALUE_MARKER),
+										currentTransaction));
+			}
 			transactionalValue.remove();
 			sizeMetadata.delta(-1);
 		}
@@ -546,11 +549,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		protected void onVersionCreation(AtomicInteger object) {
-			// NOOP
-		}
-
-		@Override
 		// TODO - strictly speaking, it possibly is - but the sizes returned are
 		// only estimates
 		protected boolean thisMayBeVisibleToPriorTransactions() {
@@ -627,7 +625,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		protected void onVersionCreation(ObjectWrapper object) {
+		protected ObjectWrapper getEmptyMarkerObject() {
+			return ObjectWrapper.of(REMOVED_VALUE_MARKER);
 		}
 
 		@Override

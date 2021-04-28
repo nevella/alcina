@@ -161,4 +161,26 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 			throw new WrappedRuntimeException(e);
 		}
 	}
+
+	public static class SimpleLoaderTask extends LazyLoadProvideTask<Entity> {
+		public <V extends Entity> List<V> loadTableTyped(Class clazz,
+				String sqlFilter, ClassIdLock lock) throws Exception {
+			return (List) super.loadTable(clazz, sqlFilter, lock);
+		}
+
+		@Override
+		protected boolean checkShouldLazyLoad(List<Entity> toLoad) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected void lazyLoad(Collection<Entity> objects) throws Exception {
+		}
+
+		@Override
+		protected void loadDependents(List<Entity> requireLoad)
+				throws Exception {
+			throw new UnsupportedOperationException();
+		}
+	}
 }

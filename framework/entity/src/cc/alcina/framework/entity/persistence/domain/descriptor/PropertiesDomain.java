@@ -73,12 +73,8 @@ public class PropertiesDomain {
 			LooseContext
 					.pushWithTrue(WrappedObjectProvider.CONTEXT_DO_NOT_CREATE);
 			WrappedObject<? extends WrapperPersistable> wrappedObject = CommonPersistenceProvider
-					.get().getCommonPersistence()
-					.callWithEntityManager(em -> Registry
-							.impl(WrappedObjectProvider.class)
-							.getObjectWrapperForUser(
-									(Class<? extends WrapperPersistable>) clazz,
-									0L, em));
+					.get().getCommonPersistence().getObjectWrapperForUser(
+							(Class<? extends WrapperPersistable>) clazz);
 			if (wrappedObject != null) {
 				logger.info("Loaded legacy property - {} {}", clazz, user);
 				return (P) wrappedObject.getObject();

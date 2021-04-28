@@ -1188,6 +1188,8 @@ class ClassTransformer {
 						if (body.length() > 0) {
 							String f_body = Ax.format("{\n%s}",
 									CommonUtils.padLinesLeft(body, "\t"));
+							Ax.err(method.getName());
+							Ax.out(f_body);
 							tasks.add(() -> {
 								CtMethod newMethod = CtNewMethod.make(
 										method.getModifiers(),

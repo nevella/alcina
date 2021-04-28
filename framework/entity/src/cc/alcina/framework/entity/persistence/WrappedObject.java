@@ -45,6 +45,8 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 	public static final String CONTEXT_CLASSES = WrappedObject.class.getName()
 			+ ".CONTEXT_CLASSES";
 
+	public String getClassName();
+
 	@Transient
 	public T getObject();
 

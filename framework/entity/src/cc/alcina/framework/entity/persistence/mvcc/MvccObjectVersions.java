@@ -1,10 +1,8 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.lang.reflect.Field;
-import java.util.Arrays;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -90,6 +88,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	Transaction initialWriteableTransaction;
 
+	private boolean hasCommittedTransactions;
+
 	/*
 	 * synchronization - either a newly created object t for this domainstore
 	 * (so no sync needed), or accessed via a block synced on 't'
@@ -114,6 +114,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			version.object = copyObject(t);
 		}
 		putVersion(version);
+		onVersionCreation(version);
 	}
 
 	public T getBaseObject() {
@@ -192,11 +193,17 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		 * Don't use removeAll (because it calls CSLM.size() - OK with Java9,
 		 * not with Java8
 		 */
-		long start = System.currentTimeMillis();
-		List initialValues = Arrays.asList(size,
-				vacuumableTransactions.completedNonDomainTransactions.size(),
-				vacuumableTransactions.completedDomainTransactions.size());
-		if (initialWriteableTransaction != null) {
+		// #### below for debugging
+		// List<Transaction> beforeVacuumVersionKeys = new ArrayList<>();
+		// if (Ax.isTest()) {
+		// beforeVacuumVersionKeys = versions.keySet().stream()
+		// .collect(Collectors.toList());
+		// }
+		// List initialValues = Arrays.asList(size,
+		// vacuumableTransactions.completedNonDomainTransactions.size(),
+		// vacuumableTransactions.completedDomainTransactions.size());
+		boolean hadInitialWriteableTransaction = initialWriteableTransaction != null;
+		if (hadInitialWriteableTransaction) {
 			if (vacuumableTransactions.completedNonDomainTransactions
 					.contains(initialWriteableTransaction)
 					|| vacuumableTransactions.completedDomainTransactions
@@ -228,6 +235,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				// baseObject fields will not be reachable here to app code
 				// (all active txs will be looking at version.object fields)
 				copyObject(version.object, baseObject);
+				hasCommittedTransactions = true;
 				if (firstCommittedTransactionId == null) {
 					firstCommittedTransactionId = vacuumableTransactions.oldestVacuumableDomainTransaction
 							.getId();
@@ -255,11 +263,22 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		// }
 		if (versions.isEmpty()) {
 			synchronized (baseObject) {
-				if (versions.isEmpty() && baseObject instanceof MvccObject
-						&& initialWriteableTransaction == null) {
-					logger.trace("removed mvcc versions: {} : {}", baseObject,
-							System.identityHashCode(baseObject));
-					((MvccObject) baseObject).__setMvccVersions__(null);
+				if (versions.isEmpty() && initialWriteableTransaction == null) {
+					if (baseObject instanceof MvccObject) {
+						logger.trace("removed mvcc versions: {} : {}",
+								baseObject,
+								System.identityHashCode(baseObject));
+						((MvccObject) baseObject).__setMvccVersions__(null);
+					} else {
+						if (!hasCommittedTransactions) {
+							T emptyMarkerObject = getEmptyMarkerObject();
+							if (emptyMarkerObject != null) {
+								baseObject = emptyMarkerObject;
+								__mostRecentReffed = baseObject;
+								__mostRecentWritable = baseObject;
+							}
+						}
+					}
 				}
 			}
 		}
@@ -332,7 +351,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			version.writeable = true;
 			// put before register (which will call resolve());
 			putVersion(version);
-			onVersionCreation(version.object);
+			onVersionCreation(version);
 			return version.object;
 		} else {
 			/*
@@ -352,7 +371,12 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected abstract <E extends Entity> Class<E> entityClass();
 
-	protected abstract void onVersionCreation(T object);
+	protected T getEmptyMarkerObject() {
+		return null;
+	}
+
+	protected void onVersionCreation(ObjectVersion<T> version) {
+	}
 
 	protected void removeWithSize(Transaction tx) {
 		ObjectVersion<T> removed = versions.remove(tx);

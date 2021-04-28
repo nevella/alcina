@@ -42,8 +42,10 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
-	protected void onVersionCreation(T object) {
-		Domain.register(object);
+	protected void onVersionCreation(ObjectVersion<T> version) {
+		if (version.writeable) {
+			Domain.register(version.object);
+		}
 	}
 
 	@Override

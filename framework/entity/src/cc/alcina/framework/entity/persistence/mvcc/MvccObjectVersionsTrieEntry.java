@@ -21,11 +21,6 @@ public class MvccObjectVersionsTrieEntry
 	}
 
 	@Override
-	protected void onVersionCreation(TransactionalTrieEntry object) {
-		// noop
-	}
-
-	@Override
 	protected boolean thisMayBeVisibleToPriorTransactions() {
 		return false;
 	}

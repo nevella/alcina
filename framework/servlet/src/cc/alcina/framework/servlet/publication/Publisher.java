@@ -132,8 +132,8 @@ public class Publisher {
 		publication.setUserPublicationId(publicationUserId);
 		publication.setPublicationUid(SEUtilities.generateId());
 		publication.setPublicationType(contentDefinition.getPublicationType());
-		long id = persister.persist(publication);
-		result.publicationId = id;
+		persister.persist(publication);
+		result.publicationId = ctx.publication.getId();
 		result.publicationUid = publication.getPublicationUid();
 	}
 
@@ -294,15 +294,15 @@ public class Publisher {
 			}
 		}
 
-		public long persist(Publication publication) {
+		public void persist(Publication publication) {
 			if (useWrappedObjectSerialization()) {
-				long id = Registry.impl(CommonPersistenceProvider.class)
+				Publication merged = Registry
+						.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence().merge(publication);
-				publication.setId(id);
-				return id;
+				ResourceUtilities.copyBeanProperties(merged, publication, null,
+						false);
 			} else {
 				Transaction.commit();
-				return publication.getId();
 			}
 		}
 
@@ -311,8 +311,13 @@ public class Publisher {
 			publication.setSerializedPublication(
 					KryoUtils.serializeToBase64(results));
 			if (useWrappedObjectSerialization()) {
-				Registry.impl(CommonPersistenceProvider.class)
+				Publication merged = Registry
+						.impl(CommonPersistenceProvider.class)
 						.getCommonPersistence().merge(publication);
+				ResourceUtilities.copyBeanProperties(merged, publication, null,
+						false);
+				publication
+						.setVersionNumber(publication.getVersionNumber() + 1);
 			} else {
 				Transaction.commit();
 			}

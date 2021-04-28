@@ -44,7 +44,7 @@ public interface UserPropertyPersistable
 
 		public synchronized UserPropertyPersistable getPersistable() {
 			if (persistable == null) {
-				persistable = property.deserialize();
+				persistable = (UserPropertyPersistable) property.deserialize();
 				ensureListeners();
 			}
 			return this.persistable;

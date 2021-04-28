@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.transform.policy;
 
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -16,8 +17,8 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 
 @RegistryLocation(registryPoint = TransformPropagationPolicy.class, implementationType = ImplementationType.INSTANCE)
 public class TransformPropagationPolicy {
-	public static final transient String CONTEXT_DISABLE_PROPAGATION = TransformPropagationPolicy.class
-			.getName() + ".CONTEXT_DISABLE_PROPAGATION";
+	public static final transient String CONTEXT_PROPAGATION_FILTER = TransformPropagationPolicy.class
+			.getName() + ".CONTEXT_PROPAGATION_FILTER";
 
 	public long
 			getProjectedPersistentCount(Stream<DomainTransformEvent> events) {
@@ -62,7 +63,9 @@ public class TransformPropagationPolicy {
 		if (isNonDomainStoreClass(event.getObjectClass())) {
 			return false;
 		}
-		if (LooseContext.is(CONTEXT_DISABLE_PROPAGATION)) {
+		Predicate<DomainTransformEvent> propagationFilter = LooseContext
+				.get(CONTEXT_PROPAGATION_FILTER);
+		if (propagationFilter != null && !propagationFilter.test(event)) {
 			return false;
 		}
 		return propagation.value() == PropagationType.PERSISTENT

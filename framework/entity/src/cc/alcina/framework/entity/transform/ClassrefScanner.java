@@ -286,7 +286,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 					if (AppPersistenceBase.isInstanceReadOnly()) {
 						id = --roIdCounter;
 					} else {
-						id = cp.merge(ref);
+						id = cp.merge(ref).getId();
 					}
 					ref.setId(id);
 					ClassRef.add(CommonUtils.wrapInCollection(ref));

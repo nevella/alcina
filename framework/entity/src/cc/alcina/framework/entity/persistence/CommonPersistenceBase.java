@@ -545,6 +545,15 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
+	public WrappedObject<? extends WrapperPersistable> getObjectWrapperForUser(
+			Class<? extends WrapperPersistable> clazz) throws Exception {
+		return Registry.impl(WrappedObjectProvider.class)
+				.getObjectWrapperForUser(
+						(Class<? extends WrapperPersistable>) clazz, 0L,
+						getEntityManager());
+	}
+
+	@Override
 	public <T extends WrapperPersistable> WrappedObject<T>
 			getObjectWrapperForUser(Class<T> c, long id) throws Exception {
 		return getObjectWrapperForUser(null, c, id);
@@ -684,6 +693,17 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
+	public <W extends WrappedObject> List<W> getWrappedObjects(long from,
+			long to) {
+		List sessionEntities = getEntityManager()
+				.createQuery("from "
+						+ getImplementation(WrappedObject.class).getSimpleName()
+						+ " where id >=? and id<? order by id")
+				.setParameter(1, from).setParameter(2, to).getResultList();
+		return DomainLinker.linkToDomain(sessionEntities);
+	}
+
+	@Override
 	public List<ActionLogItem> listLogItemsForClass(String className,
 			int count) {
 		List list = getEntityManager()
@@ -727,16 +747,15 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	@Override
 	// FIXME - mvcc.4 - persist with transforms
-	public long merge(HasId hi) {
+	public <E extends Entity> E merge(E entity) {
 		AppPersistenceBase.checkNotReadOnly();
-		if (hi instanceof Publication) {
-			((Publication) hi).setUser(
+		if (entity instanceof Publication) {
+			((Publication) entity).setUser(
 					getEntityManager().find(getImplementation(IUser.class),
-							((Publication) hi).getUser().getId()));
+							((Publication) entity).getUser().getId()));
 		}
-		persistWrappables(hi);
-		HasId merge = getEntityManager().merge(hi);
-		return merge.getId();
+		persistWrappables(entity);
+		return getEntityManager().merge(entity);
 	}
 
 	@Override

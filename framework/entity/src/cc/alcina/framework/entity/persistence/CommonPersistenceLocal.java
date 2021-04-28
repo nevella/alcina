@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -85,6 +86,9 @@ public interface CommonPersistenceLocal {
 
 	public Date getMostRecentClientInstanceCreationDate(IUser o);
 
+	public WrappedObject<? extends WrapperPersistable> getObjectWrapperForUser(
+			Class<? extends WrapperPersistable> clazz) throws Exception;
+
 	public <T extends WrapperPersistable> WrappedObject<T>
 			getObjectWrapperForUser(Class<T> c, long id) throws Exception;
 
@@ -108,8 +112,6 @@ public interface CommonPersistenceLocal {
 	public long log(String message, String componentKey, String data);
 
 	public abstract void logActionItem(ActionLogItem result);
-
-	public abstract long merge(HasId hi);
 
 	public abstract IUser mergeUser(IUser user);
 
@@ -164,5 +166,9 @@ public interface CommonPersistenceLocal {
 
 	long getNextPublicationIdForUser(IUser user);
 
+	<W extends WrappedObject> List<W> getWrappedObjects(long from, long to);
+
 	List<Long> listRecentClientInstanceIds(String iidKey);
+
+	<E extends Entity> E merge(E entity);
 }
