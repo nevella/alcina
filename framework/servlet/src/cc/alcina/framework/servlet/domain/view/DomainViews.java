@@ -4,8 +4,13 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.LinkedBlockingQueue;
 import java.util.function.Predicate;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.csobjects.view.DomainView;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNode;
@@ -23,10 +28,20 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 
 @RegistryLocation(registryPoint = DomainViews.class, implementationType = ImplementationType.SINGLETON)
+/**
+ * TODO - logic of happens-before (event sequencing means any query executed
+ * before a domain commit will be sequentially correct)
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 public abstract class DomainViews {
 	public static DomainViews get() {
 		return Registry.impl(DomainViews.class);
@@ -36,9 +51,38 @@ public abstract class DomainViews {
 
 	private Map<Key, LiveView> views = new ConcurrentHashMap<>();
 
+	private Map<DomainTransformPersistenceEvent, Transaction> preCommitTransactions = new ConcurrentHashMap<>();
+
+	private BlockingQueue<ViewsEvent> events = new LinkedBlockingQueue<>();
+
+	Logger logger = LoggerFactory.getLogger(getClass());
+
+	private boolean finished;
+
+	private EventProcessorThread thread;
+
+	private TopicListener<DomainTransformPersistenceEvent> beforeDomainCommittedListener = (
+			k, e) -> {
+		if (isIndexableTransformRequest(e)) {
+			preCommitTransactions.put(e, Transaction.createRewindTransaction());
+		}
+	};
+
+	private TopicListener<DomainTransformPersistenceEvent> afterDomainCommittedListener = (
+			k, e) -> {
+		if (isIndexableTransformRequest(e)) {
+			ViewsEvent event = new ViewsEvent();
+			event.modelChange.preCommit = preCommitTransactions.get(e);
+			event.modelChange.commit = Transaction.current();
+		}
+	};
+
 	public DomainViews() {
 		liveListener = new LiveListener();
-		setupIndexingInterceptors();
+		DomainStore.writableStore().topicBeforeDomainCommitted()
+				.add(beforeDomainCommittedListener);
+		DomainStore.writableStore().topicAfterDomainCommitted()
+				.add(afterDomainCommittedListener);
 	}
 
 	public Response handleRequest(
@@ -48,7 +92,35 @@ public abstract class DomainViews {
 		return view.generateResponse(request);
 	}
 
-	protected abstract void setupIndexingInterceptors();
+	protected abstract Class<? extends Entity>[] getIndexableEntityClasses();
+
+	protected boolean
+			isIndexableTransformRequest(DomainTransformPersistenceEvent event) {
+		return event.getTransformPersistenceToken().getTransformCollation()
+				.has((Class[]) getIndexableEntityClasses());
+	}
+
+	void processEvent(ViewsEvent event) {
+	}
+
+	public class EventProcessorThread extends Thread {
+		@Override
+		public void run() {
+			setName("DomainViews-event-queue-"
+					+ EntityLayerUtils.getLocalHostName());
+			while (!finished) {
+				try {
+					ViewsEvent event = events.take();
+					Transaction.begin();
+					processEvent(event);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				} finally {
+					Transaction.end();
+				}
+			}
+		}
+	}
 
 	public static class GeneratingContext {
 		public Map<TreePath, DomainViewNode> byPath;

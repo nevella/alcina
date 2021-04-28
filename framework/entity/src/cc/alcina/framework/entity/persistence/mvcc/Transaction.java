@@ -69,6 +69,20 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	/*
+	 * For fancy before-and-after (off-store indexing)
+	 */
+	public static Transaction createRewindTransaction() {
+		Transaction current = current();
+		Preconditions.checkNotNull(current);
+		threadLocalInstance.set(null);
+		begin();
+		Transaction rewind = current();
+		rewind.threadCount.decrementAndGet();
+		threadLocalInstance.set(current);
+		return rewind;
+	}
+
 	public static Transaction current() {
 		Transaction transaction = threadLocalInstance.get();
 		if (transaction == null

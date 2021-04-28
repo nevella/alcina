@@ -188,11 +188,6 @@ public class DomainStore implements IDomainStore {
 		return domainStores;
 	}
 
-	public static Topic<DomainTransformPersistenceEvent>
-			topicBeforeDomainCommitted() {
-		return Topic.local();
-	}
-
 	public static Topic<DomainStoreUpdateException> topicUpdateException() {
 		return Topic.global(TOPIC_UPDATE_EXCEPTION);
 	}
@@ -213,6 +208,12 @@ public class DomainStore implements IDomainStore {
 				? new Timestamp(System.currentTimeMillis())
 				: new Timestamp(transactionCommitTime.getTime());
 	}
+
+	Topic<DomainTransformPersistenceEvent> topicBeforeDomainCommitted = Topic
+			.local();
+
+	Topic<DomainTransformPersistenceEvent> topicAfterDomainCommitted = Topic
+			.local();
 
 	private DomainTransformPersistenceEvents persistenceEvents;
 
@@ -435,6 +436,14 @@ public class DomainStore implements IDomainStore {
 	public void throwDomainStoreException(String message) {
 		health.domainStoreExceptionCount.incrementAndGet();
 		throw new DomainStoreException(message);
+	}
+
+	public Topic<DomainTransformPersistenceEvent> topicAfterDomainCommitted() {
+		return topicAfterDomainCommitted;
+	}
+
+	public Topic<DomainTransformPersistenceEvent> topicBeforeDomainCommitted() {
+		return topicBeforeDomainCommitted;
 	}
 
 	@Override
@@ -898,6 +907,7 @@ public class DomainStore implements IDomainStore {
 			}
 			topicBeforeDomainCommitted().publish(persistenceEvent);
 			Transaction.current().toDomainCommitted();
+			topicBeforeDomainCommitted().publish(persistenceEvent);
 		} catch (Exception e) {
 			logger.warn("post process exception - pre final", e);
 			Transaction.current().toDomainAborted();
