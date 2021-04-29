@@ -81,7 +81,7 @@ public class SerializationSignatureListener
 				if (!entityCollation.isDeleted()) {
 					serializedSignatureReflector.setPropertyValue(
 							entityCollation.getObject(), ensureSignature());
-					token.addCascadedEvents();
+					token.addCascadedEvents(false);
 				}
 			}
 		}

@@ -56,8 +56,8 @@ public class TransformCollation {
 
 	public <E extends Entity> boolean has(Class<E>... classes) {
 		ensureLookups();
-		for(Class clazz:classes){
-			if(perClass.containsKey(clazz)){
+		for (Class clazz : classes) {
+			if (perClass.containsKey(clazz)) {
 				return true;
 			}
 		}
@@ -246,6 +246,16 @@ public class TransformCollation {
 
 		public <E extends Entity> E getObject() {
 			return entityCollation.getObject();
+		}
+
+		public boolean hasCreateTransform() {
+			return events.stream().anyMatch(
+					e -> e.getTransformType() == TransformType.CREATE_OBJECT);
+		}
+
+		public boolean hasDeleteTransform() {
+			return events.stream().anyMatch(
+					e -> e.getTransformType() == TransformType.DELETE_OBJECT);
 		}
 
 		public void removeTransformsFromRequest() {

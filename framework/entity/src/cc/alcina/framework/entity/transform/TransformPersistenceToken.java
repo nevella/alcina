@@ -86,13 +86,18 @@ public class TransformPersistenceToken implements Serializable {
 				.impl(TransformPropagationPolicy.class);
 	}
 
-	public boolean addCascadedEvents() {
+	public boolean addCascadedEvents(boolean toStart) {
 		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		boolean cascaded = false;
+		int idx = 0;
 		for (DomainTransformEvent pending : pendingTransforms) {
 			pending.setCommitType(CommitType.TO_STORAGE);
-			request.getEvents().add(pending);
+			if (toStart) {
+				request.getEvents().add(idx++, pending);
+			} else {
+				request.getEvents().add(pending);
+			}
 			cascaded = true;
 		}
 		TransformManager.get().clearTransforms();

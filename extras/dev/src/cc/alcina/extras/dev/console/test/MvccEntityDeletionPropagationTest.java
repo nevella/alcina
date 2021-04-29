@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.PublicationCounter;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -68,6 +69,10 @@ public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG ext
 							.setUserName("will-delete-in-this-tx@nodomain.com");
 					createdGroup.domain().addToProperty("memberUsers",
 							createdUser2);
+					Domain.stream(PersistentImpl
+							.getImplementation(PublicationCounter.class))
+							.filter(pc -> pc.getUser() == createdUser2)
+							.forEach(Entity::delete);
 					createdUser2.delete();
 					List<IU> users = Domain.stream(userClass)
 							.collect(Collectors.toList());

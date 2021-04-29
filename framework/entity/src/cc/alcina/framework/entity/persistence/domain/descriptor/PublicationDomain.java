@@ -1,7 +1,8 @@
 package cc.alcina.framework.entity.persistence.domain.descriptor;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.PublicationCounter;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -51,20 +52,31 @@ public class PublicationDomain {
 					.getPersistenceEventType() == DomainTransformPersistenceEventType.PRE_COMMIT) {
 				AdjunctTransformCollation collation = event
 						.getTransformPersistenceToken().getTransformCollation();
-				if (collation.has(iUserImpl) && collation.query(iUserImpl)
-						.withFilter(
-								DomainTransformEvent::provideIsCreationTransform)
-						.stream().count() > 0) {
+				if (collation.has(iUserImpl)) {
 					collation.ensureApplied();
-					collation.query(iUserImpl).withFilter(
-							DomainTransformEvent::provideIsCreationTransform)
-							.stream().forEach(qr -> {
+					collation.query(iUserImpl).stream().forEach(qr -> {
+						if (qr.hasCreateTransform()) {
+							if (!qr.hasDeleteTransform()) {
 								IUser iUser = qr.getObject();
 								PublicationCounter counter = PersistentImpl
 										.create(PublicationCounter.class);
 								counter.setUser(iUser);
-							});
-					event.getTransformPersistenceToken().addCascadedEvents();
+								event.getTransformPersistenceToken()
+										.addCascadedEvents(false);
+							}
+						} else if (qr.hasDeleteTransform()) {
+							// will have been deleted from graph, so use locator
+							EntityLocator locator = qr.events.get(0)
+									.toObjectLocator();
+							Domain.stream(PersistentImpl.getImplementation(
+									PublicationCounter.class))
+									.filter(pc -> ((Entity) pc.getUser())
+											.toLocator().equals(locator))
+									.forEach(Entity::delete);
+							event.getTransformPersistenceToken()
+									.addCascadedEvents(true);
+						}
+					});
 				}
 			}
 		}
