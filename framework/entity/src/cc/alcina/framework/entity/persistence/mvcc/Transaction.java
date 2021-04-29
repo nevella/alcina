@@ -16,6 +16,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
@@ -72,15 +73,15 @@ public class Transaction implements Comparable<Transaction> {
 	/*
 	 * For fancy before-and-after (off-store indexing)
 	 */
-	public static Transaction createRewindTransaction() {
-		Transaction current = current();
-		Preconditions.checkNotNull(current);
+	public static Transaction createSnapshotTransaction() {
+		Transaction preSnapshot = current();
+		Preconditions.checkNotNull(preSnapshot);
 		threadLocalInstance.set(null);
 		begin();
-		Transaction rewind = current();
-		rewind.threadCount.decrementAndGet();
-		threadLocalInstance.set(current);
-		return rewind;
+		Transaction snapshot = current();
+		split();
+		threadLocalInstance.set(preSnapshot);
+		return snapshot;
 	}
 
 	public static Transaction current() {
@@ -250,6 +251,8 @@ public class Transaction implements Comparable<Transaction> {
 
 	Boolean emptyCommitted = null;
 
+	private DomainTransformCommitPosition commitPosition;
+
 	public Transaction(TransactionPhase initialPhase) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
 				.put(store, new StoreTransaction(store)));
@@ -302,8 +305,16 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	public DomainTransformCommitPosition getCommitPosition() {
+		return this.commitPosition;
+	}
+
 	public TransactionId getId() {
 		return this.id;
+	}
+
+	public DomainTransformCommitPosition getPosition() {
+		return null;
 	}
 
 	public long getTimeout() {
@@ -402,7 +413,9 @@ public class Transaction implements Comparable<Transaction> {
 		setPhase(TransactionPhase.TO_DOMAIN_ABORTED);
 	}
 
-	public void toDomainCommitted() {
+	public void
+			toDomainCommitted(DomainTransformCommitPosition commitPosition) {
+		this.commitPosition = commitPosition;
 		Preconditions.checkState(
 				getPhase() == TransactionPhase.TO_DOMAIN_COMMITTING);
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTED);

@@ -1102,6 +1102,14 @@ public class GraphProjection {
 			return false;
 		}
 
+		public <T> T get() {
+			try {
+				return (T) field.get(sourceOwner);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
 		@Override
 		public int hashCode() {
 			return clazz.hashCode() ^ fieldName.hashCode();
@@ -1115,6 +1123,14 @@ public class GraphProjection {
 				return parent.parent(predicate);
 			}
 			return Optional.empty();
+		}
+
+		public void set(Object object) {
+			try {
+				field.set(sourceOwner, object);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 
 		public String toPath(boolean withToString) {

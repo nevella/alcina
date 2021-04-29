@@ -931,20 +931,13 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	@Override
 	// permissions...? (well, it's going away with FIXME - mvcc.wrapped)
 	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
-		preloadWrappedObjects(wrappers);
-		RuntimeException lastException = null;
-		for (HasId wrapper : wrappers) {
-			try {
-				unwrap(wrapper);
-			} catch (RuntimeException e) {
-				System.out.println(e.getMessage());
-				lastException = e;
-			}
+		UnwrapWithExceptionsResult<T> unwrapWithExceptions = unwrapWithExceptions(
+				wrappers);
+		if (unwrapWithExceptions.exceptions.size() > 0) {
+			throw unwrapWithExceptions.exceptions.values().iterator().next();
+		} else {
+			return unwrapWithExceptions.unwrapped;
 		}
-		if (lastException != null) {
-			throw lastException;
-		}
-		return wrappers;
 	}
 
 	@Override
@@ -953,9 +946,33 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			new WrappedObjectPersistence().unwrap(wrapper, getEntityManager(),
 					Registry.impl(WrappedObjectProvider.class));
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			throw WrappedRuntimeException.wrapIfNotRuntime(e);
 		}
 		return wrapper;
+	}
+
+	@Override
+	// permissions...? (well, it's going away with FIXME - mvcc.wrapped)
+	public <T extends HasId> UnwrapWithExceptionsResult<T>
+			unwrapWithExceptions(Collection<T> wrappers) {
+		preloadWrappedObjects(wrappers);
+		UnwrapWithExceptionsResult<T> result = new UnwrapWithExceptionsResult<>();
+		int exceptionCount = 0;
+		for (T wrapper : wrappers) {
+			try {
+				unwrap(wrapper);
+				result.unwrapped.add(wrapper);
+			} catch (RuntimeException e) {
+				if (result.exceptions.size() <= 5) {
+					result.exceptions.put(wrapper, e);
+					System.out.println(e.getMessage());
+					if (e.getCause() != null && e.getCause() != e) {
+						System.out.println(e.getCause().getMessage());
+					}
+				}
+			}
+		}
+		return result;
 	}
 
 	@Override
@@ -1204,5 +1221,11 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	@RegistryLocation(registryPoint = CommonPersistenceConnectionProvider.class)
 	public abstract static class CommonPersistenceConnectionProvider {
 		public abstract Connection getConnection();
+	}
+
+	public static class UnwrapWithExceptionsResult<T> {
+		public List<T> unwrapped = new ArrayList<>();
+
+		public Map<T, RuntimeException> exceptions = new LinkedHashMap<>();
 	}
 }

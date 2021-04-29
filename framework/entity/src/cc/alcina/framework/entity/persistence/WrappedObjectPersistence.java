@@ -140,9 +140,10 @@ public class WrappedObjectPersistence {
 					}
 					pd.getWriteMethod().invoke(wrapper, unwrapped);
 				} catch (RuntimeException e) {
-					System.out.format("Exception unwrapping/getObject %s\n",
-							wrapperId);
-					throw e;
+					throw new RuntimeException(
+							Ax.format("Exception unwrapping/getObject %s\n",
+									wrapperId),
+							e);
 				}
 			}
 		}
@@ -172,8 +173,10 @@ public class WrappedObjectPersistence {
 					return;
 				}
 			}
-			if (PermissionsManager.get().isPermitted(PermissionsManager.ADMIN_PERMISSIBLE)) {
-				if (!PermissionsManager.get().isPermitted(PermissionsManager.ROOT_PERMISSIBLE)) {
+			if (PermissionsManager.get()
+					.isPermitted(PermissionsManager.ADMIN_PERMISSIBLE)) {
+				if (!PermissionsManager.get()
+						.isPermitted(PermissionsManager.ROOT_PERMISSIBLE)) {
 					System.err.println(Ax.format(
 							"Warn - allowing access to %s : %s only via admin override",
 							wrapper == null ? "(null wrapper)"

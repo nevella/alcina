@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
@@ -34,6 +35,7 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.HandlerData;
 
 @RegistryLocation(registryPoint = DomainViews.class, implementationType = ImplementationType.SINGLETON)
 /**
@@ -70,7 +72,8 @@ public abstract class DomainViews {
 		if (isIndexableTransformRequest(e)) {
 			ViewsTask task = new ViewsTask();
 			addTaskLock.lock();
-			preCommitTransactions.put(e, Transaction.createRewindTransaction());
+			preCommitTransactions.put(e,
+					Transaction.createSnapshotTransaction());
 		}
 	};
 
@@ -79,7 +82,8 @@ public abstract class DomainViews {
 		if (isIndexableTransformRequest(e)) {
 			ViewsTask task = new ViewsTask();
 			task.modelChange.preCommit = preCommitTransactions.get(e);
-			task.modelChange.commit = Transaction.current();
+			task.modelChange.postCommit = Transaction
+					.createSnapshotTransaction();
 			tasks.add(task);
 			addTaskLock.unlock();
 		}
@@ -98,11 +102,26 @@ public abstract class DomainViews {
 	// does *not* on the DTR eventqueue thread
 	public Response handleRequest(
 			Request<? extends DomainViewSearchDefinition> request) {
-		Key key = new Key(request);
-		LiveView view = views.computeIfAbsent(key, LiveView::new);
 		ViewsTask task = new ViewsTask();
-		task.type = ViewsTask.Type.REQUEST;
-		return view.generateResponse(request);
+		task.type = ViewsTask.Type.HANDLE_REQUEST;
+		addTaskLock.lock();
+		task.handlerData.transaction = Transaction.createSnapshotTransaction();
+		task.handlerData.request = request;
+		tasks.add(task);
+		addTaskLock.unlock();
+		task.handlerData.await();
+		return task.handlerData.response;
+	}
+
+	private void processRequest(ViewsTask task) {
+		HandlerData handlerData = task.handlerData;
+		Transaction.join(handlerData.transaction);
+		Key key = new Key(handlerData.request);
+		LiveView view = views.computeIfAbsent(key, LiveView::new);
+		handlerData.response = view.generateResponse(handlerData.request);
+		handlerData.response.setPosition(Transaction.current().getPosition());
+		Transaction.end();
+		handlerData.latch.countDown();
 	}
 
 	protected abstract Class<? extends Entity>[] getIndexableEntityClasses();
@@ -114,6 +133,13 @@ public abstract class DomainViews {
 	}
 
 	void processEvent(ViewsTask task) {
+		switch (task.type) {
+		case MODEL_CHANGE:
+			throw new UnsupportedOperationException();
+		case HANDLE_REQUEST:
+			processRequest(task);
+			break;
+		}
 	}
 
 	public static class GeneratingContext {
@@ -312,7 +338,7 @@ public abstract class DomainViews {
 		}
 	}
 
-	static class ViewsTask {
+	static class ViewsDeltaEvent {
 		ModelChange modelChange = new ModelChange();
 
 		PathChange pathChange = new PathChange();
@@ -322,15 +348,27 @@ public abstract class DomainViews {
 		static class ModelChange {
 			Transaction preCommit;
 
-			Transaction commit;
+			Transaction postCommit;
 
 			Request request;
 		}
 
 		static class PathChange {
+			public Response response;// =view.generateResponse(request);
+
+			public Request<? extends DomainViewSearchDefinition> request;
+
+			public Transaction transaction;
+
 			TreePath path;
 
 			Type type;
+
+			private CountDownLatch latch = new CountDownLatch(1);
+
+			public void await() {
+				// TODO Auto-generated method stub
+			}
 
 			static enum Type {
 				ADD, REMOVE, CHANGE;
@@ -339,6 +377,42 @@ public abstract class DomainViews {
 
 		static enum Type {
 			MODEL_CHANGE, PATH_CHANGE, REQUEST;
+		}
+	}
+
+	static class ViewsTask {
+		ModelChange modelChange = new ModelChange();
+
+		HandlerData handlerData = new HandlerData();
+
+		Type type;
+
+		static class HandlerData {
+			public Response response;// =view.generateResponse(request);
+
+			public Request<? extends DomainViewSearchDefinition> request;
+
+			public Transaction transaction;
+
+			private CountDownLatch latch = new CountDownLatch(1);
+
+			public void await() {
+				try {
+					latch.await();
+				} catch (Exception e) {
+					return;
+				}
+			}
+		}
+
+		static class ModelChange {
+			Transaction preCommit;
+
+			Transaction postCommit;
+		}
+
+		static enum Type {
+			MODEL_CHANGE, HANDLE_REQUEST;
 		}
 	}
 }

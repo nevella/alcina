@@ -377,7 +377,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		connectionPool.drain();
 		warmupExecutor = null;
 		warmupTransaction = null;
-		Transaction.current().toDomainCommitted();
+		Transaction.current().toDomainCommitted(highestVisibleCommitPosition);
 		store.getPersistenceEvents().getQueue()
 				.setTransformLogPosition(highestVisibleCommitPosition);
 		Transaction.endAndBeginNew();

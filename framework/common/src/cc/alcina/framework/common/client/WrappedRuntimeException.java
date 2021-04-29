@@ -35,6 +35,9 @@ public class WrappedRuntimeException extends RuntimeException {
 	 */
 	private SuggestedAction suggestedAction;
 
+	public WrappedRuntimeException() {
+	}
+
 	public WrappedRuntimeException(String cause, SuggestedAction sa) {
 		super(cause);
 		setSuggestedAction(sa);

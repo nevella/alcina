@@ -192,7 +192,13 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 	public static class Response implements Serializable {
 		private List<Transform> transforms = new ArrayList<>();
 
+		private DomainTransformCommitPosition position;
+
 		private boolean clearExisting;
+
+		public DomainTransformCommitPosition getPosition() {
+			return this.position;
+		}
 
 		public List<Transform> getTransforms() {
 			return this.transforms;
@@ -204,6 +210,10 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 
 		public void setClearExisting(boolean clearExisting) {
 			this.clearExisting = clearExisting;
+		}
+
+		public void setPosition(DomainTransformCommitPosition position) {
+			this.position = position;
 		}
 
 		public void setTransforms(List<Transform> transforms) {

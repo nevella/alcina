@@ -209,6 +209,10 @@ public class Transactions {
 	public void onDomainTransactionCommited(Transaction transaction) {
 		synchronized (transactionMetadataLock) {
 			committedTransactions.add(transaction);
+			/*
+			 * these occur sequentially, so transaction will always have the
+			 * highest visible id (for a tx of this type)
+			 */
 			highestVisibleCommittedTransactionId = transaction.getId();
 			committedTransactionIds.add(transaction.getId());
 		}

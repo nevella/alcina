@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
+import cc.alcina.framework.entity.persistence.CommonPersistenceBase.UnwrapWithExceptionsResult;
 import cc.alcina.framework.entity.persistence.UnwrapInfoItem.UnwrapInfoContainer;
 import cc.alcina.framework.entity.persistence.metric.InternalMetric;
 import cc.alcina.framework.entity.persistence.transform.TransformCache;
@@ -171,4 +172,7 @@ public interface CommonPersistenceLocal {
 	List<Long> listRecentClientInstanceIds(String iidKey);
 
 	<E extends Entity> E merge(E entity);
+
+	<T extends HasId> UnwrapWithExceptionsResult<T>
+			unwrapWithExceptions(Collection<T> wrappers);
 }
