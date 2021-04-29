@@ -15,6 +15,7 @@ public class MvccEntityAllTransactionTests extends AbstractTaskPerformer {
 		 * not a tx test, but throw in
 		 */
 		// new MvccEntityConstraintTest().run();
+		new MvccLiSetTest().run();
 		new MvccEntityLocalPromotionTest().run();
 		Transactions.waitForAllToCompleteExSelf();
 		new MvccEntityTransactionalIndexTest().run();
