@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 import java.io.Serializable;
 import java.util.AbstractSet;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -41,6 +42,26 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		LiSet<H> result = new LiSet<>();
 		result.add(h);
 		return result;
+	}
+
+	private static int compare(Entity o1, Entity o2) {
+		if (o1.getLocalId() != 0 || o2.getLocalId() != 0) {
+			if (o2.getLocalId() == 0) {
+				return -1;
+			}
+			if (o1.getLocalId() == 0) {
+				return 1;
+			}
+			// localId is guaranteed < Integer.MAX_VALUE
+			return (int) (o1.getLocalId() - o2.getLocalId());
+		}
+		if (o1.getId() < o2.getId()) {
+			return -1;
+		}
+		if (o1.getId() > o2.getId()) {
+			return 1;
+		}
+		return 0;
 	}
 
 	private transient Entity[] elementData;
@@ -205,73 +226,41 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		return size;
 	}
 
-	private int compare(Entity o1, Entity o2) {
-		if (o1.getLocalId() != 0 || o2.getLocalId() != 0) {
-			if (o2.getLocalId() == 0) {
-				return -1;
-			}
-			if (o1.getLocalId() == 0) {
-				return 1;
-			}
-			// localId is guaranteed < Integer.MAX_VALUE
-			return (int) (o1.getLocalId() - o2.getLocalId());
-		}
-		if (o1.getId() < o2.getId()) {
-			return -1;
-		}
-		if (o1.getId() > o2.getId()) {
-			return 1;
-		}
-		return 0;
-	}
-
+	/*
+	 * If elementData contains e, returns the index of e. If not, return index
+	 * of least f gt e (or value of field 'size' if no f gt e)
+	 * 
+	 */
 	private int indexOf(Entity e) {
 		int rangeMin = 0;
+		// open range - i.e. rangeMax is guaranteed gt target index (unless
+		// target index==size)
 		int rangeMax = size;
 		int arrayPos = 0;
 		int res = 0;
-		while (rangeMax > rangeMin) {
+		if (size == 0) {
+			return 0;
+		}
+		while (true) {
 			arrayPos = (rangeMax - rangeMin) / 2 + rangeMin;
 			Entity f = elementData[arrayPos];
 			res = compare(e, f);
 			if (res == 0) {
 				return arrayPos;
 			}
-			if (res < 0) {
-				rangeMax = arrayPos - 1;
+			if (rangeMax == rangeMin) {
+				return arrayPos;
 			} else {
-				rangeMin = arrayPos + 1;
-			}
-		}
-		// we want the least elt f that is greater than e
-		// if res>0 e>f -- but possibly e>g (elementData[arrayPos+1]) - limits
-		// of binary search.
-		// if res<0, e<f - but possibly e<d (elementData[arrayPos-1]) - limits
-		// of binary search.
-		if (rangeMax < size && rangeMax >= 0) {
-			Entity f = elementData[rangeMax];
-			if (e.equals(f)) {
-				return rangeMax;
-			}
-		}
-		if (res < 0) {
-			if (arrayPos > 0) {
-				Entity d = elementData[arrayPos - 1];
-				res = compare(e, d);
-				if (res == -1) {
-					return arrayPos - 1;
+				if (res < 0) {
+					rangeMax = arrayPos;
+				} else {
+					rangeMin = arrayPos + 1;
+				}
+				if (rangeMin >= size) {
+					// no elt f gt e
+					return size;
 				}
 			}
-			return arrayPos;
-		} else {
-			if (arrayPos + 1 < size) {
-				Entity g = elementData[arrayPos + 1];
-				res = compare(e, g);
-				if (res == 1) {
-					return arrayPos + 2;
-				}
-			}
-			return arrayPos + 1;
 		}
 	}
 
@@ -295,6 +284,13 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 
 	public interface NonDomainNotifier {
 		public void notifyNonDomain(LiSet liSet, Entity e);
+	}
+
+	public static class TestComparator implements Comparator<Entity> {
+		@Override
+		public int compare(Entity o1, Entity o2) {
+			return LiSet.compare(o1, o2);
+		}
 	}
 
 	class LiSetIterator implements Iterator<H> {
