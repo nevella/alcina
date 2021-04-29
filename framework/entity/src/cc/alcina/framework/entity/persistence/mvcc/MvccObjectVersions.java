@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
@@ -88,8 +90,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	Transaction initialWriteableTransaction;
 
-	private boolean hasCommittedTransactions;
-
 	/*
 	 * synchronization - either a newly created object t for this domainstore
 	 * (so no sync needed), or accessed via a block synced on 't'
@@ -98,11 +98,12 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			boolean initialObjectIsWriteable) {
 		ObjectVersion<T> version = new ObjectVersion<>();
 		version.transaction = initialTransaction;
-		baseObject = t;
+		baseObject = baseObjectFor(t);
 		if (initialObjectIsWriteable) {
+			Preconditions.checkState(baseObject == t);
 			/*
 			 * t (and associated mvccobjectversions) will not be visible to
-			 * other txs until tx
+			 * other txs until current tx has completed
 			 */
 			this.initialWriteableTransaction = initialTransaction;
 			version.object = baseObject;
@@ -235,7 +236,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				// baseObject fields will not be reachable here to app code
 				// (all active txs will be looking at version.object fields)
 				copyObject(version.object, baseObject);
-				hasCommittedTransactions = true;
 				if (firstCommittedTransactionId == null) {
 					firstCommittedTransactionId = vacuumableTransactions.oldestVacuumableDomainTransaction
 							.getId();
@@ -269,15 +269,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 								baseObject,
 								System.identityHashCode(baseObject));
 						((MvccObject) baseObject).__setMvccVersions__(null);
-					} else {
-						if (!hasCommittedTransactions) {
-							T emptyMarkerObject = getEmptyMarkerObject();
-							if (emptyMarkerObject != null) {
-								baseObject = emptyMarkerObject;
-								__mostRecentReffed = baseObject;
-								__mostRecentWritable = baseObject;
-							}
-						}
 					}
 				}
 			}
@@ -362,6 +353,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
+	protected T baseObjectFor(T t) {
+		return t;
+	}
+
 	protected T copyObject(T mostRecentObject) {
 		T result = (T) Transactions.copyObject((MvccObject) mostRecentObject);
 		return result;
@@ -370,10 +365,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	protected abstract void copyObject(T fromObject, T baseObject);
 
 	protected abstract <E extends Entity> Class<E> entityClass();
-
-	protected T getEmptyMarkerObject() {
-		return null;
-	}
 
 	protected void onVersionCreation(ObjectVersion<T> version) {
 	}
@@ -389,11 +380,19 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			// debugVersions.add(new VersionDebug(tx, removed));
 			// }
 			// }
+			if (__mostRecentReffed == removed.object) {
+				__mostRecentReffed = null;
+			}
+			if (__mostRecentWritable == removed.object) {
+				__mostRecentWritable = null;
+			}
 			size.decrementAndGet();
 		}
 	}
 
-	protected abstract boolean thisMayBeVisibleToPriorTransactions();
+	protected boolean thisMayBeVisibleToPriorTransactions() {
+		return false;
+	}
 
 	void debugResolvedVersion() {
 		try {

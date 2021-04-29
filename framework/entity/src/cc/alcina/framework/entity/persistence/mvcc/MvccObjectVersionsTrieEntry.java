@@ -19,9 +19,4 @@ public class MvccObjectVersionsTrieEntry
 	protected <E extends Entity> Class<E> entityClass() {
 		return getBaseObject().entityClass();
 	}
-
-	@Override
-	protected boolean thisMayBeVisibleToPriorTransactions() {
-		return false;
-	}
 }

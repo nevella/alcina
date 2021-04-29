@@ -47,9 +47,4 @@ public class MvccObjectVersionsEntity<T extends Entity>
 			Domain.register(version.object);
 		}
 	}
-
-	@Override
-	protected boolean thisMayBeVisibleToPriorTransactions() {
-		return false;
-	}
 }

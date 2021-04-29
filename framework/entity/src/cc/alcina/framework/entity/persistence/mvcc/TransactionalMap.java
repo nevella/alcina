@@ -609,6 +609,15 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
+		/*
+		 * because possibly visible before version creation, the base must be
+		 * marked as 'removed'
+		 */
+		protected ObjectWrapper baseObjectFor(ObjectWrapper t) {
+			return ObjectWrapper.of(REMOVED_VALUE_MARKER);
+		}
+
+		@Override
 		protected ObjectWrapper copyObject(ObjectWrapper mostRecentObject) {
 			return ObjectWrapper.of(mostRecentObject.get());
 		}
@@ -622,11 +631,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		@Override
 		protected <E extends Entity> Class<E> entityClass() {
 			return null;
-		}
-
-		@Override
-		protected ObjectWrapper getEmptyMarkerObject() {
-			return ObjectWrapper.of(REMOVED_VALUE_MARKER);
 		}
 
 		@Override
