@@ -7,6 +7,7 @@ import java.util.Map;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -36,7 +37,7 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 
 @RegistryLocation(registryPoint = DomainViews.class, implementationType = ImplementationType.SINGLETON)
 /**
- * TODO - logic of happens-before (event sequencing means any query executed
+ * TODO - logic of happens-before (task sequencing means any query executed
  * before a domain commit will be sequentially correct)
  * 
  * @author nick@alcina.cc
@@ -53,17 +54,22 @@ public abstract class DomainViews {
 
 	private Map<DomainTransformPersistenceEvent, Transaction> preCommitTransactions = new ConcurrentHashMap<>();
 
-	private BlockingQueue<ViewsEvent> events = new LinkedBlockingQueue<>();
+	private BlockingQueue<ViewsTask> tasks = new LinkedBlockingQueue<>();
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	private boolean finished;
 
-	private EventProcessorThread thread;
+	private TaskProcessorThread thread;
 
+	private ReentrantLock addTaskLock = new ReentrantLock();
+
+	// runs on the DTR eventqueue thread
 	private TopicListener<DomainTransformPersistenceEvent> beforeDomainCommittedListener = (
 			k, e) -> {
 		if (isIndexableTransformRequest(e)) {
+			ViewsTask task = new ViewsTask();
+			addTaskLock.lock();
 			preCommitTransactions.put(e, Transaction.createRewindTransaction());
 		}
 	};
@@ -71,9 +77,11 @@ public abstract class DomainViews {
 	private TopicListener<DomainTransformPersistenceEvent> afterDomainCommittedListener = (
 			k, e) -> {
 		if (isIndexableTransformRequest(e)) {
-			ViewsEvent event = new ViewsEvent();
-			event.modelChange.preCommit = preCommitTransactions.get(e);
-			event.modelChange.commit = Transaction.current();
+			ViewsTask task = new ViewsTask();
+			task.modelChange.preCommit = preCommitTransactions.get(e);
+			task.modelChange.commit = Transaction.current();
+			tasks.add(task);
+			addTaskLock.unlock();
 		}
 	};
 
@@ -83,12 +91,17 @@ public abstract class DomainViews {
 				.add(beforeDomainCommittedListener);
 		DomainStore.writableStore().topicAfterDomainCommitted()
 				.add(afterDomainCommittedListener);
+		thread = new TaskProcessorThread();
+		thread.start();
 	}
 
+	// does *not* on the DTR eventqueue thread
 	public Response handleRequest(
 			Request<? extends DomainViewSearchDefinition> request) {
 		Key key = new Key(request);
 		LiveView view = views.computeIfAbsent(key, LiveView::new);
+		ViewsTask task = new ViewsTask();
+		task.type = ViewsTask.Type.REQUEST;
 		return view.generateResponse(request);
 	}
 
@@ -100,26 +113,7 @@ public abstract class DomainViews {
 				.has((Class[]) getIndexableEntityClasses());
 	}
 
-	void processEvent(ViewsEvent event) {
-	}
-
-	public class EventProcessorThread extends Thread {
-		@Override
-		public void run() {
-			setName("DomainViews-event-queue-"
-					+ EntityLayerUtils.getLocalHostName());
-			while (!finished) {
-				try {
-					ViewsEvent event = events.take();
-					Transaction.begin();
-					processEvent(event);
-				} catch (Throwable e) {
-					e.printStackTrace();
-				} finally {
-					Transaction.end();
-				}
-			}
-		}
+	void processEvent(ViewsTask task) {
 	}
 
 	public static class GeneratingContext {
@@ -164,6 +158,25 @@ public abstract class DomainViews {
 
 		public List<? extends Object> getChildModels(DomainViewNode node,
 				GeneratingContext generatingContext);
+	}
+
+	public class TaskProcessorThread extends Thread {
+		@Override
+		public void run() {
+			setName("DomainViews-task-queue-"
+					+ EntityLayerUtils.getLocalHostName());
+			while (!finished) {
+				try {
+					ViewsTask task = tasks.take();
+					Transaction.begin();
+					processEvent(task);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				} finally {
+					Transaction.end();
+				}
+			}
+		}
 	}
 
 	private static class LiveListener implements DomainListener {
@@ -299,7 +312,7 @@ public abstract class DomainViews {
 		}
 	}
 
-	static class ViewsEvent {
+	static class ViewsTask {
 		ModelChange modelChange = new ModelChange();
 
 		PathChange pathChange = new PathChange();
@@ -325,7 +338,7 @@ public abstract class DomainViews {
 		}
 
 		static enum Type {
-			MODEL_CHANGE, PATH_CHANGE;
+			MODEL_CHANGE, PATH_CHANGE, REQUEST;
 		}
 	}
 }

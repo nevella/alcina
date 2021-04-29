@@ -272,7 +272,7 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 
 		@ClientInstantiable
 		public static enum Type {
-			APPEND, INSERT_AFTER, REMOVE, SET_PROPERTY
+			APPEND, INSERT_AFTER, REMOVE, SET_PROPERTY;
 		}
 	}
 
