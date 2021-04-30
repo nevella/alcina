@@ -186,6 +186,9 @@ public abstract class DomainViews {
 				GeneratingContext generatingContext);
 	}
 
+	public interface NodeGenerator2<E extends Entity> {
+	}
+
 	public class TaskProcessorThread extends Thread {
 		@Override
 		public void run() {
@@ -346,37 +349,19 @@ public abstract class DomainViews {
 		Type type;
 
 		static class ModelChange {
-			Transaction preCommit;
+			TreePath path;
 
-			Transaction postCommit;
-
-			Request request;
+			NodeGenerator2 generator;
 		}
 
 		static class PathChange {
-			public Response response;// =view.generateResponse(request);
-
-			public Request<? extends DomainViewSearchDefinition> request;
-
-			public Transaction transaction;
-
 			TreePath path;
 
-			Type type;
-
-			private CountDownLatch latch = new CountDownLatch(1);
-
-			public void await() {
-				// TODO Auto-generated method stub
-			}
-
-			static enum Type {
-				ADD, REMOVE, CHANGE;
-			}
+			DomainViewNode change;
 		}
 
 		static enum Type {
-			MODEL_CHANGE, PATH_CHANGE, REQUEST;
+			ADD, REMOVE, CHANGE;
 		}
 	}
 
