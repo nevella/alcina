@@ -203,10 +203,12 @@ public abstract class MultikeyMapBase<V>
 	}
 
 	@Override
-	public void put(Object... objects) {
+	public Object put(Object... objects) {
 		Map m = getMapForObjects(true, 2, objects);
 		Object key = objects[objects.length - 2];
+		Object existing = m.get(key);
 		m.put(key, objects[objects.length - 1]);
+		return existing;
 	}
 
 	@Override

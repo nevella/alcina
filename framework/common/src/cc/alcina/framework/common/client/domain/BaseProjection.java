@@ -79,21 +79,23 @@ public abstract class BaseProjection<T extends Entity>
 	}
 
 	@Override
-	public void insert(T t) {
+	public Object insert(T t) {
 		Object[] values = project(t);
 		if (values != null) {
 			try {
 				if (values.length > 0 && values[0] != null
 						&& values[0].getClass().isArray()) {
+					Object result = null;
 					for (Object tuple : values) {
-						lookup.put((Object[]) tuple);
+						result = lookup.put((Object[]) tuple);
 					}
+					return result;
 				} else {
 					if (isUnique()) {
 						Object[] keys = Arrays.copyOf(values,
 								values.length - 1);
 						if (!lookup.checkKeys(keys)) {
-							return;
+							return null;
 						}
 						T existing = lookup.get(keys);
 						if (existing != null) {
@@ -104,10 +106,10 @@ public abstract class BaseProjection<T extends Entity>
 									break;
 								}
 							}
-							return;
+							return existing;
 						}
 					}
-					lookup.put(values);
+					return lookup.put(values);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -115,7 +117,10 @@ public abstract class BaseProjection<T extends Entity>
 				if (t instanceof Entity) {
 					System.out.println(((Entity) t).toLocator());
 				}
+				return null;
 			}
+		} else {
+			return null;
 		}
 	}
 
@@ -152,28 +157,33 @@ public abstract class BaseProjection<T extends Entity>
 	}
 
 	@Override
-	public void remove(T t) {
+	public Object remove(T t) {
 		Object[] values = project(t);
 		if (values != null) {
 			try {
 				if (values.length > 0 && values[0] != null
 						&& values[0].getClass().isArray()) {
+					Object result = null;
 					for (Object tuple : values) {
-						lookup.remove((Object[]) tuple);
+						result = lookup.remove((Object[]) tuple);
 					}
+					return result;
 				} else {
 					if (isUnique()) {
 						Object[] keys = Arrays.copyOf(values,
 								values.length - 1);
 						if (!lookup.checkKeys(keys)) {
-							return;
+							return null;
 						}
 					}
-					lookup.remove(values);
+					return lookup.remove(values);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
+				return null;
 			}
+		} else {
+			return null;
 		}
 	}
 

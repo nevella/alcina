@@ -53,13 +53,16 @@ public class TrieProjection<K, E extends Entity>
 	}
 
 	@Override
-	public void insert(E o) {
+	public Object insert(E o) {
 		keyMapper.apply(o).forEach(key -> {
 			key = normalise(key);
 			trie.add(key, o);
 			List<K> subKeys = extractSubKeys(key);
 			subKeys.forEach(k -> trie.add(k, o));
 		});
+		// can result in multiple insert objects, so (presently) return null
+		// since ambiguous
+		return null;
 	}
 
 	@Override
@@ -72,13 +75,14 @@ public class TrieProjection<K, E extends Entity>
 	}
 
 	@Override
-	public void remove(E o) {
+	public Object remove(E o) {
 		keyMapper.apply(o).forEach(key -> {
 			key = normalise(key);
 			trie.removeKeyItem(key, o);
 			List<K> subKeys = extractSubKeys(key);
 			subKeys.forEach(k -> trie.removeKeyItem(k, o));
 		});
+		return null;
 	}
 
 	@Override

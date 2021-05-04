@@ -97,19 +97,21 @@ public class DomainLookup<T, E extends Entity>
 	}
 
 	@Override
-	public void insert(E entity) {
+	public Object insert(E entity) {
 		if (relevanceFilter != null && !relevanceFilter.allow(entity)) {
-			return;
+			return null;
 		}
+		boolean changed = false;
 		Object v1 = getChainedProperty(entity);
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
 			for (Object v2 : deduped) {
-				add(normalise((T) v2), entity);
+				changed |= add(normalise((T) v2), entity);
 			}
 		} else {
-			add(normalise((T) v1), entity);
+			changed |= add(normalise((T) v1), entity);
 		}
+		return changed;
 	}
 
 	@Override
@@ -130,16 +132,18 @@ public class DomainLookup<T, E extends Entity>
 	}
 
 	@Override
-	public void remove(E entity) {
+	public Object remove(E entity) {
 		Object v1 = getChainedProperty(entity);
+		boolean changed = false;
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
 			for (Object v2 : deduped) {
-				remove(normalise((T) v2), entity);
+				changed |= remove(normalise((T) v2), entity);
 			}
 		} else {
-			remove(normalise((T) v1), entity);
+			changed |= remove(normalise((T) v1), entity);
 		}
+		return changed;
 	}
 
 	@Override
@@ -175,20 +179,22 @@ public class DomainLookup<T, E extends Entity>
 		return normaliser == null ? key : normaliser.convert(key);
 	}
 
-	private void remove(T key, E value) {
+	private boolean remove(T key, E value) {
 		Set<E> set = get(key);
 		if (set != null) {
-			set.remove(value);
+			return set.remove(value);
+		} else {
+			return false;
 		}
 	}
 
-	protected void add(T key, E value) {
+	protected boolean add(T key, E value) {
 		if (value == null) {
 			System.err.println(
 					"Invalid value (null) for cache lookup put - " + key);
-			return;
+			return false;
 		}
-		getAndEnsure(key).add(value);
+		return getAndEnsure(key).add(value);
 	}
 
 	protected Set<E> getAndEnsure(T key) {

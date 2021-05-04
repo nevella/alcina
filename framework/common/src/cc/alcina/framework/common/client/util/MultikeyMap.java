@@ -28,6 +28,10 @@ public interface MultikeyMap<V> {
 
 	public abstract List<List> asTuples(int depth);
 
+	/*
+	 * Checks if the MKM allows the keys (basically for null checks and sorted
+	 * maps)
+	 */
 	public abstract boolean checkKeys(Object[] keys);
 
 	public abstract void clear();
@@ -50,7 +54,7 @@ public interface MultikeyMap<V> {
 
 	public <T> Set<T> keySet();
 
-	public abstract void put(Object... objects);
+	public abstract Object put(Object... objects);
 
 	public abstract Object remove(Object... objects);
 
