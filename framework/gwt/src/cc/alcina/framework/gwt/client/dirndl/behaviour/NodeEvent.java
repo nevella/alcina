@@ -55,7 +55,7 @@ public abstract class NodeEvent {
 		}
 	}
 
-	public void setReceiver(NodeEventReceiver eventReceiver) {
+	public void setEventReceiver(NodeEventReceiver eventReceiver) {
 		this.eventReceiver = eventReceiver;
 	}
 

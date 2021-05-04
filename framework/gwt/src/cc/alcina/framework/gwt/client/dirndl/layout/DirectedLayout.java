@@ -684,7 +684,7 @@ public class DirectedLayout {
 					if (eventBinding == null) {
 						eventBinding = Reflections
 								.newInstance(behaviour.event());
-						eventBinding.setReceiver(this);
+						eventBinding.setEventReceiver(this);
 					}
 					eventBinding.bind(getBindingWidget(), true);
 				} else {
