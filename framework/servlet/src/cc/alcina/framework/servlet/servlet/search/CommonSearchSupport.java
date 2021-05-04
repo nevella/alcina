@@ -69,6 +69,67 @@ public class CommonSearchSupport {
 		}
 	}
 
+	public ModelSearchResults getModelSearchResults(
+			List<? extends Entity> queried, EntitySearchDefinition def) {
+		ModelSearchResults<?> modelSearchResults = new ModelSearchResults();
+		modelSearchResults.setDef(def);
+		if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
+		} else {
+			if (def == null) {
+				// single object
+				Entity first = CommonUtils.first(queried);
+				queried.clear();
+				List untyped = queried;
+				modelSearchResults.setRawEntity(first);
+				modelSearchResults.setResultClassName(Optional.ofNullable(first)
+						.map(e -> e.entityClass().getName()).orElse(null));
+				if (first != null) {
+					untyped.add(project(first, modelSearchResults, true));
+				}
+			} else {
+				queried = project(queried, modelSearchResults,
+						def.isReturnSingleDataObjectImplementations());
+				List<EntityPlace> filterPlaces = def.provideFilterPlaces();
+				modelSearchResults.setFilteringEntities((List) filterPlaces
+						.stream().map(EntityPlace::asLocator).map(Domain::find)
+						.collect(Collectors.toList()));
+				/*
+				 * Just get non-entity properties, essentially - for things like
+				 * breadcrumbs client-side
+				 */
+				Set<Entity> alsoProject = modelSearchResults
+						.getFilteringEntities().stream()
+						.map(Entity.Ownership::getOwningEntities)
+						.flatMap(Collection::stream)
+						.collect(Collectors.toSet());
+				CollectionProjectionFilterWithCache dataFilter = new CollectionProjectionFilterWithCache() {
+					@Override
+					public <T> T filterData(T original, T projected,
+							GraphProjectionContext context,
+							GraphProjection graphProjection) throws Exception {
+						if (original instanceof Set
+								|| original instanceof Map) {
+							return null;
+						}
+						if (original instanceof Entity
+								&& !(modelSearchResults.getFilteringEntities()
+										.contains(original))
+								&& !(alsoProject.contains(original))) {
+							return null;
+						}
+						return super.filterData(original, projected, context,
+								graphProjection);
+					}
+				};
+				modelSearchResults.setFilteringEntities(GraphProjections
+						.defaultProjections().dataFilter(dataFilter)
+						.project(modelSearchResults.getFilteringEntities()));
+			}
+		}
+		modelSearchResults.setQueriedResultObjects((List) queried);
+		return modelSearchResults;
+	}
+
 	public ModelSearchResults searchModel(BindableSearchDefinition def) {
 		if (def.getGroupingParameters() != null) {
 			def.setResultsPerPage(99999999);
@@ -116,13 +177,14 @@ public class CommonSearchSupport {
 				GroupingHandler groupingHandler = Registry.impl(
 						GroupingHandler.class,
 						searchContext.groupingParameters.getClass());
-				searchContext.modelSearchResults.setGroupedResult(groupingHandler
-						.process(searchContext.queried,
+				searchContext.modelSearchResults.setGroupedResult(
+						groupingHandler.process(searchContext.queried,
 								searchContext.groupingParameters, def));
 				groupingHandler.sort(
 						searchContext.modelSearchResults.getGroupedResult(),
 						searchContext.groupingParameters);
-				searchContext.modelSearchResults.setQueriedResultObjects(new ArrayList<>());
+				searchContext.modelSearchResults
+						.setQueriedResultObjects(new ArrayList<>());
 				if (customSearchHandler.isPresent()) {
 					customSearchHandler.get().beforeProjection(searchContext);
 				}
@@ -136,9 +198,9 @@ public class CommonSearchSupport {
 			searchContext.modelSearchResults.setDef(def);
 			searchContext.modelSearchResults.setPageNumber(def.getPageNumber());
 			searchContext.modelSearchResults.setRecordCount(rows.size());
-			searchContext.modelSearchResults.setTransformLogPosition(DomainStore
-					.stores().writableStore().getPersistenceEvents().getQueue()
-					.getTransformCommitPosition());
+			searchContext.modelSearchResults.setTransformLogPosition(
+					DomainStore.stores().writableStore().getPersistenceEvents()
+							.getQueue().getTransformCommitPosition());
 			return searchContext.modelSearchResults;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -156,69 +218,9 @@ public class CommonSearchSupport {
 		result.setPageNumber(toSearchDefinition.getPageNumber());
 		result.setDef(toSearchDefinition);
 		result.setRecordCount(searchResultsBase.getTotalResultCount());
-		result.setResultClassName(toSearchDefinition.queriedBindableClass()
-				.getName());
+		result.setResultClassName(
+				toSearchDefinition.queriedBindableClass().getName());
 		return result;
-	}
-
-	private ModelSearchResults getModelSearchResults(
-			List<? extends Entity> queried, EntitySearchDefinition def) {
-		ModelSearchResults<?> modelSearchResults = new ModelSearchResults();
-		modelSearchResults.setDef(def);
-		if (LooseContext.is(CONTEXT_DO_NOT_PROJECT_SEARCH)) {
-		} else {
-			if (def == null) {
-				// single object
-				Entity first = CommonUtils.first(queried);
-				queried.clear();
-				List untyped = queried;
-				modelSearchResults.setRawEntity(first);
-				modelSearchResults.setResultClassName(Optional.ofNullable(first)
-						.map(e -> e.entityClass().getName()).orElse(null));
-				if (first != null) {
-					untyped.add(project(first, modelSearchResults, true));
-				}
-			} else {
-				queried = project(queried, modelSearchResults,
-						def.isReturnSingleDataObjectImplementations());
-				List<EntityPlace> filterPlaces = def.provideFilterPlaces();
-				modelSearchResults.setFilteringEntities((List) filterPlaces
-						.stream().map(EntityPlace::asLocator).map(Domain::find)
-						.collect(Collectors.toList()));
-				/*
-				 * Just get non-entity properties, essentially - for things like
-				 * breadcrumbs client-side
-				 */
-				Set<Entity> alsoProject = modelSearchResults.getFilteringEntities()
-						.stream().map(Entity.Ownership::getOwningEntities)
-						.flatMap(Collection::stream)
-						.collect(Collectors.toSet());
-				CollectionProjectionFilterWithCache dataFilter = new CollectionProjectionFilterWithCache() {
-					@Override
-					public <T> T filterData(T original, T projected,
-							GraphProjectionContext context,
-							GraphProjection graphProjection) throws Exception {
-						if (original instanceof Set
-								|| original instanceof Map) {
-							return null;
-						}
-						if (original instanceof Entity
-								&& !(modelSearchResults.getFilteringEntities()
-										.contains(original))
-								&& !(alsoProject.contains(original))) {
-							return null;
-						}
-						return super.filterData(original, projected, context,
-								graphProjection);
-					}
-				};
-				modelSearchResults.setFilteringEntities(GraphProjections
-						.defaultProjections().dataFilter(dataFilter)
-						.project(modelSearchResults.getFilteringEntities()));
-			}
-		}
-		modelSearchResults.setQueriedResultObjects((List) queried);
-		return modelSearchResults;
 	}
 
 	private <T> T project(T object, ModelSearchResults modelSearchResults,
