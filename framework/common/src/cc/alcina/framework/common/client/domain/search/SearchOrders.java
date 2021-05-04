@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
 @Bean
+@Introspectable
 public class SearchOrders<T> implements Comparator<T>, Serializable,
 		HasEquivalence<SearchOrders<T>>, TreeSerializable {
 	/*
@@ -216,6 +217,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	}
 
 	@Bean
+	@Introspectable
 	public static class SerializableSearchOrder implements Serializable,
 			HasReflectiveEquivalence<SerializableSearchOrder>,
 			TreeSerializable {
