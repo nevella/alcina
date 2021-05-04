@@ -364,10 +364,27 @@ public class IntrospectorGenerator extends Generator {
 			writer.print("Method readMethod = ");
 			String returnType = p.getReadMethod().getBaseMethod()
 					.getReturnType().getQualifiedSourceName();
-			String extendsMarker = " extends ";
-			int idx = returnType.indexOf(extendsMarker);
-			if (idx != -1) {
-				returnType = returnType.substring(idx + extendsMarker.length());
+			{
+				String extendsMarker = " extends ";
+				int idx = returnType.indexOf(extendsMarker);
+				if (idx != -1) {
+					returnType = returnType
+							.substring(idx + extendsMarker.length());
+				}
+			}
+			{
+				String implementsMarker = " & ";
+				int idx = returnType.indexOf(implementsMarker);
+				if (idx != -1) {
+					returnType = returnType.substring(0, idx);
+				}
+			}
+			{
+				String genericMarker = "<";
+				int idx = returnType.indexOf(genericMarker);
+				if (idx != -1) {
+					returnType = returnType.substring(0, idx);
+				}
 			}
 			if (p.getReadMethod() == null) {
 				writer.println("null;");
