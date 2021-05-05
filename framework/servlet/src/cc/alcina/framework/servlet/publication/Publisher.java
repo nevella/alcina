@@ -316,8 +316,6 @@ public class Publisher {
 						.getCommonPersistence().merge(publication);
 				ResourceUtilities.copyBeanProperties(merged, publication, null,
 						false);
-				publication
-						.setVersionNumber(publication.getVersionNumber() + 1);
 			} else {
 				Transaction.commit();
 			}
