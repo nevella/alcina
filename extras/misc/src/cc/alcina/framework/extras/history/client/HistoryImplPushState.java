@@ -15,6 +15,7 @@ package cc.alcina.framework.extras.history.client;
 
 import java.util.Objects;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.HistoryImpl;
 import com.google.gwt.user.client.Window;
@@ -39,6 +40,16 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
  * 
  */
 public class HistoryImplPushState extends HistoryImpl {
+	private static String getDecodedHash() {
+		HistoryTokenEncoder tokenEncoder = GWT
+				.create(HistoryTokenEncoder.class);
+		String hashToken = Window.Location.getHash();
+		if (hashToken == null || hashToken.isEmpty()) {
+			return "";
+		}
+		return tokenEncoder.decode(hashToken.substring(1));
+	}
+
 	/**
 	 * Add the given token to the history using pushState.
 	 */
@@ -65,7 +76,7 @@ public class HistoryImplPushState extends HistoryImpl {
 
 	@Override
 	public boolean init() {
-		lastPushed = History.getDecodedHash();
+		lastPushed = getDecodedHash();
 		// initialize HistoryImpl with the current path
 		String initialToken = Window.Location.getPath()
 				+ Window.Location.getQueryString();
@@ -155,5 +166,16 @@ public class HistoryImplPushState extends HistoryImpl {
 			path = CodeServerParameterHelper.append(path);
 			return path;
 		}
+	}
+
+	private static class HistoryTokenEncoder {
+		public native String decode(String toDecode) /*-{
+      return $wnd.decodeURI(toDecode.replace("%23", "#"));
+		}-*/;
+
+		public native String encode(String toEncode) /*-{
+      // encodeURI() does *not* encode the '#' character.
+      return $wnd.encodeURI(toEncode).replace("#", "%23");
+		}-*/;
 	}
 }
