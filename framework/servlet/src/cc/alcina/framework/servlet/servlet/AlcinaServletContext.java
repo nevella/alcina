@@ -87,6 +87,8 @@ public class AlcinaServletContext {
 		LooseContext.confirmDepth(incomingDepth);
 		if (TransformManager.hasInstance()) {
 			ThreadlocalTransformManager.cast().resetTltm(null);
+			PermissionsManager.confirmDepth(permissionsManagerDepth.get());
+			PermissionsManager.get().reset();
 			LooseContext.pop();
 			Transaction.ensureEnded();
 		} else {
@@ -95,8 +97,6 @@ public class AlcinaServletContext {
 			} catch (Exception e) {// squelch, probably webapp undeployed
 			}
 		}
-		PermissionsManager.confirmDepth(permissionsManagerDepth.get());
-		PermissionsManager.get().reset();
 		Thread.currentThread().setName(originalThreadName.get());
 		removePerThreadContexts();
 	}
