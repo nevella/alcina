@@ -3,21 +3,20 @@ package cc.alcina.framework.entity.persistence.domain;
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Timer;
 import java.util.TreeSet;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
-
-import org.eclipse.jdt.core.dom.Modifier;
-
-import com.google.gwt.dev.util.collect.IdentityHashMap;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.DomainDescriptor;
@@ -38,7 +37,6 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
-import cern.colt.Timer;
 import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
 import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator.MemoryLayoutSpecification;
 
