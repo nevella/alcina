@@ -523,6 +523,7 @@ public class GraphProjection {
 			result = new ArrayList<Field>();
 			Set<Field> dynamicPermissionFields = new HashSet<Field>();
 			Class c = clazz;
+			boolean mvccClass = MvccObject.class.isAssignableFrom(clazz);
 			while (c != Object.class) {
 				List<Field> fields = ensureDeclaredNonStaticFields(c);
 				for (Field field : fields) {
@@ -544,17 +545,20 @@ public class GraphProjection {
 							continue;
 						}
 					}
-					// special-case mvcc fields
-					PropertyDescriptor propertyDescriptor = SEUtilities
-							.getPropertyDescriptorByName(c, field.getName());
-					if (propertyDescriptor != null
-							&& propertyDescriptor.getReadMethod() != null) {
-						MvccAccess mvccAccess = propertyDescriptor
-								.getReadMethod()
-								.getAnnotation(MvccAccess.class);
-						if (mvccAccess != null && mvccAccess
-								.type() == MvccAccessType.TRANSACTIONAL_ACCESS_NOT_SUPPORTED) {
-							continue;
+					if (mvccClass) {
+						// special-case mvcc fields
+						PropertyDescriptor propertyDescriptor = SEUtilities
+								.getPropertyDescriptorByName(c,
+										field.getName());
+						if (propertyDescriptor != null
+								&& propertyDescriptor.getReadMethod() != null) {
+							MvccAccess mvccAccess = propertyDescriptor
+									.getReadMethod()
+									.getAnnotation(MvccAccess.class);
+							if (mvccAccess != null && mvccAccess
+									.type() == MvccAccessType.TRANSACTIONAL_ACCESS_NOT_SUPPORTED) {
+								continue;
+							}
 						}
 					}
 					result.add(field);
