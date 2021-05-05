@@ -22,6 +22,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 public abstract class DomainViewNode<E extends Entity> extends Model {
 	private String name;
 
+	private String title;
+
 	private transient E entity;
 
 	public abstract Class<E> entityClass();
@@ -33,6 +35,10 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 
 	public String getName() {
 		return this.name;
+	}
+
+	public String getTitle() {
+		return this.title;
 	}
 
 	public boolean isLeaf() {
@@ -47,6 +53,10 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 		String old_name = this.name;
 		this.name = name;
 		propertyChangeSupport().firePropertyChange("name", old_name, name);
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
 	public <DV extends DomainViewNode<E>> DV withEntity(E entity) {

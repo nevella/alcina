@@ -29,11 +29,10 @@ public abstract class SortedIdentityProjection<T extends Entity>
 	}
 
 	@Override
-	public Object insert(T o) {
+	public void insert(T o) {
 		if (isIndexable(o)) {
 			sorted.put(o, o);
 		}
-		return null;
 	}
 
 	@Override
@@ -42,11 +41,10 @@ public abstract class SortedIdentityProjection<T extends Entity>
 	}
 
 	@Override
-	public Object remove(T o) {
+	public void remove(T o) {
 		if (isIndexable(o)) {
 			sorted.remove(o);
 		}
-		return null;
 	}
 
 	@Override

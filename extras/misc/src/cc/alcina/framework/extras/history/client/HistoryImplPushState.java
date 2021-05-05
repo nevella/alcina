@@ -65,6 +65,7 @@ public class HistoryImplPushState extends HistoryImpl {
 
 	@Override
 	public boolean init() {
+		lastPushed = History.getDecodedHash();
 		// initialize HistoryImpl with the current path
 		String initialToken = Window.Location.getPath()
 				+ Window.Location.getQueryString();
@@ -98,7 +99,8 @@ public class HistoryImplPushState extends HistoryImpl {
 		if (!newPushStateToken.startsWith("/")) {
 			newPushStateToken = "/" + newPushStateToken;
 		}
-		if (!Objects.equals(newPushStateToken, lastPushed)) {
+		if (!Objects.equals(newPushStateToken, lastPushed)
+				&& !Objects.equals(historyToken, lastPushed)) {
 			pushState(newPushStateToken);
 			lastPushed = newPushStateToken;
 		}

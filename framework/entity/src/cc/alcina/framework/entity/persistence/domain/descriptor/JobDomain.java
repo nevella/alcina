@@ -788,7 +788,7 @@ public class JobDomain {
 		 * Doesn't try to track result of insertion (i.e. returns null whether
 		 * or not the job is present in the projection)
 		 */
-		public Object insert(Job job) {
+		public void insert(Job job) {
 			/*
 			 * avoid deserializing if possible - hence the try/catch
 			 */
@@ -797,12 +797,10 @@ public class JobDomain {
 			} catch (RuntimeException e) {
 				if (!job.provideCanDeserializeTask()) {
 					undeserializableJobs.add(job);
-					return null;
 				} else {
 					throw e;
 				}
 			}
-			return null;
 		}
 
 		@Override
@@ -820,7 +818,7 @@ public class JobDomain {
 		 * Doesn't try to track result of removal (i.e. returns null whether or
 		 * not the job is present in the projection)
 		 */
-		public Object remove(Job job) {
+		public void remove(Job job) {
 			/*
 			 * avoid deserializing if possible - hence the try/catch
 			 */
@@ -829,12 +827,11 @@ public class JobDomain {
 			} catch (RuntimeException e) {
 				if (!job.provideCanDeserializeTask()) {
 					undeserializableJobs.add(job);
-					return null;
+					return;
 				} else {
 					throw e;
 				}
 			}
-			return null;
 		}
 
 		@Override
@@ -1008,17 +1005,16 @@ public class JobDomain {
 			}
 
 			@Override
-			public Object insert(Job t) {
+			public void insert(Job t) {
 				if (!t.provideIsComplete()) {
-					return null;
+					return;
 				}
 				if (t.provideIsTopLevel() ^ topLevel) {
-					return null;
+					return;
 				}
 				if (t.getEndTime() == null) {
-					return null;
+					return;
 				}
-				return super.insert(t);
 			}
 
 			@Override

@@ -97,21 +97,19 @@ public class DomainLookup<T, E extends Entity>
 	}
 
 	@Override
-	public Object insert(E entity) {
+	public void insert(E entity) {
 		if (relevanceFilter != null && !relevanceFilter.allow(entity)) {
-			return null;
+			return;
 		}
-		boolean changed = false;
 		Object v1 = getChainedProperty(entity);
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
 			for (Object v2 : deduped) {
-				changed |= add(normalise((T) v2), entity);
+				add(normalise((T) v2), entity);
 			}
 		} else {
-			changed |= add(normalise((T) v1), entity);
+			add(normalise((T) v1), entity);
 		}
-		return changed;
 	}
 
 	@Override
@@ -132,18 +130,16 @@ public class DomainLookup<T, E extends Entity>
 	}
 
 	@Override
-	public Object remove(E entity) {
+	public void remove(E entity) {
 		Object v1 = getChainedProperty(entity);
-		boolean changed = false;
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
 			for (Object v2 : deduped) {
-				changed |= remove(normalise((T) v2), entity);
+				remove(normalise((T) v2), entity);
 			}
 		} else {
-			changed |= remove(normalise((T) v1), entity);
+			remove(normalise((T) v1), entity);
 		}
-		return changed;
 	}
 
 	@Override

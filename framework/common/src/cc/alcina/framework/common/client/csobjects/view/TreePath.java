@@ -21,7 +21,7 @@ public class TreePath<T> extends Model {
 	public static TreePath absolutePath(String path) {
 		Preconditions.checkArgument(path.length() > 0);
 		TreePath<?> root = root(path.split("\\.")[0]);
-		return root.path(path);
+		return root.atPath(path);
 	}
 
 	public static <T> TreePath<T> root(Object rootSegment) {
@@ -49,11 +49,11 @@ public class TreePath<T> extends Model {
 	public TreePath() {
 	}
 
-	public TreePath child(Object segmentObject) {
-		return child(segmentObject, children.size());
+	public TreePath<T> addChild(Object segmentObject) {
+		return addChild(segmentObject, children.size());
 	}
 
-	public TreePath<T> child(Object segmentObject, int index) {
+	public TreePath<T> addChild(Object segmentObject, int index) {
 		TreePath<T> child = new TreePath();
 		child.setSegment(asSegment(segmentObject));
 		child.setParent(this);
@@ -66,6 +66,14 @@ public class TreePath<T> extends Model {
 		}
 		child.setInitialIndex(index);
 		return child;
+	}
+
+	public TreePath<T> atPath(String stringPath) {
+		return paths.path(stringPath);
+	}
+
+	public TreePath<T> childPath(Object segment) {
+		return atPath(toString() + "." + asSegment(segment));
 	}
 
 	public int depth() {
@@ -123,10 +131,6 @@ public class TreePath<T> extends Model {
 			cursor = cursor.parent;
 		}
 		return false;
-	}
-
-	public TreePath<T> path(String stringPath) {
-		return paths.path(stringPath);
 	}
 
 	public boolean provideIsEmpty() {
@@ -224,7 +228,7 @@ public class TreePath<T> extends Model {
 				cursor = idx == -1 ? stringPath : stringPath.substring(0, idx);
 				String segment = cursor.substring(segmentStart,
 						cursor.length());
-				treePath = treePath.child(segment);
+				treePath = treePath.addChild(segment);
 			}
 		}
 

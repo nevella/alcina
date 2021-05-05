@@ -91,14 +91,14 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			if (parent == null) {
 				treePath = TreePath.root(path);
 			} else {
-				treePath = parent.treePath.path(path);
+				treePath = parent.treePath.atPath(path);
 			}
 			treePath.setValue(this);
 		}
 
 		public DomainViewNodeModel ensureNode(String path, int initialIndex,
 				boolean fireCollectionModificationEvents) {
-			TreePath<DomainViewNodeModel> otherTreePath = treePath.path(path);
+			TreePath<DomainViewNodeModel> otherTreePath = treePath.atPath(path);
 			if (otherTreePath.getValue() == null) {
 				DomainViewNodeModel parent = otherTreePath.getParent() == null
 						? null
@@ -132,6 +132,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		public void setNode(DomainViewNode<?> node) {
 			this.node = node;
 			getLabel().setLabel(node.getName());
+			getLabel().setTitle(node.getTitle());
 			setLeaf(node.isLeaf());
 		}
 
@@ -224,7 +225,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 	@Directed(tag = "div", cssClass = "dl-tree-node", bindings = {
 			@Binding(from = "open", type = Type.CSS_CLASS, literal = "open"),
-			@Binding(from = "leaf", type = Type.CSS_CLASS, literal = "leaf")})
+			@Binding(from = "leaf", type = Type.CSS_CLASS, literal = "leaf") })
 	public static class NodeModel<NM extends NodeModel> extends Model {
 		boolean populated;
 
@@ -235,16 +236,8 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		private List<NodeModel<NM>> children = new IdentityArrayList<>();
 
 		private NM parent;
-		
+
 		private boolean leaf;
-
-		public boolean isLeaf() {
-			return this.leaf;
-		}
-
-		public void setLeaf(boolean leaf) {
-			this.leaf = leaf;
-		}
 
 		@Directed(renderer = MultipleNodeRenderer.class)
 		@MultipleNodeRendererArgs(tags = { "div" }, cssClasses = { "" })
@@ -262,6 +255,10 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			return this.parent;
 		}
 
+		public boolean isLeaf() {
+			return this.leaf;
+		}
+
 		public boolean isOpen() {
 			return this.open;
 		}
@@ -271,6 +268,10 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			this.children = children;
 			propertyChangeSupport().firePropertyChange("children", old_children,
 					children);
+		}
+
+		public void setLeaf(boolean leaf) {
+			this.leaf = leaf;
 		}
 
 		public void setOpen(boolean open) {
@@ -286,15 +287,22 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		public static class LabelClicked extends NodeTopic {
 		}
 
-		@Directed(tag = "label")
+		@Directed(tag = "label", bindings = {
+				@Binding(from = "title", to = "title", type = Binding.Type.PROPERTY) })
 		public static class NodeLabel extends Model {
 			private Object toggle = new Object();
 
 			private Object label = "";
 
+			private String title;
+
 			@Directed(tag = "label", behaviours = @Behaviour(handler = EmitTopicHandler.class, event = DomEvents.Click.class, topics = @TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviour.TopicBehaviourType.EMIT)))
 			public Object getLabel() {
 				return this.label;
+			}
+
+			public String getTitle() {
+				return this.title;
 			}
 
 			@Directed(tag = "span", behaviours = {
@@ -309,6 +317,13 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				this.label = label;
 				propertyChangeSupport().firePropertyChange("label", old_label,
 						label);
+			}
+
+			public void setTitle(String title) {
+				String old_title = this.title;
+				this.title = title;
+				propertyChangeSupport().firePropertyChange("title", old_title,
+						title);
 			}
 		}
 

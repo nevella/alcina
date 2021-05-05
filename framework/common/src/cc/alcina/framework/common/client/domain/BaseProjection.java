@@ -79,23 +79,22 @@ public abstract class BaseProjection<T extends Entity>
 	}
 
 	@Override
-	public Object insert(T t) {
+	public void insert(T t) {
 		Object[] values = project(t);
 		if (values != null) {
 			try {
 				if (values.length > 0 && values[0] != null
 						&& values[0].getClass().isArray()) {
-					Object result = null;
 					for (Object tuple : values) {
-						result = lookup.put((Object[]) tuple);
+						lookup.put((Object[]) tuple);
 					}
-					return result;
+					return;
 				} else {
 					if (isUnique()) {
 						Object[] keys = Arrays.copyOf(values,
 								values.length - 1);
 						if (!lookup.checkKeys(keys)) {
-							return null;
+							return;
 						}
 						T existing = lookup.get(keys);
 						if (existing != null) {
@@ -106,10 +105,10 @@ public abstract class BaseProjection<T extends Entity>
 									break;
 								}
 							}
-							return existing;
+							return;
 						}
 					}
-					return lookup.put(values);
+					lookup.put(values);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
@@ -117,11 +116,21 @@ public abstract class BaseProjection<T extends Entity>
 				if (t instanceof Entity) {
 					System.out.println(((Entity) t).toLocator());
 				}
-				return null;
 			}
-		} else {
-			return null;
 		}
+	}
+
+	public List<Object> insertReturnChanges(T t) {
+		Object[] values = project(t);
+		List<Object> result = new ArrayList<>();
+		for (int idx = 0; idx < values.length - 1; idx++) {
+			Object[] keys = Arrays.copyOf(values, idx + 1);
+			if (!lookup.containsKey(keys)) {
+				result.add(values[idx]);
+			}
+		}
+		insert(t);
+		return result;
 	}
 
 	@Override
@@ -157,34 +166,43 @@ public abstract class BaseProjection<T extends Entity>
 	}
 
 	@Override
-	public Object remove(T t) {
+	public void remove(T t) {
 		Object[] values = project(t);
 		if (values != null) {
 			try {
 				if (values.length > 0 && values[0] != null
 						&& values[0].getClass().isArray()) {
-					Object result = null;
 					for (Object tuple : values) {
-						result = lookup.remove((Object[]) tuple);
+						lookup.remove((Object[]) tuple);
 					}
-					return result;
 				} else {
 					if (isUnique()) {
 						Object[] keys = Arrays.copyOf(values,
 								values.length - 1);
 						if (!lookup.checkKeys(keys)) {
-							return null;
+							return;
 						}
 					}
-					return lookup.remove(values);
+					lookup.remove(values);
+					return;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
-				return null;
 			}
-		} else {
-			return null;
 		}
+	}
+
+	public List<Object> removeReturnChanges(T t) {
+		Object[] values = project(t);
+		remove(t);
+		List<Object> result = new ArrayList<>();
+		for (int idx = 0; idx < values.length - 1; idx++) {
+			Object[] keys = Arrays.copyOf(values, idx + 1);
+			if (!lookup.containsKey(keys)) {
+				result.add(values[idx]);
+			}
+		}
+		return result;
 	}
 
 	public void setDerived(boolean derived) {

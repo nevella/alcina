@@ -147,6 +147,14 @@ public class History {
     $wnd.history.forward();
 	}-*/;
 
+	public static String getDecodedHash() {
+		String hashToken = Window.Location.getHash();
+		if (hashToken == null || hashToken.isEmpty()) {
+			return "";
+		}
+		return tokenEncoder.decode(hashToken.substring(1));
+	}
+
 	/**
 	 * Gets the current history token. The handler will not receive a
 	 * {@link ValueChangeHandler#onValueChange(com.google.gwt.event.logical.shared.ValueChangeEvent)}
@@ -275,14 +283,6 @@ public class History {
 		if (issueEvent) {
 			fireCurrentHistoryState();
 		}
-	}
-
-	private static String getDecodedHash() {
-		String hashToken = Window.Location.getHash();
-		if (hashToken == null || hashToken.isEmpty()) {
-			return "";
-		}
-		return tokenEncoder.decode(hashToken.substring(1));
 	}
 
 	// this is called from JS when the native onhashchange occurs

@@ -168,9 +168,7 @@ public abstract class DomainViews {
 		}
 
 		@Override
-		public Object insert(Entity o) {
-			// TODO Auto-generated method stub
-			return null;
+		public void insert(Entity o) {
 		}
 
 		@Override
@@ -179,9 +177,7 @@ public abstract class DomainViews {
 		}
 
 		@Override
-		public Object remove(Entity o) {
-			// TODO Auto-generated method stub
-			return null;
+		public void remove(Entity o) {
 		}
 
 		@Override

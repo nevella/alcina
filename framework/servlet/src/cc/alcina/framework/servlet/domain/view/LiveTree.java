@@ -154,7 +154,7 @@ public class LiveTree {
 		Preconditions
 				.checkState(request.getWaitPolicy() == WaitPolicy.RETURN_NODES);
 		List<Transform> result = new ArrayList<>();
-		LiveNode node = root.path(request.getTreePath()).getValue();
+		LiveNode node = root.atPath(request.getTreePath()).getValue();
 		if (node != null) {
 			{
 				Transform transform = new Transform();
@@ -195,13 +195,14 @@ public class LiveTree {
 
 		public TreeMap<Integer, Set<TreePath<LiveNode>>> depthChanged = new TreeMap<>();
 
-		public void addChildWithGenerator(LiveNode liveNode,
+		public TreePath<LiveNode> addChildWithGenerator(LiveNode liveNode,
 				Object discriminator, NodeGenerator<?, ?, ?> generator) {
 			PathChange change = new PathChange();
 			change.operation = Operation.INSERT;
-			TreePath childPath = liveNode.path.child(discriminator);
+			TreePath<LiveNode> childPath = liveNode.path.addChild(discriminator);
 			change.path = ensureNode(childPath, generator, discriminator).path;
 			addPathChange(change);
+			return childPath;
 		}
 
 		public void addPathChange(PathChange change) {
@@ -262,6 +263,10 @@ public class LiveTree {
 
 		public <P extends NodeGenerator> P getGenerator() {
 			return (P) generator;
+		}
+
+		public TreePath<LiveNode> getPath() {
+			return this.path;
 		}
 
 		void clearCollatedOperation() {
