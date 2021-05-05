@@ -744,6 +744,7 @@ public class Binding {
 			}
 		}
 
+		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			if (bound) {
 				unbind();
@@ -787,6 +788,7 @@ public class Binding {
 			this.target = target;
 		}
 
+		@Override
 		public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
 			Object value = propertyChangeEvent.getNewValue();
 			if (instance.validator != null) {
@@ -827,7 +829,7 @@ public class Binding {
 			try {
 				target.property.getMutatorMethod().invoke(target.object, args);
 			} catch (Exception e) {
-				// e.printStackTrace();
+				e.printStackTrace();
 				throw new RuntimeException("Exception setting property: "
 						+ target.property.getName(), e);
 				// LOGGER.log(Level.ERROR, "Exception setting property: "

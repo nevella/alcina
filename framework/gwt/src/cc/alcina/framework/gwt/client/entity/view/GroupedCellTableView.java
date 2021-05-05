@@ -20,6 +20,7 @@ import cc.alcina.framework.gwt.client.entity.export.RowExportContentDefinition;
 import cc.alcina.framework.gwt.client.entity.place.EntitySubPlace;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections.ContentViewSectionsDialogBuilder;
+import cc.alcina.framework.gwt.client.logic.MessageManager;
 
 public interface GroupedCellTableView<VM extends ViewModel> extends IsWidget {
 	public ColumnMapper
@@ -79,6 +80,11 @@ public interface GroupedCellTableView<VM extends ViewModel> extends IsWidget {
 	}
 
 	default void refreshSingleLineMode() {
+		if (groupedCellTable() == null) {
+			MessageManager.get()
+					.icyCenterMessage("Applies only to grouped results");
+			return;
+		}
 		groupedCellTable().setStyleName("single-line",
 				getGroupingSupport().isMultiline());
 	}
