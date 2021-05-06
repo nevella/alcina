@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.impl.domain;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -16,6 +17,10 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
+
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.util.Ax;
 
 @SuppressWarnings("deprecation")
 public class DomainStoreCriteria implements Criteria {
@@ -44,6 +49,8 @@ public class DomainStoreCriteria implements Criteria {
 	int firstResult;
 
 	private ResultTransformer resultTransformer;
+
+	DomainStoreCriteria parent;
 
 	public DomainStoreCriteria(Class clazz, String alias,
 			Criteria entityManagerCriteria,
@@ -161,12 +168,21 @@ public class DomainStoreCriteria implements Criteria {
 
 	@Override
 	public Criteria createCriteria(String associationPath, String alias,
-			JoinType arg2) throws HibernateException {
+			JoinType joinType) throws HibernateException {
 		Criteria subCriteria = this.entityManagerCriteria == null ? null
 				: this.entityManagerCriteria.createCriteria(associationPath,
 						alias);
-		DomainStoreCriteria newCriteria = new DomainStoreCriteria(null, alias,
-				associationPath, subCriteria, arg2, domainStoreSession);
+		Class subClazz = Reflections.classLookup()
+				.getPropertyReflector(clazz, associationPath).getPropertyType();
+		if (Set.class.isAssignableFrom(subClazz)) {
+			subClazz = Reflections.classLookup()
+					.getPropertyReflector(clazz, associationPath)
+					.getAnnotation(Association.class).implementationClass();
+		}
+		DomainStoreCriteria newCriteria = new DomainStoreCriteria(subClazz,
+				alias, associationPath, subCriteria, joinType,
+				domainStoreSession);
+		newCriteria.parent = this;
 		subs.add(newCriteria);
 		return newCriteria;
 	}
@@ -310,6 +326,16 @@ public class DomainStoreCriteria implements Criteria {
 	@Override
 	public Criteria setTimeout(int arg0) {
 		return this.entityManagerCriteria.setTimeout(arg0);
+	}
+
+	@Override
+	public String toString() {
+		if (parent == null) {
+			return clazz.getSimpleName();
+		} else {
+			return Ax.format("%s %s.%s  as %s", joinType,
+					parent.clazz.getSimpleName(), associationPath, alias);
+		}
 	}
 
 	@Override

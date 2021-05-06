@@ -18,6 +18,11 @@ import org.hibernate.Session;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class DomainStoreEntityManager implements EntityManager {
+	public static boolean useDomainStore() {
+		return ResourceUtilities.is(DomainStoreEntityManager.class,
+				"useDomainStore");
+	}
+
 	private EntityManager delegate;
 
 	public DomainStoreEntityManager(EntityManager delegate) {
@@ -119,8 +124,7 @@ public class DomainStoreEntityManager implements EntityManager {
 	public Object getDelegate() {
 		Object subDelegate = this.delegate == null ? null
 				: this.delegate.getDelegate();
-		if (ResourceUtilities.is(DomainStoreEntityManager.class,
-				"useDomainStore")) {
+		if (useDomainStore()) {
 			return new DomainStoreSession((Session) subDelegate);
 		} else {
 			return subDelegate;

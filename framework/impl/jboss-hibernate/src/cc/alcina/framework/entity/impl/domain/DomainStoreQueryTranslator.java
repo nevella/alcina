@@ -85,8 +85,17 @@ public class DomainStoreQueryTranslator {
 
 	public String translatePropertyPath(Criterion criterion,
 			DomainStoreCriteria context, String propertyPath) {
-		if (!propertyPath.contains(".") && context != null) {
-			propertyPath = context.alias + "." + propertyPath;
+		if (context != null) {
+			if (propertyPath.contains(".")) {
+				// chain to the root
+				DomainStoreCriteria cursor = context;
+				while (cursor.parent != null) {
+					propertyPath = cursor.associationPath + "." + propertyPath;
+					cursor = cursor.parent;
+				}
+			} else {
+				propertyPath = context.alias + "." + propertyPath;
+			}
 		}
 		if (propertyPath.contains(".")) {
 			int idx = propertyPath.indexOf(".");
@@ -704,6 +713,8 @@ public class DomainStoreQueryTranslator {
 								.getProjection(idx);
 						addProjection(projection);
 					}
+				} else if (wrapped instanceof PropertyProjection) {
+					addProjection(wrapped);
 				} else {
 					throw new NotHandledException(rootProjection.toString());
 				}
