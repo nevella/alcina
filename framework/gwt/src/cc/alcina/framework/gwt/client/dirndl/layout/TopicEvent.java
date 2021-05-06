@@ -17,16 +17,20 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.Behaviou
 
 public class TopicEvent<T> extends NodeEvent {
 	public static void fire(Context context, Class<? extends NodeTopic> topic,
-			Class<? extends Function> payloadTransformer,
+			Class<? extends Function> payloadTransformer, Object payload,
 			boolean programmatic) {
 		TopicEvent topicEvent = new TopicEvent(context);
 		topicEvent.topic = topic;
-		if (payloadTransformer == IdentityFunction.class) {
-			topicEvent.payload = context.node;
+		if (payload == null) {
+			if (payloadTransformer == IdentityFunction.class) {
+				topicEvent.payload = context.node;
+			} else {
+				Function<Node, ?> transformerImpl = Reflections
+						.newInstance(payloadTransformer);
+				topicEvent.payload = transformerImpl.apply(context.node);
+			}
 		} else {
-			Function<Node, ?> transformerImpl = Reflections
-					.newInstance(payloadTransformer);
-			topicEvent.payload = transformerImpl.apply(context.node);
+			topicEvent.payload = payload;
 		}
 		/*
 		 * Code event, use listeners on the emitting behaviour binding

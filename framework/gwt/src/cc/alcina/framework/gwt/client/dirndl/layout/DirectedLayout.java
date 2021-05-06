@@ -755,7 +755,7 @@ public class DirectedLayout {
 			void onTopicEvent(TopicEvent topicEvent) {
 				if (Behaviour.Util.hasActivationTopic(behaviour,
 						topicEvent.topic)) {
-					bindEvent(true);
+					bindEvent((boolean) topicEvent.payload);
 				}
 				if (Behaviour.Util.hasListenerTopic(behaviour,
 						topicEvent.topic)) {

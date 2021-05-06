@@ -153,7 +153,7 @@ public class LinkModel {
 						context.node = node;
 						context.topicListeners = new TopicListeners();
 						TopicEvent.fire(context, behaviour.topic(),
-								behaviour.payloadTransformer(), false);
+								behaviour.payloadTransformer(), null, false);
 					}, ClickEvent.getType());
 				}
 			}

@@ -13,6 +13,6 @@ public class EmitTopicHandler implements NodeEvent.Handler {
 		TopicBehaviour behaviour = Behaviour.Util
 				.getEmitTopicBehaviour(context.behaviour);
 		TopicEvent.fire(context, behaviour.topic(),
-				behaviour.payloadTransformer(), false);
+				behaviour.payloadTransformer(), null, false);
 	}
 }
