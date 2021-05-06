@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.zip.GZIPOutputStream;
 
 import org.objenesis.Objenesis;
 import org.objenesis.ObjenesisStd;
@@ -33,12 +34,14 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 
 public class StatsFilter extends CollectionProjectionFilter {
@@ -54,14 +57,22 @@ public class StatsFilter extends CollectionProjectionFilter {
 			oos.writeObject(resultObject);
 			oos.close();
 			MetricLogging.get().end("serialize-jvm");
+			System.out.format("\njava-ser size:%s\n\n", out.size());
 			MetricLogging.get().start("serialize-kryo");
 			Kryo kryo = new Kryo();
-			ByteArrayOutputStream baos = new ByteArrayOutputStream();
-			Output output = new Output(baos);
+			out = new ByteArrayOutputStream();
+			Output output = new Output(out);
 			kryo.writeObject(output, resultObject);
 			output.flush();
 			MetricLogging.get().end("serialize-kryo");
-			System.out.format("\njava-ser size:%s\n\n", out.size());
+			System.out.format("\nkryo-ser size:%s\n\n", out.size());
+			MetricLogging.get().start("serialize-alcina");
+			String string = AlcinaBeanSerializer.serializeHolder(resultObject);
+			MetricLogging.get().end("serialize-alcina");
+			out = new ByteArrayOutputStream();
+			ResourceUtilities.writeStringToOutputStream(string,
+					new GZIPOutputStream(out));
+			System.out.format("\nkryo-ser size:%s\n\n", out.size());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

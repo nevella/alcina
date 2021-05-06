@@ -27,8 +27,10 @@ import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
@@ -40,7 +42,7 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
-public abstract class ClassRef extends Entity {
+public abstract class ClassRef extends Entity implements TreeSerializable {
 	private static Map<String, ClassRef> refMap = new HashMap<String, ClassRef>();
 
 	private static Map<Long, ClassRef> idMap = new HashMap<Long, ClassRef>();
@@ -89,6 +91,7 @@ public abstract class ClassRef extends Entity {
 
 	@Transient
 	@XmlTransient
+	@AlcinaTransient
 	public Class getRefClass() {
 		if (this.refClass == null && this.refClassName != null) {
 			try {

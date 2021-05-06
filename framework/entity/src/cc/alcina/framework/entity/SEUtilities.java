@@ -106,7 +106,9 @@ public class SEUtilities {
 	private static Pattern yearRangePattern = Pattern
 			.compile("(\\d{4})(-(\\d{4}))?");
 
-	private static Map<Class, Map<String, PropertyDescriptor>> pdLookup = new LinkedHashMap<>();
+	private static Map<Class, Map<String, PropertyDescriptor>> propertyDescriptorLookup = new ConcurrentHashMap<>();
+
+	private static Map<Class, List<PropertyDescriptor>> sortedPropertyDescriptorLookup = new ConcurrentHashMap<>();
 
 	private static Map<Class, List<Method>> allMethodsPerClass = new ConcurrentHashMap<>();
 
@@ -164,7 +166,7 @@ public class SEUtilities {
 	}
 
 	public static void appShutdown() {
-		pdLookup = null;
+		propertyDescriptorLookup = null;
 	}
 
 	public static void clearAllFields(Object object) {
@@ -854,7 +856,7 @@ public class SEUtilities {
 			List<String> ignore) {
 		Class<? extends Object> clazz = obj.getClass();
 		ensureDescriptorLookup(clazz);
-		return pdLookup.get(clazz).entrySet().stream()
+		return propertyDescriptorLookup.get(clazz).entrySet().stream()
 				.filter(e -> !ignore.contains(e.getKey()))
 				.collect(Collectors.toMap(e -> e.getKey(), e -> e.getValue()));
 	}
@@ -862,7 +864,8 @@ public class SEUtilities {
 	public static PropertyDescriptor getPropertyDescriptorByName(Class clazz,
 			String propertyName) {
 		ensureDescriptorLookup(clazz);
-		PropertyDescriptor cached = pdLookup.get(clazz).get(propertyName);
+		PropertyDescriptor cached = propertyDescriptorLookup.get(clazz)
+				.get(propertyName);
 		return cached;
 	}
 
@@ -870,7 +873,7 @@ public class SEUtilities {
 			getPropertyDescriptorsSortedByField(Class clazz) {
 		ensureDescriptorLookup(clazz);
 		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
-				pdLookup.get(clazz).values());
+				propertyDescriptorLookup.get(clazz).values());
 		Map<String, Integer> fieldOrdinals = new LinkedHashMap<>();
 		allFields(clazz).stream().map(Field::getName).distinct()
 				.forEach(name -> fieldOrdinals.put(name, fieldOrdinals.size()));
@@ -920,18 +923,21 @@ public class SEUtilities {
 	}
 
 	public static List<PropertyDescriptor>
-			getSortedPropertyDescriptors(Class clazz) {
-		ensureDescriptorLookup(clazz);
-		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
-				pdLookup.get(clazz).values());
-		Comparator<PropertyDescriptor> pdNameComparator = new Comparator<PropertyDescriptor>() {
-			@Override
-			public int compare(PropertyDescriptor o1, PropertyDescriptor o2) {
-				return o1.getName().compareTo(o2.getName());
-			}
-		};
-		Collections.sort(result, pdNameComparator);
-		return result;
+			getSortedPropertyDescriptors(Class clazz0) {
+		return sortedPropertyDescriptorLookup.computeIfAbsent(clazz0, clazz -> {
+			ensureDescriptorLookup(clazz);
+			List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
+					propertyDescriptorLookup.get(clazz).values());
+			Comparator<PropertyDescriptor> pdNameComparator = new Comparator<PropertyDescriptor>() {
+				@Override
+				public int compare(PropertyDescriptor o1,
+						PropertyDescriptor o2) {
+					return o1.getName().compareTo(o2.getName());
+				}
+			};
+			Collections.sort(result, pdNameComparator);
+			return result;
+		});
 	}
 
 	public static String getStacktraceSlice(Thread t) {
@@ -1488,24 +1494,20 @@ public class SEUtilities {
 		}
 	}
 
-	protected static void ensureDescriptorLookup(Class clazz) {
-		try {
-			if (!pdLookup.containsKey(clazz)) {
-				synchronized (pdLookup) {
-					if (!pdLookup.containsKey(clazz)) {
-						Map<String, PropertyDescriptor> map = new LinkedHashMap<>();
-						PropertyDescriptor[] pds = Introspector
-								.getBeanInfo(clazz).getPropertyDescriptors();
-						for (PropertyDescriptor pd : pds) {
-							map.put(pd.getName(), pd);
-						}
-						pdLookup.put(clazz, map);
-					}
+	protected static void ensureDescriptorLookup(Class clazz0) {
+		propertyDescriptorLookup.computeIfAbsent(clazz0, clazz -> {
+			try {
+				Map<String, PropertyDescriptor> map = new LinkedHashMap<>();
+				PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
+						.getPropertyDescriptors();
+				for (PropertyDescriptor pd : pds) {
+					map.put(pd.getName(), pd);
 				}
+				return map;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
 			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		});
 	}
 
 	public static class Bytes {
