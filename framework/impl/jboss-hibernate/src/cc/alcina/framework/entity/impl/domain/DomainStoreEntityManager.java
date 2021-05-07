@@ -18,6 +18,12 @@ import org.hibernate.Session;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class DomainStoreEntityManager implements EntityManager {
+	public static final String ORDER_HANDLER = "orderHandler:";
+
+	public static String orderHandlerHint(Class criteriaClass) {
+		return ORDER_HANDLER + criteriaClass.getName();
+	}
+
 	public static boolean useDomainStore() {
 		return ResourceUtilities.is(DomainStoreEntityManager.class,
 				"useDomainStore");

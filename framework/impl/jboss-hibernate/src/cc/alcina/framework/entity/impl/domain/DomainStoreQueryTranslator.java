@@ -34,6 +34,7 @@ import org.hibernate.transform.ResultTransformer;
 import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.Converter;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FilterOperator;
@@ -138,6 +139,7 @@ public class DomainStoreQueryTranslator {
 	}
 
 	private void addOrders(DomainStoreCriteria criteria) {
+		// TODO
 	}
 
 	private void addRestrictions(DomainStoreCriteria criteria)
@@ -151,12 +153,26 @@ public class DomainStoreQueryTranslator {
 			addRestrictions(sub);
 		}
 		addOrders(criteria);
+		handleHints(criteria);
 	}
 
 	private void checkHandlesClass(Class clazz) throws NotHandledException {
 		if (!query.getStore().isCached(clazz)) {
 			throw new NotHandledException(
 					"Not handled class - " + clazz.getSimpleName());
+		}
+	}
+
+	private void handleHints(DomainStoreCriteria criteria) {
+		for (String hint : criteria.hints) {
+			if (hint.startsWith(DomainStoreEntityManager.ORDER_HANDLER)) {
+				String className = hint.substring(
+						DomainStoreEntityManager.ORDER_HANDLER.length());
+				Registry.impl(OrderHandler.class,
+						Reflections.forName(className)).addOrder(query);
+			} else {
+				throw new UnsupportedOperationException();
+			}
 		}
 	}
 
@@ -356,6 +372,10 @@ public class DomainStoreQueryTranslator {
 					getStringFieldValue(criterion, "propertyName"));
 			return new DomainFilter(propertyName, null, FilterOperator.EQ);
 		}
+	}
+
+	public interface OrderHandler {
+		void addOrder(DomainStoreQuery query);
 	}
 
 	public static class SimpleExpressionTranslator

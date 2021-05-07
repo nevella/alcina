@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.impl.domain;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 
@@ -47,6 +48,8 @@ public class DomainStoreCriteria implements Criteria {
 	int maxResults;
 
 	int firstResult;
+
+	Set<String> hints = new LinkedHashSet<>();
 
 	private ResultTransformer resultTransformer;
 
@@ -97,6 +100,7 @@ public class DomainStoreCriteria implements Criteria {
 
 	@Override
 	public Criteria addQueryHint(String hint) {
+		hints.add(hint);
 		return this;
 	}
 
