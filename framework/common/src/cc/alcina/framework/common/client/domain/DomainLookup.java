@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.domain;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashSet;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -11,7 +12,6 @@ import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.MultisetCreator;
@@ -63,18 +63,15 @@ public class DomainLookup<T, E extends Entity>
 	}
 
 	@Override
-	public Set<E> getKeyMayBeCollection(Object value) {
+	public StreamOrSet<E> getKeyMayBeCollection(Object value) {
 		if (value instanceof Collection) {
-			Set<E> result = new LiSet<>();
-			for (T t : (Collection<T>) value) {
-				Set<E> values = get(normalise(t));
-				if (values != null) {
-					result.addAll(values);
-				}
-			}
-			return result;
+			Stream<Set> s1 = ((Collection) value).stream()
+					.map(o -> get(normalise((T) o))).filter(Objects::nonNull);
+			Stream<E> stream = s1.flatMap(Collection::stream);
+			return new StreamOrSet<>(stream);
 		} else {
-			return get(normalise((T) value));
+			Set<E> set = get(normalise((T) value));
+			return set == null ? null : new StreamOrSet<>(set);
 		}
 	}
 

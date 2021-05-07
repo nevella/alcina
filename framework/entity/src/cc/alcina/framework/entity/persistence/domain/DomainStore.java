@@ -58,6 +58,7 @@ import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.FilterCost;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.domain.IndexedValueProvider;
+import cc.alcina.framework.common.client.domain.IndexedValueProvider.StreamOrSet;
 import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.ObjectMemory;
 import cc.alcina.framework.common.client.domain.MemoryStat.StatType;
@@ -87,6 +88,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.NonDomainNotifier;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
@@ -517,7 +519,7 @@ public class DomainStore implements IDomainStore {
 				// FIXME - mvcc.query - if we have estimates of size, we might
 				// be
 				// able to optimise here
-				Set<E> indexedValues = valueProvider
+				StreamOrSet<E> indexedValues = valueProvider
 						.getKeyMayBeCollection(filter.getPropertyValue());
 				token.appendEvaluatedValueFilter(indexedValues);
 				return;
@@ -565,31 +567,19 @@ public class DomainStore implements IDomainStore {
 	}
 
 	private IndexedValueProvider getValueProviderFor(Class clazz,
-			String propertyName) {
-		if ("id".equals(propertyName)) {
-			return new IndexedValueProvider() {
-				@Override
-				public FilterCost estimateFilterCost(int entityCount,
-						DomainFilter... filters) {
-					return FilterCost.lookupProjectionCost();
-				}
-
-				@Override
-				public Set getKeyMayBeCollection(Object value) {
-					if (value instanceof Collection) {
-						Stream<Entity> stream = ((Collection<Long>) value)
-								.stream()
-								.map(id -> (Entity) cache.get(clazz, id));
-						return (Set) stream.collect(Collectors.toSet());
-					} else {
-						long id = (long) value;
-						return Collections.singleton(cache.get(clazz, id));
-					}
-				}
-			};
-		} else {
-			return getLookupFor(clazz, propertyName);
+			String propertyPath) {
+		if ("id".equals(propertyPath)) {
+			return new CacheIdProvider(clazz);
+		} else if (Ax.matches(propertyPath, "[^.]+\\.id")) {
+			String propertyName = propertyPath.replaceFirst("(.+)\\.id", "$1");
+			Association association = Reflections.propertyAccessor()
+					.getAnnotationForProperty(clazz, Association.class,
+							propertyName);
+			if (association != null) {
+				return new AssociationIdProvider(clazz, propertyName);
+			}
 		}
+		return getLookupFor(clazz, propertyPath);
 	}
 
 	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
@@ -1306,6 +1296,70 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	private class AssociationIdProvider implements IndexedValueProvider {
+		private Class clazz;
+
+		private String propertyName;
+
+		public AssociationIdProvider(Class clazz, String propertyName) {
+			this.clazz = clazz;
+			this.propertyName = propertyName;
+		}
+
+		@Override
+		public FilterCost estimateFilterCost(int entityCount,
+				DomainFilter... filters) {
+			return FilterCost.lookupProjectionCost();
+		}
+
+		@Override
+		public StreamOrSet getKeyMayBeCollection(Object value) {
+			PropertyReflector propertyReflector = Reflections.classLookup()
+					.getPropertyReflector(clazz, propertyName);
+			Association association = propertyReflector
+					.getAnnotation(Association.class);
+			Class<? extends Entity> associationClass = association
+					.implementationClass();
+			PropertyReflector associationReflector = Reflections.classLookup()
+					.getPropertyReflector(associationClass,
+							association.propertyName());
+			Collection<Long> ids = CommonUtils.wrapInCollection(value);
+			Stream<Entity> stream = ((Collection<Long>) value).stream()
+					.map(id -> (Entity) cache.get(associationClass, id))
+					.filter(Objects::nonNull);
+			stream = stream.map(e -> ((Set<Entity>) associationReflector
+					.getPropertyValue(e))).flatMap(Collection::stream);
+			return new StreamOrSet<>(stream);
+		}
+	}
+
+	private class CacheIdProvider implements IndexedValueProvider {
+		private final Class clazz;
+
+		private CacheIdProvider(Class clazz) {
+			this.clazz = clazz;
+		}
+
+		@Override
+		public FilterCost estimateFilterCost(int entityCount,
+				DomainFilter... filters) {
+			return FilterCost.lookupProjectionCost();
+		}
+
+		@Override
+		public StreamOrSet getKeyMayBeCollection(Object value) {
+			if (value instanceof Collection) {
+				return new StreamOrSet(((Collection<Long>) value).stream()
+						.map(id -> (Entity) cache.get(this.clazz, id))
+						.filter(Objects::nonNull));
+			} else {
+				long id = (long) value;
+				return new StreamOrSet(Stream.of(cache.get(this.clazz, id))
+						.filter(Objects::nonNull));
+			}
+		}
+	}
+
 	private class ComplexFilterContextImpl<E extends Entity>
 			implements ComplexFilterContext<E> {
 		private final Class clazz;
@@ -1664,15 +1718,16 @@ public class DomainStore implements IDomainStore {
 			this.query = query;
 		}
 
-		public void appendEvaluatedValueFilter(Set<E> values) {
-			if (values == null || values.size() == 0) {
-				empty = true;
+		public void appendEvaluatedValueFilter(StreamOrSet<E> indexedValues) {
+			if (indexedValues == null) {
 				stream = Stream.empty();
+				empty = true;
 			} else {
 				if (stream == null) {
-					stream = values.stream();
+					stream = indexedValues.provideStream();
 				} else {
-					stream = stream.filter(values::contains);
+					stream = stream
+							.filter(indexedValues.provideSet()::contains);
 				}
 			}
 		}
