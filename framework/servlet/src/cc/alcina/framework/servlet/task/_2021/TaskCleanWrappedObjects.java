@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
@@ -121,20 +122,6 @@ public class TaskCleanWrappedObjects
 		return false;
 	}
 
-	private boolean ignoreRefactored(WrappedObject wrappedObject) {
-		switch (wrappedObject.getClassName()) {
-		case "cc.alcina.framework.gwt.client.data.GeneralProperties":
-		case "cc.alcina.framework.gwt.client.data.export.RowExportContentDefinition":
-		case "cc.alcina.framework.gwt.client.data.export.RowExportRequest":
-		case "au.com.barnet.demeter.entity.cs.report.RowExportContentDefinition":
-		case "au.com.barnet.demeter.entity.cs.report.RowExportRequest":
-		case "au.com.barnet.demeter.entity.cs.report.ShopAdminReportContentDefinition":
-		case "au.com.barnet.demeter.entity.cs.report.ShopAdminReportRequest":
-			return true;
-		}
-		return false;
-	}
-
 	private void updateSerializable(TreeSerializable serializable) {
 		new GraphWalker().walk(serializable, null, (context, object) -> {
 			if (object instanceof TreeSerializable) {
@@ -209,6 +196,8 @@ public class TaskCleanWrappedObjects
 			return Publication.class.isAssignableFrom(clazz)
 					|| WrappedObject.class.isAssignableFrom(clazz);
 		};
+		IgnoreRefactored ignoreRefactored = Registry
+				.impl(IgnoreRefactored.class);
 		LooseContext.set(TransformPropagationPolicy.CONTEXT_PROPAGATION_FILTER,
 				propagationFilter);
 		Set<WrappedObject> noCorrespondingOwner = new LinkedHashSet<>();
@@ -232,7 +221,7 @@ public class TaskCleanWrappedObjects
 				if (convertProperties(wrappedObject)) {
 					((Entity) wrappedObject).delete();
 					itr.remove();
-				} else if (ignoreRefactored(wrappedObject)) {
+				} else if (ignoreRefactored.apply(wrappedObject)) {
 					((Entity) wrappedObject).delete();
 					itr.remove();
 				} else {
@@ -325,6 +314,11 @@ public class TaskCleanWrappedObjects
 		Ax.out("Not handled deser classes:");
 		Ax.out("==========================");
 		Ax.out(notDeserializedWrappedObjectClasses);
+	}
+
+	@RegistryLocation(registryPoint = IgnoreRefactored.class)
+	public static abstract class IgnoreRefactored
+			implements Function<WrappedObject, Boolean> {
 	}
 
 	public static class State implements TreeSerializable {
