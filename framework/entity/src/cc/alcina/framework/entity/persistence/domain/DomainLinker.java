@@ -129,7 +129,7 @@ public class DomainLinker<E extends Entity> {
 	public List<E> linkAndDetach(EntityManager em, String eql) {
 		MethodContext methodContext = MethodContext.instance();
 		if (TransformManager.get().getTransforms().isEmpty()) {
-			methodContext.withExecuteOutsideTransaction();
+			methodContext.withExecuteOutsideTransaction(true);
 		}
 		List<Object[]> objs = methodContext
 				.call(() -> em.createQuery(eql).getResultList());

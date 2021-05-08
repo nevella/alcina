@@ -109,8 +109,9 @@ public class MethodContext {
 		return this;
 	}
 
-	public MethodContext withExecuteOutsideTransaction() {
-		this.executeOutsideTransaction = true;
+	public MethodContext
+			withExecuteOutsideTransaction(boolean executeOutsideTransaction) {
+		this.executeOutsideTransaction = executeOutsideTransaction;
 		return this;
 	}
 

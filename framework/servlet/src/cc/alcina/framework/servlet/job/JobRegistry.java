@@ -37,13 +37,13 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.Job.ResourceRecord;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
-import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.job.JobResult;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.NonRootTask;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.job.TransientFieldTask;
+import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -265,8 +265,7 @@ public class JobRegistry extends WriterService {
 	}
 
 	public Stream<FutureStat> getFutureQueueStats() {
-		return JobDomain.get().getAllFutureJobs()
-				.map(FutureStat::new);
+		return JobDomain.get().getAllFutureJobs().map(FutureStat::new);
 	}
 
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
@@ -371,7 +370,7 @@ public class JobRegistry extends WriterService {
 			} else {
 				forJob.persistProcessState();
 				Transaction.commit();
-				MethodContext.instance().withExecuteOutsideTransaction()
+				MethodContext.instance().withExecuteOutsideTransaction(true)
 						.run(resource::acquire);
 				try {
 					// ensure lazy (process state) field. FIXME - mvcc.jobs.4 -
