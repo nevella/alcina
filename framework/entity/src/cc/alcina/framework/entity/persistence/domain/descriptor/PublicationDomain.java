@@ -22,16 +22,16 @@ public class PublicationDomain {
 		return Registry.impl(PublicationDomain.class);
 	}
 
-	private Class<? extends PublicationCounter> publicationImpl;
+	private Class<? extends PublicationCounter> publicationCounterImpl;
 
 	private Class<? extends Entity> iUserImpl;
 
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
 		this.iUserImpl = (Class<? extends Entity>) PersistentImpl
 				.getImplementation(IUser.class);
-		this.publicationImpl = (Class<? extends PublicationCounter>) PersistentImpl
+		this.publicationCounterImpl = (Class<? extends PublicationCounter>) PersistentImpl
 				.getImplementation(PublicationCounter.class);
-		descriptor.addClassDescriptor(publicationImpl);
+		descriptor.addClassDescriptor(publicationCounterImpl);
 	}
 
 	public void onWarmupComplete(DomainStore domainStore) {
