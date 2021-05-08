@@ -40,6 +40,7 @@ public class PropertiesDomain {
 		Optional<UserProperty> byUserClass = UserProperty.byUserClass(user,
 				clazz);
 		if (!byUserClass.isPresent()) {
+			Transaction.commit();
 			Lockable lock = Locks.get().getUserLock(user);
 			try {
 				lock.acquire();

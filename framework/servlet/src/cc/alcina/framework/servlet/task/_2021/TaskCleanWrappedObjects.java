@@ -18,7 +18,7 @@ import java.util.stream.Collectors;
 
 import javax.persistence.Table;
 
-import com.google.api.client.util.Preconditions;
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.search.EntityCriteriaGroup;
@@ -30,6 +30,8 @@ import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
@@ -113,11 +115,18 @@ public class TaskCleanWrappedObjects
 		if (UserPropertyPersistable.class.isAssignableFrom(clazz)) {
 			// non-optimised but not fussed. This forces a locked property
 			// storage conversion
-			UserPropertyPersistable persistable = PropertiesDomain.get()
-					.getProperties(clazz);
-			Preconditions.checkState(persistable.getUserPropertySupport()
-					.getProperty().domain().wasPersisted());
-			return true;
+			try {
+				PermissionsManager.get().pushUser(wrappedObject.getUser(),
+						LoginState.LOGGED_IN);
+				UserPropertyPersistable persistable = PropertiesDomain.get()
+						.getProperties(clazz);
+				Ax.out(persistable.getUserPropertySupport().getProperty());
+				Preconditions.checkState(persistable.getUserPropertySupport()
+						.getProperty().domain().wasPersisted());
+				return true;
+			} finally {
+				PermissionsManager.get().popUser();
+			}
 		}
 		return false;
 	}
