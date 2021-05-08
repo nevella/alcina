@@ -90,7 +90,7 @@ public class DomainStoreQueryTranslator {
 			if (propertyPath.contains(".")) {
 				// chain to the root
 				DomainStoreCriteria cursor = context;
-				while (cursor.parent != null) {
+				while (cursor.parent != null && cursor.parent.alias == null) {
 					propertyPath = cursor.associationPath + "." + propertyPath;
 					cursor = cursor.parent;
 				}
