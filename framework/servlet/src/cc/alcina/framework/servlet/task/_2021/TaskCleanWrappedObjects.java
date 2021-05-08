@@ -202,8 +202,8 @@ public class TaskCleanWrappedObjects
 		Set<String> notDeserializedWrappedObjectClasses = new TreeSet<>();
 		Predicate<DomainTransformEvent> propagationFilter = evt -> {
 			Class clazz = evt.getObjectClass();
-			return Publication.class.isAssignableFrom(clazz)
-					|| WrappedObject.class.isAssignableFrom(clazz);
+			return !(Publication.class.isAssignableFrom(clazz)
+					|| WrappedObject.class.isAssignableFrom(clazz));
 		};
 		IgnoreRefactored ignoreRefactored = Registry
 				.impl(IgnoreRefactored.class);
