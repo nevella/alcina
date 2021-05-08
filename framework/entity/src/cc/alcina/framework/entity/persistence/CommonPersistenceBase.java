@@ -955,24 +955,29 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	// permissions...? (well, it's going away with FIXME - mvcc.wrapped)
 	public <T extends HasId> UnwrapWithExceptionsResult<T>
 			unwrapWithExceptions(Collection<T> wrappers) {
-		preloadWrappedObjects(wrappers);
-		UnwrapWithExceptionsResult<T> result = new UnwrapWithExceptionsResult<>();
-		int exceptionCount = 0;
-		for (T wrapper : wrappers) {
-			try {
-				unwrap(wrapper);
-				result.unwrapped.add(wrapper);
-			} catch (RuntimeException e) {
-				if (result.exceptions.size() <= 5) {
-					result.exceptions.put(wrapper, e);
-					System.out.println(e.getMessage());
-					if (e.getCause() != null && e.getCause() != e) {
-						System.out.println(e.getCause().getMessage());
+		return MethodContext.instance()
+				.withContextTrue(WrappedObjectProvider.CONTEXT_DO_NOT_CREATE)
+				.call(() -> {
+					preloadWrappedObjects(wrappers);
+					UnwrapWithExceptionsResult<T> result = new UnwrapWithExceptionsResult<>();
+					int exceptionCount = 0;
+					for (T wrapper : wrappers) {
+						try {
+							unwrap(wrapper);
+							result.unwrapped.add(wrapper);
+						} catch (RuntimeException e) {
+							if (result.exceptions.size() <= 5) {
+								result.exceptions.put(wrapper, e);
+								System.out.println(e.getMessage());
+								if (e.getCause() != null && e.getCause() != e) {
+									System.out
+											.println(e.getCause().getMessage());
+								}
+							}
+						}
 					}
-				}
-			}
-		}
-		return result;
+					return result;
+				});
 	}
 
 	@Override

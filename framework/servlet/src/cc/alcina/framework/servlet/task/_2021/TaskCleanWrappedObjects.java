@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.task._2021;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -41,9 +42,11 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase.UnwrapWithExceptionsResult;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.WrappedObject;
+import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.persistence.domain.ClassIdLock;
 import cc.alcina.framework.entity.persistence.domain.DataSourceAdapter;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -76,6 +79,12 @@ public class TaskCleanWrappedObjects
 
 	private String wrappedObjectTableName;
 
+	private int sliceSize = 1000;
+
+	public int getSliceSize() {
+		return this.sliceSize;
+	}
+
 	public boolean isResetMaxCleanedId() {
 		return this.resetMaxCleanedId;
 	}
@@ -84,8 +93,15 @@ public class TaskCleanWrappedObjects
 		this.resetMaxCleanedId = resetMaxCleanedId;
 	}
 
+	public void setSliceSize(int sliceSize) {
+		this.sliceSize = sliceSize;
+	}
+
 	private boolean convertProperties(WrappedObject wrappedObject) {
 		Class clazz = null;
+		if (wrappedObject.getClassName() == null) {
+			return true;
+		}
 		try {
 			clazz = Reflections.forName(wrappedObject.getClassName());
 		} catch (Exception e) {
@@ -100,6 +116,20 @@ public class TaskCleanWrappedObjects
 					.getProperties(clazz);
 			Preconditions.checkState(persistable.getUserPropertySupport()
 					.getProperty().domain().wasPersisted());
+			return true;
+		}
+		return false;
+	}
+
+	private boolean ignoreRefactored(WrappedObject wrappedObject) {
+		switch (wrappedObject.getClassName()) {
+		case "cc.alcina.framework.gwt.client.data.GeneralProperties":
+		case "cc.alcina.framework.gwt.client.data.export.RowExportContentDefinition":
+		case "cc.alcina.framework.gwt.client.data.export.RowExportRequest":
+		case "au.com.barnet.demeter.entity.cs.report.RowExportContentDefinition":
+		case "au.com.barnet.demeter.entity.cs.report.RowExportRequest":
+		case "au.com.barnet.demeter.entity.cs.report.ShopAdminReportContentDefinition":
+		case "au.com.barnet.demeter.entity.cs.report.ShopAdminReportRequest":
 			return true;
 		}
 		return false;
@@ -164,7 +194,6 @@ public class TaskCleanWrappedObjects
 		loadLookups();
 		logger.info("Beginning run - from: {}; max: {}; size; {}",
 				state.maxCleanedId, state.maxId, state.size);
-		int sliceSize = 1000;
 		if (resetMaxCleanedId) {
 			state.maxCleanedId = 0;
 		}
@@ -182,6 +211,9 @@ public class TaskCleanWrappedObjects
 		};
 		LooseContext.set(TransformPropagationPolicy.CONTEXT_PROPAGATION_FILTER,
 				propagationFilter);
+		Set<WrappedObject> noCorrespondingOwner = new LinkedHashSet<>();
+		List<Map.Entry<Publication, RuntimeException>> publicationWrapperExceptions = new ArrayList<>();
+		Multimap<Publication, List<WrappedObject>> publicationWrapperExceptionsWrappedObjects = new Multimap<>();
 		while (cursor <= state.maxId) {
 			String key = "clean-loop:" + cursor;
 			MetricLogging.get().start(key);
@@ -200,7 +232,15 @@ public class TaskCleanWrappedObjects
 				if (convertProperties(wrappedObject)) {
 					((Entity) wrappedObject).delete();
 					itr.remove();
+				} else if (ignoreRefactored(wrappedObject)) {
+					((Entity) wrappedObject).delete();
+					itr.remove();
 				} else {
+					if (id == cursor + sliceSize - 1 || id == cursor) {
+						// avoid deletion of contendef wrapper but not deliv
+						// model wrapper, or v-v
+						continue;
+					}
 					Long publicationId = contentDefinitionPublication.get(id);
 					if (publicationId == null) {
 						publicationId = deliveryModelPublication.get(id);
@@ -209,6 +249,8 @@ public class TaskCleanWrappedObjects
 						publicationIds.add(publicationId);
 						wrappedByPublicationId.add(publicationId,
 								wrappedObject);
+					} else {
+						noCorrespondingOwner.add(wrappedObject);
 					}
 				}
 			}
@@ -224,6 +266,12 @@ public class TaskCleanWrappedObjects
 			UnwrapWithExceptionsResult<Publication> unwrapped = CommonPersistenceProvider
 					.get().getCommonPersistence()
 					.unwrapWithExceptions(publications);
+			publicationWrapperExceptions
+					.addAll(unwrapped.exceptions.entrySet());
+			unwrapped.exceptions.forEach((p, e) -> {
+				publicationWrapperExceptionsWrappedObjects.put(p,
+						wrappedByPublicationId.get(p.getId()));
+			});
 			unwrapped.unwrapped.forEach(pub -> {
 				DeliveryModel deliveryModel = pub.getDeliveryModel();
 				Preconditions.checkState(deliveryModel != null);
@@ -241,8 +289,9 @@ public class TaskCleanWrappedObjects
 				logger.warn("Not handled: {}", wrappedObjects.stream()
 						.map(HasId::getId).collect(Collectors.toList()));
 			}
-			wrappedObjects.stream().forEach(w -> {
-				notDeserializedWrappedObjectClasses.add(w.getClassName());
+			wrappedObjects.stream().forEach(wrappedObject -> {
+				notDeserializedWrappedObjectClasses
+						.add(wrappedObject.getClassName());
 			});
 			cursor += sliceSize;
 			if (!hadNotHandled) {
@@ -254,6 +303,28 @@ public class TaskCleanWrappedObjects
 		}
 		Transaction.commit();
 		conn.close();
+		if (publicationWrapperExceptions.size() > 0) {
+			publicationWrapperExceptions.stream().limit(5).forEach(e -> {
+				Ax.out("Publication exception: %s %s", e.getKey().getId(),
+						e.getKey().getPublicationDate());
+				Ax.out("%s", SEUtilities.getFullExceptionMessage(e.getValue()));
+				List<WrappedObject> list = publicationWrapperExceptionsWrappedObjects
+						.get(e.getKey());
+				try {
+					WrappedObjectHelper.xmlDeserialize(
+							Reflections.forName(list.get(0).getClassName()),
+							list.get(0).getSerializedXml());
+					int debug = 3;
+				} catch (Exception e1) {
+					e1.printStackTrace();
+				}
+			});
+		}
+		if (noCorrespondingOwner.size() > 0) {
+			Ax.out("No corresponding owner:");
+			Ax.out("==========================");
+			Ax.out(EntityHelper.toIdSet((Set) noCorrespondingOwner));
+		}
 		Ax.out("Not handled deser classes:");
 		Ax.out("==========================");
 		Ax.out(notDeserializedWrappedObjectClasses);
