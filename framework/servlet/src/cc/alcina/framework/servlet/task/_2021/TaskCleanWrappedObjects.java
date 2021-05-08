@@ -236,11 +236,6 @@ public class TaskCleanWrappedObjects
 					((Entity) wrappedObject).delete();
 					itr.remove();
 				} else {
-					if (id == cursor + sliceSize - 1 || id == cursor) {
-						// avoid deletion of contendef wrapper but not deliv
-						// model wrapper, or v-v
-						continue;
-					}
 					Long publicationId = contentDefinitionPublication.get(id);
 					if (publicationId == null) {
 						publicationId = deliveryModelPublication.get(id);
@@ -273,11 +268,13 @@ public class TaskCleanWrappedObjects
 						wrappedByPublicationId.get(p.getId()));
 			});
 			unwrapped.unwrapped.forEach(pub -> {
-				DeliveryModel deliveryModel = pub.getDeliveryModel();
-				Preconditions.checkState(deliveryModel != null);
-				updateSerializable(deliveryModel);
-				idMap.get(pub.getId())
-						.setDefinition((Definition) deliveryModel);
+				if (pub.getDefinitionSerialized() == null) {
+					DeliveryModel deliveryModel = pub.getDeliveryModel();
+					Preconditions.checkState(deliveryModel != null);
+					updateSerializable(deliveryModel);
+					idMap.get(pub.getId())
+							.setDefinition((Definition) deliveryModel);
+				}
 				wrappedByPublicationId.get(pub.getId()).forEach(w -> {
 					wrappedObjects.remove(w);
 					((Entity) w).delete();
