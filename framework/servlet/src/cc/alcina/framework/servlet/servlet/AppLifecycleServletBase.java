@@ -54,10 +54,10 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMetadataCacheProvider;
-import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.DbAppender;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.DegenerateCreatorMvcc;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
@@ -66,11 +66,13 @@ import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
@@ -84,6 +86,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	private Date startupTime;
 
 	protected ServletClassMetadataCacheProvider classMetadataCacheProvider = new CachingServletClassMetadataCacheProvider();
+
+	private SerializationSignatureListener serializationSignatureListener;
 
 	public void clearJarCache() {
 		try {
@@ -182,6 +186,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initEntityLayer();
 			postInitEntityLayer();
 			initCustom();
+			runFinalPreInitTasks();
 			ServletLayerUtils.setAppServletInitialised(true);
 			onAppServletInitialised();
 			launchPostInitTasks();
@@ -461,9 +466,17 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void postInitEntityLayer() {
 		if (DomainStore.stores().hasInitialisedDatabaseStore()) {
 			BackendTransformQueue.get().start();
+			serializationSignatureListener = new SerializationSignatureListener();
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.addDomainTransformPersistenceListener(
-							new SerializationSignatureListener());
+							serializationSignatureListener);
+		}
+	}
+
+	protected void runFinalPreInitTasks() {
+		if (serializationSignatureListener != null) {
+			MethodContext.instance().withRunInNewThread(Sx.isTestServer()).call(
+					() -> serializationSignatureListener.ensureSignature());
 		}
 	}
 

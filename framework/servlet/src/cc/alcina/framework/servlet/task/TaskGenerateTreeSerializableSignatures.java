@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.task;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.Date;
@@ -10,8 +11,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
-
-import org.eclipse.jdt.core.dom.Modifier;
 
 import com.google.common.base.Preconditions;
 

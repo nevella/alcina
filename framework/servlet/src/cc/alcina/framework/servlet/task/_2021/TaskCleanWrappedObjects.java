@@ -76,9 +76,9 @@ public class TaskCleanWrappedObjects
 
 	private boolean resetMaxCleanedId = true;
 
-	private String publicationTableName;
+	private transient String publicationTableName;
 
-	private String wrappedObjectTableName;
+	private transient String wrappedObjectTableName;
 
 	private int sliceSize = 1000;
 

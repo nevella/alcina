@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformCollatio
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
@@ -27,6 +28,37 @@ import cc.alcina.framework.servlet.task.TaskGenerateTreeSerializableSignatures;
 public class SerializationSignatureListener
 		implements DomainTransformPersistenceListener {
 	private String signature;
+
+	public synchronized String ensureSignature() {
+		if (signature == null) {
+			if (!ResourceUtilities.is("enabled")) {
+				return null;
+			}
+			CountDownLatch latch = new CountDownLatch(1);
+			TaskGenerateTreeSerializableSignatures task = new TaskGenerateTreeSerializableSignatures();
+			AlcinaChildContextRunner
+					.runInTransactionNewThread("Ensure signatures", () -> {
+						try {
+							task.run();
+						} catch (Exception e) {
+							e.printStackTrace();
+						} finally {
+							latch.countDown();
+						}
+					});
+			try {
+				latch.await();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			signature = task.getSignature();
+			if (signature == null) {
+				signature = Ax.format("(exception generating signature) %s",
+						System.currentTimeMillis());
+			}
+		}
+		return signature;
+	}
 
 	@Override
 	public void onDomainTransformRequestPersistence(
@@ -85,24 +117,5 @@ public class SerializationSignatureListener
 				}
 			}
 		}
-	}
-
-	private synchronized String ensureSignature() {
-		if (signature == null) {
-			CountDownLatch latch = new CountDownLatch(1);
-			TaskGenerateTreeSerializableSignatures task = new TaskGenerateTreeSerializableSignatures();
-			AlcinaChildContextRunner
-					.runInTransactionNewThread("Ensure signatures", () -> {
-						task.run();
-						latch.countDown();
-					});
-			try {
-				latch.await();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			signature = task.getSignature();
-		}
-		return signature;
 	}
 }

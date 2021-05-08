@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.google;
 
 import java.io.File;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
@@ -10,7 +11,6 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import org.eclipse.jdt.core.dom.Modifier;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

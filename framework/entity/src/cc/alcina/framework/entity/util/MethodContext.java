@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.concurrent.Callable;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.MetricLogging;
@@ -33,7 +34,15 @@ public class MethodContext {
 
 	private boolean executeOutsideTransaction;
 
+	private boolean runInNewThread;
+
 	public <T> T call(Callable<T> callable) {
+		if (runInNewThread) {
+			AlcinaChildRunnable.runInTransactionNewThread(
+					Ax.format("child-thread-%s", callable.getClass().getName()),
+					() -> callable.call());
+			return null;
+		}
 		entryClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean pushedRoot = false;
 		boolean inTransaction = Transaction.isInTransaction();
@@ -122,6 +131,11 @@ public class MethodContext {
 
 	public MethodContext withRootPermissions(boolean rootPermissions) {
 		this.rootPermissions = rootPermissions;
+		return this;
+	}
+
+	public MethodContext withRunInNewThread(boolean runInNewThread) {
+		this.runInNewThread = runInNewThread;
 		return this;
 	}
 
