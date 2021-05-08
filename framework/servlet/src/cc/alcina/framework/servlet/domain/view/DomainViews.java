@@ -25,6 +25,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.HandlerData;
+import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.Type;
 
 @RegistryLocation(registryPoint = DomainViews.class, implementationType = ImplementationType.SINGLETON)
 /**
@@ -70,6 +71,7 @@ public abstract class DomainViews {
 			k, e) -> {
 		if (isIndexableTransformRequest(e)) {
 			ViewsTask task = new ViewsTask();
+			task.type = Type.MODEL_CHANGE;
 			task.modelChange.preCommit = preCommitTransactions.get(e);
 			task.modelChange.postCommit = Transaction
 					.createSnapshotTransaction();
@@ -135,7 +137,7 @@ public abstract class DomainViews {
 	void processEvent(ViewsTask task) {
 		switch (task.type) {
 		case MODEL_CHANGE:
-			throw new UnsupportedOperationException();
+			// throw new UnsupportedOperationException();
 		case HANDLE_REQUEST:
 			processRequest(task);
 			break;
