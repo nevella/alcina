@@ -28,11 +28,10 @@ import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
-import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.Event;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventType;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
-import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.Event;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
@@ -251,7 +250,9 @@ class JobAllocator {
 						Transaction.commit();
 					}
 				}
-				JobDomain.get().removeAllocationQueue(job);
+				// don't remove directly - breaks deallocation - rely on
+				// jobprojection to do this correctly
+				// JobDomain.get().removeAllocationQueue(job);
 				onFinished();
 				return;
 			}

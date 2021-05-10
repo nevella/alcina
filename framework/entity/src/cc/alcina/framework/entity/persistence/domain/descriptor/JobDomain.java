@@ -177,7 +177,8 @@ public class JobDomain {
 
 	BlockingQueue<List<JobStateMessage>> stateMessageEventQueue = new LinkedBlockingQueue<>();
 
-	private Set<AllocationQueue> queuesWithBufferedEvents = new LinkedHashSet<>();
+	private Set<AllocationQueue> queuesWithBufferedEvents = Collections
+			.synchronizedSet(new LinkedHashSet<>());
 
 	public void configureDescriptor(DomainStoreDescriptor descriptor) {
 		jobImplClass = PersistentImpl.getImplementation(Job.class);
@@ -292,7 +293,7 @@ public class JobDomain {
 	}
 
 	public void removeAllocationQueue(Job job) {
-		queues.remove(job);
+		AllocationQueue queue = queues.remove(job);
 	}
 
 	private void cleanupQueues() {
