@@ -1324,7 +1324,7 @@ public class DomainStore implements IDomainStore {
 					.getPropertyReflector(associationClass,
 							association.propertyName());
 			Collection<Long> ids = CommonUtils.wrapInCollection(value);
-			Stream<Entity> stream = ((Collection<Long>) value).stream()
+			Stream<Entity> stream = ids.stream()
 					.map(id -> (Entity) cache.get(associationClass, id))
 					.filter(Objects::nonNull);
 			stream = stream.map(e -> ((Set<Entity>) associationReflector
