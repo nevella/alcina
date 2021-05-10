@@ -756,14 +756,14 @@ public class GraphProjection {
 			return projected;
 		}
 		List<Field> primitiveOrDataFieldsForClass = getPrimitiveOrDataFieldsForClass(
-				projected.getClass());
+				source.getClass());
 		/*
 		 * Force previous statement to evaluate before getting "checkFields"
 		 * value
 		 */
 		Preconditions.checkArgument(primitiveOrDataFieldsForClass.size() >= 0);
 		Set<Field> checkFields = perObjectPermissionFields
-				.get(projected.getClass().getName());
+				.get(source.getClass().getName());
 		// primitive/data before non - to ensure recursively reached collections
 		// are ok
 		for (Field field : primitiveOrDataFieldsForClass) {
