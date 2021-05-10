@@ -156,15 +156,15 @@ public class LiveTree {
 		List<Transform> result = new ArrayList<>();
 		LiveNode node = root.atPath(request.getTreePath()).getValue();
 		if (node != null) {
-			{
-				Transform transform = new Transform();
-				transform.setTreePath(request.getTreePath());
-				transform.setNode(node.viewNode);
-				transform.setOperation(Operation.INSERT);
-				result.add(transform);
-			}
 			switch (request.getChildren()) {
-			case IMMEDIATE_ONLY:
+			case IMMEDIATE_ONLY: {
+				{
+					Transform transform = new Transform();
+					transform.setTreePath(request.getTreePath());
+					transform.setNode(node.viewNode);
+					transform.setOperation(Operation.INSERT);
+					result.add(transform);
+				}
 				int index = 0;
 				for (TreePath<LiveNode> childPath : node.path.getChildren()) {
 					{
@@ -176,6 +176,32 @@ public class LiveTree {
 						result.add(transform);
 					}
 				}
+			}
+				break;
+			case DEPTH_FIRST: {
+				int index = 0;
+				int count = 0;
+				Deque<LiveNode> deque = new LinkedList<>();
+				deque.push(node);
+				count++;
+				while (deque.size() > 0) {
+					LiveNode liveNode = deque.removeFirst();
+					count++;
+					if (index++ < 100) {
+						Transform transform = new Transform();
+						transform.setTreePath(liveNode.path.toString());
+						transform.setNode(liveNode.viewNode);
+						transform.setOperation(Operation.INSERT);
+						transform.setIndex(index++);
+						result.add(transform);
+					}
+					liveNode.getPath().getChildren()
+							.forEach(p -> deque.add(p.getValue()));
+				}
+			}
+				break;
+			default:
+				throw new UnsupportedOperationException();
 			}
 		}
 		return result;
@@ -199,7 +225,8 @@ public class LiveTree {
 				Object discriminator, NodeGenerator<?, ?, ?> generator) {
 			PathChange change = new PathChange();
 			change.operation = Operation.INSERT;
-			TreePath<LiveNode> childPath = liveNode.path.addChild(discriminator);
+			TreePath<LiveNode> childPath = liveNode.path
+					.addChild(discriminator);
 			change.path = ensureNode(childPath, generator, discriminator).path;
 			addPathChange(change);
 			return childPath;

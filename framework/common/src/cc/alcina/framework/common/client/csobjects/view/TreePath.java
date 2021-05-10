@@ -216,7 +216,7 @@ public class TreePath<T> extends Model {
 				if (treePath != null) {
 					break;
 				}
-				idx = stringPath.lastIndexOf(".");
+				idx = cursor.lastIndexOf(".");
 				cursor = cursor.substring(0, idx);
 			}
 			while (true) {

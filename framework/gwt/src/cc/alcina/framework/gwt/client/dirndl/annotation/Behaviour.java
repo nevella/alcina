@@ -10,7 +10,6 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.util.IdentityFunction;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour.TopicBehaviourType;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
 import cc.alcina.framework.gwt.client.dirndl.handler.EmitTopicHandler;
@@ -40,20 +39,6 @@ public @interface Behaviour {
 		Class<? extends NodeTopic> topic();
 
 		TopicBehaviourType type();
-
-		public static enum TopicBehaviourType {
-			EMIT, RECEIVE, ACTIVATION;
-
-			boolean isListenerTopic() {
-				switch (this) {
-				case RECEIVE:
-				case ACTIVATION:
-					return true;
-				default:
-					return false;
-				}
-			}
-		}
 	}
 
 	public static class Util {

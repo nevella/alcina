@@ -245,18 +245,36 @@ public class DirectedLayout {
 				 * if the property has a simple @Directed annotation, and the
 				 * class has a non-simple @Directed, use the class
 				 */
+				if (clazz != null
+						&& clazz.getSimpleName().contains("TreeModel")) {
+					int debug = 3;
+				}
 				directed = Registry.impl(DirectedResolver.class, clazz);
 				AnnotationLocation annotationLocation = new AnnotationLocation(
 						clazz, propertyReflector);
 				if (propertyReflector != null
 						&& propertyReflector
 								.getAnnotation(Directed.class) != null
-						&& isDefault(
-								propertyReflector.getAnnotation(Directed.class))
 						&& clazz != null
 						&& Reflections.classLookup().getAnnotationForClass(
 								clazz, Directed.class) != null) {
-					annotationLocation = new AnnotationLocation(clazz, null);
+					if (isDefault(
+							propertyReflector.getAnnotation(Directed.class))) {
+						annotationLocation = new AnnotationLocation(clazz,
+								null);
+						Directed classAnnotation = annotationLocation
+								.getAnnotation(Directed.class);
+						if (classAnnotation != null
+								&& classAnnotation.merge()) {
+							((DirectedResolver) directed)
+									.setMergeLocation(new AnnotationLocation(
+											clazz.getSuperclass(), null));
+						}
+					} else if (propertyReflector.getAnnotation(Directed.class)
+							.merge()) {
+						((DirectedResolver) directed).setMergeLocation(
+								new AnnotationLocation(clazz, null));
+					}
 				}
 				((DirectedResolver) directed).setLocation(annotationLocation);
 			}

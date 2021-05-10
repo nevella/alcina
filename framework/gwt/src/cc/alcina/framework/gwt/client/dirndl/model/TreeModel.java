@@ -9,11 +9,13 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Request;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Transform;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
+import cc.alcina.framework.common.client.util.IdentityFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.TopicBehaviourType;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
@@ -26,19 +28,26 @@ import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererArgs;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.CodeTopic;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.LabelClicked;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.ToggleButtonClicked;
 
 @Directed(tag = "div", cssClass = "dl-tree", bindings = {
 		@Binding(from = "hideRoot", type = Type.CSS_CLASS, literal = "hide-root") }, behaviours = {
-				@Behaviour(event = TopicEvent.class, topics = @TopicBehaviour(topic = ToggleButtonClicked.class, type = TopicBehaviour.TopicBehaviourType.RECEIVE)),
-				@Behaviour(event = TopicEvent.class, topics = @TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviour.TopicBehaviourType.RECEIVE)) })
+				@Behaviour(event = TopicEvent.class, topics = @TopicBehaviour(topic = ToggleButtonClicked.class, type = TopicBehaviourType.RECEIVE)),
+				@Behaviour(event = TopicEvent.class, topics = @TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviourType.RECEIVE)),
+				@Behaviour(handler = EmitTopicHandler.class, event = TopicEvent.class, topics = {
+						@TopicBehaviour(topic = CodeTopic.class, type = TopicBehaviourType.RECEIVE),
+						@TopicBehaviour(topic = SelectionChanged.class, type = TopicBehaviourType.EMIT), }) })
 public class TreeModel<NM extends NodeModel<NM>> extends Model
 		implements NodeEvent.Handler {
 	private boolean hideRoot;
 
 	private NM root;
+
+	protected NM selectedNodeModel;
 
 	@Directed
 	public NM getRoot() {
@@ -52,6 +61,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 	@Override
 	public void onEvent(Context eventContext) {
 		DirectedLayout.Node eventSource = (Node) eventContext.topicEvent.payload;
+		// FIXME - dirndl1.1 - reemit at NodeModel rather than use ancestormodel
 		NM model = eventSource.ancestorModel(m -> m instanceof NodeModel);
 		if (eventContext.topicEvent.topic == ToggleButtonClicked.class) {
 			model.setOpen(!model.isOpen());
@@ -59,8 +69,15 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				model.populated = true;
 				loadChildren(model);
 			}
-		} else {
-			// TODO - fire selection event
+		}
+		if (eventContext.topicEvent.topic == LabelClicked.class) {
+			if (selectedNodeModel != null) {
+				selectedNodeModel.setSelected(false);
+			}
+			selectedNodeModel = model;
+			selectedNodeModel.setSelected(true);
+			TopicEvent.fire(eventContext, SelectionChanged.class,
+					IdentityFunction.class, model, true);
 		}
 	}
 
@@ -161,9 +178,58 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		}
 	}
 
-	public static abstract class DomainViewTreeModel
+	/*
+	 * Non-abstract to export reflected annotations
+	 */
+	public static class DomainViewTreeModel
 			extends TreeModel<DomainViewNodeModel> {
-		public abstract void sendRequest(Request<?> request);
+		private TreePath<DomainViewNodeModel> openingToPath = null;
+
+		private boolean depthFirst;
+
+		public boolean isDepthFirst() {
+			return this.depthFirst;
+		}
+
+		public void openToPath(TreePath<DomainViewNodeModel> initialPath) {
+			if (initialPath != null) {
+				openingToPath = initialPath;
+			}
+			boolean initialCall = initialPath != null;
+			TreePath<DomainViewNodeModel> path = openingToPath;
+			DomainViewNodeModel nodeModel = path.getValue();
+			if (nodeModel != null) {
+				selectedNodeModel = nodeModel;
+				nodeModel.setSelected(true);
+				return;
+			} else {
+				while (nodeModel == null) {
+					path = path.getParent();
+					nodeModel = path.getValue();
+				}
+				if (nodeModel.isOpen()) {
+					if (!initialCall) {
+						openingToPath = null;// path not reachable
+					}
+					return;
+				}
+				{
+					// FIXME - should move most event/handling down to nodemodel
+					// (it fires 'requires_children')
+					nodeModel.setOpen(true);
+					nodeModel.populated = true;
+					loadChildren(nodeModel);
+				}
+			}
+		}
+
+		public void sendRequest(Request<?> request) {
+			throw new UnsupportedOperationException();
+		}
+
+		public void setDepthFirst(boolean depthFirst) {
+			this.depthFirst = depthFirst;
+		}
 
 		protected void apply(Transform transform,
 				boolean fireCollectionModificationEvents) {
@@ -197,6 +263,9 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			// delta children at the end to generate visual nodes after node
 			// tree complete
 			target.setChildren(new IdentityArrayList<>(target.getChildren()));
+			if (openingToPath != null) {
+				openToPath(null);
+			}
 		}
 	}
 
@@ -225,9 +294,10 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 	@Directed(tag = "div", cssClass = "dl-tree-node", bindings = {
 			@Binding(from = "open", type = Type.CSS_CLASS, literal = "open"),
+			@Binding(from = "selected", type = Type.CSS_CLASS, literal = "selected"),
 			@Binding(from = "leaf", type = Type.CSS_CLASS, literal = "leaf") })
 	public static class NodeModel<NM extends NodeModel> extends Model {
-		boolean populated;
+		public boolean populated;
 
 		private boolean open;
 
@@ -238,6 +308,8 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		private NM parent;
 
 		private boolean leaf;
+
+		private boolean selected;
 
 		@Directed(renderer = MultipleNodeRenderer.class)
 		@MultipleNodeRendererArgs(tags = { "div" }, cssClasses = { "" })
@@ -263,6 +335,10 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			return this.open;
 		}
 
+		public boolean isSelected() {
+			return this.selected;
+		}
+
 		public void setChildren(List<NodeModel<NM>> children) {
 			List<NodeModel<NM>> old_children = this.children;
 			this.children = children;
@@ -284,6 +360,13 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			this.parent = parent;
 		}
 
+		public void setSelected(boolean selected) {
+			boolean old_selected = this.selected;
+			this.selected = selected;
+			propertyChangeSupport().firePropertyChange("selected", old_selected,
+					selected);
+		}
+
 		public static class LabelClicked extends NodeTopic {
 		}
 
@@ -296,7 +379,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 			private String title;
 
-			@Directed(tag = "label", behaviours = @Behaviour(handler = EmitTopicHandler.class, event = DomEvents.Click.class, topics = @TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviour.TopicBehaviourType.EMIT)))
+			@Directed(tag = "label", behaviours = @Behaviour(handler = EmitTopicHandler.class, event = DomEvents.Click.class, topics = @TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviourType.EMIT)))
 			public Object getLabel() {
 				return this.label;
 			}
@@ -307,7 +390,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 			@Directed(tag = "span", behaviours = {
 					@Behaviour(handler = EmitTopicHandler.class, event = DomEvents.Click.class, topics = {
-							@TopicBehaviour(topic = ToggleButtonClicked.class, type = TopicBehaviour.TopicBehaviourType.EMIT) }) })
+							@TopicBehaviour(topic = ToggleButtonClicked.class, type = TopicBehaviourType.EMIT) }) })
 			public Object getToggle() {
 				return this.toggle;
 			}
@@ -325,6 +408,9 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				propertyChangeSupport().firePropertyChange("title", old_title,
 						title);
 			}
+		}
+
+		public static class SelectionChanged extends NodeTopic {
 		}
 
 		public static class ToggleButtonClicked extends NodeTopic {

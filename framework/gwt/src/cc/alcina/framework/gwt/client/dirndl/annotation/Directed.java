@@ -30,6 +30,12 @@ public @interface Directed {
 
 	public String cssClass() default "";
 
+	/**
+	 * if true, the resolved value will return the union of the property and
+	 * class annotation - or class and superclass (max 1)
+	 */
+	public boolean merge() default false;
+
 	public Class<? extends DirectedNodeRenderer> renderer() default ModelClassNodeRenderer.class;
 
 	public String tag() default "";
@@ -38,6 +44,8 @@ public @interface Directed {
 	@ClientInstantiable
 	public static class DirectedResolver implements Directed {
 		protected TreeResolver<Directed> resolver;
+
+		private AnnotationLocation mergeLocation;
 
 		public DirectedResolver() {
 		}
@@ -70,6 +78,11 @@ public @interface Directed {
 		}
 
 		@Override
+		public boolean merge() {
+			return false;
+		}
+
+		@Override
 		public Class<? extends DirectedNodeRenderer> renderer() {
 			Function<Directed, Class<? extends DirectedNodeRenderer>> function = Directed::renderer;
 			return resolver.resolve(function, "renderer",
@@ -79,8 +92,14 @@ public @interface Directed {
 		public void setLocation(AnnotationLocation annotationLocation) {
 			Directed leafValue = annotationLocation
 					.getAnnotation(Directed.class);
-			resolver = createResolver(
-					new TreeResolver<Directed>(annotationLocation, leafValue));
+			Directed leafSecondaryValue = mergeLocation == null ? null
+					: mergeLocation.getAnnotation(Directed.class);
+			resolver = createResolver(new TreeResolver<Directed>(
+					annotationLocation, leafValue, leafSecondaryValue));
+		}
+
+		public void setMergeLocation(AnnotationLocation mergeLocation) {
+			this.mergeLocation = mergeLocation;
 		}
 
 		@Override

@@ -68,6 +68,10 @@ public class TopicEvent<T> extends NodeEvent {
 		this.context = context;
 	}
 
+	public <V> V typedPayload() {
+		return (V) payload;
+	}
+
 	@Override
 	protected HandlerRegistration bind0(Widget widget) {
 		return widget.addAttachHandler(evt -> {

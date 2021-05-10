@@ -21,73 +21,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public class MultipleNodeRenderer extends DirectedNodeRenderer
 		implements HasWrappingDirecteds {
-	/*
-	 * Fabricates a 'directed' out of the supplied tag & css class
-	 */
-	private final class DirectedImplementation implements Directed {
-		private final int idx;
-
-		private final MultipleNodeRendererArgs args;
-
-		private DirectedImplementation(int idx, MultipleNodeRendererArgs args) {
-			this.idx = idx;
-			this.args = args;
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return Directed.class;
-		}
-
-		@Override
-		public String tag() {
-			return this.args.tags()[this.idx];
-		}
-
-		@Override
-		public Class<? extends DirectedNodeRenderer> renderer() {
-			return ContainerNodeRenderer.class;
-		}
-
-		@Override
-		public String cssClass() {
-			return this.args.cssClasses()[this.idx];
-		}
-
-		@Override
-		public Behaviour[] behaviours() {
-			return new Behaviour[0];
-		}
-
-		@Override
-		public Binding[] bindings() {
-			return new Binding[0];
-		}
-	}
-
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface MultipleNodeRendererArgs {
-		String[] tags();
-
-		String[] cssClasses();
-	}
-
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface MultipleNodeRendererLeaf {
-		Directed value();
-	}
-
-	@Override
-	public Widget render(Node node) {
-		throw new UnsupportedOperationException();
-	}
-
 	@Override
 	public List<Directed> getWrappingDirecteds(Node node) {
 		List<Directed> result = new ArrayList<>();
@@ -121,5 +54,77 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 			result.add(leafDirected);
 		}
 		return result;
+	}
+
+	@Override
+	public Widget render(Node node) {
+		throw new UnsupportedOperationException();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface MultipleNodeRendererArgs {
+		String[] cssClasses();
+
+		String[] tags();
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface MultipleNodeRendererLeaf {
+		Directed value();
+	}
+
+	/*
+	 * Fabricates a 'directed' out of the supplied tag & css class
+	 */
+	private final class DirectedImplementation implements Directed {
+		private final int idx;
+
+		private final MultipleNodeRendererArgs args;
+
+		private DirectedImplementation(int idx, MultipleNodeRendererArgs args) {
+			this.idx = idx;
+			this.args = args;
+		}
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return Directed.class;
+		}
+
+		@Override
+		public Behaviour[] behaviours() {
+			return new Behaviour[0];
+		}
+
+		@Override
+		public Binding[] bindings() {
+			return new Binding[0];
+		}
+
+		@Override
+		public String cssClass() {
+			return this.args.cssClasses()[this.idx];
+		}
+
+		@Override
+		public boolean merge() {
+			return false;
+		}
+
+		@Override
+		public Class<? extends DirectedNodeRenderer> renderer() {
+			return ContainerNodeRenderer.class;
+		}
+
+		@Override
+		public String tag() {
+			return this.args.tags()[this.idx];
+		}
 	}
 }
