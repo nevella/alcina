@@ -29,6 +29,17 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  * 
  * vacuum map swap is synchronized on (this)
  * 
+ * FIXME - mvcc.4 - mvcc - object uniqueness - anything non-local must have a tx
+ * - add tx/version caching - trans value only refs one mvccentity - look at
+ * non-concurrent map for mvccobject.
+ * 
+ * This is in response to TransformCommit.getLocatorMapForClient - two
+ * lazy-loaded mvcc objects, identical class/id, are non-identical. The
+ * MvccObject (entity) should be unique until unreachable (post-vscuum) - ensure
+ * this via checks in TransactionalValue and possible replacement in
+ * DomainStore.SubgraphTransformManagerPostProcess.getEntityForCreate(DomainTransformEvent)
+ * and local-id/creation checks in DomainStore.find(Class<T>, long)
+ * 
  * 
  * 
  * @author nick@alcina.cc

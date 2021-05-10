@@ -325,13 +325,16 @@ public class Transactions {
 									transaction);
 							transaction.toTimedOut();
 							// only the tx thread should end the transaction
-							// (calls
+							// (otherwise calls
 							// to Transaction.current() will throw)
+							// so - we let the Tx stay in the threadlocalmap,
+							// but remove from the app lookups in the finally
+							// clause
 							// oldest.endTransaction();
 						} catch (Exception e) {
 							Transaction.logger.error("Cancel exception",
 									new MvccException(e));
-							// ignore phase checks
+						} finally {
 							onTransactionEnded(transaction);
 						}
 					}

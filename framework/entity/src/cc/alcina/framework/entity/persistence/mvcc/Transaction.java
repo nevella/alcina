@@ -473,8 +473,8 @@ public class Transaction implements Comparable<Transaction> {
 		case VACUUM_BEGIN:
 			// well..we'd be in trouble here;
 		default:
-			throw new UnsupportedOperationException(
-					"Cannot cancel transaction in phase " + phase);
+			throw new UnsupportedOperationException(Ax.format(
+					"Cannot cancel transaction %s in phase %s", id, phase));
 		}
 	}
 

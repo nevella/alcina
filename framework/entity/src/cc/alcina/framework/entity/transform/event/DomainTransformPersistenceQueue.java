@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
@@ -26,12 +25,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPositionProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -355,18 +352,18 @@ public class DomainTransformPersistenceQueue {
 					}
 					logger.debug("Polled event from queue: {}", firingEvent);
 					try {
-						LooseContext.pushWithKey(
-								DetachedEntityCache.CONTEXT_CREATED_LOCAL_DEBUG,
-								new DetachedEntityCache.CreatedLocalDebug() {
-									@Override
-									public void debugCreation(long localId,
-											Entity entity) {
-										logger.warn(
-												"Adding created local - localId {} entity {} dtr {}",
-												localId, entity,
-												firingEvent.requestId);
-									}
-								});
+						// LooseContext.pushWithKey(
+						// DetachedEntityCache.CONTEXT_CREATED_LOCAL_DEBUG,
+						// new DetachedEntityCache.CreatedLocalDebug() {
+						// @Override
+						// public void debugCreation(long localId,
+						// Entity entity) {
+						// logger.warn(
+						// "Adding created local - localId {} entity {} dtr {}",
+						// localId, entity,
+						// firingEvent.requestId);
+						// }
+						// });
 						Transaction.ensureBegun();
 						ThreadedPermissionsManager.cast().pushSystemUser();
 						publishTransformEvent(firingEvent);
@@ -378,7 +375,7 @@ public class DomainTransformPersistenceQueue {
 						Transaction.ensureBegun();
 						ThreadedPermissionsManager.cast().popSystemUser();
 						Transaction.ensureEnded();
-						LooseContext.pop();
+						// LooseContext.pop();
 					}
 				} catch (Exception e) {
 					if (e != logged) {
@@ -492,7 +489,8 @@ public class DomainTransformPersistenceQueue {
 						requestId);
 			}
 			if (event.commitPosition != null) {
-				Timestamp transactionCommitTime = event.commitPosition.getCommitTimestamp();
+				Timestamp transactionCommitTime = event.commitPosition
+						.getCommitTimestamp();
 				if (transactionCommitTime.before(muteEventsOnOrBefore)
 						|| transactionCommitTime.equals(muteEventsOnOrBefore)) {
 					request.setEvents(new ArrayList<>());
