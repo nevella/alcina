@@ -137,7 +137,12 @@ public abstract class DomainViews {
 	void processEvent(ViewsTask task) {
 		switch (task.type) {
 		case MODEL_CHANGE:
-			// throw new UnsupportedOperationException();
+			Transaction.join(task.modelChange.preCommit);
+			Transaction.end();
+			Transaction.join(task.modelChange.postCommit);
+			Transaction.end();
+			break;
+		// throw new UnsupportedOperationException();
 		case HANDLE_REQUEST:
 			processRequest(task);
 			break;

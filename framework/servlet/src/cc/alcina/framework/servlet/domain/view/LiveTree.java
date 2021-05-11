@@ -179,24 +179,32 @@ public class LiveTree {
 			}
 				break;
 			case DEPTH_FIRST: {
-				int index = 0;
 				int count = 0;
 				Deque<LiveNode> deque = new LinkedList<>();
+				node.currentIndex = 0;// node.indexInParent();
 				deque.push(node);
 				count++;
 				while (deque.size() > 0) {
 					LiveNode liveNode = deque.removeFirst();
 					count++;
-					if (index++ < 100) {
+					if (count++ < 100) {
 						Transform transform = new Transform();
 						transform.setTreePath(liveNode.path.toString());
 						transform.setNode(liveNode.viewNode);
 						transform.setOperation(Operation.INSERT);
-						transform.setIndex(index++);
+						transform.setIndex(node.currentIndex);
 						result.add(transform);
 					}
-					liveNode.getPath().getChildren()
-							.forEach(p -> deque.add(p.getValue()));
+					int index = 0;
+					Deque<LiveNode> toAddRev = new LinkedList<>();
+					for (TreePath<LiveNode> child : liveNode.getPath()
+							.getChildren()) {
+						child.getValue().currentIndex = index++;
+						toAddRev.add(child.getValue());
+					}
+					while (toAddRev.size() > 0) {
+						deque.push(toAddRev.removeFirst());
+					}
 				}
 			}
 				break;
@@ -288,12 +296,18 @@ public class LiveTree {
 
 		boolean dirty;
 
+		int currentIndex;
+
 		public <P extends NodeGenerator> P getGenerator() {
 			return (P) generator;
 		}
 
 		public TreePath<LiveNode> getPath() {
 			return this.path;
+		}
+
+		public int indexInParent() {
+			return path.provideCurrentIndex();
 		}
 
 		void clearCollatedOperation() {

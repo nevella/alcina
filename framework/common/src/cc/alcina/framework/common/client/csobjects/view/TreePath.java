@@ -133,6 +133,14 @@ public class TreePath<T> extends Model {
 		return false;
 	}
 
+	public int provideCurrentIndex() {
+		if (parent == null) {
+			return 0;
+		} else {
+			return parent.getChildren().indexOf(this);
+		}
+	}
+
 	public boolean provideIsEmpty() {
 		return toString().isEmpty();
 	}

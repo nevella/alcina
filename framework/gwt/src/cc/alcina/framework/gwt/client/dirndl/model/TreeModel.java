@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Request;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Transform;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.IdentityFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
@@ -100,6 +101,8 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 		private TreePath<DomainViewNodeModel> treePath;
 
+		private Generator generator;
+
 		public DomainViewNodeModel() {
 		}
 
@@ -113,15 +116,16 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			treePath.setValue(this);
 		}
 
-		public DomainViewNodeModel ensureNode(String path, int initialIndex,
+		public DomainViewNodeModel ensureNode(DomainViewNode valueModel,
+				String path, int initialIndex,
 				boolean fireCollectionModificationEvents) {
 			TreePath<DomainViewNodeModel> otherTreePath = treePath.atPath(path);
 			if (otherTreePath.getValue() == null) {
 				DomainViewNodeModel parent = otherTreePath.getParent() == null
 						? null
 						: otherTreePath.getParent().getValue();
-				DomainViewNodeModel model = new DomainViewNodeModel(
-						otherTreePath.getParent().getValue(), path);
+				DomainViewNodeModel model = generator.generate(valueModel,
+						parent, path);
 				if (parent != null) {
 					parent.modifyChildren(Operation.INSERT, initialIndex, model,
 							fireCollectionModificationEvents);
@@ -129,6 +133,10 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				otherTreePath.setValue(model);
 			}
 			return otherTreePath.getValue();
+		}
+
+		public Generator getGenerator() {
+			return this.generator;
 		}
 
 		public DomainViewNode<?> getNode() {
@@ -144,6 +152,10 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				getParent().modifyChildren(Operation.REMOVE, -1, this, true);
 			}
 			setParent(null);
+		}
+
+		public void setGenerator(Generator generator) {
+			this.generator = generator;
 		}
 
 		public void setNode(DomainViewNode<?> node) {
@@ -175,6 +187,14 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				throw new UnsupportedOperationException();
 			}
 			setChildren(newValue);
+		}
+
+		@ClientInstantiable
+		public static class Generator {
+			public DomainViewNodeModel generate(DomainViewNode valueModel,
+					DomainViewNodeModel parent, String path) {
+				return new DomainViewNodeModel(parent, path);
+			}
 		}
 	}
 
@@ -233,7 +253,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 		protected void apply(Transform transform,
 				boolean fireCollectionModificationEvents) {
-			DomainViewNodeModel node = getRoot().ensureNode(
+			DomainViewNodeModel node = getRoot().ensureNode(transform.getNode(),
 					transform.getTreePath(), transform.getIndex(),
 					fireCollectionModificationEvents);
 			switch (transform.getOperation()) {
@@ -254,7 +274,9 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			// TODO - iterate through transactions => only last one is 'replace'
 			String requestPath = response.getRequest().getTreePath();
 			root = (DomainViewNodeModel) getRoot();
-			target = root.ensureNode(requestPath, -1, false);
+			DomainViewNode rootModel = response.getTransforms().isEmpty() ? null
+					: response.getTransforms().get(0).getNode();
+			target = root.ensureNode(rootModel, requestPath, -1, false);
 			if (response.getTransforms().isEmpty()) {
 				// no children - request path has been removed in a prior tx
 				return;
