@@ -151,7 +151,7 @@ public class TreePath<T> extends Model {
 		parent = null;
 	}
 
-	public TreePath rootPath() {
+	public TreePath<T> rootPath() {
 		return paths.root;
 	}
 

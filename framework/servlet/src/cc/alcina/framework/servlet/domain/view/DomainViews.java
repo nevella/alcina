@@ -62,8 +62,8 @@ public abstract class DomainViews {
 		if (isIndexableTransformRequest(e)) {
 			ViewsTask task = new ViewsTask();
 			addTaskLock.lock();
-			preCommitTransactions.put(e,
-					Transaction.createSnapshotTransaction());
+			// preCommitTransactions.put(e,
+			// Transaction.createSnapshotTransaction());
 		}
 	};
 
@@ -72,9 +72,9 @@ public abstract class DomainViews {
 		if (isIndexableTransformRequest(e)) {
 			ViewsTask task = new ViewsTask();
 			task.type = Type.MODEL_CHANGE;
-			task.modelChange.preCommit = preCommitTransactions.get(e);
-			task.modelChange.postCommit = Transaction
-					.createSnapshotTransaction();
+			// task.modelChange.preCommit = preCommitTransactions.get(e);
+			// task.modelChange.postCommit = Transaction
+			// .createSnapshotTransaction();
 			tasks.add(task);
 			addTaskLock.unlock();
 		}
@@ -137,10 +137,10 @@ public abstract class DomainViews {
 	void processEvent(ViewsTask task) {
 		switch (task.type) {
 		case MODEL_CHANGE:
-			Transaction.join(task.modelChange.preCommit);
-			Transaction.end();
-			Transaction.join(task.modelChange.postCommit);
-			Transaction.end();
+			// Transaction.join(task.modelChange.preCommit);
+			// Transaction.end();
+			// Transaction.join(task.modelChange.postCommit);
+			// Transaction.end();
 			break;
 		// throw new UnsupportedOperationException();
 		case HANDLE_REQUEST:
