@@ -8,6 +8,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.stream.Collectors;
@@ -16,6 +17,8 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -24,8 +27,11 @@ import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class Transactions {
 	private static Transactions instance;
+
+	private static ConcurrentHashMap<Class, Constructor> copyConstructors = new ConcurrentHashMap<>();
 
 	public static <T extends Entity> boolean checkResolved(T t) {
 		return resolve(t, false, false) == t;
@@ -61,11 +67,11 @@ public class Transactions {
 	}
 
 	/*
-	 * The 'base' parameter is used by ClassTransformer rewritten classes (to
-	 * get domainIdentity())
+	 * The 'domainIdentity' parameter is used by ClassTransformer rewritten
+	 * classes (to get domainIdentity())
 	 */
 	public static <T extends Entity> T resolve(T t, boolean write,
-			boolean base) {
+			boolean domainIdentity) {
 		if (t instanceof MvccObject) {
 			MvccObject mvccObject = (MvccObject) t;
 			MvccObjectVersions<T> versions = mvccObject.__getMvccVersions__();
@@ -73,11 +79,12 @@ public class Transactions {
 				// no transactional versions, return base
 				return t;
 			} else {
-				// if returning 'base', no need to synchronize (it's being
+				// if returning 'domainIdentity', no need to synchronize (it's
+				// being
 				// returned as domainIdentity(), not for fields - and the
 				// identity itself is immutable)
-				if (base) {
-					return versions.getBaseObject();
+				if (domainIdentity) {
+					return versions.domainIdentity;
 				}
 				Transaction transaction = Transaction.current();
 				// TODO - possibly optimise (app level 'in warmup')
@@ -105,6 +112,7 @@ public class Transactions {
 	public static void revertToDefaultFieldValues(Entity entity) {
 		Entity defaults = (Entity) Reflections
 				.newInstance(entity.entityClass());
+		//because copying fields without resolution, entity will be the domainVersion
 		copyObjectFields(defaults, entity);
 	}
 
@@ -121,7 +129,8 @@ public class Transactions {
 		get().waitForAllToCompleteExSelf0();
 	}
 
-	static <T extends MvccObject> T copyObject(T from) {
+	static <T extends MvccObject> T copyObject(T from,
+			boolean withFieldValues) {
 		T clone = null;
 		try {
 			if (from instanceof TransactionalSet) {
@@ -129,15 +138,26 @@ public class Transactions {
 			} else if (from instanceof TransactionalTrieEntry) {
 				clone = (T) new TransactionalTrieEntry();
 			} else {
-				Constructor<T> constructor = (Constructor<T>) from.getClass()
-						.getConstructor(new Class[0]);
-				constructor.setAccessible(true);
+				Constructor<T> constructor = copyConstructors
+						.computeIfAbsent(from.getClass(), clazz -> {
+							try {
+								Constructor<T> constructor0 = (Constructor<T>) from
+										.getClass()
+										.getConstructor(new Class[0]);
+								constructor0.setAccessible(true);
+								return constructor0;
+							} catch (Exception e) {
+								throw new WrappedRuntimeException(e);
+							}
+						});
 				clone = constructor.newInstance();
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-		ResourceUtilities.fieldwiseCopy(from, clone, false, true);
+		if (withFieldValues) {
+			ResourceUtilities.fieldwiseCopy(from, clone, false, true);
+		}
 		MvccObjectVersions __getMvccVersions__ = from.__getMvccVersions__();
 		clone.__setMvccVersions__(__getMvccVersions__);
 		return clone;
@@ -474,5 +494,10 @@ public class Transactions {
 		public Thread getVacuumThread() {
 			return vacuum.getVacuumThread();
 		}
+	}
+
+	public static void copyIdFieldsToCurrentVersion(Entity entity) {
+		MvccObjectVersions versions = ((MvccObject)entity).__getMvccVersions__();
+		((MvccObjectVersionsEntity)versions).copyIdFieldsToCurrentVersion();
 	}
 }

@@ -84,7 +84,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
@@ -93,9 +92,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
-import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -111,6 +108,8 @@ import cc.alcina.framework.entity.util.MethodContext;
 /**
  *
  * @author Nick Reddel
+ * 
+ *         TODO - mvcc.5 - remove dependence on DomainStore
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalTransformManager extends TransformManager
@@ -221,7 +220,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private Map<Long, Entity> localIdToEntityMap;
 
-	protected EntityLocatorMap userSessionEntityMap;
+	protected EntityLocatorMap clientInstanceEntityMap;
 
 	private EntityManager entityManager;
 
@@ -244,9 +243,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	private volatile boolean useTlIdGenerator = false;
 
 	private Set<DomainTransformEvent> flushAfterTransforms = new LinkedHashSet<>();
-
-	private CachingMap<DomainStore, PostTransactionEntityResolver> postTransactionEntityResolvers = new CachingMap<DomainStore, PostTransactionEntityResolver>(
-			PostTransactionEntityResolver::new);
 
 	private boolean applyingExternalTransforms;
 
@@ -410,6 +406,10 @@ public class ThreadlocalTransformManager extends TransformManager
 		return this.clientInstance;
 	}
 
+	public EntityLocatorMap getClientInstanceEntityMap() {
+		return this.clientInstanceEntityMap;
+	}
+
 	public DetachedEntityCache getDetachedEntityCache() {
 		return this.detachedEntityCache;
 	}
@@ -445,17 +445,10 @@ public class ThreadlocalTransformManager extends TransformManager
 					return entity;
 				}
 			}
-			if (userSessionEntityMap != null && localId != 0) {
-				id = userSessionEntityMap.containsKey(localId)
-						? userSessionEntityMap.getForLocalId(localId).id
+			if (clientInstanceEntityMap != null && localId != 0) {
+				id = clientInstanceEntityMap.containsKey(localId)
+						? clientInstanceEntityMap.getForLocalId(localId).id
 						: 0;
-			}
-			if (id == 0) {
-				EntityLocator locator = postTransactionEntityResolvers
-						.get(DomainStore.writableStore()).resolve(localId);
-				if (locator != null) {
-					id = locator.id;
-				}
 			}
 		}
 		if (id != 0) {
@@ -503,11 +496,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		entity = ensureNonProxy(entity);
 		return super.getObject(entity);
-	}
-
-	public PostTransactionEntityResolver
-			getPostTransactionEntityResolver(DomainStore domainStore) {
-		return this.postTransactionEntityResolvers.get(domainStore);
 	}
 
 	@Override
@@ -564,10 +552,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	public <T> T getTemplateInstance(Class<T> clazz) {
 		return ObjectPersistenceHelper.get().getTemplateInstance(clazz);
-	}
-
-	public EntityLocatorMap getUserSessionEntityMap() {
-		return this.userSessionEntityMap;
 	}
 
 	@Override
@@ -683,9 +667,13 @@ public class ThreadlocalTransformManager extends TransformManager
 			if (Entity.class.isAssignableFrom(clazz)) {
 				Entity newInstance = null;
 				if (entityManager == null) {
+					DomainStore store = DomainStore.stores().storeFor(clazz);
 					newInstance = Transaction.current().create((Class) clazz,
-							DomainStore.stores().storeFor(clazz), objectId,
-							localId);
+							store, objectId, localId);
+					if (objectId == 0L) {
+						// created ex-store
+						store.getCache().put(newInstance);
+					}
 				} else {
 					newInstance = (Entity) clazz.newInstance();
 					newInstance.setLocalId(localId);
@@ -715,8 +703,8 @@ public class ThreadlocalTransformManager extends TransformManager
 				localIdToEntityMap.put(localId, newInstance);
 				createdObjectLocators.add(entityLocator);
 				if (!isApplyingExternalTransforms()) {
-					if (userSessionEntityMap != null) {
-						userSessionEntityMap.putToLookups(entityLocator);
+					if (clientInstanceEntityMap != null) {
+						clientInstanceEntityMap.putToLookups(entityLocator);
 					}
 				}
 				return (T) newInstance;
@@ -792,16 +780,14 @@ public class ThreadlocalTransformManager extends TransformManager
 			List<Object[]> idTuples = getEntityManager().createQuery(eql)
 					.setParameter(1, TransformType.CREATE_OBJECT)
 					.getResultList();
-			// force non-empty
-			userSessionEntityMap.putToLookups(new EntityLocator(null, -1, 0));
 			for (Object[] obj : idTuples) {
 				ClassRef classRef = ClassRef.forId((long) obj[2]);
-				userSessionEntityMap.putToLookups(new EntityLocator(
+				clientInstanceEntityMap.putToLookups(new EntityLocator(
 						classRef.getRefClass(), (Long) obj[0], (Long) obj[1]));
 			}
 			MetricLogging.get().end(message);
 		}
-		return userSessionEntityMap;
+		return clientInstanceEntityMap;
 	}
 
 	@Override
@@ -819,14 +805,16 @@ public class ThreadlocalTransformManager extends TransformManager
 	 *
 	 */
 	public <T extends Entity> T registerDomainObject(T entity) {
-		if (Ax.isTest() && !Mvcc.isMvccObject(entity)
+		if (!Mvcc.isMvccObject(entity)
 				&& DomainStore.writableStore().isCached(entity.entityClass())
 				&& !DomainStore.writableStore().getCache().contains(entity)) {
 			/*
-			 * This usage is key for allowing 'synthetic transform' creation against a dev db... e.g:
+			 * Usable for synthetic objects  with negative ids)
+			 * 
+			 * Also key for allowing 'synthetic transform' creation against a dev db... e.g:
 			 * @formatter:off
 			 * 
-			 * 	JadeUser user = new JadeUser(99999).domain().register();
+			 * 	IUser user = new IUser(99999).domain().register();
 				user.setUsername("Honeybunny");
 				console.dumpTransforms();
 				
@@ -835,14 +823,6 @@ public class ThreadlocalTransformManager extends TransformManager
 			DomainStore.writableStore().getCache().put(entity);
 		}
 		listenTo(entity);
-		if (entity.getId() <= 0) {
-			DomainStore store = DomainStore.stores()
-					.storeFor(entity.entityClass());
-			DetachedEntityCache cache = store.getCache();
-			if (!cache.contains(entity)) {
-				cache.put(entity);
-			}
-		}
 		return entity;
 	}
 
@@ -871,11 +851,6 @@ public class ThreadlocalTransformManager extends TransformManager
 				keepExplicitlyPermittedAndFlushAfterTransforms, false);
 	}
 
-	public <V extends Entity> EntityLocator
-			resolvePersistedLocal(DomainStore domainStore, V v) {
-		return postTransactionEntityResolvers.get(domainStore).resolve(v);
-	}
-
 	public void
 			setApplyingExternalTransforms(boolean applyingExternalTransforms) {
 		this.applyingExternalTransforms = applyingExternalTransforms;
@@ -883,6 +858,11 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public void setClientInstance(ClientInstance clientInstance) {
 		this.clientInstance = clientInstance;
+	}
+
+	public void setClientInstanceEntityMap(
+			EntityLocatorMap clientInstanceEntityMap) {
+		this.clientInstanceEntityMap = clientInstanceEntityMap;
 	}
 
 	public void
@@ -909,13 +889,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	public void
 			setIgnoreTransformPermissions(boolean ignoreTransformPermissions) {
 		this.ignoreTransformPermissions = ignoreTransformPermissions;
-	}
-
-	// dev-only
-	public void setPostTransactionEntityResolver(
-			PostTransactionEntityResolver postTransactionEntityResolver) {
-		this.postTransactionEntityResolvers.put(DomainStore.writableStore(),
-				postTransactionEntityResolver);
 	}
 
 	@Override
@@ -947,10 +920,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public void setUseObjectCreationId(boolean useObjectCreationId) {
 		this.useObjectCreationId = useObjectCreationId;
-	}
-
-	public void setUserSessionEntityMap(EntityLocatorMap userSessionEntityMap) {
-		this.userSessionEntityMap = userSessionEntityMap;
 	}
 
 	public boolean testPermissions(Entity entity, DomainTransformEvent evt,
@@ -1121,12 +1090,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		setEntityManager(null);
 		setDetachedEntityCache(null);
 		this.exceptionPolicy = exceptionPolicy;
-		if (this.userSessionEntityMap != null) {
-			DomainStore.stores().stream()
-					.forEach(store -> this.postTransactionEntityResolvers
-							.get(store).merge(userSessionEntityMap));
-		}
-		this.userSessionEntityMap = locatorMap;
+		this.clientInstanceEntityMap = locatorMap;
 		localIdToEntityMap = new HashMap<Long, Entity>();
 		modifiedObjects = new HashSet<Entity>();
 		modificationEvents = new ArrayList<DomainTransformEvent>();
@@ -1395,90 +1359,6 @@ public class ThreadlocalTransformManager extends TransformManager
 							event.getPropertyName()) == null;
 		}
 		return true;
-	}
-
-	/*
-	 * FIXME - mvcc.4 - is this needed?
-	 */
-	public static class PostTransactionEntityResolver {
-		private EntityLocatorMap locatorMap = new EntityLocatorMap();
-
-		private boolean reconstituted = false;
-
-		private long clientInstanceId;
-
-		@SuppressWarnings("unused")
-		private transient DomainStore domainStore;
-
-		// for serializersr
-		public PostTransactionEntityResolver() {
-		}
-
-		public PostTransactionEntityResolver(DomainStore domainStore) {
-			this.domainStore = domainStore;
-		}
-
-		public void
-				addMappings(DomainTransformRequestPersistent persistedRequest) {
-			persistedRequest.allTransforms().stream()
-					.filter(transform -> transform
-							.getTransformType() == TransformType.CREATE_OBJECT)
-					.forEach(transform -> {
-						locatorMap.putToLookups(transform.toObjectLocator());
-					});
-		}
-
-		public void merge(EntityLocatorMap locatorMap) {
-			synchronized (locatorMap) {
-				if (PermissionsManager.get().getClientInstanceId() == null) {
-					this.locatorMap = new EntityLocatorMap();
-				} else {
-					long currentClientInstanceId = PermissionsManager.get()
-							.getClientInstanceId();
-					if (currentClientInstanceId != clientInstanceId) {
-						this.locatorMap = new EntityLocatorMap();
-					}
-					this.locatorMap.merge(locatorMap);
-					clientInstanceId = currentClientInstanceId;
-				}
-				reconstituted = false;
-			}
-		}
-
-		public EntityLocator resolve(Entity v) {
-			long localId = v.getLocalId();
-			return resolve(localId);
-		}
-
-		protected EntityLocator resolve(long localId) {
-			if (!AppPersistenceBase.isTest() && PermissionsManager.get()
-					.getClientInstanceId() != clientInstanceId) {
-				return null;
-			}
-			EntityLocator locator = locatorMap.getForLocalId(localId);
-			if (locator != null) {
-				return locator;
-			}
-			/*
-			 * If root (system user / server-side commits), we *shouldn't* have
-			 * any missing mappings - these
-			 */
-			if (!reconstituted
-					&& PermissionsManager.get().getClientInstance() != null) {
-				if (ThreadedPermissionsManager.cast().isSystemUser()) {
-					Ax.err("Possibly missing server client instance localId: %s",
-							localId);
-				} else {
-					locatorMap = CommonPersistenceProvider.get()
-							.getCommonPersistence()
-							.reconstituteEntityMap(PermissionsManager.get()
-									.getClientInstance().getId());
-					reconstituted = true;
-				}
-			}
-			locator = locatorMap.getForLocalId(localId);
-			return locator;
-		}
 	}
 
 	public static class ThreadlocalTransformManagerFactory {

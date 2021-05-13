@@ -593,6 +593,11 @@ public class TransformCommit {
 
 	public EntityLocatorMap getLocatorMapForClient(
 			ClientInstance clientInstance, boolean forceRefresh) {
+		if (clientInstance == EntityLayerObjects.get()
+				.getServerAsClientInstance()) {
+			return EntityLayerObjects.get()
+					.getServerAsClientInstanceEntityLocatorMap();
+		}
 		Long clientInstanceId = clientInstance.getId();
 		if (!clientInstanceLocatorMap.containsKey(clientInstanceId)
 				|| forceRefresh) {
@@ -694,7 +699,8 @@ public class TransformCommit {
 			Collection<DomainTransformEvent> transforms, String tag)
 			throws DomainTransformRequestException {
 		int requestId = nextTransformRequestId();
-		EntityLocatorMap map = new EntityLocatorMap();
+		EntityLocatorMap map = EntityLayerObjects.get()
+				.getServerAsClientInstanceEntityLocatorMap();
 		ClientInstance clientInstance = EntityLayerObjects.get()
 				.getServerAsClientInstance();
 		DomainTransformRequest request = DomainTransformRequest

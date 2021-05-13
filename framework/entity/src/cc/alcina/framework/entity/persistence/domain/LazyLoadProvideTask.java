@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.Loader;
 
 /*
  * With mvcc and lazy properties, some of the motivation for this has left. Left in the codebase for reference rather than the expectation it'll ever be used
@@ -127,12 +128,20 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 	protected abstract void loadDependents(List<T> requireLoad)
 			throws Exception;
 
-	protected List<T> loadTable(Class clazz, String sqlFilter, ClassIdLock lock)
+	protected List<T> loadTable(Class clazz, String sqlFilter)
 			throws Exception {
+		return loadTable(clazz, sqlFilter, false);
+	}
+
+	protected List<T> loadTable(Class clazz, String sqlFilter,
+			boolean populateLazyPropertyValues) throws Exception {
 		Preconditions.checkState(
 				domainStore.loader instanceof DomainStoreLoaderDatabase);
-		return ((DomainStoreLoaderDatabase) domainStore.loader).loadTable(clazz,
-				sqlFilter, lock);
+		Loader loader = ((DomainStoreLoaderDatabase) domainStore.loader)
+				.loader();
+		loader.withClazz(clazz).withSqlFilter(sqlFilter)
+				.withPopulateLazyPropertyValues(populateLazyPropertyValues);
+		return loader.loadEntities();
 	}
 
 	protected void log(String template, Object... args) {
@@ -164,8 +173,10 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 
 	public static class SimpleLoaderTask extends LazyLoadProvideTask<Entity> {
 		public <V extends Entity> List<V> loadTableTyped(Class clazz,
-				String sqlFilter, ClassIdLock lock) throws Exception {
-			return (List) super.loadTable(clazz, sqlFilter, lock);
+				String sqlFilter, boolean populateLazyPropertyValues)
+				throws Exception {
+			return (List) super.loadTable(clazz, sqlFilter,
+					populateLazyPropertyValues);
 		}
 
 		@Override

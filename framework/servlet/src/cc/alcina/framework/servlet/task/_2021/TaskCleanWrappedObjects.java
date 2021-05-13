@@ -50,11 +50,9 @@ import cc.alcina.framework.entity.persistence.CommonPersistenceBase.UnwrapWithEx
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
-import cc.alcina.framework.entity.persistence.domain.ClassIdLock;
 import cc.alcina.framework.entity.persistence.domain.DataSourceAdapter;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask.SimpleLoaderTask;
-import cc.alcina.framework.entity.persistence.domain.LockUtils;
 import cc.alcina.framework.entity.persistence.domain.descriptor.PropertiesDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
@@ -249,12 +247,10 @@ public class TaskCleanWrappedObjects
 			}
 			Class<? extends Publication> pubImpl = PersistentImpl
 					.getImplementation(Publication.class);
-			ClassIdLock lock = LockUtils
-					.obtainClassIdLock(TaskCleanWrappedObjects.class, 0);
 			String sqlFilter = Ax.format(" id in %s",
 					EntityPersistenceHelper.toInClause(publicationIds));
 			List<Publication> publications = loader.loadTableTyped(pubImpl,
-					sqlFilter, lock);
+					sqlFilter, false);
 			Map<Long, Publication> idMap = EntityHelper.toIdMap(publications);
 			UnwrapWithExceptionsResult<Publication> unwrapped = CommonPersistenceProvider
 					.get().getCommonPersistence()

@@ -15,7 +15,6 @@ public class TransactionalMultiTrie<K, E extends Entity, V extends Set<E>>
 			Class<E> entityClass) {
 		super(keyAnalyzer);
 		this.entityClass = entityClass;
-		((TransactionalTrieEntry) root).entityClass = entityClass;
 	}
 
 	@Override
@@ -25,7 +24,6 @@ public class TransactionalMultiTrie<K, E extends Entity, V extends Set<E>>
 
 	@Override
 	protected TrieEntry<K, V> createTrieEntry(K key, V value, int bitIndex) {
-		return new TransactionalTrieEntry<K, V>(key, value, bitIndex,
-				entityClass);
+		return new TransactionalTrieEntry<K, V>(key, value, bitIndex);
 	}
 }

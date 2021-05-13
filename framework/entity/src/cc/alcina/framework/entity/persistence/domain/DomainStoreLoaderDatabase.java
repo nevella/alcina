@@ -95,7 +95,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainSegmentLoader.DomainS
 import cc.alcina.framework.entity.persistence.domain.DomainSegmentLoader.DomainSegmentLoaderProperty;
 import cc.alcina.framework.entity.persistence.domain.DomainSegmentLoader.DomainSegmentPropertyType;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
-import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.EntityRefs.Ref;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -146,17 +146,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private UnsortedMultikeyMap<Field> domainStorePropertyFields = new UnsortedMultikeyMap<Field>(
 			2);
-	//
 
+	//
 	MultikeyMap<PdOperator> operatorsByClass = new UnsortedMultikeyMap<>(2);
 
 	private BackupLazyLoader backupLazyLoader = new BackupLazyLoader();
 
-	private List<LaterLookup> warmupLaterLookups = new ArrayList<>();
+	private List<EntityRefs> warmupEntityRefss = new ArrayList<>();
 
 	DomainStoreDescriptor domainDescriptor;
-
-	private boolean loadingSegment;
 
 	private Map<JoinTable, DomainClassDescriptor> joinTableClassDescriptor = new LinkedHashMap<>();
 
@@ -223,19 +221,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		return this.transformSequencer;
 	}
 
-	public <T extends Entity> List<T> loadTable(Class clazz, String sqlFilter,
-			ClassIdLock sublock) throws Exception {
-		assert sublock != null;
-		try {
-			LooseContext.push();
-			LooseContext.remove(DomainStore.CONTEXT_NO_LOCKS);
-			return (List<T>) loadTable(clazz, sqlFilter, sublock,
-					new LaterLookup());
-		} finally {
-			LooseContext.pop();
-		}
-	}
-
 	@Override
 	public DomainTransformRequestPersistent loadTransformRequest(long id) {
 		synchronized (loadTransformRequestLock) {
@@ -297,7 +282,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		MetricLogging.get().end("tables");
 		interns = null;
 		MetricLogging.get().start("xrefs");
-		for (LaterLookup ll : warmupLaterLookups) {
+		for (EntityRefs ll : warmupEntityRefss) {
 			calls.add(() -> {
 				ll.resolve();
 				return null;
@@ -306,13 +291,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("xrefs");
 		serverClientInstanceToDomainStoreVersion();
-		warmupLaterLookups.clear();
+		warmupEntityRefss.clear();
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {
 			MetricLogging.get().start("domain-segment");
-			loadingSegment = true;
 			loadDomainSegment();
-			loadingSegment = false;
 			MetricLogging.get().end("domain-segment");
 		}
 		MetricLogging.get().start("postLoad");
@@ -471,10 +454,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					&& pass++ < maxPasses) {
 				Set<Entry<Class, Set<Long>>> perClass = segmentLoader.toLoadIds
 						.entrySet();
-				List<LaterLookup> laterLookups = new ArrayList<>();
+				List<EntityRefs> entityRefss = new ArrayList<>();
 				for (Entry<Class, Set<Long>> entry : perClass) {
-					LaterLookup laterLookup = new LaterLookup();
-					laterLookups.add(laterLookup);
+					EntityRefs entityRefs = new EntityRefs();
+					entityRefss.add(entityRefs);
 					segmentClasses.add(entry.getKey());
 					calls.add(() -> {
 						Collection<Long> ids = entry.getValue();
@@ -484,7 +467,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						ids = segmentLoader.filterForQueried(clazz, "id", ids);
 						if (ids.size() > 0) {
 							loadTableSegment(clazz, Ax.format(" id in %s",
-									longsToIdClause(ids)), laterLookup);
+									longsToIdClause(ids)), entityRefs);
 						}
 						segmentLoader.loadedInPhase(clazz, ids);
 						entry.getValue().clear();
@@ -493,12 +476,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				}
 				invokeAllWithThrow(calls);
 				// resolve what we can (last pass)
-				LaterLookup lastPassLookup = new LaterLookup();
+				EntityRefs lastPassLookup = new EntityRefs();
 				lastPassLookup.list.addAll(segmentLoader.toResolve);
 				segmentLoader.toResolve.clear();
 				lastPassLookup.resolve(segmentLoader);
-				laterLookups.forEach(ll -> ll.resolve(segmentLoader));
-				laterLookups.clear();
+				entityRefss.forEach(ll -> ll.resolve(segmentLoader));
+				entityRefss.clear();
 				if (segmentLoader.pendingCount() == 0) {
 					for (DomainSegmentLoaderProperty property : segmentLoader.properties) {
 						if (property.isIgnoreForPhase(phase)) {
@@ -518,10 +501,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							segmentClasses.add(property.clazz1);
 							if (ids.size() > 0) {
 								calls.add(() -> {
-									LaterLookup laterLookup = new LaterLookup();
-									laterLookups.add(laterLookup);
+									EntityRefs entityRefs = new EntityRefs();
+									entityRefss.add(entityRefs);
 									loadTableSegment(property.clazz1, sqlFilter,
-											laterLookup);
+											entityRefs);
 									return null;
 								});
 							}
@@ -543,16 +526,16 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 									longsToIdClause(ids));
 							segmentClasses.add(property.clazz2);
 							calls.add(() -> {
-								LaterLookup laterLookup = new LaterLookup();
-								laterLookups.add(laterLookup);
+								EntityRefs entityRefs = new EntityRefs();
+								entityRefss.add(entityRefs);
 								loadTableSegment(property.clazz2, sqlFilter,
-										laterLookup);
+										entityRefs);
 								return null;
 							});
 						}
 					}
 					invokeAllWithThrow(calls);
-					laterLookups.forEach(ll -> ll.resolve(segmentLoader));
+					entityRefss.forEach(ll -> ll.resolve(segmentLoader));
 				}
 				lastTotal = total;
 				Integer size = segmentClasses.stream().collect(Collectors
@@ -573,7 +556,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	private void loadJoinTable(Entry<PropertyDescriptor, JoinTable> entry,
-			LaterLookup laterLookup) {
+			EntityRefs entityRefs) {
 		JoinTable joinTable = entry.getValue();
 		if (joinTable == null) {
 			return;
@@ -646,8 +629,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							rev.getReadMethod().getDeclaringClass(),
 							(Long) row[1]);
 					assert tgt != null;
-					laterLookup.add(tgt, pdFwd, src);
-					laterLookup.add(src, pdRev, tgt);
+					entityRefs.add(tgt, pdFwd, src);
+					entityRefs.add(src, pdRev, tgt);
 				} else {
 					joinHandler.injectValue(row, src);
 				}
@@ -661,129 +644,20 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	/*
-	 * sublock is now just used to say "this is a lazy load - so index" - no
-	 * actual locking (not needed since the load only applies to this tx)
-	 */
-	private List<Entity> loadTable(Class clazz, String sqlFilter,
-			ClassIdLock sublock, LaterLookup laterLookup) throws Exception {
-		List<Entity> loaded = (List) loadTable0(clazz, sqlFilter, sublock,
-				laterLookup, (!store.initialising || loadingSegment), false);
-		boolean keepDetached = LooseContext
-				.is(DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
-		if (sublock != null) {
-			laterLookup.resolve();
-			if (!store.initialising && !keepDetached) {
-				for (Entity entity : loaded) {
-					store.index(entity, true, null, true);
-				}
-			}
-		}
-		return loaded;
-	}
-
-	private List<HasId> loadTable0(Class clazz, String sqlFilter,
-			ClassIdLock sublock, LaterLookup laterLookup,
-			boolean ignoreIfExisting, boolean keepDetached) throws Exception {
-		Connection conn = getConnection();
-		try {
-			return loadTable0(conn, clazz, sqlFilter, sublock, laterLookup,
-					ignoreIfExisting, keepDetached, true);
-		} finally {
-			releaseConn(conn);
-		}
-	}
-
-	// FIXME - mvcc.jobs - are we including lazy loads in the select?
-	private List<HasId> loadTable0(Connection conn, Class clazz,
-			String sqlFilter, ClassIdLock sublock, LaterLookup laterLookup,
-			boolean ignoreIfExisting, boolean keepDetached,
-			boolean ensureModificationChecker) throws Exception {
-		keepDetached |= LooseContext
-				.is(DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
-		boolean populateLazyPropertyValues = LooseContext
-				.is(DomainStore.CONTEXT_POPULATE_LAZY_PROPERTY_VALUES);
-		List<HasId> loaded;
-		ConnResults connResults = ConnResults.builder().withClazz(clazz)
-				.withConn(conn)
-				.withColumnDescriptors(columnDescriptors.get(clazz))
-				.withPopulateLazyPropertyValues(populateLazyPropertyValues)
-				.withLoader(this).withSqlFilter(sqlFilter).build();
-		List<PdOperator> pds = descriptors.get(clazz);
-		loaded = new ArrayList<>();
-		PdOperator idOperator = pds.stream().filter(pd -> pd.name.equals("id"))
-				.findFirst().get();
-		Transaction transaction = Transaction.isInTransaction()
-				? Transaction.current()
-				: null;
-		boolean transactional = DomainStore.stores().storeFor(clazz) != null;
-		ignoreIfExisting &= sublock == null;
-		for (Object[] objects : connResults) {
-			long entityId = (Long) objects[idOperator.idx];
-			HasId hasId = (HasId) (transactional && !keepDetached
-					? transaction.create(clazz, store, entityId, 0L)
-					: clazz.newInstance());
-			if (ignoreIfExisting) {
-				if (store.transformManager.store.contains(clazz, entityId)) {
-					continue;
-				}
-			}
-			if (sublock != null) {
-				loaded.add(hasId);
-			}
-			for (int i = 0; i < objects.length; i++) {
-				PdOperator pdOperator = pds.get(i);
-				ColumnDescriptor columnDescriptor = connResults.columnDescriptors
-						.get(i);
-				Method rm = pdOperator.readMethod;
-				if (pdOperator.manyToOne != null
-						|| pdOperator.oneToOne != null) {
-					Long id = (Long) objects[i];
-					if (id != null) {
-						if (hasId != null) {
-							laterLookup.add(id, pdOperator, hasId);
-						}
-					}
-				} else {
-					try {
-						pdOperator.field.set(hasId, objects[i]);
-					} catch (Exception e) {
-						if ((pdOperator.field.getType() == int.class
-								|| pdOperator.field.getType() == long.class)
-								&& objects[i] == null) {
-							pdOperator.field.set(hasId, -1);
-							logger.warn(
-									"Replaced int/null with int/-1 :: {}.{} - id: {}",
-									pdOperator.clazz.getSimpleName(),
-									pdOperator.field.getName(), hasId.getId());
-						} else {
-							throw e;
-						}
-					}
-				}
-			}
-			if (!keepDetached && hasId instanceof Entity) {
-				store.transformManager.store.mapObject((Entity) hasId);
-			}
-		}
-		return loaded;
-	}
-
+	// TODO - this used to require 'keep entities detached' (see rev 41cc5b3d7)
+	// - removed, but check on next use
 	private void loadTableSegment(Class clazz, String sqlFilter,
-			LaterLookup laterLookup) throws Exception {
+			EntityRefs entityRefs) throws Exception {
 		synchronized (clazz) {
 			DomainClassDescriptor<?> descriptor = domainDescriptor.perClass
 					.get(clazz);
 			MetricLogging.get().start(clazz.getSimpleName());
-			loadTable(clazz, sqlFilter, null, laterLookup);
+			loader().withClazz(clazz).withSqlFilter(sqlFilter)
+					.withEntityRefs(entityRefs).loadHasIds();
 			MetricLogging.get().end(clazz.getSimpleName(), store.metricLogger);
 		}
 	}
 
-	/*
-	 * This method originally supported loading requests for multiple
-	 * ids...hence use of collections
-	 */
 	private DomainTransformRequestPersistent
 			loadTransformRequest0(long requestId) throws Exception {
 		store.logger.info("{} - loading transform request {}", store.name,
@@ -816,14 +690,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 			String sqlFilter = Ax.format(
 					" domainTransformRequestPersistent_id = %s ", requestId);
-			LaterLookup laterLookup = new LaterLookup();
+			EntityRefs entityRefs = new EntityRefs();
 			Transaction.ensureDomainPreparingActive();
-			List<? extends DomainTransformEventPersistent> transforms = (List) loadTable0(
-					transformEventImplClass, sqlFilter,
-					new ClassIdLock(DomainTransformRequestPersistent.class,
-							requestId),
-					laterLookup, false, true);
-			laterLookup.resolve(new CustomResolver() {
+			Loader loader = loader().withConnection(conn)
+					.withClazz(transformEventImplClass).withSqlFilter(sqlFilter)
+					.withEntityRefs(entityRefs);
+			List<? extends DomainTransformEventPersistent> transforms = (List<? extends DomainTransformEventPersistent>) (List<?>) loader
+					.loadHasIds();
+			entityRefs.resolve(new CustomResolver() {
 				@Override
 				public boolean handles(PdOperator pdOperator) {
 					switch (pdOperator.name) {
@@ -837,8 +711,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				}
 
 				@Override
-				public Object resolveCustom(PdOperator pdOperator,
-						LaterItem item) {
+				public Object resolveCustom(PdOperator pdOperator, Ref item) {
 					switch (pdOperator.name) {
 					case "objectClassRef":
 					case "valueClassRef":
@@ -1043,7 +916,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			calls.add(new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
-					loadJoinTable(entryF, warmupLaterLookup());
+					loadJoinTable(entryF, warmupEntityRefs());
 					return null;
 				}
 			});
@@ -1059,8 +932,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					@Override
 					public Void call() throws Exception {
 						MetricLogging.get().start(clazz.getSimpleName());
-						loadTable(clazz, descriptor.getInitialLoadFilter(),
-								null, warmupLaterLookup());
+						loader().withClazz(clazz)
+								.withSqlFilter(
+										descriptor.getInitialLoadFilter())
+								.withEntityRefs(warmupEntityRefs())
+								.loadEntities();
 						MetricLogging.get().end(clazz.getSimpleName(),
 								store.metricLogger);
 						return null;
@@ -1070,40 +946,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	/*
-	 * Use the write method of the domain entity (to force a transactional
-	 * version) but don't record the property change. The populated version will
-	 * be vacuumed - neatly avoiding any cache invalidation requirements
-	 */
-	<T extends Entity> void copyLazyPropertyValues(T tableEntity,
-			T domainEntity) {
-		try {
-			TransformManager.get().setIgnorePropertyChanges(true);
-			Class<? extends Entity> clazz = tableEntity.entityClass();
-			List<ColumnDescriptor> columnDescriptors = this.columnDescriptors
-					.get(clazz);
-			List<PdOperator> pds = descriptors.get(clazz);
-			int idx = 0;
-			for (idx = 0; idx < columnDescriptors.size(); idx++) {
-				ColumnDescriptor columnDescriptor = columnDescriptors.get(idx);
-				PdOperator pd = pds.get(idx);
-				if (columnDescriptor.loadType == DomainStorePropertyLoadType.LAZY) {
-					try {
-						Object tableValue = pd.field.get(tableEntity);
-						pd.writeMethod.invoke(domainEntity,
-								new Object[] { tableValue });
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
-			}
-		} finally {
-			TransformManager.get().setIgnorePropertyChanges(false);
-		}
-	}
-
 	Connection getConnection() {
 		return connectionPool.getConnection();
+	}
+
+	Loader loader() {
+		return new Loader();
 	}
 
 	void releaseConn(Connection conn) {
@@ -1113,9 +961,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		connectionPool.releaseConnection(conn);
 	}
 
-	synchronized LaterLookup warmupLaterLookup() {
-		LaterLookup result = new LaterLookup();
-		warmupLaterLookups.add(result);
+	synchronized EntityRefs warmupEntityRefs() {
+		EntityRefs result = new EntityRefs();
+		warmupEntityRefss.add(result);
 		return result;
 	}
 
@@ -1193,6 +1041,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 		}
 
+		public void set(HasId hasId, Object value) throws Exception {
+			if (store.initialising) {
+				field.set(hasId, value);
+			} else {
+				writeMethod.invoke(hasId, new Object[] { value });
+			}
+		}
+
 		@Override
 		public String toString() {
 			return Ax.format("%s.%s [%s]", clazz.getSimpleName(), name,
@@ -1246,8 +1102,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						&& customResolver.handles(PdOperator.this);
 			}
 
-			Object resolveCustom(CustomResolver customResolver,
-					LaterItem item) {
+			Object resolveCustom(CustomResolver customResolver, Ref item) {
 				return customResolver.resolveCustom(PdOperator.this, item);
 			}
 		}
@@ -1270,24 +1125,25 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		@Override
 		public Void call() {
 			try {
-				LaterLookup laterLookup = new LaterLookup();
+				EntityRefs entityRefs = new EntityRefs();
 				String sqlFilter = Ax.format(" id in %s ",
 						EntityPersistenceHelper.toInClause(collations));
 				ClassIdLock dummySublock = new ClassIdLock(clazz, 0L);
-				List<? extends Entity> persistentSources = (List) loadTable0(
-						conn, clazz, sqlFilter, dummySublock, laterLookup,
-						false, true, false);
+				Loader loader = loader().withConnection(conn).withClazz(clazz)
+						.withSqlFilter(sqlFilter).withEntityRefs(entityRefs);
+				List<? extends Entity> persistentSources = (List<? extends Entity>) (List<?>) loader
+						.loadHasIds();
 				Map<EntityLocator, EntityCollation> locatorCollation = collations
 						.stream().collect(AlcinaCollectors
 								.toKeyMap(EntityCollation::getLocator));
-				// laterLookup.resolve() definitiely not needed - in fact key
+				// entityRefs.resolve() definitiely not needed - in fact key
 				// that we don't (quite hard to track
 				// issue) because otherwise we'll corrupt our graph with lame
 				// fauxness
 				// we're only loading these to get the non transform metadata,
 				// after all
 				//
-				// laterLookup.resolve();
+				// entityRefs.resolve();
 				for (Entity persistentSource : persistentSources) {
 					EntityCollation collation = locatorCollation
 							.get(persistentSource.toLocator());
@@ -1322,25 +1178,27 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	class BackupLazyLoader implements LazyObjectLoader {
 		@Override
-		public <T extends Entity> void loadObject(Class<? extends T> c, long id,
-				long localId) {
+		public <T extends Entity> void loadObject(Class<? extends T> clazz,
+				long id, long localId) {
+			boolean ignorePropertyChanges = TransformManager.get()
+					.isIgnorePropertyChanges();
 			try {
+				TransformManager.get().setIgnorePropertyChanges(true);
 				DomainClassDescriptor itemDescriptor = domainDescriptor.perClass
-						.get(c);
+						.get(clazz);
 				if (itemDescriptor != null
 						&& itemDescriptor.provideNotFullyLoadedOnStartup()) {
-					// sublock is now just used as a marker (FIXME - mvcc.4 -
-					// remove and just have a boolean 'should index' marker)
-					//
-					// since effects of the object version load are isolated to
-					// the current thread tx
-					ClassIdLock lock = LockUtils.obtainClassIdLock(c, 0L);
 					logger.debug("Backup lazy load: {} - {}\n",
-							c.getSimpleName(), id);
-					loadTable(c, "id=" + id, lock);
+							clazz.getSimpleName(), id);
+					loader().withClazz(clazz).withSqlFilter("id=" + id).
+					// handle cascading resolution in initialising phase
+							withResolveRefs(true).loadEntities();
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
+			} finally {
+				TransformManager.get()
+						.setIgnorePropertyChanges(ignorePropertyChanges);
 			}
 		}
 	}
@@ -1970,22 +1828,22 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	interface CustomResolver {
 		boolean handles(PdOperator pdOperator);
 
-		Object resolveCustom(PdOperator pdOperator, LaterItem item);
+		Object resolveCustom(PdOperator pdOperator, Ref item);
 	}
 
-	class LaterLookup {
-		List<LaterItem> list = new LaterLookupList();
+	class EntityRefs {
+		List<Ref> list = new RefList();
 
 		private CustomResolver customResolver;
 
 		private DomainSegmentLoader segmentLoader;
 
 		void add(HasId target, PdOperator pd, HasId source) {
-			list.add(new LaterItem(target, pd, source));
+			list.add(new Ref(target, pd, source));
 		}
 
 		void add(Long id, PdOperator pd, HasId hasId) {
-			list.add(new LaterItem(id, pd, hasId));
+			list.add(new Ref(id, pd, hasId));
 		}
 
 		void doResolve() {
@@ -2011,41 +1869,36 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 
 		private final class ResolveRefsTask implements Callable<Void> {
-			private List<LaterItem> items;
+			private List<Ref> items;
 
 			int missingWarningCount = 0;
 
-			private ResolveRefsTask(List<LaterItem> items) {
+			private ResolveRefsTask(List<Ref> items) {
 				this.items = items;
 			}
 
 			@Override
-			/*
-			 * multithread Problem here is that set() methods need to be synced
-			 * per class (really, pd) ..so run linear
-			 */
-			public Void call() throws Exception {
-				boolean keepDetached = LooseContext.is(
-						DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
+			public /*
+					 * multithread Problem here is that set() methods need to be
+					 * synced per class (really, pd) ..so run linear
+					 */
+			Void call() throws Exception {
 				if (LooseContext.is(
 						DomainStore.CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS)) {
 					this.items.clear();
 					return null;
 				}
-				for (LaterItem item : this.items) {
+				for (Ref item : this.items) {
 					try {
 						PdOperator pdOperator = item.pdOperator;
 						pdOperator.resolveHelper.ensure(item.source.getClass());
 						long id = item.id;
 						if (pdOperator.resolveHelper.isCustom(customResolver)) {
+							// non-entity, so field access tx-OK
 							pdOperator.field.set(item.source,
 									pdOperator.resolveHelper.resolveCustom(
 											customResolver, item));
 						} else if (pdOperator.resolveHelper.inJoinTables) {
-							if (keepDetached) {
-								throw new RuntimeException(
-										"Cannot keep join tables detached");
-							}
 							Set set = (Set) pdOperator.field.get(item.source);
 							if (set == null) {
 								set = new LiSet();
@@ -2120,27 +1973,24 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 									}
 								}
 							}
-							pdOperator.field.set(item.source, target);
-							if (keepDetached) {
-								continue;
-							}
+							pdOperator.set(item.source, target);
 							PdOperator targetOperator = pdOperator.resolveHelper.targetOperator;
 							if (targetOperator != null && target != null) {
 								Set set = (Set) targetOperator.field
 										.get(target);
 								if (set == null) {
 									set = new LiSet();
-									targetOperator.field.set(target, set);
+									targetOperator.set((HasId) target, set);
 								}
 								set.add(item.source);
 							}
 							targetOperator = pdOperator.resolveHelper.oneToOneOperator;
 							if (targetOperator != null && target != null) {
-								targetOperator.field.set(target, item.source);
+								targetOperator.set((HasId) target, item.source);
 							}
 							targetOperator = pdOperator.resolveHelper.domainStoreRevOperator;
 							if (targetOperator != null && target != null) {
-								targetOperator.field.set(target, item.source);
+								targetOperator.set((HasId) target, item.source);
 							}
 						}
 					} catch (Exception e) {
@@ -2167,7 +2017,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 		}
 
-		class LaterItem {
+		class Ref {
 			long id;
 
 			PdOperator pdOperator;
@@ -2176,24 +2026,24 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 			HasId target;
 
-			LaterItem() {
+			Ref() {
 			}
 
-			LaterItem(HasId target, PdOperator pd, HasId source) {
+			Ref(HasId target, PdOperator pd, HasId source) {
 				this.target = target;
 				this.pdOperator = pd;
 				this.source = source;
 			}
 
-			LaterItem(long id, PdOperator pd, HasId source) {
+			Ref(long id, PdOperator pd, HasId source) {
 				this.id = id;
 				this.pdOperator = pd;
 				this.source = source;
 			}
 		}
 
-		class LaterLookupList extends AbstractList<LaterItem> {
-			LaterItem view = new LaterItem();
+		class RefList extends AbstractList<Ref> {
+			Ref view = new Ref();
 
 			LongArrayList ids = new LongArrayList();
 
@@ -2204,12 +2054,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			List<HasId> targets = new ArrayList<>();
 
 			@Override
-			public void add(int index, LaterItem element) {
+			public void add(int index, Ref element) {
 				throw new UnsupportedOperationException();
 			}
 
 			@Override
-			public boolean add(LaterItem e) {
+			public boolean add(Ref e) {
 				add(e.id, e.pdOperator, e.source, e.target);
 				return true;
 			}
@@ -2223,7 +2073,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 
 			@Override
-			public LaterItem get(int index) {
+			public Ref get(int index) {
 				view.id = ids.getLong(index);
 				view.pdOperator = pdOperators.get(index);
 				view.source = sources.get(index);
@@ -2232,7 +2082,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 
 			@Override
-			public Iterator<LaterItem> iterator() {
+			public Iterator<Ref> iterator() {
 				return new Itr();
 			}
 
@@ -2257,7 +2107,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				add(id, pd, source, null);
 			}
 
-			private class Itr implements Iterator<LaterItem> {
+			private class Itr implements Iterator<Ref> {
 				/**
 				 * Index of element to be returned by subsequent call to next.
 				 */
@@ -2276,7 +2126,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				}
 
 				@Override
-				public LaterItem next() {
+				public Ref next() {
 					checkForComodification();
 					try {
 						int index = cursor;
@@ -2299,6 +2149,148 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						throw new ConcurrentModificationException();
 				}
 			}
+		}
+	}
+
+	class Loader {
+		Class clazz;
+
+		String sqlFilter;
+
+		EntityRefs entityRefs = new EntityRefs();
+
+		Connection connection;
+
+		boolean populateLazyPropertyValues;
+
+		boolean returnResults;
+
+		private boolean resolveRefs;
+
+		public Loader withClazz(Class clazz) {
+			this.clazz = clazz;
+			return this;
+		}
+
+		public Loader withConnection(Connection connection) {
+			this.connection = connection;
+			return this;
+		}
+
+		public Loader withEntityRefs(EntityRefs entityRefs) {
+			this.entityRefs = entityRefs;
+			return this;
+		}
+
+		public Loader withPopulateLazyPropertyValues(
+				boolean populateLazyPropertyValues) {
+			this.populateLazyPropertyValues = populateLazyPropertyValues;
+			return this;
+		}
+
+		public Loader withResolveRefs(boolean resolveRefs) {
+			this.resolveRefs = resolveRefs;
+			return this;
+		}
+
+		public Loader withReturnResults(boolean returnResults) {
+			this.returnResults = returnResults;
+			return this;
+		}
+
+		public Loader withSqlFilter(String sqlFilter) {
+			this.sqlFilter = sqlFilter;
+			return this;
+		}
+
+		private List<HasId> load0() throws Exception {
+			List<HasId> loaded = new ArrayList<>();
+			ConnResults connResults = ConnResults.builder().withClazz(clazz)
+					.withConn(connection)
+					.withColumnDescriptors(columnDescriptors.get(clazz))
+					.withPopulateLazyPropertyValues(populateLazyPropertyValues)
+					.withLoader(DomainStoreLoaderDatabase.this)
+					.withSqlFilter(sqlFilter).build();
+			List<PdOperator> pds = descriptors.get(clazz);
+			PdOperator idOperator = pds.stream()
+					.filter(pd -> pd.name.equals("id")).findFirst().get();
+			Transaction transaction = Transaction.isInTransaction()
+					? Transaction.current()
+					: null;
+			boolean transactional = DomainStore.stores()
+					.storeFor(clazz) != null;
+			for (Object[] objects : connResults) {
+				long id = (Long) objects[idOperator.idx];
+				HasId hasId = null;
+				if (transactional) {
+					if (store.initialising) {
+						hasId = transaction.create(clazz, store, id, 0L);
+						store.transformManager.store.mapObject((Entity) hasId);
+					} else {
+						hasId = store.ensureEntity(clazz, id);
+					}
+				} else {
+					hasId = (HasId) clazz.newInstance();
+				}
+				if (returnResults) {
+					loaded.add(hasId);
+				}
+				for (int i = 0; i < objects.length; i++) {
+					PdOperator pdOperator = pds.get(i);
+					ColumnDescriptor columnDescriptor = connResults.columnDescriptors
+							.get(i);
+					Method rm = pdOperator.readMethod;
+					Object value = objects[i];
+					if (pdOperator.manyToOne != null
+							|| pdOperator.oneToOne != null) {
+						Long refId = (Long) value;
+						if (refId != null) {
+							if (hasId != null) {
+								entityRefs.add(refId, pdOperator, hasId);
+							}
+						}
+					} else {
+						boolean illegalNull = (pdOperator.field
+								.getType() == int.class
+								|| pdOperator.field.getType() == long.class)
+								&& value == null;
+						if (illegalNull) {
+							value = -1;
+							logger.warn(
+									"Replaced int/null with int/-1 :: {}.{} - id: {}",
+									pdOperator.clazz.getSimpleName(),
+									pdOperator.field.getName(), hasId.getId());
+						}
+						pdOperator.set(hasId, value);
+					}
+				}
+			}
+			return loaded;
+		}
+
+		private List<HasId> loadHasIds() throws Exception {
+			boolean ignorePropertyChanges = TransformManager.get()
+					.isIgnorePropertyChanges();
+			try {
+				TransformManager.get().setIgnorePropertyChanges(true);
+				if (connection == null) {
+					connection = getConnection();
+				}
+				return load0();
+			} finally {
+				releaseConn(connection);
+				TransformManager.get()
+						.setIgnorePropertyChanges(ignorePropertyChanges);
+			}
+		}
+
+		<T extends Entity> List<T> loadEntities() throws Exception {
+			List<T> result = (List<T>) (List<?>) loadHasIds();
+			if (store.initialised || resolveRefs) {
+				entityRefs.resolve();
+				result.forEach(e -> store.index(e, true, null, true));
+			}
+			return result;
 		}
 	}
 }

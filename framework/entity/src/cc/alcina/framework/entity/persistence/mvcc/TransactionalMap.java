@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIte
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
+import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
@@ -58,7 +59,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	/*
 	 * Stores mappings in the base layer
 	 */
-	private Map<K, V> nonConcurrent;
+	protected Map<K, V> nonConcurrent;
 
 	private SizeMetadata sizeMetadata;
 
@@ -66,7 +67,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	 * Non-generic because we use the NULL_KEY_MARKER - other than that; Map<K,
 	 * TransactionalValue<V>>
 	 */
-	private Map concurrent;
+	protected Map concurrent;
 
 	public TransactionalMap(Class<K> keyClass, Class<V> valueClass) {
 		this(keyClass, valueClass, null);
@@ -205,7 +206,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 										ObjectWrapper.of(value),
 										currentTransaction));
 			}
-			transactionalValue.put(value);
+			boolean success = transactionalValue.put(value);
+			if (!success) {
+				// concurrent vacuum - retry
+				return put(key, value);
+			}
 			if (!hasExisting) {
 				sizeMetadata.delta(1);
 			}
@@ -242,8 +247,11 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	@Override
 	public int size() {
-		return sizeMetadata == null ? nonConcurrent.size()
-				: sizeMetadata.resolve(false).get();
+		if (sizeMetadata == null || sizeMetadata.resolve(false) == null) {
+			return nonConcurrent.size();
+		} else {
+			return sizeMetadata.resolve(false).get();
+		}
 	}
 
 	@Override
@@ -269,10 +277,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		return key == NULL_KEY_MARKER ? null : (K) key;
 	}
 
-	private Object wrapTransactionalKey(Object key) {
-		return key == null ? NULL_KEY_MARKER : key;
-	}
-
 	protected Map createConcurrentMap() {
 		return new ConcurrentHashMap<>();
 	}
@@ -290,6 +294,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return (Map<K, V>) new Object2ObjectLinkedOpenHashMap<>(
 					Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
 		}
+	}
+
+	protected Object wrapTransactionalKey(Object key) {
+		return key == null ? NULL_KEY_MARKER : key;
 	}
 
 	void ensureConcurrent(Transaction currentTransaction) {
@@ -321,6 +329,33 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	 */
 	void putInBaseLayer(Transaction baseTransaction, K key, V value) {
 		nonConcurrent.put(key, value);
+	}
+
+	public static class EntityIdMap extends TransactionalMap<Long, Entity> {
+		public EntityIdMap(Class<Long> keyClass, Class<Entity> valueClass) {
+			super(keyClass, valueClass);
+		}
+
+		public void ensureVersion(Long key) {
+			if (concurrent != null) {
+				TransactionalValue transactionalValue = (TransactionalValue) concurrent
+						.get(wrapTransactionalKey(key));
+				if (transactionalValue != null) {
+					transactionalValue.ensureVersion();
+				}
+			}
+		}
+
+		public Entity getAnyTransaction(Long key) {
+			if (concurrent != null) {
+				TransactionalValue transactionalValue = (TransactionalValue) concurrent
+						.get(wrapTransactionalKey(key));
+				if (transactionalValue != null) {
+					return transactionalValue.getAnyTransaction();
+				}
+			}
+			return nonConcurrent.get(key);
+		}
 	}
 
 	private class KeySet extends AbstractSet<K> {
@@ -452,12 +487,18 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				Object key = wrapTransactionalKey(e.getKey());
 				TransactionalValue transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 						.get(key);
+				boolean inTransactionalIteratorPhase = layerIterator
+						.getCurrentIterator()
+						.getSource() == transactionalIterator;
 				if (transactionalValue != null) {
-					return layerIterator.getCurrentIterator()
-							.getSource() == transactionalIterator
+					return inTransactionalIteratorPhase
 							&& transactionalValue.isNotRemoved();
+				} else {
+					/*
+					 * if null and in tx iterator phase, the key was vacuumed
+					 */
+					return !inTransactionalIteratorPhase;
 				}
-				return true;
 			};
 			return new FilteringIterator<>(layerIterator, notVisibleFilter);
 		}
@@ -544,15 +585,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		protected <E extends Entity> Class<E> entityClass() {
-			return null;
+		protected AtomicInteger
+				initialAllTransactionsValueFor(AtomicInteger t) {
+			return new AtomicInteger(0);
 		}
 
 		@Override
-		// TODO - strictly speaking, it possibly is - but the sizes returned are
-		// only estimates
 		protected boolean thisMayBeVisibleToPriorTransactions() {
-			return false;
+			return true;
 		}
 	}
 
@@ -565,6 +605,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			this.key = key;
 		}
 
+		public void ensureVersion() {
+			if (get(key) != null) {
+				return;
+			}
+			V value = getAnyTransaction();
+			put(value);
+		}
+
 		public V getValue() {
 			ObjectWrapper o = resolve(false);
 			if (o == null) {
@@ -573,8 +621,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				 */
 				return nonConcurrent.get(key);
 			}
-			Object value = o.get();
-			if (value == REMOVED_VALUE_MARKER) {
+			// not-not - but otherwise so many single nots
+			if (!isNotRemovedValueMarker(o)) {
 				throw new UnsupportedOperationException();
 			}
 			return (V) o.get();
@@ -582,7 +630,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public int hashCode() {
-			return key instanceof Entity ? Objects.hash(key) : super.hashCode();
+			return key instanceof Entity || key instanceof Long
+					? Objects.hash(key)
+					: super.hashCode();
 		}
 
 		public boolean isNotRemoved() {
@@ -593,15 +643,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				 */
 				return nonConcurrent.containsKey(key);
 			}
-			Object value = o.get();
-			if (value == REMOVED_VALUE_MARKER) {
-				return false;
-			}
-			return true;
-		}
-
-		public void put(V value) {
-			resolve(true).set(value);
+			return isNotRemovedValueMarker(o);
 		}
 
 		public void remove() {
@@ -609,12 +651,20 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		/*
-		 * because possibly visible before version creation, the base must be
-		 * marked as 'removed'
-		 */
-		protected ObjectWrapper baseObjectFor(ObjectWrapper t) {
-			return ObjectWrapper.of(REMOVED_VALUE_MARKER);
+		public void vacuum(VacuumableTransactions vacuumableTransactions) {
+			super.vacuum(vacuumableTransactions);
+			synchronized (this) {
+				if (getSize() == 0
+						&& visibleAllTransactions.get() == REMOVED_VALUE_MARKER
+						&& !nonConcurrent.containsKey(key)) {
+					/*
+					 * Note that this only affects objects not loaded in the
+					 * base transaction - but that's generally exactly (viz
+					 * lazy-loaded objects) what we'd want to vacuum anyway
+					 */
+					concurrent.remove(wrapTransactionalKey(key));
+				}
+			}
 		}
 
 		@Override
@@ -629,13 +679,48 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		protected <E extends Entity> Class<E> entityClass() {
-			return null;
+		/*
+		 * because possibly visible before version creation, the base must be
+		 * marked as 'removed'
+		 */
+		protected ObjectWrapper
+				initialAllTransactionsValueFor(ObjectWrapper t) {
+			return ObjectWrapper.of(REMOVED_VALUE_MARKER);
 		}
 
 		@Override
 		protected boolean thisMayBeVisibleToPriorTransactions() {
 			return true;
+		}
+
+		V getAnyTransaction() {
+			ObjectWrapper baseObject = visibleAllTransactions;
+			if (isNotRemovedValueMarker(baseObject)) {
+				return (V) baseObject.get();
+			}
+			return (V) versions.values().stream()
+					.filter(ov -> isNotRemovedValueMarker(ov.object))
+					.findFirst().get().object.get();
+		}
+
+		boolean isNotRemovedValueMarker(ObjectWrapper o) {
+			return o.get() != REMOVED_VALUE_MARKER;
+		}
+
+		boolean put(V value) {
+			/*
+			 * this synchronization may or may not be spendy - I have a feeling
+			 * not (compared to resolve) since concurrent access should be very
+			 * rare
+			 */
+			synchronized (this) {
+				if (concurrent.get(wrapTransactionalKey(key)) == null) {
+					// vacuumed
+					return false;
+				}
+				resolve(true).set(value);
+				return true;
+			}
 		}
 	}
 

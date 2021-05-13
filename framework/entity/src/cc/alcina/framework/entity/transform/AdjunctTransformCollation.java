@@ -49,8 +49,8 @@ public class AdjunctTransformCollation extends TransformCollation {
 					.cast();
 			try {
 				tltm.setIgnorePropertyChanges(true);
-				if (tltm.getUserSessionEntityMap() == null) {
-					tltm.setUserSessionEntityMap(TransformCommit.get()
+				if (tltm.getClientInstanceEntityMap() == null) {
+					tltm.setClientInstanceEntityMap(TransformCommit.get()
 							.getLocatorMapForClient(token.getRequest()));
 				}
 				tltm.setApplyingExternalTransforms(true);
@@ -59,7 +59,7 @@ public class AdjunctTransformCollation extends TransformCollation {
 							.getTransformType() == TransformType.CREATE_OBJECT) {
 						// only create our transient event receiver if this
 						// request hasn't been applied
-						if (tltm.getUserSessionEntityMap().getForLocalId(
+						if (tltm.getClientInstanceEntityMap().getForLocalId(
 								event.getObjectLocalId()) == null) {
 							Entity instance = (Entity) tltm.newInstance(
 									event.getObjectClass(), event.getObjectId(),

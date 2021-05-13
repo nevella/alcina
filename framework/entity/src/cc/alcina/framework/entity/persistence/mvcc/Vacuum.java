@@ -54,7 +54,7 @@ class Vacuum {
 	 * synchronized semantic - only called from single-thread executor
 	 */
 	private synchronized void vacuum() {
-		while (paused) {
+		while (paused || true) {
 			try {
 				Thread.sleep(50);
 			} catch (InterruptedException e) {

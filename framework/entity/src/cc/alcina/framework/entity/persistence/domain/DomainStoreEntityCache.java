@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalMap;
+import cc.alcina.framework.entity.persistence.mvcc.TransactionalMap.EntityIdMap;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 
 class DomainStoreEntityCache extends DetachedEntityCache {
@@ -16,6 +17,10 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 		TransactionalMap txMap = (TransactionalMap) domain
 				.get(objectLocator.getClazz());
 		txMap.debugNotFound(objectLocator.getId());
+	}
+
+	public void ensureVersion(Entity entity) {
+		getDomainMap(entity.entityClass()).ensureVersion(entity.getId());
 	}
 
 	@Override
@@ -31,9 +36,7 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 
 	@Override
 	protected Map<Long, Entity> createIdEntityMap(Class clazz) {
-		TransactionalMap transactionalMap = new TransactionalMap(Long.class,
-				clazz);
-		return transactionalMap;
+		return new TransactionalMap.EntityIdMap(Long.class, clazz);
 	}
 
 	@Override
@@ -57,6 +60,14 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 	@Override
 	protected boolean isExternalCreate() {
 		return ThreadlocalTransformManager.cast().isExternalCreate();
+	}
+
+	Entity getAnyTransaction(Class<? extends Entity> clazz, long id) {
+		return getDomainMap(clazz).getAnyTransaction(id);
+	}
+
+	EntityIdMap getDomainMap(Class<? extends Entity> clazz) {
+		return (EntityIdMap) domain.get(clazz);
 	}
 
 	void initialiseMap(Class clazz) {

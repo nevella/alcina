@@ -419,7 +419,7 @@ public class TransformPersisterInPersistenceContext {
 						eventsPersisted.forEach(event -> {
 							if (event.getObjectId() == 0) {
 								event.setObjectId(tlTransformManager
-										.getUserSessionEntityMap()
+										.getClientInstanceEntityMap()
 										.getForLocalId(event.getObjectLocalId())
 										.getId());
 							}
@@ -597,7 +597,7 @@ public class TransformPersisterInPersistenceContext {
 				getEntityManager().persist(entity);
 				persistedLocals.add(lastCreationEvent.getObjectLocalId());
 				lastCreationEvent.setGeneratedServerId(entity.getId());
-				ThreadlocalTransformManager.cast().getUserSessionEntityMap()
+				ThreadlocalTransformManager.cast().getClientInstanceEntityMap()
 						.putToLookups(entity.toLocator());
 				lastCreationEvent = null;
 			}

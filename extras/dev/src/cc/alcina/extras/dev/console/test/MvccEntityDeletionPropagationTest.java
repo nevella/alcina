@@ -144,6 +144,12 @@ public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG ext
 	}
 
 	@Override
+	protected void notifyThreadException(Exception e) {
+		super.notifyThreadException(e);
+		txLatch.countDown();
+	}
+
+	@Override
 	protected void run0() throws Exception {
 		username = "moew" + System.currentTimeMillis() + "@nodomain.com";
 		txLatch = new CountDownLatch(2);

@@ -157,15 +157,4 @@ public class HistoryImplPushState extends HistoryImpl {
 			return path;
 		}
 	}
-
-	private static class HistoryTokenEncoder {
-		public native String decode(String toDecode) /*-{
-      return $wnd.decodeURI(toDecode.replace("%23", "#"));
-		}-*/;
-
-		public native String encode(String toEncode) /*-{
-      // encodeURI() does *not* encode the '#' character.
-      return $wnd.encodeURI(toEncode).replace("#", "%23");
-		}-*/;
-	}
 }

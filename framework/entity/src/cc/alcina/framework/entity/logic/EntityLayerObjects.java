@@ -19,6 +19,7 @@ import java.util.Objects;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
@@ -57,6 +58,8 @@ public class EntityLayerObjects {
 	 */
 	private ClientInstance serverAsClientInstance;
 
+	private EntityLocatorMap serverAsClientInstanceEntityLocatorMap = new EntityLocatorMap();
+
 	private EntityLayerObjects() {
 		super();
 	}
@@ -79,6 +82,10 @@ public class EntityLayerObjects {
 
 	public ClientInstance getServerAsClientInstance() {
 		return this.serverAsClientInstance;
+	}
+
+	public EntityLocatorMap getServerAsClientInstanceEntityLocatorMap() {
+		return this.serverAsClientInstanceEntityLocatorMap;
 	}
 
 	public ClassLoader getServletLayerClassLoader() {

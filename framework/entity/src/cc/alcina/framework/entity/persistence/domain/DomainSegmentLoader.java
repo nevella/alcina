@@ -23,7 +23,7 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResultsReuse;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
-import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.LaterLookup.LaterItem;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.EntityRefs.Ref;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.SimpleAtomModel.AtomKey;
 
@@ -34,7 +34,7 @@ import cc.alcina.framework.entity.util.SimpleAtomModel.AtomKey;
  * be sensitive to phase
  */
 public abstract class DomainSegmentLoader implements ConnResultsReuse {
-	List<LaterItem> toResolve = new ArrayList<>();
+	List<Ref> toResolve = new ArrayList<>();
 
 	Multiset<Class, Set<Long>> toLoadIds = new Multiset<>();
 
@@ -122,7 +122,7 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 		});
 	}
 
-	public synchronized void notifyLater(LaterItem item, Class type, long id) {
+	public synchronized void notifyLater(Ref item, Class type, long id) {
 		if (properties.stream().anyMatch(property -> property.isIgnore(item))) {
 			return;
 		}
@@ -246,7 +246,7 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 			return Ax.blankTo(columnName1, propertyName1 + "_id");
 		}
 
-		public boolean isIgnore(LaterItem item) {
+		public boolean isIgnore(Ref item) {
 			if (type == DomainSegmentPropertyType.IGNORE) {
 				if (item.pdOperator.pd.getName().equals(propertyName1)
 						&& ((Entity) item.source).entityClass() == clazz1) {
@@ -263,7 +263,7 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 			return this.phase.isIgnoreForPhase(forPhase);
 		}
 
-		public boolean isRefsOnly(LaterItem item) {
+		public boolean isRefsOnly(Ref item) {
 			if (item.pdOperator.pd.getName().equals(propertyName1)
 					&& ((Entity) item.source).entityClass() == clazz1) {
 				return true;

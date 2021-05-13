@@ -301,7 +301,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 11;
+		private static final transient int VERSION = 12;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -1045,7 +1045,7 @@ class ClassTransformer {
 								mvccObjectVersionsCtClass.getName());
 						bodyBuilder.line(
 								"\tif (versions == null){\n\t\treturn this;\n\t} else {\n\t\t"
-										+ "return (%s) versions.getBaseObject();\t\n}\n}",
+										+ "return (%s) versions.getDomainIdentity();\t\n}\n}",
 								ctClass.getName());
 						String body = bodyBuilder.toString();
 						CtMethod newMethod = CtNewMethod.make(Modifier.PUBLIC,
