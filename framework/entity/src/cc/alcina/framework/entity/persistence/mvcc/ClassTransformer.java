@@ -301,7 +301,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 12;
+		private static final transient int VERSION = 14;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -1052,7 +1052,6 @@ class ClassTransformer {
 								entityCtClass, "domainIdentity", new CtClass[0],
 								new CtClass[0], body, ctClass);
 						ctClass.addMethod(newMethod);
-						int debug = 3;
 					});
 					/*
 					 * add default constructor
@@ -1128,7 +1127,26 @@ class ClassTransformer {
 						// changes must work
 						boolean setter = method.getName().matches("set[A-Z].*")
 								&& method.getParameterTypes().length == 1;
+						boolean propertyChangeListenerModifier = method
+								.getName().matches(
+										"(?:(?:add|remove).*PropertyChangeListener)|propertyChangeSupport");
+						// FIXME - mvcc.4
+						// propertyChangeListeners are problematic because of,
+						// among other things, circular calls to TLTM.listenTo
+						// when removing if we have them be 'writeresolve'
+						//
+						// if the object version is already in write state (i.e.
+						// called frorm a setter), all good.
+						//
+						// if not, listener will be added to immutable prior-tx
+						// object (since it'll be read-resolved) which is
+						// inelegant but harmless
+						//
+						// a solution would be tristate resolve
+						// (read,write,listener) which returns a marker object
+						// ignoreable by TLTM... but is that elegant?
 						boolean writeResolve = setter;
+						// || propertyChangeListenerModifier;
 						MvccAccessType accessType = null;
 						if (method.hasAnnotation(MvccAccess.class)) {
 							MvccAccess annotation = (MvccAccess) method

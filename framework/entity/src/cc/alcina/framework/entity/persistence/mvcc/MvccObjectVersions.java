@@ -46,20 +46,21 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 public abstract class MvccObjectVersions<T> implements Vacuumable {
 	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
 
-	// called in a synchronized block (synchronized on baseObject)
-	static <E extends Entity> MvccObjectVersions<E> ensureEntity(E baseObject,
-			Transaction transaction, boolean initialObjectIsWriteable) {
-		MvccObject mvccObject = (MvccObject) baseObject;
-		return new MvccObjectVersionsEntity<E>(baseObject, transaction,
+	// called in a synchronized block (synchronized on domainIdentity)
+	static <E extends Entity> MvccObjectVersions<E> ensureEntity(
+			E domainIdentity, Transaction transaction,
+			boolean initialObjectIsWriteable) {
+		MvccObject mvccObject = (MvccObject) domainIdentity;
+		return new MvccObjectVersionsEntity<E>(domainIdentity, transaction,
 				initialObjectIsWriteable);
 	}
 
-	// called in a synchronized block (synchronized on baseObject)
+	// called in a synchronized block (synchronized on domainIdentity)
 	static MvccObjectVersions<TransactionalTrieEntry> ensureTrieEntry(
-			TransactionalTrieEntry baseObject, Transaction transaction,
+			TransactionalTrieEntry domainIdentity, Transaction transaction,
 			boolean initialObjectIsWriteable) {
-		MvccObject mvccObject = (MvccObject) baseObject;
-		return new MvccObjectVersionsTrieEntry(baseObject, transaction,
+		MvccObject mvccObject = (MvccObject) domainIdentity;
+		return new MvccObjectVersionsTrieEntry(domainIdentity, transaction,
 				initialObjectIsWriteable);
 	}
 
@@ -232,15 +233,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (write && transaction.isReadonly()) {
 			throw new MvccException("Writing within a readonly transaction");
 		}
-		if ((size.get() == 0 || transaction.isEmptyCommittedTransactions())
-				&& !write) {
-			if (thisMayBeVisibleToPriorTransactions()
-					&& !transaction.isVisible(firstCommittedTransactionId)) {
-				return null;
-			} else {
-				return visibleAllTransactions;
-			}
-		}
 		// try cached
 		if (write) {
 			if (mostRecentWritableTransactionId == transaction.getId()) {
@@ -257,6 +249,18 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				if (mostRecentReffedTransactionId == transaction.getId()) {
 					return result;
 				}
+			}
+		}
+		/*
+		 * TODO - doc - this makes sense but explain why...
+		 */
+		if ((size.get() == 0 || (transaction.isEmptyCommittedTransactions()
+				&& !versions.containsKey(transaction))) && !write) {
+			if (thisMayBeVisibleToPriorTransactions()
+					&& !transaction.isVisible(firstCommittedTransactionId)) {
+				return null;
+			} else {
+				return visibleAllTransactions;
 			}
 		}
 		ObjectVersion<T> version = versions.get(transaction);
@@ -277,11 +281,13 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 		T mostRecentObject = null;
 		/*
-		 * mostRecentVersion will be null if just created
+		 * Allow upping from read- to write-version
 		 */
-		ObjectVersion<T> mostRecentVersion = mostRecentTransaction == null
-				? null
-				: versions.get(mostRecentTransaction);
+		ObjectVersion<T> mostRecentVersion = version;
+		if (mostRecentVersion == null) {
+			mostRecentVersion = mostRecentTransaction == null ? null
+					: versions.get(mostRecentTransaction);
+		}
 		if (mostRecentVersion != null) {
 			mostRecentObject = mostRecentVersion.object;
 		} else {
@@ -339,6 +345,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		versions.put(version.transaction, version);
 		size.incrementAndGet();
 		Transactions.get().onAddedVacuumable(version.transaction, this);
+		updateCached(version.transaction, version.object, version.writeable);
 	}
 
 	protected void removeWithSize(Transaction tx) {
@@ -349,9 +356,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			}
 			versions.remove(tx);
 			if (__mostRecentReffed == version.object) {
+				mostRecentReffedTransactionId = null;
 				__mostRecentReffed = null;
 			}
 			if (__mostRecentWritable == version.object) {
+				mostRecentWritableTransactionId = null;
 				__mostRecentWritable = null;
 			}
 			size.decrementAndGet();
@@ -362,15 +371,23 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		return false;
 	}
 
-	T resolve(boolean write) {
-		Transaction transaction = Transaction.current();
-		T resolved = resolve0(transaction, write);
+	protected void updateCached(Transaction transaction, T resolved,
+			boolean write) {
+		if (resolved == null && this instanceof MvccObjectVersionsTrieEntry) {
+			int debug = 3;
+		}
 		mostRecentReffedTransactionId = transaction.getId();
 		__mostRecentReffed = resolved;
 		if (write) {
 			mostRecentWritableTransactionId = transaction.getId();
 			__mostRecentWritable = resolved;
 		}
+	}
+
+	T resolve(boolean write) {
+		Transaction transaction = Transaction.current();
+		T resolved = resolve0(transaction, write);
+		updateCached(transaction, resolved, write);
 		return resolved;
 	}
 
@@ -379,6 +396,17 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		MvccObjectVersionsMvccObject(T t, Transaction initialTransaction,
 				boolean initialObjectIsWriteable) {
 			super(t, initialTransaction, initialObjectIsWriteable);
+			if (!initialObjectIsWriteable) {
+				// creating a versions object from a committed domainIdentity
+				// object.
+				//
+				// DOC : this is called either from create()
+				// (Transaction.create(), TransactionalTrieEntry constructor;
+				// both with initialObjectIsWriteable) or resolve( with
+				// false)(from a visible object with no mvccobjectversions i.e.
+				// visible to all txs)
+				visibleAllTransactions = domainIdentity;
+			}
 		}
 
 		@Override
@@ -389,10 +417,15 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 					if (versions.isEmpty()
 							&& initialWriteableTransaction == null) {
 						if (visibleAllTransactions != null) {
-							copyObject(visibleAllTransactions, domainIdentity);
+							if (visibleAllTransactions != domainIdentity) {
+								copyObject(visibleAllTransactions,
+										domainIdentity);
+							}
+							((MvccObject) visibleAllTransactions)
+									.__setMvccVersions__(null);
+							((MvccObject) domainIdentity)
+									.__setMvccVersions__(null);
 						}
-						((MvccObject) visibleAllTransactions)
-								.__setMvccVersions__(null);
 					}
 				}
 			}
@@ -400,6 +433,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 		@Override
 		protected void putVersion(ObjectVersion<T> version) {
+			((MvccObject) domainIdentity).__setMvccVersions__(this);
 			((MvccObject) version.object).__setMvccVersions__(this);
 			super.putVersion(version);
 		}

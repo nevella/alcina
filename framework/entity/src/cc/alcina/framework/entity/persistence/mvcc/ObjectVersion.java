@@ -12,6 +12,9 @@ class ObjectVersion<T> {
 
 	boolean writeable;
 
+	public ObjectVersion() {
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof ObjectVersion) {

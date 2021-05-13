@@ -37,6 +37,12 @@ public class Transactions {
 		return resolve(t, false, false) == t;
 	}
 
+	public static void copyIdFieldsToCurrentVersion(Entity entity) {
+		MvccObjectVersions versions = ((MvccObject) entity)
+				.__getMvccVersions__();
+		((MvccObjectVersionsEntity) versions).copyIdFieldsToCurrentVersion();
+	}
+
 	public static void enqueueLazyLoad(EntityLocator locator) {
 		synchronized (get().enqueuedLazyLoads) {
 			get().enqueuedLazyLoads.add(locator);
@@ -112,7 +118,8 @@ public class Transactions {
 	public static void revertToDefaultFieldValues(Entity entity) {
 		Entity defaults = (Entity) Reflections
 				.newInstance(entity.entityClass());
-		//because copying fields without resolution, entity will be the domainVersion
+		// because copying fields without resolution, entity will be the
+		// domainVersion
 		copyObjectFields(defaults, entity);
 	}
 
@@ -169,6 +176,14 @@ public class Transactions {
 
 	static Transactions get() {
 		return instance;
+	}
+
+	// FIXME - mvcc.5 - only implement if performance warrants (as opposed to
+	// current 'synchronize on the object' logic)
+	static Object identityMutex(Object o) {
+		// to avoid synchronizing on o - slower, but means that object can
+		// maintain an identity hashcode
+		throw new UnsupportedOperationException();
 	}
 
 	static <K, V> TransactionalTrieEntry<K, V>
@@ -494,10 +509,5 @@ public class Transactions {
 		public Thread getVacuumThread() {
 			return vacuum.getVacuumThread();
 		}
-	}
-
-	public static void copyIdFieldsToCurrentVersion(Entity entity) {
-		MvccObjectVersions versions = ((MvccObject)entity).__getMvccVersions__();
-		((MvccObjectVersionsEntity)versions).copyIdFieldsToCurrentVersion();
 	}
 }

@@ -48,12 +48,6 @@ public class MultiTrie<K, V extends Set<? extends Entity>>
 		}
 		if (!containsKey(key)) {
 			put(key, (V) createNewSet());
-			Set set = (Set) get(key);
-			if (set == null) {
-				int debug = 3;
-				set = (Set) get(key);
-				debug = 4;
-			}
 		}
 		Set set = (Set) get(key);
 		if (set.contains(item)) {
