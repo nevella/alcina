@@ -24,11 +24,11 @@ import javax.persistence.Table;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
@@ -62,8 +62,8 @@ public class DevConsoleCommandTransforms {
 		while (rs.next()) {
 			long id = rs.getLong("id");
 			String cn = rs.getString("refclassname");
-			Class clazz = Registry.get().lookupSingle(
-					PersistentImpl.class, ClassRef.class);
+			Class clazz = Registry.get().lookupSingle(PersistentImpl.class,
+					ClassRef.class);
 			ClassRef cr = (ClassRef) clazz.newInstance();
 			cr.setId(id);
 			cr.setRefClassName(cn);
@@ -370,7 +370,7 @@ public class DevConsoleCommandTransforms {
 			if (oldCi) {
 				authClause = authClauseOld;
 			}
-			String sql1 = "select dtr.id as id" + authClause
+			String sql1 = "select dtr.id as id from " + authClause
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
 					+ "where %s order by dtr.id desc";
 			String sql2 = "select ci.id as cli_id, u.username,  "
