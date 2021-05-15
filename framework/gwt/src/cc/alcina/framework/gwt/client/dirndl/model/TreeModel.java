@@ -102,8 +102,6 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 		private TreePath<DomainViewNodeModel> treePath;
 
-		private DomainViewTreeModel tree;
-
 		public DomainViewNodeModel() {
 		}
 
@@ -125,8 +123,8 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				DomainViewNodeModel parent = otherTreePath.getParent() == null
 						? null
 						: otherTreePath.getParent().getValue();
-				DomainViewNodeModel model = getTreePath().rootPath().getValue()
-						.getTree().generator.generate(valueModel, parent, path);
+				DomainViewNodeModel model = provideContainingTree().generator
+						.generate(valueModel, parent, path);
 				if (parent != null) {
 					parent.modifyChildren(Operation.INSERT, initialIndex, model,
 							fireCollectionModificationEvents);
@@ -140,12 +138,16 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			return this.node;
 		}
 
-		public DomainViewTreeModel getTree() {
-			return this.tree;
-		}
-
 		public TreePath<DomainViewNodeModel> getTreePath() {
 			return this.treePath;
+		}
+
+		public DomainViewTreeModel provideContainingTree() {
+			return getTreePath().provideContainingTree();
+		}
+
+		public void putTree(DomainViewTreeModel tree) {
+			getTreePath().putTree(tree);
 		}
 
 		public void removeFromParent() {
@@ -157,13 +159,11 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 		public void setNode(DomainViewNode<?> node) {
 			this.node = node;
-			getLabel().setLabel(node.getName());
+			DomainViewTreeModel treeModel = getTreePath()
+					.provideContainingTree();
+			constructLabel(node);
 			getLabel().setTitle(node.getTitle());
 			setLeaf(node.isLeaf());
-		}
-
-		public void setTree(DomainViewTreeModel tree) {
-			this.tree = tree;
 		}
 
 		private void modifyChildren(Operation operation, int initialIndex,
@@ -190,11 +190,40 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			setChildren(newValue);
 		}
 
+		protected void constructLabel(DomainViewNode<?> node) {
+			getLabel().setLabel(node.getName());
+		}
+
+		public static class FullLabel extends DomainViewNodeModel {
+			public FullLabel() {
+			}
+
+			public FullLabel(DomainViewNodeModel parent, String path) {
+				super(parent, path);
+			}
+
+			@Override
+			protected void constructLabel(DomainViewNode<?> node) {
+				getLabel().setLabel(node);
+			}
+		}
+
 		@ClientInstantiable
+		// TODO - the dirndl way would be scoped annotation resolution which
+		// resolves NodeLabel.getLabel to either return the name or the object
+		// itself...
 		public static class Generator {
 			public DomainViewNodeModel generate(DomainViewNode valueModel,
 					DomainViewNodeModel parent, String path) {
 				return new DomainViewNodeModel(parent, path);
+			}
+
+			public static class FullLabel extends Generator {
+				@Override
+				public DomainViewNodeModel generate(DomainViewNode valueModel,
+						DomainViewNodeModel parent, String path) {
+					return new DomainViewNodeModel.FullLabel(parent, path);
+				}
 			}
 		}
 	}
@@ -285,7 +314,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			// TODO - iterate through transactions => only last one is 'replace'
 			String requestPath = response.getRequest().getTreePath();
 			root = (DomainViewNodeModel) getRoot();
-			root.setTree(this);
+			root.putTree(this);
 			DomainViewNode rootModel = response.getTransforms().isEmpty() ? null
 					: response.getTransforms().get(0).getNode();
 			target = root.ensureNode(rootModel, requestPath, -1, false);
@@ -413,7 +442,9 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 			private String title;
 
-			@Directed(tag = "label", behaviours = @Behaviour(handler = EmitTopicHandler.class, event = DomEvents.Click.class, topics = @TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviourType.EMIT)))
+			@Directed(tag = "label", behaviours = {
+					@Behaviour(handler = EmitTopicHandler.class, event = DomEvents.Click.class, topics = {
+							@TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviourType.EMIT) }) })
 			public Object getLabel() {
 				return this.label;
 			}

@@ -133,6 +133,10 @@ public class TreePath<T> extends Model {
 		return false;
 	}
 
+	public <CT> CT provideContainingTree() {
+		return (CT) paths.containingTree;
+	}
+
 	public int provideCurrentIndex() {
 		if (parent == null) {
 			return 0;
@@ -143,6 +147,10 @@ public class TreePath<T> extends Model {
 
 	public boolean provideIsEmpty() {
 		return toString().isEmpty();
+	}
+
+	public void putTree(Object containingTree) {
+		paths.putTree(containingTree);
 	}
 
 	public void removeFromParent() {
@@ -210,6 +218,8 @@ public class TreePath<T> extends Model {
 
 		Map<String, TreePath> byString = new LinkedHashMap<>();
 
+		Object containingTree;
+
 		public Paths(TreePath root) {
 			this.root = root;
 			put(root);
@@ -238,6 +248,13 @@ public class TreePath<T> extends Model {
 						cursor.length());
 				treePath = treePath.addChild(segment);
 			}
+		}
+
+		/*
+		 * avoid requiring each treenode to have a containing tree ref
+		 */
+		public void putTree(Object containingTree) {
+			this.containingTree = containingTree;
 		}
 
 		void put(TreePath path) {
