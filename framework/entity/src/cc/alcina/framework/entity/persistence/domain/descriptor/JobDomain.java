@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -1016,6 +1017,11 @@ public class JobDomain {
 				if (t.getEndTime() == null) {
 					return;
 				}
+				if (new Date().getTime() - t.getEndTime().getTime() > 2
+						* TimeConstants.ONE_DAY_MS) {
+					return;
+				}
+				super.insert(t);
 			}
 
 			@Override
