@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.task;
 
+import java.util.Arrays;
 import java.util.Date;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
@@ -46,8 +48,9 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.accept(Utils::large).cell("Started").accept(Utils::date)
 					.cell("Thread").accept(Utils::medium).cell("Performer")
 					.accept(Utils::instance).cell("Links").accept(Utils::links);
-			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
-			JobDomain.get().getActiveJobs().filter(nameFilter)
+			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
+					job.getTaskSerialized());
+			JobDomain.get().getActiveJobs().filter(textFilter)
 					.filter(sectionFilter).forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))
@@ -87,9 +90,10 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.accept(Utils::large).cell("Started").accept(Utils::date)
 					.cell("Finished").accept(Utils::date).cell("Performer")
 					.accept(Utils::instance).cell("Link").accept(Utils::links);
-			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
+			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
+					job.getTaskSerialized());
 			JobDomain.get().getRecentlyCompletedJobs(topLevel)
-					.filter(nameFilter).limit(limit).forEach(job -> {
+					.filter(textFilter).limit(limit).forEach(job -> {
 						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 								.cell(String.valueOf(job.getId()))
 								.cell(job.provideName()).accept(Utils::large)
@@ -109,7 +113,8 @@ public class TaskListJobs extends AbstractTaskPerformer {
 	@Override
 	protected void run0() throws Exception {
 		DomDoc doc = DomDoc.basicHtmlDoc();
-		String css = ResourceUtilities.readRelativeResource("res/TaskListJobs.css");
+		String css = ResourceUtilities
+				.readRelativeResource("res/TaskListJobs.css");
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
 		{
 			Stream<QueueStat> queues = JobRegistry.get().getActiveQueueStats();
@@ -171,17 +176,15 @@ public class TaskListJobs extends AbstractTaskPerformer {
 		logger.info("Log output to job.largeResult");
 	}
 
-	boolean filter(String test) {
+	boolean filter(String... tests) {
 		if (filter == null) {
 			return true;
-		}
-		if (test == null) {
-			return false;
 		}
 		if (filterPattern == null) {
 			filterPattern = Pattern.compile(filter);
 		}
-		return filterPattern.matcher(test).matches();
+		return Arrays.stream(tests).filter(Objects::nonNull)
+				.anyMatch(test -> filterPattern.matcher(test).matches());
 	}
 
 	String timestamp(Date date) {
