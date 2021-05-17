@@ -38,6 +38,8 @@ public abstract class DomainQuery<E extends Entity> {
 
 	private Comparator<E> comparator;
 
+	private boolean parallel;
+
 	public DomainQuery(Class<E> entityClass) {
 		this.entityClass = entityClass;
 	}
@@ -119,6 +121,10 @@ public abstract class DomainQuery<E extends Entity> {
 		return this.sourceStream;
 	}
 
+	public boolean isParallel() {
+		return this.parallel;
+	}
+
 	public DomainQuery<E> limit(int limit) {
 		this.limit = limit;
 		return this;
@@ -128,6 +134,11 @@ public abstract class DomainQuery<E extends Entity> {
 
 	public Optional<E> optional() {
 		return stream().findFirst();
+	}
+
+	public DomainQuery<E> parallel(boolean parallel) {
+		this.parallel = parallel;
+		return this;
 	}
 
 	public DomainQuery<E> sorted(Comparator<?> comparator) {

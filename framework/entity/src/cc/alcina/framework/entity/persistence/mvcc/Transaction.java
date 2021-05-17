@@ -8,6 +8,7 @@ import java.util.NavigableSet;
 import java.util.SortedSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,6 +46,9 @@ public class Transaction implements Comparable<Transaction> {
 			.getName() + ".CONTEXT_ALLOW_ABORTED_TX_ACCESS";
 
 	private static ThreadLocal<Transaction> threadLocalInstance = new ThreadLocal() {
+	};
+
+	private static ThreadLocal<Supplier<Transaction>> threadLocalSupplier = new ThreadLocal() {
 	};
 
 	static Logger logger = LoggerFactory.getLogger(Transaction.class);
@@ -85,7 +89,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public static Transaction current() {
-		Transaction transaction = threadLocalInstance.get();
+		Transaction transaction = provideCurrentThreadTransaction();
 		if (transaction == null
 				|| (transaction.getPhase() == TransactionPhase.TO_DB_ABORTED
 						&& !LooseContext.is(CONTEXT_ALLOW_ABORTED_TX_ACCESS))) {
@@ -144,7 +148,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public static boolean isInTransaction() {
-		return threadLocalInstance.get() != null;
+		return provideCurrentThreadTransaction() != null;
 	}
 
 	/*
@@ -164,6 +168,10 @@ public class Transaction implements Comparable<Transaction> {
 		threadLocalInstance.remove();
 	}
 
+	public static void setSupplier(Supplier<Transaction> transactionSupplier) {
+		threadLocalSupplier.set(transactionSupplier);
+	}
+
 	// inverse of join
 	public static void split() {
 		Transaction transaction = threadLocalInstance.get();
@@ -172,6 +180,17 @@ public class Transaction implements Comparable<Transaction> {
 				Thread.currentThread().getId());
 		threadLocalInstance.remove();
 		transaction.threadCount.decrementAndGet();
+	}
+
+	private static Transaction provideCurrentThreadTransaction() {
+		Transaction transaction = threadLocalInstance.get();
+		if (transaction == null) {
+			Supplier<Transaction> supplier = threadLocalSupplier.get();
+			if (supplier != null) {
+				transaction = supplier.get();
+			}
+		}
+		return transaction;
 	}
 
 	private static boolean retainStartEndTraces() {

@@ -20,7 +20,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.TimeZone;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ForkJoinPool.ForkJoinWorkerThreadFactory;
+import java.util.concurrent.ForkJoinWorkerThread;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -122,6 +126,7 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.util.OffThreadLogger;
+import cc.alcina.framework.entity.util.RunnableCallable;
 
 /**
  * <h3>Locking notes:</h3>
@@ -141,6 +146,8 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class DomainStore implements IDomainStore {
+	private static volatile QueryPool queryPool;
+
 	private static final String TOPIC_UPDATE_EXCEPTION = DomainStore.class
 			.getName() + ".TOPIC_UPDATE_EXCEPTION";
 
@@ -179,6 +186,15 @@ public class DomainStore implements IDomainStore {
 
 	public static Builder builder() {
 		return new Builder();
+	}
+
+	public static QueryPool queryPool() {
+		synchronized (DomainStore.class) {
+			if (queryPool == null) {
+				queryPool = new QueryPool();
+			}
+		}
+		return queryPool;
 	}
 
 	public static DomainStores stores() {
@@ -289,6 +305,9 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public void appShutdown() {
+		if (isWritable() && queryPool != null) {
+			queryPool.pool.shutdown();
+		}
 		domainDescriptor.onAppShutdown();
 		loader.appShutdown();
 		persistenceEvents.getQueue().appShutdown();
@@ -1293,6 +1312,83 @@ public class DomainStore implements IDomainStore {
 		public DomainStoreUpdateException(UmbrellaException umby) {
 			super(umby);
 			this.umby = umby;
+		}
+	}
+
+	public static class QueryPool {
+		private final ForkJoinPool pool;
+
+		AtomicInteger activeQueries = new AtomicInteger();
+
+		private Transaction transaction;
+
+		QueryPool() {
+			pool = new ForkJoinPool(
+					ResourceUtilities.getInteger(DomainStore.class,
+							"queryPoolSize"),
+					new WorkerThreadFactory(), null, false);
+			try {
+				Field workerNamePrefix = ForkJoinPool.class
+						.getDeclaredField("workerNamePrefix");
+				workerNamePrefix.setAccessible(true);
+				workerNamePrefix.set(pool, "domainStore-queryPool");
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		public <T> T call(Callable<T> callable,
+				Stream<? extends Entity> stream) {
+			boolean runInPool = true;
+			synchronized (activeQueries) {
+				if (activeQueries.get() > 0) {
+					runInPool = false;
+				} else {
+					activeQueries.incrementAndGet();
+				}
+			}
+			if (runInPool) {
+				try {
+					transaction = Transaction.current();
+					return pool.submit(callable).get();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				} finally {
+					synchronized (activeQueries) {
+						activeQueries.decrementAndGet();
+					}
+				}
+			} else {
+				stream.sequential();
+				try {
+					return callable.call();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+
+		public void run(Runnable runnable, Stream<? extends Entity> stream) {
+			call(new RunnableCallable(runnable), stream);
+		}
+
+		class WorkerThread extends ForkJoinWorkerThread {
+			protected WorkerThread(ForkJoinPool pool) {
+				super(pool);
+			}
+
+			@Override
+			public void run() {
+				Transaction.setSupplier(() -> transaction);
+				super.run();
+			};
+		}
+
+		class WorkerThreadFactory implements ForkJoinWorkerThreadFactory {
+			@Override
+			public final ForkJoinWorkerThread newThread(ForkJoinPool pool) {
+				return new WorkerThread(pool);
+			}
 		}
 	}
 
