@@ -848,7 +848,11 @@ public class DirectedLayout {
 					element.setInnerText(stringValue);
 					break;
 				case PROPERTY:
-					element.setAttribute(binding.to(), stringValue);
+					if (value == null) {
+						element.removeAttribute(binding.to());
+					} else {
+						element.setAttribute(binding.to(), stringValue);
+					}
 					break;
 				case CSS_CLASS: {
 					if (hasTransform) {

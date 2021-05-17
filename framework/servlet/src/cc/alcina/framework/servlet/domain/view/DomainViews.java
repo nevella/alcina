@@ -10,8 +10,8 @@ import java.util.concurrent.locks.ReentrantLock;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Request;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Response;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.logic.domain.Entity;

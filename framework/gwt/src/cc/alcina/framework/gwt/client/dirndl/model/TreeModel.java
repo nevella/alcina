@@ -4,9 +4,9 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNode;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Request;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Transform;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Transform;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -98,7 +98,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 	public static class DomainViewNodeModel
 			extends NodeModel<DomainViewNodeModel> {
-		private DomainViewNode<?> node;
+		private DomainViewNodeContentModel<?> node;
 
 		private TreePath<DomainViewNodeModel> treePath;
 
@@ -115,9 +115,9 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			treePath.setValue(this);
 		}
 
-		public DomainViewNodeModel ensureNode(DomainViewNode valueModel,
-				String path, int initialIndex,
-				boolean fireCollectionModificationEvents) {
+		public DomainViewNodeModel ensureNode(
+				DomainViewNodeContentModel valueModel, String path,
+				int initialIndex, boolean fireCollectionModificationEvents) {
 			TreePath<DomainViewNodeModel> otherTreePath = treePath.atPath(path);
 			if (otherTreePath.getValue() == null) {
 				DomainViewNodeModel parent = otherTreePath.getParent() == null
@@ -134,7 +134,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			return otherTreePath.getValue();
 		}
 
-		public DomainViewNode<?> getNode() {
+		public DomainViewNodeContentModel<?> getNode() {
 			return this.node;
 		}
 
@@ -157,7 +157,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			setParent(null);
 		}
 
-		public void setNode(DomainViewNode<?> node) {
+		public void setNode(DomainViewNodeContentModel<?> node) {
 			this.node = node;
 			DomainViewTreeModel treeModel = getTreePath()
 					.provideContainingTree();
@@ -190,8 +190,10 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			setChildren(newValue);
 		}
 
-		protected void constructLabel(DomainViewNode<?> node) {
-			getLabel().setLabel(node.getName());
+		protected void constructLabel(DomainViewNodeContentModel<?> node) {
+			NodeLabelText nodeLabelText = new NodeLabelText();
+			nodeLabelText.setText(node.getName());
+			getLabel().setLabel(nodeLabelText);
 		}
 
 		public static class FullLabel extends DomainViewNodeModel {
@@ -203,7 +205,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			}
 
 			@Override
-			protected void constructLabel(DomainViewNode<?> node) {
+			protected void constructLabel(DomainViewNodeContentModel<?> node) {
 				getLabel().setLabel(node);
 			}
 		}
@@ -213,14 +215,16 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		// resolves NodeLabel.getLabel to either return the name or the object
 		// itself...
 		public static class Generator {
-			public DomainViewNodeModel generate(DomainViewNode valueModel,
+			public DomainViewNodeModel generate(
+					DomainViewNodeContentModel valueModel,
 					DomainViewNodeModel parent, String path) {
 				return new DomainViewNodeModel(parent, path);
 			}
 
 			public static class FullLabel extends Generator {
 				@Override
-				public DomainViewNodeModel generate(DomainViewNode valueModel,
+				public DomainViewNodeModel generate(
+						DomainViewNodeContentModel valueModel,
 						DomainViewNodeModel parent, String path) {
 					return new DomainViewNodeModel.FullLabel(parent, path);
 				}
@@ -307,7 +311,8 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			}
 		}
 
-		protected void handleResponse(DomainViewNode.Response response) {
+		protected void
+				handleResponse(DomainViewNodeContentModel.Response response) {
 			DomainViewNodeModel root = null;
 			DomainViewNodeModel target = null;
 			Request<?> request = response.getRequest();
@@ -315,8 +320,9 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			String requestPath = response.getRequest().getTreePath();
 			root = (DomainViewNodeModel) getRoot();
 			root.putTree(this);
-			DomainViewNode rootModel = response.getTransforms().isEmpty() ? null
-					: response.getTransforms().get(0).getNode();
+			DomainViewNodeContentModel rootModel = response.getTransforms()
+					.isEmpty() ? null
+							: response.getTransforms().get(0).getNode();
 			target = root.ensureNode(rootModel, requestPath, -1, false);
 			if (response.getTransforms().isEmpty()) {
 				// no children - request path has been removed in a prior tx
@@ -442,7 +448,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 			private String title;
 
-			@Directed(tag = "label", behaviours = {
+			@Directed(merge = true, behaviours = {
 					@Behaviour(handler = EmitTopicHandler.class, event = DomEvents.Click.class, topics = {
 							@TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviourType.EMIT) }) })
 			public Object getLabel() {
@@ -472,6 +478,19 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				this.title = title;
 				propertyChangeSupport().firePropertyChange("title", old_title,
 						title);
+			}
+		}
+
+		@Directed(tag = "label", bindings = @Binding(from = "text", type = Type.INNER_TEXT))
+		public static class NodeLabelText extends Model {
+			private String text;
+
+			public String getText() {
+				return this.text;
+			}
+
+			public void setText(String text) {
+				this.text = text;
 			}
 		}
 

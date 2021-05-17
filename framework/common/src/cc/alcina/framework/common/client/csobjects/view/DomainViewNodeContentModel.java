@@ -16,11 +16,11 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-/*
- * Possibly better named  "domain view node data" - the parent/child structure is handled separately
- */
-public abstract class DomainViewNode<E extends Entity> extends Model {
+public abstract class DomainViewNodeContentModel<E extends Entity>
+		extends Model {
 	private String name;
+
+	private String publicationText;
 
 	private String title;
 
@@ -35,6 +35,10 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 
 	public String getName() {
 		return this.name;
+	}
+
+	public String getPublicationText() {
+		return this.publicationText;
 	}
 
 	public String getTitle() {
@@ -55,11 +59,15 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 		propertyChangeSupport().firePropertyChange("name", old_name, name);
 	}
 
+	public void setPublicationText(String publicationText) {
+		this.publicationText = publicationText;
+	}
+
 	public void setTitle(String title) {
 		this.title = title;
 	}
 
-	public <DV extends DomainViewNode<E>> DV withEntity(E entity) {
+	public <DV extends DomainViewNodeContentModel<E>> DV withEntity(E entity) {
 		setEntity(entity);
 		return (DV) this;
 	}
@@ -74,7 +82,7 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 	}
 
 	public static abstract class EntityNode<E extends Entity>
-			extends DomainViewNode<E> implements HasEntity {
+			extends DomainViewNodeContentModel<E> implements HasEntity {
 		private E entity;
 
 		@Override
@@ -260,7 +268,7 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 
 		private Operation operation;
 
-		private DomainViewNode node;
+		private DomainViewNodeContentModel node;
 
 		private int index;
 
@@ -268,7 +276,7 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 			return this.index;
 		}
 
-		public DomainViewNode getNode() {
+		public DomainViewNodeContentModel getNode() {
 			return this.node;
 		}
 
@@ -284,7 +292,7 @@ public abstract class DomainViewNode<E extends Entity> extends Model {
 			this.index = index;
 		}
 
-		public void setNode(DomainViewNode node) {
+		public void setNode(DomainViewNodeContentModel node) {
 			this.node = node;
 		}
 

@@ -17,11 +17,11 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.csobjects.view.DomainView;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNode;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Request;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Response;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.Transform;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNode.WaitPolicy;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Transform;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.WaitPolicy;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
@@ -292,7 +292,7 @@ public class LiveTree {
 
 		private Operation collatedOperation;
 
-		DomainViewNode<?> viewNode;
+		DomainViewNodeContentModel<?> viewNode;
 
 		boolean dirty;
 
@@ -349,7 +349,7 @@ public class LiveTree {
 		}
 
 		void generateNode(GeneratorContext context) {
-			DomainViewNode<?> generatedNode = generator.generate(segment,
+			DomainViewNodeContentModel<?> generatedNode = generator.generate(segment,
 					context);
 			dirty = viewNode == null || !GraphProjection
 					.nonTransientFieldwiseEqual(generatedNode, viewNode);
@@ -397,7 +397,7 @@ public class LiveTree {
 	}
 
 	// <P,I,N> -- Parent, Input segment object, Output node
-	public interface NodeGenerator<P extends NodeGenerator, I, O extends DomainViewNode> {
+	public interface NodeGenerator<P extends NodeGenerator, I, O extends DomainViewNodeContentModel> {
 		public O generate(I in, GeneratorContext context);
 
 		public void onTreeAddition(GeneratorContext context, LiveNode liveNode);
