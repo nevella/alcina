@@ -26,7 +26,6 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -118,6 +117,14 @@ public class JobContext {
 		}
 	}
 
+	public static void jobException(Exception e) {
+		if (has()) {
+			get().onJobException(e);
+		} else {
+			e.printStackTrace();
+		}
+	}
+
 	public static ProgressBuilder progressBuilder() {
 		return get().createProgressBuilder();
 	}
@@ -131,6 +138,24 @@ public class JobContext {
 					.filter(r -> r.equals(match)).findFirst().get();
 			jobResource.release();
 			resources.remove(jobResource);
+		}
+	}
+
+	public static void setCompletion(double completion) {
+		if (has()) {
+			get().getJob().setCompletion(completion);
+		} else {
+			LoggerFactory.getLogger(JobContext.class)
+					.info("(no-job) job completion => {}", completion);
+		}
+	}
+
+	public static void setStatusMessage(String template, Object... args) {
+		if (has()) {
+			get().getJob().setStatusMessage(Ax.format(template, args));
+		} else {
+			LoggerFactory.getLogger(JobContext.class).info(
+					"(no-job) status message: {}", Ax.format(template, args));
 		}
 	}
 
@@ -242,10 +267,6 @@ public class JobContext {
 	public void setResultMessage(String resultMessage) {
 		info(resultMessage);
 		get().getJob().setResultMessage(resultMessage);
-	}
-
-	public void setStatusMessage(String template, Object... args) {
-		getJob().setStatusMessage(Ax.format(template, args));
 	}
 
 	public void toAwaitingChildren() {
