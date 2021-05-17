@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
 
 import com.google.gwt.user.client.History;
 
@@ -81,10 +82,14 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	}
 
 	public static StringMap fromHash(String s) {
+		return fromHash(s, null);
+	}
+
+	public static StringMap fromHash(String s,
+			BiPredicate<String, String> nonDecoder) {
 		s = maybeUnencode(s);
 		StringMap map = new StringMap();
 		String key = null;
-		String value = null;
 		boolean forKey = true;
 		for (int idx = 0; idx < s.length();) {
 			if (forKey) {
@@ -119,10 +124,13 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 						idx = idx3 + DOUBLE_AMP.length();
 					}
 				}
-				map.put(key,
-						Registry.impl(UrlComponentEncoder.class)
-								.decode(s.substring(idxStart, idx0))
-								.replace("&&", "&"));
+				String value = s.substring(idxStart, idx0);
+				if (nonDecoder != null && nonDecoder.test(key, value)) {
+					map.put(key, value);
+				} else {
+					map.put(key, Registry.impl(UrlComponentEncoder.class)
+							.decode(value).replace("&&", "&"));
+				}
 				forKey = true;
 				idx = idx0;
 				idx += s.indexOf("&", idx) == idx ? 1 : 3;// advance past setp

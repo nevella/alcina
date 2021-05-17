@@ -25,7 +25,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	protected String[] parts;
 
-	private StringMap params;
+	protected StringMap params;
 
 	public P copyPlace(P place) {
 		String token = getToken(place);

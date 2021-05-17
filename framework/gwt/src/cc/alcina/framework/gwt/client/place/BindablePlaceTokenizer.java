@@ -6,6 +6,8 @@ import java.util.List;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
+import cc.alcina.framework.common.client.search.ReflectiveSearchDefinitionSerializer;
+import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 
 public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends BindableSearchDefinition, P extends BindablePlace<SD>>
 		extends BasePlaceTokenizer<P> {
@@ -47,5 +49,16 @@ public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends Bin
 			setParameter(P_DEF,
 					searchDefinitionSerializer().serialize(place.def));
 		}
+	}
+
+	@Override
+	protected void parseMap(String s) {
+		params = AlcinaHistory.fromHash(s, (k, v) -> {
+			if (k.equals(P_DEF) && !v
+					.startsWith(ReflectiveSearchDefinitionSerializer.RS0)) {
+				return true;
+			}
+			return false;
+		});
 	}
 }

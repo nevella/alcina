@@ -83,6 +83,8 @@ public class TextUtils {
 	}
 
 	public static class Encoder {
+		private static final char UNICODE_SMALL_AMPERSAND = '\uFE60';
+
 		private static final String HEX = "0123456789ABCDEF";
 
 		public static String decodeURIComponentEsque(String str) {
@@ -127,13 +129,14 @@ public class TextUtils {
 								break;
 							c = str.charAt(i);
 						} while (c == '%');
-						builder.append(new String(bytes, 0, j, "UTF-8"));
+						String s = new String(bytes, 0, j, "UTF-8");
+						builder.append(s);
 					}
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
-			return builder.toString();
+			return builder.toString().replace(UNICODE_SMALL_AMPERSAND, '&');
 		}
 
 		public static String encodeURIComponentEsque(String str) {
@@ -141,21 +144,28 @@ public class TextUtils {
 				return null;
 			byte[] bytes = null;
 			try {
-				bytes = str.getBytes("UTF-8");
+				bytes = str.replace('&', UNICODE_SMALL_AMPERSAND)
+						.getBytes("UTF-8");
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
 			StringBuilder builder = new StringBuilder(bytes.length);
-			for (byte c : bytes) {
+			for (byte b : bytes) {
+				char c = (char) b;
 				boolean escape = true;
 				if (c >= 32 && c <= 126) {
 					switch (c) {
 					case '%':// escape
 					case ',':// value separator
 					case '+':// space
-					case '&':// query-string separator
 					case ':':// k-v separator
 						break;
+					// never reached
+					// case '&':// query-string separator
+					// // further escape because of issues with munging of '&'
+					// // in hotmail etc
+					// c = UNICODE_SMALL_AMPERSAND;
+					// break;
 					case ' ':
 						escape = false;
 						c = '+';

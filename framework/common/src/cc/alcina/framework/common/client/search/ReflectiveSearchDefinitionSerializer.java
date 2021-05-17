@@ -17,7 +17,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -32,7 +31,7 @@ public class ReflectiveSearchDefinitionSerializer
 	public static final String CONTEXT_GUARANTEE_LAST_DEF_NOT_CHANGED = ReflectiveSearchDefinitionSerializer.class
 			.getName() + ".CONTEXT_GUARANTEE_LAST_DEF_NOT_CHANGED";
 
-	private static final String RS0 = "rs0_";
+	public static final String RS0 = "rs0_";
 
 	public static boolean flatTreeSerializationEnabled = false;
 
@@ -111,7 +110,8 @@ public class ReflectiveSearchDefinitionSerializer
 	@Override
 	public <SD extends SearchDefinition> SD deserialize(
 			Class<? extends SearchDefinition> clazz, String serializedDef) {
-		if (clazz != null && (serializedDef.contains("=")||serializedDef.isEmpty())
+		if (clazz != null
+				&& (serializedDef.contains("=") || serializedDef.isEmpty())
 				&& canFlatTreeSerialize(clazz)) {
 			try {
 				return (SD) FlatTreeSerializer.deserialize(clazz, serializedDef,
