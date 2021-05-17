@@ -285,7 +285,8 @@ class JobAllocator {
 			} else {
 				Transaction.endAndBeginNew();
 				AllocationQueue constraintQueue = queue;
-				if (queue.currentPhase == SubqueuePhase.Sequence
+				if ((queue.currentPhase == SubqueuePhase.Sequence
+						|| queue.currentPhase == SubqueuePhase.Child)
 						&& queue.job.provideParent().isPresent()) {
 					/*
 					 * use the parent constraints
@@ -294,8 +295,11 @@ class JobAllocator {
 				}
 				ExecutionConstraints executionConstraints = ExecutionConstraints
 						.forQueue(constraintQueue);
-				long maxAllocatable = executionConstraints
-						.calculateMaxAllocatable(queue);
+				long maxAllocatable = queue.currentPhase == SubqueuePhase.Sequence
+						? 1// essentially passing the allocation
+							// slot to the next-in-sequence
+						: executionConstraints
+								.calculateMaxAllocatable(constraintQueue);
 				// FIXME - mvcc.jobs.1a - allocate in batches (i.e.
 				// 30...let drain to 10...again)
 				if (maxAllocatable > 0) {
