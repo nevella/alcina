@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
@@ -87,13 +88,19 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return tokenizersByPlace.get(place.getClass());
 	}
 
-	public String removeAppPrefix(String tokenString) {
+	public String removeAppPrefixAndLeadingSlashes(String tokenString) {
 		String appPrefix = getAppPrefix();
 		if (tokenString.startsWith("/")) {
 			tokenString = tokenString.substring(1);
 		}
-		if (tokenString.startsWith(appPrefix)) {
-			tokenString = tokenString.substring(appPrefix.length());
+		if (appPrefix.length() > 0) {
+			String matchesPattern = Ax.format("/?%s(/.*|$)", appPrefix);
+			if (tokenString.matches(matchesPattern)) {
+				tokenString = tokenString.substring(appPrefix.length());
+			}
+		}
+		if (tokenString.startsWith("/")) {
+			tokenString = tokenString.substring(1);
 		}
 		return tokenString;
 	}
@@ -135,15 +142,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	protected synchronized Place getPlace(String i_token, boolean copy) {
-		if (i_token.startsWith("/")) {
-			i_token = i_token.substring(1);
-		}
-		if (i_token.startsWith(getAppPrefix())) {
-			i_token = i_token.substring(getAppPrefix().length());
-		}
-		if (i_token.startsWith("/")) {
-			i_token = i_token.substring(1);
-		}
+		i_token = removeAppPrefixAndLeadingSlashes(i_token);
 		String token = i_token;
 		if (!copy) {
 			System.out.println("get place:" + token);

@@ -83,7 +83,7 @@ public abstract class BasePlace extends Place implements Serializable {
 	}
 
 	public String toTokenStringWithoutAppPrefix() {
-		return RegistryHistoryMapper.get().removeAppPrefix(toTokenString());
+		return RegistryHistoryMapper.get().removeAppPrefixAndLeadingSlashes(toTokenString());
 	}
 
 	@RegistryLocation(registryPoint = BasePlaceAbsoluteHrefSupplier.class, implementationType = ImplementationType.SINGLETON)
