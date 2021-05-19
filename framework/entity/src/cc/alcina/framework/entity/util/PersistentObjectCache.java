@@ -1,12 +1,14 @@
 package cc.alcina.framework.entity.util;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 
 public interface PersistentObjectCache<T> {
 	public Class<T> getPersistedClass();
@@ -25,6 +27,11 @@ public interface PersistentObjectCache<T> {
 	}
 
 	T get(String path);
+
+	default Map<String, Optional<Long>> lastModifiedMultiple(List<String> paths) {
+		return paths.stream()
+				.collect(AlcinaCollectors.toValueMap(this::lastModified));
+	}
 
 	Optional<Long> lastModified(String path);
 

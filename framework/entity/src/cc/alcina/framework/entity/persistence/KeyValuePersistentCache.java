@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.persistence;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
@@ -38,7 +39,7 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 
 	@Override
 	public T get(String path) {
-		Optional<KeyValuePersistent> kvp = optionalKvp(path);
+		Optional<KeyValuePersistent> kvp = optionalKvp(path, true);
 		if (kvp.isPresent()) {
 			return (T) kvp.get().deserializeObject(clazz);
 		} else {
@@ -62,9 +63,15 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 
 	@Override
 	public Optional<Long> lastModified(String path) {
-		return optionalKvp(path)
+		return optionalKvp(path, false)
 				.map(KeyValuePersistent::getLastModificationDate)
 				.map(Date::getTime);
+	}
+
+	@Override
+	public Map<String, Optional<Long>>
+			lastModifiedMultiple(List<String> paths) {
+		return PersistentObjectCache.super.lastModifiedMultiple(paths);
 	}
 
 	@Override
@@ -116,9 +123,10 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 		return Ax.format("%s/%s/%s", getClass().getSimpleName(), base, path);
 	}
 
-	protected Optional<KeyValuePersistent> optionalKvp(String path) {
+	protected Optional<KeyValuePersistent> optionalKvp(String path,
+			boolean populate) {
 		Optional<KeyValuePersistent> kvp = KeyValuePersistent
-				.byKey(joinPath(path));
+				.byKey(joinPath(path), populate);
 		return kvp;
 	}
 }
