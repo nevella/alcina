@@ -820,7 +820,7 @@ public class DirectedLayout {
 							^ binding.literal().length() > 0);
 					break;
 				}
-				if (binding.from().length() > 0) {
+				if (binding.from().length() > 0 && model instanceof Bindable) {
 					this.listener = new RemovablePropertyChangeListener(
 							(Bindable) model, binding.from(), evt -> set());
 				}

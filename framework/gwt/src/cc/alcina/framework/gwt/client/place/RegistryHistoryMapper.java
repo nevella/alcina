@@ -87,6 +87,17 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return tokenizersByPlace.get(place.getClass());
 	}
 
+	public String removeAppPrefix(String tokenString) {
+		String appPrefix = getAppPrefix();
+		if (tokenString.startsWith("/")) {
+			tokenString = tokenString.substring(1);
+		}
+		if (tokenString.startsWith(appPrefix)) {
+			tokenString = tokenString.substring(appPrefix.length());
+		}
+		return tokenString;
+	}
+
 	private synchronized void ensurePlaceLookup() {
 		if (initialised) {
 			return;

@@ -5,6 +5,7 @@ import java.util.Arrays;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 /**
  * Thoughts on binding :: particularly in the case of UI bindings, a.b->c.d is
@@ -30,5 +31,26 @@ public abstract class Model extends Bindable {
 				.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
 				.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)
 						.unbind());
+	}
+
+	@Directed
+	public static class StringModel extends Model {
+		private String string;
+
+		public StringModel() {
+		}
+
+		public StringModel(String string) {
+			this.string = string;
+		}
+
+		@Directed
+		public String getString() {
+			return this.string;
+		}
+
+		public void setString(String string) {
+			this.string = string;
+		}
 	}
 }

@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -29,6 +30,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
+import cc.alcina.framework.gwt.client.dirndl.model.LinkModel.LinkModelRendererPrimaryClassName;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -36,7 +38,8 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 //FIXME - dirndl.2 - baseplace should implement a  'link provider' interface
 // and various subtypes should be subclasses...
 @Bean
-public class LinkModel {
+@LinkModelRendererPrimaryClassName("-ol-primary")
+public class LinkModel extends Model {
 	private BasePlace place;
 
 	private boolean withoutLink;
@@ -46,6 +49,8 @@ public class LinkModel {
 	private NonstandardObjectAction objectAction;
 
 	private String text;
+
+	private String className;
 
 	public LinkModel() {
 	}
@@ -57,6 +62,10 @@ public class LinkModel {
 
 	public void addTo(List<LinkModel> actions) {
 		actions.add(this);
+	}
+
+	public String getClassName() {
+		return this.className;
 	}
 
 	public NonstandardObjectAction getObjectAction() {
@@ -79,8 +88,37 @@ public class LinkModel {
 		return this.withoutLink;
 	}
 
+	public void setClassName(String className) {
+		this.className = className;
+	}
+
+	public void setObjectAction(NonstandardObjectAction objectAction) {
+		this.objectAction = objectAction;
+	}
+
+	public void setPlace(BasePlace place) {
+		this.place = place;
+	}
+
+	public void setPrimaryAction(boolean primaryAction) {
+		this.primaryAction = primaryAction;
+	}
+
+	public void setText(String text) {
+		this.text = text;
+	}
+
+	public void setWithoutLink(boolean withoutLink) {
+		this.withoutLink = withoutLink;
+	}
+
 	public LinkModel withActionRef(Class<? extends ActionRef> clazz) {
 		return withPlace(new ActionRefPlace(clazz));
+	}
+
+	public LinkModel withClassName(String className) {
+		this.className = className;
+		return this;
 	}
 
 	public LinkModel
@@ -197,6 +235,7 @@ public class LinkModel {
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
+	@Inherited
 	@Target({ ElementType.TYPE, ElementType.METHOD })
 	public @interface LinkModelRendererPrimaryClassName {
 		String value();

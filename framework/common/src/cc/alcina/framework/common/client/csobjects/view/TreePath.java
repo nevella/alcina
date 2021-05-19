@@ -180,7 +180,9 @@ public class TreePath<T> extends Model {
 	}
 
 	public void setValue(T value) {
+		T old_value = this.value;
 		this.value = value;
+		propertyChangeSupport().firePropertyChange("value", old_value, value);
 	}
 
 	@Override
@@ -198,6 +200,12 @@ public class TreePath<T> extends Model {
 	}
 
 	private String asSegment(Object object) {
+		String segment = asSegment0(object);
+		Preconditions.checkArgument(!segment.contains("."));
+		return segment;
+	}
+
+	private String asSegment0(Object object) {
 		if (object instanceof String) {
 			return (String) object;
 		}

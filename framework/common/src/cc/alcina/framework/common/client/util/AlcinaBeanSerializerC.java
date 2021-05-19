@@ -36,6 +36,8 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
@@ -136,6 +138,10 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 				m.put(deserializeValue(jv), deserializeValue(jv2));
 			}
 			return m;
+		}
+		if (CommonUtils.isOrHasSuperClass(type, BasePlace.class)) {
+			return RegistryHistoryMapper.get()
+					.getPlace(jsonValue.isString().stringValue());
 		}
 		return deserializeObject(jsonValue.isObject());
 	}
@@ -252,6 +258,9 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 				arr.set(i++, serializeObject(e.getValue()));
 			}
 			return arr;
+		}
+		if (value instanceof BasePlace) {
+			return new JSONString(((BasePlace) value).toTokenString());
 		}
 		return serializeObject(value);
 	}

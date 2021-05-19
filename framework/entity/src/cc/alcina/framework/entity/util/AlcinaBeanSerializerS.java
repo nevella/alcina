@@ -40,6 +40,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
@@ -168,6 +170,9 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		if (m != null) {
 			return deserializeMap(o, m);
 		}
+		if (CommonUtils.isOrHasSuperClass(type, BasePlace.class)) {
+			return RegistryHistoryMapper.get().getPlace(o.toString());
+		}
 		return deserializeObject((JSONObject) o);
 	}
 
@@ -274,6 +279,9 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		if (value instanceof Collection) {
 			Collection c = (Collection) value;
 			return serializeCollection(c);
+		}
+		if (value instanceof BasePlace) {
+			return ((BasePlace) value).toTokenString();
 		}
 		return serializeObject(value);
 	}

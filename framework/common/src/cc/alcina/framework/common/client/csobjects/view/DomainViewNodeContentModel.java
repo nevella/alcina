@@ -33,6 +33,10 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 		return this.entity;
 	}
 
+	public String getHighestPrecedenceName() {
+		return getName();
+	}
+
 	public String getName() {
 		return this.name;
 	}

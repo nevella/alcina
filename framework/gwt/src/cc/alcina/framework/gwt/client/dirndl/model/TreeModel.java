@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentMod
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IdentityFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
@@ -108,7 +109,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		public DomainViewNodeModel(DomainViewNodeModel parent, String path) {
 			setParent(parent);
 			if (parent == null) {
-				treePath = TreePath.root(path);
+				treePath = TreePath.absolutePath(path);
 			} else {
 				treePath = parent.treePath.atPath(path);
 			}
@@ -123,8 +124,11 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				DomainViewNodeModel parent = otherTreePath.getParent() == null
 						? null
 						: otherTreePath.getParent().getValue();
-				DomainViewNodeModel model = provideContainingTree().generator
-						.generate(valueModel, parent, path);
+				Generator generator = provideContainingTree() == null
+						? new Generator()
+						: provideContainingTree().generator;
+				DomainViewNodeModel model = generator.generate(valueModel,
+						parent, path);
 				if (parent != null) {
 					parent.modifyChildren(Operation.INSERT, initialIndex, model,
 							fireCollectionModificationEvents);
@@ -164,6 +168,12 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			constructLabel(node);
 			getLabel().setTitle(node.getTitle());
 			setLeaf(node.isLeaf());
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s [%s children]", getTreePath(),
+					getChildren().size());
 		}
 
 		private void modifyChildren(Operation operation, int initialIndex,

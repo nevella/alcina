@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @RegistryLocation(registryPoint = BasePlace.class)
 public abstract class BasePlace extends Place implements Serializable {
 	public static String tokenFor(BasePlace p) {
-		return Registry.impl(RegistryHistoryMapper.class).getToken(p);
+		return RegistryHistoryMapper.get().getToken(p);
 	}
 
 	private boolean refreshed;
@@ -80,6 +80,10 @@ public abstract class BasePlace extends Place implements Serializable {
 
 	public String toTokenString() {
 		return tokenFor(this);
+	}
+
+	public String toTokenStringWithoutAppPrefix() {
+		return RegistryHistoryMapper.get().removeAppPrefix(toTokenString());
 	}
 
 	@RegistryLocation(registryPoint = BasePlaceAbsoluteHrefSupplier.class, implementationType = ImplementationType.SINGLETON)

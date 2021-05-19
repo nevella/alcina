@@ -6,6 +6,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -94,17 +96,45 @@ public abstract class DomainViews {
 	public Response handleRequest(
 			Request<? extends DomainViewSearchDefinition> request) {
 		ViewsTask task = new ViewsTask();
-		task.type = ViewsTask.Type.HANDLE_REQUEST;
-		addTaskLock.lock();
-		task.handlerData.transaction = Transaction.createSnapshotTransaction();
+		task.type = ViewsTask.Type.HANDLE_PATH_REQUEST;
 		task.handlerData.request = request;
-		tasks.add(task);
-		addTaskLock.unlock();
-		task.handlerData.await();
+		queueTask(task);
+		task.await();
 		if (task.handlerData.exception == null) {
 			return task.handlerData.response;
 		} else {
 			throw task.handlerData.exception;
+		}
+	}
+
+	public <T> T submitLambda(
+			Request<? extends DomainViewSearchDefinition> request,
+			Function<LiveTree, T> lambda) {
+		ViewsTask task = new ViewsTask();
+		task.type = Type.HANDLE_LAMBDA;
+		task.handlerData.request = request;
+		task.handlerData.lambda = (Function<LiveTree, Object>) lambda;
+		queueTask(task);
+		task.await();
+		if (task.handlerData.exception == null) {
+			return (T) task.handlerData.lambdaResult;
+		} else {
+			throw task.handlerData.exception;
+		}
+	}
+
+	private void processLambda(ViewsTask task) {
+		HandlerData handlerData = task.handlerData;
+		try {
+			Transaction.join(handlerData.transaction);
+			Key key = new Key(handlerData.request);
+			LiveTree view = views.computeIfAbsent(key, LiveTree::new);
+			task.handlerData.lambdaResult = task.handlerData.lambda.apply(view);
+		} catch (RuntimeException e) {
+			handlerData.exception = e;
+		} finally {
+			Transaction.end();
+			task.latch.countDown();
 		}
 	}
 
@@ -122,7 +152,7 @@ public abstract class DomainViews {
 			handlerData.exception = e;
 		} finally {
 			Transaction.end();
-			handlerData.latch.countDown();
+			task.latch.countDown();
 		}
 	}
 
@@ -143,10 +173,20 @@ public abstract class DomainViews {
 			// Transaction.end();
 			break;
 		// throw new UnsupportedOperationException();
-		case HANDLE_REQUEST:
+		case HANDLE_PATH_REQUEST:
 			processRequest(task);
 			break;
+		case HANDLE_LAMBDA:
+			processLambda(task);
+			break;
 		}
+	}
+
+	void queueTask(ViewsTask task) {
+		addTaskLock.lock();
+		task.handlerData.transaction = Transaction.createSnapshotTransaction();
+		tasks.add(task);
+		addTaskLock.unlock();
 	}
 
 	public class TaskProcessorThread extends Thread {
@@ -200,18 +240,26 @@ public abstract class DomainViews {
 
 		public Key(Request<?> request) {
 			this.request = request;
-			this.stringKey = FlatTreeSerializer
-					.serializeElided(request.getSearchDefinition());
+			this.stringKey = Ax.format("%s::%s", request.getRoot(),
+					FlatTreeSerializer
+							.serializeElided(request.getSearchDefinition()));
 		}
 
 		@Override
 		public boolean equals(Object anObject) {
-			return this.stringKey.equals(anObject);
+			return anObject instanceof Key
+					? this.stringKey.equals(((Key) anObject).stringKey)
+					: false;
 		}
 
 		@Override
 		public int hashCode() {
 			return this.stringKey.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return this.stringKey;
 		}
 	}
 
@@ -222,24 +270,28 @@ public abstract class DomainViews {
 
 		Type type;
 
+		CountDownLatch latch = new CountDownLatch(1);
+
+		void await() {
+			try {
+				latch.await();
+			} catch (Exception e) {
+				return;
+			}
+		}
+
 		static class HandlerData {
+			public Function<LiveTree, Object> lambda;
+
+			public Object lambdaResult;
+
 			public RuntimeException exception;
 
-			public Response response;// =view.generateResponse(request);
+			public Response response;
 
 			public Request<? extends DomainViewSearchDefinition> request;
 
 			public Transaction transaction;
-
-			private CountDownLatch latch = new CountDownLatch(1);
-
-			public void await() {
-				try {
-					latch.await();
-				} catch (Exception e) {
-					return;
-				}
-			}
 		}
 
 		static class ModelChange {
@@ -249,7 +301,7 @@ public abstract class DomainViews {
 		}
 
 		static enum Type {
-			MODEL_CHANGE, HANDLE_REQUEST;
+			MODEL_CHANGE, HANDLE_PATH_REQUEST, HANDLE_LAMBDA;
 		}
 	}
 }

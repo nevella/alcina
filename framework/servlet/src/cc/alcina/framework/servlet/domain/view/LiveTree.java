@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.domain.view;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -62,6 +63,24 @@ public class LiveTree {
 				|| request.getSince().compareTo(earliestPosition) < 0);
 		response.getTransforms().addAll(requestToTransform(request));
 		return response;
+	}
+
+	public TreePath<LiveNode> getRoot() {
+		return this.root;
+	}
+
+	public List<Transform> toTransforms(TreePath<LiveNode> path) {
+		List<Transform> result = new ArrayList<>();
+		while (path != null) {
+			Transform transform = new Transform();
+			transform.setTreePath(path.toString());
+			transform.setNode(path.getValue().viewNode);
+			transform.setOperation(Operation.INSERT);
+			result.add(transform);
+			path = path.getParent();
+		}
+		Collections.reverse(result);
+		return result;
 	}
 
 	private LiveNode ensureNode(TreePath<LiveNode> path,
@@ -146,7 +165,6 @@ public class LiveTree {
 		}
 		List<Transform> result = context.generateTransformResult();
 		transactionTransforms.put(currentPosition, result);
-		Ax.out(result);
 	}
 
 	private List<Transform> requestToTransform(
@@ -306,6 +324,10 @@ public class LiveTree {
 			return this.path;
 		}
 
+		public DomainViewNodeContentModel<?> getViewNode() {
+			return this.viewNode;
+		}
+
 		public int indexInParent() {
 			return path.provideCurrentIndex();
 		}
@@ -349,8 +371,8 @@ public class LiveTree {
 		}
 
 		void generateNode(GeneratorContext context) {
-			DomainViewNodeContentModel<?> generatedNode = generator.generate(segment,
-					context);
+			DomainViewNodeContentModel<?> generatedNode = generator
+					.generate(segment, context);
 			dirty = viewNode == null || !GraphProjection
 					.nonTransientFieldwiseEqual(generatedNode, viewNode);
 			viewNode = generatedNode;

@@ -16,6 +16,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Property;
@@ -23,7 +25,6 @@ import com.totsp.gwittir.client.beans.Property;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -159,10 +160,6 @@ public class FlatTreeSerializer {
 		return serialize(object, new SerializerOptions()
 				.withTopLevelTypeInfo(true).withShortPaths(true));
 	}
-	public static String serializeElided(TreeSerializable object) {
-		return serialize(object, new SerializerOptions()
-				.withTopLevelTypeInfo(true).withShortPaths(true).withElideDefaults(true));
-	}
 
 	public static String serialize(TreeSerializable object,
 			SerializerOptions options) {
@@ -198,6 +195,12 @@ public class FlatTreeSerializer {
 					checkSerialized);
 		}
 		return serialized;
+	}
+
+	public static String serializeElided(TreeSerializable object) {
+		return serialize(object,
+				new SerializerOptions().withTopLevelTypeInfo(true)
+						.withShortPaths(true).withElideDefaults(true));
 	}
 
 	private static boolean isCollection(Class clazz) {
@@ -422,6 +425,12 @@ public class FlatTreeSerializer {
 									.filter(p -> p.getName().equals(segment))
 									.findFirst().get();
 							resolved = true;
+						}
+						if (property == null) {
+							LoggerFactory.getLogger(getClass()).info(
+									"Unknown property: {} {}",
+									state.rootClass.getSimpleName(), path);
+							continue;
 						}
 						PropertySerialization propertySerialization = getPropertySerialization(
 								cursor.value.getClass(), property.getName());
@@ -1350,6 +1359,4 @@ public class FlatTreeSerializer {
 			}
 		}
 	}
-
-	
 }

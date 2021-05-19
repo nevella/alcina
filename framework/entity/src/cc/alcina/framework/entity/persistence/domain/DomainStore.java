@@ -771,7 +771,7 @@ public class DomainStore implements IDomainStore {
 		if (!Transaction.isInTransaction()) {
 			return v.getId() != 0 || v.getLocalId() != 0;
 		}
-		V existing = (V) cache.get(v.entityClass(), v.getId());
+		V existing = (V) cache.get(v.toLocator());
 		return existing == v;
 	}
 

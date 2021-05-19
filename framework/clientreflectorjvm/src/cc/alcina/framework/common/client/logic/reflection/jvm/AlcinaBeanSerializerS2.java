@@ -40,9 +40,13 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
+// FIXME - mvcc.4 - use gwt.elemental to make one single version (bar
+// classloader refs)
 // hack for some classloader issues causing AlcinaBeanSerializerS to be unusable
 public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 	private static boolean useContextClassloader;
@@ -64,6 +68,8 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 	Map seenIn = new LinkedHashMap();
 
 	private int depth = 0;
+
+	protected Map<String, Class> resolvedClassLookup = new LinkedHashMap<>();
 
 	public AlcinaBeanSerializerS2() {
 		propertyFieldName = PROPERTIES;
@@ -168,6 +174,9 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		}
 		if (m != null) {
 			return deserializeMap(o, m);
+		}
+		if (CommonUtils.isOrHasSuperClass(type, BasePlace.class)) {
+			return RegistryHistoryMapper.get().getPlace(o.toString());
 		}
 		return deserializeObject((JSONObject) o);
 	}
@@ -285,6 +294,9 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		if (value instanceof Collection) {
 			Collection c = (Collection) value;
 			return serializeCollection(c);
+		}
+		if (value instanceof BasePlace) {
+			return ((BasePlace) value).toTokenString();
 		}
 		return serializeObject(value);
 	}
@@ -409,7 +421,6 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		}
 		return m;
 	}
-	protected Map<String, Class> resolvedClassLookup = new LinkedHashMap<>();
 
 	@Override
 	protected Class getClassMaybeAbbreviated(String className) {
