@@ -54,6 +54,11 @@ public class TransformCollation {
 				.map(EntityCollation::getLocator).collect(Collectors.toSet());
 	}
 
+	public MultikeyMap<EntityCollation> getPerClass() {
+		ensureLookups();
+		return this.perClass;
+	}
+
 	public <E extends Entity> boolean has(Class<E>... classes) {
 		ensureLookups();
 		for (Class clazz : classes) {
@@ -77,6 +82,10 @@ public class TransformCollation {
 
 	public <E extends Entity> Query query(E entity) {
 		return new Query(entity);
+	}
+
+	public void setPerClass(MultikeyMap<EntityCollation> perClass) {
+		this.perClass = perClass;
 	}
 
 	protected void ensureLookups() {
