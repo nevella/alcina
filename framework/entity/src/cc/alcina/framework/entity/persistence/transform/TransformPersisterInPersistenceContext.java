@@ -563,6 +563,15 @@ public class TransformPersisterInPersistenceContext {
 			} else {
 				tlTransformManager.setIgnorePropertyChanges(true);
 			}
+			if (event.getNewStringValue() != null
+					&& event.getNewStringValue().contains("\u0000")) {
+				logger.warn("Removed unicode 0x0 from event {}/{}/{}",
+						event.toObjectLocator(), event.getTransformType(),
+						event.getPropertyName());
+				// pg will not accept 0x0
+				event.setNewStringValue(
+						event.getNewStringValue().replace("\u0000", ""));
+			}
 			tlTransformManager.fireDomainTransform(event);
 			delayedEntityPersister.checkPersistEntity(event);
 		} finally {

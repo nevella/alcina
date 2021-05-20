@@ -436,13 +436,23 @@ public class JobContext {
 
 		private int total = 1;
 
+		private boolean log;
+
 		public void publish() {
 			setItemCount(total);
 			updateJob(message, delta);
+			if (log) {
+				getLogger().info(message);
+			}
 		}
 
 		public ProgressBuilder withDelta(int delta) {
 			this.delta = delta;
+			return this;
+		}
+
+		public ProgressBuilder withLog(boolean log) {
+			this.log = log;
 			return this;
 		}
 
