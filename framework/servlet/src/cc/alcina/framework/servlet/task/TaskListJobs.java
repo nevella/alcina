@@ -96,9 +96,13 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.accept(Utils::instance).cell("Link").accept(Utils::links);
 			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
 					job.getTaskSerialized());
+			Predicate<? extends Job> topLevelAdditional = topLevel
+					? Job::provideIsFirstInSequence
+					: job -> true;
 			Stream<? extends Job> stream = JobDomain.get()
 					.getRecentlyCompletedJobs(topLevel).parallel()
-					.filter(textFilter).limit(limit);
+					.filter(textFilter).filter((Predicate) topLevelAdditional)
+					.limit(limit);
 			List<Job> jobs = DomainStore.queryPool()
 					.call(() -> stream.collect(Collectors.toList()), stream);
 			jobs.forEach(job -> {
