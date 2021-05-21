@@ -1200,10 +1200,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				return v;
 			}
 			if (type == Date.class) {
+				long utcTime = rs.getLong(idx);
 				if (rs.wasNull()) {
 					return null;
 				}
-				long utcTime = rs.getLong(idx);
 				// it seems getLong mostly returns utc timestamp (not locale)
 				// now mandating that with the 'at timezone utc' above
 				// note these cols are currently pg timestamp without tz
