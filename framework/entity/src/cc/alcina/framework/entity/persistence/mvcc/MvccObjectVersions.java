@@ -87,6 +87,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	private volatile TransactionId mostRecentWritableTransactionId;
 
+	/*
+	 * also used as a monitor for resolution caching
+	 */
 	private AtomicInteger size = new AtomicInteger();
 
 	Transaction initialWriteableTransaction;
@@ -236,18 +239,25 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		// try cached
 		if (write) {
 			if (mostRecentWritableTransactionId == transaction.getId()) {
-				T result = __mostRecentWritable;
-				// double-check on volatile;
-				if (mostRecentWritableTransactionId == transaction.getId()) {
-					return result;
+				// size acts as a monitor
+				synchronized (size) {
+					T result = __mostRecentWritable;
+					// double-check
+					if (mostRecentWritableTransactionId == transaction
+							.getId()) {
+						return result;
+					}
 				}
 			}
 		} else {
 			if (mostRecentReffedTransactionId == transaction.getId()) {
-				T result = __mostRecentReffed;
-				// double-check on volatile;
-				if (mostRecentReffedTransactionId == transaction.getId()) {
-					return result;
+				// size acts as a monitor
+				synchronized (size) {
+					T result = __mostRecentReffed;
+					// double-check on volatile;
+					if (mostRecentReffedTransactionId == transaction.getId()) {
+						return result;
+					}
 				}
 			}
 		}
@@ -356,12 +366,16 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			}
 			versions.remove(tx);
 			if (__mostRecentReffed == version.object) {
-				mostRecentReffedTransactionId = null;
-				__mostRecentReffed = null;
+				synchronized (size) {
+					mostRecentReffedTransactionId = null;
+					__mostRecentReffed = null;
+				}
 			}
 			if (__mostRecentWritable == version.object) {
-				mostRecentWritableTransactionId = null;
-				__mostRecentWritable = null;
+				synchronized (size) {
+					mostRecentWritableTransactionId = null;
+					__mostRecentWritable = null;
+				}
 			}
 			size.decrementAndGet();
 		}
@@ -373,14 +387,13 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected void updateCached(Transaction transaction, T resolved,
 			boolean write) {
-		if (resolved == null && this instanceof MvccObjectVersionsTrieEntry) {
-			int debug = 3;
-		}
-		mostRecentReffedTransactionId = transaction.getId();
-		__mostRecentReffed = resolved;
-		if (write) {
-			mostRecentWritableTransactionId = transaction.getId();
-			__mostRecentWritable = resolved;
+		synchronized (size) {
+			mostRecentReffedTransactionId = transaction.getId();
+			__mostRecentReffed = resolved;
+			if (write) {
+				mostRecentWritableTransactionId = transaction.getId();
+				__mostRecentWritable = resolved;
+			}
 		}
 	}
 
