@@ -63,6 +63,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoManager;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
@@ -1155,7 +1156,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			PropertyInfo info = itr.next();
 			String propertyName = info.getPropertyName();
 			Class propertyType = info.getPropertyType();
-			if (ignorePropertyForCaching(clazz, propertyType, propertyName)) {
+			if (ignorePropertyForObjectsToDtes(clazz, propertyType,
+					propertyName)) {
 				itr.remove();
 			} else {
 				Object defaultValue = accessor
@@ -1844,11 +1846,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return false;
 	}
 
-	protected boolean ignorePropertyForCaching(Class objectType,
+	protected boolean ignorePropertyForObjectsToDtes(Class objectType,
 			Class propertyType, String propertyName) {
 		return ignorePropertiesForCaching.contains(propertyName)
-				|| propertyType == Class.class || !PermissionsManager.get()
-						.checkReadable(objectType, propertyName, null);
+				|| propertyType == Class.class
+				|| !PermissionsManager.get().checkReadable(objectType,
+						propertyName, null)
+				|| Reflections.propertyAccessor().getAnnotationForProperty(
+						objectType, AlcinaTransient.class,
+						propertyName) != null;
 	}
 
 	protected void initCollections() {

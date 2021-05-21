@@ -371,7 +371,7 @@ public class DevConsoleCommandTransforms {
 			if (oldCi) {
 				authClause = authClauseOld;
 			}
-			String sql1 = "select dtr.id as id" + authClause
+			String sql1 = "select dtr.id as id from " + authClause
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
 					+ "where %s order by dtr.id desc";
 			String sql2 = "select ci.id as cli_id, u.username,  "

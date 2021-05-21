@@ -282,23 +282,22 @@ public class ThreadlocalTransformManager extends TransformManager
 		return getEntityManager() == null;
 	}
 
-	public boolean checkPropertyAccess(Entity entity, String propertyName,
+	public boolean checkPropertyAccess(Entity<?> entity, String propertyName,
 			boolean read) throws IntrospectionException {
 		if (entity.domain().wasPersisted()
 				|| LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
+			Class<? extends Entity> entityClass = entity.entityClass();
 			PropertyDescriptor descriptor = SEUtilities
-					.getPropertyDescriptorByName(entity.getClass(),
-							propertyName);
+					.getPropertyDescriptorByName(entityClass, propertyName);
 			if (descriptor == null) {
 				throw new IntrospectionException(
 						String.format("Property not found - %s::%s",
-								entity.getClass().getName(), propertyName));
+								entityClass.getName(), propertyName));
 			}
 			PropertyPermissions pp = SEUtilities
-					.getPropertyDescriptorByName(entity.getClass(),
-							propertyName)
+					.getPropertyDescriptorByName(entityClass, propertyName)
 					.getReadMethod().getAnnotation(PropertyPermissions.class);
-			ObjectPermissions op = entity.getClass()
+			ObjectPermissions op = entityClass
 					.getAnnotation(ObjectPermissions.class);
 			return PermissionsManager.get().checkEffectivePropertyPermission(op,
 					pp, entity, read);
@@ -964,20 +963,21 @@ public class ThreadlocalTransformManager extends TransformManager
 				entity = ensureNonProxy(entity);
 				entity = resolveForPermissionsChecks(entity);
 			}
-			Class<? extends Entity> objectClass = entity.getClass();
+			Class<? extends Entity> objectClass = entity.entityClass();
 			ObjectPermissions op = objectClass
 					.getAnnotation(ObjectPermissions.class);
 			op = op == null
 					? PermissionsManager.get().getDefaultObjectPermissions()
 					: op;
-			Entity entityChange = (Entity) (change instanceof Entity ? change
+			Entity<? extends Entity> entityChange = (Entity) (change instanceof Entity
+					? change
 					: null);
 			ObjectPermissions oph = null;
 			AssignmentPermission aph = Reflections.propertyAccessor()
 					.getAnnotationForProperty(objectClass,
 							AssignmentPermission.class, propertyName);
 			if (entityChange != null) {
-				oph = entityChange.getClass()
+				oph = entityChange.entityClass()
 						.getAnnotation(ObjectPermissions.class);
 				oph = oph == null
 						? PermissionsManager.get().getDefaultObjectPermissions()
@@ -986,18 +986,20 @@ public class ThreadlocalTransformManager extends TransformManager
 			switch (evt.getTransformType()) {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
-				checkPropertyReadAccessAndThrow(entity, propertyName, evt);
 				checkTargetReadAndAssignmentAccessAndThrow(entity, entityChange,
 						oph, aph, evt);
+				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
 				break;
 			case CHANGE_PROPERTY_REF:
 				checkTargetReadAndAssignmentAccessAndThrow(entity, entityChange,
 						oph, aph, evt);
-				// deliberate fall-through
+				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
+				break;
+			// deliberate fall-through
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_SIMPLE_VALUE:
-				return checkPropertyWriteAccessAndThrow(entity, propertyName,
-						evt);
+				checkPropertyWriteAccessAndThrow(entity, propertyName, evt);
+				break;
 			case CREATE_OBJECT:
 				if (!PermissionsManager.get().isPermitted(entity,
 						op.create())) {
@@ -1040,11 +1042,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 	}
 
-	private boolean checkPropertyWriteAccessAndThrow(Entity entity,
+	private boolean checkPropertyWriteAccessAndThrow(Entity<?> entity,
 			String propertyName, DomainTransformEvent evt)
 			throws DomainTransformException, IntrospectionException {
 		if (!checkPropertyAccess(entity, propertyName, false)) {
-			DomainProperty ann = getAnnotationForProperty(entity.getClass(),
+			DomainProperty ann = getAnnotationForProperty(entity.entityClass(),
 					DomainProperty.class, propertyName);
 			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : write - object/property " + evt));
