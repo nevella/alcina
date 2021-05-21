@@ -582,7 +582,13 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public int hashCode() {
-			return key instanceof Entity ? Objects.hash(key) : super.hashCode();
+			if (key instanceof Entity) {
+				return Objects.hash(key);
+			}
+			if (key instanceof Long && ((Long) key).longValue() != 0) {
+				return Objects.hash(key);
+			}
+			return super.hashCode();
 		}
 
 		public boolean isNotRemoved() {

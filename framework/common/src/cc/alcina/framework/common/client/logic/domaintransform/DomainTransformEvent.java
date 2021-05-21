@@ -285,6 +285,11 @@ public class DomainTransformEvent
 		return valueVersionNumber;
 	}
 
+	@Override
+	public int hashCode() {
+		return (int) (eventId != 0 ? eventId : super.hashCode());
+	}
+
 	@Transient
 	public boolean isInImmediatePropertyChangeCommit() {
 		return this.inImmediatePropertyChangeCommit;

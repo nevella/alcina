@@ -24,11 +24,12 @@ import javax.persistence.Table;
 
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
@@ -62,8 +63,8 @@ public class DevConsoleCommandTransforms {
 		while (rs.next()) {
 			long id = rs.getLong("id");
 			String cn = rs.getString("refclassname");
-			Class clazz = Registry.get().lookupSingle(
-					PersistentImpl.class, ClassRef.class);
+			Class clazz = Registry.get().lookupSingle(PersistentImpl.class,
+					ClassRef.class);
 			ClassRef cr = (ClassRef) clazz.newInstance();
 			cr.setId(id);
 			cr.setRefClassName(cn);
@@ -846,7 +847,8 @@ public class DevConsoleCommandTransforms {
 				throws Exception {
 			List<DomainTransformEvent> dtes = new ArrayList<DomainTransformEvent>();
 			while (rs.next()) {
-				DomainTransformEvent dte = new DomainTransformEvent();
+				DomainTransformEvent dte = TransformManager
+						.createTransformEvent();
 				dtes.add(dte);
 				dte.setNewStringValue(rs.getString("newStringValue"));
 				dte.setObjectClassRef(ClassRef.forId(rs.getLong(

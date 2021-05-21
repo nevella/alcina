@@ -130,6 +130,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected static Map<Integer, List<Entity>> createdLocalAndPromoted = null;
 
+	public static DomainTransformEvent createTransformEvent() {
+		DomainTransformEvent event = new DomainTransformEvent();
+		/*
+		 * Not 'UTC' date! No such thing exists - just the epoch date.
+		 */
+		event.setUtcDate(new Date());
+		event.setEventId(nextEventIdCounter());
+		return event;
+	}
+
 	public static String fromEnumValueCollection(Collection objects) {
 		return CommonUtils.join(objects, ",");
 	}
@@ -208,6 +218,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		});
 		return map.asTuples(3).stream().map(Object::toString)
 				.collect(Collectors.joining("\n"));
+	}
+
+	public static synchronized long nextEventIdCounter() {
+		return ++eventIdCounter;
 	}
 
 	public static void register(TransformManager tm) {
@@ -671,7 +685,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public DomainTransformEvent
 			createTransformFromPropertyChange(PropertyChangeEvent evt) {
-		DomainTransformEvent dte = new DomainTransformEvent();
+		DomainTransformEvent dte = createTransformEvent();
 		dte.setSource((Entity) evt.getSource());
 		dte.setNewValue(evt.getNewValue());
 		dte.setPropertyName(evt.getPropertyName());
@@ -704,7 +718,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		markedForDeletion.add(entity);
 		registerDomainObject(entity);
-		DomainTransformEvent dte = new DomainTransformEvent();
+		DomainTransformEvent dte = createTransformEvent();
 		dte.setObjectId(entity.getId());
 		dte.setObjectLocalId(entity.getLocalId());
 		dte.setObjectClass(entity.entityClass());
@@ -1117,10 +1131,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 				collectionPropertyName, c);
 	}
 
-	public synchronized long nextEventIdCounter() {
-		return ++eventIdCounter;
-	}
-
 	public synchronized long nextLocalIdCounter() {
 		return localIdGenerator.incrementAndGet();
 	}
@@ -1165,7 +1175,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		for (Object o : objects) {
 			Object[] arr = asObjectSpec ? (Object[]) o : null;
 			Entity entity = asObjectSpec ? null : (Entity) o;
-			DomainTransformEvent dte = new DomainTransformEvent();
+			DomainTransformEvent dte = createTransformEvent();
 			dte.setSource(null);
 			dte.setUtcDate(new Date(0L));
 			Long id = asObjectSpec ? (Long) arr[0] : entity.getId();
@@ -1197,7 +1207,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					Iterator itr = ((Set) value).iterator();
 					for (; itr.hasNext();) {
 						Object o2 = itr.next();
-						dte = new DomainTransformEvent();
+						dte = createTransformEvent();
 						dte.setUtcDate(new Date(0L));
 						dte.setObjectId(id);
 						dte.setObjectLocalId(localId);
@@ -1220,7 +1230,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						dtes.add(dte);
 					}
 				} else {
-					dte = new DomainTransformEvent();
+					dte = createTransformEvent();
 					dte.setUtcDate(new Date(0L));
 					dte.setObjectId(id);
 					dte.setObjectClass(clazz);
@@ -1714,7 +1724,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	protected void fireCreateObjectEvent(Class clazz, long id, long localId) {
-		DomainTransformEvent dte = new DomainTransformEvent();
+		DomainTransformEvent dte = createTransformEvent();
 		dte.setSource(null);
 		dte.setObjectId(id);
 		dte.setObjectLocalId(localId);
@@ -1902,7 +1912,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		} else {
 			coll.add(collectionMember);
 		}
-		DomainTransformEvent event = new DomainTransformEvent();
+		DomainTransformEvent event = createTransformEvent();
 		event.setSource(objectWithCollection);
 		event.setPropertyName(propertyName);
 		event.setObjectId(objectWithCollection.getId());
@@ -2035,7 +2045,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 						: TransformType.ADD_REF_TO_COLLECTION)
 				: remove ? TransformType.NULL_PROPERTY_REF
 						: TransformType.CHANGE_PROPERTY_REF;
-		evt = new DomainTransformEvent();
+		evt = createTransformEvent();
 		evt.setTransformType(tt);
 		maybeAddVersionNumbers(evt, object, targetObject);
 		// No! Only should check one end of the relation for permissions
@@ -2228,11 +2238,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 				if (tm.isProvisionalObject(evt.getSource())) {
 					return;
 				}
-				/*
-				 * Not 'UTC' date! No such thing exists - just the epoch date.
-				 */
-				evt.setUtcDate(new Date());
-				evt.setEventId(tm.nextEventIdCounter());
 				tm.setTransformCommitType(evt, CommitType.TO_LOCAL_GRAPH);
 				return;
 			}

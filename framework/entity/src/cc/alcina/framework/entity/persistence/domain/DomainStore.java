@@ -1714,6 +1714,21 @@ public class DomainStore implements IDomainStore {
 			DomainStore store = DomainStore.stores()
 					.storeFor(event.getObjectClass());
 			Entity entity = tm.getObject(event);
+			switch (event.getTransformType()) {
+			case ADD_REF_TO_COLLECTION:
+			case REMOVE_REF_FROM_COLLECTION:
+				/*
+				 * These normally shouldn't
+				 */
+				DomainProperty domainProperty = Reflections.propertyAccessor()
+						.getAnnotationForProperty(entity.entityClass(),
+								DomainProperty.class, event.getPropertyName());
+				if (domainProperty == null
+						|| !domainProperty.reindexOnChange()) {
+					return;
+				}
+				return;
+			}
 			if (event.getTransformType() != TransformType.CREATE_OBJECT) {
 				switch (event.getTransformType()) {
 				case CHANGE_PROPERTY_REF:
