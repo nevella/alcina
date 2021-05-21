@@ -51,7 +51,7 @@ public class TransformPropagationPolicy {
 			/*
 			 * Always persist non-root transforms (if not propogation::NONE)
 			 */
-			return !propagation.neverPersist()
+			return propagation.persistNonRoot()
 					&& !PermissionsManager.get().isRoot();
 		default:
 			throw new UnsupportedOperationException();

@@ -20,6 +20,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.DomainDescriptor;
+import cc.alcina.framework.common.client.domain.DomainStoreLazyLoader;
 import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.Counter;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
@@ -29,6 +30,7 @@ import cc.alcina.framework.common.client.domain.TrieProjection;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -76,6 +78,12 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 	public Class<? extends DomainTransformEvent>
 			getShadowDomainTransformEventPersistentClass() {
 		throw new UnsupportedOperationException();
+	}
+
+	public boolean isEnqueueLazyLoad(EntityLocator locator) {
+		DomainStoreLazyLoader lazyLoader = locator.clazz
+				.getAnnotation(DomainStoreLazyLoader.class);
+		return lazyLoader != null && lazyLoader.enqueueLazyLoads();
 	}
 
 	public void onAppShutdown() {

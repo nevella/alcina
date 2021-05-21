@@ -21,6 +21,7 @@ import javax.persistence.Transient;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
+import cc.alcina.framework.common.client.domain.DomainStoreLazyLoader;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
@@ -37,6 +38,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * 
  */
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+@DomainStoreLazyLoader(enqueueLazyLoads = true)
 public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 	public static ClientInstance self() {
 		return PermissionsManager.get().getClientInstance();

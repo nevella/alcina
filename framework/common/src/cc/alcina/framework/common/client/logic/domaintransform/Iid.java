@@ -18,6 +18,7 @@ import java.util.Set;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.domain.DomainStoreLazyLoader;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
@@ -30,6 +31,7 @@ import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 @DomainTransformPersistable
 @MappedSuperclass
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+@DomainStoreLazyLoader(enqueueLazyLoads = true)
 public abstract class Iid extends VersionableEntity<Iid> {
 	private String instanceId;
 

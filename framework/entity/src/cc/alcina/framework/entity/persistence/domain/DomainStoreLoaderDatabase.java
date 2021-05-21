@@ -52,6 +52,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -65,6 +66,7 @@ import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -694,7 +696,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			Transaction.ensureDomainPreparingActive();
 			Loader loader = loader().withConnection(conn)
 					.withClazz(transformEventImplClass).withSqlFilter(sqlFilter)
-					.withEntityRefs(entityRefs);
+					.withReturnResults(true).withEntityRefs(entityRefs);
 			List<? extends DomainTransformEventPersistent> transforms = (List<? extends DomainTransformEventPersistent>) (List<?>) loader
 					.loadHasIds();
 			entityRefs.resolve(new CustomResolver() {
@@ -946,6 +948,18 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
+	protected Date utcTimeToDate(long utcTime) {
+		int persistOffset = store.startupTz.getOffset(utcTime);
+		long timeLocal = utcTime - persistOffset;
+		return new Date(timeLocal);
+	}
+
+	String createDateClause(String columnName) {
+		return String.format(
+				"EXTRACT (EPOCH FROM %s::timestamp at time zone 'utc')::float*1000 as %s",
+				columnName, columnName);
+	}
+
 	Connection getConnection() {
 		return connectionPool.getConnection();
 	}
@@ -1033,7 +1047,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 		}
 
-		public Object read(Entity obj) {
+		public Object get(Entity obj) {
 			try {
 				return field.get(obj);
 			} catch (Exception e) {
@@ -1126,31 +1140,32 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		public Void call() {
 			try {
 				EntityRefs entityRefs = new EntityRefs();
-				String sqlFilter = Ax.format(" id in %s ",
+				String sql = Ax.format(
+						"select id,%s,%s from %s where id in %s ",
+						createDateClause("creationDate"),
+						createDateClause("lastModificationDate"),
+						clazz.getAnnotation(Table.class).name(),
 						EntityPersistenceHelper.toInClause(collations));
-				ClassIdLock dummySublock = new ClassIdLock(clazz, 0L);
-				Loader loader = loader().withConnection(conn).withClazz(clazz)
-						.withSqlFilter(sqlFilter).withEntityRefs(entityRefs);
-				List<? extends Entity> persistentSources = (List<? extends Entity>) (List<?>) loader
-						.loadHasIds();
-				Map<EntityLocator, EntityCollation> locatorCollation = collations
-						.stream().collect(AlcinaCollectors
-								.toKeyMap(EntityCollation::getLocator));
-				// entityRefs.resolve() definitiely not needed - in fact key
-				// that we don't (quite hard to track
-				// issue) because otherwise we'll corrupt our graph with lame
-				// fauxness
-				// we're only loading these to get the non transform metadata,
-				// after all
-				//
-				// entityRefs.resolve();
-				for (Entity persistentSource : persistentSources) {
-					EntityCollation collation = locatorCollation
-							.get(persistentSource.toLocator());
-					((DomainTransformEventPersistent) collation.last())
-							.populateDbMetadata(persistentSource);
+				try (Statement statement = conn.createStatement()) {
+					ResultSet rs = SqlUtils.executeQuery(statement, sql);
+					Map<EntityLocator, EntityCollation> locatorCollation = collations
+							.stream().collect(AlcinaCollectors
+									.toKeyMap(EntityCollation::getLocator));
+					while (rs.next()) {
+						VersionableEntity persistentSource = (VersionableEntity) Reflections
+								.newInstance(clazz);
+						persistentSource.setId(rs.getLong("id"));
+						persistentSource.setCreationDate(
+								utcTimeToDate(rs.getLong("creationDate")));
+						persistentSource.setLastModificationDate(utcTimeToDate(
+								rs.getLong("lastModificationDate")));
+						EntityCollation collation = locatorCollation
+								.get(persistentSource.toLocator());
+						((DomainTransformEventPersistent) collation.last())
+								.populateDbMetadata(persistentSource);
+					}
+					return null;
 				}
-				return null;
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new WrappedRuntimeException(e);
@@ -1255,9 +1270,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				return Ax.format("null as %s", columnName);
 			}
 			if (type == Date.class) {
-				return String.format(
-						"EXTRACT (EPOCH FROM %s::timestamp at time zone 'utc')::float*1000 as %s",
-						columnName, columnName);
+				return createDateClause(columnName);
 			} else {
 				return columnName;
 			}
@@ -1322,18 +1335,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				return v;
 			}
 			if (type == Date.class) {
-				long utcTime = rs.getLong(idx);
 				if (rs.wasNull()) {
 					return null;
 				}
+				long utcTime = rs.getLong(idx);
 				// it seems getLong mostly returns utc timestamp (not locale)
 				// now mandating that with the 'at timezone utc' above
 				// note these cols are currently pg timestamp without tz
-				int persistOffset = store.startupTz.getOffset(utcTime);
-				long timeLocal = utcTime - persistOffset;
-				return rs.wasNull() ? null : new Date(timeLocal);
-				// Timestamp v = rs.getTimestamp(idx);
-				// return v == null ? null : new Date(v.getTime());
+				return utcTimeToDate(utcTime);
 			}
 			if (Enum.class.isAssignableFrom(type)) {
 				switch (enumType) {
@@ -1899,10 +1908,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 									pdOperator.resolveHelper.resolveCustom(
 											customResolver, item));
 						} else if (pdOperator.resolveHelper.inJoinTables) {
-							Set set = (Set) pdOperator.field.get(item.source);
+							Set set = (Set) pdOperator
+									.get((Entity) item.source);
 							if (set == null) {
 								set = new LiSet();
-								pdOperator.field.set(item.source, set);
+								pdOperator.set(item.source, set);
 							}
 							set.add(item.target);
 						} else if (customResolver != null) {
@@ -2276,7 +2286,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				if (connection == null) {
 					connection = getConnection();
 				}
-				return load0();
+				List<HasId> result = load0();
+				return result;
 			} finally {
 				releaseConn(connection);
 				TransformManager.get()

@@ -743,9 +743,8 @@ public class DomainStore implements IDomainStore {
 						|| !Transactions.isCommitted(lazyLoadTxId)) {
 					lazyObjectLoader.loadObject(clazz, id, 0);
 					t = cache.get(clazz, id);
-					if (t != null && !toDomainCommitting) {
-						// TODO - ask the domaindescriptor for an enqueue policy
-						// (publication; wrapped object - probably not)
+					if (t != null && !toDomainCommitting
+							&& domainDescriptor.isEnqueueLazyLoad(locator)) {
 						Transactions.enqueueLazyLoad(locator);
 					}
 				}

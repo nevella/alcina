@@ -41,7 +41,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.StandardLabelCustomiser
 @Bean
 @Introspectable
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = Publication.class)
-@DomainTransformPropagation(value = PropagationType.NON_PERSISTENT, neverPersist = true)
+@DomainTransformPropagation(value = PropagationType.NON_PERSISTENT, persistNonRoot = false)
 /*
  * Marked as NON_PERSISTENT rather than NONE so that publisher can see the
  * publication id post-persistence. If working in bulk, though, consider an

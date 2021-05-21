@@ -30,7 +30,7 @@ import java.lang.annotation.Target;
 @Documented
 @Target({ ElementType.TYPE, ElementType.METHOD })
 public @interface DomainTransformPropagation {
-	boolean neverPersist() default false;
+	boolean persistNonRoot() default true;
 
 	PropagationType value();
 
