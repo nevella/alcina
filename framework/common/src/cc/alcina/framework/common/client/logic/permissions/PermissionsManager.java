@@ -182,6 +182,20 @@ public class PermissionsManager implements DomainTransformListener {
 		return groups;
 	}
 
+	public static boolean hasReadPermission(Object object) {
+		AnnotationLocation clazzLocation = new AnnotationLocation(
+				object.getClass(), null);
+		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
+		ObjectPermissions op = clazzLocation
+				.getAnnotation(ObjectPermissions.class);
+		if (op == null) {
+			return false;
+		} else {
+			return PermissionsManager.get().checkEffectivePropertyPermission(op,
+					null, object, true);
+		}
+	}
+
 	public static boolean isOffline() {
 		return get().getOnlineState() == OnlineState.OFFLINE;
 	}
@@ -311,15 +325,6 @@ public class PermissionsManager implements DomainTransformListener {
 	};
 
 	protected Stack<PermissionsState> stateStack = new Stack<>();
-
-	// This should never be necessary, if the code always surrounds user
-	// push/pop in try/finally...but...
-	public void reset() {
-		stateStack.clear();
-		setRoot(false);
-		setUser(null);
-		setLoginState(LoginState.NOT_LOGGED_IN);
-	}
 
 	private Long authenticatedClientInstanceId;
 
@@ -621,6 +626,16 @@ public class PermissionsManager implements DomainTransformListener {
 		return isPermitted(new AnnotatedPermissible(create));
 	}
 
+	public boolean isPermittedClass(Object object,
+			Permission defaultPermission) {
+		if (object instanceof Permissible) {
+			return isPermitted((Permissible) object);
+		}
+		Permission permission = Reflections.classLookup()
+				.getAnnotationForClass(object.getClass(), Permission.class);
+		return isPermitted(permission != null ? permission : defaultPermission);
+	}
+
 	public boolean isRoot() {
 		return root;
 	}
@@ -679,6 +694,15 @@ public class PermissionsManager implements DomainTransformListener {
 		setLoginState(loginState);
 		setUser(user);
 		setRoot(asRoot);
+	}
+
+	// This should never be necessary, if the code always surrounds user
+	// push/pop in try/finally...but...
+	public void reset() {
+		stateStack.clear();
+		setRoot(false);
+		setUser(null);
+		setLoginState(LoginState.NOT_LOGGED_IN);
 	}
 
 	public void setAllPermissible(boolean allPermissible) {
@@ -751,7 +775,12 @@ public class PermissionsManager implements DomainTransformListener {
 		if (this.user != null
 				&& this.user instanceof SourcesPropertyChangeEvents) {
 			SourcesPropertyChangeEvents spce = (SourcesPropertyChangeEvents) user;
-			spce.addPropertyChangeListener(userListener);
+			try {
+				spce.addPropertyChangeListener(userListener);
+			} catch (Exception e) {
+				e.printStackTrace();
+				spce.addPropertyChangeListener(userListener);
+			}
 		}
 		if (user == null) {
 			// do not fire listeners
@@ -931,29 +960,5 @@ public class PermissionsManager implements DomainTransformListener {
 		public void register(PermissionsExtensionForRule ext) {
 			extensionMapForRule.put(ext.getRuleName(), ext);
 		}
-	}
-
-	public static boolean hasReadPermission(Object object) {
-		AnnotationLocation clazzLocation = new AnnotationLocation(
-				object.getClass(), null);
-		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
-		ObjectPermissions op = clazzLocation
-				.getAnnotation(ObjectPermissions.class);
-		if (op == null) {
-			return false;
-		} else {
-			return PermissionsManager.get().checkEffectivePropertyPermission(op,
-					null, object, true);
-		}
-	}
-
-	public boolean isPermittedClass(Object object,
-			Permission defaultPermission) {
-		if (object instanceof Permissible) {
-			return isPermitted((Permissible) object);
-		}
-		Permission permission = Reflections.classLookup()
-				.getAnnotationForClass(object.getClass(), Permission.class);
-		return isPermitted(permission != null ? permission : defaultPermission);
 	}
 }

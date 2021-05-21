@@ -69,6 +69,13 @@ public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG ext
 							.setUserName("will-delete-in-this-tx@nodomain.com");
 					createdGroup.domain().addToProperty("memberUsers",
 							createdUser2);
+					Preconditions.checkState(
+							createdGroup.containsUser(createdUser2),
+							"post-delete: referenced group !contains user2");
+					Preconditions.checkState(
+							createdUser2.getSecondaryGroups()
+									.contains((IGroup) createdGroup),
+							"post-delete: user2 !containts createdGroup");
 					Domain.stream(PersistentImpl
 							.getImplementation(PublicationCounter.class))
 							.filter(pc -> pc.getUser() == createdUser2)
@@ -141,6 +148,12 @@ public class MvccEntityDeletionPropagationTest<IU extends Entity & IUser, IG ext
 						"non-committed-tx2: userClass.count()!=initialSize");
 			}
 		}.start();
+	}
+
+	@Override
+	protected void notifyThreadException(Exception e) {
+		super.notifyThreadException(e);
+		txLatch.countDown();
 	}
 
 	@Override

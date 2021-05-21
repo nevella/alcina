@@ -511,6 +511,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						throw e0;
 					} finally {
 						try {
+							if (pushedUser != null) {
+								PermissionsManager.get().popUser();
+							}
 							if (Transactions.isInitialised()) {
 								Transaction.end();
 							}
@@ -521,9 +524,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 								// additional exception (tx phase) that ain't
 								// helpful
 						} finally {
-							if (pushedUser != null) {
-								PermissionsManager.get().popUser();
-							}
 							LooseContext.pop();
 						}
 					}

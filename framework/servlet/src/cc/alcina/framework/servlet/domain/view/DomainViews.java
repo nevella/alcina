@@ -46,6 +46,7 @@ public abstract class DomainViews {
 
 	private Map<Key, LiveTree> views = new ConcurrentHashMap<>();
 
+	@SuppressWarnings("unused")
 	private Map<DomainTransformPersistenceEvent, Transaction> preCommitTransactions = new ConcurrentHashMap<>();
 
 	private BlockingQueue<ViewsTask> tasks = new LinkedBlockingQueue<>();

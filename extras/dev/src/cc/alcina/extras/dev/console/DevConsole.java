@@ -101,6 +101,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.metric.StartupStats;
 import cc.alcina.framework.entity.persistence.metric.StartupStats.KeyedStat;
 import cc.alcina.framework.entity.persistence.metric.StartupStats.LogProvider;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
@@ -1011,7 +1012,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			}
 		} finally {
 			runningLastCommand = false;
+			// txs just to allow propertychangelistener removal from user
+			Transaction.begin();
 			PermissionsManager.get().popUser();
+			Transaction.end();
 			LooseContext.pop();
 			runningJobs.remove(c);
 		}

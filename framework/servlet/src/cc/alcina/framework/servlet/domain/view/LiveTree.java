@@ -431,6 +431,7 @@ public class LiveTree {
 	}
 
 	public static class SearchPredicate implements Predicate {
+		@SuppressWarnings("unused")
 		private DomainViewSearchDefinition searchDefinition;
 
 		public SearchPredicate(DomainViewSearchDefinition searchDefinition) {

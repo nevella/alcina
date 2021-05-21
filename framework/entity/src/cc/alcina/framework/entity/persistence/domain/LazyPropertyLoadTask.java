@@ -6,7 +6,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -62,25 +61,13 @@ public class LazyPropertyLoadTask<T extends Entity>
 			return;
 		}
 		try {
-			LooseContext.pushWithTrue(
-					DomainStore.CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH);
-			LooseContext
-					.setTrue(DomainStore.CONTEXT_POPULATE_LAZY_PROPERTY_VALUES);
-			LooseContext.setTrue(CONTEXT_IN_LAZY_PROPERTY_LOAD);
+			LooseContext.pushWithTrue(CONTEXT_IN_LAZY_PROPERTY_LOAD);
 			String sqlFilter = String.format(" id in %s",
 					EntityPersistenceHelper.toInClause(objects));
-			ClassIdLock lock = LockUtils.obtainClassIdLock(clazz, 0);
 			String key = Ax.format("load :: %s (%s)",
 					getClass().getSimpleName(), objects.size());
 			metric(key, false);
-			List<T> values = loadTable(clazz, sqlFilter, lock);
-			for (T t : values) {
-				T domain = Domain.find(t);
-				if (domain != null) {
-					((DomainStoreLoaderDatabase) domainStore.loader)
-							.copyLazyPropertyValues(t, domain);
-				}
-			}
+			List<T> values = loadTable(clazz, sqlFilter, true);
 			metric(key, true);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

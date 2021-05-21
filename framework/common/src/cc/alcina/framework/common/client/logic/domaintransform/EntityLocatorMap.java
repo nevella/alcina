@@ -73,6 +73,14 @@ public class EntityLocatorMap implements Serializable {
 		return localToPersistent.get(localId);
 	}
 
+	public long getLocalId(Class<? extends Entity> clazz, long id) {
+		EntityLocator entityLocator = persistentToLocal.get(clazz, id);
+		if (entityLocator != null) {
+			return entityLocator.localId;
+		}
+		return 0;
+	}
+
 	public synchronized <H extends Entity> long
 			getLocalIdForClientInstance(H entity) {
 		if (entity.getLocalId() != 0) {
@@ -94,10 +102,6 @@ public class EntityLocatorMap implements Serializable {
 		}
 	}
 
-	public synchronized boolean isEmpty() {
-		return localToPersistent.isEmpty();
-	}
-
 	public synchronized void merge(EntityLocatorMap locatorMap) {
 		putAll(locatorMap);
 	}
@@ -109,8 +113,10 @@ public class EntityLocatorMap implements Serializable {
 
 	public synchronized void putToLookups(EntityLocator entityLocator) {
 		localToPersistent.put(entityLocator.localId, entityLocator);
-		persistentToLocal.put(entityLocator.clazz, entityLocator.id,
-				entityLocator);
+		if (entityLocator.id != 0) {
+			persistentToLocal.put(entityLocator.clazz, entityLocator.id,
+					entityLocator);
+		}
 	}
 
 	public static class ToCreatedIdConverter<H extends Entity>

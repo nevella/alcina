@@ -109,6 +109,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.WrappedObject;
@@ -154,18 +155,8 @@ public class DomainStore implements IDomainStore {
 	public static final String CONTEXT_DEBUG_QUERY_METRICS = DomainStore.class
 			.getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
 
-	public static final String CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH = DomainStore.class
-			.getName() + ".CONTEXT_KEEP_LOAD_TABLE_DETACHED_FROM_GRAPH";
-
 	public static final String CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS";
-
-	public static final String CONTEXT_POPULATE_LAZY_PROPERTY_VALUES = DomainStore.class
-			.getName() + ".CONTEXT_POPULATE_LAZY_PROPERTY_VALUES";
-
-	// while debugging, prevent reentrant locks
-	public static final String CONTEXT_NO_LOCKS = DomainStore.class.getName()
-			+ ".CONTEXT_NO_LOCKS";
 
 	public static final String CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES";
@@ -687,6 +678,56 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	Entity ensureEntity(Class<? extends Entity> clazz, long id) {
+		EntityLocatorMap map = EntityLayerObjects.get()
+				.getServerAsClientInstanceEntityLocatorMap();
+		long localId = map.getLocalId(clazz, id);
+		ClassIdLock lock = LockUtils.obtainClassIdLock(clazz, id);
+		synchronized (lock) {
+			// thereby preserving the 'entity uniqueness unless vacuumed'
+			// constraint
+			Entity visible = cache.get(clazz, id);
+			if (visible != null) {
+				return visible;
+			}
+			Entity existing = cache.getAnyTransaction(clazz, id);
+			// the Transactions.resolve calls force a visible version
+			if (existing != null) {
+				Transactions.resolve(existing, true, false);
+				cache.ensureVersion(existing);
+				return existing;
+			}
+			if (localId != 0) {
+				// this below is all a bit fancy - but is the only place where
+				// said fanciness is needed
+				Entity local = cache.getCreatedLocals().get(localId);
+				Transactions.resolve(local, true, false);
+				Preconditions.checkState(local != null);
+				// The created local is the 'domain identity', so need to
+				// preserve it but revert
+				// its field values before transforming
+				Transactions.revertToDefaultFieldValues(local);
+				local.setLocalId(localId);
+				local.setId(id);
+				// the current version (which will be committed)
+				Transactions.copyIdFieldsToCurrentVersion(local);
+				// only local-id objects created by this webapp client instance
+				// will ever be put into the store cache in this phase - thus
+				// preserving the "local ids don't collide because they're on
+				// different transactions" logic of the cache
+				cache.removeLocal(local);
+				cache.put(local);
+				TransformManager.registerLocalObjectPromotion(local);
+				return local;
+			} else {
+				Entity entity = Transaction.current().create(clazz, this, id,
+						0L);
+				cache.put(entity);
+				return entity;
+			}
+		}
+	}
+
 	<T extends Entity> T find(Class<T> clazz, long id) {
 		T t = cache.get(clazz, id);
 		if (t == null) {
@@ -703,6 +744,8 @@ public class DomainStore implements IDomainStore {
 					lazyObjectLoader.loadObject(clazz, id, 0);
 					t = cache.get(clazz, id);
 					if (t != null && !toDomainCommitting) {
+						// TODO - ask the domaindescriptor for an enqueue policy
+						// (publication; wrapped object - probably not)
 						Transactions.enqueueLazyLoad(locator);
 					}
 				}
@@ -813,14 +856,6 @@ public class DomainStore implements IDomainStore {
 			TransformManager.get().setIgnorePropertyChanges(true);
 			postProcessStart = System.currentTimeMillis();
 			MetricLogging.get().start("post-process");
-			Map<Long, Entity> createdLocalsSnapshot = persistenceEvent
-					.isLocalToVm()
-					&& !persistenceEvent.getTransformPersistenceToken()
-							.isRequestorExternalToThisJvm()
-									? cache.getCreatedLocals()
-									: Collections.emptyMap();
-			transformManager.setLocalReplacementCreationObjectResolver(
-					localId -> createdLocalsSnapshot.get(localId));
 			Transaction.ensureEnded();
 			Transaction.beginDomainPreparing();
 			Date transactionCommitTime = persistenceEvent
@@ -844,6 +879,9 @@ public class DomainStore implements IDomainStore {
 			// this is also checked in TransformCommit
 			// filtered.removeIf(collation::isCreatedAndDeleted);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
+			if (filtered.toString().contains("JobImpl")) {
+				int debug = 3;
+			}
 			for (DomainTransformEventPersistent transform : filtered) {
 				postProcessTransform = transform;
 				// remove from indicies before first change - and only if
@@ -1622,16 +1660,10 @@ public class DomainStore implements IDomainStore {
 				if (v.getLocalId() == 0) {
 					return null;
 				}
-				EntityLocator locator = ThreadlocalTransformManager.get()
-						.resolvePersistedLocal(DomainStore.this, v);
-				if (locator == null) {
-					/*
-					 * not yet persisted, tx-local
-					 */
-					return (V) cache.get(v.toLocator());
-				} else {
-					return (V) cache.get(v.entityClass(), locator.id);
-				}
+				/*
+				 * not yet persisted, tx-local
+				 */
+				return (V) cache.get(v.toLocator());
 			} else {
 				return (V) find(v.entityClass(), v.getId());
 			}
@@ -1899,8 +1931,6 @@ public class DomainStore implements IDomainStore {
 	}
 
 	class SubgraphTransformManagerPostProcess extends SubgraphTransformManager {
-		private LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver;
-
 		@Override
 		public Entity getObject(DomainTransformEvent dte,
 				boolean ignoreSource) {
@@ -1914,11 +1944,6 @@ public class DomainStore implements IDomainStore {
 		public Entity getObjectForCreationTransform(DomainTransformEvent dte,
 				boolean ignoreSource) {
 			return super.getObject(dte, ignoreSource);
-		}
-
-		public void setLocalReplacementCreationObjectResolver(
-				LocalReplacementCreationObjectResolver localReplacementCreationObjectResolver) {
-			this.localReplacementCreationObjectResolver = localReplacementCreationObjectResolver;
 		}
 
 		@Override
@@ -1936,31 +1961,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		protected Entity getEntityForCreate(DomainTransformEvent event) {
-			Entity localReplacement = localReplacementCreationObjectResolver
-					.apply(event.getObjectLocalId());
-			if (localReplacement != null) {
-				/*
-				 * will *not* create a new version (yet) - so still in base.
-				 * This means that id and localid are invariant for all versions
-				 * of the object
-				 */
-				long localId = localReplacement.getLocalId();
-				/*
-				 * Revert all non id/localid field values of the base (initial)
-				 * object so that replay occurs
-				 */
-				Transactions.revertToDefaultFieldValues(localReplacement);
-				localReplacement.setLocalId(localId);
-				localReplacement.setId(event.getObjectId());
-				// only local-id objects created by this webapp client instance
-				// will ever be put into the store cache in this phase - thus
-				// preserving the "local ids don't collide because they're on
-				// different transactions" logic of the cache
-				store.getCache().removeLocal(localReplacement);
-				store.getCache().put(localReplacement);
-				TransformManager.registerLocalObjectPromotion(localReplacement);
-			}
-			return localReplacement;
+			return ensureEntity(event.getObjectClass(), event.getObjectId());
 		}
 
 		@Override

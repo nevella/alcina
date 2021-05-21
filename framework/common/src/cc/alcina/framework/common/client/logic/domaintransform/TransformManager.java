@@ -228,17 +228,19 @@ public abstract class TransformManager implements PropertyChangeListener,
 		factoryInstance = tm;
 	}
 
-	// synchronized method because createdLocalAndPromoted is initially null -
-	// this method won't be called that often
 	public static void registerLocalObjectPromotion(Entity entity) {
 		if (createdLocalAndPromoted == null) {
-			createdLocalAndPromoted = Registry.impl(ConcurrentMapCreator.class)
-					.createMap();
+			synchronized (TransformManager.class) {
+				if (createdLocalAndPromoted == null) {
+					createdLocalAndPromoted = Registry
+							.impl(ConcurrentMapCreator.class).createMap();
+				}
+			}
 		}
 		synchronized (createdLocalAndPromoted) {
 			// use the same code as for Entity.hashCode on an object with
 			// zero localid, same
-			// class and id (for later lookup)
+			// class and id (for subsequent lookup)
 			int withoutLocalIdHash = ((int) entity.getId())
 					^ entity.entityClass().getName().hashCode();
 			if (withoutLocalIdHash == 0) {

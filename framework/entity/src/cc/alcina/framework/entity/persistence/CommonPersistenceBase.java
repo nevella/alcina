@@ -460,7 +460,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				.getEntityManager();
 		ThreadlocalTransformManager.get().setEntityManager(getEntityManager());
 		ThreadlocalTransformManager.get()
-				.setUserSessionEntityMap(new EntityLocatorMap());
+				.setClientInstanceEntityMap(new EntityLocatorMap());
 		ClientInstance clientInstanceImpl = PersistentImpl
 				.getNewImplementationInstance(ClientInstance.class);
 		clientInstanceImpl.setId(clientInstanceId);

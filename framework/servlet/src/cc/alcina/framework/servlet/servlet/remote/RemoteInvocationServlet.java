@@ -200,9 +200,6 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			resultHolder.add(out);
 			if (transformMethod) {
 				ThreadlocalTransformManager.get().resetTltm(null);
-				resultHolder.add(ThreadlocalTransformManager.get()
-						.getPostTransactionEntityResolver(
-								DomainStore.writableStore()));
 				DomainStore.writableStore().getPersistenceEvents().getQueue()
 						.refreshPositions();
 			}
