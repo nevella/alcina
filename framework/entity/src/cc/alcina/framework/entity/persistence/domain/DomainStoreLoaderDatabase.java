@@ -987,141 +987,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		public void injectValue(Object[] row, Entity source);
 	}
 
-	public class PdOperator {
-		ResolveHelper resolveHelper = new ResolveHelper();
-
-		Method readMethod;
-
-		ManyToMany manyToMany;
-
-		ManyToOne manyToOne;
-
-		JoinTable joinTable;
-
-		OneToMany oneToMany;
-
-		OneToOne oneToOne;
-
-		Method writeMethod;
-
-		PropertyDescriptor pd;
-
-		public String name;
-
-		Field field;
-
-		Class clazz;
-
-		public int idx;
-
-		Class mappedClass;
-
-		DomainStoreProperty domainStoreProperty;
-
-		DomainStorePropertyLoadOracle lazyLoadOracle;
-
-		public PdOperator(PropertyDescriptor pd, Class clazz, int idx)
-				throws Exception {
-			this.pd = pd;
-			this.clazz = clazz;
-			this.idx = idx;
-			this.field = store.getField(clazz, pd.getName());
-			this.name = pd.getName();
-			this.readMethod = pd.getReadMethod();
-			this.writeMethod = pd.getWriteMethod();
-			this.manyToMany = readMethod.getAnnotation(ManyToMany.class);
-			this.manyToOne = readMethod.getAnnotation(ManyToOne.class);
-			this.joinTable = readMethod.getAnnotation(JoinTable.class);
-			this.oneToMany = readMethod.getAnnotation(OneToMany.class);
-			this.oneToOne = readMethod.getAnnotation(OneToOne.class);
-			// FIXME - mvcc.4 - do we need DomainStoreMapping?
-			DomainStoreMapping mapping = readMethod
-					.getAnnotation(DomainStoreMapping.class);
-			this.mappedClass = mapping == null ? null : mapping.mapping();
-			this.domainStoreProperty = store.domainStoreProperties.get(clazz,
-					pd.getName());
-			if (this.domainStoreProperty != null && this.domainStoreProperty
-					.loadType() == DomainStorePropertyLoadType.CUSTOM) {
-				this.lazyLoadOracle = Registry
-						.impl(this.domainStoreProperty.customLoadOracle());
-			}
-		}
-
-		public Object get(Entity obj) {
-			try {
-				return field.get(obj);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		public void set(HasId hasId, Object value) throws Exception {
-			if (store.initialising) {
-				field.set(hasId, value);
-			} else {
-				writeMethod.invoke(hasId, new Object[] { value });
-			}
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s.%s [%s]", clazz.getSimpleName(), name,
-					readMethod.getReturnType().getSimpleName());
-		}
-
-		class ResolveHelper {
-			PropertyDescriptor domainStorePdRev;
-
-			PropertyDescriptor oneToOnePd;
-
-			PropertyDescriptor targetPd;
-
-			PdOperator targetOperator;
-
-			boolean inJoinTables;
-
-			boolean ensured = false;
-
-			PdOperator oneToOneOperator;
-
-			PdOperator domainStoreRevOperator;
-
-			void ensure(Class<? extends HasId> sourceClass) {
-				sourceClass = Mvcc.resolveEntityClass(sourceClass);
-				if (!ensured) {
-					inJoinTables = joinTables.containsKey(PdOperator.this.pd);
-					targetPd = manyToOneRev.get(sourceClass, name);
-					if (targetPd != null) {
-						targetOperator = ensurePdOperator(targetPd,
-								targetPd.getReadMethod().getDeclaringClass());
-					}
-					oneToOnePd = oneToOneRev.get(sourceClass, name);
-					if (oneToOnePd != null) {
-						oneToOneOperator = ensurePdOperator(oneToOnePd,
-								oneToOnePd.getReadMethod().getDeclaringClass());
-					}
-					domainStorePdRev = domainStoreColumnRev.get(sourceClass,
-							name);
-					if (domainStorePdRev != null) {
-						domainStoreRevOperator = ensurePdOperator(
-								domainStorePdRev, domainStorePdRev
-										.getReadMethod().getDeclaringClass());
-					}
-					ensured = true;
-				}
-			}
-
-			boolean isCustom(CustomResolver customResolver) {
-				return customResolver != null
-						&& customResolver.handles(PdOperator.this);
-			}
-
-			Object resolveCustom(CustomResolver customResolver, Ref item) {
-				return customResolver.resolveCustom(PdOperator.this, item);
-			}
-		}
-	}
-
 	private class IVersionableLoaderTask implements Callable<Void> {
 		private Class<Entity> clazz;
 
@@ -2302,6 +2167,141 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				result.forEach(e -> store.index(e, true, null, true));
 			}
 			return result;
+		}
+	}
+
+	class PdOperator {
+		ResolveHelper resolveHelper = new ResolveHelper();
+
+		Method readMethod;
+
+		ManyToMany manyToMany;
+
+		ManyToOne manyToOne;
+
+		JoinTable joinTable;
+
+		OneToMany oneToMany;
+
+		OneToOne oneToOne;
+
+		Method writeMethod;
+
+		PropertyDescriptor pd;
+
+		public String name;
+
+		Field field;
+
+		Class clazz;
+
+		public int idx;
+
+		Class mappedClass;
+
+		DomainStoreProperty domainStoreProperty;
+
+		DomainStorePropertyLoadOracle lazyLoadOracle;
+
+		public PdOperator(PropertyDescriptor pd, Class clazz, int idx)
+				throws Exception {
+			this.pd = pd;
+			this.clazz = clazz;
+			this.idx = idx;
+			this.field = store.getField(clazz, pd.getName());
+			this.name = pd.getName();
+			this.readMethod = pd.getReadMethod();
+			this.writeMethod = pd.getWriteMethod();
+			this.manyToMany = readMethod.getAnnotation(ManyToMany.class);
+			this.manyToOne = readMethod.getAnnotation(ManyToOne.class);
+			this.joinTable = readMethod.getAnnotation(JoinTable.class);
+			this.oneToMany = readMethod.getAnnotation(OneToMany.class);
+			this.oneToOne = readMethod.getAnnotation(OneToOne.class);
+			// FIXME - mvcc.4 - do we need DomainStoreMapping?
+			DomainStoreMapping mapping = readMethod
+					.getAnnotation(DomainStoreMapping.class);
+			this.mappedClass = mapping == null ? null : mapping.mapping();
+			this.domainStoreProperty = store.domainStoreProperties.get(clazz,
+					pd.getName());
+			if (this.domainStoreProperty != null && this.domainStoreProperty
+					.loadType() == DomainStorePropertyLoadType.CUSTOM) {
+				this.lazyLoadOracle = Registry
+						.impl(this.domainStoreProperty.customLoadOracle());
+			}
+		}
+
+		public Object get(Entity obj) {
+			try {
+				return field.get(obj);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		public void set(HasId hasId, Object value) throws Exception {
+			if (store.initialising) {
+				field.set(hasId, value);
+			} else {
+				writeMethod.invoke(hasId, new Object[] { value });
+			}
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s.%s [%s]", clazz.getSimpleName(), name,
+					readMethod.getReturnType().getSimpleName());
+		}
+
+		class ResolveHelper {
+			PropertyDescriptor domainStorePdRev;
+
+			PropertyDescriptor oneToOnePd;
+
+			PropertyDescriptor targetPd;
+
+			PdOperator targetOperator;
+
+			boolean inJoinTables;
+
+			boolean ensured = false;
+
+			PdOperator oneToOneOperator;
+
+			PdOperator domainStoreRevOperator;
+
+			void ensure(Class<? extends HasId> sourceClass) {
+				sourceClass = Mvcc.resolveEntityClass(sourceClass);
+				if (!ensured) {
+					inJoinTables = joinTables.containsKey(PdOperator.this.pd);
+					targetPd = manyToOneRev.get(sourceClass, name);
+					if (targetPd != null) {
+						targetOperator = ensurePdOperator(targetPd,
+								targetPd.getReadMethod().getDeclaringClass());
+					}
+					oneToOnePd = oneToOneRev.get(sourceClass, name);
+					if (oneToOnePd != null) {
+						oneToOneOperator = ensurePdOperator(oneToOnePd,
+								oneToOnePd.getReadMethod().getDeclaringClass());
+					}
+					domainStorePdRev = domainStoreColumnRev.get(sourceClass,
+							name);
+					if (domainStorePdRev != null) {
+						domainStoreRevOperator = ensurePdOperator(
+								domainStorePdRev, domainStorePdRev
+										.getReadMethod().getDeclaringClass());
+					}
+					ensured = true;
+				}
+			}
+
+			boolean isCustom(CustomResolver customResolver) {
+				return customResolver != null
+						&& customResolver.handles(PdOperator.this);
+			}
+
+			Object resolveCustom(CustomResolver customResolver, Ref item) {
+				return customResolver.resolveCustom(PdOperator.this, item);
+			}
 		}
 	}
 }
