@@ -66,6 +66,8 @@ public interface MultikeyMap<V> {
 
 	public int size();
 
+	public void sortKeys(Object... objects);
+
 	public abstract void stripNonDuplicates(int depth);
 
 	public abstract MultikeyMap<V> swapKeysZeroAndOne();

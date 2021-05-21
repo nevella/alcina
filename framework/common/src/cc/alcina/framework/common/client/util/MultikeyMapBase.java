@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -248,6 +249,16 @@ public abstract class MultikeyMapBase<V>
 	@Override
 	public int size() {
 		return this.delegate.size();
+	}
+
+	@Override
+	public void sortKeys(Object... objects) {
+		Map delegate = asMapEnsureDelegate(true, objects);
+		Map copyHolder = new HashMap<>();
+		copyHolder.putAll(delegate);
+		delegate.clear();
+		copyHolder.keySet().stream().sorted()
+				.forEach(key -> delegate.put(key, copyHolder.get(key)));
 	}
 
 	@Override
