@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import com.google.gwt.core.client.Scheduler;
+import com.google.gwt.user.client.rpc.SerializationException;
 
 import cc.alcina.framework.common.client.collections.IteratorWithCurrent;
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
@@ -91,12 +92,12 @@ public class UnwrapAndRegisterObjectsPlayer
 	@Override
 	public void onFailure(Throwable caught) {
 		caught.printStackTrace();
-		if (consort.containsState(HandshakeState.OBJECT_DATA_LOADED)) {
-			// code failure in post-ok handler
-			consort.onFailure(caught);
-		} else {
+		if (CommonUtils.hasCauseOfClass(caught, SerializationException.class)) {
 			consort.wasPlayed(this, Collections.singletonList(
 					HandshakeState.OBJECTS_FATAL_DESERIALIZATION_EXCEPTION));
+		} else {
+			// code failure in post-ok handler
+			consort.onFailure(caught);
 		}
 	}
 
