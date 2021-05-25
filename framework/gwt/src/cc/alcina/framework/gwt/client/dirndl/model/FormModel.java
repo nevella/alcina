@@ -10,6 +10,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 
+import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.place.shared.Place;
 import com.totsp.gwittir.client.beans.Binding;
@@ -59,62 +60,16 @@ public class FormModel extends Model {
 
 	private FormModelState state;
 
-	public FormModelState getState() {
-		return this.state;
-	}
-
 	public List<LinkModel> getActions() {
 		return this.actions;
-	}
-
-	public static class Submitted extends NodeTopic {
-	}
-
-	public static class Cancelled extends NodeTopic {
-	}
-
-	@Ref("submit")
-	@ActionRefHandler(SubmitHandler.class)
-	@TopicBehaviour(topic = Submitted.class, type = TopicBehaviourType.EMIT)
-	public static class SubmitRef extends ActionRef {
-	}
-
-	public static class SubmitHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-			FormModel formModel = (FormModel) node
-					.ancestorModel(m -> m instanceof FormModel);
-			formModel.onSubmit(node);
-		}
 	}
 
 	public List<FormElement> getElements() {
 		return this.elements;
 	}
 
-	@Ref("cancel")
-	@ActionRefHandler(CancelHandler.class)
-	@TopicBehaviour(topic = Cancelled.class, type = TopicBehaviourType.EMIT)
-	public static class CancelRef extends ActionRef {
-	}
-
-	public static class CancelHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-			Place currentPlace = Client.currentPlace();
-			if (currentPlace instanceof EntityPlace) {
-				EntityPlace entityPlace = ((EntityPlace) currentPlace).copy();
-				entityPlace.action = EntityAction.VIEW;
-				Client.goTo(entityPlace);
-			} else if (currentPlace instanceof CategoryNamePlace) {
-				CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
-						.copy();
-				categoryNamePlace.nodeName = null;
-				Client.goTo(categoryNamePlace);
-			}
-		}
+	public FormModelState getState() {
+		return this.state;
 	}
 
 	public void onSubmit(Node node) {
@@ -139,6 +94,50 @@ public class FormModel extends Model {
 		new FormValidation().validate(onValid, getState().formBinding);
 	}
 
+	public static class BindableFormModelTransformer extends
+			AbstractContextSensitiveModelTransform<Bindable, FormModel> {
+		@Override
+		public FormModel apply(Bindable bindable) {
+			FormModelState state = new FormModelState();
+			state.editable = true;
+			if (bindable instanceof Entity && state.editable) {
+				bindable = ClientTransformManager.cast()
+						.ensureEditable((Entity) bindable);
+			}
+			state.model = bindable;
+			state.adjunct = true;
+			return new FormModelTransformer().withContextNode(node)
+					.apply(state);
+		}
+	}
+
+	public static class CancelHandler extends ActionHandler {
+		@Override
+		public void handleAction(Node node, GwtEvent event,
+				ActionRefPlace place) {
+			Place currentPlace = Client.currentPlace();
+			if (currentPlace instanceof EntityPlace) {
+				EntityPlace entityPlace = ((EntityPlace) currentPlace).copy();
+				entityPlace.action = EntityAction.VIEW;
+				Client.goTo(entityPlace);
+			} else if (currentPlace instanceof CategoryNamePlace) {
+				CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
+						.copy();
+				categoryNamePlace.nodeName = null;
+				Client.goTo(categoryNamePlace);
+			}
+		}
+	}
+
+	public static class Cancelled extends NodeTopic {
+	}
+
+	@Ref("cancel")
+	@ActionRefHandler(CancelHandler.class)
+	@TopicBehaviour(topic = Cancelled.class, type = TopicBehaviourType.EMIT)
+	public static class CancelRef extends ActionRef {
+	}
+
 	public static class EntityTransformer extends
 			AbstractContextSensitiveModelTransform<DirectedEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
 		@Override
@@ -158,58 +157,42 @@ public class FormModel extends Model {
 		}
 	}
 
-	public static class BindableFormModelTransformer extends
-			AbstractContextSensitiveModelTransform<Bindable, FormModel> {
-		@Override
-		public FormModel apply(Bindable bindable) {
-			FormModelState state = new FormModelState();
-			state.editable = true;
-			if (bindable instanceof Entity && state.editable) {
-				bindable = ClientTransformManager.cast()
-						.ensureEditable((Entity) bindable);
-			}
-			state.model = bindable;
-			state.adjunct = true;
-			return new FormModelTransformer().withContextNode(node)
-					.apply(state);
-		}
-	}
+	public static class FormElement extends Model {
+		private static transient int formElementIdxCounter;
 
-	@ClientInstantiable
-	public static class PermissibleActionFormTransformer extends
-			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
-		@Override
-		public FormModel apply(PermissibleAction action) {
-			FormModelState state = new FormModelState();
-			state.editable = true;
-			state.adjunct = true;
-			state.expectsModel = true;
-			if (action instanceof PermissibleEntityAction) {
-				Entity entity = ((PermissibleEntityAction) action).getEntity();
-				ObjectPermissions op = Reflections.classLookup()
-						.getAnnotationForClass(entity.getClass(),
-								ObjectPermissions.class);
-				op = op == null
-						? PermissionsManager.get().getDefaultObjectPermissions()
-						: op;
-				state.editable = PermissionsManager.get().isPermitted(entity,
-						op.write());
-				if (state.editable) {
-					entity = ClientTransformManager.cast()
-							.ensureEditable(entity);
-				} else {
-					state.adjunct = false;
-				}
-				state.model = entity;
-			} else if (action instanceof RemoteActionWithParameters) {
-				state.model = (Bindable) ((RemoteActionWithParameters) action)
-						.getParameters();
-			} else if (action instanceof LocalActionWithParameters) {
-				state.model = null;
-				state.expectsModel = false;
-			}
-			return new FormModelTransformer().withContextNode(node)
-					.apply(state);
+		protected LabelModel label;
+
+		protected FormValueModel value;
+
+		private Field field;
+
+		private Bindable bindable;
+
+		private int formElementIdx;
+
+		public FormElement() {
+		}
+
+		public FormElement(Field field, Bindable bindable) {
+			this.field = field;
+			this.bindable = bindable;
+			this.formElementIdx = ++formElementIdxCounter;
+			this.label = new LabelModel(this);
+			this.value = new FormValueModel(this);
+		}
+
+		@Directed
+		public LabelModel getLabel() {
+			return this.label;
+		}
+
+		@Directed
+		public FormValueModel getValue() {
+			return this.value;
+		}
+
+		public String provideId() {
+			return Ax.format("_dl_form_%s", formElementIdx);
 		}
 	}
 
@@ -292,6 +275,17 @@ public class FormModel extends Model {
 			return model;
 		}
 
+		@ClientInstantiable
+		public static class ActionsModulator {
+			public String getOverrideLinkText(LinkModel linkModel) {
+				return null;
+			}
+
+			public boolean isRemoveAction(LinkModel linkModel) {
+				return false;
+			}
+		}
+
 		@Retention(RetentionPolicy.RUNTIME)
 		@Documented
 		@Target({ ElementType.TYPE, ElementType.METHOD })
@@ -299,25 +293,40 @@ public class FormModel extends Model {
 		public static @interface Args {
 			Class<? extends ActionsModulator> actionsModulator() default ActionsModulator.class;
 		}
+	}
 
-		@ClientInstantiable
-		public static class ActionsModulator {
-			public boolean isRemoveAction(LinkModel linkModel) {
-				return false;
-			}
+	public static class FormValueModel extends Model implements ValueModel {
+		protected FormElement formElement;
 
-			public String getOverrideLinkText(LinkModel linkModel) {
-				return null;
-			}
+		public FormValueModel() {
+		}
+
+		public FormValueModel(FormElement formElement) {
+			this.formElement = formElement;
+		}
+
+		@Override
+		public Bindable getBindable() {
+			return formElement.bindable;
+		}
+
+		@Override
+		public Field getField() {
+			return formElement.field;
+		}
+
+		public FormElement getFormElement() {
+			return this.formElement;
+		}
+
+		@Override
+		public String getValueId() {
+			return formElement.provideId();
 		}
 	}
 
 	public static class LabelModel extends Model {
 		protected FormElement formElement;
-
-		public FormElement getFormElement() {
-			return this.formElement;
-		}
 
 		public LabelModel() {
 		}
@@ -329,6 +338,68 @@ public class FormModel extends Model {
 		public Field getField() {
 			return formElement.field;
 		}
+
+		public FormElement getFormElement() {
+			return this.formElement;
+		}
+	}
+
+	@ClientInstantiable
+	public static class PermissibleActionFormTransformer extends
+			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
+		@Override
+		public FormModel apply(PermissibleAction action) {
+			FormModelState state = new FormModelState();
+			state.editable = true;
+			state.adjunct = true;
+			state.expectsModel = true;
+			if (action instanceof PermissibleEntityAction) {
+				Entity entity = ((PermissibleEntityAction) action).getEntity();
+				ObjectPermissions op = Reflections.classLookup()
+						.getAnnotationForClass(entity.getClass(),
+								ObjectPermissions.class);
+				op = op == null
+						? PermissionsManager.get().getDefaultObjectPermissions()
+						: op;
+				state.editable = PermissionsManager.get().isPermitted(entity,
+						op.write());
+				if (state.editable) {
+					entity = ClientTransformManager.cast()
+							.ensureEditable(entity);
+				} else {
+					state.adjunct = false;
+				}
+				state.model = entity;
+			} else if (action instanceof RemoteActionWithParameters) {
+				state.model = (Bindable) ((RemoteActionWithParameters) action)
+						.getParameters();
+			} else if (action instanceof LocalActionWithParameters) {
+				state.model = null;
+				state.expectsModel = false;
+			}
+			return new FormModelTransformer().withContextNode(node)
+					.apply(state);
+		}
+	}
+
+	public static class SubmitHandler extends ActionHandler {
+		@Override
+		public void handleAction(Node node, GwtEvent event,
+				ActionRefPlace place) {
+			((DomEvent) event).preventDefault();
+			FormModel formModel = (FormModel) node
+					.ancestorModel(m -> m instanceof FormModel);
+			formModel.onSubmit(node);
+		}
+	}
+
+	@Ref("submit")
+	@ActionRefHandler(SubmitHandler.class)
+	@TopicBehaviour(topic = Submitted.class, type = TopicBehaviourType.EMIT)
+	public static class SubmitRef extends ActionRef {
+	}
+
+	public static class Submitted extends NodeTopic {
 	}
 
 	public interface ValueModel {
@@ -337,74 +408,5 @@ public class FormModel extends Model {
 		Field getField();
 
 		String getValueId();
-	}
-
-	public static class FormValueModel extends Model implements ValueModel {
-		protected FormElement formElement;
-
-		public FormValueModel() {
-		}
-
-		public FormElement getFormElement() {
-			return this.formElement;
-		}
-
-		public FormValueModel(FormElement formElement) {
-			this.formElement = formElement;
-		}
-
-		@Override
-		public Field getField() {
-			return formElement.field;
-		}
-
-		@Override
-		public String getValueId() {
-			return formElement.provideId();
-		}
-
-		@Override
-		public Bindable getBindable() {
-			return formElement.bindable;
-		}
-	}
-
-	public static class FormElement extends Model {
-		protected LabelModel label;
-
-		protected FormValueModel value;
-
-		private Field field;
-
-		private Bindable bindable;
-
-		private static transient int formElementIdxCounter;
-
-		private int formElementIdx;
-
-		public String provideId() {
-			return Ax.format("_dl_form_%s", formElementIdx);
-		}
-
-		public FormElement() {
-		}
-
-		public FormElement(Field field, Bindable bindable) {
-			this.field = field;
-			this.bindable = bindable;
-			this.formElementIdx = ++formElementIdxCounter;
-			this.label = new LabelModel(this);
-			this.value = new FormValueModel(this);
-		}
-
-		@Directed
-		public LabelModel getLabel() {
-			return this.label;
-		}
-
-		@Directed
-		public FormValueModel getValue() {
-			return this.value;
-		}
 	}
 }

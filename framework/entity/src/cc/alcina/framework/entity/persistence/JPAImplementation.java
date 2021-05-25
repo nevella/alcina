@@ -35,6 +35,9 @@ import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCall
  * @author Nick Reddel
  */
 public interface JPAImplementation {
+	public static final String CONTEXT_USE_DOMAIN_QUERIES = JPAImplementation.class
+			.getName() + ".CONTEXT_USE_DOMAIN_QUERIES";
+
 	public void afterSpecificSetId(Object fromBefore) throws Exception;
 
 	/**

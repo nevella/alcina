@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.SortedSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
@@ -61,9 +62,29 @@ public class Transaction implements Comparable<Transaction> {
 		begin(TransactionPhase.TO_DOMAIN_PREPARING);
 	}
 
+	public static <T> T callInSnapshotTransaction(Callable<T> callable)
+			throws Exception {
+		Transaction preSnapshot = current();
+		Preconditions.checkNotNull(preSnapshot);
+		threadLocalInstance.set(null);
+		begin();
+		current().snapshot = true;
+		T t = callable.call();
+		end();
+		threadLocalInstance.set(preSnapshot);
+		return t;
+	}
+
 	public static int commit() {
-		int transformCount = TransformCommit.commitTransformsAsRoot();
-		return transformCount;
+		Transaction transaction = provideCurrentThreadTransaction();
+		if (transaction == null) {
+			Preconditions.checkState(!TransformManager.get().hasTransforms());
+			return 0;
+		} else {
+			Preconditions.checkState(!transaction.snapshot);
+			int transformCount = TransformCommit.commitTransformsAsRoot();
+			return transformCount;
+		}
 	}
 
 	public static int commitIfTransformCount(int n) {
@@ -227,6 +248,12 @@ public class Transaction implements Comparable<Transaction> {
 					.getCurrentThreadStacktraceSlice();
 		}
 	}
+
+	/*
+	 * Essentially run within another tx to access graph state before any
+	 * changes in the current tx were applied
+	 */
+	private boolean snapshot;
 
 	private ConcurrentHashMap<MvccObjectVersions, Transaction> resolvedMostRecentVisibleTransactions = new ConcurrentHashMap<>(
 			Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
@@ -524,21 +551,26 @@ public class Transaction implements Comparable<Transaction> {
 						endPhase);
 			}
 		}
-		if (TransformManager.get().getTransforms().size() == 0) {
-		} else {
-			// FIXME - mvcc.4 - mvcc exception
-			logger.warn("Ending transaction with uncommitted transforms: {} {}",
-					endPhase, TransformManager.get().getTransforms().size());
-		}
-		// need to do this even if transforms == 0 - to clear listeners setup
-		// during the transaction
-		// the transaction
-		//
-		try {
-			LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
-			ThreadlocalTransformManager.cast().resetTltm(null);
-		} finally {
-			LooseContext.pop();
+		if (!snapshot) {
+			if (TransformManager.get().getTransforms().size() == 0) {
+			} else {
+				// FIXME - mvcc.4 - mvcc exception
+				logger.warn(
+						"Ending transaction with uncommitted transforms: {} {}",
+						endPhase,
+						TransformManager.get().getTransforms().size());
+			}
+			// need to do this even if transforms == 0 - to clear listeners
+			// setup
+			// during the transaction
+			// the transaction
+			//
+			try {
+				LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
+				ThreadlocalTransformManager.cast().resetTltm(null);
+			} finally {
+				LooseContext.pop();
+			}
 		}
 		if (retainStartEndTraces()) {
 			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();

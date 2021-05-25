@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.MapCreator;
 import cc.alcina.framework.common.client.util.NullFriendlyComparatorWrapper;
 import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
 import cc.alcina.framework.common.client.util.trie.MultiTrie;
+import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class BaseProjectionSupportMvcc {
@@ -97,6 +98,14 @@ public class BaseProjectionSupportMvcc {
 		@Override
 		public Object get() {
 			return new TransactionalMap(Object.class, Object.class);
+		}
+	}
+
+	public static class TreeMapCreatorNonTransactional<K, V>
+			implements CollectionCreators.MapCreator<K, V> {
+		@Override
+		public Map<K, V> get() {
+			return new Object2ObjectAVLTreeMap<>();
 		}
 	}
 

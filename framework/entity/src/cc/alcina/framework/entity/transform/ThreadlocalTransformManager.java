@@ -662,6 +662,11 @@ public class ThreadlocalTransformManager extends TransformManager
 	 */
 	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
+		return newInstance(clazz, objectId, localId, false);
+	}
+
+	public <T> T newInstance(Class<T> clazz, long objectId, long localId,
+			boolean externalLocal) {
 		try {
 			if (Entity.class.isAssignableFrom(clazz)) {
 				Entity newInstance = null;
@@ -671,7 +676,10 @@ public class ThreadlocalTransformManager extends TransformManager
 							store, objectId, localId);
 					if (objectId == 0L) {
 						// created ex-store
-						store.getCache().put(newInstance);
+						if (externalLocal) {
+						} else {
+							store.getCache().put(newInstance);
+						}
 					}
 				} else {
 					newInstance = (Entity) clazz.newInstance();

@@ -152,8 +152,9 @@ public class WrappedObjectPersistence {
 	private void checkWrappedObjectAccess0(HasId wrapper, WrappedObject wrapped,
 			Class clazz) throws PermissionsException {
 		if (!PersistentSingleton.class.isAssignableFrom(clazz)
-				&& wrapped != null && wrapped.getUser()
-						.getId() != PermissionsManager.get().getUserId()) {
+				&& wrapped != null
+				&& (wrapped.getUser() == null || wrapped.getUser()
+						.getId() != PermissionsManager.get().getUserId())) {
 			if (wrapper != null) {
 				if (wrapper instanceof IVersionableOwnable) {
 					IVersionableOwnable ivo = (IVersionableOwnable) wrapper;

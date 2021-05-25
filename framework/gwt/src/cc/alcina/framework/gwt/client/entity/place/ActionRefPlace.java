@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.entity.place;
 import java.util.Optional;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
@@ -17,11 +18,13 @@ import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 public class ActionRefPlace extends BasePlace {
 	private Class<? extends ActionRef> ref;
 
-	public Class<? extends ActionRef> getRef() {
-		return this.ref;
-	}
+	private EntityLocator locator;
 
 	public ActionRefPlace() {
+	}
+
+	public ActionRefPlace(Class<? extends ActionRef> ref) {
+		this.ref = ref;
 	}
 
 	public Optional<ActionHandler> getActionHandler() {
@@ -44,8 +47,40 @@ public class ActionRefPlace extends BasePlace {
 				.getAnnotationForClass(ref, TopicBehaviour.class));
 	}
 
-	public ActionRefPlace(Class<? extends ActionRef> ref) {
+	public EntityLocator getLocator() {
+		return this.locator;
+	}
+
+	public Class<? extends ActionRef> getRef() {
+		return this.ref;
+	}
+
+	public void setLocator(EntityLocator locator) {
+		this.locator = locator;
+	}
+
+	public void setRef(Class<? extends ActionRef> ref) {
 		this.ref = ref;
+	}
+
+	@Override
+	public String toString() {
+		Ref refRef = Reflections.classLookup().getAnnotationForClass(ref,
+				Ref.class);
+		if (refRef.displayName().length() > 0) {
+			return refRef.displayName();
+		}
+		return CommonUtils.titleCase(refRef.value());
+	}
+
+	public ActionRefPlace withLocator(EntityLocator locator) {
+		setLocator(locator);
+		return this;
+	}
+
+	public ActionRefPlace withRef(Class<? extends ActionRef> ref) {
+		setRef(ref);
+		return this;
 	}
 
 	public static class ActionRefPlaceTokenizer
@@ -62,22 +97,20 @@ public class ActionRefPlace extends BasePlace {
 				return place;
 			}
 			place.ref = ActionRef.forId(parts[1]);
+			if (parts.length > 2) {
+				place.locator = EntityLocator.nonClassDependent(parts[2],
+						Long.parseLong(parts[3]));
+			}
 			return place;
 		}
 
 		@Override
 		protected void getToken0(ActionRefPlace place) {
 			addTokenPart(Reference.id(place.ref));
+			if (place.getLocator() != null) {
+				addTokenPart(place.getLocator().getEntityClassName());
+				addTokenPart(place.getLocator().getId());
+			}
 		}
-	}
-
-	@Override
-	public String toString() {
-		Ref refRef = Reflections.classLookup().getAnnotationForClass(ref,
-				Ref.class);
-		if (refRef.displayName().length() > 0) {
-			return refRef.displayName();
-		}
-		return CommonUtils.titleCase(refRef.value());
 	}
 }

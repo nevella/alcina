@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.NodeEventReceiver;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
@@ -74,6 +75,14 @@ public abstract class NodeEvent {
 	}
 
 	public static class Context {
+		public static Context newTopicContext(GwtEvent event, Node node) {
+			Context context = new Context();
+			context.gwtEvent = event;
+			context.node = node;
+			context.topicListeners = new TopicListeners();
+			return context;
+		}
+
 		public Behaviour behaviour;
 
 		public DirectedLayout.Node node;

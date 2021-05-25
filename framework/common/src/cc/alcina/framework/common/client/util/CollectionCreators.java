@@ -61,6 +61,24 @@ public class CollectionCreators {
 		}
 	}
 
+	@RegistryLocation(registryPoint = TreeMapCreator.class, implementationType = ImplementationType.INSTANCE)
+	public static class TreeMapCreator implements MapCreator {
+		public List<Class> types;
+
+		public TreeMapCreator() {
+		}
+
+		@Override
+		public Map get() {
+			return new TreeMap();
+		}
+
+		public TreeMapCreator withTypes(List<Class> types) {
+			this.types = types;
+			return this;
+		}
+	}
+
 	@RegistryLocation(registryPoint = TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE)
 	public static class TreeMapRevCreator implements MapCreator {
 		public List<Class> types;

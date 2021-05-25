@@ -29,8 +29,7 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
  *
  * @param <T>
  */
-public abstract class BaseProjection<T extends Entity>
-		implements DomainProjection<T> {
+public abstract class BaseProjection<T> implements DomainProjection<T> {
 	protected MultikeyMap<T> lookup;
 
 	protected final List<Class> types;

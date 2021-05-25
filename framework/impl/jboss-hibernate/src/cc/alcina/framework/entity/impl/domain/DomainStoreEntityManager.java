@@ -15,18 +15,21 @@ import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.Session;
 
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.persistence.JPAImplementation;
 
 public class DomainStoreEntityManager implements EntityManager {
 	public static final String ORDER_HANDLER = "orderHandler:";
 
-	public static String orderHandlerHint(Class criteriaClass) {
-		return ORDER_HANDLER + criteriaClass.getName();
+	public static boolean isUseDomainStore() {
+		return ResourceUtilities.is(DomainStoreEntityManager.class,
+				"useDomainStore")
+				|| LooseContext.is(JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);
 	}
 
-	public static boolean useDomainStore() {
-		return ResourceUtilities.is(DomainStoreEntityManager.class,
-				"useDomainStore");
+	public static String orderHandlerHint(Class criteriaClass) {
+		return ORDER_HANDLER + criteriaClass.getName();
 	}
 
 	private EntityManager delegate;
@@ -130,7 +133,7 @@ public class DomainStoreEntityManager implements EntityManager {
 	public Object getDelegate() {
 		Object subDelegate = this.delegate == null ? null
 				: this.delegate.getDelegate();
-		if (useDomainStore()) {
+		if (isUseDomainStore()) {
 			return new DomainStoreSession((Session) subDelegate);
 		} else {
 			return subDelegate;

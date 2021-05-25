@@ -856,7 +856,7 @@ public class DirectedLayout {
 					break;
 				case CSS_CLASS: {
 					if (hasTransform) {
-						element.setClassName(stringValue);
+						element.setClassName(value == null ? "" : stringValue);
 					} else {
 						boolean present = (boolean) value;
 						element.setClassName(binding.literal(), present);

@@ -29,7 +29,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.LinkModel.LinkModelRendererPrimaryClassName;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -52,6 +51,10 @@ public class LinkModel extends Model {
 
 	private String className;
 
+	private String href;
+
+	private boolean newTab;
+
 	public LinkModel() {
 	}
 
@@ -68,6 +71,10 @@ public class LinkModel extends Model {
 		return this.className;
 	}
 
+	public String getHref() {
+		return this.href;
+	}
+
 	public NonstandardObjectAction getObjectAction() {
 		return this.objectAction;
 	}
@@ -80,6 +87,10 @@ public class LinkModel extends Model {
 		return text;
 	}
 
+	public boolean isNewTab() {
+		return this.newTab;
+	}
+
 	public boolean isPrimaryAction() {
 		return this.primaryAction;
 	}
@@ -90,6 +101,14 @@ public class LinkModel extends Model {
 
 	public void setClassName(String className) {
 		this.className = className;
+	}
+
+	public void setHref(String href) {
+		this.href = href;
+	}
+
+	public void setNewTab(boolean newTab) {
+		this.newTab = newTab;
 	}
 
 	public void setObjectAction(NonstandardObjectAction objectAction) {
@@ -118,6 +137,16 @@ public class LinkModel extends Model {
 
 	public LinkModel withClassName(String className) {
 		this.className = className;
+		return this;
+	}
+
+	public LinkModel withHref(String href) {
+		this.href = href;
+		return this;
+	}
+
+	public LinkModel withNewTab(boolean newTab) {
+		this.newTab = newTab;
 		return this;
 	}
 
@@ -170,29 +199,39 @@ public class LinkModel extends Model {
 				return rendered;
 			}
 			BasePlace place = model.getPlace();
-			rendered.getElement().setAttribute("href", place.toHrefString());
-			if (place instanceof ActionRefPlace) {
-				ActionRefPlace actionRefPlace = (ActionRefPlace) place;
-				Optional<ActionHandler> actionHandler = actionRefPlace
-						.getActionHandler();
-				if (actionHandler.isPresent()) {
-					rendered.getElement().setAttribute("href", "#");
-					rendered.addDomHandler(evt -> actionHandler.get()
-							.handleAction(node, evt, actionRefPlace),
-							ClickEvent.getType());
+			if (place == null) {
+				if (model.getHref() != null) {
+					rendered.getElement().setAttribute("href", model.getHref());
 				}
-				Optional<TopicBehaviour> actionTopic = actionRefPlace
-						.getActionTopic();
-				if (actionTopic.isPresent()) {
-					rendered.addDomHandler(event -> {
-						TopicBehaviour behaviour = actionTopic.get();
-						Context context = new NodeEvent.Context();
-						context.gwtEvent = event;
-						context.node = node;
-						context.topicListeners = new TopicListeners();
-						TopicEvent.fire(context, behaviour.topic(),
-								behaviour.payloadTransformer(), null, false);
-					}, ClickEvent.getType());
+				if (model.isNewTab()) {
+					rendered.getElement().setAttribute("target", "_blank");
+				}
+			} else {
+				rendered.getElement().setAttribute("href",
+						place.toHrefString());
+				if (place instanceof ActionRefPlace) {
+					ActionRefPlace actionRefPlace = (ActionRefPlace) place;
+					Optional<ActionHandler> actionHandler = actionRefPlace
+							.getActionHandler();
+					if (actionHandler.isPresent()) {
+						rendered.getElement().setAttribute("href", "#");
+						rendered.addDomHandler(
+								evt -> actionHandler.get().handleAction(node,
+										evt, actionRefPlace),
+								ClickEvent.getType());
+					}
+					Optional<TopicBehaviour> actionTopic = actionRefPlace
+							.getActionTopic();
+					if (actionTopic.isPresent()) {
+						rendered.addDomHandler(event -> {
+							TopicBehaviour behaviour = actionTopic.get();
+							Context context = NodeEvent.Context
+									.newTopicContext(event, node);
+							TopicEvent.fire(context, behaviour.topic(),
+									behaviour.payloadTransformer(), null,
+									false);
+						}, ClickEvent.getType());
+					}
 				}
 			}
 			if (model.isPrimaryAction()) {

@@ -23,6 +23,8 @@ public class Async {
 
 		private Consumer<Throwable> failureConsumer = this::onFailure;
 
+		private Runnable completionCallback;
+
 		private Object inflightMarker;
 
 		public AsyncCallback<T> build() {
@@ -32,14 +34,21 @@ public class Async {
 			return new AsyncCallback<T>() {
 				@Override
 				public void onFailure(Throwable caught) {
-					inflight.remove(inflightMarker);
+					onComplete();
 					failureConsumer.accept(caught);
 				}
 
 				@Override
 				public void onSuccess(T result) {
-					inflight.remove(inflightMarker);
+					onComplete();
 					successConsumer.accept(result);
+				}
+
+				private void onComplete() {
+					if (completionCallback != null) {
+						completionCallback.run();
+					}
+					inflight.remove(inflightMarker);
 				}
 			};
 		}
@@ -52,6 +61,11 @@ public class Async {
 
 		public AsyncCallbackBuilder<T> success(Consumer<T> successConsumer) {
 			this.successConsumer = successConsumer;
+			return this;
+		}
+
+		public AsyncCallbackBuilder<T> withCompletion(Runnable runnable) {
+			this.completionCallback = runnable;
 			return this;
 		}
 

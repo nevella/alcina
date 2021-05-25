@@ -132,6 +132,10 @@ public class DomNode {
 		return attr(attrName).matches(regex);
 	}
 
+	public DomNode attrNode(String name) {
+		return doc.nodeFor(node.getAttributes().getNamedItem(name));
+	}
+
 	public DomNodeBuilder builder() {
 		return new DomNodeBuilder(this);
 	}

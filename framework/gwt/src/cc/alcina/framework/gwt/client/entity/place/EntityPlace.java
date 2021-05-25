@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -69,8 +70,7 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 
 	public <E extends Entity> E provideEntity() {
 		return entity != null ? (E) entity
-				: (E) TransformManager.get().getObject(provideEntityClass(), id,
-						0);
+				: (E) Domain.find(provideEntityClass(), id);
 	}
 
 	public Class<? extends Entity> provideEntityClass() {

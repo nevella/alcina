@@ -267,6 +267,15 @@ public class TransformCollation {
 					e -> e.getTransformType() == TransformType.DELETE_OBJECT);
 		}
 
+		public boolean hasNoDeleteTransform() {
+			return !hasDeleteTransform();
+		}
+
+		public boolean hasPropertyName(String name) {
+			return events.stream()
+					.anyMatch(e -> Objects.equals(e.getPropertyName(), name));
+		}
+
 		public void removeTransformsFromRequest() {
 			TransformCollation.this.removeTransformsFromRequest(this);
 		}

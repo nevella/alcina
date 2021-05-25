@@ -140,7 +140,8 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 		Loader loader = ((DomainStoreLoaderDatabase) domainStore.loader)
 				.loader();
 		loader.withClazz(clazz).withSqlFilter(sqlFilter)
-				.withPopulateLazyPropertyValues(populateLazyPropertyValues);
+				.withPopulateLazyPropertyValues(populateLazyPropertyValues)
+				.withResolveRefs(true);
 		return loader.loadEntities();
 	}
 

@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.domain;
 
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 
 /**
@@ -10,7 +9,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformCollatio
  * 
  * @param <T>
  */
-public interface DomainProjection<T extends Entity>
+public interface DomainProjection<T>
 		extends DomainListener<T>, MemoryStatProvider {
 	@Override
 	default MemoryStat addMemoryStats(MemoryStat parent) {
@@ -36,6 +35,4 @@ public interface DomainProjection<T extends Entity>
 	default boolean isIgnoreForIndexing(EntityCollation entityCollation) {
 		return false;
 	}
-	
-	
 }

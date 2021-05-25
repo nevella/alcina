@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -26,6 +27,14 @@ public class EntityLocator implements Serializable, TreeSerializable {
 
 	public static EntityLocator instanceLocator(Entity entity) {
 		return new EntityLocator(entity);
+	}
+
+	public static EntityLocator nonClassDependent(String entityClassName,
+			long id) {
+		EntityLocator entityLocator = new EntityLocator();
+		entityLocator.entityClassName = entityClassName;
+		entityLocator.id = id;
+		return entityLocator;
 	}
 
 	public static EntityLocator objectLocalLocator(DomainTransformEvent dte) {
@@ -80,6 +89,9 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	@JsonIgnore
 	public long clientInstanceId;
 
+	@JsonIgnore
+	private String entityClassName;
+
 	private transient int hash;
 
 	public EntityLocator() {
@@ -90,7 +102,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 				? (Class<? extends Entity>) Domain.resolveEntityClass(clazz)
 				: null;
 		this.id = id;
-		this.localId = localId;
+		setLocalId(localId);
 		if (id == 0) {
 			this.clientInstanceId = PermissionsManager.get()
 					.getClientInstanceId();
@@ -100,7 +112,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	private EntityLocator(Entity obj) {
 		this.clazz = obj.entityClass();
 		this.id = obj.getId();
-		this.localId = obj.getLocalId();
+		setLocalId(obj.getLocalId());
 	}
 
 	@Override
@@ -120,11 +132,21 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	}
 
 	public Class<? extends Entity> getClazz() {
+		if (!GWT.isClient() && clazz == null && entityClassName != null) {
+			clazz = Reflections.forName(entityClassName);
+		}
 		return this.clazz;
 	}
 
 	public long getClientInstanceId() {
 		return this.clientInstanceId;
+	}
+
+	public String getEntityClassName() {
+		if (this.entityClassName == null && clazz != null) {
+			entityClassName = clazz.getCanonicalName();
+		}
+		return this.entityClassName;
 	}
 
 	public long getId() {
@@ -166,6 +188,10 @@ public class EntityLocator implements Serializable, TreeSerializable {
 
 	public void setClientInstanceId(long clientInstanceId) {
 		this.clientInstanceId = clientInstanceId;
+	}
+
+	public void setEntityClassName(String entityClassName) {
+		this.entityClassName = entityClassName;
 	}
 
 	public void setId(long id) {
@@ -212,6 +238,8 @@ public class EntityLocator implements Serializable, TreeSerializable {
 			return toRecoverableString(clientInstanceId);
 		}
 		return Ax.format("%s - %s",
-				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
+				clazz == null ? entityClassName == null ? "??" : entityClassName
+						: CommonUtils.simpleClassName(clazz),
+				id);
 	}
 }

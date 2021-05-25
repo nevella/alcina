@@ -1285,7 +1285,7 @@ public class DomainStore implements IDomainStore {
 
 			@Override
 			public <V extends Entity> V find(EntityLocator locator) {
-				return storeHandler(locator.clazz).find(locator);
+				return storeHandler(locator.getClazz()).find(locator);
 			}
 
 			@Override

@@ -1070,9 +1070,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						&& itemDescriptor.provideNotFullyLoadedOnStartup()) {
 					logger.debug("Backup lazy load: {} - {}\n",
 							clazz.getSimpleName(), id);
-					loader().withClazz(clazz).withSqlFilter("id=" + id).
-					// handle cascading resolution in initialising phase
-							withResolveRefs(true).loadEntities();
+					List<Entity> entities = loader().withClazz(clazz)
+							.withSqlFilter("id=" + id).
+							// handle cascading resolution in initialising phase
+							withResolveRefs(true).withReturnResults(true)
+							.loadEntities();
+					int debug = 3;
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -2164,6 +2167,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			List<T> result = (List<T>) (List<?>) loadHasIds();
 			if (store.initialised || resolveRefs) {
 				entityRefs.resolve();
+			}
+			if (store.initialised) {
 				result.forEach(e -> store.index(e, true, null, true));
 			}
 			return result;

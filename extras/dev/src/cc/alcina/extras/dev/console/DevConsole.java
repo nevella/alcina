@@ -1013,7 +1013,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		} finally {
 			runningLastCommand = false;
 			// txs just to allow propertychangelistener removal from user
-			Transaction.begin();
+			Transaction.ensureBegun();
 			PermissionsManager.get().popUser();
 			Transaction.end();
 			LooseContext.pop();

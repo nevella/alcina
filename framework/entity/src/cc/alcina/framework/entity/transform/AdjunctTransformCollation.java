@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.transform;
 
+import java.util.concurrent.Callable;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -27,12 +29,24 @@ public class AdjunctTransformCollation extends TransformCollation {
 		this.token = transformPersistenceToken;
 	}
 
+	public <T> T callHandleDeleted(QueryResult result, Callable<T> callable) {
+		try {
+			if (result.hasDeleteTransform()) {
+				return Transaction.callInSnapshotTransaction(callable);
+			} else {
+				return callable.call();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	// this works because of transactions -
 	/*
 	 * Note that there's a chance some of these requests have already applied -
 	 * but that's harmless, as long as we drop the creation events
 	 */
-	public void ensureApplied() {
+	public AdjunctTransformCollation ensureApplied() {
 		// should only be called by local pre-commit listeners
 		Preconditions.checkState(
 				Transaction.current().isPreCommit() && token.isLocalToVm());
@@ -43,7 +57,7 @@ public class AdjunctTransformCollation extends TransformCollation {
 					&& !LooseContext.is(CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD)) {
 				// on a normal server-thread pre-commit - these transforms have
 				// already been applied to the TLTM
-				return;
+				return this;
 			}
 			ThreadlocalTransformManager tltm = ThreadlocalTransformManager
 					.cast();
@@ -63,7 +77,7 @@ public class AdjunctTransformCollation extends TransformCollation {
 								event.getObjectLocalId()) == null) {
 							Entity instance = (Entity) tltm.newInstance(
 									event.getObjectClass(), event.getObjectId(),
-									event.getObjectLocalId());
+									event.getObjectLocalId(), true);
 							token.getTargetStore().putExternalLocal(instance);
 						}
 					}
@@ -80,6 +94,7 @@ public class AdjunctTransformCollation extends TransformCollation {
 				tltm.setIgnorePropertyChanges(false);
 			}
 		}
+		return this;
 	}
 
 	@Override

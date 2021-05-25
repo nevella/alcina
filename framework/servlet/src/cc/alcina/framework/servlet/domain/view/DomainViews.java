@@ -11,6 +11,7 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
@@ -21,8 +22,10 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
@@ -124,6 +127,15 @@ public abstract class DomainViews {
 		}
 	}
 
+	public void waitForEmptyQueue() {
+		try {
+			Thread.sleep(200);
+			// can't get more naive than that now...
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	private void processLambda(ViewsTask task) {
 		HandlerData handlerData = task.handlerData;
 		try {
@@ -197,6 +209,8 @@ public abstract class DomainViews {
 					+ EntityLayerUtils.getLocalHostName());
 			while (!finished) {
 				try {
+					LooseContext.pushWithTrue(
+							JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);
 					ViewsTask task = tasks.take();
 					Transaction.begin();
 					processEvent(task);
@@ -204,6 +218,7 @@ public abstract class DomainViews {
 					e.printStackTrace();
 				} finally {
 					Transaction.ensureEnded();
+					LooseContext.pop();
 				}
 			}
 		}
@@ -211,12 +226,12 @@ public abstract class DomainViews {
 
 	private static class LiveListener implements DomainListener {
 		@Override
-		public Class<? extends Entity> getListenedClass() {
+		public Class<?> getListenedClass() {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
-		public void insert(Entity o) {
+		public void insert(Object o) {
 		}
 
 		@Override
@@ -225,7 +240,7 @@ public abstract class DomainViews {
 		}
 
 		@Override
-		public void remove(Entity o) {
+		public void remove(Object o) {
 		}
 
 		@Override
