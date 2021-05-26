@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.Job.ResourceRecord;
@@ -216,16 +215,22 @@ public class JobRegistry extends WriterService {
 	}
 
 	public Job await(Job job) throws InterruptedException {
-		ContextAwaiter awaiter = contextAwaiters.get(job);
+		return await(job, 0);
+	}
+
+	public Job await(Job job, long maxTime) throws InterruptedException {
+		ContextAwaiter awaiter = ensureAwaiter(job);
 		Transaction.commit();
-		awaiter.await();
+		awaiter.await(maxTime);
 		JobContext jobContext = activeJobs.get(job);
 		contextAwaiters.remove(job);
 		jobContext.awaitSequenceCompletion();
 		DomainStore.waitUntilCurrentRequestsProcessed();
-		// FIXME - mvcc.jobs.1a - *really* make these lazy, mr annotation
-		// you
-		return Domain.find(job);
+		return job.domain().ensurePopulated();
+	}
+
+	public ContextAwaiter ensureAwaiter(Job job) {
+		return contextAwaiters.computeIfAbsent(job, ContextAwaiter::new);
 	}
 
 	/*
@@ -679,8 +684,7 @@ public class JobRegistry extends WriterService {
 						EntityLayerObjects.get().getServerAsClientInstance());
 			}
 			if (awaiter) {
-				JobRegistry.get().contextAwaiters.put(job,
-						new ContextAwaiter());
+				JobRegistry.get().ensureAwaiter(job);
 			}
 			if (task instanceof TransientFieldTask) {
 				TransientFieldTasks.get().registerTask(job, task);
@@ -812,7 +816,10 @@ public class JobRegistry extends WriterService {
 
 		Map<String, Object> copyContext = new LinkedHashMap<>();
 
-		public ContextAwaiter() {
+		private Job job;
+
+		public ContextAwaiter(Job job) {
+			this.job = job;
 			// we don't copy permissions manager/user - since often the launcher
 			// will be triggered by a system user context (because triggered by
 			// a transaction event)
@@ -822,9 +829,16 @@ public class JobRegistry extends WriterService {
 			copyContext.putAll(LooseContext.getContext().properties);
 		}
 
-		public void await() {
+		public void await(long maxTime) {
 			try {
-				latch.await();
+				if (job.provideIsComplete()) {
+					latch.countDown();
+				}
+				if (maxTime == 0) {
+					latch.await();
+				} else {
+					latch.await(maxTime, TimeUnit.MILLISECONDS);
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

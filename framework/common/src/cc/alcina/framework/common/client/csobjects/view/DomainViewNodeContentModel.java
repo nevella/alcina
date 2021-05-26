@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -124,6 +126,8 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 
 		private Children children;
 
+		private int waitId;
+
 		// FIXME - should be a treepath ("from offest exclusive")
 		private int offset;
 
@@ -161,6 +165,10 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 			return this.treePath;
 		}
 
+		public int getWaitId() {
+			return this.waitId;
+		}
+
 		public WaitPolicy getWaitPolicy() {
 			return this.waitPolicy;
 		}
@@ -195,6 +203,10 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 
 		public void setTreePath(String treePath) {
 			this.treePath = treePath;
+		}
+
+		public void setWaitId(int waitId) {
+			this.waitId = waitId;
 		}
 
 		public void setWaitPolicy(WaitPolicy waitPolicy) {
@@ -248,6 +260,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 		}
 
 		public void setPosition(DomainTransformCommitPosition position) {
+			Preconditions.checkNotNull(position);
 			this.position = position;
 		}
 

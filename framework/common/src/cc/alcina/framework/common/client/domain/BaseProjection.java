@@ -61,6 +61,14 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 		return (MultikeyMap<T>) lookup.asMap(objects);
 	}
 
+	public List<Object> deltaReturnChanges(T t, boolean insert) {
+		if (insert) {
+			return insertReturnChanges(t);
+		} else {
+			return removeReturnChanges(t);
+		}
+	}
+
 	public <V> V first(Object... objects) {
 		return (V) CommonUtils.first(items(objects));
 	}

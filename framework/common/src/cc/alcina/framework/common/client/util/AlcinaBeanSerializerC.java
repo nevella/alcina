@@ -81,12 +81,20 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		if (type == String.class) {
 			return jsonValue.isString().stringValue();
 		}
-		if (type == Date.class) {
-			return new Date(Long.parseLong(jsonValue.isString().stringValue()));
-		}
-		if (type == Timestamp.class) {
-			return new Timestamp(
-					Long.parseLong(jsonValue.isString().stringValue()));
+		if (type == Date.class || type == Timestamp.class) {
+			String s = jsonValue.isString().stringValue();
+			if (s.contains(",")) {
+				String[] parts = s.split(",");
+				Timestamp timestamp = new Timestamp(Long.parseLong(parts[0]));
+				timestamp.setNanos(Integer.parseInt(parts[1]));
+				return timestamp;
+			} else {
+				if (type == Date.class) {
+					return new Date(Long.parseLong(s));
+				} else {
+					return new Timestamp(Long.parseLong(s));
+				}
+			}
 		}
 		if (type.isEnum()) {
 			return Enum.valueOf(type, jsonValue.isString().stringValue());
@@ -236,8 +244,13 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		if (type == Boolean.class || type == boolean.class) {
 			return JSONBoolean.getInstance((Boolean) value);
 		}
-		if (type == Date.class || type == Timestamp.class) {
+		if (type == Date.class) {
 			return new JSONString(String.valueOf(((Date) value).getTime()));
+		}
+		if (type == Timestamp.class) {
+			return new JSONString(Ax.format("%s,%s",
+					String.valueOf(((Timestamp) value).getTime()),
+					String.valueOf(((Timestamp) value).getNanos())));
 		}
 		if (value instanceof Collection) {
 			Collection c = (Collection) value;

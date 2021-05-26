@@ -116,11 +116,20 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		if (type == String.class) {
 			return o.toString();
 		}
-		if (type == Date.class) {
-			return new Date(Long.parseLong(o.toString()));
-		}
-		if (type == Timestamp.class) {
-			return new Timestamp(Long.parseLong(o.toString()));
+		if (type == Date.class || type == Timestamp.class) {
+			String s = o.toString();
+			if (s.contains(",")) {
+				String[] parts = s.split(",");
+				Timestamp timestamp = new Timestamp(Long.parseLong(parts[0]));
+				timestamp.setNanos(Integer.parseInt(parts[1]));
+				return timestamp;
+			} else {
+				if (type == Date.class) {
+					return new Date(Long.parseLong(s));
+				} else {
+					return new Timestamp(Long.parseLong(s));
+				}
+			}
 		}
 		if (type.isEnum()) {
 			return Enum.valueOf(type, o.toString());
@@ -276,9 +285,13 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		if (type == Class.class) {
 			return ((Class) value).getName();
 		}
-		// Note - timestamp (possibly) loses precision - FIXME mvcc.4
-		if (type == Date.class || type == Timestamp.class) {
-			return (String.valueOf(((Date) value).getTime()));
+		if (type == Date.class) {
+			return String.valueOf(((Date) value).getTime());
+		}
+		if (type == Timestamp.class) {
+			return Ax.format("%s,%s",
+					String.valueOf(((Timestamp) value).getTime()),
+					String.valueOf(((Timestamp) value).getNanos()));
 		}
 		if (type.isArray() && type.getComponentType() == byte.class) {
 			return Base64.encodeBytes((byte[]) value);

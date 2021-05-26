@@ -22,7 +22,12 @@ public class TreePath<T> extends Model {
 	public static TreePath absolutePath(String path) {
 		Preconditions.checkArgument(path.length() > 0);
 		TreePath<?> root = root(path.split("\\.")[0]);
-		return root.atPath(path);
+		return root.ensurePath(path);
+	}
+
+	public static String parentPath(String treePath) {
+		int lastIndex = treePath.lastIndexOf(".");
+		return lastIndex == -1 ? null : treePath.substring(0, lastIndex);
 	}
 
 	public static <T> TreePath<T> root(Object rootSegment) {
@@ -56,7 +61,8 @@ public class TreePath<T> extends Model {
 
 	public TreePath<T> addChild(Object segmentObject, int index) {
 		TreePath<T> child = new TreePath();
-		child.setSegment(asSegment(segmentObject));
+		String asSegment = asSegment(segmentObject);
+		child.setSegment(asSegment);
 		child.setParent(this);
 		child.paths = paths;
 		paths.put(child);
@@ -69,14 +75,6 @@ public class TreePath<T> extends Model {
 		return child;
 	}
 
-	public TreePath<T> atPath(String stringPath) {
-		return paths.path(stringPath);
-	}
-
-	public TreePath<T> childPath(Object segment) {
-		return atPath(toString() + "." + asSegment(segment));
-	}
-
 	public int depth() {
 		int depth = 0;
 		TreePath cursor = parent;
@@ -85,6 +83,19 @@ public class TreePath<T> extends Model {
 			cursor = cursor.parent;
 		}
 		return depth;
+	}
+
+	public TreePath<T> ensureChild(Object segment) {
+		TreePath<T> childPath = ensureChildPath(segment);
+		return childPath != null ? childPath : addChild(segment);
+	}
+
+	public TreePath<T> ensureChildPath(Object segment) {
+		return ensurePath(toString() + "." + asSegment(segment));
+	}
+
+	public TreePath<T> ensurePath(String stringPath) {
+		return paths.path(stringPath);
 	}
 
 	@Override
@@ -118,9 +129,17 @@ public class TreePath<T> extends Model {
 		return parent != null && parent.hasSelfOrAncestorMatching(predicate);
 	}
 
+	public boolean hasChildPath(Object segment) {
+		return hasPath(toString() + "." + asSegment(segment));
+	}
+
 	@Override
 	public int hashCode() {
 		return toString().hashCode();
+	}
+
+	public boolean hasPath(String stringPath) {
+		return paths.hasPath(stringPath);
 	}
 
 	public boolean hasSelfOrAncestorMatching(Predicate<TreePath<T>> predicate) {
@@ -233,6 +252,10 @@ public class TreePath<T> extends Model {
 		public Paths(TreePath root) {
 			this.root = root;
 			put(root);
+		}
+
+		public boolean hasPath(String stringPath) {
+			return byString.containsKey(stringPath);
 		}
 
 		public TreePath path(String stringPath) {

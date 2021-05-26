@@ -8,21 +8,17 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.csobjects.view.DomainView;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Transform;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.WaitPolicy;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
@@ -31,6 +27,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.servlet.domain.view.DomainViews.Key;
 
 public class LiveTree {
@@ -45,7 +42,15 @@ public class LiveTree {
 
 	private Deque<PathChange> modelChanges = new LinkedList<>();
 
-	private Map<DomainTransformCommitPosition, List<Transform>> transactionTransforms = new TreeMap<>();
+	private TreeMap<DomainTransformCommitPosition, List<Transform>> transactionTransforms = new TreeMap<>();
+
+	private Set<NodeGenerator> indexers = new LinkedHashSet<>();
+
+	private GeneratorContext generatorContext;
+
+	private List<LiveNode> modifiedNodes = new ArrayList<>();
+
+	private List<DeltaListener> deltaListeners = new ArrayList<>();
 
 	public LiveTree(Key key) {
 		earliestPosition = DomainStore.writableStore()
@@ -56,17 +61,58 @@ public class LiveTree {
 		generateTree1(key.request.getRoot().find());
 	}
 
+	public void addDeltaListener(long clientInstanceId, int waitId,
+			DomainTransformCommitPosition since, Runnable runnable) {
+		DeltaListener listener = new DeltaListener(clientInstanceId, waitId,
+				since, runnable);
+		deltaListeners.add(listener);
+	}
+
+	public void cancelChangeListeners(long clientInstanceId, int waitId) {
+		Iterator<DeltaListener> itr = deltaListeners.iterator();
+		while (itr.hasNext()) {
+			DeltaListener next = itr.next();
+			if (next.clientInstanceId == clientInstanceId
+					&& next.waitId == waitId) {
+				next.run();
+				itr.remove();
+			}
+		}
+	}
+
 	public Response generateResponse(
 			Request<? extends DomainViewSearchDefinition> request) {
 		Response response = new Response();
 		response.setClearExisting(request.getSince() == null
 				|| request.getSince().compareTo(earliestPosition) < 0);
 		response.getTransforms().addAll(requestToTransform(request));
+		response.setRequest(request);
+		response.setPosition(currentPosition);
 		return response;
 	}
 
 	public TreePath<LiveNode> getRoot() {
 		return this.root;
+	}
+
+	public boolean hasDeltasSince(DomainTransformCommitPosition since) {
+		return transactionTransforms.tailMap(since, false).entrySet().iterator()
+				.hasNext();
+	}
+
+	public void index(DomainTransformPersistenceEvent event, boolean add) {
+		if (!add) {
+			generatorContext = new GeneratorContext();
+			generatorContext.log = true;
+		}
+		indexers.forEach(g -> g.indexTransformPersistenceEvent(event,
+				generatorContext, add));
+		if (add) {
+			if (generatorContext.pathChanged.size() > 0) {
+				currentPosition = event.getPosition();
+				processEvents(generatorContext);
+			}
+		}
 	}
 
 	public List<Transform> toTransforms(TreePath<LiveNode> path) {
@@ -83,12 +129,26 @@ public class LiveTree {
 		return result;
 	}
 
+	private void checkChangeListeners() {
+		Iterator<DeltaListener> itr = deltaListeners.iterator();
+		while (itr.hasNext()) {
+			DeltaListener next = itr.next();
+			if (next.since.compareTo(currentPosition) <= 0) {
+				next.run();
+				itr.remove();
+			}
+		}
+	}
+
 	private LiveNode ensureNode(TreePath<LiveNode> path,
 			NodeGenerator<?, ?, ?> generator, Object segment) {
 		if (path.getValue() == null) {
 			LiveNode node = new LiveNode();
 			node.segment = segment;
 			node.generator = generator;
+			if (generator.isIndexer()) {
+				indexers.add(generator);
+			}
 			node.path = path;
 			path.setValue(node);
 		}
@@ -105,7 +165,8 @@ public class LiveTree {
 				.generatorFor(rootEntity);
 		change.path = ensureNode(root, rootGenerator, rootEntity).path;
 		modelChanges.add(change);
-		processEvents();
+		GeneratorContext generatorContext = new GeneratorContext();
+		processEvents(generatorContext);
 	}
 
 	/*
@@ -126,9 +187,8 @@ public class LiveTree {
 	 * 
 	 * 
 	 */
-	private void processEvents() {
+	private void processEvents(GeneratorContext context) {
 		// modelchange collation
-		GeneratorContext context = new GeneratorContext();
 		context.root = root;
 		modelChanges.forEach(context::addPathChange);
 		modelChanges.clear();
@@ -138,7 +198,7 @@ public class LiveTree {
 					Operation op = p.getValue().collateOperations();
 					return op == Operation.INSERT || op == Operation.REMOVE;
 				})).collect(Collectors.toList());
-		pathChanged.forEach(path -> path.getValue().clearCollatedOperation());
+		modifiedNodes.forEach(LiveNode::clearCollatedOperation);
 		toRemove.forEach(context::removePathChange);
 		// Phase 2 - cascade collated changes. A linked hashset can, after all,
 		// function as a FIFO queue.
@@ -164,15 +224,43 @@ public class LiveTree {
 			}
 		}
 		List<Transform> result = context.generateTransformResult();
+		modifiedNodes.forEach(LiveNode::clearContextData);
+		modifiedNodes.clear();
 		transactionTransforms.put(currentPosition, result);
+		checkChangeListeners();
 	}
 
 	private List<Transform> requestToTransform(
 			Request<? extends DomainViewSearchDefinition> request) {
-		Preconditions
-				.checkState(request.getWaitPolicy() == WaitPolicy.RETURN_NODES);
+		switch (request.getWaitPolicy()) {
+		case RETURN_NODES:
+			return requestToTransforms_returnNodes(request);
+		case WAIT_FOR_DELTAS:
+			return requestToTransforms_returnDeltas(request);
+		default:
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	private List<Transform> requestToTransforms_returnDeltas(
+			Request<? extends DomainViewSearchDefinition> request) {
+		List<List<Transform>> since = new ArrayList<>();
+		for (Entry<DomainTransformCommitPosition, List<Transform>> entry : transactionTransforms
+				.descendingMap().entrySet()) {
+			if (entry.getKey().compareTo(request.getSince()) <= 0) {
+				break;
+			}
+			since.add(entry.getValue());
+		}
+		Collections.reverse(since);
+		return since.stream().flatMap(Collection::stream)
+				.collect(Collectors.toList());
+	}
+
+	private List<Transform> requestToTransforms_returnNodes(
+			Request<? extends DomainViewSearchDefinition> request) {
 		List<Transform> result = new ArrayList<>();
-		LiveNode node = root.atPath(request.getTreePath()).getValue();
+		LiveNode node = root.ensurePath(request.getTreePath()).getValue();
 		if (node != null) {
 			switch (request.getChildren()) {
 			case IMMEDIATE_ONLY: {
@@ -247,22 +335,41 @@ public class LiveTree {
 
 		public TreeMap<Integer, Set<TreePath<LiveNode>>> depthChanged = new TreeMap<>();
 
+		boolean log = false;
+
+		public GeneratorContext() {
+		}
+
 		public TreePath<LiveNode> addChildWithGenerator(LiveNode liveNode,
 				Object discriminator, NodeGenerator<?, ?, ?> generator) {
 			PathChange change = new PathChange();
 			change.operation = Operation.INSERT;
 			TreePath<LiveNode> childPath = liveNode.path
-					.addChild(discriminator);
+					.ensureChild(discriminator);
 			change.path = ensureNode(childPath, generator, discriminator).path;
 			addPathChange(change);
 			return childPath;
 		}
 
 		public void addPathChange(PathChange change) {
-			change.path.getValue().operations.add(change.operation);
+			change.path.getValue().addOperation(change.operation);
 			pathChanged.add(change.path);
 			depthChanged.computeIfAbsent(change.path.depth(),
 					d -> new LinkedHashSet<>()).add(change.path);
+			if (log) {
+				Ax.out("tree event: %s", change);
+			}
+		}
+
+		public TreePath<LiveNode> deltaChildWithGenerator(LiveNode liveNode,
+				Object discriminator, NodeGenerator<?, ?, ?> generator,
+				boolean add) {
+			if (add) {
+				return addChildWithGenerator(liveNode, discriminator,
+						generator);
+			} else {
+				return removeChild(liveNode, discriminator);
+			}
 		}
 
 		public void dump() {
@@ -288,7 +395,6 @@ public class LiveTree {
 					transform.setIndex(liveNode.path.getInitialIndex());
 					result.add(transform);
 				}
-				liveNode.clearCollatedOperation();
 			});
 			return result;
 		}
@@ -297,9 +403,27 @@ public class LiveTree {
 			pathChanged.remove(path);
 			depthChanged.remove(path.depth(), path);
 		}
+
+		// TODO - views.1 - remove generator if removed?
+		private TreePath<LiveNode> removeChild(LiveNode liveNode,
+				Object discriminator) {
+			if (liveNode.path.hasChildPath(discriminator)) {
+				TreePath<LiveNode> childPath = liveNode.path
+						.ensureChildPath(discriminator);
+				// childPath.removeFromParent();
+				// add the remove operation, will be handled in processevents
+				PathChange change = new PathChange();
+				change.operation = Operation.REMOVE;
+				change.path = childPath.getValue().path;
+				addPathChange(change);
+				return childPath;
+			} else {
+				return null;
+			}
+		}
 	}
 
-	public static class LiveNode {
+	public class LiveNode {
 		Object segment;
 
 		TreePath<LiveNode> path;
@@ -316,6 +440,9 @@ public class LiveTree {
 
 		int currentIndex;
 
+		public LiveNode() {
+		}
+
 		public <P extends NodeGenerator> P getGenerator() {
 			return (P) generator;
 		}
@@ -330,6 +457,16 @@ public class LiveTree {
 
 		public int indexInParent() {
 			return path.provideCurrentIndex();
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s - %s - %s", path, operations, dirty);
+		}
+
+		void addOperation(Operation operation) {
+			operations.add(operation);
+			modifiedNodes.add(this);
 		}
 
 		void clearCollatedOperation() {
@@ -356,6 +493,7 @@ public class LiveTree {
 					total--;
 					break;
 				case CHANGE:
+					break;
 				default:
 					throw new IllegalArgumentException();
 				}
@@ -367,6 +505,7 @@ public class LiveTree {
 			} else {
 				collatedOperation = Operation.INSERT;
 			}
+			modifiedNodes.add(this);
 			return collatedOperation;
 		}
 
@@ -375,6 +514,9 @@ public class LiveTree {
 					.generate(segment, context);
 			dirty = viewNode == null || !GraphProjection
 					.nonTransientFieldwiseEqual(generatedNode, viewNode);
+			if (dirty) {
+				modifiedNodes.add(this);
+			}
 			viewNode = generatedNode;
 			if (dirty && path.getParent() != null) {
 				// give parents a chance to refresh if their children change
@@ -422,7 +564,14 @@ public class LiveTree {
 	public interface NodeGenerator<P extends NodeGenerator, I, O extends DomainViewNodeContentModel> {
 		public O generate(I in, GeneratorContext context);
 
+		public boolean isIndexer();
+
 		public void onTreeAddition(GeneratorContext context, LiveNode liveNode);
+
+		default void indexTransformPersistenceEvent(
+				DomainTransformPersistenceEvent event,
+				GeneratorContext generatorContext, boolean add) {
+		}
 	}
 
 	public interface RootGeneratorFactory {
@@ -441,6 +590,32 @@ public class LiveTree {
 		@Override
 		public boolean test(Object t) {
 			return true;
+		}
+	}
+
+	static class DeltaListener {
+		long clientInstanceId;
+
+		int waitId;
+
+		DomainTransformCommitPosition since;
+
+		Runnable runnable;
+
+		public DeltaListener(long clientInstanceId, int waitId,
+				DomainTransformCommitPosition since, Runnable runnable) {
+			this.clientInstanceId = clientInstanceId;
+			this.waitId = waitId;
+			this.since = since;
+			this.runnable = runnable;
+		}
+
+		public void run() {
+			try {
+				runnable.run();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
 		}
 	}
 

@@ -181,6 +181,7 @@ public class Transaction implements Comparable<Transaction> {
 		logger.debug("Joining tx - {} {} {}", transaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
+		Preconditions.checkState(provideCurrentThreadTransaction() == null);
 		transaction.threadCount.incrementAndGet();
 		threadLocalInstance.set(transaction);
 	}

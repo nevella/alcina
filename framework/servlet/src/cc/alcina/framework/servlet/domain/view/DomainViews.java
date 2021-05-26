@@ -11,9 +11,12 @@ import java.util.function.Function;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.WaitPolicy;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -47,9 +50,8 @@ public abstract class DomainViews {
 
 	protected LiveListener liveListener;
 
-	private Map<Key, LiveTree> views = new ConcurrentHashMap<>();
+	private Map<Key, LiveTree> trees = new ConcurrentHashMap<>();
 
-	@SuppressWarnings("unused")
 	private Map<DomainTransformPersistenceEvent, Transaction> preCommitTransactions = new ConcurrentHashMap<>();
 
 	private BlockingQueue<ViewsTask> tasks = new LinkedBlockingQueue<>();
@@ -68,8 +70,8 @@ public abstract class DomainViews {
 		if (isIndexableTransformRequest(e)) {
 			ViewsTask task = new ViewsTask();
 			addTaskLock.lock();
-			// preCommitTransactions.put(e,
-			// Transaction.createSnapshotTransaction());
+			preCommitTransactions.put(e,
+					Transaction.createSnapshotTransaction());
 		}
 	};
 
@@ -78,9 +80,10 @@ public abstract class DomainViews {
 		if (isIndexableTransformRequest(e)) {
 			ViewsTask task = new ViewsTask();
 			task.type = Type.MODEL_CHANGE;
-			// task.modelChange.preCommit = preCommitTransactions.get(e);
-			// task.modelChange.postCommit = Transaction
-			// .createSnapshotTransaction();
+			task.modelChange.preCommit = preCommitTransactions.get(e);
+			task.modelChange.event = e;
+			task.modelChange.postCommit = Transaction
+					.createSnapshotTransaction();
 			tasks.add(task);
 			addTaskLock.unlock();
 		}
@@ -139,9 +142,10 @@ public abstract class DomainViews {
 	private void processLambda(ViewsTask task) {
 		HandlerData handlerData = task.handlerData;
 		try {
+			Transaction.end();
 			Transaction.join(handlerData.transaction);
 			Key key = new Key(handlerData.request);
-			LiveTree view = views.computeIfAbsent(key, LiveTree::new);
+			LiveTree view = trees.computeIfAbsent(key, LiveTree::new);
 			task.handlerData.lambdaResult = task.handlerData.lambda.apply(view);
 		} catch (RuntimeException e) {
 			handlerData.exception = e;
@@ -153,19 +157,52 @@ public abstract class DomainViews {
 
 	private void processRequest(ViewsTask task) {
 		HandlerData handlerData = task.handlerData;
+		boolean awaitingTask = false;
 		try {
+			Transaction.end();
 			Transaction.join(handlerData.transaction);
 			Key key = new Key(handlerData.request);
-			LiveTree view = views.computeIfAbsent(key, LiveTree::new);
-			handlerData.response = view.generateResponse(handlerData.request);
-			handlerData.response.setRequest(handlerData.request);
-			handlerData.response
-					.setPosition(Transaction.current().getPosition());
+			LiveTree tree = trees.get(key);
+			if (handlerData.request
+					.getWaitPolicy() == WaitPolicy.CANCEL_WAITS) {
+				if (tree == null) {
+					return;
+				} else {
+					tree.cancelChangeListeners(handlerData.clientInstanceId,
+							handlerData.request.getWaitId());
+				}
+				return;
+			}
+			if (handlerData.request
+					.getWaitPolicy() == WaitPolicy.WAIT_FOR_DELTAS) {
+				Preconditions.checkNotNull(handlerData.request.getSince());
+			}
+			// if waitpolicy == wait_for_deltas but tree does not exist or
+			// already has deltas, fall straight through
+			if (handlerData.request
+					.getWaitPolicy() == WaitPolicy.WAIT_FOR_DELTAS
+					&& tree != null
+					&& !tree.hasDeltasSince(handlerData.request.getSince())) {
+				LiveTree f_tree = tree;
+				tree.addDeltaListener(handlerData.clientInstanceId,
+						handlerData.request.getWaitId(),
+						handlerData.request.getSince(), () -> {
+							handlerData.response = f_tree
+									.generateResponse(handlerData.request);
+							task.latch.countDown();
+						});
+				awaitingTask = true;
+				return;
+			}
+			tree = trees.computeIfAbsent(key, LiveTree::new);
+			handlerData.response = tree.generateResponse(handlerData.request);
 		} catch (RuntimeException e) {
 			handlerData.exception = e;
 		} finally {
 			Transaction.end();
-			task.latch.countDown();
+			if (!awaitingTask) {
+				task.latch.countDown();
+			}
 		}
 	}
 
@@ -180,10 +217,15 @@ public abstract class DomainViews {
 	void processEvent(ViewsTask task) {
 		switch (task.type) {
 		case MODEL_CHANGE:
-			// Transaction.join(task.modelChange.preCommit);
-			// Transaction.end();
-			// Transaction.join(task.modelChange.postCommit);
-			// Transaction.end();
+			Transaction.end();
+			Transaction.join(task.modelChange.preCommit);
+			trees.values()
+					.forEach(tree -> tree.index(task.modelChange.event, false));
+			Transaction.end();
+			Transaction.join(task.modelChange.postCommit);
+			trees.values()
+					.forEach(tree -> tree.index(task.modelChange.event, true));
+			Transaction.end();
 			break;
 		// throw new UnsupportedOperationException();
 		case HANDLE_PATH_REQUEST:
@@ -297,6 +339,8 @@ public abstract class DomainViews {
 		}
 
 		static class HandlerData {
+			public long clientInstanceId;
+
 			public Function<LiveTree, Object> lambda;
 
 			public Object lambdaResult;
@@ -311,6 +355,8 @@ public abstract class DomainViews {
 		}
 
 		static class ModelChange {
+			public DomainTransformPersistenceEvent event;
+
 			Transaction preCommit;
 
 			Transaction postCommit;

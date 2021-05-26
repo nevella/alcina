@@ -19,7 +19,7 @@ public class Async {
 		private Consumer<T> successConsumer = t -> {
 		};
 
-		private boolean cancelledInflight = false;
+		private boolean cancelledBecauseExistingInflight = false;
 
 		private Consumer<Throwable> failureConsumer = this::onFailure;
 
@@ -28,7 +28,7 @@ public class Async {
 		private Object inflightMarker;
 
 		public AsyncCallback<T> build() {
-			if (cancelledInflight) {
+			if (cancelledBecauseExistingInflight) {
 				return new CancelledCallback();
 			}
 			return new AsyncCallback<T>() {
@@ -71,7 +71,7 @@ public class Async {
 
 		public AsyncCallbackBuilder<T> withInflight(Object object) {
 			this.inflightMarker = object;
-			cancelledInflight = !inflight.add(object);
+			cancelledBecauseExistingInflight = !inflight.add(object);
 			return this;
 		}
 

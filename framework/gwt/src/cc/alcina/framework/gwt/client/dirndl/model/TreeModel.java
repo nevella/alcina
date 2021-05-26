@@ -6,7 +6,9 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Transform;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.WaitPolicy;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -34,8 +36,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.CodeTopic;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.DomainViewNodeModel.Generator;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.LabelClicked;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.ToggleButtonClicked;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.SelectionChanged;
 
 @Directed(tag = "div", cssClass = "dl-tree", bindings = {
 		@Binding(from = "hideRoot", type = Type.CSS_CLASS, literal = "hide-root") }, behaviours = {
@@ -43,6 +45,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.ToggleBut
 				@Behaviour(event = TopicEvent.class, topics = @TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviourType.RECEIVE)),
 				@Behaviour(handler = EmitTopicHandler.class, event = TopicEvent.class, topics = {
 						@TopicBehaviour(topic = CodeTopic.class, type = TopicBehaviourType.RECEIVE),
+						@TopicBehaviour(topic = SelectionChanged.class, type = TopicBehaviourType.EMIT),
 						@TopicBehaviour(topic = SelectionChanged.class, type = TopicBehaviourType.EMIT), }) })
 public class TreeModel<NM extends NodeModel<NM>> extends Model
 		implements NodeEvent.Handler {
@@ -97,6 +100,9 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 	protected void loadChildren(NM model) {
 	}
 
+	public static class ChildrenLoaded extends NodeTopic {
+	}
+
 	public static class DomainViewNodeModel
 			extends NodeModel<DomainViewNodeModel> {
 		private DomainViewNodeContentModel<?> node;
@@ -111,7 +117,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			if (parent == null) {
 				treePath = TreePath.absolutePath(path);
 			} else {
-				treePath = parent.treePath.atPath(path);
+				treePath = parent.treePath.ensurePath(path);
 			}
 			treePath.setValue(this);
 		}
@@ -119,7 +125,8 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		public DomainViewNodeModel ensureNode(
 				DomainViewNodeContentModel valueModel, String path,
 				int initialIndex, boolean fireCollectionModificationEvents) {
-			TreePath<DomainViewNodeModel> otherTreePath = treePath.atPath(path);
+			TreePath<DomainViewNodeModel> otherTreePath = treePath
+					.ensurePath(path);
 			if (otherTreePath.getValue() == null) {
 				DomainViewNodeModel parent = otherTreePath.getParent() == null
 						? null
@@ -185,7 +192,8 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			}
 			switch (operation) {
 			case INSERT:
-				if (initialIndex == newValue.size()) {
+				// FIXME - should never be gt, klar
+				if (initialIndex >= newValue.size()) {
 					newValue.add(model);
 				} else {
 					newValue.add(initialIndex, model);
@@ -253,8 +261,14 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 		private boolean depthFirst;
 
+		private DomainViewNodeContentModel.Response lastResponse;
+
 		public Generator getGenerator() {
 			return this.generator;
+		}
+
+		public DomainViewNodeContentModel.Response getLastResponse() {
+			return this.lastResponse;
 		}
 
 		public boolean isDepthFirst() {
@@ -305,8 +319,38 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			this.generator = generator;
 		}
 
-		protected void apply(Transform transform,
-				boolean fireCollectionModificationEvents) {
+		public void setLastResponse(
+				DomainViewNodeContentModel.Response lastResponse) {
+			DomainViewNodeContentModel.Response old_lastResponse = this.lastResponse;
+			this.lastResponse = lastResponse;
+			propertyChangeSupport().firePropertyChange("lastResponse",
+					old_lastResponse, lastResponse);
+		}
+
+		protected void apply(Transform transform, WaitPolicy waitPolicy) {
+			boolean fireCollectionModificationEvents = waitPolicy == WaitPolicy.WAIT_FOR_DELTAS;
+			if (waitPolicy == WaitPolicy.WAIT_FOR_DELTAS) {
+				// don't apply delta transforms if outside the visible tree
+				switch (transform.getOperation()) {
+				case REMOVE:
+				case CHANGE:
+					if (!getRoot().getTreePath()
+							.hasPath(transform.getTreePath())) {
+						return;
+					}
+					break;
+				case INSERT:
+					if (!getRoot().getTreePath()
+							.hasPath(transform.getTreePath())) {
+						// TODO - if predecessor doesn't exist, ignore
+						if (!getRoot().getTreePath().hasPath(
+								TreePath.parentPath(transform.getTreePath()))) {
+							return;
+						}
+					}
+					break;
+				}
+			}
 			DomainViewNodeModel node = getRoot().ensureNode(transform.getNode(),
 					transform.getTreePath(), transform.getIndex(),
 					fireCollectionModificationEvents);
@@ -325,26 +369,42 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				handleResponse(DomainViewNodeContentModel.Response response) {
 			DomainViewNodeModel root = null;
 			DomainViewNodeModel target = null;
+			// TODO - handle interrupt/fail
+			if (response == null) {
+				Response lastResponse = getLastResponse();
+				setLastResponse(response);
+				setLastResponse(lastResponse);
+				return;
+			}
 			Request<?> request = response.getRequest();
 			// TODO - iterate through transactions => only last one is 'replace'
 			String requestPath = response.getRequest().getTreePath();
 			root = (DomainViewNodeModel) getRoot();
 			root.putTree(this);
-			DomainViewNodeContentModel rootModel = response.getTransforms()
-					.isEmpty() ? null
-							: response.getTransforms().get(0).getNode();
-			target = root.ensureNode(rootModel, requestPath, -1, false);
+			if (requestPath != null) {
+				DomainViewNodeContentModel rootModel = response.getTransforms()
+						.isEmpty() ? null
+								: response.getTransforms().get(0).getNode();
+				target = root.ensureNode(rootModel, requestPath, -1, false);
+			}
+			// TODO - requestPath ....hmmm, if switching backends, probably just
+			// do a redraw/open to ...
 			if (response.getTransforms().isEmpty()) {
 				// no children - request path has been removed in a prior tx
-				return;
+			} else {
+				response.getTransforms()
+						.forEach(t -> this.apply(t, request.getWaitPolicy()));
+				// delta children at the end to generate visual nodes after node
+				// tree complete
+				if (requestPath != null) {
+					target.setChildren(
+							new IdentityArrayList<>(target.getChildren()));
+				}
+				if (openingToPath != null) {
+					openToPath(null);
+				}
 			}
-			response.getTransforms().forEach(t -> this.apply(t, false));
-			// delta children at the end to generate visual nodes after node
-			// tree complete
-			target.setChildren(new IdentityArrayList<>(target.getChildren()));
-			if (openingToPath != null) {
-				openToPath(null);
-			}
+			setLastResponse(response);
 		}
 	}
 
@@ -504,10 +564,10 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			}
 		}
 
-		public static class SelectionChanged extends NodeTopic {
-		}
-
 		public static class ToggleButtonClicked extends NodeTopic {
 		}
+	}
+
+	public static class SelectionChanged extends NodeTopic {
 	}
 }
