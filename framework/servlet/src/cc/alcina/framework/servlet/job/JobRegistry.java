@@ -51,8 +51,10 @@ import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
@@ -137,7 +139,9 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
  * @author nick@alcina.cc
  *
  */
-@RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON)
+@RegistryLocations({
+		@RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON),
+		@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class) })
 public class JobRegistry {
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";
@@ -145,16 +149,25 @@ public class JobRegistry {
 	public static final String TRANSFORM_QUEUE_NAME = JobRegistry.class
 			.getName();
 
+	private static JobRegistry instance = null;
+
 	public static Builder createBuilder() {
 		return new Builder();
 	}
 
 	public static JobRegistry get() {
-		return Registry.impl(JobRegistry.class);
+		if (instance == null) {
+			instance = Registry.impl(JobRegistry.class);
+		}
+		return instance;
 	}
 
 	public static boolean isActiveInstance(ClientInstance instance) {
 		return get().jobExecutors.getActiveServers().contains(instance);
+	}
+
+	public static boolean isInitialised() {
+		return instance != null;
 	}
 
 	private static void checkAnnotatedPermissions(Object o) {
