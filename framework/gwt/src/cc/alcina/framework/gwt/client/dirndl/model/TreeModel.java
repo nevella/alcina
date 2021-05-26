@@ -124,7 +124,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 		public DomainViewNodeModel ensureNode(
 				DomainViewNodeContentModel valueModel, String path,
-				int initialIndex, boolean fireCollectionModificationEvents) {
+				String beforePath, boolean fireCollectionModificationEvents) {
 			TreePath<DomainViewNodeModel> otherTreePath = treePath
 					.ensurePath(path);
 			if (otherTreePath.getValue() == null) {
@@ -137,7 +137,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				DomainViewNodeModel model = generator.generate(valueModel,
 						parent, path);
 				if (parent != null) {
-					parent.modifyChildren(Operation.INSERT, initialIndex, model,
+					parent.modifyChildren(Operation.INSERT, beforePath, model,
 							fireCollectionModificationEvents);
 				}
 				otherTreePath.setValue(model);
@@ -163,15 +163,13 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 		public void removeFromParent() {
 			if (getParent() != null) {
-				getParent().modifyChildren(Operation.REMOVE, -1, this, true);
+				getParent().modifyChildren(Operation.REMOVE, null, this, true);
 			}
 			setParent(null);
 		}
 
 		public void setNode(DomainViewNodeContentModel<?> node) {
 			this.node = node;
-			DomainViewTreeModel treeModel = getTreePath()
-					.provideContainingTree();
 			constructLabel(node);
 			getLabel().setTitle(node.getTitle());
 			setLeaf(node.isLeaf());
@@ -183,7 +181,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 					getChildren().size());
 		}
 
-		private void modifyChildren(Operation operation, int initialIndex,
+		private void modifyChildren(Operation operation, String beforePath,
 				DomainViewNodeModel model,
 				boolean fireCollectionModificationEvents) {
 			List<NodeModel<DomainViewNodeModel>> newValue = getChildren();
@@ -192,11 +190,19 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			}
 			switch (operation) {
 			case INSERT:
-				// FIXME - should never be gt, klar
-				if (initialIndex >= newValue.size()) {
+				int index = newValue.size();
+				if (beforePath != null) {
+					if (model.getTreePath().hasPath(beforePath)) {
+						TreePath<DomainViewNodeModel> beforeTreePath = model
+								.getTreePath().ensurePath(beforePath);
+						index = beforeTreePath.getParent().getChildren()
+								.indexOf(beforeTreePath);
+					}
+				}
+				if (index == newValue.size()) {
 					newValue.add(model);
 				} else {
-					newValue.add(initialIndex, model);
+					newValue.add(index, model);
 				}
 				break;
 			case REMOVE:
@@ -352,7 +358,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				}
 			}
 			DomainViewNodeModel node = getRoot().ensureNode(transform.getNode(),
-					transform.getTreePath(), transform.getIndex(),
+					transform.getTreePath(), transform.getBeforePath(),
 					fireCollectionModificationEvents);
 			switch (transform.getOperation()) {
 			case INSERT:
@@ -376,6 +382,9 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				setLastResponse(lastResponse);
 				return;
 			}
+			if (response.isNoChangeListener()) {
+				return;
+			}
 			Request<?> request = response.getRequest();
 			// TODO - iterate through transactions => only last one is 'replace'
 			String requestPath = response.getRequest().getTreePath();
@@ -385,7 +394,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				DomainViewNodeContentModel rootModel = response.getTransforms()
 						.isEmpty() ? null
 								: response.getTransforms().get(0).getNode();
-				target = root.ensureNode(rootModel, requestPath, -1, false);
+				target = root.ensureNode(rootModel, requestPath, null, false);
 			}
 			// TODO - requestPath ....hmmm, if switching backends, probably just
 			// do a redraw/open to ...

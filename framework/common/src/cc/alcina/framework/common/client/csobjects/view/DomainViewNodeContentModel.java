@@ -18,8 +18,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-public abstract class DomainViewNodeContentModel<E extends Entity>
-		extends Model {
+public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
+		implements Comparable<DomainViewNodeContentModel<E>> {
 	private String name;
 
 	private String publicationText;
@@ -27,6 +27,13 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 	private String title;
 
 	private transient E entity;
+
+	private transient String __comparatorString;
+
+	@Override
+	public int compareTo(DomainViewNodeContentModel o) {
+		return comparatorString().compareTo(o.comparatorString());
+	}
 
 	public abstract Class<E> entityClass();
 
@@ -73,9 +80,38 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 		this.title = title;
 	}
 
+	@Override
+	public String toString() {
+		return Ax.format("%s :: %s", getClass().getSimpleName(),
+				comparatorString());
+	}
+
 	public <DV extends DomainViewNodeContentModel<E>> DV withEntity(E entity) {
 		setEntity(entity);
 		return (DV) this;
+	}
+
+	private String comparatorString() {
+		if (__comparatorString == null) {
+			__comparatorString = comparatorString0();
+			if (__comparatorString != null) {
+				__comparatorString = __comparatorString.toLowerCase();
+			}
+		}
+		return __comparatorString;
+	}
+
+	protected String comparatorString0() {
+		if (title != null) {
+			return title;
+		}
+		if (name != null) {
+			return name;
+		}
+		if (publicationText != null) {
+			return publicationText;
+		}
+		return null;
 	}
 
 	@ClientInstantiable
@@ -231,6 +267,11 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 
 		private Request<?> request;
 
+		private boolean noChangeListener;
+
+		public Response() {
+		}
+
 		public int getChildCount() {
 			return this.childCount;
 		}
@@ -251,12 +292,20 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 			return this.clearExisting;
 		}
 
+		public boolean isNoChangeListener() {
+			return this.noChangeListener;
+		}
+
 		public void setChildCount(int childCount) {
 			this.childCount = childCount;
 		}
 
 		public void setClearExisting(boolean clearExisting) {
 			this.clearExisting = clearExisting;
+		}
+
+		public void setNoChangeListener(boolean noChangeListener) {
+			this.noChangeListener = noChangeListener;
 		}
 
 		public void setPosition(DomainTransformCommitPosition position) {
@@ -287,10 +336,10 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 
 		private DomainViewNodeContentModel node;
 
-		private int index;
+		private String beforePath;
 
-		public int getIndex() {
-			return this.index;
+		public String getBeforePath() {
+			return this.beforePath;
 		}
 
 		public DomainViewNodeContentModel getNode() {
@@ -305,8 +354,8 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 			return this.treePath;
 		}
 
-		public void setIndex(int index) {
-			this.index = index;
+		public void setBeforePath(String beforePath) {
+			this.beforePath = beforePath;
 		}
 
 		public void setNode(DomainViewNodeContentModel node) {
@@ -323,7 +372,9 @@ public abstract class DomainViewNodeContentModel<E extends Entity>
 
 		@Override
 		public String toString() {
-			return Ax.format("%s [%s] %s %s", treePath, index, operation,
+			String before = beforePath == null ? ""
+					: Ax.format("[<<%s] ", beforePath);
+			return Ax.format("%s %s%s %s", treePath, before, operation,
 					node.getClass().getSimpleName());
 		}
 	}

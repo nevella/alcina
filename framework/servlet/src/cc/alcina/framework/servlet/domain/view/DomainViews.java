@@ -165,6 +165,9 @@ public abstract class DomainViews {
 			LiveTree tree = trees.get(key);
 			if (handlerData.request
 					.getWaitPolicy() == WaitPolicy.CANCEL_WAITS) {
+				handlerData.response = new Response();
+				handlerData.response.setRequest(handlerData.request);
+				handlerData.response.setNoChangeListener(true);
 				if (tree == null) {
 					return;
 				} else {
@@ -184,13 +187,7 @@ public abstract class DomainViews {
 					&& tree != null
 					&& !tree.hasDeltasSince(handlerData.request.getSince())) {
 				LiveTree f_tree = tree;
-				tree.addDeltaListener(handlerData.clientInstanceId,
-						handlerData.request.getWaitId(),
-						handlerData.request.getSince(), () -> {
-							handlerData.response = f_tree
-									.generateResponse(handlerData.request);
-							task.latch.countDown();
-						});
+				tree.addChangeListener(task);
 				awaitingTask = true;
 				return;
 			}
@@ -352,6 +349,8 @@ public abstract class DomainViews {
 			public Request<? extends DomainViewSearchDefinition> request;
 
 			public Transaction transaction;
+
+			public boolean noChangeListeners;
 		}
 
 		static class ModelChange {

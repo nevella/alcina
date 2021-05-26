@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 
@@ -41,7 +42,7 @@ public class TreePath<T> extends Model {
 
 	private TreePath<T> parent;
 
-	private transient List<TreePath<T>> children = new ArrayList<>();
+	private transient List<TreePath<T>> children;
 
 	private transient String cached;
 
@@ -49,29 +50,21 @@ public class TreePath<T> extends Model {
 
 	private String segment = "";
 
-	private int initialIndex;
-
 	// Should only be used by serialization
 	public TreePath() {
 	}
 
 	public TreePath<T> addChild(Object segmentObject) {
+		ensureChildren();
 		return addChild(segmentObject, children.size());
 	}
 
 	public TreePath<T> addChild(Object segmentObject, int index) {
+		ensureChildren();
 		TreePath<T> child = new TreePath();
 		String asSegment = asSegment(segmentObject);
 		child.setSegment(asSegment);
-		child.setParent(this);
-		child.paths = paths;
-		paths.put(child);
-		if (index == children.size()) {
-			children.add(child);
-		} else {
-			children.add(index, child);
-		}
-		child.setInitialIndex(index);
+		addChildPath(index, child);
 		return child;
 	}
 
@@ -105,11 +98,8 @@ public class TreePath<T> extends Model {
 
 	@AlcinaTransient
 	public List<TreePath<T>> getChildren() {
+		ensureChildren();
 		return this.children;
-	}
-
-	public int getInitialIndex() {
-		return this.initialIndex;
 	}
 
 	public TreePath<T> getParent() {
@@ -131,6 +121,10 @@ public class TreePath<T> extends Model {
 
 	public boolean hasChildPath(Object segment) {
 		return hasPath(toString() + "." + asSegment(segment));
+	}
+
+	public boolean hasChildren() {
+		return children != null && children.size() > 0;
 	}
 
 	@Override
@@ -157,20 +151,33 @@ public class TreePath<T> extends Model {
 		return (CT) paths.containingTree;
 	}
 
-	public int provideCurrentIndex() {
-		if (parent == null) {
-			return 0;
-		} else {
-			return parent.getChildren().indexOf(this);
-		}
-	}
-
 	public boolean provideIsEmpty() {
 		return toString().isEmpty();
 	}
 
+	public String provideSuccessorPath() {
+		if (getParent() == null) {
+			return null;
+		}
+		List<TreePath<T>> children = getParent().ensureChildren();
+		Preconditions.checkState(children instanceof SortedChildren);
+		SortedChildren<T> sortedChildren = (SortedChildren<T>) children;
+		TreePath<T> successor = sortedChildren.successor(this);
+		return successor == null ? null : successor.toString();
+	}
+
+	public void putSortedChildren() {
+		paths.childListCreator = () -> new SortedChildren();
+	}
+
 	public void putTree(Object containingTree) {
 		paths.putTree(containingTree);
+	}
+
+	public void reinsertInParent() {
+		TreePath<T> parent = getParent();
+		removeFromParent();
+		parent.addChildPath(parent.getChildren().size(), this);
 	}
 
 	public void removeFromParent() {
@@ -187,10 +194,6 @@ public class TreePath<T> extends Model {
 		this.children = children;
 	}
 
-	public void setInitialIndex(int initialIndex) {
-		this.initialIndex = initialIndex;
-	}
-
 	public void setParent(TreePath parent) {
 		this.parent = parent;
 	}
@@ -203,6 +206,12 @@ public class TreePath<T> extends Model {
 		T old_value = this.value;
 		this.value = value;
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
+	}
+
+	public void sortChildren() {
+		Preconditions.checkState(children instanceof SortedChildren);
+		SortedChildren<T> sortedChildren = (SortedChildren<T>) children;
+		sortedChildren.reSort();
 	}
 
 	@Override
@@ -218,6 +227,17 @@ public class TreePath<T> extends Model {
 	public TreePath withSegment(Object object) {
 		segment = asSegment(object);
 		return this;
+	}
+
+	private void addChildPath(int index, TreePath<T> child) {
+		child.setParent(this);
+		child.paths = paths;
+		paths.put(child);
+		if (index == children.size()) {
+			children.add(child);
+		} else {
+			children.add(index, child);
+		}
 	}
 
 	private String asSegment(Object object) {
@@ -237,6 +257,13 @@ public class TreePath<T> extends Model {
 		}
 	}
 
+	private List<TreePath<T>> ensureChildren() {
+		if (children == null) {
+			children = paths.createChildList();
+		}
+		return children;
+	}
+
 	@ClientInstantiable
 	public static enum Operation {
 		INSERT, REMOVE, CHANGE;
@@ -249,9 +276,15 @@ public class TreePath<T> extends Model {
 
 		Object containingTree;
 
+		Supplier<List> childListCreator = () -> new ArrayList();
+
 		public Paths(TreePath root) {
 			this.root = root;
 			put(root);
+		}
+
+		public List createChildList() {
+			return childListCreator.get();
 		}
 
 		public boolean hasPath(String stringPath) {
@@ -288,6 +321,10 @@ public class TreePath<T> extends Model {
 		 */
 		public void putTree(Object containingTree) {
 			this.containingTree = containingTree;
+		}
+
+		public void setChildListCreator(Supplier<List> childListCreator) {
+			this.childListCreator = childListCreator;
 		}
 
 		void put(TreePath path) {
