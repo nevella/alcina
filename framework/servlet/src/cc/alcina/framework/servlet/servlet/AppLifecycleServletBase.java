@@ -139,9 +139,14 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	@Override
 	public void destroy() {
 		try {
+			if (usesJobs()) {
+				Transaction.begin();
+				JobRegistry.get().stopService();
+				Transaction.end();
+			}
 			getStatusNotifier().destroyed();
-			Transactions.shutdown();
 			BackendTransformQueue.get().stop();
+			Transactions.shutdown();
 			Registry.appShutdown();
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();

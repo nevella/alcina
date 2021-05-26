@@ -80,7 +80,6 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
-import cc.alcina.framework.servlet.servlet.control.WriterService;
 
 /**
  * <h2>Overview</h2>
@@ -139,7 +138,7 @@ import cc.alcina.framework.servlet.servlet.control.WriterService;
  *
  */
 @RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON)
-public class JobRegistry extends WriterService {
+public class JobRegistry {
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";
 
@@ -324,11 +323,6 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
-	@Override
-	public void startService() {
-	}
-
-	@Override
 	public void stopService() {
 		stopped = true;
 		scheduler.stopService();
