@@ -4,6 +4,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
@@ -103,6 +104,14 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			tokenString = tokenString.substring(1);
 		}
 		return tokenString;
+	}
+
+	public void removeTokenizer(Predicate<BasePlaceTokenizer> matcher) {
+		tokenizersByModelClass.entrySet()
+				.removeIf(e -> matcher.test(e.getValue()));
+		tokenizersByPlace.entrySet().removeIf(e -> matcher.test(e.getValue()));
+		tokenizersByPrefix.values()
+				.forEach(l -> l.removeIf(tokenizer -> matcher.test(tokenizer)));
 	}
 
 	private synchronized void ensurePlaceLookup() {
