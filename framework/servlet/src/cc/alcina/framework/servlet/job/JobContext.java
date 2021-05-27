@@ -47,6 +47,9 @@ public class JobContext {
 	private static final String CONTEXT_EX_JOB_RESOURCES = JobContext.class
 			.getName() + ".CONTEXT_EX_JOB_RESOURCES";
 
+	public static final String CONTEXT_KNOWN_OUTSIDE_JOB = JobContext.class
+			.getName() + ".CONTEXT_KNOWN_OUTSIDE_JOB";
+
 	public static void acquireResource(JobResource resource) {
 		if (has()) {
 			JobRegistry.get().acquireResource(get().getJob(), resource);
@@ -110,8 +113,12 @@ public class JobContext {
 
 	public static void info(String template, Object... args) {
 		if (get() == null) {
-			Ax.out("Called JobContext.info() outside job - %s %s", template,
-					Arrays.asList(args));
+			String message = Ax.format(template.replace("{}", "%"), args);
+			if (LooseContext.is(CONTEXT_KNOWN_OUTSIDE_JOB)) {
+				Ax.out(message);
+			} else {
+				Ax.out("Called JobContext.info() outside job - %s", message);
+			}
 		} else {
 			get().getLogger().info(template, args);
 		}

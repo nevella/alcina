@@ -713,6 +713,9 @@ public class GraphProjection {
 		if (dumpProjectionStats && context != null) {
 			contextStats.add(context.toPoint());
 		}
+		if (dataFilter != null && dataFilter.retainOriginal(source)) {
+			return source;
+		}
 		if (projected == null) {
 			if (sourceClass.isArray()) {
 				projected = (T) Array.newInstance(
@@ -999,7 +1002,19 @@ public class GraphProjection {
 						"java.util.Collections$UnmodifiableRandomAccessList")) {
 					return (T) new ArrayList();
 				}
-				Constructor ctor = sourceClass.getConstructor(new Class[] {});
+				Constructor ctor = null;
+				Class cursor = sourceClass;
+				while (cursor != Object.class) {
+					Optional<Constructor> zeroArgs = Arrays
+							.stream(cursor.getDeclaredConstructors())
+							.filter(c -> c.getParameterCount() == 0)
+							.findFirst();
+					if (zeroArgs.isPresent()) {
+						ctor = zeroArgs.get();
+						break;
+					}
+					cursor = cursor.getSuperclass();
+				}
 				ctor.setAccessible(true);
 				constructorLookup.put(sourceClass, ctor);
 				if (dumpProjectionStats) {
@@ -1190,6 +1205,10 @@ public class GraphProjection {
 
 		<T> boolean projectIntoCollection(T value, T projected,
 				GraphProjectionContext context);
+
+		default <T> boolean retainOriginal(T original) {
+			return false;
+		}
 	}
 
 	public static interface GraphProjectionDualFilter

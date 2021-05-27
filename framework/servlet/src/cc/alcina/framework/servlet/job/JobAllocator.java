@@ -473,10 +473,16 @@ class JobAllocator {
 								}
 							}
 						}
+					} catch (Exception e) {
+						logger.warn("Exception in allocator");
+						logger.warn("Trace: ", e);
+						e.printStackTrace();
 					} finally {
 						Transaction.ensureEnded();
 					}
 				} catch (Exception e) {
+					logger.warn("Exception in allocator (outer)");
+					logger.warn("Trace: ", e);
 					e.printStackTrace();
 				}
 			}

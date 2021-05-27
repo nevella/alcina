@@ -96,6 +96,8 @@ public class Transactions {
 				// TODO - possibly optimise (app level 'in warmup')
 				// although - doesn't warmup write fields, not via setters? In
 				// which case this isn't called in warmup?
+				// FIXME - mvcc.5 - yep, setters (so resolve) shouldn't be
+				// called _at_all during warmup. Precondition me
 				if (transaction.isBaseTransaction() || (versions != null
 						&& transaction == versions.initialWriteableTransaction)) {
 					return t;

@@ -58,6 +58,10 @@ public class AbstractParserSlice<T extends ParserToken> {
 		this.startOffsetInRun = startOffsetInRun;
 	}
 
+	// for projection
+	protected AbstractParserSlice() {
+	}
+
 	public String cleanedContents() {
 		if (cachedContents == null) {
 			cachedContents = SEUtilities.normalizeWhitespace(contents()).trim();

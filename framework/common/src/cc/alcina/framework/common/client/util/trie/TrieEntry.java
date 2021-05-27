@@ -27,7 +27,8 @@ public class TrieEntry<K, V> implements Map.Entry<K, V> {
 
 	private transient int hashCode = 0;
 
-	protected TrieEntry() {
+	// public for serialization
+	public TrieEntry() {
 	}
 
 	protected TrieEntry(K key, V value, int bitIndex) {

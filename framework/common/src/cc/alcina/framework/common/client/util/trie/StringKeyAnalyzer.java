@@ -37,12 +37,9 @@ public class StringKeyAnalyzer extends AbstractKeyAnalyzer<String>
 	public static final StringKeyAnalyzer BYTE = new StringKeyAnalyzer(
 			Byte.SIZE);
 
-	@Deprecated
-	public static final StringKeyAnalyzer INSTANCE = CHAR;
+	private int size;
 
-	private final int size;
-
-	private final int msb;
+	private int msb;
 
 	private StringKeyAnalyzer(int size) {
 		this(size, 1 << size - 1);
@@ -51,47 +48,6 @@ public class StringKeyAnalyzer extends AbstractKeyAnalyzer<String>
 	private StringKeyAnalyzer(int size, int msb) {
 		this.size = size;
 		this.msb = msb;
-	}
-
-	/**
-	 * Returns a bit mask where the given bit is set
-	 */
-	private int mask(int bit) {
-		return msb >>> bit;
-	}
-
-	/**
-	 * Returns the {@code char} at the given index.
-	 */
-	private char valueAt(String value, int index) {
-		if (index < value.length()) {
-			char ch = value.charAt(index);
-			if (size == Byte.SIZE) {
-				ch &= 0xFF;
-			}
-			return ch;
-		}
-		return 0;
-	}
-
-	@Override
-	public int lengthInBits(String key) {
-		return key.length() * size;
-	}
-
-	@Override
-	public boolean isBitSet(String key, int bitIndex) {
-		if (bitIndex >= lengthInBits(key)) {
-			return false;
-		}
-		int index = (int) (bitIndex / size);
-		int bit = (int) (bitIndex % size);
-		return (key.charAt(index) & mask(bit)) != 0;
-	}
-
-	@Override
-	public boolean isPrefix(String key, String prefix) {
-		return key.startsWith(prefix);
 	}
 
 	@Override
@@ -119,5 +75,46 @@ public class StringKeyAnalyzer extends AbstractKeyAnalyzer<String>
 		}
 		// Both keys are equal
 		return KeyAnalyzer.EQUAL_BIT_KEY;
+	}
+
+	@Override
+	public boolean isBitSet(String key, int bitIndex) {
+		if (bitIndex >= lengthInBits(key)) {
+			return false;
+		}
+		int index = (int) (bitIndex / size);
+		int bit = (int) (bitIndex % size);
+		return (key.charAt(index) & mask(bit)) != 0;
+	}
+
+	@Override
+	public boolean isPrefix(String key, String prefix) {
+		return key.startsWith(prefix);
+	}
+
+	@Override
+	public int lengthInBits(String key) {
+		return key.length() * size;
+	}
+
+	/**
+	 * Returns a bit mask where the given bit is set
+	 */
+	private int mask(int bit) {
+		return msb >>> bit;
+	}
+
+	/**
+	 * Returns the {@code char} at the given index.
+	 */
+	private char valueAt(String value, int index) {
+		if (index < value.length()) {
+			char ch = value.charAt(index);
+			if (size == Byte.SIZE) {
+				ch &= 0xFF;
+			}
+			return ch;
+		}
+		return 0;
 	}
 }
