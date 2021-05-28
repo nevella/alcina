@@ -40,6 +40,11 @@ public class Mvcc {
 		return entity instanceof MvccObject;
 	}
 
+	public static boolean isVisible(Entity e) {
+		MvccObjectVersions versions = ((MvccObject) e).__getMvccVersions__();
+		return versions == null || versions.hasVisibleVersion();
+	}
+
 	public static Class<? extends HasId>
 			resolveEntityClass(Class<? extends HasId> clazz) {
 		if (MvccObject.class.isAssignableFrom(clazz)) {

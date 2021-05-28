@@ -21,6 +21,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.InvariantOnceCreated;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
@@ -47,6 +48,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	private static transient final Object NULL_KEY_MARKER = new Object();
 
 	private static transient final Object REMOVED_VALUE_MARKER = new Object();
+
+	static Logger logger = LoggerFactory.getLogger(TransactionalTreeMap.class);
 
 	protected Class<K> keyClass;
 
@@ -275,10 +278,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	private K unwrapTransactionalKey(Object key) {
 		return key == NULL_KEY_MARKER ? null : (K) key;
-	}
-
-	protected void beforeVacuumEntity(Entity entity) {
-		// for sorted subclass (which requires a valid verrsion)
 	}
 
 	protected Map createConcurrentMap() {
@@ -664,13 +663,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			synchronized (this) {
 				if (getSize() == 0 && visibleAllTransactions
 						.get() == REMOVED_VALUE_MARKER) {
-					/*
-					 * handle objects that have no transaction visible to this
-					 * vacuuming tx.
-					 */
-					if (key instanceof Entity) {
-						TransactionalMap.this.beforeVacuumEntity((Entity) key);
-					}
 					if (!nonConcurrent.containsKey(key)) {
 						/*
 						 * Note that this only affects objects not loaded in the
@@ -790,6 +782,43 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			}
 			if (o2 == NULL_KEY_MARKER) {
 				o2 = null;
+			}
+			if (o1 instanceof Entity) {
+				Entity entity = (Entity) o1;
+				MvccObjectVersions mvccVersions = ((MvccObject) entity)
+						.__getMvccVersions__();
+				// there's no easy way to get rid of unreachable entities in the
+				// sortedmap - but given they should be invariant we just use
+				// their while-alive values
+				if (mvccVersions != null
+						&& mvccVersions.hasNoVisibleTransaction()) {
+					if (entity instanceof InvariantOnceCreated) {
+						if (entity.getId() == 0) {
+							mvccVersions.resolveInvariantToDomainIdentity();
+						}
+					} else {
+						logger.warn(
+								"Cpr unreachable access - non invariant entity - {}",
+								entity.getClass().getSimpleName());
+					}
+				}
+			}
+			if (o2 instanceof Entity) {
+				Entity entity = (Entity) o2;
+				MvccObjectVersions mvccVersions = ((MvccObject) entity)
+						.__getMvccVersions__();
+				if (mvccVersions != null
+						&& mvccVersions.hasNoVisibleTransaction()) {
+					if (entity instanceof InvariantOnceCreated) {
+						if (entity.getId() == 0) {
+							mvccVersions.resolveInvariantToDomainIdentity();
+						}
+					} else {
+						logger.warn(
+								"Cpr unreachable access - non invariant entity - {}",
+								entity.getClass().getSimpleName());
+					}
+				}
 			}
 			return comparator.compare((K) o1, (K) o2);
 		}

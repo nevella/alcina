@@ -399,7 +399,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
-	void beforeInvariantVacuum() {
+	void resolveInvariantToDomainIdentity() {
 		Transaction transaction = Transaction.current();
 		ObjectVersion<T> version = new ObjectVersion<>();
 		version.object = domainIdentity;
@@ -411,6 +411,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	boolean hasNoVisibleTransaction() {
 		return resolve(false) == null;
+	}
+
+	boolean hasVisibleVersion() {
+		return resolve(false) != null;
 	}
 
 	T resolve(boolean write) {
