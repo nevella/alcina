@@ -21,7 +21,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.InvariantOnceCreated;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
@@ -276,6 +275,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	private K unwrapTransactionalKey(Object key) {
 		return key == NULL_KEY_MARKER ? null : (K) key;
+	}
+
+	protected void beforeVacuumEntity(Entity entity) {
+		// for sorted subclass (which requires a valid verrsion)
 	}
 
 	protected Map createConcurrentMap() {
@@ -666,16 +669,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 					 * vacuuming tx.
 					 */
 					if (key instanceof Entity) {
-						Entity entity = (Entity) key;
-						if (entity instanceof InvariantOnceCreated) {
-							if (entity.getId() == 0) {
-								((MvccObject) entity).__getMvccVersions__()
-										.beforeInvariantVacuum();
-							}
-						} else {
-							logger.warn("Vacuum non invariant entity - {}",
-									entity.getClass().getSimpleName());
-						}
+						TransactionalMap.this.beforeVacuumEntity((Entity) key);
 					}
 					if (!nonConcurrent.containsKey(key)) {
 						/*

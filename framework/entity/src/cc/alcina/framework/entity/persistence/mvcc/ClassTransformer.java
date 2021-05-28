@@ -1108,7 +1108,7 @@ class ClassTransformer {
 							continue;
 						}
 						/*
-						 * id is only set on the base version - ditto localId
+						 * id is only set on the domain identity - ditto localId
 						 */
 						if (method.getName()
 								.matches("getId|setId|getLocalId|setLocalId")) {

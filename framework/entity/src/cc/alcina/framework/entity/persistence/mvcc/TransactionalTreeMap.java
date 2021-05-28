@@ -7,12 +7,19 @@ import java.util.NavigableSet;
 import java.util.SortedMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.InvariantOnceCreated;
 import it.unimi.dsi.fastutil.longs.Long2BooleanAVLTreeMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 
 public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 		implements NavigableMap<K, V> {
+	static Logger logger = LoggerFactory.getLogger(TransactionalTreeMap.class);
+
 	public TransactionalTreeMap(Class<K> keyClass, Class<V> valueClass,
 			Comparator<K> comparator) {
 		super(keyClass, valueClass, comparator);
@@ -142,6 +149,22 @@ public class TransactionalTreeMap<K, V> extends TransactionalMap<K, V>
 	@Override
 	public NavigableMap<K, V> tailMap(K fromKey, boolean inclusive) {
 		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected void beforeVacuumEntity(Entity entity) {
+		MvccObjectVersions mvccVersions = ((MvccObject) entity)
+				.__getMvccVersions__();
+		if (mvccVersions != null && mvccVersions.hasNoVisibleTransaction()) {
+			if (entity instanceof InvariantOnceCreated) {
+				if (entity.getId() == 0) {
+					mvccVersions.beforeInvariantVacuum();
+				}
+			} else {
+				logger.warn("Vacuum non invariant entity - {}",
+						entity.getClass().getSimpleName());
+			}
+		}
 	}
 
 	@Override

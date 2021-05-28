@@ -1,7 +1,9 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -407,6 +409,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		updateCached(transaction, domainIdentity, true);
 	}
 
+	boolean hasNoVisibleTransaction() {
+		return resolve(false) == null;
+	}
+
 	T resolve(boolean write) {
 		Transaction transaction = Transaction.current();
 		T resolved = resolve0(transaction, write);
@@ -460,5 +466,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			((MvccObject) version.object).__setMvccVersions__(this);
 			super.putVersion(version);
 		}
+	}
+
+	static class Node {
+		List<Node> children = new ArrayList<>();
+
+		String name;
 	}
 }
