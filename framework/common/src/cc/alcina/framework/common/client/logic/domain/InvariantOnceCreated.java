@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.persistence.mvcc;
+package cc.alcina.framework.common.client.logic.domain;
 
 /**
  * Marker interface to allow entities to be keys of tx maps (since vacuum of
