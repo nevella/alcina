@@ -103,7 +103,7 @@ class Vacuum {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.warn("Vacuum exception", new MvccException(e));
+			logger.warn("DEVEX-1 - Vacuum exception", new MvccException(e));
 		} finally {
 			Transaction.end();
 		}
