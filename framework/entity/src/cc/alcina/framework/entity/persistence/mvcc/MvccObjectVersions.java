@@ -397,6 +397,16 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
+	void beforeInvariantVacuum() {
+		Transaction transaction = Transaction.current();
+		ObjectVersion<T> version = new ObjectVersion<>();
+		version.object = domainIdentity;
+		version.transaction = transaction;
+		version.writeable = true;
+		versions.put(transaction, version);
+		updateCached(transaction, domainIdentity, true);
+	}
+
 	T resolve(boolean write) {
 		Transaction transaction = Transaction.current();
 		T resolved = resolve0(transaction, write);

@@ -658,15 +658,32 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		public void vacuum(VacuumableTransactions vacuumableTransactions) {
 			super.vacuum(vacuumableTransactions);
 			synchronized (this) {
-				if (getSize() == 0
-						&& visibleAllTransactions.get() == REMOVED_VALUE_MARKER
-						&& !nonConcurrent.containsKey(key)) {
+				if (getSize() == 0 && visibleAllTransactions
+						.get() == REMOVED_VALUE_MARKER) {
 					/*
-					 * Note that this only affects objects not loaded in the
-					 * base transaction - but that's generally exactly (viz
-					 * lazy-loaded objects) what we'd want to vacuum anyway
+					 * handle objects that have no transaction visible to this
+					 * vacuuming tx.
 					 */
-					concurrent.remove(wrapTransactionalKey(key));
+					if (key instanceof Entity) {
+						Entity entity = (Entity) key;
+						if (entity instanceof InvariantOnceCreated) {
+							if (entity.getId() == 0) {
+								((MvccObject) entity).__getMvccVersions__()
+										.beforeInvariantVacuum();
+							}
+						} else {
+							logger.warn("Vacuum non invariant entity - {}",
+									entity.getClass().getSimpleName());
+						}
+					}
+					if (!nonConcurrent.containsKey(key)) {
+						/*
+						 * Note that this only affects objects not loaded in the
+						 * base transaction - but that's generally exactly (viz
+						 * lazy-loaded objects) what we'd want to vacuum anyway
+						 */
+						concurrent.remove(wrapTransactionalKey(key));
+					}
 				}
 			}
 		}
