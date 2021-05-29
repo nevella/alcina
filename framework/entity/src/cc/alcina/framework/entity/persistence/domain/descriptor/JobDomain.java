@@ -522,12 +522,19 @@ public class JobDomain {
 
 		private void checkFireToProcessing(Job job) {
 			if (job == this.job && !firedToProcessing) {
-				switch (job.resolveState()) {
-				case PROCESSING:
-				case COMPLETED:
-					firedToProcessing = true;
-					publish(EventType.TO_PROCESSING);
-					break;
+				try {
+					switch (job.resolveState()) {
+					case PROCESSING:
+					case COMPLETED:
+						firedToProcessing = true;
+						publish(EventType.TO_PROCESSING);
+						break;
+					}
+				} catch (Exception e) {
+					logger.warn(
+							"DEVEX-0 - Fire to processing of (probably) non-visible job - {}",
+							job.getId());
+					e.printStackTrace();
 				}
 			}
 		}
