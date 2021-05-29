@@ -303,7 +303,11 @@ class JobAllocator {
 				// FIXME - mvcc.jobs.1a - allocate in batches (i.e.
 				// 30...let drain to 10...again)
 				if (maxAllocatable > 0) {
-					if (queue.getUnallocatedJobs()
+					long incompleteAllocated = queue
+							.getIncompleteAllocatedJobCountForCurrentPhaseThisVm();
+					// FIXME - incompleteAllocated should never approach 30 -
+					// but it does...
+					if (incompleteAllocated < 30 && queue.getUnallocatedJobs()
 							.anyMatch(this::isAllocatable)) {
 						ExecutorService executorService = executionConstraints
 								.getExecutorServiceProvider()
@@ -327,7 +331,9 @@ class JobAllocator {
 								} else {
 									j.setState(JobState.ALLOCATED);
 									j.setPerformer(ClientInstance.self());
-									logger.debug("Allocated job {}", j);
+									logger.debug(
+											"Allocated job {} - queue {}/{}", j,
+											queue.job, queue.currentPhase);
 									lastAllocated = System.currentTimeMillis();
 								}
 							});
