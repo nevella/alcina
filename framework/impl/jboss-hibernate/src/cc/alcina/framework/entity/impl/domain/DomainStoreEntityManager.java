@@ -15,6 +15,9 @@ import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.Session;
 
+import cc.alcina.framework.common.client.search.OrderCriterion;
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -22,14 +25,23 @@ import cc.alcina.framework.entity.persistence.JPAImplementation;
 public class DomainStoreEntityManager implements EntityManager {
 	public static final String ORDER_HANDLER = "orderHandler:";
 
+	public static final String CRITERION_HANDLER = "criterionHandler:";
+
+	public static String criterionHandlerHint(SearchCriterion searchCriterion) {
+		return CRITERION_HANDLER
+				+ FlatTreeSerializer.serializeElided(searchCriterion);
+	}
+
 	public static boolean isUseDomainStore() {
 		return ResourceUtilities.is(DomainStoreEntityManager.class,
 				"useDomainStore")
-				|| LooseContext.is(JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);
+				|| LooseContext
+						.is(JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);
 	}
 
-	public static String orderHandlerHint(Class criteriaClass) {
-		return ORDER_HANDLER + criteriaClass.getName();
+	public static String orderHandlerHint(OrderCriterion orderCriterion) {
+		return ORDER_HANDLER
+				+ FlatTreeSerializer.serializeElided(orderCriterion);
 	}
 
 	private EntityManager delegate;

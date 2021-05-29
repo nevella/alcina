@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import java.util.Comparator;
+
 /**
  * 
  * @author Nick Reddel
@@ -29,5 +31,10 @@ public class OrderCriterion extends SearchCriterion {
 	@Override
 	public OrderCriterion withDirection(Direction direction) {
 		return (OrderCriterion) super.withDirection(direction);
+	}
+
+	public Comparator reverseIfDescending(Comparator cmp) {
+		return getDirection() == Direction.DESCENDING ? cmp.reversed()
+				: cmp;
 	}
 }

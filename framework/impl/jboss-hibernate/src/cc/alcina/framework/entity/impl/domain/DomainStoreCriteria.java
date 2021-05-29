@@ -21,6 +21,7 @@ import org.hibernate.transform.ResultTransformer;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.Ax;
 
 @SuppressWarnings("deprecation")
@@ -173,16 +174,16 @@ public class DomainStoreCriteria implements Criteria {
 	@Override
 	public Criteria createCriteria(String associationPath, String alias,
 			JoinType joinType) throws HibernateException {
-		associationPath = cleanAssociationPath(associationPath);
 		Criteria subCriteria = this.entityManagerCriteria == null ? null
 				: this.entityManagerCriteria.createCriteria(associationPath,
 						alias);
-		Class subClazz = Reflections.classLookup()
-				.getPropertyReflector(clazz, associationPath).getPropertyType();
+		PropertyReflector propertyReflector = Reflections.classLookup()
+				.getPropertyReflector(clazz,
+						cleanAssociationPath(associationPath));
+		Class subClazz = propertyReflector.getPropertyType();
 		if (Set.class.isAssignableFrom(subClazz)) {
-			subClazz = Reflections.classLookup()
-					.getPropertyReflector(clazz, associationPath)
-					.getAnnotation(Association.class).implementationClass();
+			subClazz = propertyReflector.getAnnotation(Association.class)
+					.implementationClass();
 		}
 		DomainStoreCriteria newCriteria = new DomainStoreCriteria(subClazz,
 				alias, associationPath, subCriteria, joinType,

@@ -23,6 +23,7 @@ import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Distinct;
 import org.hibernate.criterion.InExpression;
 import org.hibernate.criterion.NotExpression;
+import org.hibernate.criterion.NotNullExpression;
 import org.hibernate.criterion.NullExpression;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.ProjectionList;
@@ -34,15 +35,18 @@ import org.hibernate.transform.ResultTransformer;
 import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.search.OrderCriterion;
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
@@ -167,10 +171,22 @@ public class DomainStoreQueryTranslator {
 	private void handleHints(DomainStoreCriteria criteria) {
 		for (String hint : criteria.hints) {
 			if (hint.startsWith(DomainStoreEntityManager.ORDER_HANDLER)) {
-				String className = hint.substring(
+				String payload = hint.substring(
 						DomainStoreEntityManager.ORDER_HANDLER.length());
-				Registry.impl(OrderHandler.class,
-						Reflections.forName(className)).addOrder(query);
+				OrderCriterion criterion = FlatTreeSerializer
+						.deserialize(payload);
+				Registry.impl(OrderHandler.class, criterion.getClass())
+						.addOrder(criterion, query);
+			} else if (hint
+					.startsWith(DomainStoreEntityManager.CRITERION_HANDLER)) {
+				String payload = hint.substring(
+						DomainStoreEntityManager.CRITERION_HANDLER.length());
+				SearchCriterion criterion = FlatTreeSerializer
+						.deserialize(payload);
+				String className = hint.substring(
+						DomainStoreEntityManager.CRITERION_HANDLER.length());
+				Registry.impl(CriterionHandler.class, criterion.getClass())
+						.addFilter(criterion, query);
 			} else {
 				throw new UnsupportedOperationException();
 			}
@@ -255,6 +271,10 @@ public class DomainStoreQueryTranslator {
 		}
 	}
 
+	public interface CriterionHandler<E extends Entity, T extends SearchCriterion> {
+		void addFilter(T criterion, DomainStoreQuery<E> query);
+	}
+
 	@RegistryLocation(registryPoint = CriterionTranslator.class)
 	public abstract static class CriterionTranslator<C extends Criterion> {
 		FieldHelper fieldHelper = new FieldHelper();
@@ -337,6 +357,25 @@ public class DomainStoreQueryTranslator {
 		}
 	}
 
+	public static class NotNullTranslator
+			extends CriterionTranslator<NotNullExpression> {
+		@Override
+		protected Class<NotNullExpression> getHandledClass() {
+			return NotNullExpression.class;
+		}
+
+		@Override
+		protected DomainFilter handle(NotNullExpression criterion,
+				DomainStoreCriteria domainStoreCriteria,
+				DomainStoreQueryTranslator translator)
+				throws NotHandledException {
+			String propertyName = translator.translatePropertyPath(criterion,
+					domainStoreCriteria,
+					getStringFieldValue(criterion, "propertyName"));
+			return new DomainFilter(propertyName, null, FilterOperator.NE);
+		}
+	}
+
 	public static class NotTranslator
 			extends CriterionTranslator<NotExpression> {
 		@Override
@@ -375,8 +414,8 @@ public class DomainStoreQueryTranslator {
 		}
 	}
 
-	public interface OrderHandler {
-		void addOrder(DomainStoreQuery query);
+	public interface OrderHandler<T extends OrderCriterion> {
+		void addOrder(T criterion, DomainStoreQuery query);
 	}
 
 	public static class SimpleExpressionTranslator
