@@ -29,6 +29,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import it.unimi.dsi.fastutil.Hash;
 
@@ -93,6 +94,10 @@ public class Transaction implements Comparable<Transaction> {
 		} else {
 			return 0;
 		}
+	}
+
+	public static DomainTransformLayerWrapper commitReturnResults() {
+		return TransformCommit.commitTransforms(null, true, true);
 	}
 
 	/*

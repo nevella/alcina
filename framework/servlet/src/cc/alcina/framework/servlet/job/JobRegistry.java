@@ -311,6 +311,10 @@ public class JobRegistry {
 		return threadDataWaiter.queriedJobs;
 	}
 
+	public boolean isActiveCreator(Job job) {
+		return jobExecutors.getActiveServers().contains(job.getCreator());
+	}
+
 	/*
 	 * Awaits completion of the task and any sequential (cascaded) tasks
 	 */
