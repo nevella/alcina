@@ -173,6 +173,7 @@ public class DomainStoreCriteria implements Criteria {
 	@Override
 	public Criteria createCriteria(String associationPath, String alias,
 			JoinType joinType) throws HibernateException {
+		associationPath = cleanAssociationPath(associationPath);
 		Criteria subCriteria = this.entityManagerCriteria == null ? null
 				: this.entityManagerCriteria.createCriteria(associationPath,
 						alias);
@@ -345,5 +346,14 @@ public class DomainStoreCriteria implements Criteria {
 	@Override
 	public Object uniqueResult() throws HibernateException {
 		return this.entityManagerCriteria.uniqueResult();
+	}
+
+	private String cleanAssociationPath(String associationPath) {
+		if (parent == null && alias != null && associationPath.startsWith(alias)
+				&& associationPath.charAt(alias.length()) == '.') {
+			return associationPath.substring(alias.length() + 1);
+		} else {
+			return associationPath;
+		}
 	}
 }

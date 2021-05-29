@@ -254,13 +254,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return nonConcurrent.size();
 		} else {
 			int fromSizeMeta = sizeMetadata.resolve(false).get();
-			if (fromSizeMeta == -1) {
-				if (nonConcurrent.size() < 1000) {
-					logger.warn("DEVEX-01 - illegal size");
-					return (int) entrySet().stream().count();
-				} else {
-					throw new IllegalStateException();
-				}
+			if (fromSizeMeta < 0) {
+				logger.warn("DEVEX-01 - illegal size");
 			}
 			return fromSizeMeta;
 		}
@@ -583,6 +578,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		public void delta(int delta) {
 			int result = resolve(true).addAndGet(delta);
+			if (result < 0) {
+				int debug = 3;
+			}
 		}
 
 		@Override
@@ -599,7 +597,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		@Override
 		protected AtomicInteger
 				initialAllTransactionsValueFor(AtomicInteger t) {
-			return new AtomicInteger(0);
+			/*
+			 * All txs begin with the size of the nonconcurrent map
+			 */
+			return new AtomicInteger(t.get());
 		}
 
 		@Override
