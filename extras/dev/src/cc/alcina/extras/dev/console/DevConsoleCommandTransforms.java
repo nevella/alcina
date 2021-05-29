@@ -514,6 +514,10 @@ public class DevConsoleCommandTransforms {
 			@Override
 			public String getFilter(String value) {
 				value = CommonUtils.isNullOrEmpty(value) ? "-1" : value;
+				if (value.contains("/")) {
+					return Ax.format("ci.id=%s AND dtr.requestId=%s",
+							value.split("/")[0], value.split("/")[1]);
+				}
 				return String.format(
 						value.contains(",") ? "ci.id in (%s)" : "ci.id=%s",
 						value);
