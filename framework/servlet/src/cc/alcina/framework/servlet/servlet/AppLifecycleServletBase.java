@@ -198,6 +198,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		} catch (Throwable e) {
 			Ax.out("Exception in lifecycle servlet init");
 			e.printStackTrace();
+			getStatusNotifier().failed();
 			throw new ServletException(e);
 		} finally {
 			initServletConfig = null;
