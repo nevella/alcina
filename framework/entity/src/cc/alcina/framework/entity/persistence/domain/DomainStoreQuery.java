@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.persistence.domain;
 
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -14,6 +15,11 @@ public class DomainStoreQuery<V extends Entity> extends DomainQuery<V> {
 	public DomainStoreQuery(Class<V> entityClass, DomainStore store) {
 		super(entityClass);
 		this.store = store;
+	}
+
+	public Predicate<V> asFilter() {
+		return v -> getFilters().stream()
+				.allMatch(f -> f.asCollectionFilter().allow(v));
 	}
 
 	@Override

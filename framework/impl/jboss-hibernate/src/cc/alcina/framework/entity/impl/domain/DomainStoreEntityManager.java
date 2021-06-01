@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreQuery;
 
 public class DomainStoreEntityManager implements EntityManager {
 	public static final String ORDER_HANDLER = "orderHandler:";
@@ -45,6 +46,8 @@ public class DomainStoreEntityManager implements EntityManager {
 	}
 
 	private EntityManager delegate;
+
+	private DomainStoreQuery lastQuery;
 
 	public DomainStoreEntityManager(EntityManager delegate) {
 		this.delegate = delegate;
@@ -146,7 +149,7 @@ public class DomainStoreEntityManager implements EntityManager {
 		Object subDelegate = this.delegate == null ? null
 				: this.delegate.getDelegate();
 		if (isUseDomainStore()) {
-			return new DomainStoreSession((Session) subDelegate);
+			return new DomainStoreSession(this, (Session) subDelegate);
 		} else {
 			return subDelegate;
 		}
@@ -160,6 +163,10 @@ public class DomainStoreEntityManager implements EntityManager {
 	@Override
 	public FlushModeType getFlushMode() {
 		return this.delegate.getFlushMode();
+	}
+
+	public DomainStoreQuery getLastQuery() {
+		return lastQuery;
 	}
 
 	@Override
@@ -246,6 +253,10 @@ public class DomainStoreEntityManager implements EntityManager {
 	@Override
 	public void setFlushMode(FlushModeType arg0) {
 		this.delegate.setFlushMode(arg0);
+	}
+
+	public void setLastQuery(DomainStoreQuery lastQuery) {
+		this.lastQuery = lastQuery;
 	}
 
 	@Override

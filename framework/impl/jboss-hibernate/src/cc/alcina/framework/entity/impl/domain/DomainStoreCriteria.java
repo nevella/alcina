@@ -222,7 +222,11 @@ public class DomainStoreCriteria implements Criteria {
 	@Override
 	public List list() throws HibernateException {
 		try {
-			return new DomainStoreQueryTranslator().list(this);
+			DomainStoreQueryTranslator translator = new DomainStoreQueryTranslator();
+			List list = translator.list(this);
+			domainStoreSession.getDomainStoreEntityManager()
+					.setLastQuery(translator.query);
+			return list;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new HibernateException(ex);
