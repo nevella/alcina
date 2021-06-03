@@ -99,6 +99,10 @@ public abstract class DomainViews {
 		thread.start();
 	}
 
+	public void clearTrees() {
+		trees.clear();
+	}
+
 	// does *not* run on the DTR eventqueue thread
 	public Response handleRequest(
 			Request<? extends DomainViewSearchDefinition> request) {

@@ -141,4 +141,8 @@ public class DomainTransformLayerWrapper implements Serializable {
 				? DomainTransformPersistenceEventType.COMMIT_OK
 				: DomainTransformPersistenceEventType.COMMIT_ERROR;
 	}
+
+	public void snapshotEntityLocatorMap() {
+		locatorMap = locatorMap.copy();
+	}
 }

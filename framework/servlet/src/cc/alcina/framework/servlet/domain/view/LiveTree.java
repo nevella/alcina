@@ -140,7 +140,7 @@ public class LiveTree {
 	}
 
 	private LiveNode ensureNode(TreePath<LiveNode> path,
-			NodeGenerator<?, ?, ?> generator, Object segment) {
+			NodeGenerator<?, ?> generator, Object segment) {
 		if (path.getValue() == null) {
 			LiveNode node = new LiveNode();
 			node.segment = segment;
@@ -161,7 +161,7 @@ public class LiveTree {
 		change.operation = Operation.INSERT;
 		RootGeneratorFactory rootGeneratorFactory = Registry
 				.impl(RootGeneratorFactory.class);
-		NodeGenerator<?, ? extends DomainView, ?> rootGenerator = rootGeneratorFactory
+		NodeGenerator<? extends DomainView, ?> rootGenerator = rootGeneratorFactory
 				.generatorFor(rootEntity);
 		change.path = ensureNode(root, rootGenerator, rootEntity).path;
 		modelChanges.add(change);
@@ -349,7 +349,7 @@ public class LiveTree {
 		}
 
 		public TreePath<LiveNode> addChildWithGenerator(LiveNode liveNode,
-				Object discriminator, NodeGenerator<?, ?, ?> generator) {
+				Object discriminator, NodeGenerator<?, ?> generator) {
 			PathChange change = new PathChange();
 			change.operation = Operation.INSERT;
 			TreePath<LiveNode> childPath = liveNode.path
@@ -367,7 +367,7 @@ public class LiveTree {
 		}
 
 		public TreePath<LiveNode> deltaChildWithGenerator(LiveNode liveNode,
-				Object discriminator, NodeGenerator<?, ?, ?> generator,
+				Object discriminator, NodeGenerator<?, ?> generator,
 				boolean add) {
 			if (add) {
 				return addChildWithGenerator(liveNode, discriminator,
@@ -575,7 +575,7 @@ public class LiveTree {
 	}
 
 	// <P,I,N> -- Parent, Input segment object, Output node
-	public interface NodeGenerator<P extends NodeGenerator, I, O extends DomainViewNodeContentModel> {
+	public interface NodeGenerator<I, O extends DomainViewNodeContentModel> {
 		public O generate(I in, GeneratorContext context);
 
 		public boolean isIndexer();
@@ -589,7 +589,7 @@ public class LiveTree {
 	}
 
 	public interface RootGeneratorFactory {
-		NodeGenerator<?, ? extends DomainView, ?>
+		NodeGenerator<? extends DomainView, ?>
 				generatorFor(DomainView rootEntity);
 	}
 

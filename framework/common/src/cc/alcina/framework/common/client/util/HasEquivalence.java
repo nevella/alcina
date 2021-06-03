@@ -342,8 +342,10 @@ public interface HasEquivalence<T> {
 		public static <T extends Entity & HasEquivalenceHash> void
 				mergeTransforms(Collection<T> existing,
 						Collection<T> generated) {
-			ThreeWaySetResult<T> split = threeWaySplit(existing, generated);
-			split.firstOnly.forEach(Entity::delete);
+			// compare in order (generated,existing) so the intersection will be
+			// the generated objects (for which we remove transforms)
+			ThreeWaySetResult<T> split = threeWaySplit(generated, existing);
+			split.secondOnly.forEach(Entity::delete);
 			TransformManager.get()
 					.removeTransformsForObjects(split.intersection);
 		}

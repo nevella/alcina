@@ -103,9 +103,18 @@ public class BaseProjectionSupportMvcc {
 
 	public static class TreeMapCreatorNonTransactional<K, V>
 			implements CollectionCreators.MapCreator<K, V> {
+		private Comparator<K> cmp;
+
 		@Override
 		public Map<K, V> get() {
-			return new Object2ObjectAVLTreeMap<>();
+			return cmp == null ? new Object2ObjectAVLTreeMap<>()
+					: new Object2ObjectAVLTreeMap<>(cmp);
+		}
+
+		public TreeMapCreatorNonTransactional<K, V>
+				withComparator(Comparator cmp) {
+			this.cmp = cmp;
+			return this;
 		}
 	}
 

@@ -104,10 +104,10 @@ public class DomainStoreQueryTranslator {
 			}
 		}
 		if (propertyPath.contains(".")) {
+			// first maybe expand subcriteria, then remove root alias
 			int idx = propertyPath.indexOf(".");
 			String prefix = propertyPath.substring(0, idx);
 			if (prefix.equals(root.alias)) {
-				propertyPath = propertyPath.substring(idx + 1);
 			} else {
 				DomainStoreCriteria sub = aliasLookup.get(prefix);
 				if (sub == null) {
@@ -116,6 +116,11 @@ public class DomainStoreQueryTranslator {
 					propertyPath = sub.associationPath + "."
 							+ propertyPath.substring(idx + 1);
 				}
+			}
+			idx = propertyPath.indexOf(".");
+			prefix = propertyPath.substring(0, idx);
+			if (prefix.equals(root.alias)) {
+				propertyPath = propertyPath.substring(idx + 1);
 			}
 		}
 		propertyPath = query.getCanonicalPropertyPath(root.clazz, propertyPath);
@@ -708,6 +713,9 @@ public class DomainStoreQueryTranslator {
 			try {
 				if (projection instanceof AliasedProjection) {
 					projection = fieldHelper.getValue(projection, "projection");
+				}
+				if (projection.toString().equals("distinct count(cc.id)")) {
+					int debug = 3;
 				}
 				this.rootProjection = projection;
 				if (projection instanceof CountProjection) {

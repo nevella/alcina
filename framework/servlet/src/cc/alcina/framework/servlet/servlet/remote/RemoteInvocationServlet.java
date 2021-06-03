@@ -34,6 +34,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
+import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
@@ -202,6 +203,9 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				ThreadlocalTransformManager.get().resetTltm(null);
 				DomainStore.writableStore().getPersistenceEvents().getQueue()
 						.refreshPositions();
+				DomainTransformLayerWrapper wrapper = (DomainTransformLayerWrapper) resultHolder
+						.get(0);
+				wrapper.snapshotEntityLocatorMap();
 			}
 			if (params.api.isLinkToDomain(method.getName())
 					&& params.mayLinkToDomain) {

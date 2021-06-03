@@ -9,6 +9,7 @@ import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -94,6 +95,10 @@ public class TreePath<T> extends Model {
 	@Override
 	public boolean equals(Object obj) {
 		return obj instanceof TreePath && toString().equals(obj.toString());
+	}
+
+	public <E extends Entity> E find(Class<E> clazz) {
+		return Domain.find(clazz, segmentAsLong());
 	}
 
 	@AlcinaTransient
@@ -262,6 +267,10 @@ public class TreePath<T> extends Model {
 			children = paths.createChildList();
 		}
 		return children;
+	}
+
+	private long segmentAsLong() {
+		return Long.parseLong(getSegment());
 	}
 
 	@ClientInstantiable
