@@ -14,10 +14,13 @@ public class AppServletStatusNotifier {
 
 	File destroyed = new File(dataFolder.getPath() + "/" + "webapp.destroyed");
 
+	File failed = new File(dataFolder.getPath() + "/" + "webapp.failed");
+
 	public void deploying() {
 		try {
 			ready.delete();
 			destroyed.delete();
+			failed.delete();
 			deploying.createNewFile();
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -28,9 +31,21 @@ public class AppServletStatusNotifier {
 		try {
 			ready.delete();
 			deploying.delete();
+			failed.delete();
 			destroyed.createNewFile();
 		} catch (Exception e) {
 			e.printStackTrace();
+		}
+	}
+
+	public void failed() {
+		try {
+			ready.delete();
+			destroyed.delete();
+			deploying.delete();
+			failed.createNewFile();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 
@@ -38,6 +53,7 @@ public class AppServletStatusNotifier {
 		try {
 			destroyed.delete();
 			deploying.delete();
+			failed.delete();
 			ready.createNewFile();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
