@@ -187,6 +187,10 @@ public class DomainTransformPersistenceEvents {
 					if (event.isLocalToVm()
 							|| listener.isAllVmEventsListener()) {
 						try {
+							// any transforms that arise are logical cascades
+							// (owned by root) - allow
+							ThreadlocalTransformManager.get()
+									.setTransformsExplicitlyPermitted(true);
 							InternalMetrics.get().startTracker(event,
 									() -> describeEvent(event),
 									InternalMetricTypeAlcina.service,
@@ -205,6 +209,8 @@ public class DomainTransformPersistenceEvents {
 									rex);
 						} finally {
 							InternalMetrics.get().endTracker(event);
+							ThreadlocalTransformManager.get()
+									.setTransformsExplicitlyPermitted(false);
 						}
 					}
 				}
