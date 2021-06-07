@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 
 /**
@@ -20,44 +22,47 @@ import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
  */
 @TypeSerialization("daterange")
 public class DateRangeEnumCriterion extends EnumCriterion<DateRange> {
+	static final transient long serialVersionUID = -1L;
 
-    static final transient long serialVersionUID = -1L;
+	private DateRange dateRange;
 
-    private DateRange dateRange;
+	public DateRangeEnumCriterion() {
+	}
 
-    public DateRangeEnumCriterion() {
-    }
+	public DateRangeEnumCriterion(DateRange value) {
+		setValue(value);
+	}
 
-    public DateRangeEnumCriterion(DateRange value) {
-        setValue(value);
-    }
+	public DateRangeEnumCriterion(String criteriaDisplayName,
+			boolean withNull) {
+		super(criteriaDisplayName, withNull);
+	}
 
-    public DateRangeEnumCriterion(String criteriaDisplayName, boolean withNull) {
-        super(criteriaDisplayName, withNull);
-    }
+	@AlcinaTransient
+	public DateRange getDateRange() {
+		return this.dateRange;
+	}
 
-    public DateRange getDateRange() {
-        return this.dateRange;
-    }
+	@Override
+	@PropertySerialization(defaultProperty = true)
+	public DateRange getValue() {
+		return getDateRange();
+	}
 
-    @Override
-    public DateRange getValue() {
-        return getDateRange();
-    }
+	public void setDateRange(DateRange dateRange) {
+		DateRange old_dateRange = this.dateRange;
+		this.dateRange = dateRange;
+		propertyChangeSupport().firePropertyChange("dateRange", old_dateRange,
+				dateRange);
+	}
 
-    public void setDateRange(DateRange dateRange) {
-        DateRange old_dateRange = this.dateRange;
-        this.dateRange = dateRange;
-        propertyChangeSupport().firePropertyChange("dateRange", old_dateRange, dateRange);
-    }
+	@Override
+	public void setValue(DateRange value) {
+		setDateRange(value);
+	}
 
-    @Override
-    public void setValue(DateRange value) {
-        setDateRange(value);
-    }
-
-    @Override
-    protected boolean valueAsString() {
-        return true;
-    }
+	@Override
+	protected boolean valueAsString() {
+		return true;
+	}
 }

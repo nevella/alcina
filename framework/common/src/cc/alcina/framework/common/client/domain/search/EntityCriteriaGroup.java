@@ -1,15 +1,19 @@
 package cc.alcina.framework.common.client.domain.search;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 
 @RegistryLocation(registryPoint = SearchDefinitionSerializationInfo.class)
-public class EntityCriteriaGroup extends CriteriaGroup {
+@TypeSerialization(notSerializable = true)
+public abstract class EntityCriteriaGroup extends CriteriaGroup {
 	public EntityCriteriaGroup() {
 	}
 
 	@Override
+	@AlcinaTransient
 	public String getDisplayName() {
 		return "filters";
 	}

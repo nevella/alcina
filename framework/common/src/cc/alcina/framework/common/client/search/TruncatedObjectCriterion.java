@@ -7,6 +7,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
@@ -54,11 +55,13 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		return super.equivalentTo(other);
 	}
 
+	@PropertySerialization(fromClient = false)
 	public String getDisplayText() {
 		return this.displayText;
 	}
 
 	@Override
+	@PropertySerialization(defaultProperty = true)
 	public long getId() {
 		return this.id;
 	}
@@ -78,6 +81,11 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	}
 
 	public void populateValue() {
+	}
+
+	public String provideTypeDisplayName() {
+		return CommonUtils.titleCase(
+				CommonUtils.deInfix(getObjectClass().getSimpleName()));
 	}
 
 	public void setDisplayText(String displayText) {
@@ -113,9 +121,5 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 
 	protected String getDisplayTextFor(E value) {
 		return value == null ? null : value.toString();
-	}
-	public String provideTypeDisplayName() {
-		return CommonUtils
-				.titleCase(CommonUtils.deInfix(getObjectClass().getSimpleName()));
 	}
 }

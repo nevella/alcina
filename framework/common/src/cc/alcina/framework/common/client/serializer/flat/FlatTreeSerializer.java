@@ -35,9 +35,12 @@ import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TextUtils;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
 /**
  * <p>
@@ -101,6 +104,9 @@ public class FlatTreeSerializer {
 	public static final String CONTEXT_SUPPRESS_EXCEPTIONS = FlatTreeSerializer.class
 			.getName() + ".CONTEXT_SUPPRESS_EXCEPTIONS";
 
+	public static final String CONTEXT_DESERIALIZING = FlatTreeSerializer.class
+			.getName() + ".CONTEXT_DESERIALIZING";
+
 	private static String NULL_MARKER = "__fts_NULL__";
 
 	private static Map<Class, List<Property>> serializationProperties = Registry
@@ -118,6 +124,8 @@ public class FlatTreeSerializer {
 	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
 
+	public static Topic<StringPair> unequalSerialized = Topic.local();
+
 	public static <R extends TreeSerializable> R clone(R object) {
 		return deserialize(serialize(object));
 	}
@@ -131,29 +139,39 @@ public class FlatTreeSerializer {
 
 	public static <T extends TreeSerializable> T deserialize(Class<T> clazz,
 			String value, DeserializerOptions options) {
-		if (value == null) {
-			return null;
+		try {
+			LooseContext.pushWithTrue(CONTEXT_DESERIALIZING);
+			if (value == null) {
+				return null;
+			}
+			State state = new State();
+			state.deserializerOptions = options;
+			if (!value.contains("\n")) {
+				value = value.replace(":", "\n");
+			}
+			state.keyValues = StringMap.fromPropertyString(value);
+			if (clazz == null) {
+				clazz = Reflections.classLookup()
+						.getClassForName(state.keyValues.get(CLASS));
+			}
+			state.keyValues.remove(CLASS);
+			T instance = Reflections.newInstance(clazz);
+			instance.onBeforeTreeDeserialize();
+			Node node = new Node(null, instance, null);
+			new FlatTreeSerializer(state).deserialize(node);
+			instance.onAfterTreeDeserialize();
+			return instance;
+		} finally {
+			LooseContext.pop();
 		}
-		State state = new State();
-		state.deserializerOptions = options;
-		if (!value.contains("\n")) {
-			value = value.replace(":", "\n");
-		}
-		state.keyValues = StringMap.fromPropertyString(value);
-		if (clazz == null) {
-			clazz = Reflections.classLookup()
-					.getClassForName(state.keyValues.get(CLASS));
-		}
-		state.keyValues.remove(CLASS);
-		T instance = Reflections.newInstance(clazz);
-		Node node = new Node(null, instance, null);
-		new FlatTreeSerializer(state).deserialize(node);
-		instance.onAfterTreeDeserialize();
-		return instance;
 	}
 
 	public static <T extends TreeSerializable> T deserialize(String value) {
 		return deserialize(null, value);
+	}
+
+	public static boolean isDeserializing() {
+		return LooseContext.is(CONTEXT_DESERIALIZING);
 	}
 
 	public static String serialize(TreeSerializable object) {
@@ -189,10 +207,14 @@ public class FlatTreeSerializer {
 					.withSingleLine(options.singleLine)
 					.withTopLevelTypeInfo(options.topLevelTypeInfo);
 			String checkSerialized = serialize(checkObject, checkOptions);
-			Preconditions.checkState(
-					Objects.equals(serialized, checkSerialized),
-					"Unequal serialized: \n%s\n%s", serialized,
-					checkSerialized);
+			if (!Objects.equals(serialized, checkSerialized)) {
+				unequalSerialized
+						.publish(new StringPair(serialized, checkSerialized));
+				Preconditions.checkState(
+						Objects.equals(serialized, checkSerialized),
+						"Unequal serialized:\n\n%s\n========\n%s", serialized,
+						checkSerialized);
+			}
 		}
 		return serialized;
 	}
@@ -218,7 +240,7 @@ public class FlatTreeSerializer {
 	}
 
 	private static boolean isIntermediateType(Class clazz) {
-		return isTreeSerializable(clazz) || isCollection(clazz);
+		return isCollection(clazz) || isTreeSerializable(clazz);
 	}
 
 	private static boolean isLeafValue(Object value) {
@@ -241,6 +263,20 @@ public class FlatTreeSerializer {
 				return false;
 			}
 		});
+	}
+
+	private static boolean
+			isTreeSerializableWithInstantiationChecks(Class clazz) {
+		if (clazz == TreeSerializable.class) {
+			return true;
+		}
+		if (CommonUtils.stdAndPrimitives.contains(clazz)) {
+			return false;
+		}
+		if (isCollection(clazz)) {
+			return false;
+		}
+		return isTreeSerializable(clazz);
 	}
 
 	private static boolean isValueType(Class clazz) {
@@ -306,7 +342,7 @@ public class FlatTreeSerializer {
 		if (state.serializerOptions.reachables != null
 				&& childNode.path.propertySerialization != null) {
 			for (Class clazz : childNode.path.propertySerialization.types()) {
-				if (isTreeSerializable(clazz)) {
+				if (isTreeSerializableWithInstantiationChecks(clazz)) {
 					state.serializerOptions.reachables.add(clazz);
 				}
 			}
@@ -486,6 +522,8 @@ public class FlatTreeSerializer {
 									}
 								}
 								childValue = Reflections.newInstance(type);
+								((TreeSerializable) childValue)
+										.onBeforeTreeDeserialize();
 								Reflections.propertyAccessor().setPropertyValue(
 										cursor.value, property.getName(),
 										childValue);
@@ -734,9 +772,17 @@ public class FlatTreeSerializer {
 
 	private Object synthesisePopulatedPropertyValue(Node node,
 			Property property) {
-		// TODO - cleanup - use node.path.soleType?
 		PropertySerialization propertySerialization = getPropertySerialization(
 				node.value.getClass(), property.getName());
+		if (propertySerialization != null
+				&& propertySerialization.notTestable()) {
+			try {
+				return property.getAccessorMethod().invoke(node.value,
+						new Object[0]);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 		Class type = property.getType();
 		if (propertySerialization == null || isValueType(type)) {
 			/*
@@ -822,7 +868,12 @@ public class FlatTreeSerializer {
 		}
 		if (valueClass.isEnum() || (valueClass.getSuperclass() != null
 				&& valueClass.getSuperclass().isEnum())) {
-			return valueClass.getEnumConstants()[0];
+			Object object = valueClass.getEnumConstants()[0];
+			if (object.toString().startsWith("__")
+					&& valueClass.getEnumConstants().length > 1) {
+				object = valueClass.getEnumConstants()[1];
+			}
+			return object;
 		}
 		if (CommonUtils.isOrHasSuperClass(valueClass,
 				VersionableEntity.class)) {

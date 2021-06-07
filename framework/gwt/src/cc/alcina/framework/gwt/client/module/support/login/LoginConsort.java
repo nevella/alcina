@@ -2,10 +2,8 @@ package cc.alcina.framework.gwt.client.module.support.login;
 
 import java.util.Collections;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.rpc.ServiceDefTarget;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -16,7 +14,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
-import cc.alcina.framework.common.client.remote.LoginRemoteService;
 import cc.alcina.framework.common.client.remote.LoginRemoteServiceAsync;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer;
@@ -25,7 +22,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.module.support.login.LoginConsort.State;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
-import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilderLight;
 
 @RegistryLocation(registryPoint = LoginConsort.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable

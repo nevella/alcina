@@ -16,11 +16,6 @@ package cc.alcina.framework.extras.history.client;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.HistoryImpl;
 
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.place.BasePlace.HrefProvider;
-
 /**
  * Extends GWT's {@link HistoryImpl} and adds HTML5 pushState support.
  * 

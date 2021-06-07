@@ -1,20 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.util.Collections;
 import java.util.List;
-import java.util.function.Function;
 
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 @ClientInstantiable

@@ -15,6 +15,8 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.Comparator;
 
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
+
 /**
  * 
  * @author Nick Reddel
@@ -22,19 +24,32 @@ import java.util.Comparator;
 public class OrderCriterion extends SearchCriterion {
 	static final transient long serialVersionUID = -1L;
 
+	private Direction direction = Direction.ASCENDING;
+
 	public String addDirection(String criterionName) {
 		return criterionName == null || getDirection() == Direction.ASCENDING
 				? criterionName
 				: criterionName + " (reverse)";
 	}
 
-	@Override
-	public OrderCriterion withDirection(Direction direction) {
-		return (OrderCriterion) super.withDirection(direction);
+	@PropertySerialization(path = "dir")
+	public Direction getDirection() {
+		return this.direction;
 	}
 
 	public Comparator reverseIfDescending(Comparator cmp) {
-		return getDirection() == Direction.DESCENDING ? cmp.reversed()
-				: cmp;
+		return getDirection() == Direction.DESCENDING ? cmp.reversed() : cmp;
+	}
+
+	public void setDirection(Direction direction) {
+		Direction old_direction = this.direction;
+		this.direction = direction;
+		propertyChangeSupport().firePropertyChange("direction", old_direction,
+				direction);
+	}
+
+	public OrderCriterion withDirection(Direction direction) {
+		setDirection(direction);
+		return this;
 	}
 }

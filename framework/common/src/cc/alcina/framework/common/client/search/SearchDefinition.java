@@ -269,6 +269,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 	}
 
 	@Override
+	@AlcinaTransient
 	public String getDisplayName() {
 		return "";
 	}

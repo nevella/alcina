@@ -38,26 +38,30 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
  * the default)
  */
 public @interface PropertySerialization {
-	// Class<? extends TreeSerializable>[] childTypes() default {};
 	/*
 	 * Maximum one per type.
 	 */
 	boolean defaultProperty() default false;
-	// Class<? extends TreeSerializable>[] grandchildTypes() default {};
+
+	/*
+	 * Serialize if serializing on client
+	 */
+	boolean fromClient() default true;
 
 	boolean ignore() default false;
-	// Class leafType() default void.class;
 
 	/*
 	 * Only use if this annotation is part of a TypeSerialization definition
 	 */
 	String name() default "";
 
+	// not testable (for signature verification)
+	boolean notTestable() default false;
+
 	/*
 	 * Unique per path segment (including default resolution)
 	 */
 	String path() default "";
-	// Class[] type() default {};
 
 	/*
 	 * Usages:

@@ -18,6 +18,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -162,6 +163,7 @@ public class PermissibleAction implements Permissible {
 		}
 
 		@Override
+		@AlcinaTransient
 		public String getDisplayName() {
 			return this.delegate.getDisplayName();
 		}

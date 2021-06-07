@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.actions.instances;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.provider.TextProvider;
 
 /**
@@ -22,6 +23,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
  */
 public class ChangePasswordClientAction extends NonstandardObjectAction {
 	@Override
+	@AlcinaTransient
 	public String getDisplayName() {
 		return TextProvider.get().getUiObjectText(getClass(),
 				TextProvider.DISPLAY_NAME, "Change password");

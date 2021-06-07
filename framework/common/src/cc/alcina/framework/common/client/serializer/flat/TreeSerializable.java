@@ -14,6 +14,9 @@ public interface TreeSerializable extends Serializable {
 	default void onAfterTreeDeserialize() {
 	}
 
+	default void onBeforeTreeDeserialize() {
+	}
+
 	default void onBeforeTreeSerialize() {
 	}
 }

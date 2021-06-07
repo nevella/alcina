@@ -28,11 +28,13 @@ import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.publication.Publication.Definition;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -41,6 +43,7 @@ import cc.alcina.framework.common.client.util.StringMap;
  * 
  * @author Nick Reddel
  */
+@RegistryLocation(registryPoint = TreeSerializable.class)
 public abstract class ContentRequestBase<CD extends ContentDefinition>
 		extends WrapperPersistable implements GwtMultiplePersistable,
 		DeliveryModel, TreeSerializable, Definition {
@@ -104,7 +107,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 
 	private Map<String, String> properties = new LinkedHashMap<String, String>();
 
-	private String propertiesSerialized;
+	private String propertiesSerialized = "";
 
 	public transient List<MailInlineImage> images = new ArrayList<>();
 
@@ -201,6 +204,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 		return this.properties;
 	}
 
+	@PropertySerialization(notTestable = true)
 	public String getPropertiesSerialized() {
 		return this.propertiesSerialized;
 	}
@@ -291,6 +295,13 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 	public void onAfterTreeDeserialize() {
 		StringMap.fromPropertyString(propertiesSerialized)
 				.forEach((k, v) -> properties.put(k, v));
+	}
+
+	@Override
+	public void onBeforeTreeDeserialize() {
+		if (contentDefinition != null) {
+			contentDefinition.onBeforeTreeDeserialize();
+		}
 	}
 
 	@Override
