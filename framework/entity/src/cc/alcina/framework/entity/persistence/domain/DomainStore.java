@@ -91,6 +91,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObject
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.NonDomainNotifier;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -1642,6 +1643,17 @@ public class DomainStore implements IDomainStore {
 			if (entity == null) {
 				ClientInstance clientInstance = AuthenticationPersistence.get()
 						.getClientInstance(locator.getClientInstanceId());
+				if (clientInstance == null) {
+					logger.warn(
+							"Unable to find clientinstance for local find:\n\t locator: {}"
+									+ "\n\t Current user: {}"
+									+ "\n\t Current pm instance: {}"
+									+ "\n\t Service instance: {}",
+							locator, PermissionsManager.get().getUser(),
+							PermissionsManager.get().getClientInstance(),
+							EntityLayerObjects.get()
+									.getServerAsClientInstance());
+				}
 				EntityLocatorMap locatorMap = TransformCommit.get()
 						.getLocatorMapForClient(clientInstance, Ax.isTest());
 				EntityLocator persistentLocator = locatorMap
