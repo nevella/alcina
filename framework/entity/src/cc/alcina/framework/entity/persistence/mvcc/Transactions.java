@@ -353,15 +353,12 @@ public class Transactions {
 						seenStandardTransactionTimeout = true;
 					} else {
 						timeout = transaction.getTimeout();
-						if (ResourceUtilities.is(Transactions.class, "logCustomTimeoutTxAge") && age % 30000 == 0) {
-							Transaction.logger.info("Tx {} current age: {} timeout {}", transaction, age, timeout);
-						}
 					}
 					if (age > timeout) {
 						try {
 							Transaction.logger.error(
-									"Cancelling timed out transaction :: {}",
-									transaction);
+									"Cancelling timed out transaction :: {} :: timeout {}",
+									transaction, timeout);
 							transaction.toTimedOut();
 							// only the tx thread should end the transaction
 							// (otherwise calls
