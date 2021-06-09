@@ -3,11 +3,11 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import java.lang.reflect.Field;
 import java.util.Iterator;
 
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.MvccObjectVersionsMvccObject;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 
 public class MvccObjectVersionsEntity<T extends Entity>
 		extends MvccObjectVersionsMvccObject<T> {
@@ -90,7 +90,8 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	@Override
 	protected void onVersionCreation(ObjectVersion<T> version) {
 		if (version.writeable) {
-			Domain.register(version.object);
+			ThreadlocalTransformManager.cast()
+					.registerDomainObject(version.object, true);
 		}
 	}
 }

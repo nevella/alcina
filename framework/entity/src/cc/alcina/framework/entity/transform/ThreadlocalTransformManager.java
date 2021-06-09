@@ -812,7 +812,13 @@ public class ThreadlocalTransformManager extends TransformManager
 	 *
 	 */
 	public <T extends Entity> T registerDomainObject(T entity) {
-		if (!Mvcc.isMvccObject(entity)
+		return registerDomainObject(entity, false);
+	}
+
+	public <T extends Entity> T registerDomainObject(T entity,
+			boolean listenToMvccObjectVersion) {
+		boolean mvccObject = Mvcc.isMvccObject(entity);
+		if (!mvccObject
 				&& DomainStore.writableStore().isCached(entity.entityClass())
 				&& !DomainStore.writableStore().getCache().contains(entity)) {
 			/*
@@ -829,7 +835,9 @@ public class ThreadlocalTransformManager extends TransformManager
 			 */
 			DomainStore.writableStore().getCache().put(entity);
 		}
-		listenTo(entity);
+		if (!mvccObject || listenToMvccObjectVersion) {
+			listenTo(entity);
+		}
 		return entity;
 	}
 
