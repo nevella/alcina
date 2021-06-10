@@ -669,7 +669,18 @@ public class DomainStore implements IDomainStore {
 			Collection<DomainTransformEventPersistent> events) {
 		return events.stream().filter(new InSubgraphFilter())
 				.filter(domainDescriptor::customFilterPostProcess)
-				.map(event -> filterForDomainStoreProperty(event))
+				.filter(event -> {
+					if (!isCached(event.getObjectClass())) {
+						return false;
+					}
+					if (event.getValueClass() != null && Entity.class
+							.isAssignableFrom(event.getValueClass())) {
+						if (!isCached(event.getValueClass())) {
+							return false;
+						}
+					}
+					return true;
+				}).map(event -> filterForDomainStoreProperty(event))
 				.filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
