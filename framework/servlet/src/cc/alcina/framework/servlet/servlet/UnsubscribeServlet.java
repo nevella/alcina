@@ -94,7 +94,7 @@ public class UnsubscribeServlet extends AlcinaServlet {
 	}
 
 	public static enum UnsubscribeRequestAction {
-		UNSUBSCRIBE_ALERTS("ua"),
+		UNSUBSCRIBE_ALERTS("u"),
 		RESUBSCRIBE_ALERTS("r"),
 		UNSUBSCRIBE_ALL("ul");
 
