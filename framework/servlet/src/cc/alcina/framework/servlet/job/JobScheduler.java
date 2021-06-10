@@ -46,8 +46,8 @@ import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
-import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.Event;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -183,16 +183,15 @@ public class JobScheduler {
 		if (!SchedulingPermissions.canFutureToPending()) {
 			return;
 		}
-		logger.info("futures to pending :: visible futures :: \n{}",
-				JobDomain.get().getAllFutureJobs()
-						.collect(Collectors.toList()));
+		logger.info("futures to pending :: visible futures :: \n{}", JobDomain
+				.get().getAllFutureJobs().collect(Collectors.toList()));
 		JobDomain.get().getAllFutureJobs()
 				.filter(job -> job.getRunAt().compareTo(new Date()) <= 0)
 				.filter(SchedulingPermissions::canModifyFuture).forEach(job -> {
 					Class<? extends Task> key = job.provideTaskClass();
 					Schedule schedule = Schedule.forTaskClass(key);
-					Optional<Job> earliestIncompleteScheduled = JobDomain
-							.get().getEarliestIncompleteScheduled(key,
+					Optional<Job> earliestIncompleteScheduled = JobDomain.get()
+							.getEarliestIncompleteScheduled(key,
 									schedule.isVmLocal());
 					if (schedule != null
 							&& earliestIncompleteScheduled.isPresent()
@@ -295,8 +294,7 @@ public class JobScheduler {
 			if (nextForTaskClass == null) {
 				continue;
 			}
-			Optional<Job> earliestIncompleteScheduled = JobDomain
-					.get()
+			Optional<Job> earliestIncompleteScheduled = JobDomain.get()
 					.getEarliestIncompleteScheduled(key, schedule.isVmLocal());
 			Optional<Job> earliestFuture = JobDomain.get()
 					.getEarliestFuture(key, schedule.isVmLocal());
@@ -370,10 +368,9 @@ public class JobScheduler {
 				.run(() -> enqueueEvent(new ScheduleEvent(Type.WAKEUP)));
 	}
 
-	private void processOrphans() {
+	void processOrphans() {
 		if (jobRegistry.jobExecutors.isHighestBuildNumberInCluster()) {
-			JobDomain.get().getUndeserializableJobs()
-					.forEach(Job::delete);
+			JobDomain.get().getUndeserializableJobs().forEach(Job::delete);
 		}
 		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
 				.getActiveServers();

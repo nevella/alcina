@@ -110,9 +110,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	}
 
 	private EntityLocator(Entity obj) {
-		this.clazz = obj.entityClass();
-		this.id = obj.getId();
-		setLocalId(obj.getLocalId());
+		this(obj.entityClass(), obj.getId(), obj.getLocalId());
 	}
 
 	@Override
