@@ -76,6 +76,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
@@ -964,7 +965,17 @@ public class GraphProjection {
 		// Trying hard to avoid the first case (it's very much not optimal)
 		if (source instanceof MvccObject
 				&& ((MvccObject) source).__getMvccVersions__() != null) {
-			return SEUtilities.getPropertyValue(source, field.getName());
+			try {
+				return SEUtilities.getPropertyValue(source, field.getName());
+			} catch (Exception e) {
+				// possibly dev rpc
+				if (EntityLayerUtils.isTestOrTestServer()) {
+					e.printStackTrace();
+					return null;
+				} else {
+					throw e;
+				}
+			}
 		} else {
 			return field.get(source);
 		}
