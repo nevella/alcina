@@ -10,9 +10,9 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Consumer;
 import java.util.function.Predicate;
 
 import org.slf4j.Logger;
@@ -98,6 +98,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 		return nonConcurrent.containsKey(key);
+	}
+
+	public Spliterator createSpliterator(Iterator iterator, int size) {
+		return Spliterators.spliterator(iterator, size, Spliterator.CONCURRENT);
 	}
 
 	public void debugNotFound(long id) {
@@ -395,7 +399,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public Spliterator<K> spliterator() {
-			return new UnsplittableIteratorSpliterator<>(iterator(), size());
+			return createSpliterator(iterator(), size());
 		}
 	}
 
@@ -419,7 +423,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public Spliterator<V> spliterator() {
-			return new UnsplittableIteratorSpliterator<>(iterator(), size());
+			return createSpliterator(iterator(), size());
 		}
 	}
 
@@ -443,7 +447,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public Spliterator<V> spliterator() {
-			return new UnsplittableIteratorSpliterator<>(iterator(), size());
+			return createSpliterator(iterator(), size());
 		}
 	}
 
@@ -521,8 +525,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public Spliterator<Entry<K, V>> spliterator() {
-			return new UnsplittableIteratorSpliterator<>(iterator(),
-					estimateSize());
+			return createSpliterator(iterator(), estimateSize());
 		}
 
 		private int estimateSize() {
@@ -739,42 +742,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				resolve(true).set(value);
 				return true;
 			}
-		}
-	}
-
-	static class UnsplittableIteratorSpliterator<E> implements Spliterator<E> {
-		private Iterator<E> itr;
-
-		private int size;
-
-		UnsplittableIteratorSpliterator(Iterator<E> itr, int size) {
-			this.itr = itr;
-			this.size = size;
-		}
-
-		@Override
-		public int characteristics() {
-			return Spliterator.CONCURRENT;
-		}
-
-		@Override
-		public long estimateSize() {
-			return size;
-		}
-
-		@Override
-		public boolean tryAdvance(Consumer<? super E> action) {
-			if (itr.hasNext()) {
-				action.accept(itr.next());
-				return true;
-			} else {
-				return false;
-			}
-		}
-
-		@Override
-		public Spliterator<E> trySplit() {
-			return null;
 		}
 	}
 
