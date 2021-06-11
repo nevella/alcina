@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -873,6 +874,8 @@ public class GraphProjection {
 			c = new ArrayList();
 		} else if (coll.getClass() == LiSet.class) {
 			c = new LiSet();
+		} else if (coll.getClass() == TreeSet.class) {
+			c = new TreeSet();
 		} else if (coll.getClass() == LightSet.class) {
 			c = new LightSet();
 		} else if (coll.getClass() == ConcurrentLinkedQueue.class) {
