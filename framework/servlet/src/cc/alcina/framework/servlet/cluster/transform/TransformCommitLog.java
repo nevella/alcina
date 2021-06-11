@@ -351,7 +351,8 @@ public class TransformCommitLog {
 						try {
 							ClusterTransformRequest request = Registry
 									.impl(ClusterTransformSerializer.class)
-									.deserialize(record.value());
+									.deserialize(record.value(),
+											TransformCommitLog.this.getClass());
 							if (request == null) {
 								logger.info("Received partial packet - {}",
 										Registry.impl(

@@ -5,12 +5,15 @@ import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,7 +28,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
@@ -47,7 +49,9 @@ public class ClusterTransformSerializer {
 
 	private AtomicInteger localSequenceCounter = new AtomicInteger(1);
 
-	public ClusterTransformRequest deserialize(byte[] data) {
+	@SuppressWarnings("resource")
+	public ClusterTransformRequest deserialize(byte[] data,
+			Class<? extends TransformCommitLog> requestorClass) {
 		KafkaPacket packet = deserializePacket(data);
 		byte[] assembled = null;
 		synchronized (packets) {
@@ -69,11 +73,12 @@ public class ClusterTransformSerializer {
 			}
 		}
 		try {
-			byte[] unzipped = ResourceUtilities.gunzipBytes(assembled);
-			String json = new String(unzipped, StandardCharsets.UTF_8);
-			json = preProcessJson(json);
-			ClusterTransformRequest request = JacksonUtils.deserialize(json,
-					ClusterTransformRequest.class);
+			InputStream inputStream = new GZIPInputStream(
+					new ByteArrayInputStream(assembled));
+			inputStream = preProcessJson(inputStream, requestorClass);
+			ClusterTransformRequest request = JacksonUtils
+					.deserialize(inputStream, ClusterTransformRequest.class);
+			inputStream.close();
 			return request;
 		} catch (Exception e) {
 			// application-fatal. how sad
@@ -104,20 +109,20 @@ public class ClusterTransformSerializer {
 		}
 		List<byte[]> result = new ArrayList<>();
 		byte[] zipped = new byte[0];
-		byte[] unzipped = null;
 		try {
-			String json = new JacksonJsonObjectSerializer().withIdRefs()
-					.withTypeInfo().withDefaults(false)
-					.withMaxLength(Integer.MAX_VALUE).serialize(clusterRequest);
-			unzipped = json.getBytes(StandardCharsets.UTF_8);
-			zipped = ResourceUtilities.gzipBytes(unzipped);
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			OutputStream outputStream = new GZIPOutputStream(out);
+			new JacksonJsonObjectSerializer().withIdRefs().withTypeInfo()
+					.withDefaults(false).withMaxLength(Integer.MAX_VALUE)
+					.serializeToStream(clusterRequest, outputStream);
+			zipped = out.toByteArray();
 			if (state == State.PRE_COMMIT) {
 				if (zipped == null || zipped.length > 100000
 						|| request.getEvents().size() > 1000) {
 					logger.info(
-							"Large serialized request :: {} :: {} events :: {} bytes unzipped :: {} bytes zipped",
+							"Large serialized request :: {} :: {} events ::  {} bytes zipped",
 							request.getId(), request.getEvents().size(),
-							unzipped.length, zipped.length);
+							zipped.length);
 				}
 			}
 			/*
@@ -210,8 +215,10 @@ public class ClusterTransformSerializer {
 	/*
 	 * For subclasses, to handle multi-domain-store incoming requests
 	 */
-	protected String preProcessJson(String json) {
-		return json;
+	protected InputStream preProcessJson(InputStream inputStream,
+			Class<? extends TransformCommitLog> requestorClass)
+			throws Exception {
+		return inputStream;
 	}
 
 	static class KafkaPacket {

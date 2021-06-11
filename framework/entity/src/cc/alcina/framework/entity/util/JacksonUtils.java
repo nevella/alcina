@@ -1,6 +1,9 @@
 package cc.alcina.framework.entity.util;
 
 import java.io.File;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
@@ -22,6 +25,16 @@ public class JacksonUtils {
 		return new JacksonJsonObjectSerializer().withIdRefs().withTypeInfo()
 				.withDefaults(true).withAllowUnknownProperties()
 				.withPrettyPrint();
+	}
+
+	public static <T> T deserialize(InputStream stream, Class<T> clazz) {
+		try {
+			return defaultSerializer().deserialize(
+					new InputStreamReader(stream, StandardCharsets.UTF_8),
+					clazz);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static <T> T deserialize(String json, Class<T> clazz) {

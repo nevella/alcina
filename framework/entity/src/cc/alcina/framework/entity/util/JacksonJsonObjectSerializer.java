@@ -1,5 +1,8 @@
 package cc.alcina.framework.entity.util;
 
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -69,6 +72,16 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public JacksonJsonObjectSerializer() {
 		maxLength = ResourceUtilities.getInteger(
 				JacksonJsonObjectSerializer.class, "maxLength", 10000000);
+	}
+
+	public <T> T deserialize(Reader reader, Class<T> clazz) {
+		return runWithObjectMapper(mapper -> {
+			try {
+				return mapper.readValue(reader, clazz);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		});
 	}
 
 	@Override
@@ -153,6 +166,19 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		return runWithObjectMapper(mapper -> {
 			try {
 				return mapper.writeValueAsString(node);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		});
+	}
+
+	public void serializeToStream(Object object, OutputStream outputStream) {
+		runWithObjectMapper(mapper -> {
+			try {
+				OutputStreamWriter writer = new OutputStreamWriter(outputStream,
+						StandardCharsets.UTF_8);
+				mapper.writeValue(writer, object);
+				return null;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
