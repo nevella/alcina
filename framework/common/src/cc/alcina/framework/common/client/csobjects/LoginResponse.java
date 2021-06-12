@@ -21,11 +21,13 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 
 /**
  * 
  * @author Nick Reddel
  */
+@Bean
 public class LoginResponse implements Serializable {
 	private boolean ok;
 
@@ -35,27 +37,11 @@ public class LoginResponse implements Serializable {
 
 	private IUser user;
 
-	public IUser getUser() {
-		return this.user;
-	}
-
-	public void setUser(IUser user) {
-		this.user = user;
-	}
-
 	private Map<String, String> properties = new LinkedHashMap<>();
 
 	private Set<LoginResponseState> states = new LinkedHashSet<>();
 
 	private String twoFactorAuthQRCode;
-
-	public String getTwoFactorAuthQRCode() {
-		return this.twoFactorAuthQRCode;
-	}
-
-	public void setTwoFactorAuthQRCode(String twoFactorAuthQRCode) {
-		this.twoFactorAuthQRCode = twoFactorAuthQRCode;
-	}
 
 	public LoginResponse() {
 	}
@@ -74,6 +60,14 @@ public class LoginResponse implements Serializable {
 
 	public Set<LoginResponseState> getStates() {
 		return this.states;
+	}
+
+	public String getTwoFactorAuthQRCode() {
+		return this.twoFactorAuthQRCode;
+	}
+
+	public IUser getUser() {
+		return this.user;
 	}
 
 	public boolean isOk() {
@@ -98,5 +92,13 @@ public class LoginResponse implements Serializable {
 
 	public void setStates(Set<LoginResponseState> states) {
 		this.states = states;
+	}
+
+	public void setTwoFactorAuthQRCode(String twoFactorAuthQRCode) {
+		this.twoFactorAuthQRCode = twoFactorAuthQRCode;
+	}
+
+	public void setUser(IUser user) {
+		this.user = user;
 	}
 }

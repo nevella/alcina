@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -224,7 +223,6 @@ public class TreePath<T> extends Model {
 		if (cached == null) {
 			cached = parent == null || parent.toString().isEmpty() ? segment
 					: parent.toString() + "." + segment;
-			Ax.out(cached);
 		}
 		return cached;
 	}

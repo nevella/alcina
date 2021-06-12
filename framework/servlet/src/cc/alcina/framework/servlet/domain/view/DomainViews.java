@@ -136,7 +136,8 @@ public abstract class DomainViews {
 
 	public void waitForEmptyQueue() {
 		try {
-			Thread.sleep(200);
+			Thread.sleep(30);
+			// FIXME - index
 			// can't get more naive than that now...
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

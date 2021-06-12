@@ -25,8 +25,8 @@ public abstract class AlcinaBeanSerializer {
 		if (serialized == null) {
 			return null;
 		}
-		Object object = Registry.impl(AlcinaBeanSerializer.class)
-				.deserialize(serialized);
+		AlcinaBeanSerializer impl = Registry.impl(AlcinaBeanSerializer.class);
+		Object object = impl.deserialize(serialized);
 		if (object instanceof AlcinaBeanSerializer.SerializationHolder) {
 			return (V) ((AlcinaBeanSerializer.SerializationHolder) object)
 					.provideValue();
@@ -51,7 +51,13 @@ public abstract class AlcinaBeanSerializer {
 
 	private boolean throwOnUnrecognisedProperty;
 
+	private boolean throwOnUnrecognisedClass = true;
+
 	public abstract <T> T deserialize(String jsonString);
+
+	public boolean isThrowOnUnrecognisedClass() {
+		return this.throwOnUnrecognisedClass;
+	}
 
 	public boolean isThrowOnUnrecognisedProperty() {
 		return this.throwOnUnrecognisedProperty;
@@ -66,6 +72,10 @@ public abstract class AlcinaBeanSerializer {
 	}
 
 	public abstract String serialize(Object bean);
+
+	public void setThrowOnUnrecognisedClass(boolean throwOnUnrecognisedClass) {
+		this.throwOnUnrecognisedClass = throwOnUnrecognisedClass;
+	}
 
 	public AlcinaBeanSerializer throwOnUnrecognisedProperty() {
 		throwOnUnrecognisedProperty = true;

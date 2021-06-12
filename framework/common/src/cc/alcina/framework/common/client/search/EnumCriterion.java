@@ -18,7 +18,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
@@ -75,7 +74,6 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	@Override
 	@XmlTransient
 	@JsonIgnore
-	@PropertySerialization(defaultProperty = true)
 	public abstract E getValue();
 
 	@Override

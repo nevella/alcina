@@ -64,6 +64,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoMana
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransientType;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
@@ -1852,9 +1853,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 				|| propertyType == Class.class
 				|| !PermissionsManager.get().checkReadable(objectType,
 						propertyName, null)
-				|| Reflections.propertyAccessor().getAnnotationForProperty(
-						objectType, AlcinaTransient.class,
-						propertyName) != null;
+				|| (Reflections.propertyAccessor().getAnnotationForProperty(
+						objectType, AlcinaTransient.class, propertyName) != null
+						&& Reflections.propertyAccessor()
+								.getAnnotationForProperty(objectType,
+										AlcinaTransient.class, propertyName)
+								.value() == TransientType.ALL);
 	}
 
 	protected void initCollections() {

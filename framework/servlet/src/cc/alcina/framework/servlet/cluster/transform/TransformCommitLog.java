@@ -347,6 +347,7 @@ public class TransformCommitLog {
 					if (stopped.get() && !cancelled.get()) {
 						return;// don't commitsync
 					}
+					boolean hadRecords = false;
 					for (ConsumerRecord<Void, byte[]> record : records) {
 						try {
 							ClusterTransformRequest request = Registry
@@ -365,6 +366,7 @@ public class TransformCommitLog {
 						} catch (Exception e) {
 							e.printStackTrace();
 						} finally {
+							hadRecords = true;
 							currentOffset = record.offset();
 							highestSeekOffset = Math.max(highestSeekOffset,
 									currentOffset);
@@ -374,7 +376,9 @@ public class TransformCommitLog {
 						checkCurrentPositionLatch.countDown();
 						checkCurrentPositionLatch = null;
 					}
-					performOperation(() -> consumer.commitSync());
+					if (!hadRecords) {
+						performOperation(() -> consumer.commitSync());
+					}
 				} catch (Throwable e) {
 					if (CommonUtils.hasCauseOfClass(e, WakeupException.class)) {
 					} else {

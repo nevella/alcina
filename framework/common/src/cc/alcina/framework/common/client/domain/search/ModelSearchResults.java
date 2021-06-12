@@ -4,6 +4,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.totsp.gwittir.client.beans.annotations.Introspectable;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
@@ -15,6 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 
 @ClientInstantiable
+@Introspectable
 public class ModelSearchResults<B extends IsBindable & SearchResult>
 		implements Serializable {
 	private List<B> queriedResultObjects;

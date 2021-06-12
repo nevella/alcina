@@ -85,9 +85,9 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
-import cc.alcina.framework.common.client.remote.DevRemoteServiceAsync.DevRemoteServicePayload;
-import cc.alcina.framework.common.client.remote.DevRemoteServiceHandler;
-import cc.alcina.framework.common.client.remote.DevRpcRemoteService;
+import cc.alcina.framework.common.client.remote.ReflectiveRemoteServiceAsync.ReflectiveRemoteServicePayload;
+import cc.alcina.framework.common.client.remote.ReflectiveRemoteServiceHandler;
+import cc.alcina.framework.common.client.remote.ReflectiveRpcRemoteService;
 import cc.alcina.framework.common.client.remote.SearchRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -141,7 +141,7 @@ import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
  */
 public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		implements CommonRemoteService, SearchRemoteService,
-		DevRpcRemoteService, DevRemoteServiceHandler {
+		ReflectiveRpcRemoteService, ReflectiveRemoteServiceHandler {
 	public static final String UA_NULL_SERVER = "null/server";
 
 	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
@@ -218,14 +218,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			.withRootPermissions(false);
 
 	@Override
-	public String devRpc(String encodedRpcPayload) {
+	public String callRpc(String encodedRpcPayload) {
 		try {
 			Preconditions.checkState(ResourceUtilities
 					.is(CommonRemoteServiceServlet.class, "devRpcEnabled"));
-			DevRemoteServicePayload payload = AlcinaBeanSerializer
+			ReflectiveRemoteServicePayload payload = AlcinaBeanSerializer
 					.deserializeHolder(encodedRpcPayload);
-			DevRemoteServiceHandler handler = Registry.impl(
-					DevRemoteServiceHandler.class,
+			ReflectiveRemoteServiceHandler handler = Registry.impl(
+					ReflectiveRemoteServiceHandler.class,
 					payload.getAsyncInterfaceClass());
 			Class[] methodArgumentTypes = (Class[]) payload
 					.getMethodArgumentTypes().toArray(

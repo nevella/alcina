@@ -134,6 +134,8 @@ public class JobDomain {
 	 * 
 	 * The queue subfields are essentially immutable or tx-safe - exception is
 	 * phase, but that's modified by the single-threaded allocator
+	 * 
+	 * But this does mean that all access should check that the job exists
 	 */
 	private Map<Job, AllocationQueue> queues = new ConcurrentHashMap<>();
 
@@ -199,6 +201,7 @@ public class JobDomain {
 
 	public Stream<? extends Job> getActiveJobs() {
 		// subjobs are reachable from two allocationqueues, hence 'distinct'
+		cleanupQueues();
 		return queues.values().stream().flatMap(AllocationQueue::getActiveJobs)
 				.distinct()
 				.sorted(Comparator.comparing(Job::getStartTime).reversed());
@@ -298,8 +301,8 @@ public class JobDomain {
 	}
 
 	private void cleanupQueues() {
-		queues.entrySet().removeIf(e -> e.getValue().job
-				.resolveState() == JobState.ABORTED
+		queues.entrySet().removeIf(e -> e.getValue().job.domain().wasRemoved()
+				|| e.getValue().job.resolveState() == JobState.ABORTED
 				|| e.getValue().job.resolveState() == JobState.CANCELLED);
 	}
 

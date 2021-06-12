@@ -154,7 +154,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		i_token = removeAppPrefixAndLeadingSlashes(i_token);
 		String token = i_token;
 		if (!copy) {
-			System.out.println("get place:" + token);
+			// System.out.println("get place:" + token);
 		}
 		String[] split = token.split("/");
 		String top = split[0];

@@ -1340,6 +1340,12 @@ public class DomainStore implements IDomainStore {
 				return storeHandler(clazz).stream(clazz);
 			}
 
+			@Override
+			public boolean wasRemoved(Entity entity) {
+				Class clazz = entity.entityClass();
+				return storeHandler(clazz).wasRemoved(entity);
+			}
+
 			DomainHandler storeHandler(Class clazz) {
 				DomainStore domainStore = classMap.get(clazz);
 				if (domainStore == null) {
@@ -1720,6 +1726,11 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
 			return Domain.query(clazz).stream();
+		}
+
+		@Override
+		public boolean wasRemoved(Entity entity) {
+			return cache.contains(entity);
 		}
 
 		<T extends Entity> List<T> list(Class<T> clazz) {

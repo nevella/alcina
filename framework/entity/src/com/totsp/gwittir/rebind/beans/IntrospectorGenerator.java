@@ -53,6 +53,7 @@ import com.google.gwt.user.rebind.SourceWriter;
 import com.totsp.gwittir.client.beans.TreeIntrospector;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -295,9 +296,6 @@ public class IntrospectorGenerator extends Generator {
 		}
 		sb.append(")");
 		String result = sb.toString();
-		if (result.contains("BoundWidget")) {
-			int j = 3;
-		}
 		return result;
 	}
 
@@ -307,6 +305,9 @@ public class IntrospectorGenerator extends Generator {
 		JClassType ct = type.isClassOrInterface();
 		if (ct != null) {
 			if (ct.getAnnotation(Introspectable.class) != null) {
+				return true;
+			}
+			if (ct.getAnnotation(Bean.class) != null) {
 				return true;
 			}
 			for (JClassType iface : ct.getImplementedInterfaces()) {
