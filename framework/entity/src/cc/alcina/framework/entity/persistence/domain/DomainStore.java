@@ -1730,7 +1730,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public boolean wasRemoved(Entity entity) {
-			return cache.contains(entity);
+			return !cache.contains(entity);
 		}
 
 		<T extends Entity> List<T> list(Class<T> clazz) {
