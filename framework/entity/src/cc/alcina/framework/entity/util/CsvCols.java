@@ -160,7 +160,8 @@ public class CsvCols
 		}
 
 		public long getLong(String key) {
-			return Long.parseLong(get(key));
+			String s = get(key);
+			return Ax.isBlank(s) ? -1 : Long.parseLong(s);
 		}
 
 		public boolean has(String key) {
