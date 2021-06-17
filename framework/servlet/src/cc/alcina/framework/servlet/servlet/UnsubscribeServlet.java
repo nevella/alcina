@@ -35,7 +35,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 public class UnsubscribeServlet extends AlcinaServlet {
 	private static final String DEFAULT_SERVLET_PATH = "unsubscribe.do";
 
-	public static String defaultHref(PublicationResult publicationResult, UnsubscribeRequestAction action) {
+	public static String defaultHref(PublicationResult publicationResult, String action) {
 		UnsubscribeRequest request = new UnsubscribeRequest();
 		request.publicationId = publicationResult.publicationId;
 		request.publicationUid = publicationResult.publicationUid;
@@ -55,7 +55,7 @@ public class UnsubscribeServlet extends AlcinaServlet {
 			UnsubscribeRequest unsubscribe = new UnsubscribeRequest();
 			unsubscribe.publicationId = Long.parseLong(parts[0]);
 			unsubscribe.publicationUid = parts[1];
-			unsubscribe.action = UnsubscribeRequestAction.fromShortForm(parts[2]);
+			unsubscribe.action = parts[2];
 			logger.info(GraphProjection.fieldwiseToString(unsubscribe));
 			String message = Registry.impl(UnsubscribeHandler.class)
 					.handle(unsubscribe);
@@ -84,37 +84,12 @@ public class UnsubscribeServlet extends AlcinaServlet {
 
 		public String publicationUid;
 
-		public UnsubscribeRequestAction action;
+		public String action;
 
 		public String serialize() {
 			return new FormatBuilder().separator("/").append(publicationId)
-					.append(publicationUid).append(action.getShortForm())
+					.append(publicationUid).append(action)
 					.toString();
-		}
-	}
-
-	public static enum UnsubscribeRequestAction {
-		UNSUBSCRIBE_ALERTS("u"),
-		RESUBSCRIBE_ALERTS("r"),
-		UNSUBSCRIBE_ALL("ul");
-
-		private String shortform; 
-
-		UnsubscribeRequestAction(String shortform) {
-			this.shortform = shortform;
-		}
-
-		public String getShortForm() {
-			return this.shortform;
-		}
-
-		public static UnsubscribeRequestAction fromShortForm(String value) {
-			for (UnsubscribeRequestAction ura : values()) {
-				if (ura.getShortForm().equals(value)) {
-					return ura;
-				}
-			}
-			return null;
 		}
 	}
 }
