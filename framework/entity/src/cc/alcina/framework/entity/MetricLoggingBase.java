@@ -114,10 +114,14 @@ public class MetricLoggingBase {
 		this.muted = muted;
 	}
 
-	public synchronized void start(String key) {
+	public synchronized void setStart(String key, long time) {
 		key = keyWithParents(key, false);
-		metricStart.put(key, System.currentTimeMillis());
+		metricStart.put(key, time);
 		metricStartThreadIds.put(key, getCurrentThreadId());
+	}
+
+	public synchronized void start(String key) {
+		setStart(key, System.currentTimeMillis());
 	}
 
 	public void startTicks(String key) {

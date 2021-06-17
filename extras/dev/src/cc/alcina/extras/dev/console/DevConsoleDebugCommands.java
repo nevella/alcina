@@ -457,12 +457,8 @@ public class DevConsoleDebugCommands {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			try {
-				console.clear();
-				return run0(argv);
-			} finally {
-				console.scrollToTopAtEnd();
-			}
+			console.clear();
+			return run0(argv);
 		}
 
 		private void deObfStacktrace(String text, String mn, Browser browser)

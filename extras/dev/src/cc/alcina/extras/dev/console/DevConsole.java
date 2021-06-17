@@ -1,8 +1,6 @@
 package cc.alcina.extras.dev.console;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
-import java.awt.Dimension;
 import java.awt.HeadlessException;
 import java.awt.Insets;
 import java.awt.Rectangle;
@@ -12,14 +10,6 @@ import java.awt.datatransfer.ClipboardOwner;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
-import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
@@ -29,7 +19,6 @@ import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,19 +27,11 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.stream.Collectors;
 
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.JViewport;
 import javax.swing.SwingUtilities;
-import javax.swing.event.AncestorEvent;
-import javax.swing.event.AncestorListener;
 import javax.swing.text.AttributeSet;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.Element;
@@ -69,11 +50,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
-import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitConsole;
-import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitConsole.StatCategory_InitJaxbServices;
-import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitConsole.StatCategory_InitLightweightServices;
-import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_InitPostObjectServices;
-import cc.alcina.extras.dev.console.StatCategory_All.StatCategory_Start;
+import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitConsole;
+import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitJaxbServices;
+import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitLightweightServices;
+import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitPostObjectServices;
+import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_Start;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -98,9 +79,8 @@ import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
-import cc.alcina.framework.entity.persistence.metric.StartupStats;
-import cc.alcina.framework.entity.persistence.metric.StartupStats.KeyedStat;
-import cc.alcina.framework.entity.persistence.metric.StartupStats.LogProvider;
+import cc.alcina.framework.entity.persistence.domain.StatCategory_DomainStore;
+import cc.alcina.framework.entity.persistence.metric.DevStats;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
@@ -112,6 +92,7 @@ import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
+import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
 @RegistryLocation(registryPoint = DevConsole.class, implementationType = ImplementationType.SINGLETON)
@@ -172,36 +153,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		System.setOut(out.s1);
 	}
 
-	private MainFrame mainFrame;
-
 	public D devHelper;
 
 	Map<String, DevConsoleCommand> commandsById = new HashMap<String, DevConsoleCommand>();
-
-	private JConsole consoleLeft = new JConsole();
-
-	private JConsole consoleRight = new JConsole();
-
-	private JPanel panelLeft = new JPanel(new BorderLayout());
-
-	private JPanel panelRight = new JPanel(new BorderLayout());
-	{
-		panelLeft.add(consoleLeft, BorderLayout.CENTER);
-	}
-	{
-		panelRight.add(consoleRight, BorderLayout.CENTER);
-	}
-
-	private JScrollPane scrollLeft = new JScrollPane(panelLeft);
-
-	private JScrollPane scrollRight = new JScrollPane(panelRight);
-	{
-		scrollLeft.getVerticalScrollBar().setUnitIncrement(16);
-		scrollLeft.getHorizontalScrollBar().setUnitIncrement(16);
-		scrollRight.getVerticalScrollBar().setUnitIncrement(16);
-	}
-
-	private JCommandLine commandLine = new JCommandLine();
 
 	public P props;
 
@@ -247,6 +201,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public ConsoleStatLogProvider logProvider;
 
+	private DevConsoleStyle style = DevConsoleStyle.NORMAL;
+
 	public DevConsole() {
 		shells.push(DevConsoleCommand.class);
 		DevConsoleRunnable.console = this;
@@ -272,12 +228,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public void clear() {
-		consoleLeft.invoke(new Runnable() {
-			@Override
-			public void run() {
-				consoleLeft.setText("");
-			}
-		});
 		remote.addClearEvent();
 		if (lastCommand != null) {
 			echoCommand(lastCommand);
@@ -320,9 +270,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public void echoCommand(String commandString) {
-		consoleLeft.setStyle(DevConsoleStyle.COMMAND);
+		setStyle(DevConsoleStyle.COMMAND);
 		Ax.out("\n>%s", commandString);
-		consoleLeft.setStyle(DevConsoleStyle.NORMAL);
+		setStyle(DevConsoleStyle.NORMAL);
 	}
 
 	public String endRecordingSysout() {
@@ -333,10 +283,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public abstract void ensureDomainStore() throws Exception;
-
-	public void find(String text) {
-		consoleLeft.find(text);
-	}
 
 	/**
 	 * Get the String residing on the clipboard.
@@ -380,14 +326,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		return result;
 	}
 
-	public JConsole getConsoleLeft() {
-		return this.consoleLeft;
-	}
-
-	public DevConsoleStyle getCurrentConsoleStyle() {
-		return consoleLeft.currentStyle;
-	}
-
 	public File getDevFile(String path) {
 		return new File(String.format("%s/%s", devFolder.getPath(), path));
 	}
@@ -397,59 +335,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public String getMultilineInput(String prompt, int rows, int cols) {
-		if (isHeadless()) {
-			return getClipboardContents();
-		}
-		final JTextArea textArea = new JTextArea(rows, cols);
-		textArea.addAncestorListener(new AncestorListener() {
-			@Override
-			public void ancestorAdded(AncestorEvent event) {
-				textArea.requestFocusInWindow();
-			}
-
-			@Override
-			public void ancestorMoved(AncestorEvent event) {
-			}
-
-			@Override
-			public void ancestorRemoved(AncestorEvent event) {
-			}
-		});
-		textArea.setText(getClipboardContents().replace("\r", "\n"));
-		JScrollPane jsp = new JScrollPane(textArea);
-		int result = JOptionPane.showConfirmDialog(null, jsp, prompt,
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (result == JOptionPane.OK_OPTION) {
-			return textArea.getText();
-		} else {
-			return null;
-		}
+		return getClipboardContents();
 	}
 
-	public String getSingleLineInput(String prompt, String defaultValue) {
-		final JTextField textArea = new JTextField(40);
-		textArea.addAncestorListener(new AncestorListener() {
-			@Override
-			public void ancestorAdded(AncestorEvent event) {
-				textArea.requestFocusInWindow();
-			}
-
-			@Override
-			public void ancestorMoved(AncestorEvent event) {
-			}
-
-			@Override
-			public void ancestorRemoved(AncestorEvent event) {
-			}
-		});
-		textArea.setText(defaultValue);
-		int result = JOptionPane.showConfirmDialog(null, textArea, prompt,
-				JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
-		if (result == JOptionPane.OK_OPTION) {
-			return textArea.getText();
-		} else {
-			return null;
-		}
+	public DevConsoleStyle getStyle() {
+		return style;
 	}
 
 	public boolean isHeadless() {
@@ -484,6 +374,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	@Override
 	public void lostOwnership(Clipboard clipboard, Transferable contents) {
+	}
+
+	public void ok(String string) {
+		setStyle(DevConsoleStyle.OK);
+		Ax.out(string);
+		setStyle(DevConsoleStyle.NORMAL);
 	}
 
 	public String padLeft(String str, int tabCount, int charCount) {
@@ -545,7 +441,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				template = commandsById.get(cmd);
 			}
 			if (template == null) {
-				consoleLeft.err(String.format("'%s' is not a command\n", cmd));
+				Ax.err("'%s' is not a command\n", cmd);
 				CmdHelp cmdHelp = new CmdHelp();
 				cmdHelp.console = this;
 				cmdHelp.run(new String[0]);
@@ -678,30 +574,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		serializeObject(props, consolePropertiesFile);
 		serializeObject(history, consoleHistoryFile);
 		serializeObject(strings, consoleStringsFile);
-		// this breaks our jaxb classpath loading...only use if kryo failing due
-		// to signature change
-		// new Thread() {
-		// @Override
-		// public void run() {
-		// try {
-		// ResourceUtilities.writeStringToFile(
-		// WrappedObjectHelper.xmlSerialize(props),
-		// consolePropertiesFile);
-		// ResourceUtilities.writeStringToFile(
-		// WrappedObjectHelper.xmlSerialize(history),
-		// consoleHistoryFile);
-		// ResourceUtilities.writeStringToFile(
-		// WrappedObjectHelper.xmlSerialize(strings),
-		// consoleStringsFile);
-		// } catch (Exception e) {
-		// e.printStackTrace();
-		// }
-		// }
-		// }.start();
-	}
-
-	public void scrollToTopAtEnd() {
-		consoleLeft.scrollToTopAtEnd = true;
 	}
 
 	public void serializeState() {
@@ -733,7 +605,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public void setCommandLineText(String text) {
-		commandLine.setTextWithPrompt(text);
 		remote.addSetCommandLineEvent(text);
 	}
 
@@ -749,6 +620,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public void setStyle(DevConsoleStyle style) {
+		this.style = style;
 	}
 
 	public void startRecordingSysout(boolean mute) {
@@ -815,21 +690,28 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
-	@SuppressWarnings("unused")
-	private void loadFontMetrics() {
-		new Thread(() -> {
-			new BufferedImage(1, 1, BufferedImage.TYPE_BYTE_GRAY)
-					.createGraphics().getFontMetrics();
-		}).start();
+	private void serializeObject(Object object, File file) {
+		new Thread(Ax.format("console-serialize-%s", file.getName())) {
+			@Override
+			public void run() {
+				try {
+					new ObjectMapper().enableDefaultTyping()
+							.writerWithDefaultPrettyPrinter()
+							.writeValue(file, object);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			};
+		}.start();
 	}
 
-	private void serializeObject(Object object, File file) {
-		try {
-			new ObjectMapper().enableDefaultTyping()
-					.writerWithDefaultPrettyPrinter().writeValue(file, object);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+	protected void atEndOfDomainStoreLoad() {
+		new StatCategory_Console.PostDomainStore.End().emit();
+		new StatCategory_DomainStore().emit();
+		new StatCategory_Console().emit();
+		new DevStats().parse(logProvider).dump(true);
+		logProvider.startRemote();
+		JobRegistry.get();
 	}
 
 	protected abstract void createDevHelper();
@@ -846,12 +728,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		instance = this;
 		Registry.registerSingleton(DevConsole.class, this);
 		long statStartInit = System.currentTimeMillis();
-		MetricLogging.get().start("init-console");
-		// osx =>
-		// https://bugs.openjdk.java.net/browse/JDK-8179209
-		// loadFontMetrics();
 		createDevHelper();
-		devHelper.loadDefaultLoggingProperties();
+		devHelper.doParallelEarlyClassInit();
 		devHelper.loadJbossConfig(new ConsolePrompter());
 		devHelper.initLightweightServices();
 		long statEndInitLightweightServices = System.currentTimeMillis();
@@ -878,8 +756,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		initState();
 		devHelper.loadJbossConfig(null);
 		boolean waitForUi = !devHelper.configLoaded;
-		consoleLeft.initAttrs(props.fontName);
-		consoleRight.initAttrs(props.fontName);
 		remote = new DevConsoleRemote(this);
 		remote.start(devHelper.configLoaded);
 		this.headless = remote.isHasRemote();
@@ -894,27 +770,27 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		devErr.s1 = new PrintStream(
 				new WriterOutputStream(remote.getErrWriter()));
 		if (!headless) {
-			new AlcinaChildContextRunner("launcher-thread")
-					.callNewThreadOrCurrent(() -> initUi(), null, !waitForUi);
+			throw new UnsupportedOperationException();
 		}
 		clear();
+		MetricLogging.get().setStart("init-console", statStartInit);
 		MetricLogging.get().end("init-console");
 		this.logProvider = new ConsoleStatLogProvider();
 		new StatCategory_Start().emit(startupTime);
 		new StatCategory_InitLightweightServices()
 				.emit(statEndInitLightweightServices);
 		new StatCategory_InitJaxbServices().emit(statEndInitJaxbServices);
-		new StatCategory_InitConsole().emit(System.currentTimeMillis());
 		devHelper.initPostObjectServices();
 		// FIXME - to consort
 		BackendTransformQueue.get().start();
 		new StatCategory_InitPostObjectServices()
 				.emit(System.currentTimeMillis());
+		new StatCategory_InitConsole().emit(System.currentTimeMillis());
 		if (!props.lastCommand.matches("|q|re|restart")) {
 			runningLastCommand = true;
 			performCommand(props.lastCommand);
 		} else {
-			consoleLeft.ok("Enter 'h' for help\n\n");
+			ok("Enter 'h' for help\n\n");
 		}
 	}
 
@@ -930,35 +806,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 		classrefScanner.scan(cache);
 	}
-	// protected void initJaxb() {
-	// new Thread() {
-	// @Override
-	// public void run() {
-	// try {
-	// // init full jaxb
-	// WrappedObjectHelper
-	// .xmlSerialize(new DevConsoleProperties());
-	// } catch (Exception e) {
-	// e.printStackTrace();
-	// }
-	// };
-	// }.start();
-	// }
 
 	protected abstract void initState();
-
-	protected void initUi() {
-		try {
-			SwingUtilities.invokeAndWait(() -> {
-				mainFrame = new MainFrame();
-				mainFrame.setName("Dev Console");
-				mainFrame.setVisible(!remote.isHasRemote());
-				devHelper.loadJbossConfig(new SwingPrompter());
-			});
-		} catch (Throwable e) {
-			e.printStackTrace();
-		}
-	}
 
 	protected boolean isConsoleInstanceCommand(DevConsoleCommand c) {
 		return false;
@@ -995,8 +844,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			c.cleanup();
 			long l2 = System.currentTimeMillis();
 			if (msg != null) {
-				consoleLeft
-						.ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
+				ok(String.format("  %s - ok - %s ms\n", msg, l2 - l1));
 			}
 			if (topLevel && !c.ignoreForCommandHistory()) {
 				String modCommand = c.rerunIfMostRecentOnRestart() ? lastCommand
@@ -1034,54 +882,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		consolePropertiesFile = getDevFile("console-properties.xml");
 		consoleHistoryFile = getDevFile("console-history.xml");
 		consoleStringsFile = getDevFile("console-strings.xml");
-	}
-
-	public static class ConsoleStat_StatCategory_InitConsole extends KeyedStat {
-		public ConsoleStat_StatCategory_InitConsole() {
-			super(StatCategory_Start.class, StatCategory_InitConsole.class);
-		}
-
-		public static class ConsoleStat_StatCategory_InitJaxbServices
-				extends KeyedStat {
-			public ConsoleStat_StatCategory_InitJaxbServices() {
-				super(StatCategory_InitLightweightServices.class,
-						StatCategory_InitJaxbServices.class);
-			}
-		}
-
-		public static class ConsoleStat_StatCategory_InitLightweightServices
-				extends KeyedStat {
-			public ConsoleStat_StatCategory_InitLightweightServices() {
-				super(StatCategory_Start.class,
-						StatCategory_InitLightweightServices.class);
-			}
-		}
-	}
-
-	public static class ConsoleStatAll extends KeyedStat {
-		public ConsoleStatAll() {
-			super(StatCategory_Start.class, StatCategory_All.class);
-		}
-	}
-
-	public static class ConsoleStatLogProvider implements LogProvider {
-		List<String> stats = Collections.synchronizedList(new ArrayList<>());
-
-		String log;
-
-		public ConsoleStatLogProvider() {
-			StartupStats.topicEmitStat().add((k, v) -> {
-				stats.add(v);
-			});
-		}
-
-		@Override
-		public String getLog() {
-			if (log == null) {
-				log = stats.stream().collect(Collectors.joining("\n"));
-			}
-			return log;
-		}
 	}
 
 	public enum DevConsoleStyle {
@@ -1331,106 +1131,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					r.run();
 				}
 			}
-		}
-	}
-
-	private class JCommandLine extends JTextField {
-		private KeyListener arrowListener = new KeyAdapter() {
-			@Override
-			public void keyReleased(KeyEvent e) {
-				int code = e.getKeyCode();
-				int delta = 0;
-				switch (code) {
-				case KeyEvent.VK_DOWN:
-					delta = 1;
-					break;
-				case KeyEvent.VK_UP:
-					delta = -1;
-					break;
-				}
-				if (delta != 0) {
-					doCommandHistoryDelta(delta);
-				}
-				if (e.isMetaDown() && e.getKeyChar() == 'k') {
-					clear();
-				}
-			}
-		};
-
-		public JCommandLine() {
-			addKeyListener(arrowListener);
-		}
-
-		public String getTrimmedText() {
-			return getText().substring(1);
-		}
-
-		@Override
-		public void setCaretPosition(int position) {
-			super.setCaretPosition(
-					position == 0 ? getText().length() == 0 ? 0 : 1 : position);
-		}
-
-		public void setTextWithPrompt(final String text) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					setText(">" + text);
-					setCaretPosition(getText().length());
-				}
-			});
-		}
-
-		private void reset() {
-			requestFocusInWindow();
-			setTextWithPrompt("");
-			select(1, 1);
-		}
-	}
-
-	private class MainFrame extends JFrame {
-		private ActionListener clListener = new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				String command = commandLine.getTrimmedText();
-				// consoleLeft.append(command + "\n");
-				commandLine.reset();
-				performCommand(command);
-			}
-		};
-
-		public MainFrame() {
-			JPanel jp = new JPanel();
-			jp.setLayout(new BorderLayout());
-			jp.add(commandLine, BorderLayout.SOUTH);
-			commandLine.addActionListener(clListener);
-			jp.setMinimumSize(new Dimension(300, 300));
-			jp.setPreferredSize(new Dimension(1250, props.preferredHeight));
-			devOut.s2 = new PrintStream(new WriterOutputStream(
-					new ColouredWriter(DevConsoleStyle.NORMAL, consoleLeft)));
-			devErr.s2 = new PrintStream(new WriterOutputStream(
-					new ColouredWriter(DevConsoleStyle.ERR, consoleLeft)));
-			// JSplitPane split = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT,
-			// scrollLeft, scrollRight);
-			// split.setDividerLocation(490);
-			// jp.add(split, BorderLayout.CENTER);
-			jp.add(scrollLeft, BorderLayout.CENTER);
-			add(jp);
-			pack();
-			setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			addWindowListener(new WindowAdapter() {
-				@Override
-				public void windowClosed(WindowEvent e) {
-					System.exit(0);
-				}
-			});
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					commandLine.reset();
-				}
-			});
-			setTitle("Dev Console");
 		}
 	}
 

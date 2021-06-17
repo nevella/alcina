@@ -240,6 +240,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	@Override
 	public void warmup() throws Exception {
+		new StatCategory_DomainStore.Warmup.Loader().emit();
 		this.domainDescriptor = store.domainDescriptor;
 		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
 		descriptors = new LinkedHashMap<Class, List<PdOperator>>();
@@ -261,6 +262,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				store.applyTxToGraphCounter.getAndIncrement(), 0L);
 		store.getPersistenceEvents().getQueue().setMuteEventsOnOrBefore(
 				highestVisibleCommitPosition.getCommitTimestamp());
+		new StatCategory_DomainStore.Warmup.Loader.Mark().emit();
 		// get non-many-many obj
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {
@@ -279,8 +281,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		List<Callable> calls = new ArrayList<Callable>();
 		setupInitialLoadTableCalls(calls);
 		invokeAllWithThrow(calls);
+		new StatCategory_DomainStore.Warmup.Loader.Tables().emit();
 		setupInitialJoinTableCalls(calls);
 		invokeAllWithThrow(calls);
+		new StatCategory_DomainStore.Warmup.Loader.JoinTables().emit();
 		MetricLogging.get().end("tables");
 		interns = null;
 		MetricLogging.get().start("xrefs");
@@ -292,6 +296,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("xrefs");
+		new StatCategory_DomainStore.Warmup.Loader.Xrefs().emit();
 		serverClientInstanceToDomainStoreVersion();
 		warmupEntityRefss.clear();
 		// lazy tables, load a segment (for large db dev work)
@@ -300,6 +305,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			loadDomainSegment();
 			MetricLogging.get().end("domain-segment");
 		}
+		new StatCategory_DomainStore.Warmup.Loader.Segment().emit();
 		MetricLogging.get().start("postLoad");
 		for (final DomainStoreTask task : domainDescriptor.postLoadTasks) {
 			calls.add(new Callable<Void>() {
@@ -322,6 +328,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		calls.clear();
 		// invokeAllWithThrow(calls);
 		MetricLogging.get().end("postLoad");
+		new StatCategory_DomainStore.Warmup.Loader.PostLoad().emit();
 		MetricLogging.get().start("lookups");
 		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
 				.values()) {
@@ -341,6 +348,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("lookups");
+		new StatCategory_DomainStore.Warmup.Loader.Lookups().emit();
 		MetricLogging.get().start("projections");
 		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
 				.values()) {
@@ -358,6 +366,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("projections");
+		new StatCategory_DomainStore.Warmup.Loader.Projections().emit();
 		store.initialising = false;
 		connectionPool.drain();
 		warmupExecutor = null;
@@ -366,6 +375,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		store.getPersistenceEvents().getQueue()
 				.setTransformLogPosition(highestVisibleCommitPosition);
 		Transaction.endAndBeginNew();
+		new StatCategory_DomainStore.Warmup.Loader.End().emit();
 	}
 
 	private void addColumnName(Class clazz, PropertyDescriptor pd,

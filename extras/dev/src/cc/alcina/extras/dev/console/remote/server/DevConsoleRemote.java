@@ -251,7 +251,7 @@ public class DevConsoleRemote {
 			this.text = text;
 			this.errWriter = errWriter;
 			this.style = errWriter ? DevConsoleStyle.ERR
-					: devConsole.getCurrentConsoleStyle();
+					: devConsole.getStyle();
 			putCallerId();
 		}
 

@@ -567,8 +567,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	}
 
 	public static class CmdExtractChromeCacheFile extends DevConsoleCommand {
-		static String lastFileName = "";
-
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "chrx" };
@@ -589,8 +587,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String chrx = console.getMultilineInput(
 					"Enter the chrome cache file text, or blank for clipboard: ");
 			chrx = chrx.isEmpty() ? console.getClipboardContents() : chrx;
-			lastFileName = console.getSingleLineInput("Save to file:",
-					lastFileName);
 			Pattern p = Pattern.compile("00000000:");
 			Matcher m1 = p.matcher(chrx);
 			m1.find();
@@ -607,12 +603,12 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				}
 			}
 			int size = baos.size();
+			String fileName = "/tmp/CmdExtractChromeCacheFile.dat";
 			BufferedOutputStream bos = new BufferedOutputStream(
-					new FileOutputStream(lastFileName));
+					new FileOutputStream(fileName));
 			ResourceUtilities.writeStreamToStream(
 					new ByteArrayInputStream(baos.toByteArray()), bos);
-			System.out.format("Wrote %s bytes to \n\t'%s'\n", size,
-					lastFileName);
+			System.out.format("Wrote %s bytes to \n\t'%s'\n", size, fileName);
 			return "";
 		}
 	}
@@ -659,34 +655,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			console.setClipboardContents(list);
 			System.out.println("\n");
 			return "";
-		}
-	}
-
-	public static class CmdFind extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "f" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "Find text in main console";
-		}
-
-		@Override
-		public String getUsage() {
-			return "f <text|last text>";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			console.find(argv.length == 0 ? null : argv[0]);
-			return null;
-		}
-
-		@Override
-		public boolean silent() {
-			return true;
 		}
 	}
 

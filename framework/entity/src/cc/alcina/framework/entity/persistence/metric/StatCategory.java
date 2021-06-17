@@ -23,8 +23,8 @@ public abstract class StatCategory {
 	public void emit(long time) {
 		String timeStamp = new SimpleDateFormat("HH:mm:ss,SSS")
 				.format(new Date(time));
-		String key = Ax.format("[alc-%s]", getClass().getSimpleName());
-		StartupStats.topicEmitStat
+		String key = Ax.format("[alc-%s]", getClass().getCanonicalName());
+		DevStats.topicEmitStat
 				.publish(Ax.format("%s %s :: end", timeStamp, key));
 	}
 
