@@ -74,7 +74,6 @@ import cc.alcina.framework.entity.transform.TestPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
-import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -334,7 +333,6 @@ public abstract class DevHelper {
 		TransformManager.register(createTransformManager());
 		initCustomServicesFirstHalf();
 		setupJobsToSysout();
-		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		XmlUtils.noTransformerCaching = true;
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		AlcinaTopics.notifyDevWarningListenerDelta(devWarningListener, true);
