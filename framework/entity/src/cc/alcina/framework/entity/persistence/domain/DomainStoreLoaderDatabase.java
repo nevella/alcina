@@ -110,13 +110,7 @@ import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SqlUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 
-/*FIXME - mvcc.4
- * The various loadtable methods are way to overloaded 
- * (and use context vars as well because of call depth). Refactor into a loadparams builder
- * 
- * FIXME - mvcc.5
- * 
- * warmup connections would ideally be all in the same tx (no idea if that's even possible). or ... 1 connection multiple statements?
+/*
  */
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	static final transient String CONTEXT_ALLOW_ALL_LAZY_LOAD = DomainStoreLoaderDatabase.class
@@ -1286,8 +1280,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					long now = System.currentTimeMillis();
 					if (now - start > 1000 && store.initialised) {
 						logger.warn("Long wait for connection - {} threads",
-								members.stream().collect(Collectors
-										.summingInt(m -> m.threads.size())));
+								members.stream()
+										.collect(Collectors.summingInt(
+												m -> m.threads.size()))
+										.toString());
 					}
 					o_member = getMember0();
 					if (o_member.isPresent()) {
