@@ -80,7 +80,7 @@ public abstract class DomainViews {
 		if (isIndexableTransformRequest(e)) {
 			ViewsTask task = new ViewsTask();
 			task.type = Type.MODEL_CHANGE;
-			task.modelChange.preCommit = preCommitTransactions.get(e);
+			task.modelChange.preCommit = preCommitTransactions.remove(e);
 			task.modelChange.event = e;
 			task.modelChange.postCommit = Transaction
 					.createSnapshotTransaction();
