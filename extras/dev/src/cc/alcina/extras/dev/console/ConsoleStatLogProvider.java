@@ -10,8 +10,8 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
-import cc.alcina.framework.entity.persistence.metric.DevStats;
-import cc.alcina.framework.entity.persistence.metric.DevStats.LogProvider;
+import cc.alcina.framework.entity.stat.DevStats;
+import cc.alcina.framework.entity.stat.DevStats.LogProvider;
 
 public class ConsoleStatLogProvider implements LogProvider {
 	List<String> stats = Collections.synchronizedList(new ArrayList<>());

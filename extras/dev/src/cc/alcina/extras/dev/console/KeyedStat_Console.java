@@ -1,13 +1,14 @@
 package cc.alcina.extras.dev.console;
 
-import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitConsole;
-import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitJaxbServices;
-import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitLightweightServices;
-import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitPostObjectServices;
-import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_Start;
-import cc.alcina.framework.entity.persistence.domain.StatCategory_DomainStore;
-import cc.alcina.framework.entity.persistence.domain.StatCategory_DomainStore.Start;
-import cc.alcina.framework.entity.persistence.metric.DevStats.KeyedStat;
+import cc.alcina.framework.entity.stat.StatCategory_Console;
+import cc.alcina.framework.entity.stat.StatCategory_DomainStore;
+import cc.alcina.framework.entity.stat.DevStats.KeyedStat;
+import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole;
+import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitPostObjectServices;
+import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_Start;
+import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitJaxbServices;
+import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitLightweightServices;
+import cc.alcina.framework.entity.stat.StatCategory_DomainStore.Start;
 
 public class KeyedStat_Console {
 	public static class ConsoleStat_StatCategory_DomainStore extends KeyedStat {

@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.persistence.metric;
+package cc.alcina.framework.entity.stat;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

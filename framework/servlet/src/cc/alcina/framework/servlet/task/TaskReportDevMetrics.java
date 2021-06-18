@@ -17,11 +17,11 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.metric.DevStats;
-import cc.alcina.framework.entity.persistence.metric.DevStats.KeyedStat;
-import cc.alcina.framework.entity.persistence.metric.DevStats.LogProvider;
-import cc.alcina.framework.entity.persistence.metric.DevStats.LogProvider.StringLogProvider;
-import cc.alcina.framework.entity.persistence.metric.DevStats.StatResults;
+import cc.alcina.framework.entity.stat.DevStats;
+import cc.alcina.framework.entity.stat.DevStats.KeyedStat;
+import cc.alcina.framework.entity.stat.DevStats.LogProvider;
+import cc.alcina.framework.entity.stat.DevStats.StatResults;
+import cc.alcina.framework.entity.stat.DevStats.LogProvider.StringLogProvider;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
 

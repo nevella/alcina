@@ -42,7 +42,6 @@ import javax.swing.text.StyledDocument;
 import javax.swing.text.TabSet;
 import javax.swing.text.TabStop;
 
-import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -50,15 +49,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
-import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitConsole;
-import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitJaxbServices;
-import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitLightweightServices;
-import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_InitPostObjectServices;
-import cc.alcina.extras.dev.console.StatCategory_Console.StatCategory_Start;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -75,16 +68,21 @@ import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
-import cc.alcina.framework.entity.persistence.domain.StatCategory_DomainStore;
-import cc.alcina.framework.entity.persistence.metric.DevStats;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
+import cc.alcina.framework.entity.stat.DevStats;
+import cc.alcina.framework.entity.stat.StatCategory_Console;
+import cc.alcina.framework.entity.stat.StatCategory_DomainStore;
+import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole;
+import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitPostObjectServices;
+import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_Start;
+import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitJaxbServices;
+import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitLightweightServices;
 import cc.alcina.framework.entity.transform.ClassrefScanner;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable.AlcinaChildContextRunner;
@@ -816,8 +814,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	protected abstract P newConsoleProperties();
 
 	protected void onAddDomainStore() {
-		EntityLayerLogging.setLevel(
-				AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.WARN);
+		// EntityLayerLogging.setLevel(
+		// AlcinaLogUtils.getMetricLogger(DomainStore.class), Level.WARN);
 		DomainStore.stores().writableStore().getPersistenceEvents()
 				.addDomainTransformPersistenceListener(
 						new SerializationSignatureListener());

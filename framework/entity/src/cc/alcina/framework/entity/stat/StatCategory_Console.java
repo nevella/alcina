@@ -1,7 +1,4 @@
-package cc.alcina.extras.dev.console;
-
-import cc.alcina.framework.entity.persistence.domain.StatCategory_DomainStore;
-import cc.alcina.framework.entity.persistence.metric.StatCategory;
+package cc.alcina.framework.entity.stat;
 
 public class StatCategory_Console extends StatCategory {
 	public StatCategory_Console() {
