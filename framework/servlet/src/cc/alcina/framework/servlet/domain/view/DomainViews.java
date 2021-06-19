@@ -72,15 +72,23 @@ public abstract class DomainViews {
 			addTaskLock.lock();
 			preCommitTransactions.put(e,
 					Transaction.createSnapshotTransaction());
+			logger.info("leak trace - added {} - size {} - indexable {}",
+					e.hashCode(), preCommitTransactions.size(), true);
 		}
 	};
 
 	private TopicListener<DomainTransformPersistenceEvent> afterDomainCommittedListener = (
 			k, e) -> {
-		if (isIndexableTransformRequest(e)) {
+		Transaction preCommit = preCommitTransactions.remove(e);
+		boolean indexableTransformRequest = isIndexableTransformRequest(e);
+		logger.info("leak trace - removed {} - size {} - indexable {}",
+				e.hashCode(), preCommitTransactions.size(),
+				indexableTransformRequest);
+		if (indexableTransformRequest
+				&& Transaction.current().isToDomainCommitted()) {
 			ViewsTask task = new ViewsTask();
 			task.type = Type.MODEL_CHANGE;
-			task.modelChange.preCommit = preCommitTransactions.remove(e);
+			task.modelChange.preCommit = preCommit;
 			task.modelChange.event = e;
 			task.modelChange.postCommit = Transaction
 					.createSnapshotTransaction();

@@ -770,9 +770,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				if (mvccVersions != null
 						&& mvccVersions.hasNoVisibleTransaction()) {
 					if (entity instanceof InvariantOnceCreated) {
-						if (entity.getId() == 0) {
-							mvccVersions.resolveInvariantToDomainIdentity();
-						}
+						mvccVersions.resolveInvariantToDomainIdentity();
 					} else {
 						logger.warn(
 								"Cpr unreachable access - non invariant entity - {}",
@@ -787,9 +785,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				if (mvccVersions != null
 						&& mvccVersions.hasNoVisibleTransaction()) {
 					if (entity instanceof InvariantOnceCreated) {
-						if (entity.getId() == 0) {
-							mvccVersions.resolveInvariantToDomainIdentity();
-						}
+						mvccVersions.resolveInvariantToDomainIdentity();
 					} else {
 						logger.warn(
 								"Cpr unreachable access - non invariant entity - {}",

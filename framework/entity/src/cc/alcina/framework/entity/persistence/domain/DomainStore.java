@@ -971,12 +971,12 @@ public class DomainStore implements IDomainStore {
 			topicBeforeDomainCommitted().publish(persistenceEvent);
 			Transaction.current()
 					.toDomainCommitted(persistenceEvent.getPosition());
-			topicAfterDomainCommitted().publish(persistenceEvent);
 		} catch (Exception e) {
 			logger.warn("post process exception - pre final", e);
 			Transaction.current().toDomainAborted();
 			causes.add(e);
 		} finally {
+			topicAfterDomainCommitted().publish(persistenceEvent);
 			TransformManager.get().setIgnorePropertyChanges(false);
 			health.domainStorePostProcessStartTime = 0;
 			postProcessThread = null;
