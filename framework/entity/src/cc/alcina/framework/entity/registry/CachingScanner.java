@@ -107,13 +107,20 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 					loadClassNanos / 1000 / 1000,
 					loadClassErrNanos / 1000 / 1000, ignoreCount, time);
 		}
-		try {
-			LooseContext.pushWithTrue(
-					JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL);
-			JacksonUtils.serializeToFile(outgoingCache, cacheFile);
-		} finally {
-			LooseContext.pop();
-		}
+		new Thread(Ax.format("caching-scanner-write-%s", cacheFile.getName())) {
+			@Override
+			public void run() {
+				try {
+					LooseContext.pushWithTrue(
+							JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL);
+					JacksonUtils.serializeToFile(outgoingCache, cacheFile);
+				} catch (Throwable t) {
+					t.printStackTrace();
+				} finally {
+					LooseContext.pop();
+				}
+			};
+		}.start();
 	}
 
 	private void maybeLog(Throwable throwable, String className) {

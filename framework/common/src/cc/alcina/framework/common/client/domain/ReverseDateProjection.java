@@ -34,6 +34,11 @@ public abstract class ReverseDateProjection<T extends Entity>
 	}
 
 	@Override
+	public boolean isCommitOnly() {
+		return true;
+	}
+
+	@Override
 	protected MultikeyMap<T> createLookup() {
 		return new BaseProjectionLookupBuilder(this)
 				.withMapCreators(new CollectionCreators.MapCreator[] { Registry

@@ -91,6 +91,14 @@ public class Ax {
 		return CommonUtils.last(list);
 	}
 
+	public static int length(double[] array) {
+		return array.length;
+	}
+
+	public static int length(Object[] array) {
+		return array.length;
+	}
+
 	public static boolean matches(String test, String regex) {
 		if (test == null || regex == null) {
 			return false;
@@ -159,6 +167,10 @@ public class Ax {
 		System.out.println(CommonUtils.highlightForLog(template, args));
 	}
 
+	public static String timestamp(Date date) {
+		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME_MS);
+	}
+
 	public static String trim(String s, int maxChars) {
 		return CommonUtils.trimToWsChars(s, maxChars, true);
 	}
@@ -174,13 +186,5 @@ public class Ax {
 				return t;
 			};
 		}
-	}
-
-	public static int length(Object[] array) {
-		return array.length;
-	}
-
-	public static int length(double[] array) {
-		return array.length;
 	}
 }

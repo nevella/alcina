@@ -102,6 +102,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
+import cc.alcina.framework.entity.stat.StatCategory_DomainStore;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.AnnotationUtils;
@@ -109,13 +110,7 @@ import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SqlUtils;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
 
-/*FIXME - mvcc.4
- * The various loadtable methods are way to overloaded 
- * (and use context vars as well because of call depth). Refactor into a loadparams builder
- * 
- * FIXME - mvcc.5
- * 
- * warmup connections would ideally be all in the same tx (no idea if that's even possible). or ... 1 connection multiple statements?
+/*
  */
 public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	static final transient String CONTEXT_ALLOW_ALL_LAZY_LOAD = DomainStoreLoaderDatabase.class
@@ -240,6 +235,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	@Override
 	public void warmup() throws Exception {
+		new StatCategory_DomainStore.Warmup.Loader().emit();
 		this.domainDescriptor = store.domainDescriptor;
 		joinTables = new LinkedHashMap<PropertyDescriptor, JoinTable>();
 		descriptors = new LinkedHashMap<Class, List<PdOperator>>();
@@ -261,6 +257,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				store.applyTxToGraphCounter.getAndIncrement(), 0L);
 		store.getPersistenceEvents().getQueue().setMuteEventsOnOrBefore(
 				highestVisibleCommitPosition.getCommitTimestamp());
+		new StatCategory_DomainStore.Warmup.Loader.Mark().emit();
 		// get non-many-many obj
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {
@@ -279,8 +276,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		List<Callable> calls = new ArrayList<Callable>();
 		setupInitialLoadTableCalls(calls);
 		invokeAllWithThrow(calls);
+		new StatCategory_DomainStore.Warmup.Loader.Tables().emit();
 		setupInitialJoinTableCalls(calls);
 		invokeAllWithThrow(calls);
+		new StatCategory_DomainStore.Warmup.Loader.JoinTables().emit();
 		MetricLogging.get().end("tables");
 		interns = null;
 		MetricLogging.get().start("xrefs");
@@ -292,6 +291,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("xrefs");
+		new StatCategory_DomainStore.Warmup.Loader.Xrefs().emit();
 		serverClientInstanceToDomainStoreVersion();
 		warmupEntityRefss.clear();
 		// lazy tables, load a segment (for large db dev work)
@@ -300,6 +300,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			loadDomainSegment();
 			MetricLogging.get().end("domain-segment");
 		}
+		new StatCategory_DomainStore.Warmup.Loader.Segment().emit();
 		MetricLogging.get().start("postLoad");
 		for (final DomainStoreTask task : domainDescriptor.postLoadTasks) {
 			calls.add(new Callable<Void>() {
@@ -322,6 +323,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		calls.clear();
 		// invokeAllWithThrow(calls);
 		MetricLogging.get().end("postLoad");
+		new StatCategory_DomainStore.Warmup.Loader.PostLoad().emit();
 		MetricLogging.get().start("lookups");
 		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
 				.values()) {
@@ -341,6 +343,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("lookups");
+		new StatCategory_DomainStore.Warmup.Loader.Lookups().emit();
 		MetricLogging.get().start("projections");
 		for (final DomainClassDescriptor<?> descriptor : domainDescriptor.perClass
 				.values()) {
@@ -358,6 +361,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("projections");
+		new StatCategory_DomainStore.Warmup.Loader.Projections().emit();
 		store.initialising = false;
 		connectionPool.drain();
 		warmupExecutor = null;
@@ -366,6 +370,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		store.getPersistenceEvents().getQueue()
 				.setTransformLogPosition(highestVisibleCommitPosition);
 		Transaction.endAndBeginNew();
+		new StatCategory_DomainStore.Warmup.Loader.End().emit();
 	}
 
 	private void addColumnName(Class clazz, PropertyDescriptor pd,
@@ -1275,8 +1280,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					long now = System.currentTimeMillis();
 					if (now - start > 1000 && store.initialised) {
 						logger.warn("Long wait for connection - {} threads",
-								members.stream().collect(Collectors
-										.summingInt(m -> m.threads.size())));
+								members.stream()
+										.collect(Collectors.summingInt(
+												m -> m.threads.size()))
+										.toString());
 					}
 					o_member = getMember0();
 					if (o_member.isPresent()) {

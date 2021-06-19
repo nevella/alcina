@@ -23,8 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  */
 public interface ToStringFunction<T> extends Function<T, String> {
 	@ClientInstantiable
-	public static final class ExplicitIdentity
-			implements ToStringFunction<String> {
+	public static class ExplicitIdentity implements ToStringFunction<String> {
 		@Override
 		public String apply(String t) {
 			return t;
@@ -32,7 +31,7 @@ public interface ToStringFunction<T> extends Function<T, String> {
 	}
 
 	@ClientInstantiable
-	public static final class Identity implements ToStringFunction<String> {
+	public static class Identity implements ToStringFunction<String> {
 		@Override
 		public String apply(String t) {
 			return t;

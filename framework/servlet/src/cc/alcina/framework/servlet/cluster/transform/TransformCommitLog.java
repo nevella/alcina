@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet.cluster.transform;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Properties;
 import java.util.Timer;
@@ -33,8 +34,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.State;
 
@@ -80,7 +81,8 @@ public class TransformCommitLog {
 		this.pollTimeout = commitLogHost.getPollTimeout();
 		if (!initialised.getAndSet(true)) {
 			topicPartition = new TopicPartition(getTopic(), 0);
-			logger.info("Launch consumer thread :: {}", hostName);
+			logger.info("{}Launch consumer thread :: {}", datestampIfTest(),
+					hostName);
 			launchConsumerThread(-1);
 			logger.info("Started queue :: host {} :: offset {}", hostName,
 					currentConsumerThread.currentOffset);
@@ -95,7 +97,8 @@ public class TransformCommitLog {
 			// network outage/timeout on startup)
 			/*
 			 */
-			refreshCurrentPosition();
+			MethodContext.instance().withMetricKey("tcl-initial-position")
+					.run(() -> refreshCurrentPosition());
 		}
 	}
 
@@ -147,6 +150,10 @@ public class TransformCommitLog {
 		if (timeoutChecker != null) {
 			timeoutChecker.cancel();
 		}
+	}
+
+	private String datestampIfTest() {
+		return Ax.isTest() ? Ax.timestamp(new Date()) + " " : "";
 	}
 
 	private void launchConsumerThread(long offset) {
@@ -305,7 +312,7 @@ public class TransformCommitLog {
 						logger.info(
 								"Started consumer :: thread {} :: groupId :: {} :: topicPartion :: {}",
 								tName, groupId, topicPartition);
-						if (!AppPersistenceBase.isTestServer()) {
+						if (!Sx.isTest() && !Sx.isTestServer()) {
 							/*
 							 * We've just created a new consumer group, and
 							 * kafka seems to hang more than it should at this
@@ -320,7 +327,8 @@ public class TransformCommitLog {
 						previousConsumerCompletedOffset = -1;
 					}
 					if (checkCurrentPositionLatch != null) {
-						logger.info("Check current position");
+						logger.info("{}Check current position",
+								datestampIfTest());
 						if (currentOffset == -1) {
 							performOperation(() -> {
 								consumer.seekToEnd(Collections
@@ -330,8 +338,8 @@ public class TransformCommitLog {
 						long position = performOperation(
 								() -> consumer.position(topicPartition));
 						logger.info(
-								"Current position :: {} - current offset :: {}",
-								position, currentOffset);
+								"{}Current position :: {} - current offset :: {}",
+								datestampIfTest(), position, currentOffset);
 						if (currentOffset == -1) {
 							currentOffset = position - 1;
 							highestSeekOffset = Math.max(highestSeekOffset,
@@ -347,11 +355,13 @@ public class TransformCommitLog {
 					if (stopped.get() && !cancelled.get()) {
 						return;// don't commitsync
 					}
+					boolean hadRecords = false;
 					for (ConsumerRecord<Void, byte[]> record : records) {
 						try {
 							ClusterTransformRequest request = Registry
 									.impl(ClusterTransformSerializer.class)
-									.deserialize(record.value());
+									.deserialize(record.value(),
+											TransformCommitLog.this.getClass());
 							if (request == null) {
 								logger.info("Received partial packet - {}",
 										Registry.impl(
@@ -364,6 +374,7 @@ public class TransformCommitLog {
 						} catch (Exception e) {
 							e.printStackTrace();
 						} finally {
+							hadRecords = true;
 							currentOffset = record.offset();
 							highestSeekOffset = Math.max(highestSeekOffset,
 									currentOffset);
@@ -373,7 +384,9 @@ public class TransformCommitLog {
 						checkCurrentPositionLatch.countDown();
 						checkCurrentPositionLatch = null;
 					}
-					performOperation(() -> consumer.commitSync());
+					if (!hadRecords) {
+						performOperation(() -> consumer.commitSync());
+					}
 				} catch (Throwable e) {
 					if (CommonUtils.hasCauseOfClass(e, WakeupException.class)) {
 					} else {

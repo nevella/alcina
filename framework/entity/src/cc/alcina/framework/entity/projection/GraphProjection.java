@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -76,6 +77,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
@@ -872,6 +874,8 @@ public class GraphProjection {
 			c = new ArrayList();
 		} else if (coll.getClass() == LiSet.class) {
 			c = new LiSet();
+		} else if (coll.getClass() == TreeSet.class) {
+			c = new TreeSet();
 		} else if (coll.getClass() == LightSet.class) {
 			c = new LightSet();
 		} else if (coll.getClass() == ConcurrentLinkedQueue.class) {
@@ -964,7 +968,17 @@ public class GraphProjection {
 		// Trying hard to avoid the first case (it's very much not optimal)
 		if (source instanceof MvccObject
 				&& ((MvccObject) source).__getMvccVersions__() != null) {
-			return SEUtilities.getPropertyValue(source, field.getName());
+			try {
+				return SEUtilities.getPropertyValue(source, field.getName());
+			} catch (Exception e) {
+				// possibly dev rpc
+				if (EntityLayerUtils.isTestOrTestServer()) {
+					e.printStackTrace();
+					return null;
+				} else {
+					throw e;
+				}
+			}
 		} else {
 			return field.get(source);
 		}

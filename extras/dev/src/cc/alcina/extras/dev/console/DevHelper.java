@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -71,8 +72,8 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.transform.TestPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
-import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -132,6 +133,48 @@ public abstract class DevHelper {
 		File cacheFile = SEUtilities.getChildFile(getDataFolder(),
 				"servlet-classpath.ser");
 		cacheFile.delete();
+	}
+
+	public void doParallelEarlyClassInit() {
+		CountDownLatch latch = new CountDownLatch(3);
+		new Thread("clinit-jackson") {
+			@Override
+			public void run() {
+				try {
+					JacksonUtils.serialize(new ArrayList());
+					latch.countDown();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			};
+		}.start();
+		new Thread("clinit-servlet") {
+			@Override
+			public void run() {
+				try {
+					loadDefaultLoggingProperties();
+					latch.countDown();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			};
+		}.start();
+		new Thread("clinit-logging") {
+			@Override
+			public void run() {
+				try {
+					MetricLogging.get();
+					latch.countDown();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			};
+		}.start();
+		try {
+			latch.await();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public Set<DomainTransformEvent> dumpTransforms() {
@@ -290,7 +333,6 @@ public abstract class DevHelper {
 		TransformManager.register(createTransformManager());
 		initCustomServicesFirstHalf();
 		setupJobsToSysout();
-		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		XmlUtils.noTransformerCaching = true;
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		AlcinaTopics.notifyDevWarningListenerDelta(devWarningListener, true);

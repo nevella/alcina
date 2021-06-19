@@ -397,6 +397,10 @@ public class Transaction implements Comparable<Transaction> {
 		return phase == TransactionPhase.TO_DB_PREPARING;
 	}
 
+	public boolean isToDomainCommitted() {
+		return phase == TransactionPhase.TO_DOMAIN_COMMITTED;
+	}
+
 	public boolean isToDomainCommitting() {
 		return phase == TransactionPhase.TO_DOMAIN_COMMITTING;
 	}
@@ -419,6 +423,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public void setTimeout(long timeout) {
+		logger.info("{} :: Setting timeout to {}", this, timeout);
 		this.timeout = timeout;
 	}
 
@@ -595,10 +600,6 @@ public class Transaction implements Comparable<Transaction> {
 
 	boolean isReadonly() {
 		return threadCount.get() != 1;
-	}
-
-	boolean isToDomainCommitted() {
-		return phase == TransactionPhase.TO_DOMAIN_COMMITTED;
 	}
 
 	/*

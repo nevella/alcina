@@ -354,12 +354,11 @@ public class Transactions {
 					} else {
 						timeout = transaction.getTimeout();
 					}
-					if (age > ResourceUtilities.getInteger(Transaction.class,
-							"maxAgeSecs") * TimeConstants.ONE_SECOND_MS) {
+					if (age > timeout) {
 						try {
 							Transaction.logger.error(
-									"Cancelling timed out transaction :: {}",
-									transaction);
+									"Cancelling timed out transaction :: {} :: timeout {}",
+									transaction, timeout);
 							transaction.toTimedOut();
 							// only the tx thread should end the transaction
 							// (otherwise calls

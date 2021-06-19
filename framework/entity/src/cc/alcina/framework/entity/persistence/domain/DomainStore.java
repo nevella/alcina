@@ -91,6 +91,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObject
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.NonDomainNotifier;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -119,6 +120,7 @@ import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.stat.StatCategory_DomainStore;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent.ExTransformDbMetadata;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
@@ -465,6 +467,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public void warmup() throws Exception {
+		new StatCategory_DomainStore.Warmup().emit();
 		MetricLogging.get().start("domainStore.warmup");
 		initialised = false;
 		initialising = true;
@@ -480,10 +483,12 @@ public class DomainStore implements IDomainStore {
 		domainDescriptor.registerStore(this);
 		domainDescriptor.perClass.values().stream()
 				.forEach(this::prepareClassDescriptor);
+		new StatCategory_DomainStore.Warmup.InitialiseDescriptor().emit();
 		mvcc = new Mvcc(this, domainDescriptor, cache);
 		MetricLogging.get().start("mvcc");
 		mvcc.init();
 		MetricLogging.get().end("mvcc");
+		new StatCategory_DomainStore.Warmup.Mvcc().emit();
 		Transaction.beginDomainPreparing();
 		Transaction.current().setBaseTransaction(true);
 		domainDescriptor.perClass.keySet()
@@ -499,6 +504,7 @@ public class DomainStore implements IDomainStore {
 		initialised = true;
 		domainDescriptor.onWarmupComplete(this);
 		MetricLogging.get().end("domainStore.warmup");
+		new StatCategory_DomainStore.Warmup.End().emit();
 	}
 
 	private <E extends Entity> void applyFilter(final Class clazz,
@@ -668,7 +674,18 @@ public class DomainStore implements IDomainStore {
 			Collection<DomainTransformEventPersistent> events) {
 		return events.stream().filter(new InSubgraphFilter())
 				.filter(domainDescriptor::customFilterPostProcess)
-				.map(event -> filterForDomainStoreProperty(event))
+				.filter(event -> {
+					if (!isCached(event.getObjectClass())) {
+						return false;
+					}
+					if (event.getValueClass() != null && Entity.class
+							.isAssignableFrom(event.getValueClass())) {
+						if (!isCached(event.getValueClass())) {
+							return false;
+						}
+					}
+					return true;
+				}).map(event -> filterForDomainStoreProperty(event))
 				.filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
@@ -954,12 +971,12 @@ public class DomainStore implements IDomainStore {
 			topicBeforeDomainCommitted().publish(persistenceEvent);
 			Transaction.current()
 					.toDomainCommitted(persistenceEvent.getPosition());
-			topicAfterDomainCommitted().publish(persistenceEvent);
 		} catch (Exception e) {
 			logger.warn("post process exception - pre final", e);
 			Transaction.current().toDomainAborted();
 			causes.add(e);
 		} finally {
+			topicAfterDomainCommitted().publish(persistenceEvent);
 			TransformManager.get().setIgnorePropertyChanges(false);
 			health.domainStorePostProcessStartTime = 0;
 			postProcessThread = null;
@@ -1328,6 +1345,12 @@ public class DomainStore implements IDomainStore {
 				return storeHandler(clazz).stream(clazz);
 			}
 
+			@Override
+			public boolean wasRemoved(Entity entity) {
+				Class clazz = entity.entityClass();
+				return storeHandler(clazz).wasRemoved(entity);
+			}
+
 			DomainHandler storeHandler(Class clazz) {
 				DomainStore domainStore = classMap.get(clazz);
 				if (domainStore == null) {
@@ -1642,6 +1665,17 @@ public class DomainStore implements IDomainStore {
 			if (entity == null) {
 				ClientInstance clientInstance = AuthenticationPersistence.get()
 						.getClientInstance(locator.getClientInstanceId());
+				if (clientInstance == null) {
+					logger.warn(
+							"Unable to find clientinstance for local find:\n\t locator: {}"
+									+ "\n\t Current user: {}"
+									+ "\n\t Current pm instance: {}"
+									+ "\n\t Service instance: {}",
+							locator, PermissionsManager.get().getUser(),
+							PermissionsManager.get().getClientInstance(),
+							EntityLayerObjects.get()
+									.getServerAsClientInstance());
+				}
 				EntityLocatorMap locatorMap = TransformCommit.get()
 						.getLocatorMapForClient(clientInstance, Ax.isTest());
 				EntityLocator persistentLocator = locatorMap
@@ -1697,6 +1731,11 @@ public class DomainStore implements IDomainStore {
 		@Override
 		public <V extends Entity> Stream<V> stream(Class<V> clazz) {
 			return Domain.query(clazz).stream();
+		}
+
+		@Override
+		public boolean wasRemoved(Entity entity) {
+			return !cache.contains(entity);
 		}
 
 		<T extends Entity> List<T> list(Class<T> clazz) {

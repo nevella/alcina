@@ -134,6 +134,8 @@ public class JobDomain {
 	 * 
 	 * The queue subfields are essentially immutable or tx-safe - exception is
 	 * phase, but that's modified by the single-threaded allocator
+	 * 
+	 * But this does mean that all access should check that the job exists
 	 */
 	private Map<Job, AllocationQueue> queues = new ConcurrentHashMap<>();
 
@@ -199,7 +201,8 @@ public class JobDomain {
 
 	public Stream<? extends Job> getActiveJobs() {
 		// subjobs are reachable from two allocationqueues, hence 'distinct'
-		return queues.values().stream().flatMap(AllocationQueue::getActiveJobs)
+		cleanupQueues();
+		return getVisibleQueues().flatMap(AllocationQueue::getActiveJobs)
 				.distinct()
 				.sorted(Comparator.comparing(Job::getStartTime).reversed());
 	}
@@ -219,7 +222,7 @@ public class JobDomain {
 
 	public Stream<AllocationQueue> getAllocationQueues() {
 		cleanupQueues();
-		return queues.values().stream();
+		return getVisibleQueues();
 	}
 
 	public Optional<Job> getEarliestFuture(Class<? extends Task> key,
@@ -236,13 +239,12 @@ public class JobDomain {
 
 	public Stream<Job> getIncompleteJobs() {
 		cleanupQueues();
-		return queues.values().stream()
-				.flatMap(AllocationQueue::getIncompleteJobs);
+		return getVisibleQueues().flatMap(AllocationQueue::getIncompleteJobs);
 	}
 
 	public Optional<AllocationQueue> getIncompleteQueueContaining(Job job) {
 		cleanupQueues();
-		return queues.values().stream()
+		return getVisibleQueues()
 				.filter(q -> q.getIncompleteJobs().anyMatch(j -> j == job))
 				.findFirst();
 	}
@@ -298,9 +300,14 @@ public class JobDomain {
 	}
 
 	private void cleanupQueues() {
-		queues.entrySet().removeIf(e -> e.getValue().job
-				.resolveState() == JobState.ABORTED
+		queues.entrySet().removeIf(e -> e.getValue().job.domain().wasRemoved()
+				|| e.getValue().job.resolveState() == JobState.ABORTED
 				|| e.getValue().job.resolveState() == JobState.CANCELLED);
+	}
+
+	private Stream<AllocationQueue> getVisibleQueues() {
+		return queues.values().stream()
+				.filter(q -> !q.job.domain().wasRemoved());
 	}
 
 	public class AllocationQueue {

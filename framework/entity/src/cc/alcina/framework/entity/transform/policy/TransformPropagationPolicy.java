@@ -63,6 +63,12 @@ public class TransformPropagationPolicy {
 		if (isNonDomainStoreClass(event.getObjectClass())) {
 			return false;
 		}
+		if (event.getValueClass() != null
+				&& Entity.class.isAssignableFrom(event.getValueClass())) {
+			if (isNonDomainStoreClass(event.getValueClass())) {
+				return false;
+			}
+		}
 		Predicate<DomainTransformEvent> propagationFilter = LooseContext
 				.get(CONTEXT_PROPAGATION_FILTER);
 		if (propagationFilter != null && !propagationFilter.test(event)) {

@@ -10,14 +10,16 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-public class DevRemoteServiceAsync {
+public class ReflectiveRemoteServiceAsync {
 	protected <T> void call(String methodName, Class[] methodArgumentTypes,
 			AsyncCallback callback, Object... methodArguments) {
-		DevRemoteServicePayload payload = new DevRemoteServicePayload(
+		ReflectiveRemoteServicePayload payload = new ReflectiveRemoteServicePayload(
 				getClass(), methodName, methodArgumentTypes, methodArguments);
 		String serializedPayload = AlcinaBeanSerializer
 				.serializeHolder(payload);
-		Registry.impl(DevRpcRemoteServiceAsync.class).devRpc(serializedPayload,
+		// FIXME - 2021 - this can just use an http call - just need to
+		// integrate Alcina header insertion/handling
+		Registry.impl(ReflectiveRpcRemoteServiceAsync.class).callRpc(serializedPayload,
 				new AsyncCallback<String>() {
 					@Override
 					public void onFailure(Throwable caught) {
@@ -32,20 +34,20 @@ public class DevRemoteServiceAsync {
 				});
 	}
 
-	public static class DevRemoteServicePayload extends Model {
+	public static class ReflectiveRemoteServicePayload extends Model {
 		private String methodName;
 
-		private Class<? extends DevRemoteServiceAsync> asyncInterfaceClass;
+		private Class<? extends ReflectiveRemoteServiceAsync> asyncInterfaceClass;
 
 		private List<?> methodArguments;
 
 		private List<Class> methodArgumentTypes;
 
-		public DevRemoteServicePayload() {
+		public ReflectiveRemoteServicePayload() {
 		}
 
-		public DevRemoteServicePayload(
-				Class<? extends DevRemoteServiceAsync> asyncInterfaceClass,
+		public ReflectiveRemoteServicePayload(
+				Class<? extends ReflectiveRemoteServiceAsync> asyncInterfaceClass,
 				String methodName, Class[] methodArgumentTypes,
 				Object[] methodArguments) {
 			this.methodName = methodName;
@@ -56,7 +58,8 @@ public class DevRemoteServiceAsync {
 					.collect(Collectors.toList());
 		}
 
-		public Class<? extends DevRemoteServiceAsync> getAsyncInterfaceClass() {
+		public Class<? extends ReflectiveRemoteServiceAsync>
+				getAsyncInterfaceClass() {
 			return this.asyncInterfaceClass;
 		}
 
@@ -73,7 +76,7 @@ public class DevRemoteServiceAsync {
 		}
 
 		public void setAsyncInterfaceClass(
-				Class<? extends DevRemoteServiceAsync> asyncInterfaceClass) {
+				Class<? extends ReflectiveRemoteServiceAsync> asyncInterfaceClass) {
 			this.asyncInterfaceClass = asyncInterfaceClass;
 		}
 

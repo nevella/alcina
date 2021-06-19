@@ -77,10 +77,13 @@ public abstract class DomainViews {
 
 	private TopicListener<DomainTransformPersistenceEvent> afterDomainCommittedListener = (
 			k, e) -> {
-		if (isIndexableTransformRequest(e)) {
+		Transaction preCommit = preCommitTransactions.remove(e);
+		boolean indexableTransformRequest = isIndexableTransformRequest(e);
+		if (indexableTransformRequest
+				&& Transaction.current().isToDomainCommitted()) {
 			ViewsTask task = new ViewsTask();
 			task.type = Type.MODEL_CHANGE;
-			task.modelChange.preCommit = preCommitTransactions.get(e);
+			task.modelChange.preCommit = preCommit;
 			task.modelChange.event = e;
 			task.modelChange.postCommit = Transaction
 					.createSnapshotTransaction();
@@ -136,7 +139,8 @@ public abstract class DomainViews {
 
 	public void waitForEmptyQueue() {
 		try {
-			Thread.sleep(200);
+			Thread.sleep(30);
+			// FIXME - index
 			// can't get more naive than that now...
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

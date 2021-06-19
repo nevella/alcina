@@ -78,6 +78,10 @@ public abstract class NodeLocal implements DomNode, LocalDomNode {
 		}
 		NodeLocal nextLocal = CommonUtils
 				.indexedOrNullWithDelta(parentNode.getChildren(), this, 1);
+		if (nextLocal == this) {
+			// issue with DomModification? break for now
+			return null;
+		}
 		return nodeFor(nextLocal);
 	}
 

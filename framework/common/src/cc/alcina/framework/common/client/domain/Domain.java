@@ -109,6 +109,17 @@ public class Domain {
 		return v == null ? null : handler.detachedVersion(v);
 	}
 
+	public static <V extends Entity> V ensure(Class<V> clazz,
+			String propertyName, Object value) {
+		V first = by(clazz, propertyName, value);
+		if (first == null) {
+			first = create(clazz);
+			Reflections.propertyAccessor().setPropertyValue(first, propertyName,
+					value);
+		}
+		return first;
+	}
+
 	public static <V extends Entity> V find(Class clazz, long id) {
 		return handler.find(clazz, id);
 	}
@@ -119,17 +130,6 @@ public class Domain {
 
 	public static <V extends Entity> V find(V v) {
 		return handler.find(v);
-	}
-
-	public static <V extends Entity> V ensure(Class<V> clazz,
-			String propertyName, Object value) {
-		V first = by(clazz, propertyName, value);
-		if (first == null) {
-			first = create(clazz);
-			Reflections.propertyAccessor().setPropertyValue(first, propertyName,
-					value);
-		}
-		return first;
 	}
 
 	public static <V extends Entity> boolean isDomainVersion(V v) {
@@ -176,6 +176,10 @@ public class Domain {
 
 	public static <V extends Entity> Stream<V> stream(Class<V> clazz) {
 		return handler.stream(clazz);
+	}
+
+	public static boolean wasRemoved(Entity entity) {
+		return handler.wasRemoved(entity);
 	}
 
 	public interface DomainHandler {
@@ -231,6 +235,10 @@ public class Domain {
 
 		default <V extends Entity> long size(Class<V> clazz) {
 			return stream(clazz).count();
+		}
+
+		default boolean wasRemoved(Entity entity) {
+			return false;
 		}
 	}
 

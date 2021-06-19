@@ -19,6 +19,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.zip.GZIPOutputStream;
@@ -493,6 +494,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 				c = new ArrayList();
 			} else if (coll instanceof LiSet) {
 				c = new LiSet();
+			} else if (coll instanceof TreeSet) {
+				c = new TreeSet();
 			} else if (coll instanceof Set) {
 				c = new LinkedHashSet();
 			} else if (coll instanceof ConcurrentLinkedQueue) {

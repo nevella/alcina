@@ -368,6 +368,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 		public boolean wasPersisted() {
 			return getId() != 0;
 		}
+
+		public boolean wasRemoved() {
+			return Domain.wasRemoved(Entity.this);
+		}
 	}
 
 	public static class EntityByIdFilter implements CollectionFilter<Entity> {

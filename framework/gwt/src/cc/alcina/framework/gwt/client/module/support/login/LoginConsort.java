@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
-import cc.alcina.framework.common.client.remote.LoginRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.ReflectiveLoginRemoteServiceAsync;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -129,8 +129,8 @@ public abstract class LoginConsort extends Consort<State> {
 		// for subclasses, e.g. show a 'sign up' dialog
 	}
 
-	LoginRemoteServiceAsync getAsyncService() {
-		return Registry.impl(LoginRemoteServiceAsync.class);
+	ReflectiveLoginRemoteServiceAsync getAsyncService() {
+		return Registry.impl(ReflectiveLoginRemoteServiceAsync.class);
 	}
 
 	class Player_Got_2fa extends EnumPlayer<State> {

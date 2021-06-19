@@ -108,6 +108,9 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		if (type == Boolean.class || type == boolean.class) {
 			return jsonValue.isBoolean().booleanValue();
 		}
+		if (type == Class.class) {
+			return getClassMaybeAbbreviated(jsonValue.isString().stringValue());
+		}
 		Collection c = null;
 		if (type == Set.class || type == LinkedHashSet.class) {
 			c = new LinkedHashSet();
@@ -164,7 +167,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		try {
 			clazz = getClassMaybeAbbreviated(cns);
 		} catch (Exception e1) {
-			if (isThrowOnUnrecognisedProperty()) {
+			if (isThrowOnUnrecognisedClass()) {
 				throw new RuntimeException(
 						Ax.format("class not found - %s", cns));
 			} else {
@@ -247,6 +250,9 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		if (type == Date.class) {
 			return new JSONString(String.valueOf(((Date) value).getTime()));
 		}
+		if (type == Class.class) {
+			return new JSONString(((Class) value).getName());
+		}
 		if (type == Timestamp.class) {
 			return new JSONString(Ax.format("%s,%s",
 					String.valueOf(((Timestamp) value).getTime()),
@@ -292,7 +298,8 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		typeName = normaliseReverseAbbreviation(type, typeName);
 		jo.put(CLASS_NAME, new JSONString(typeName));
 		Class<? extends Object> clazz = object.getClass();
-		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
+		if (CommonUtils.isStandardJavaClassOrEnum(clazz)
+				|| clazz == Class.class) {
 			jo.put(LITERAL, serializeField(object, clazz));
 			return jo;
 		}

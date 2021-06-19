@@ -69,38 +69,6 @@ public class MuteablePropertyChangeSupport {
 		delegate.addPropertyChangeListener(propertyName, listener);
 	}
 
-	/**
-	 * Taking advantage of propertychangesupport null != null - note that the
-	 * old/newvalues of the propertychangeevent should !not! be read. For
-	 * listeners on collection properties
-	 */
-	public void fireUnspecifiedPropertyChange(String name) {
-		fireUnspecifiedPropertyChange(name, UNSPECIFIED_PROPERTY_CHANGE);
-	}
-
-	/**
-	 * Taking advantage of propertychangesupport null != null - note that the
-	 * old/newvalues of the propertychangeevent should !not! be read. Indicates
-	 * "this object has changed - possibly below the child/field level"
-	 */
-	public void fireUnspecifiedPropertyChange(Object propagationId) {
-		fireUnspecifiedPropertyChange(null, propagationId);
-	}
-
-	private void fireUnspecifiedPropertyChange(String name,
-			Object propagationId) {
-		if (isMuteAll() || delegate == null) {
-			return;
-		}
-		PropertyChangeEvent changeEvent = new PropertyChangeEvent(sourceBean,
-				name, null, null);
-		if (propagationId == null) {
-			propagationId = UNSPECIFIED_PROPERTY_CHANGE;
-		}
-		changeEvent.setPropagationId(propagationId);
-		delegate.firePropertyChange(changeEvent);
-	}
-
 	public void firePropertyChange(PropertyChangeEvent evt) {
 		if (isMuteAll() || delegate == null) {
 			return;
@@ -115,6 +83,24 @@ public class MuteablePropertyChangeSupport {
 			return;
 		}
 		delegate.firePropertyChange(propertyName, oldValue, newValue);
+	}
+
+	/**
+	 * Taking advantage of propertychangesupport null != null - note that the
+	 * old/newvalues of the propertychangeevent should !not! be read. Indicates
+	 * "this object has changed - possibly below the child/field level"
+	 */
+	public void fireUnspecifiedPropertyChange(Object propagationId) {
+		fireUnspecifiedPropertyChange(null, propagationId);
+	}
+
+	/**
+	 * Taking advantage of propertychangesupport null != null - note that the
+	 * old/newvalues of the propertychangeevent should !not! be read. For
+	 * listeners on collection properties
+	 */
+	public void fireUnspecifiedPropertyChange(String name) {
+		fireUnspecifiedPropertyChange(name, UNSPECIFIED_PROPERTY_CHANGE);
 	}
 
 	public PropertyChangeListener[] getPropertyChangeListeners() {
@@ -141,5 +127,19 @@ public class MuteablePropertyChangeSupport {
 		if (delegate == null) {
 			delegate = new PropertyChangeSupport(sourceBean);
 		}
+	}
+
+	private void fireUnspecifiedPropertyChange(String name,
+			Object propagationId) {
+		if (isMuteAll() || delegate == null) {
+			return;
+		}
+		PropertyChangeEvent changeEvent = new PropertyChangeEvent(sourceBean,
+				name, null, null);
+		if (propagationId == null) {
+			propagationId = UNSPECIFIED_PROPERTY_CHANGE;
+		}
+		changeEvent.setPropagationId(propagationId);
+		delegate.firePropertyChange(changeEvent);
 	}
 }

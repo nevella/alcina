@@ -340,6 +340,13 @@ public class JobRegistry {
 		}
 	}
 
+	public void processOrphans() {
+		// manual because auto-scheduling generally disabled for dev
+		// server/consoles
+		Preconditions.checkState(Ax.isTest());
+		scheduler.processOrphans();
+	}
+
 	public void stopService() {
 		stopped = true;
 		scheduler.stopService();

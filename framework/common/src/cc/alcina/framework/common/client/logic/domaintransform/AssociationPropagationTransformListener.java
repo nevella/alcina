@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -55,17 +56,20 @@ public class AssociationPropagationTransformListener
 		switch (token.transformType) {
 		case NULL_PROPERTY_REF:
 		case CHANGE_PROPERTY_REF: {
-			tm.updateAssociation(event, entity, token.existingTargetEntity,
-					true);
-			tm.updateAssociation(event, entity, token.newTargetEntity, false);
+			tm.updateAssociation(event.getPropertyName(), entity,
+					token.existingTargetEntity, true);
+			tm.updateAssociation(event.getPropertyName(), entity,
+					token.newTargetEntity, false);
 			break;
 		}
 		case ADD_REF_TO_COLLECTION: {
-			tm.updateAssociation(event, entity, token.newTargetEntity, false);
+			tm.updateAssociation(event.getPropertyName(), entity,
+					token.newTargetEntity, false);
 			break;
 		}
 		case REMOVE_REF_FROM_COLLECTION: {
-			tm.updateAssociation(event, entity, token.newTargetEntity, true);
+			tm.updateAssociation(event.getPropertyName(), entity,
+					token.newTargetEntity, true);
 			break;
 		}
 		case DELETE_OBJECT: {
@@ -80,7 +84,10 @@ public class AssociationPropagationTransformListener
 						if (association.cascadeDeletes()) {
 							// parent.children
 							if (associated instanceof Set) {
-								((Set<? extends Entity>) associated)
+								// copy to avoid recursive concurrent
+								// modification
+								((Set<? extends Entity>) associated).stream()
+										.collect(Collectors.toList())
 										.forEach(Entity::delete);
 								// child.parent (!!)
 							} else if (associated instanceof Entity) {
@@ -122,11 +129,14 @@ public class AssociationPropagationTransformListener
 								Object associatedAssociationValue = associatedObjectAccessor
 										.getPropertyValue(associated);
 								if (associatedAssociationValue instanceof Set) {
-									// child.parent
-									((Entity) associated).domain()
-											.removeFromProperty(
-													association.propertyName(),
-													entity);
+									// child.parent - optimised
+									tm.updateAssociation(
+											propertyReflector.getPropertyName(),
+											entity, (Entity) associated, true);
+									// ((Entity) associated).domain()
+									// .removeFromProperty(
+									// association.propertyName(),
+									// entity);
 								} else if (associated instanceof Entity) {
 									// one-one(!!)
 									associatedObjectAccessor

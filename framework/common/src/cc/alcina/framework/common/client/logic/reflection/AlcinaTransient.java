@@ -13,4 +13,9 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD })
 @ClientVisible
 public @interface AlcinaTransient {
+	TransientType value() default TransientType.ALL;
+
+	public enum TransientType {
+		ALL, CLIENT
+	}
 }

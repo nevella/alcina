@@ -64,6 +64,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoMana
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransientType;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
@@ -1852,9 +1853,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 				|| propertyType == Class.class
 				|| !PermissionsManager.get().checkReadable(objectType,
 						propertyName, null)
-				|| Reflections.propertyAccessor().getAnnotationForProperty(
-						objectType, AlcinaTransient.class,
-						propertyName) != null;
+				|| (Reflections.propertyAccessor().getAnnotationForProperty(
+						objectType, AlcinaTransient.class, propertyName) != null
+						&& Reflections.propertyAccessor()
+								.getAnnotationForProperty(objectType,
+										AlcinaTransient.class, propertyName)
+								.value() == TransientType.ALL);
 	}
 
 	protected void initCollections() {
@@ -2030,22 +2034,21 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return true;
 	}
 
-	protected void updateAssociation(DomainTransformEvent evt, Entity object,
-			Entity targetObject, boolean remove) {
-		Association association = object == null ? null
+	protected void updateAssociation(String propertyName, Entity delta,
+			Entity associated, boolean remove) {
+		Association association = delta == null ? null
 				: propertyAccessor().getAnnotationForProperty(
-						object.entityClass(), Association.class,
-						evt.getPropertyName());
-		if (targetObject == null || association == null
+						delta.entityClass(), Association.class, propertyName);
+		if (associated == null || association == null
 				|| association.propertyName().length() == 0) {
 			return;
 		}
-		if (markedForDeletion.contains(targetObject)) {
+		if (markedForDeletion.contains(associated)) {
 			return;
 		}
-		targetObject = (Entity) ensureEndpointWriteable(targetObject);
+		associated = (Entity) ensureEndpointWriteable(associated);
 		Object associatedObject = propertyAccessor()
-				.getPropertyValue(targetObject, association.propertyName());
+				.getPropertyValue(associated, association.propertyName());
 		associatedObject = ensureEndpointInTransformGraph(associatedObject);
 		boolean assocObjIsCollection = associatedObject instanceof Collection;
 		TransformType tt = assocObjIsCollection
@@ -2053,16 +2056,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 						: TransformType.ADD_REF_TO_COLLECTION)
 				: remove ? TransformType.NULL_PROPERTY_REF
 						: TransformType.CHANGE_PROPERTY_REF;
-		evt = createTransformEvent();
-		evt.setTransformType(tt);
-		maybeAddVersionNumbers(evt, object, targetObject);
+		DomainTransformEvent event = createTransformEvent();
+		event.setTransformType(tt);
+		maybeAddVersionNumbers(event, delta, associated);
 		// No! Only should check one end of the relation for permissions
 		// checkPermissions(hTgt, evt, assoc.propertyName());
 		if (assocObjIsCollection) {
 			Collection coll = (Collection) associatedObject;
-			if (isPerformDirectAssociationUpdates(targetObject)) {
-				performDirectAssociationUpdate(targetObject,
-						association.propertyName(), coll, object, remove);
+			if (isPerformDirectAssociationUpdates(associated)) {
+				performDirectAssociationUpdate(associated,
+						association.propertyName(), coll, delta, remove);
 			} else {
 				try {
 					coll = CommonUtils.shallowCollectionClone(coll);
@@ -2070,18 +2073,18 @@ public abstract class TransformManager implements PropertyChangeListener,
 					throw new WrappedRuntimeException(e);
 				}
 				if (remove) {
-					boolean wasContained = coll.remove(object);
+					boolean wasContained = coll.remove(delta);
 					if (!wasContained) {
 						// FIXME - mvcc.4 - these are only for JPA contexts, and
 						// this method is only called ex-JPA - remove
-						doubleCheckRemoval(coll, object);
+						doubleCheckRemoval(coll, delta);
 					}
 				} else {
-					if (!coll.contains(object)) {
-						doubleCheckAddition(coll, object);
+					if (!coll.contains(delta)) {
+						doubleCheckAddition(coll, delta);
 					}
 				}
-				propertyAccessor().setPropertyValue(targetObject,
+				propertyAccessor().setPropertyValue(associated,
 						association.propertyName(), coll);
 			}
 		} else {
@@ -2092,15 +2095,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 			 * null if the assoc prop is the old value
 			 */
 			if (remove) {
-				Object current = propertyAccessor().getPropertyValue(
-						targetObject, association.propertyName());
-				if (current == object) {
-					propertyAccessor().setPropertyValue(targetObject,
+				Object current = propertyAccessor().getPropertyValue(associated,
+						association.propertyName());
+				if (current == delta) {
+					propertyAccessor().setPropertyValue(associated,
 							association.propertyName(), null);
 				}
 			} else {
-				propertyAccessor().setPropertyValue(targetObject,
-						association.propertyName(), object);
+				propertyAccessor().setPropertyValue(associated,
+						association.propertyName(), delta);
 			}
 			// shouldn't fire for collection props, probly. also, collection
 			// mods are very unlikely to collide in a nasty way (since
@@ -2109,7 +2112,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			//
 			// "probably" means "at the moment we don't fire - i.e. don't mark
 			// the target object as updated"
-			objectModified(targetObject, evt, true);
+			objectModified(associated, event, true);
 		}
 	}
 
