@@ -1941,13 +1941,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected void promoteToDomain(Collection objects, boolean deregister) {
 		try {
-			objects = (Collection) objects.stream().map(o -> {
-				if (o instanceof HasTransformPersistable) {
-					return ((HasTransformPersistable) o).resolvePersistable();
-				} else {
-					return o;
-				}
-			}).collect(Collectors.toList());
 			CollectionModificationSupport.queue(true);
 			for (Object o : objects) {
 				if (o instanceof Entity

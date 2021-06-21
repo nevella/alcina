@@ -157,8 +157,8 @@ public abstract class UserProperty<T extends UserProperty>
 	}
 
 	public void serializeObject(Object object) {
-		setValue(TransformManager.serialize(object));
 		setCategory(object.getClass().getName());
+		setValue(TransformManager.serialize(object));
 	}
 
 	public void setCategory(String category) {

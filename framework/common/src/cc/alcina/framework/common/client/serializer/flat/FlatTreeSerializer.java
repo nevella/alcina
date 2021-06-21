@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.serializer.flat;
 
+import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -19,6 +20,7 @@ import java.util.stream.Collectors;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Property;
 
@@ -27,6 +29,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.Serializer;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -184,14 +187,19 @@ public class FlatTreeSerializer {
 		if (object == null) {
 			return null;
 		}
-		object.onBeforeTreeSerialize();
-		State state = new State();
-		state.serializerOptions = options;
-		Node node = new Node(null, object, Reflections.classLookup()
-				.getTemplateInstance(object.getClass()));
-		state.pending.add(node);
-		FlatTreeSerializer serializer = new FlatTreeSerializer(state);
-		serializer.serialize();
+		State state;
+		try {
+			object.onBeforeTreeSerialize();
+			state = new State();
+			state.serializerOptions = options;
+			Node node = new Node(null, object, Reflections.classLookup()
+					.getTemplateInstance(object.getClass()));
+			state.pending.add(node);
+			FlatTreeSerializer serializer = new FlatTreeSerializer(state);
+			serializer.serialize();
+		} finally {
+			object.onAfterTreeSerialize();
+		}
 		String serialized = state.keyValues.sorted().toPropertyString();
 		if (options.singleLine) {
 			serialized = serialized.replace("\n", ":");
@@ -227,6 +235,9 @@ public class FlatTreeSerializer {
 
 	private static boolean isCollection(Class clazz) {
 		if (clazz == List.class || clazz == Set.class) {
+			return true;
+		}
+		if (CommonUtils.isOrHasSuperClass(clazz, AbstractCollection.class)) {
 			return true;
 		}
 		return assignableFromCollection.computeIfAbsent(clazz, c -> {
@@ -746,7 +757,15 @@ public class FlatTreeSerializer {
 					Object childValue = getValue(cursor, property, value);
 					Object defaultValue = cursor.defaultValue == null ? null
 							: getValue(cursor, property, cursor.defaultValue);
+					if (defaultValue == null && childValue != null
+							&& childValue instanceof TreeSerializable) {
+						defaultValue = Reflections
+								.newInstance(childValue.getClass());
+					}
 					Node childNode = new Node(cursor, childValue, defaultValue);
+					if (childNode.path.ignoreForSerialization()) {
+						return;
+					}
 					childNode.path.property = property;
 					childNode.path.propertySerialization = getPropertySerialization(
 							cursor.value.getClass(), property.getName());
@@ -930,6 +949,34 @@ public class FlatTreeSerializer {
 	public static class MissingElementTypeException extends RuntimeException {
 		public MissingElementTypeException(String message) {
 			super(message);
+		}
+	}
+
+	public static abstract class SerializerFlat extends Serializer {
+		@Override
+		public <V> V deserialize(String serialized, Class<V> clazz) {
+			if ((clazz != null && !serialized.startsWith("{"))
+					|| serialized.startsWith("class$=")) {
+				FlatTreeSerializer.DeserializerOptions options = new FlatTreeSerializer.DeserializerOptions()
+						.withShortPaths(true);
+				Class<? extends TreeSerializable> tsClazz = (Class<? extends TreeSerializable>) clazz;
+				return (V) FlatTreeSerializer.deserialize(tsClazz, serialized,
+						options);
+			}
+			return super.deserialize(serialized, clazz);
+		}
+
+		@Override
+		public String serialize(Object object, boolean hasClassNameProperty) {
+			if (object instanceof TreeSerializable) {
+				FlatTreeSerializer.SerializerOptions options = new FlatTreeSerializer.SerializerOptions()
+						.withShortPaths(true)
+						.withTopLevelTypeInfo(!hasClassNameProperty)
+						.withElideDefaults(true);
+				return FlatTreeSerializer.serialize((TreeSerializable) object,
+						options);
+			}
+			return super.serialize(object, hasClassNameProperty);
 		}
 	}
 
@@ -1290,6 +1337,11 @@ public class FlatTreeSerializer {
 						"Unable to determine element type for collection property %s.%s",
 						parent.type.getSimpleName(), property.getName()));
 			}
+		}
+
+		boolean ignoreForSerialization() {
+			return propertySerialization != null
+					&& !propertySerialization.fromClient() && GWT.isClient();
 		}
 
 		boolean isMultipleTypes() {

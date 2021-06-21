@@ -74,6 +74,12 @@ public class RpcRequestRouter {
 		if (rpcRequest.getMethod().getName().matches("hello|login|logout")) {
 			return true;
 		}
+		/*
+		 * Just because the from-server response would include ClassRefImpl
+		 */
+		if (rpcRequest.getMethod().getName().matches("transform")) {
+			return true;
+		}
 		return false;
 	}
 }

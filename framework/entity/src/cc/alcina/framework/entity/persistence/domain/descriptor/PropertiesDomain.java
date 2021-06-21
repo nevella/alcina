@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.persistence.domain.descriptor;
 
 import java.util.Optional;
+import java.util.function.Function;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,6 +35,11 @@ public class PropertiesDomain {
 	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	public <P extends UserPropertyPersistable> P getProperties(Class<P> clazz) {
+		return getProperties(clazz, null);
+	}
+
+	public <P extends UserPropertyPersistable> P getProperties(Class<P> clazz,
+			Function<Class, WrappedObject> legacyLoader) {
 		IUser user = PersistentSingleton.class.isAssignableFrom(clazz)
 				? new UserlandProvider().getSystemUser()
 				: PermissionsManager.get().getUser();
@@ -48,7 +54,7 @@ public class PropertiesDomain {
 				// double-checked
 				byUserClass = UserProperty.byUserClass(user, clazz);
 				if (!byUserClass.isPresent()) {
-					P instance = getLegacyProperties(clazz, user);
+					P instance = getLegacyProperties(clazz, user, legacyLoader);
 					if (!byUserClass.isPresent()) {
 						logger.info("Creating property - {} {}", clazz, user);
 						instance = Reflections.newInstance(clazz);
@@ -68,14 +74,20 @@ public class PropertiesDomain {
 				.getPersistable();
 	}
 
-	private <P extends UserPropertyPersistable> P
-			getLegacyProperties(Class<P> clazz, IUser user) {
+	private <P extends UserPropertyPersistable> P getLegacyProperties(
+			Class<P> clazz, IUser user,
+			Function<Class, WrappedObject> legacyLoader) {
 		try {
 			LooseContext
 					.pushWithTrue(WrappedObjectProvider.CONTEXT_DO_NOT_CREATE);
-			WrappedObject<? extends WrapperPersistable> wrappedObject = CommonPersistenceProvider
-					.get().getCommonPersistence().getObjectWrapperForUser(
-							(Class<? extends WrapperPersistable>) clazz);
+			WrappedObject<? extends WrapperPersistable> wrappedObject = null;
+			if (legacyLoader == null) {
+				wrappedObject = CommonPersistenceProvider.get()
+						.getCommonPersistence().getObjectWrapperForUser(
+								(Class<? extends WrapperPersistable>) clazz);
+			} else {
+				wrappedObject = legacyLoader.apply(clazz);
+			}
 			if (wrappedObject != null) {
 				logger.info("Loaded legacy property - {} {}", clazz, user);
 				return (P) wrappedObject.getObject();
