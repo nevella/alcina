@@ -64,6 +64,9 @@ public class Publisher {
 	public static final String CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT = Publisher.class
 			.getName() + ".CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT";
 
+	public static final String CONTEXT_PERSIST_CONTENT_RENDERER_RESULTS = Publisher.class
+			.getName() + ".CONTEXT_PERSIST_CONTENT_RENDERER_RESULTS";
+
 	public static boolean useWrappedObjectSerialization() {
 		return ResourceUtilities.is(Publisher.class,
 				"useWrappedObjectSerialization");
@@ -242,7 +245,8 @@ public class Publisher {
 		if (persistPublication) {
 			postDeliveryPersistence(publicationId);
 			crh.getResults().htmlContent = cw.wrappedContent;
-			if (crh.getResults().persist && ctx.publication != null) {
+			if ((LooseContext.is(CONTEXT_PERSIST_CONTENT_RENDERER_RESULTS)
+					|| crh.getResults().persist) && ctx.publication != null) {
 				persister.persistContentRendererResults(crh.getResults(),
 						ctx.publication);
 			}
