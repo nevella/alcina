@@ -73,7 +73,6 @@ import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
-import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.stat.DevStats;
 import cc.alcina.framework.entity.stat.StatCategory_Console;
@@ -205,6 +204,15 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	public DevConsole() {
 		shells.push(DevConsoleCommand.class);
 		DevConsoleRunnable.console = this;
+	}
+
+	public void atEndOfDomainStoreLoad() {
+		new StatCategory_Console.PostDomainStore.End().emit();
+		new StatCategory_DomainStore().emit();
+		new StatCategory_Console().emit();
+		new DevStats().parse(logProvider).dump(true);
+		logProvider.startRemote();
+		JobRegistry.get();
 	}
 
 	public String breakAndPad(int tabCount, int width, String text,
@@ -339,6 +347,19 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public DevConsoleStyle getStyle() {
 		return style;
+	}
+
+	public void initClassrefScanner() throws Exception {
+		ClassMetadataCache cache = new CachingClasspathScanner("*", true, false,
+				Logger.getLogger(getClass()), Registry.MARKER_RESOURCE,
+				Arrays.asList(
+						new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
+								.getClasses();
+		ClassrefScanner classrefScanner = new ClassrefScanner();
+		// if (!TransformCommit.isCommitTestTransforms()) {
+		classrefScanner.noPersistence();
+		// }
+		classrefScanner.scan(cache);
 	}
 
 	public boolean isHeadless() {
@@ -704,15 +725,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}.start();
 	}
 
-	protected void atEndOfDomainStoreLoad() {
-		new StatCategory_Console.PostDomainStore.End().emit();
-		new StatCategory_DomainStore().emit();
-		new StatCategory_Console().emit();
-		new DevStats().parse(logProvider).dump(true);
-		logProvider.startRemote();
-		JobRegistry.get();
-	}
-
 	protected abstract void createDevHelper();
 
 	protected void filterLookup(List<Class> lookup) {
@@ -792,19 +804,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		} else {
 			ok("Enter 'h' for help\n\n");
 		}
-	}
-
-	protected void initClassrefScanner() throws Exception {
-		ClassMetadataCache cache = new CachingClasspathScanner("*", true, false,
-				Logger.getLogger(getClass()), Registry.MARKER_RESOURCE,
-				Arrays.asList(
-						new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
-								.getClasses();
-		ClassrefScanner classrefScanner = new ClassrefScanner();
-		if (!TransformCommit.isCommitTestTransforms()) {
-			classrefScanner.noPersistence();
-		}
-		classrefScanner.scan(cache);
 	}
 
 	protected abstract void initState();

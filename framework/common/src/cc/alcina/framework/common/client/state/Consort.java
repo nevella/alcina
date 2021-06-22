@@ -484,8 +484,8 @@ public class Consort<D> {
 							} else if (relPriority < 0) {
 								// keep current;
 							} else {
-								if (!player.isAllowEqualPriority()
-										|| result.isAllowEqualPriority()) {
+								if (!(player.isAllowEqualPriority()
+										|| result.isAllowEqualPriority())) {
 									throw new RuntimeException(Ax.format(
 											PLAYERS_WITH_EQUAL_DEPS_ERR, player,
 											result, providerDependencies));
