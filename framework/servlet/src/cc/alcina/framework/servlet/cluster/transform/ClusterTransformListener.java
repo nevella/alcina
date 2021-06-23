@@ -84,7 +84,11 @@ public class ClusterTransformListener
 				preFlushLatches.put(event.getMaxPersistedRequestId(), latch);
 				publishRequests(requests, State.PRE_COMMIT);
 				try {
+					long start = System.currentTimeMillis();
 					latch.await();
+					logger.info("Pre-commit await: request {} : {} ms",
+							event.getMaxPersistedRequestId(),
+							System.currentTimeMillis() - start);
 				} catch (InterruptedException e) {
 					throw new WrappedRuntimeException(e);
 				}
@@ -154,10 +158,13 @@ public class ClusterTransformListener
 		switch (request.state) {
 		case PRE_COMMIT:
 			queue.onRequestDataReceived(request.request);
+			logger.info("Post request data received: {} {}", request.id,
+					request.state);
 			CountDownLatch latch = preFlushLatches
 					.remove(request.request.getId());
 			if (latch != null) {
 				latch.countDown();
+				logger.info("Released latch: {} {}", request.id, request.state);
 			}
 			break;
 		case COMMIT:
