@@ -28,6 +28,12 @@ public class StatCategory_Console extends StatCategory {
 			}
 		}
 
+		public static class PreInstance extends StatCategory {
+			public PreInstance() {
+				super(PostDomainStore.class, "pre-instance");
+			}
+		}
+
 		public static class SetupInstance extends StatCategory {
 			public SetupInstance() {
 				super(PostDomainStore.class, "setup-instance");

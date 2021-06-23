@@ -29,7 +29,11 @@ public class OffThreadLogger implements RegistrableService, InvocationHandler {
 	}
 
 	public static Logger getLogger(Class clazz) {
-		Logger delegate = LoggerFactory.getLogger(clazz);
+		return getLogger(clazz.getName());
+	}
+
+	public static Logger getLogger(String name) {
+		Logger delegate = LoggerFactory.getLogger(name);
 		Logger proxy = (Logger) Proxy.newProxyInstance(
 				Thread.currentThread().getContextClassLoader(),
 				new Class[] { Logger.class }, OffThreadLogger.get());

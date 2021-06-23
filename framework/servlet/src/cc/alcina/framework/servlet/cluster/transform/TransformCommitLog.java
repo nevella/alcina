@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.cluster.transform;
 
+import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
@@ -351,7 +352,8 @@ public class TransformCommitLog {
 						}
 					}
 					ConsumerRecords<Void, byte[]> records = performOperation(
-							() -> consumer.poll(pollTimeout));
+							() -> consumer
+									.poll(Duration.ofMillis(pollTimeout)));
 					if (stopped.get() && !cancelled.get()) {
 						return;// don't commitsync
 					}

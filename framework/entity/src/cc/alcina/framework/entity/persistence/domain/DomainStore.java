@@ -467,7 +467,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public void warmup() throws Exception {
-		new StatCategory_DomainStore.Warmup().emit();
+		new StatCategory_DomainStore.Warmup().emit(isWritable());
 		MetricLogging.get().start("domainStore.warmup");
 		initialised = false;
 		initialising = true;
@@ -483,12 +483,13 @@ public class DomainStore implements IDomainStore {
 		domainDescriptor.registerStore(this);
 		domainDescriptor.perClass.values().stream()
 				.forEach(this::prepareClassDescriptor);
-		new StatCategory_DomainStore.Warmup.InitialiseDescriptor().emit();
+		new StatCategory_DomainStore.Warmup.InitialiseDescriptor()
+				.emit(isWritable());
 		mvcc = new Mvcc(this, domainDescriptor, cache);
 		MetricLogging.get().start("mvcc");
 		mvcc.init();
 		MetricLogging.get().end("mvcc");
-		new StatCategory_DomainStore.Warmup.Mvcc().emit();
+		new StatCategory_DomainStore.Warmup.Mvcc().emit(isWritable());
 		Transaction.beginDomainPreparing();
 		Transaction.current().setBaseTransaction(true);
 		domainDescriptor.perClass.keySet()
@@ -504,7 +505,7 @@ public class DomainStore implements IDomainStore {
 		initialised = true;
 		domainDescriptor.onWarmupComplete(this);
 		MetricLogging.get().end("domainStore.warmup");
-		new StatCategory_DomainStore.Warmup.End().emit();
+		new StatCategory_DomainStore.Warmup.End().emit(isWritable());
 	}
 
 	private <E extends Entity> void applyFilter(final Class clazz,
