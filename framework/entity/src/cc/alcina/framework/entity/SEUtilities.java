@@ -1742,7 +1742,8 @@ public class SEUtilities {
 
 		public PropertyDescriptorWrapper(PropertyDescriptor delegate)
 				throws IntrospectionException {
-			super(delegate.getName(), delegate.getPropertyType());
+			super(delegate.getName(), delegate.getReadMethod(),
+					delegate.getWriteMethod());
 			this.delegate = delegate;
 			this._readMethod = delegate.getReadMethod();
 			if (this._readMethod != null) {
@@ -1841,67 +1842,52 @@ public class SEUtilities {
 
 		@Override
 		public void setBound(boolean bound) {
-			this.delegate.setBound(bound);
 		}
 
 		@Override
 		public void setConstrained(boolean constrained) {
-			this.delegate.setConstrained(constrained);
 		}
 
 		@Override
 		public void setDisplayName(String displayName) {
-			this.delegate.setDisplayName(displayName);
 		}
 
 		@Override
 		public void setExpert(boolean expert) {
-			this.delegate.setExpert(expert);
 		}
 
 		@Override
 		public void setHidden(boolean hidden) {
-			this.delegate.setHidden(hidden);
 		}
 
 		@Override
 		public void setName(String name) {
-			if (this.delegate == null) {
-				return;
-			}
-			this.delegate.setName(name);
 		}
 
 		@Override
 		public void setPreferred(boolean preferred) {
-			this.delegate.setPreferred(preferred);
 		}
 
 		@Override
 		public void setPropertyEditorClass(Class<?> propertyEditorClass) {
-			this.delegate.setPropertyEditorClass(propertyEditorClass);
 		}
 
 		@Override
 		public void setReadMethod(Method readMethod)
 				throws IntrospectionException {
-			this.delegate.setReadMethod(readMethod);
 		}
 
 		@Override
 		public void setShortDescription(String text) {
-			this.delegate.setShortDescription(text);
 		}
 
 		@Override
 		public void setValue(String attributeName, Object value) {
-			this.delegate.setValue(attributeName, value);
 		}
 
 		@Override
 		public void setWriteMethod(Method writeMethod)
 				throws IntrospectionException {
-			this.delegate.setWriteMethod(writeMethod);
 		}
 
 		@Override

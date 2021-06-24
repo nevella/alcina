@@ -127,6 +127,9 @@ public class ResourceUtilities {
 			PropertyDescriptor sourceDescriptor = SEUtilities
 					.getPropertyDescriptorByName(srcBean.getClass(),
 							targetDescriptor.getName());
+			if (sourceDescriptor == null) {
+				continue;
+			}
 			Method readMethod = sourceDescriptor.getReadMethod();
 			if (readMethod == null) {
 				continue;
