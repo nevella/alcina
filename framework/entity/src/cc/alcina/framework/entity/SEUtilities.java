@@ -1866,6 +1866,9 @@ public class SEUtilities {
 
 		@Override
 		public void setName(String name) {
+			if (this.delegate == null) {
+				return;
+			}
 			this.delegate.setName(name);
 		}
 
