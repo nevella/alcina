@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.entity.transform;
 
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -224,9 +223,8 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		try {
 			List<PropertyInfo> infos = new ArrayList<PropertyInfo>();
-			java.beans.BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
+			for (PropertyDescriptor pd : SEUtilities
+					.getSortedPropertyDescriptors(clazz)) {
 				Class<?> propertyType = pd.getPropertyType();
 				if (pd.getWriteMethod() == null || pd.getReadMethod() == null) {
 					continue;

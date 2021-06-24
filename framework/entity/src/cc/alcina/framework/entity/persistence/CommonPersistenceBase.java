@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.entity.persistence;
 
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
@@ -828,9 +827,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		UnwrapInfoContainer result = new UnwrapInfoContainer();
 		result.setHasId(wrapper);
 		try {
-			PropertyDescriptor[] pds = Introspector
-					.getBeanInfo(wrapper.getClass()).getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
+			for (PropertyDescriptor pd : SEUtilities
+					.getSortedPropertyDescriptors(wrapper.getClass())) {
 				if (pd.getReadMethod() != null) {
 					Wrapper info = pd.getReadMethod()
 							.getAnnotation(Wrapper.class);
@@ -1066,9 +1064,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	private void persistWrappables(HasId hi) {
 		AppPersistenceBase.checkNotReadOnly();
 		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(hi.getClass())
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
+			for (PropertyDescriptor pd : SEUtilities
+					.getSortedPropertyDescriptors(hi.getClass())) {
 				if (pd.getReadMethod() != null) {
 					Wrapper info = pd.getReadMethod()
 							.getAnnotation(Wrapper.class);

@@ -1,7 +1,5 @@
 package cc.alcina.framework.common.client.logic.reflection.jvm;
 
-import java.beans.BeanInfo;
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.File;
 import java.lang.annotation.Annotation;
@@ -256,14 +254,8 @@ public class ClientReflectorJvm extends ClientReflector {
 		}
 		if (!reflectors.containsKey(clazz)) {
 			Map<String, ClientPropertyReflector> propertyReflectors = new HashMap<String, ClientPropertyReflector>();
-			BeanInfo beanInfo = null;
-			try {
-				beanInfo = Introspector.getBeanInfo(clazz);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
+			for (PropertyDescriptor pd : SEUtilities
+					.getSortedPropertyDescriptors(clazz)) {
 				if (pd.getName().equals("class")
 						|| pd.getName().equals("propertyChangeListeners")) {
 					continue;
@@ -326,15 +318,9 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	@Override
 	public List<PropertyInfo> getWritableProperties(Class clazz) {
-		BeanInfo beanInfo = null;
-		try {
-			beanInfo = Introspector.getBeanInfo(clazz);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-		List<PropertyInfo> infos = new ArrayList<PropertyInfo>();
-		for (PropertyDescriptor pd : pds) {
+		List<PropertyInfo> infos = new ArrayList<>();
+		for (PropertyDescriptor pd : SEUtilities
+				.getSortedPropertyDescriptors(clazz)) {
 			if (pd.getName().equals("class")
 					|| pd.getName().equals("propertyChangeListeners")
 					|| pd.getWriteMethod() == null) {

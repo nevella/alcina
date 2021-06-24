@@ -15,8 +15,10 @@ package cc.alcina.framework.entity;
 
 import java.awt.Component;
 import java.awt.Container;
+import java.beans.IntrospectionException;
 import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
+import java.beans.PropertyEditor;
 import java.io.BufferedReader;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -1501,7 +1503,7 @@ public class SEUtilities {
 				PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
 						.getPropertyDescriptors();
 				for (PropertyDescriptor pd : pds) {
-					map.put(pd.getName(), pd);
+					map.put(pd.getName(), new PropertyDescriptorWrapper(pd));
 				}
 				return map;
 			} catch (Exception e) {
@@ -1724,6 +1726,184 @@ public class SEUtilities {
 		public Iterator<String> iterator() {
 			Matcher matcher = pattern.matcher(text);
 			return new MatcherIterator(matcher, group);
+		}
+	}
+
+	/*
+	 * Cache method access (in the jvm class it performs access checks *each
+	 * time* and uses substring. Delegate most calls to the jvm class
+	 */
+	public static class PropertyDescriptorWrapper extends PropertyDescriptor {
+		private PropertyDescriptor delegate;
+
+		private Method _readMethod;
+
+		private Method _writeMethod;
+
+		public PropertyDescriptorWrapper(PropertyDescriptor delegate)
+				throws IntrospectionException {
+			super(delegate.getName(), delegate.getPropertyType());
+			this.delegate = delegate;
+			this._readMethod = delegate.getReadMethod();
+			if (this._readMethod != null) {
+				this._readMethod.setAccessible(true);
+			}
+			this._writeMethod = delegate.getWriteMethod();
+			if (this._writeMethod != null) {
+				this._writeMethod.setAccessible(true);
+			}
+		}
+
+		@Override
+		public Enumeration<String> attributeNames() {
+			return this.delegate.attributeNames();
+		}
+
+		@Override
+		public PropertyEditor createPropertyEditor(Object bean) {
+			return this.delegate.createPropertyEditor(bean);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return this.delegate.equals(obj);
+		}
+
+		@Override
+		public String getDisplayName() {
+			return this.delegate.getDisplayName();
+		}
+
+		@Override
+		public String getName() {
+			return this.delegate.getName();
+		}
+
+		@Override
+		public Class<?> getPropertyEditorClass() {
+			return this.delegate.getPropertyEditorClass();
+		}
+
+		@Override
+		public Class<?> getPropertyType() {
+			return this.delegate.getPropertyType();
+		}
+
+		@Override
+		public Method getReadMethod() {
+			return this._readMethod;
+		}
+
+		@Override
+		public String getShortDescription() {
+			return this.delegate.getShortDescription();
+		}
+
+		@Override
+		public Object getValue(String attributeName) {
+			return this.delegate.getValue(attributeName);
+		}
+
+		@Override
+		public Method getWriteMethod() {
+			return this._writeMethod;
+		}
+
+		@Override
+		public int hashCode() {
+			return this.delegate.hashCode();
+		}
+
+		@Override
+		public boolean isBound() {
+			return this.delegate.isBound();
+		}
+
+		@Override
+		public boolean isConstrained() {
+			return this.delegate.isConstrained();
+		}
+
+		@Override
+		public boolean isExpert() {
+			return this.delegate.isExpert();
+		}
+
+		@Override
+		public boolean isHidden() {
+			return this.delegate.isHidden();
+		}
+
+		@Override
+		public boolean isPreferred() {
+			return this.delegate.isPreferred();
+		}
+
+		@Override
+		public void setBound(boolean bound) {
+			this.delegate.setBound(bound);
+		}
+
+		@Override
+		public void setConstrained(boolean constrained) {
+			this.delegate.setConstrained(constrained);
+		}
+
+		@Override
+		public void setDisplayName(String displayName) {
+			this.delegate.setDisplayName(displayName);
+		}
+
+		@Override
+		public void setExpert(boolean expert) {
+			this.delegate.setExpert(expert);
+		}
+
+		@Override
+		public void setHidden(boolean hidden) {
+			this.delegate.setHidden(hidden);
+		}
+
+		@Override
+		public void setName(String name) {
+			this.delegate.setName(name);
+		}
+
+		@Override
+		public void setPreferred(boolean preferred) {
+			this.delegate.setPreferred(preferred);
+		}
+
+		@Override
+		public void setPropertyEditorClass(Class<?> propertyEditorClass) {
+			this.delegate.setPropertyEditorClass(propertyEditorClass);
+		}
+
+		@Override
+		public void setReadMethod(Method readMethod)
+				throws IntrospectionException {
+			this.delegate.setReadMethod(readMethod);
+		}
+
+		@Override
+		public void setShortDescription(String text) {
+			this.delegate.setShortDescription(text);
+		}
+
+		@Override
+		public void setValue(String attributeName, Object value) {
+			this.delegate.setValue(attributeName, value);
+		}
+
+		@Override
+		public void setWriteMethod(Method writeMethod)
+				throws IntrospectionException {
+			this.delegate.setWriteMethod(writeMethod);
+		}
+
+		@Override
+		public String toString() {
+			return this.delegate.toString();
 		}
 	}
 

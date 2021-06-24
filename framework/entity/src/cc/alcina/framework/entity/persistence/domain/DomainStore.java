@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.persistence.domain;
 
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -603,10 +602,8 @@ public class DomainStore implements IDomainStore {
 		try {
 			Class clazz = classDescriptor.clazz;
 			classDescriptor.setDomainDescriptor(domainDescriptor);
-			List<PropertyDescriptor> pds = new ArrayList<PropertyDescriptor>(
-					Arrays.asList(Introspector.getBeanInfo(clazz)
-							.getPropertyDescriptors()));
-			for (PropertyDescriptor pd : pds) {
+			for (PropertyDescriptor pd : SEUtilities
+					.getSortedPropertyDescriptors(clazz)) {
 				if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
 					continue;
 				}
