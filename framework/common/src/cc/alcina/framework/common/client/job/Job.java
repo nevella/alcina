@@ -466,6 +466,12 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return resolvedState == null ? false : resolvedState.isComplete();
 	}
 
+	public boolean provideIsCompletedNormally() {
+		JobState resolvedState = resolveState();
+		return resolvedState == null ? false
+				: resolvedState.isCompletedNormally();
+	}
+
 	public boolean provideIsCompleteWithEndTime() {
 		return provideIsComplete() && getEndTime() != null;
 	}
