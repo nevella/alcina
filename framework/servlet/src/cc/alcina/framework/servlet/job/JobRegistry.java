@@ -72,6 +72,7 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.QueueStat;
@@ -295,6 +296,8 @@ public class JobRegistry {
 				.sorted(EntityComparator.REVERSED_INSTANCE).limit(count)
 				.collect(EntityHelper.toIdSet());
 		return Domain.query(PersistentImpl.getImplementation(Job.class))
+				.contextTrue(
+						LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
 				.filterByIds(ids).stream().map(Job::asJobResult)
 				.map(JobResult::getActionLogItem).collect(Collectors.toList());
 	}
