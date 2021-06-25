@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.stream.Collectors;
 
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
@@ -50,9 +51,11 @@ import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
-import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -73,7 +76,6 @@ import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
-import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.stat.DevStats;
 import cc.alcina.framework.entity.stat.StatCategory_Console;
 import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole;
@@ -82,7 +84,6 @@ import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitCon
 import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitPostObjectServices;
 import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_Start;
 import cc.alcina.framework.entity.stat.StatCategory_DomainStore;
-import cc.alcina.framework.entity.transform.ClassrefScanner;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable.AlcinaChildContextRunner;
 import cc.alcina.framework.entity.util.BiPrintStream;
@@ -350,16 +351,20 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	}
 
 	public void initClassrefScanner() throws Exception {
-		ClassMetadataCache cache = new CachingClasspathScanner("*", true, false,
-				Logger.getLogger(getClass()), Registry.MARKER_RESOURCE,
-				Arrays.asList(
-						new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
-								.getClasses();
-		ClassrefScanner classrefScanner = new ClassrefScanner();
-		// if (!TransformCommit.isCommitTestTransforms()) {
-		classrefScanner.noPersistence();
-		// }
-		classrefScanner.scan(cache);
+		// ClassMetadataCache cache = new CachingClasspathScanner("*", true,
+		// false,
+		// Logger.getLogger(getClass()), Registry.MARKER_RESOURCE,
+		// Arrays.asList(
+		// new String[] { "WEB-INF/classes", "WEB-INF/lib" }))
+		// .getClasses();
+		// ClassrefScanner classrefScanner = new ClassrefScanner();
+		// // if (!TransformCommit.isCommitTestTransforms()) {
+		// classrefScanner.noPersistence();
+		// // }
+		// classrefScanner.scan(cache);
+		ClassRef.add(
+				Domain.stream(PersistentImpl.getImplementation(ClassRef.class))
+						.collect(Collectors.toList()));
 	}
 
 	public boolean isHeadless() {
