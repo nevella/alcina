@@ -4,7 +4,6 @@
  */
 package com.totsp.gwittir.client.beans.internal;
 
-import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyExceptio
 import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 /**
@@ -79,6 +79,11 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	}
 
 	@Override
+	public BeanDescriptor getDescriptorOrNull(Object object) {
+		return getDescriptor(object);
+	}
+
+	@Override
 	public Class resolveClass(Object instance) {
 		return instance.getClass();
 	}
@@ -86,13 +91,13 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	public static class MethodWrapper implements Method {
 		private final java.lang.reflect.Method inner;
 
-		public java.lang.reflect.Method getInner() {
-			return this.inner;
-		}
-
 		public MethodWrapper(java.lang.reflect.Method inner) {
 			assert inner != null;
 			this.inner = inner;
+		}
+
+		public java.lang.reflect.Method getInner() {
+			return this.inner;
 		}
 
 		// @Override
@@ -116,8 +121,6 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	}
 
 	public static class ReflectionBeanDescriptor implements BeanDescriptor {
-		BeanInfo info;
-
 		Property[] props;
 
 		String className;
@@ -126,10 +129,10 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 			try {
 				className = clazz.getName();
 				ClientReflectorJvm.checkClassAnnotations(clazz);
-				info = java.beans.Introspector.getBeanInfo(clazz);
 				List<Property> properties = new ArrayList<>();
 				Class enumSubclass = null;
-				for (PropertyDescriptor d : info.getPropertyDescriptors()) {
+				for (PropertyDescriptor d : SEUtilities
+						.getSortedPropertyDescriptors(clazz)) {
 					Class<?> propertyType = d.getPropertyType();
 					if (propertyType != null && propertyType.isEnum()
 							&& propertyType.getSuperclass() == Enum.class
@@ -138,7 +141,8 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 						enumSubclass = propertyType;
 					}
 				}
-				for (PropertyDescriptor d : info.getPropertyDescriptors()) {
+				for (PropertyDescriptor d : SEUtilities
+						.getSortedPropertyDescriptors(clazz)) {
 					Class<?> propertyType = d.getPropertyType();
 					if (propertyType == Enum.class
 							&& d.getName().equals("value")) {
@@ -177,10 +181,5 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 			throw new NoSuchPropertyException(
 					"Unknown property: " + name + " on class " + className);
 		}
-	}
-
-	@Override
-	public BeanDescriptor getDescriptorOrNull(Object object) {
-		return getDescriptor(object);
 	}
 }

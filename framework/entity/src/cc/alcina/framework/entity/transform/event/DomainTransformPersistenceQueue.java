@@ -68,7 +68,7 @@ public class DomainTransformPersistenceQueue {
 
 	BlockingDeque<Event> events = new LinkedBlockingDeque<>();
 
-	private FireEventsThread eventQueue;
+	private PersistenceEvents eventQueue;
 
 	private DomainTransformPersistenceEvents persistenceEvents;
 
@@ -190,7 +190,7 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public void startEventQueue() {
-		eventQueue = new FireEventsThread();
+		eventQueue = new PersistenceEvents();
 		eventQueue.start();
 	}
 
@@ -332,12 +332,13 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
-	public class FireEventsThread extends Thread {
-		Logger fireEventThreadLogger = OffThreadLogger.getLogger(getClass());
+	public class PersistenceEvents extends Thread {
+		Logger fireEventThreadLogger = OffThreadLogger.getLogger(getClass()
+				.getName().replace("DomainTransformPersistenceQueue$", ""));
 
 		@Override
 		public void run() {
-			setName(Ax.format("DomainTransformPersistenceQueue-fire::%s",
+			setName(Ax.format("persistence-queue:%s",
 					persistenceEvents.domainStore.name));
 			while (true) {
 				Exception logged = null;

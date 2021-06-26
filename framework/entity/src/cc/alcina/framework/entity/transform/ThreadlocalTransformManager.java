@@ -14,7 +14,6 @@
 package cc.alcina.framework.entity.transform;
 
 import java.beans.IntrospectionException;
-import java.beans.Introspector;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
@@ -378,12 +377,11 @@ public class ThreadlocalTransformManager extends TransformManager
 	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
 			Class<A> annotationClass, String propertyName) {
 		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(targetClass)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals(propertyName)) {
-					return pd.getReadMethod().getAnnotation(annotationClass);
-				}
+			PropertyDescriptor descriptor = SEUtilities
+					.getPropertyDescriptorByName(targetClass, propertyName);
+			if (descriptor != null && descriptor.getReadMethod() != null) {
+				return descriptor.getReadMethod()
+						.getAnnotation(annotationClass);
 			}
 			return null;
 		} catch (Exception e) {

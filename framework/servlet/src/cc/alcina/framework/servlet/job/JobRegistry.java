@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -32,6 +33,7 @@ import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.Job.ResourceRecord;
@@ -44,6 +46,7 @@ import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.job.TransientFieldTask;
 import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -69,6 +72,7 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.QueueStat;
@@ -288,10 +292,14 @@ public class JobRegistry {
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
-		return JobDomain.get().getJobsForTask(action.getClass(), true)
-				.sorted(EntityComparator.REVERSED_INSTANCE)
-				.map(Job::asJobResult).map(JobResult::getActionLogItem)
-				.limit(count).collect(Collectors.toList());
+		Set<Long> ids = JobDomain.get().getJobsForTask(action.getClass(), false)
+				.sorted(EntityComparator.REVERSED_INSTANCE).limit(count)
+				.collect(EntityHelper.toIdSet());
+		return Domain.query(PersistentImpl.getImplementation(Job.class))
+				.contextTrue(
+						LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+				.filterByIds(ids).stream().map(Job::asJobResult)
+				.map(JobResult::getActionLogItem).collect(Collectors.toList());
 	}
 
 	public String getPerformerThreadName(Job job) {

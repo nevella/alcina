@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.persistence;
 
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,10 +57,8 @@ public class WrappedObjectPersistence {
 		List<Long> wrapperIds = new ArrayList<Long>();
 		try {
 			for (HasId wrapper : wrappers) {
-				PropertyDescriptor[] pds = Introspector
-						.getBeanInfo(wrapper.getClass())
-						.getPropertyDescriptors();
-				for (PropertyDescriptor pd : pds) {
+				for (PropertyDescriptor pd : SEUtilities
+						.getSortedPropertyDescriptors(wrapper.getClass())) {
 					if (pd.getReadMethod() != null) {
 						Wrapper info = pd.getReadMethod()
 								.getAnnotation(Wrapper.class);

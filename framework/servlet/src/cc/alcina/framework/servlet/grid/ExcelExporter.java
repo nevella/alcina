@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.servlet.grid;
 
-import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -42,7 +41,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.grid.GridFormatAnnotation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 
 /**
@@ -143,10 +142,10 @@ public class ExcelExporter {
 		}
 		Object o = coll.iterator().next();
 		Class clazz = o.getClass();
-		BeanInfo beanInfo = ResourceUtilities.getBeanInfo(clazz);
-		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-		List<PdMultiplexer> pdMultis = CollectionFilters.convertAndFilter(
-				Arrays.asList(pds), new ToPdMultiConverterFilter());
+		List<PropertyDescriptor> pds = SEUtilities
+				.getSortedPropertyDescriptors(clazz);
+		List<PdMultiplexer> pdMultis = CollectionFilters.convertAndFilter(pds,
+				new ToPdMultiConverterFilter());
 		Collections.sort(pdMultis);
 		addCollectionToBook(coll, book, sheetName, pdMultis);
 	}
@@ -183,7 +182,6 @@ public class ExcelExporter {
 		Element table = (Element) sn.getElementsByTagName("Table").item(0);
 		Object o = coll.iterator().next();
 		Class clazz = o.getClass();
-		BeanInfo beanInfo = ResourceUtilities.getBeanInfo(clazz);
 		table.setAttributeNS(SS_NS, "ss:ExpandedColumnCount",
 				String.valueOf(pds.size()));
 		table.setAttributeNS(SS_NS, "ss:ExpandedRowCount",

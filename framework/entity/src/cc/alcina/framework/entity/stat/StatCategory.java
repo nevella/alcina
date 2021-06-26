@@ -20,6 +20,12 @@ public abstract class StatCategory {
 		emit(System.currentTimeMillis());
 	}
 
+	public void emit(boolean emit) {
+		if (emit) {
+			emit();
+		}
+	}
+
 	public void emit(long time) {
 		String timeStamp = new SimpleDateFormat("HH:mm:ss,SSS")
 				.format(new Date(time));

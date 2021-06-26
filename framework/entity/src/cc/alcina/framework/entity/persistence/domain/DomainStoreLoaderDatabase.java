@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.persistence.domain;
 
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
@@ -13,7 +12,6 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.AbstractList;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.ConcurrentModificationException;
 import java.util.Date;
@@ -131,7 +129,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private Multimap<Class, List<ColumnDescriptor>> columnDescriptors;
 
-	private Map<PropertyDescriptor, Class> propertyDescriptorFetchTypes = new LinkedHashMap<PropertyDescriptor, Class>();
+	private Map<PdOperator, Class> propertyDescriptorFetchTypes = new LinkedHashMap<PdOperator, Class>();
 
 	private DomainStore store;
 
@@ -373,11 +371,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		new StatCategory_DomainStore.Warmup.Loader.End().emit();
 	}
 
-	private void addColumnName(Class clazz, PropertyDescriptor pd,
+	private void addColumnName(Class clazz, PdOperator pdOperator,
 			Class propertyType) {
 		columnDescriptors.add(clazz,
-				new ColumnDescriptor(clazz, pd, propertyType));
-		propertyDescriptorFetchTypes.put(pd, propertyType);
+				new ColumnDescriptor(clazz, pdOperator.pd, propertyType));
+		propertyDescriptorFetchTypes.put(pdOperator, propertyType);
 	}
 
 	private synchronized PdOperator ensurePdOperator(PropertyDescriptor pd,
@@ -769,9 +767,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	private void prepareTable(DomainClassDescriptor classDescriptor)
 			throws Exception {
 		Class clazz = classDescriptor.clazz;
-		List<PropertyDescriptor> pds = new ArrayList<PropertyDescriptor>(
-				Arrays.asList(Introspector.getBeanInfo(clazz)
-						.getPropertyDescriptors()));
+		List<PropertyDescriptor> pds = SEUtilities
+				.getSortedPropertyDescriptors(clazz).stream()
+				.collect(Collectors.toList());
 		PropertyDescriptor id = SEUtilities.getPropertyDescriptorByName(clazz,
 				"id");
 		pds.remove(id);
@@ -864,6 +862,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			OneToOne oneToOne = rm.getAnnotation(OneToOne.class);
 			DomainStoreDbColumn domainStoreColumn = rm
 					.getAnnotation(DomainStoreDbColumn.class);
+			PdOperator pdOperator = ensurePdOperator(pd, clazz);
 			if (manyToOne != null || oneToOne != null
 					|| domainStoreColumn != null) {
 				if (domainStoreColumn != null
@@ -889,12 +888,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						continue;
 					}
 				}
-				addColumnName(clazz, pd,
+				addColumnName(clazz, pdOperator,
 						getEntityType(getTargetEntityType(pd.getReadMethod())));
 			} else {
-				addColumnName(clazz, pd, getEntityType(pd.getPropertyType()));
+				addColumnName(clazz, pdOperator,
+						getEntityType(pd.getPropertyType()));
 			}
-			mapped.add(ensurePdOperator(pd, clazz));
+			mapped.add(pdOperator);
 		}
 		boolean addLazyPropertyLoadTask = columnDescriptors.get(clazz).stream()
 				.anyMatch(
@@ -1794,7 +1794,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							// resolvable
 						} else {
 							Class type = propertyDescriptorFetchTypes
-									.get(pdOperator.pd);
+									.get(pdOperator);
 							Object target = store.cache.get(type, id);
 							if (target == null) {
 								boolean loadLazy = domainDescriptor.perClass

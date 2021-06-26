@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.entity.transform;
 
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -35,7 +34,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ImplementationLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -97,24 +95,6 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			return ((HasDisplayName) o).displayName();
 		}
 		return o.toString();
-	}
-
-	public List<String> getAnnotatedPropertyNames(Class clazz) {
-		try {
-			List<String> result = new ArrayList<String>();
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getReadMethod() != null && pd.getWriteMethod() != null
-						&& pd.getReadMethod()
-								.getAnnotation(Display.class) != null) {
-					result.add(pd.getName());
-				}
-			}
-			return result;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	@Override
@@ -187,18 +167,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	@Override
 	public Class getPropertyType(Class clazz, String propertyName) {
-		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals(propertyName)) {
-					return pd.getPropertyType();
-				}
-			}
-			return null;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return SEUtilities.getPropertyDescriptorByName(clazz, propertyName)
+				.getPropertyType();
 	}
 
 	@Override
@@ -219,9 +189,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		try {
 			List<PropertyInfo> infos = new ArrayList<PropertyInfo>();
-			java.beans.BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
+			for (PropertyDescriptor pd : SEUtilities
+					.getSortedPropertyDescriptors(clazz)) {
 				Class<?> propertyType = pd.getPropertyType();
 				if (pd.getWriteMethod() == null || pd.getReadMethod() == null) {
 					continue;
