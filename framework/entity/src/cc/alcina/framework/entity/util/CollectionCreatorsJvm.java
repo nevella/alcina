@@ -9,7 +9,10 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.HashMapCreator;
+<<<<<<< HEAD
 import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCreator;
+=======
+>>>>>>> main
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class CollectionCreatorsJvm {
@@ -39,6 +42,7 @@ public class CollectionCreatorsJvm {
 			return new Object2ObjectLinkedOpenHashMap<>();
 		}
 	}
+<<<<<<< HEAD
 
 	@RegistryLocation(registryPoint = UnsortedMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class UnsortedMapCreatorJvm extends UnsortedMapCreator {
@@ -47,4 +51,6 @@ public class CollectionCreatorsJvm {
 			return new Object2ObjectLinkedOpenHashMap<>();
 		}
 	}
+=======
+>>>>>>> main
 }
