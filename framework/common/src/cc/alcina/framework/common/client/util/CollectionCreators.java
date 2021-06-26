@@ -37,8 +37,8 @@ public class CollectionCreators {
 	@RegistryLocation(registryPoint = CollectionCreators.HashMapCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class HashMapCreator {
-		public <K, V> Map<K, V> copy(Map<K, V> toClone) {
-			return new HashMap<>(toClone);
+		public <K, V> Map<K, V> copy(Map<K, V> from) {
+			return new HashMap<>(from);
 		}
 
 		public <K, V> Map<K, V> create() {
