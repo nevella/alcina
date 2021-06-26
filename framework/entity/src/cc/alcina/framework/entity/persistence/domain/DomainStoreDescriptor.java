@@ -80,6 +80,10 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		throw new UnsupportedOperationException();
 	}
 
+	public boolean handlesAssociationsFor(Class clazz) {
+		return perClass.containsKey(clazz);
+	}
+
 	public boolean isEnqueueLazyLoad(EntityLocator locator) {
 		DomainStoreLazyLoader lazyLoader = locator.clazz
 				.getAnnotation(DomainStoreLazyLoader.class);
