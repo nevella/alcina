@@ -32,7 +32,7 @@ public class AbstractDateCriterion extends SearchCriterion
 
 	private Date date;
 
-	private Direction direction;
+	private Direction direction = Direction.ASCENDING;
 
 	public AbstractDateCriterion() {
 		super();

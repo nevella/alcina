@@ -1836,7 +1836,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 							.classLookup().getPropertyReflector(entityClass,
 									classNamePropertyName);
 					serializedClassNameReflector.setPropertyValue(entity,
-							event.getNewValue().getClass().getName());
+							event.getNewValue() == null ? null
+									: event.getNewValue().getClass().getName());
 				}
 				// do not persist as a transform
 				return true;
