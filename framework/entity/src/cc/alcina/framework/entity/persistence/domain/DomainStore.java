@@ -375,8 +375,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	public boolean handlesAssociationsFor(Class clazz) {
-		return domainDescriptor.perClass.containsKey(clazz)
-				|| this == DomainStore.stores().classMap.get(clazz);
+		return domainDescriptor.handlesAssociationsFor(clazz);
 	}
 
 	public boolean isCached(Class clazz) {
