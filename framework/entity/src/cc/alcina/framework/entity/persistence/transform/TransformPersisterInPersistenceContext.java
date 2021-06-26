@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.persistence.transform;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
@@ -125,7 +126,6 @@ public class TransformPersisterInPersistenceContext {
 		Date startPersistTime = new Date();
 		this.entityManager = entityManager;
 		EntityLocatorMap locatorMap = token.getLocatorMap();
-		EntityLocatorMap locatorMapClone = (EntityLocatorMap) locatorMap.copy();
 		final DomainTransformRequest request = token.getRequest();
 		List<DomainTransformEventPersistent> persistentEvents = wrapper.persistentEvents;
 		List<DomainTransformRequestPersistent> dtrps = wrapper.persistentRequests;
@@ -134,6 +134,7 @@ public class TransformPersisterInPersistenceContext {
 		ThreadlocalTransformManager tlTransformManager = ThreadlocalTransformManager
 				.cast();
 		DelayedEntityPersister delayedEntityPersister = new DelayedEntityPersister();
+		List<DomainTransformRequest> transformRequests = new ArrayList<DomainTransformRequest>();
 		try {
 			// We know this is thread-local, so we can clear the tm transforms
 			// add the entity version checker now
@@ -169,7 +170,6 @@ public class TransformPersisterInPersistenceContext {
 			}
 			tlTransformManager.setClientInstance(persistentClientInstance);
 			tlTransformManager.setUseCreatedLocals(false);
-			List<DomainTransformRequest> transformRequests = new ArrayList<DomainTransformRequest>();
 			transformRequests.addAll(request.getPriorRequestsWithoutResponse());
 			transformRequests.add(request);
 			for (DomainTransformRequest dtr : transformRequests) {
@@ -322,8 +322,7 @@ public class TransformPersisterInPersistenceContext {
 									.add(transformException);
 							possiblyAddSilentSkips(token, transformException);
 							token.getIgnoreInExceptionPass().add(event);
-							locatorMap.clear();
-							locatorMap.putAll(locatorMapClone);
+							undoLocatorMapDeltas(locatorMap, transformRequests);
 							TransformExceptionAction actionForException = token
 									.getTransformExceptionPolicy()
 									.getActionForException(transformException,
@@ -462,8 +461,7 @@ public class TransformPersisterInPersistenceContext {
 			case RETRY_WITH_IGNORES:
 				return;
 			default:
-				locatorMap.clear();
-				locatorMap.putAll(locatorMapClone);
+				undoLocatorMapDeltas(locatorMap, transformRequests);
 				token.setPass(Pass.FAIL);
 				// ve must rollback
 				putExceptionInWrapper(token, null, wrapper);
@@ -484,8 +482,7 @@ public class TransformPersisterInPersistenceContext {
 				}
 			}
 			e.printStackTrace();
-			locatorMap.clear();
-			locatorMap.putAll(locatorMapClone);
+			undoLocatorMapDeltas(locatorMap, transformRequests);
 			if (token.getPass() == Pass.TRY_COMMIT) {
 				token.setPass(Pass.DETERMINE_EXCEPTION_DETAIL);
 				transformPersisterToken.determineExceptionDetailPassStartTime = System
@@ -521,6 +518,15 @@ public class TransformPersisterInPersistenceContext {
 				token.getTransformExceptions().add(addPos, silentSkip);
 			}
 		}
+	}
+
+	private void undoLocatorMapDeltas(EntityLocatorMap locatorMap,
+			List<DomainTransformRequest> transformRequests) {
+		transformRequests.stream().map(DomainTransformRequest::getEvents)
+				.flatMap(Collection::stream)
+				.filter(dte -> dte.provideIsCreationTransform())
+				.map(DomainTransformEvent::toObjectLocator)
+				.forEach(locator -> locatorMap.remove(locator));
 	}
 
 	protected void persistEvent(ThreadlocalTransformManager tlTransformManager,
