@@ -12,7 +12,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multiset;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 public class CollectionCreatorsMvcc {
@@ -48,14 +47,6 @@ public class CollectionCreatorsMvcc {
 			} else {
 				return new TransactionalMultiset<>(keyClass, valueClass);
 			}
-		}
-	}
-
-	@RegistryLocation(registryPoint = CollectionCreators.HashMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-	@ClientInstantiable
-	public static class HashMapCreator {
-		public <K, V> Map<K, V> create() {
-			return new Object2ObjectOpenHashMap<>();
 		}
 	}
 
