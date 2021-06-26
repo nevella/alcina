@@ -26,6 +26,7 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
@@ -200,6 +201,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			ArrayList resultHolder = new ArrayList();
 			resultHolder.add(out);
 			if (transformMethod) {
+				Preconditions.checkState(EntityLayerUtils.isTestServer());
 				ThreadlocalTransformManager.get().resetTltm(null);
 				DomainStore.writableStore().getPersistenceEvents().getQueue()
 						.refreshPositions();

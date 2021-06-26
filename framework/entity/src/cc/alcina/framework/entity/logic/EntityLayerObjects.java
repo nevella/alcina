@@ -58,7 +58,7 @@ public class EntityLayerObjects {
 	 */
 	private ClientInstance serverAsClientInstance;
 
-	private EntityLocatorMap serverAsClientInstanceEntityLocatorMap = new EntityLocatorMap();
+	private EntityLocatorMap serverAsClientInstanceEntityLocatorMap;
 
 	private EntityLayerObjects() {
 		super();
@@ -119,6 +119,9 @@ public class EntityLayerObjects {
 	public void
 			setServerAsClientInstance(ClientInstance serverAsClientInstance) {
 		this.serverAsClientInstance = serverAsClientInstance;
+		if (serverAsClientInstanceEntityLocatorMap == null) {
+			serverAsClientInstanceEntityLocatorMap = new EntityLocatorMap();
+		}
 	}
 
 	public void

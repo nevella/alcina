@@ -55,7 +55,6 @@ import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.domain.search.DomainSearcher;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.log.ILogRecord;
@@ -393,21 +392,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		DomainStore.waitUntilCurrentRequestsProcessed();
 		String idString = String.valueOf(job.getId());
 		return idString;
-	}
-
-	@Override
-	public <G extends WrapperPersistable> Long persist(G gwpo)
-			throws WebException {
-		try {
-			Long id = Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().persist(gwpo);
-			TransformCommit.get().handleWrapperTransforms();
-			return id;
-		} catch (Exception e) {
-			logger.warn("Exception in persist wrappable", e);
-			logRpcException(e);
-			throw new WebException(e.getMessage());
-		}
 	}
 
 	@Override
@@ -847,14 +831,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return GraphProjections.defaultProjections().project(response);
 		}
 
-		protected List<T> projectResponses(List<T> list, Class<T> clazz) {
-			if (Entity.class.isAssignableFrom(clazz)) {
-				list = GraphProjections.defaultProjections().maxDepth(1)
-						.project(list);
-			}
-			return list;
-		}
-
 		protected abstract List<T> getResponses(String query,
 				BoundSuggestOracleModel model, String hint);
 
@@ -864,6 +840,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 		protected boolean offerNullSuggestion() {
 			return true;
+		}
+
+		protected List<T> projectResponses(List<T> list, Class<T> clazz) {
+			if (Entity.class.isAssignableFrom(clazz)) {
+				list = GraphProjections.defaultProjections().maxDepth(1)
+						.project(list);
+			}
+			return list;
 		}
 	}
 
