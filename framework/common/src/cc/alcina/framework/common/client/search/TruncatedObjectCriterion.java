@@ -41,12 +41,6 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	}
 
 	@Override
-	public boolean equals(Object obj) {
-		return obj instanceof SearchCriterion
-				&& equivalentTo((SearchCriterion) obj);
-	}
-
-	@Override
 	public boolean equivalentTo(SearchCriterion other) {
 		if (other instanceof TruncatedObjectCriterion) {
 			return other.getClass() == getClass()
@@ -75,11 +69,6 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		return value;
 	}
 
-	@Override
-	public int hashCode() {
-		return getClass().hashCode() ^ (int) getId();
-	}
-
 	public void populateValue() {
 	}
 
@@ -98,7 +87,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	}
 
 	public void setValue(E value) {
-		setDisplayText(getDisplayTextFor(value));
+		setDisplayText(provideDisplayTextFor(value));
 		if (value != null) {
 			setId(value.getId());
 		} else {
@@ -119,7 +108,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		return (T) this;
 	}
 
-	protected String getDisplayTextFor(E value) {
+	protected String provideDisplayTextFor(E value) {
 		return value == null ? null : value.toString();
 	}
 }

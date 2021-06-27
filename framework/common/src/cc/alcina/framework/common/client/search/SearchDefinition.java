@@ -38,11 +38,13 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 //FIXME - mvcc.4 - this shouldn't extend entity
@@ -333,6 +335,24 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	public void maxResultsPerPage() {
 		setResultsPerPage(Integer.MAX_VALUE);
+	}
+
+	@Override
+	// because it's prettier, there's ambiguity about multiple criteriagroups w
+	// 1 criterion vs 1 cg multiple criteria
+	// so - combine (map to first)
+	public void onAfterTreeDeserialize() {
+		Multimap<?, List<CriteriaGroup>> byClass = criteriaGroups.stream()
+				.collect(AlcinaCollectors
+						.toKeyMultimap(CriteriaGroup::getClass));
+		byClass.values().forEach(list -> {
+			CriteriaGroup<?> first = list.get(0);
+			for (int idx = 1; idx < list.size(); idx++) {
+				CriteriaGroup later = list.get(idx);
+				first.getCriteria().addAll(later.getCriteria());
+				criteriaGroups.remove(later);
+			}
+		});
 	}
 
 	public void onBeforeRunSearch() {

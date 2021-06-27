@@ -38,7 +38,7 @@ public class EntityHelper {
 	}
 
 	public static <T extends Entity> SortedSet<T>
-			combineAndOrderById(boolean reverse, Collection<T>... collections) {
+			combineAndOrder(boolean reverse, Collection<T>... collections) {
 		TreeSet<T> join = new TreeSet<T>();
 		for (Collection<T> collection : collections) {
 			join.addAll(collection);

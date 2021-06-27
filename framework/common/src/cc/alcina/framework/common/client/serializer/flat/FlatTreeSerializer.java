@@ -477,7 +477,7 @@ public class FlatTreeSerializer {
 							LoggerFactory.getLogger(getClass()).info(
 									"Unknown property: {} {}",
 									state.rootClass.getSimpleName(), path);
-							continue;
+							break;
 						}
 						PropertySerialization propertySerialization = getPropertySerialization(
 								cursor.value.getClass(), property.getName());
@@ -763,12 +763,12 @@ public class FlatTreeSerializer {
 								.newInstance(childValue.getClass());
 					}
 					Node childNode = new Node(cursor, childValue, defaultValue);
-					if (childNode.path.ignoreForSerialization()) {
-						return;
-					}
 					childNode.path.property = property;
 					childNode.path.propertySerialization = getPropertySerialization(
 							cursor.value.getClass(), property.getName());
+					if (childNode.path.ignoreForSerialization()) {
+						return;
+					}
 					checkReachableTestingTypes(childNode);
 					if (childNode.isMultipleTypes()
 							&& !childNode.isCollection()) {
@@ -1339,6 +1339,17 @@ public class FlatTreeSerializer {
 			}
 		}
 
+		private void addMaybeWithoutSeparator(FormatBuilder fb, String path) {
+			if (path.startsWith("-")) {
+				// tricky bit of defaulting here - for searchdefinitions.
+				// FIXME - 2022 - think about doing this better (although it
+				// works as-is)
+				fb.separator("");
+			}
+			fb.appendIfNotBlank(path);
+			fb.separator(".");
+		}
+
 		boolean ignoreForSerialization() {
 			return propertySerialization != null
 					&& !propertySerialization.fromClient() && GWT.isClient();
@@ -1369,7 +1380,7 @@ public class FlatTreeSerializer {
 					fb.append(property.getName());
 				}
 				if (index != null) {
-					fb.appendIfNotBlank(
+					addMaybeWithoutSeparator(fb,
 							index.toStringFull(mergeLeafValuePaths));
 				}
 				path = fb.toString();
@@ -1400,7 +1411,7 @@ public class FlatTreeSerializer {
 					}
 				}
 				if (index != null) {
-					fb.appendIfNotBlank(
+					addMaybeWithoutSeparator(fb,
 							index.toStringShort(this, mergeLeafValuePaths));
 				}
 				shortPath = fb.toString();
