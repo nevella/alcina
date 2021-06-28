@@ -88,14 +88,30 @@ public class DomainStoreQueryTranslator {
 		return results;
 	}
 
+	/*
+	 * FIXME - 2022 - there's a lot of hackery with remapping/resolving -
+	 * possibly revisit 'context' etc
+	 */
 	public String translatePropertyPath(Criterion criterion,
 			DomainStoreCriteria context, String propertyPath) {
 		if (context != null) {
 			if (propertyPath.contains(".")) {
+				String firstSegment = propertyPath.substring(0,
+						propertyPath.indexOf("."));
+				if (aliasLookup.containsKey(firstSegment)) {
+					context = aliasLookup.get(firstSegment);
+				}
 				// chain to the root
 				DomainStoreCriteria cursor = context;
 				while (cursor.parent != null && (cursor.parent.alias == null
 						|| cursor.parent.joinType != null)) {
+					if (cursor.alias != null) {
+						String aliasSegment = cursor.alias + ".";
+						if (propertyPath.startsWith(aliasSegment)) {
+							propertyPath = propertyPath
+									.substring(aliasSegment.length());
+						}
+					}
 					propertyPath = cursor.associationPath + "." + propertyPath;
 					cursor = cursor.parent;
 				}

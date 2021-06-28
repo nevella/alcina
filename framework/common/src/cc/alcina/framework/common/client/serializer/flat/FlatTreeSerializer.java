@@ -159,10 +159,10 @@ public class FlatTreeSerializer {
 			}
 			state.keyValues.remove(CLASS);
 			T instance = Reflections.newInstance(clazz);
-			instance.onBeforeTreeDeserialize();
+			instance.treeSerializationCustomiser().onBeforeTreeDeserialize();
 			Node node = new Node(null, instance, null);
 			new FlatTreeSerializer(state).deserialize(node);
-			instance.onAfterTreeDeserialize();
+			instance.treeSerializationCustomiser().onAfterTreeDeserialize();
 			return instance;
 		} finally {
 			LooseContext.pop();
@@ -189,7 +189,7 @@ public class FlatTreeSerializer {
 		}
 		State state;
 		try {
-			object.onBeforeTreeSerialize();
+			object.treeSerializationCustomiser().onBeforeTreeSerialize();
 			state = new State();
 			state.serializerOptions = options;
 			Node node = new Node(null, object, Reflections.classLookup()
@@ -198,7 +198,7 @@ public class FlatTreeSerializer {
 			FlatTreeSerializer serializer = new FlatTreeSerializer(state);
 			serializer.serialize();
 		} finally {
-			object.onAfterTreeSerialize();
+			object.treeSerializationCustomiser().onAfterTreeSerialize();
 		}
 		String serialized = state.keyValues.sorted().toPropertyString();
 		if (options.singleLine) {
@@ -214,12 +214,16 @@ public class FlatTreeSerializer {
 					.withShortPaths(options.shortPaths)
 					.withSingleLine(options.singleLine)
 					.withTopLevelTypeInfo(options.topLevelTypeInfo);
+			String testSerialized = object.treeSerializationCustomiser()
+					.filterTestSerialized(serialized);
 			String checkSerialized = serialize(checkObject, checkOptions);
-			if (!Objects.equals(serialized, checkSerialized)) {
-				unequalSerialized
-						.publish(new StringPair(serialized, checkSerialized));
+			String testCheckSerialized = object.treeSerializationCustomiser()
+					.filterTestSerialized(checkSerialized);
+			if (!Objects.equals(testSerialized, testCheckSerialized)) {
+				unequalSerialized.publish(
+						new StringPair(testSerialized, testCheckSerialized));
 				Preconditions.checkState(
-						Objects.equals(serialized, checkSerialized),
+						Objects.equals(testSerialized, testCheckSerialized),
 						"Unequal serialized:\n\n%s\n========\n%s", serialized,
 						checkSerialized);
 			}
@@ -534,6 +538,7 @@ public class FlatTreeSerializer {
 								}
 								childValue = Reflections.newInstance(type);
 								((TreeSerializable) childValue)
+										.treeSerializationCustomiser()
 										.onBeforeTreeDeserialize();
 								Reflections.propertyAccessor().setPropertyValue(
 										cursor.value, property.getName(),

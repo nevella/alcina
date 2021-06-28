@@ -292,24 +292,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 	}
 
 	@Override
-	public void onAfterTreeDeserialize() {
-		StringMap.fromPropertyString(propertiesSerialized)
-				.forEach((k, v) -> properties.put(k, v));
-	}
-
-	@Override
-	public void onBeforeTreeDeserialize() {
-		if (contentDefinition != null) {
-			contentDefinition.onBeforeTreeDeserialize();
-		}
-	}
-
-	@Override
-	public void onBeforeTreeSerialize() {
-		propertiesSerialized = new StringMap(properties).toPropertyString();
-	}
-
-	@Override
 	public List<MailAttachment> provideAttachments() {
 		if (attachments == null) {
 			attachments = new ArrayList<>();
@@ -556,6 +538,11 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 				+ " Format: " + CommonUtils.friendlyConstant(getOutputFormat());
 	}
 
+	@Override
+	public TreeSerializable.Customiser treeSerializationCustomiser() {
+		return new Customiser(this);
+	}
+
 	public static class TestContentDefinition implements ContentDefinition {
 		@Override
 		public String getPublicationType() {
@@ -576,6 +563,33 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 		public void
 				setContentDefinition(TestContentDefinition contentDefinition) {
 			this.contentDefinition = contentDefinition;
+		}
+	}
+
+	private static class Customiser
+			extends TreeSerializable.Customiser<ContentRequestBase> {
+		public Customiser(ContentRequestBase serializable) {
+			super(serializable);
+		}
+
+		@Override
+		public void onAfterTreeDeserialize() {
+			StringMap.fromPropertyString(serializable.propertiesSerialized)
+					.forEach((k, v) -> serializable.properties.put(k, v));
+		}
+
+		@Override
+		public void onBeforeTreeDeserialize() {
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onBeforeTreeDeserialize();
+			}
+		}
+
+		@Override
+		public void onBeforeTreeSerialize() {
+			serializable.propertiesSerialized = new StringMap(
+					serializable.properties).toPropertyString();
 		}
 	}
 }

@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
+import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -276,6 +277,18 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return "";
 	}
 
+	@Override
+	@PropertySerialization(ignore = true)
+	public long getId() {
+		return super.getId();
+	}
+
+	@Override
+	@PropertySerialization(ignore = true)
+	public long getLocalId() {
+		return super.getLocalId();
+	}
+
 	public String getName() {
 		return name;
 	}
@@ -335,24 +348,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	public void maxResultsPerPage() {
 		setResultsPerPage(Integer.MAX_VALUE);
-	}
-
-	@Override
-	// because it's prettier, there's ambiguity about multiple criteriagroups w
-	// 1 criterion vs 1 cg multiple criteria
-	// so - combine (map to first)
-	public void onAfterTreeDeserialize() {
-		Multimap<?, List<CriteriaGroup>> byClass = criteriaGroups.stream()
-				.collect(AlcinaCollectors
-						.toKeyMultimap(CriteriaGroup::getClass));
-		byClass.values().forEach(list -> {
-			CriteriaGroup<?> first = list.get(0);
-			for (int idx = 1; idx < list.size(); idx++) {
-				CriteriaGroup later = list.get(idx);
-				first.getCriteria().addAll(later.getCriteria());
-				criteriaGroups.remove(later);
-			}
-		});
 	}
 
 	public void onBeforeRunSearch() {
@@ -490,6 +485,11 @@ public abstract class SearchDefinition extends WrapperPersistable
 	}
 
 	@Override
+	public TreeSerializable.Customiser treeSerializationCustomiser() {
+		return new Customiser(this);
+	}
+
+	@Override
 	public String validatePermissions() {
 		mapCriteriaToPropertyNames();
 		List<CriteriaGroup> children = new ArrayList<CriteriaGroup>();
@@ -522,5 +522,36 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	protected void putOrderGroup(OrderGroup og) {
 		orderGroups.add(og);
+	}
+
+	protected static class Customiser<S extends SearchDefinition>
+			extends TreeSerializable.Customiser<S> {
+		public Customiser(S serializable) {
+			super(serializable);
+		}
+
+		@Override
+		public String filterTestSerialized(String serialized) {
+			return serialized.replaceAll(".+\\.displayText=.+", "");
+		}
+
+		@Override
+		// because it's prettier, there's ambiguity about multiple
+		// criteriagroups w
+		// 1 criterion vs 1 cg multiple criteria
+		// so - combine (map to first)
+		public void onAfterTreeDeserialize() {
+			Multimap<?, List<CriteriaGroup>> byClass = serializable
+					.getCriteriaGroups().stream().collect(AlcinaCollectors
+							.toKeyMultimap(CriteriaGroup::getClass));
+			byClass.values().forEach(list -> {
+				CriteriaGroup<?> first = list.get(0);
+				for (int idx = 1; idx < list.size(); idx++) {
+					CriteriaGroup later = list.get(idx);
+					first.getCriteria().addAll(later.getCriteria());
+					serializable.getCriteriaGroups().remove(later);
+				}
+			});
+		}
 	}
 }

@@ -11,15 +11,34 @@ import java.io.Serializable;
  *
  */
 public interface TreeSerializable extends Serializable {
-	default void onAfterTreeDeserialize() {
+	default Customiser treeSerializationCustomiser() {
+		return Customiser.INSTANCE;
 	}
 
-	default void onAfterTreeSerialize() {
-	}
+	public static class Customiser<T extends TreeSerializable> {
+		public static final transient Customiser INSTANCE = new Customiser(
+				null);
 
-	default void onBeforeTreeDeserialize() {
-	}
+		protected T serializable;
 
-	default void onBeforeTreeSerialize() {
+		public Customiser(T treeSerializable) {
+			this.serializable = treeSerializable;
+		}
+
+		public String filterTestSerialized(String serialized) {
+			return serialized;
+		}
+
+		public void onAfterTreeDeserialize() {
+		}
+
+		public void onAfterTreeSerialize() {
+		}
+
+		public void onBeforeTreeDeserialize() {
+		}
+
+		public void onBeforeTreeSerialize() {
+		}
 	}
 }
