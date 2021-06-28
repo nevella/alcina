@@ -956,7 +956,7 @@ public class FlatTreeSerializer {
 		@Override
 		public <V> V deserialize(String serialized, Class<V> clazz) {
 			if ((clazz != null && !serialized.startsWith("{"))
-					|| serialized.startsWith("class$=")) {
+					|| serialized.contains("class$=")) {
 				FlatTreeSerializer.DeserializerOptions options = new FlatTreeSerializer.DeserializerOptions()
 						.withShortPaths(true);
 				Class<? extends TreeSerializable> tsClazz = (Class<? extends TreeSerializable>) clazz;
