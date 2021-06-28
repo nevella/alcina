@@ -646,7 +646,9 @@ public class DomainStoreQueryTranslator {
 					rows.add(currentRow);
 					currentRow.added = true;
 				}
-				currentRow = null;
+				if (groupCount != 0 || !aggregateQuery) {
+					currentRow = null;
+				}
 			}
 		}
 
