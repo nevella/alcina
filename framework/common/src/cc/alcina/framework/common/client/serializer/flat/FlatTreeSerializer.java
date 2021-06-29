@@ -159,6 +159,12 @@ public class FlatTreeSerializer {
 			}
 			state.keyValues.remove(CLASS);
 			T instance = Reflections.newInstance(clazz);
+			String mappedKeysValue = instance.treeSerializationCustomiser()
+					.mapKeys(value, false);
+			if (!Objects.equals(mappedKeysValue, value)) {
+				state.keyValues = StringMap.fromPropertyString(mappedKeysValue);
+				state.keyValues.remove(CLASS);
+			}
 			instance.treeSerializationCustomiser().onBeforeTreeDeserialize();
 			Node node = new Node(null, instance, null);
 			new FlatTreeSerializer(state).deserialize(node);
@@ -201,6 +207,8 @@ public class FlatTreeSerializer {
 			object.treeSerializationCustomiser().onAfterTreeSerialize();
 		}
 		String serialized = state.keyValues.sorted().toPropertyString();
+		serialized = object.treeSerializationCustomiser().mapKeys(serialized,
+				true);
 		if (options.singleLine) {
 			serialized = serialized.replace("\n", ":");
 		}
@@ -490,7 +498,8 @@ public class FlatTreeSerializer {
 										property.getName());
 						Node lookahead = new Node(cursor, childValue, null);
 						lookahead.path.property = property;
-						lookahead.path.propertySerialization = propertySerialization;
+						lookahead.path.setPropertySerialization(
+								propertySerialization);
 						/*
 						 * Always skip the lookahead type parameter segment in
 						 * the segment loop.
@@ -554,7 +563,8 @@ public class FlatTreeSerializer {
 						if (childValue != null || lookahead.isLeaf()) {
 							cursor = new Node(cursor, childValue, null);
 							cursor.path.property = property;
-							cursor.path.propertySerialization = propertySerialization;
+							cursor.path.setPropertySerialization(
+									propertySerialization);
 						} else {
 							resolved = true;
 						}
@@ -712,7 +722,8 @@ public class FlatTreeSerializer {
 			Object value = cursor.value;
 			if (isLeafValue(value)) {
 				if (!Objects.equals(value, cursor.defaultValue)
-						|| !state.serializerOptions.elideDefaults) {
+						|| !state.serializerOptions.elideDefaults
+						|| cursor.isPutDefaultValue()) {
 					cursor.putValue(state);
 				}
 				state.mergeableNode = cursor;
@@ -769,8 +780,9 @@ public class FlatTreeSerializer {
 					}
 					Node childNode = new Node(cursor, childValue, defaultValue);
 					childNode.path.property = property;
-					childNode.path.propertySerialization = getPropertySerialization(
-							cursor.value.getClass(), property.getName());
+					childNode.path.setPropertySerialization(
+							getPropertySerialization(cursor.value.getClass(),
+									property.getName()));
 					if (childNode.path.ignoreForSerialization()) {
 						return;
 					}
@@ -1144,6 +1156,11 @@ public class FlatTreeSerializer {
 			return path.isMultipleTypes();
 		}
 
+		public boolean isPutDefaultValue() {
+			return path.serializer != null
+					&& !path.serializer.elideDefaultValues(value);
+		}
+
 		@Override
 		public String toString() {
 			return Ax.format("%s=%s", path, value);
@@ -1172,6 +1189,9 @@ public class FlatTreeSerializer {
 		Object parseStringValue(Class valueClass, String stringValue) {
 			if (NULL_MARKER.equals(stringValue)) {
 				return null;
+			}
+			if (path.serializer != null) {
+				return path.serializer.deserializeValue(stringValue);
 			}
 			if (valueClass == String.class) {
 				return TextUtils.Encoder.decodeURIComponentEsque(stringValue);
@@ -1271,6 +1291,9 @@ public class FlatTreeSerializer {
 			if (value == null) {
 				return NULL_MARKER;
 			}
+			if (path.serializer != null) {
+				return path.serializer.serializeValue(value);
+			}
 			if (value instanceof Date) {
 				return String.valueOf(((Date) value).getTime());
 			} else if (value instanceof String) {
@@ -1310,12 +1333,24 @@ public class FlatTreeSerializer {
 
 		public Class type;
 
+		private PropertySerialization.Serializer serializer;
+
 		Path(Path parent) {
 			this.parent = parent;
 		}
 
 		public boolean canMergeTo(Path other) {
 			return toStringShort(true).equals(other.toStringShort(true));
+		}
+
+		public void setPropertySerialization(
+				PropertySerialization propertySerialization) {
+			this.propertySerialization = propertySerialization;
+			if (propertySerialization != null && propertySerialization
+					.serializer() != PropertySerialization.Serializer.None.class) {
+				serializer = Reflections
+						.newInstance(propertySerialization.serializer());
+			}
 		}
 
 		public Class soleType() {

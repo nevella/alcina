@@ -1322,9 +1322,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		} catch (RuntimeException e) {
 			if (GWT.isClient()) {
 				AlcinaTopics.TOPIC_TRANSFORM_CASCADE_EXCEPTION.publish(e);
-			} else {
-				throw e;
 			}
+			throw e;
 		}
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
 		DomainTransformEvent dte = createTransformFromPropertyChange(event);

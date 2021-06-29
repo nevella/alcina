@@ -142,7 +142,12 @@ public abstract class DomainQuery<E extends Entity> {
 	}
 
 	public DomainQuery<E> sorted(Comparator<?> comparator) {
-		this.comparator = (Comparator<E>) comparator;
+		Comparator<E> cast = (Comparator<E>) comparator;
+		if (this.comparator == null) {
+			this.comparator = cast;
+		} else {
+			this.comparator = this.comparator.thenComparing(cast);
+		}
 		return this;
 	}
 

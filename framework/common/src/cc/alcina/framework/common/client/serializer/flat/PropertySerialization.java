@@ -63,6 +63,8 @@ public @interface PropertySerialization {
 	 */
 	String path() default "";
 
+	Class<? extends Serializer> serializer() default Serializer.None.class;
+
 	/*
 	 * Usages:
 	 * 
@@ -73,4 +75,26 @@ public @interface PropertySerialization {
 	 * assignable from that subclass or a collection
 	 */
 	Class[] types() default {};
+
+	public static interface Serializer<T> {
+		T deserializeValue(String value);
+
+		default boolean elideDefaultValues(T t) {
+			return true;
+		}
+
+		String serializeValue(T t);
+
+		public static class None implements Serializer {
+			@Override
+			public Object deserializeValue(String value) {
+				return null;
+			}
+
+			@Override
+			public String serializeValue(Object t) {
+				return null;
+			}
+		}
+	}
 }

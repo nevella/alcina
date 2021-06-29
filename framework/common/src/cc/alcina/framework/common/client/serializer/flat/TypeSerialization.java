@@ -33,6 +33,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 @Target({ ElementType.TYPE })
 @ClientVisible
 public @interface TypeSerialization {
+	String[] keyPrefixMappings() default {};
+
 	boolean notSerializable() default false;
 
 	PropertySerialization[] properties() default {};

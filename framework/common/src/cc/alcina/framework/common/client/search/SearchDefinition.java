@@ -312,6 +312,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return publicationType;
 	}
 
+	@PropertySerialization(path = "pageSize")
 	public int getResultsPerPage() {
 		return this.resultsPerPage;
 	}
@@ -552,6 +553,12 @@ public abstract class SearchDefinition extends WrapperPersistable
 					serializable.getCriteriaGroups().remove(later);
 				}
 			});
+		}
+
+		@Override
+		public void onBeforeTreeSerialize() {
+			serializable.getOrderGroups().forEach(og -> og
+					.treeSerializationCustomiser().onBeforeTreeSerialize());
 		}
 	}
 }
