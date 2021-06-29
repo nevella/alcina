@@ -43,13 +43,13 @@ public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
 	}
 
 	@Override
-	public String getDisplayName() {
-		return "Date";
+	public Class entityClass() {
+		return null;
 	}
 
 	@Override
-	public Class getEntityClass() {
-		return null;
+	public String getDisplayName() {
+		return "Date";
 	}
 
 	@Override

@@ -18,10 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
@@ -104,6 +100,8 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		return criterion;
 	}
 
+	public abstract Class entityClass();
+
 	/*
 	 * only used for single-table search, compiled out for client
 	 */
@@ -165,10 +163,6 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 
 	@Override
 	public abstract String getDisplayName();
-
-	@XmlTransient
-	@JsonIgnore
-	public abstract Class getEntityClass();
 
 	/**
 	 * To disallow injection attacks here, the criteria/property name mapping

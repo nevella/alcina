@@ -47,7 +47,7 @@ public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
 	}
 
 	@Override
-	public Class getEntityClass() {
+	public Class entityClass() {
 		return null;
 	}
 

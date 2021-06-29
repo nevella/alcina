@@ -32,7 +32,7 @@ public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
 	}
 
 	@Override
-	public Class getEntityClass() {
+	public Class entityClass() {
 		return null;
 	}
 
