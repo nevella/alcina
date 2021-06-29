@@ -1,13 +1,11 @@
 package cc.alcina.framework.gwt.client.tour;
 
-import com.google.gwt.core.client.JsArray;
-
-import cc.alcina.framework.gwt.client.tour.Tour.Step;
+import java.util.List;
 
 public class TourModel {
 	static TourModel fromJson(String tourJson) {
 		TourModel model = new TourModel();
-		model.tour = Tour.fromJson(tourJson);
+		model.tour = TourJso.fromJson(tourJson);
 		return model;
 	}
 
@@ -15,11 +13,22 @@ public class TourModel {
 
 	private Tour tour;
 
+	public TourModel() {
+	}
+
+	public TourModel(Tour tour) {
+		this.tour = tour;
+	}
+
 	public int getCurrentStepIndex() {
 		return stepIdx;
 	}
 
-	Step getCurrentStep() {
+	public List<? extends Tour.Step> getSteps() {
+		return tour.getSteps();
+	}
+
+	Tour.Step getCurrentStep() {
 		return getSteps().get(stepIdx);
 	}
 
@@ -27,16 +36,12 @@ public class TourModel {
 		return tour.getName();
 	}
 
-	JsArray<Step> getSteps() {
-		return tour.getSteps();
-	}
-
 	void gotoStep(int idx) {
 		stepIdx = idx;
 	}
 
 	boolean hasNext() {
-		return stepIdx < getSteps().length() - 1;
+		return stepIdx < getSteps().size() - 1;
 	}
 
 	boolean hasPrevious() {

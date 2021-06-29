@@ -1,5 +1,6 @@
 package cc.alcina.extras.webdriver;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -299,6 +300,21 @@ public class WdExec {
 	public void waitFor() {
 		for (int i = 0; i < timeoutSecs * 10; i++) {
 			if (immediateTest()) {
+				return;
+			} else {
+				sleep(100);
+			}
+		}
+		throw new TimedOutException();
+	}
+
+	public void waitForOneOf(String... paths) {
+		String xpath = Arrays.stream(paths).collect(Collectors.joining(" or "));
+		for (int i = 0; i < timeoutSecs * 10; i++) {
+			boolean found = (boolean) executeScript(Ax.format(
+					"return document.evaluate(\"%s\",document).booleanValue",
+					xpath));
+			if (found) {
 				return;
 			} else {
 				sleep(100);

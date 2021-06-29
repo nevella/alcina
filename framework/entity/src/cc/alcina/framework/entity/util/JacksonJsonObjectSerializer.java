@@ -69,6 +69,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private boolean truncateAtMaxLength;
 
+	private boolean withWrapRootValue;
+
 	public JacksonJsonObjectSerializer() {
 		maxLength = ResourceUtilities.getInteger(
 				JacksonJsonObjectSerializer.class, "maxLength", 10000000);
@@ -125,7 +127,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 					o.withAllowUnknownProperties, withBase64Encoding,
 					o.withBase64Encoding, maxLength, o.maxLength,
 					withPrettyPrint, o.withPrettyPrint, withDefaults,
-					o.withDefaults);
+					o.withDefaults, withWrapRootValue, o.withWrapRootValue);
 		} else {
 			return false;
 		}
@@ -135,7 +137,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public int hashCode() {
 		return Objects.hash(withIdRefs, withTypeInfo,
 				withAllowUnknownProperties, withBase64Encoding, maxLength,
-				withPrettyPrint, withDefaults);
+				withPrettyPrint, withDefaults, withWrapRootValue);
 	}
 
 	@Override
@@ -232,6 +234,11 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		return this;
 	}
 
+	public JacksonJsonObjectSerializer withWrapRootValue() {
+		this.withWrapRootValue = true;
+		return this;
+	}
+
 	private <T> T deserialize_v1(String json, Class<T> clazz) {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
@@ -294,6 +301,9 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		if (withAllowUnknownProperties) {
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
 					false);
+		}
+		if (withWrapRootValue) {
+			mapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
 		}
 		if (withIdRefs) {
 			mapper.setVisibility(mapper.getSerializationConfig()

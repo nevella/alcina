@@ -17,9 +17,9 @@ public class StepPopupView extends Composite {
 
 	TopicPublisher topicPublisher = new TopicPublisher();
 
-	PopupInfo popupInfo;
+	Tour.PopupInfo popupInfo;
 
-	public StepPopupView(PopupInfo popupInfo, TourModel currentTour,
+	public StepPopupView(Tour.PopupInfo popupInfo, TourModel currentTour,
 			boolean withButtons) {
 		this.popupInfo = popupInfo;
 		this.fp = new FlowPanel();

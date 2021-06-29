@@ -75,6 +75,15 @@ public class RpcRequestRouter {
 			return true;
 		}
 		/*
+		 * For the moment, avoid requests which modify the cookie state
+		 * (reflective rpc)
+		 */
+		if (rpcRequest.getMethod().getName().matches("callRpc")
+				&& rpcRequest.getParameters()[0].toString()
+						.contains("\"methodName\":\"login\"")) {
+			return true;
+		}
+		/*
 		 * Just because the from-server response would include ClassRefImpl
 		 */
 		if (rpcRequest.getMethod().getName().matches("transform")) {
