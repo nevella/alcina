@@ -8,6 +8,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -17,6 +18,7 @@ import cc.alcina.framework.common.client.util.Ax;
  * @author nick@alcina.cc
  * 
  */
+@Bean
 public class LoadObjectsRequest implements Serializable {
 	private String moduleTypeSignature;
 

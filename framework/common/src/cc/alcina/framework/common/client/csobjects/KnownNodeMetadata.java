@@ -5,28 +5,80 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.csobjects.KnownStatusRule.KnownStatusRuleImpl;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 
+@Bean
 public class KnownNodeMetadata implements Serializable {
-	public enum Type {
-		Job, Other
-	}
+	private Type type;
 
-	public Type type;
+	private List<KnownNodeProperty> knownNodeProperties = new ArrayList<>();
 
-	public List<KnownNodeProperty> knownNodeProperties = new ArrayList<>();
+	private KnownStatusRuleImpl statusRule;
 
-	public KnownStatusRuleImpl statusRule;
-
-	public static class KnownNodeProperty implements Serializable {
-		public KnownStatusRuleImpl statusRule;
-
-		public String name;
-
-		public String typeName;
+	public List<KnownNodeProperty> getKnownNodeProperties() {
+		return knownNodeProperties;
 	}
 
 	public KnownNodeProperty getPropertyMetadata(String name) {
-		return knownNodeProperties.stream().filter(n -> n.name.equals(name))
-				.findFirst().orElse(null);
+		return getKnownNodeProperties().stream()
+				.filter(n -> n.getName().equals(name)).findFirst().orElse(null);
+	}
+
+	public KnownStatusRuleImpl getStatusRule() {
+		return statusRule;
+	}
+
+	public Type getType() {
+		return type;
+	}
+
+	public void setKnownNodeProperties(
+			List<KnownNodeProperty> knownNodeProperties) {
+		this.knownNodeProperties = knownNodeProperties;
+	}
+
+	public void setStatusRule(KnownStatusRuleImpl statusRule) {
+		this.statusRule = statusRule;
+	}
+
+	public void setType(Type type) {
+		this.type = type;
+	}
+
+	@Bean
+	public static class KnownNodeProperty implements Serializable {
+		private KnownStatusRuleImpl statusRule;
+
+		private String name;
+
+		private String typeName;
+
+		public String getName() {
+			return name;
+		}
+
+		public KnownStatusRuleImpl getStatusRule() {
+			return statusRule;
+		}
+
+		public String getTypeName() {
+			return typeName;
+		}
+
+		public void setName(String name) {
+			this.name = name;
+		}
+
+		public void setStatusRule(KnownStatusRuleImpl statusRule) {
+			this.statusRule = statusRule;
+		}
+
+		public void setTypeName(String typeName) {
+			this.typeName = typeName;
+		}
+	}
+
+	public enum Type {
+		Job, Other
 	}
 }

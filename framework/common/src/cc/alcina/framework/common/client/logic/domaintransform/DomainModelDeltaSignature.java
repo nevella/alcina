@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -13,6 +14,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author nick@alcina.cc
  *
  */
+@Bean
 public class DomainModelDeltaSignature implements Serializable {
 	public static DomainModelDeltaSignature parseSignature(String text) {
 		if (text == null || !text.startsWith("ds:")) {
