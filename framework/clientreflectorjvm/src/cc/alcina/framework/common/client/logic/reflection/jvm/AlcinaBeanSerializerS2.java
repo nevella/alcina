@@ -446,6 +446,10 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 				if (resolved == null) {
 					clazz = CommonUtils.stdAndPrimitivesMap.get(className);
 					if (clazz == null) {
+						if (GWT.isClient()) {
+							Reflections.forName(className);
+							// throw if not reflectively accessible
+						}
 						try {
 							clazz = classLoader.loadClass(className);
 						} catch (Exception e) {

@@ -1,5 +1,8 @@
 package cc.alcina.framework.common.client.csobjects;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+
+@ClientInstantiable
 public enum KnownTagAlcina implements KnownTag {
 	Root(null),
 	/*
@@ -11,15 +14,11 @@ public enum KnownTagAlcina implements KnownTag {
 	 * 
 	 */
 	Area(Root), Area_Code(Area), Area_Devops(Area), Area_None(Area);
+
 	private KnownTag parent;
 
 	private KnownTagAlcina(KnownTag parent) {
 		this.parent = parent;
-	}
-
-	@Override
-	public KnownTag parent() {
-		return parent;
 	}
 
 	public boolean isOrAncestorIs(KnownTagAlcina test) {
@@ -30,5 +29,10 @@ public enum KnownTagAlcina implements KnownTag {
 			return false;
 		}
 		return ((KnownTagAlcina) parent).isOrAncestorIs(test);
+	}
+
+	@Override
+	public KnownTag parent() {
+		return parent;
 	}
 }
