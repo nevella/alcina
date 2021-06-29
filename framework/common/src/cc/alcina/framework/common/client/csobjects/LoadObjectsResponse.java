@@ -7,7 +7,9 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTranche;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 
+@Bean
 public class LoadObjectsResponse implements Serializable {
 	private LoadObjectsRequest request;
 

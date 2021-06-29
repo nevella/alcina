@@ -31,7 +31,6 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
@@ -220,8 +219,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public String callRpc(String encodedRpcPayload) {
 		try {
-			Preconditions.checkState(ResourceUtilities
-					.is(CommonRemoteServiceServlet.class, "devRpcEnabled"));
 			ReflectiveRemoteServicePayload payload = AlcinaBeanSerializer
 					.deserializeHolder(encodedRpcPayload);
 			ReflectiveRemoteServiceHandler handler = Registry.impl(
@@ -847,14 +844,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return GraphProjections.defaultProjections().project(response);
 		}
 
-		protected List<T> projectResponses(List<T> list, Class<T> clazz) {
-			if (Entity.class.isAssignableFrom(clazz)) {
-				list = GraphProjections.defaultProjections().maxDepth(1)
-						.project(list);
-			}
-			return list;
-		}
-
 		protected abstract List<T> getResponses(String query,
 				BoundSuggestOracleModel model, String hint);
 
@@ -864,6 +853,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 		protected boolean offerNullSuggestion() {
 			return true;
+		}
+
+		protected List<T> projectResponses(List<T> list, Class<T> clazz) {
+			if (Entity.class.isAssignableFrom(clazz)) {
+				list = GraphProjections.defaultProjections().maxDepth(1)
+						.project(list);
+			}
+			return list;
 		}
 	}
 
