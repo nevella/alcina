@@ -2,10 +2,7 @@ package cc.alcina.framework.gwt.client.tour;
 
 import java.util.List;
 
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.gwt.client.tour.TourImpl.StepImpl;
 
 public interface Tour {
 	public String getName();
@@ -63,7 +60,7 @@ public interface Tour {
 		public PositioningDirection getPositioningDirection();
 	}
 
-	@JsonDeserialize(as = StepImpl.class)
+	// @JsonDeserialize(as = StepImpl.class)
 	interface Step {
 		public Action getAction();
 
