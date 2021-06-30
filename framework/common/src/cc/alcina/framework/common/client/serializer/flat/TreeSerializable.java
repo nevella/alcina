@@ -73,6 +73,7 @@ public interface TreeSerializable extends Serializable {
 			}
 			StringMap keyValues = StringMap.fromPropertyString(serialized);
 			StringMap replacements = new StringMap();
+			boolean modified = false;
 			for (String key : keyValues.keySet()) {
 				for (String mapKey : mappings.keySet()) {
 					if (key.startsWith(mapKey)) {
@@ -82,15 +83,20 @@ public interface TreeSerializable extends Serializable {
 							String replacementKey = mappings.get(mapKey)
 									+ key.substring(mapKey.length());
 							replacements.put(key, replacementKey);
+							modified = true;
 						}
 					}
 				}
 			}
-			replacements.entrySet().forEach(e -> {
-				String value = keyValues.remove(e.getKey());
-				keyValues.put(e.getValue(), value);
-			});
-			return keyValues.toPropertyString();
+			if (modified) {
+				replacements.entrySet().forEach(e -> {
+					String value = keyValues.remove(e.getKey());
+					keyValues.put(e.getValue(), value);
+				});
+				return keyValues.sorted().toPropertyString();
+			} else {
+				return serialized;
+			}
 		}
 	}
 }
