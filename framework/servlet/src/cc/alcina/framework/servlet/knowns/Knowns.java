@@ -132,8 +132,8 @@ public class Knowns {
 		if (Objects.equals(debugStatusPath, node.path())) {
 			int debug = 4;
 		}
-		if (node.field != null) {
-			Field field = (Field) node.field;
+		if (node.getField() != null) {
+			Field field = (Field) node.getField();
 			KnownStatusRule rule = field.getAnnotation(KnownStatusRule.class);
 			if (rule == null) {
 				return;
@@ -144,15 +144,15 @@ public class Knowns {
 					.handleRule(field, node, rule);
 			Registry.impl(KnownNodeAppLogic.class).processNodeRule(node, rule);
 		} else {
-			if (node.nodeMetadata != null) {
-				KnownStatusRule rule = node.nodeMetadata.statusRule;
+			if (node.getNodeMetadata() != null) {
+				KnownStatusRule rule = node.getNodeMetadata().getStatusRule();
 				if (rule == null) {
 					return;
 				}
 				Registry.get()
 						.lookupImplementation(KnownStatusRuleHandler.class,
 								rule.name(), "ruleName", true)
-						.handleRule(node.nodeMetadata, node, rule);
+						.handleRule(node.getNodeMetadata(), node, rule);
 				Registry.impl(KnownNodeAppLogic.class).processNodeRule(node,
 						rule);
 			}
@@ -164,25 +164,25 @@ public class Knowns {
 			KnownNodeProperty propertyMetadata) {
 		try {
 			KnownRenderableNode propertyNode = new KnownRenderableNode();
-			propertyNode.parent = parent;
-			parent.children.add(propertyNode);
-			propertyNode.value = value;
-			propertyNode.name = name;
-			propertyNode.property = true;
-			propertyNode.typedValue = typedValue;
-			propertyNode.field = field;
-			propertyNode.propertyMetadata = propertyMetadata;
+			propertyNode.setParent(parent);
+			parent.getChildren().add(propertyNode);
+			propertyNode.setValue(value);
+			propertyNode.setName(name);
+			propertyNode.setProperty(true);
+			propertyNode.setTypedValue(typedValue);
+			propertyNode.setField(field);
+			propertyNode.setPropertyMetadata(propertyMetadata);
 			if (propertyMetadata != null) {
 				Class typeClass = Class
-						.forName(propertyNode.propertyMetadata.typeName);
+						.forName(propertyNode.getPropertyMetadata().getTypeName());
 				if (typeClass == Date.class) {
-					propertyNode.dateValue = (Date) fromStringValue(
+					propertyNode.setDateValue((Date) fromStringValue(
 							parent.path(), value, name, typeClass,
-							ValueType.DATA_TYPE);
+							ValueType.DATA_TYPE));
 				} else if (typeClass == OpStatus.class) {
-					propertyNode.opStatusValue = (OpStatus) fromStringValue(
+					propertyNode.setOpStatusValue((OpStatus) fromStringValue(
 							parent.path(), value, name, typeClass,
-							ValueType.DATA_TYPE);
+							ValueType.DATA_TYPE));
 				}
 			}
 		} catch (Exception e) {

@@ -305,7 +305,9 @@ public class ClientReflectorJvm extends ClientReflector {
 	@Override
 	public Class getClassForName(String fqn) {
 		try {
-			return Class.forName(fqn);
+			Class<?> clazz = Class.forName(fqn);
+			checkClassAnnotationsForInstantiation(clazz);
+			return clazz;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

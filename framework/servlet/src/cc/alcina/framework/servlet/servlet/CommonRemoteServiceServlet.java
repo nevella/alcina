@@ -31,7 +31,6 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
@@ -219,8 +218,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public String callRpc(String encodedRpcPayload) {
 		try {
-			Preconditions.checkState(ResourceUtilities
-					.is(CommonRemoteServiceServlet.class, "devRpcEnabled"));
 			ReflectiveRemoteServicePayload payload = AlcinaBeanSerializer
 					.deserializeHolder(encodedRpcPayload);
 			ReflectiveRemoteServiceHandler handler = Registry.impl(

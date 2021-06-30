@@ -25,7 +25,7 @@ public class PersistentObjectCriteriaGroup
 	}
 
 	@Override
-	public Class getEntityClass() {
+	public Class entityClass() {
 		return ClassRef.class;
 	}
 }

@@ -19,7 +19,7 @@ public abstract class EntityCriteriaGroup extends CriteriaGroup {
 	}
 
 	@Override
-	public Class getEntityClass() {
+	public Class entityClass() {
 		return null;
 	}
 }

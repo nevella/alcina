@@ -38,7 +38,7 @@ public abstract class KnownStatusRuleHandler {
 		public void handleRule(Field field, KnownRenderableNode node,
 				KnownStatusRule rule) {
 			Preconditions.checkArgument(field.getType() == KnownJob.class);
-			KnownJob value = (KnownJob) node.typedValue;
+			KnownJob value = (KnownJob) node.getTypedValue();
 			if (value == null) {
 				return;
 			}
@@ -67,7 +67,7 @@ public abstract class KnownStatusRuleHandler {
 				}
 			}
 			if (status != null) {
-				node.tags.add(status);
+				node.getTags().add(status);
 			}
 		}
 
@@ -109,7 +109,7 @@ public abstract class KnownStatusRuleHandler {
 				}
 			}
 			if (status != null) {
-				node.tags.add(status);
+				node.getTags().add(status);
 			}
 		}
 	}
@@ -125,13 +125,13 @@ public abstract class KnownStatusRuleHandler {
 		public void handleRule(Field field, KnownRenderableNode node,
 				KnownStatusRule rule) {
 			Preconditions.checkArgument(field.getType() == KnownJob.class);
-			KnownJob value = (KnownJob) node.typedValue;
+			KnownJob value = (KnownJob) node.getTypedValue();
 			if (value == null) {
 				return;
 			}
 			KnownTagAlcina status = testRule(value.status, rule, value.lastOk);
 			if (status != null) {
-				node.tags.add(status);
+				node.getTags().add(status);
 			}
 		}
 
@@ -150,7 +150,7 @@ public abstract class KnownStatusRuleHandler {
 			}
 			KnownTagAlcina status = testRule(opStatus, rule, lastOkDate);
 			if (status != null) {
-				node.tags.add(status);
+				node.getTags().add(status);
 			}
 		}
 

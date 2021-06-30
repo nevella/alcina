@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @Bean
-// TODO - make flat-serializable when needed
 @TypeSerialization(notSerializable = true)
 public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
 	static final transient long serialVersionUID = -1L;
@@ -47,14 +46,14 @@ public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
 	}
 
 	@Override
-	@AlcinaTransient
-	public String getDisplayName() {
-		return "Date";
+	public Class entityClass() {
+		return null;
 	}
 
 	@Override
-	public Class getEntityClass() {
-		return null;
+	@AlcinaTransient
+	public String getDisplayName() {
+		return "Date";
 	}
 
 	@Override

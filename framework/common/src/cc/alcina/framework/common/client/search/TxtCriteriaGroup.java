@@ -44,7 +44,7 @@ public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 	}
 
 	@Override
-	public Class getEntityClass() {
+	public Class entityClass() {
 		return null;
 	}
 

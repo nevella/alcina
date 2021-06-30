@@ -35,7 +35,7 @@ public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
 	}
 
 	@Override
-	public Class getEntityClass() {
+	public Class entityClass() {
 		return null;
 	}
 

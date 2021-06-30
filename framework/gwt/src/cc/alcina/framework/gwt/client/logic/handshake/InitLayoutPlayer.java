@@ -27,7 +27,8 @@ public class InitLayoutPlayer extends RunnablePlayer {
 			Registry.impl(CommitToStorageTransformListener.class).flush();
 		}
 		Registry.impl(LayoutManagerBase.class).redrawLayout();
-		if (!CommonUtils.isNullOrEmpty(History.getToken())) {
+		if (!CommonUtils.isNullOrEmpty(History.getToken())
+				&& Registry.hasImpl(AlcinaHistory.class)) {
 			AlcinaHistory.get().setNoHistoryDisabled(true);
 			fireCurrentHistoryState();
 			AlcinaHistory.get().setNoHistoryDisabled(false);
