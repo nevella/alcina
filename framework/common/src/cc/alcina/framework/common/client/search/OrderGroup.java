@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  *
@@ -80,7 +81,9 @@ public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
 
 		@Override
 		public void onBeforeTreeSerialize() {
-			Preconditions.checkState(serializable.getCriteria().size() <= 1);
+			Preconditions.checkState(
+					serializable.getCriteria().size() <= 1 || LooseContext
+							.is(TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS));
 		}
 	}
 }

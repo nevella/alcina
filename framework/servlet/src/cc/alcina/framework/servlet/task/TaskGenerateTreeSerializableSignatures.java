@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -69,6 +70,8 @@ public class TaskGenerateTreeSerializableSignatures
 
 	private void checkSerializationIssues(TreeSerializable serializable) {
 		try {
+			LooseContext.pushWithTrue(
+					TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS);
 			Reachables reachables = new SerializerOptions.Reachables();
 			FlatTreeSerializer.serialize(serializable,
 					new SerializerOptions().withElideDefaults(false)
@@ -89,8 +92,11 @@ public class TaskGenerateTreeSerializableSignatures
 			String message = Ax.format("%s - %s",
 					serializable.getClass().getSimpleName(),
 					CommonUtils.toSimpleExceptionMessage(e));
+			// e.printStackTrace();
 			Ax.err(message);
 			serializationIssues.add(message);
+		} finally {
+			LooseContext.pop();
 		}
 	}
 

@@ -576,6 +576,18 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 		public void onAfterTreeDeserialize() {
 			StringMap.fromPropertyString(serializable.propertiesSerialized)
 					.forEach((k, v) -> serializable.properties.put(k, v));
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onAfterTreeDeserialize();
+			}
+		}
+
+		@Override
+		public void onAfterTreeSerialize() {
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onAfterTreeSerialize();
+			}
 		}
 
 		@Override
@@ -590,6 +602,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 		public void onBeforeTreeSerialize() {
 			serializable.propertiesSerialized = new StringMap(
 					serializable.properties).toPropertyString();
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onBeforeTreeSerialize();
+			}
 		}
 	}
 }

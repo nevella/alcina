@@ -16,6 +16,9 @@ import cc.alcina.framework.common.client.util.StringMap;
  *
  */
 public interface TreeSerializable extends Serializable {
+	public static final String CONTEXT_IGNORE_CUSTOM_CHECKS = TreeSerializable.class
+			.getName() + ".CONTEXT_IGNORE_CUSTOM_CHECKS";
+
 	default Customiser treeSerializationCustomiser() {
 		return Customiser.INSTANCE;
 	}
