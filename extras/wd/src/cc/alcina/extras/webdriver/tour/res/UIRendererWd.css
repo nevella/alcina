@@ -1,0 +1,18 @@
+div.tmwd-popup {
+    position: absolute;
+    background-color: #333;
+    border: solid 2px #eee;
+    padding: 12px;
+    border-radius: 6px;
+    color:#eee;
+    font-size: 15px;
+    font-family: sans-serif;
+    max-width: 300px;
+}
+div.tmwd-popup caption-area{
+    font-weight: bold;
+}
+div.tmwd-popup caption-area, div.tmwd-popup description {
+    display: block;
+    padding-bottom: 1em;
+}

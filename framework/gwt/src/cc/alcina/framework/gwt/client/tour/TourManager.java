@@ -51,10 +51,10 @@ public abstract class TourManager {
 
 	protected TourManager() {
 		super();
-		UIRenderer.get().startTour(this);
 	}
 
 	public void startTour(Tour tour) {
+		UIRenderer.get().startTour(this);
 		currentTour = new TourModel(tour);
 		autoplay = true;
 		refreshTourView();
@@ -91,6 +91,10 @@ public abstract class TourManager {
 		consort.start();
 	}
 
+	protected boolean shouldRetry(DisplayStepPhase state) {
+		return true;
+	}
+
 	public static enum DisplayStepPhase {
 		SETUP, WAIT_FOR, IGNORE_IF, PERFORM_ACTION, SHOW_POPUP
 	}
@@ -98,6 +102,12 @@ public abstract class TourManager {
 	public static abstract class UIRenderer {
 		public static TourManager.UIRenderer get() {
 			return Registry.impl(TourManager.UIRenderer.class);
+		}
+
+		protected TourManager tourManager;
+
+		public void setTourManager(TourManager tourManager) {
+			this.tourManager = tourManager;
 		}
 
 		protected abstract void afterStepListenerAction();
@@ -153,6 +163,17 @@ public abstract class TourManager {
 			finished();
 			if (completionCallback != null) {
 				completionCallback.onFailure(throwable);
+			}
+		}
+
+		@Override
+		public void retry(
+				AllStatesConsort<DisplayStepPhase>.AllStatesPlayer allStatesPlayer,
+				DisplayStepPhase state, int delay) {
+			if (shouldRetry(state)) {
+				super.retry(allStatesPlayer, state, delay);
+			} else {
+				cancel();
 			}
 		}
 

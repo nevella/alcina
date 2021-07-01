@@ -130,7 +130,7 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		}-*/;
 
 		@Override
-		public final Tour.PositioningDirection getPositioningDirection() {
+		public final Tour.PositioningDirection getDirection() {
 			return CommonUtils.getEnumValueOrNull(
 					Tour.PositioningDirection.class, getDirectionString(), true,
 					Tour.PositioningDirection.LEFT_BOTTOM);
@@ -176,7 +176,7 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		}-*/;
 
 		@Override
-		public final List<? extends Tour.PopupInfo> getPopups() {
+		public final List<? extends Tour.PopupInfo> providePopups() {
 			return ClientUtils.jsArrayToTypedArray(getPopupsArray());
 		}
 

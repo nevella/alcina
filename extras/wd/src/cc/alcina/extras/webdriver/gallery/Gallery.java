@@ -39,7 +39,9 @@ public class Gallery {
 	}
 
 	public static void snap(String snapName) {
-		instance.snap0(snapName);
+		if (ResourceUtilities.is("snap")) {
+			instance.snap0(snapName);
+		}
 	}
 
 	private String appName;

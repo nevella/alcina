@@ -57,7 +57,7 @@ public interface Tour {
 
 		public int getPopupFromBottom();
 
-		public PositioningDirection getPositioningDirection();
+		public PositioningDirection getDirection();
 	}
 
 	// @JsonDeserialize(as = StepImpl.class)
@@ -70,7 +70,7 @@ public interface Tour {
 
 		public Condition getIgnoreIf();
 
-		public List<? extends PopupInfo> getPopups();
+		public List<? extends PopupInfo> providePopups();
 
 		public Condition getTarget();
 

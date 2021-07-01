@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.tour;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class TourImpl implements Tour {
@@ -109,7 +110,12 @@ public class TourImpl implements Tour {
 
 		private int popupFromBottom;
 
-		private PositioningDirection positioningDirection;
+		private PositioningDirection direction;
+
+		@Override
+		public PositioningDirection getDirection() {
+			return this.direction;
+		}
 
 		@Override
 		public String getElement() {
@@ -141,9 +147,8 @@ public class TourImpl implements Tour {
 			return this.popupFromBottom;
 		}
 
-		@Override
-		public PositioningDirection getPositioningDirection() {
-			return this.positioningDirection;
+		public void setDirection(PositioningDirection direction) {
+			this.direction = direction;
 		}
 
 		public void setElement(String element) {
@@ -169,14 +174,9 @@ public class TourImpl implements Tour {
 		public void setPopupFromBottom(int popupFromBottom) {
 			this.popupFromBottom = popupFromBottom;
 		}
-
-		public void setPositioningDirection(
-				PositioningDirection positioningDirection) {
-			this.positioningDirection = positioningDirection;
-		}
 	}
 
-	public static class StepImpl implements Tour.Step {
+	public static class StepImpl implements Tour.Step, Tour.PopupInfo {
 		private Action action;
 
 		private String actionValue;
@@ -191,6 +191,12 @@ public class TourImpl implements Tour {
 
 		private Condition waitFor;
 
+		private String caption;
+
+		private String description;
+
+		private RelativeTo relativeTo;
+
 		@Override
 		public Action getAction() {
 			return this.action;
@@ -199,6 +205,16 @@ public class TourImpl implements Tour {
 		@Override
 		public String getActionValue() {
 			return this.actionValue;
+		}
+
+		@Override
+		public String getCaption() {
+			return this.caption;
+		}
+
+		@Override
+		public String getDescription() {
+			return this.description;
 		}
 
 		@Override
@@ -211,9 +227,13 @@ public class TourImpl implements Tour {
 			return this.ignoreIf;
 		}
 
-		@Override
 		public List<? extends PopupInfo> getPopups() {
 			return this.popups;
+		}
+
+		@Override
+		public RelativeTo getRelativeTo() {
+			return this.relativeTo;
 		}
 
 		@Override
@@ -226,12 +246,25 @@ public class TourImpl implements Tour {
 			return this.waitFor;
 		}
 
+		@Override
+		public List<? extends PopupInfo> providePopups() {
+			return popups.size() > 0 ? popups : Collections.singletonList(this);
+		}
+
 		public void setAction(Action action) {
 			this.action = action;
 		}
 
 		public void setActionValue(String actionValue) {
 			this.actionValue = actionValue;
+		}
+
+		public void setCaption(String caption) {
+			this.caption = caption;
+		}
+
+		public void setDescription(String description) {
+			this.description = description;
 		}
 
 		public void setIgnoreActionIf(Condition ignoreActionIf) {
@@ -244,6 +277,10 @@ public class TourImpl implements Tour {
 
 		public void setPopups(List<? extends PopupInfo> popups) {
 			this.popups = popups;
+		}
+
+		public void setRelativeTo(RelativeTo relativeTo) {
+			this.relativeTo = relativeTo;
 		}
 
 		public void setTarget(Condition target) {

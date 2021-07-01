@@ -37,8 +37,6 @@ public class UIRendererClient extends UIRenderer
 
 	public HandlerRegistration nativePreviewHandlerRegistration;
 
-	private TourManager tourManager;
-
 	@Override
 	public void onPreviewNativeEvent(NativePreviewEvent npe) {
 		Event event = Event.as(npe.getNativeEvent());
@@ -49,10 +47,6 @@ public class UIRendererClient extends UIRenderer
 				tourManager.stepListener.topicPublished(null, Action.CLOSE);
 			}
 		}
-	}
-
-	public void setTourManager(TourManager tourManager) {
-		this.tourManager = tourManager;
 	}
 
 	@Override
@@ -131,7 +125,7 @@ public class UIRendererClient extends UIRenderer
 	protected void render(Step step) {
 		clearPopups();
 		int idx = 0;
-		for (Tour.PopupInfo popupInfo : step.getPopups()) {
+		for (Tour.PopupInfo popupInfo : step.providePopups()) {
 			DecoratedRelativePopupPanel popup = new DecoratedRelativePopupPanel(
 					false, idx == 0);
 			popup.setStyleName("dropdown-popup tour");
@@ -197,7 +191,7 @@ public class UIRendererClient extends UIRenderer
 				params.widgetToShow = view;
 				params.addRelativeWidgetHeight = true;
 				OtherPositioningStrategy strategy = OtherPositioningStrategy.BELOW_WITH_PREFERRED_LEFT;
-				switch (relativeTo.getPositioningDirection()) {
+				switch (relativeTo.getDirection()) {
 				case LEFT_BOTTOM:
 					break;
 				case CENTER_TOP:

@@ -224,7 +224,10 @@ public abstract class WebdriverTest {
 	protected void getAndLog(WebDriver driver, String uri) {
 		String key = "Load: " + uri;
 		MetricLogging.get().start(key);
-		driver.get(uri);
+		if (uri.equals(driver.getCurrentUrl()) && !isRequiresRefresh()) {
+		} else {
+			driver.get(uri);
+		}
 		MetricLogging.get().end(key);
 	}
 
@@ -247,5 +250,9 @@ public abstract class WebdriverTest {
 			}
 		}
 		return testTemplates;
+	}
+
+	protected boolean isRequiresRefresh() {
+		return true;
 	}
 }
