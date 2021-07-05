@@ -43,6 +43,11 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		}
 
 		@Override
+		public final native String getEvaluatorClassName()/*-{
+      return this.evaluatorClassName;
+		}-*/;
+
+		@Override
 		public final Tour.Operator getOperator() {
 			return CommonUtils.getEnumValueOrNull(Tour.Operator.class,
 					getOperatorString(), true, Tour.Operator.AND);
@@ -99,6 +104,13 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		}
 
 		@Override
+		public final Tour.PositioningDirection getDirection() {
+			return CommonUtils.getEnumValueOrNull(
+					Tour.PositioningDirection.class, getDirectionString(), true,
+					Tour.PositioningDirection.LEFT_BOTTOM);
+		}
+
+		@Override
 		final public native String getElement()/*-{
       return this.element;
 		}-*/;
@@ -130,11 +142,9 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		}-*/;
 
 		@Override
-		public final Tour.PositioningDirection getDirection() {
-			return CommonUtils.getEnumValueOrNull(
-					Tour.PositioningDirection.class, getDirectionString(), true,
-					Tour.PositioningDirection.LEFT_BOTTOM);
-		}
+		final public native boolean isBubble()/*-{
+      return !!this.bubble;
+		}-*/;
 
 		private final native String getDirectionString()/*-{
       return this.direction;
@@ -176,23 +186,23 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		}-*/;
 
 		@Override
+		final public native ConditionJso getWaitFor()/*-{
+      return this.waitFor;
+		}-*/;
+
+		@Override
 		public final List<? extends Tour.PopupInfo> providePopups() {
 			return ClientUtils.jsArrayToTypedArray(getPopupsArray());
 		}
 
 		@Override
-		final public native ConditionJso getTarget()/*-{
+		final public native ConditionJso provideTarget()/*-{
       if (!(this.target)) {
         return null;
       }
       return {
         "selectors" : this.target
       }
-		}-*/;
-
-		@Override
-		final public native ConditionJso getWaitFor()/*-{
-      return this.waitFor;
 		}-*/;
 
 		final private native String getActionString()/*-{

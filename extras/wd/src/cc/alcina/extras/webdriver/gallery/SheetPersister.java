@@ -2,6 +2,7 @@ package cc.alcina.extras.webdriver.gallery;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
@@ -11,15 +12,26 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+
+import org.apache.commons.lang.StringEscapeUtils;
 
 import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.RowData;
 
 import cc.alcina.extras.webdriver.gallery.GalleryConfiguration.Element;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.util.AlcinaChildRunnable;
+import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.servlet.google.DriveAccessor;
 import cc.alcina.framework.servlet.google.SheetAccessor;
@@ -39,27 +51,45 @@ public class SheetPersister {
 
 	private String dateStamp;
 
+	private String hashes;
+
+	private String build;
+
 	public void persist(File base, Element configuration, String userAgentType)
 			throws Exception {
 		this.configuration = configuration;
 		this.userAgentType = userAgentType;
 		files = Arrays.stream(base.listFiles())
+				.filter(f -> !f.getName().startsWith("."))
 				.sorted(Comparator.comparing(File::lastModified))
 				.map(GalleryFile::new).collect(Collectors.toList());
 		ZonedDateTime utcZoned = ZonedDateTime.now(ZoneId.of("UTC"));
 		dateStamp = utcZoned.format(DateTimeFormatter
 				.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneId.of("UTC")));
+		driveAccessor = new DriveAccessor()
+				.withDriveAccess(configuration.asDriveAccess());
 		if (ResourceUtilities.is("uploadImages")) {
 			uploadImages();
 		}
-		updateSheet();
+		hashes = new ShellWrapper()
+				.runBashScript(configuration.repoHashesCommand).output;
+		build = BuildNumberProvider.get().getBuildNumber(configuration.name);
+		AlcinaChildRunnable.launchWithCurrentThreadContext("update-sheet",
+				() -> updateSheet());
+		updateViewer();
+	}
+
+	private Map<String, GalleryTuple> nameTuples() {
+		Map<String, GalleryTuple> nameTuples = new LinkedHashMap<>();
+		files.forEach(file -> nameTuples
+				.computeIfAbsent(file.getName(), key -> new GalleryTuple())
+				.put(file));
+		return nameTuples;
 	}
 
 	private void updateSheet() throws Exception {
 		SheetAccessor sheetAccessor = new SheetAccessor()
 				.withSheetAccess(configuration.asSheetAccess());
-		String hashes = new ShellWrapper()
-				.runBashScript(configuration.repoHashesCommand).output;
 		{
 			List<List<Object>> values = Arrays.asList(
 					Arrays.asList("App", configuration.name),
@@ -96,10 +126,7 @@ public class SheetPersister {
 			}
 			keyRow.put(formattedValue, idx + 1);
 		}
-		Map<String, GalleryTuple> nameTuples = new LinkedHashMap<>();
-		files.forEach(file -> nameTuples
-				.computeIfAbsent(file.getName(), key -> new GalleryTuple())
-				.put(file));
+		Map<String, GalleryTuple> nameTuples = nameTuples();
 		// to use in lambda
 		AtomicInteger rowCounter = new AtomicInteger(idx + 1);
 		nameTuples.values().forEach(tuple -> {
@@ -108,8 +135,8 @@ public class SheetPersister {
 			}
 			Integer row = keyRow.get(tuple.name());
 			List<List<Object>> values = Arrays.asList(Arrays.asList(
-					tuple.name(), tuple.image.toDownloadUrl(),
-					tuple.html == null ? null : tuple.html.toDownloadUrl()));
+					tuple.name(), tuple.image.toPreviewUrl(),
+					tuple.html == null ? null : tuple.html.toPreviewUrl()));
 			try {
 				sheetAccessor.update("A" + row, values);
 			} catch (IOException e) {
@@ -118,13 +145,111 @@ public class SheetPersister {
 		});
 	}
 
+	private void updateViewer() throws IOException {
+		DomDoc doc = DomDoc.basicHtmlDoc();
+		List<Image> images = nameTuples().values().stream().map(Image::new)
+				.collect(Collectors.toList());
+		String json = JacksonUtils.serializeNoTypes(images);
+		String js = Ax.format("let __viewer_data=JSON.parse(\"%s\");",
+				StringEscapeUtils.escapeJavaScript(json));
+		doc.html().head().builder().tag("script")
+				// .text(js)
+				.append();
+		doc.html().head().builder().tag("script")
+				// .text(ResourceUtilities.readRelativeResource("res/viewer.js"))
+				.append();
+		doc.html().head().builder().tag("style")
+				// .text(ResourceUtilities.readRelativeResource("res/viewer.css"))
+				.append();
+		DomNode main = doc.html().body().builder().tag("div").className("main")
+				.append();
+		DomNode left = main.builder().tag("div").className("left").append();
+		{
+			DomNode header = left.builder().tag("div").className("header")
+					.append();
+			header.builder().tag("h2").text("Gallery").append();
+			DomNodeHtmlTableBuilder builder = header.html().tableBuilder();
+			List<List<Object>> values = Arrays.asList(
+					Arrays.asList("App", configuration.name),
+					Arrays.asList("Hashes", hashes),
+					Arrays.asList("Build", build),
+					Arrays.asList("User agent", userAgentType),
+					Arrays.asList("Timestamp (UTC)", dateStamp));
+			for (List<Object> list : values) {
+				builder.row().cell(list.get(0).toString() + ":")
+						.cell(list.get(1).toString());
+			}
+		}
+		{
+			DomNode buttons = left.builder().tag("div").className("buttons")
+					.append();
+			DomNode links = left.builder().tag("div").className("links")
+					.append();
+			buttons.builder().tag("button").text("<")
+					.attr("onclick", "previous()").append();
+			buttons.builder().tag("button").text(">").attr("onclick", "next()")
+					.append();
+			buttons.builder().tag("div").className("hint")
+					.text("Shortcuts : , and .").append();
+			AtomicInteger counter = new AtomicInteger();
+			nameTuples().values().stream().map(Image::new).forEach(image -> {
+				DomNode link = links.html().addLink(image.name, image.url,
+						"_blank");
+				link.setAttr("id", "link_" + counter.getAndIncrement());
+				link.setAttr("onclick", "return view(this.id);");
+			});
+		}
+		{
+			DomNode viewer = main.builder().tag("div").className("viewer")
+					.append();
+			viewer.builder().tag("div").attr("class", "img-wrapper").append()
+					.builder().tag("img").attr("id", "img__")
+					.attr("onclick", "toggleFull()").append();
+		}
+		String prettyToString = doc.prettyToString();
+		prettyToString = prettyToString.replaceFirst("(<script/>)",
+				Matcher.quoteReplacement(Ax.format("<script>%s</script>", js)));
+		prettyToString = prettyToString.replaceFirst("(<script/>)",
+				Ax.format("<script>%s</script>",
+						Matcher.quoteReplacement(ResourceUtilities
+								.readRelativeResource("res/viewer.js"))));
+		prettyToString = prettyToString.replaceFirst("(<style/>)",
+				Ax.format("<style>%s</style>",
+						Matcher.quoteReplacement(ResourceUtilities
+								.readRelativeResource("res/viewer.css"))));
+		ResourceUtilities.logToFile(prettyToString);
+		byte[] bytes = prettyToString.getBytes(StandardCharsets.UTF_8);
+		{
+			String name = Ax.format("%s.%s.%s.html", configuration.name,
+					userAgentType, dateStamp);
+			AlcinaChildRunnable.launchWithCurrentThreadContext(
+					"upload-new-version",
+					() -> driveAccessor.upload(driveAccessor.rootFolder(),
+							bytes, name, false));
+		}
+		String name = Ax.format("%s.%s.html", configuration.name,
+				userAgentType);
+		AlcinaChildRunnable.launchWithCurrentThreadContext(
+				"update-current-version", () -> driveAccessor
+						.upload(driveAccessor.rootFolder(), bytes, name, true));
+	}
+
 	void uploadImages() throws IOException {
-		driveAccessor = new DriveAccessor()
-				.withDriveAccess(configuration.asDriveAccess());
 		String folderPath = Ax.format("%s/%s/%s", configuration.name,
 				userAgentType, dateStamp);
 		this.folder = driveAccessor.ensureFolder(folderPath);
-		files.forEach(GalleryFile::upload);
+		files.parallelStream().forEach(GalleryFile::upload);
+	}
+
+	@RegistryLocation(registryPoint = BuildNumberProvider.class, implementationType = ImplementationType.INSTANCE)
+	public static class BuildNumberProvider {
+		public static SheetPersister.BuildNumberProvider get() {
+			return Registry.impl(SheetPersister.BuildNumberProvider.class);
+		}
+
+		public String getBuildNumber(String name) {
+			return "Unknown";
+		}
 	}
 
 	class GalleryFile {
@@ -136,6 +261,10 @@ public class SheetPersister {
 			this.file = file;
 		}
 
+		public String toViewUrl() {
+			return Ax.format("/drive?id=%s", id);
+		}
+
 		String getName() {
 			return file.getName().replaceFirst("(.+)\\..+", "$1");
 		}
@@ -145,6 +274,11 @@ public class SheetPersister {
 		}
 
 		String toDownloadUrl() {
+			return Ax.format(
+					"https://drive.google.com/uc?export=download&id=%s", id);
+		}
+
+		String toPreviewUrl() {
 			return Ax.format("https://drive.google.com/file/d/%s/view", id);
 		}
 
@@ -152,7 +286,7 @@ public class SheetPersister {
 			try {
 				id = driveAccessor.upload(folder,
 						ResourceUtilities.readFileToByteArray(file),
-						file.getName()).getId();
+						file.getName(), false).getId();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -174,6 +308,20 @@ public class SheetPersister {
 
 		String name() {
 			return image.getName();
+		}
+	}
+
+	static class Image {
+		String name;
+
+		String url;
+
+		public Image() {
+		}
+
+		Image(GalleryTuple tuple) {
+			name = tuple.name();
+			url = tuple.image.toViewUrl();
 		}
 	}
 }

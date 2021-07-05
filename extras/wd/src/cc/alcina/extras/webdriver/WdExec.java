@@ -43,6 +43,8 @@ public class WdExec {
 
 	private TestCallback testCallback;
 
+	private WebElement externalElement;
+
 	public void clear() {
 		getElement().clear();
 	}
@@ -95,11 +97,18 @@ public class WdExec {
 		return WDUtils.executeScript(driver, getElement(), script);
 	}
 
+	public void externalElement(WebElement element) {
+		externalElement = element;
+	}
+
 	public WebDriver getDriver() {
 		return driver;
 	}
 
 	public WebElement getElement() {
+		if (externalElement != null) {
+			return externalElement;
+		}
 		By by = getBy();
 		if (by == null) {
 			return null;

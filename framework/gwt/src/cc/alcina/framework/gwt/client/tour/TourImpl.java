@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 public class TourImpl implements Tour {
 	private String name;
 
@@ -34,9 +36,16 @@ public class TourImpl implements Tour {
 
 		private List<String> selectors = new ArrayList<>();
 
+		private String evaluatorClassName;
+
 		@Override
 		public List<? extends Condition> getConditions() {
 			return this.conditions;
+		}
+
+		@Override
+		public String getEvaluatorClassName() {
+			return this.evaluatorClassName;
 		}
 
 		@Override
@@ -53,12 +62,21 @@ public class TourImpl implements Tour {
 			this.conditions = conditions;
 		}
 
+		public void setEvaluatorClassName(String evaluatorClassName) {
+			this.evaluatorClassName = evaluatorClassName;
+		}
+
 		public void setOperator(Operator operator) {
 			this.operator = operator;
 		}
 
 		public void setSelectors(List<String> selectors) {
 			this.selectors = selectors;
+		}
+
+		public ConditionImpl withSelector(String target) {
+			selectors.add(target);
+			return this;
 		}
 	}
 
@@ -112,6 +130,8 @@ public class TourImpl implements Tour {
 
 		private PositioningDirection direction;
 
+		private boolean bubble;
+
 		@Override
 		public PositioningDirection getDirection() {
 			return this.direction;
@@ -147,6 +167,15 @@ public class TourImpl implements Tour {
 			return this.popupFromBottom;
 		}
 
+		@Override
+		public boolean isBubble() {
+			return this.bubble;
+		}
+
+		public void setBubble(boolean bubble) {
+			this.bubble = bubble;
+		}
+
 		public void setDirection(PositioningDirection direction) {
 			this.direction = direction;
 		}
@@ -174,6 +203,11 @@ public class TourImpl implements Tour {
 		public void setPopupFromBottom(int popupFromBottom) {
 			this.popupFromBottom = popupFromBottom;
 		}
+
+		@Override
+		public String toString() {
+			return element;
+		}
 	}
 
 	public static class StepImpl implements Tour.Step, Tour.PopupInfo {
@@ -187,7 +221,7 @@ public class TourImpl implements Tour {
 
 		private List<? extends PopupInfo> popups = new ArrayList<>();
 
-		private Condition target;
+		private String target;
 
 		private Condition waitFor;
 
@@ -236,8 +270,7 @@ public class TourImpl implements Tour {
 			return this.relativeTo;
 		}
 
-		@Override
-		public Condition getTarget() {
+		public String getTarget() {
 			return this.target;
 		}
 
@@ -248,7 +281,15 @@ public class TourImpl implements Tour {
 
 		@Override
 		public List<? extends PopupInfo> providePopups() {
-			return popups.size() > 0 ? popups : Collections.singletonList(this);
+			return popups.size() > 0 ? popups
+					: description == null ? Collections.emptyList()
+							: Collections.singletonList(this);
+		}
+
+		@Override
+		public Condition provideTarget() {
+			return this.target == null ? null
+					: new ConditionImpl().withSelector(this.target);
 		}
 
 		public void setAction(Action action) {
@@ -283,12 +324,17 @@ public class TourImpl implements Tour {
 			this.relativeTo = relativeTo;
 		}
 
-		public void setTarget(Condition target) {
+		public void setTarget(String target) {
 			this.target = target;
 		}
 
 		public void setWaitFor(Condition waitFor) {
 			this.waitFor = waitFor;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s : %s", getCaption(), getRelativeTo());
 		}
 	}
 }

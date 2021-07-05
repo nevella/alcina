@@ -77,6 +77,10 @@ public class Gallery {
 				this.galleryConfiguration = WrappedObjectHelper.xmlDeserialize(
 						GalleryConfiguration.class, configurationXml);
 				configuration = this.galleryConfiguration.find(appName);
+				if (configuration == null) {
+					throw Ax.runtimeException("No configuration with name '%s'",
+							appName);
+				}
 				new SheetAccessor()
 						.withSheetAccess(configuration.asSheetAccess())
 						.ensureSpreadsheet();
@@ -99,6 +103,12 @@ public class Gallery {
 	}
 
 	private void snap0(String snapName) {
+		try {
+			Thread.sleep(ResourceUtilities.getInteger(Gallery.class,
+					"preSnapPause"));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 		File toFileImage = SEUtilities.getChildFile(base, snapName + ".png");
 		File toFileHtml = SEUtilities.getChildFile(base, snapName + ".html");
 		RemoteWebDriver remoteDriver = (RemoteWebDriver) driver;

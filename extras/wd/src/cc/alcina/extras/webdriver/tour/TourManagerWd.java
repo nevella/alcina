@@ -2,6 +2,7 @@ package cc.alcina.extras.webdriver.tour;
 
 import java.beans.PropertyDescriptor;
 import java.io.IOException;
+import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.core.JsonParser;
@@ -16,7 +17,9 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.tour.Tour;
 import cc.alcina.framework.gwt.client.tour.TourImpl;
@@ -28,6 +31,7 @@ public class TourManagerWd extends TourManager {
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.addMixIn(Tour.RelativeTo.class, RelativeToMixin.class);
 			mapper.addMixIn(Tour.Step.class, StepMixin.class);
+			mapper.addMixIn(Tour.Condition.class, ConditionMixin.class);
 			mapper.addMixIn(Tour.PositioningDirection.class, EnumMixin.class);
 			mapper.addMixIn(Tour.Action.class, EnumMixin.class);
 			mapper.addMixIn(Tour.Operator.class, EnumMixin.class);
@@ -54,14 +58,21 @@ public class TourManagerWd extends TourManager {
 				final DeserializationContext context)
 				throws IOException, JsonProcessingException {
 			String string = parser.getValueAsString();
+			if (string == null) {
+				return null;
+			}
 			String currentName = parser.getCurrentName();
 			Object currentValue = parser.getCurrentValue();
 			PropertyDescriptor descriptor = SEUtilities
 					.getPropertyDescriptorByName(currentValue.getClass(),
 							currentName);
-			return CommonUtils.getEnumValueOrNull(
+			Enum value = CommonUtils.getEnumValueOrNull(
 					(Class<Enum>) descriptor.getPropertyType(), string, true,
 					null);
+			Objects.requireNonNull(value,
+					Ax.format("value '%s' not found in enum %s", string,
+							descriptor.getPropertyType().getSimpleName()));
+			return value;
 		}
 	}
 
@@ -72,6 +83,28 @@ public class TourManagerWd extends TourManager {
 				throws IOException, JsonProcessingException {
 			gen.writeString(CommonUtils.friendlyConstant(value, "-"));
 		}
+	}
+
+	public static class PathDeserializer extends JsonDeserializer<String> {
+		@Override
+		public String deserialize(final JsonParser parser,
+				final DeserializationContext context)
+				throws IOException, JsonProcessingException {
+			String string = parser.getValueAsString();
+			if (string == null) {
+				return null;
+			}
+			if (string.startsWith("file://")) {
+				return ResourceUtilities
+						.read(string.substring("file:/".length()));
+			} else {
+				return string;
+			}
+		}
+	}
+
+	@JsonDeserialize(as = TourImpl.ConditionImpl.class)
+	static abstract class ConditionMixin {
 	}
 
 	@JsonSerialize(using = EnumSerializer.class)
@@ -85,5 +118,7 @@ public class TourManagerWd extends TourManager {
 
 	@JsonDeserialize(as = TourImpl.StepImpl.class)
 	static abstract class StepMixin {
+		@JsonDeserialize(using = PathDeserializer.class)
+		public abstract String getDescription();
 	}
 }

@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.tour;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
@@ -9,12 +10,15 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.AllStatesConsort;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.tour.StepPopupView.Action;
+import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
+import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
 import cc.alcina.framework.gwt.client.tour.Tour.Step;
 
 public abstract class TourManager {
-	protected TourModel currentTour;
+	protected TourState currentTour;
 
 	String tourJson = "";
 
@@ -23,6 +27,8 @@ public abstract class TourManager {
 	protected boolean autoplay;
 
 	protected Tour.Step step;
+
+	public Topic<Step> stepRendered = Topic.local();
 
 	public TopicListener<StepPopupView.Action> stepListener = new TopicListener<StepPopupView.Action>() {
 		@Override
@@ -53,9 +59,21 @@ public abstract class TourManager {
 		super();
 	}
 
+	public void allSteps(Tour tour) {
+		startTour(tour);
+		while (step != Ax.last(tour.getSteps())) {
+			currentTour.gotoStep(currentTour.getCurrentStepIndex() + 1);
+			refreshTourView();
+		}
+	}
+
+	public Tour.Step getStep() {
+		return this.step;
+	}
+
 	public void startTour(Tour tour) {
 		UIRenderer.get().startTour(this);
-		currentTour = new TourModel(tour);
+		currentTour = new TourState(tour);
 		autoplay = true;
 		refreshTourView();
 	}
@@ -75,7 +93,7 @@ public abstract class TourManager {
 					+ tourJson.substring(idx2 + 2);
 		}
 		this.tourJson = tourJson.replaceFirst("var sample = ", "");
-		currentTour = TourModel.fromJson(this.tourJson);
+		currentTour = TourState.fromJson(this.tourJson);
 		refreshTourView();
 	}
 
@@ -143,6 +161,7 @@ public abstract class TourManager {
 			super(DisplayStepPhase.class, callback);
 			this.timeout = 20000;
 			exitListenerDelta(exitListener, false, true);
+			Ax.out(currentTour.getCurrentStep());
 		}
 
 		@Override
@@ -241,6 +260,12 @@ public abstract class TourManager {
 		}
 
 		private boolean evaluateCondition(Tour.Condition condition) {
+			Optional<ConditionEvaluator> evaluator = condition
+					.provideEvaluator();
+			if (evaluator.isPresent()) {
+				return evaluator.get()
+						.evaluate(new ConditionEvaluationContext(currentTour));
+			}
 			Tour.Operator operator = condition.getOperator();
 			int conditionCount = 0;
 			int passCount = 0;

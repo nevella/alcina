@@ -2,9 +2,9 @@ package cc.alcina.framework.gwt.client.tour;
 
 import java.util.List;
 
-public class TourModel {
-	static TourModel fromJson(String tourJson) {
-		TourModel model = new TourModel();
+public class TourState {
+	static TourState fromJson(String tourJson) {
+		TourState model = new TourState();
 		model.tour = TourJso.fromJson(tourJson);
 		return model;
 	}
@@ -13,10 +13,10 @@ public class TourModel {
 
 	private Tour tour;
 
-	public TourModel() {
+	public TourState() {
 	}
 
-	public TourModel(Tour tour) {
+	public TourState(Tour tour) {
 		this.tour = tour;
 	}
 

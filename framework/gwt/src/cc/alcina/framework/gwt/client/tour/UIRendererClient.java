@@ -81,7 +81,7 @@ public class UIRendererClient extends UIRenderer
 
 	@Override
 	protected boolean performAction(Step step) {
-		Tour.Condition targetCondition = step.getTarget();
+		Tour.Condition targetCondition = step.provideTarget();
 		if (targetCondition == null) {
 			return true;
 		}

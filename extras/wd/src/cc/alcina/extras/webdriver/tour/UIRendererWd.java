@@ -1,10 +1,13 @@
 package cc.alcina.extras.webdriver.tour;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.openqa.selenium.WebElement;
 
+import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDoc;
@@ -34,58 +37,93 @@ public class UIRendererWd extends UIRenderer {
 		return CommonUtils.friendlyConstant(e, "-");
 	}
 
+	public long timeout() {
+		return System.currentTimeMillis() + 2000;
+	}
+
 	@Override
 	protected void afterStepListenerAction() {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	protected void clearPopups() {
-		// TODO Auto-generated method stub
+		popups.forEach(RenderedPopup::remove);
+		popups.clear();
 	}
 
 	@Override
 	protected void exitTour(String message) {
-		// TODO Auto-generated method stub
+	}
+
+	protected WebElement getElement(List<String> selectors) {
+		long timeout = timeout();
+		while (System.currentTimeMillis() < timeout) {
+			WebElement result = wdJsInvoke(false, "getForSelectors(%s)",
+					JacksonUtils.serializeNoTypes(selectors));
+			if (result != null) {
+				return result;
+			}
+		}
+		throw new TimedOutException(selectors.size() == 1 ? selectors.get(0)
+				: selectors.toString());
 	}
 
 	@Override
 	protected boolean hasElement(List<String> selectors) {
-		// TODO Auto-generated method stub
-		return false;
+		return getElement(selectors) != null;
 	}
 
 	@Override
 	protected boolean performAction(Step step) {
-		// TODO Auto-generated method stub
-		return false;
+		Tour.Condition targetCondition = step.provideTarget();
+		if (targetCondition == null) {
+			return true;
+		}
+		final WebElement target = getElement(targetCondition.getSelectors());
+		if (target == null) {
+			return false;
+		}
+		exec.externalElement(target);
+		switch (step.getAction()) {
+		case NONE:
+			break;
+		case CLICK:
+			exec.click();
+			break;
+		case SET_TEXT:
+			exec.clearAndSetText(step.getActionValue());
+			break;
+		}
+		exec.externalElement(null);
+		return true;
 	}
 
 	@Override
 	protected void publishNext() {
-		// TODO Auto-generated method stub
 	}
 
 	@Override
 	protected void render(Step step) {
 		clearPopups();
-		int idx = 0;
 		for (Tour.PopupInfo popupInfo : step.providePopups()) {
 			RenderedPopup popup = new RenderedPopup(popupInfo);
-			popup.render();
 			popups.add(popup);
 		}
-		int debug = 3;
 	}
 
 	@Override
 	protected boolean showStepPopups() {
-		// TODO Auto-generated method stub
-		return false;
+		popups.forEach(popup -> {
+			popup.waitForSelector();
+			popup.render();
+		});
+		tourManager.stepRendered.publish(tourManager.getStep());
+		return true;
 	}
 
 	@Override
 	protected void startTour(TourManager tourManager) {
+		popups.clear();
 		this.tourManager = tourManager;
 		String js = ResourceUtilities
 				.readRelativeResource("res/UIRendererWd.js");
@@ -99,20 +137,28 @@ public class UIRendererWd extends UIRenderer {
 		exec.executeScript(cmd);
 	}
 
-	Object wdJsInvoke(String template, Object... args) {
+	TourManagerWd managerWd() {
+		return (TourManagerWd) tourManager;
+	}
+
+	<T> T wdJsInvoke(boolean escape, String template, Object... args) {
 		Object[] escapedArgs = new Object[args.length];
 		for (int i = 0; i < args.length; i++) {
 			escapedArgs[i] = StringEscapeUtils
 					.escapeJavaScript(args[i].toString());
 		}
-		String wdCommand = Ax.format(template, escapedArgs);
-		String command = Ax.format("__UIRendererWd.%s;", wdCommand);
+		String wdCommand = Ax.format(template, escape ? escapedArgs : args);
+		String command = Ax.format("return __UIRendererWd.%s;", wdCommand);
 		try {
-			return exec.executeScript(command);
+			return (T) exec.executeScript(command);
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	<T> T wdJsInvoke(String template, Object... args) {
+		return wdJsInvoke(true, template, args);
 	}
 
 	class RenderedPopup {
@@ -125,8 +171,23 @@ public class UIRendererWd extends UIRenderer {
 			id = Ax.format("__tmwd_rendered_popup_%s", ++idCounter);
 		}
 
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s", popupInfo.getCaption(),
+					popupInfo.getRelativeTo().getElement());
+		}
+
+		public void waitForSelector() {
+			getElement(Collections
+					.singletonList(popupInfo.getRelativeTo().getElement()));
+		}
+
 		void remove() {
-			wdJsInvoke("remove('%s')", id);
+			try {
+				wdJsInvoke("remove('%s')", id);
+			} catch (Exception e) {
+				Ax.simpleExceptionOut(e);
+			}
 		}
 
 		void render() {

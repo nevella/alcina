@@ -1,7 +1,9 @@
 package cc.alcina.framework.gwt.client.tour;
 
 import java.util.List;
+import java.util.Optional;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 public interface Tour {
@@ -17,9 +19,37 @@ public interface Tour {
 	interface Condition {
 		List<? extends Condition> getConditions();
 
+		String getEvaluatorClassName();
+
 		Operator getOperator();
 
 		List<String> getSelectors();
+
+		default Optional<ConditionEvaluator> provideEvaluator() {
+			if (getEvaluatorClassName() == null) {
+				return Optional.empty();
+			} else {
+				Class<ConditionEvaluator> evaluatorClass = Reflections
+						.forName(getEvaluatorClassName());
+				return Optional.of(Reflections.newInstance(evaluatorClass));
+			}
+		}
+	}
+
+	public static class ConditionEvaluationContext {
+		private TourState tourState;
+
+		public ConditionEvaluationContext(TourState tourState) {
+			this.tourState = tourState;
+		}
+
+		public TourState getTourState() {
+			return this.tourState;
+		}
+	}
+
+	public interface ConditionEvaluator {
+		boolean evaluate(ConditionEvaluationContext context);
 	}
 
 	enum Operator {
@@ -41,10 +71,13 @@ public interface Tour {
 
 	@ClientInstantiable
 	enum PositioningDirection {
-		CENTER_TOP, LEFT_BOTTOM, RIGHT_BOTTOM, RIGHT_TOP, TOP_LEFT
+		CENTER_TOP, LEFT_BOTTOM, RIGHT_BOTTOM, RIGHT_TOP, TOP_LEFT, LEFT_TOP,
+		BOTTOM_RIGHT, BOTTOM_LEFT, TOP_RIGHT
 	}
 
 	interface RelativeTo {
+		public PositioningDirection getDirection();
+
 		public String getElement();
 
 		public int getOffsetHorizontal();
@@ -57,7 +90,7 @@ public interface Tour {
 
 		public int getPopupFromBottom();
 
-		public PositioningDirection getDirection();
+		public boolean isBubble();
 	}
 
 	// @JsonDeserialize(as = StepImpl.class)
@@ -70,10 +103,10 @@ public interface Tour {
 
 		public Condition getIgnoreIf();
 
+		public Condition getWaitFor();
+
 		public List<? extends PopupInfo> providePopups();
 
-		public Condition getTarget();
-
-		public Condition getWaitFor();
+		public Condition provideTarget();
 	}
 }

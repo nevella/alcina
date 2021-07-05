@@ -1,48 +1,110 @@
 class UIRendererWd {
-    constructor() {
+	constructor() {
 
-    }
+	}
 
-    start() {
-        let css = __UIRendererWd_css;
-        let style = document.createElement("style");
-        style.innerText = css;
-        document.head.appendChild(style);
-    }
-    renderRelative(popupInfoJson, html) {
+	start() {
+		let css = __UIRendererWd_css;
+		let style = document.createElement("style");
+		style.innerText = css;
+		document.head.appendChild(style);
+	}
+	renderRelative(popupInfoJson, html) {
 
-        let popupInfo = JSON.parse(popupInfoJson);
-        let relativeTo = this.evalSelector(popupInfo.relativeTo.element);
-        let rect = relativeTo.getBoundingClientRect();
-        let absRect = this.absRect(rect);
-        let div = document.createElement("div");
-        div.innerHTML = html;
-        let content = div.firstElementChild;
-        document.body.appendChild(content);
-        let clientWidth = document.documentElement.clientWidth;
-        let clientHeight = document.documentElement.clientHeight;
-        content.style.top = absRect.top + "px";
-        content.style.right = (clientWidth - absRect.left + popupInfo.relativeTo.offsetHorizontal) + "px";
-    }
+		let popupInfo = JSON.parse(popupInfoJson);
+		let relativeTo = this.evalSelector(popupInfo.relativeTo.element);
+		let div = document.createElement("div");
+		div.innerHTML = html;
+		let content = div.firstElementChild;
+		content.addEventListener('click', e => content.remove(), false);
+		document.body.appendChild(content);
+		this.position(content, relativeTo, popupInfo.relativeTo);
 
-    absRect(rect) {
-        return {
-            top: rect.top + window.scrollY,
-            bottom: rect.bottom + window.scrollY,
-            left: rect.left + window.scrollX,
-            right: rect.right + window.scrollX
-        };
-    }
 
-    evalSelector(selector) {
-        if (selector.indexOf("/") == 0) {
-            return document.evaluate(selector);
-        } else {
-            return document.querySelector(selector);
-        }
-    }
+	}
 
-    remove(id) {
-        document.getElementById(id).remove();
-    }
+	position(elem, relativeToElem, relativeTo) {
+		let rect = relativeToElem.getBoundingClientRect();
+		let absRect = this.absRect(rect);
+		let clientWidth = document.documentElement.clientWidth;
+		let clientHeight = document.documentElement.clientHeight;
+		let directions = relativeTo.direction.split("_");
+		switch (directions[0]) {
+			case "TOP":
+				elem.style.bottom = (clientHeight - absRect.top + relativeTo.offsetVertical) + "px";
+				break;
+			case "BOTTOM":
+				elem.style.top = (absRect.bottom + relativeTo.offsetVertical) + "px";
+				break;
+			case "LEFT":
+				elem.style.right = (clientWidth - absRect.left + relativeTo.offsetHorizontal) + "px";
+				break;
+			default:
+				throw `not handled direction (axis 1): ${directions}`;
+		}
+		switch (directions[1]) {
+			case "LEFT":
+				elem.style.left = absRect.left + relativeTo.offsetHorizontal + "px";
+				break;
+			case "RIGHT":
+				elem.style.right = (clientWidth - absRect.right - relativeTo.offsetHorizontal) + "px";
+				break;
+			case "TOP":
+				elem.style.top = absRect.top + "px";
+				break;
+			default:
+				throw `not handled direction (axis 2): ${directions}`;
+		}
+		if (relativeTo.bubble) {
+			let bubbleElem = document.createElement("div");
+			bubbleElem.className = "ol-tour-bubble";
+			bubbleElem.id = elem.id + "_bubble";
+			elem.parentElement.appendChild(bubbleElem);
+			switch (directions[0]) {
+				case "TOP":
+					bubbleElem.style.bottom = (clientHeight - absRect.top) + "px";
+					bubbleElem.style.left = (absRect.left + (rect.width / 2) - 5) + "px";
+					break;
+				case "BOTTOM":
+					bubbleElem.style.top = (absRect.bottom + 0) + "px";
+					bubbleElem.style.left = (absRect.left + (rect.width / 2) - 5) + "px";
+					break;
+				default:
+					throw `not handled direction (bubble): ${directions}`;
+			}
+		}
+	}
+
+	absRect(rect) {
+		return {
+			top: rect.top + window.scrollY,
+			bottom: rect.bottom + window.scrollY,
+			left: rect.left + window.scrollX,
+			right: rect.right + window.scrollX
+		};
+	}
+
+	evalSelector(selector) {
+		if (selector.indexOf("/") == 0) {
+			return document.evaluate(selector, document, null, XPathResult.FIRST_ORDERED_NODE_TYPE, null).singleNodeValue;
+		} else {
+			return document.querySelector(selector);
+		}
+	}
+	getForSelectors(selectors) {
+		for (const selector of selectors) {
+			let relativeTo = this.evalSelector(selector);
+			if (relativeTo != null) {
+				return relativeTo;
+			}
+		}
+		return null;
+	}
+	remove(id) {
+		document.getElementById(id).remove();
+		let bubble = document.getElementById(id+ "_bubble");
+		if (bubble) {
+			bubble.remove();
+		}
+	}
 }
