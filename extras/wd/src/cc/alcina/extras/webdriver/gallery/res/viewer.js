@@ -29,6 +29,7 @@ function show(linkIdx) {
 	idx = linkIdx;
 	lastIdx = idx;
 	document.getElementById('link_' + idx).className = 'selected';
+	document.getElementById('img__').className="loading";
 	document.getElementById('img__').src = __viewer_data[idx].url;
 	window.event.preventDefault();
 }

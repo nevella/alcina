@@ -1,72 +1,97 @@
-body{
-	  font-family: Helvetica, sans-serif;
-	font-size:16px;
+body {
+	font-family: Helvetica, sans-serif;
+	font-size: 16px;
+	margin: 0;
 }
-tr td:first-child{
+
+tr td:first-child {
 	white-space: nowrap;
 }
-td{
-	vertical-align:top;
-	color:#333;
-	font-size:14px;
+
+td {
+	vertical-align: top;
+	color: #333;
+	font-size: 14px;
 }
-div.links a{
-	display:block;
-	white-space:nowrap;
-	text-decoration:none;
-	color:#5b5bdc;
+
+div.links a {
+	display: block;
+	white-space: nowrap;
+	text-decoration: none;
+	color: #555;
+	font-size: 14px;
+	line-height: 1.4em;
 }
-div.links a.selected{
-	background-color:#ddd;
+
+div.links a.selected {
+	color: hsl(217deg 65% 51%);
 }
-div.main{
-  display: flex;
-  flex-direction: row;
-  flex-wrap: wrap;
-  width: 100%;
+
+div.main {
+	display: flex;
+	flex-direction: row;
+	flex-wrap: wrap;
+	width: 100%;
 }
-body.full div.left{
-	display:none;
+
+body.full div.left {
+	display: none;
 }
-body.full{
-	margin:0;
+
+body.full div.viewer{
+	padding-top:0;
 }
-body.full div.viewer div.img-wrapper{
-	max-width:100%;
-	border:none;
-	padding:0;
+img.loading{
+	opacity:0.7;
 }
-div.left{
-	padding:0 1em;
-	flex:0.1;
+body.full div.viewer div.img-wrapper {
+	max-width: 100%;
+	border: none;
+	padding: 0;
 }
-div.viewer{
-	flex:1;
+
+div.left {
+	padding: 0 1em;
+	flex: 0.1;
+	height: 100vh;
+	margin-right: 1em;
+	border-right: solid 1px #ddd;
 }
-div.viewer  div.img-wrapper{
+
+div.viewer {
+	flex: 1;
+	padding-top: 8px;
+}
+
+div.viewer  div.img-wrapper {
 	max-width: calc(100% - 20px);
-	border:solid 1px #ccc;
-	padding:2px;
+	border: solid 1px #ccc;
+	padding: 2px;
 }
-div.viewer  div.img-wrapper img{
+
+div.viewer  div.img-wrapper img {
 	max-width: 100%;
 }
-div.buttons{
-	padding:1em;
-	margin:1em 0;
-	text-align:center;
-	border-top:solid 1px #ddd;
-	border-bottom:solid 1px #ddd;
+
+div.buttons {
+	padding: 1.5em 1em 1em 0;
+	margin: 1em 0;
+	text-align: center;
+	border-top: solid 1px #ddd;
+	border-bottom: solid 1px #ddd;
 }
-div.buttons button{
+
+div.buttons button {
 	margin: 0 1em;
 }
-div.hint{
-	color:#999;
-	padding-top:1em;
-	text-align:center;
-	font-size:13px;
+
+div.hint {
+	color: #999;
+	padding-top: 1em;
+	text-align: center;
+	font-size: 13px;
 }
+
 tr:nth-child(2){
-	display:none;
+	display: none;
 }

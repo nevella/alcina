@@ -204,7 +204,8 @@ public class SheetPersister {
 					.append();
 			viewer.builder().tag("div").attr("class", "img-wrapper").append()
 					.builder().tag("img").attr("id", "img__")
-					.attr("onclick", "toggleFull()").append();
+					.attr("onclick", "toggleFull()")
+					.attr("onload", "this.className='loaded';").append();
 		}
 		String prettyToString = doc.prettyToString();
 		prettyToString = prettyToString.replaceFirst("(<script/>)",
