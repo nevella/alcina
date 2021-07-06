@@ -55,7 +55,7 @@
 	<classpathentry kind="lib" path="lib/framework/entity/jackson-core-2.7.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jackson-databind-2.7.1.jar" sourcepath="/g/minor/jackson-databind"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev-patch.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-3.20.0.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-3.20.0.jar" sourcepath="/g/minor/javaparser/"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-generators-3.20.0.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-core-3.20.0.jar" sourcepath="/g/minor/javaparser"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/barbary-watchservice-2.0-SNAPSHOT.jar" sourcepath="/barbary_watch"/>
