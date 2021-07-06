@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.misc.proxy;
+package cc.alcina.extras.dev.console.code;
 
 import java.io.File;
 import java.io.FileFilter;
@@ -43,7 +43,6 @@ import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.google.common.base.Preconditions;
 
-import cc.alcina.extras.dev.console.code.CompilationUnits;
 import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
