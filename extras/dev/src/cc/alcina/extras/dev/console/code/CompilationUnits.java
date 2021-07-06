@@ -65,6 +65,45 @@ public class CompilationUnits {
 		return units;
 	}
 
+	private static String fqn0(CompilationUnitWrapper unit,
+			ClassOrInterfaceType n) {
+		String nameAsString = n.getNameAsString();
+		Optional<ImportDeclaration> importDecl = unit.unit().getImports()
+				.stream()
+				.filter(id -> id.getNameAsString().endsWith(nameAsString))
+				.findFirst();
+		if (importDecl.isPresent()) {
+			return importDecl.get().getNameAsString();
+		} else {
+			try {
+				Class<?> clazz = Class.forName("java.lang." + nameAsString);
+				return clazz.getName();
+			} catch (Exception e) {
+				try {
+					Class<?> clazz = Class
+							.forName(unit.unit.getPackageDeclaration().get()
+									.getNameAsString() + "." + nameAsString);
+					return clazz.getName();
+				} catch (Exception e2) {
+					try {
+						// inner
+						String cn = unit.unit.getPackageDeclaration().get()
+								.getNameAsString()
+								+ "."
+								+ ((ClassOrInterfaceDeclaration) n
+										.getParentNode().get().getParentNode()
+										.get()).getNameAsString()
+								+ "$" + nameAsString;
+						Class<?> clazz = Class.forName(cn);
+						return clazz.getName().replace("$", ".");
+					} catch (Exception e3) {
+						throw new WrappedRuntimeException(e3);
+					}
+				}
+			}
+		}
+	}
+
 	private static CompilationUnits load0(
 			SingletonCache<CompilationUnits> cache, StringMap classPaths,
 			BiFunction<CompilationUnits, CompilationUnitWrapper, CompilationUnitWrapperVisitor> visitorCreator,
@@ -110,40 +149,10 @@ public class CompilationUnits {
 	}
 
 	static String fqn(CompilationUnitWrapper unit, ClassOrInterfaceType n) {
-		String nameAsString = n.getNameAsString();
-		Optional<ImportDeclaration> importDecl = unit.unit().getImports()
-				.stream()
-				.filter(id -> id.getNameAsString().endsWith(nameAsString))
-				.findFirst();
-		if (importDecl.isPresent()) {
-			return importDecl.get().getNameAsString();
-		} else {
-			try {
-				Class<?> clazz = Class.forName("java.lang." + nameAsString);
-				return clazz.getName();
-			} catch (Exception e) {
-				try {
-					Class<?> clazz = Class
-							.forName(unit.unit.getPackageDeclaration().get()
-									.getNameAsString() + "." + nameAsString);
-					return clazz.getName();
-				} catch (Exception e2) {
-					try {
-						// inner
-						String cn = unit.unit.getPackageDeclaration().get()
-								.getNameAsString()
-								+ "."
-								+ ((ClassOrInterfaceDeclaration) n
-										.getParentNode().get().getParentNode()
-										.get()).getNameAsString()
-								+ "$" + nameAsString;
-						Class<?> clazz = Class.forName(cn);
-						return clazz.getName().replace("$", ".");
-					} catch (Exception e3) {
-						throw new WrappedRuntimeException(e3);
-					}
-				}
-			}
+		try {
+			return fqn0(unit, n);
+		} catch (Error e) {
+			return null;
 		}
 	}
 
@@ -246,6 +255,8 @@ public class CompilationUnits {
 
 		public String superclassFqn;
 
+		public boolean invalid;
+
 		public ClassOrInterfaceDeclarationWrapper() {
 		}
 
@@ -255,6 +266,10 @@ public class CompilationUnits {
 			this.name = n.getNameAsString();
 			qualifiedSourceName = fqn(unit, n, false);
 			qualifiedBinaryName = fqn(unit, n, true);
+			if (qualifiedSourceName == null) {
+				invalid = true;
+				return;
+			}
 			NodeList<ClassOrInterfaceType> extendedTypes = n.getExtendedTypes();
 			if (extendedTypes.size() > 1) {
 				throw new UnsupportedOperationException();

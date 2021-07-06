@@ -1,4 +1,4 @@
-package cc.alcina.framework.entity.proxy;
+package cc.alcina.framework.servlet.misc.proxy;
 
 import java.util.List;
 
