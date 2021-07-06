@@ -152,6 +152,8 @@ public class CompilationUnits {
 		try {
 			return fqn0(unit, n);
 		} catch (Error e) {
+			Ax.err(unit.file.getName());
+			Ax.simpleExceptionOut(e);
 			return null;
 		}
 	}

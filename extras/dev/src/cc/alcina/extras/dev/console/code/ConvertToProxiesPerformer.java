@@ -35,6 +35,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
+import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.UnaryExpr;
 import com.github.javaparser.ast.stmt.ExpressionStmt;
@@ -195,6 +196,7 @@ public class ConvertToProxiesPerformer
 		compUnits = CompilationUnits.load(cache, classPaths,
 				DeclarationVisitor::new, task.refreshCompilationUnits);
 		compUnits.units.forEach(this::instrumentClass);
+		compUnits.writeDirty(task.isDryRun());
 	}
 
 	private void scanForClassesToInstrument() {
@@ -251,7 +253,17 @@ public class ConvertToProxiesPerformer
 		public ProxyGenerator(Class clazz) {
 			this.clazz = clazz;
 			generators.put(clazz, this);
+			Preconditions.checkState(
+					!simpleClassNames.containsKey(clazz.getSimpleName()));
 			simpleClassNames.put(clazz.getSimpleName(), clazz);
+		}
+
+		public Class getProxyClass() {
+			try {
+				return Class.forName(proxyFqn());
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 
 		private void addConstructor() {
@@ -328,16 +340,25 @@ public class ConvertToProxiesPerformer
 						clazz.getName(), proxyString, method.getName(),
 						methodTypesClause, methodArgsClause);
 				methodDeclaration.getBody().get().addStatement(proxyCall);
+				Arrays.stream(method.getExceptionTypes()).forEach(
+						c -> methodDeclaration.addThrownException((Class) c));
 			}
+		}
+
+		private String fullOutputPackage() {
+			return task.outputPackage + "." + clazz.getPackage().getName();
 		}
 
 		private String proxyClassName() {
 			return clazz.getSimpleName() + "_";
 		}
 
+		private String proxyFqn() {
+			return Ax.format("%s.%s", fullOutputPackage(), proxyClassName());
+		}
+
 		void generate() {
-			String fullOutputPackage = task.outputPackage + "."
-					+ clazz.getPackage().getName();
+			String fullOutputPackage = fullOutputPackage();
 			String java = Ax.format(
 					"package %s;\n\npublic class %s extends %s{}",
 					fullOutputPackage, proxyClassName(),
@@ -373,32 +394,44 @@ public class ConvertToProxiesPerformer
 		public void visit(com.github.javaparser.ast.expr.MethodCallExpr expr,
 				Object arg) {
 			Matcher matcher = simpleStaticPattern.matcher(expr.toString());
-			if (matcher.matches()) {
+			if (expr.getChildNodes().get(0) instanceof NameExpr
+					&& matcher.matches()) {
 				String firstPart = matcher.group(1);
 				if (simpleClassNames.containsKey(firstPart)) {
-					Class<? extends Node> parentClass = expr.getParentNode()
-							.get().getClass();
-					if (okRedirectContainers.contains(parentClass)) {
-						// ensure we only redirect from the start of a method
-						// call expr
-						return;
-					}
-					String containerName = parentClass.getSimpleName();
-					String containerName2 = expr.getParentNode().get()
-							.getParentNode().get().getClass().getSimpleName();
-					if (parents.add(containerName) || true) {
-						Ax.out(this.unit.file.getName());
-						Ax.out(expr);
-						Ax.out(containerName);
-						Ax.out(expr.getParentNode().get());
-						Ax.out(containerName2);
-						Ax.out(expr.getParentNode().get().getParentNode()
-								.get());
-						int debug = 3;
-					}
+					// testOkWrapping(expr);
+					Class clazz = simpleClassNames.get(firstPart);
+					Class proxyClass = generators.get(clazz).getProxyClass();
+					unit.ensureImport(proxyClass);
+					NameExpr nameExpr = (NameExpr) expr.getChildNodes().get(0);
+					nameExpr.setName(proxyClass.getSimpleName());
+					unit.dirty = true;
 				}
 			}
 			super.visit(expr, arg);
+		}
+
+		@SuppressWarnings("unused")
+		void testOkWrapping(
+				com.github.javaparser.ast.expr.MethodCallExpr expr) {
+			Class<? extends Node> parentClass = expr.getParentNode().get()
+					.getClass();
+			if (okRedirectContainers.contains(parentClass)) {
+				// ensure we only redirect from the start of a method
+				// call expr
+				return;
+			}
+			String containerName = parentClass.getSimpleName();
+			String containerName2 = expr.getParentNode().get().getParentNode()
+					.get().getClass().getSimpleName();
+			if (parents.add(containerName) || true) {
+				Ax.out(this.unit.file.getName());
+				Ax.out(expr);
+				Ax.out(containerName);
+				Ax.out(expr.getParentNode().get());
+				Ax.out(containerName2);
+				Ax.out(expr.getParentNode().get().getParentNode().get());
+				int debug = 3;
+			}
 		}
 	}
 
