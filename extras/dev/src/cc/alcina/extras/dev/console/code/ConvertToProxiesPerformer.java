@@ -122,9 +122,8 @@ public class ConvertToProxiesPerformer
 
 	private void ensureProxies() throws Exception {
 		Set<String> nextDelta = new LinkedHashSet<>();
-		importMatches.stream()
-				.map(imp -> imp.replaceFirst("import (.+);", "$1"))
-				.forEach(nextDelta::add);
+		Pattern p = Pattern.compile(task.importMatcherRegex);
+		importMatches.stream().forEach(nextDelta::add);
 		classesToProxy = new LinkedHashSet<>();
 		int pass = 0;
 		do {
@@ -215,14 +214,18 @@ public class ConvertToProxiesPerformer
 					if (f.getName().endsWith(".java")) {
 						javaFileCount.incrementAndGet();
 						boolean found = false;
+						if (f.getName().contains("ApdmFileImportUtil")) {
+							int debug = 3;
+						}
 						String source = ResourceUtilities.read(f);
-						if (source.contains(task.outputPackage)) {
+						if (source
+								.startsWith("package " + task.outputPackage)) {
 							return false;
 						}
 						Matcher m = p.matcher(source);
 						while (m.find()) {
 							found = true;
-							importMatches.add(m.group());
+							importMatches.add(m.group(1));
 						}
 						return found;
 					}
@@ -323,9 +326,6 @@ public class ConvertToProxiesPerformer
 				}
 				methodDeclaration.setType(method.getReturnType());
 				String proxyString = isStatic ? "null" : "this";
-				String returnString = method.getReturnType() == void.class ? ""
-						: Ax.format("return (%s) ",
-								method.getReturnType().getCanonicalName());
 				String methodTypesClause = Arrays.stream(method.getParameters())
 						.map(Parameter::getType).map(Class::getCanonicalName)
 						.map(s -> s + ".class")
@@ -334,12 +334,26 @@ public class ConvertToProxiesPerformer
 						.map(Parameter::getName)
 						.collect(Collectors.joining(", "));
 				String proxyCall = Ax.format(
-						"%sRegistry.impl(%s.class).handle(%s.class, %s, \"%s\", "
+						"ProxyResult result = Registry.impl(%s.class).handle(%s.class, %s, \"%s\", "
 								+ "Arrays.asList(%s), Arrays.asList(%s)); ",
-						returnString, task.classProxyImpl.getSimpleName(),
-						clazz.getName(), proxyString, method.getName(),
-						methodTypesClause, methodArgsClause);
+						task.classProxyImpl.getSimpleName(), clazz.getName(),
+						proxyString, method.getName(), methodTypesClause,
+						methodArgsClause);
 				methodDeclaration.getBody().get().addStatement(proxyCall);
+				Arrays.stream(method.getExceptionTypes()).forEach(et -> {
+					String checkThrow = Ax.format(
+							"if(result.throwable instanceof %s){\n\t"
+									+ "throw (%s)result.throwable;\n}",
+							et.getCanonicalName(), et.getCanonicalName());
+					methodDeclaration.getBody().get().addStatement(checkThrow);
+				});
+				if (method.getReturnType() != void.class) {
+					String returnStatement = Ax.format(
+							"return (%s) result.returnValue;",
+							method.getReturnType().getCanonicalName());
+					methodDeclaration.getBody().get()
+							.addStatement(returnStatement);
+				}
 				Arrays.stream(method.getExceptionTypes()).forEach(
 						c -> methodDeclaration.addThrownException((Class) c));
 			}
@@ -367,6 +381,8 @@ public class ConvertToProxiesPerformer
 			String proxyFqn = Ax.format("%s.%s", fullOutputPackage,
 					proxyClassName());
 			unit.addImport(task.classProxyInterfacePackage + ".ClassProxy");
+			unit.addImport(task.classProxyInterfacePackage
+					+ ".ClassProxy.ProxyResult");
 			unit.addImport(task.classProxyImpl);
 			unit.addImport(List.class);
 			unit.addImport(clazz);

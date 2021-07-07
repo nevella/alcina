@@ -37,6 +37,9 @@ public class TaskConvertToProxies implements Task {
 		return this.classProxyInterfacePackage;
 	}
 
+	/*
+	 * format 'import (?:[output-package].)?(clazzRegex);"
+	 */
 	public String getImportMatcherRegex() {
 		return this.importMatcherRegex;
 	}
