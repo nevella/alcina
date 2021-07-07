@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -304,6 +305,7 @@ public class KryoUtils {
 	}
 
 	@RegistryLocation(registryPoint = KryoCreationCustomiser.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
 	public static class KryoCreationCustomiser {
 		public void configure(Kryo kryo) {
 		}

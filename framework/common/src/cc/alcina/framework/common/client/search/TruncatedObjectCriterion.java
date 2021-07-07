@@ -80,6 +80,11 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	public void populateValue() {
 	}
 
+	public String provideTypeDisplayName() {
+		return CommonUtils.titleCase(
+				CommonUtils.deInfix(getObjectClass().getSimpleName()));
+	}
+
 	public void setDisplayText(String displayText) {
 		this.displayText = displayText;
 	}
@@ -113,9 +118,5 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 
 	protected String getDisplayTextFor(E value) {
 		return value == null ? null : value.toString();
-	}
-	public String provideTypeDisplayName() {
-		return CommonUtils
-				.titleCase(CommonUtils.deInfix(getObjectClass().getSimpleName()));
 	}
 }
