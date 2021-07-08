@@ -17,6 +17,7 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
@@ -401,18 +402,21 @@ public class FlatTreeSerializer {
 			boolean resolvingLastSegment = false;
 			String reachedPath = "";
 			List<String> resolvedSegments = new ArrayList<>();
+			int previousSegmentUnusedIndex = -1;
 			for (int idx = 0; idx < segments.length; idx++) {
 				String segment = segments[idx];
-				String segmentPath = segment;
-				int index = 1;
-				if (segment.contains("-1")) {
-					int debug = 3;
-				}
 				boolean lastSegment = idx == segments.length - 1;
-				if (segment.matches("(.+?)-(\\d+)")) {
-					segmentPath = segment.replaceFirst("(.+?)-(\\d+)", "$1");
-					index = Integer.parseInt(
-							segment.replaceFirst("(.+?)-(\\d+)", "$2")) + 1;
+				boolean indexed = segment.matches("(.+?)-(\\d+)");
+				String segmentPath = indexed
+						? segment.replaceFirst("(.+?)-(\\d+)", "$1")
+						: segment;
+				int index = indexed
+						? Integer.parseInt(
+								segment.replaceFirst("(.+?)-(\\d+)", "$2")) + 1
+						: 1;
+				if (previousSegmentUnusedIndex != -1) {
+					index = previousSegmentUnusedIndex;
+					previousSegmentUnusedIndex = -1;
 				}
 				boolean resolved = false;
 				Set<String> seenPossibleBranchesThisSegment = new LinkedHashSet<>();
@@ -469,6 +473,9 @@ public class FlatTreeSerializer {
 						cursor.path.index = new CollectionIndex(elementClass,
 								index, false);
 					} else {
+						if (index != 1) {
+							previousSegmentUnusedIndex = index;
+						}
 						Property property = null;
 						if (state.deserializerOptions.shortPaths) {
 							Map<String, Property> segmentMap = getAliasPropertyMap(
@@ -476,7 +483,7 @@ public class FlatTreeSerializer {
 							checkBranchUniqueness(resolvedSegments,
 									seenPossibleBranchesThisSegment,
 									segmentMap.keySet());
-							property = segmentMap.get(segment);
+							property = segmentMap.get(segmentPath);
 							if (property != null) {
 								resolved = true;
 							} else {
@@ -484,7 +491,8 @@ public class FlatTreeSerializer {
 							}
 						} else {
 							property = getProperties(cursor.value).stream()
-									.filter(p -> p.getName().equals(segment))
+									.filter(p -> p.getName()
+											.equals(segmentPath))
 									.findFirst().get();
 							resolved = true;
 						}
@@ -974,6 +982,9 @@ public class FlatTreeSerializer {
 	}
 
 	public static abstract class SerializerFlat extends Serializer {
+		private transient static Logger logger = LoggerFactory
+				.getLogger(SerializerFlat.class);
+
 		@Override
 		public <V> V deserialize(String serialized, Class<V> clazz) {
 			if ((clazz != null && !serialized.startsWith("{"))
@@ -1000,9 +1011,16 @@ public class FlatTreeSerializer {
 				FlatTreeSerializer.SerializerOptions options = new FlatTreeSerializer.SerializerOptions()
 						.withShortPaths(true)
 						.withTopLevelTypeInfo(!hasClassNameProperty)
-						.withElideDefaults(true);
-				return FlatTreeSerializer.serialize((TreeSerializable) object,
-						options);
+						.withTestSerialized(true).withElideDefaults(true);
+				try {
+					return FlatTreeSerializer
+							.serialize((TreeSerializable) object, options);
+				} catch (Exception e) {
+					String jsonSerialized = super.serialize(object,
+							hasClassNameProperty);
+					logger.warn("SerializerFlat exception: {}", jsonSerialized);
+					return jsonSerialized;
+				}
 			} else {
 				return super.serialize(object, hasClassNameProperty);
 			}
