@@ -89,7 +89,8 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (!AnnotationUtils.hasAnnotationNamed(clazz, ClientInstantiable.class)
 				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null
 				&& clazz.getAnnotation(
-						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null) {
+						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null
+				&& !clazz.getName().startsWith("java.lang")) {
 			throw new IntrospectionException(
 					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
 					clazz);
@@ -116,6 +117,9 @@ public class ClientReflectorJvm extends ClientReflector {
 				|| clazz.getAnnotation(
 						cc.alcina.framework.common.client.logic.reflection.Bean.class) != null
 				|| clazz.getAnnotation(Introspectable.class) != null;
+		if (clazz.getName().startsWith("java.lang")) {
+			introspectable = true;
+		}
 		for (Class iface : getAllImplementedInterfaces(clazz)) {
 			introspectable |= iface.getAnnotation(Introspectable.class) != null;
 		}
