@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
  * @author Nick Reddel
  */
 @PermissibleChildClasses({ TxtCriterion.class })
-@TypeSerialization(notSerializable = true)
+@TypeSerialization(flatSerializable = false)
 public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 	static final transient long serialVersionUID = -1L;
 

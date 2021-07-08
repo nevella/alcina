@@ -9,11 +9,13 @@ import java.io.IOException;
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdExecRunnable;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 @RegistryLocation(registryPoint = DevConsoleRunnable.class)
+@TypeSerialization(flatSerializable = false)
 public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 	public static final String CONTEXT_ACTION_RESULT = CmdExecRunnable.class
 			.getName() + ".CONTEXT_ACTION_RESULT";

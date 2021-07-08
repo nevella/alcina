@@ -45,12 +45,18 @@ public class DevConsoleRpcRequestRouterHandler extends AbstractHandler {
 		}
 	}
 
-	private static class RemoteInvocationServlet_DevConsole
+	public static class RemoteInvocationServlet_DevConsole
 			extends RemoteInvocationServlet {
 		@Override
 		public void doPost(HttpServletRequest req, HttpServletResponse res)
 				throws ServletException, IOException {
 			super.doPost(req, res);
+		}
+
+		@Override
+		protected void customiseContextBeforePayloadWrite() {
+			RemoteInvocationServlet_DevConsole_Customiser.get()
+					.customiseContextBeforePayloadWrite();
 		}
 
 		@Override

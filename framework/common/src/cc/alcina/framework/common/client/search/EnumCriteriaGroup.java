@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 
 @Bean
 // TODO - make flat-serializable when needed
-@TypeSerialization(notSerializable = true)
+@TypeSerialization(flatSerializable = false)
 public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
 	static final transient long serialVersionUID = -1L;
 

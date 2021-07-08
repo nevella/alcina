@@ -5,8 +5,10 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
+@TypeSerialization(flatSerializable = false)
 public class PersistentObjectCriterion extends SearchCriterion {
 	static final transient long serialVersionUID = -1L;
 
@@ -40,15 +42,15 @@ public class PersistentObjectCriterion extends SearchCriterion {
 		this.classRef = classRef;
 	}
 
-	public PersistentObjectCriterion withValue(ClassRef value) {
-		setClassRef(value);
-		return this;
-	}
-
 	@Override
 	public String toString() {
 		return classRef == null ? ""
 				: "class: "
 						+ CommonUtils.simpleClassName(classRef.getRefClass());
+	}
+
+	public PersistentObjectCriterion withValue(ClassRef value) {
+		setClassRef(value);
+		return this;
 	}
 }

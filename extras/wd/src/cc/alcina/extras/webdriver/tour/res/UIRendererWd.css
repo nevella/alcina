@@ -9,6 +9,18 @@ div.tmwd-popup {
 	font-family: sans-serif;
 	max-width: 300px;
 	min-width: 300px;
+	cursor:pointer;
+}
+div.tmwd-popup.bubble:before{
+	content: "";
+  position: absolute;
+  top: 100%;
+  left: 30px;
+  height: 20px;
+  width: 20px;
+  background: gray;
+  box-sizing:border-box;
+  transform: rotate(45deg) translate(-50%);
 }
 
 div.tmwd-popup caption-area {
@@ -24,11 +36,3 @@ div.tmwd-popup description {
 	white-space: pre-wrap;
 }
 
-div.ol-tour-bubble {
-	width: 6px;
-	height: 6px;
-	position: absolute;
-	border-radius: 5px;
-	border: solid 2px #333;
-	background-color:#125cc4;
-}

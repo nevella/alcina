@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 @Bean
 @PermissibleChildClasses({ PersistentObjectCriterion.class })
 // TODO - make flat-serializable when needed
-@TypeSerialization(notSerializable = true)
+@TypeSerialization(flatSerializable = false)
 public class PersistentObjectCriteriaGroup
 		extends CriteriaGroup<PersistentObjectCriterion> {
 	static final transient long serialVersionUID = -1L;

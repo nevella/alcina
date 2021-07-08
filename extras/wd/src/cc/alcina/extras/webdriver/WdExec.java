@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.openqa.selenium.By;
+import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -205,6 +206,13 @@ public class WdExec {
 					WDUtils.scrollToCenterUsingBoundingClientRect(driver, elem);
 					sleep(200);
 				} else if (e instanceof StaleElementReferenceException) {
+					if (returnIfNotVisible) {
+						return true;
+					}
+					// WDUtils.scrollToCenterUsingBoundingClientRect(driver,
+					// elem);
+					sleep(200);
+				} else if (e instanceof ElementNotInteractableException) {
 					if (returnIfNotVisible) {
 						return true;
 					}

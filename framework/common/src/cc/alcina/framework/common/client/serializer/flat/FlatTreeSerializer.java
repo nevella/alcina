@@ -405,6 +405,9 @@ public class FlatTreeSerializer {
 				String segment = segments[idx];
 				String segmentPath = segment;
 				int index = 1;
+				if (segment.contains("-1")) {
+					int debug = 3;
+				}
 				boolean lastSegment = idx == segments.length - 1;
 				if (segment.matches("(.+?)-(\\d+)")) {
 					segmentPath = segment.replaceFirst("(.+?)-(\\d+)", "$1");
@@ -597,12 +600,13 @@ public class FlatTreeSerializer {
 				}
 			}
 		}
-		/*
-		 * will always be accessed in index-ascending order
-		 */
-		Object object = Reflections.newInstance(elementClass);
-		collection.add(object);
-		return object;
+		while (true) {
+			Object object = Reflections.newInstance(elementClass);
+			collection.add(object);
+			if (--index == 0) {
+				return object;
+			}
+		}
 	}
 
 	private Map<String, Class> getAliasClassMap(Class rootClass, Node cursor) {
@@ -979,21 +983,29 @@ public class FlatTreeSerializer {
 				Class<? extends TreeSerializable> tsClazz = (Class<? extends TreeSerializable>) clazz;
 				return (V) FlatTreeSerializer.deserialize(tsClazz, serialized,
 						options);
+			} else {
+				return super.deserialize(serialized, clazz);
 			}
-			return super.deserialize(serialized, clazz);
 		}
 
 		@Override
 		public String serialize(Object object, boolean hasClassNameProperty) {
-			if (object instanceof TreeSerializable) {
+			TypeSerialization typeSerialization = Reflections.classLookup()
+					.getAnnotationForClass(object.getClass(),
+							TypeSerialization.class);
+			boolean useFlat = object instanceof TreeSerializable
+					&& (typeSerialization == null
+							|| typeSerialization.flatSerializable());
+			if (useFlat) {
 				FlatTreeSerializer.SerializerOptions options = new FlatTreeSerializer.SerializerOptions()
 						.withShortPaths(true)
 						.withTopLevelTypeInfo(!hasClassNameProperty)
 						.withElideDefaults(true);
 				return FlatTreeSerializer.serialize((TreeSerializable) object,
 						options);
+			} else {
+				return super.serialize(object, hasClassNameProperty);
 			}
-			return super.serialize(object, hasClassNameProperty);
 		}
 	}
 

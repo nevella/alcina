@@ -683,7 +683,12 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				EntityPersistenceHelper.toInClause(ids));
 		List<Publication> publications = getEntityManager().createQuery(sql)
 				.getResultList();
-		unwrap(publications);
+		try {
+			unwrap(publications);
+		} catch (Exception e) {
+			// FIXME - mvcc.4 - will remove the unwrap call post mvcc.4
+			e.printStackTrace();
+		}
 		return DomainLinker.linkToDomain(publications);
 	}
 

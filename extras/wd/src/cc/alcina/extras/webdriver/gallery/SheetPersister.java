@@ -233,6 +233,7 @@ public class SheetPersister {
 		AlcinaChildRunnable.launchWithCurrentThreadContext(
 				"update-current-version", () -> driveAccessor
 						.upload(driveAccessor.rootFolder(), bytes, name, true));
+		int complete = 3;
 	}
 
 	void uploadImages() throws IOException {

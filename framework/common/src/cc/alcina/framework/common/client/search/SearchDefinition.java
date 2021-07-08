@@ -533,7 +533,7 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 		@Override
 		public String filterTestSerialized(String serialized) {
-			return serialized.replaceAll(".+\\.displayText=.+", "");
+			return serialized.replaceAll(".+\\.displayText=.+\n?", "");
 		}
 
 		@Override

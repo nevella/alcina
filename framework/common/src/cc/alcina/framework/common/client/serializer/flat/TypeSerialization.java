@@ -33,9 +33,12 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 @Target({ ElementType.TYPE })
 @ClientVisible
 public @interface TypeSerialization {
-	String[] keyPrefixMappings() default {};
+	boolean flatSerializable() default true;
 
-	boolean notSerializable() default false;
+	/*
+	 * Specialised aliasing (for say criteriagroup/criteria tuples)
+	 */
+	String[] keyPrefixMappings() default {};
 
 	PropertySerialization[] properties() default {};
 

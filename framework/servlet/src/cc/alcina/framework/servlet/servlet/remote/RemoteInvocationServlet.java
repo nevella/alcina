@@ -50,6 +50,9 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 		return LooseContext.is(CONTEXT_IN);
 	}
 
+	protected void customiseContextBeforePayloadWrite() {
+	}
+
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
@@ -213,9 +216,18 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					&& params.mayLinkToDomain) {
 				resultHolder = DomainLinker.linkToDomain(resultHolder);
 			}
-			byte[] outBytes = KryoUtils.serializeToByteArray(resultHolder);
-			ResourceUtilities.writeStreamToStream(
-					new ByteArrayInputStream(outBytes), res.getOutputStream());
+			ArrayList f_resultHolder = resultHolder;
+			try {
+				LooseContext.push();
+				customiseContextBeforePayloadWrite();
+				byte[] outBytes = KryoUtils
+						.serializeToByteArray(f_resultHolder);
+				ResourceUtilities.writeStreamToStream(
+						new ByteArrayInputStream(outBytes),
+						res.getOutputStream());
+			} finally {
+				LooseContext.pop();
+			}
 			return;
 		} catch (Exception e) {
 			throw new ServletException(e);
