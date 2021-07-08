@@ -103,7 +103,8 @@ public class ClientReflectorJvm extends ClientReflector {
 					boolean generateExceptions) {
 		IntrospectionCheckResult result = new IntrospectionCheckResult();
 		int mod = clazz.getModifiers();
-		if (Modifier.isAbstract(mod) || clazz.isAnonymousClass()
+		if ((Modifier.isAbstract(mod) && !clazz.isEnum())
+				|| clazz.isAnonymousClass()
 				|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
 			if (generateExceptions) {
 				result.exception = new IntrospectionException(

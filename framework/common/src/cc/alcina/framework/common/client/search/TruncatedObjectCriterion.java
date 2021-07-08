@@ -77,11 +77,6 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 				CommonUtils.deInfix(getObjectClass().getSimpleName()));
 	}
 
-	public String provideTypeDisplayName() {
-		return CommonUtils.titleCase(
-				CommonUtils.deInfix(getObjectClass().getSimpleName()));
-	}
-
 	public void setDisplayText(String displayText) {
 		this.displayText = displayText;
 	}

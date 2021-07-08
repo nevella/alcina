@@ -12,10 +12,12 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -340,6 +342,10 @@ public class KryoUtils {
 						.forName("java.util.Arrays$ArrayList");
 				kryo.addDefaultSerializer(arraysArrayList,
 						ArraysArrayListSerializer.class);
+				Class<?> unmodifiableRandomAccessList = Class.forName(
+						"java.util.Collections$UnmodifiableRandomAccessList");
+				kryo.addDefaultSerializer(arraysArrayList,
+						ArraysArrayListSerializer.class);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -361,6 +367,33 @@ public class KryoUtils {
 
 		public KryoDeserializationException(Throwable cause) {
 			super(cause);
+		}
+	}
+
+	public static class UnmodifiableRandomAccessListSerializer
+			extends Serializer {
+		public UnmodifiableRandomAccessListSerializer(Kryo kryo,
+				Class<?> type) {
+		}
+
+		@Override
+		public Object read(Kryo kryo, Input input, Class type) {
+			int len = input.readInt();
+			Object[] array = new Object[len];
+			for (int idx = 0; idx < len; idx++) {
+				array[idx] = kryo.readClassAndObject(input);
+			}
+			return Collections.unmodifiableList(
+					Arrays.stream(array).collect(Collectors.toList()));
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output, Object object) {
+			List list = (List) object;
+			output.writeInt(list.size());
+			for (Object element : list) {
+				kryo.writeClassAndObject(output, element);
+			}
 		}
 	}
 
