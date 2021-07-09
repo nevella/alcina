@@ -9,18 +9,48 @@ div.tmwd-popup {
 	font-family: sans-serif;
 	max-width: 300px;
 	min-width: 300px;
-	cursor:pointer;
+	cursor: pointer;
 }
-div.tmwd-popup.bubble:before{
-	content: "";
-  position: absolute;
-  top: 100%;
-  left: 30px;
-  height: 20px;
-  width: 20px;
-  background: gray;
-  box-sizing:border-box;
-  transform: rotate(45deg) translate(-50%);
+
+div.ol-tour-bubble {
+	position: absolute;
+	height: 14px;
+	width: 14px;
+	background: #333;
+	border: solid 2px #eee;
+	box-sizing: border-box;
+	border-left: 0;
+	border-top: 0;
+}
+
+div.ol-tour-bubble.axis-1-left {
+	right: -4px;
+	transform: rotate(315deg) translate(50%);
+}
+div.ol-tour-bubble.axis-1-bottom {
+	top: -4px;
+	transform: rotate(225deg) translate(50%);
+}
+div.ol-tour-bubble.axis-1-right {
+	left: -4px;
+	transform: rotate(135deg) translate(50%);
+}
+div.ol-tour-bubble.axis-1-top{
+	bottom: -4px;
+	transform: rotate(45deg) translate(50%);
+}
+
+div.ol-tour-bubble.axis-2-top {
+	top: 30px;
+}
+div.ol-tour-bubble.axis-2-right {
+	right: 30px;
+}
+div.ol-tour-bubble.axis-2-left {
+	left: 30px;
+}
+div.ol-tour-bubble.axis-2-bottom {
+	bottom: 30px;
 }
 
 div.tmwd-popup caption-area {
@@ -35,4 +65,3 @@ div.tmwd-popup caption-area, div.tmwd-popup description {
 div.tmwd-popup description {
 	white-space: pre-wrap;
 }
-

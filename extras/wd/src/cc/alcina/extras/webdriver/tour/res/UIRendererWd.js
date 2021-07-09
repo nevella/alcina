@@ -19,8 +19,6 @@ class UIRendererWd {
 		content.addEventListener('click', e => content.remove(), false);
 		document.body.appendChild(content);
 		this.position(content, relativeTo, popupInfo.relativeTo);
-
-
 	}
 
 	position(elem, relativeToElem, relativeTo) {
@@ -29,49 +27,57 @@ class UIRendererWd {
 		let clientWidth = document.documentElement.clientWidth;
 		let clientHeight = document.documentElement.clientHeight;
 		let directions = relativeTo.direction.split("_");
+		let distOffset = 14;
 		switch (directions[0]) {
 			case "TOP":
-				elem.style.bottom = (clientHeight - absRect.top + relativeTo.offsetVertical) + "px";
+				elem.style.bottom = (clientHeight - absRect.top + distOffset) + "px";
 				break;
 			case "BOTTOM":
-				elem.style.top = (absRect.bottom + relativeTo.offsetVertical) + "px";
+				elem.style.top = (absRect.bottom + distOffset) + "px";
 				break;
 			case "LEFT":
-				elem.style.right = (clientWidth - absRect.left + relativeTo.offsetHorizontal) + "px";
+				elem.style.right = (clientWidth - absRect.left + distOffset) + "px";
 				break;
 			default:
 				throw `not handled direction (axis 1): ${directions}`;
 		}
+		let bubbleOffset = 30 + 7 + 2;//offset + 1/2 triangle width + border width (although....it's transfomed??')
 		switch (directions[1]) {
-			case "LEFT":
-				elem.style.left = absRect.left + relativeTo.offsetHorizontal + "px";
+			case "LEFT": {
+				let fudge = 5;
+				elem.style.left = Math.max(0, absRect.left + (absRect.right - absRect.left) / 2 - bubbleOffset + fudge) + "px";
+			}
 				break;
-			case "RIGHT":
-				elem.style.right = (clientWidth - absRect.right - relativeTo.offsetHorizontal) + "px";
+			case "RIGHT":{
+				elem.style.right = (clientWidth - absRect.right + (absRect.right - absRect.left) / 2 - bubbleOffset) + "px";
+				}
 				break;
-			case "TOP":
-				elem.style.top = absRect.top + "px";
+			case "TOP": {
+				let fudge = 15;
+				bubbleOffset = 30 + 7 + 2 - fudge;//offset + 1/2 triangle width + border width (although....it's transfomed??')
+				elem.style.top = Math.max(0, absRect.top - bubbleOffset) + "px";
+			}
 				break;
 			default:
 				throw `not handled direction (axis 2): ${directions}`;
 		}
 		if (relativeTo.bubble) {
 			let bubbleElem = document.createElement("div");
-			bubbleElem.className = "ol-tour-bubble";
+			bubbleElem.className = `ol-tour-bubble axis-1-${directions[0].toLowerCase()} axis-2-${directions[1].toLowerCase()}`;
 			bubbleElem.id = elem.id + "_bubble";
-			elem.parentElement.appendChild(bubbleElem);
-			switch (directions[0]) {
-				case "TOP":
-					bubbleElem.style.bottom = (clientHeight - absRect.top) + "px";
-					bubbleElem.style.left = (absRect.left + (rect.width / 2) - 5) + "px";
-					break;
-				case "BOTTOM":
-					bubbleElem.style.top = (absRect.bottom + 0) + "px";
-					bubbleElem.style.left = (absRect.left + (rect.width / 2) - 5) + "px";
-					break;
-				default:
-					throw `not handled direction (bubble): ${directions}`;
-			}
+			elem.appendChild(bubbleElem);
+			//			switch (directions[0]) {
+			//				case "TOP":
+			//					bubbleElem.style.bottom = (clientHeight - absRect.top) + "px";
+			//					bubbleElem.style.left = (absRect.left + (rect.width / 2) - 5) + "px";
+			//					break;
+			//				case "BOTTOM":
+			//					bubbleElem.style.top = (absRect.bottom + 0) + "px";
+			//					bubbleElem.style.left = (absRect.left + (rect.width / 2) - 5) + "px";
+			//					break;
+			//				default:
+			//					throw `not handled direction (bubble): ${directions}`;
+			//			}
 		}
 	}
 
@@ -102,7 +108,7 @@ class UIRendererWd {
 	}
 	remove(id) {
 		document.getElementById(id).remove();
-		let bubble = document.getElementById(id+ "_bubble");
+		let bubble = document.getElementById(id + "_bubble");
 		if (bubble) {
 			bubble.remove();
 		}

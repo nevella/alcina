@@ -185,12 +185,12 @@ public class SheetPersister {
 					.append();
 			DomNode links = left.builder().tag("div").className("links")
 					.append();
-			buttons.builder().tag("button").text("<")
+			buttons.builder().tag("button").text("<").title("Shortcut: ,")
 					.attr("onclick", "previous()").append();
-			buttons.builder().tag("button").text(">").attr("onclick", "next()")
-					.append();
-			buttons.builder().tag("div").className("hint")
-					.text("Shortcuts : , and .").append();
+			buttons.builder().tag("button").text(">").title("Shortcut: .")
+					.attr("onclick", "next()").append();
+			// buttons.builder().tag("div").className("hint")
+			// .text("Shortcuts : , and .").append();
 			AtomicInteger counter = new AtomicInteger();
 			nameTuples().values().stream().map(Image::new).forEach(image -> {
 				DomNode link = links.html().addLink(image.name, image.url,

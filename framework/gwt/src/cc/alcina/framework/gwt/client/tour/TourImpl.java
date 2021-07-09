@@ -130,7 +130,7 @@ public class TourImpl implements Tour {
 
 		private PositioningDirection direction;
 
-		private boolean bubble;
+		private boolean bubble = true;
 
 		@Override
 		public PositioningDirection getDirection() {
