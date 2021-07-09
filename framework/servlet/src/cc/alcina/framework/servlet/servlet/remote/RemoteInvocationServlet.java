@@ -240,7 +240,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			RemoteInvocationParameters params) throws Exception;
 
 	protected void maybeToNoActiveTransaction() {
-		// FIXME - (only for EJB API and even then...)
+		// FIXME - 2021 - (only for calls to EJB impl classes and even then...)
 		Transaction.current().toNoActiveTransaction();
 	}
 }
