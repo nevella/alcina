@@ -83,7 +83,8 @@ public abstract class BasePlace extends Place implements Serializable {
 	}
 
 	public String toTokenStringWithoutAppPrefix() {
-		return RegistryHistoryMapper.get().removeAppPrefixAndLeadingSlashes(toTokenString());
+		return RegistryHistoryMapper.get()
+				.removeAppPrefixAndLeadingSlashes(toTokenString());
 	}
 
 	@RegistryLocation(registryPoint = BasePlaceAbsoluteHrefSupplier.class, implementationType = ImplementationType.SINGLETON)
@@ -93,15 +94,21 @@ public abstract class BasePlace extends Place implements Serializable {
 		}
 	}
 
-	@RegistryLocation(registryPoint = HrefProvider.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static class HrefProvider {
+	public static interface HrefProvider {
 		public static BasePlace.HrefProvider get() {
 			return Registry.impl(BasePlace.HrefProvider.class);
 		}
 
-		public String toHrefString(BasePlace basePlace) {
-			return "#" + BasePlace.tokenFor(basePlace);
+		String toHrefString(BasePlace basePlace);
+
+		@RegistryLocation(registryPoint = HrefProvider.class, implementationType = ImplementationType.SINGLETON)
+		@ClientInstantiable
+		public static class Hash implements HrefProvider {
+			@Override
+			public String toHrefString(BasePlace basePlace) {
+				return "#" + BasePlace.tokenFor(basePlace);
+			}
 		}
 	}
 }
