@@ -31,6 +31,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
@@ -129,8 +130,7 @@ public class Publisher {
 		publication.setUserPublicationId(publicationUserId);
 		publication.setPublicationUid(SEUtilities.generateId());
 		publication.setPublicationType(contentDefinition.getPublicationType());
-		persister.persist(publication);
-		result.publicationId = ctx.publication.getId();
+		result.publicationId = persister.persist(publication);
 		result.publicationUid = publication.getPublicationUid();
 	}
 
@@ -287,8 +287,9 @@ public class Publisher {
 			return PersistentImpl.create(Publication.class);
 		}
 
-		public void persist(Publication publication) {
-			Transaction.commit();
+		public long persist(Publication publication) {
+			return TransformCommit.commitTransformsAndReturnId(true,
+					publication);
 		}
 
 		public void persistContentRendererResults(
