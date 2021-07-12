@@ -350,6 +350,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return !Domain.isDomainVersion(Entity.this);
 		}
 
+		public void persistSerializables() {
+			TransformManager.get().persistSerializables(Entity.this);
+		}
+
 		public T register() {
 			TransformManager.get().registerDomainObject(Entity.this);
 			return (T) Entity.this;

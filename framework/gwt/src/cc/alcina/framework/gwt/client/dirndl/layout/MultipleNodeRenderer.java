@@ -14,9 +14,9 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public class MultipleNodeRenderer extends DirectedNodeRenderer
@@ -98,11 +98,6 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 		}
 
 		@Override
-		public Behaviour[] behaviours() {
-			return new Behaviour[0];
-		}
-
-		@Override
 		public Binding[] bindings() {
 			return new Binding[0];
 		}
@@ -113,8 +108,23 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 		}
 
 		@Override
+		public Class<? extends NodeEvent>[] emits() {
+			return new Class[0];
+		}
+
+		@Override
 		public boolean merge() {
 			return false;
+		}
+
+		@Override
+		public Class<? extends NodeEvent>[] receives() {
+			return new Class[0];
+		}
+
+		@Override
+		public Class<? extends NodeEvent>[] reemits() {
+			return new Class[0];
 		}
 
 		@Override

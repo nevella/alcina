@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -220,16 +219,15 @@ public class LinkModel extends Model {
 										evt, actionRefPlace),
 								ClickEvent.getType());
 					}
-					Optional<TopicBehaviour> actionTopic = actionRefPlace
-							.getActionTopic();
+					Optional<Class<? extends TopicEvent>> actionTopic = actionRefPlace
+							.getEmitsTopic();
 					if (actionTopic.isPresent()) {
 						rendered.addDomHandler(event -> {
-							TopicBehaviour behaviour = actionTopic.get();
+							Class<? extends TopicEvent> type = actionTopic
+									.get();
 							Context context = NodeEvent.Context
 									.newTopicContext(event, node);
-							TopicEvent.fire(context, behaviour.topic(),
-									behaviour.payloadTransformer(), null,
-									false);
+							TopicEvent.fire(context, type, null);
 						}, ClickEvent.getType());
 					}
 				}

@@ -13,42 +13,30 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.IdentityFunction;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.annotation.TopicBehaviourType;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
-import cc.alcina.framework.gwt.client.dirndl.handler.EmitTopicHandler;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererArgs;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.CodeTopic;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.DomainViewNodeModel.Generator;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.LabelClicked;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel.ToggleButtonClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.SelectionChanged;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeModelEvents.NodeLabelClicked;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeModelEvents.NodeToggleButtonClicked;
 
 @Directed(tag = "div", cssClass = "dl-tree", bindings = {
-		@Binding(from = "hideRoot", type = Type.CSS_CLASS, literal = "hide-root") }, behaviours = {
-				@Behaviour(event = TopicEvent.class, topics = @TopicBehaviour(topic = ToggleButtonClicked.class, type = TopicBehaviourType.RECEIVE)),
-				@Behaviour(event = TopicEvent.class, topics = @TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviourType.RECEIVE)),
-				@Behaviour(handler = EmitTopicHandler.class, event = TopicEvent.class, topics = {
-						@TopicBehaviour(topic = CodeTopic.class, type = TopicBehaviourType.RECEIVE),
-						@TopicBehaviour(topic = SelectionChanged.class, type = TopicBehaviourType.EMIT),
-						@TopicBehaviour(topic = SelectionChanged.class, type = TopicBehaviourType.EMIT), }) })
+		@Binding(from = "hideRoot", type = Type.CSS_CLASS, literal = "hide-root") }, receives = {
+				TreeModelEvents.NodeLabelClicked.class,
+				TreeModelEvents.NodeToggleButtonClicked.class }, emits = SelectionChanged.class)
 public class TreeModel<NM extends NodeModel<NM>> extends Model
-		implements NodeEvent.Handler {
+		implements NodeLabelClicked.Handler, NodeToggleButtonClicked.Handler {
 	private boolean hideRoot;
 
 	private NM root;
@@ -65,25 +53,25 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 	}
 
 	@Override
-	public void onEvent(Context eventContext) {
-		DirectedLayout.Node eventSource = (Node) eventContext.topicEvent.payload;
-		// FIXME - dirndl1.1 - reemit at NodeModel rather than use ancestormodel
-		NM model = eventSource.ancestorModel(m -> m instanceof NodeModel);
-		if (eventContext.topicEvent.topic == ToggleButtonClicked.class) {
-			model.setOpen(!model.isOpen());
-			if (model.isOpen() && !model.populated) {
-				model.populated = true;
-				loadChildren(model);
-			}
+	public void onNodeLabelClicked(NodeLabelClicked event) {
+		NM model = event.getModel();
+		if (selectedNodeModel != null) {
+			selectedNodeModel.setSelected(false);
 		}
-		if (eventContext.topicEvent.topic == LabelClicked.class) {
-			if (selectedNodeModel != null) {
-				selectedNodeModel.setSelected(false);
-			}
-			selectedNodeModel = model;
-			selectedNodeModel.setSelected(true);
-			TopicEvent.fire(eventContext, SelectionChanged.class,
-					IdentityFunction.class, model, true);
+		selectedNodeModel = model;
+		selectedNodeModel.setSelected(true);
+		Context context = NodeEvent.Context.newTopicContext(event.getContext(),
+				null);
+		TopicEvent.fire(context, SelectionChanged.class, model);
+	}
+
+	@Override
+	public void onNodeToggleButtonClicked(NodeToggleButtonClicked event) {
+		NM model = event.getModel();
+		model.setOpen(!model.isOpen());
+		if (model.isOpen() && !model.populated) {
+			model.populated = true;
+			loadChildren(model);
 		}
 	}
 
@@ -440,10 +428,30 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		}
 	}
 
+	public static class LabelClicked
+			extends TopicEvent<Object, LabelClicked.Handler> {
+		@Override
+		public void dispatch(LabelClicked.Handler handler) {
+			handler.onLabelClicked(this);
+		}
+
+		@Override
+		public Class<LabelClicked.Handler> getHandlerClass() {
+			return LabelClicked.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onLabelClicked(LabelClicked LabelClicked);
+		}
+	}
+
 	@Directed(tag = "div", cssClass = "dl-tree-node", bindings = {
 			@Binding(from = "open", type = Type.CSS_CLASS, literal = "open"),
 			@Binding(from = "selected", type = Type.CSS_CLASS, literal = "selected"),
-			@Binding(from = "leaf", type = Type.CSS_CLASS, literal = "leaf") })
+			@Binding(from = "leaf", type = Type.CSS_CLASS, literal = "leaf") }, receives = {
+					LabelClicked.class, ToggleButtonClicked.class }, reemits = {
+							NodeLabelClicked.class,
+							NodeToggleButtonClicked.class })
 	public static class NodeModel<NM extends NodeModel> extends Model {
 		public boolean populated;
 
@@ -515,9 +523,6 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 					selected);
 		}
 
-		public static class LabelClicked extends NodeTopic {
-		}
-
 		@Directed(tag = "label", bindings = {
 				@Binding(from = "title", to = "title", type = Binding.Type.PROPERTY) })
 		public static class NodeLabel extends Model {
@@ -527,9 +532,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 			private String title;
 
-			@Directed(merge = true, behaviours = {
-					@Behaviour(handler = EmitTopicHandler.class, event = DomEvents.Click.class, topics = {
-							@TopicBehaviour(topic = LabelClicked.class, type = TopicBehaviourType.EMIT) }) })
+			@Directed(merge = true, receives = DomEvents.Click.class, reemits = LabelClicked.class)
 			public Object getLabel() {
 				return this.label;
 			}
@@ -538,9 +541,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				return this.title;
 			}
 
-			@Directed(tag = "span", behaviours = {
-					@Behaviour(handler = EmitTopicHandler.class, event = DomEvents.Click.class, topics = {
-							@TopicBehaviour(topic = ToggleButtonClicked.class, type = TopicBehaviourType.EMIT) }) })
+			@Directed(tag = "span", receives = DomEvents.Click.class, reemits = ToggleButtonClicked.class)
 			public Object getToggle() {
 				return this.toggle;
 			}
@@ -572,11 +573,39 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				this.text = text;
 			}
 		}
+	}
 
-		public static class ToggleButtonClicked extends NodeTopic {
+	public static class SelectionChanged
+			extends TopicEvent<NodeModel, SelectionChanged.Handler> {
+		@Override
+		public void dispatch(SelectionChanged.Handler handler) {
+			handler.onSelectionChanged(this);
+		}
+
+		@Override
+		public Class<SelectionChanged.Handler> getHandlerClass() {
+			return SelectionChanged.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionChanged(SelectionChanged event);
 		}
 	}
 
-	public static class SelectionChanged extends NodeTopic {
+	public static class ToggleButtonClicked
+			extends TopicEvent<Object, ToggleButtonClicked.Handler> {
+		@Override
+		public void dispatch(ToggleButtonClicked.Handler handler) {
+			handler.onToggleButtonClicked(this);
+		}
+
+		@Override
+		public Class<ToggleButtonClicked.Handler> getHandlerClass() {
+			return ToggleButtonClicked.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onToggleButtonClicked(ToggleButtonClicked event);
+		}
 	}
 }

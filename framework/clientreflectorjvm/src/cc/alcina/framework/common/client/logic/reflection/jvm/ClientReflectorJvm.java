@@ -341,6 +341,12 @@ public class ClientReflectorJvm extends ClientReflector {
 	}
 
 	@Override
+	public boolean isAssignableFrom(Class from, Class to) {
+		checkClassAnnotationsForInstantiation(to);
+		return from.isAssignableFrom(to);
+	}
+
+	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		try {
 			if (filter != null && !filter.allow(clazz.getName())) {

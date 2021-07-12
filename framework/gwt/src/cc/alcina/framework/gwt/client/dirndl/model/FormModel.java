@@ -39,11 +39,10 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
-import cc.alcina.framework.gwt.client.dirndl.annotation.TopicBehaviourType;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
@@ -106,8 +105,21 @@ public class FormModel extends Model {
 			}
 			state.model = bindable;
 			state.adjunct = true;
+			BindableFormModelTransformer.Args args = node
+					.annotation(BindableFormModelTransformer.Args.class);
+			if (args != null) {
+				state.adjunct = args.adjunct();
+			}
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
+		}
+
+		@ClientVisible
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE, ElementType.METHOD })
+		public @interface Args {
+			boolean adjunct() default false;
 		}
 	}
 
@@ -129,12 +141,9 @@ public class FormModel extends Model {
 		}
 	}
 
-	public static class Cancelled extends NodeTopic {
-	}
-
 	@Ref("cancel")
 	@ActionRefHandler(CancelHandler.class)
-	@TopicBehaviour(topic = Cancelled.class, type = TopicBehaviourType.EMIT)
+	@EmitsTopic(NodeEvents.Cancelled.class)
 	public static class CancelRef extends ActionRef {
 	}
 
@@ -223,12 +232,13 @@ public class FormModel extends Model {
 			if (state.model == null && state.expectsModel) {
 				return model;
 			}
-			ActionsModulator actionsModulator = new ActionsModulator();
 			Args args = node.annotation(Args.class);
-			if (args != null) {
-				actionsModulator = Reflections.classLookup()
-						.newInstance(args.actionsModulator());
-			}
+			ActionsModulator actionsModulator = args != null
+					? Reflections.newInstance(args.actionsModulator())
+					: new ActionsModulator();
+			FieldModulator fieldModulator = args != null
+					? Reflections.newInstance(args.fieldModulator())
+					: new FieldModulator();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			node.pushResolver(ModalResolver.single(!state.editable));
 			if (state.model != null) {
@@ -236,7 +246,8 @@ public class FormModel extends Model {
 						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 								state.model, factory, state.editable,
 								state.adjunct, node.getResolver());
-				fields.stream()
+				fields.stream().filter(
+						field -> fieldModulator.accept(state.model, field))
 						.map(field -> new FormElement(field, state.model))
 						.forEach(model.elements::add);
 			}
@@ -292,6 +303,15 @@ public class FormModel extends Model {
 		@ClientVisible
 		public static @interface Args {
 			Class<? extends ActionsModulator> actionsModulator() default ActionsModulator.class;
+
+			Class<? extends FieldModulator> fieldModulator() default FieldModulator.class;
+		}
+
+		@ClientInstantiable
+		public static class FieldModulator {
+			public boolean accept(Bindable model, Field field) {
+				return true;
+			}
 		}
 	}
 
@@ -395,11 +415,8 @@ public class FormModel extends Model {
 
 	@Ref("submit")
 	@ActionRefHandler(SubmitHandler.class)
-	@TopicBehaviour(topic = Submitted.class, type = TopicBehaviourType.EMIT)
+	@EmitsTopic(NodeEvents.Submitted.class)
 	public static class SubmitRef extends ActionRef {
-	}
-
-	public static class Submitted extends NodeTopic {
 	}
 
 	public interface ValueModel {

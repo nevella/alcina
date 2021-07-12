@@ -18,9 +18,9 @@ public class JsNativeMap<K, V> extends JavaScriptObject {
     this.clear();
 	}-*/;
 
-	public final boolean containsKey(Object key) {
-		return this.get(key) != null;
-	}
+	public final native boolean containsKey(Object key) /*-{
+    return this.has(key);
+	}-*/;
 
 	public final boolean containsValue(Object value) {
 		throw new UnsupportedOperationException();
@@ -35,7 +35,7 @@ public class JsNativeMap<K, V> extends JavaScriptObject {
 	}-*/;
 
 	public final boolean isEmpty() {
-		throw new UnsupportedOperationException();
+		return size() == 0;
 	}
 
 	public final Set<K> keySet() {
@@ -53,14 +53,14 @@ public class JsNativeMap<K, V> extends JavaScriptObject {
 
 	public final native V remove(Object key) /*-{
     var v = this.get(key);
-    this.set(key, null);
+    //gwt js validator doesn't like this.delete(key)
+    this["delete"](key);
     return v;
-    //    return this.delete(key);
 	}-*/;
 
-	public final int size() {
-		throw new UnsupportedOperationException();
-	}
+	public final native int size() /*-{
+    return this.size;
+	}-*/;
 
 	public final Collection<V> values() {
 		throw new UnsupportedOperationException();
