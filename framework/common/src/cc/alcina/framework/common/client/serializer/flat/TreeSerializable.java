@@ -80,9 +80,10 @@ public interface TreeSerializable extends Serializable {
 			for (String key : keyValues.keySet()) {
 				for (String mapKey : mappings.keySet()) {
 					if (key.startsWith(mapKey)) {
-						if (key.length() == mapKey.length()
-								|| key.length() > mapKey.length()
-										&& key.charAt(mapKey.length()) == '.') {
+						if (key.length() == mapKey.length() || key
+								.length() > mapKey.length()
+								&& (key.charAt(mapKey.length()) == '.' || key
+										.charAt(mapKey.length()) == '-')) {
 							String replacementKey = mappings.get(mapKey)
 									+ key.substring(mapKey.length());
 							replacements.put(key, replacementKey);

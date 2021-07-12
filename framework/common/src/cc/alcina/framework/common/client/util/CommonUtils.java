@@ -1080,6 +1080,7 @@ public class CommonUtils {
 		StringBuilder sb = new StringBuilder();
 		for (Object obj : objects) {
 			String app = obj == null ? "null" : obj.toString();
+			app = app == null ? "null" : app;
 			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties)
 					&& separator != null) {
 				sb.append(separator);

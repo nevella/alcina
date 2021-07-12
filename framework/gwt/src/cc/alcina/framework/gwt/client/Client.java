@@ -123,7 +123,6 @@ public abstract class Client {
 			LiSet liSet = new LiSet();
 			CommonUtils.setSupplier = () -> new LightSet();
 			LocalDom.mutations.setDisabled(true);
-			//
 			if (GWT.isScript()) {
 				Registry.setDelegateCreator(new JsRegistryDelegateCreator());
 			}
