@@ -1931,6 +1931,9 @@ public class DomainStore implements IDomainStore {
 					stream = streamFromCacheValues();
 				}
 				if (LooseContext.has(DomainQuery.CONTEXT_DEBUG_CONSUMER)) {
+					DomainQuery.DebugConsumer consumer = LooseContext
+							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER);
+					consumer.queryToken = this;
 					stream = stream.peek(LooseContext
 							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER));
 				}
