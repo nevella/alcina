@@ -132,7 +132,9 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					clientInstance.getId(), targetClass.getSimpleName(),
 					methodName);
 			try {
-				MetricLogging.get().start(key);
+				if (!methodName.equals("callRpc")) {
+					MetricLogging.get().start(key);
+				}
 				if (transformMethod) {
 					TransformPersistenceToken token = (TransformPersistenceToken) args[1];
 					Integer highestPersistedRequestId = CommonPersistenceProvider
@@ -198,7 +200,9 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				if (transformMethod) {
 					PermissionsManager.get().popUser();
 				}
-				MetricLogging.get().end(key);
+				if (!methodName.equals("callRpc")) {
+					MetricLogging.get().end(key);
+				}
 			}
 			Object result = out;
 			ArrayList resultHolder = new ArrayList();

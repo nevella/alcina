@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.google.gwt.event.dom.client.DomEvent;
@@ -42,9 +43,12 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandl
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -71,7 +75,7 @@ public class FormModel extends Model {
 		return this.state;
 	}
 
-	public void onSubmit(Node node) {
+	public boolean onSubmit(Node node) {
 		Consumer<Void> onValid = o -> {
 			if (getState().model instanceof Entity) {
 				ClientTransformManager.cast()
@@ -90,7 +94,7 @@ public class FormModel extends Model {
 						categoryNamePlace.ensureAction(), node);
 			}
 		};
-		new FormValidation().validate(onValid, getState().formBinding);
+		return new FormValidation().validate(onValid, getState().formBinding);
 	}
 
 	public static class BindableFormModelTransformer extends
@@ -402,6 +406,9 @@ public class FormModel extends Model {
 		}
 	}
 
+	/*
+	 * FIXME - dirndl 1.2 - move to OlForm
+	 */
 	public static class SubmitHandler extends ActionHandler {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
@@ -409,13 +416,19 @@ public class FormModel extends Model {
 			((DomEvent) event).preventDefault();
 			FormModel formModel = (FormModel) node
 					.ancestorModel(m -> m instanceof FormModel);
-			formModel.onSubmit(node);
+			if (formModel.onSubmit(node)) {
+				Optional<EmitsTopic> emitsTopic = place.emitsTopic();
+				Class<? extends TopicEvent> type = emitsTopic.get().value();
+				Context context = NodeEvent.Context.newTopicContext(event,
+						node);
+				TopicEvent.fire(context, type, formModel);
+			}
 		}
 	}
 
 	@Ref("submit")
 	@ActionRefHandler(SubmitHandler.class)
-	@EmitsTopic(NodeEvents.Submitted.class)
+	@EmitsTopic(value = NodeEvents.Submitted.class, hasValidation = true)
 	public static class SubmitRef extends ActionRef {
 	}
 

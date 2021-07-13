@@ -94,6 +94,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -231,8 +232,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Method method = handler.getClass()
 					.getMethod(payload.getMethodName(), methodArgumentTypes);
 			method.setAccessible(true);
-			Object result = method.invoke(handler, methodArguments);
-			return AlcinaBeanSerializer.serializeHolder(result);
+			String key = Ax.format("callRpc::%s.%s",
+					handler.getClass().getSimpleName(), method.getName());
+			try {
+				MetricLogging.get().start(key);
+				Object result = method.invoke(handler, methodArguments);
+				return AlcinaBeanSerializer.serializeHolder(result);
+			} finally {
+				MetricLogging.get().end(key);
+			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

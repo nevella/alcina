@@ -14,5 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 @Target(ElementType.TYPE)
 @ClientVisible
 public @interface EmitsTopic {
+	boolean hasValidation() default false;
+
 	Class<? extends TopicEvent<?, ?>> value();
 }

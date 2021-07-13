@@ -195,6 +195,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				break;
 			case REMOVE:
 				newValue.remove(model);
+				model.getTreePath().removeFromParent();
 				break;
 			default:
 				throw new UnsupportedOperationException();

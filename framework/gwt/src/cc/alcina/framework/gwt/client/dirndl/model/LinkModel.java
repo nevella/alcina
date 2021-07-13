@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
+import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -219,12 +220,13 @@ public class LinkModel extends Model {
 										evt, actionRefPlace),
 								ClickEvent.getType());
 					}
-					Optional<Class<? extends TopicEvent>> actionTopic = actionRefPlace
-							.getEmitsTopic();
-					if (actionTopic.isPresent()) {
+					Optional<EmitsTopic> emitsTopic = actionRefPlace
+							.emitsTopic();
+					if (emitsTopic.isPresent()
+							&& !emitsTopic.get().hasValidation()) {
 						rendered.addDomHandler(event -> {
-							Class<? extends TopicEvent> type = actionTopic
-									.get();
+							Class<? extends TopicEvent> type = emitsTopic.get()
+									.value();
 							Context context = NodeEvent.Context
 									.newTopicContext(event, node);
 							TopicEvent.fire(context, type, null);
