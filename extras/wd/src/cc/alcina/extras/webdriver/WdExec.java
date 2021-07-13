@@ -187,7 +187,7 @@ public class WdExec {
 	public boolean performAction(boolean returnIfNotVisible,
 			Consumer<WebElement> actor) {
 		RuntimeException lastException = null;
-		for (int i = 0; i < timeoutSecs * 5; i++) {
+		for (int i = 0; i < Math.max(1, timeoutSecs * 5); i++) {
 			WebElement elem = getElement();
 			Actions actions = new Actions(driver);
 			actions.moveToElement(elem);
