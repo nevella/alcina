@@ -55,7 +55,7 @@ public class PropertiesDomain {
 				byUserClass = UserProperty.byUserClass(user, clazz);
 				if (!byUserClass.isPresent()) {
 					P instance = getLegacyProperties(clazz, user, legacyLoader);
-					if (!byUserClass.isPresent()) {
+					if (instance == null) {
 						logger.info("Creating property - {} {}", clazz, user);
 						instance = Reflections.newInstance(clazz);
 					}

@@ -242,9 +242,11 @@ public class TransformPersisterInPersistenceContext {
 						"unwrapDisabled")) {
 					Class implementation = PersistentImpl
 							.getImplementation(WrappedObject.class);
+					// check for any non-delete transforms
 					Preconditions.checkArgument(
 							!new TransformCollation(subRequest.getEvents())
-									.has(implementation));
+									.query(implementation).stream()
+									.anyMatch(qr -> !qr.hasDeleteTransform()));
 				}
 				List<DomainTransformEvent> events = subRequest.getEvents();
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();

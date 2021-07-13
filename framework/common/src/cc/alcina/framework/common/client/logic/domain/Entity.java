@@ -135,7 +135,8 @@ public abstract class Entity<T extends Entity> extends Bindable
 	 * (Unused but viable) Can be 'packed' with the lower 31 bits of the
 	 * clientInstance id (and negated) to make an effectively globally unique id
 	 * (for the given domainstore/db) that can be used in the same set as the id
-	 * field (per-class, db-generated) ids
+	 * field (per-class, db-generated) ids - assumption being that at most 2^32
+	 * creations per client instance, 2^31 client instances
 	 */
 	public long getLocalId() {
 		return this.localId;
