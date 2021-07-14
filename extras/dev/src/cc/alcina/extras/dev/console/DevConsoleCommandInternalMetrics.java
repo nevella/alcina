@@ -103,7 +103,7 @@ public class DevConsoleCommandInternalMetrics {
 
 		@Override
 		public String getUsage() {
-			return "ims filters:{host|args|call|threadName|age|nearDate|duration} modifiers:{tz|format|ignoreables}";
+			return "ims filters:{host|args|call|threadName|age|nearDate|duration|withend} modifiers:{tz|format|ignoreables}";
 		}
 
 		@Override
@@ -148,6 +148,8 @@ public class DevConsoleCommandInternalMetrics {
 			Format format = Format.valueOf(p.valueOrDefault("list"));
 			p = new FilterArgvParam(argv, "order");
 			String order = p.valueOrDefault("updatetime");
+			p = new FilterArgvParam(argv, "withend");
+			boolean withEnd = p.value == null ? false : true;
 			Connection conn = getConn();
 			CommonPersistenceLocal cpl = Registry
 					.impl(CommonPersistenceProvider.class)
@@ -184,6 +186,9 @@ public class DevConsoleCommandInternalMetrics {
 				filters.add(Ax.format(
 						"extract    (epoch from (CASE when endtime is null then now() ELSE endtime END)-starttime)*1000>%s",
 						duration));
+			}
+			if (withEnd) {
+				filters.add(Ax.format("endtime is not null", duration));
 			}
 			if (nearDate.length() > 0) {
 				DateFormat dbDateFormat = new SynchronizedSimpleDateFormat(
