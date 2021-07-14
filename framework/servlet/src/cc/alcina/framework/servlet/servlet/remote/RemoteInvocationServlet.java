@@ -32,6 +32,8 @@ import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.domain.DomainLinker;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
@@ -86,12 +88,13 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 		}
 	}
 
-	protected void doPost0(HttpServletRequest req, HttpServletResponse res)
-			throws Exception {
-		String encodedParams = req.getParameter(REMOTE_INVOCATION_PARAMETERS);
+	protected void doPost0(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String encodedParams = request
+				.getParameter(REMOTE_INVOCATION_PARAMETERS);
 		RemoteInvocationParameters params = KryoUtils.deserializeFromBase64(
 				encodedParams, RemoteInvocationParameters.class);
-		String remoteAddress = req.getRemoteAddr();
+		String remoteAddress = request.getRemoteAddr();
 		String permittedAddressPattern = ResourceUtilities.get(
 				RemoteInvocationServlet.class,
 				Ax.format("%s.permittedAddresses", params.api));
@@ -135,6 +138,10 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				if (!methodName.equals("callRpc")) {
 					MetricLogging.get().start(key);
 				}
+				InternalMetrics.get().startTracker(request,
+						() -> "remote-invocation:" + method.toString(),
+						InternalMetricTypeAlcina.remote_invocation,
+						Thread.currentThread().getName(), () -> true);
 				if (transformMethod) {
 					TransformPersistenceToken token = (TransformPersistenceToken) args[1];
 					Integer highestPersistedRequestId = CommonPersistenceProvider
@@ -200,6 +207,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				if (transformMethod) {
 					PermissionsManager.get().popUser();
 				}
+				InternalMetrics.get().endTracker(request);
 				if (!methodName.equals("callRpc")) {
 					MetricLogging.get().end(key);
 				}
@@ -228,7 +236,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 						.serializeToByteArray(f_resultHolder);
 				ResourceUtilities.writeStreamToStream(
 						new ByteArrayInputStream(outBytes),
-						res.getOutputStream());
+						response.getOutputStream());
 			} finally {
 				LooseContext.pop();
 			}
