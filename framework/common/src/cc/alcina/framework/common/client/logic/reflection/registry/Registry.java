@@ -40,12 +40,12 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCreator;
 
 /**
  *
@@ -94,7 +94,7 @@ public class Registry {
 
 	private static RegistryProvider provider = new BasicRegistryProvider();
 
-	private static DelegateMapCreator delegateCreator = new UnsortedMapCreator();
+	static DelegateMapCreator delegateCreator = new CollectionCreators.UnsortedMapCreator();
 
 	public static void appShutdown() {
 		provider.appShutdown();

@@ -20,6 +20,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 
 /**
@@ -34,6 +35,7 @@ public abstract class UserIdContentDefinition extends WrapperPersistable
 
 	@XmlTransient
 	@JsonIgnore
+	@AlcinaTransient
 	public IUser getUser() {
 		return this.user;
 	}

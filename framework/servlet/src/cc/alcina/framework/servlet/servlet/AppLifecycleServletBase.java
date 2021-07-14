@@ -51,6 +51,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMetadataCacheProvider;
@@ -72,7 +73,6 @@ import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
@@ -481,7 +481,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void runFinalPreInitTasks() {
 		if (serializationSignatureListener != null) {
-			MethodContext.instance().withRunInNewThread(Sx.isTestServer()).call(
+			MethodContext.instance().withRunInNewThread(EntityLayerUtils.isTestServer()).call(
 					() -> serializationSignatureListener.ensureSignature());
 		}
 	}

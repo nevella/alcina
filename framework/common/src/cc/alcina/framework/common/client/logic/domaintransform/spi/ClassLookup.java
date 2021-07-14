@@ -47,6 +47,8 @@ public interface ClassLookup {
 
 	public List<PropertyInfo> getWritableProperties(Class clazz);
 
+	public boolean isAssignableFrom(Class from, Class to);
+
 	public <T> T newInstance(Class<T> clazz);
 
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId);

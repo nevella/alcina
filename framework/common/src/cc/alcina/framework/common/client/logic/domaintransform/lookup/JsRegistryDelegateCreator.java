@@ -7,6 +7,6 @@ import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCrea
 public class JsRegistryDelegateCreator implements DelegateMapCreator {
 	@Override
 	public Map createDelegateMap(int depthFromRoot, int depth) {
-		return JsUniqueMap.create(Class.class, false);
+		return JsUniqueMap.create(Class.class, true);
 	}
 }

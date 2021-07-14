@@ -16,8 +16,6 @@ package cc.alcina.framework.common.client.util;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.util.Collection;
-import java.util.LinkedHashMap;
-import java.util.Map;
 
 import com.google.gwt.core.shared.GwtIncompatible;
 
@@ -100,15 +98,8 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 	@Override
 	protected DelegateMapCreator ensureDelegateMapCreator() {
 		if (this.delegateMapCreator == null) {
-			this.delegateMapCreator = new UnsortedMapCreator();
+			this.delegateMapCreator = new CollectionCreators.UnsortedMapCreator();
 		}
 		return delegateMapCreator;
-	}
-
-	public static class UnsortedMapCreator implements DelegateMapCreator {
-		@Override
-		public Map createDelegateMap(int depthFromRoot, int depth) {
-			return new LinkedHashMap<>();
-		}
 	}
 }

@@ -222,9 +222,20 @@ public abstract class WebdriverTest {
 	}
 
 	protected void getAndLog(WebDriver driver, String uri) {
+		getAndLog(driver, uri, null);
+	}
+
+	protected void getAndLog(WebDriver driver, String uri, WDToken token) {
 		String key = "Load: " + uri;
 		MetricLogging.get().start(key);
-		driver.get(uri);
+		if (uri.equals(driver.getCurrentUrl()) && !isRequiresRefresh()
+				&& (token != null && token.getLoadedUrl() != null)) {
+		} else {
+			driver.get(uri);
+			if (token != null) {
+				token.setLoadedUrl(uri);
+			}
+		}
 		MetricLogging.get().end(key);
 	}
 
@@ -247,5 +258,9 @@ public abstract class WebdriverTest {
 			}
 		}
 		return testTemplates;
+	}
+
+	protected boolean isRequiresRefresh() {
+		return true;
 	}
 }

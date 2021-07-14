@@ -10,8 +10,13 @@ import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelpe
 @RegistryLocation(registryPoint = BindablePlace.class)
 public abstract class BindablePlace<SD extends BindableSearchDefinition>
 		extends BasePlace implements PlaceWithSearchDefinition<SD> {
+	public static BindablePlace forClass(Class clazz) {
+		return (BindablePlace) RegistryHistoryMapper.get()
+				.getPlaceByModelClass(clazz);
+	}
+
 	public long fromId;
-	
+
 	public String fromClass;
 
 	public long id;
@@ -33,6 +38,20 @@ public abstract class BindablePlace<SD extends BindableSearchDefinition>
 		return HasEquivalenceHelper.argwiseEquivalent(def, o.def);
 	}
 
+	public String stringId() {
+		return String.valueOf(id);
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s:%s",
+				getClass().getSimpleName().replaceFirst("(.+)Place", "$1"), id);
+	}
+
+	public <T extends BindablePlace> T withHasId(HasId hasId) {
+		return withId(hasId == null ? 0 : hasId.getId());
+	}
+
 	public <T extends BindablePlace> T withId(long id) {
 		this.id = id;
 		return (T) this;
@@ -42,24 +61,5 @@ public abstract class BindablePlace<SD extends BindableSearchDefinition>
 		return withId(Long.parseLong(stringId));
 	}
 
-	public <T extends BindablePlace> T withHasId(HasId hasId) {
-		return withId(hasId == null ? 0 : hasId.getId());
-	}
-
-	public String stringId() {
-		return String.valueOf(id);
-	}
-
 	protected abstract SD createSearchDefinition();
-
-	@Override
-	public String toString() {
-		return Ax.format("%s:%s",
-				getClass().getSimpleName().replaceFirst("(.+)Place", "$1"), id);
-	}
-
-	public static BindablePlace forClass(Class clazz) {
-		return (BindablePlace) RegistryHistoryMapper.get()
-				.getPlaceByModelClass(clazz);
-	}
 }

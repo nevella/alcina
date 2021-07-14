@@ -600,8 +600,8 @@ public class RangeImpl implements Range {
 			endPointB = endPointB.getParentNode();
 			depthDiff++;
 		}
-		for (Node pA = endPointA.getParentNode(), pB = endPointB
-				.getParentNode(); pA != pB; pA = pA
+		for (Node pA = endPointA.getParentNode(),
+				pB = endPointB.getParentNode(); pA != pB; pA = pA
 						.getParentNode(), pB = pB.getParentNode()) {
 			endPointA = pA;
 			endPointB = pB;
@@ -1087,6 +1087,17 @@ public class RangeImpl implements Range {
 	 *         <code>DELETE_CONTENTS</code>, the return value is null.
 	 */
 	private DocumentFragment traverseContents(int how) throws DOMException {
+		boolean use=useIndexLookup.get();
+		try{
+			useIndexLookup.set(false);
+			return traverseContents0(how);
+		}
+		finally{
+			useIndexLookup.set(true);
+		}
+	}
+	
+	private DocumentFragment traverseContents0(int how) throws DOMException {
 		if (fStartContainer == null || fEndContainer == null) {
 			return null; // REVIST: Throw exception?
 		}
@@ -1110,8 +1121,9 @@ public class RangeImpl implements Range {
 		// This can be quickly tested by walking the parent chain of
 		// end container
 		int endContainerDepth = 0;
-		for (Node c = fEndContainer, p = c
-				.getParentNode(); p != null; c = p, p = p.getParentNode()) {
+		for (Node c = fEndContainer,
+				p = c.getParentNode(); p != null; c = p, p = p
+						.getParentNode()) {
 			if (p == fStartContainer)
 				return traverseCommonStartContainer(c, how);
 			++endContainerDepth;
@@ -1119,8 +1131,9 @@ public class RangeImpl implements Range {
 		// case 3: Child C of container B is ancestor of A
 		// This can be quickly tested by walking the parent chain of A
 		int startContainerDepth = 0;
-		for (Node c = fStartContainer, p = c
-				.getParentNode(); p != null; c = p, p = p.getParentNode()) {
+		for (Node c = fStartContainer,
+				p = c.getParentNode(); p != null; c = p, p = p
+						.getParentNode()) {
 			if (p == fEndContainer)
 				return traverseCommonEndContainer(c, how);
 			++startContainerDepth;
@@ -1139,8 +1152,8 @@ public class RangeImpl implements Range {
 			depthDiff++;
 		}
 		// ascend the ancestor hierarchy until we have a common parent.
-		for (Node sp = startNode.getParentNode(), ep = endNode
-				.getParentNode(); sp != ep; sp = sp
+		for (Node sp = startNode.getParentNode(),
+				ep = endNode.getParentNode(); sp != ep; sp = sp
 						.getParentNode(), ep = ep.getParentNode()) {
 			startNode = sp;
 			endNode = ep;
@@ -1917,7 +1930,7 @@ public class RangeImpl implements Range {
 				parent = parent.getParentNode();
 			}
 		} // while (parent != null && parent != fRoot) {
-		// end of list, return null
+			// end of list, return null
 		return null;
 	}
 
@@ -1935,7 +1948,7 @@ public class RangeImpl implements Range {
 		if (child.getParentNode() != parent)
 			return -1;
 		int i = 0;
-		if (useIndexLookup.get()&&parent.getChildNodes().getLength() > 100) {
+		if (useIndexLookup.get() && parent.getChildNodes().getLength() > 100) {
 			if (!indexLookup.containsKey(parent)) {
 				indexLookup.put(parent, new IndexLookup());
 			}
@@ -1948,11 +1961,12 @@ public class RangeImpl implements Range {
 		return i;
 	}
 
-	public static ThreadLocal<Boolean> useIndexLookup=new ThreadLocal<Boolean>(){
+	public static ThreadLocal<Boolean> useIndexLookup = new ThreadLocal<Boolean>() {
 		protected Boolean initialValue() {
 			return false;
 		};
 	};
+
 	/**
 	 * Utility method to retrieve a child node by index. This method assumes the
 	 * caller is trying to find out which node is selected by the given index.
@@ -1999,7 +2013,8 @@ public class RangeImpl implements Range {
 		public int getIndex(Node child) {
 			Node parentNode = child.getParentNode();
 			NodeListCache fNodeListCache = ((ParentNode) parentNode).fNodeListCache;
-			if (lastFNodeListCache!=null && lastFNodeListCache != fNodeListCache) {
+			if (lastFNodeListCache != null
+					&& lastFNodeListCache != fNodeListCache) {
 				index.clear();
 			}
 			lastFNodeListCache = fNodeListCache;

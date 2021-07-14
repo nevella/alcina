@@ -107,6 +107,7 @@ public interface WrappedObject<T extends WrapperPersistable> extends HasId {
 				StringReader sr = new StringReader(preProcessed);
 				return (T) um.unmarshal(sr);
 			} catch (Exception e) {
+				e.printStackTrace();
 				throw new WrappedRuntimeException(e);
 			}
 		}

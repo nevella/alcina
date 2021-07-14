@@ -15,13 +15,26 @@ package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  *
  * @author Nick Reddel
  */
 public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
+	@Override
+	public void addCriterion(OrderCriterion criterion) {
+		if (getCriteria().size() > 0) {
+			Ax.err("Warn - adding order criterion to group with existing criterion");
+		}
+		super.addCriterion(criterion);
+	}
+
 	@Override
 	public Class entityClass() {
 		return null;
@@ -47,11 +60,30 @@ public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
 	}
 
 	@Override
+	public TreeSerializable.Customiser treeSerializationCustomiser() {
+		return new Customiser(this);
+	}
+
+	@Override
 	public /**
 			 * Either subclass, or rely on property mappings. No real risk of
 			 * information leakage 'ere
 			 */
 	String validatePermissions() {
 		return null;
+	}
+
+	private static class Customiser
+			extends TreeSerializable.Customiser<OrderGroup> {
+		public Customiser(OrderGroup serializable) {
+			super(serializable);
+		}
+
+		@Override
+		public void onBeforeTreeSerialize() {
+			Preconditions.checkState(
+					serializable.getCriteria().size() <= 1 || LooseContext
+							.is(TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS));
+		}
 	}
 }

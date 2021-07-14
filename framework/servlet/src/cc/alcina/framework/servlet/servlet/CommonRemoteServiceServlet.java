@@ -54,7 +54,6 @@ import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.domain.search.DomainSearcher;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.log.ILogRecord;
@@ -95,6 +94,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -232,8 +232,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Method method = handler.getClass()
 					.getMethod(payload.getMethodName(), methodArgumentTypes);
 			method.setAccessible(true);
-			Object result = method.invoke(handler, methodArguments);
-			return AlcinaBeanSerializer.serializeHolder(result);
+			String key = Ax.format("callRpc::%s.%s",
+					handler.getClass().getSimpleName(), method.getName());
+			try {
+				MetricLogging.get().start(key);
+				Object result = method.invoke(handler, methodArguments);
+				return AlcinaBeanSerializer.serializeHolder(result);
+			} finally {
+				MetricLogging.get().end(key);
+			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -390,21 +397,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		DomainStore.waitUntilCurrentRequestsProcessed();
 		String idString = String.valueOf(job.getId());
 		return idString;
-	}
-
-	@Override
-	public <G extends WrapperPersistable> Long persist(G gwpo)
-			throws WebException {
-		try {
-			Long id = Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().persist(gwpo);
-			TransformCommit.get().handleWrapperTransforms();
-			return id;
-		} catch (Exception e) {
-			logger.warn("Exception in persist wrappable", e);
-			logRpcException(e);
-			throw new WebException(e.getMessage());
-		}
 	}
 
 	@Override

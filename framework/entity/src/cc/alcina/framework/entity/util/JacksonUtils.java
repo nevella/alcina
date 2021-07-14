@@ -84,6 +84,11 @@ public class JacksonUtils {
 		return new JacksonJsonObjectSerializer().withIdRefs()
 				.withAllowUnknownProperties().serialize(object);
 	}
+	
+	public static String serializeNoTypesInterchange(Object object) {
+		return new JacksonJsonObjectSerializer().withPrettyPrint().withWrapRootValue()
+				.withAllowUnknownProperties().serialize(object);
+	}
 
 	public static void serializeToFile(Object object, File file) {
 		ResourceUtilities.write(serialize(object), file);

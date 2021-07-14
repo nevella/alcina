@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.google.gwt.event.dom.client.DomEvent;
@@ -39,13 +40,15 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
-import cc.alcina.framework.gwt.client.dirndl.annotation.TopicBehaviourType;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -72,7 +75,7 @@ public class FormModel extends Model {
 		return this.state;
 	}
 
-	public void onSubmit(Node node) {
+	public boolean onSubmit(Node node) {
 		Consumer<Void> onValid = o -> {
 			if (getState().model instanceof Entity) {
 				ClientTransformManager.cast()
@@ -91,7 +94,7 @@ public class FormModel extends Model {
 						categoryNamePlace.ensureAction(), node);
 			}
 		};
-		new FormValidation().validate(onValid, getState().formBinding);
+		return new FormValidation().validate(onValid, getState().formBinding);
 	}
 
 	public static class BindableFormModelTransformer extends
@@ -106,8 +109,21 @@ public class FormModel extends Model {
 			}
 			state.model = bindable;
 			state.adjunct = true;
+			BindableFormModelTransformer.Args args = node
+					.annotation(BindableFormModelTransformer.Args.class);
+			if (args != null) {
+				state.adjunct = args.adjunct();
+			}
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
+		}
+
+		@ClientVisible
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE, ElementType.METHOD })
+		public @interface Args {
+			boolean adjunct() default false;
 		}
 	}
 
@@ -129,12 +145,9 @@ public class FormModel extends Model {
 		}
 	}
 
-	public static class Cancelled extends NodeTopic {
-	}
-
 	@Ref("cancel")
 	@ActionRefHandler(CancelHandler.class)
-	@TopicBehaviour(topic = Cancelled.class, type = TopicBehaviourType.EMIT)
+	@EmitsTopic(NodeEvents.Cancelled.class)
 	public static class CancelRef extends ActionRef {
 	}
 
@@ -223,12 +236,13 @@ public class FormModel extends Model {
 			if (state.model == null && state.expectsModel) {
 				return model;
 			}
-			ActionsModulator actionsModulator = new ActionsModulator();
 			Args args = node.annotation(Args.class);
-			if (args != null) {
-				actionsModulator = Reflections.classLookup()
-						.newInstance(args.actionsModulator());
-			}
+			ActionsModulator actionsModulator = args != null
+					? Reflections.newInstance(args.actionsModulator())
+					: new ActionsModulator();
+			FieldModulator fieldModulator = args != null
+					? Reflections.newInstance(args.fieldModulator())
+					: new FieldModulator();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			node.pushResolver(ModalResolver.single(!state.editable));
 			if (state.model != null) {
@@ -236,7 +250,8 @@ public class FormModel extends Model {
 						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 								state.model, factory, state.editable,
 								state.adjunct, node.getResolver());
-				fields.stream()
+				fields.stream().filter(
+						field -> fieldModulator.accept(state.model, field))
 						.map(field -> new FormElement(field, state.model))
 						.forEach(model.elements::add);
 			}
@@ -292,6 +307,15 @@ public class FormModel extends Model {
 		@ClientVisible
 		public static @interface Args {
 			Class<? extends ActionsModulator> actionsModulator() default ActionsModulator.class;
+
+			Class<? extends FieldModulator> fieldModulator() default FieldModulator.class;
+		}
+
+		@ClientInstantiable
+		public static class FieldModulator {
+			public boolean accept(Bindable model, Field field) {
+				return true;
+			}
 		}
 	}
 
@@ -382,6 +406,9 @@ public class FormModel extends Model {
 		}
 	}
 
+	/*
+	 * FIXME - dirndl 1.2 - move to OlForm
+	 */
 	public static class SubmitHandler extends ActionHandler {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
@@ -389,17 +416,20 @@ public class FormModel extends Model {
 			((DomEvent) event).preventDefault();
 			FormModel formModel = (FormModel) node
 					.ancestorModel(m -> m instanceof FormModel);
-			formModel.onSubmit(node);
+			if (formModel.onSubmit(node)) {
+				Optional<EmitsTopic> emitsTopic = place.emitsTopic();
+				Class<? extends TopicEvent> type = emitsTopic.get().value();
+				Context context = NodeEvent.Context.newTopicContext(event,
+						node);
+				TopicEvent.fire(context, type, formModel);
+			}
 		}
 	}
 
 	@Ref("submit")
 	@ActionRefHandler(SubmitHandler.class)
-	@TopicBehaviour(topic = Submitted.class, type = TopicBehaviourType.EMIT)
+	@EmitsTopic(value = NodeEvents.Submitted.class, hasValidation = true)
 	public static class SubmitRef extends ActionRef {
-	}
-
-	public static class Submitted extends NodeTopic {
 	}
 
 	public interface ValueModel {

@@ -103,8 +103,11 @@ public class CommonUtils {
 	 */
 	public static final int SAFE_VARCHAR_MAX_CHARS = 230;
 
+	/*
+	 * name,friendly,string
+	 */
 	private static UnsortedMultikeyMap<Enum> enumValueLookup = new UnsortedMultikeyMap<Enum>(
-			2);
+			3);
 
 	private static Set<String> done = new LinkedHashSet<>();
 
@@ -763,23 +766,26 @@ public class CommonUtils {
 	public static synchronized <E extends Enum> E getEnumValueOrNull(
 			Class<E> enumClass, String value, boolean withFriendlyNames,
 			E defaultValue) {
-		if (!enumValueLookup.containsKey(enumClass)) {
+		if (enumValueLookup.asMapEnsure(false, enumClass,
+				withFriendlyNames) == null) {
 			for (E ev : enumClass.getEnumConstants()) {
-				enumValueLookup.put(enumClass, ev.toString(), ev);
-				enumValueLookup.put(enumClass, ev.toString().toLowerCase(), ev);
+				enumValueLookup.put(enumClass, withFriendlyNames, ev.toString(),
+						ev);
+				enumValueLookup.put(enumClass, withFriendlyNames,
+						ev.toString().toLowerCase(), ev);
 				if (withFriendlyNames) {
-					enumValueLookup.put(enumClass,
+					enumValueLookup.put(enumClass, withFriendlyNames,
 							friendlyConstant(ev, "-").toLowerCase(), ev);
-					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"),
-							ev);
-					enumValueLookup.put(enumClass, friendlyConstant(ev, " "),
-							ev);
-					enumValueLookup.put(enumClass,
+					enumValueLookup.put(enumClass, withFriendlyNames,
+							friendlyConstant(ev, "-"), ev);
+					enumValueLookup.put(enumClass, withFriendlyNames,
+							friendlyConstant(ev, " "), ev);
+					enumValueLookup.put(enumClass, withFriendlyNames,
 							friendlyConstant(ev, " ").toLowerCase(), ev);
 				}
 			}
 		}
-		E result = (E) enumValueLookup.get(enumClass, value);
+		E result = (E) enumValueLookup.get(enumClass, withFriendlyNames, value);
 		return result == null ? defaultValue : result;
 	}
 
@@ -1074,6 +1080,7 @@ public class CommonUtils {
 		StringBuilder sb = new StringBuilder();
 		for (Object obj : objects) {
 			String app = obj == null ? "null" : obj.toString();
+			app = app == null ? "null" : app;
 			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties)
 					&& separator != null) {
 				sb.append(separator);

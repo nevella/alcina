@@ -672,6 +672,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 		@Override
 		public void vacuum(VacuumableTransactions vacuumableTransactions) {
+			if (domainIdentity.get().getClass().getName()
+					.contains("ClientInstance")) {
+				int debug = 3;
+			}
 			super.vacuum(vacuumableTransactions);
 			synchronized (this) {
 				if (getSize() == 0 && visibleAllTransactions

@@ -127,14 +127,15 @@ public class SearchUtils {
 		if (date != null) {
 			for (SearchCriterion criterion : def.allCriteria()) {
 				if (criterion instanceof DateCriterion) {
-					if (criterion.getDirection() == Direction.ASCENDING) {
+					DateCriterion dateCriterion = (DateCriterion) criterion;
+					if (dateCriterion.getDirection() == Direction.ASCENDING) {
 						Date d2 = new Date(date.getTime());
 						CalendarUtil.addDaysToDate(d2, -2);
-						((DateCriterion) criterion).setDate(d2);
+						dateCriterion.setDate(d2);
 					} else {
 						Date d2 = new Date(date.getTime());
 						CalendarUtil.addDaysToDate(d2, +2);
-						((DateCriterion) criterion).setDate(d2);
+						dateCriterion.setDate(d2);
 					}
 				}
 			}

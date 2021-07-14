@@ -15,13 +15,17 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Property;
 
@@ -29,12 +33,15 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 /**
@@ -66,15 +73,19 @@ public abstract class ClientReflector implements ClassLookup {
 		domainReflector = r;
 	}
 
-	protected Map<Class, ClientBeanReflector> gwbiMap = new HashMap<Class, ClientBeanReflector>();
+	protected Map<Class, ClientBeanReflector> gwbiMap;
 
 	private List<ClientReflector> reflectors = new ArrayList<ClientReflector>();
 
 	Set<Class> nullReflectors = new LinkedHashSet<>();
 
-	private Map<Class, Object> templateInstances = new HashMap<Class, Object>();
+	private Map<Class, Object> templateInstances;
 
-	protected Map<String, Class> forNameMap = new HashMap<String, Class>();
+	protected Map<String, Class> forNameMap;
+
+	protected Map<String, List<String>> clazzImplements;
+
+	private MultikeyMap<Boolean> assignableFrom = new UnsortedMultikeyMap<>(2);
 
 	CachingMap<Class<?>, List<PropertyReflector>> propertyReflectorsCache = new CachingMap<>(
 			beanClass -> ClientReflector.get().beanInfoForClass(beanClass)
@@ -82,8 +93,12 @@ public abstract class ClientReflector implements ClassLookup {
 					.collect(Collectors.toList()));
 
 	public ClientReflector() {
+		gwbiMap = createClassKeyMap();
+		templateInstances = createClassKeyMap();
+		forNameMap = createStringKeyMap();
+		clazzImplements = createStringKeyMap();
 		{
-			forNameMap.putAll(CommonUtils.stdAndPrimitivesMap);
+			CommonUtils.stdAndPrimitivesMap.forEach(forNameMap::put);
 		}
 		reflectors.add(this);
 	}
@@ -188,6 +203,41 @@ public abstract class ClientReflector implements ClassLookup {
 		return beanInfoForClass(clazz) != null;
 	}
 
+	@Override
+	public boolean isAssignableFrom(Class from, Class to) {
+		return assignableFrom.ensure(() -> {
+			Set<String> checked = new HashSet<>();
+			Set<String> stack = new HashSet<>();
+			String fromName = from.getName();
+			Class cursor = to;
+			while (cursor != Object.class) {
+				if (from == cursor) {
+					return true;
+				}
+				List<String> interfaces = clazzImplements.get(cursor.getName());
+				if (interfaces != null) {
+					stack.addAll(interfaces);
+				}
+				cursor = cursor.getSuperclass();
+			}
+			while (stack.size() > 0) {
+				Iterator<String> iterator = stack.iterator();
+				String type = iterator.next();
+				iterator.remove();
+				if (fromName.equals(type)) {
+					return true;
+				}
+				checked.add(type);
+				List<String> interfaces = clazzImplements.get(type);
+				if (interfaces != null) {
+					interfaces.stream().filter(t -> !checked.contains(t))
+							.forEach(stack::add);
+				}
+			}
+			return false;
+		}, from, to);
+	}
+
 	public boolean isInstantiableClass(Class clazz) {
 		try {
 			if (CommonUtils.stdAndPrimitives.contains(clazz)) {
@@ -234,12 +284,33 @@ public abstract class ClientReflector implements ClassLookup {
 		reflectors.add(0, child);
 		child.gwbiMap = gwbiMap;
 		forNameMap.putAll(child.forNameMap);
+		child.clazzImplements.forEach((from, to) -> {
+			List<String> list = clazzImplements.get(from);
+			if (list != null) {
+				clazzImplements.put(from,
+						Stream.concat(list.stream(), to.stream())
+								.collect(Collectors.toList()));
+			} else {
+				clazzImplements.put(from, to);
+			}
+		});
 		gwbiMap.keySet().removeAll(nullReflectors);
 		nullReflectors.clear();
 	}
 
 	private BeaninfoClassResolver getBeanInfoClassResolver() {
 		return Registry.impl(BeaninfoClassResolver.class);
+	}
+
+	protected Map createClassKeyMap() {
+		// FIXME - 2022 - hide this behind delegation
+		return GWT.isClient() ? JsUniqueMap.create(Class.class, true)
+				: new LinkedHashMap<>();
+	}
+
+	protected Map createStringKeyMap() {
+		return GWT.isClient() ? JsUniqueMap.create(String.class, true)
+				: new LinkedHashMap<>();
 	}
 
 	protected abstract void initialiseNewInstance(Class clazz);

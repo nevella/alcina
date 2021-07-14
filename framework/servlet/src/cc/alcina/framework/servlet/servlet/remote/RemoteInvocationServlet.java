@@ -26,6 +26,7 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
@@ -47,6 +48,9 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 
 	public static boolean in() {
 		return LooseContext.is(CONTEXT_IN);
+	}
+
+	protected void customiseContextBeforePayloadWrite() {
 	}
 
 	@Override
@@ -128,7 +132,9 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					clientInstance.getId(), targetClass.getSimpleName(),
 					methodName);
 			try {
-				MetricLogging.get().start(key);
+				if (!methodName.equals("callRpc")) {
+					MetricLogging.get().start(key);
+				}
 				if (transformMethod) {
 					TransformPersistenceToken token = (TransformPersistenceToken) args[1];
 					Integer highestPersistedRequestId = CommonPersistenceProvider
@@ -194,12 +200,15 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				if (transformMethod) {
 					PermissionsManager.get().popUser();
 				}
-				MetricLogging.get().end(key);
+				if (!methodName.equals("callRpc")) {
+					MetricLogging.get().end(key);
+				}
 			}
 			Object result = out;
 			ArrayList resultHolder = new ArrayList();
 			resultHolder.add(out);
 			if (transformMethod) {
+				Preconditions.checkState(EntityLayerUtils.isTestServer());
 				ThreadlocalTransformManager.get().resetTltm(null);
 				DomainStore.writableStore().getPersistenceEvents().getQueue()
 						.refreshPositions();
@@ -211,9 +220,18 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					&& params.mayLinkToDomain) {
 				resultHolder = DomainLinker.linkToDomain(resultHolder);
 			}
-			byte[] outBytes = KryoUtils.serializeToByteArray(resultHolder);
-			ResourceUtilities.writeStreamToStream(
-					new ByteArrayInputStream(outBytes), res.getOutputStream());
+			ArrayList f_resultHolder = resultHolder;
+			try {
+				LooseContext.push();
+				customiseContextBeforePayloadWrite();
+				byte[] outBytes = KryoUtils
+						.serializeToByteArray(f_resultHolder);
+				ResourceUtilities.writeStreamToStream(
+						new ByteArrayInputStream(outBytes),
+						res.getOutputStream());
+			} finally {
+				LooseContext.pop();
+			}
 			return;
 		} catch (Exception e) {
 			throw new ServletException(e);
@@ -226,7 +244,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			RemoteInvocationParameters params) throws Exception;
 
 	protected void maybeToNoActiveTransaction() {
-		// FIXME - (only for EJB API and even then...)
+		// FIXME - 2021 - (only for calls to EJB impl classes and even then...)
 		Transaction.current().toNoActiveTransaction();
 	}
 }

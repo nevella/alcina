@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.client.place;
 
 import java.io.Serializable;
 
+import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
@@ -39,6 +41,11 @@ public abstract class BasePlace extends Place implements Serializable {
 		} else {
 			return false;
 		}
+	}
+
+	public void go() {
+		Preconditions.checkState(GWT.isClient());
+		Registry.impl(PlaceNavigator.class).go(this);
 	}
 
 	@Override
@@ -83,7 +90,8 @@ public abstract class BasePlace extends Place implements Serializable {
 	}
 
 	public String toTokenStringWithoutAppPrefix() {
-		return RegistryHistoryMapper.get().removeAppPrefixAndLeadingSlashes(toTokenString());
+		return RegistryHistoryMapper.get()
+				.removeAppPrefixAndLeadingSlashes(toTokenString());
 	}
 
 	@RegistryLocation(registryPoint = BasePlaceAbsoluteHrefSupplier.class, implementationType = ImplementationType.SINGLETON)
@@ -103,5 +111,9 @@ public abstract class BasePlace extends Place implements Serializable {
 		public String toHrefString(BasePlace basePlace) {
 			return "#" + BasePlace.tokenFor(basePlace);
 		}
+	}
+
+	public interface PlaceNavigator {
+		void go(Place place);
 	}
 }

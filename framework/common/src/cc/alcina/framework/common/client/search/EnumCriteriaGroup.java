@@ -13,9 +13,13 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 
 @Bean
+// TODO - make flat-serializable when needed
+@TypeSerialization(flatSerializable = false)
 public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
 	static final transient long serialVersionUID = -1L;
 
@@ -24,6 +28,7 @@ public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
 	}
 
 	@Override
+	@AlcinaTransient
 	public String getDisplayName() {
 		if (getCriteria().isEmpty()) {
 			return "";

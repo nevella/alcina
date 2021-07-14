@@ -3,9 +3,9 @@ package cc.alcina.framework.servlet.job;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
-import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 
@@ -43,7 +43,7 @@ class SchedulingPermissions {
 		if (AppPersistenceBase.isInstanceReadOnly()) {
 			return false;
 		}
-		boolean production = Sx.isProduction();
+		boolean production = EntityLayerUtils.isProduction();
 		boolean scheduleClusterJobs = production
 				|| ResourceUtilities.is(JobScheduler.class, "testSchedules");
 		boolean scheduleVmLocalJobs = production || ResourceUtilities
@@ -56,7 +56,7 @@ class SchedulingPermissions {
 		if (AppPersistenceBase.isInstanceReadOnly()) {
 			return false;
 		}
-		if (Sx.isProduction()) {
+		if (EntityLayerUtils.isProduction()) {
 			return ResourceUtilities.is(JobScheduler.class,
 					"canFuturesToPending");
 		} else {

@@ -11,6 +11,8 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
@@ -57,6 +59,16 @@ public class JobContext {
 			resource.acquire();
 			LooseContext.ensure(CONTEXT_EX_JOB_RESOURCES,
 					() -> new ArrayList<JobResource>()).add(resource);
+		}
+	}
+
+	public static void adopt(JobContext jobContext, boolean adopt) {
+		if (adopt) {
+			Preconditions.checkState(!has());
+			LooseContext.set(CONTEXT_CURRENT, jobContext);
+		} else {
+			Preconditions.checkState(has());
+			LooseContext.remove(CONTEXT_CURRENT);
 		}
 	}
 

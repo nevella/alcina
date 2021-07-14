@@ -218,6 +218,11 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	@Override
+	public boolean isAssignableFrom(Class from, Class to) {
+		return from.isAssignableFrom(to);
+	}
+
+	@Override
 	public boolean isReadOnly(Class objectClass, String propertyName) {
 		return SEUtilities
 				.getPropertyDescriptorByName(objectClass, propertyName)

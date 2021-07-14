@@ -41,6 +41,8 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue.Event.Type;
 import cc.alcina.framework.entity.util.OffThreadLogger;
+import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 /**
  * Improvement: rather than a strict dtrp-id queue, use 'happens after' field of
@@ -671,15 +673,15 @@ public class DomainTransformPersistenceQueue {
 	class State {
 		// most recent event
 		// REVISIT - remove?
-		private Set<Long> lastFired = new LinkedHashSet<>();
+		private Set<Long> lastFired = new LongLinkedOpenHashSet();
 
-		private Set<String> appLifetimeEventUuidsThisVm = new LinkedHashSet<>();
+		private Set<String> appLifetimeEventUuidsThisVm = new ObjectLinkedOpenHashSet<>();
 
-		private Set<Long> appLifetimeEventIdsThisVm = new LinkedHashSet<>();
+		private Set<Long> appLifetimeEventIdsThisVm = new LongLinkedOpenHashSet();
 
-		private Set<Long> appLifetimeEventsFired = new LinkedHashSet<>();
+		private Set<Long> appLifetimeEventsFired = new LongLinkedOpenHashSet();
 
-		private Set<Long> appLifetimeCommitEventsRegistered = new LinkedHashSet<>();
+		private Set<Long> appLifetimeCommitEventsRegistered = new LongLinkedOpenHashSet();
 
 		private DomainTransformCommitPosition transformCommitPosition;
 

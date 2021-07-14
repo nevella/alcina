@@ -304,7 +304,7 @@ public class LiveTree {
 				while (deque.size() > 0) {
 					LiveNode liveNode = deque.removeFirst();
 					count++;
-					if (count++ < 100) {
+					if (count++ < request.getCount()) {
 						Transform transform = new Transform();
 						transform.setTreePath(liveNode.path.toString());
 						transform.setNode(liveNode.viewNode);

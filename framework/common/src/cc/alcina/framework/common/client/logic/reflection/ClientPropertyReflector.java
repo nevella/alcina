@@ -21,9 +21,10 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
+import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCreator;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap.UnsortedMapCreator;
 
 /**
  * 
@@ -39,7 +40,7 @@ public class ClientPropertyReflector
 	public static final String CONTEXT_NAME_TRANSLATOR = ClientPropertyReflector.class
 			.getName() + ".CONTEXT_NAME_TRANSLATOR";
 
-	private static DelegateMapCreator annotationLookupCreator = new UnsortedMapCreator();
+	private static DelegateMapCreator annotationLookupCreator = new CollectionCreators.UnsortedMapCreator();
 
 	public static void
 			setDelegateCreator(DelegateMapCreator annotationLookupCreator) {

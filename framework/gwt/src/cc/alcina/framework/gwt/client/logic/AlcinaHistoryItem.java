@@ -105,7 +105,8 @@ public class AlcinaHistoryItem {
 		}
 		return new SearchHistoryInfo(getIntParameter(SEARCH_INDEX),
 				getIntParameter(SEARCH_PAGE),
-				getStringParameter(SEARCH_SERIALIZED));
+				getStringParameter(SEARCH_SERIALIZED),
+				getStringParameter(SEARCH_MARKER));
 	}
 
 	public String getStringParameter(String key) {
@@ -203,6 +204,8 @@ public class AlcinaHistoryItem {
 		if (searchHistoryInfo.searchDefinitionSerialized != null) {
 			setParameter(SEARCH_SERIALIZED,
 					searchHistoryInfo.searchDefinitionSerialized);
+			setParameter(SEARCH_MARKER,
+					searchHistoryInfo.searchDefinitionMarker);
 		} else {
 			setParameter(SEARCH_INDEX, searchHistoryInfo.defId, true);
 		}

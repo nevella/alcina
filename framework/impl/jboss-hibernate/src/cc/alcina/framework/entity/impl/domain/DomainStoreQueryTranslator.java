@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.hibernate.NullPrecedence;
 import org.hibernate.criterion.AliasedProjection;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.CountProjection;
@@ -25,6 +27,7 @@ import org.hibernate.criterion.InExpression;
 import org.hibernate.criterion.NotExpression;
 import org.hibernate.criterion.NotNullExpression;
 import org.hibernate.criterion.NullExpression;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.PropertyProjection;
@@ -75,6 +78,7 @@ public class DomainStoreQueryTranslator {
 		this.root = criteria;
 		query = DomainStore.stores().query(root.clazz);
 		addRestrictions(criteria);
+		addOrders();
 		checkHandlesClass(root.clazz);
 		rows = query.list();
 		handleProjections();
@@ -88,14 +92,30 @@ public class DomainStoreQueryTranslator {
 		return results;
 	}
 
+	/*
+	 * FIXME - 2022 - there's a lot of hackery with remapping/resolving -
+	 * possibly revisit 'context' etc
+	 */
 	public String translatePropertyPath(Criterion criterion,
 			DomainStoreCriteria context, String propertyPath) {
 		if (context != null) {
 			if (propertyPath.contains(".")) {
+				String firstSegment = propertyPath.substring(0,
+						propertyPath.indexOf("."));
+				if (aliasLookup.containsKey(firstSegment)) {
+					context = aliasLookup.get(firstSegment);
+				}
 				// chain to the root
 				DomainStoreCriteria cursor = context;
 				while (cursor.parent != null && (cursor.parent.alias == null
 						|| cursor.parent.joinType != null)) {
+					if (cursor.alias != null) {
+						String aliasSegment = cursor.alias + ".";
+						if (propertyPath.startsWith(aliasSegment)) {
+							propertyPath = propertyPath
+									.substring(aliasSegment.length());
+						}
+					}
 					propertyPath = cursor.associationPath + "." + propertyPath;
 					cursor = cursor.parent;
 				}
@@ -148,8 +168,12 @@ public class DomainStoreQueryTranslator {
 				sub.joinType, sub.alias);
 	}
 
-	private void addOrders(DomainStoreCriteria criteria) {
-		// TODO
+	private void addOrders() throws Exception {
+		for (Order order : root.orders) {
+			DomainComparator comparator = new DomainComparator(this, root,
+					order);
+			query.sorted(comparator);
+		}
 	}
 
 	private void addRestrictions(DomainStoreCriteria criteria)
@@ -162,7 +186,6 @@ public class DomainStoreQueryTranslator {
 		for (DomainStoreCriteria sub : criteria.subs) {
 			addRestrictions(sub);
 		}
-		addOrders(criteria);
 		handleHints(criteria);
 	}
 
@@ -329,6 +352,69 @@ public class DomainStoreQueryTranslator {
 						translator.criterionToFilter(domainStoreCriteria, sub));
 			}
 			return filter;
+		}
+	}
+
+	// FIXME - domainstore.query - use sortedstream in for first
+	// comparator
+	//
+	// Impl - have a reflective 'comparator to source' replacer (which only
+	// operates if the sourcestream is a full class stream)
+	public static class DomainComparator implements Comparator {
+		private Order order;
+
+		private PropertyPathAccessor accessor;
+
+		private NullPrecedence nullPrecedence;
+
+		public DomainComparator(DomainStoreQueryTranslator translator,
+				DomainStoreCriteria context, Order order) throws Exception {
+			this.order = order;
+			String propertyName = order.getPropertyName();
+			String translatedPropertyName = translator
+					.translatePropertyPath(null, context, propertyName);
+			accessor = new PropertyPathAccessor(translatedPropertyName);
+			Field field = Order.class.getDeclaredField("nullPrecedence");
+			field.setAccessible(true);
+			nullPrecedence = (NullPrecedence) field.get(order);
+			if (nullPrecedence == null) {
+				nullPrecedence = NullPrecedence.LAST;
+			}
+		}
+
+		@Override
+		public int compare(Object o1, Object o2) {
+			Comparable v1 = (Comparable) accessor.getChainedProperty(o1);
+			Comparable v2 = (Comparable) accessor.getChainedProperty(o2);
+			int directionMultiplier = order.isAscending() ? 1 : -1;
+			if (v1 == null || v2 == null) {
+				if (v1 == v2) {
+					return 0;
+				}
+				switch (nullPrecedence) {
+				case FIRST:
+					return directionMultiplier * (v1 == null ? -1 : 1);
+				case NONE:
+				case LAST:
+					return directionMultiplier * (v1 == null ? 1 : -1);
+				default:
+					throw new UnsupportedOperationException();
+				}
+			} else {
+				if (v1 instanceof String) {
+					if (order.isIgnoreCase()) {
+						return directionMultiplier
+								* String.CASE_INSENSITIVE_ORDER
+										.compare((String) v1, (String) v2);
+					}
+				}
+				return directionMultiplier * v1.compareTo(v2);
+			}
+		}
+
+		@Override
+		public String toString() {
+			return order.toString();
 		}
 	}
 
@@ -646,7 +732,9 @@ public class DomainStoreQueryTranslator {
 					rows.add(currentRow);
 					currentRow.added = true;
 				}
-				currentRow = null;
+				if (groupCount != 0 || !aggregateQuery) {
+					currentRow = null;
+				}
 			}
 		}
 
