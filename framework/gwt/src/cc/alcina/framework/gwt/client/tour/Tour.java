@@ -1,112 +1,202 @@
 package cc.alcina.framework.gwt.client.tour;
 
 import java.util.List;
-import java.util.Optional;
 
-import cc.alcina.framework.common.client.Reflections;
+import com.google.gwt.core.client.JavaScriptObject;
+import com.google.gwt.core.client.JsArray;
+import com.google.gwt.core.client.JsArrayString;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.util.ClientUtils;
 
-public interface Tour {
-	public String getName();
+public class Tour extends JavaScriptObject {
+	static native Tour fromJson(String tourJson) /*-{
+    var v = JSON.parse(tourJson);
+    return v;
+	}-*/;
 
-	public List<? extends Tour.Step> getSteps();
-
-	@ClientInstantiable
-	enum Action {
-		CLICK, SET_TEXT, NONE
+	protected Tour() {
 	}
 
-	interface Condition {
-		List<? extends Condition> getConditions();
+	final native String getName()/*-{
+    return this.name;
+	}-*/;
 
-		String getEvaluatorClassName();
+	final native JsArray<Step> getSteps() /*-{
+    return this.steps;
+	}-*/;
 
-		Operator getOperator();
-
-		List<String> getSelectors();
-
-		default Optional<ConditionEvaluator> provideEvaluator() {
-			if (getEvaluatorClassName() == null) {
-				return Optional.empty();
-			} else {
-				Class<ConditionEvaluator> evaluatorClass = Reflections
-						.forName(getEvaluatorClassName());
-				return Optional.of(Reflections.newInstance(evaluatorClass));
-			}
-		}
-	}
-
-	public static class ConditionEvaluationContext {
-		private TourState tourState;
-
-		public ConditionEvaluationContext(TourState tourState) {
-			this.tourState = tourState;
-		}
-
-		public TourState getTourState() {
-			return this.tourState;
-		}
-	}
-
-	public interface ConditionEvaluator {
-		boolean evaluate(ConditionEvaluationContext context);
-	}
-
-	enum Operator {
+	public static enum Operator {
 		AND, OR, NOT
 	}
 
 	@ClientInstantiable
-	enum Pointer {
+	public static enum Pointer {
 		CENTER_UP, LEFT_UP, CENTER_DOWN, RIGHT_UP, RIGHT_DOWN
 	}
 
-	interface PopupInfo {
-		public String getCaption();
-
-		public String getDescription();
-
-		public RelativeTo getRelativeTo();
+	@ClientInstantiable
+	public static enum PositioningDirection {
+		CENTER_TOP, LEFT_BOTTOM, RIGHT_BOTTOM, RIGHT_TOP
 	}
 
 	@ClientInstantiable
-	enum PositioningDirection {
-		CENTER_TOP, LEFT_BOTTOM, RIGHT_BOTTOM, RIGHT_TOP, TOP_LEFT, LEFT_TOP,
-		BOTTOM_RIGHT, BOTTOM_LEFT, TOP_RIGHT
+	public static enum TourAction {
+		CLICK, SET_TEXT, NONE
 	}
 
-	interface RelativeTo {
-		public PositioningDirection getDirection();
+	static class Condition extends JavaScriptObject {
+		protected Condition() {
+		}
 
-		public String getElement();
+		final private native JsArray<Condition> getConditionsArray()/*-{
+      return (this.conditions) ? this.conditions : [];
+		}-*/;
 
-		public int getOffsetHorizontal();
+		final private native JsArrayString getJsSelectors()/*-{
+      if (!(this.selectors)) {
+        return [];
+      }
+      if (typeof this.selectors == "string") {
+        return [ this.selectors ];
+      }
+      return this.selectors;
+		}-*/;
 
-		public int getOffsetVertical();
+		final private native String getOperatorString()/*-{
+      return this.action;
+		}-*/;
 
-		public Pointer getPointer();
+		final List<Condition> getConditions() {
+			return ClientUtils.jsArrayToTypedArray(getConditionsArray());
+		}
 
-		public int getPointerRightMargin();
+		final Operator getOperator() {
+			return CommonUtils.getEnumValueOrNull(Operator.class,
+					getOperatorString(), true, Operator.AND);
+		}
 
-		public int getPopupFromBottom();
-
-		public boolean isBubble();
+		final List<String> getSelectors() {
+			return ClientUtils.jsStringArrayAsStringList(getJsSelectors());
+		}
 	}
 
-	// @JsonDeserialize(as = StepImpl.class)
-	interface Step {
-		public Action getAction();
+	static class PopupInfo extends JavaScriptObject {
+		protected PopupInfo() {
+		}
 
-		public String getActionValue();
+		final public native String getCaption()/*-{
+      return this.caption;
+		}-*/;
 
-		public Condition getIgnoreActionIf();
+		final public native String getDescription()/*-{
+      return this.description;
+		}-*/;
 
-		public Condition getIgnoreIf();
+		final public native RelativeTo getRelativeTo()/*-{
+      return this.relativeTo;
+		}-*/;
+	}
 
-		public Condition getWaitFor();
+	static class RelativeTo extends JavaScriptObject {
+		protected RelativeTo() {
+		}
 
-		public List<? extends PopupInfo> providePopups();
+		final public native String getElement()/*-{
+      return this.element;
+		}-*/;
 
-		public Condition provideTarget();
+		final public native int getOffsetHorizontal()/*-{
+      return (this.offsetHorizontal) ? this.offsetHorizontal : 0;
+		}-*/;
+
+		final public native int getOffsetVertical()/*-{
+      return (this.offsetVertical) ? this.offsetVertical : 0;
+		}-*/;
+
+		final public native int getPointerRightMargin()/*-{
+      return (this.pointerRightMargin) ? this.pointerRightMargin : 0;
+		}-*/;
+
+		final public native int getPopupFromBottom()/*-{
+      return (this.popupFromBottom) ? this.popupFromBottom : 0;
+		}-*/;
+
+		private final native String getDirectionString()/*-{
+      return this.direction;
+		}-*/;
+
+		final Pointer getPointer() {
+			return CommonUtils.getEnumValueOrNull(Pointer.class,
+					getPointerString(), true, Pointer.CENTER_UP);
+		}
+
+		final native String getPointerString()/*-{
+      return this.pointer;
+		}-*/;
+
+		final PositioningDirection getPositioningDirection() {
+			return CommonUtils.getEnumValueOrNull(PositioningDirection.class,
+					getDirectionString(), true,
+					PositioningDirection.LEFT_BOTTOM);
+		}
+	}
+
+	static class Step extends JavaScriptObject {
+		protected Step() {
+		}
+
+		final public native String asString()
+		/*-{
+      return JSON.stringify(this);
+		}-*/;
+
+		final public native String getActionValue()/*-{
+      return this.actionValue;
+		}-*/;
+
+		final public native Condition getIgnoreActionIf()/*-{
+      return this.ignoreActionIf;
+		}-*/;
+
+		final public native Condition getIgnoreIf()/*-{
+      return this.ignoreIf;
+		}-*/;
+
+		final public native Condition getTarget()/*-{
+      if (!(this.target)) {
+        return null;
+      }
+      return {
+        "selectors" : this.target
+      }
+		}-*/;
+
+		final public native Condition getWaitFor()/*-{
+      return this.waitFor;
+		}-*/;
+
+		final private native String getActionString()/*-{
+      return this.action;
+		}-*/;
+
+		final private native JsArray<PopupInfo> getPopupsArray()/*-{
+      return (this.popups) ? this.popups : [ {
+        caption : this.caption,
+        description : this.description,
+        relativeTo : this.relativeTo
+
+      } ];
+		}-*/;
+
+		final TourAction getAction() {
+			return CommonUtils.getEnumValueOrNull(TourAction.class,
+					getActionString(), true, TourAction.NONE);
+		}
+
+		final List<PopupInfo> getPopups() {
+			return ClientUtils.jsArrayToTypedArray(getPopupsArray());
+		}
 	}
 }

@@ -15,7 +15,6 @@ package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 
 @Bean
 /**
@@ -23,7 +22,6 @@ import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
  * @author Nick Reddel
  */
 @PermissibleChildClasses({ TxtCriterion.class })
-@TypeSerialization(flatSerializable = false)
 public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 	static final transient long serialVersionUID = -1L;
 
@@ -41,14 +39,13 @@ public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 		getCriteria().add(tc);
 	}
 
-	@Override
-	public Class entityClass() {
-		return null;
+	public String getDisplayName() {
+		return this.displayName;
 	}
 
 	@Override
-	public String getDisplayName() {
-		return this.displayName;
+	public Class entityClass() {
+		return null;
 	}
 
 	public void setDisplayName(String displayName) {

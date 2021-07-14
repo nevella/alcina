@@ -30,9 +30,6 @@ public abstract class ActionRef extends Reference {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE, ElementType.METHOD })
-	/*
-	 * FIXME - dirndl 1.3 - get rid of this, just use topics
-	 */
 	public static @interface ActionRefHandler {
 		Class<? extends ActionHandler> value();
 	}

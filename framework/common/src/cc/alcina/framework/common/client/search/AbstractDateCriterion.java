@@ -19,7 +19,6 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
@@ -31,8 +30,6 @@ public class AbstractDateCriterion extends SearchCriterion
 	static final transient long serialVersionUID = -1L;
 
 	private Date date;
-
-	private Direction direction = Direction.ASCENDING;
 
 	public AbstractDateCriterion() {
 		super();
@@ -71,14 +68,8 @@ public class AbstractDateCriterion extends SearchCriterion
 		return date;
 	}
 
-	@PropertySerialization(path = "dir")
-	public Direction getDirection() {
-		return this.direction;
-	}
-
 	@Override
 	@XmlTransient
-	@PropertySerialization(defaultProperty = true)
 	public Date getValue() {
 		return getDate();
 	}
@@ -87,13 +78,6 @@ public class AbstractDateCriterion extends SearchCriterion
 		Date old_date = this.date;
 		this.date = date;
 		propertyChangeSupport().firePropertyChange("date", old_date, date);
-	}
-
-	public void setDirection(Direction direction) {
-		Direction old_direction = this.direction;
-		this.direction = direction;
-		propertyChangeSupport().firePropertyChange("direction", old_direction,
-				direction);
 	}
 
 	/**
@@ -106,11 +90,6 @@ public class AbstractDateCriterion extends SearchCriterion
 
 	public AbstractDateCriterion withDate(int year, int month, int dayOfMonth) {
 		setDate(CommonUtils.oldDate(year, month, dayOfMonth));
-		return this;
-	}
-
-	public AbstractDateCriterion withDirection(Direction direction) {
-		setDirection(direction);
 		return this;
 	}
 

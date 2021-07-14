@@ -14,7 +14,6 @@
 package cc.alcina.framework.servlet.servlet;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 
 /**
  * Marker interface for registry
@@ -24,7 +23,6 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
  */
 public class AuthenticatedWebMethod extends PermissibleAction {
 	@Override
-	@AlcinaTransient
 	public String getDisplayName() {
 		return "AuthenticatedWebMethod";
 	}

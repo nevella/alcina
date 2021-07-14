@@ -37,10 +37,10 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 public class UserStories {
@@ -58,7 +58,7 @@ public class UserStories {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public String asHtml(long id) {
-		if (!PermissionsManager.get().isAdmin() && !EntityLayerUtils.isTest()) {
+		if (!PermissionsManager.get().isAdmin() && !Sx.isTest()) {
 			throw new RuntimeException("Not permitted");
 		}
 		build(id, null);

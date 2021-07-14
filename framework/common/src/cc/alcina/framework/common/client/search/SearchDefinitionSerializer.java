@@ -17,10 +17,7 @@ public interface SearchDefinitionSerializer {
 	}
 
 	default boolean canSimpleSerialize(SearchDefinition def) {
-		// replaced by flat tree
-		// FIXME - 2022 - remove
-		return false;
-		// return simpleSerialize(def) != null;
+		return simpleSerialize(def) != null;
 	}
 
 	default <SD extends SearchDefinition> SD deserialize(String serializedDef) {

@@ -27,10 +27,6 @@ public class Reflections {
 		return get().applicationName;
 	}
 
-	public static boolean isAssignableFrom(Class from, Class to) {
-		return get().classLookup.isAssignableFrom(from, to);
-	}
-
 	public static <T> T newInstance(Class<T> clazz) {
 		return classLookup().newInstance(clazz);
 	}

@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;

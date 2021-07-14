@@ -2,6 +2,9 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.List;
 
+import com.google.gwt.user.client.rpc.AsyncCallback;
+
+import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 
 public class TestTransformManager extends ClientTransformManager {
@@ -35,5 +38,10 @@ public class TestTransformManager extends ClientTransformManager {
 
 	@Override
 	public void performDeleteObject(Entity entity) {
+	}
+
+	@Override
+	protected void callRemotePersistence(WrapperPersistable persistableObject,
+			AsyncCallback<Long> savedCallback) {
 	}
 }

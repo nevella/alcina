@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 
@@ -25,21 +24,17 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 @Inherited
 @ClientVisible
 public @interface Directed {
+	public Behaviour[] behaviours() default {};
+
 	public Binding[] bindings() default {};
 
 	public String cssClass() default "";
-
-	public Class<? extends NodeEvent>[] emits() default {};
 
 	/**
 	 * if true, the resolved value will return the union of the property and
 	 * class annotation - or class and superclass (max 1)
 	 */
 	public boolean merge() default false;
-
-	public Class<? extends NodeEvent>[] receives() default {};
-
-	public Class<? extends NodeEvent>[] reemits() default {};
 
 	public Class<? extends DirectedNodeRenderer> renderer() default ModelClassNodeRenderer.class;
 
@@ -65,6 +60,12 @@ public @interface Directed {
 		}
 
 		@Override
+		public Behaviour[] behaviours() {
+			Function<Directed, Behaviour[]> function = Directed::behaviours;
+			return resolver.resolve(function, "behaviours", new Behaviour[0]);
+		}
+
+		@Override
 		public Binding[] bindings() {
 			Function<Directed, Binding[]> function = Directed::bindings;
 			return resolver.resolve(function, "bindings", new Binding[0]);
@@ -77,26 +78,8 @@ public @interface Directed {
 		}
 
 		@Override
-		public Class<? extends NodeEvent>[] emits() {
-			Function<Directed, Class<? extends NodeEvent>[]> function = Directed::emits;
-			return resolver.resolve(function, "emits", new Class[0]);
-		}
-
-		@Override
 		public boolean merge() {
 			return false;
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] receives() {
-			Function<Directed, Class<? extends NodeEvent>[]> function = Directed::receives;
-			return resolver.resolve(function, "receives", new Class[0]);
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] reemits() {
-			Function<Directed, Class<? extends NodeEvent>[]> function = Directed::reemits;
-			return resolver.resolve(function, "reemits", new Class[0]);
 		}
 
 		@Override

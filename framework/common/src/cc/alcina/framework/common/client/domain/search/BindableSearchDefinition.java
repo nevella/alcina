@@ -157,7 +157,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	}
 
 	@ClientInstantiable
-	@TypeSerialization(flatSerializable = false)
+	@TypeSerialization(notSerializable = true)
 	public static class DataNullSearchDefinition
 			extends EntitySearchDefinition {
 		@Override

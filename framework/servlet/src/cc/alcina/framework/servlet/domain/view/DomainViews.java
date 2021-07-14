@@ -20,9 +20,6 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentMod
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -262,15 +259,12 @@ public abstract class DomainViews {
 					LooseContext.pushWithTrue(
 							JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);
 					ViewsTask task = tasks.take();
-					PermissionsManager.get().pushUser(task.user,
-							task.loginState);
 					Transaction.begin();
 					processEvent(task);
 				} catch (Throwable e) {
 					e.printStackTrace();
 				} finally {
 					Transaction.ensureEnded();
-					PermissionsManager.get().popUser();
 					LooseContext.pop();
 				}
 			}
@@ -333,22 +327,13 @@ public abstract class DomainViews {
 	}
 
 	static class ViewsTask {
-		public LoginState loginState;
-
 		ModelChange modelChange = new ModelChange();
 
 		HandlerData handlerData = new HandlerData();
 
 		Type type;
 
-		IUser user;
-
 		CountDownLatch latch = new CountDownLatch(1);
-
-		public ViewsTask() {
-			loginState = PermissionsManager.get().getLoginState();
-			user = PermissionsManager.get().getUser();
-		}
 
 		void await() {
 			try {

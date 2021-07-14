@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -49,7 +48,6 @@ public class WrapperPersistable extends Entity<WrapperPersistable>
 	}
 
 	@Override
-	@PropertySerialization(ignore = true)
 	public long getId() {
 		return this.id;
 	}

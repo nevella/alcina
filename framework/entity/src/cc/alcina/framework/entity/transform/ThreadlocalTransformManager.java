@@ -188,13 +188,13 @@ public class ThreadlocalTransformManager extends TransformManager
 			return true;
 		}
 		return false;
-	}
+	};
 
 	// for testing
 	public static void registerPerThreadTransformManager(
 			TransformManager perThreadTransformManager) {
 		threadLocalInstance.set(perThreadTransformManager);
-	};
+	}
 
 	public static Topic<Thread> topicTransformManagerWasReset() {
 		return Topic.global(TOPIC_RESET_THREAD_TRANSFORM_MANAGER);
@@ -567,11 +567,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public boolean isApplyingExternalTransforms() {
 		return this.applyingExternalTransforms;
-	}
-
-	@Override
-	public boolean isAssignableFrom(Class from, Class to) {
-		return ObjectPersistenceHelper.get().isAssignableFrom(from, to);
 	}
 
 	public boolean isExternalCreate() {

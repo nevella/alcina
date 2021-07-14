@@ -7,7 +7,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
@@ -41,6 +40,12 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	}
 
 	@Override
+	public boolean equals(Object obj) {
+		return obj instanceof SearchCriterion
+				&& equivalentTo((SearchCriterion) obj);
+	}
+
+	@Override
 	public boolean equivalentTo(SearchCriterion other) {
 		if (other instanceof TruncatedObjectCriterion) {
 			return other.getClass() == getClass()
@@ -49,13 +54,11 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		return super.equivalentTo(other);
 	}
 
-	@PropertySerialization(fromClient = false)
 	public String getDisplayText() {
 		return this.displayText;
 	}
 
 	@Override
-	@PropertySerialization(defaultProperty = true)
 	public long getId() {
 		return this.id;
 	}
@@ -67,6 +70,11 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	@AlcinaTransient
 	public E getValue() {
 		return value;
+	}
+
+	@Override
+	public int hashCode() {
+		return getClass().hashCode() ^ (int) getId();
 	}
 
 	public void populateValue() {
@@ -87,7 +95,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 	}
 
 	public void setValue(E value) {
-		setDisplayText(provideDisplayTextFor(value));
+		setDisplayText(getDisplayTextFor(value));
 		if (value != null) {
 			setId(value.getId());
 		} else {
@@ -108,7 +116,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		return (T) this;
 	}
 
-	protected String provideDisplayTextFor(E value) {
+	protected String getDisplayTextFor(E value) {
 		return value == null ? null : value.toString();
 	}
 }

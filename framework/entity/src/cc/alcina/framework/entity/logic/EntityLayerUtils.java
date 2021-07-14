@@ -60,20 +60,4 @@ public class EntityLayerUtils {
 	public static boolean isTestOrTestServer() {
 		return Ax.isTest() || AppPersistenceBase.isTestServer();
 	}
-
-	public static boolean isTestServer() {
-		return AppPersistenceBase.isTestServer();
-	}
-
-	public static boolean isProduction() {
-		return !isTestOrTestServer();
-	}
-
-	public static boolean isTest() {
-		return AppPersistenceBase.isTest();
-	}
-
-	public static void setTestServer(boolean testServer) {
-		AppPersistenceBase.setTestServer(testServer);
-	}
 }

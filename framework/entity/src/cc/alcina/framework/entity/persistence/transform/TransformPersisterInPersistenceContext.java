@@ -17,8 +17,6 @@ import javax.persistence.OptimisticLockException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -31,7 +29,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -42,7 +39,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -237,16 +233,6 @@ public class TransformPersisterInPersistenceContext {
 				if (subRequest.checkForDuplicateEvents()) {
 					System.out.println("*** duplicate create events in rqId: "
 							+ subRequest.getRequestId());
-				}
-				if (ResourceUtilities.is(CommonPersistenceBase.class,
-						"unwrapDisabled")) {
-					Class implementation = PersistentImpl
-							.getImplementation(WrappedObject.class);
-					// check for any non-delete transforms
-					Preconditions.checkArgument(
-							!new TransformCollation(subRequest.getEvents())
-									.query(implementation).stream()
-									.anyMatch(qr -> !qr.hasDeleteTransform()));
 				}
 				List<DomainTransformEvent> events = subRequest.getEvents();
 				List<DomainTransformEvent> eventsPersisted = new ArrayList<DomainTransformEvent>();

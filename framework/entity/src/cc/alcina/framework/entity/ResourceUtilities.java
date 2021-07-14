@@ -59,8 +59,6 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
-import javax.net.ssl.HostnameVerifier;
-import javax.net.ssl.HttpsURLConnection;
 import javax.swing.ImageIcon;
 
 import org.cyberneko.html.parsers.DOMParser;
@@ -993,8 +991,6 @@ public class ResourceUtilities {
 
 		private StringMap queryStringParameters;
 
-		private HostnameVerifier hostnameVerifier;
-
 		public SimpleQuery(String strUrl) {
 			this.strUrl = strUrl;
 		}
@@ -1020,11 +1016,6 @@ public class ResourceUtilities {
 				connection.setDoOutput(true);
 				connection.setDoInput(true);
 				connection.setUseCaches(false);
-				if (hostnameVerifier != null
-						&& connection instanceof HttpsURLConnection) {
-					((HttpsURLConnection) connection)
-							.setHostnameVerifier(hostnameVerifier);
-				}
 				if (postBody != null) {
 					connection.setRequestMethod("POST");
 				}
@@ -1121,12 +1112,6 @@ public class ResourceUtilities {
 
 		public SimpleQuery withHeaders(StringMap headers) {
 			this.headers = headers;
-			return this;
-		}
-
-		public SimpleQuery
-				withHostnameVerifier(HostnameVerifier hostnameVerifier) {
-			this.hostnameVerifier = hostnameVerifier;
 			return this;
 		}
 

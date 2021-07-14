@@ -58,7 +58,6 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
-import cc.alcina.framework.entity.stat.StatCategory_Console;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.ShellWrapper;
 
@@ -482,8 +481,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						}
 						if (runnable.requiresDomainStore()
 								&& DevHelper.getDefaultUser() == null) {
-							DevConsole.getInstance().emitIfFirst(
-									new StatCategory_Console.InitCommands());
 							console.ensureDomainStore();
 							pushedUser = DevHelper.getDefaultUser();
 							PermissionsManager.get().pushUser(pushedUser,

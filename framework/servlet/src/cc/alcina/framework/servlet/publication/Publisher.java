@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.publication.PublicationContent;
-import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.publication.request.NonRootPublicationRequest;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.Ax;
@@ -27,11 +26,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
@@ -67,6 +66,11 @@ public class Publisher {
 
 	public static final String CONTEXT_PERSIST_CONTENT_RENDERER_RESULTS = Publisher.class
 			.getName() + ".CONTEXT_PERSIST_CONTENT_RENDERER_RESULTS";
+
+	public static boolean useWrappedObjectSerialization() {
+		return ResourceUtilities.is(Publisher.class,
+				"useWrappedObjectSerialization");
+	}
 
 	private PublicationContext ctx;
 
@@ -114,23 +118,25 @@ public class Publisher {
 			hasId.setId(0);
 			// force new
 		}
-		Definition definition = deliveryModel.provideDefinition();
-		if (definition.provideContentDefinition() == null) {
-			((ContentRequestBase) deliveryModel)
-					.setContentDefinition(contentDefinition);
+		if (useWrappedObjectSerialization()) {
+			publication.setContentDefinition(contentDefinition);
+			publication.setDeliveryModel(deliveryModel);
+		} else {
+			Definition definition = deliveryModel.provideDefinition();
+			Preconditions.checkArgument(definition
+					.provideContentDefinition() == contentDefinition
+					&& definition.provideDeliveryModel() == deliveryModel);
+			publication.setDefinition(definition);
+			publication.setDefinitionDescription(definition.toString());
 		}
-		Preconditions.checkArgument(
-				definition.provideContentDefinition() == contentDefinition
-						&& definition.provideDeliveryModel() == deliveryModel);
-		publication.setDefinition(definition);
-		publication.setDefinitionDescription(definition.toString());
 		publication.setUser(PermissionsManager.get().getUser());
 		publication.setPublicationDate(new Date());
 		publication.setOriginalPublication(original);
 		publication.setUserPublicationId(publicationUserId);
 		publication.setPublicationUid(SEUtilities.generateId());
 		publication.setPublicationType(contentDefinition.getPublicationType());
-		result.publicationId = persister.persist(publication);
+		persister.persist(publication);
+		result.publicationId = ctx.publication.getId();
 		result.publicationUid = publication.getPublicationUid();
 	}
 
@@ -284,19 +290,39 @@ public class Publisher {
 		}
 
 		public Publication newPublicationInstance() {
-			return PersistentImpl.create(Publication.class);
+			if (useWrappedObjectSerialization()) {
+				return PersistentImpl
+						.getNewImplementationInstance(Publication.class);
+			} else {
+				return PersistentImpl.create(Publication.class);
+			}
 		}
 
-		public long persist(Publication publication) {
-			return TransformCommit.commitTransformsAndReturnId(true,
-					publication);
+		public void persist(Publication publication) {
+			if (useWrappedObjectSerialization()) {
+				Publication merged = Registry
+						.impl(CommonPersistenceProvider.class)
+						.getCommonPersistence().merge(publication);
+				ResourceUtilities.copyBeanProperties(merged, publication, null,
+						false);
+			} else {
+				Transaction.commit();
+			}
 		}
 
 		public void persistContentRendererResults(
 				ContentRendererResults results, Publication publication) {
 			publication.setSerializedPublication(
 					KryoUtils.serializeToBase64(results));
-			Transaction.commit();
+			if (useWrappedObjectSerialization()) {
+				Publication merged = Registry
+						.impl(CommonPersistenceProvider.class)
+						.getCommonPersistence().merge(publication);
+				ResourceUtilities.copyBeanProperties(merged, publication, null,
+						false);
+			} else {
+				Transaction.commit();
+			}
 		}
 	}
 }

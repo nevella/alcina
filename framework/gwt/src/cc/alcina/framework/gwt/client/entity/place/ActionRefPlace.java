@@ -2,9 +2,6 @@ package cc.alcina.framework.gwt.client.entity.place;
 
 import java.util.Optional;
 
-import com.google.gwt.event.shared.GwtEvent;
-import com.google.gwt.user.client.Window;
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -12,10 +9,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Reference;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 
@@ -31,11 +27,6 @@ public class ActionRefPlace extends BasePlace {
 		this.ref = ref;
 	}
 
-	public Optional<EmitsTopic> emitsTopic() {
-		return Optional.ofNullable(Reflections.classLookup()
-				.getAnnotationForClass(ref, EmitsTopic.class));
-	}
-
 	public Optional<ActionHandler> getActionHandler() {
 		Optional<ActionHandler> handler = Registry.optional(ActionHandler.class,
 				ref);
@@ -49,6 +40,11 @@ public class ActionRefPlace extends BasePlace {
 				.ofNullable(Reflections.classLookup().getAnnotationForClass(ref,
 						ActionRefHandler.class))
 				.map(ann -> Reflections.newInstance(ann.value()));
+	}
+
+	public Optional<TopicBehaviour> getActionTopic() {
+		return Optional.ofNullable(Reflections.classLookup()
+				.getAnnotationForClass(ref, TopicBehaviour.class));
 	}
 
 	public EntityLocator getLocator() {
@@ -115,14 +111,6 @@ public class ActionRefPlace extends BasePlace {
 				addTokenPart(place.getLocator().getEntityClassName());
 				addTokenPart(place.getLocator().getId());
 			}
-		}
-	}
-
-	public static class NotImplementedHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-			Window.alert("Not implemented");
 		}
 	}
 }

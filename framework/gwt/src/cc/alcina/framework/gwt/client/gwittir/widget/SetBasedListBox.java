@@ -71,7 +71,6 @@ import cc.alcina.framework.common.client.actions.InlineButtonHandler;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Callback;
@@ -702,7 +701,6 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 
 	private class AddItemHandler extends InlineButtonHandler {
 		@Override
-		@AlcinaTransient
 		public String getDisplayName() {
 			return "+";
 		}

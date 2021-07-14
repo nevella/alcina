@@ -15,9 +15,11 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions.Reachables;
@@ -26,7 +28,6 @@ import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -68,8 +69,6 @@ public class TaskGenerateTreeSerializableSignatures
 
 	private void checkSerializationIssues(TreeSerializable serializable) {
 		try {
-			LooseContext.pushWithTrue(
-					TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS);
 			Reachables reachables = new SerializerOptions.Reachables();
 			FlatTreeSerializer.serialize(serializable,
 					new SerializerOptions().withElideDefaults(false)
@@ -90,11 +89,8 @@ public class TaskGenerateTreeSerializableSignatures
 			String message = Ax.format("%s - %s",
 					serializable.getClass().getSimpleName(),
 					CommonUtils.toSimpleExceptionMessage(e));
-			// e.printStackTrace();
 			Ax.err(message);
 			serializationIssues.add(message);
-		} finally {
-			LooseContext.pop();
 		}
 	}
 
@@ -169,10 +165,24 @@ public class TaskGenerateTreeSerializableSignatures
 	}
 
 	boolean filter(TreeSerializable treeSerializable) {
+		if (treeSerializable instanceof SingleTableSearchDefinition) {
+			return false;
+		}
+		if (Ax.isTest()) {
+			try {
+				Class<?> devConsoleRunnableClass = Class.forName(
+						"cc.alcina.extras.dev.console.DevConsoleRunnable");
+				if (devConsoleRunnableClass
+						.isAssignableFrom(treeSerializable.getClass())) {
+					return false;
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 		TypeSerialization typeSerialization = treeSerializable.getClass()
 				.getAnnotation(TypeSerialization.class);
-		if (typeSerialization != null
-				&& !typeSerialization.flatSerializable()) {
+		if (typeSerialization != null && typeSerialization.notSerializable()) {
 			return false;
 		}
 		return true;

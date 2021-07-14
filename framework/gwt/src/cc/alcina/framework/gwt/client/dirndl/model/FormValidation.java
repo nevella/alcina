@@ -25,6 +25,12 @@ public class FormValidation {
 
 	private Consumer<Void> onValid;
 
+	void validate(Consumer<Void> onValid, Binding binding) {
+		this.onValid = onValid;
+		this.binding = binding;
+		validateAndCommit(null, null);
+	}
+
 	public boolean validateAndCommit(final Widget sender,
 			final AsyncCallback<Void> serverValidationCallback) {
 		try {
@@ -133,11 +139,5 @@ public class FormValidation {
 
 	public boolean validateFields() {
 		return binding.validate();
-	}
-
-	boolean validate(Consumer<Void> onValid, Binding binding) {
-		this.onValid = onValid;
-		this.binding = binding;
-		return validateAndCommit(null, null);
 	}
 }

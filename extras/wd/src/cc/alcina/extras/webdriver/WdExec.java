@@ -1,6 +1,5 @@
 package cc.alcina.extras.webdriver;
 
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Consumer;
 import java.util.regex.Matcher;
@@ -9,7 +8,6 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.openqa.selenium.By;
-import org.openqa.selenium.ElementNotInteractableException;
 import org.openqa.selenium.ElementNotVisibleException;
 import org.openqa.selenium.SearchContext;
 import org.openqa.selenium.StaleElementReferenceException;
@@ -43,8 +41,6 @@ public class WdExec {
 	private String textMatchParent;
 
 	private TestCallback testCallback;
-
-	private WebElement externalElement;
 
 	public void clear() {
 		getElement().clear();
@@ -98,18 +94,11 @@ public class WdExec {
 		return WDUtils.executeScript(driver, getElement(), script);
 	}
 
-	public void externalElement(WebElement element) {
-		externalElement = element;
-	}
-
 	public WebDriver getDriver() {
 		return driver;
 	}
 
 	public WebElement getElement() {
-		if (externalElement != null) {
-			return externalElement;
-		}
 		By by = getBy();
 		if (by == null) {
 			return null;
@@ -187,7 +176,7 @@ public class WdExec {
 	public boolean performAction(boolean returnIfNotVisible,
 			Consumer<WebElement> actor) {
 		RuntimeException lastException = null;
-		for (int i = 0; i < Math.max(1, timeoutSecs * 5); i++) {
+		for (int i = 0; i < timeoutSecs * 5; i++) {
 			WebElement elem = getElement();
 			Actions actions = new Actions(driver);
 			actions.moveToElement(elem);
@@ -208,23 +197,6 @@ public class WdExec {
 				} else if (e instanceof StaleElementReferenceException) {
 					if (returnIfNotVisible) {
 						return true;
-					}
-					// WDUtils.scrollToCenterUsingBoundingClientRect(driver,
-					// elem);
-					sleep(200);
-				} else if (e instanceof ElementNotInteractableException) {
-					if (returnIfNotVisible) {
-						return true;
-					}
-					String message = e.getMessage();
-					if (message.contains("is not clickable")) {
-						if (ignoreSpuriousOtherElementWouldReceiveClickException(
-								elem, message)) {
-							return false;
-						}
-						WDUtils.scrollToCenterUsingBoundingClientRect(driver,
-								elem);
-						sleep(200);
 					}
 					// WDUtils.scrollToCenterUsingBoundingClientRect(driver,
 					// elem);
@@ -327,21 +299,6 @@ public class WdExec {
 	public void waitFor() {
 		for (int i = 0; i < timeoutSecs * 10; i++) {
 			if (immediateTest()) {
-				return;
-			} else {
-				sleep(100);
-			}
-		}
-		throw new TimedOutException();
-	}
-
-	public void waitForOneOf(String... paths) {
-		String xpath = Arrays.stream(paths).collect(Collectors.joining(" or "));
-		for (int i = 0; i < timeoutSecs * 10; i++) {
-			boolean found = (boolean) executeScript(Ax.format(
-					"return document.evaluate(\"%s\",document).booleanValue",
-					xpath));
-			if (found) {
 				return;
 			} else {
 				sleep(100);

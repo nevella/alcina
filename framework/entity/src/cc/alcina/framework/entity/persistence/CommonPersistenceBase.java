@@ -38,8 +38,6 @@ import javax.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
@@ -208,8 +206,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				storageClass = clazz;
 			}
 			if (WrapperPersistable.class.isAssignableFrom(clazz)) {
-				Preconditions.checkState(ResourceUtilities
-						.not(CommonPersistenceBase.class, "unwrapDisabled"));
 				storageClass = getImplementation(WrappedObject.class);
 			}
 			if (storageClass != null) {
@@ -683,12 +679,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 				EntityPersistenceHelper.toInClause(ids));
 		List<Publication> publications = getEntityManager().createQuery(sql)
 				.getResultList();
-		try {
-			unwrap(publications);
-		} catch (Exception e) {
-			// FIXME - mvcc.4 - will remove the unwrap call post mvcc.4
-			e.printStackTrace();
-		}
+		unwrap(publications);
 		return DomainLinker.linkToDomain(publications);
 	}
 
@@ -703,8 +694,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	@Override
 	public <W extends WrappedObject> List<W> getWrappedObjects(long from,
 			long to) {
-		Preconditions.checkState(ResourceUtilities
-				.not(CommonPersistenceBase.class, "unwrapDisabled"));
 		List sessionEntities = getEntityManager()
 				.createQuery("from "
 						+ getImplementation(WrappedObject.class).getSimpleName()
@@ -1114,8 +1103,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	private <T extends HasId> void
 			preloadWrappedObjects(Collection<T> wrappers) {
-		Preconditions.checkState(ResourceUtilities
-				.not(CommonPersistenceBase.class, "unwrapDisabled"));
 		try {
 			List<Long> wrapperIds = new WrappedObjectPersistence()
 					.getWrapperIds(wrappers);

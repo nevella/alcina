@@ -1106,16 +1106,11 @@ public class DomUtils implements NodeFromXpathProvider {
 					}
 					if (Ax.notBlank(currentEltWrapId)) {
 						flushToUnwrap();
-						if (e.getChildNodes().getLength() == 0
-								&& e.getTagName().equalsIgnoreCase("A")) {
-							int debug = 3;
-						} else {
-							Preconditions.checkState(
-									e.getChildNodes().getLength() == 1);
-							Preconditions.checkState(e.getChildNodes().item(0)
-									.getNodeType() == Node.TEXT_NODE);
-							kids.add(e.getChildNodes().item(0));
-						}
+						Preconditions
+								.checkState(e.getChildNodes().getLength() == 1);
+						Preconditions.checkState(e.getChildNodes().item(0)
+								.getNodeType() == Node.TEXT_NODE);
+						kids.add(e.getChildNodes().item(0));
 					} else {
 						if (Ax.notBlank(currentEltUnwrapId)) {
 							if (!Objects.equals(currentEltUnwrapId,

@@ -16,13 +16,11 @@ package cc.alcina.framework.common.client.search;
 import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
-import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 
 /**
  *
  * @author Nick Reddel
  */
-@TypeSerialization(flatSerializable = false)
 public abstract class SingleTableSearchDefinition<R extends SearchResult>
 		extends SearchDefinition implements RemoteParameters {
 	private Direction orderDirection;

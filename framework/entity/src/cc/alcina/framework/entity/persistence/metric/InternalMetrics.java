@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
@@ -104,10 +103,6 @@ public class InternalMetrics {
 	}
 
 	public void startService() {
-		if (!ResourceUtilities.is(InternalMetrics.class, "enabled")
-				&& EntityLayerUtils.isTestOrTestServer()) {
-			return;
-		}
 		this.sliceOracle = Registry.impl(InternalMetricSliceOracle.class);
 		Preconditions.checkState(!started);
 		started = true;

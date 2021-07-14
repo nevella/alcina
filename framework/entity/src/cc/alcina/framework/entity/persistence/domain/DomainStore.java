@@ -893,6 +893,9 @@ public class DomainStore implements IDomainStore {
 			// this is also checked in TransformCommit
 			// filtered.removeIf(collation::isCreatedAndDeleted);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
+			if (filtered.toString().contains("JobImpl")) {
+				int debug = 3;
+			}
 			for (DomainTransformEventPersistent transform : filtered) {
 				postProcessTransform = transform;
 				// remove from indicies before first change - and only if
@@ -1931,9 +1934,6 @@ public class DomainStore implements IDomainStore {
 					stream = streamFromCacheValues();
 				}
 				if (LooseContext.has(DomainQuery.CONTEXT_DEBUG_CONSUMER)) {
-					DomainQuery.DebugConsumer consumer = LooseContext
-							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER);
-					consumer.queryToken = this;
 					stream = stream.peek(LooseContext
 							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER));
 				}
@@ -1980,11 +1980,6 @@ public class DomainStore implements IDomainStore {
 		public Entity getObjectForCreationTransform(DomainTransformEvent dte,
 				boolean ignoreSource) {
 			return super.getObject(dte, ignoreSource);
-		}
-
-		@Override
-		public boolean isIgnorePropertyChanges() {
-			return true;
 		}
 
 		@Override

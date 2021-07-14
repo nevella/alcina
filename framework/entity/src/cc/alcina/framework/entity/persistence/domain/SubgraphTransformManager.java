@@ -104,11 +104,6 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 
 		@Override
-		public boolean isAssignableFrom(Class from, Class to) {
-			return ObjectPersistenceHelper.get().isAssignableFrom(from, to);
-		}
-
-		@Override
 		public <T> T newInstance(Class<T> clazz) {
 			try {
 				return clazz.newInstance();

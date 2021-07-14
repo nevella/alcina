@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -220,16 +220,16 @@ public class LinkModel extends Model {
 										evt, actionRefPlace),
 								ClickEvent.getType());
 					}
-					Optional<EmitsTopic> emitsTopic = actionRefPlace
-							.emitsTopic();
-					if (emitsTopic.isPresent()
-							&& !emitsTopic.get().hasValidation()) {
+					Optional<TopicBehaviour> actionTopic = actionRefPlace
+							.getActionTopic();
+					if (actionTopic.isPresent()) {
 						rendered.addDomHandler(event -> {
-							Class<? extends TopicEvent> type = emitsTopic.get()
-									.value();
+							TopicBehaviour behaviour = actionTopic.get();
 							Context context = NodeEvent.Context
 									.newTopicContext(event, node);
-							TopicEvent.fire(context, type, null);
+							TopicEvent.fire(context, behaviour.topic(),
+									behaviour.payloadTransformer(), null,
+									false);
 						}, ClickEvent.getType());
 					}
 				}

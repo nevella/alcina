@@ -5,12 +5,6 @@ public class StatCategory_DomainStore extends StatCategory {
 		super(StatCategory_Console.class, "domain-store");
 	}
 
-	public static class GetDescriptor extends StatCategory {
-		public GetDescriptor() {
-			super(StatCategory_DomainStore.class, "get-descriptor");
-		}
-	}
-
 	public static class Load extends StatCategory {
 		public Load() {
 			super(StatCategory_DomainStore.class, "load-domainstore");

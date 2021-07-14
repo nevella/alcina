@@ -4,16 +4,6 @@ import java.util.Arrays;
 import java.util.Optional;
 import java.util.function.Function;
 
-/**
- * A key part of dirndl - how annotations (declarative domain knowledge) are
- * modified by their context.
- * 
- * See com.fasterxml.jackson.databind.ObjectMapper.addMixIn(Class<?>, Class<?>)
- * for a good alternative solution for straight-forward cases.
- * 
- * Bit of an a-Ha moment - does this remind anyone of DNA transcription?
- * (particularly in the generative context of dirndl)?
- */
 public class TreeResolver<A> {
 	private A leafValue;
 

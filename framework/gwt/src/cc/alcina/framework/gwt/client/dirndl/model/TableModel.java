@@ -30,12 +30,10 @@ import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedBindableSearchActivity;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedCategoriesActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -60,6 +58,148 @@ public class TableModel extends Model {
 
 	public List<TableRow> getRows() {
 		return this.rows;
+	}
+
+	public static class TableCell extends Model {
+		protected TableValueModel value;
+
+		protected TableColumn column;
+
+		protected TableRow row;
+
+		public TableCell() {
+		}
+
+		public TableCell(TableColumn column, TableRow row) {
+			this.column = column;
+			this.row = row;
+			this.value = new TableValueModel(this);
+		}
+
+		public TableValueModel getValue() {
+			return this.value;
+		}
+	}
+
+	public enum SortDirection {
+		ASCENDING, DESCENDING;
+	}
+
+	public static class TableColumn extends Model {
+		private Field field;
+
+		private SortDirection sortDirection;
+
+		public SortDirection getSortDirection() {
+			return this.sortDirection;
+		}
+
+		public void setSortDirection(SortDirection sortDirection) {
+			this.sortDirection = sortDirection;
+		}
+
+		public Field getField() {
+			return this.field;
+		}
+
+		public void setField(Field field) {
+			this.field = field;
+		}
+
+		private String caption;
+
+		public TableColumn() {
+		}
+
+		public TableColumn(Field field) {
+			this(field, null);
+		}
+
+		public TableColumn(Field field, SortDirection sortDirection) {
+			this.field = field;
+			this.sortDirection = sortDirection;
+			this.caption = field.getLabel();
+		}
+
+		public String getCaption() {
+			return this.caption;
+		}
+	}
+
+	public static class TableHeader extends Model {
+		private List<TableColumn> columns = new ArrayList<>();
+
+		public TableHeader() {
+		}
+
+		@Directed
+		public List<TableColumn> getColumns() {
+			return this.columns;
+		}
+	}
+
+	@ClientInstantiable
+	public static class SearchTableColumnClickHandler
+			implements NodeEvent.Handler {
+		@Override
+		public void onEvent(Context eventContext) {
+			TableColumn column = eventContext.node.getModel();
+			Place rawPlace = Client.currentPlace();
+			if (!(rawPlace instanceof BindablePlace)) {
+				return;
+			}
+			BindablePlace<?> place = Client.currentPlace();
+			place = place.copy();
+			DisplaySearchOrder order = new DisplaySearchOrder();
+			order.setFieldName(column.getField().getPropertyName());
+			SearchOrders searchOrders = place.def.getSearchOrders();
+			Optional<SearchOrder> firstOrder = searchOrders.getFirstOrder();
+			if (firstOrder.isPresent()
+					&& firstOrder.get().equivalentTo(order)) {
+				searchOrders.toggleFirstOrder();
+			} else {
+				searchOrders.putFirstOrder(order);
+			}
+			Client.goTo(place);
+		}
+	}
+
+	public static class DirectedEntitySearchActivityTransformer extends
+			AbstractContextSensitiveModelTransform<DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
+		@Override
+		public TableModel apply(
+				DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
+			TableModel model = new TableModel();
+			BoundWidgetTypeFactory factory = Registry
+					.impl(TableTypeFactory.class);
+			if (activity.getSearchResults() == null) {
+				return model;
+			}
+			node.pushResolver(ModalResolver.multiple(true));
+			BindableSearchDefinition def = activity.getSearchResults().getDef();
+			String sortFieldName = def.getSearchOrders()
+					.provideSearchOrderFieldName();
+			SortDirection sortDirection = def.getSearchOrders()
+					.provideIsAscending() ? SortDirection.ASCENDING
+							: SortDirection.DESCENDING;
+			Class<? extends Bindable> resultClass = activity.getSearchResults()
+					.resultClass();
+			GwittirBridge.get()
+					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
+							Reflections.classLookup()
+									.getTemplateInstance(resultClass),
+							factory, false, true, node.getResolver())
+					.stream().map(field -> {
+						SortDirection fieldDirection = field.getPropertyName()
+								.equals(sortFieldName) ? sortDirection : null;
+						return new TableColumn(field, fieldDirection);
+					}).forEach(model.header.columns::add);
+			activity.getSearchResults().getQueriedResultObjects().stream()
+					.map(bindable -> new TableRow(model, bindable))
+					.forEach(model.rows::add);
+			// add actions if editable and adjunct
+			return model;
+		}
 	}
 
 	public static class DirectedCategoriesActivityTransformer extends
@@ -103,9 +243,10 @@ public class TableModel extends Model {
 				this.place = place;
 			}
 
-			@Override
-			public String displayName() {
-				return place.ensureAction().getDisplayName();
+			@Display(name = "Name", orderingHint = 10)
+			@Custom(customiserClass = ModelPlaceCustomiser.class)
+			public CategoryNamePlace getPlace() {
+				return place;
 			}
 
 			@Display(name = "Description", orderingHint = 20)
@@ -115,170 +256,16 @@ public class TableModel extends Model {
 								: place.ensureAction().getDescription();
 			}
 
-			@Display(name = "Name", orderingHint = 10)
-			@Custom(customiserClass = ModelPlaceCustomiser.class)
-			public CategoryNamePlace getPlace() {
-				return place;
+			@Override
+			public String displayName() {
+				return place.ensureAction().getDisplayName();
 			}
 		}
 	}
 
-	public static class DirectedEntitySearchActivityTransformer extends
-			AbstractContextSensitiveModelTransform<DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable>, TableModel> {
-		@Override
-		public TableModel apply(
-				DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
-			TableModel model = new TableModel();
-			BoundWidgetTypeFactory factory = Registry
-					.impl(TableTypeFactory.class);
-			if (activity.getSearchResults() == null) {
-				return model;
-			}
-			node.pushResolver(ModalResolver.multiple(true));
-			BindableSearchDefinition def = activity.getSearchResults().getDef();
-			String sortFieldName = def.getSearchOrders()
-					.provideSearchOrderFieldName();
-			SortDirection sortDirection = def.getSearchOrders()
-					.provideIsAscending() ? SortDirection.ASCENDING
-							: SortDirection.DESCENDING;
-			Class<? extends Bindable> resultClass = activity.getSearchResults()
-					.resultClass();
-			GwittirBridge.get()
-					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							Reflections.classLookup()
-									.getTemplateInstance(resultClass),
-							factory, false, true, node.getResolver())
-					.stream().map(field -> {
-						SortDirection fieldDirection = field.getPropertyName()
-								.equals(sortFieldName) ? sortDirection : null;
-						return new TableColumn(field, fieldDirection);
-					}).forEach(model.header.columns::add);
-			activity.getSearchResults().getQueriedResultObjects().stream()
-					.map(bindable -> new TableRow(model, bindable))
-					.forEach(model.rows::add);
-			// add actions if editable and adjunct
-			return model;
-		}
-	}
-
-	public interface SearchTableColumnClickHandler
-			extends DomEvents.Click.Handler {
-		@Override
-		default void onClick(Click Click) {
-			TableColumn column = (TableColumn) this;
-			Place rawPlace = Client.currentPlace();
-			if (!(rawPlace instanceof BindablePlace)) {
-				return;
-			}
-			BindablePlace<?> place = Client.currentPlace();
-			place = place.copy();
-			DisplaySearchOrder order = new DisplaySearchOrder();
-			order.setFieldName(column.getField().getPropertyName());
-			SearchOrders searchOrders = place.def.getSearchOrders();
-			Optional<SearchOrder> firstOrder = searchOrders.getFirstOrder();
-			if (firstOrder.isPresent()
-					&& firstOrder.get().equivalentTo(order)) {
-				searchOrders.toggleFirstOrder();
-			} else {
-				searchOrders.putFirstOrder(order);
-			}
-			Client.goTo(place);
-		}
-	}
-
-	public enum SortDirection {
-		ASCENDING, DESCENDING;
-	}
-
-	public static class TableCell extends Model {
-		protected TableValueModel value;
-
-		protected TableColumn column;
-
-		protected TableRow row;
-
-		public TableCell() {
-		}
-
-		public TableCell(TableColumn column, TableRow row) {
-			this.column = column;
-			this.row = row;
-			this.value = new TableValueModel(this);
-		}
-
-		public TableValueModel getValue() {
-			return this.value;
-		}
-	}
-
-	public static class TableColumn extends Model {
-		private Field field;
-
-		private SortDirection sortDirection;
-
-		private String caption;
-
-		public TableColumn() {
-		}
-
-		public TableColumn(Field field) {
-			this(field, null);
-		}
-
-		public TableColumn(Field field, SortDirection sortDirection) {
-			this.field = field;
-			this.sortDirection = sortDirection;
-			this.caption = field.getLabel();
-		}
-
-		public String getCaption() {
-			return this.caption;
-		}
-
-		public Field getField() {
-			return this.field;
-		}
-
-		public SortDirection getSortDirection() {
-			return this.sortDirection;
-		}
-
-		public void setField(Field field) {
-			this.field = field;
-		}
-
-		public void setSortDirection(SortDirection sortDirection) {
-			this.sortDirection = sortDirection;
-		}
-	}
-
-	public static class TableColumnClicked
-			extends TopicEvent<TableColumn, TableColumnClicked.Handler> {
-		@Override
-		public void dispatch(TableColumnClicked.Handler handler) {
-			handler.onTableColumnClicked(this);
-		}
-
-		@Override
-		public Class<TableColumnClicked.Handler> getHandlerClass() {
-			return TableColumnClicked.Handler.class;
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onTableColumnClicked(TableColumnClicked TableColumnClicked);
-		}
-	}
-
-	public static class TableHeader extends Model {
-		private List<TableColumn> columns = new ArrayList<>();
-
-		public TableHeader() {
-		}
-
-		@Directed
-		public List<TableColumn> getColumns() {
-			return this.columns;
-		}
+	@RegistryLocation(registryPoint = TableTypeFactory.class, implementationType = ImplementationType.INSTANCE)
+	@ClientInstantiable
+	public static class TableTypeFactory extends BoundWidgetTypeFactory {
 	}
 
 	public static class TableRow extends Model {
@@ -300,11 +287,6 @@ public class TableModel extends Model {
 		public List<TableCell> getCells() {
 			return this.cells;
 		}
-	}
-
-	@RegistryLocation(registryPoint = TableTypeFactory.class, implementationType = ImplementationType.INSTANCE)
-	@ClientInstantiable
-	public static class TableTypeFactory extends BoundWidgetTypeFactory {
 	}
 
 	public static class TableValueModel extends Model implements ValueModel {

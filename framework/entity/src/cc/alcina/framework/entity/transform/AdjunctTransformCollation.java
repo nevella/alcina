@@ -98,8 +98,8 @@ public class AdjunctTransformCollation extends TransformCollation {
 	}
 
 	@Override
-	protected void removeTransformFromRequest(DomainTransformEvent event) {
+	protected void removeTransformsFromRequest(QueryResult queryResult) {
 		Preconditions.checkState(token.getTransformResult() == null);
-		token.getRequest().removeTransform(event);
+		queryResult.events.forEach(token.getRequest()::removeTransform);
 	}
 }

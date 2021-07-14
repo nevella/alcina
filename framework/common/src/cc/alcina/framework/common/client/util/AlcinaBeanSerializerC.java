@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -41,6 +42,10 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
 public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
+	CachingMap<Class, AlcinaBeanSerializerCCustom> customSerializers = new CachingMap<Class, AlcinaBeanSerializerCCustom>(
+			clazz -> Registry.implOrNull(AlcinaBeanSerializerCCustom.class,
+					clazz));
+
 	IdentityHashMap seenOut = new IdentityHashMap();
 
 	Map seenIn = new LinkedHashMap();
@@ -168,6 +173,11 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			} else {
 				return null;
 			}
+		}
+		AlcinaBeanSerializerCCustom customSerializer = customSerializers
+				.get(clazz);
+		if (customSerializer != null) {
+			return customSerializer.fromJson(jsonObj);
 		}
 		JSONObject props = (JSONObject) jsonObj
 				.get(getPropertyFieldName(jsonObj));
@@ -298,6 +308,11 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			return jo;
 		} else {
 			seenOut.put(object, seenOut.size());
+		}
+		AlcinaBeanSerializerCCustom customSerializer = customSerializers
+				.get(clazz);
+		if (customSerializer != null) {
+			return customSerializer.toJson(object);
 		}
 		GwittirBridge gb = GwittirBridge.get();
 		Object template = Reflections.classLookup().getTemplateInstance(clazz);

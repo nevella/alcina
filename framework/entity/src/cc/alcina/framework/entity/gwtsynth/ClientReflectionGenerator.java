@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -66,7 +65,6 @@ import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ToStringComparator;
@@ -502,25 +500,11 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println("private void init() {");
 		sw.indent();
 		sw.println("initCreateLookup0();");
-		List<JClassType> instantiableTypesThisModule = allTypes.stream().filter(
-				t -> !filter.omitForModule(t, ReflectionAction.NEW_INSTANCE))
-				.collect(Collectors.toList());
-		Map<JClassType, List<JClassType>> assignableFromTypes = computeAssignableFromTypes(
-				instantiableTypesThisModule);
-		assignableFromTypes.forEach((from, to) -> {
-			if (to.isEmpty()) {
-				return;
+		for (JClassType t : allTypes) {
+			if (!filter.omitForModule(t, ReflectionAction.NEW_INSTANCE)) {
+				sw.println(String.format("forNameMap.put(\"%s\",%s.class);",
+						t.getQualifiedBinaryName(), getQualifiedSourceName(t)));
 			}
-			sw.println(String.format(
-					"clazzImplements.put(\"%s\",java.util.Arrays.asList(%s));",
-					from.getQualifiedBinaryName(),
-					to.stream().map(JClassType::getQualifiedBinaryName)
-							.map(t -> Ax.format("\"%s\"", t))
-							.collect(Collectors.joining(","))));
-		});
-		for (JClassType t : assignableFromTypes.keySet()) {
-			sw.println(String.format("forNameMap.put(\"%s\",%s.class);",
-					t.getQualifiedBinaryName(), getQualifiedSourceName(t)));
 		}
 		sw.println("");
 		sw.println("//init registry");
@@ -558,32 +542,6 @@ public class ClientReflectionGenerator extends Generator {
 			System.out.println(wrappedWriters.get(printWriter).getStringWriter()
 					.toString());
 		}
-	}
-
-	private Map<JClassType, List<JClassType>> computeAssignableFromTypes(
-			List<JClassType> instantiableTypesThisModule) {
-		Map<JClassType, List<JClassType>> result = new LinkedHashMap<>();
-		Set<String> resultBinaryNames = new LinkedHashSet<>();
-		Set<JClassType> stack = new LinkedHashSet<>(
-				instantiableTypesThisModule);
-		while (stack.size() > 0) {
-			Iterator<JClassType> iterator = stack.iterator();
-			JClassType type = iterator.next();
-			iterator.remove();
-			result.put(type, Arrays.asList(type.getImplementedInterfaces()));
-			JClassType superclass = type.getSuperclass();
-			if (superclass != null && resultBinaryNames
-					.add(superclass.getQualifiedBinaryName())) {
-				stack.add(superclass);
-			}
-			for (JClassType jClassType : type.getImplementedInterfaces()) {
-				if (resultBinaryNames
-						.add(jClassType.getQualifiedBinaryName())) {
-					stack.add(jClassType);
-				}
-			}
-		}
-		return result;
 	}
 
 	private SourceWriter createWriter(ClassSourceFileComposerFactory factory,

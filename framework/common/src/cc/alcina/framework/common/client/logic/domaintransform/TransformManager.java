@@ -182,11 +182,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public static List<Long> idListToLongs(String str) {
-		return idListToLongs(str, false);
-	}
-
-	public static List<Long> idListToLongs(String str,
-			boolean includeNonPositive) {
 		ArrayList<Long> result = new ArrayList<Long>();
 		if (CommonUtils.isNullOrEmpty(str)) {
 			return result;
@@ -201,7 +196,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			String t = s.trim();
 			if (t.length() > 0) {
 				long value = Long.parseLong(t);
-				if (value > 0 || includeNonPositive) {
+				if (value > 0) {
 					result.add(value);
 				}
 			}
@@ -485,23 +480,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 			switch (token.transformType) {
 			case NULL_PROPERTY_REF:
 			case CHANGE_PROPERTY_REF:
-				if (token.existingTargetObject != token.newTargetObject) {
-					if (token.existingTargetObject instanceof Collection) {
-						throw new RuntimeException(
-								"Should not null a collection property:\n "
-										+ event.toString());
-					}
-				}
-				break;
-			}
-			switch (token.transformType) {
-			case NULL_PROPERTY_REF:
-			case CHANGE_PROPERTY_SIMPLE_VALUE:
-				if (token.domainSerializablePropertyName != null
-						&& isIgnorePropertyChanges()) {
-					propertyAccessor().setPropertyValue(token.object,
-							token.domainSerializablePropertyName, null);
-				}
 				if (token.existingTargetObject != token.newTargetObject) {
 					if (token.existingTargetObject instanceof Collection) {
 						throw new RuntimeException(
@@ -1290,21 +1268,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return dtes;
 	}
 
-	public void persistSerializables(Entity entity) {
-		Reflections.classLookup().getPropertyReflectors(entity.entityClass())
-				.stream()
-				.filter(reflector -> reflector != null
-						&& reflector.getAnnotation(DomainProperty.class) != null
-						&& reflector.getAnnotation(DomainProperty.class)
-								.serialize())
-				.forEach(reflector -> {
-					Object propertyValue = reflector.getPropertyValue(entity);
-					Object copy = Serializer.get().copy(propertyValue);
-					reflector.setPropertyValue(entity, copy);
-				});
-		;
-	}
-
 	/**
 	 * <p>
 	 * Can be called multiple times - transforms will be removed after the first
@@ -1359,8 +1322,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 		} catch (RuntimeException e) {
 			if (GWT.isClient()) {
 				AlcinaTopics.TOPIC_TRANSFORM_CASCADE_EXCEPTION.publish(e);
+			} else {
+				throw e;
 			}
-			throw e;
 		}
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
 		DomainTransformEvent dte = createTransformFromPropertyChange(event);
@@ -1872,8 +1836,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 							.classLookup().getPropertyReflector(entityClass,
 									classNamePropertyName);
 					serializedClassNameReflector.setPropertyValue(entity,
-							event.getNewValue() == null ? null
-									: event.getNewValue().getClass().getName());
+							event.getNewValue().getClass().getName());
 				}
 				// do not persist as a transform
 				return true;
@@ -1978,6 +1941,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected void promoteToDomain(Collection objects, boolean deregister) {
 		try {
+			objects = (Collection) objects.stream().map(o -> {
+				if (o instanceof HasTransformPersistable) {
+					return ((HasTransformPersistable) o).resolvePersistable();
+				} else {
+					return o;
+				}
+			}).collect(Collectors.toList());
 			CollectionModificationSupport.queue(true);
 			for (Object o : objects) {
 				if (o instanceof Entity
@@ -2292,10 +2262,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return Registry.impl(TransformManager.Serializer.class);
 		}
 
-		public <T> T copy(T object) {
-			return deserialize(serialize(object, false));
-		}
-
 		public <V> V deserialize(String serialized) {
 			return deserialize(serialized, null);
 		}
@@ -2310,10 +2276,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	class ApplyToken {
-		private static final String SERIALIZED_SUFFIX = "Serialized";
-
-		String domainSerializablePropertyName;
-
 		Entity object;
 
 		TransformType transformType;
@@ -2343,13 +2305,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 				}
 			}
 			existingTargetObject = null;
-			String propertyName = event.getPropertyName();
 			if (event.isInImmediatePropertyChangeCommit()) {
 				existingTargetObject = event.getOldValue();
-			} else if (event.getSource() == null || propertyName == null) {
+			} else if (event.getSource() == null
+					|| event.getPropertyName() == null) {
 			} else {
-				existingTargetObject = propertyAccessor()
-						.getPropertyValue(event.getSource(), propertyName);
+				existingTargetObject = propertyAccessor().getPropertyValue(
+						event.getSource(), event.getPropertyName());
 			}
 			existingTargetObject = ensureEndpointInTransformGraph(
 					existingTargetObject);
@@ -2363,18 +2325,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 			newTargetEntity = null;
 			if (newTargetObject instanceof Entity) {
 				newTargetEntity = (Entity) newTargetObject;
-			}
-			if (propertyName != null
-					&& propertyName.endsWith(SERIALIZED_SUFFIX)) {
-				String serializationSourceName = propertyName.substring(0,
-						propertyName.length() - SERIALIZED_SUFFIX.length());
-				PropertyReflector reflector = Reflections.propertyAccessor()
-						.getPropertyReflector(event.getObjectClass(),
-								serializationSourceName);
-				domainSerializablePropertyName = reflector != null
-						&& reflector.hasAnnotation(DomainProperty.class)
-						&& reflector.getAnnotation(DomainProperty.class)
-								.serialize() ? serializationSourceName : null;
 			}
 		}
 	}

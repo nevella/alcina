@@ -19,7 +19,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
-import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Panel;
@@ -38,12 +37,15 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ToStringFunction;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Handler;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -59,9 +61,7 @@ public class DirectedLayout {
 	public static boolean isDefault(Directed annotation) {
 		return annotation.renderer() == ModelClassNodeRenderer.class
 				&& annotation.cssClass().isEmpty() && annotation.tag().isEmpty()
-				&& annotation.emits().length == 0
-				&& annotation.reemits().length == 0
-				&& annotation.receives().length == 0
+				&& annotation.behaviours().length == 0
 				&& annotation.bindings().length == 0;
 	}
 
@@ -187,9 +187,8 @@ public class DirectedLayout {
 		}
 
 		public void fireEvent(TopicEvent topicEvent) {
-			if (rendered.eventBindings != null) {
-				rendered.eventBindings
-						.forEach(bb -> bb.onTopicEvent(topicEvent));
+			if (rendered.behaviours != null) {
+				rendered.behaviours.forEach(bb -> bb.onTopicEvent(topicEvent));
 			}
 		}
 
@@ -339,8 +338,7 @@ public class DirectedLayout {
 		}
 
 		private void bindBehaviours() {
-			if (directed == null || directed.receives().length == 0
-					|| model == null) {
+			if (directed == null || directed.behaviours().length == 0) {
 				return;
 			}
 			rendered.bindBehaviours();
@@ -368,9 +366,6 @@ public class DirectedLayout {
 			 * without adding model children until the final Directed
 			 */
 			if (renderer instanceof HasWrappingDirecteds) {
-				if (model == null) {
-					return;
-				}
 				List<Directed> wrappers = ((HasWrappingDirecteds) renderer)
 						.getWrappingDirecteds(this);
 				Widget rootResult = null;
@@ -542,30 +537,29 @@ public class DirectedLayout {
 		public class Rendered {
 			List<Widget> widgets = new ArrayList<>();
 
-			public List<NodeEventBinding> eventBindings;
+			public List<BehaviourBinding> behaviours;
 
 			public List<PropertyBinding> bindings;
 
-			private Map<Class<? extends NodeEvent>, NodeEventBinding> preRenderListeners;
+			private Map<Behaviour, BehaviourBinding> preRenderListeners;
 
-			public void addBehaviourBinding(
-					Class<? extends NodeEvent> eventType,
-					NodeEventBinding behaviourBinding) {
-				if (eventBindings != null) {
-					eventBindingFor(eventType).topicListeners
+			public void addBehaviourBinding(Behaviour behaviour,
+					BehaviourBinding behaviourBinding) {
+				if (behaviours != null) {
+					behaviourBindingFor(behaviour).topicListeners
 							.addListener(behaviourBinding);
 				} else {
 					if (preRenderListeners == null) {
 						preRenderListeners = new LinkedHashMap<>();
 					}
-					preRenderListeners.put(eventType, behaviourBinding);
+					preRenderListeners.put(behaviour, behaviourBinding);
 				}
 			}
 
-			public NodeEventBinding
-					eventBindingFor(Class<? extends NodeEvent> eventType) {
-				return eventBindings.stream().filter(bb -> bb.type == eventType)
-						.findFirst().get();
+			public BehaviourBinding behaviourBindingFor(Behaviour behaviour) {
+				return behaviours.stream()
+						.filter(bb -> bb.behaviour == behaviour).findFirst()
+						.get();
 			}
 
 			public int getChildIndex(Widget childWidget) {
@@ -611,16 +605,14 @@ public class DirectedLayout {
 
 			void bindBehaviours() {
 				Preconditions.checkState(widgets.size() == 1);
-				eventBindings = new ArrayList<>();
-				for (int idx = 0; idx < directed.receives().length; idx++) {
-					Class<? extends NodeEvent> clazz = directed.receives()[idx];
-					eventBindings.add(new NodeEventBinding(clazz, idx));
-				}
-				eventBindings.forEach(NodeEventBinding::bind);
+				behaviours = Arrays.stream(directed.behaviours())
+						.map(BehaviourBinding::new)
+						.collect(Collectors.toList());
+				behaviours.forEach(BehaviourBinding::bind);
 				if (preRenderListeners != null) {
 					preRenderListeners
 							.forEach((behaviour, behaviourBinding) -> {
-								eventBindingFor(behaviour).topicListeners
+								behaviourBindingFor(behaviour).topicListeners
 										.addListener(behaviourBinding);
 							});
 					preRenderListeners = null;
@@ -681,111 +673,97 @@ public class DirectedLayout {
 			}
 		}
 
-		class NodeEventBinding implements NodeEventReceiver {
-			Class<? extends NodeEvent> type;
+		class BehaviourBinding implements NodeEventReceiver {
+			Behaviour behaviour;
 
-			// FIXME - dirndl 1.3 - why binding? why not bound event?
-			// also .... shouldn't we create these events on demand, and just
-			// use type? or call it 'template'?
-			NodeEvent<? extends EventHandler> eventTemplate;
+			NodeEvent eventBinding;
 
 			TopicListeners topicListeners = new TopicListeners();
 
-			private int receiverIndex;
-
-			public NodeEventBinding(Class<? extends NodeEvent> type, int idx) {
-				this.type = type;
-				this.receiverIndex = idx;
+			public BehaviourBinding(Behaviour behaviour) {
+				this.behaviour = behaviour;
 			}
 
 			@Override
 			public void onEvent(GwtEvent event) {
 				Context context = new NodeEvent.Context();
 				context.gwtEvent = event;
-				fireEvent(context, Node.this.getModel());
+				fireEvent(context);
 			}
 
 			@Override
 			public String toString() {
 				return Ax.format("Binding :: %s :: %s",
-						model.getClass().getSimpleName(), type);
+						model.getClass().getSimpleName(), behaviour);
 			}
 
 			private void bindEvent(boolean bind) {
 				if (bind) {
-					if (eventTemplate == null) {
-						eventTemplate = Reflections.newInstance(type);
-						eventTemplate.setEventReceiver(this);
+					if (eventBinding == null) {
+						eventBinding = Reflections
+								.newInstance(behaviour.event());
+						eventBinding.setEventReceiver(this);
 					}
-					eventTemplate.bind(getBindingWidget(), true);
+					eventBinding.bind(getBindingWidget(), true);
 				} else {
-					eventTemplate.bind(null, false);
+					eventBinding.bind(null, false);
 				}
 			}
 
-			private void fireEvent(Context context, Object model) {
-				NodeEvent nodeEvent = Reflections.newInstance(type);
-				context.setNodeEvent(nodeEvent);
-				nodeEvent.setModel(model);
+			private void fireEvent(Context context) {
+				context.nodeEvent = eventBinding;
+				context.behaviour = behaviour;
 				context.node = Node.this;
-				// FIXME - dirndl 1.3 - do we still need to pass topicListeners?
 				context.topicListeners = topicListeners;
-				Class<? extends EventHandler> handlerClass = eventTemplate
-						.getHandlerClass();
-				NodeEvent.Handler handler = null;
-				if (Reflections.isAssignableFrom(handlerClass,
-						context.node.renderer.getClass())) {
-					handler = (NodeEvent.Handler) context.node.renderer;
-				} else if (Reflections.isAssignableFrom(handlerClass,
-						context.node.model.getClass())) {
-					handler = (NodeEvent.Handler) context.node.model;
+				Class<? extends Handler> handlerClass = behaviour.handler();
+				Handler handler = null;
+				// allow context-sensitive handlers
+				if (context.node.renderer.getClass() == handlerClass) {
+					handler = (Handler) context.node.renderer;
+				} else if (context.node.model.getClass() == handlerClass) {
+					handler = (Handler) context.node.model;
+				} else if (handlerClass == NodeEvent.Handler.Self.class) {
+					handler = (Handler) context.node.model;
 				} else {
-					// fire a logical topic event, based on correspondence
-					// between Directed.reemits and receives
-					Context eventContext = NodeEvent.Context
-							.newTopicContext(context, Node.this);
-					Preconditions.checkState(directed
-							.receives().length == directed.reemits().length);
-					Class<? extends TopicEvent> emitTopic = (Class<? extends TopicEvent>) directed
-							.reemits()[receiverIndex];
-					TopicEvent event = Reflections.newInstance(emitTopic);
-					TopicEvent.fire(eventContext, emitTopic,
-							Node.this.getModel());
-					return;
+					// FIXME - remove (with ancestor model)
+					Handler ancestorHandler = context.node
+							.ancestorModel(handlerClass);
+					if (ancestorHandler == null) {
+						handler = Reflections.newInstance(handlerClass);
+					} else {
+						handler = ancestorHandler;
+					}
 				}
 				logger.trace("Firing behaviour {} on {} to {}",
-						eventTemplate.getClass().getSimpleName(),
+						eventBinding.getClass().getSimpleName(),
 						Node.this.pathSegment(), handlerClass.getSimpleName());
-				nodeEvent.dispatch(handler);
+				handler.onEvent(context);
 			}
 
 			void bind() {
-				bindEvent(true);
-				// FIXME - dirndl.emit
-				/// go up the node tree until we find an emitter
-				//
-				// but - is this even used? maybe for search/form filters - but
-				// not sure it's needed/wanted
-				// for (TopicBehaviour topicBehaviour : type.topics()) {
-				// if (Behaviour.Util.isListenerTopic(topicBehaviour)) {
-				// Node cursor = Node.this;
-				// while (cursor != null) {
-				// Behaviour behaviour = Behaviour.Util.getEmitter(
-				// cursor.directed, topicBehaviour.topic());
-				// if (behaviour != null) {
-				// cursor.rendered.addBehaviourBinding(behaviour,
-				// this);
-				// logger.warn(
-				// "Binding topic behaviour {} on {} to {}\n",
-				// topicBehaviour.topic().getSimpleName(),
-				// Node.this.pathSegment(),
-				// cursor.pathSegment());
-				// break;
-				// }
-				// cursor = cursor.parent;
-				// }
-				// }
-				// }
+				if (!Behaviour.Util.hasActivationTopic(behaviour)) {
+					bindEvent(true);
+				}
+				for (TopicBehaviour topicBehaviour : behaviour.topics()) {
+					if (Behaviour.Util.isListenerTopic(topicBehaviour)) {
+						Node cursor = Node.this;
+						while (cursor != null) {
+							Behaviour behaviour = Behaviour.Util.getEmitter(
+									cursor.directed, topicBehaviour.topic());
+							if (behaviour != null) {
+								cursor.rendered.addBehaviourBinding(behaviour,
+										this);
+								logger.warn(
+										"Binding topic behaviour {} on {} to {}\n",
+										topicBehaviour.topic().getSimpleName(),
+										Node.this.pathSegment(),
+										cursor.pathSegment());
+								break;
+							}
+							cursor = cursor.parent;
+						}
+					}
+				}
 			}
 
 			Widget getBindingWidget() {
@@ -793,11 +771,15 @@ public class DirectedLayout {
 			}
 
 			void onTopicEvent(TopicEvent topicEvent) {
-				if (topicEvent.getClass() == type) {
-					Context context = NodeEvent.Context.newTopicContext(
-							topicEvent.getContext(), Node.this);
-					fireEvent(context, topicEvent.getModel());
-					topicEvent.setHandled(true);
+				if (Behaviour.Util.hasActivationTopic(behaviour,
+						topicEvent.topic)) {
+					bindEvent((boolean) topicEvent.payload);
+				}
+				if (Behaviour.Util.hasListenerTopic(behaviour,
+						topicEvent.topic)) {
+					Context context = new NodeEvent.Context();
+					context.topicEvent = topicEvent;
+					fireEvent(context);
 				}
 			}
 		}
@@ -860,14 +842,10 @@ public class DirectedLayout {
 				Element element = rendered.widgets.get(0).getElement();
 				switch (binding.type()) {
 				case INNER_HTML:
-					if (value != null) {
-						element.setInnerHTML(stringValue);
-					}
+					element.setInnerHTML(stringValue);
 					break;
 				case INNER_TEXT:
-					if (value != null) {
-						element.setInnerText(stringValue);
-					}
+					element.setInnerText(stringValue);
 					break;
 				case PROPERTY:
 					if (value == null) {

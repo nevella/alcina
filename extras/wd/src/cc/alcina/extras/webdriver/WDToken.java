@@ -22,8 +22,6 @@ public class WDToken {
 
 	private WDDriverHandler driverHandler;
 
-	private String loadedUrl;
-
 	private StringMap testInfo = new StringMap();
 
 	public WDConfigurationItem getConfiguration() {
@@ -32,10 +30,6 @@ public class WDToken {
 
 	public WDDriverHandler getDriverHandler() {
 		return driverHandler;
-	}
-
-	public String getLoadedUrl() {
-		return this.loadedUrl;
 	}
 
 	public TestResult getRootResult() {
@@ -68,10 +62,6 @@ public class WDToken {
 
 	public void setDriverHandler(WDDriverHandler driverHandler) {
 		this.driverHandler = driverHandler;
-	}
-
-	public void setLoadedUrl(String loadedUrl) {
-		this.loadedUrl = loadedUrl;
 	}
 
 	public void setRootResult(TestResult rootResult) {

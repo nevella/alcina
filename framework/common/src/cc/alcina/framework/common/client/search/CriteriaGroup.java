@@ -28,10 +28,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
@@ -40,9 +38,7 @@ import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 @Bean
-@RegistryLocations({
-		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
-		@RegistryLocation(registryPoint = TreeSerializable.class) })
+@RegistryLocation(registryPoint = JaxbContextRegistration.class)
 public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		implements TreeRenderable, Permissible, HasPermissionsValidation,
 		HasReflectiveEquivalence<CriteriaGroup>, TreeSerializable {
@@ -166,7 +162,6 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 	}
 
 	@Override
-	@AlcinaTransient
 	public abstract String getDisplayName();
 
 	/**
@@ -181,8 +176,6 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 			}
 		}
 	}
-
-	
 
 	public boolean provideIsEmpty() {
 		for (SearchCriterion criterion : getCriteria()) {

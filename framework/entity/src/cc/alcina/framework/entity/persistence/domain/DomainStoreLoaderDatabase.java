@@ -1080,6 +1080,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							// handle cascading resolution in initialising phase
 							withResolveRefs(true).withReturnResults(true)
 							.loadEntities();
+					int debug = 3;
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);

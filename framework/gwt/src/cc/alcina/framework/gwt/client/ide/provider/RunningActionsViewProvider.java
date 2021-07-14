@@ -25,7 +25,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ide.widget.ActionProgress;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
@@ -109,7 +108,6 @@ public class RunningActionsViewProvider implements ViewProvider {
 	public static class ShowActionsViewProviderAction
 			extends PermissibleAction {
 		@Override
-		@AlcinaTransient
 		public String getDisplayName() {
 			return "Show running jobs";
 		}

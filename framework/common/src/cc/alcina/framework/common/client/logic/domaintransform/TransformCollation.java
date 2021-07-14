@@ -103,12 +103,8 @@ public class TransformCollation {
 		}
 	}
 
-	protected void removeTransformFromRequest(DomainTransformEvent event) {
-		throw new UnsupportedOperationException();
-	}
-
 	protected void removeTransformsFromRequest(QueryResult queryResult) {
-		queryResult.events.forEach(this::removeTransformFromRequest);
+		throw new UnsupportedOperationException();
 	}
 
 	public class EntityCollation implements HasId {
@@ -278,10 +274,6 @@ public class TransformCollation {
 		public boolean hasPropertyName(String name) {
 			return events.stream()
 					.anyMatch(e -> Objects.equals(e.getPropertyName(), name));
-		}
-
-		public void removeTransform(DomainTransformEvent event) {
-			TransformCollation.this.removeTransformFromRequest(event);
 		}
 
 		public void removeTransformsFromRequest() {

@@ -5,12 +5,8 @@ import java.util.Date;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 public abstract class StatCategory {
-	public static final transient String CONTEXT_MUTED = StatCategory.class
-			.getName() + ".CONTEXT_MUTED";
-
 	private Class<? extends StatCategory> parent;
 
 	private String name;
@@ -31,9 +27,6 @@ public abstract class StatCategory {
 	}
 
 	public void emit(long time) {
-		if (LooseContext.is(CONTEXT_MUTED)) {
-			return;
-		}
 		String timeStamp = new SimpleDateFormat("HH:mm:ss,SSS")
 				.format(new Date(time));
 		String key = Ax.format("[alc-%s]", getClass().getCanonicalName());

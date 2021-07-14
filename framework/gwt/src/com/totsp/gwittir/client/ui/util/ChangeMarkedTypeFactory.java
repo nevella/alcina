@@ -20,13 +20,12 @@
 
 package com.totsp.gwittir.client.ui.util;
 
+import com.google.gwt.user.client.ui.Widget;
+import com.totsp.gwittir.client.ui.BoundWidget;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-
-import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.BoundWidget;
 
 /**
  *

@@ -10,18 +10,23 @@ import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.ui.Widget;
 
 public class InferredDomEvents {
-	public static class ClickOutside extends NodeEvent<ClickOutside.Handler>
+	/**
+	 * @author nick@alcina.cc
+	 *
+	 */
+	public static class ClickOutside extends NodeEvent
 			implements NativePreviewHandler {
 		private Widget widget;
 
 		@Override
-		public void dispatch(ClickOutside.Handler handler) {
-			handler.onClickOutside(this);
-		}
-
-		@Override
-		public Class<ClickOutside.Handler> getHandlerClass() {
-			return ClickOutside.Handler.class;
+		protected HandlerRegistration bind0(Widget widget) {
+			this.widget = widget;
+			widget.addAttachHandler(evt -> {
+				if (!evt.isAttached()) {
+					unbind();
+				}
+			});
+			return Event.addNativePreviewHandler(this);
 		}
 
 		@Override
@@ -49,20 +54,5 @@ public class InferredDomEvents {
 			}
 			return false;
 		}
-
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			this.widget = widget;
-			widget.addAttachHandler(evt -> {
-				if (!evt.isAttached()) {
-					unbind();
-				}
-			});
-			return Event.addNativePreviewHandler(this);
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onClickOutside(ClickOutside event);
-		}
-	}
+	};
 }

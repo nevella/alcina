@@ -104,12 +104,4 @@ public class CollectionCreators {
 	public static interface TypedMapCreator<K, V> {
 		public Map<K, V> create(Class<K> keyClass, Class<V> valueClass);
 	}
-
-	@RegistryLocation(registryPoint = UnsortedMapCreator.class, implementationType = ImplementationType.SINGLETON)
-	public static class UnsortedMapCreator implements DelegateMapCreator {
-		@Override
-		public Map createDelegateMap(int depthFromRoot, int depth) {
-			return new LinkedHashMap<>();
-		}
-	}
 }
