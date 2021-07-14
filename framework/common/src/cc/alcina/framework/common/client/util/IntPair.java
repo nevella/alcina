@@ -15,7 +15,7 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 @RegistryLocations({
 		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
 		@RegistryLocation(registryPoint = TreeSerializable.class) })
-@ClientInstantiable
+@Bean
 @XmlAccessorType(XmlAccessType.FIELD)
 public class IntPair implements Comparable<IntPair>, Serializable,
 		Iterable<Integer>, TreeSerializable {

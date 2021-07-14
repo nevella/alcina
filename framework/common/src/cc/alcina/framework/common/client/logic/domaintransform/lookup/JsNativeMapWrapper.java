@@ -177,11 +177,15 @@ public class JsNativeMapWrapper<K, V> extends AbstractMap<K, V> {
 
 		@Override
 		public void remove() {
-			throw new UnsupportedOperationException();
+			if (!nextCalled) {
+				throw new UnsupportedOperationException();
+			}
+			JsNativeMapWrapper.this.remove(key);
+			nextCalled = false;
 		}
 
 		private int modCount() {
-			// FIXME - implement
+			// FIXME - implement (and check in removal as well)
 			return 0;
 		}
 	}
