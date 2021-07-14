@@ -7,8 +7,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -35,15 +33,6 @@ public class EntityHelper {
 		}
 		return Ax.format("%s : %s ", CommonUtils.simpleClassName(hi.getClass()),
 				hi.getId());
-	}
-
-	public static <T extends Entity> SortedSet<T>
-			combineAndOrder(boolean reverse, Collection<T>... collections) {
-		TreeSet<T> join = new TreeSet<T>();
-		for (Collection<T> collection : collections) {
-			join.addAll(collection);
-		}
-		return reverse ? join.descendingSet() : join;
 	}
 
 	public static int compare(Entity o1, Entity o2) {
