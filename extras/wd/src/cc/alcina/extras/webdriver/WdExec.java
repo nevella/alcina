@@ -216,6 +216,16 @@ public class WdExec {
 					if (returnIfNotVisible) {
 						return true;
 					}
+					String message = e.getMessage();
+					if (message.contains("is not clickable")) {
+						if (ignoreSpuriousOtherElementWouldReceiveClickException(
+								elem, message)) {
+							return false;
+						}
+						WDUtils.scrollToCenterUsingBoundingClientRect(driver,
+								elem);
+						sleep(200);
+					}
 					// WDUtils.scrollToCenterUsingBoundingClientRect(driver,
 					// elem);
 					sleep(200);
