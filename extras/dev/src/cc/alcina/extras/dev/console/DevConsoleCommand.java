@@ -1400,6 +1400,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			} else {
 				System.err.format("Unknown subcommand - %s\n", cmd);
 			}
+			console.saveConfig();
 			return "";
 		}
 
