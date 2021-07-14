@@ -428,11 +428,11 @@ public class InternalMetrics {
 											.formatDate(date,
 													DateStyle.TIMESTAMP)
 											.substring(0, 8)),
-							Ax.format("%s.%s.txt",
+							Ax.format("%s.%s.txt.gz",
 									CommonUtils.formatDate(date,
 											DateStyle.TIMESTAMP_NO_DAY),
 									nextIsAlloc ? "alloc" : "cpu"));
-					ResourceUtilities.write(wrapper.output, out);
+					ResourceUtilities.writeStringToFileGz(wrapper.output, out);
 					Arrays.stream(DataFolderProvider.get()
 							.getSubFolder("profiler").listFiles())
 							.filter(f -> System.currentTimeMillis()
