@@ -1478,8 +1478,18 @@ public class DomainStore implements IDomainStore {
 			Stream<Entity> stream = ids.stream()
 					.map(id -> (Entity) cache.get(associationClass, id))
 					.filter(Objects::nonNull);
-			stream = stream.map(e -> ((Set<Entity>) associationReflector
-					.getPropertyValue(e))).flatMap(Collection::stream);
+			boolean propertyIsSet = Set.class
+					.isAssignableFrom(associationReflector.getPropertyType());
+			if (propertyIsSet) {
+				stream = stream
+						.map(e -> ((Set<Entity>) associationReflector
+								.getPropertyValue(e)))
+						.flatMap(Collection::stream);
+			} else {
+				stream = stream.map(
+						e -> (Entity) associationReflector.getPropertyValue(e))
+						.filter(Objects::nonNull);
+			}
 			return new StreamOrSet<>(stream);
 		}
 	}

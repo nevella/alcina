@@ -985,6 +985,11 @@ public class FlatTreeSerializer {
 		private transient static Logger logger = LoggerFactory
 				.getLogger(SerializerFlat.class);
 
+		public String beanSerialize(Object object,
+				boolean hasClassNameProperty) {
+			return super.serialize(object, hasClassNameProperty);
+		}
+
 		@Override
 		public <V> V deserialize(String serialized, Class<V> clazz) {
 			if ((clazz != null && !serialized.startsWith("{"))
@@ -1022,7 +1027,7 @@ public class FlatTreeSerializer {
 					return jsonSerialized;
 				}
 			} else {
-				return super.serialize(object, hasClassNameProperty);
+				return beanSerialize(object, hasClassNameProperty);
 			}
 		}
 	}
