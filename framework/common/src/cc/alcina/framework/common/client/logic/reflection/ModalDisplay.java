@@ -56,18 +56,18 @@ public @interface ModalDisplay {
 		}
 
 		@Override
-		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
+		public <A extends Annotation> A resolveAnnotation(Class<A> annotationClass,
 				AnnotationLocation location) {
 			boolean customResolution = annotationClass == Display.class
 					|| annotationClass == Custom.class
 					|| annotationClass == Validator.class;
-			A defaultResolution = Resolver.super.getAnnotation(annotationClass,
+			A defaultResolution = Resolver.super.resolveAnnotation(annotationClass,
 					location);
 			if (customResolution) {
 				RequireSpecified requireSpecified = Reflections.classLookup()
-						.getAnnotationForClass(location.fallbackToClass,
+						.getAnnotationForClass(location.classLocation,
 								RequireSpecified.class);
-				ModalDisplay modalDisplay = Resolver.super.getAnnotation(
+				ModalDisplay modalDisplay = Resolver.super.resolveAnnotation(
 						ModalDisplay.class, location);
 				A modalResolution = null;
 				Optional<Modal> matchingModal = Optional.empty();

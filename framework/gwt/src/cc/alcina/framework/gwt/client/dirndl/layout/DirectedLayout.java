@@ -37,11 +37,13 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.annotation.ImmutableModel;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
@@ -77,14 +79,21 @@ public class DirectedLayout {
 	}
 
 	@ClientInstantiable
-	public static class ContextResolver implements AnnotationLocation.Resolver {
+	public static class ContextResolver<M>
+			implements AnnotationLocation.Resolver {
+		private M model;
+
 		public ContextResolver() {
 		}
 
+		public M getModel() {
+			return this.model;
+		}
+
 		@Override
-		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
-				AnnotationLocation location) {
-			return AnnotationLocation.Resolver.super.getAnnotation(
+		public <A extends Annotation> A resolveAnnotation(
+				Class<A> annotationClass, AnnotationLocation location) {
+			return AnnotationLocation.Resolver.super.resolveAnnotation(
 					annotationClass, location);
 		}
 
@@ -94,6 +103,10 @@ public class DirectedLayout {
 
 		public <T> T resolveRenderContextProperty(String key) {
 			return null;
+		}
+
+		public void setModel(M model) {
+			this.model = model;
 		}
 	}
 
@@ -116,7 +129,7 @@ public class DirectedLayout {
 	 * </p>
 	 */
 	public static class Node {
-		private ContextResolver resolver;
+		private ContextResolver<?> resolver;
 
 		final Object model;
 
@@ -165,7 +178,7 @@ public class DirectedLayout {
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			AnnotationLocation location = new AnnotationLocation(
 					model == null ? null : model.getClass(), propertyReflector);
-			A annotation = resolver.getAnnotation(clazz, location);
+			A annotation = resolver.resolveAnnotation(clazz, location);
 			if (annotation != null) {
 				return annotation;
 			}
@@ -246,10 +259,6 @@ public class DirectedLayout {
 				 * if the property has a simple @Directed annotation, and the
 				 * class has a non-simple @Directed, use the class
 				 */
-				if (clazz != null
-						&& clazz.getSimpleName().contains("TreeModel")) {
-					int debug = 3;
-				}
 				directed = Registry.impl(DirectedResolver.class, clazz);
 				AnnotationLocation annotationLocation = new AnnotationLocation(
 						clazz, propertyReflector);
@@ -419,10 +428,24 @@ public class DirectedLayout {
 						.getPropertyReflectors((model.getClass()));
 				if (propertyReflectors != null) {
 					for (PropertyReflector propertyReflector : propertyReflectors) {
-						if (propertyReflector
-								.getAnnotation(Directed.class) != null) {
+						AnnotationLocation propertyLocation = new AnnotationLocation(
+								model.getClass(), propertyReflector, resolver,
+								false);
+						if (propertyLocation.hasAnnotation(Directed.class)) {
 							Object childModel = propertyReflector
 									.getPropertyValue(model);
+							if (propertyReflector.getPropertyName()
+									.equals("primaryJudge")) {
+								int debug = 3;
+							}
+							if (childModel == null && propertyLocation
+									.hasAnnotation(ImmutableModel.class)) {
+								/*
+								 * There will never be a non-null value, so
+								 * don't render a placeholder
+								 */
+								continue;
+							}
 							Node child = addChild(childModel, propertyReflector,
 									propertyReflector);
 						}
@@ -450,6 +473,7 @@ public class DirectedLayout {
 			if (directedContextResolver != null) {
 				resolver = Reflections
 						.newInstance(directedContextResolver.value());
+				((ContextResolver) resolver).setModel(model);
 			}
 			populateWidgets(intermediateChild);
 			bindBehaviours();
@@ -815,12 +839,10 @@ public class DirectedLayout {
 				switch (binding.type()) {
 				case CSS_CLASS:
 					/*
-					 * requires from/transform or from/literal
+					 * requires from. If both transform and literal are
+					 * undefined, uses the de-infixed form of the property name
 					 */
-					Preconditions.checkArgument(
-							binding.from().length() > 0 && (binding
-									.transform() != ToStringFunction.Identity.class
-									^ binding.literal().length() > 0));
+					Preconditions.checkArgument(binding.from().length() > 0);
 					break;
 				case SWITCH_CSS_CLASS:
 					/*
@@ -880,8 +902,11 @@ public class DirectedLayout {
 					if (hasTransform) {
 						element.setClassName(value == null ? "" : stringValue);
 					} else {
+						String cssClass = binding.literal().isEmpty()
+								? CommonUtils.deInfixCss(binding.from())
+								: binding.literal();
 						boolean present = (boolean) value;
-						element.setClassName(binding.literal(), present);
+						element.setClassName(cssClass, present);
 					}
 				}
 					break;
@@ -920,8 +945,9 @@ public class DirectedLayout {
 		public void onEvent(GwtEvent event);
 	}
 
-	private static class DelegatingContextResolver extends ContextResolver {
-		private ContextResolver parent = null;
+	private static class DelegatingContextResolver<M>
+			extends ContextResolver<M> {
+		private ContextResolver<?> parent = null;
 
 		private Resolver locationResolver;
 
@@ -932,9 +958,10 @@ public class DirectedLayout {
 		}
 
 		@Override
-		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
-				AnnotationLocation location) {
-			return locationResolver.getAnnotation(annotationClass, location);
+		public <A extends Annotation> A resolveAnnotation(
+				Class<A> annotationClass, AnnotationLocation location) {
+			return locationResolver.resolveAnnotation(annotationClass,
+					location);
 		}
 
 		@Override

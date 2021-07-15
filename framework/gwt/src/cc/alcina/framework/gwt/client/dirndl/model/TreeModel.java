@@ -32,7 +32,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TreeModelEvents.NodeLabelClic
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModelEvents.NodeToggleButtonClicked;
 
 @Directed(tag = "div", cssClass = "dl-tree", bindings = {
-		@Binding(from = "hideRoot", type = Type.CSS_CLASS, literal = "hide-root") }, receives = {
+		@Binding(from = "hideRoot", type = Type.CSS_CLASS) }, receives = {
 				TreeModelEvents.NodeLabelClicked.class,
 				TreeModelEvents.NodeToggleButtonClicked.class }, emits = SelectionChanged.class)
 public class TreeModel<NM extends NodeModel<NM>> extends Model

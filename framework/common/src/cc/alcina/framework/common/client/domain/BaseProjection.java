@@ -61,7 +61,7 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 		return (MultikeyMap<T>) lookup.asMap(objects);
 	}
 
-	public List<Object> deltaReturnChanges(T t, boolean insert) {
+	public List<Object[]> deltaReturnChanges(T t, boolean insert) {
 		if (insert) {
 			return insertReturnChanges(t);
 		} else {
@@ -127,13 +127,13 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 		}
 	}
 
-	public List<Object> insertReturnChanges(T t) {
+	public List<Object[]> insertReturnChanges(T t) {
 		Object[] values = project(t);
-		List<Object> result = new ArrayList<>();
+		List<Object[]> result = new ArrayList<>();
 		for (int idx = 0; idx < values.length - 1; idx++) {
 			Object[] keys = Arrays.copyOf(values, idx + 1);
 			if (!lookup.containsKey(keys)) {
-				result.add(values[idx]);
+				result.add(Arrays.copyOf(values, idx + 1));
 			}
 		}
 		insert(t);
@@ -199,14 +199,14 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 		}
 	}
 
-	public List<Object> removeReturnChanges(T t) {
+	public List<Object[]> removeReturnChanges(T t) {
 		Object[] values = project(t);
 		remove(t);
-		List<Object> result = new ArrayList<>();
+		List<Object[]> result = new ArrayList<>();
 		for (int idx = 0; idx < values.length - 1; idx++) {
 			Object[] keys = Arrays.copyOf(values, idx + 1);
 			if (!lookup.containsKey(keys)) {
-				result.add(values[idx]);
+				result.add(Arrays.copyOf(values, idx + 1));
 			}
 		}
 		return result;

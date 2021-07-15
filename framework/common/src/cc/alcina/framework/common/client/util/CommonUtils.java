@@ -337,6 +337,19 @@ public class CommonUtils {
 		return buf.toString();
 	}
 
+	public static String deInfixCss(String s) {
+		if (isNullOrEmpty(s)) {
+			return s;
+		}
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < s.length(); i++) {
+			String c = s.substring(i, i + 1);
+			builder.append(c.toUpperCase().equals(c) ? "-" : "");
+			builder.append(c.toLowerCase());
+		}
+		return builder.toString();
+	}
+
 	public static void doOnce(Class clazz, Runnable runnable) {
 		doOnce(clazz, null, runnable);
 	}
