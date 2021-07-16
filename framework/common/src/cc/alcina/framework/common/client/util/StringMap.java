@@ -55,6 +55,62 @@ public class StringMap extends LinkedHashMap<String, String> {
 		for (String line : props.split("\n")) {
 			int idx = line.indexOf("=");
 			if (idx != -1 && !line.startsWith("#")) {
+				int end = line.length();
+				int idx1 = idx + 1;
+				// if (unQuote && value.startsWith("\"") &&
+				// value.endsWith("\"")) {
+				// value = value.substring(1, value.length() - 1);
+				// }
+				if (unQuote && line.charAt(idx1) == '\"'
+						&& line.charAt(end - 1) == '\"') {
+					idx1++;
+					end--;
+				}
+				StringBuilder sb = new StringBuilder();
+				for (; idx1 < end - 1;) {
+					char c = line.charAt(idx1++);
+					if (c == '\\') {
+						char next = line.charAt(idx1++);
+						switch (next) {
+						case 'n':
+							sb.append('\n');
+							break;
+						case '=':
+							sb.append('=');
+							break;
+						case '\\':
+							sb.append('\\');
+							break;
+						default:
+							sb.append(c);
+							sb.append(next);
+							break;
+						}
+					} else {
+						sb.append(c);
+					}
+				}
+				if (idx1 < end) {
+					char c = line.charAt(idx1++);
+					sb.append(c);
+				}
+				// String value = line.substring(idx + 1).replace("\\n", "\n")
+				// .replace("\\=", "=").replace("\\\\", "\\");
+				map.put(line.substring(0, idx), sb.toString());
+			}
+		}
+		return map;
+	}
+
+	public static StringMap fromPropertyStringOld(String props,
+			boolean unQuote) {
+		StringMap map = new StringMap();
+		if (props == null) {
+			return map;
+		}
+		for (String line : props.split("\n")) {
+			int idx = line.indexOf("=");
+			if (idx != -1 && !line.startsWith("#")) {
 				String value = line.substring(idx + 1).replace("\\n", "\n")
 						.replace("\\=", "=").replace("\\\\", "\\");
 				if (unQuote && value.startsWith("\"") && value.endsWith("\"")) {

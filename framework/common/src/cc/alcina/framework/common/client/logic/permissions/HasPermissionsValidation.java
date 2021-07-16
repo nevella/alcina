@@ -35,15 +35,18 @@ public interface HasPermissionsValidation {
 			if (typeSerialization != null && validateWithFlatTreeSerializer
 					&& typeSerialization.flatSerializable()) {
 				// serialization-with-test checks valid type membership
-				SerializerOptions options = new FlatTreeSerializer.SerializerOptions()
-						.withTestSerialized(true).withTopLevelTypeInfo(true);
-				try {
-					FlatTreeSerializer.serialize((TreeSerializable) hpv,
-							options);
-				} catch (RuntimeException e) {
-					Ax.err("HasPermissionsValidation exception (unequal serialized): %s",
-							AlcinaBeanSerializer.serializeHolder(hpv));
-					e.printStackTrace();
+				if ("disabled-due-to-memory-issues".isEmpty()) {
+					SerializerOptions options = new FlatTreeSerializer.SerializerOptions()
+							.withTestSerialized(true)
+							.withTopLevelTypeInfo(true);
+					try {
+						FlatTreeSerializer.serialize((TreeSerializable) hpv,
+								options);
+					} catch (RuntimeException e) {
+						Ax.err("HasPermissionsValidation exception (unequal serialized): %s",
+								AlcinaBeanSerializer.serializeHolder(hpv));
+						e.printStackTrace();
+					}
 				}
 				return null;
 			}
