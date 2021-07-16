@@ -94,8 +94,6 @@ public class ResourceUtilities {
 
 	private static ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
 
-	private static Method getCallerClassMethod;
-
 	public static void appShutdown() {
 	}
 
@@ -294,7 +292,9 @@ public class ResourceUtilities {
 	}
 
 	public static String get(String propertyName) {
-		return get(getCallerClass(), propertyName);
+		return get(StackWalker
+				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+				.getCallerClass(), propertyName);
 	}
 
 	public static boolean getBoolean(Class clazz, String propertyName) {
@@ -398,7 +398,9 @@ public class ResourceUtilities {
 	}
 
 	public static boolean is(String propertyName) {
-		return is(getCallerClass(), propertyName);
+		return is(StackWalker
+				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+				.getCallerClass(), propertyName);
 	}
 
 	public static boolean isClientWithJvmProperties() {
@@ -606,7 +608,9 @@ public class ResourceUtilities {
 	}
 
 	public static String readRelativeResource(String path) {
-		return readClassPathResourceAsString(getCallerClass(), path);
+		return readClassPathResourceAsString(StackWalker
+				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+				.getCallerClass(), path);
 	}
 
 	public static byte[] readStreamToByteArray(InputStream is)
@@ -956,20 +960,6 @@ public class ResourceUtilities {
 		constructor.setAccessible(true);
 		T instance = constructor.newInstance();
 		return instance;
-	}
-
-	protected static Class getCallerClass() {
-		try {
-			if (getCallerClassMethod == null) {
-				Class clazz = Class.forName("sun.reflect.Reflection");
-				getCallerClassMethod = clazz.getMethod("getCallerClass",
-						int.class);
-			}
-			Class callerClass = (Class) getCallerClassMethod.invoke(null, 3);
-			return callerClass;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	public static class SimpleQuery {
