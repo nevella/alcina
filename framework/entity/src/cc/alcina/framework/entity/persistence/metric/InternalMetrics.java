@@ -22,6 +22,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import javax.servlet.http.HttpServletRequest;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -384,8 +386,8 @@ public class InternalMetrics {
 							synchronized (imd) {
 								if (imd.persistent != null
 										&& imd.persistent.getId() == 0) {
-									imd.persistent
-											.setId(internalMetric.getId());
+									imd.setPersistentId(internalMetric.getId());
+									
 								}
 							}
 						});
@@ -402,11 +404,14 @@ public class InternalMetrics {
 		trackers.entrySet().removeIf(e -> toRemove.contains(e.getValue()));
 	}
 
+	private boolean highFrequencyProfiling;
+
 	void doProfilerLoop() {
 		boolean nextIsAlloc = false;
 		String profilerPath = ResourceUtilities.get("profilerPath");
-		String alloc = "--alloc 2m -d 5 -i 20000 ";
-		String cpu = "-d 5 -i 20000 ";
+		String alloc = "--alloc 2m -d 5 ";
+		String cpu = "-d 5 -d 5 --cstack no -t ";
+		int frequency = highFrequencyProfiling ? 50 : 500;
 		while (isEnabled() && started) {
 			try {
 				if (ResourceUtilities.is("profilerEnabled")) {
@@ -417,26 +422,23 @@ public class InternalMetrics {
 								.getName();
 						pid = name.replaceFirst("(.+)@.+", "$1");
 					}
-					String cmd = Ax.format("%s %s %s", profilerPath, params,
-							pid);
+					String cmd = Ax.format("%s %s -i %sus %s", profilerPath,
+							params, frequency, pid);
 					ShellOutputTuple wrapper = new ShellWrapper().noLogging()
 							.runBashScript(cmd);
-					Date date = new Date();
-					File out = DataFolderProvider.get().getSubFolderFile(
-							Ax.format("profiler/%s",
-									CommonUtils
-											.formatDate(date,
-													DateStyle.TIMESTAMP)
-											.substring(0, 8)),
-							Ax.format("%s.%s.txt.gz",
-									CommonUtils.formatDate(date,
-											DateStyle.TIMESTAMP_NO_DAY),
-									nextIsAlloc ? "alloc" : "cpu"));
+					String typeName = nextIsAlloc ? "alloc" : "cpu";
+					File out = telemetryFile(typeName);
 					ResourceUtilities.writeStringToFileGz(wrapper.output, out);
+					String runningMetrics = trackers.values().stream()
+							.filter(imd -> !imd.isFinished())
+							.map(InternalMetricData::logForBlackBox)
+							.collect(Collectors.joining("\n"));
+					out = telemetryFile("metrics");
+					ResourceUtilities.writeStringToFileGz(runningMetrics, out);
 					Arrays.stream(DataFolderProvider.get()
 							.getSubFolder("profiler").listFiles())
 							.filter(f -> System.currentTimeMillis()
-									- f.lastModified() > 3
+									- f.lastModified() > 2
 											* TimeConstants.ONE_DAY_MS)
 							.forEach(SEUtilities::deleteDirectory);
 					nextIsAlloc = !nextIsAlloc;
@@ -447,6 +449,25 @@ public class InternalMetrics {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	private File telemetryFile(String typeName) {
+		Date date = new Date();
+		File out = DataFolderProvider.get().getSubFolderFile(
+				Ax.format("profiler/%s",
+						CommonUtils.formatDate(date, DateStyle.TIMESTAMP)
+								.substring(0, 8)),
+				Ax.format("%s.%s.txt.gz", CommonUtils.formatDate(date,
+						DateStyle.TIMESTAMP_NO_DAY), typeName));
+		return out;
+	}
+
+	public boolean isHighFrequencyProfiling() {
+		return this.highFrequencyProfiling;
+	}
+
+	public void setHighFrequencyProfiling(boolean highFrequencyProfiling) {
+		this.highFrequencyProfiling = highFrequencyProfiling;
 	}
 
 	String getMemoryStats() {
@@ -480,5 +501,12 @@ public class InternalMetrics {
 
 	public enum InternalMetricTypeAlcina implements InternalMetricType {
 		client, service, health, api, servlet, job, remote_invocation;
+	}
+
+	public void changeTrackerContext(Object marker, String context) {
+		InternalMetricData metricData = trackers.get(marker);
+		if (metricData != null) {
+			metricData.updateContext(context);
+		}
 	}
 }

@@ -49,12 +49,6 @@ public class InternalMetricData {
 			InternalMetricType type, String metricName) {
 		this.markerObject = markerObject;
 		this.callContextProvider = callContextProvider;
-		try {
-			// call early, just in case the context changes
-			this.callContext = callContextProvider.get();
-		} catch (Exception e) {
-			this.callContext = SEUtilities.getFullExceptionMessage(e);
-		}
 		this.startTime = startTime;
 		this.thread = thread;
 		this.type = type;
@@ -64,6 +58,11 @@ public class InternalMetricData {
 
 	public InternalMetric asMetric() {
 		if (persistent == null) {
+			try {
+				this.callContext = callContextProvider.get();
+			} catch (Exception e) {
+				this.callContext = SEUtilities.getFullExceptionMessage(e);
+			}
 			persistent = PersistentImpl
 					.getNewImplementationInstance(InternalMetric.class);
 			persistent.setCallName(metricName);
@@ -88,9 +87,10 @@ public class InternalMetricData {
 
 	public String logForBlackBox() {
 		return Ax.format(
-				"Thread: %s [%s] - Metric: %s - Start: %s" + "\nContext:\n%s",
+				"Thread: %s [%s] - Metric: %s - Start: %s - Persistent id: %s"
+						+ "\nContext:\n%s",
 				thread.getName(), thread.getId(), metricName,
-				new Date(startTime), callContext);
+				new Date(startTime), persistentId, callContext);
 	}
 
 	public int sliceCount() {
@@ -118,5 +118,17 @@ public class InternalMetricData {
 		threadHistory.addElement(info, stackTrace, activeDomainStoreLockTime,
 				domainStoreWaitTime, domainStoreLockState, maxStackLines,
 				maxFrames, waitStats);
+	}
+
+	public void updateContext(String context) {
+		callContextProvider = () -> context;
+		if (persistent != null) {
+			persistent.setObfuscatedArgs(context);
+		}
+	}
+
+	public void setPersistentId(long id) {
+		persistentId = id;
+		persistent.setId(id);
 	}
 }

@@ -242,9 +242,12 @@ public class DomainTransformPersistenceEvents {
 	}
 
 	String describeEvent(DomainTransformPersistenceEvent event) {
-		return Ax.format("Persistence event: id: %s - %s",
-				CommonUtils.first(event.getPersistedRequestIds()),
-				event.getPersistenceEventType());
+		return Ax
+				.format("Persistence event: id: %s - %s - %s",
+						Ax.first(event.getPersistedRequestIds()),
+						event.getTransformPersistenceToken().getRequest()
+								.getChunkUuidString(),
+						event.getPersistenceEventType());
 	}
 
 	// FIXME - mvcc.4 - add optional
