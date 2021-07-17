@@ -132,13 +132,19 @@ public class Registry {
 				}
 			}
 			for (RegistryLocation loc : locs) {
-				if (!pointsForPrecedingSubclass
-						.containsKey(loc.registryPoint())) {
-					uniques.put(loc.registryPoint(), loc.targetClass(), loc);
+				Class registryPoint = null;
+				try {
+					registryPoint = loc.registryPoint();
+				} catch (Exception e) {
+					Ax.out(loc.getClass());
+					e.printStackTrace();
+					continue;
+				}
+				if (!pointsForPrecedingSubclass.containsKey(registryPoint)) {
+					uniques.put(registryPoint, loc.targetClass(), loc);
 				} else {
-					if (uniques.get(loc.registryPoint(),
-							loc.targetClass()) == loc
-							|| loc.registryPoint() == JaxbContextRegistration.class) {
+					if (uniques.get(registryPoint, loc.targetClass()) == loc
+							|| registryPoint == JaxbContextRegistration.class) {
 						// inherited, ignore
 					} else {
 						// System.out
