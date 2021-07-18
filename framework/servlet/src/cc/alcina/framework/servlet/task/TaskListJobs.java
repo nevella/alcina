@@ -25,8 +25,10 @@ import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.job.JobRegistry.FutureStat;
 import cc.alcina.framework.servlet.servlet.JobServlet;
+import cc.alcina.framework.servlet.servlet.TaskWithHtmlResult;
 
-public class TaskListJobs extends AbstractTaskPerformer {
+public class TaskListJobs extends AbstractTaskPerformer
+		implements TaskWithHtmlResult {
 	private String filter;
 
 	private transient Pattern filterPattern;

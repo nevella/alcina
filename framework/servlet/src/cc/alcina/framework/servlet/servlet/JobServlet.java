@@ -121,7 +121,9 @@ public class JobServlet extends AlcinaServlet {
 			Transaction.commit();
 			String href = createTaskUrl(new TaskLogJobDetails()
 					.withValue(String.valueOf(job.getId())));
-			response.setContentType("text/plain");
+			response.setContentType(
+					task instanceof TaskWithHtmlResult ? "text/html"
+							: "text/plain");
 			response.getWriter().write(Ax.format("Job started:\n%s\n", href));
 			response.flushBuffer();
 			JobRegistry.get().await(job);
