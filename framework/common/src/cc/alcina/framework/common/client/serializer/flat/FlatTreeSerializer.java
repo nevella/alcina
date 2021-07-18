@@ -601,6 +601,7 @@ public class FlatTreeSerializer {
 
 	private Object ensureNthCollectionElement(Class elementClass, int index,
 			Collection collection) {
+		Preconditions.checkArgument(index > 0);
 		for (Object object : collection) {
 			if (object.getClass() == elementClass) {
 				if (--index == 0) {
