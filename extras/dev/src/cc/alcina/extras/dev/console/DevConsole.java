@@ -264,6 +264,27 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
+	public void disablePathLinks(boolean disable) {
+		Runnable r = () -> ResourceUtilities.registerCustomProperty(
+				"MethodHandler_GET_RECORDS.disablePathLinks",
+				String.valueOf(disable));
+		if (disable) {
+			r.run();
+		} else {
+			new Thread() {
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(500);
+						r.run();
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+			}.start();
+		}
+	}
+
 	public void doCommandHistoryDelta(int delta) {
 		String cmd = history.getCommand(delta);
 		if (!cmd.isEmpty()) {

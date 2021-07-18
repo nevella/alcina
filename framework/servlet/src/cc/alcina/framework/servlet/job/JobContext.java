@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -166,6 +167,14 @@ public class JobContext {
 		} else {
 			LoggerFactory.getLogger(JobContext.class)
 					.info("(no-job) job completion => {}", completion);
+		}
+	}
+
+	public static void setLargeResult(Object largeResult) {
+		if (has()) {
+			get().getJob().setLargeResult(largeResult);
+		} else {
+			ResourceUtilities.logToFile(largeResult.toString());
 		}
 	}
 

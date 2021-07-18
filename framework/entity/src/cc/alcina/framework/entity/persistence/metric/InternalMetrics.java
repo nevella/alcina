@@ -22,8 +22,6 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-import javax.servlet.http.HttpServletRequest;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +61,11 @@ public class InternalMetrics {
 		return Registry.impl(InternalMetrics.class);
 	}
 
+	public static String profilerFolder(Date date) {
+		return Ax.format("profiler/%s", CommonUtils
+				.formatDate(date, DateStyle.TIMESTAMP).substring(0, 8));
+	}
+
 	private Timer timer;
 
 	private ThreadPoolExecutor sliceExecutor;
@@ -87,6 +90,17 @@ public class InternalMetrics {
 
 	AtomicInteger healthNotificationCounter = new AtomicInteger();
 
+	private boolean highFrequencyProfiling;
+
+	int parseGcLogFrom = 0;
+
+	public void changeTrackerContext(Object marker, String context) {
+		InternalMetricData metricData = trackers.get(marker);
+		if (metricData != null) {
+			metricData.updateContext(context);
+		}
+	}
+
 	public void endTracker(Object markerObject) {
 		if (!started || markerObject == null) {
 			return;
@@ -97,6 +111,10 @@ public class InternalMetrics {
 				tracker.endTime = System.currentTimeMillis();
 			}
 		}
+	}
+
+	public boolean isHighFrequencyProfiling() {
+		return this.highFrequencyProfiling;
 	}
 
 	public boolean isStarted() {
@@ -114,6 +132,10 @@ public class InternalMetrics {
 		logger.warn(message);
 		ResourceUtilities.write(message, Ax.format("/tmp/imd-blackbox-%s.txt",
 				System.currentTimeMillis()));
+	}
+
+	public void setHighFrequencyProfiling(boolean highFrequencyProfiling) {
+		this.highFrequencyProfiling = highFrequencyProfiling;
 	}
 
 	public void startService() {
@@ -347,6 +369,14 @@ public class InternalMetrics {
 				});
 	}
 
+	private File telemetryFile(MetricType type) {
+		Date date = new Date();
+		File out = DataFolderProvider.get().getSubFolderFile(
+				profilerFolder(date), Ax.format("%s.%s.txt.gz", CommonUtils
+						.formatDate(date, DateStyle.TIMESTAMP_NO_DAY), type));
+		return out;
+	}
+
 	protected void persist() {
 		if (!isEnabled() || !ResourceUtilities.is("persistEnabled")) {
 			return;
@@ -387,7 +417,6 @@ public class InternalMetrics {
 								if (imd.persistent != null
 										&& imd.persistent.getId() == 0) {
 									imd.setPersistentId(internalMetric.getId());
-									
 								}
 							}
 						});
@@ -403,8 +432,6 @@ public class InternalMetrics {
 		}
 		trackers.entrySet().removeIf(e -> toRemove.contains(e.getValue()));
 	}
-
-	private boolean highFrequencyProfiling;
 
 	void doProfilerLoop() {
 		boolean nextIsAlloc = false;
@@ -426,15 +453,29 @@ public class InternalMetrics {
 							params, frequency, pid);
 					ShellOutputTuple wrapper = new ShellWrapper().noLogging()
 							.runBashScript(cmd);
-					String typeName = nextIsAlloc ? "alloc" : "cpu";
-					File out = telemetryFile(typeName);
+					MetricType type = nextIsAlloc
+							|| !ResourceUtilities.is("cpuProfilingEnabled")
+									? MetricType.alloc
+									: MetricType.cpu;
+					File out = telemetryFile(type);
 					ResourceUtilities.writeStringToFileGz(wrapper.output, out);
 					String runningMetrics = trackers.values().stream()
 							.filter(imd -> !imd.isFinished())
 							.map(InternalMetricData::logForBlackBox)
 							.collect(Collectors.joining("\n"));
-					out = telemetryFile("metrics");
+					out = telemetryFile(MetricType.metrics);
 					ResourceUtilities.writeStringToFileGz(runningMetrics, out);
+					String gcLogFile = "/opt/jboss/gc.log";
+					if (new File(gcLogFile).exists()) {
+						GCLogParser.Events events = new GCLogParser().parse(
+								gcLogFile, parseGcLogFrom,
+								ResourceUtilities.getInteger(getClass(),
+										"gcEventThresholdMillis"));
+						out = telemetryFile(MetricType.gc);
+						ResourceUtilities.writeStringToFileGz(events.toString(),
+								out);
+						parseGcLogFrom = events.end;
+					}
 					Arrays.stream(DataFolderProvider.get()
 							.getSubFolder("profiler").listFiles())
 							.filter(f -> System.currentTimeMillis()
@@ -449,25 +490,6 @@ public class InternalMetrics {
 				e.printStackTrace();
 			}
 		}
-	}
-
-	private File telemetryFile(String typeName) {
-		Date date = new Date();
-		File out = DataFolderProvider.get().getSubFolderFile(
-				Ax.format("profiler/%s",
-						CommonUtils.formatDate(date, DateStyle.TIMESTAMP)
-								.substring(0, 8)),
-				Ax.format("%s.%s.txt.gz", CommonUtils.formatDate(date,
-						DateStyle.TIMESTAMP_NO_DAY), typeName));
-		return out;
-	}
-
-	public boolean isHighFrequencyProfiling() {
-		return this.highFrequencyProfiling;
-	}
-
-	public void setHighFrequencyProfiling(boolean highFrequencyProfiling) {
-		this.highFrequencyProfiling = highFrequencyProfiling;
 	}
 
 	String getMemoryStats() {
@@ -503,10 +525,7 @@ public class InternalMetrics {
 		client, service, health, api, servlet, job, remote_invocation;
 	}
 
-	public void changeTrackerContext(Object marker, String context) {
-		InternalMetricData metricData = trackers.get(marker);
-		if (metricData != null) {
-			metricData.updateContext(context);
-		}
+	public enum MetricType {
+		alloc, cpu, gc, metrics
 	}
 }

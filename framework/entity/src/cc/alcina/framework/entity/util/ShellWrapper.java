@@ -10,6 +10,8 @@ import java.util.TimerTask;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
@@ -17,6 +19,22 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class ShellWrapper {
+	public static String exec(String script, Object... args) {
+		try {
+			String command = Ax.format(script, args);
+			LoggerFactory.getLogger(ShellWrapper.class).info(command);
+			ShellWrapper shellWrapper = new ShellWrapper();
+			shellWrapper.logToStdOut = false;
+			ShellOutputTuple tuple = shellWrapper.runBashScript(command, false);
+			if (Ax.notBlank(tuple.error)) {
+				Ax.err(tuple.error);
+			}
+			return tuple.output;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public String ERROR_MARKER = "**>";
 
 	public String OUTPUT_MARKER = "";
@@ -219,11 +237,12 @@ public class ShellWrapper {
 			return exitValue != 0;
 		}
 
-		public void throwOnException() {
+		public ShellOutputTuple throwOnException() {
 			if (failed()) {
 				throw Ax.runtimeException("ShellOutputTuple exit code %s\n%s",
 						exitValue, error);
 			}
+			return this;
 		}
 	}
 }
