@@ -46,7 +46,6 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
-import cc.alcina.framework.servlet.job.JobRegistry;
 
 @RegistryLocation(registryPoint = InternalMetrics.class, implementationType = ImplementationType.SINGLETON)
 public class InternalMetrics {
@@ -464,11 +463,10 @@ public class InternalMetrics {
 							.filter(imd -> !imd.isFinished())
 							.map(InternalMetricData::logForBlackBox)
 							.collect(Collectors.joining("\n"));
-					String activeJobs = JobRegistry.get()
-							.dumpActiveJobsThisInstance();
 					String metrics = Ax.format("%s\nTrackers:\n%s\n\nJobs:\n%s",
-							JobRegistry.get().getExecutorState(),
-							runningMetrics, activeJobs);
+							ContainerProvider.get().getContainerState(),
+							ContainerProvider.get().getJobsState(),
+							runningMetrics);
 					out = telemetryFile(MetricType.metrics);
 					ResourceUtilities.writeStringToFileGz(runningMetrics, out);
 					String gcLogFile = "/opt/jboss/gc.log";
@@ -522,6 +520,21 @@ public class InternalMetrics {
 			}
 		}
 		return returnLong;
+	}
+
+	@RegistryLocation(registryPoint = ContainerProvider.class, implementationType = ImplementationType.SINGLETON)
+	public static class ContainerProvider {
+		public static InternalMetrics.ContainerProvider get() {
+			return Registry.impl(InternalMetrics.ContainerProvider.class);
+		}
+
+		public String getContainerState() {
+			return "---";
+		}
+
+		public String getJobsState() {
+			return "---";
+		}
 	}
 
 	public interface InternalMetricType {

@@ -284,10 +284,6 @@ public class JobRegistry {
 						.comparing(stat -> -stat.startTime.getTime()));
 	}
 
-	public String getExecutorState() {
-		return jobExecutors.getExecutorState();
-	}
-
 	public String getExJobSystemNextJobId(Class<?> clazz) {
 		return Ax.format("%s::%s::%s::%s", clazz.getName(),
 				EntityLayerUtils.getLocalHostName(),
@@ -821,11 +817,6 @@ public class JobRegistry {
 		public List<ClientInstance> getActiveServers() {
 			return Arrays.asList(
 					EntityLayerObjects.get().getServerAsClientInstance());
-		}
-
-		@Override
-		public String getExecutorState() {
-			return "---";
 		}
 
 		@Override
