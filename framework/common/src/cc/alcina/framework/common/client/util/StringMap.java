@@ -9,7 +9,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 
 public class StringMap extends LinkedHashMap<String, String> {
 	private static final transient long serialVersionUID = 8219302205025519855L;
@@ -225,7 +224,9 @@ public class StringMap extends LinkedHashMap<String, String> {
 	}
 
 	public StringMap sorted() {
-		return new StringMap(new TreeMap(this));
+		StringMap result = new StringMap();
+		keySet().stream().sorted().forEach(key -> result.put(key, get(key)));
+		return result;
 	}
 
 	public String toKvStringList() {

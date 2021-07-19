@@ -40,11 +40,13 @@ import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCr
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
  * <p>
@@ -327,6 +329,9 @@ public class FlatTreeSerializer {
 
 	State state;
 
+	private MultikeyMap<Object> collectionElementClassIndexObject = new UnsortedMultikeyMap<>(
+			3);
+
 	private FlatTreeSerializer(State state) {
 		this.state = state;
 	}
@@ -601,21 +606,17 @@ public class FlatTreeSerializer {
 
 	private Object ensureNthCollectionElement(Class elementClass, int index,
 			Collection collection) {
-		Preconditions.checkArgument(index > 0);
-		for (Object object : collection) {
-			if (object.getClass() == elementClass) {
-				if (--index == 0) {
-					return object;
-				}
-			}
+		IdentityWrapper identityWrapper = new IdentityWrapper(collection);
+		if (!collectionElementClassIndexObject.containsKey(identityWrapper)) {
+			collection.forEach(o -> {
+				MultikeyMap<Object> existing = collectionElementClassIndexObject
+						.asMapEnsure(true, identityWrapper, elementClass);
+				existing.put(existing.size() + 1, o);
+			});
 		}
-		while (true) {
-			Object object = Reflections.newInstance(elementClass);
-			collection.add(object);
-			if (--index == 0) {
-				return object;
-			}
-		}
+		return collectionElementClassIndexObject.ensure(
+				() -> Reflections.newInstance(elementClass), identityWrapper,
+				elementClass, index);
 	}
 
 	private Map<String, Class> getAliasClassMap(Class rootClass, Node cursor) {
@@ -973,6 +974,28 @@ public class FlatTreeSerializer {
 		public DeserializerOptions withShortPaths(boolean shortPaths) {
 			this.shortPaths = shortPaths;
 			return this;
+		}
+	}
+
+	public static class IdentityWrapper {
+		private Object object;
+
+		public IdentityWrapper(Object object) {
+			this.object = object;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof IdentityWrapper) {
+				return object == ((IdentityWrapper) obj).object;
+			} else {
+				return false;
+			}
+		}
+
+		@Override
+		public int hashCode() {
+			return System.identityHashCode(object);
 		}
 	}
 
