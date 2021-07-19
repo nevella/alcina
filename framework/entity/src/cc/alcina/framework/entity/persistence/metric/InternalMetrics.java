@@ -436,9 +436,9 @@ public class InternalMetrics {
 	void doProfilerLoop() {
 		boolean nextIsAlloc = false;
 		String profilerPath = ResourceUtilities.get("profilerPath");
-		String alloc = "--alloc 2m -d 5 ";
-		String cpu = "-d 5 -d 5 --cstack no -t ";
-		int frequency = highFrequencyProfiling ? 50 : 500;
+		String alloc = "--alloc 2m -t -d 5 ";
+		String cpu = "-d 5 --cstack no -t ";
+		int frequency = highFrequencyProfiling ? 50 : 200;
 		while (isEnabled() && started) {
 			try {
 				if (ResourceUtilities.is("profilerEnabled")) {
