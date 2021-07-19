@@ -97,7 +97,8 @@ public interface TreeSerializable extends Serializable {
 					String value = keyValues.remove(e.getKey());
 					keyValues.put(e.getValue(), value);
 				});
-				return keyValues.sorted().toPropertyString();
+				return keyValues.sorted(new FlatTreeSerializer.KeyComparator())
+						.toPropertyString();
 			} else {
 				return serialized;
 			}

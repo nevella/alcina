@@ -245,6 +245,12 @@ public class JobRegistry {
 		return job.domain().ensurePopulated();
 	}
 
+	public String dumpActiveJobsThisInstance() {
+		return activeJobs.keySet().stream().filter(Objects::nonNull).map(j -> {
+			return Ax.format("%s\n\t%s", j.toString(), j.getTask());
+		}).collect(Collectors.joining("\n"));
+	}
+
 	public ContextAwaiter ensureAwaiter(Job job) {
 		return contextAwaiters.computeIfAbsent(job, ContextAwaiter::new);
 	}
@@ -276,6 +282,10 @@ public class JobRegistry {
 				.map(AllocationQueue::asQueueStat).sorted(Comparator
 						// aka reversed date order
 						.comparing(stat -> -stat.startTime.getTime()));
+	}
+
+	public String getExecutorState() {
+		return jobExecutors.getExecutorState();
 	}
 
 	public String getExJobSystemNextJobId(Class<?> clazz) {
@@ -811,6 +821,11 @@ public class JobRegistry {
 		public List<ClientInstance> getActiveServers() {
 			return Arrays.asList(
 					EntityLayerObjects.get().getServerAsClientInstance());
+		}
+
+		@Override
+		public String getExecutorState() {
+			return "---";
 		}
 
 		@Override

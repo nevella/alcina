@@ -12,6 +12,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
@@ -209,7 +210,8 @@ public class FlatTreeSerializer {
 		} finally {
 			object.treeSerializationCustomiser().onAfterTreeSerialize();
 		}
-		String serialized = state.keyValues.sorted().toPropertyString();
+		String serialized = state.keyValues.sorted(new KeyComparator())
+				.toPropertyString();
 		serialized = object.treeSerializationCustomiser().mapKeys(serialized,
 				true);
 		if (options.singleLine) {
@@ -401,7 +403,9 @@ public class FlatTreeSerializer {
 		 * defaults
 		 * 
 		 */
-		state.keyValues.forEach((path, value) -> {
+		for (Entry<String, String> entry : state.keyValues.entrySet()) {
+			String path = entry.getKey();
+			String value = entry.getValue();
 			Node cursor = root;
 			String[] segments = path.split("\\.");
 			boolean resolvingLastSegment = false;
@@ -411,14 +415,9 @@ public class FlatTreeSerializer {
 			for (int idx = 0; idx < segments.length; idx++) {
 				String segment = segments[idx];
 				boolean lastSegment = idx == segments.length - 1;
-				boolean indexed = segment.matches("(.+?)-(\\d+)");
-				String segmentPath = indexed
-						? segment.replaceFirst("(.+?)-(\\d+)", "$1")
-						: segment;
-				int index = indexed
-						? Integer.parseInt(
-								segment.replaceFirst("(.+?)-(\\d+)", "$2")) + 1
-						: 1;
+				SegmentIndex segmentIndex = new SegmentIndex(segment);
+				int index = segmentIndex.index;
+				String segmentPath = segmentIndex.segment;
 				if (previousSegmentUnusedIndex != -1) {
 					index = previousSegmentUnusedIndex;
 					previousSegmentUnusedIndex = -1;
@@ -433,8 +432,14 @@ public class FlatTreeSerializer {
 					 * steps so the 'descend until resolved' loop is correct,
 					 * rather than attempting a short-circuit
 					 */
+					/*
+					 * Note that we might be resolving >1 indexed collections
+					 * (because of default paths), so set the index counter to 1
+					 * after the firrst use - ditto previousSegmentUnusedIndex
+					 */
 					resolved |= resolvingLastSegment;
 					if (cursor.isCollection() && !cursor.isLeaf()) {
+						previousSegmentUnusedIndex = -1;
 						Class elementClass = null;
 						Map<String, Class> typeMap = getAliasClassMap(
 								state.rootClass, cursor);
@@ -476,7 +481,8 @@ public class FlatTreeSerializer {
 							throw e;
 						}
 						cursor.path.index = new CollectionIndex(elementClass,
-								index, false);
+								null, index, false);
+						index = 1;
 					} else {
 						if (index != 1) {
 							previousSegmentUnusedIndex = index;
@@ -601,22 +607,30 @@ public class FlatTreeSerializer {
 				}
 			}
 			cursor.putToObject(value);
-		});
+		}
 	}
 
 	private Object ensureNthCollectionElement(Class elementClass, int index,
 			Collection collection) {
 		IdentityWrapper identityWrapper = new IdentityWrapper(collection);
 		if (!collectionElementClassIndexObject.containsKey(identityWrapper)) {
+			// if the collection is non-empty, populate the lookup with its
+			// initial elements
 			collection.forEach(o -> {
 				MultikeyMap<Object> existing = collectionElementClassIndexObject
-						.asMapEnsure(true, identityWrapper, elementClass);
+						.asMapEnsure(true, identityWrapper, o.getClass());
 				existing.put(existing.size() + 1, o);
 			});
 		}
-		return collectionElementClassIndexObject.ensure(
-				() -> Reflections.newInstance(elementClass), identityWrapper,
+		Object object = collectionElementClassIndexObject.get(identityWrapper,
 				elementClass, index);
+		if (object == null) {
+			object = Reflections.newInstance(elementClass);
+			collectionElementClassIndexObject.put(identityWrapper, elementClass,
+					index, object);
+			collection.add(object);
+		}
+		return object;
 	}
 
 	private Map<String, Class> getAliasClassMap(Class rootClass, Node cursor) {
@@ -999,6 +1013,49 @@ public class FlatTreeSerializer {
 		}
 	}
 
+	public static class KeyComparator implements Comparator<String> {
+		private Map<String, Key> map = new LinkedHashMap<>();
+
+		@Override
+		public int compare(String o1, String o2) {
+			return get(o1).compareTo(get(o2));
+		}
+
+		private Key get(String s) {
+			return map.computeIfAbsent(s, Key::new);
+		}
+
+		public static class Key implements Comparable<Key> {
+			private List<SegmentIndex> segments;
+
+			public Key(String path) {
+				segments = Arrays.stream(path.split("\\."))
+						.map(SegmentIndex::new).collect(Collectors.toList());
+			}
+
+			@Override
+			public int compareTo(Key o) {
+				for (int idx = 0; idx < segments.size(); idx++) {
+					if (idx == o.segments.size()) {
+						return 1;
+					}
+					SegmentIndex ours = segments.get(idx);
+					SegmentIndex theirs = o.segments.get(idx);
+					int segCmp = ours.compareTo(theirs);
+					if (segCmp != 0) {
+						return segCmp;
+					}
+				}
+				return segments.size() == o.segments.size() ? 0 : -1;
+			}
+
+			@Override
+			public String toString() {
+				return segments.toString();
+			}
+		}
+	}
+
 	public static class MissingElementTypeException extends RuntimeException {
 		public MissingElementTypeException(String message) {
 			super(message);
@@ -1126,8 +1183,12 @@ public class FlatTreeSerializer {
 
 		boolean leafValue = false;
 
-		public CollectionIndex(Class clazz, int index, boolean leafValue) {
+		private List<Object> list;
+
+		public CollectionIndex(Class clazz, List<Object> list, int index,
+				boolean leafValue) {
 			this.clazz = clazz;
+			this.list = list;
 			this.index = index;
 			this.leafValue = leafValue;
 		}
@@ -1139,11 +1200,9 @@ public class FlatTreeSerializer {
 
 		public String toStringShort(Path path, boolean mergeLeafValuePaths) {
 			if (leafValue) {
-				return index == 1 || mergeLeafValuePaths ? ""
-						: CommonUtils.padTwo(index - 1);
+				return index == 1 || mergeLeafValuePaths ? "" : pad();
 			}
-			String strIndex = index == 1 ? ""
-					: "-" + CommonUtils.padTwo(index - 1);
+			String strIndex = index == 1 ? "" : "-" + pad();
 			String shortenedClassName = null;
 			if (path != null) {
 				if (path.parent.propertySerialization != null) {
@@ -1167,6 +1226,24 @@ public class FlatTreeSerializer {
 			return shortenedClassName + strIndex;
 		}
 
+		private String pad() {
+			int value = index - 1;
+			String valString = String.valueOf(value);
+			if (list != null && list.size() > 9) {
+				int maxValue = list.size() - 1;
+				StringBuilder sb = new StringBuilder();
+				int pad = String.valueOf(maxValue).length()
+						- valString.length();
+				for (int idx = 0; idx < pad; idx++) {
+					sb.append('0');
+				}
+				sb.append(valString);
+				return sb.toString();
+			} else {
+				return valString;
+			}
+		}
+
 		String toStringFull(boolean mergeLeafValuePaths) {
 			if (leafValue) {
 				return index == 1 || mergeLeafValuePaths ? ""
@@ -1185,7 +1262,7 @@ public class FlatTreeSerializer {
 					: childValue.getClass();
 			indicies.add(clazz, childValue);
 			List<Object> list = indicies.get(clazz);
-			return new CollectionIndex(clazz, list.size(),
+			return new CollectionIndex(clazz, list, list.size(),
 					isLeafValue(childValue));
 		}
 	}
@@ -1547,6 +1624,50 @@ public class FlatTreeSerializer {
 		@Override
 		public String toString() {
 			return Ax.format("%s:%s", rootClass.getName(), property.getName());
+		}
+	}
+
+	static class SegmentIndex implements Comparable<SegmentIndex> {
+		String segment;
+
+		int index;
+
+		public SegmentIndex(String segment) {
+			int lastDashIdx = -1;
+			boolean digitsAfterLastDash = false;
+			for (int idx = 0; idx < segment.length(); idx++) {
+				char c = segment.charAt(idx);
+				if (c == '-') {
+					digitsAfterLastDash = false;
+					lastDashIdx = idx;
+				} else if (c >= '0' && c <= '9') {
+					digitsAfterLastDash = lastDashIdx != -1;
+				} else {
+					lastDashIdx = -1;
+				}
+			}
+			if (lastDashIdx != -1 && digitsAfterLastDash) {
+				this.segment = segment.substring(0, lastDashIdx);
+				this.index = Integer
+						.parseInt(segment.substring(lastDashIdx + 1)) + 1;
+			} else {
+				this.segment = segment;
+				this.index = 1;
+			}
+		}
+
+		@Override
+		public int compareTo(SegmentIndex o) {
+			int segCmp = segment.compareTo(o.segment);
+			if (segCmp != 0) {
+				return segCmp;
+			}
+			return index - o.index;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s:%s", segment, index);
 		}
 	}
 

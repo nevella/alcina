@@ -17,6 +17,8 @@ public interface JobExecutors {
 
 	List<ClientInstance> getActiveServers();
 
+	String getExecutorState();
+
 	default boolean isCurrentOrphanage() {
 		return isCurrentScheduledJobExecutor();
 	}

@@ -45,28 +45,7 @@ public class TaskGenerateTreeSerializableSignatures
 
 	private transient String signature;
 
-	@AlcinaTransient
-	public String getSignature() {
-		return this.signature;
-	}
-
-	private void checkAllFieldsAreProperties(TreeSerializable serializable) {
-		Field[] fields = serializable.getClass().getDeclaredFields();
-		for (Field field : fields) {
-			if (Modifier.isTransient(field.getModifiers())
-					|| Modifier.isStatic(field.getModifiers())) {
-				continue;
-			}
-			PropertyDescriptor propertyDescriptor = SEUtilities
-					.getPropertyDescriptorByName(serializable.getClass(),
-							field.getName());
-			if (propertyDescriptor == null) {
-				missingPropertyDescriptors.add(field);
-			}
-		}
-	}
-
-	private void checkSerializationIssues(TreeSerializable serializable) {
+	public void checkSerializationIssues(TreeSerializable serializable) {
 		try {
 			LooseContext.pushWithTrue(
 					TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS);
@@ -95,6 +74,27 @@ public class TaskGenerateTreeSerializableSignatures
 			serializationIssues.add(message);
 		} finally {
 			LooseContext.pop();
+		}
+	}
+
+	@AlcinaTransient
+	public String getSignature() {
+		return this.signature;
+	}
+
+	private void checkAllFieldsAreProperties(TreeSerializable serializable) {
+		Field[] fields = serializable.getClass().getDeclaredFields();
+		for (Field field : fields) {
+			if (Modifier.isTransient(field.getModifiers())
+					|| Modifier.isStatic(field.getModifiers())) {
+				continue;
+			}
+			PropertyDescriptor propertyDescriptor = SEUtilities
+					.getPropertyDescriptorByName(serializable.getClass(),
+							field.getName());
+			if (propertyDescriptor == null) {
+				missingPropertyDescriptors.add(field);
+			}
 		}
 	}
 
