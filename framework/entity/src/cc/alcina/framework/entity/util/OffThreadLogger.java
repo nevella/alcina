@@ -19,7 +19,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableSe
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
-import cc.alcina.framework.entity.persistence.mvcc.MvccException;
 
 /*
  * For infrastructure components where blocking due to log emission > writer speed can cause feedback
@@ -98,14 +97,16 @@ public class OffThreadLogger implements RegistrableService, InvocationHandler {
 					Thread.currentThread().setName(event.threadName);
 					ThrowingRunnable runnable = () -> event.method
 							.invoke(event.delegate, event.args);
-					try {
-						runnable.run();
-					} catch (MvccException e) {
-						// FIXME - mvcc.5 - inject handler from mvcc
-						MethodContext.instance().withWrappingTransaction()
-								.run(runnable);
-					}
-				} catch (Exception e) {
+					runnable.run();
+					// FIXME - mvcc.5 - throw if any args are mvcc objects -
+					// require the strinng be evaluated on the originatinng
+					// thread
+					// } catch (MvccException e) {
+					// // FIXME - mvcc.5 - inject handler from mvcc
+					// MethodContext.instance().withWrappingTransaction()
+					// .run(runnable);
+					// }
+				} catch (Throwable e) {
 					Ax.out("DEVEX::0 - OffThreadLogger.LoggerThread exception");
 					e.printStackTrace();
 				} finally {

@@ -464,6 +464,10 @@ public class LiveTree {
 			return this.path;
 		}
 
+		public Object getSegment() {
+			return this.segment;
+		}
+
 		public DomainViewNodeContentModel<?> getViewNode() {
 			return this.viewNode;
 		}

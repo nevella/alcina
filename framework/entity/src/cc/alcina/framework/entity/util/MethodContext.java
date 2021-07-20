@@ -72,25 +72,32 @@ public class MethodContext {
 						.setContextClassLoader(contextClassLoader);
 			}
 			return callable.call();
-		} catch (Exception e) {
+		} catch (Throwable e) {
 			e.printStackTrace();
 			throw new RuntimeException(e);
 		} finally {
-			Thread.currentThread().setContextClassLoader(entryClassLoader);
-			if (pushedRoot) {
-				ThreadedPermissionsManager.cast().popUser();
-			}
-			if (metricKey != null) {
-				MetricLogging.get().end(metricKey);
-			}
-			if (!context.isEmpty()) {
-				LooseContext.pop();
-			}
-			if (wrappingTransaction && !inTransaction) {
-				Transaction.end();
-			}
-			if (executeOutsideTransaction && inTransaction) {
-				Transaction.begin();
+			try {
+				Thread.currentThread().setContextClassLoader(entryClassLoader);
+				if (pushedRoot) {
+					ThreadedPermissionsManager.cast().popUser();
+				}
+				if (metricKey != null) {
+					MetricLogging.get().end(metricKey);
+				}
+				if (!context.isEmpty()) {
+					LooseContext.pop();
+				}
+				if (wrappingTransaction && !inTransaction) {
+					Transaction.end();
+				}
+				if (executeOutsideTransaction && inTransaction) {
+					Transaction.begin();
+				}
+			} catch (Throwable e) {
+				// TODO Auto-generated catch block
+				Ax.out("DEVEX::0 - Exception in methodcontext/finally");
+				e.printStackTrace();
+				throw e;
 			}
 		}
 	}
