@@ -344,8 +344,8 @@ public class KryoUtils {
 						ArraysArrayListSerializer.class);
 				Class<?> unmodifiableRandomAccessList = Class.forName(
 						"java.util.Collections$UnmodifiableRandomAccessList");
-				kryo.addDefaultSerializer(arraysArrayList,
-						ArraysArrayListSerializer.class);
+				kryo.addDefaultSerializer(unmodifiableRandomAccessList,
+						UnmodifiableRandomAccessListSerializer.class);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

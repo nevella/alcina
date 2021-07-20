@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -550,10 +551,15 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 		}
 	}
 
+	@TypeSerialization(flatSerializable = false)
+	// FIXME - mvcc.flat - this fails because FTS can't differentiate between
+	// default content definition and null - it *is* an issue (possibly
+	// requiring __FTS_DEFAULT__)
+	//
+	// yep - for objects where presence/absence is meaningful and there are no
+	// fields, have that - *IFF* require field type to be final
 	public static class TestContentRequest
 			extends ContentRequestBase<TestContentDefinition> {
-		private TestContentDefinition contentDefinition = new TestContentDefinition();
-
 		@Override
 		public TestContentDefinition getContentDefinition() {
 			return this.contentDefinition;
