@@ -46,6 +46,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 //FIXME - mvcc.4 - this shouldn't extend entity
@@ -533,7 +534,13 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 		@Override
 		public String filterTestSerialized(String serialized) {
-			return serialized.replaceAll(".+\\.displayText=.+\n?", "");
+			if (serialized.contains(".displayText=")) {
+				StringMap map = StringMap.fromPropertyString(serialized);
+				map.keySet().removeIf(k -> k.endsWith(".displayText"));
+				return map.toPropertyString();
+			} else {
+				return serialized;
+			}
 		}
 
 		@Override
