@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -66,6 +67,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderType
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.GraphProjectionTransient;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -301,7 +303,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 14;
+		private static final transient int VERSION = 15;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -375,6 +377,35 @@ class ClassTransformer {
 					});
 		}
 
+		/*
+		 * Only getters are required (for graph projection - that will project
+		 * using field.set() on a non-mvcc object)
+		 */
+		private void checkFieldsHaveGetters() {
+			SEUtilities.allFields(originalClass).stream()
+					.filter(f -> (f.getModifiers() & Modifier.PRIVATE) != 0)
+					.filter(f -> (f.getModifiers() & Modifier.STATIC) == 0)
+					.filter(f -> (f.getModifiers() & Modifier.TRANSIENT) == 0)
+					.filter(f -> f.getAnnotation(
+							GraphProjectionTransient.class) == null)
+					.forEach(f -> {
+						PropertyDescriptor propertyDescriptor = SEUtilities
+								.getPropertyDescriptorByName(originalClass,
+										f.getName());
+						if (propertyDescriptor != null
+								&& propertyDescriptor.getReadMethod() != null) {
+						} else {
+							fieldsWithProblematicAccess.add(f.getName());
+							correctnessIssueTopic
+									.publish(new MvccCorrectnessIssue(
+											MvccCorrectnessIssueType.Invalid_field_access,
+											Ax.format(
+													"Missing getter/setter: field '%s'",
+													f.getName())));
+						}
+					});
+		}
+
 		private String findSource(Class clazz) throws Exception {
 			for (SourceFinder finder : SourceFinder.sourceFinders) {
 				String source = finder.findSource(clazz);
@@ -408,6 +439,7 @@ class ClassTransformer {
 				Ax.out("checking unit : %s", originalClass.getSimpleName());
 				checkFieldModifiers();
 				checkDuplicateFieldNames();
+				checkFieldsHaveGetters();
 				for (String source : classSources) {
 					if (token.checkedSources.add(source)) {
 						compilationUnit = StaticJavaParser.parse(source);

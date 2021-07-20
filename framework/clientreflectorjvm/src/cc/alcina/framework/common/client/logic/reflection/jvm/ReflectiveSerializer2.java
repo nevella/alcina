@@ -24,6 +24,11 @@ import elemental.json.JsonValue;
 import elemental.json.impl.JsonUtil;
 
 @GwtScriptOnly
+/*
+ * Note - will need to handle
+ * cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable.
+ * Support specially
+ */
 public class ReflectiveSerializer2 {
 	private IdentityHashMap serialized = new IdentityHashMap();
 

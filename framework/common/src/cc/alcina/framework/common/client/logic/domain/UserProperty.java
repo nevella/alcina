@@ -157,6 +157,11 @@ public abstract class UserProperty<T extends UserProperty>
 		return getUser();
 	}
 
+	@Transient
+	public UserPropertyPersistable.Support getUserPropertySupport() {
+		return this.userPropertySupport;
+	}
+
 	@Lob
 	@Transient
 	public String getValue() {

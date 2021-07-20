@@ -246,9 +246,12 @@ public class JobRegistry {
 	}
 
 	public String dumpActiveJobsThisInstance() {
-		return activeJobs.keySet().stream().filter(Objects::nonNull).map(j -> {
-			return Ax.format("%s\n\t%s", j.toString(), j.getTask());
-		}).collect(Collectors.joining("\n"));
+		return MethodContext.instance().withWrappingTransaction()
+				.call(() -> activeJobs.keySet().stream()
+						.filter(Objects::nonNull).map(j -> {
+							return Ax.format("%s\n\t%s", j.toString(),
+									j.getTask());
+						}).collect(Collectors.joining("\n")));
 	}
 
 	public ContextAwaiter ensureAwaiter(Job job) {
