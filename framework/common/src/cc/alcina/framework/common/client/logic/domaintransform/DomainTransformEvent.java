@@ -215,6 +215,7 @@ public class DomainTransformEvent
 
 	@Transient
 	@JsonIgnore
+	@AlcinaTransient
 	public Object getOldValue() {
 		return this.oldValue;
 	}
