@@ -436,13 +436,17 @@ public class InternalMetrics {
 	void doProfilerLoop() {
 		boolean nextIsAlloc = false;
 		String profilerPath = ResourceUtilities.get("profilerPath");
-		String alloc = "--alloc 2m -t -d 5 ";
-		String cpu = "-d 5 --cstack no -t ";
-		int frequency = highFrequencyProfiling ? 50 : 200;
+		String alloc = "--alloc 100k -t -d 5 -e alloc ";
+		String cpu = "-d 5 --cstack no -t -e cpu ";
 		while (isEnabled() && started) {
 			try {
 				if (ResourceUtilities.is("profilerEnabled")) {
-					String params = nextIsAlloc ? alloc : cpu;
+					int frequency = highFrequencyProfiling ? 50 : 200;
+					MetricType type = nextIsAlloc
+							|| !ResourceUtilities.is("cpuProfilingEnabled")
+									? MetricType.alloc
+									: MetricType.cpu;
+					String params = type == MetricType.alloc ? alloc : cpu;
 					String pid = "jps";
 					if (Ax.isTest()) {
 						String name = ManagementFactory.getRuntimeMXBean()
@@ -453,10 +457,6 @@ public class InternalMetrics {
 							params, frequency, pid);
 					ShellOutputTuple wrapper = new ShellWrapper().noLogging()
 							.runBashScript(cmd);
-					MetricType type = nextIsAlloc
-							|| !ResourceUtilities.is("cpuProfilingEnabled")
-									? MetricType.alloc
-									: MetricType.cpu;
 					File out = telemetryFile(type);
 					ResourceUtilities.writeStringToFileGz(wrapper.output, out);
 					String runningMetrics = trackers.values().stream()
