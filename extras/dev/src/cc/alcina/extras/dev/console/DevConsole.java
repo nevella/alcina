@@ -633,6 +633,19 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		loadCommandMap();
 	}
 
+	public void restart() {
+		String command = props.restartCommand;
+		if (Ax.isBlank(command)) {
+			Ax.err("Property 'restartCommand' not set");
+		} else {
+			try {
+				new ShellWrapper().runBashScript(command).throwOnException();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	public void saveConfig() throws Exception {
 		serializeObject(props, consolePropertiesFile);
 		serializeObject(history, consoleHistoryFile);

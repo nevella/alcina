@@ -1007,12 +1007,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String command = console.props.restartCommand;
-			if (Ax.isBlank(command)) {
-				Ax.err("Property 'restartCommand' not set");
-			} else {
-				new ShellWrapper().runBashScript(command);
-			}
+			console.restart();
 			return "control message sent";
 		}
 	}
