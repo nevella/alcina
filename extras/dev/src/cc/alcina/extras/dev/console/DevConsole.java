@@ -62,6 +62,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -224,6 +225,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		new DevStats().parse(logProvider).dump(true);
 		logProvider.startRemote();
 		JobRegistry.get();
+		AlcinaTopics.applicationRestart.add((k, v) -> getInstance().restart());
 	}
 
 	public String breakAndPad(int tabCount, int width, String text,
