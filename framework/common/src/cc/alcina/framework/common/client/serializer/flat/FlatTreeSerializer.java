@@ -1087,6 +1087,9 @@ public class FlatTreeSerializer {
 
 		@Override
 		public String serialize(Object object, boolean hasClassNameProperty) {
+			if (object == null) {
+				return null;
+			}
 			TypeSerialization typeSerialization = Reflections.classLookup()
 					.getAnnotationForClass(object.getClass(),
 							TypeSerialization.class);
