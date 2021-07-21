@@ -17,10 +17,13 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+
 /**
  * 
  * @author Nick Reddel
  */
+@Bean
 public class DomainTransformResponse implements Serializable {
 	private long requestId;
 
