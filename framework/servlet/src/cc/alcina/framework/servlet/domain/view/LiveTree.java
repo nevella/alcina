@@ -203,6 +203,7 @@ public class LiveTree {
 		toRemove.forEach(context::removePathChange);
 		// Phase 2 - cascade collated changes. A linked hashset can, after all,
 		// function as a FIFO queue.
+		root.trace(!context.treeCreation);
 		do {
 			Iterator<TreePath<LiveNode>> iterator = pathChanged.iterator();
 			TreePath<LiveNode> pathChange = iterator.next();
@@ -224,23 +225,12 @@ public class LiveTree {
 				context.ensureInTransactionResult(liveNode);
 			}
 		}
-		// Phase 4 - resort child collections (now the livenodes have nodes)
-		context.transactionResult.forEach(path -> {
-			if (context.treeCreation) {
-				if (path.hasChildren()) {
-					path.sortChildren();
-				}
-			} else {
-				if (path.getValue().collateOperations() == Operation.INSERT) {
-					path.reinsertInParent();
-				}
-			}
-		});
 		List<Transform> result = context.generateTransformResult();
 		modifiedNodes.forEach(LiveNode::clearContextData);
 		modifiedNodes.clear();
 		transactionTransforms.put(currentPosition, result);
 		checkChangeListeners();
+		root.trace(false);
 	}
 
 	private List<Transform> requestToTransform(
@@ -352,8 +342,8 @@ public class LiveTree {
 				Object discriminator, NodeGenerator<?, ?> generator) {
 			PathChange change = new PathChange();
 			change.operation = Operation.INSERT;
-			TreePath<LiveNode> childPath = liveNode.path
-					.ensureChild(discriminator);
+			TreePath<LiveNode> childPath = liveNode.ensureChildPath(this,
+					generator, discriminator);
 			change.path = ensureNode(childPath, generator, discriminator).path;
 			addPathChange(change);
 			return childPath;
@@ -454,6 +444,18 @@ public class LiveTree {
 		@Override
 		public int compareTo(LiveNode o) {
 			return viewNode.compareTo(o.viewNode);
+		}
+
+		public TreePath<LiveNode> ensureChildPath(
+				GeneratorContext generatorContext,
+				NodeGenerator<?, ?> childGenerator, Object discriminator) {
+			SegmentComparable segmentComparable = new SegmentComparable(
+					generatorContext, childGenerator, discriminator);
+			/*
+			 * Supply the comparable on path creation - any other way we run
+			 * into the "comparable value changes" bugbear and hide up a tree
+			 */
+			return path.ensureChild(discriminator, segmentComparable);
 		}
 
 		public <P extends NodeGenerator> P getGenerator() {
@@ -608,6 +610,21 @@ public class LiveTree {
 		@Override
 		public boolean test(Object t) {
 			return true;
+		}
+	}
+
+	public static class SegmentComparable
+			implements Comparable<SegmentComparable> {
+		private DomainViewNodeContentModel comparable;
+
+		public SegmentComparable(GeneratorContext context,
+				NodeGenerator generator, Object discriminator) {
+			this.comparable = generator.generate(discriminator, context);
+		}
+
+		@Override
+		public int compareTo(SegmentComparable o) {
+			return comparable.compareTo(o.comparable);
 		}
 	}
 

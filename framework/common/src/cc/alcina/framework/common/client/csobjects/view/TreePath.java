@@ -8,12 +8,15 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /*
@@ -48,6 +51,8 @@ public class TreePath<T> extends Model {
 
 	private transient T value;
 
+	transient Comparable segmentComparable;
+
 	private String segment = "";
 
 	// Should only be used by serialization
@@ -64,6 +69,7 @@ public class TreePath<T> extends Model {
 		TreePath<T> child = new TreePath();
 		String asSegment = asSegment(segmentObject);
 		child.setSegment(asSegment);
+		child.segmentComparable = paths.segmentComparable;
 		addChildPath(index, child);
 		return child;
 	}
@@ -78,9 +84,20 @@ public class TreePath<T> extends Model {
 		return depth;
 	}
 
-	public TreePath<T> ensureChild(Object segment) {
-		TreePath<T> childPath = ensureChildPath(segment);
-		return childPath != null ? childPath : addChild(segment);
+	public void dump(int depth, int maxDepth) {
+		FormatBuilder fb = new FormatBuilder();
+		fb.indent(depth * 2);
+		fb.append(toString());
+		Ax.out(fb.toString());
+		if (depth < maxDepth) {
+			getChildren().forEach(n -> n.dump(depth + 1, maxDepth));
+		}
+	}
+
+	public TreePath<T> ensureChild(Object segment,
+			Comparable segmentComparable) {
+		paths.segmentComparable = segmentComparable;
+		return ensureChildPath(segment);
 	}
 
 	public TreePath<T> ensureChildPath(Object segment) {
@@ -178,14 +195,8 @@ public class TreePath<T> extends Model {
 		paths.putTree(containingTree);
 	}
 
-	public void reinsertInParent() {
-		TreePath<T> parent = getParent();
-		removeFromParent();
-		parent.addChildPath(parent.getChildren().size(), this);
-	}
-
 	public void removeFromParent() {
-		paths.byString.remove(toString());
+		paths.remove(toString());
 		parent.children.remove(this);
 		parent = null;
 	}
@@ -212,12 +223,6 @@ public class TreePath<T> extends Model {
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
 	}
 
-	public void sortChildren() {
-		Preconditions.checkState(children instanceof SortedChildren);
-		SortedChildren<T> sortedChildren = (SortedChildren<T>) children;
-		sortedChildren.reSort();
-	}
-
 	@Override
 	public String toString() {
 		if (cached == null) {
@@ -225,6 +230,10 @@ public class TreePath<T> extends Model {
 					: parent.toString() + "." + segment;
 		}
 		return cached;
+	}
+
+	public void trace(boolean trace) {
+		paths.trace = trace;
 	}
 
 	public TreePath withSegment(Object object) {
@@ -277,6 +286,8 @@ public class TreePath<T> extends Model {
 	}
 
 	static class Paths {
+		public Comparable segmentComparable;
+
 		TreePath root;
 
 		Map<String, TreePath> byString = new LinkedHashMap<>();
@@ -284,6 +295,8 @@ public class TreePath<T> extends Model {
 		Object containingTree;
 
 		Supplier<List> childListCreator = () -> new ArrayList();
+
+		boolean trace;
 
 		public Paths(TreePath root) {
 			this.root = root;
@@ -312,6 +325,7 @@ public class TreePath<T> extends Model {
 			}
 			while (true) {
 				if (cursor.length() == stringPath.length()) {
+					segmentComparable = null;
 					return treePath;
 				}
 				int segmentStart = cursor.length() + 1;
@@ -319,6 +333,11 @@ public class TreePath<T> extends Model {
 				cursor = idx == -1 ? stringPath : stringPath.substring(0, idx);
 				String segment = cursor.substring(segmentStart,
 						cursor.length());
+				checkTrace("add", stringPath);
+				if (segmentComparable != null) {
+					// require this to be the last segment
+					Preconditions.checkArgument(idx == -1);
+				}
 				treePath = treePath.addChild(segment);
 			}
 		}
@@ -330,12 +349,29 @@ public class TreePath<T> extends Model {
 			this.containingTree = containingTree;
 		}
 
+		public void remove(String path) {
+			checkTrace("remove", path);
+			byString.remove(path);
+		}
+
 		public void setChildListCreator(Supplier<List> childListCreator) {
 			this.childListCreator = childListCreator;
 		}
 
+		private void checkTrace(String op, String path) {
+			if (!GWT.isClient()) {
+				if (trace) {
+					Ax.out("treePath:%s:%s", op, path);
+				}
+			}
+		}
+
 		void put(TreePath path) {
-			byString.put(path.toString(), path);
+			String stringPath = path.toString();
+			if (!byString.containsKey(stringPath)) {
+				checkTrace("add", stringPath);
+			}
+			byString.put(stringPath, path);
 		}
 	}
 }

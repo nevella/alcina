@@ -11,8 +11,6 @@ import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.util.CommonUtils;
-
 public class SortedChildren<T> implements List<TreePath<T>> {
 	private TreeSet<TreePath<T>> children = new TreeSet<>(Cmp.INSTANCE);
 
@@ -130,14 +128,6 @@ public class SortedChildren<T> implements List<TreePath<T>> {
 		return this.children.removeIf(filter);
 	}
 
-	public void reSort() {
-		TreeSet<TreePath<T>> newChildren = new TreeSet<>(Cmp.INSTANCE);
-		// nope - see TreeSet.addAll
-		// newChildren.addAll(children);
-		children.stream().forEach(newChildren::add);
-		children = newChildren;
-	}
-
 	@Override
 	public boolean retainAll(Collection<?> c) {
 		return this.children.retainAll(c);
@@ -192,9 +182,7 @@ public class SortedChildren<T> implements List<TreePath<T>> {
 
 		@Override
 		public int compare(TreePath o1, TreePath o2) {
-			Comparable c1 = (Comparable) o1.getValue();
-			Comparable c2 = (Comparable) o2.getValue();
-			return CommonUtils.compareWithNullMinusOne(c1, c2);
+			return o1.segmentComparable.compareTo(o2.segmentComparable);
 		}
 	}
 }

@@ -1,7 +1,10 @@
 package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
+import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -45,6 +48,78 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onClick(Click event);
+		}
+	}
+
+	public static class KeyDown extends NodeEvent<KeyDown.Handler> {
+		@Override
+		public void dispatch(KeyDown.Handler handler) {
+			handler.onKeyDown(this);
+		}
+
+		@Override
+		public Class<KeyDown.Handler> getHandlerClass() {
+			return KeyDown.Handler.class;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::fireEvent,
+					KeyDownEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onKeyDown(KeyDown event);
+		}
+	}
+
+	public static class KeyUp extends NodeEvent<KeyUp.Handler> {
+		@Override
+		public void dispatch(KeyUp.Handler handler) {
+			handler.onKeyUp(this);
+		}
+
+		@Override
+		public Class<KeyUp.Handler> getHandlerClass() {
+			return KeyUp.Handler.class;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::fireEvent, KeyUpEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onKeyUp(KeyUp event);
+		}
+	}
+
+	/*
+	 * Doesn't work because requires element to be attached to the dom - would
+	 * require a bit of a rework of event system to get it to work (and just
+	 * intercepting an[enter] key works just as well)
+	 */
+	public static class Submit extends NodeEvent<Submit.Handler> {
+		@Override
+		public void dispatch(Submit.Handler handler) {
+			handler.onSubmit(this);
+		}
+
+		@Override
+		public Class<Submit.Handler> getHandlerClass() {
+			return Submit.Handler.class;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			// required since form submit doesn't propagate
+			LocalDom.flush();
+			return widget.addBitlessDomHandler(this::fireEvent,
+					DomSubmitEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSubmit(Submit event);
 		}
 	}
 }

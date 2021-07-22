@@ -9,6 +9,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domain.HasEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -32,7 +33,14 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 
 	@Override
 	public int compareTo(DomainViewNodeContentModel o) {
-		return comparatorString().compareTo(o.comparatorString());
+		int stringCmp = comparatorString().compareTo(o.comparatorString());
+		if (stringCmp != 0) {
+			return stringCmp;
+		}
+		if (entity != null && o.entity != null) {
+			return EntityComparator.INSTANCE.compare(entity, o.getEntity());
+		}
+		return 0;
 	}
 
 	public abstract Class<E> entityClass();
@@ -374,8 +382,8 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 		public String toString() {
 			String before = beforePath == null ? ""
 					: Ax.format("[<<%s] ", beforePath);
-			return Ax.format("%s %s%s %s", treePath, before, operation,
-					node.getClass().getSimpleName());
+			return Ax.format("%s %s%s %s %s", treePath, before, operation,
+					node.getClass().getSimpleName(), node.getName());
 		}
 	}
 

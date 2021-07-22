@@ -69,6 +69,15 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 		}
 	}
 
+	public Object[] deltaReturnProjected(T t, boolean insert) {
+		if (insert) {
+			insert(t);
+		} else {
+			remove(t);
+		}
+		return project(t);
+	}
+
 	public <V> V first(Object... objects) {
 		return (V) CommonUtils.first(items(objects));
 	}
