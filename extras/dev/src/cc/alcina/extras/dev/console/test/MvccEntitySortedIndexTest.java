@@ -18,6 +18,8 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 /**
  * 
  * @author nick@alcina.cc
+ * 
+ * Note that sorted projections are only post-tx
  *
  */
 public class MvccEntitySortedIndexTest<IU extends Entity & IUser, IG extends Entity & IGroup>
@@ -34,18 +36,17 @@ public class MvccEntitySortedIndexTest<IU extends Entity & IUser, IG extends Ent
 		Date date = new Date();
 		Entity instance = Registry.impl(TestSupport.class)
 				.createReversedDateEntityInstance();
+		Preconditions.checkState(projection.getSince(date).size() == 0);
+		Transaction.commit();
 		Preconditions.checkState(projection.getSince(date).size() == 1);
 		debug(projection.getSince(date));
-		Transaction.commit();
 		instance = Registry.impl(TestSupport.class)
 				.createReversedDateEntityInstance();
+		Transaction.commit();
 		Preconditions.checkState(projection.getSince(date).size() == 2);
 		debug(projection.getSince(date));
 		instance = Registry.impl(TestSupport.class)
 				.createReversedDateEntityInstance();
-		Preconditions.checkState(projection.getSince(date).size() == 3
-				&& projection.getSince(date).get(0) == instance);
-		debug(projection.getSince(date));
 		Transaction.commit();
 		Preconditions.checkState(projection.getSince(date).size() == 3
 				&& projection.getSince(date).get(0) == instance);

@@ -26,7 +26,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	static final transient long serialVersionUID = 1L;
 
 	public static EntityLocator instanceLocator(Entity entity) {
-		return new EntityLocator(entity);
+		return entity==null?null:new EntityLocator(entity);
 	}
 
 	public static EntityLocator nonClassDependent(String entityClassName,

@@ -1,9 +1,7 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
-import java.util.List;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -11,9 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
+import cc.alcina.framework.entity.projection.GraphProjection;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 
 /**
@@ -71,23 +72,27 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected volatile T visibleAllTransactions;
 
-	/*
-	 * debugging aids, resolution caching
-	 */
-	private volatile T __mostRecentReffed;
+	class CachedResolution {
+		private T __mostRecentReffed;
 
-	private volatile T __mostRecentWritable;
+		private T __mostRecentWritable;
+
+		private TransactionId mostRecentReffedTransactionId;
+
+		private TransactionId mostRecentWritableTransactionId;
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToString(this);
+		}
+	}
+
+	private volatile CachedResolution cachedResolution;
 
 	/*
 	 * Only used to determine if a txmap key is not visible to a given
 	 * transaction (post vacuum)
 	 */
 	private TransactionId firstCommittedTransactionId;
-
-	// resolution caching
-	private volatile TransactionId mostRecentReffedTransactionId;
-
-	private volatile TransactionId mostRecentWritableTransactionId;
 
 	/*
 	 * also used as a monitor for resolution caching
@@ -238,29 +243,19 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		if (write && transaction.isReadonly()) {
 			throw new MvccException("Writing within a readonly transaction");
 		}
+		CachedResolution cachedResolution = this.cachedResolution;
 		// try cached
 		if (write) {
-			if (mostRecentWritableTransactionId == transaction.getId()) {
-				// size acts as a monitor
-				synchronized (size) {
-					T result = __mostRecentWritable;
-					// double-check
-					if (mostRecentWritableTransactionId == transaction
+			if (cachedResolution != null
+					&& cachedResolution.mostRecentWritableTransactionId == transaction
 							.getId()) {
-						return result;
-					}
-				}
+				return cachedResolution.__mostRecentWritable;
 			}
 		} else {
-			if (mostRecentReffedTransactionId == transaction.getId()) {
-				// size acts as a monitor
-				synchronized (size) {
-					T result = __mostRecentReffed;
-					// double-check on volatile;
-					if (mostRecentReffedTransactionId == transaction.getId()) {
-						return result;
-					}
-				}
+			if (cachedResolution != null
+					&& cachedResolution.mostRecentReffedTransactionId == transaction
+							.getId()) {
+				return cachedResolution.__mostRecentReffed;
 			}
 		}
 		/*
@@ -367,18 +362,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				visibleAllTransactions = version.object;
 			}
 			versions.remove(tx);
-			if (__mostRecentReffed == version.object) {
-				synchronized (size) {
-					mostRecentReffedTransactionId = null;
-					__mostRecentReffed = null;
-				}
-			}
-			if (__mostRecentWritable == version.object) {
-				synchronized (size) {
-					mostRecentWritableTransactionId = null;
-					__mostRecentWritable = null;
-				}
-			}
+			cachedResolution = null;
 			size.decrementAndGet();
 		}
 	}
@@ -389,16 +373,19 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected void updateCached(Transaction transaction, T resolved,
 			boolean write) {
-		synchronized (size) {
-			mostRecentReffedTransactionId = transaction.getId();
-			__mostRecentReffed = resolved;
-			if (write) {
-				mostRecentWritableTransactionId = transaction.getId();
-				__mostRecentWritable = resolved;
-			}
+		CachedResolution cachedResolution = new CachedResolution();
+		cachedResolution.mostRecentReffedTransactionId = transaction.getId();
+		cachedResolution.__mostRecentReffed = resolved;
+		if (write) {
+			cachedResolution.mostRecentWritableTransactionId = transaction
+					.getId();
+			cachedResolution.__mostRecentWritable = resolved;
 		}
+		this.cachedResolution = cachedResolution;
 	}
 
+	// sorted maps are nice but also painful (boiling down to "the comparable
+	// must be invariant") - this takes care of
 	void resolveInvariantToDomainIdentity() {
 		Transaction transaction = Transaction.current();
 		ObjectVersion<T> version = new ObjectVersion<>();
@@ -472,9 +459,14 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
-	static class Node {
-		List<Node> children = new ArrayList<>();
 
-		String name;
-	}
+	 protected void debugNotResolved(){
+		 FormatBuilder fb = new FormatBuilder();
+		 fb.line("Version count: %s", versions.size());
+		 fb.line("visibleAllTransactions: %s", visibleAllTransactions!=null);
+		 fb.line("cachedResolution: %s", cachedResolution);
+		 fb.line("firstCommittedTransactionId: %s", firstCommittedTransactionId);
+		 fb.line("initialWriteableTransaction: %s", initialWriteableTransaction);
+		 logger.warn(fb.toString());
+	 }
 }

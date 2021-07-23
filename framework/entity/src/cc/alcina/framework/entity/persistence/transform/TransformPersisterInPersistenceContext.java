@@ -591,6 +591,8 @@ public class TransformPersisterInPersistenceContext {
 				// pg will not accept 0x0
 				event.setNewStringValue(
 						event.getNewStringValue().replace("\u0000", ""));
+				//and must blank this too
+				event.setNewValue(null);
 			}
 			tlTransformManager.fireDomainTransform(event);
 			delayedEntityPersister.checkPersistEntity(event);

@@ -9,7 +9,6 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -18,10 +17,6 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorr
 
 public class Mvcc {
 	private static Logger logger = LoggerFactory.getLogger(Mvcc.class);
-
-	public static void debugSourceNotFound(DomainTransformException e) {
-		logger.warn("in vacuum?");
-	}
 
 	public static <T extends Entity> T getEntity(EntityManager entityManager,
 			T t) {
@@ -110,5 +105,18 @@ public class Mvcc {
 			}
 			logger.info("(All tests passed)");
 		}
+	}
+
+	public static void debugNotFound(Entity entity, RuntimeException e) {
+		logger.warn("mvcc.debugNotFound :: {} :: {}/{}", e.getClass().getSimpleName(),
+				entity.getClass().getSimpleName(), entity.getId());
+		if(isMvccObject(entity)){
+			 MvccObjectVersions versions = ((MvccObject) entity).__getMvccVersions__();
+			 if(versions!=null){
+				 versions.debugNotResolved();
+			 }
+			 
+		}
+		
 	}
 }

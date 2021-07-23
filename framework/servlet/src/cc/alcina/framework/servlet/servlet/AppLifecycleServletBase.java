@@ -485,10 +485,20 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void runFinalPreInitTasks() {
 		if (serializationSignatureListener != null) {
+			boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities
+					.is(AppLifecycleServletBase.class,
+							"cancelStartupOnSignatureGenerationFailure")
+					|| !EntityLayerUtils.isTestServer();
 			MethodContext.instance()
-					.withRunInNewThread(EntityLayerUtils.isTestServer())
+					.withRunInNewThread(
+							!cancelStartupOnSignatureGenerationFailure)
 					.call(() -> serializationSignatureListener
 							.ensureSignature());
+			if (serializationSignatureListener.isEnsureFailed()
+					&& cancelStartupOnSignatureGenerationFailure) {
+				throw new RuntimeException(
+						"Task signature generation failed: cancelling startup");
+			}
 		}
 	}
 
