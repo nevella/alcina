@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 
@@ -40,6 +41,7 @@ public class DownloadServlet extends HttpServlet {
 
 	public static String add(DownloadItem item) {
 		String id = SEUtilities.generateId();
+		Ax.out("Served download at /download.do?id=%s", id);
 		items.put(id, item);
 		return id;
 	}
@@ -64,12 +66,13 @@ public class DownloadServlet extends HttpServlet {
 			res.setContentType(item.mimeType);
 			res.setContentLength((int) f.length());
 			if (item.fileName != null) {
-				String fixedFileName = 
-						item.fileName.replaceAll("[^\\x20-\\x7e]", "");
+				String fixedFileName = item.fileName
+						.replaceAll("[^\\x20-\\x7e]", "");
 				res.setHeader("Content-Disposition",
 						"attachment; filename=\"" + fixedFileName + "\"");
 			}
 		}
+		// FIXME - dirndl1.2 - multiple timers here
 		try {
 			ResourceUtilities.writeStreamToStream(
 					new BufferedInputStream(new FileInputStream(f)),
@@ -97,7 +100,7 @@ public class DownloadServlet extends HttpServlet {
 		}
 		return null;
 	}
-	
+
 	public DownloadItem getItem(String id) {
 		return items.get(id);
 	}

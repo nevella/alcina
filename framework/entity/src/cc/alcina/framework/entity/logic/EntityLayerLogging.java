@@ -56,8 +56,9 @@ public class EntityLayerLogging {
 				.log(message, componentKey.toString());
 	}
 
-	public static void persistentLog(Enum componentKey, Throwable t) {
-		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
+	public static long persistentLog(Enum componentKey, Throwable t) {
+		return Registry.impl(CommonPersistenceProvider.class)
+				.getCommonPersistence()
 				.log(SEUtilities.getFullExceptionMessage(t),
 						componentKey.toString());
 	}

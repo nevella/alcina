@@ -1,15 +1,60 @@
 package cc.alcina.framework.common.client.publication.request;
 
-import java.io.Serializable;
+import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-public class PublicationResult implements Serializable {
-	public String content;
+public class PublicationResult extends Model implements TreeSerializable {
+	private String content;
 
-	public Long publicationId;
+	private Long publicationId;
 
-	public String publicationUid;
+	private String publicationUid;
 
-	public String contentToken;
+	private String contentToken;
 
-	public String contentUrl;
+	private String contentUrl;
+
+	public void ensureMinimal() {
+		setContent(null);
+	}
+
+	public String getContent() {
+		return content;
+	}
+
+	public String getContentToken() {
+		return contentToken;
+	}
+
+	public String getContentUrl() {
+		return contentUrl;
+	}
+
+	public Long getPublicationId() {
+		return publicationId;
+	}
+
+	public String getPublicationUid() {
+		return publicationUid;
+	}
+
+	public void setContent(String content) {
+		this.content = content;
+	}
+
+	public void setContentToken(String contentToken) {
+		this.contentToken = contentToken;
+	}
+
+	public void setContentUrl(String contentUrl) {
+		this.contentUrl = contentUrl;
+	}
+
+	public void setPublicationId(Long publicationId) {
+		this.publicationId = publicationId;
+	}
+
+	public void setPublicationUid(String publicationUid) {
+		this.publicationUid = publicationUid;
+	}
 }

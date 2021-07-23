@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.NodeEventReceiver;
+import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 
 @ClientInstantiable
@@ -151,6 +152,20 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 		public NodeEvent getNodeEvent() {
 			return nodeEvent;
+		}
+
+		public boolean hasPrevious(Class<? extends NodeEvent> eventClass) {
+			if (eventClass == nodeEvent.getClass()) {
+				return true;
+			}
+			if (previous == null) {
+				return false;
+			}
+			return previous.hasPrevious(eventClass);
+		}
+
+		public void markCauseTopicAsNotHandled() {
+			((TopicEvent) previous.getNodeEvent()).setHandled(false);
 		}
 
 		public void setNodeEvent(NodeEvent nodeEvent) {

@@ -820,8 +820,10 @@ public class DirectedLayout {
 				if (topicEvent.getClass() == type) {
 					Context context = NodeEvent.Context.newTopicContext(
 							topicEvent.getContext(), Node.this);
-					fireEvent(context, topicEvent.getModel());
+					// set before we dispatch to the handler, so the handler can
+					// unset
 					topicEvent.setHandled(true);
+					fireEvent(context, topicEvent.getModel());
 				}
 			}
 		}

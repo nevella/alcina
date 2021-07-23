@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.serializer.flat;
 
-import java.util.AbstractCollection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,6 +47,9 @@ import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
+import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 /**
  * <p>
@@ -123,9 +125,6 @@ public class FlatTreeSerializer {
 			.impl(ConcurrentMapCreator.class).createMap();
 
 	private static Map<Class, Boolean> assignableFromTreeSerializable = Registry
-			.impl(ConcurrentMapCreator.class).createMap();
-
-	private static Map<Class, Boolean> assignableFromCollection = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
 
 	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
@@ -251,20 +250,7 @@ public class FlatTreeSerializer {
 	}
 
 	private static boolean isCollection(Class clazz) {
-		if (clazz == List.class || clazz == Set.class) {
-			return true;
-		}
-		if (CommonUtils.isOrHasSuperClass(clazz, AbstractCollection.class)) {
-			return true;
-		}
-		return assignableFromCollection.computeIfAbsent(clazz, c -> {
-			try {
-				Object instance = Reflections.newInstance(clazz);
-				return instance instanceof Collection;
-			} catch (Exception e) {
-				return false;
-			}
-		});
+		return Reflections.isAssignableFrom(Collection.class, clazz);
 	}
 
 	private static boolean isIntermediateType(Class clazz) {
@@ -314,7 +300,7 @@ public class FlatTreeSerializer {
 		if (CommonUtils.stdAndPrimitives.contains(clazz)) {
 			return true;
 		}
-		if (clazz.isEnum() || CommonUtils.isEnumSubclass(clazz)) {
+		if (Reflections.isAssignableFrom(Enum.class, clazz)) {
 			return true;
 		}
 		if (clazz.isArray() && clazz.getComponentType() == byte.class) {
@@ -323,7 +309,10 @@ public class FlatTreeSerializer {
 		if (isIntermediateType(clazz)) {
 			return false;
 		}
-		if (CommonUtils.isOrHasSuperClass(clazz, Entity.class)) {
+		if (Reflections.isAssignableFrom(Entity.class, clazz)) {
+			return true;
+		}
+		if (Reflections.isAssignableFrom(BasePlace.class, clazz)) {
 			return true;
 		}
 		return false;
@@ -930,8 +919,7 @@ public class FlatTreeSerializer {
 		if (valueClass == Class.class) {
 			return String.class;
 		}
-		if (valueClass.isEnum() || (valueClass.getSuperclass() != null
-				&& valueClass.getSuperclass().isEnum())) {
+		if (Reflections.isAssignableFrom(Enum.class, valueClass)) {
 			Object object = valueClass.getEnumConstants()[0];
 			if (object.toString().startsWith("__")
 					&& valueClass.getEnumConstants().length > 1) {
@@ -939,13 +927,20 @@ public class FlatTreeSerializer {
 			}
 			return object;
 		}
-		if (CommonUtils.isOrHasSuperClass(valueClass,
-				VersionableEntity.class)) {
+		if (Reflections.isAssignableFrom(VersionableEntity.class, valueClass)) {
 			VersionableEntity entity = (VersionableEntity) Reflections
 					.newInstance(valueClass);
 			// deliberately non-persistent so that testing roundtrip is stable
 			entity.setId(-1);
 			return entity;
+		}
+		if (Reflections.isAssignableFrom(BasePlace.class, valueClass)) {
+			BasePlace place = (BasePlace) Reflections.newInstance(valueClass);
+			// deliberately non-persistent so that testing roundtrip is stable
+			if (place instanceof EntityPlace) {
+				((EntityPlace) place).id = -1;
+			}
+			return place;
 		}
 		if (valueClass.isArray()
 				&& valueClass.getComponentType() == byte.class) {
@@ -1354,13 +1349,15 @@ public class FlatTreeSerializer {
 			if (valueClass == Date.class) {
 				return new Date(Long.parseLong(stringValue));
 			}
-			if (valueClass.isEnum() || (valueClass.getSuperclass() != null
-					&& valueClass.getSuperclass().isEnum())) {
+			if (Reflections.isAssignableFrom(Enum.class, valueClass)) {
 				return CommonUtils.getEnumValueOrNull(valueClass, stringValue,
 						true, null);
 			}
-			if (CommonUtils.isOrHasSuperClass(valueClass,
-					VersionableEntity.class)) {
+			if (Reflections.isAssignableFrom(BasePlace.class, valueClass)) {
+				return RegistryHistoryMapper.get().getPlace(stringValue);
+			}
+			if (Reflections.isAssignableFrom(VersionableEntity.class,
+					valueClass)) {
 				long id = Long.parseLong(stringValue);
 				if (id < 0) {
 					// testing, synthesised entity
@@ -1448,6 +1445,8 @@ public class FlatTreeSerializer {
 				return Base64.encodeBytes((byte[]) value);
 			} else if (value instanceof Class) {
 				return ((Class) value).getCanonicalName();
+			} else if (value instanceof BasePlace) {
+				return ((BasePlace) value).toTokenString();
 			} else {
 				return value.toString();
 			}

@@ -280,7 +280,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		if (isUseVerp() && PublicationContext.get() != null) {
 			String publicationUid = PublicationContext
-					.get().publicationResult.publicationUid;
+					.get().publicationResult.getPublicationUid();
 			// will be null if non-persistent
 			if (publicationUid != null) {
 				String replyTo = fromAddress.replaceFirst("(.+?)@(.+)",

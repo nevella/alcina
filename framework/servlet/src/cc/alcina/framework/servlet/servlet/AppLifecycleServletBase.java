@@ -35,6 +35,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
+import com.google.gwt.core.shared.GWT;
+
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -48,6 +50,7 @@ import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
@@ -262,6 +265,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Registry.registerSingleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
+		GWT.setBridge(new GWTBridgeHeadless());
 	}
 
 	protected abstract void initCustom();
@@ -481,8 +485,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void runFinalPreInitTasks() {
 		if (serializationSignatureListener != null) {
-			MethodContext.instance().withRunInNewThread(EntityLayerUtils.isTestServer()).call(
-					() -> serializationSignatureListener.ensureSignature());
+			MethodContext.instance()
+					.withRunInNewThread(EntityLayerUtils.isTestServer())
+					.call(() -> serializationSignatureListener
+							.ensureSignature());
 		}
 	}
 

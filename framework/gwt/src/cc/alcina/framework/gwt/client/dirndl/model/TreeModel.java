@@ -270,6 +270,51 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			return this.depthFirst;
 		}
 
+		public void
+				mergeResponse(DomainViewNodeContentModel.Response response) {
+			DomainViewNodeModel root = null;
+			DomainViewNodeModel target = null;
+			// TODO - handle interrupt/fail
+			if (response == null) {
+				Response lastResponse = getLastResponse();
+				setLastResponse(response);
+				setLastResponse(lastResponse);
+				return;
+			}
+			if (response.isNoChangeListener()) {
+				return;
+			}
+			Request<?> request = response.getRequest();
+			// TODO - iterate through transactions => only last one is 'replace'
+			String requestPath = response.getRequest().getTreePath();
+			root = (DomainViewNodeModel) getRoot();
+			root.putTree(this);
+			if (requestPath != null) {
+				DomainViewNodeContentModel rootModel = response.getTransforms()
+						.isEmpty() ? null
+								: response.getTransforms().get(0).getNode();
+				target = root.ensureNode(rootModel, requestPath, null, false);
+			}
+			// TODO - requestPath ....hmmm, if switching backends, probably just
+			// do a redraw/open to ...
+			if (response.getTransforms().isEmpty()) {
+				// no children - request path has been removed in a prior tx
+			} else {
+				response.getTransforms()
+						.forEach(t -> this.apply(t, request.getWaitPolicy()));
+				// delta children at the end to generate visual nodes after node
+				// tree complete
+				if (requestPath != null) {
+					target.setChildren(
+							new IdentityArrayList<>(target.getChildren()));
+				}
+				if (openingToPath != null) {
+					openToPath(null);
+				}
+			}
+			setLastResponse(response);
+		}
+
 		public void openToPath(TreePath<DomainViewNodeModel> initialPath) {
 			if (initialPath != null) {
 				openingToPath = initialPath;
@@ -358,51 +403,6 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				node.removeFromParent();
 				break;
 			}
-		}
-
-		protected void
-				handleResponse(DomainViewNodeContentModel.Response response) {
-			DomainViewNodeModel root = null;
-			DomainViewNodeModel target = null;
-			// TODO - handle interrupt/fail
-			if (response == null) {
-				Response lastResponse = getLastResponse();
-				setLastResponse(response);
-				setLastResponse(lastResponse);
-				return;
-			}
-			if (response.isNoChangeListener()) {
-				return;
-			}
-			Request<?> request = response.getRequest();
-			// TODO - iterate through transactions => only last one is 'replace'
-			String requestPath = response.getRequest().getTreePath();
-			root = (DomainViewNodeModel) getRoot();
-			root.putTree(this);
-			if (requestPath != null) {
-				DomainViewNodeContentModel rootModel = response.getTransforms()
-						.isEmpty() ? null
-								: response.getTransforms().get(0).getNode();
-				target = root.ensureNode(rootModel, requestPath, null, false);
-			}
-			// TODO - requestPath ....hmmm, if switching backends, probably just
-			// do a redraw/open to ...
-			if (response.getTransforms().isEmpty()) {
-				// no children - request path has been removed in a prior tx
-			} else {
-				response.getTransforms()
-						.forEach(t -> this.apply(t, request.getWaitPolicy()));
-				// delta children at the end to generate visual nodes after node
-				// tree complete
-				if (requestPath != null) {
-					target.setChildren(
-							new IdentityArrayList<>(target.getChildren()));
-				}
-				if (openingToPath != null) {
-					openToPath(null);
-				}
-			}
-			setLastResponse(response);
 		}
 	}
 

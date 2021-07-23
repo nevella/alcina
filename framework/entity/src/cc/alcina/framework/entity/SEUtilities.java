@@ -153,12 +153,17 @@ public class SEUtilities {
 		return allFieldsPerClass.computeIfAbsent(clazz0, clazz -> {
 			List<Field> result = new ArrayList<>();
 			try {
+				List<Class> topDown = new ArrayList<>();
 				while (clazz != Object.class) {
-					for (Field f : clazz.getDeclaredFields()) {
+					topDown.add(clazz);
+					clazz = clazz.getSuperclass();
+				}
+				Collections.reverse(topDown);
+				for (Class clazz1 : topDown) {
+					for (Field f : clazz1.getDeclaredFields()) {
 						f.setAccessible(true);
 						result.add(f);
 					}
-					clazz = clazz.getSuperclass();
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);

@@ -130,8 +130,8 @@ public class Publisher {
 		publication.setUserPublicationId(publicationUserId);
 		publication.setPublicationUid(SEUtilities.generateId());
 		publication.setPublicationType(contentDefinition.getPublicationType());
-		result.publicationId = persister.persist(publication);
-		result.publicationUid = publication.getPublicationUid();
+		result.setPublicationId(persister.persist(publication));
+		result.setPublicationUid(publication.getPublicationUid());
 	}
 
 	private void postDeliveryPersistence(Long publicationId) {
@@ -165,7 +165,7 @@ public class Publisher {
 				&& deliveryModel.provideContentDeliveryType().isRepublishable();
 		PublicationContent publicationContent = cmh.getPublicationContent();
 		ctx.publicationContent = publicationContent;
-		result.publicationUid = deliveryModel.getPublicationUid();
+		result.setPublicationUid(deliveryModel.getPublicationUid());
 		PublicationPersister persister = PublicationPersister.get();
 		boolean persistPublication = forPublication
 				&& !AppPersistenceBase.isInstanceReadOnly();
@@ -178,14 +178,14 @@ public class Publisher {
 			persist(contentDefinition, deliveryModel, publicationUserId,
 					original, result);
 			ctx.getVisitorOrNoop()
-					.afterPublicationPersistence(result.publicationId);
+					.afterPublicationPersistence(result.getPublicationId());
 		} else {
-			if (result.publicationUid == null) {
-				result.publicationUid = SEUtilities.generateId();
-				result.publicationId = 0L;
+			if (result.getPublicationUid() == null) {
+				result.setPublicationUid(SEUtilities.generateId());
+				result.setPublicationId(0L);
 			}
 		}
-		long publicationId = CommonUtils.lv(result.publicationId);
+		long publicationId = CommonUtils.lv(result.getPublicationId());
 		ContentRenderer crh = (ContentRenderer) Registry.get()
 				.instantiateSingle(ContentRenderer.class,
 						publicationContent.getClass());
@@ -207,12 +207,12 @@ public class Publisher {
 		if (deliveryModel.provideContentDeliveryType().getClass() == null) {
 			return null;
 		}
-		result.content = cw.wrappedContent;
+		result.setContent(cw.wrappedContent);
 		if (deliveryModel
 				.provideContentDeliveryType() == ContentDeliveryType.PRINT) {
-			if (result.content == null && (AppPersistenceBase.isTest()
+			if (result.getContent() == null && (AppPersistenceBase.isTest()
 					|| LooseContext.is(CONTEXT_SAVE_BYTES_TO_PRINT_CONTENT))) {
-				result.content = Base64Utils.toBase64(cw.wrappedBytes);
+				result.setContent(Base64Utils.toBase64(cw.wrappedBytes));
 			}
 			return result;
 		}
@@ -245,8 +245,8 @@ public class Publisher {
 						ctx.publication);
 			}
 		}
-		result.content = null;
-		result.contentToken = token;
+		result.setContent(null);
+		result.setContentToken(token);
 		ctx.getVisitorOrNoop().publicationFinished(result);
 		return result;
 	}
