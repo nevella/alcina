@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.Serializer;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
@@ -624,8 +625,8 @@ public class FlatTreeSerializer {
 
 	private Map<String, Class> getAliasClassMap(Class rootClass, Node cursor) {
 		Function<? super Class, ? extends String> keyMapper = clazz -> {
-			TypeSerialization typeSerialization = Reflections.classLookup()
-					.getAnnotationForClass(clazz, TypeSerialization.class);
+			TypeSerialization typeSerialization = Annotations.resolve(clazz,
+					TypeSerialization.class);
 			if (typeSerialization != null
 					&& !typeSerialization.value().isEmpty()) {
 				return typeSerialization.value();
@@ -701,10 +702,8 @@ public class FlatTreeSerializer {
 									return false;
 								}
 								String name = property.getName();
-								if (Reflections.propertyAccessor()
-										.getAnnotationForProperty(valueClass,
-												AlcinaTransient.class,
-												name) != null) {
+								if (Annotations.has(valueClass, name,
+										AlcinaTransient.class)) {
 									return false;
 								}
 								PropertySerialization propertySerialization = getPropertySerialization(
@@ -955,17 +954,22 @@ public class FlatTreeSerializer {
 
 	protected PropertySerialization getPropertySerialization(Class<?> clazz,
 			String propertyName) {
-		TypeSerialization typeSerialization = Reflections.classLookup()
-				.getAnnotationForClass(clazz, TypeSerialization.class);
+		TypeSerialization typeSerialization = Annotations.resolve(clazz,
+				TypeSerialization.class);
+		PropertySerialization annotation = null;
 		if (typeSerialization != null) {
 			for (PropertySerialization p : typeSerialization.properties()) {
 				if (p.name().equals(propertyName)) {
-					return p;
+					annotation = p;
+					break;
 				}
 			}
 		}
-		return Reflections.propertyAccessor().getAnnotationForProperty(clazz,
-				PropertySerialization.class, propertyName);
+		if (annotation == null) {
+			annotation = Annotations.resolve(clazz, propertyName,
+					PropertySerialization.class);
+		}
+		return annotation;
 	}
 
 	public static class DeserializerOptions {
@@ -1076,9 +1080,8 @@ public class FlatTreeSerializer {
 			if (object == null) {
 				return null;
 			}
-			TypeSerialization typeSerialization = Reflections.classLookup()
-					.getAnnotationForClass(object.getClass(),
-							TypeSerialization.class);
+			TypeSerialization typeSerialization = Annotations
+					.resolve(object.getClass(), TypeSerialization.class);
 			boolean useFlat = object instanceof TreeSerializable
 					&& (typeSerialization == null
 							|| typeSerialization.flatSerializable());
@@ -1203,8 +1206,8 @@ public class FlatTreeSerializer {
 				}
 			}
 			if (shortenedClassName == null) {
-				TypeSerialization typeSerialization = Reflections.classLookup()
-						.getAnnotationForClass(clazz, TypeSerialization.class);
+				TypeSerialization typeSerialization = Annotations.resolve(clazz,
+						TypeSerialization.class);
 				if (typeSerialization != null
 						&& typeSerialization.value().length() > 0) {
 					shortenedClassName = typeSerialization.value();

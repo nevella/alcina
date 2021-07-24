@@ -3,6 +3,8 @@ package cc.alcina.framework.common.client.logic.reflection;
 import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 public class AnnotationLocation {
 	public PropertyReflector propertyReflector;
@@ -19,7 +21,7 @@ public class AnnotationLocation {
 
 	public AnnotationLocation(Class clazz,
 			PropertyReflector propertyReflector) {
-		this(clazz, propertyReflector, new DefaultResolver(), true);
+		this(clazz, propertyReflector, Resolver.get(), true);
 	}
 
 	public AnnotationLocation(Class clazz, PropertyReflector propertyReflector,
@@ -78,10 +80,16 @@ public class AnnotationLocation {
 		}
 	}
 
+	@RegistryLocation(registryPoint = Resolver.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
 	public static class DefaultResolver implements Resolver {
 	}
 
 	public static interface Resolver {
+		public static AnnotationLocation.Resolver get() {
+			return Registry.impl(AnnotationLocation.Resolver.class);
+		}
+
 		default <A extends Annotation> A resolveAnnotation(
 				Class<A> annotationClass, AnnotationLocation location) {
 			return location.getAnnotation0(annotationClass);

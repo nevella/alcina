@@ -28,6 +28,8 @@ import java.lang.annotation.Target;
 /**
  * Totally ignore this assocation (e.g. when clearing an object's associations
  * pre-delete) - the getter is probably not bound to a field
+ * 
+ * FIXME - mvcc.4 - can this be folded into another annotation?
  */
 public @interface SyntheticGetter {
 }
