@@ -946,20 +946,11 @@ public class FlatTreeSerializer {
 				&& valueClass.getComponentType() == byte.class) {
 			return new byte[] { 10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 0 };
 		}
-		try {
-			Object instance = Reflections.newInstance(valueClass);
-			if (instance instanceof TreeSerializable) {
-				return instance;
-			}
-		} catch (Exception e) {
-			if (e instanceof InstantiationException) {
-				throw new UnsupportedOperationException(Ax.format(
-						"Cannot determine serialization of %s", valueClass));
-			} else {
-				throw WrappedRuntimeException.wrapIfNotRuntime(e);
-			}
+		if (Reflections.isAssignableFrom(TreeSerializable.class, valueClass)) {
+			return Reflections.newInstance(valueClass);
+		} else {
+			throw new UnsupportedOperationException();
 		}
-		throw new UnsupportedOperationException();
 	}
 
 	protected PropertySerialization getPropertySerialization(Class<?> clazz,
