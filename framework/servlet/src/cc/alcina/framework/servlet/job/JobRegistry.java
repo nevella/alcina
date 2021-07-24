@@ -507,6 +507,7 @@ public class JobRegistry {
 			context.persistMetadata();
 			LooseContext.pop();
 			activeJobs.remove(job);
+			context.clearRefs();
 			context.remove();
 			if (trackInternalMetrics()) {
 				InternalMetrics.get().endTracker(job);

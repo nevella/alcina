@@ -410,6 +410,12 @@ public class JobContext {
 		}
 	}
 
+	void clearRefs() {
+		performer = null;
+		allocator = null;
+		thread = null;
+	}
+
 	String describeTask(Task task, String msg) {
 		msg += "Clazz: " + task.getClass().getName() + "\n";
 		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
