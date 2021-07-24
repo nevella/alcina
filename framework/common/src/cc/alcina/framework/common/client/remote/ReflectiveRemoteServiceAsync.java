@@ -19,8 +19,8 @@ public class ReflectiveRemoteServiceAsync {
 				.serializeHolder(payload);
 		// FIXME - 2021 - this can just use an http call - just need to
 		// integrate Alcina header insertion/handling
-		Registry.impl(ReflectiveRpcRemoteServiceAsync.class).callRpc(serializedPayload,
-				new AsyncCallback<String>() {
+		Registry.impl(ReflectiveRpcRemoteServiceAsync.class)
+				.callRpc(serializedPayload, new AsyncCallback<String>() {
 					@Override
 					public void onFailure(Throwable caught) {
 						callback.onFailure(caught);
@@ -28,7 +28,13 @@ public class ReflectiveRemoteServiceAsync {
 
 					@Override
 					public void onSuccess(String result) {
-						T t = AlcinaBeanSerializer.deserializeHolder(result);
+						T t = null;
+						try {
+							t = AlcinaBeanSerializer.deserializeHolder(result);
+						} catch (Exception e) {
+							onFailure(e);
+							return;
+						}
 						callback.onSuccess(t);
 					}
 				});

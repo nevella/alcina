@@ -80,4 +80,7 @@ public interface CommonRemoteServiceAsync {
 
 	void waitForTransforms(DomainTransformCommitPosition position,
 			AsyncCallback<DomainUpdate> callback);
+
+	public void pollJobStatus(JobTracker.Request request, 
+			AsyncCallback<JobTracker.Response> callback);
 }

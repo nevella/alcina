@@ -134,4 +134,11 @@ public class ReflectiveCommonRemoteServiceAsync extends
 			AsyncCallback<DomainUpdate> callback) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public void pollJobStatus(JobTracker.Request request,
+			AsyncCallback<JobTracker.Response> callback) {
+		call("pollJobStatus", new Class[] { JobTracker.Request.class },
+				callback, request);
+	}
 }

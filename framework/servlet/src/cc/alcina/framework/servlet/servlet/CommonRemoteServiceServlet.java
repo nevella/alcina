@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -410,8 +411,20 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
+	public JobTracker.Response pollJobStatus(JobTracker.Request request) {
+		List<Job> jobs = MethodContext.instance().withContextTrue(
+				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
+				.call(() -> request.getIds().stream().map(Job::byId)
+						.filter(Objects::nonNull).collect(Collectors.toList()));
+		JobTracker.Response response = new JobTracker.Response();
+		response.setTrackers(jobs.stream().map(Job::asJobTracker)
+				.collect(Collectors.toList()));
+		return response;
+	}
+
+	@Override
 	public JobTracker pollJobStatus(String id, boolean cancel) {
-		return MethodContext.instance().withContextTrue(
+		Job job0 = MethodContext.instance().withContextTrue(
 				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
 				.call(() -> {
 					Job job = Job.byId(Long.parseLong(id));
@@ -422,8 +435,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						job.cancel();
 						Transaction.commit();
 					}
-					return job.asJobTracker();
+					return job;
 				});
+		return job0 == null ? null : job0.asJobTracker();
 	}
 
 	@Override

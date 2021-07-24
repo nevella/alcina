@@ -194,7 +194,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		try {
 			clazz = getClassMaybeAbbreviated(cn);
 		} catch (Exception e1) {
-			if (isThrowOnUnrecognisedProperty()) {
+			if (isThrowOnUnrecognisedClass()) {
 				throw new Exception(Ax.format("class not found - %s", cn));
 			} else {
 				return null;

@@ -155,7 +155,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		tracker.setCancelled(resolveState() == JobState.CANCELLED);
 		tracker.setComplete(resolveState().isComplete());
 		tracker.setEndTime(endTime);
-		tracker.setId(toLocator().toString());
+		tracker.setId(String.valueOf(getId()));
 		tracker.setJobName(getTask().getName());
 		tracker.setJobResult(resultMessage);
 		tracker.setJobResultType(getResultType());
@@ -163,6 +163,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		tracker.setPercentComplete(completion);
 		tracker.setProgressMessage(statusMessage);
 		tracker.setStartTime(startTime);
+		if (tracker.isComplete()) {
+			domain().ensurePopulated();
+			tracker.setSerializedResult(getResultSerialized());
+		}
 		return tracker;
 	}
 

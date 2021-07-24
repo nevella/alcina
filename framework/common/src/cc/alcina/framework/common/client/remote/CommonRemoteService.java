@@ -90,4 +90,6 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod
 	public DomainUpdate waitForTransforms(
 			DomainTransformCommitPosition position) throws PermissionsException;
+
+	JobTracker.Response pollJobStatus(JobTracker.Request request);
 }

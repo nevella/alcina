@@ -41,7 +41,7 @@ public class DownloadServlet extends HttpServlet {
 
 	public static String add(DownloadItem item) {
 		String id = SEUtilities.generateId();
-		Ax.out("Served download at /download.do?id=%s", id);
+		Ax.out("Added download at /downloadServlet.do?id=%s", id);
 		items.put(id, item);
 		return id;
 	}

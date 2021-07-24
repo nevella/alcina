@@ -11,6 +11,7 @@ import com.google.gwt.core.ext.typeinfo.JClassType;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.NotIntrospected;
+import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 
 public abstract class IntrospectorFilterBase implements IntrospectorFilter {
 	private GeneratorContext context;
@@ -37,6 +38,14 @@ public abstract class IntrospectorFilterBase implements IntrospectorFilter {
 								&& emitBeanResolver(o);
 					}
 				});
+	}
+
+	@Override
+	public boolean isReflectableJavaCollectionClass(JClassType jClassType) {
+		return moduleName.equals(ReflectionModule.INITIAL)
+				? IntrospectorFilter.super.isReflectableJavaCollectionClass(
+						jClassType)
+				: false;
 	}
 
 	@Override

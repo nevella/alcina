@@ -646,10 +646,11 @@ public class ClientReflectionGenerator extends Generator {
 		for (JClassType jClassType : types) {
 			if ((hasAnnotationNamed(jClassType, ClientInstantiable.class)
 					|| jClassType.isAnnotationPresent(
-							cc.alcina.framework.common.client.logic.reflection.Bean.class))
+							cc.alcina.framework.common.client.logic.reflection.Bean.class)
+					||filter.isReflectableJavaCollectionClass(jClassType)
+					)
 					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
-				// addImport(crf, getQualifiedSourceName(jClassType));
 			}
 		}
 		return results;

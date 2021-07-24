@@ -7,6 +7,9 @@ import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import javax.xml.bind.annotation.XmlTransient;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
@@ -118,6 +121,8 @@ public class TreePath<T> extends Model {
 	}
 
 	@AlcinaTransient
+	@XmlTransient
+	@JsonIgnore
 	public List<TreePath<T>> getChildren() {
 		ensureChildren();
 		return this.children;
@@ -132,6 +137,8 @@ public class TreePath<T> extends Model {
 	}
 
 	@AlcinaTransient
+	@XmlTransient
+	@JsonIgnore
 	public T getValue() {
 		return this.value;
 	}

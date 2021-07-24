@@ -1,15 +1,28 @@
 package com.totsp.gwittir.rebind.beans;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.typeinfo.JAnnotationType;
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.dev.util.collect.HashMap;
+import com.google.gwt.dev.util.collect.HashSet;
 
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
@@ -44,4 +57,15 @@ public interface IntrospectorFilter {
 	void setContext(GeneratorContext context);
 
 	void setModuleName(String value);
+
+	default boolean isReflectableJavaCollectionClass(JClassType jClassType) {
+		return COLLECTION_CLASS_NAMES
+				.contains(jClassType.getQualifiedSourceName());
+	}
+
+	public static final Set<String> COLLECTION_CLASS_NAMES = Arrays
+			.asList(ArrayList.class, LinkedList.class, HashSet.class,
+					LinkedHashSet.class, TreeSet.class, HashMap.class,
+					LinkedHashMap.class, TreeMap.class,LightSet.class,LiSet.class,LightMap.class)
+			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 }
