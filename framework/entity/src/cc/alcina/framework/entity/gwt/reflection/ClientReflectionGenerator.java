@@ -570,7 +570,10 @@ public class ClientReflectionGenerator extends Generator {
 			Iterator<JClassType> iterator = stack.iterator();
 			JClassType type = iterator.next();
 			iterator.remove();
-			result.put(type, Arrays.asList(type.getImplementedInterfaces()));
+			if (type.isPublic()) {
+				result.put(type,
+						Arrays.asList(type.getImplementedInterfaces()));
+			}
 			JClassType superclass = type.getSuperclass();
 			if (superclass != null && resultBinaryNames
 					.add(superclass.getQualifiedBinaryName())) {
@@ -647,8 +650,7 @@ public class ClientReflectionGenerator extends Generator {
 			if ((hasAnnotationNamed(jClassType, ClientInstantiable.class)
 					|| jClassType.isAnnotationPresent(
 							cc.alcina.framework.common.client.logic.reflection.Bean.class)
-					||filter.isReflectableJavaCollectionClass(jClassType)
-					)
+					|| filter.isReflectableJavaCollectionClass(jClassType))
 					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
 			}
