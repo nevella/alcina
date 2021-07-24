@@ -19,15 +19,22 @@
  */
 package com.totsp.gwittir.rebind.beans;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.totsp.gwittir.client.beans.annotations.Omit;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 /**
  *
@@ -44,6 +51,8 @@ public class BeanResolver {
 	private TreeLogger logger;
 
 	private String[] filterProperties;
+
+	private Map<JClassType, Set<String>> jdkClassMethodNames = new LinkedHashMap<>();
 
 	/** Creates a new instance of BeanResolver */
 	public BeanResolver(TreeLogger logger, JClassType type) {
@@ -114,15 +123,36 @@ public class BeanResolver {
 
 	private void buildMethods(JClassType type) {
 		JMethod[] methods = type.getMethods();
+		if (type.getQualifiedSourceName().equals("java.lang.Throwable")) {
+			int debug = 3;
+		}
 		logger = logger.branch(TreeLogger.DEBUG,
 				type.getQualifiedSourceName() + " " + type.getMethods().length,
 				null);
 		for (int i = 0; i < methods.length; i++) {
-			if (!methods[i].isPublic()) {
+			JMethod jMethod = methods[i];
+			if (!jMethod.isPublic()) {
 				continue;
 			}
-			if (methods[i].isStatic()) {
+			if (jMethod.isStatic()) {
 				continue;
+			}
+			if (type.getQualifiedSourceName().startsWith("java.")) {
+				Set<String> jdkNames = jdkClassMethodNames.computeIfAbsent(type,
+						t -> {
+							try {
+								Class clazz = Class
+										.forName(type.getQualifiedBinaryName());
+								return Arrays.stream(clazz.getMethods())
+										.map(Method::getName)
+										.collect(Collectors.toSet());
+							} catch (Exception e) {
+								throw new WrappedRuntimeException(e);
+							}
+						});
+				if (!jdkNames.contains(jMethod.getName())) {
+					continue;
+				}
 			}
 			MethodWrapper w = new MethodWrapper(type, methods[i]);
 			if (methods[i].getAnnotation(Omit.class) != null) {

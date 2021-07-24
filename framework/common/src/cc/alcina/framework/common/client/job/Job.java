@@ -51,7 +51,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
-@Bean
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = Job.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class Job extends VersionableEntity<Job> implements HasIUser {
