@@ -412,7 +412,9 @@ public class JobContext {
 
 	void clearRefs() {
 		performer = null;
-		allocator = null;
+		// not allocator - it's a circular reference anyway, and required for
+		// awaitSequenceCompletion
+		// allocator = null;
 		thread = null;
 	}
 

@@ -105,6 +105,13 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	}
 
 	@Override
+	public void pollJobStatus(JobTracker.Request request,
+			AsyncCallback<JobTracker.Response> callback) {
+		call("pollJobStatus", new Class[] { JobTracker.Request.class },
+				callback, request);
+	}
+
+	@Override
 	public void pollJobStatus(String id, boolean cancel,
 			AsyncCallback<JobTracker> callback) {
 		throw new UnsupportedOperationException();
@@ -133,12 +140,5 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	public void waitForTransforms(DomainTransformCommitPosition position,
 			AsyncCallback<DomainUpdate> callback) {
 		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public void pollJobStatus(JobTracker.Request request,
-			AsyncCallback<JobTracker.Response> callback) {
-		call("pollJobStatus", new Class[] { JobTracker.Request.class },
-				callback, request);
 	}
 }

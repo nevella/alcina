@@ -918,39 +918,6 @@ public class JobRegistry {
 		}
 	}
 
-	class SequenceCompletionLatch {
-		private CountDownLatch latch = new CountDownLatch(1);
-
-		JobContext context;
-
-		void await() {
-			try {
-				// FIXME - mvcc.jobs - remove timeout
-				while (true) {
-					try {
-						Transaction.ensureEnded();
-						if (latch.await(10, TimeUnit.SECONDS)) {
-							break;
-						}
-						int debug = 3;
-					} finally {
-						Transaction.begin();
-						if (context != null) {
-							context.checkCancelled0(true);
-						}
-					}
-				}
-				context.awaitSequenceCompletion();
-			} catch (InterruptedException e) {
-				throw WrappedRuntimeException.wrapIfNotRuntime(e);
-			}
-		}
-
-		void onChildJobsCompleted() {
-			latch.countDown();
-		}
-	}
-
 	class ThreadDataWaiter {
 		List<Job> queriedJobs = new ArrayList<>();
 
