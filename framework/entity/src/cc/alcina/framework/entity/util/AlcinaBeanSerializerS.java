@@ -265,8 +265,11 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		if (type == Object.class) {
 			type = value.getClass();
 		}
-		if (type == Long.class || type == long.class || type == String.class
-				|| type.isEnum() || (type.getSuperclass() != null
+		if (type == String.class) {
+			return value.toString();
+		}
+		if (type == Long.class || type == long.class || type.isEnum()
+				|| (type.getSuperclass() != null
 						&& type.getSuperclass().isEnum())) {
 			return value.toString();
 		}
