@@ -60,6 +60,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return PersistentImpl.find(Job.class, id);
 	}
 
+	@GwtTransient
 	private Task task;
 
 	private String taskSerialized;
@@ -104,6 +105,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	private String processStateSerialized;
 
+	@GwtTransient
 	private ProcessState processState;
 
 	private transient String cachedDisplayName;
