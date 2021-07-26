@@ -1398,6 +1398,16 @@ public class SEUtilities {
 		return String.format("%s/%s/%s", m.group(2), m.group(1), m.group(3));
 	}
 
+	public static boolean isToday(Date date) {
+		Calendar today = Calendar.getInstance();
+        Calendar specifiedDate  = Calendar.getInstance();
+        specifiedDate.setTime(date);
+
+        return today.get(Calendar.DAY_OF_MONTH) == specifiedDate.get(Calendar.DAY_OF_MONTH)
+                &&  today.get(Calendar.MONTH) == specifiedDate.get(Calendar.MONTH)
+                &&  today.get(Calendar.YEAR) == specifiedDate.get(Calendar.YEAR);
+	}
+
 	public static IntPair yearRange(String s) {
 		Matcher matcher = yearRangePattern.matcher(s);
 		IntPair result = new IntPair();
