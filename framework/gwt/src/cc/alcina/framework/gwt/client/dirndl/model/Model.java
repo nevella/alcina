@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Validator;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel.FormModelTransformer;
 
 /**
  * Thoughts on binding :: particularly in the case of UI bindings, a.b->c.d is
@@ -40,6 +41,7 @@ public abstract class Model extends Bindable {
 						.unbind());
 	}
 
+	@FormModelTransformer.Args(focusOnAttach = "string")
 	public static class EditableStringModel extends Model {
 		private String string;
 

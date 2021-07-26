@@ -157,7 +157,9 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	@Override
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+		MethodIndividualPropertyAccessor accessor = new MethodIndividualPropertyAccessor(
+				clazz, propertyName);
+		return accessor.isInvalid() ? null : accessor;
 	}
 
 	@Override

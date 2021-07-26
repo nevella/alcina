@@ -183,6 +183,8 @@ public class FormModel extends Model {
 
 		private int formElementIdx;
 
+		private boolean focusOnAttach;
+
 		public FormElement() {
 		}
 
@@ -204,8 +206,16 @@ public class FormModel extends Model {
 			return this.value;
 		}
 
+		public boolean isFocusOnAttach() {
+			return this.focusOnAttach;
+		}
+
 		public String provideId() {
 			return Ax.format("_dl_form_%s", formElementIdx);
+		}
+
+		public void setFocusOnAttach(boolean focusOnAttach) {
+			this.focusOnAttach = focusOnAttach;
 		}
 	}
 
@@ -252,8 +262,14 @@ public class FormModel extends Model {
 								state.adjunct, node.getResolver());
 				fields.stream().filter(
 						field -> fieldModulator.accept(state.model, field))
-						.map(field -> new FormElement(field, state.model))
-						.forEach(model.elements::add);
+						.map(field -> {
+							FormElement e = new FormElement(field, state.model);
+							if (args != null && args.focusOnAttach()
+									.equals(field.getPropertyName())) {
+								e.setFocusOnAttach(true);
+							}
+							return e;
+						}).forEach(model.elements::add);
 			}
 			if (state.adjunct) {
 				model.actions.add(new LinkModel()
@@ -309,6 +325,8 @@ public class FormModel extends Model {
 			Class<? extends ActionsModulator> actionsModulator() default ActionsModulator.class;
 
 			Class<? extends FieldModulator> fieldModulator() default FieldModulator.class;
+
+			String focusOnAttach() default "";
 		}
 
 		@ClientInstantiable

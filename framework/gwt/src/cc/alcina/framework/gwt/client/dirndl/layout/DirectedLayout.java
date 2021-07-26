@@ -195,6 +195,19 @@ public class DirectedLayout {
 			return idx == 0 ? null : children.get(idx - 1);
 		}
 
+		public Node childWithModel(Predicate<Object> test) {
+			if (test.test(this.model)) {
+				return this;
+			}
+			for (Node child : children) {
+				Node childWithModel = child.childWithModel(test);
+				if (childWithModel != null) {
+					return childWithModel;
+				}
+			}
+			return null;
+		}
+
 		public AnnotationLocation.Resolver contextResolver() {
 			return resolver;
 		}
