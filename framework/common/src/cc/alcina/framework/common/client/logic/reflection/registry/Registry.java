@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCrea
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
@@ -95,6 +96,9 @@ public class Registry {
 	private static RegistryProvider provider = new BasicRegistryProvider();
 
 	static DelegateMapCreator delegateCreator = new CollectionCreators.UnsortedMapCreator();
+
+	public static Topic<RegisteredSingletonInfo> topicRegisteredSingleton = Topic
+			.local();
 
 	public static void appShutdown() {
 		provider.appShutdown();
@@ -507,6 +511,9 @@ public class Registry {
 		registered.put(registeringClassKey, registeringClassKey);
 		implementationTypeMap.put(registryPointKey, targetClassKey,
 				implementationType);
+		topicRegisteredSingleton.publish(new RegisteredSingletonInfo(
+				registeringClassKey, registryPointKey, targetClassKey,
+				implementationType, infoPriority));
 		targetPriority.put(registryPointKey, targetClassKey, infoPriority);
 	}
 
@@ -645,6 +652,8 @@ public class Registry {
 			voidPointSingletons.put(registryPoint.getName(), t);
 		}
 		implClassesRegistered.put(t.getClass(), t);
+		topicRegisteredSingleton
+				.publish(new RegisteredSingletonInfo(registryPoint, t));
 		return t;
 	}
 
@@ -809,6 +818,72 @@ public class Registry {
 			super(Ax.format(
 					"Constructor of singleton %s invoked more than once",
 					clazz.getName()));
+		}
+	}
+
+	public static class RegisteredSingletonInfo {
+		public Class<? extends Object> class1;
+
+		public Object t;
+
+		public RegistryKey registeringClassKey;
+
+		public RegistryKey registryPointKey;
+
+		public RegistryKey targetClassKey;
+
+		public ImplementationType implementationType;
+
+		public int infoPriority;
+
+		public RegisteredSingletonInfo(Class<? extends Object> class1,
+				Object t) {
+			this.class1 = class1;
+			this.t = t;
+		}
+
+		public RegisteredSingletonInfo(RegistryKey registeringClassKey,
+				RegistryKey registryPointKey, RegistryKey targetClassKey,
+				ImplementationType implementationType, int infoPriority) {
+			this.registeringClassKey = registeringClassKey;
+			this.registryPointKey = registryPointKey;
+			this.targetClassKey = targetClassKey;
+			this.implementationType = implementationType;
+			this.infoPriority = infoPriority;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder sb = new StringBuilder();
+			sb.append("class1");
+			sb.append(":");
+			sb.append(class1);
+			sb.append("\n");
+			sb.append("t");
+			sb.append(":");
+			sb.append(t);
+			sb.append("\n");
+			sb.append("registeringClassKey");
+			sb.append(":");
+			sb.append(registeringClassKey);
+			sb.append("\n");
+			sb.append("registryPointKey");
+			sb.append(":");
+			sb.append(registryPointKey);
+			sb.append("\n");
+			sb.append("targetClassKey");
+			sb.append(":");
+			sb.append(targetClassKey);
+			sb.append("\n");
+			sb.append("implementationType");
+			sb.append(":");
+			sb.append(implementationType);
+			sb.append("\n");
+			sb.append("infoPriority");
+			sb.append(":");
+			sb.append(infoPriority);
+			sb.append("\n");
+			return sb.toString();
 		}
 	}
 
