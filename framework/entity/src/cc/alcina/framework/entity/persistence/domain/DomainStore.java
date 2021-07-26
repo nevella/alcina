@@ -693,10 +693,10 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	Entity ensureEntity(Class<? extends Entity> clazz, long id) {
+	Entity ensureEntity(Class<? extends Entity> clazz, long id, long localId) {
 		EntityLocatorMap map = EntityLayerObjects.get()
 				.getServerAsClientInstanceEntityLocatorMap();
-		long localId = map.getLocalId(clazz, id);
+		localId = id < 0 ? localId : map.getLocalId(clazz, id);
 		ClassIdLock lock = LockUtils.obtainClassIdLock(clazz, id);
 		synchronized (lock) {
 			// thereby preserving the 'entity uniqueness unless vacuumed'
@@ -2012,7 +2012,8 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		protected Entity getEntityForCreate(DomainTransformEvent event) {
-			return ensureEntity(event.getObjectClass(), event.getObjectId());
+			return ensureEntity(event.getObjectClass(), event.getObjectId(),
+					event.getObjectLocalId());
 		}
 
 		@Override

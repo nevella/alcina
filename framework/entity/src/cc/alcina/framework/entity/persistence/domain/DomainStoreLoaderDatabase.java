@@ -2111,7 +2111,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						hasId = transaction.create(clazz, store, id, 0L);
 						store.transformManager.store.mapObject((Entity) hasId);
 					} else {
-						hasId = store.ensureEntity(clazz, id);
+						hasId = store.ensureEntity(clazz, id, 0L);
 					}
 				} else {
 					hasId = (HasId) clazz.newInstance();
