@@ -390,6 +390,7 @@ class JobAllocator {
 					&& jobContext != null
 					&& jobContext.getJob().getPerformer() == ClientInstance
 							.self()
+					&& jobContext.getPerformer() != null
 					&& jobContext.getPerformer().canAbort(job.getTask())
 					&& ResourceUtilities.is(Transactions.class,
 							"cancelTimedoutTransactions")) {
