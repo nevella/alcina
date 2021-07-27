@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 @Bean
 public class DomainTransformException extends Exception
@@ -125,6 +126,7 @@ public class DomainTransformException extends Exception
 		this.type = type;
 	}
 
+	@ClientInstantiable
 	public enum DomainTransformExceptionType {
 		OPTIMISTIC_LOCK_EXCEPTION, SOURCE_ENTITY_NOT_FOUND,
 		TARGET_ENTITY_NOT_FOUND, FK_CONSTRAINT_EXCEPTION {

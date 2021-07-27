@@ -18,6 +18,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 /**
  * 
@@ -107,6 +108,7 @@ public class DomainTransformResponse implements Serializable {
 		return sb.toString();
 	}
 
+	@ClientInstantiable
 	public enum DomainTransformResponseResult {
 		OK, FAILURE
 	}
