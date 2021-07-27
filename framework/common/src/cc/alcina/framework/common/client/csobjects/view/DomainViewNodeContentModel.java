@@ -259,7 +259,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 
 		@Override
 		public String toString() {
-			return Ax.format("%s :: %s", treePath, children);
+			return Ax.format("%s :: %s :: %s", treePath, children, waitPolicy);
 		}
 	}
 

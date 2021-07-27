@@ -5,6 +5,7 @@ import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 
@@ -29,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -150,6 +152,10 @@ public abstract class DomainViews {
 		}
 	}
 
+	private void processCheckWaits(ViewsTask task) {
+		trees.values().forEach(LiveTree::checkChangeListeners);
+	}
+
 	private void processLambda(ViewsTask task) {
 		HandlerData handlerData = task.handlerData;
 		try {
@@ -242,6 +248,9 @@ public abstract class DomainViews {
 		case HANDLE_LAMBDA:
 			processLambda(task);
 			break;
+		case EVICT_LISTENERS:
+			processCheckWaits(task);
+			break;
 		}
 	}
 
@@ -257,20 +266,35 @@ public abstract class DomainViews {
 		public void run() {
 			setName("DomainViews-task-queue-"
 					+ EntityLayerUtils.getLocalHostName());
+			long lastEvictSubmit = 0;
 			while (!finished) {
 				try {
 					LooseContext.pushWithTrue(
 							JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);
-					ViewsTask task = tasks.take();
-					PermissionsManager.get().pushUser(task.user,
-							task.loginState);
-					Transaction.begin();
-					processEvent(task);
+					ViewsTask task = tasks.poll(1, TimeUnit.SECONDS);
+					if (task != null) {
+						try {
+							PermissionsManager.get().pushUser(task.user,
+									task.loginState);
+							Transaction.begin();
+							processEvent(task);
+						} finally {
+							Transaction.ensureEnded();
+							PermissionsManager.get().popUser();
+						}
+					}
+					long now = System.currentTimeMillis();
+					if (now - lastEvictSubmit > 1
+							* TimeConstants.ONE_SECOND_MS) {
+						lastEvictSubmit = now;
+						ViewsTask submit = new ViewsTask();
+						submit.type = ViewsTask.Type.EVICT_LISTENERS;
+						// ordering of addTaskLock not required
+						tasks.add(submit);
+					}
 				} catch (Throwable e) {
 					e.printStackTrace();
 				} finally {
-					Transaction.ensureEnded();
-					PermissionsManager.get().popUser();
 					LooseContext.pop();
 				}
 			}
@@ -385,7 +409,7 @@ public abstract class DomainViews {
 		}
 
 		static enum Type {
-			MODEL_CHANGE, HANDLE_PATH_REQUEST, HANDLE_LAMBDA;
+			MODEL_CHANGE, HANDLE_PATH_REQUEST, HANDLE_LAMBDA, EVICT_LISTENERS;
 		}
 	}
 }

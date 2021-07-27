@@ -25,6 +25,8 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
@@ -80,6 +82,19 @@ public class LiveTree {
 		}
 	}
 
+	public void checkChangeListeners() {
+		Iterator<ChangeListener> itr = changeListeners.iterator();
+		long expire = System.currentTimeMillis() - getEvictMillis();
+		while (itr.hasNext()) {
+			ChangeListener next = itr.next();
+			if (next.getSince().compareTo(currentPosition) < 0
+					|| next.getTime() < expire) {
+				next.run();
+				itr.remove();
+			}
+		}
+	}
+
 	public Response generateResponse(
 			Request<? extends DomainViewSearchDefinition> request) {
 		Response response = new Response();
@@ -128,17 +143,6 @@ public class LiveTree {
 		return result;
 	}
 
-	private void checkChangeListeners() {
-		Iterator<ChangeListener> itr = changeListeners.iterator();
-		while (itr.hasNext()) {
-			ChangeListener next = itr.next();
-			if (next.getSince().compareTo(currentPosition) <= 0) {
-				next.run();
-				itr.remove();
-			}
-		}
-	}
-
 	private LiveNode ensureNode(TreePath<LiveNode> path,
 			NodeGenerator<?, ?> generator, Object segment) {
 		if (path.getValue() == null) {
@@ -168,6 +172,11 @@ public class LiveTree {
 		GeneratorContext generatorContext = new GeneratorContext();
 		generatorContext.treeCreation = true;
 		processEvents(generatorContext);
+	}
+
+	private long getEvictMillis() {
+		return ResourceUtilities.getInteger(LiveTree.class, "evictSeconds")
+				* TimeConstants.ONE_SECOND_MS;
 	}
 
 	/*
@@ -633,13 +642,20 @@ public class LiveTree {
 
 		private LiveTree tree;
 
+		private long time;
+
 		public ChangeListener(ViewsTask task, LiveTree tree) {
 			this.task = task;
 			this.tree = tree;
+			this.time = System.currentTimeMillis();
 		}
 
 		public DomainTransformCommitPosition getSince() {
 			return task.handlerData.request.getSince();
+		}
+
+		public long getTime() {
+			return this.time;
 		}
 
 		public void onChange() {
