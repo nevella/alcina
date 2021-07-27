@@ -1874,7 +1874,7 @@ public class DomainStore implements IDomainStore {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 			case CHANGE_PROPERTY_REF:
-				return GraphProjection.isEnumOrEnumSubclass(evt.getValueClass())
+				return CommonUtils.isEnumOrEnumSubclass(evt.getValueClass())
 						|| domainDescriptor
 								.applyPostTransform(evt.getValueClass(), evt);
 			}

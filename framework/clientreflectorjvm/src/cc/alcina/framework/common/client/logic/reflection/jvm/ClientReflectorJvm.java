@@ -92,7 +92,8 @@ public class ClientReflectorJvm extends ClientReflector {
 				&& clazz.getAnnotation(
 						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null
 				&& !clazz.getName().startsWith("java.lang")
-				&&!IntrospectorFilter.COLLECTION_CLASS_NAMES.contains(clazz.getCanonicalName())) {
+				&& !IntrospectorFilter.COLLECTION_CLASS_NAMES
+						.contains(clazz.getCanonicalName())) {
 			throw new IntrospectionException(
 					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
 					clazz);
@@ -100,21 +101,23 @@ public class ClientReflectorJvm extends ClientReflector {
 		checkedClassAnnotationsForInstantiation.add(clazz);
 	}
 
-	//FIXME - metagen - clean all this up (unify annotation reflection/property introspection/instantiation)
+	// FIXME - metagen - clean all this up (unify annotation reflection/property
+	// introspection/instantiation)
 	private static IntrospectionCheckResult
 			checkClassAnnotationsGenerateException(Class clazz,
 					boolean generateExceptions) {
 		IntrospectionCheckResult result = new IntrospectionCheckResult();
 		int mod = clazz.getModifiers();
-		if ((Modifier.isAbstract(mod) && !clazz.isEnum())
-				|| clazz.isAnonymousClass()
-				|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
-			if (generateExceptions) {
-				result.exception = new IntrospectionException(
-						"not reflectable class - abstract or non-static",
-						clazz);
+		if (!CommonUtils.isEnumOrEnumSubclass(clazz)) {
+			if (Modifier.isAbstract(mod) || clazz.isAnonymousClass()
+					|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
+				if (generateExceptions) {
+					result.exception = new IntrospectionException(
+							"not reflectable class - abstract or non-static",
+							clazz);
+				}
+				return result;
 			}
-			return result;
 		}
 		boolean introspectable = AnnotationUtils.hasAnnotationNamed(clazz,
 				ClientInstantiable.class)
@@ -124,7 +127,8 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (clazz.getName().startsWith("java.lang")) {
 			introspectable = true;
 		}
-		if(IntrospectorFilter.COLLECTION_CLASS_NAMES.contains(clazz.getCanonicalName())){
+		if (IntrospectorFilter.COLLECTION_CLASS_NAMES
+				.contains(clazz.getCanonicalName())) {
 			introspectable = true;
 		}
 		for (Class iface : getAllImplementedInterfaces(clazz)) {

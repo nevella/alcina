@@ -993,6 +993,10 @@ public class CommonUtils {
 		return clazz.isEnum() || isEnumSubclass(clazz);
 	}
 
+	public static boolean isEnumOrEnumSubclass(Class c) {
+		return c.isEnum() || isEnumSubclass(c);
+	}
+
 	public static boolean isEnumSubclass(Class c) {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}

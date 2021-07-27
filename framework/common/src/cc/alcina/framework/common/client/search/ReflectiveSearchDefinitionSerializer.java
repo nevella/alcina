@@ -29,7 +29,7 @@ public class ReflectiveSearchDefinitionSerializer
 
 	public static final String RS0 = "rs0_";
 
-	public static boolean flatTreeSerializationEnabled = false;
+	public static boolean flatTreeSerializationEnabled = true;
 
 	public static String escapeJsonForUrl(String str) {
 		StringBuilder sb = new StringBuilder();
