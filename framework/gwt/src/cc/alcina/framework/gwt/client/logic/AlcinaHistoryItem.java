@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -133,8 +134,9 @@ public class AlcinaHistoryItem {
 		return getBooleanParameter(NO_HISTORY_KEY);
 	}
 
-	public Map<String, String> parseParameters(String s) {
-		params = AlcinaHistory.fromHash(s);
+	public Map<String, String> parseParameters(String s,
+			BiPredicate<String, String> nonDecoder) {
+		params = AlcinaHistory.fromHash(s, nonDecoder);
 		return params;
 	}
 

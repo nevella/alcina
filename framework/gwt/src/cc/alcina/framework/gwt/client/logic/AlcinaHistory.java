@@ -316,6 +316,11 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	}
 
 	public I parseToken(String historyToken) {
+		return parseToken(historyToken, null);
+	}
+
+	public I parseToken(String historyToken,
+			BiPredicate<String, String> nonDecoder) {
 		if (historyToken.startsWith("#")) {
 			historyToken = historyToken.substring(1);
 		}
@@ -326,7 +331,8 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 			historyToken = historyToken.substring(1);
 		}
 		I item = createHistoryInfo();
-		Map<String, String> params = item.parseParameters(historyToken);
+		Map<String, String> params = item.parseParameters(historyToken,
+				nonDecoder);
 		if (params.size() == 0) {
 			item.notAHistoryToken = true;
 			return item;
