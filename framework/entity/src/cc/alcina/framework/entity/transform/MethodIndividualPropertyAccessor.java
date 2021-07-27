@@ -57,8 +57,6 @@ public class MethodIndividualPropertyAccessor implements PropertyReflector {
 		PropertyDescriptor pd = SEUtilities.getPropertyDescriptorByName(clazz,
 				propertyName);
 		if (pd == null) {
-			Ax.err("No property descriptor - %s.%s", clazz.getSimpleName(),
-					propertyName);
 			return;
 		}
 		this.readMethod = pd.getReadMethod();

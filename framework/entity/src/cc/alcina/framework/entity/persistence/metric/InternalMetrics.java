@@ -110,6 +110,9 @@ public class InternalMetrics {
 			synchronized (tracker) {
 				tracker.endTime = System.currentTimeMillis();
 			}
+			if (!ResourceUtilities.is("persistEnabled")) {
+				trackers.remove(markerObject);
+			}
 		}
 	}
 
