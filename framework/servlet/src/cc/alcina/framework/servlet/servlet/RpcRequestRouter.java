@@ -29,7 +29,8 @@ public class RpcRequestRouter {
 
 	public String invokeAndEncodeResponse(Object target, RPCRequest rpcRequest)
 			throws SerializationException {
-		String requestHandlerUrl = ResourceUtilities.get("requestHandlerUrl");
+		String requestHandlerUrl = ResourceUtilities.get(RpcRequestRouter.class,
+				"requestHandlerUrl");
 		if (Ax.notBlank(requestHandlerUrl) && !forceServerHandler(rpcRequest)) {
 			try {
 				LooseContext.pushWithTrue(CONTEXT_IN_RPC_CALL);
