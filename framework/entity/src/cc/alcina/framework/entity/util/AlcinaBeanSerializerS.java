@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
@@ -66,6 +67,8 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 
 	protected Map<String, Class> resolvedClassLookup = new LinkedHashMap<>();
 
+	private ClassNameTranslator classNameTranslator;
+
 	public AlcinaBeanSerializerS() {
 		propertyFieldName = PROPERTIES;
 	}
@@ -74,6 +77,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	public <T> T deserialize(String jsonString) {
 		try {
 			JSONObject obj = new JSONObject(jsonString);
+			classNameTranslator = Registry.impl(ClassNameTranslator.class);
 			if (GWT.isClient() && !useContextClassloader) {
 				// devmode
 				classLoader = getClass().getClassLoader().getParent();
@@ -432,6 +436,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 				if (resolved == null) {
 					clazz = CommonUtils.stdAndPrimitivesMap.get(className);
 					if (clazz == null) {
+						className = classNameTranslator.translate(className);
 						if (GWT.isClient()) {
 							Reflections.forName(className);
 							// throw if not reflectively accessible
@@ -485,5 +490,12 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			arr.put(i++, serializeCollection((Collection) e.getValue()));
 		}
 		return arr;
+	}
+
+	@RegistryLocation(registryPoint = ClassNameTranslator.class, implementationType = ImplementationType.SINGLETON)
+	public static class ClassNameTranslator {
+		public String translate(String className) {
+			return className;
+		}
 	}
 }
