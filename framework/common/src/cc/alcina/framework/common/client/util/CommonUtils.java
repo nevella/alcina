@@ -787,6 +787,9 @@ public class CommonUtils {
 				enumValueLookup.put(enumClass, withFriendlyNames,
 						ev.toString().toLowerCase(), ev);
 				if (withFriendlyNames) {
+					// handle double__ default
+					enumValueLookup.put(enumClass, withFriendlyNames,
+							ev.toString().toLowerCase().replace('_', '-'), ev);
 					enumValueLookup.put(enumClass, withFriendlyNames,
 							friendlyConstant(ev, "-").toLowerCase(), ev);
 					enumValueLookup.put(enumClass, withFriendlyNames,
