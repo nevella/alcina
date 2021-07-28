@@ -240,6 +240,23 @@ public class FlatTreeSerializer {
 						"Unequal serialized:\n\n%s\n========\n%s", serialized,
 						checkSerialized);
 			}
+			/*
+			 * Would be nice - but then we'd need to do fancy things to
+			 * replicate filterTestSerialized (handle fields we deliberately
+			 * drop for client concision)
+			 */
+			// String reflectiveCheck0 = AlcinaBeanSerializer
+			// .serializeHolder(object);
+			// String reflectiveCheck1 = AlcinaBeanSerializer
+			// .serializeHolder(checkObject);
+			// if (!Objects.equals(reflectiveCheck0, reflectiveCheck1)) {
+			// unequalSerialized.publish(
+			// new StringPair(reflectiveCheck0, reflectiveCheck1));
+			// Preconditions.checkState(
+			// Objects.equals(reflectiveCheck0, reflectiveCheck1),
+			// "Unequal serialized (bean):\n\n%s\n========\n%s",
+			// reflectiveCheck0, reflectiveCheck1);
+			// }
 		}
 		return serialized;
 	}
