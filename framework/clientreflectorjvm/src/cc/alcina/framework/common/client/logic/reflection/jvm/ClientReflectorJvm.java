@@ -51,6 +51,9 @@ import cc.alcina.framework.entity.util.MethodWrapper;
 
 /**
  *
+ * FIXME - mvcc.4 - registry - should *not* populate if class not visible (due
+ * to module filter) (e,g.
+ * cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.DefaultResolver)
  */
 public class ClientReflectorJvm extends ClientReflector {
 	public static final String CONTEXT_MODULE_NAME = ClientReflectorJvm.class
