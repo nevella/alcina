@@ -58,6 +58,11 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		run();
 	}
 
+	// typed a lot - so alias
+	public void sub(DevConsoleRunnable parentRunnable) {
+		runAsSubcommand(parentRunnable);
+	}
+
 	public abstract String[] tagStrings();
 
 	@Override
