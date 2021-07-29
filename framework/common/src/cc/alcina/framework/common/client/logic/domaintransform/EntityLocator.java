@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
@@ -26,7 +27,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	static final transient long serialVersionUID = 1L;
 
 	public static EntityLocator instanceLocator(Entity entity) {
-		return entity==null?null:new EntityLocator(entity);
+		return entity == null ? null : new EntityLocator(entity);
 	}
 
 	public static EntityLocator nonClassDependent(String entityClassName,
@@ -129,6 +130,8 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		return Domain.find(this);
 	}
 
+	@AlcinaTransient
+	@JsonIgnore
 	public Class<? extends Entity> getClazz() {
 		if (!GWT.isClient() && clazz == null && entityClassName != null) {
 			clazz = Reflections.forName(entityClassName);
@@ -155,6 +158,8 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		return this.localId;
 	}
 
+	@AlcinaTransient
+	@JsonIgnore
 	public <E extends Entity> E getObject() {
 		return Domain.find(this);
 	}
@@ -236,7 +241,10 @@ public class EntityLocator implements Serializable, TreeSerializable {
 			return toRecoverableString(clientInstanceId);
 		}
 		return Ax.format("%s - %s",
-				clazz == null ? entityClassName == null ? "??" : entityClassName
+				clazz == null
+						? entityClassName == null ? "??"
+								: entityClassName.replaceFirst(".+\\.(.+)",
+										"$1")
 						: CommonUtils.simpleClassName(clazz),
 				id);
 	}
