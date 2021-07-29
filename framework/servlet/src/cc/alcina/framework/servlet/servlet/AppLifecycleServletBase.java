@@ -70,6 +70,7 @@ import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
@@ -181,6 +182,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initServletConfig = servletConfig;
 			// push to registry
 			Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+			Registry.setDelegateCreator(
+					new DelegateMapCreatorConcurrentNoNulls());
 			AppPersistenceBase.setInstanceReadOnly(false);
 			initBootstrapRegistry();
 			initNames();

@@ -169,12 +169,6 @@ public class ReflectiveSearchDefinitionSerializer
 		return lastStringDef;
 	}
 
-	private boolean
-			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
-		return Reflections.classLookup().getAnnotationForClass(defClass,
-				TypeSerialization.class) != null;
-	}
-
 	private void ensureLookups() {
 		if (abbrevLookup.isEmpty()) {
 			List<Class> classes = Registry.get()
@@ -249,5 +243,11 @@ public class ReflectiveSearchDefinitionSerializer
 			flatTreeException.printStackTrace();
 		}
 		return RS0 + escapeJsonForUrl(str);
+	}
+
+	protected boolean
+			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
+		return Reflections.classLookup().getAnnotationForClass(defClass,
+				TypeSerialization.class) != null;
 	}
 }

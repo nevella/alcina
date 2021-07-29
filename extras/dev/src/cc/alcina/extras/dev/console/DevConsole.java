@@ -89,6 +89,7 @@ import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable.AlcinaChildContextRunner;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
@@ -795,6 +796,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	protected void init() throws Exception {
 		instance = this;
+		Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
 		Registry.registerSingleton(DevConsole.class, this);
 		long statStartInit = System.currentTimeMillis();
 		createDevHelper();

@@ -88,6 +88,11 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * 
  *         FIXME - dirndl.1a - the registrylocation->registration/keys (and dox)
  * 
+ *         Thread-safety: operations which can logically conflict (register(),
+ *         singleton creation) are synchronized on the instance - or the
+ *         registrykey if possible. All maps are concurrent in a threaded
+ *         environment
+ * 
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class Registry {
@@ -95,6 +100,7 @@ public class Registry {
 
 	private static RegistryProvider provider = new BasicRegistryProvider();
 
+	// must be concurrent if in a concurrent environment
 	static DelegateMapCreator delegateCreator = new CollectionCreators.UnsortedMapCreator();
 
 	public static Topic<RegisteredSingletonInfo> topicRegisteredSingleton = Topic
@@ -275,11 +281,11 @@ public class Registry {
 		targetPriority = new UnsortedMultikeyMap<Integer>(2, 0,
 				delegateCreator);
 		singletons = new UnsortedMultikeyMap<Object>(2, 0, delegateCreator);
-		voidPointSingletons = new LinkedHashMap<String, Object>(1000);
+		voidPointSingletons = delegateCreator.createDelegateMap(0, 0);
 		exactMap = new UnsortedMultikeyMap<RegistryKey>(2, 0, delegateCreator);
 		implementationTypeMap = new UnsortedMultikeyMap<ImplementationType>(2,
 				0, delegateCreator);
-		implClassesRegistered = new LinkedHashMap<>();
+		implClassesRegistered = delegateCreator.createDelegateMap(0, 0);
 	}
 
 	public List<Class> allImplementationKeys(Class registryPoint) {
@@ -442,9 +448,7 @@ public class Registry {
 					false);
 			cachedKey = lookup.size() > 0 ? keys.get(lookup.get(0))
 					: keys.emptyLookupKey();
-			synchronized (exactMap) {
-				exactMap.put(registryPoint, targetClassKey, cachedKey);
-			}
+			exactMap.put(registryPoint, targetClassKey, cachedKey);
 		}
 		if (cachedKey == keys.emptyLookupKey() && errorOnNull) {
 			throw new RegistryException(
@@ -707,6 +711,7 @@ public class Registry {
 		switch (type) {
 		case SINGLETON:
 		case FACTORY:
+			// synchronize to prevent double-creation
 			synchronized (registryPointKey) {
 				if (voidTarget) {
 					singleton = voidPointSingletons
