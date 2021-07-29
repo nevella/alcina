@@ -419,6 +419,7 @@ public class FlatTreeSerializer {
 			String reachedPath = "";
 			List<String> resolvedSegments = new ArrayList<>();
 			int previousSegmentUnusedIndex = -1;
+			boolean unknownProperty = false;
 			for (int idx = 0; idx < segments.length; idx++) {
 				String segment = segments[idx];
 				boolean lastSegment = idx == segments.length - 1;
@@ -515,6 +516,7 @@ public class FlatTreeSerializer {
 							resolved = true;
 						}
 						if (property == null) {
+							unknownProperty = true;
 							LoggerFactory.getLogger(getClass()).info(
 									"Unknown property: {} {}",
 									state.rootClass.getSimpleName(), path);
@@ -613,7 +615,9 @@ public class FlatTreeSerializer {
 					}
 				}
 			}
-			cursor.putToObject(value);
+			if (!unknownProperty) {
+				cursor.putToObject(value);
+			}
 		}
 	}
 
