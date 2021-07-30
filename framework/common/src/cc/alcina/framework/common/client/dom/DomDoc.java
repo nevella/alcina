@@ -171,7 +171,7 @@ public class DomDoc extends DomNode {
 
 	Multimap<String, List<DomNode>> byTag() {
 		if (byTag == null) {
-			byTag = getDocumentElementNode().children.flat()
+			byTag = getDocumentElementNode().children.stream()
 					.collect(AlcinaCollectors.toKeyMultimap(DomNode::name));
 		}
 		return byTag;

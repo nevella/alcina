@@ -361,7 +361,7 @@ public class DomNode {
 	}
 
 	public void removeWhitespaceNodes() {
-		children.flat().filter(n -> n.isText() && n.isWhitespaceTextContent())
+		children.stream().filter(n -> n.isText() && n.isWhitespaceTextContent())
 				.forEach(DomNode::removeFromParent);
 	}
 
@@ -699,12 +699,12 @@ public class DomNode {
 		}
 
 		public DomNode firstNonWhitespaceTextDescendant() {
-			return flat()
+			return stream()
 					.filter(n -> n.isText() && !n.isWhitespaceTextContent())
 					.findFirst().orElse(null);
 		}
 
-		public Stream<DomNode> flat() {
+		public Stream<DomNode> stream() {
 			return flatten();
 		}
 
@@ -1089,7 +1089,7 @@ public class DomNode {
 			if (blockResolver.isBlock(DomNode.this)) {
 				return true;
 			}
-			return children.flat().anyMatch(blockResolver::isBlock);
+			return children.stream().anyMatch(blockResolver::isBlock);
 		}
 
 		public DomNode setClassName(String string) {
@@ -1301,7 +1301,7 @@ public class DomNode {
 		}
 
 		public void clearContents() {
-			List<DomNode> kids = doc.getDocumentElementNode().children.flat()
+			List<DomNode> kids = doc.getDocumentElementNode().children.stream()
 					.collect(Collectors.toList());
 			boolean inRange = false;
 			List<DomNode> toRemoveNodes = new ArrayList<>();
