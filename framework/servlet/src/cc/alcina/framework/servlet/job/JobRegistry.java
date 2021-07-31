@@ -558,16 +558,23 @@ public class JobRegistry {
 
 	protected TaskPerformer getTaskPerformer(Job job) {
 		Task task = job.getTask();
+		TaskPerformer performer = null;
 		if (task instanceof TaskPerformer) {
-			return (TaskPerformer) task;
-		}
-		Optional<TaskPerformer> performer = Registry
-				.optional(TaskPerformer.class, task.getClass());
-		if (performer.isPresent()) {
-			return performer.get();
+			performer = (TaskPerformer) task;
 		} else {
-			return new MissingPerformerPerformer();
+			Optional<TaskPerformer> o_performer = Registry
+					.optional(TaskPerformer.class, task.getClass());
+			if (o_performer.isPresent()) {
+				performer = o_performer.get();
+			} else {
+				performer = new MissingPerformerPerformer();
+			}
 		}
+		if (performer instanceof HasRoutingPerformer) {
+			performer = ((HasRoutingPerformer) performer).routingPerformer()
+					.route(performer);
+		}
+		return performer;
 	}
 
 	protected boolean trackInternalMetrics() {
