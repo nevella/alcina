@@ -21,6 +21,7 @@ import javax.servlet.http.HttpServletResponse;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ServerControlAction;
+import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
@@ -167,8 +168,21 @@ public class JobServlet extends AlcinaServlet {
 		}
 		job = Domain.find(job);
 		if (job.getResultType().isFail() || job.getLargeResult() == null) {
-			writeTextResponse(response, Ax.blankTo(job.getLog(),
-					Ax.format("Job %s - complete", job)));
+			String message = Ax.blankTo(job.getLog(),
+					Ax.format("Job %s - complete", job));
+			if (Ax.matches(request.getHeader("User-Agent"), ".*Mozilla.*")) {
+				DomDoc doc = DomDoc.basicHtmlDoc();
+				doc.html().head().builder().tag("title")
+						.text(Ax.format("Job - %s",
+								job.getTask().getClass().getSimpleName()))
+						.append();
+				doc.html().body().builder().tag("div")
+						.attr("style", "font-family:monospace").text(message)
+						.append();
+				writeHtmlResponse(response, doc.prettyToString());
+			} else {
+				writeTextResponse(response, message);
+			}
 		} else {
 			writeHtmlResponse(response, job.getLargeResult().toString());
 		}
