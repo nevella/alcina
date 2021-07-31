@@ -112,7 +112,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 					.filter(textFilter).filter((Predicate) topLevelAdditional)
 					.limit(limit);
 			if (Ax.notBlank(filter)) {
-				stream = stream.sorted(Comparator.comparing(Job::getEndTime));
+				stream = stream.sorted(
+						Comparator.comparing(Job::getEndTime).reversed());
 			}
 			Stream<? extends Job> f_stream = stream;
 			List<Job> jobs = DomainStore.queryPool().call(
