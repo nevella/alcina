@@ -611,6 +611,11 @@ public class ResourceUtilities {
 		return readClassPathResourceAsString(getCallerClass(), path);
 	}
 
+	public static byte[] readRelativeResourceAsBytes(String string) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
 	public static byte[] readStreamToByteArray(InputStream is)
 			throws IOException {
 		int bufLength = is.available() <= 1024 ? 1024 * 64 : is.available();
