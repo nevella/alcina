@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
@@ -49,6 +48,8 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 public abstract class MvccObjectVersions<T> implements Vacuumable {
 	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
 
+	private static int resolveNullCount = 0;
+
 	// called in a synchronized block (synchronized on domainIdentity)
 	static <E extends Entity> MvccObjectVersions<E> ensureEntity(
 			E domainIdentity, Transaction transaction,
@@ -71,20 +72,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			Collections.reverseOrder());
 
 	protected volatile T visibleAllTransactions;
-
-	class CachedResolution {
-		private T __mostRecentReffed;
-
-		private T __mostRecentWritable;
-
-		private TransactionId mostRecentReffedTransactionId;
-
-		private TransactionId mostRecentWritableTransactionId;
-		@Override
-		public String toString() {
-			return GraphProjection.fieldwiseToString(this);
-		}
-	}
 
 	private volatile CachedResolution cachedResolution;
 
@@ -263,7 +250,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		 */
 		if ((size.get() == 0 || (transaction.isEmptyCommittedTransactions()
 				&& !versions.containsKey(transaction))) && !write) {
-			if (thisMayBeVisibleToPriorTransactions()
+			if (mayBeReachableFromPreCreationTransactions()
 					&& !transaction.isVisible(firstCommittedTransactionId)) {
 				return null;
 			} else {
@@ -281,7 +268,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			 * Object not visible to the current tx - note that if this is an
 			 * instance of MvccObjectVersionsEntity this will never be true
 			 */
-			if (thisMayBeVisibleToPriorTransactions()
+			if (mayBeReachableFromPreCreationTransactions()
 					&& !transaction.isVisible(firstCommittedTransactionId)) {
 				return null;
 			}
@@ -334,12 +321,35 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected abstract void copyObject(T fromObject, T baseObject);
 
+	protected void debugNotResolved() {
+		FormatBuilder fb = new FormatBuilder();
+		fb.line("Version count: %s", versions.size());
+		fb.line("visibleAllTransactions: %s", visibleAllTransactions != null);
+		fb.line("cachedResolution: %s", cachedResolution);
+		fb.line("firstCommittedTransactionId: %s", firstCommittedTransactionId);
+		fb.line("initialWriteableTransaction: %s", initialWriteableTransaction);
+		logger.warn(fb.toString());
+	}
+
 	protected int getSize() {
 		return this.size.get();
 	}
 
 	protected T initialAllTransactionsValueFor(T t) {
 		return null;
+	}
+
+	protected boolean mayBeReachableFromPreCreationTransactions() {
+		return false;
+	}
+
+	protected void onResolveNull(boolean write) {
+		if (!mayBeReachableFromPreCreationTransactions()) {
+			if (resolveNullCount++ < 10) {
+				logger.warn("onResolveNull - {}", domainIdentity);
+				logger.warn("onResolveNull", new Exception());
+			}
+		}
 	}
 
 	protected void onVersionCreation(ObjectVersion<T> version) {
@@ -367,10 +377,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
-	protected boolean thisMayBeVisibleToPriorTransactions() {
-		return false;
-	}
-
 	protected void updateCached(Transaction transaction, T resolved,
 			boolean write) {
 		CachedResolution cachedResolution = new CachedResolution();
@@ -382,6 +388,24 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			cachedResolution.__mostRecentWritable = resolved;
 		}
 		this.cachedResolution = cachedResolution;
+	}
+
+	boolean hasNoVisibleTransaction() {
+		return resolve(false) == null;
+	}
+
+	boolean hasVisibleVersion() {
+		return resolve(false) != null;
+	}
+
+	T resolve(boolean write) {
+		Transaction transaction = Transaction.current();
+		T resolved = resolve0(transaction, write);
+		if (resolved == null) {
+			onResolveNull(write);
+		}
+		updateCached(transaction, resolved, write);
+		return resolved;
 	}
 
 	// sorted maps are nice but also painful (boiling down to "the comparable
@@ -396,19 +420,19 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		updateCached(transaction, domainIdentity, true);
 	}
 
-	boolean hasNoVisibleTransaction() {
-		return resolve(false) == null;
-	}
+	class CachedResolution {
+		private T __mostRecentReffed;
 
-	boolean hasVisibleVersion() {
-		return resolve(false) != null;
-	}
+		private T __mostRecentWritable;
 
-	T resolve(boolean write) {
-		Transaction transaction = Transaction.current();
-		T resolved = resolve0(transaction, write);
-		updateCached(transaction, resolved, write);
-		return resolved;
+		private TransactionId mostRecentReffedTransactionId;
+
+		private TransactionId mostRecentWritableTransactionId;
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToString(this);
+		}
 	}
 
 	static abstract class MvccObjectVersionsMvccObject<T>
@@ -458,15 +482,4 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			super.putVersion(version);
 		}
 	}
-
-
-	 protected void debugNotResolved(){
-		 FormatBuilder fb = new FormatBuilder();
-		 fb.line("Version count: %s", versions.size());
-		 fb.line("visibleAllTransactions: %s", visibleAllTransactions!=null);
-		 fb.line("cachedResolution: %s", cachedResolution);
-		 fb.line("firstCommittedTransactionId: %s", firstCommittedTransactionId);
-		 fb.line("initialWriteableTransaction: %s", initialWriteableTransaction);
-		 logger.warn(fb.toString());
-	 }
 }

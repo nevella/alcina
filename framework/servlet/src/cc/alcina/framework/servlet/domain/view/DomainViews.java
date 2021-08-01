@@ -374,6 +374,11 @@ public abstract class DomainViews {
 			user = PermissionsManager.get().getUser();
 		}
 
+		@Override
+		public String toString() {
+			return type.toString();
+		}
+
 		void await() {
 			try {
 				latch.await();

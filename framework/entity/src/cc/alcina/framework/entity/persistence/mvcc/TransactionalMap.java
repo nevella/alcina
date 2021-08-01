@@ -607,7 +607,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		protected boolean thisMayBeVisibleToPriorTransactions() {
+		protected boolean mayBeReachableFromPreCreationTransactions() {
 			return true;
 		}
 	}
@@ -710,7 +710,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		protected boolean thisMayBeVisibleToPriorTransactions() {
+		protected boolean mayBeReachableFromPreCreationTransactions() {
 			return true;
 		}
 

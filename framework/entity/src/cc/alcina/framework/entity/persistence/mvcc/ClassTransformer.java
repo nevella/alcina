@@ -654,9 +654,10 @@ class ClassTransformer {
 					boolean privateOrPackageMethod = decl
 							.accessSpecifier() == AccessSpecifier.PRIVATE
 							|| decl.accessSpecifier() == AccessSpecifier.PACKAGE_PRIVATE;
+					boolean staticMethod = decl.isStatic();
 					boolean entityMethod = decl.declaringType()
 							.getQualifiedName().equals(originalClass.getName());
-					if (privateOrPackageMethod && entityMethod
+					if (privateOrPackageMethod && entityMethod && !staticMethod
 							&& (expressionIsInNestedType
 									|| expressionIsInNestedAnonymousType)) {
 						addProblematicAccess(

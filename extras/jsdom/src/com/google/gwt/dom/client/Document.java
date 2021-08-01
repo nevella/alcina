@@ -887,6 +887,11 @@ public class Document extends Node
 	}
 
 	@Override
+	public String getVisibilityState() {
+		return remote.getVisibilityState();
+	}
+
+	@Override
 	public String getXmlEncoding() {
 		throw new UnsupportedOperationException();
 	}
