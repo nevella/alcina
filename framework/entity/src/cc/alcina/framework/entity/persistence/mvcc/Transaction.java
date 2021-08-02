@@ -156,7 +156,8 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public static void ensureBegun() {
-		if (threadLocalInstance.get() == null) {
+		if (threadLocalInstance.get() == null
+				|| threadLocalInstance.get().isEnded()) {
 			begin();
 		}
 	}
