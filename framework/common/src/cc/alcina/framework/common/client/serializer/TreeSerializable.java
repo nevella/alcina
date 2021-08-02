@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.serializer.flat;
+package cc.alcina.framework.common.client.serializer;
 
 import java.io.Serializable;
 import java.util.LinkedHashMap;

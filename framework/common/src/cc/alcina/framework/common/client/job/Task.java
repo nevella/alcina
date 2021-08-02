@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.job;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
 public interface Task extends TreeSerializable {
 	default String getName() {

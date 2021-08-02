@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.publication.request;
 
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class PublicationResult extends Model implements TreeSerializable {

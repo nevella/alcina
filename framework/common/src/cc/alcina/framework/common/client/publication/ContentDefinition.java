@@ -14,7 +14,7 @@
 package cc.alcina.framework.common.client.publication;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
 /**
  * Marker interface for publication content
