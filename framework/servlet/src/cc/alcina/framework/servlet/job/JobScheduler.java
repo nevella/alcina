@@ -387,6 +387,7 @@ public class JobScheduler {
 					"Not processing orphans - visible instances size: {}, minimum size: {}",
 					activeInstances.size(),
 					minimumVisibleInstancesForOrphanProcessing);
+			return;
 		}
 		String visibleInstanceRegex = ResourceUtilities
 				.get("visibleInstanceRegex");
