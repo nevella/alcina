@@ -130,9 +130,9 @@
 			<src path="${framework.clientreflectorjvm.src.dir}" />
 			<exclude name="cc/alcina/framework/common/translatable/**" />
 			<classpath>
-				<path refid="framework.common.lib.path" />
 				<pathelement path="${framework.classmeta.build.dir}" />
 				<pathelement path="${framework.entity.build.dir}" />
+				<path refid="framework.common.lib.path" />
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
