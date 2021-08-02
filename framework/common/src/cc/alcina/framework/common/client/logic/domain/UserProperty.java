@@ -126,8 +126,8 @@ public abstract class UserProperty<T extends UserProperty>
 			} catch (Exception e) {
 			}
 		}
-		return (V) TransformManager.resolveMaybeDeserialize(null, getValue(),
-				null, clazz);
+		return (V) TransformManager.Serializer.get().deserialize(getValue(),
+				clazz);
 	}
 
 	public synchronized UserPropertyPersistable.Support
