@@ -14,9 +14,9 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
-import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.DeserializerOptions;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -202,11 +202,8 @@ public class ReflectiveSearchDefinitionSerializer
 								.withElideDefaults(true)
 								.withTestSerialized(true));
 			} catch (Exception e) {
-				if (!LooseContext
-						.is(FlatTreeSerializer.CONTEXT_SUPPRESS_EXCEPTIONS)) {
-					e.printStackTrace();
-					flatTreeException = e;
-				}
+				e.printStackTrace();
+				flatTreeException = e;
 			}
 		}
 		ensureLookups();

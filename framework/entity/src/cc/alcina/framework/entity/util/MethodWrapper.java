@@ -10,14 +10,17 @@ public class MethodWrapper implements Method {
 		this.inner = inner;
 	}
 
-	// @Override
-	// For JDK1.5 compatibility, don't override methods inherited from an
-	// interface
+	@Override
+	public Class getDeclaringClass() {
+		return inner.getDeclaringClass();
+	}
+
+	@Override
 	public String getName() {
 		return ((java.lang.reflect.Method) inner).toString();
 	}
 
-	// @Override
+	@Override
 	public Object invoke(Object target, Object[] args) throws Exception {
 		return inner.invoke(target, args);
 	}

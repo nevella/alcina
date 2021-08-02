@@ -111,9 +111,6 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 public class FlatTreeSerializer {
 	private static final String CLASS = "class$";
 
-	public static final String CONTEXT_SUPPRESS_EXCEPTIONS = FlatTreeSerializer.class
-			.getName() + ".CONTEXT_SUPPRESS_EXCEPTIONS";
-
 	public static final String CONTEXT_DESERIALIZING = FlatTreeSerializer.class
 			.getName() + ".CONTEXT_DESERIALIZING";
 
@@ -257,6 +254,7 @@ public class FlatTreeSerializer {
 			// "Unequal serialized (bean):\n\n%s\n========\n%s",
 			// reflectiveCheck0, reflectiveCheck1);
 			// }
+			// FIXME - 2021 - implement once reflectiveserializer up
 		}
 		return serialized;
 	}
