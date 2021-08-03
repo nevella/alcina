@@ -15,6 +15,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -35,6 +36,7 @@ import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.VariableDeclarator;
 import com.github.javaparser.ast.expr.AssignExpr;
 import com.github.javaparser.ast.expr.BinaryExpr;
+import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.NameExpr;
 import com.github.javaparser.ast.expr.ObjectCreationExpr;
 import com.github.javaparser.ast.expr.UnaryExpr;
@@ -171,6 +173,9 @@ public class ConvertToProxiesPerformer
 				reachable.add(field.getType());
 			}
 			for (Method method : clazz.getDeclaredMethods()) {
+				if (method.getName().equals("setLoggingLevel")) {
+					int debug = 3;
+				}
 				reachable.add(method.getReturnType());
 				Arrays.stream(method.getParameterTypes())
 						.forEach(reachable::add);
@@ -270,30 +275,94 @@ public class ConvertToProxiesPerformer
 		}
 
 		private void addConstructor() {
-			Set<Constructor> declaredConstructors = Arrays
+			Set<Constructor> constructors = Arrays
 					.stream(clazz.getDeclaredConstructors())
 					.collect(Collectors.toSet());
-			if (declaredConstructors.isEmpty()) {
-				return;
+			if (constructors.isEmpty()) {
+				constructors = Arrays.stream(clazz.getConstructors())
+						.collect(Collectors.toSet());
 			}
-			ConstructorDeclaration constructorDeclaration = declaration
-					.addConstructor(Keyword.PUBLIC);
-			Constructor constructor = declaredConstructors.iterator().next();
-			String typeIndicators = Arrays.stream(constructor.getParameters())
-					.map(p -> {
-						if (p.getType().isPrimitive()) {
-							Object defaultValue = Array
-									.get(Array.newInstance(p.getType(), 1), 0);
-							return defaultValue.toString();
-						} else {
-							return Ax.format("(%s)null",
-									p.getType().getCanonicalName());
-						}
-					}).collect(Collectors.joining(", "));
-			String proxyCall = Ax.format("super(%s);", typeIndicators);
-			constructorDeclaration.getBody().addStatement(proxyCall);
-			Arrays.stream(constructor.getExceptionTypes())
-					.forEach(constructorDeclaration::addThrownException);
+			if (constructors.size() == 0) {
+				logger.info("No public constructors: {}",
+						clazz.getSimpleName());
+			}
+			Constructor first = Ax.first(constructors);
+			for (Constructor constructor : constructors) {
+				/*
+				 * Add exactly one (unused) private constructors
+				 */
+				{
+					if (constructor == first) {
+						ConstructorDeclaration constructorDeclaration = declaration
+								.addConstructor(Keyword.PRIVATE);
+						String typeIndicators = Arrays
+								.stream(constructor.getParameters()).map(p -> {
+									if (p.getType().isPrimitive()) {
+										Object defaultValue = Array.get(Array
+												.newInstance(p.getType(), 1),
+												0);
+										return defaultValue.toString();
+									} else {
+										return Ax.format("(%s)null",
+												p.getType().getCanonicalName());
+									}
+								}).collect(Collectors.joining(", "));
+						String proxyCall = Ax.format("super(%s);",
+								typeIndicators);
+						constructorDeclaration.getBody()
+								.addStatement(proxyCall);
+						Arrays.stream(constructor.getExceptionTypes()).forEach(
+								constructorDeclaration::addThrownException);
+					}
+				}
+				/*
+				 * Add proxying __newInstance call
+				 */
+				if (Modifier.isPublic(constructor.getModifiers())) {
+					MethodDeclaration methodDeclaration = declaration
+							.addMethod("__newInstance", Keyword.PUBLIC);
+					methodDeclaration.addModifier(Keyword.STATIC);
+					for (Parameter parameter : constructor.getParameters()) {
+						methodDeclaration.addParameter(parameter.getType(),
+								parameter.getName());
+					}
+					methodDeclaration.setType(clazz);
+					String methodTypesClause = Arrays
+							.stream(constructor.getParameters())
+							.map(Parameter::getType)
+							.map(Class::getCanonicalName).map(s -> s + ".class")
+							.collect(Collectors.joining(", "));
+					String methodArgsClause = Arrays
+							.stream(constructor.getParameters())
+							.map(Parameter::getName)
+							.collect(Collectors.joining(", "));
+					String proxyCall = Ax.format(
+							"ProxyResult result = %s.handle(%s.class, null, null, "
+									+ "Arrays.asList(%s), Arrays.asList(%s)); ",
+							task.classProxyImpl.getSimpleName(),
+							clazz.getName(), methodTypesClause,
+							methodArgsClause);
+					methodDeclaration.getBody().get().addStatement(proxyCall);
+					Arrays.stream(constructor.getExceptionTypes())
+							.forEach(et -> {
+								String checkThrow = Ax.format(
+										"if(result.throwable instanceof %s){\n\t"
+												+ "throw (%s)result.throwable;\n}",
+										et.getCanonicalName(),
+										et.getCanonicalName());
+								methodDeclaration.getBody().get()
+										.addStatement(checkThrow);
+							});
+					String returnStatement = Ax.format(
+							"return (%s) result.returnValue;",
+							clazz.getCanonicalName());
+					methodDeclaration.getBody().get()
+							.addStatement(returnStatement);
+					Arrays.stream(constructor.getExceptionTypes())
+							.forEach(c -> methodDeclaration
+									.addThrownException((Class) c));
+				}
+			}
 		}
 
 		private void addMethods() {
@@ -334,7 +403,7 @@ public class ConvertToProxiesPerformer
 						.map(Parameter::getName)
 						.collect(Collectors.joining(", "));
 				String proxyCall = Ax.format(
-						"ProxyResult result = Registry.impl(%s.class).handle(%s.class, %s, \"%s\", "
+						"ProxyResult result = %s.handle(%s.class, %s, \"%s\", "
 								+ "Arrays.asList(%s), Arrays.asList(%s)); ",
 						task.classProxyImpl.getSimpleName(), clazz.getName(),
 						proxyString, method.getName(), methodTypesClause,
@@ -426,28 +495,29 @@ public class ConvertToProxiesPerformer
 			super.visit(expr, arg);
 		}
 
-		@SuppressWarnings("unused")
-		void testOkWrapping(
-				com.github.javaparser.ast.expr.MethodCallExpr expr) {
-			Class<? extends Node> parentClass = expr.getParentNode().get()
-					.getClass();
-			if (okRedirectContainers.contains(parentClass)) {
-				// ensure we only redirect from the start of a method
-				// call expr
-				return;
+		@Override
+		public void visit(
+				com.github.javaparser.ast.expr.ObjectCreationExpr expr,
+				Object arg) {
+			Matcher matcher = Pattern.compile("new ([a-zA-Z.0-9]+)(\\(.*?\\))")
+					.matcher(expr.toString());
+			if (matcher.matches()) {
+				String firstPart = matcher.group(1);
+				if (simpleClassNames.containsKey(firstPart)) {
+					// testOkWrapping(expr);
+					Class clazz = simpleClassNames.get(firstPart);
+					Class proxyClass = generators.get(clazz).getProxyClass();
+					unit.ensureImport(proxyClass);
+					String expression = Ax.format("%s.__newInstance%s",
+							proxyClass.getSimpleName(), matcher.group(2));
+					Expression replExpr = StaticJavaParser
+							.parseExpression(expression);
+					Optional<Node> parent = expr.getParentNode();
+					parent.get().replace(expr, replExpr);
+					unit.dirty = true;
+				}
 			}
-			String containerName = parentClass.getSimpleName();
-			String containerName2 = expr.getParentNode().get().getParentNode()
-					.get().getClass().getSimpleName();
-			if (parents.add(containerName) || true) {
-				Ax.out(this.unit.file.getName());
-				Ax.out(expr);
-				Ax.out(containerName);
-				Ax.out(expr.getParentNode().get());
-				Ax.out(containerName2);
-				Ax.out(expr.getParentNode().get().getParentNode().get());
-				int debug = 3;
-			}
+			super.visit(expr, arg);
 		}
 	}
 
