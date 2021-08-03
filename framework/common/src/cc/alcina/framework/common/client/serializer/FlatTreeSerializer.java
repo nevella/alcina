@@ -1082,6 +1082,9 @@ public class FlatTreeSerializer {
 
 		@Override
 		public <V> V deserialize(String serialized, Class<V> clazz) {
+			if (serialized == null) {
+				return null;
+			}
 			if ((clazz != null && !serialized.startsWith("{"))
 					|| serialized.contains("class$=")) {
 				FlatTreeSerializer.DeserializerOptions options = new FlatTreeSerializer.DeserializerOptions()
