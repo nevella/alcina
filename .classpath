@@ -13,7 +13,7 @@
 	<classpathentry kind="src" path="extras/collections/src"/>
 	<classpathentry excluding="org/json/|registry.properties" kind="src" path="framework/entity/src"/>
 	<classpathentry kind="src" path="framework/impl/jboss-hibernate/src"/>
-	<classpathentry excluding="com/google/gwt/user/client/impl/*|com/google/gwt/user/client/ui/PopupPanel.java|registry.properties" kind="src" path="framework/gwt/src"/>
+	<classpathentry excluding="cc/alcina/framework/gwt/translatable/|com/google/gwt/user/client/impl/*|com/google/gwt/user/client/ui/PopupPanel.java|registry.properties" kind="src" path="framework/gwt/src"/>
 	<classpathentry excluding="registry.properties" kind="src" path="framework/servlet/src"/>
 	<classpathentry kind="src" path="extras/cluster/tasks-src"/>
 	<classpathentry kind="src" output="extras/dev/bin" path="extras/dev/src"/>
