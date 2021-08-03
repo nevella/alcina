@@ -60,7 +60,7 @@ public class StringMap extends LinkedHashMap<String, String> {
 			if (idx != -1 && !line.startsWith("#")) {
 				int end = line.length();
 				int idx1 = idx + 1;
-				if (unQuote && line.charAt(idx1) == '\"'
+				if (unQuote && idx1 < line.length() && line.charAt(idx1) == '\"'
 						&& line.charAt(end - 1) == '\"') {
 					idx1++;
 					end--;
