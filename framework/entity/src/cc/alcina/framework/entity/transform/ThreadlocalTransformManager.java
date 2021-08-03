@@ -30,6 +30,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.OneToMany;
@@ -1139,10 +1140,9 @@ public class ThreadlocalTransformManager extends TransformManager
 		Set<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN);
 		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()) {
-			System.out.println(
-					"**WARNING ** TLTM - cleared (but still pending) transforms:\n "
-							+ pendingTransforms);
-			Thread.dumpStack();
+			Ax.out("**WARNING ** TLTM - cleared (but still pending) transforms [%s]:\n %s",
+					pendingTransforms.size(), pendingTransforms.stream()
+							.limit(1000).collect(Collectors.toList()));
 			try {
 				AlcinaTopics
 						.notifyDevWarning(new UncomittedTransformsException());
