@@ -451,7 +451,7 @@ public class Registry {
 			exactMap.put(registryPoint, targetClassKey, cachedKey);
 		}
 		if (cachedKey == keys.emptyLookupKey() && errorOnNull) {
-			throw new RegistryException(
+			throw new RegistryException(this,
 					Ax.format("singleton/factory not registered - %s:%s",
 							CommonUtils.classSimpleName(registryPoint),
 							CommonUtils.classSimpleName(targetClass)));
@@ -495,7 +495,7 @@ public class Registry {
 		if (implementationType == ImplementationType.MULTIPLE
 				&& targetClassKey == keys.undefinedTargetKey()
 				&& infoPriority != RegistryLocation.DEFAULT_PRIORITY) {
-			throw new RegistryException(Ax.format(
+			throw new RegistryException(this, Ax.format(
 					"Non-default priority " + "with Multiple impl type -"
 							+ " probably should be instance - %s",
 					registeringClassKey.name()));
@@ -765,7 +765,7 @@ public class Registry {
 				"Registry: no resolved implementation type for %s :: %s",
 				registryPointKey.simpleName(), targetClassKey.simpleName());
 		System.out.println(message);
-		throw new RegistryException(message);
+		throw new RegistryException(this, message);
 	}
 
 	protected <T> T singleton0(Class<T> clazz,
