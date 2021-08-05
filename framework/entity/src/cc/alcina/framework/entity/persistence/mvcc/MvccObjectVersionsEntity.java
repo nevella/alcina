@@ -44,14 +44,7 @@ public class MvccObjectVersionsEntity<T extends Entity>
 		}
 		return hash;
 	}
-	 protected void debugNotResolved(){
-		 FormatBuilder fb = new FormatBuilder();
-		 fb.line("visibleAllTransactions: %s", EntityLocator.instanceLocator(visibleAllTransactions));
-		 fb.line("domainIdentity: %s", EntityLocator.instanceLocator(domainIdentity));
-		 
-		 logger.warn(fb.toString());
-		 super.debugNotResolved();
-	 }
+
 	@Override
 	public String toString() {
 		try {
@@ -94,6 +87,26 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	@Override
 	protected void copyObject(T fromObject, T baseObject) {
 		Transactions.copyObjectFields(fromObject, baseObject);
+	}
+
+	@Override
+	protected void debugNotResolved() {
+		FormatBuilder fb = new FormatBuilder();
+		fb.line("visibleAllTransactions: %s",
+				EntityLocator.instanceLocator(visibleAllTransactions));
+		fb.line("domainIdentity: %s",
+				EntityLocator.instanceLocator(domainIdentity));
+		logger.warn(fb.toString());
+		super.debugNotResolved();
+	}
+
+	@Override
+	protected void onResolveNull(boolean write) {
+		if (resolveNullCount < 10) {
+			logger.warn("onResolveNull - {}/{}", domainIdentity.getId(),
+					domainIdentity.getClass().getSimpleName());
+		}
+		super.onResolveNull(write);
 	}
 
 	@Override

@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
-import cc.alcina.framework.entity.projection.GraphProjection;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 
 /**
@@ -48,7 +47,7 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 public abstract class MvccObjectVersions<T> implements Vacuumable {
 	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
 
-	private static int resolveNullCount = 0;
+	protected static int resolveNullCount = 0;
 
 	// called in a synchronized block (synchronized on domainIdentity)
 	static <E extends Entity> MvccObjectVersions<E> ensureEntity(
@@ -234,15 +233,15 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		// try cached
 		if (write) {
 			if (cachedResolution != null
-					&& cachedResolution.mostRecentWritableTransactionId == transaction
+					&& cachedResolution.writableTransactionId == transaction
 							.getId()) {
-				return cachedResolution.__mostRecentWritable;
+				return cachedResolution.writeable;
 			}
 		} else {
 			if (cachedResolution != null
-					&& cachedResolution.mostRecentReffedTransactionId == transaction
+					&& cachedResolution.readTransactionId == transaction
 							.getId()) {
-				return cachedResolution.__mostRecentReffed;
+				return cachedResolution.read;
 			}
 		}
 		/*
@@ -346,7 +345,15 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	protected void onResolveNull(boolean write) {
 		if (!mayBeReachableFromPreCreationTransactions()) {
 			if (resolveNullCount++ < 10) {
-				logger.warn("onResolveNull - {}", domainIdentity);
+				logger.warn(
+						"onResolveNull: \nVersions: {}\nCurrent tx-id: {} - highest visible id: {}\n"
+								+ "Visible all tx?: {}\nFirst committed tx-id: {}\nInitial writeable tx: {}\nCached resolution: {}",
+						versions.keySet(), Transaction.current(),
+						Transaction
+								.current().highestVisibleCommittedTransactionId,
+						visibleAllTransactions != null,
+						firstCommittedTransactionId,
+						initialWriteableTransaction, cachedResolution);
 				logger.warn("onResolveNull", new Exception());
 			}
 		}
@@ -380,12 +387,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	protected void updateCached(Transaction transaction, T resolved,
 			boolean write) {
 		CachedResolution cachedResolution = new CachedResolution();
-		cachedResolution.mostRecentReffedTransactionId = transaction.getId();
-		cachedResolution.__mostRecentReffed = resolved;
+		cachedResolution.readTransactionId = transaction.getId();
+		cachedResolution.read = resolved;
 		if (write) {
-			cachedResolution.mostRecentWritableTransactionId = transaction
-					.getId();
-			cachedResolution.__mostRecentWritable = resolved;
+			cachedResolution.writableTransactionId = transaction.getId();
+			cachedResolution.writeable = resolved;
 		}
 		this.cachedResolution = cachedResolution;
 	}
@@ -421,17 +427,20 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	class CachedResolution {
-		private T __mostRecentReffed;
+		private T read;
 
-		private T __mostRecentWritable;
+		private T writeable;
 
-		private TransactionId mostRecentReffedTransactionId;
+		private TransactionId readTransactionId;
 
-		private TransactionId mostRecentWritableTransactionId;
+		private TransactionId writableTransactionId;
 
 		@Override
 		public String toString() {
-			return GraphProjection.fieldwiseToString(this);
+			return Ax.format(
+					"Read :: tx %s :: value :: %s - Write :: tx %s :: value :: %s",
+					readTransactionId, read != null, writableTransactionId,
+					writeable != null);
 		}
 	}
 
