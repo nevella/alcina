@@ -81,6 +81,11 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 
 		@Override
+		public List<Class> getInterfaces(Class clazz) {
+			return ObjectPersistenceHelper.get().getInterfaces(clazz);
+		}
+
+		@Override
 		public List<PropertyReflector>
 				getPropertyReflectors(Class<?> beanClass) {
 			return ObjectPersistenceHelper.get()

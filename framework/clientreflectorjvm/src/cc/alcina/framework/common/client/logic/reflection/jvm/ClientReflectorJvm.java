@@ -332,6 +332,11 @@ public class ClientReflectorJvm extends ClientReflector {
 	}
 
 	@Override
+	public List<Class> getInterfaces(Class clazz) {
+		return Arrays.asList(clazz.getInterfaces());
+	}
+
+	@Override
 	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
 		return classPropertyReflectorLookup.get(beanClass);
 	}

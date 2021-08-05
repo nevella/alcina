@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.persistence.domain;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.List;
 
 import cc.alcina.framework.common.client.domain.Domain;
@@ -85,6 +86,11 @@ public class PermissionsTestingTransformManager
 		@Override
 		public Class getClassForName(String fqn) {
 			return this.delegate.getClassForName(fqn);
+		}
+
+		@Override
+		public List<Class> getInterfaces(Class clazz) {
+			return Arrays.asList(clazz.getInterfaces());
 		}
 
 		@Override

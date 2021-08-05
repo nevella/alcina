@@ -33,7 +33,7 @@ public class Reflections {
 	}
 
 	public static boolean isEffectivelyFinal(Class clazz) {
-		return CommonUtils.stdAndPrimitivesMap.containsKey(clazz)
+		return CommonUtils.stdAndPrimitivesMap.containsKey(clazz.getName())
 				|| CommonUtils.isEnumOrEnumSubclass(clazz);
 	}
 

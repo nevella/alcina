@@ -41,6 +41,11 @@ public class InstantiateOnlyClassLookup implements ClassLookup {
 	}
 
 	@Override
+	public List<Class> getInterfaces(Class clazz) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
 		throw new UnsupportedOperationException();
 	}

@@ -416,6 +416,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		return entityManager;
 	}
 
+	@Override
+	public List<Class> getInterfaces(Class clazz) {
+		return ObjectPersistenceHelper.get().getInterfaces(clazz);
+	}
+
 	public Map<Long, Entity> getLocalIdToEntityMap() {
 		return this.localIdToEntityMap;
 	}

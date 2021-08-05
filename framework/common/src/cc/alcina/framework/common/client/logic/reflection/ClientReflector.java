@@ -87,6 +87,8 @@ public abstract class ClientReflector implements ClassLookup {
 
 	private MultikeyMap<Boolean> assignableFrom = new UnsortedMultikeyMap<>(2);
 
+	private Map<Class, List<Class>> perClassInterfaces;
+
 	CachingMap<Class<?>, List<PropertyReflector>> propertyReflectorsCache = new CachingMap<>(
 			beanClass -> ClientReflector.get().beanInfoForClass(beanClass)
 					.getPropertyReflectors().values().stream()
@@ -95,6 +97,7 @@ public abstract class ClientReflector implements ClassLookup {
 	public ClientReflector() {
 		gwbiMap = createClassKeyMap();
 		templateInstances = createClassKeyMap();
+		perClassInterfaces = createClassKeyMap();
 		forNameMap = createStringKeyMap();
 		clazzImplements = createStringKeyMap();
 		{
@@ -152,6 +155,15 @@ public abstract class ClientReflector implements ClassLookup {
 		throw new WrappedRuntimeException(
 				Ax.format("Class %s not reflect-instantiable", fqn),
 				SuggestedAction.NOTIFY_ERROR);
+	}
+
+	@Override
+	public List<Class> getInterfaces(Class clazz) {
+		return perClassInterfaces.computeIfAbsent(clazz, k -> {
+			List<String> list = clazzImplements.get(k.getName());
+			return list.stream().map(Reflections::forName)
+					.collect(Collectors.toList());
+		});
 	}
 
 	@Override

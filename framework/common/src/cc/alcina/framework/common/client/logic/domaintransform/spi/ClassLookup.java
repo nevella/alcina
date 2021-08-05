@@ -39,6 +39,8 @@ public interface ClassLookup {
 
 	public Class getClassForName(String fqn);
 
+	public List<Class> getInterfaces(Class clazz);
+
 	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass);
 
 	public Class getPropertyType(Class clazz, String propertyName);

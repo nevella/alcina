@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.transform;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -139,6 +140,11 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			cache.put(object.getClass(), result);
 		}
 		return result;
+	}
+
+	@Override
+	public List<Class> getInterfaces(Class clazz) {
+		return Arrays.asList(clazz.getInterfaces());
 	}
 
 	@Override

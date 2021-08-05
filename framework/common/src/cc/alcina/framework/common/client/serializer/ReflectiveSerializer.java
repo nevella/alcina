@@ -7,9 +7,11 @@ import java.util.Comparator;
 import java.util.Deque;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -23,11 +25,16 @@ import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.LooseContext;
 import elemental.json.Json;
 import elemental.json.JsonArray;
+import elemental.json.JsonBoolean;
+import elemental.json.JsonNull;
+import elemental.json.JsonNumber;
 import elemental.json.JsonObject;
+import elemental.json.JsonString;
 import elemental.json.JsonValue;
 
 /**
@@ -113,7 +120,7 @@ public class ReflectiveSerializer {
 			State state = new State();
 			state.deserializerOptions = options;
 			// create json doc
-			Node node = new Node(null, null, null);
+			GraphNode node = new GraphNode(null, null, null);
 			new ReflectiveSerializer(state).deserialize(node);
 			return node.value;
 		} finally {
@@ -130,20 +137,54 @@ public class ReflectiveSerializer {
 		if (object == null) {
 			return null;
 		}
+		JsonSerialNode.ensureValueSerializers();
 		State state = new State();
 		state.serializerOptions = options;
-		Node node = new Node(null, null, object);
-		node.documentPosition = JsonDocumentPosition.empty();
-		node.documentPosition.writeTypeName(object.getClass());
+		GraphNode node = new GraphNode(null, null, object);
+		node.serialNode = JsonSerialNode.empty();
+		node.serialNode.writeTypeName(object);
 		node.writeValue();
 		state.pending.add(node);
 		ReflectiveSerializer serializer = new ReflectiveSerializer(state);
 		serializer.serialize0();
-		return node.documentPosition.toJson();
+		return node.serialNode.toJson();
 	}
 
-	static TypeSerializer resolve(Class clazz) {
-		return null;
+	static TypeSerializer resolveSerializer(Class clazz) {
+		if (typeSerializers.isEmpty()) {
+			synchronized (typeSerializers) {
+				if (typeSerializers.isEmpty()) {
+					Registry.impls(TypeSerializer.class)
+							.forEach(typeSerializer -> typeSerializer
+									.handlesTypes()
+									.forEach(handled -> typeSerializers
+											.put(handled, typeSerializer)));
+				}
+			}
+		}
+		return typeSerializers.computeIfAbsent(clazz, k -> {
+			List<Class> toResolve = Arrays.asList(clazz);
+			while (toResolve.size() > 0) {
+				Optional<Class> match = toResolve.stream()
+						.filter(typeSerializers::containsKey).findFirst();
+				if (match.isPresent()) {
+					return typeSerializers.get(match.get());
+				}
+				List<Class> next = new ArrayList<>();
+				toResolve.forEach(c2 -> {
+					// implemented interfaces and superclass are at the same
+					// level, so to speak
+					if (c2.getSuperclass() != null) {
+						next.add(c2.getSuperclass());
+					}
+					Reflections.classLookup().getInterfaces(c2)
+							.forEach(next::add);
+				});
+				toResolve = next;
+			}
+			throw new IllegalArgumentException(
+					Ax.format("No serializer for type %s", clazz));
+		});
 	}
 
 	State state;
@@ -152,7 +193,7 @@ public class ReflectiveSerializer {
 		this.state = state;
 	}
 
-	private void deserialize(Node root) {
+	private void deserialize(GraphNode root) {
 	}
 
 	private List<Property> getProperties(Object value) {
@@ -186,11 +227,11 @@ public class ReflectiveSerializer {
 
 	private void serialize0() {
 		do {
-			Node node = state.pending.peek();
+			GraphNode node = state.pending.peek();
 			node.ensureValue();
-			Iterator<Node> itr = node.ensureIterator();
+			Iterator<GraphNode> itr = node.ensureIterator();
 			if (itr != null && itr.hasNext()) {
-				Node next = itr.next();
+				GraphNode next = itr.next();
 				state.pending.push(next);
 			} else {
 				state.pending.pop();
@@ -236,7 +277,8 @@ public class ReflectiveSerializer {
 
 		public abstract Class serializeAs(Class incoming);
 
-		protected abstract void writeValueOrContainer(Node node, Object object);
+		public abstract void writeValueOrContainer(GraphNode node,
+				SerialNode serialNode);
 	}
 
 	public static class TypeSerializer_Collection extends TypeSerializer {
@@ -251,8 +293,9 @@ public class ReflectiveSerializer {
 		}
 
 		@Override
-		protected void writeValueOrContainer(Node node, Object object) {
-			// TODO Auto-generated method stub
+		public void writeValueOrContainer(GraphNode node,
+				SerialNode serialNode) {
+			serialNode.write(null, serialNode.createArrayContainer());
 		}
 	}
 
@@ -268,24 +311,76 @@ public class ReflectiveSerializer {
 		}
 	}
 
-	interface DocumentPosition {
-		boolean canWriteTypeName();
+	static class GraphNode {
+		public Object value;
 
-		String toJson();
+		private PropertyReflector propertyReflector;
 
-		DocumentPosition writeClassValueContainer(String name);
+		SerialNode serialNode;
 
-		void writeTypeName(Object value);
-	}
+		private GraphNode parent;
 
-	static class JsonDocumentPosition implements DocumentPosition {
-		public static DocumentPosition empty() {
-			JsonDocumentPosition position = new JsonDocumentPosition();
-			position.jsonValue = Json.createArray();
-			return position;
+		private Iterator<GraphNode> iterator;
+
+		private TypeSerializer serializer;
+
+		private String name;
+
+		GraphNode(GraphNode parent, String name, Object value) {
+			this.parent = parent;
+			this.name = name;
+			this.value = value;
+			serializer = resolveSerializer(value.getClass());
 		}
 
-		public static DocumentPosition parse(String value) {
+		private boolean hasFinalClass() {
+			// TODO - 2022 - || Reflections.isFinal()
+			return value == null
+					|| Reflections.isEffectivelyFinal(value.getClass());
+		}
+
+		Iterator<GraphNode> ensureIterator() {
+			return null;
+		}
+
+		void ensureValue() {
+			if (serialNode == null) {
+				if (!hasFinalClass()) {
+					serialNode = parent.serialNode
+							.writeClassValueContainer(name);
+					serialNode.writeTypeName(value);
+				}
+				writeValue();
+			}
+		}
+
+		void writeValue() {
+			serializer.writeValueOrContainer(this,
+					serialNode != null ? serialNode : parent.serialNode);
+		}
+	}
+
+	static class JsonSerialNode implements SerialNode {
+		private static Map<Class, ValueSerializer> valueSerializers;
+
+		public static SerialNode empty() {
+			JsonSerialNode serialNode = new JsonSerialNode();
+			serialNode.jsonValue = Json.createArray();
+			return serialNode;
+		}
+
+		public static void ensureValueSerializers() {
+			if (valueSerializers == null) {
+				// don't bother with synchronization
+				Map<Class, ValueSerializer> valueSerializers = new LinkedHashMap<>();
+				valueSerializers.put(String.class, new ValueSerializerString());
+				valueSerializers.put(Boolean.class,
+						new ValueSerializerBoolean());
+				JsonSerialNode.valueSerializers = valueSerializers;
+			}
+		}
+
+		public static SerialNode parse(String value) {
 			throw new UnsupportedOperationException();
 		}
 
@@ -297,22 +392,34 @@ public class ReflectiveSerializer {
 		}
 
 		@Override
+		public SerialNode createArrayContainer() {
+			JsonSerialNode serialNode = new JsonSerialNode();
+			serialNode.jsonValue = Json.createArray();
+			return serialNode;
+		}
+
+		@Override
 		public String toJson() {
 			return jsonValue.toJson();
 		}
 
 		@Override
-		public DocumentPosition writeClassValueContainer(String name) {
-			JsonDocumentPosition position = new JsonDocumentPosition();
-			position.jsonValue = Json.createArray();
-			if (name != null) {
+		public void write(String name, Object value) {
+			JsonValue writeValue = toJsonValue(value);
+			if (name == null) {
 				JsonArray array = (JsonArray) jsonValue;
-				array.set(array.length(), position.jsonValue);
+				array.set(array.length(), writeValue);
 			} else {
 				JsonObject object = (JsonObject) jsonValue;
-				object.put(name, position.jsonValue);
+				object.put(name, writeValue);
 			}
-			return position;
+		}
+
+		@Override
+		public SerialNode writeClassValueContainer(String name) {
+			SerialNode serialNode = createArrayContainer();
+			write(name, serialNode);
+			return serialNode;
 		}
 
 		@Override
@@ -320,56 +427,95 @@ public class ReflectiveSerializer {
 			Preconditions.checkState(jsonValue instanceof JsonArray);
 			((JsonArray) jsonValue).set(0, value.getClass().getName());
 		}
-	}
 
-	static class Node {
-		public Object value;
-
-		private PropertyReflector propertyReflector;
-
-		DocumentPosition documentPosition;
-
-		private Node parent;
-
-		private Iterator<Node> iterator;
-
-		private TypeSerializer serializer;
-
-		private String name;
-
-		Node(Node parent, String name, Object value) {
-			this.parent = parent;
-			this.name = name;
-			this.value = value;
-			serializer = resolve(value.getClass());
-		}
-
-		private boolean hasFinalClass() {
-			// TODO - 2022 - Reflections.isFinal()
-			return value == null
-					|| Reflections.isEffectivelyFinal(value.getClass());
-		}
-
-		Iterator<Node> ensureIterator() {
-			return null;
-		}
-
-		void ensureValue() {
-			if (documentPosition == null) {
-				if (!hasFinalClass()) {
-					documentPosition = parent.documentPosition
-							.writeClassValueContainer(name);
-					documentPosition.writeTypeName(value);
-				}
-				writeValue();
+		private JsonValue toJsonValue(Object value) {
+			if (value == null) {
+				return Json.createNull();
+			}
+			if (value instanceof JsonSerialNode) {
+				return ((JsonSerialNode) value).jsonValue;
+			}
+			Class<? extends Object> type = value.getClass();
+			ValueSerializer valueSerializer = valueSerializers.get(type);
+			if (valueSerializer == null) {
+				throw Ax.runtimeException("No value serializer for type %s",
+						type);
+			} else {
+				return valueSerializer.toJson(value);
 			}
 		}
 
-		void writeValue() {
-			serializer.writeValueOrContainer(this,
-					documentPosition != null ? documentPosition
-							: parent.documentPosition);
+		private static class ValueSerializerBoolean
+				extends ValueSerializer<Boolean> {
+			@Override
+			public JsonValue toJson(Boolean object) {
+				return Json.create(object);
+			}
+
+			@Override
+			protected Boolean fromJsonBoolean(JsonBoolean value) {
+				return value.asBoolean();
+			}
 		}
+
+		private static class ValueSerializerString
+				extends ValueSerializer<String> {
+			@Override
+			public JsonValue toJson(String object) {
+				return Json.create(object);
+			}
+
+			@Override
+			protected String fromJsonString(JsonString value) {
+				return value.asString();
+			}
+		}
+
+		static abstract class ValueSerializer<T> {
+			protected T fromJson(JsonValue value) {
+				if (value instanceof JsonNull) {
+					return null;
+				}
+				if (value instanceof JsonBoolean) {
+					return fromJsonBoolean((JsonBoolean) value);
+				}
+				if (value instanceof JsonNumber) {
+					return fromJsonNumber((JsonNumber) value);
+				}
+				if (value instanceof JsonString) {
+					return fromJsonString((JsonString) value);
+				}
+				throw new UnsupportedOperationException();
+			}
+
+			protected T fromJsonBoolean(JsonBoolean value) {
+				throw new UnsupportedOperationException();
+			}
+
+			protected T fromJsonNumber(JsonNumber value) {
+				throw new UnsupportedOperationException();
+			}
+
+			protected T fromJsonString(JsonString value) {
+				throw new UnsupportedOperationException();
+			}
+
+			protected abstract JsonValue toJson(T object);
+		}
+	}
+
+	interface SerialNode {
+		boolean canWriteTypeName();
+
+		SerialNode createArrayContainer();
+
+		String toJson();
+
+		void write(String name, Object value);
+
+		SerialNode writeClassValueContainer(String name);
+
+		void writeTypeName(Object value);
 	}
 
 	static class State {
@@ -381,6 +527,6 @@ public class ReflectiveSerializer {
 
 		public DeserializerOptions deserializerOptions;
 
-		Deque<Node> pending = new LinkedList<>();
+		Deque<GraphNode> pending = new LinkedList<>();
 	}
 }
