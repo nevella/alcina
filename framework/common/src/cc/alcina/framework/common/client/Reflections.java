@@ -5,6 +5,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
@@ -29,6 +30,11 @@ public class Reflections {
 
 	public static boolean isAssignableFrom(Class from, Class to) {
 		return get().classLookup.isAssignableFrom(from, to);
+	}
+
+	public static boolean isEffectivelyFinal(Class clazz) {
+		return CommonUtils.stdAndPrimitivesMap.containsKey(clazz)
+				|| CommonUtils.isEnumOrEnumSubclass(clazz);
 	}
 
 	public static <T> T newInstance(Class<T> clazz) {
