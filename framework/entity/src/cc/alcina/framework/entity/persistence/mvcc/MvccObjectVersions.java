@@ -47,7 +47,7 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 public abstract class MvccObjectVersions<T> implements Vacuumable {
 	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
 
-	protected static int resolveNullCount = 0;
+	protected static int notifyResolveNullCount = 100000;
 
 	// called in a synchronized block (synchronized on domainIdentity)
 	static <E extends Entity> MvccObjectVersions<E> ensureEntity(
@@ -344,7 +344,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected void onResolveNull(boolean write) {
 		if (!mayBeReachableFromPreCreationTransactions()) {
-			if (resolveNullCount++ < 10) {
+			if (notifyResolveNullCount-- >= 0) {
 				logger.warn(
 						"onResolveNull: \nVersions: {}\nCurrent tx-id: {} - highest visible id: {}\n"
 								+ "Visible all tx?: {}\nFirst committed tx-id: {}\nInitial writeable tx: {}\nCached resolution: {}",

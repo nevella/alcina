@@ -102,7 +102,7 @@ public class MvccObjectVersionsEntity<T extends Entity>
 
 	@Override
 	protected void onResolveNull(boolean write) {
-		if (resolveNullCount < 10) {
+		if (notifyResolveNullCount > 0) {
 			logger.warn("onResolveNull - {}/{}", domainIdentity.getId(),
 					domainIdentity.getClass().getSimpleName());
 		}
