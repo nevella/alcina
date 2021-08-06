@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -118,9 +119,12 @@ public class BackendTransformQueue {
 				"(Backend queue)  - committing {} transforms - locators: {}",
 				pendingTransforms.size(), locators);
 		Transaction.endAndBeginNew();
-		ThreadlocalTransformManager.get().addTransforms(pendingTransforms,
-				false);
+		TransformCollation transformCollation = new TransformCollation(
+				pendingTransforms);
 		pendingTransforms.clear();
+		transformCollation.filterNonpersistentPropertyTransforms();
+		ThreadlocalTransformManager.get()
+				.addTransforms(transformCollation.getAllEvents(), false);
 		queueFirstEvent.clear();
 		try {
 			LooseContext.pushWithTrue(

@@ -163,7 +163,7 @@ public class JobContext {
 
 	public static void setCompletion(double completion) {
 		if (has()) {
-			get().getJob().setCompletion(completion);
+			get().maybeEnqueue(() -> get().getJob().setCompletion(completion));
 		} else {
 			LoggerFactory.getLogger(JobContext.class)
 					.info("(no-job) job completion => {}", completion);
@@ -180,7 +180,8 @@ public class JobContext {
 
 	public static void setStatusMessage(String template, Object... args) {
 		if (has()) {
-			get().getJob().setStatusMessage(Ax.format(template, args));
+			get().maybeEnqueue(() -> get().getJob()
+					.setStatusMessage(Ax.format(template, args)));
 		} else {
 			LoggerFactory.getLogger(JobContext.class).info(
 					"(no-job) status message: {}", Ax.format(template, args));
@@ -199,6 +200,8 @@ public class JobContext {
 			get().getLogger().warn(template, args);
 		}
 	}
+
+	private boolean enqueueProgressOnBackend;
 
 	private TaskPerformer performer;
 
@@ -258,6 +261,10 @@ public class JobContext {
 		itemCount += delta;
 	}
 
+	public boolean isEnqueueProgressOnBackend() {
+		return this.enqueueProgressOnBackend;
+	}
+
 	public void jobOk(String resultMessage) {
 		job.setResultMessage(resultMessage);
 		job.setStatusMessage(resultMessage);
@@ -282,6 +289,10 @@ public class JobContext {
 
 	public void remove() {
 		LooseContext.remove(CONTEXT_CURRENT);
+	}
+
+	public void setEnqueueProgressOnBackend(boolean enqueueProgressOnBackend) {
+		this.enqueueProgressOnBackend = enqueueProgressOnBackend;
 	}
 
 	public void setItemCount(int itemCount) {
@@ -356,6 +367,14 @@ public class JobContext {
 			Thread.currentThread().setName(threadStartName);
 		}
 		endedLatch.countDown();
+	}
+
+	private void maybeEnqueue(Runnable runnable) {
+		if (isEnqueueProgressOnBackend()) {
+			TransformCommit.get().enqueueBackendTransform(runnable);
+		} else {
+			runnable.run();
+		}
 	}
 
 	protected void persistMetadata() {
