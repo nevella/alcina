@@ -447,10 +447,6 @@ public class DirectedLayout {
 						if (propertyLocation.hasAnnotation(Directed.class)) {
 							Object childModel = propertyReflector
 									.getPropertyValue(model);
-							if (propertyReflector.getPropertyName()
-									.equals("primaryJudge")) {
-								int debug = 3;
-							}
 							if (childModel == null && propertyLocation
 									.hasAnnotation(ImmutableModel.class)) {
 								/*

@@ -33,6 +33,12 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.servlet.domain.view.DomainViews.Key;
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
 
+/**
+ * FIXME - dirndl 1.2 - there's confusion between 'node' and 'model' here -
+ * partly driven by the separation of 'node' and 'path' (which really, really
+ * helps). But NodeModel -> TreeNode...the model *is* the logical node for all
+ * intents n purps
+ */
 public class LiveTree {
 	private DomainTransformCommitPosition earliestPosition;
 
@@ -221,8 +227,9 @@ public class LiveTree {
 			liveNode.onChange(context);
 			context.ensureInTransactionResult(liveNode);
 		} while (pathChanged.size() > 0);
-		// Phase 3 - bottom up generate dirty path nodes. These can optionally
-		// mark parents as dirty
+		// Phase 3 - bottom up (re)-generate dirty path content models. Parent
+		// content models
+		// will be regenerated and added to the transform list if changed
 		while (context.depthChanged.size() > 0) {
 			Entry<Integer, Set<TreePath<LiveNode>>> lastEntry = context.depthChanged
 					.lastEntry();
@@ -230,6 +237,7 @@ public class LiveTree {
 			Set<TreePath<LiveNode>> lastPaths = lastEntry.getValue();
 			for (TreePath<LiveNode> path : lastPaths) {
 				LiveNode liveNode = path.getValue();
+				context.collateChildren = liveNode;
 				liveNode.generateNode(context);
 				context.ensureInTransactionResult(liveNode);
 			}
@@ -343,6 +351,8 @@ public class LiveTree {
 		public TreeMap<Integer, Set<TreePath<LiveNode>>> depthChanged = new TreeMap<>();
 
 		boolean treeCreation = false;
+
+		public LiveNode collateChildren;
 
 		public GeneratorContext() {
 		}
