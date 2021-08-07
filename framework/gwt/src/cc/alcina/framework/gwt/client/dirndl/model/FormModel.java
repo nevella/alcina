@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.actions.instances.NonstandardObjectActi
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -132,6 +133,15 @@ public class FormModel extends Model {
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
 			Place currentPlace = Client.currentPlace();
+			/*
+			 * FIXME - adjunct
+			 */
+			FormModel formModel = (FormModel) node
+					.ancestorModel(m -> m instanceof FormModel);
+			TransformManager.get()
+					.removeTransformsFor(formModel.getState().model);
+			TransformManager.get()
+					.deregisterProvisionalObject(formModel.getState().model);
 			if (currentPlace instanceof EntityPlace) {
 				EntityPlace entityPlace = ((EntityPlace) currentPlace).copy();
 				entityPlace.action = EntityAction.VIEW;
