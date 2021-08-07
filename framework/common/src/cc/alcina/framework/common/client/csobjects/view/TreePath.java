@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -62,6 +63,10 @@ public class TreePath<T> extends Model {
 
 	private String segment = "";
 
+	private transient int selfAndDescendantCount = 1;
+
+	private transient boolean onlyLeafChildren;
+
 	// Should only be used by serialization
 	public TreePath() {
 	}
@@ -78,6 +83,7 @@ public class TreePath<T> extends Model {
 		child.setSegment(asSegment);
 		child.segmentComparable = paths.segmentComparable;
 		addChildPath(index, child);
+		recalculateCount();
 		return child;
 	}
 
@@ -138,6 +144,10 @@ public class TreePath<T> extends Model {
 
 	public String getSegment() {
 		return this.segment;
+	}
+
+	public int getSelfAndDescendantCount() {
+		return this.selfAndDescendantCount;
 	}
 
 	@AlcinaTransient
@@ -202,10 +212,6 @@ public class TreePath<T> extends Model {
 		return successor == null ? null : successor.toString();
 	}
 
-	public int provideTotalNodeCount() {
-		return paths.byString.size();
-	}
-
 	public void putSortedChildren() {
 		paths.childListCreator = () -> new SortedChildren();
 	}
@@ -217,6 +223,7 @@ public class TreePath<T> extends Model {
 	public void removeFromParent() {
 		paths.remove(toString());
 		parent.children.remove(this);
+		parent.recalculateCount();
 		parent = null;
 	}
 
@@ -234,6 +241,10 @@ public class TreePath<T> extends Model {
 
 	public void setSegment(String segment) {
 		this.segment = segment;
+	}
+
+	public void setSelfAndDescendantCount(int selfAndDescendantCount) {
+		this.selfAndDescendantCount = selfAndDescendantCount;
 	}
 
 	public void setValue(T value) {
@@ -297,6 +308,21 @@ public class TreePath<T> extends Model {
 
 	private long segmentAsLong() {
 		return Long.parseLong(getSegment());
+	}
+
+	protected void recalculateCount() {
+		/*
+		 * inefficient (generally at worst n logn, unless we have a non-leaf
+		 * layer with high cardinality)) - but saves a lot of gallumphing with
+		 * phases
+		 */
+		selfAndDescendantCount = 1 + (onlyLeafChildren ? getChildren().size()
+				: getChildren().stream().collect(Collectors
+						.summingInt(TreePath::getSelfAndDescendantCount)));
+		if (parent != null) {
+			parent.onlyLeafChildren = false;
+			parent.recalculateCount();
+		}
 	}
 
 	@ClientInstantiable

@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
-@Target(ElementType.TYPE)
+@Target({ ElementType.TYPE, ElementType.METHOD })
 @ClientVisible
 public @interface ImmutableModel {
 	public static class Impl implements ImmutableModel {

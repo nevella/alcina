@@ -27,6 +27,8 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 
 	private DomainViewNodeContentModel.Response lastResponse;
 
+	private int selfAndDescendantCount = -1;
+
 	public DomainViewNodeModel.Generator getGenerator() {
 		return this.generator;
 	}
@@ -86,9 +88,11 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 				openToPath(null);
 			}
 		}
-		// if we're not displaying all nodes, show the paginator
-		if (response.getTotalNodeCount() > root.getTreePath()
-				.provideTotalNodeCount() && isDepthFirst()) {
+		if (request.getWaitPolicy() == WaitPolicy.RETURN_NODES) {
+			selfAndDescendantCount = response.getSelfAndDescendantCount();
+		}
+		if (isDepthFirst() && selfAndDescendantCount > root.getTreePath()
+				.getSelfAndDescendantCount()) {
 			Paginator paginator = new Paginator();
 			paginator.setText("Loading ...");
 			setPaginator(paginator);

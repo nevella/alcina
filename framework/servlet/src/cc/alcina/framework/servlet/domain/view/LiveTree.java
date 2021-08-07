@@ -23,9 +23,11 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentMod
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -111,7 +113,8 @@ public class LiveTree {
 		response.getTransforms().addAll(requestToTransform(request, response));
 		response.setRequest(request);
 		response.setPosition(currentPosition);
-		response.setTotalNodeCount(root.provideTotalNodeCount());
+		response.setSelfAndDescendantCount(root
+				.ensurePath(request.getTreePath()).getSelfAndDescendantCount());
 		return response;
 	}
 
@@ -475,9 +478,16 @@ public class LiveTree {
 
 		DomainViewNodeContentModel<?> viewNode;
 
+		private List<ExceptionChild> exceptionChildren = new ArrayList<>();
+
 		boolean dirty;
 
 		public LiveNode() {
+		}
+
+		public void addExceptionChild(Object data, Exception e) {
+			ExceptionChild exceptionChild = new ExceptionChild(data, e);
+			exceptionChildren.add(exceptionChild);
 		}
 
 		@Override
@@ -497,6 +507,10 @@ public class LiveTree {
 			return path.ensureChild(discriminator, segmentComparable);
 		}
 
+		public List<ExceptionChild> getExceptionChildren() {
+			return this.exceptionChildren;
+		}
+
 		public <P extends NodeGenerator> P getGenerator() {
 			return (P) generator;
 		}
@@ -511,6 +525,11 @@ public class LiveTree {
 
 		public DomainViewNodeContentModel<?> getViewNode() {
 			return this.viewNode;
+		}
+
+		public void
+				setExceptionChildren(List<ExceptionChild> exceptionChildren) {
+			this.exceptionChildren = exceptionChildren;
 		}
 
 		@Override
@@ -616,6 +635,26 @@ public class LiveTree {
 
 		<T> T typedSegment() {
 			return (T) segment;
+		}
+
+		public class ExceptionChild {
+			private Object data;
+
+			private Exception e;
+
+			public ExceptionChild(Object data, Exception e) {
+				this.data = data;
+				this.e = e;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s :: %s :: %s", path.toString(),
+						(data instanceof Entity
+								? ((Entity) data).toStringEntity()
+								: data.toString()),
+						CommonUtils.toSimpleExceptionMessage(e));
+			}
 		}
 	}
 

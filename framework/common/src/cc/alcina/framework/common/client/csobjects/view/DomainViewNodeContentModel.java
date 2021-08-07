@@ -274,9 +274,9 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 
 		private boolean noChangeListener;
 
-		private int totalNodeCount;
-
 		private boolean delayBeforeReturn;
+
+		private int selfAndDescendantCount;
 
 		public Response() {
 		}
@@ -289,8 +289,8 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			return this.request;
 		}
 
-		public int getTotalNodeCount() {
-			return this.totalNodeCount;
+		public int getSelfAndDescendantCount() {
+			return this.selfAndDescendantCount;
 		}
 
 		public List<Transform> getTransforms() {
@@ -333,8 +333,8 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			this.request = request;
 		}
 
-		public void setTotalNodeCount(int totalNodeCount) {
-			this.totalNodeCount = totalNodeCount;
+		public void setSelfAndDescendantCount(int selfAndDescendantCount) {
+			this.selfAndDescendantCount = selfAndDescendantCount;
 		}
 
 		public void setTransforms(List<Transform> transforms) {
