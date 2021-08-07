@@ -172,8 +172,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 
 		private int waitId;
 
-		// FIXME - should be a treepath ("from offest exclusive")
-		private int offset;
+		private String fromOffsetExclusivePath;
 
 		private int count = 100;
 
@@ -185,8 +184,8 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			return this.count;
 		}
 
-		public int getOffset() {
-			return this.offset;
+		public String getFromOffsetExclusivePath() {
+			return this.fromOffsetExclusivePath;
 		}
 
 		public ReturnType getReturnType() {
@@ -225,8 +224,8 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			this.count = count;
 		}
 
-		public void setOffset(int offset) {
-			this.offset = offset;
+		public void setFromOffsetExclusivePath(String fromOffsetExclusivePath) {
+			this.fromOffsetExclusivePath = fromOffsetExclusivePath;
 		}
 
 		public void setReturnType(ReturnType returnType) {
@@ -271,17 +270,15 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 
 		private boolean clearExisting;
 
-		private int childCount;
-
 		private Request<?> request;
 
 		private boolean noChangeListener;
 
-		public Response() {
-		}
+		private int totalNodeCount;
 
-		public int getChildCount() {
-			return this.childCount;
+		private boolean delayBeforeReturn;
+
+		public Response() {
 		}
 
 		public DomainTransformCommitPosition getPosition() {
@@ -292,6 +289,10 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			return this.request;
 		}
 
+		public int getTotalNodeCount() {
+			return this.totalNodeCount;
+		}
+
 		public List<Transform> getTransforms() {
 			return this.transforms;
 		}
@@ -300,16 +301,23 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			return this.clearExisting;
 		}
 
+		/*
+		 * Server delays before returning
+		 */
+		public boolean isDelayBeforeReturn() {
+			return this.delayBeforeReturn;
+		}
+
 		public boolean isNoChangeListener() {
 			return this.noChangeListener;
 		}
 
-		public void setChildCount(int childCount) {
-			this.childCount = childCount;
-		}
-
 		public void setClearExisting(boolean clearExisting) {
 			this.clearExisting = clearExisting;
+		}
+
+		public void setDelayBeforeReturn(boolean delayBeforeReturn) {
+			this.delayBeforeReturn = delayBeforeReturn;
 		}
 
 		public void setNoChangeListener(boolean noChangeListener) {
@@ -325,13 +333,17 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			this.request = request;
 		}
 
+		public void setTotalNodeCount(int totalNodeCount) {
+			this.totalNodeCount = totalNodeCount;
+		}
+
 		public void setTransforms(List<Transform> transforms) {
 			this.transforms = transforms;
 		}
 	}
 
 	/*
-	 * For request return type specification
+	 * For request return type specification (currently unused)
 	 */
 	public interface ReturnType {
 	}

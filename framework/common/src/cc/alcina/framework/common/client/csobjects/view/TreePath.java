@@ -48,6 +48,10 @@ public class TreePath<T> extends Model {
 
 	private TreePath<T> parent;
 
+	/*
+	 * Note that children are unordered - it's the order of the children in the
+	 * corresponding NodeModel that matters
+	 */
 	private transient List<TreePath<T>> children;
 
 	private transient String cached;
@@ -155,6 +159,10 @@ public class TreePath<T> extends Model {
 		return children != null && children.size() > 0;
 	}
 
+	public boolean hasChildrenLoaded() {
+		return children != null;
+	}
+
 	@Override
 	public int hashCode() {
 		return toString().hashCode();
@@ -192,6 +200,10 @@ public class TreePath<T> extends Model {
 		SortedChildren<T> sortedChildren = (SortedChildren<T>) children;
 		TreePath<T> successor = sortedChildren.successor(this);
 		return successor == null ? null : successor.toString();
+	}
+
+	public int provideTotalNodeCount() {
+		return paths.byString.size();
 	}
 
 	public void putSortedChildren() {

@@ -95,9 +95,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	}
 
 	public void setModel(Object model) {
-		if (model instanceof NodeEvent) {
-			int debug = 3;
-		}
 		this.model = model;
 	}
 

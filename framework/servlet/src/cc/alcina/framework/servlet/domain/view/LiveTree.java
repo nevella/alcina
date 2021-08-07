@@ -9,6 +9,7 @@ import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.function.Predicate;
@@ -38,6 +39,7 @@ import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
  * partly driven by the separation of 'node' and 'path' (which really, really
  * helps). But NodeModel -> TreeNode...the model *is* the logical node for all
  * intents n purps
+ * 
  */
 public class LiveTree {
 	private DomainTransformCommitPosition earliestPosition;
@@ -106,9 +108,10 @@ public class LiveTree {
 		Response response = new Response();
 		response.setClearExisting(request.getSince() == null
 				|| request.getSince().compareTo(earliestPosition) < 0);
-		response.getTransforms().addAll(requestToTransform(request));
+		response.getTransforms().addAll(requestToTransform(request, response));
 		response.setRequest(request);
 		response.setPosition(currentPosition);
+		response.setTotalNodeCount(root.provideTotalNodeCount());
 		return response;
 	}
 
@@ -251,9 +254,19 @@ public class LiveTree {
 	}
 
 	private List<Transform> requestToTransform(
-			Request<? extends DomainViewSearchDefinition> request) {
+			Request<? extends DomainViewSearchDefinition> request,
+			Response response) {
 		switch (request.getWaitPolicy()) {
 		case RETURN_NODES:
+			if (request.getSince() != null
+					&& request.getSince().compareTo(currentPosition) < 0) {
+				/*
+				 * force a client retry - with a delay in case there's a change
+				 * storm
+				 */
+				response.setDelayBeforeReturn(true);
+				return new ArrayList<>();
+			}
 			return requestToTransforms_returnNodes(request);
 		case WAIT_FOR_DELTAS:
 			return requestToTransforms_returnDeltas(request);
@@ -273,8 +286,9 @@ public class LiveTree {
 			since.add(entry.getValue());
 		}
 		Collections.reverse(since);
-		return since.stream().flatMap(Collection::stream)
+		List<Transform> transforms = since.stream().flatMap(Collection::stream)
 				.collect(Collectors.toList());
+		return transforms;
 	}
 
 	private List<Transform> requestToTransforms_returnNodes(
@@ -304,20 +318,26 @@ public class LiveTree {
 			}
 				break;
 			case DEPTH_FIRST: {
-				int count = 0;
 				Deque<LiveNode> deque = new LinkedList<>();
 				deque.push(node);
-				count++;
-				while (deque.size() > 0) {
+				/*
+				 * A missing fromOffsetExclusivePath should never occur (since
+				 * we only handle pagination requests if the requestor's tx is
+				 * current)
+				 */
+				boolean seenStart = request
+						.getFromOffsetExclusivePath() == null;
+				while (deque.size() > 0 && result.size() < request.getCount()) {
 					LiveNode liveNode = deque.removeFirst();
-					count++;
-					if (count++ < request.getCount()) {
+					if (seenStart) {
 						Transform transform = new Transform();
 						transform.setTreePath(liveNode.path.toString());
 						transform.setNode(liveNode.viewNode);
 						transform.setOperation(Operation.INSERT);
 						result.add(transform);
 					}
+					seenStart |= Objects.equals(liveNode.path.toString(),
+							request.getFromOffsetExclusivePath());
 					Deque<LiveNode> toAddRev = new LinkedList<>();
 					for (TreePath<LiveNode> child : liveNode.getPath()
 							.getChildren()) {

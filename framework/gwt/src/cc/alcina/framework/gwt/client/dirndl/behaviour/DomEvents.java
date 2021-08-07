@@ -5,6 +5,7 @@ import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyUpEvent;
+import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
@@ -91,6 +92,27 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onKeyUp(KeyUp event);
+		}
+	}
+
+	public static class Scroll extends NodeEvent<Scroll.Handler> {
+		@Override
+		public void dispatch(Scroll.Handler handler) {
+			handler.onScroll(this);
+		}
+
+		@Override
+		public Class<Scroll.Handler> getHandlerClass() {
+			return Scroll.Handler.class;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::fireEvent, ScrollEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onScroll(Scroll event);
 		}
 	}
 

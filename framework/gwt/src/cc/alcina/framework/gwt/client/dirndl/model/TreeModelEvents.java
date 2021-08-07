@@ -37,4 +37,21 @@ public class TreeModelEvents {
 			void onNodeToggleButtonClicked(NodeToggleButtonClicked event);
 		}
 	}
+
+	public static class PaginatorVisible
+			extends TopicEvent<TreeModel.NodeModel, PaginatorVisible.Handler> {
+		@Override
+		public void dispatch(PaginatorVisible.Handler handler) {
+			handler.onPaginatorVisible(this);
+		}
+
+		@Override
+		public Class<PaginatorVisible.Handler> getHandlerClass() {
+			return PaginatorVisible.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onPaginatorVisible(PaginatorVisible event);
+		}
+	}
 }

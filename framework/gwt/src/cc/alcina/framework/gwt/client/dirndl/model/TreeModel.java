@@ -4,19 +4,12 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Transform;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.WaitPolicy;
-import cc.alcina.framework.common.client.csobjects.view.TreePath;
-import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.IntersectionObserved;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
@@ -25,23 +18,32 @@ import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererArgs;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.DomainViewNodeModel.Generator;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModelEvents.NodeLabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeModelEvents.NodeToggleButtonClicked;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeModelEvents.PaginatorVisible;
 
 @Directed(tag = "div", cssClass = "dl-tree", bindings = {
 		@Binding(from = "hideRoot", type = Type.CSS_CLASS) }, receives = {
 				TreeModelEvents.NodeLabelClicked.class,
-				TreeModelEvents.NodeToggleButtonClicked.class }, emits = SelectionChanged.class)
+				TreeModelEvents.NodeToggleButtonClicked.class,
+				TreeModelEvents.PaginatorVisible.class }, emits = SelectionChanged.class)
 public class TreeModel<NM extends NodeModel<NM>> extends Model
-		implements NodeLabelClicked.Handler, NodeToggleButtonClicked.Handler {
+		implements NodeLabelClicked.Handler, NodeToggleButtonClicked.Handler,
+		PaginatorVisible.Handler {
 	private boolean hideRoot;
 
 	private NM root;
 
 	protected NM selectedNodeModel;
+
+	private Paginator paginator;
+
+	@Directed
+	public Paginator getPaginator() {
+		return this.paginator;
+	}
 
 	@Directed
 	public NM getRoot() {
@@ -75,8 +77,20 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		}
 	}
 
+	@Override
+	public void onPaginatorVisible(PaginatorVisible event) {
+		throw new UnsupportedOperationException();
+	}
+
 	public void setHideRoot(boolean hideRoot) {
 		this.hideRoot = hideRoot;
+	}
+
+	public void setPaginator(Paginator paginator) {
+		Paginator old_paginator = this.paginator;
+		this.paginator = paginator;
+		propertyChangeSupport().firePropertyChange("paginator", old_paginator,
+				paginator);
 	}
 
 	public void setRoot(NM root) {
@@ -88,322 +102,11 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 	protected void loadChildren(NM model) {
 	}
 
+	protected void loadNextPage() {
+		throw new UnsupportedOperationException();
+	}
+
 	public static class ChildrenLoaded extends NodeTopic {
-	}
-
-	public static class DomainViewNodeModel
-			extends NodeModel<DomainViewNodeModel> {
-		private DomainViewNodeContentModel<?> node;
-
-		private TreePath<DomainViewNodeModel> treePath;
-
-		public DomainViewNodeModel() {
-		}
-
-		public DomainViewNodeModel(DomainViewNodeModel parent, String path) {
-			setParent(parent);
-			if (parent == null) {
-				treePath = TreePath.absolutePath(path);
-			} else {
-				treePath = parent.treePath.ensurePath(path);
-			}
-			treePath.setValue(this);
-		}
-
-		public DomainViewNodeModel ensureNode(
-				DomainViewNodeContentModel valueModel, String path,
-				String beforePath, boolean fireCollectionModificationEvents) {
-			TreePath<DomainViewNodeModel> otherTreePath = treePath
-					.ensurePath(path);
-			if (otherTreePath.getValue() == null) {
-				DomainViewNodeModel parent = otherTreePath.getParent() == null
-						? null
-						: otherTreePath.getParent().getValue();
-				Generator generator = provideContainingTree() == null
-						? new Generator()
-						: provideContainingTree().generator;
-				DomainViewNodeModel model = generator.generate(valueModel,
-						parent, path);
-				if (parent != null) {
-					parent.modifyChildren(Operation.INSERT, beforePath, model,
-							fireCollectionModificationEvents);
-				}
-				otherTreePath.setValue(model);
-			}
-			return otherTreePath.getValue();
-		}
-
-		public DomainViewNodeContentModel<?> getNode() {
-			return this.node;
-		}
-
-		public TreePath<DomainViewNodeModel> getTreePath() {
-			return this.treePath;
-		}
-
-		public DomainViewTreeModel provideContainingTree() {
-			return getTreePath().provideContainingTree();
-		}
-
-		public void putTree(DomainViewTreeModel tree) {
-			getTreePath().putTree(tree);
-		}
-
-		public void removeFromParent() {
-			if (getParent() != null) {
-				getParent().modifyChildren(Operation.REMOVE, null, this, true);
-			}
-			setParent(null);
-		}
-
-		public void setNode(DomainViewNodeContentModel<?> node) {
-			this.node = node;
-			constructLabel(node);
-			getLabel().setTitle(node.getTitle());
-			setLeaf(node.isLeaf());
-		}
-
-		@Override
-		public String toString() {
-			return Ax.format("%s [%s children]", getTreePath(),
-					getChildren().size());
-		}
-
-		private void modifyChildren(Operation operation, String beforePath,
-				DomainViewNodeModel model,
-				boolean fireCollectionModificationEvents) {
-			List<NodeModel<DomainViewNodeModel>> newValue = getChildren();
-			if (fireCollectionModificationEvents) {
-				newValue = new ArrayList<>(newValue);
-			}
-			switch (operation) {
-			case INSERT:
-				int index = newValue.size();
-				if (beforePath != null) {
-					if (model.getTreePath().hasPath(beforePath)) {
-						TreePath<DomainViewNodeModel> beforeTreePath = model
-								.getTreePath().ensurePath(beforePath);
-						index = beforeTreePath.getParent().getChildren()
-								.indexOf(beforeTreePath);
-					}
-				}
-				if (index == newValue.size()) {
-					newValue.add(model);
-				} else {
-					newValue.add(index, model);
-				}
-				break;
-			case REMOVE:
-				newValue.remove(model);
-				model.getTreePath().removeFromParent();
-				break;
-			default:
-				throw new UnsupportedOperationException();
-			}
-			setChildren(newValue);
-		}
-
-		protected void constructLabel(DomainViewNodeContentModel<?> node) {
-			NodeLabelText nodeLabelText = new NodeLabelText();
-			nodeLabelText.setText(node.getName());
-			getLabel().setLabel(nodeLabelText);
-		}
-
-		public static class FullLabel extends DomainViewNodeModel {
-			public FullLabel() {
-			}
-
-			public FullLabel(DomainViewNodeModel parent, String path) {
-				super(parent, path);
-			}
-
-			@Override
-			protected void constructLabel(DomainViewNodeContentModel<?> node) {
-				getLabel().setLabel(node);
-			}
-		}
-
-		@ClientInstantiable
-		// TODO - the dirndl way would be scoped annotation resolution which
-		// resolves NodeLabel.getLabel to either return the name or the object
-		// itself...
-		public static class Generator {
-			public DomainViewNodeModel generate(
-					DomainViewNodeContentModel valueModel,
-					DomainViewNodeModel parent, String path) {
-				return new DomainViewNodeModel(parent, path);
-			}
-
-			public static class FullLabel extends Generator {
-				@Override
-				public DomainViewNodeModel generate(
-						DomainViewNodeContentModel valueModel,
-						DomainViewNodeModel parent, String path) {
-					return new DomainViewNodeModel.FullLabel(parent, path);
-				}
-			}
-		}
-	}
-
-	/*
-	 * Non-abstract to export reflected annotations
-	 */
-	public static class DomainViewTreeModel
-			extends TreeModel<DomainViewNodeModel> {
-		private Generator generator = new Generator();
-
-		private TreePath<DomainViewNodeModel> openingToPath = null;
-
-		private boolean depthFirst;
-
-		private DomainViewNodeContentModel.Response lastResponse;
-
-		public Generator getGenerator() {
-			return this.generator;
-		}
-
-		public DomainViewNodeContentModel.Response getLastResponse() {
-			return this.lastResponse;
-		}
-
-		public boolean isDepthFirst() {
-			return this.depthFirst;
-		}
-
-		public void
-				mergeResponse(DomainViewNodeContentModel.Response response) {
-			DomainViewNodeModel root = null;
-			DomainViewNodeModel target = null;
-			// TODO - handle interrupt/fail
-			if (response == null) {
-				Response lastResponse = getLastResponse();
-				setLastResponse(response);
-				setLastResponse(lastResponse);
-				return;
-			}
-			if (response.isNoChangeListener()) {
-				return;
-			}
-			Request<?> request = response.getRequest();
-			// TODO - iterate through transactions => only last one is 'replace'
-			String requestPath = response.getRequest().getTreePath();
-			root = (DomainViewNodeModel) getRoot();
-			root.putTree(this);
-			if (requestPath != null) {
-				DomainViewNodeContentModel rootModel = response.getTransforms()
-						.isEmpty() ? null
-								: response.getTransforms().get(0).getNode();
-				target = root.ensureNode(rootModel, requestPath, null, false);
-			}
-			// TODO - requestPath ....hmmm, if switching backends, probably just
-			// do a redraw/open to ...
-			if (response.getTransforms().isEmpty()) {
-				// no children - request path has been removed in a prior tx
-			} else {
-				response.getTransforms()
-						.forEach(t -> this.apply(t, request.getWaitPolicy()));
-				// delta children at the end to generate visual nodes after node
-				// tree complete
-				if (requestPath != null) {
-					target.setChildren(
-							new IdentityArrayList<>(target.getChildren()));
-				}
-				if (openingToPath != null) {
-					openToPath(null);
-				}
-			}
-			setLastResponse(response);
-		}
-
-		public void openToPath(TreePath<DomainViewNodeModel> initialPath) {
-			if (initialPath != null) {
-				openingToPath = initialPath;
-			}
-			boolean initialCall = initialPath != null;
-			TreePath<DomainViewNodeModel> path = openingToPath;
-			DomainViewNodeModel nodeModel = path.getValue();
-			if (nodeModel != null) {
-				selectedNodeModel = nodeModel;
-				nodeModel.setSelected(true);
-				return;
-			} else {
-				while (nodeModel == null) {
-					path = path.getParent();
-					nodeModel = path.getValue();
-				}
-				if (nodeModel.isOpen()) {
-					if (!initialCall) {
-						openingToPath = null;// path not reachable
-					}
-					return;
-				}
-				{
-					// FIXME - should move most event/handling down to nodemodel
-					// (it fires 'requires_children')
-					nodeModel.setOpen(true);
-					nodeModel.populated = true;
-					loadChildren(nodeModel);
-				}
-			}
-		}
-
-		public void sendRequest(Request<?> request) {
-			throw new UnsupportedOperationException();
-		}
-
-		public void setDepthFirst(boolean depthFirst) {
-			this.depthFirst = depthFirst;
-		}
-
-		public void setGenerator(Generator generator) {
-			this.generator = generator;
-		}
-
-		public void setLastResponse(
-				DomainViewNodeContentModel.Response lastResponse) {
-			DomainViewNodeContentModel.Response old_lastResponse = this.lastResponse;
-			this.lastResponse = lastResponse;
-			propertyChangeSupport().firePropertyChange("lastResponse",
-					old_lastResponse, lastResponse);
-		}
-
-		protected void apply(Transform transform, WaitPolicy waitPolicy) {
-			boolean fireCollectionModificationEvents = waitPolicy == WaitPolicy.WAIT_FOR_DELTAS;
-			if (waitPolicy == WaitPolicy.WAIT_FOR_DELTAS) {
-				// don't apply delta transforms if outside the visible tree
-				switch (transform.getOperation()) {
-				case REMOVE:
-				case CHANGE:
-					if (!getRoot().getTreePath()
-							.hasPath(transform.getTreePath())) {
-						return;
-					}
-					break;
-				case INSERT:
-					if (!getRoot().getTreePath()
-							.hasPath(transform.getTreePath())) {
-						// TODO - if predecessor doesn't exist, ignore
-						if (!getRoot().getTreePath().hasPath(
-								TreePath.parentPath(transform.getTreePath()))) {
-							return;
-						}
-					}
-					break;
-				}
-			}
-			DomainViewNodeModel node = getRoot().ensureNode(transform.getNode(),
-					transform.getTreePath(), transform.getBeforePath(),
-					fireCollectionModificationEvents);
-			switch (transform.getOperation()) {
-			case INSERT:
-			case CHANGE:
-				node.setNode(transform.getNode());
-				break;
-			case REMOVE:
-				node.removeFromParent();
-				break;
-			}
-		}
 	}
 
 	/**
@@ -573,6 +276,32 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			public void setText(String text) {
 				this.text = text;
 			}
+		}
+	}
+
+	@Directed(tag = "paginator", bindings = @Binding(type = Type.INNER_TEXT, from = "text"), receives = InferredDomEvents.IntersectionObserved.class)
+	public static class Paginator extends Model
+			implements InferredDomEvents.IntersectionObserved.Handler {
+		private String text;
+
+		private boolean fired;
+
+		public String getText() {
+			return this.text;
+		}
+
+		@Override
+		public void onIntersectionObserved(IntersectionObserved event) {
+			if (event.isIntersecting() && !fired) {
+				fired = true;
+				Context context = NodeEvent.Context
+						.newTopicContext(event.getContext(), null);
+				TopicEvent.fire(context, PaginatorVisible.class, null);
+			}
+		}
+
+		public void setText(String text) {
+			this.text = text;
 		}
 	}
 

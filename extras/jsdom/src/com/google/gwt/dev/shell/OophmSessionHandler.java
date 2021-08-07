@@ -177,6 +177,7 @@ public class OophmSessionHandler extends SessionHandlerServer {
 			exception = dispMethod.invoke(jsThis, jsArgs, jsRetVal);
 		} catch (Throwable t) {
 			exception = true;
+			t.printStackTrace();
 			JsValueGlue.set(jsRetVal, moduleSpace.getIsolatedClassLoader(),
 					t.getClass(), t);
 		}

@@ -120,6 +120,14 @@ public abstract class DomainViews {
 		queueTask(task);
 		task.await();
 		if (task.handlerData.exception == null) {
+			if (task.handlerData.response != null
+					&& task.handlerData.response.isDelayBeforeReturn()) {
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					//
+				}
+			}
 			return task.handlerData.response;
 		} else {
 			throw task.handlerData.exception;
