@@ -32,6 +32,8 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.JsonSer
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import elemental.json.Json;
 import elemental.json.JsonBoolean;
 import elemental.json.JsonNumber;
@@ -93,7 +95,7 @@ public class ReflectiveSerializers {
 				ReflectiveSerializer.SerialNode serialNode) {
 			ReflectiveSerializer.SerialNode container = serialNode
 					.createArrayContainer();
-			serialNode.write(null, container);
+			serialNode.write(node, container);
 			node.serialNode = container;
 		}
 	}
@@ -217,7 +219,7 @@ public class ReflectiveSerializers {
 				ReflectiveSerializer.SerialNode serialNode) {
 			ReflectiveSerializer.SerialNode container = serialNode
 					.createArrayContainer();
-			serialNode.write(null, container);
+			serialNode.write(node, container);
 			node.serialNode = container;
 		}
 
@@ -265,6 +267,9 @@ public class ReflectiveSerializers {
 		}
 	}
 
+	/*
+	 * For objects which can be represented as a javascript value
+	 */
 	public static class TypeSerializer_Value
 			extends ReflectiveSerializer.TypeSerializer {
 		@Override
@@ -274,7 +279,8 @@ public class ReflectiveSerializers {
 					Boolean.class, Character.class, Date.class, String.class,
 					long.class, int.class, short.class, char.class, byte.class,
 					boolean.class, double.class, float.class, Enum.class,
-					Class.class, void.class, Void.class, byte[].class);
+					Class.class, void.class, Void.class, byte[].class,
+					BasePlace.class);
 		}
 
 		@Override
@@ -306,7 +312,26 @@ public class ReflectiveSerializers {
 		@Override
 		public void writeValueOrContainer(ReflectiveSerializer.GraphNode node,
 				ReflectiveSerializer.SerialNode serialNode) {
-			serialNode.write(node.name, node.value);
+			serialNode.write(node, node.value);
+		}
+	}
+
+	public static class ValueSerializerBasePlace
+			extends JsonSerialNode.ValueSerializer<BasePlace> {
+		@Override
+		public List<Class> serializesTypes() {
+			return Arrays.asList(BasePlace.class);
+		}
+
+		@Override
+		public JsonValue toJson(BasePlace object) {
+			return Json.create(object.toTokenString());
+		}
+
+		@Override
+		protected BasePlace fromJson(Class clazz, JsonValue value) {
+			return (BasePlace) RegistryHistoryMapper.get()
+					.getPlace(value.asString());
 		}
 	}
 
@@ -373,7 +398,8 @@ public class ReflectiveSerializers {
 
 		@Override
 		public JsonValue toJson(Class object) {
-			return Json.create(object.getName());
+			return Json.create(
+					ReflectiveSerializer.serializationClass(object).getName());
 		}
 
 		@Override
@@ -533,7 +559,7 @@ public class ReflectiveSerializers {
 			extends JsonSerialNode.ValueSerializer<Timestamp> {
 		@Override
 		public List<Class> serializesTypes() {
-			return Arrays.asList(Date.class);
+			return Arrays.asList(Timestamp.class);
 		}
 
 		@Override

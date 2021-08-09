@@ -4,8 +4,6 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.IsBindable;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
@@ -13,11 +11,10 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 
-@ClientInstantiable
-@Introspectable
+@Bean
 public class ModelSearchResults<B extends IsBindable & SearchResult>
 		implements Serializable {
 	private List<B> queriedResultObjects;

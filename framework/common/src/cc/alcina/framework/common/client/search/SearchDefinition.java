@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
@@ -53,6 +54,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 @RegistryLocations({
 		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
 		@RegistryLocation(registryPoint = TreeSerializable.class) })
+@Bean
 public abstract class SearchDefinition extends WrapperPersistable
 		implements TreeSerializable, TreeRenderable, ContentDefinition,
 		HasPermissionsValidation, HasReflectiveEquivalence<SearchDefinition>,

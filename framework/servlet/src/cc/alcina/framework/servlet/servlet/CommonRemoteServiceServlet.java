@@ -89,7 +89,7 @@ import cc.alcina.framework.common.client.remote.ReflectiveRemoteServiceHandler;
 import cc.alcina.framework.common.client.remote.ReflectiveRpcRemoteService;
 import cc.alcina.framework.common.client.remote.SearchRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -220,8 +220,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public String callRpc(String encodedRpcPayload) {
 		try {
-			ReflectiveRemoteServicePayload payload = AlcinaBeanSerializer
-					.deserializeHolder(encodedRpcPayload);
+			ReflectiveRemoteServicePayload payload = ReflectiveSerializer
+					.deserialize(encodedRpcPayload);
 			ReflectiveRemoteServiceHandler handler = Registry.impl(
 					ReflectiveRemoteServiceHandler.class,
 					payload.getAsyncInterfaceClass());
@@ -238,7 +238,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			try {
 				MetricLogging.get().start(key);
 				Object result = method.invoke(handler, methodArguments);
-				return AlcinaBeanSerializer.serializeHolder(result);
+				return ReflectiveSerializer.serialize(result);
 			} finally {
 				MetricLogging.get().end(key);
 			}

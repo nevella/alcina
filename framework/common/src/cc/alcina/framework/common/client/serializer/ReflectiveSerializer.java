@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 import elemental.json.Json;
 import elemental.json.JsonArray;
 import elemental.json.JsonBoolean;
@@ -61,8 +62,6 @@ import elemental.json.JsonValue;
  * <li>Write data-like value or back to 'for any unreached'
  * </ul>
  * <ul>
- * <li>TODO - add place serialization once full flattree serialization uses this
- * as a check
  * </ul>
  * </ul>
  * 
@@ -76,7 +75,6 @@ import elemental.json.JsonValue;
  * 
  *         check classloader usage in AlcinaBeanSerializer
  */
-@SuppressWarnings("unused")
 public class ReflectiveSerializer {
 	private static Map<Class, TypeSerializer> typeSerializers = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
@@ -85,18 +83,18 @@ public class ReflectiveSerializer {
 		return (T) deserialize(serialize(object));
 	}
 
-	public static Object deserialize(String value) {
+	public static <T> T deserialize(String value) {
 		DeserializerOptions options = new DeserializerOptions();
 		return deserialize(value, options);
 	}
 
-	public static Object deserialize(String value,
-			DeserializerOptions options) {
+	public static <T> T deserialize(String value, DeserializerOptions options) {
 		try {
 			LooseContext.pushWithTrue(FlatTreeSerializer.CONTEXT_DESERIALIZING);
 			if (value == null) {
 				return null;
 			}
+			JsonSerialNode.ensureValueSerializers();
 			State state = new State();
 			state.deserializerOptions = options;
 			// create json doc
@@ -106,7 +104,7 @@ public class ReflectiveSerializer {
 			node.serialNode = root;
 			state.pending.add(node);
 			new ReflectiveSerializer(state).deserialize(node);
-			return node.value;
+			return (T) node.value;
 		} finally {
 			LooseContext.pop();
 		}
@@ -149,10 +147,7 @@ public class ReflectiveSerializer {
 				}
 			}
 		}
-		Class lookupClass = clazz.getSuperclass() != null
-				&& clazz.getSuperclass().isEnum()
-						? clazz = clazz.getSuperclass()
-						: clazz;
+		Class lookupClass = serializationClass(clazz);
 		return typeSerializers.computeIfAbsent(lookupClass, k -> {
 			List<Class> toResolve = Arrays.asList(lookupClass);
 			while (toResolve.size() > 0) {
@@ -180,6 +175,14 @@ public class ReflectiveSerializer {
 			throw new IllegalArgumentException(
 					Ax.format("No serializer for type %s", lookupClass));
 		});
+	}
+
+	static Class serializationClass(Class clazz) {
+		Class lookupClass = clazz.getSuperclass() != null
+				&& clazz.getSuperclass().isEnum()
+						? clazz = clazz.getSuperclass()
+						: clazz;
+		return lookupClass;
 	}
 
 	State state;
@@ -302,7 +305,7 @@ public class ReflectiveSerializer {
 			node.type = serializeAs(node.value.getClass());
 			ReflectiveSerializer.SerialNode container = serialNode
 					.createPropertyContainer();
-			serialNode.write(null, container);
+			serialNode.write(node, container);
 			node.serialNode = container;
 		}
 	}
@@ -317,6 +320,7 @@ public class ReflectiveSerializer {
 	}
 
 	@RegistryLocation(registryPoint = TypeSerializer.class)
+	@Bean
 	public static abstract class TypeSerializer {
 		public void childDeserializationComplete(GraphNode graphNode,
 				GraphNode child) {
@@ -348,7 +352,9 @@ public class ReflectiveSerializer {
 	}
 
 	static class GraphNode {
-		public Object value;
+		boolean consumedName;
+
+		Object value;
 
 		SerialNode serialNode;
 
@@ -469,13 +475,14 @@ public class ReflectiveSerializer {
 				if (serializer.isReferenceSerializer()) {
 					Object idx = state.identityIdx.get(value);
 					if (idx != null) {
-						parent.serialNode.write(name, idx);
+						parent.serialNode.write(this, idx);
 						return;
 					}
 				}
 				if (!hasFinalClass()) {
 					serialNode = parent.serialNode
 							.writeClassValueContainer(name);
+					consumedName = true;
 					serialNode.writeTypeName(
 							serializer.serializeAs(value.getClass()));
 				}
@@ -530,9 +537,7 @@ public class ReflectiveSerializer {
 		@Override
 		public GraphNode apply(Property t) {
 			PropertyReflector propertyReflector = Reflections.propertyAccessor()
-					.getPropertyReflector(
-							t.getAccessorMethod().getDeclaringClass(),
-							t.getName());
+					.getPropertyReflector(node.value.getClass(), t.getName());
 			GraphNode graphNode = new GraphNode(node, t.getName(),
 					propertyReflector);
 			graphNode.setValue(propertyReflector.getPropertyValue(node.value));
@@ -681,15 +686,8 @@ public class ReflectiveSerializer {
 		}
 
 		@Override
-		public void write(String name, Object value) {
-			JsonValue writeValue = toJsonValue(value);
-			if (name == null) {
-				JsonArray array = (JsonArray) jsonValue;
-				array.set(array.length(), writeValue);
-			} else {
-				JsonObject object = (JsonObject) jsonValue;
-				object.put(name, writeValue);
-			}
+		public void write(GraphNode node, Object value) {
+			write(node.consumedName ? null : node.name, value);
 		}
 
 		@Override
@@ -702,7 +700,7 @@ public class ReflectiveSerializer {
 		@Override
 		public void writeTypeName(Class type) {
 			Preconditions.checkState(jsonValue instanceof JsonArray);
-			((JsonArray) jsonValue).set(0, type.getName());
+			((JsonArray) jsonValue).set(0, serializationClass(type).getName());
 		}
 
 		private JsonValue toJsonValue(Object value) {
@@ -723,10 +721,24 @@ public class ReflectiveSerializer {
 			}
 		}
 
+		private void write(String name, Object value) {
+			JsonValue writeValue = toJsonValue(value);
+			if (name == null) {
+				JsonArray array = (JsonArray) jsonValue;
+				array.set(array.length(), writeValue);
+			} else {
+				JsonObject object = (JsonObject) jsonValue;
+				object.put(name, writeValue);
+			}
+		}
+
 		protected ValueSerializer
 				getValueSerializer(Class<? extends Object> serializerType) {
 			if (CommonUtils.isEnumOrEnumSubclass(serializerType)) {
 				serializerType = Enum.class;
+			}
+			if (Reflections.isAssignableFrom(BasePlace.class, serializerType)) {
+				serializerType = BasePlace.class;
 			}
 			ValueSerializer valueSerializer = valueSerializers
 					.get(serializerType);
@@ -734,6 +746,7 @@ public class ReflectiveSerializer {
 		}
 
 		@RegistryLocation(registryPoint = ValueSerializer.class)
+		@Bean
 		public static abstract class ValueSerializer<T> {
 			public abstract List<Class> serializesTypes();
 
@@ -792,7 +805,7 @@ public class ReflectiveSerializer {
 
 		String toJson();
 
-		void write(String name, Object value);
+		void write(GraphNode node, Object value);
 
 		SerialNode writeClassValueContainer(String name);
 

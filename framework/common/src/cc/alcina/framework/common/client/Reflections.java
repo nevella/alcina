@@ -21,7 +21,30 @@ public class Reflections {
 	}
 
 	public static <T> Class<T> forName(String fqn) {
-		return fqn == null ? null : classLookup().getClassForName(fqn);
+		if (fqn == null) {
+			return null;
+		}
+		switch (fqn) {
+		case "boolean":
+			return (Class<T>) boolean.class;
+		case "byte":
+			return (Class<T>) byte.class;
+		case "short":
+			return (Class<T>) short.class;
+		case "int":
+			return (Class<T>) int.class;
+		case "long":
+			return (Class<T>) long.class;
+		case "float":
+			return (Class<T>) float.class;
+		case "double":
+			return (Class<T>) double.class;
+		case "char":
+			return (Class<T>) char.class;
+		case "void":
+			return (Class<T>) void.class;
+		}
+		return classLookup().getClassForName(fqn);
 	}
 
 	public static String getApplicationName() {

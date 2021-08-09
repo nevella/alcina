@@ -63,13 +63,15 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	static Set<Class> checkedClassAnnotationsForInstantiation = new LinkedHashSet<Class>();
 
+	static Set<Class> checkedClassAnnotationsForForName = new LinkedHashSet<Class>();
+
 	static Set<Class> checkedClassAnnotations = new LinkedHashSet<Class>();
 
 	public static boolean canIntrospect(Class clazz) {
 		if (checkedClassAnnotations.contains(clazz)) {
 			return true;
 		}
-		return checkClassAnnotationsGenerateException(clazz,
+		return checkClassAnnotationsGenerateException(clazz, false,
 				false).canIntrospect;
 	}
 
@@ -78,11 +80,34 @@ public class ClientReflectorJvm extends ClientReflector {
 			return;
 		}
 		IntrospectionCheckResult checkResult = checkClassAnnotationsGenerateException(
-				clazz, true);
+				clazz, false, true);
 		if (!checkResult.canIntrospect) {
 			throw checkResult.exception;
 		}
 		checkedClassAnnotations.add(clazz);
+	}
+
+	public static void checkClassAnnotationsForForName(Class clazz) {
+		if (checkedClassAnnotationsForForName.contains(clazz)) {
+			return;
+		}
+		IntrospectionCheckResult checkResult = checkClassAnnotationsGenerateException(
+				clazz, true, true);
+		if (!checkResult.canIntrospect) {
+			throw checkResult.exception;
+		}
+		if (!AnnotationUtils.hasAnnotationNamed(clazz, ClientInstantiable.class)
+				&& clazz.getAnnotation(IgnoreIntrospectionChecks.class) == null
+				&& clazz.getAnnotation(
+						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null
+				&& !clazz.getName().startsWith("java.lang")
+				&& !IntrospectorFilter.COLLECTION_CLASS_NAMES
+						.contains(clazz.getCanonicalName())) {
+			throw new IntrospectionException(
+					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
+					clazz);
+		}
+		checkedClassAnnotationsForForName.add(clazz);
 	}
 
 	public static void checkClassAnnotationsForInstantiation(Class clazz) {
@@ -108,11 +133,12 @@ public class ClientReflectorJvm extends ClientReflector {
 	// introspection/instantiation)
 	private static IntrospectionCheckResult
 			checkClassAnnotationsGenerateException(Class clazz,
-					boolean generateExceptions) {
+					boolean allowAbstract, boolean generateExceptions) {
 		IntrospectionCheckResult result = new IntrospectionCheckResult();
 		int mod = clazz.getModifiers();
 		if (!CommonUtils.isEnumOrEnumSubclass(clazz)) {
-			if (Modifier.isAbstract(mod) || clazz.isAnonymousClass()
+			if ((Modifier.isAbstract(mod) && !allowAbstract)
+					|| clazz.isAnonymousClass()
 					|| (clazz.isMemberClass() && !Modifier.isStatic(mod))) {
 				if (generateExceptions) {
 					result.exception = new IntrospectionException(
@@ -324,7 +350,7 @@ public class ClientReflectorJvm extends ClientReflector {
 	public Class getClassForName(String fqn) {
 		try {
 			Class<?> clazz = Class.forName(fqn);
-			checkClassAnnotationsForInstantiation(clazz);
+			checkClassAnnotationsForForName(clazz);
 			return clazz;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -360,7 +386,10 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	@Override
 	public boolean isAssignableFrom(Class from, Class to) {
-		checkClassAnnotationsForInstantiation(to);
+		// tricky - because we might want to check superclasses. Real test is
+		// reusing clientreflectiongen in these checks
+		// FIXME - dirndl 1.3
+		// checkClassAnnotationsForForName(from);
 		return from.isAssignableFrom(to);
 	}
 
