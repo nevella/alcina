@@ -28,7 +28,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.GraphNode;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.JsonSerialNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -317,7 +316,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerBasePlace
-			extends JsonSerialNode.ValueSerializer<BasePlace> {
+			extends ReflectiveSerializer.ValueSerializer<BasePlace> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(BasePlace.class);
@@ -336,7 +335,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerBoolean
-			extends JsonSerialNode.ValueSerializer<Boolean> {
+			extends ReflectiveSerializer.ValueSerializer<Boolean> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Boolean.class, boolean.class);
@@ -354,7 +353,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerByte
-			extends JsonSerialNode.ValueSerializer<Byte> {
+			extends ReflectiveSerializer.ValueSerializer<Byte> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Byte.class, byte.class);
@@ -372,7 +371,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerByteArray
-			extends JsonSerialNode.ValueSerializer<byte[]> {
+			extends ReflectiveSerializer.ValueSerializer<byte[]> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(byte[].class);
@@ -390,7 +389,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerClass
-			extends JsonSerialNode.ValueSerializer<Class> {
+			extends ReflectiveSerializer.ValueSerializer<Class> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Class.class);
@@ -410,7 +409,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerDate
-			extends JsonSerialNode.ValueSerializer<Date> {
+			extends ReflectiveSerializer.ValueSerializer<Date> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Date.class);
@@ -428,7 +427,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerDouble
-			extends JsonSerialNode.ValueSerializer<Double> {
+			extends ReflectiveSerializer.ValueSerializer<Double> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Double.class, double.class);
@@ -446,7 +445,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerEnum
-			extends JsonSerialNode.ValueSerializer<Enum> {
+			extends ReflectiveSerializer.ValueSerializer<Enum> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Enum.class);
@@ -465,7 +464,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerFloat
-			extends JsonSerialNode.ValueSerializer<Float> {
+			extends ReflectiveSerializer.ValueSerializer<Float> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Float.class, float.class);
@@ -483,7 +482,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerInteger
-			extends JsonSerialNode.ValueSerializer<Integer> {
+			extends ReflectiveSerializer.ValueSerializer<Integer> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Integer.class, int.class);
@@ -501,7 +500,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerLong
-			extends JsonSerialNode.ValueSerializer<Long> {
+			extends ReflectiveSerializer.ValueSerializer<Long> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Long.class, long.class);
@@ -519,7 +518,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerShort
-			extends JsonSerialNode.ValueSerializer<Short> {
+			extends ReflectiveSerializer.ValueSerializer<Short> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Short.class, short.class);
@@ -537,7 +536,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerString
-			extends JsonSerialNode.ValueSerializer<String> {
+			extends ReflectiveSerializer.ValueSerializer<String> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(String.class);
@@ -556,7 +555,7 @@ public class ReflectiveSerializers {
 	}
 
 	public static class ValueSerializerTimestamp
-			extends JsonSerialNode.ValueSerializer<Timestamp> {
+			extends ReflectiveSerializer.ValueSerializer<Timestamp> {
 		@Override
 		public List<Class> serializesTypes() {
 			return Arrays.asList(Timestamp.class);

@@ -351,6 +351,41 @@ public class ReflectiveSerializer {
 				SerialNode serialNode);
 	}
 
+	@RegistryLocation(registryPoint = ValueSerializer.class)
+	@Bean
+	public static abstract class ValueSerializer<T> {
+		public abstract List<Class> serializesTypes();
+
+		protected T fromJson(Class<? extends T> clazz, JsonValue value) {
+			switch (value.getType()) {
+			case NULL:
+				return null;
+			case BOOLEAN:
+				return fromJsonBoolean((JsonBoolean) value);
+			case NUMBER:
+				return fromJsonNumber((JsonNumber) value);
+			case STRING:
+				return fromJsonString(clazz, (JsonString) value);
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		protected T fromJsonBoolean(JsonBoolean value) {
+			throw new UnsupportedOperationException();
+		}
+
+		protected T fromJsonNumber(JsonNumber value) {
+			throw new UnsupportedOperationException();
+		}
+
+		protected T fromJsonString(Class<? extends T> clazz, JsonString value) {
+			throw new UnsupportedOperationException();
+		}
+
+		protected abstract JsonValue toJson(T object);
+	}
+
 	static class GraphNode {
 		boolean consumedName;
 
@@ -743,42 +778,6 @@ public class ReflectiveSerializer {
 			ValueSerializer valueSerializer = valueSerializers
 					.get(serializerType);
 			return valueSerializer;
-		}
-
-		@RegistryLocation(registryPoint = ValueSerializer.class)
-		@Bean
-		public static abstract class ValueSerializer<T> {
-			public abstract List<Class> serializesTypes();
-
-			protected T fromJson(Class<? extends T> clazz, JsonValue value) {
-				switch (value.getType()) {
-				case NULL:
-					return null;
-				case BOOLEAN:
-					return fromJsonBoolean((JsonBoolean) value);
-				case NUMBER:
-					return fromJsonNumber((JsonNumber) value);
-				case STRING:
-					return fromJsonString(clazz, (JsonString) value);
-				default:
-					throw new UnsupportedOperationException();
-				}
-			}
-
-			protected T fromJsonBoolean(JsonBoolean value) {
-				throw new UnsupportedOperationException();
-			}
-
-			protected T fromJsonNumber(JsonNumber value) {
-				throw new UnsupportedOperationException();
-			}
-
-			protected T fromJsonString(Class<? extends T> clazz,
-					JsonString value) {
-				throw new UnsupportedOperationException();
-			}
-
-			protected abstract JsonValue toJson(T object);
 		}
 	}
 
