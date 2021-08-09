@@ -184,6 +184,7 @@ public class LiveTree {
 		GeneratorContext generatorContext = new GeneratorContext();
 		generatorContext.treeCreation = true;
 		processEvents(generatorContext);
+		rootGenerator.generationComplete();
 	}
 
 	private long getEvictMillis() {
@@ -661,6 +662,8 @@ public class LiveTree {
 	// <P,I,N> -- Parent, Input segment object, Output node
 	public interface NodeGenerator<I, O extends DomainViewNodeContentModel> {
 		public O generate(I in, GeneratorContext context);
+
+		public void generationComplete();
 
 		public boolean isIndexer();
 
