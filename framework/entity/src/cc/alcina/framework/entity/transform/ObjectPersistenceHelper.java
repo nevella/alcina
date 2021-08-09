@@ -75,7 +75,11 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	private CachingConcurrentMap<String, Class> classNameLookup = new CachingConcurrentMap<String, Class>(
 			cn -> {
 				if (servletLayerClassloader != null) {
-					return servletLayerClassloader.loadClass(cn);
+					try {
+						return servletLayerClassloader.loadClass(cn);
+					} catch (Exception e) {
+						return Class.forName(cn);
+					}
 				} else {
 					return Class.forName(cn);
 				}

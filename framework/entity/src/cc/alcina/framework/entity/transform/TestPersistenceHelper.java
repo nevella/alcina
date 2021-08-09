@@ -67,7 +67,11 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	CachingMap<String, Class> fqnLookup = new CachingMap<String, Class>(fqn -> {
 		try {
-			return reflectiveClassLoader.loadClass(fqn);
+			try {
+				return reflectiveClassLoader.loadClass(fqn);
+			} catch (Exception e) {
+				return Class.forName(fqn);
+			}
 		} catch (Exception e) {
 			throw e;
 		}

@@ -56,6 +56,10 @@ explain analyze select id, pg_xact_commit_timestamp(xmin) as commit_timestamp
 	@formatter:on
 	
 	FIXME - document - the above index is only used on store initialisation
+	
+	FIXME - 2022 - no it definitely is not. But it probably should be - 
+	since we have guaranteed ids either at the cluster level or sole-server, we can 
+	filter the update by those ids (so no need for an index) - except in the recovery case
  *
  */
 public class DomainStoreTransformSequencer
@@ -202,7 +206,8 @@ public class DomainStoreTransformSequencer
 
 	private synchronized void publishUnpublishedPositions(
 			List<DomainTransformCommitPosition> positions) {
-		positions.removeIf(p -> publishedIds.containsKey(p.getCommitRequestId()));
+		positions.removeIf(
+				p -> publishedIds.containsKey(p.getCommitRequestId()));
 		unpublishedPositions.addAll(positions);
 		if (unpublishedPositions.isEmpty()) {
 			return;

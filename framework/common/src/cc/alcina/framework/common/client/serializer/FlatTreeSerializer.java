@@ -22,7 +22,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
-import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -31,7 +30,6 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.Serializer;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -115,9 +113,6 @@ public class FlatTreeSerializer {
 			.getName() + ".CONTEXT_DESERIALIZING";
 
 	private static String NULL_MARKER = "__fts_NULL__";
-
-	private static Map<Class, List<Property>> serializationProperties = Registry
-			.impl(ConcurrentMapCreator.class).createMap();
 
 	private static Map<Class, Map<String, Property>> deSerializationClassAliasProperty = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
@@ -507,7 +502,7 @@ public class FlatTreeSerializer {
 								property = segmentMap.get("");
 							}
 						} else {
-							property = getProperties(cursor.value).stream()
+							property = SerializationSupport.getProperties(cursor.value).stream()
 									.filter(p -> p.getName()
 											.equals(segmentPath))
 									.findFirst().get();
@@ -520,7 +515,7 @@ public class FlatTreeSerializer {
 									state.rootClass.getSimpleName(), path);
 							break;
 						}
-						PropertySerialization propertySerialization = getPropertySerialization(
+						PropertySerialization propertySerialization = SerializationSupport.getPropertySerialization(
 								cursor.value.getClass(), property.getName());
 						Object childValue = Reflections.propertyAccessor()
 								.getPropertyValue(cursor.value,
@@ -656,7 +651,7 @@ public class FlatTreeSerializer {
 		RootClassPropertyKey key = new RootClassPropertyKey(rootClass,
 				cursor.path.property);
 		return deSerializationPropertyAliasClass.computeIfAbsent(key, k -> {
-			PropertySerialization propertySerialization = getPropertySerialization(
+			PropertySerialization propertySerialization = SerializationSupport.getPropertySerialization(
 					cursor.parent.value.getClass(), k.property.getName());
 			Class[] availableTypes = propertySerialization == null
 					? new Class[0]
@@ -678,7 +673,7 @@ public class FlatTreeSerializer {
 
 	private Map<String, Property> getAliasPropertyMap(Node cursor) {
 		Function<? super Property, ? extends String> keyMapper = property -> {
-			PropertySerialization propertySerialization = getPropertySerialization(
+			PropertySerialization propertySerialization = SerializationSupport.getPropertySerialization(
 					cursor.value.getClass(), property.getName());
 			if (propertySerialization != null) {
 				if (propertySerialization.defaultProperty()) {
@@ -693,7 +688,7 @@ public class FlatTreeSerializer {
 		Map<String, Property> map = new LinkedHashMap<>();
 		return deSerializationClassAliasProperty
 				.computeIfAbsent(cursor.value.getClass(), clazz -> {
-					getProperties(cursor.value)
+					SerializationSupport.getProperties(cursor.value)
 							.forEach(p -> addWithUniquenessCheck(map,
 									keyMapper.apply(p), p, cursor));
 					return map;
@@ -703,37 +698,6 @@ public class FlatTreeSerializer {
 	private Class getClassFromSegment(String segmentPath) {
 		return Reflections.classLookup()
 				.getClassForName(segmentPath.replace("_", "."));
-	}
-
-	private List<Property> getProperties(Object value) {
-		return serializationProperties.computeIfAbsent(value.getClass(),
-				valueClass -> {
-					BeanDescriptor descriptor = Reflections
-							.beanDescriptorProvider().getDescriptor(value);
-					Property[] propertyArray = descriptor.getProperties();
-					return Arrays.stream(propertyArray)
-							.sorted(Comparator.comparing(Property::getName))
-							.filter(property -> {
-								if (property.getMutatorMethod() == null) {
-									return false;
-								}
-								if (property.getAccessorMethod() == null) {
-									return false;
-								}
-								String name = property.getName();
-								if (Annotations.has(valueClass, name,
-										AlcinaTransient.class)) {
-									return false;
-								}
-								PropertySerialization propertySerialization = getPropertySerialization(
-										valueClass, name);
-								if (propertySerialization != null
-										&& propertySerialization.ignore()) {
-									return false;
-								}
-								return true;
-							}).collect(Collectors.toList());
-				});
 	}
 
 	private Object getValue(Node node, Property property, Object value) {
@@ -804,7 +768,7 @@ public class FlatTreeSerializer {
 					state.pending.add(childNode);
 				});
 			} else if (value instanceof TreeSerializable) {
-				getProperties(value).forEach(property -> {
+				SerializationSupport.getProperties(value).forEach(property -> {
 					Object childValue = getValue(cursor, property, value);
 					Object defaultValue = cursor.defaultValue == null ? null
 							: getValue(cursor, property, cursor.defaultValue);
@@ -816,7 +780,7 @@ public class FlatTreeSerializer {
 					Node childNode = new Node(cursor, childValue, defaultValue);
 					childNode.path.property = property;
 					childNode.path.setPropertySerialization(
-							getPropertySerialization(cursor.value.getClass(),
+							SerializationSupport.getPropertySerialization(cursor.value.getClass(),
 									property.getName()));
 					if (childNode.path.ignoreForSerialization()) {
 						return;
@@ -843,7 +807,7 @@ public class FlatTreeSerializer {
 
 	private Object synthesisePopulatedPropertyValue(Node node,
 			Property property) {
-		PropertySerialization propertySerialization = getPropertySerialization(
+		PropertySerialization propertySerialization = SerializationSupport.getPropertySerialization(
 				node.value.getClass(), property.getName());
 		if (propertySerialization != null
 				&& propertySerialization.notTestable()) {
@@ -969,26 +933,6 @@ public class FlatTreeSerializer {
 		} else {
 			throw new UnsupportedOperationException();
 		}
-	}
-
-	protected PropertySerialization getPropertySerialization(Class<?> clazz,
-			String propertyName) {
-		TypeSerialization typeSerialization = Annotations.resolve(clazz,
-				TypeSerialization.class);
-		PropertySerialization annotation = null;
-		if (typeSerialization != null) {
-			for (PropertySerialization p : typeSerialization.properties()) {
-				if (p.name().equals(propertyName)) {
-					annotation = p;
-					break;
-				}
-			}
-		}
-		if (annotation == null) {
-			annotation = Annotations.resolve(clazz, propertyName,
-					PropertySerialization.class);
-		}
-		return annotation;
 	}
 
 	public static class DeserializerOptions {

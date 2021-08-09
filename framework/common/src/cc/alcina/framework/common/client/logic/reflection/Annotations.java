@@ -22,4 +22,10 @@ public class Annotations {
 						: Reflections.classLookup().getPropertyReflector(clazz,
 								propertyName)).getAnnotation(annotationClass);
 	}
+
+	public static <A extends Annotation> A resolve(PropertyReflector reflector,
+			Class<A> annotationClass) {
+		return new AnnotationLocation(reflector.getDefiningType(), reflector)
+				.getAnnotation(annotationClass);
+	}
 }
