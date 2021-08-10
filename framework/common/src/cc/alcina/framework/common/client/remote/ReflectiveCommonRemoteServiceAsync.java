@@ -118,7 +118,7 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	}
 
 	@Override
-	public void search(SearchDefinition def, int pageNumber,
+	public void search(SearchDefinition def,
 			AsyncCallback<SearchResultsBase> callback) {
 		throw new UnsupportedOperationException();
 	}

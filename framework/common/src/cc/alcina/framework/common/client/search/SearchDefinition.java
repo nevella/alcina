@@ -78,8 +78,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	private int charWidth;
 
-	private int clientSearchIndex;
-
 	private Set<CriteriaGroup> criteriaGroups = new LightSet<CriteriaGroup>();
 
 	private Set<OrderGroup> orderGroups = new LightSet<OrderGroup>();
@@ -89,6 +87,9 @@ public abstract class SearchDefinition extends WrapperPersistable
 	protected transient Map<String, String> propertyColumnAliases;
 
 	private transient List<PropertyChangeListener> globalListeners = new ArrayList<>();
+
+	// default 0 (rendered as 1 if non-empty results)
+	private int pageNumber;
 
 	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc) {
 		addCriterionToSoleCriteriaGroup(sc, false);
@@ -265,11 +266,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return this.charWidth;
 	}
 
-	@AlcinaTransient
-	public int getClientSearchIndex() {
-		return this.clientSearchIndex;
-	}
-
 	public Set<CriteriaGroup> getCriteriaGroups() {
 		return this.criteriaGroups;
 	}
@@ -308,6 +304,11 @@ public abstract class SearchDefinition extends WrapperPersistable
 	 */
 	public String getOrderName() {
 		return this.orderName;
+	}
+
+	@PropertySerialization(path = "page")
+	public int getPageNumber() {
+		return this.pageNumber;
 	}
 
 	@Override
@@ -445,10 +446,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 		this.charWidth = charWidth;
 	}
 
-	public void setClientSearchIndex(int clientSearchIndex) {
-		this.clientSearchIndex = clientSearchIndex;
-	}
-
 	public void setCriteriaGroups(Set<CriteriaGroup> criteriaGroups) {
 		this.criteriaGroups = criteriaGroups;
 	}
@@ -463,6 +460,13 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	public void setOrderName(String orderName) {
 		this.orderName = orderName;
+	}
+
+	public void setPageNumber(int pageNumber) {
+		int old_pageNumber = this.pageNumber;
+		this.pageNumber = pageNumber;
+		propertyChangeSupport().firePropertyChange("pageNumber", old_pageNumber,
+				pageNumber);
 	}
 
 	public void setPublicationType(String publicationType) {

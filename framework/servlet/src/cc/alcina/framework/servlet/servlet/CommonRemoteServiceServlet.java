@@ -560,9 +560,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					throws WebException;
 
 	@Override
-	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
+	public SearchResultsBase search(SearchDefinition def) {
 		return Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence().search(def, pageNumber);
+				.getCommonPersistence().search(def);
 	}
 
 	@Override

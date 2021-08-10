@@ -663,11 +663,12 @@ public class LiveTree {
 	public interface NodeGenerator<I, O extends DomainViewNodeContentModel> {
 		public O generate(I in, GeneratorContext context);
 
-		public void generationComplete();
-
 		public boolean isIndexer();
 
 		public void onTreeAddition(GeneratorContext context, LiveNode liveNode);
+
+		default void generationComplete() {
+		}
 
 		default void indexTransformPersistenceEvent(
 				DomainTransformPersistenceEvent event,

@@ -899,7 +899,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
+	public SearchResultsBase search(SearchDefinition def) {
 		String message = def.validatePermissions();
 		if (message != null) {
 			throw new WrappedRuntimeException(
@@ -907,8 +907,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		}
 		Searcher searcher = (Searcher) Registry.get()
 				.instantiateSingle(Searcher.class, def.getClass());
-		SearchResultsBase result = searcher.search(def, pageNumber,
-				getEntityManager());
+		SearchResultsBase result = searcher.search(def, getEntityManager());
 		return projectSearchResults(result);
 	}
 

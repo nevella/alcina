@@ -53,7 +53,10 @@ public interface CommonRemoteServiceAsync {
 	public void performAction(RemoteAction action,
 			AsyncCallback<String> callback);
 
-	public void search(SearchDefinition def, int pageNumber,
+	public void pollJobStatus(JobTracker.Request request,
+			AsyncCallback<JobTracker.Response> callback);
+
+	public void search(SearchDefinition def,
 			AsyncCallback<SearchResultsBase> callback);
 
 	public void transform(DomainTransformRequest request,
@@ -80,7 +83,4 @@ public interface CommonRemoteServiceAsync {
 
 	void waitForTransforms(DomainTransformCommitPosition position,
 			AsyncCallback<DomainUpdate> callback);
-
-	public void pollJobStatus(JobTracker.Request request, 
-			AsyncCallback<JobTracker.Response> callback);
 }

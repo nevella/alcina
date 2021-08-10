@@ -101,12 +101,10 @@ public class AlcinaHistoryItem {
 	}
 
 	public SearchHistoryInfo getSearchHistoryInfo() {
-		if (!hasParameter(SEARCH_INDEX) && !hasParameter(SEARCH_SERIALIZED)) {
+		if (!hasParameter(SEARCH_SERIALIZED)) {
 			return null;
 		}
-		return new SearchHistoryInfo(getIntParameter(SEARCH_INDEX),
-				getIntParameter(SEARCH_PAGE),
-				getStringParameter(SEARCH_SERIALIZED),
+		return new SearchHistoryInfo(getStringParameter(SEARCH_SERIALIZED),
 				getStringParameter(SEARCH_MARKER));
 	}
 
@@ -209,9 +207,8 @@ public class AlcinaHistoryItem {
 			setParameter(SEARCH_MARKER,
 					searchHistoryInfo.searchDefinitionMarker);
 		} else {
-			setParameter(SEARCH_INDEX, searchHistoryInfo.defId, true);
+			throw new UnsupportedOperationException();
 		}
-		setParameter(SEARCH_PAGE, searchHistoryInfo.pageNumber);
 	}
 
 	public void setSubTabName(String subTabName) {

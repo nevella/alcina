@@ -133,7 +133,7 @@ public interface CommonPersistenceLocal {
 
 	public void remove(Object o);
 
-	public SearchResultsBase search(SearchDefinition def, int pageNumber);
+	public SearchResultsBase search(SearchDefinition def);
 
 	public void setField(Class clazz, Long id, String key, Object value)
 			throws Exception;

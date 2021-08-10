@@ -78,7 +78,7 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod()
 	public JobTracker pollJobStatus(String id, boolean cancel);
 
-	public SearchResultsBase search(SearchDefinition def, int pageNumber);
+	public SearchResultsBase search(SearchDefinition def);
 
 	@WebMethod
 	public DomainTransformResponse transform(DomainTransformRequest request)

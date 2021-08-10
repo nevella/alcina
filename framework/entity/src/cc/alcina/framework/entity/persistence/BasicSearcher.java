@@ -36,9 +36,10 @@ public class BasicSearcher implements Searcher {
 		return this.entityManager;
 	}
 
-	public SearchResultsBase search(SearchDefinition def, int pageNumber,
+	@Override
+	public SearchResultsBase search(SearchDefinition def,
 			EntityManager entityManager) {
-		return searchWithTemp(def, pageNumber, entityManager, null);
+		return searchWithTemp(def, entityManager, null);
 	}
 
 	private Query searchStub(SingleTableSearchDefinition sdef, String prefix,
@@ -68,14 +69,14 @@ public class BasicSearcher implements Searcher {
 	 * - but leaving this code as is for now
 	 */
 	protected SearchResultsBase searchWithTemp(SearchDefinition def,
-			int pageNumber, EntityManager entityManager, List tempObjects) {
+			EntityManager entityManager, List tempObjects) {
 		this.entityManager = entityManager;
 		SearchResultsBase result = new SearchResultsBase();
 		SingleTableSearchDefinition sdef = (SingleTableSearchDefinition) def;
 		Long resultCount = 0L;
 		List resultList = searchStub(sdef, sdef.resultEqlPrefix(), "", true)
 				.setMaxResults(def.getResultsPerPage())
-				.setFirstResult(pageNumber * def.getResultsPerPage())
+				.setFirstResult(def.getPageNumber() * def.getResultsPerPage())
 				.getResultList();
 		if (def.getResultsPerPage() < SearchDefinition.LARGE_SEARCH) {
 			Query idQuery = searchStub(sdef, sdef.idEqlPrefix(), "", false);
@@ -85,7 +86,7 @@ public class BasicSearcher implements Searcher {
 		}
 		result.setTotalResultCount(
 				resultCount == null ? 0 : resultCount.intValue());
-		result.setPageNumber(pageNumber);
+		result.setPageNumber(def.getPageNumber());
 		result.setPageResultCount(resultList.size());
 		result.setSearchDefinition(def);
 		if (tempObjects != null) {

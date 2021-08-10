@@ -26,6 +26,7 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
+import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
@@ -147,8 +148,9 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 
 		@Override
 		protected void search(int pageNumber, SearchCallback callback) {
-			Client.commonRemoteService().search(def,
-					pageNumber, callback);
+			SearchDefinition target = (SearchDefinition) def.cloneObject();
+			target.setPageNumber(pageNumber);
+			Client.commonRemoteService().search(target, callback);
 		}
 	}
 }
