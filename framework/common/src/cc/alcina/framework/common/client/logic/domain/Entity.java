@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -260,7 +261,12 @@ public abstract class Entity<T extends Entity> extends Bindable
 	}
 
 	public final String toStringEntity() {
-		return toLocator().toString();
+		try {
+			return toLocator().toString();
+		} catch (Exception e) {
+			return Ax.format("Unable to return locator - class %s - id %s",
+					getClass().getSimpleName(), id);
+		}
 	}
 
 	protected int _compareTo(Entity o) {
