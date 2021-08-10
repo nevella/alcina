@@ -222,7 +222,7 @@ public abstract class ClientReflector implements ClassLookup {
 			Set<String> stack = new HashSet<>();
 			String fromName = from.getName();
 			Class cursor = to;
-			while (cursor != Object.class) {
+			while (cursor != Object.class && cursor != null) {
 				if (from == cursor) {
 					return true;
 				}
