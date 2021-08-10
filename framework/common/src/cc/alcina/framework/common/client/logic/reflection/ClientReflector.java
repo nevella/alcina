@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -161,8 +162,9 @@ public abstract class ClientReflector implements ClassLookup {
 	public List<Class> getInterfaces(Class clazz) {
 		return perClassInterfaces.computeIfAbsent(clazz, k -> {
 			List<String> list = clazzImplements.get(k.getName());
-			return list.stream().map(Reflections::forName)
-					.collect(Collectors.toList());
+			return list == null ? Collections.emptyList()
+					: list.stream().map(Reflections::forName)
+							.collect(Collectors.toList());
 		});
 	}
 

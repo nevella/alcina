@@ -1,8 +1,10 @@
 package com.totsp.gwittir.rebind.beans;
 
 import java.lang.annotation.Annotation;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
@@ -41,6 +43,10 @@ public interface IntrospectorFilter {
 					LiSet.class, LightMap.class)
 			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 
+	public static final Set<String> CORE_CLASS_NAMES = Arrays
+			.asList(Class.class, Date.class, Timestamp.class).stream()
+			.map(Class::getCanonicalName).collect(Collectors.toSet());
+
 	boolean emitBeanResolver(BeanResolver resolver);
 
 	void filterAnnotations(List<JAnnotationType> jAnns,
@@ -61,6 +67,10 @@ public interface IntrospectorFilter {
 	default boolean isReflectableJavaCollectionClass(JClassType jClassType) {
 		return COLLECTION_CLASS_NAMES
 				.contains(jClassType.getQualifiedSourceName());
+	}
+
+	default boolean isReflectableJavaCoreClass(JClassType jClassType) {
+		return CORE_CLASS_NAMES.contains(jClassType.getQualifiedSourceName());
 	}
 
 	boolean omitForModule(JClassType jClassType,

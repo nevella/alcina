@@ -502,11 +502,11 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println("private void init() {");
 		sw.indent();
 		sw.println("initCreateLookup0();");
-		List<JClassType> instantiableTypesThisModule = allTypes.stream().filter(
-				t -> !filter.omitForModule(t, ReflectionAction.NEW_INSTANCE))
+		List<JClassType> forNameTypesThisModule = allTypes.stream().filter(
+				t -> !filter.omitForModule(t, ReflectionAction.FOR_NAME))
 				.collect(Collectors.toList());
 		Map<JClassType, List<JClassType>> assignableFromTypes = computeAssignableFromTypes(
-				instantiableTypesThisModule);
+				forNameTypesThisModule);
 		assignableFromTypes.forEach((from, to) -> {
 			if (to.isEmpty()) {
 				return;
@@ -650,6 +650,7 @@ public class ClientReflectionGenerator extends Generator {
 			if ((hasAnnotationNamed(jClassType, ClientInstantiable.class)
 					|| jClassType.isAnnotationPresent(
 							cc.alcina.framework.common.client.logic.reflection.Bean.class)
+					|| filter.isReflectableJavaCoreClass(jClassType)
 					|| filter.isReflectableJavaCollectionClass(jClassType))
 					&& !ignore(jClassType, ReflectionAction.NEW_INSTANCE)) {
 				results.add(jClassType);
