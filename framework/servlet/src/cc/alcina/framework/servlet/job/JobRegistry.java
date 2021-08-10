@@ -697,10 +697,10 @@ public class JobRegistry {
 
 		private boolean awaiter;
 
-		public void addSibling(Task task) {
+		public Job addSibling(Task task) {
 			this.task = task;
 			withContextParent();
-			create();
+			return create();
 		}
 
 		public Job create() {
