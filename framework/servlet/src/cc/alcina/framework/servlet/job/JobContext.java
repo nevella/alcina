@@ -467,8 +467,9 @@ public class JobContext {
 		thread = Thread.currentThread();
 		threadStartName = thread.getName();
 		if (job.provideIsNotComplete()) {
-			thread.setName(job.getTask().getClass().getSimpleName() + "::"
-					+ threadStartName);
+			thread.setName(Ax.format("%s::%s::%s",
+					job.provideTaskClass().getSimpleName(), job.getId(),
+					threadStartName));
 			job.setStartTime(new Date());
 			job.setState(JobState.PROCESSING);
 			job.setPerformerVersionNumber(performer.getVersionNumber());
