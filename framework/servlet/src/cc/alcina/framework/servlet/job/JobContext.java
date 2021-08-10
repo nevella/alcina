@@ -170,6 +170,13 @@ public class JobContext {
 		}
 	}
 
+	public static void
+			setEnqueueProgressOnBackend(boolean enqueueProgressOnBackend) {
+		if (has()) {
+			get().enqueueProgressOnBackend = enqueueProgressOnBackend;
+		}
+	}
+
 	public static void setLargeResult(Object largeResult) {
 		if (has()) {
 			get().getJob().setLargeResult(largeResult);
@@ -261,10 +268,6 @@ public class JobContext {
 		itemCount += delta;
 	}
 
-	public boolean isEnqueueProgressOnBackend() {
-		return this.enqueueProgressOnBackend;
-	}
-
 	public void jobOk(String resultMessage) {
 		job.setResultMessage(resultMessage);
 		job.setStatusMessage(resultMessage);
@@ -289,10 +292,6 @@ public class JobContext {
 
 	public void remove() {
 		LooseContext.remove(CONTEXT_CURRENT);
-	}
-
-	public void setEnqueueProgressOnBackend(boolean enqueueProgressOnBackend) {
-		this.enqueueProgressOnBackend = enqueueProgressOnBackend;
 	}
 
 	public void setItemCount(int itemCount) {
@@ -370,7 +369,7 @@ public class JobContext {
 	}
 
 	private void maybeEnqueue(Runnable runnable) {
-		if (isEnqueueProgressOnBackend()) {
+		if (enqueueProgressOnBackend) {
 			TransformCommit.get().enqueueBackendTransform(runnable);
 		} else {
 			runnable.run();
