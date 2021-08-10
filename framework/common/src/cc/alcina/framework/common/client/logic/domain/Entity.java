@@ -255,7 +255,12 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return toLocator().toString();
 		}
 		if (this instanceof HasDisplayName) {
-			return ((HasDisplayName) this).displayName();
+			try {
+				return ((HasDisplayName) this).displayName();
+			} catch (Exception e) {
+				return CommonUtils.toSimpleExceptionMessage(e) + " - "
+						+ toLocator().toString();
+			}
 		}
 		return toLocator().toString();
 	}
