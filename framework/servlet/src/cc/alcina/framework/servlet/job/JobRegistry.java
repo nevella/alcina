@@ -699,7 +699,9 @@ public class JobRegistry {
 
 		public Job addSibling(Task task) {
 			this.task = task;
-			withContextParent();
+			if (JobContext.has()) {
+				withContextParent();
+			}
 			return create();
 		}
 
