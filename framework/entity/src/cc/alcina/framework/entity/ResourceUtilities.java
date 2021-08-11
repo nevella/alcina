@@ -525,7 +525,7 @@ public class ResourceUtilities {
 	public static byte[] readClassPathResourceAsByteArray(Class clazz,
 			String path) {
 		try {
-			return readStreamToByteArray(clazz.getResourceAsStream(path));
+			return readStreamToByteArray(getResourceAsStream(clazz, path));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -534,7 +534,7 @@ public class ResourceUtilities {
 	public static String readClassPathResourceAsString(Class clazz,
 			String path) {
 		try {
-			return readStreamToString(clazz.getResourceAsStream(path));
+			return readStreamToString(getResourceAsStream(clazz, path));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -944,6 +944,15 @@ public class ResourceUtilities {
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
 		bw.close();
+	}
+
+	private static InputStream getResourceAsStream(Class clazz, String path) {
+		InputStream stream = clazz.getResourceAsStream(path);
+		if (stream == null) {
+			stream = Thread.currentThread().getContextClassLoader()
+					.getResourceAsStream(path);
+		}
+		return stream;
 	}
 
 	private static <T> T newInstanceForCopy(T t)
