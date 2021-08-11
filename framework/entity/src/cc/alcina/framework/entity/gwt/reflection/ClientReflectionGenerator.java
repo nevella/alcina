@@ -412,13 +412,10 @@ public class ClientReflectionGenerator extends Generator {
 		Set<JClassType> allTypes = new LinkedHashSet<JClassType>();
 		allTypes.addAll(instantiableTypes);
 		allTypes.addAll(beanInfoTypes);
-		List<JClassType> constructorTypes = CollectionFilters.filter(allTypes,
-				new CollectionFilter<JClassType>() {
-					@Override
-					public boolean allow(JClassType o) {
-						return o.isEnum() == null;
-					}
-				});
+		List<JClassType> constructorTypes = allTypes.stream().filter(
+				t -> t.isEnum() == null && Arrays.stream(t.getConstructors())
+						.anyMatch(ctor -> ctor.getParameterTypes().length == 0))
+				.collect(Collectors.toList());
 		methodCount = 0;
 		for (JClassType jClassType : constructorTypes) {
 			/*
