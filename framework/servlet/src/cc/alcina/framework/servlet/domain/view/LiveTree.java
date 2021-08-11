@@ -113,8 +113,10 @@ public class LiveTree {
 		response.getTransforms().addAll(requestToTransform(request, response));
 		response.setRequest(request);
 		response.setPosition(currentPosition);
-		response.setSelfAndDescendantCount(root
-				.ensurePath(request.getTreePath()).getSelfAndDescendantCount());
+		response.setSelfAndDescendantCount(
+				request.getTreePath() == null ? root.getSelfAndDescendantCount()
+						: root.ensurePath(request.getTreePath())
+								.getSelfAndDescendantCount());
 		return response;
 	}
 
