@@ -191,7 +191,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initDevConsoleAndWebApp();
 			initJPA();
 			initServices();
-			initEntityLayerRegistry();
 			initCluster();
 			getStatusNotifier().deploying();
 			initEntityLayer();
@@ -294,7 +293,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected abstract void initEntityLayer() throws Exception;
 
-	protected void initEntityLayerRegistry() throws Exception {
+	protected void initEntityLayerRegistry() {
 	}
 
 	protected abstract void initJPA();
@@ -418,6 +417,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		initDataFolder();
 		clearJarCache();
 		initRegistry();
+		initEntityLayerRegistry();
 		initCommonImplServices();
 		initCustomServices();
 		MetricLogging.get().end(key);
