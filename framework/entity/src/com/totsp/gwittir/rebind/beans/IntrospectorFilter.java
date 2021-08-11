@@ -44,7 +44,7 @@ public interface IntrospectorFilter {
 			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 
 	public static final Set<String> CORE_CLASS_NAMES = Arrays
-			.asList(Class.class, Date.class, Timestamp.class).stream()
+			.asList(Class.class, Date.class).stream()
 			.map(Class::getCanonicalName).collect(Collectors.toSet());
 
 	boolean emitBeanResolver(BeanResolver resolver);
