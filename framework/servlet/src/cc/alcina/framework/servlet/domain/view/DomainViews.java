@@ -134,6 +134,11 @@ public abstract class DomainViews {
 		}
 	}
 
+	public void shutdown() {
+		finished = true;
+		tasks.add(new ViewsTask());
+	}
+
 	public <T> T submitLambda(
 			Request<? extends DomainViewSearchDefinition> request,
 			Function<LiveTree, T> lambda) {
@@ -275,11 +280,14 @@ public abstract class DomainViews {
 			setName("DomainViews-task-queue-"
 					+ EntityLayerUtils.getLocalHostName());
 			long lastEvictSubmit = 0;
-			while (!finished) {
+			while (true) {
 				try {
 					LooseContext.pushWithTrue(
 							JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);
 					ViewsTask task = tasks.poll(1, TimeUnit.SECONDS);
+					if (finished) {
+						return;
+					}
 					if (task != null) {
 						try {
 							PermissionsManager.get().pushUser(task.user,
@@ -303,7 +311,13 @@ public abstract class DomainViews {
 				} catch (Throwable e) {
 					e.printStackTrace();
 				} finally {
-					LooseContext.pop();
+					try {
+						LooseContext.pop();
+					} catch (RuntimeException e) {
+						if (!finished) {
+							throw e;
+						}
+					}
 				}
 			}
 		}
