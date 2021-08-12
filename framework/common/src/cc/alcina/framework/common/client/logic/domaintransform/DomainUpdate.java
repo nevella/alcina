@@ -81,6 +81,10 @@ public class DomainUpdate implements Serializable {
 	@RegistryLocation(registryPoint = DomainTransformCommitPositionProvider.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class DomainTransformCommitPositionProvider {
+		public long getCurrentTransactionId() {
+			return 0;
+		}
+
 		public DomainTransformCommitPosition getPosition() {
 			return null;
 		}

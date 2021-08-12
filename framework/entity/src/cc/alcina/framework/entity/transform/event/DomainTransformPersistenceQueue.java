@@ -323,6 +323,11 @@ public class DomainTransformPersistenceQueue {
 		private DomainTransformPersistenceQueue queue;
 
 		@Override
+		public long getCurrentTransactionId() {
+			return Transaction.current().getId().id;
+		}
+
+		@Override
 		public DomainTransformCommitPosition getPosition() {
 			if (queue == null) {
 				queue = DomainStore.writableStore().getPersistenceEvents()

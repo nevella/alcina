@@ -80,6 +80,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 */
 	private TransactionId firstCommittedTransactionId;
 
+	// debugging
+	private TransactionId initialTransactionId;
+
 	/*
 	 * also used as a monitor for resolution caching
 	 */
@@ -108,6 +111,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		version.transaction = initialTransaction;
 		domainIdentity = t;
 		visibleAllTransactions = initialAllTransactionsValueFor(t);
+		initialTransactionId = initialTransaction.getId();
 		if (initialObjectIsWriteable) {
 			this.initialWriteableTransaction = initialTransaction;
 			version.object = domainIdentity;
@@ -347,12 +351,13 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			if (notifyResolveNullCount-- >= 0) {
 				logger.warn(
 						"onResolveNull: \nVersions: {}\nCurrent tx-id: {} - highest visible id: {}\n"
-								+ "Visible all tx?: {}\nFirst committed tx-id: {}\nInitial writeable tx: {}\nCached resolution: {}",
+								+ "Visible all tx?: {}\nFirst committed tx-id: {}\nInitial  txid: {}"
+								+ "\nInitial writeable tx: {}\nCached resolution: {}",
 						versions.keySet(), Transaction.current(),
 						Transaction
 								.current().highestVisibleCommittedTransactionId,
 						visibleAllTransactions != null,
-						firstCommittedTransactionId,
+						firstCommittedTransactionId, initialTransactionId,
 						initialWriteableTransaction, cachedResolution);
 				logger.warn("onResolveNull", new Exception());
 			}
@@ -397,14 +402,18 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	boolean hasNoVisibleTransaction() {
-		return resolve(false) == null;
+		return resolve(false, false) == null;
 	}
 
 	boolean hasVisibleVersion() {
-		return resolve(false) != null;
+		return resolve(false, false) != null;
 	}
 
 	T resolve(boolean write) {
+		return resolve(write, true);
+	}
+
+	T resolve(boolean write, boolean notifyResolveNull) {
 		Transaction transaction = Transaction.current();
 		T resolved = resolve0(transaction, write);
 		if (resolved == null) {
