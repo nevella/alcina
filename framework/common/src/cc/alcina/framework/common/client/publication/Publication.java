@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.Wrapper;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.customiser.FriendlyEnumCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ObjectActionLinkCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.StandardLabelCustomiser;
@@ -103,8 +104,6 @@ public abstract class Publication extends Entity<Publication>
 		return contentDefinition;
 	}
 
-	@Display(name = "Content", orderingHint = 50, visible = @Permission(access = AccessLevel.LOGGED_IN))
-	@Custom(customiserClass = StandardLabelCustomiser.class)
 	@Lob
 	@Transient
 	public String getContentDefinitionDescription() {
@@ -128,9 +127,6 @@ public abstract class Publication extends Entity<Publication>
 		return this.definitionClassName;
 	}
 
-	// @Display(name = "Content", orderingHint = 50, visible =
-	// @Permission(access = AccessLevel.LOGGED_IN))
-	@Custom(customiserClass = StandardLabelCustomiser.class)
 	@Lob
 	@Transient
 	public String getDefinitionDescription() {
@@ -153,8 +149,6 @@ public abstract class Publication extends Entity<Publication>
 		return deliveryModel;
 	}
 
-	@Display(name = "Delivery", orderingHint = 60, visible = @Permission(access = AccessLevel.LOGGED_IN))
-	@Custom(customiserClass = StandardLabelCustomiser.class)
 	@Lob
 	@Transient
 	public String getDeliveryModelDescription() {
@@ -192,6 +186,16 @@ public abstract class Publication extends Entity<Publication>
 
 	public String getPublicationUid() {
 		return this.publicationUid;
+	}
+
+	@Display(name = "Content", orderingHint = 50, visible = @Permission(access = AccessLevel.LOGGED_IN))
+	@Custom(customiserClass = StandardLabelCustomiser.class)
+	@Lob
+	@Transient
+	@AlcinaTransient
+	public String getResolvedDescription() {
+		return Ax.blankTo(this.definitionDescription,
+				this.contentDefinitionDescription);
 	}
 
 	@Transient
