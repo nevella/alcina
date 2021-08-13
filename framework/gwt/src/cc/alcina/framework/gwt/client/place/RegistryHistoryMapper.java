@@ -6,6 +6,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
@@ -174,8 +175,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 				? o_tokenizer.get().getPlace(token)
 				: null;
 		if (place == null) {
-			// handle doc internal hrefs
-			place = lastPlace;
+			if (GWT.isClient()) {
+				// handle doc internal hrefs
+				place = lastPlace;
+			}
 		}
 		lastPlace = place;
 		return place;
