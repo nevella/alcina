@@ -698,10 +698,11 @@ public class JobRegistry {
 		private boolean awaiter;
 
 		public Job addSibling(Task task) {
+			// only run to add a sibling to a child job - otherwise use
+			// followWith()
+			Preconditions.checkState(JobContext.has());
 			this.task = task;
-			if (JobContext.has()) {
-				withContextParent();
-			}
+			withContextParent();
 			return create();
 		}
 
@@ -744,12 +745,13 @@ public class JobRegistry {
 			return this;
 		}
 
-		public void followWith(Task task) {
+		public Job followWith(Task task) {
 			this.task = task;
 			relationType = JobRelationType.SEQUENCE;
 			Preconditions.checkArgument(lastCreated != null);
 			related = lastCreated;
 			create();
+			return lastCreated;
 		}
 
 		public Builder withAwaiter() {

@@ -324,7 +324,7 @@ public class ReflectiveSerializers {
 
 		@Override
 		public JsonValue toJson(BasePlace object) {
-			return Json.create(object.toTokenString());
+			return Json.create(object.toTokenStringWithoutAppPrefix());
 		}
 
 		@Override
