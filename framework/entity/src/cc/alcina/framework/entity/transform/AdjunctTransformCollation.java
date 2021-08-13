@@ -29,6 +29,9 @@ public class AdjunctTransformCollation extends TransformCollation {
 		this.token = transformPersistenceToken;
 	}
 
+	/*
+	 * Don't perform any modifications in the snapshot - return to base
+	 */
 	public <T> T callHandleDeleted(QueryResult result, Callable<T> callable) {
 		try {
 			if (result.hasDeleteTransform()) {

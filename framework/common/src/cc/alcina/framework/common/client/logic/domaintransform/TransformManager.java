@@ -2076,6 +2076,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 		if (markedForDeletion.contains(associated)) {
 			return;
 		}
+		/*
+		 * When using Transaction.callInSnapshotTransaction to handle
+		 * server-side cascade transforms of client-side deleted objects
+		 */
+		if (associated.domain().wasRemoved()) {
+			return;
+		}
 		associated = (Entity) ensureEndpointWriteable(associated);
 		Object associatedObject = propertyAccessor()
 				.getPropertyValue(associated, association.propertyName());
