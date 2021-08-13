@@ -574,12 +574,16 @@ public class ResourceUtilities {
 		return readFileToString(new File(fileName));
 	}
 
-	public static String readFileToStringGz(File f) throws IOException {
-		InputStream fis = new FileInputStream(f);
-		if (f.getName().endsWith(".gz")) {
-			fis = new GZIPInputStream(new BufferedInputStream(fis));
+	public static String readFileToStringGz(File f) {
+		try {
+			InputStream fis = new FileInputStream(f);
+			if (f.getName().endsWith(".gz")) {
+				fis = new GZIPInputStream(new BufferedInputStream(fis));
+			}
+			return readStreamToString(fis);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
-		return readStreamToString(fis);
 	}
 
 	public static <T> T readObjectFromBase64(String string) throws IOException {
