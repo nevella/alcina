@@ -27,6 +27,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
@@ -100,6 +101,7 @@ import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy;
@@ -151,7 +153,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public static Map<Long, String> setIgnoreTrace = new LinkedHashMap<>();
 
-	private static AtomicInteger removeListenerCounter = new AtomicInteger();
+	private static AtomicInteger removeListenerExceptionCounter = new AtomicInteger();
 
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
@@ -223,6 +225,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	protected EntityLocatorMap clientInstanceEntityMap;
 
 	private EntityManager entityManager;
+
+	private TransactionId listeningToTransactionId;
 
 	private IdentityHashMap<Entity, Entity> listeningTo = new IdentityHashMap<Entity, Entity>();
 
@@ -1100,6 +1104,18 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private void listenTo(Entity entity) {
 		if (!listeningTo.containsKey(entity)) {
+			TransactionId transactionId = Transaction.current().getId();
+			if (listeningToTransactionId == null) {
+				listeningToTransactionId = transactionId;
+			} else {
+				if (!Objects.equals(listeningToTransactionId, transactionId)) {
+					logger.warn(
+							"DEVEX:0 - Listening to object from wrong tx: {} - current : {} - incoming : {}",
+							entity.toStringEntity(), listeningToTransactionId,
+							Transaction.current());
+					throw new IllegalStateException();
+				}
+			}
 			listeningTo.put(entity, entity);
 			entity.addPropertyChangeListener(this);
 		}
@@ -1134,13 +1150,14 @@ public class ThreadlocalTransformManager extends TransformManager
 				} catch (Exception e) {
 					logger.warn("DEVEX:0 - Exception removing listener: {} ",
 							entity.toStringEntity());
-					if (removeListenerCounter.incrementAndGet() < 50) {
+					if (removeListenerExceptionCounter.incrementAndGet() < 50) {
 						logger.warn("DEVEX:0 - Exception removing listener ",
 								e);
 					}
 				}
 			}
 		}
+		listeningToTransactionId = null;
 		listeningTo = new IdentityHashMap<>();
 		Set<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN);

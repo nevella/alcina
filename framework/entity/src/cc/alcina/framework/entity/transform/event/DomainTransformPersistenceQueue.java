@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -118,6 +119,10 @@ public class DomainTransformPersistenceQueue {
 
 	public DomainTransformCommitPosition getTransformCommitPosition() {
 		return state.transformCommitPosition;
+	}
+
+	public void onLocalVmTxTimeout() {
+		eventQueue.debugState();
 	}
 
 	public void onPersistedRequestPreCommitted(
@@ -340,6 +345,12 @@ public class DomainTransformPersistenceQueue {
 	public class PersistenceEvents extends Thread {
 		Logger fireEventThreadLogger = OffThreadLogger.getLogger(getClass()
 				.getName().replace("DomainTransformPersistenceQueue$", ""));
+
+		public void debugState() {
+			String stacktraceSlice = SEUtilities.getStacktraceSlice(this);
+			logger.warn("Queue debug: firing event: {}\n============\n{}",
+					firingEvent, stacktraceSlice);
+		}
 
 		@Override
 		public void run() {

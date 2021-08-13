@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.SEUtilities;
@@ -153,6 +152,7 @@ public class DomainTransformPersistenceEvents {
 								"DEVEX::0 - Timed out waiting for local-vm tx - {}\n\n{}\n",
 								event, SEUtilities.getFullStacktrace(
 										Thread.currentThread()));
+						queue.onLocalVmTxTimeout();
 					}
 					Transaction.endAndBeginNew();
 					return;
