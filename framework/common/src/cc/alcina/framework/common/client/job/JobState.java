@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 @ClientInstantiable
 public enum JobState {
 	FUTURE, PENDING, ALLOCATED, PROCESSING, CANCELLED, ABORTED, COMPLETED,
-	SKIPPED, SEQUENCE_COMPLETE;
+	SKIPPED, SEQUENCE_COMPLETE, FUTURE_CONSISTENCY;
 
 	public boolean isComplete() {
 		switch (this) {

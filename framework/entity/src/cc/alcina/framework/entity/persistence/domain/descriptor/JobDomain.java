@@ -875,6 +875,9 @@ public class JobDomain {
 			if (job.getTaskClassName() == null) {
 				return;
 			}
+			if (job.getState() == JobState.FUTURE_CONSISTENCY) {
+				return;
+			}
 			AllocationQueue queue = queues.get(job);
 			if (job.provideIsFuture()) {
 				if (!job.provideCanDeserializeTask()) {
@@ -930,6 +933,9 @@ public class JobDomain {
 
 		private void remove0(Job job) {
 			if (job.getTaskClassName() == null) {
+				return;
+			}
+			if (job.getState() == JobState.FUTURE_CONSISTENCY) {
 				return;
 			}
 			AllocationQueue queue = queues.get(job);

@@ -10,8 +10,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -32,6 +35,20 @@ public class Transactions {
 	private static Transactions instance;
 
 	private static ConcurrentHashMap<Class, Constructor> copyConstructors = new ConcurrentHashMap<>();
+
+	public static <T> int callWithCommits(Stream<T> stream,
+			Consumer<T> consumer, int commitEveryNTransforms) {
+		AtomicInteger counter = new AtomicInteger();
+		stream.forEach(t -> {
+			consumer.accept(t);
+			int delta = Transaction
+					.commitIfTransformCount(commitEveryNTransforms);
+			counter.addAndGet(delta);
+		});
+		int delta = Transaction.commit();
+		counter.addAndGet(delta);
+		return counter.get();
+	}
 
 	public static <T extends Entity> boolean checkResolved(T t) {
 		return resolve(t, false, false) == t;
