@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -36,14 +37,18 @@ public class Transactions {
 
 	private static ConcurrentHashMap<Class, Constructor> copyConstructors = new ConcurrentHashMap<>();
 
-	public static <T> int callWithCommits(Stream<T> stream,
-			Consumer<T> consumer, int commitEveryNTransforms) {
+	public static <T> int callWithCommits(long size, String streamName,
+			Stream<T> stream, Consumer<T> consumer,
+			int commitEveryNTransforms) {
 		AtomicInteger counter = new AtomicInteger();
+		SystemoutCounter ticks = SystemoutCounter.standardJobCounter((int) size,
+				streamName);
 		stream.forEach(t -> {
 			consumer.accept(t);
 			int delta = Transaction
 					.commitIfTransformCount(commitEveryNTransforms);
 			counter.addAndGet(delta);
+			ticks.tick();
 		});
 		int delta = Transaction.commit();
 		counter.addAndGet(delta);

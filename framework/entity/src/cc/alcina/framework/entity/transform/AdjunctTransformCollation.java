@@ -100,6 +100,16 @@ public class AdjunctTransformCollation extends TransformCollation {
 		return this;
 	}
 
+	public void refreshFromRequest() {
+		refresh(token.getRequest().allTransforms());
+	}
+
+	public void removeCreateDeleteTransforms() {
+		ensureLookups();
+		allEvents.stream().filter(this::isCreatedAndDeleted)
+				.forEach(this::removeTransformFromRequest);
+	}
+
 	@Override
 	protected void removeTransformFromRequest(DomainTransformEvent event) {
 		Preconditions.checkState(token.getTransformResult() == null);

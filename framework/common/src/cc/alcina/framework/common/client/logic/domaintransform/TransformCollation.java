@@ -28,8 +28,7 @@ public class TransformCollation {
 	private Map<EntityLocator, EntityCollation> perLocator;
 
 	public TransformCollation(List<? extends DomainTransformEvent> allEvents) {
-		this.allEvents = (List<DomainTransformEvent>) allEvents.stream()
-				.collect(Collectors.toList());
+		refresh(allEvents);
 	}
 
 	public TransformCollation(Set<? extends DomainTransformEvent> allEvents) {
@@ -42,6 +41,7 @@ public class TransformCollation {
 	}
 
 	public void filterNonpersistentPropertyTransforms() {
+		ensureLookups();
 		Set<DomainTransformEvent> events = allEvents.stream()
 				.collect(AlcinaCollectors.toLinkedHashSet());
 		allEntityCollations().forEach(ec -> {
@@ -121,6 +121,13 @@ public class TransformCollation {
 				perLocator.put(locator, collation);
 			});
 		}
+	}
+
+	protected void refresh(List<? extends DomainTransformEvent> allEvents) {
+		this.allEvents = (List<DomainTransformEvent>) allEvents.stream()
+				.collect(Collectors.toList());
+		perClass = null;
+		perLocator = null;
 	}
 
 	protected void removeTransformFromRequest(DomainTransformEvent event) {

@@ -123,6 +123,10 @@ public class EntityHelper {
 		return entity -> entity != null && longs.contains(entity.getId());
 	}
 
+	public static boolean notRemoved(Entity e) {
+		return !e.domain().wasRemoved();
+	}
+
 	public static String strGetIdOrZero(HasId hasId) {
 		return String.valueOf(getIdOrZero(hasId));
 	}
