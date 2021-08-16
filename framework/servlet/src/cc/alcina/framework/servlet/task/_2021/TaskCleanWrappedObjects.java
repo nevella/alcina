@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -60,6 +61,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionCont
 import cc.alcina.framework.entity.projection.GraphWalker;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.util.SqlUtils;
+import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskCleanWrappedObjects
@@ -82,12 +84,33 @@ public class TaskCleanWrappedObjects
 
 	private int sliceSize = 1000;
 
+	private long fromCleanedId;
+
+	private boolean allowNonFlatSerialization = false;
+
+	public long getFromCleanedId() {
+		return this.fromCleanedId;
+	}
+
 	public int getSliceSize() {
 		return this.sliceSize;
 	}
 
+	public boolean isAllowNonFlatSerialization() {
+		return this.allowNonFlatSerialization;
+	}
+
 	public boolean isResetMaxCleanedId() {
 		return this.resetMaxCleanedId;
+	}
+
+	public void
+			setAllowNonFlatSerialization(boolean allowNonFlatSerialization) {
+		this.allowNonFlatSerialization = allowNonFlatSerialization;
+	}
+
+	public void setFromCleanedId(long fromCleanedId) {
+		this.fromCleanedId = fromCleanedId;
 	}
 
 	public void setResetMaxCleanedId(boolean resetMaxCleanedId) {
@@ -166,6 +189,9 @@ public class TaskCleanWrappedObjects
 	@Override
 	protected void performAction0(TaskCleanWrappedObjects task)
 			throws Exception {
+		LooseContext.setBoolean(
+				FlatTreeSerializer.CONTEXT_THROW_ON_SERIALIZATION_FAILURE,
+				!allowNonFlatSerialization);
 		state = UserProperty.ensure(State.class).deserialize();
 		Connection conn = Registry.impl(DataSourceAdapter.class)
 				.getConnection();
@@ -189,7 +215,7 @@ public class TaskCleanWrappedObjects
 		logger.info("Beginning run - from: {}; max: {}; size; {}",
 				state.maxCleanedId, state.maxId, state.size);
 		if (resetMaxCleanedId) {
-			state.maxCleanedId = 0;
+			state.maxCleanedId = fromCleanedId;
 		}
 		UserProperty.ensure(State.class).serializeObject(state);
 		Transaction.commit();
@@ -262,17 +288,22 @@ public class TaskCleanWrappedObjects
 						wrappedByPublicationId.get(p.getId()));
 			});
 			unwrapped.unwrapped.forEach(pub -> {
-				if (pub.getDefinitionSerialized() == null) {
-					DeliveryModel deliveryModel = pub.getDeliveryModel();
-					Preconditions.checkState(deliveryModel != null);
-					updateSerializable(deliveryModel);
-					idMap.get(pub.getId())
-							.setDefinition((Definition) deliveryModel);
+				try {
+					if (pub.getDefinitionSerialized() == null) {
+						DeliveryModel deliveryModel = pub.getDeliveryModel();
+						Preconditions.checkState(deliveryModel != null);
+						updateSerializable(deliveryModel);
+						idMap.get(pub.getId())
+								.setDefinition((Definition) deliveryModel);
+					}
+					wrappedByPublicationId.get(pub.getId()).forEach(w -> {
+						wrappedObjects.remove(w);
+						((Entity) w).delete();
+					});
+				} catch (Exception e1) {
+					publicationWrapperExceptionsWrappedObjects.put(pub,
+							wrappedByPublicationId.get(pub.getId()));
 				}
-				wrappedByPublicationId.get(pub.getId()).forEach(w -> {
-					wrappedObjects.remove(w);
-					((Entity) w).delete();
-				});
 			});
 			Transaction.commit();
 			hadNotHandled |= wrappedObjects.size() > 0;
@@ -291,6 +322,7 @@ public class TaskCleanWrappedObjects
 				Transaction.commit();
 			}
 			MetricLogging.get().end(key);
+			JobContext.checkCancelled();
 		}
 		Transaction.commit();
 		conn.close();

@@ -112,6 +112,9 @@ public class FlatTreeSerializer {
 	public static final String CONTEXT_DESERIALIZING = FlatTreeSerializer.class
 			.getName() + ".CONTEXT_DESERIALIZING";
 
+	public static final String CONTEXT_THROW_ON_SERIALIZATION_FAILURE = FlatTreeSerializer.class
+			.getName() + ".CONTEXT_THROW_ON_SERIALIZATION_FAILURE";
+
 	private static String NULL_MARKER = "__fts_NULL__";
 
 	private static Map<Class, Map<String, Property>> deSerializationClassAliasProperty = Registry
@@ -502,7 +505,8 @@ public class FlatTreeSerializer {
 								property = segmentMap.get("");
 							}
 						} else {
-							property = SerializationSupport.getProperties(cursor.value).stream()
+							property = SerializationSupport
+									.getProperties(cursor.value).stream()
 									.filter(p -> p.getName()
 											.equals(segmentPath))
 									.findFirst().get();
@@ -515,8 +519,10 @@ public class FlatTreeSerializer {
 									state.rootClass.getSimpleName(), path);
 							break;
 						}
-						PropertySerialization propertySerialization = SerializationSupport.getPropertySerialization(
-								cursor.value.getClass(), property.getName());
+						PropertySerialization propertySerialization = SerializationSupport
+								.getPropertySerialization(
+										cursor.value.getClass(),
+										property.getName());
 						Object childValue = Reflections.propertyAccessor()
 								.getPropertyValue(cursor.value,
 										property.getName());
@@ -651,8 +657,9 @@ public class FlatTreeSerializer {
 		RootClassPropertyKey key = new RootClassPropertyKey(rootClass,
 				cursor.path.property);
 		return deSerializationPropertyAliasClass.computeIfAbsent(key, k -> {
-			PropertySerialization propertySerialization = SerializationSupport.getPropertySerialization(
-					cursor.parent.value.getClass(), k.property.getName());
+			PropertySerialization propertySerialization = SerializationSupport
+					.getPropertySerialization(cursor.parent.value.getClass(),
+							k.property.getName());
 			Class[] availableTypes = propertySerialization == null
 					? new Class[0]
 					: propertySerialization.types();
@@ -673,8 +680,9 @@ public class FlatTreeSerializer {
 
 	private Map<String, Property> getAliasPropertyMap(Node cursor) {
 		Function<? super Property, ? extends String> keyMapper = property -> {
-			PropertySerialization propertySerialization = SerializationSupport.getPropertySerialization(
-					cursor.value.getClass(), property.getName());
+			PropertySerialization propertySerialization = SerializationSupport
+					.getPropertySerialization(cursor.value.getClass(),
+							property.getName());
 			if (propertySerialization != null) {
 				if (propertySerialization.defaultProperty()) {
 					return "";
@@ -779,8 +787,8 @@ public class FlatTreeSerializer {
 					}
 					Node childNode = new Node(cursor, childValue, defaultValue);
 					childNode.path.property = property;
-					childNode.path.setPropertySerialization(
-							SerializationSupport.getPropertySerialization(cursor.value.getClass(),
+					childNode.path.setPropertySerialization(SerializationSupport
+							.getPropertySerialization(cursor.value.getClass(),
 									property.getName()));
 					if (childNode.path.ignoreForSerialization()) {
 						return;
@@ -807,8 +815,9 @@ public class FlatTreeSerializer {
 
 	private Object synthesisePopulatedPropertyValue(Node node,
 			Property property) {
-		PropertySerialization propertySerialization = SerializationSupport.getPropertySerialization(
-				node.value.getClass(), property.getName());
+		PropertySerialization propertySerialization = SerializationSupport
+				.getPropertySerialization(node.value.getClass(),
+						property.getName());
 		if (propertySerialization != null
 				&& propertySerialization.notTestable()) {
 			try {
@@ -1060,6 +1069,10 @@ public class FlatTreeSerializer {
 					return FlatTreeSerializer
 							.serialize((TreeSerializable) object, options);
 				} catch (Exception e) {
+					if (LooseContext
+							.is(CONTEXT_THROW_ON_SERIALIZATION_FAILURE)) {
+						throw new WrappedRuntimeException(e);
+					}
 					String jsonSerialized = super.serialize(object,
 							hasClassNameProperty);
 					logger.warn("SerializerFlat exception: {}", jsonSerialized);
