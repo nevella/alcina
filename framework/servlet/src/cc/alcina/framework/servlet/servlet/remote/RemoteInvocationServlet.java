@@ -220,9 +220,12 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				ThreadlocalTransformManager.get().resetTltm(null);
 				DomainStore.writableStore().getPersistenceEvents().getQueue()
 						.refreshPositions();
-				DomainTransformLayerWrapper wrapper = (DomainTransformLayerWrapper) resultHolder
-						.get(0);
-				wrapper.snapshotEntityLocatorMap();
+				if (resultHolder
+						.get(0) instanceof DomainTransformLayerWrapper) {
+					DomainTransformLayerWrapper wrapper = (DomainTransformLayerWrapper) resultHolder
+							.get(0);
+					wrapper.snapshotEntityLocatorMap();
+				}
 			}
 			if (params.api.isLinkToDomain(method.getName())
 					&& params.mayLinkToDomain) {
