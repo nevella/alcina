@@ -936,6 +936,9 @@ public class TransformCommit {
 									persistenceToken, null,
 									DomainTransformPersistenceEventType.PRE_COMMIT,
 									true));
+			persistenceToken.getTransformCollation().refreshFromRequest();
+			persistenceToken.getTransformCollation()
+					.removeCreateDeleteTransforms();
 			MetricLogging.get().start("transform-commit");
 			Transaction.current().toDbPersisting();
 			DomainTransformLayerWrapper wrapper = Registry
