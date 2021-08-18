@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -119,8 +121,9 @@ public class KryoUtils {
 
 	public static <T> T deserializeFromFile(File file, Class<T> knownType) {
 		try {
-			return deserializeFromStream(new FileInputStream(file), knownType,
-					() -> new FileInputStream(file));
+			return deserializeFromStream(
+					new BufferedInputStream(new FileInputStream(file)),
+					knownType, () -> new FileInputStream(file));
 		} catch (Exception e) {
 			throw new KryoDeserializationException(e);
 		}
@@ -170,7 +173,7 @@ public class KryoUtils {
 
 	public static void serializeToFile(Object object, File file) {
 		try (OutputStream os = new FileOutputStream(file)) {
-			serializeToStream(object, os);
+			serializeToStream(object, new BufferedOutputStream(os));
 		} catch (Exception e) {
 			throw new KryoDeserializationException(e);
 		}
