@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -311,6 +312,11 @@ public class TransformCollation {
 		public boolean hasPropertyName(String name) {
 			return events.stream()
 					.anyMatch(e -> Objects.equals(e.getPropertyName(), name));
+		}
+
+		public boolean hasPropertyNames(String... names) {
+			return events.stream().anyMatch(e -> Arrays.stream(names).anyMatch(
+					name -> Objects.equals(e.getPropertyName(), name)));
 		}
 
 		public void removeTransform(DomainTransformEvent event) {
