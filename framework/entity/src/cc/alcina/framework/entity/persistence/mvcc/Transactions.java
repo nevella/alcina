@@ -124,6 +124,11 @@ public class Transactions {
 						&& transaction == versions.initialWriteableTransaction)) {
 					return t;
 				} else {
+					// FIXME - mvcc.5 - this synchronization means that (a) a
+					// bunch of entities have issues with
+					// System.identityHashCode and that all the concurrency in
+					// MvccObjectVersions is unneccesary. But it's safe, at
+					// least...
 					synchronized (t) {
 						versions = mvccObject.__getMvccVersions__();
 						if (versions == null) {

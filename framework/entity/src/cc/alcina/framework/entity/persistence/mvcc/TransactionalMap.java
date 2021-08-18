@@ -671,24 +671,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		@Override
-		public void vacuum(VacuumableTransactions vacuumableTransactions) {
-			super.vacuum(vacuumableTransactions);
-			synchronized (this) {
-				if (getSize() == 0 && visibleAllTransactions
-						.get() == REMOVED_VALUE_MARKER) {
-					if (!nonConcurrent.containsKey(key)) {
-						/*
-						 * Note that this only affects objects not loaded in the
-						 * base transaction - but that's generally exactly (viz
-						 * lazy-loaded objects) what we'd want to vacuum anyway
-						 */
-						concurrent.remove(wrapTransactionalKey(key));
-					}
-				}
-			}
-		}
-
-		@Override
 		protected ObjectWrapper copyObject(ObjectWrapper mostRecentObject) {
 			return ObjectWrapper.of(mostRecentObject.get());
 		}
@@ -714,6 +696,22 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return true;
 		}
 
+		@Override
+		protected void vacuum0(VacuumableTransactions vacuumableTransactions) {
+			super.vacuum0(vacuumableTransactions);
+			if (getSize() == 0
+					&& visibleAllTransactions.get() == REMOVED_VALUE_MARKER) {
+				if (!nonConcurrent.containsKey(key)) {
+					/*
+					 * Note that this only affects objects not loaded in the
+					 * base transaction - but that's generally exactly (viz
+					 * lazy-loaded objects) what we'd want to vacuum anyway
+					 */
+					concurrent.remove(wrapTransactionalKey(key));
+				}
+			}
+		}
+
 		V getAnyTransaction() {
 			ObjectWrapper baseObject = visibleAllTransactions;
 			if (isNotRemovedValueMarker(baseObject)) {
@@ -734,7 +732,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			 * not (compared to resolve) since concurrent access should be very
 			 * rare
 			 */
-			synchronized (this) {
+			synchronized (domainIdentity) {
 				if (concurrent.get(wrapTransactionalKey(key)) == null) {
 					// vacuumed
 					return false;
