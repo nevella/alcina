@@ -15,6 +15,7 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -116,6 +117,8 @@ public class JobDomain {
 				DomainTransformPersistenceEvent event) {
 			switch (event.getPersistenceEventType()) {
 			case COMMIT_OK: {
+				jobDescriptor.allocationQueueProjection
+						.releaseModificationLocks();
 				for (AllocationQueue queue : queuesWithBufferedEvents) {
 					queue.flushBufferedEvents();
 				}
@@ -310,6 +313,11 @@ public class JobDomain {
 				.filter(q -> !q.job.domain().wasRemoved());
 	}
 
+	/*
+	 * This class is essentially a view over the contained SubqueueProjection.
+	 * Because the projection is not transactional, access is locked via a
+	 * readwrite lock - write lock taken before first modification is processed
+	 */
 	public class AllocationQueue {
 		public Job job;
 
@@ -331,6 +339,8 @@ public class JobDomain {
 		List<Event> bufferedEvents = new ArrayList<>();
 
 		private AllocationQueue parentQueue;
+
+		ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
 		public AllocationQueue(Job job) {
 			this.job = job;
@@ -457,6 +467,11 @@ public class JobDomain {
 			return perStateJobCount(JobState.PROCESSING) > 0;
 		}
 
+		@Override
+		public int hashCode() {
+			return job.hashCode();
+		}
+
 		public void incrementPhase() {
 			currentPhase = SubqueuePhase.values()[currentPhase.ordinal() + 1];
 		}
@@ -501,6 +516,10 @@ public class JobDomain {
 			} else {
 				publish0(event);
 			}
+		}
+
+		public void refreshProjection() {
+			// TODO Auto-generated method stub
 		}
 
 		public void remove(Job job) {
@@ -612,10 +631,15 @@ public class JobDomain {
 
 		private Set<? extends Job> subQueueJobs(SubqueuePhase type,
 				JobState state) {
-			MultikeyMap<Job> map = subqueues.getLookup().asMapEnsure(false,
-					type, state);
-			return map == null ? Collections.emptySet()
-					: map.typedKeySet(Job.class);
+			try {
+				lock.readLock().lock();
+				MultikeyMap<Job> map = subqueues.getLookup().asMapEnsure(false,
+						type, state);
+				return map == null ? Collections.emptySet()
+						: map.typedKeySet(Job.class);
+			} finally {
+				lock.readLock().unlock();
+			}
 		}
 
 		void fireInitialCreationEvents() {
@@ -773,6 +797,8 @@ public class JobDomain {
 		private TransactionalSet<Job> undeserializableJobs = new TransactionalSet(
 				PersistentImpl.getImplementation(Job.class));
 
+		private Set<AllocationQueue> ensuredQueues = new LinkedHashSet<>();
+
 		public AllocationQueueProjection() {
 		}
 
@@ -829,6 +855,11 @@ public class JobDomain {
 			return true;
 		}
 
+		public void releaseModificationLocks() {
+			ensuredQueues.forEach(queue -> queue.lock.writeLock().unlock());
+			ensuredQueues.clear();
+		}
+
 		@Override
 		/*
 		 * Doesn't try to track result of removal (i.e. returns null whether or
@@ -855,6 +886,16 @@ public class JobDomain {
 		}
 
 		private AllocationQueue ensureQueue(Job job, AllocationQueue queue) {
+			queue = ensureQueue0(job, queue);
+			if (!Transaction.current().isBaseTransaction()) {
+				if (ensuredQueues.add(queue)) {
+					queue.lock.writeLock().lock();
+				}
+			}
+			return queue;
+		}
+
+		private AllocationQueue ensureQueue0(Job job, AllocationQueue queue) {
 			if (queue != null) {
 				return queue;
 			} else {
@@ -896,7 +937,10 @@ public class JobDomain {
 				}
 			} else if (job.provideIsComplete()) {
 				if (queue != null) {
+					// modification tracking
+					ensureQueue(job, queue);
 					queue.insert(job);
+					// FIXME - at end
 					queue.checkComplete();
 				} else {
 				}
@@ -925,9 +969,6 @@ public class JobDomain {
 				return;
 			}
 			queue = ensureQueue(relatedQueueOwner, queue);
-			if (job.provideIsComplete()) {
-				int debug = 3;
-			}
 			queue.insert(job);
 		}
 
@@ -946,11 +987,13 @@ public class JobDomain {
 				futuresByTask.remove(job.provideTaskClass(), job);
 			} else if (job.provideIsComplete()) {
 				if (queue != null) {
+					ensureQueue(job, queue);
 					queue.remove(job);
 				} else {
 				}
 			} else {
 				if (queue != null) {
+					ensureQueue(job, queue);
 					queue.remove(job);
 				}
 				if (!job.provideCanDeserializeTask()) {
