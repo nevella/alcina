@@ -113,6 +113,8 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@GwtTransient
 	private String taskSignature;
 
+	private transient Job firstInSequence;
+
 	public Job() {
 	}
 
@@ -357,6 +359,14 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@Transient
 	public abstract Set<? extends JobRelation> getToRelations();
 
+	public boolean hasSelfOrAncestorTask(Class<? extends Task> taskClass) {
+		if (provideIsTaskClass(taskClass)) {
+			return true;
+		}
+		return provideParent().map(job -> job.hasSelfOrAncestorTask(taskClass))
+				.orElse(false);
+	}
+
 	// not used, replaced by jobstatemessage - FIXME mvcc.jobs.2 - remove
 	public boolean isStacktraceRequested() {
 		return this.stacktraceRequested;
@@ -419,16 +429,16 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public Job provideFirstInSequence() {
-		Job cursor = domainIdentity();
-		while (true) {
-			Optional<Job> previous = cursor.providePrevious();
+		if (firstInSequence == null) {
+			Optional<Job> previous = providePrevious();
 			if (previous.isPresent()) {
-				cursor = previous.get();
+				firstInSequence = providePrevious().get()
+						.provideFirstInSequence();
 			} else {
-				break;
+				firstInSequence = domainIdentity();
 			}
 		}
-		return cursor;
+		return firstInSequence;
 	}
 
 	public boolean provideHasCompletePredecesorOrNone() {
