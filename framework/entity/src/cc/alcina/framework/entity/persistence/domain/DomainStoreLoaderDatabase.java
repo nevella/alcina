@@ -2153,31 +2153,31 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 
 		private List<HasId> loadHasIds() throws Exception {
+			if (connection == null) {
+				connection = getConnection();
+			}
+			List<HasId> result = load0();
+			return result;
+		}
+
+		<T extends Entity> List<T> loadEntities() throws Exception {
 			boolean ignorePropertyChanges = TransformManager.get()
 					.isIgnorePropertyChanges();
 			try {
 				TransformManager.get().setIgnorePropertyChanges(true);
-				if (connection == null) {
-					connection = getConnection();
+				List<T> result = (List<T>) (List<?>) loadHasIds();
+				if (store.initialised || resolveRefs) {
+					entityRefs.resolve();
 				}
-				List<HasId> result = load0();
+				if (store.initialised) {
+					result.forEach(e -> store.index(e, true, null, true));
+				}
 				return result;
 			} finally {
 				releaseConn(connection);
 				TransformManager.get()
 						.setIgnorePropertyChanges(ignorePropertyChanges);
 			}
-		}
-
-		<T extends Entity> List<T> loadEntities() throws Exception {
-			List<T> result = (List<T>) (List<?>) loadHasIds();
-			if (store.initialised || resolveRefs) {
-				entityRefs.resolve();
-			}
-			if (store.initialised) {
-				result.forEach(e -> store.index(e, true, null, true));
-			}
-			return result;
 		}
 	}
 

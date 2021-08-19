@@ -141,7 +141,7 @@ public abstract class LazyLoadProvideTask<T extends Entity>
 				.loader();
 		loader.withClazz(clazz).withSqlFilter(sqlFilter)
 				.withPopulateLazyPropertyValues(populateLazyPropertyValues)
-				.withResolveRefs(true);
+				.withResolveRefs(true).withReturnResults(true);
 		return loader.loadEntities();
 	}
 
