@@ -22,6 +22,8 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.domain.BaseProjection;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -41,6 +43,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
@@ -889,6 +892,8 @@ public class JobDomain {
 			queue = ensureQueue0(job, queue);
 			if (!Transaction.current().isBaseTransaction()) {
 				if (ensuredQueues.add(queue)) {
+					Preconditions.checkState(LooseContext
+							.is(DomainStore.CONTEXT_IN_POST_PROCESS));
 					queue.lock.writeLock().lock();
 				}
 			}

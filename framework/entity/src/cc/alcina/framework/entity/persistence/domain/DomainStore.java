@@ -156,6 +156,9 @@ public class DomainStore implements IDomainStore {
 	public static final String CONTEXT_DEBUG_QUERY_METRICS = DomainStore.class
 			.getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
 
+	public static final String CONTEXT_IN_POST_PROCESS = DomainStore.class
+			.getName() + ".CONTEXT_IN_POST_PROCESS";
+
 	public static final String CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS";
 
@@ -858,6 +861,7 @@ public class DomainStore implements IDomainStore {
 		try {
 			LooseContext.pushWithTrue(
 					TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
+			LooseContext.setTrue(CONTEXT_IN_POST_PROCESS);
 			LooseContext.set(LiSet.CONTEXT_NON_DOMAIN_NOTIFIER,
 					new NonDomainNotifier() {
 						@Override
