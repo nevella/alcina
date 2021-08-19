@@ -17,6 +17,10 @@ public interface JobExecutors {
 
 	List<ClientInstance> getActiveServers();
 
+	default int getMaxConsistencyJobCount() {
+		return 0;
+	}
+
 	default boolean isCurrentOrphanage() {
 		return isCurrentScheduledJobExecutor();
 	}

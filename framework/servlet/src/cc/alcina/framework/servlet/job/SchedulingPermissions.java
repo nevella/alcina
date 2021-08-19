@@ -29,6 +29,9 @@ class SchedulingPermissions {
 	}
 
 	static boolean canAllocate(Job job) {
+		if (job.getPerformer() == ClientInstance.self()) {
+			return true;
+		}
 		if (job.getRunAt() == null) {
 			return job.getCreator() == ClientInstance.self();
 		}

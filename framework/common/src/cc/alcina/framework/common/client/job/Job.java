@@ -53,7 +53,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = Job.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
-public abstract class Job extends VersionableEntity<Job> implements HasIUser {
+public abstract class Job extends VersionableEntity<Job>
+		implements HasIUser, Comparable<Job> {
 	public static final transient String PROPERTY_STATE = "state";
 
 	public static Job byId(long id) {
@@ -184,6 +185,11 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public <T extends Task> T castTask() {
 		return (T) getTask();
+	}
+
+	@Override
+	public int compareTo(Job o) {
+		return EntityComparator.INSTANCE.compare(domainIdentity(), o);
 	}
 
 	public void createRelation(Job to, JobRelationType type) {
@@ -522,6 +528,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public boolean provideIsPending() {
 		return resolveState() == JobState.PENDING;
+	}
+
+	public boolean provideIsSequenceComplete() {
+		return provideIsComplete() && !provideHasIncompleteSubsequent();
 	}
 
 	public boolean provideIsSibling(Job job) {

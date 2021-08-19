@@ -101,6 +101,17 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
+	@RegistryLocation(registryPoint = CollectionCreators.TreeMapCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class TreeMapCreatorImpl
+			extends CollectionCreators.TreeMapCreator {
+		@Override
+		public Map get() {
+			return new TransactionalTreeMap(types.get(0), types.get(1),
+					new NullFriendlyComparatorWrapper(
+							Comparator.naturalOrder()));
+		}
+	}
+
 	public static class TreeMapCreatorNonTransactional<K, V>
 			implements CollectionCreators.MapCreator<K, V> {
 		private Comparator<K> cmp;

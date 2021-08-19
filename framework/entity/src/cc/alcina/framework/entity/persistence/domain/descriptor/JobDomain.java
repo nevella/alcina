@@ -25,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.BaseProjection;
+import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainProjection;
@@ -42,6 +43,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -241,6 +243,11 @@ public class JobDomain {
 			Class<? extends Task> key, boolean createdBySelf) {
 		return jobDescriptor.allocationQueueProjection.earliestIncomplete(key,
 				createdBySelf);
+	}
+
+	public Stream<Job> getFutureConsistencyJobs() {
+		return jobDescriptor.futureConsistencyProjection.getLookup().delegate()
+				.values().stream();
 	}
 
 	public Stream<Job> getIncompleteJobs() {
@@ -1043,6 +1050,8 @@ public class JobDomain {
 
 		private CompletedReverseDateProjection reverseDateCompletedTopLevelProjection;
 
+		private FutureConsistencyProjection futureConsistencyProjection;
+
 		private CompletedReverseDateProjection reverseDateCompletedChildProjection;
 
 		public JobDescriptor() {
@@ -1068,6 +1077,8 @@ public class JobDomain {
 			reverseDateCompletedChildProjection = new CompletedReverseDateProjection(
 					false);
 			projections.add(reverseDateCompletedChildProjection);
+			futureConsistencyProjection = new FutureConsistencyProjection();
+			projections.add(futureConsistencyProjection);
 		}
 
 		private class CompletedReverseDateProjection
@@ -1105,6 +1116,50 @@ public class JobDomain {
 			@Override
 			protected Date getDate(Job job) {
 				return job.getEndTime();
+			}
+		}
+
+		private class FutureConsistencyProjection extends BaseProjection<Job> {
+			private FutureConsistencyProjection() {
+				super(Long.class, new Class[] { (Class<Job>) jobImplClass });
+			}
+
+			@Override
+			public Class<? extends Job> getListenedClass() {
+				return jobImplClass;
+			}
+
+			@Override
+			public void insert(Job t) {
+				if (t.getState() != JobState.FUTURE_CONSISTENCY) {
+					return;
+				}
+				super.insert(t);
+			}
+
+			@Override
+			public boolean isCommitOnly() {
+				return true;
+			}
+
+			@Override
+			protected MultikeyMap<Job> createLookup() {
+				return new BaseProjectionLookupBuilder(this)
+						.withMapCreators(new CollectionCreators.MapCreator[] {
+								Registry.impl(
+										CollectionCreators.TreeMapCreator.class)
+										.withTypes(types) })
+						.createMultikeyMap();
+			}
+
+			@Override
+			protected int getDepth() {
+				return 1;
+			}
+
+			@Override
+			protected Object[] project(Job job) {
+				return new Object[] { job.getId(), job };
 			}
 		}
 	}
