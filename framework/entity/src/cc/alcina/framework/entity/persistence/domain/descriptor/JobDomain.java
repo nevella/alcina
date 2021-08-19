@@ -834,6 +834,11 @@ public class JobDomain {
 		 * or not the job is present in the projection)
 		 */
 		public void insert(Job job) {
+			if (LazyPropertyLoadTask.inLazyPropertyLoad()) {
+				// will not affect allocation queues (and wreaks havoc with
+				// locking)
+				return;
+			}
 			/*
 			 * avoid deserializing if possible - hence the try/catch
 			 */
@@ -869,6 +874,11 @@ public class JobDomain {
 		 * not the job is present in the projection)
 		 */
 		public void remove(Job job) {
+			if (LazyPropertyLoadTask.inLazyPropertyLoad()) {
+				// will not affect allocation queues (and wreaks havoc with
+				// locking)
+				return;
+			}
 			/*
 			 * avoid deserializing if possible - hence the try/catch
 			 */
