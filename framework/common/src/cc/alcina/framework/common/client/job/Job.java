@@ -690,7 +690,7 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	public Job root() {
-		return provideParent().map(Job::root).orElse(this);
+		return provideParent().map(Job::root).orElse(domainIdentity());
 	}
 
 	public void setCompletion(double completion) {
