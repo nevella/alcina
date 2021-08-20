@@ -689,6 +689,10 @@ public abstract class Job extends VersionableEntity<Job>
 		return resolveState0(0);
 	}
 
+	public Job root() {
+		return provideParent().map(Job::root).orElse(this);
+	}
+
 	public void setCompletion(double completion) {
 		double old_completion = this.completion;
 		this.completion = completion;

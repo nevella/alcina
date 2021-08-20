@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
@@ -27,6 +28,9 @@ public class TowardsAMoreDesirableSituation {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public synchronized void tend() {
+		if (!ResourceUtilities.is("enabled")) {
+			return;
+		}
 		activeJobs.removeIf(Job::provideIsSequenceComplete);
 		boolean delta = false;
 		while (activeJobs.size() < JobRegistry.get().jobExecutors
@@ -41,14 +45,14 @@ public class TowardsAMoreDesirableSituation {
 								Job job = next.get();
 								job.setPerformer(ClientInstance.self());
 								job.setState(JobState.PENDING);
+								activeJobs.add(job);
+								Transaction.commit();
 								logger.info(
 										"TowardsAMoreDesirableSituation - consitency-to-pending - {} - {} remaining",
 										job,
 										JobDomain.get()
 												.getFutureConsistencyJobs()
 												.count());
-								activeJobs.add(job);
-								Transaction.commit();
 							}
 						});
 			} else {
