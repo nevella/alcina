@@ -34,7 +34,6 @@ import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
-import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -747,21 +746,29 @@ public class FlatTreeSerializer {
 			if (cursor.isCollection()) {
 				Collection valueCollection = (Collection) value;
 				cursor.path.verifyProvidesElementTypeInfo();
-				Collection defaultCollection = cursor.defaultValue == null ?
-				/* parent object is default null */
-						CloneHelper.newCollectionInstance(valueCollection)
-						: (Collection) cursor.defaultValue;
+				/*
+				 * 'Default collections' can't work in a general sense - FIXME
+				 * 2022 - add per-ts customisers that provide 'yes default' to
+				 * the whole collection - and thus ignore for elided
+				 * 
+				 * Note that said collections must be guaranteed non-empty in
+				 * the application
+				 */
+				// Collection defaultCollection = cursor.defaultValue == null ?
+				// /* parent object is default null */
+				// CloneHelper.newCollectionInstance(valueCollection)
+				// : (Collection) cursor.defaultValue;
 				((Collection) value).forEach(childValue -> {
 					Object defaultValue = null;
 					if (isLeafValue(childValue)) {
 						//
 					} else if (childValue instanceof TreeSerializable) {
-						for (Object element : defaultCollection) {
-							if (element.getClass() == childValue.getClass()) {
-								defaultValue = element;
-								break;
-							}
-						}
+						// for (Object element : defaultCollection) {
+						// if (element.getClass() == childValue.getClass()) {
+						// defaultValue = element;
+						// break;
+						// }
+						// }
 						if (defaultValue == null) {
 							defaultValue = Reflections.classLookup()
 									.getTemplateInstance(childValue.getClass());
