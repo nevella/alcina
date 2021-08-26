@@ -234,6 +234,34 @@ public abstract class Job extends VersionableEntity<Job>
 		return getProcessState();
 	}
 
+	// Delete while ensuring job sequencing is still correct after deletion
+	public void deleteEnsuringSequence() {
+		Optional<? extends JobRelation> previousRelation = getToRelations().stream()
+				.filter(r -> r.getType() == JobRelationType.SEQUENCE)
+				.findFirst();
+		Optional<? extends JobRelation> nextRelation = getFromRelations().stream()
+			.filter(r -> r.getType() == JobRelationType.SEQUENCE)
+			.findFirst();
+		if (previousRelation.isPresent() && nextRelation.isPresent()) {
+			// If this job is in the middle of the chain,
+			// re-link it so ensure the sequence stays connected
+			Job previous = previousRelation.get().getFrom();
+			Job next = nextRelation.get().getTo();
+			// Remove old relations
+			previousRelation.get().delete();
+			nextRelation.get().delete();
+			// Create new relation
+			previous.createRelation(
+				next, JobRelationType.SEQUENCE);
+		} else if (previousRelation.isPresent()) {
+			// If only a previous relation exists,
+			// made sure that is deleted at least
+			previousRelation.get().delete();
+		}
+		// Delete this job
+		delete();
+	}
+
 	public double getCompletion() {
 		return this.completion;
 	}
