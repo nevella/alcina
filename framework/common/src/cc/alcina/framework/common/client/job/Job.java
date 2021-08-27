@@ -255,8 +255,12 @@ public abstract class Job extends VersionableEntity<Job>
 			Job next = nextRelation.get().getTo();
 			// Remove old relations
 			Ax.out("Deleting previous relation: %s", previousRelation.get());
+			// FIXME - this relation _really_ should be taken out of this set on delete
+			previous.getFromRelations().remove(previousRelation.get());
 			previousRelation.get().delete();
 			Ax.out("Deleting next relation: %s", nextRelation.get());
+			// FIXME - see above
+			next.getToRelations().remove(nextRelation.get());
 			nextRelation.get().delete();
 			// Create new relation
 			previous.createRelation(
@@ -264,6 +268,9 @@ public abstract class Job extends VersionableEntity<Job>
 		} else if (previousRelation.isPresent()) {
 			// If only a previous relation exists,
 			// made sure that is deleted at least
+			Job previous = previousRelation.get().getFrom();
+			// FIXME - see above
+			previous.getFromRelations().remove(previousRelation.get());
 			previousRelation.get().delete();
 		}
 		// Delete this job
