@@ -19,6 +19,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
@@ -251,8 +252,15 @@ public abstract class Job extends VersionableEntity<Job>
 			previousRelation.get().delete();
 			nextRelation.get().delete();
 			// Create new relation
-			previous.createRelation(
-				next, JobRelationType.SEQUENCE);
+			try {
+				previous.createRelation(
+					next, JobRelationType.SEQUENCE);
+			} catch (IllegalStateException e) {
+				Ax.err("Unable to create relation, logging relations");
+				Ax.err(previous.getToRelations());
+				Ax.err(next.getFromRelations());
+				throw new WrappedRuntimeException(e);
+			}
 		} else if (previousRelation.isPresent()) {
 			// If only a previous relation exists,
 			// made sure that is deleted at least
