@@ -202,7 +202,9 @@ public abstract class Job extends VersionableEntity<Job>
 			}
 		} else {
 			if (to.provideToAntecedentRelation().isPresent()) {
-				invalidMessage = "to has existing incoming antecedent relation";
+				invalidMessage = Ax.format(
+					"to has existing incoming antecedent relation: %s",
+					to.provideToAntecedentRelation().get());
 			}
 		}
 		Job from = domainIdentity();
@@ -217,7 +219,10 @@ public abstract class Job extends VersionableEntity<Job>
 		if (type != JobRelationType.PARENT_CHILD && from.getFromRelations()
 				.stream().anyMatch(r -> r.getType() == type)) {
 			invalidMessage = Ax.format(
-					"from has existing outgoing relation of type %s", type);
+					"from has existing outgoing relation: %s", 
+					from.getFromRelations().stream()
+						.filter(r -> r.getType() == type)
+						.findFirst().get());
 		}
 		if (invalidMessage != null) {
 			throw new IllegalStateException(invalidMessage);
@@ -249,18 +254,13 @@ public abstract class Job extends VersionableEntity<Job>
 			Job previous = previousRelation.get().getFrom();
 			Job next = nextRelation.get().getTo();
 			// Remove old relations
+			Ax.out("Deleting previous relation: %s", previousRelation.get());
 			previousRelation.get().delete();
+			Ax.out("Deleting next relation: %s", nextRelation.get());
 			nextRelation.get().delete();
 			// Create new relation
-			try {
-				previous.createRelation(
-					next, JobRelationType.SEQUENCE);
-			} catch (IllegalStateException e) {
-				Ax.err("Unable to create relation, logging relations");
-				Ax.err(previous.getToRelations());
-				Ax.err(next.getFromRelations());
-				throw new WrappedRuntimeException(e);
-			}
+			previous.createRelation(
+				next, JobRelationType.SEQUENCE);
 		} else if (previousRelation.isPresent()) {
 			// If only a previous relation exists,
 			// made sure that is deleted at least
