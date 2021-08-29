@@ -19,7 +19,6 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
@@ -203,8 +202,8 @@ public abstract class Job extends VersionableEntity<Job>
 		} else {
 			if (to.provideToAntecedentRelation().isPresent()) {
 				invalidMessage = Ax.format(
-					"to has existing incoming antecedent relation: %s",
-					to.provideToAntecedentRelation().get());
+						"to has existing incoming antecedent relation: %s",
+						to.provideToAntecedentRelation().get());
 			}
 		}
 		Job from = domainIdentity();
@@ -219,10 +218,10 @@ public abstract class Job extends VersionableEntity<Job>
 		if (type != JobRelationType.PARENT_CHILD && from.getFromRelations()
 				.stream().anyMatch(r -> r.getType() == type)) {
 			invalidMessage = Ax.format(
-					"from has existing outgoing relation: %s", 
+					"from has existing outgoing relation: %s",
 					from.getFromRelations().stream()
-						.filter(r -> r.getType() == type)
-						.findFirst().get());
+							.filter(r -> r.getType() == type).findFirst()
+							.get());
 		}
 		if (invalidMessage != null) {
 			throw new IllegalStateException(invalidMessage);
@@ -233,21 +232,14 @@ public abstract class Job extends VersionableEntity<Job>
 		relation.setTo(to);
 	}
 
-	public ProcessState ensureProcessState() {
-		if (getProcessState() == null) {
-			setProcessState(new ProcessState());
-		}
-		return getProcessState();
-	}
-
 	// Delete while ensuring job sequencing is still correct after deletion
 	public void deleteEnsuringSequence() {
-		Optional<? extends JobRelation> previousRelation = getToRelations().stream()
-				.filter(r -> r.getType() == JobRelationType.SEQUENCE)
+		Optional<? extends JobRelation> previousRelation = getToRelations()
+				.stream().filter(r -> r.getType() == JobRelationType.SEQUENCE)
 				.findFirst();
-		Optional<? extends JobRelation> nextRelation = getFromRelations().stream()
-			.filter(r -> r.getType() == JobRelationType.SEQUENCE)
-			.findFirst();
+		Optional<? extends JobRelation> nextRelation = getFromRelations()
+				.stream().filter(r -> r.getType() == JobRelationType.SEQUENCE)
+				.findFirst();
 		if (previousRelation.isPresent() && nextRelation.isPresent()) {
 			// If this job is in the middle of the chain,
 			// re-link it so ensure the sequence stays connected
@@ -255,7 +247,8 @@ public abstract class Job extends VersionableEntity<Job>
 			Job next = nextRelation.get().getTo();
 			// Remove old relations
 			Ax.out("Deleting previous relation: %s", previousRelation.get());
-			// FIXME - this relation _really_ should be taken out of this set on delete
+			// FIXME - this relation _really_ should be taken out of this set on
+			// delete
 			previous.getFromRelations().remove(previousRelation.get());
 			previousRelation.get().delete();
 			Ax.out("Deleting next relation: %s", nextRelation.get());
@@ -263,8 +256,7 @@ public abstract class Job extends VersionableEntity<Job>
 			next.getToRelations().remove(nextRelation.get());
 			nextRelation.get().delete();
 			// Create new relation
-			previous.createRelation(
-				next, JobRelationType.SEQUENCE);
+			previous.createRelation(next, JobRelationType.SEQUENCE);
 		} else if (previousRelation.isPresent()) {
 			// If only a previous relation exists,
 			// made sure that is deleted at least
@@ -275,6 +267,13 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 		// Delete this job
 		delete();
+	}
+
+	public ProcessState ensureProcessState() {
+		if (getProcessState() == null) {
+			setProcessState(new ProcessState());
+		}
+		return getProcessState();
 	}
 
 	public double getCompletion() {
