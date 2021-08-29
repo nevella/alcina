@@ -225,8 +225,9 @@ public class ClientReflectionGenerator extends Generator {
 	}
 
 	/*
-	 * FIXME - 2021 - (originally supported registrylocation annotation
-	 * extraction - but is now basically an implementation of @Inherited)
+	 * FIXME - 2022.reflection - (originally supported registrylocation
+	 * annotation extraction - but is now basically an implementation
+	 * of @Inherited)
 	 */
 	public Set<Annotation> getClassAnnotations(JClassType clazz,
 			List<Class<? extends Annotation>> annotationClasses,
