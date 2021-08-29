@@ -314,6 +314,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (entity == null) {
 			return null;
 		}
+		Preconditions.checkState(Transaction.current().isWriteable());
 		entity = ensureNonProxy(entity);
 		DomainTransformEvent event = super.delete(entity);
 		if (event != null) {
@@ -680,6 +681,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			boolean externalLocal) {
 		try {
 			if (Entity.class.isAssignableFrom(clazz)) {
+				Preconditions.checkState(Transaction.current().isWriteable());
 				Entity newInstance = null;
 				if (entityManager == null) {
 					DomainStore store = DomainStore.stores().storeFor(clazz);

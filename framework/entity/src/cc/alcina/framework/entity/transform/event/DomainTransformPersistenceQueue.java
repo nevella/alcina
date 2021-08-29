@@ -492,9 +492,6 @@ public class DomainTransformPersistenceQueue {
 
 		private void publishTransformEvent(Event event) {
 			boolean local = false;
-			/*
-			 * REVISIT - null if of type ERROR?
-			 */
 			Long requestId = event.requestId;
 			fireEventThreadLogger.debug("publishTransformEvent - dtr {}",
 					requestId);
@@ -515,7 +512,7 @@ public class DomainTransformPersistenceQueue {
 					request.setEvents(new ArrayList<>());
 				}
 			}
-			Transaction.current().toNoActiveTransaction();
+			Transaction.current().toReadonly();
 			DomainTransformPersistenceEvent persistenceEvent = createPersistenceEventFromPersistedRequest(
 					request, event.type, event.commitPosition);
 			persistenceEvent.ensureTransformsValidForVm();
