@@ -144,6 +144,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 						InternalMetricTypeAlcina.remote_invocation,
 						Thread.currentThread().getName(), () -> true);
 				if (transformMethod) {
+					Transaction.endAndBeginNew();
 					TransformPersistenceToken token = (TransformPersistenceToken) args[1];
 					Integer highestPersistedRequestId = CommonPersistenceProvider
 							.get().getCommonPersistence()
