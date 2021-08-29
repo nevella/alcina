@@ -67,7 +67,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			LooseContext.setTrue(
 					TransformPersisterInPersistenceContext.CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM);
 			Transaction.begin();
-			maybeToNoActiveTransaction();
+			maybeToReadonlyTransaction();
 			LooseContext
 					.setTrue(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
 			doPost0(req, res);
@@ -82,7 +82,8 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			throw new ServletException(e);
 		} finally {
 			ThreadlocalTransformManager.get().resetTltm(null);
-			maybeToNoActiveTransaction();
+			// ensure correct phase
+			maybeToReadonlyTransaction();
 			Transaction.end();
 			LooseContext.pop();
 		}
@@ -254,8 +255,10 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 	protected abstract Object getInvocationTarget(
 			RemoteInvocationParameters params) throws Exception;
 
-	protected void maybeToNoActiveTransaction() {
-		// FIXME - 2021 - (only for calls to EJB impl classes and even then...)
-		Transaction.current().toNoActiveTransaction();
+	protected void maybeToReadonlyTransaction() {
+		/*
+		 * By default, remote invocations are readonly
+		 */
+		Transaction.current().toReadonly();
 	}
 }

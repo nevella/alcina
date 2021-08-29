@@ -66,8 +66,8 @@ public class DevConsoleRpcRequestRouterHandler extends AbstractHandler {
 		}
 
 		@Override
-		protected void maybeToNoActiveTransaction() {
-			// NOOP (yes, use txs)
+		protected void maybeToReadonlyTransaction() {
+			// NOOP (yes, allow writeable txs)
 		}
 	}
 }
