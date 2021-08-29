@@ -747,9 +747,9 @@ public class FlatTreeSerializer {
 				Collection valueCollection = (Collection) value;
 				cursor.path.verifyProvidesElementTypeInfo();
 				/*
-				 * 'Default collections' can't work in a general sense - FIXME
-				 * 2022 - add per-ts customisers that provide 'yes default' to
-				 * the whole collection - and thus ignore for elided
+				 * 'Default collections' can't work in a general sense -....
+				 * FIXME - 2022 - add per-ts customisers that provide 'yes
+				 * default' to the whole collection - and thus ignore for elided
 				 * 
 				 * Note that said collections must be guaranteed non-empty in
 				 * the application
