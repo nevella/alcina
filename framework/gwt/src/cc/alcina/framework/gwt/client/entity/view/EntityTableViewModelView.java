@@ -179,7 +179,7 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 						} else {
 							return String.valueOf(hi.getId());
 						}
-					}).width(4.0, Unit.EM).build();
+					}).width(5.0, Unit.EM).build();
 		}
 		customSetupTable(builder);
 		table.addColumnSortHandler(model.dataProvider);
