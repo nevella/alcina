@@ -73,7 +73,7 @@ public class Transaction implements Comparable<Transaction> {
 		Preconditions.checkNotNull(preSnapshot);
 		threadLocalInstance.set(null);
 		begin();
-		current().toReadonly();
+		current().toReadonly(true);
 		T t = callable.call();
 		end();
 		threadLocalInstance.set(preSnapshot);
@@ -113,7 +113,7 @@ public class Transaction implements Comparable<Transaction> {
 		threadLocalInstance.set(null);
 		begin();
 		Transaction snapshot = current();
-		snapshot.toReadonly();
+		snapshot.toReadonly(true);
 		split();
 		threadLocalInstance.set(preSnapshot);
 		return snapshot;
@@ -436,7 +436,8 @@ public class Transaction implements Comparable<Transaction> {
 		// handling
 		Preconditions.checkState(getPhase() == TransactionPhase.TO_DB_PERSISTING
 				|| getPhase() == TransactionPhase.TO_DB_PREPARING
-				|| getPhase() == TransactionPhase.TO_DB_ABORTED);
+				|| getPhase() == TransactionPhase.TO_DB_ABORTED
+				|| getPhase() == TransactionPhase.READ_ONLY);
 		setPhase(TransactionPhase.TO_DB_ABORTED);
 	}
 
@@ -496,13 +497,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public void toReadonly() {
-		if (this.phase == TransactionPhase.READ_ONLY) {
-			return;
-		}
-		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
-				|| phase == TransactionPhase.TO_DOMAIN_PREPARING)
-				&& TransformManager.get().getTransforms().isEmpty());
-		this.phase = TransactionPhase.READ_ONLY;
+		toReadonly(false);
 	}
 
 	@Override
@@ -537,6 +532,17 @@ public class Transaction implements Comparable<Transaction> {
 			throw new UnsupportedOperationException(Ax.format(
 					"Cannot cancel transaction %s in phase %s", id, phase));
 		}
+	}
+
+	private void toReadonly(boolean allowExistingTransforms) {
+		if (this.phase == TransactionPhase.READ_ONLY) {
+			return;
+		}
+		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
+				|| phase == TransactionPhase.TO_DOMAIN_PREPARING)
+				&& (allowExistingTransforms
+						|| TransformManager.get().getTransforms().isEmpty()));
+		this.phase = TransactionPhase.READ_ONLY;
 	}
 
 	void endTransaction() {
