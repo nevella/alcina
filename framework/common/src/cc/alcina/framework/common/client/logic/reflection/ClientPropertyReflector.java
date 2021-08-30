@@ -35,7 +35,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 public class ClientPropertyReflector
 		implements Comparable<ClientPropertyReflector>, PropertyReflector {
 	// @Deprecated
-	// FIXME - 2022
+	// FIXME - clientmeta
 	public static final String CONTEXT_NAME_TRANSLATOR = ClientPropertyReflector.class
 			.getName() + ".CONTEXT_NAME_TRANSLATOR";
 

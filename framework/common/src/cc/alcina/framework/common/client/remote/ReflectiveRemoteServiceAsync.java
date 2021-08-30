@@ -18,8 +18,8 @@ public class ReflectiveRemoteServiceAsync {
 					getClass(), methodName, methodArgumentTypes,
 					methodArguments);
 			String serializedPayload = ReflectiveSerializer.serialize(payload);
-			// FIXME - 2021 - this can just use an http call - just need to
-			// integrate Alcina header insertion/handling
+			// FIXME - 2021.refactor - shift to a different serializationstream
+			// (but using gwt-rpc infrastructure)
 			Registry.impl(ReflectiveRpcRemoteServiceAsync.class)
 					.callRpc(serializedPayload, new AsyncCallback<String>() {
 						@Override
