@@ -1080,7 +1080,7 @@ public abstract class Job extends VersionableEntity<Job>
 	@Bean
 	public static class ResourceRecord extends Model
 			implements HasEquivalenceString<ResourceRecord> {
-		private boolean acquiredFromAncestor;
+		private boolean acquiredFromAntecedent;
 
 		private boolean acquired;
 
@@ -1105,16 +1105,16 @@ public abstract class Job extends VersionableEntity<Job>
 			return this.acquired;
 		}
 
-		public boolean isAcquiredFromAncestor() {
-			return this.acquiredFromAncestor;
+		public boolean isAcquiredFromAntecedent() {
+			return this.acquiredFromAntecedent;
 		}
 
 		public void setAcquired(boolean acquired) {
 			this.acquired = acquired;
 		}
 
-		public void setAcquiredFromAncestor(boolean acquiredFromAncestor) {
-			this.acquiredFromAncestor = acquiredFromAncestor;
+		public void setAcquiredFromAntecedent(boolean acquiredFromAntecedent) {
+			this.acquiredFromAntecedent = acquiredFromAntecedent;
 		}
 
 		public void setClassName(String className) {
@@ -1127,9 +1127,9 @@ public abstract class Job extends VersionableEntity<Job>
 
 		@Override
 		public String toString() {
-			return Ax.format("%s::%s - Acquired: %s - Ancestor: %s",
+			return Ax.format("%s::%s - Acquired: %s - Antecedent: %s",
 					getClassName().replaceFirst("(.+)(\\..+)", "$2"), getPath(),
-					isAcquired(), isAcquiredFromAncestor());
+					isAcquired(), isAcquiredFromAntecedent());
 		}
 	}
 

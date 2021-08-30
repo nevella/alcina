@@ -404,7 +404,7 @@ public class JobRegistry {
 			ResourceRecord record = processState.addResourceRecord(resource);
 			if (antecedentAcquired.isPresent()) {
 				record.setAcquired(true);
-				record.setAcquiredFromAncestor(true);
+				record.setAcquiredFromAntecedent(true);
 				forJob.persistProcessState();
 				Transaction.commit();
 			} else {
@@ -517,30 +517,30 @@ public class JobRegistry {
 
 	private void releaseResources(Job job, boolean inSequenceRelease) {
 		List<JobResource> resources = jobResources.get(job);
-		if (resources == null) {
-			return;
-		}
-		Iterator<JobResource> itr = resources.iterator();
-		while (itr.hasNext()) {
-			JobResource resource = itr.next();
-			boolean release = true;
-			if (job.provideHasIncompleteSubsequent()
-					&& resource.isSharedWithSubsequents()) {
-				// FIXME - mvcc.1 - tmp remove
-				// release = false;
+		if (resources != null) {
+			Iterator<JobResource> itr = resources.iterator();
+			while (itr.hasNext()) {
+				JobResource resource = itr.next();
+				boolean release = true;
+				if (job.provideHasIncompleteSubsequent()
+						&& resource.isSharedWithSubsequents()) {
+					release = false;
+				}
+				if (release) {
+					resource.release();
+					itr.remove();
+				}
 			}
-			if (release) {
-				resource.release();
-				itr.remove();
+			if (resources.isEmpty()) {
+				jobResources.remove(job);
 			}
 		}
-		if (resources.isEmpty()) {
-			jobResources.remove(job);
-		}
-		if (!inSequenceRelease) {
+		if (!inSequenceRelease && !job.provideHasIncompleteSubsequent()) {
+			// at end of sequence, re-release resources for all jobs in the
+			// sequence
 			List<Job> relatedSequential = job.provideRelatedSequential();
 			for (Job related : relatedSequential) {
-				releaseResources(job, true);
+				releaseResources(related, true);
 			}
 		}
 	}
