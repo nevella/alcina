@@ -12,6 +12,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -98,7 +99,11 @@ import javassist.bytecode.LocalVariableAttribute;
 import javassist.bytecode.MethodInfo;
 
 /*
- * TODO - rewriting
+ * 
+ * VERSIONS:
+ * 
+ * (just historical interest)
+ * 16 - disallow covariant return types
  * 
  * 
  */
@@ -303,7 +308,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 15;
+		private static final transient int VERSION = 16;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -600,9 +605,6 @@ class ClassTransformer {
 			 */
 			public void visit(FieldAccessExpr expr, Void arg) {
 				super.visit(expr, arg);
-				if (expr.toString().contains("startOffsetInOverlay")) {
-					int debug = 3;
-				}
 				if (isDefinedOk(expr)) {
 					// annotation etc
 					return;
@@ -636,10 +638,6 @@ class ClassTransformer {
 				this.visiting = expr;
 				if (isDefinedOk(expr)) {
 					return;
-				}
-				if (expr.toString()
-						.contains("invalidInnerClassAccessMethod2")) {
-					int debug = 3;
 				}
 				super.visit(expr, arg);
 				try {
@@ -693,9 +691,6 @@ class ClassTransformer {
 				if (isDefinedOk(expr)) {
 					// constant expression
 					return;
-				}
-				if (expr.toString().contains("disallowedInnerAccessField2")) {
-					int debug = 3;
 				}
 				try {
 					SymbolReference<? extends ResolvedValueDeclaration> ref = transformer.solver
@@ -1101,6 +1096,7 @@ class ClassTransformer {
 					 */
 					List<Method> allClassMethods = SEUtilities
 							.allClassMethods(originalClass);
+					checkCovariantReturnTypeMethods(allClassMethods);
 					for (CtMethod method : ctClass.getMethods()) {
 						/*
 						 * Interface methods don't (can't) refer to fields, so
@@ -1263,6 +1259,28 @@ class ClassTransformer {
 				}
 			}
 
+			private void checkCovariantReturnTypeMethods(
+					List<Method> allClassMethods) {
+				Multimap<MethodNameArgTypes, List<Method>> covariantBeanMethods = allClassMethods
+						.stream()
+						.filter(m -> m.getName().matches("(get|set|is)[A-Z].*"))
+						.sorted(Comparator.comparing(Method::getName))
+						.collect(AlcinaCollectors
+								.toKeyMultimap(MethodNameArgTypes::new));
+				covariantBeanMethods.entrySet()
+						.removeIf(e -> e.getValue().stream()
+								.map(Method::getReturnType).distinct()
+								.count() == 1);
+				if (covariantBeanMethods.size() > 0) {
+					Ax.err("Covariant methods (disallowed for mvcc)");
+					covariantBeanMethods.entrySet().stream().forEach(e -> {
+						Ax.out(e.getValue());
+						Ax.out("");
+					});
+					throw new IllegalStateException();
+				}
+			}
+
 			// https://stackoverflow.com/questions/20316965/get-a-name-of-a-method-parameter-using-javassist
 			private List<String> getArgumentNames(CtMethod method)
 					throws Exception {
@@ -1328,6 +1346,31 @@ class ClassTransformer {
 
 			private boolean matches(CtClass ctClass, Class<?> clazz) {
 				return getClassName(ctClass).equals(clazz.getName());
+			}
+
+			private class MethodNameArgTypes {
+				private Method method;
+
+				MethodNameArgTypes(Method method) {
+					this.method = method;
+				}
+
+				@Override
+				public boolean equals(Object obj) {
+					MethodNameArgTypes o = (MethodNameArgTypes) obj;
+					try {
+						return o.method.getName().equals(method.getName())
+								&& Arrays.equals(o.method.getParameterTypes(),
+										method.getParameterTypes());
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+
+				@Override
+				public int hashCode() {
+					return method.getName().hashCode();
+				}
 			}
 		}
 	}

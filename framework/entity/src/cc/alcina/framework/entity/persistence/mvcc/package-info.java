@@ -48,6 +48,15 @@
  * <li>And then of course there's ... eventual consistency
  * </ul>
  * 
+ * <h2>Further notes</h2>
+ * <ul>
+ * <li>Method access package-private is disallowed since the 'call super if
+ * resolved' rewrite strategy can't be applied, and version correctness can't be
+ * guaranteed
+ * <li>Covariant methods are not allowed since it appears the javassist rewriter
+ * doesn't rewrite both method versions
+ * <ul>
+ * 
  * <h2>DEVEX styles
  * <table>
  * <tr>
