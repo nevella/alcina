@@ -14,8 +14,8 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 /**
- * NOTE: storage can mean either client>server or server>client - just from
- * outside ??que??
+ * TO_STORAGE transforms will be recorded to client-local storage (and replayed
+ * on offline restart), and applied to server graph (db) store
  */
 public enum CommitType {
 	TO_LOCAL_BEAN, TO_LOCAL_GRAPH, TO_STORAGE, ALL_COMMITTED

@@ -1165,15 +1165,23 @@ class ClassTransformer {
 						// when removing if we have them be 'writeresolve'
 						//
 						// if the object version is already in write state (i.e.
-						// called frorm a setter), all good.
+						// called from a setter), all good.
 						//
-						// if not, listener will be added to immutable prior-tx
+						// if not, listener will be added to
+						// data-field-immutable prior-tx
 						// object (since it'll be read-resolved) which is
-						// inelegant but harmless
+						// inelegant but harmless. Or is it? It is, because
+						// generation of writeable version doesn't copy
+						// transients. Cleanup is more a question of
+						// throw-or-warn-if object is not in writeable state (if
+						// object is an mvcc object)
 						//
 						// a solution would be tristate resolve
 						// (read,write,listener) which returns a marker object
 						// ignoreable by TLTM... but is that elegant?
+						//
+						// actually, read/write/write_required - throw if
+						// write_required and not writeable
 						boolean writeResolve = setter;
 						// || propertyChangeListenerModifier;
 						MvccAccessType accessType = null;

@@ -124,7 +124,7 @@ import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 import cc.alcina.framework.servlet.job.JobRegistry;
-import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
+import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 
 /**
  *
@@ -507,7 +507,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						} catch (ReadOnlyException e) {
 							ExceptionMessage exceptionMessage = new OutOfBandMessage.ExceptionMessage();
 							exceptionMessage
-									.setMessageHtml(ReadonlySupportServlet.get()
+									.setMessageHtml(ReadonlySupportServletLayer.get()
 											.getNotPerformedBecauseReadonlyMessage());
 							OutOfBandMessages.get()
 									.addMessage(exceptionMessage);

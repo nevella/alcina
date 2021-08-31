@@ -122,7 +122,7 @@ public class DomainTransformEvent
 	/*
 	 * Better naming would have been 'CommitPhase' but this is good enough
 	 * 
-	 * FIXME - mvcc.4
+	 * FIXME - mvcc.4 - localstorage
 	 */
 	public CommitType getCommitType() {
 		return this.commitType;

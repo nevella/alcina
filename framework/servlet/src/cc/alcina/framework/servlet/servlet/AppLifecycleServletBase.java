@@ -80,7 +80,7 @@ import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
-import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
+import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
@@ -468,7 +468,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void onAppServletInitialised() {
-		ReadonlySupportServlet.get();
+		ReadonlySupportServletLayer.get();
 		if (usesJobs()) {
 			Transaction.begin();
 			JobRegistry.get();

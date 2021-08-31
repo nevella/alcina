@@ -10,11 +10,10 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
-@RegistryLocation(registryPoint = ReadonlySupportServlet.class, implementationType = ImplementationType.SINGLETON)
-// FIXME - mvcc.4 - add registrableservice
-public class ReadonlySupportServlet {
-	public static ReadonlySupportServlet get() {
-		return Registry.impl(ReadonlySupportServlet.class);
+@RegistryLocation(registryPoint = ReadonlySupportServletLayer.class, implementationType = ImplementationType.SINGLETON)
+public class ReadonlySupportServletLayer {
+	public static ReadonlySupportServletLayer get() {
+		return Registry.impl(ReadonlySupportServletLayer.class);
 	}
 
 	private String clientInstanceMessage;
@@ -37,7 +36,7 @@ public class ReadonlySupportServlet {
 		}
 	};
 
-	public ReadonlySupportServlet() {
+	public ReadonlySupportServletLayer() {
 		CommonRemoteServiceServlet.OutOfBandMessages.topicAppendMessages
 				.add(appendMessageListener);
 	}
