@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
@@ -54,6 +55,12 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		if (response.isNoChangeListener()) {
 			return;
 		}
+		if (response.isClearExisting()) {
+			getRoot().clearChildren();
+			getRoot().getTreePath().clearNonRoot();
+			loadChildren(getRoot());
+			return;
+		}
 		Request<?> request = response.getRequest();
 		// TODO - iterate through transactions => only last one is 'replace'
 		// (i.e. we don't need to render nodes > once, if a node changes in
@@ -81,8 +88,15 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 			// delta children at the end to generate visual nodes after node
 			// tree complete
 			if (requestPath != null) {
-				target.setChildren(
-						new IdentityArrayList<>(target.getChildren()));
+				IdentityArrayList<NodeModel<DomainViewNodeModel>> forceEmitEvent = new IdentityArrayList<>(
+						target.getChildren());
+				boolean mustSetTwice = target.getChildren()
+						.equals(forceEmitEvent);
+				target.setChildren(forceEmitEvent);
+				if (mustSetTwice) {
+					target.setChildren(
+							new IdentityArrayList<>(target.getChildren()));
+				}
 			}
 			if (openingToPath != null) {
 				openToPath(null);
@@ -217,6 +231,13 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 				treePath = parent.treePath.ensurePath(path);
 			}
 			treePath.setValue(this);
+		}
+
+		public void clearChildren() {
+			List<DomainViewNodeModel> list = (List) getChildren().stream()
+					.collect(Collectors.toList());
+			list.forEach(DomainViewNodeModel::removeFromParent);
+			populated = false;
 		}
 
 		public DomainViewNodeModel ensureNode(

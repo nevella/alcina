@@ -87,6 +87,10 @@ public class TreePath<T> extends Model {
 		return child;
 	}
 
+	public void clearNonRoot() {
+		paths.clearNonRoot();
+	}
+
 	public int depth() {
 		int depth = 0;
 		TreePath cursor = parent;
@@ -346,6 +350,10 @@ public class TreePath<T> extends Model {
 		public Paths(TreePath root) {
 			this.root = root;
 			put(root);
+		}
+
+		public void clearNonRoot() {
+			byString.entrySet().removeIf(e -> e.getValue() != root);
 		}
 
 		public List createChildList() {

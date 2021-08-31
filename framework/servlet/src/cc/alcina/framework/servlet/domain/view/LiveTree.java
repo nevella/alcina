@@ -108,8 +108,8 @@ public class LiveTree {
 	public Response generateResponse(
 			Request<? extends DomainViewSearchDefinition> request) {
 		Response response = new Response();
-		response.setClearExisting(request.getSince() == null
-				|| request.getSince().compareTo(earliestPosition) < 0);
+		response.setClearExisting(request.getSince() != null
+				&& request.getSince().compareTo(earliestPosition) < 0);
 		response.getTransforms().addAll(requestToTransform(request, response));
 		response.setRequest(request);
 		response.setPosition(currentPosition);
