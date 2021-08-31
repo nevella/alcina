@@ -93,6 +93,11 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * <li>(later) GWT RPC (for serializing places, searchdefs etc without
  * serialization classes)
  * <li>Per-application implementations
+ * <li>cannot have two consecutive default collection parent/child properties
+ * (since there's nowhere to allocate the counter - e.g.
+ * citationsearchdefinition/criteriagroup(single criterion)/x where x is default
+ * and has type list(searchcriterion). Note that it's ok for a collection of
+ * value types
  * </ul>
  * 
  *
@@ -414,6 +419,22 @@ public class FlatTreeSerializer {
 			String reachedPath = "";
 			List<String> resolvedSegments = new ArrayList<>();
 			int previousSegmentUnusedIndex = -1;
+			int segmentUnusedIndex = -1;
+			/*
+			 * unused indicies
+			 * 
+			 * citation-1.sectionrange-2
+			 * 
+			 * corresponds to
+			 * 
+			 * def.criteriaGroups.CitableAndSectionsCriteriaGroup.criteria[2].
+			 * sectionRanges[3]
+			 * 
+			 * the logic is a little slippery as to where to apply an index - if
+			 * unused in previous segment step, apply to first collection in
+			 * this segment step, otherwise apply only on resolution
+			 * 
+			 */
 			boolean unknownProperty = false;
 			for (int idx = 0; idx < segments.length; idx++) {
 				String segment = segments[idx];
@@ -421,10 +442,7 @@ public class FlatTreeSerializer {
 				SegmentIndex segmentIndex = new SegmentIndex(segment);
 				int index = segmentIndex.index;
 				String segmentPath = segmentIndex.segment;
-				if (previousSegmentUnusedIndex != -1) {
-					index = previousSegmentUnusedIndex;
-					previousSegmentUnusedIndex = -1;
-				}
+				previousSegmentUnusedIndex = segmentUnusedIndex;
 				boolean resolved = false;
 				Set<String> seenPossibleBranchesThisSegment = new LinkedHashSet<>();
 				while (!resolved) {
@@ -442,7 +460,7 @@ public class FlatTreeSerializer {
 					 */
 					resolved |= resolvingLastSegment;
 					if (cursor.isCollection() && !cursor.isLeaf()) {
-						previousSegmentUnusedIndex = -1;
+						segmentUnusedIndex = -1;
 						Class elementClass = null;
 						Map<String, Class> typeMap = getAliasClassMap(
 								state.rootClass, cursor);
@@ -476,8 +494,19 @@ public class FlatTreeSerializer {
 							resolved = true;
 						}
 						try {
+							int resolutionIndex = index;
+							if (!resolved) {
+								if (previousSegmentUnusedIndex != -1) {
+									resolutionIndex = previousSegmentUnusedIndex;
+									previousSegmentUnusedIndex = -1;
+								} else {
+									resolutionIndex = 1;
+								}
+							} else {
+								segmentUnusedIndex = -1;
+							}
 							Object childValue = ensureNthCollectionElement(
-									elementClass, index,
+									elementClass, resolutionIndex,
 									(Collection) cursor.value);
 							cursor = new Node(cursor, childValue, null);
 						} catch (RuntimeException e) {
@@ -485,10 +514,9 @@ public class FlatTreeSerializer {
 						}
 						cursor.path.index = new CollectionIndex(elementClass,
 								null, index, false);
-						index = 1;
 					} else {
 						if (index != 1) {
-							previousSegmentUnusedIndex = index;
+							segmentUnusedIndex = index;
 						}
 						Property property = null;
 						if (state.deserializerOptions.shortPaths) {
