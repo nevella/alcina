@@ -546,6 +546,8 @@ public class TransformPersisterInPersistenceContext {
 	protected void persistEvent(ThreadlocalTransformManager tlTransformManager,
 			DelayedEntityPersister delayedEntityPersister,
 			DomainTransformEvent event) throws DomainTransformException {
+		// FIXME - mvcc.wrap - remove wrappedObjectAssignable from
+		// tminpersistence etc (and search for wrappedobject)
 		boolean wrappedObjectAssignable = WrappedObject.class
 				.isAssignableFrom(event.getObjectClass());
 		// do not apply parent association transforms (although they'll be used
@@ -591,7 +593,7 @@ public class TransformPersisterInPersistenceContext {
 				// pg will not accept 0x0
 				event.setNewStringValue(
 						event.getNewStringValue().replace("\u0000", ""));
-				//and must blank this too
+				// and must blank this too
 				event.setNewValue(null);
 			}
 			tlTransformManager.fireDomainTransform(event);
