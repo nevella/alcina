@@ -150,16 +150,11 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	}
 
 	public void forAllRegistries(Class<?> registryPoint) {
-		forAllRegistries(registryPoint, void.class);
-	}
-
-	public void forAllRegistries(Class<?> registryPoint, Class<?> targetClass) {
 		Registry sourceInstance = perClassLoader.get(servletLayerClassloader);
 		getPerClassLoader().entrySet().stream()
 				.filter(e -> e.getKey() != servletLayerClassloader)
 				.forEach(e -> {
-					e.getValue().copyFrom(sourceInstance, registryPoint,
-							targetClass);
+					e.getValue().copyFrom(sourceInstance, registryPoint);
 				});
 	}
 

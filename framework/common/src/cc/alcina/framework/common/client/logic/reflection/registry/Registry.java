@@ -301,10 +301,7 @@ public class Registry {
 				.collect(Collectors.toList());
 	}
 
-	public void copyFrom(Registry sourceInstance, Class<?> registryPoint,
-			Class<?> targetClass) {
-		// targetClass ignored for the moment (copies all)
-		sourceInstance.impl0(registryPoint, targetClass, false);
+	public void copyFrom(Registry sourceInstance, Class<?> registryPoint) {
 		RegistryKey key = keys.get(registryPoint);
 		registry.asMap(key).putMulti(sourceInstance.registry.asMap(key));
 		targetPriority.asMap(key)
@@ -313,6 +310,15 @@ public class Registry {
 		exactMap.asMap(key).putMulti(sourceInstance.exactMap.asMap(key));
 		implementationTypeMap.asMap(key)
 				.putMulti(sourceInstance.implementationTypeMap.asMap(key));
+		sourceInstance.registry
+				.asMap(key).typedKeySet(
+						RegistryKey.class)
+				.forEach(
+						childKey -> sourceInstance
+								.impl0(registryPoint,
+										((RegistryKey) childKey).clazz(
+												sourceInstance.classLookup),
+										false));
 		if (sourceInstance.singletons.containsKey(key)) {
 			singletons.asMap(key)
 					.putMulti(sourceInstance.singletons.asMap(key));
