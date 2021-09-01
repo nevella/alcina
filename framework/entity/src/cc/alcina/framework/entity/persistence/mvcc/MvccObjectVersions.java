@@ -25,18 +25,20 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  * 
  * vacuum map swap is synchronized on (this)
  * 
- * FIXME - mvcc.4 - mvcc - object uniqueness - anything non-local must have a tx
- * - add tx/version caching - trans value only refs one mvccentity - look at
- * non-concurrent map for mvccobject.
  * 
- * This is in response to TransformCommit.getLocatorMapForClient - two
- * lazy-loaded mvcc objects, identical class/id, are non-identical. The
- * MvccObject (entity) should be unique until unreachable (post-vscuum) - ensure
- * this via checks in TransactionalValue and possible replacement in
+ * Complexities related to lazy load (e.g.
+ * TransformCommit.getLocatorMapForClient) - two lazy-loaded mvcc objects,
+ * identical class/id, are non-identical. The MvccObject (entity) is unique
+ * until unreachable (post-vscuum) - this is ensured via checks in
+ * TransactionalValue and possible replacement in
  * DomainStore.SubgraphTransformManagerPostProcess.getEntityForCreate(DomainTransformEvent)
  * and local-id/creation checks in DomainStore.find(Class<T>, long)
  * 
- * Docs - why readable/writeable?
+ * FIXME - mvcc.5 - Docs - why/how do readable/writeable operate? Answer: the
+ * "read" version is immutable and used as the source of later transaction's
+ * versions. Note that read-only _versions_ are rare (possibly non-existent?
+ * lazy-load?), but read-only _access_ (to prior visible tx version) is
+ * definitely not.
  * 
  * @author nick@alcina.cc
  * 

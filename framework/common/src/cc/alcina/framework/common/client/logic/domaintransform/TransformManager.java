@@ -768,35 +768,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	// FIXME - mvcc.4 - can be removed (since postprocess() ignores
-	// created/deleted) - but even better, move that ignore created/deleted to
-	// transformpersister
-	public void deleteObjectOrRemoveTransformsIfLocal(Entity entity) {
-		if (entity.getId() != 0) {
-			delete(entity);
-			return;
-		}
-		Set<DomainTransformEvent> toRemove = new LinkedHashSet<DomainTransformEvent>();
-		Set<DomainTransformEvent> trs = getTransformsByCommitType(
-				CommitType.TO_LOCAL_BEAN);
-		for (DomainTransformEvent dte : trs) {
-			Entity source = dte.getSource() != null ? dte.getSource()
-					: getObject(dte);
-			if (entity.equals(source)) {
-				toRemove.add(dte);
-			}
-			if (dte.getValueId() != 0 || dte.getValueLocalId() != 0) {
-				Entity object = getObjectLookup().getObject(dte.getValueClass(),
-						dte.getValueId(), dte.getValueLocalId());
-				if (entity.equals(object)) {
-					toRemove.add(dte);
-				}
-			}
-		}
-		trs.removeAll(toRemove);
-		transforms.removeAll(toRemove);
-	}
-
 	public void deregisterDomainObject(Entity entity) {
 		if (getDomainObjects() != null) {
 			getDomainObjects().deregister(entity);
