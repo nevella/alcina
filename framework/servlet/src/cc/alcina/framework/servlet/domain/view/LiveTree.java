@@ -143,6 +143,16 @@ public class LiveTree {
 		}
 	}
 
+	public void onInvalidateTree() {
+		Iterator<ChangeListener> itr = changeListeners.iterator();
+		while (itr.hasNext()) {
+			ChangeListener next = itr.next();
+			next.task.handlerData.clearExisting = true;
+			next.run();
+			itr.remove();
+		}
+	}
+
 	public List<Transform> toTransforms(TreePath<LiveNode> path) {
 		List<Transform> result = new ArrayList<>();
 		while (path != null) {
@@ -744,6 +754,8 @@ public class LiveTree {
 					.generateResponse(task.handlerData.request);
 			task.handlerData.response
 					.setNoChangeListener(task.handlerData.noChangeListeners);
+			task.handlerData.response
+					.setClearExisting(task.handlerData.clearExisting);
 			task.latch.countDown();
 		}
 	}

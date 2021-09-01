@@ -305,6 +305,10 @@ public class TransformCollation {
 					e -> e.getTransformType() == TransformType.DELETE_OBJECT);
 		}
 
+		public boolean hasNoCreateTransform() {
+			return !hasCreateTransform();
+		}
+
 		public boolean hasNoDeleteTransform() {
 			return !hasDeleteTransform();
 		}

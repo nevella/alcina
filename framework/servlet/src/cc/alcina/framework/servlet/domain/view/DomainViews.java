@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.domain.view;
 
+import java.util.Iterator;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -15,12 +17,15 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.csobjects.view.DomainView;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.WaitPolicy;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.QueryResult;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
@@ -241,6 +246,18 @@ public abstract class DomainViews {
 				.has((Class[]) getIndexableEntityClasses());
 	}
 
+	protected void onViewModified(DomainView view) {
+		Iterator<Entry<Key, LiveTree>> itr = trees.entrySet().iterator();
+		while (itr.hasNext()) {
+			Entry<Key, LiveTree> entry = itr.next();
+			if (entry.getKey().request.getRoot().equals(view.toLocator())) {
+				entry.getValue().onInvalidateTree();
+				itr.remove();
+				logger.info("Invalidated tree for view {}", view);
+			}
+		}
+	}
+
 	void processEvent(ViewsTask task) {
 		switch (task.type) {
 		case MODEL_CHANGE:
@@ -252,6 +269,12 @@ public abstract class DomainViews {
 			Transaction.join(task.modelChange.postCommit);
 			trees.values()
 					.forEach(tree -> tree.index(task.modelChange.event, true));
+			task.modelChange.event.getTransformPersistenceToken()
+					.getTransformCollation()
+					.query(PersistentImpl.getImplementation(DomainView.class))
+					.stream().filter(QueryResult::hasNoDeleteTransform)
+					.forEach(qr -> onViewModified((DomainView) qr.getObject()));
+			;
 			Transaction.end();
 			break;
 		// throw new UnsupportedOperationException();
@@ -410,25 +433,27 @@ public abstract class DomainViews {
 		}
 
 		static class HandlerData {
-			public long clientInstanceId;
+			long clientInstanceId;
 
-			public Function<LiveTree, Object> lambda;
+			Function<LiveTree, Object> lambda;
 
-			public Object lambdaResult;
+			Object lambdaResult;
 
-			public RuntimeException exception;
+			RuntimeException exception;
 
-			public Response response;
+			Response response;
 
-			public Request<? extends DomainViewSearchDefinition> request;
+			Request<? extends DomainViewSearchDefinition> request;
 
-			public Transaction transaction;
+			Transaction transaction;
 
-			public boolean noChangeListeners;
+			boolean noChangeListeners;
+
+			boolean clearExisting;
 		}
 
 		static class ModelChange {
-			public DomainTransformPersistenceEvent event;
+			DomainTransformPersistenceEvent event;
 
 			Transaction preCommit;
 
