@@ -304,6 +304,7 @@ public class Registry {
 	public void copyFrom(Registry sourceInstance, Class<?> registryPoint,
 			Class<?> targetClass) {
 		// targetClass ignored for the moment (copies all)
+		sourceInstance.impl0(registryPoint, targetClass, false);
 		RegistryKey key = keys.get(registryPoint);
 		registry.asMap(key).putMulti(sourceInstance.registry.asMap(key));
 		targetPriority.asMap(key)
