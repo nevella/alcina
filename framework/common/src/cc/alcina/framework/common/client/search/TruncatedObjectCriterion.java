@@ -39,6 +39,11 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 		value = null;
 	}
 
+	@Override
+	public boolean emptyCriterion() {
+		return id == 0;
+	}
+
 	public E ensurePlaceholderObject() {
 		if (value == null && id != 0) {
 			value = Reflections.newInstance(getObjectClass());

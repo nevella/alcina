@@ -549,6 +549,8 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 		@Override
 		public void onBeforeTreeSerialize() {
+			serializable.getCriteriaGroups().forEach(cg -> cg.getCriteria()
+					.removeIf(sc -> ((SearchCriterion) sc).emptyCriterion()));
 			serializable.getOrderGroups().forEach(og -> og
 					.treeSerializationCustomiser().onBeforeTreeSerialize());
 		}
