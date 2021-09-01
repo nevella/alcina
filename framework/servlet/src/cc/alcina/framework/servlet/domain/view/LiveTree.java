@@ -640,6 +640,9 @@ public class LiveTree {
 			return (T) segment;
 		}
 
+		/*
+		 * Exception that occurred when generating a child of this node
+		 */
 		public class ExceptionChild {
 			private Object data;
 

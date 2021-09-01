@@ -40,13 +40,11 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
@@ -547,25 +545,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 			} else {
 				return serialized;
 			}
-		}
-
-		@Override
-		// because it's prettier, there's ambiguity about multiple
-		// criteriagroups w
-		// 1 criterion vs 1 cg multiple criteria
-		// so - combine (map to first)
-		public void onAfterTreeDeserialize() {
-			Multimap<?, List<CriteriaGroup>> byClass = serializable
-					.getCriteriaGroups().stream().collect(AlcinaCollectors
-							.toKeyMultimap(CriteriaGroup::getClass));
-			byClass.values().forEach(list -> {
-				CriteriaGroup<?> first = list.get(0);
-				for (int idx = 1; idx < list.size(); idx++) {
-					CriteriaGroup later = list.get(idx);
-					first.getCriteria().addAll(later.getCriteria());
-					serializable.getCriteriaGroups().remove(later);
-				}
-			});
 		}
 
 		@Override

@@ -104,4 +104,8 @@ public interface TreeSerializable extends Serializable {
 			}
 		}
 	}
+
+	// marker for deserialization
+	public interface NonMultiple {
+	}
 }

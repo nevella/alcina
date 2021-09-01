@@ -45,7 +45,8 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 		@RegistryLocation(registryPoint = TreeSerializable.class) })
 public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		implements TreeRenderable, Permissible, HasPermissionsValidation,
-		HasReflectiveEquivalence<CriteriaGroup>, TreeSerializable {
+		HasReflectiveEquivalence<CriteriaGroup>, TreeSerializable,
+		TreeSerializable.NonMultiple {
 	static final transient long serialVersionUID = -1L;
 
 	private FilterCombinator combinator = FilterCombinator.AND;
@@ -181,8 +182,6 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 			}
 		}
 	}
-
-	
 
 	public boolean provideIsEmpty() {
 		for (SearchCriterion criterion : getCriteria()) {
