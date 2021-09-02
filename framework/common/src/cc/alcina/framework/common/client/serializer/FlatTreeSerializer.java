@@ -435,9 +435,6 @@ public class FlatTreeSerializer {
 			 * this segment step, otherwise apply only on resolution
 			 * 
 			 */
-			if (path.equals("citation-1.sections")) {
-				int debug = 3;
-			}
 			boolean unknownProperty = false;
 			for (int idx = 0; idx < segments.length; idx++) {
 				String segment = segments[idx];
