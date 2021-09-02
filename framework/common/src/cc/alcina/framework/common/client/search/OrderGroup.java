@@ -13,9 +13,9 @@
  */
 package cc.alcina.framework.common.client.search;
 
-import javax.xml.bind.annotation.XmlTransient;
+import java.util.Iterator;
 
-import com.google.common.base.Preconditions;
+import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
@@ -27,6 +27,9 @@ import cc.alcina.framework.common.client.util.LooseContext;
  * @author Nick Reddel
  */
 public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
+	public static final String CONTEXT_PRUNE_BEFORE_SERIALIZE = OrderGroup.class
+			.getName() + ".CONTEXT_PRUNE_BEFORE_SERIALIZE";
+
 	@Override
 	public void addCriterion(OrderCriterion criterion) {
 		if (getCriteria().size() > 0) {
@@ -81,9 +84,24 @@ public abstract class OrderGroup extends CriteriaGroup<OrderCriterion> {
 
 		@Override
 		public void onBeforeTreeSerialize() {
-			Preconditions.checkState(
-					serializable.getCriteria().size() <= 1 || LooseContext
-							.is(TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS));
+			if (serializable.getCriteria().size() > 1) {
+				if (LooseContext
+						.is(TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS)) {
+				} else if (LooseContext
+						.is(OrderGroup.CONTEXT_PRUNE_BEFORE_SERIALIZE)) {
+					Iterator<OrderCriterion> itr = serializable.getCriteria()
+							.iterator();
+					int count = 0;
+					while (itr.hasNext()) {
+						itr.next();
+						if (++count > 1) {
+							itr.remove();
+						}
+					}
+				} else {
+					throw new IllegalStateException();
+				}
+			}
 		}
 	}
 }
