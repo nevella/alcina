@@ -93,6 +93,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.WrappedObject;
@@ -100,6 +101,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
+import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
@@ -1176,6 +1178,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
+		// user cache invalidation
+		addDomainTransformListener(ThreadedPermissionsManager.cast());
 		for (DomainTransformListener listener : threadLocalListeners) {
 			addDomainTransformListener(listener);
 		}
@@ -1194,7 +1198,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	protected void beforeDirectCollectionModification(Entity obj,
 			String propertyName, Object newTargetValue,
 			CollectionModificationType collectionModificationType) {
-		Transactions.resolve(obj, true, false);
+		Transactions.resolve(obj, ResolvedVersionState.WRITE, false);
 	}
 
 	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {
@@ -1256,7 +1260,8 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	@Override
 	protected Entity ensureEndpointWriteable(Entity targetObject) {
-		return Transactions.resolve(targetObject, true, false);
+		return Transactions.resolve(targetObject, ResolvedVersionState.WRITE,
+				false);
 	}
 
 	protected <T extends Entity> T ensureNonProxy(T entity) {

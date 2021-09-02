@@ -103,6 +103,7 @@ import javassist.bytecode.MethodInfo;
  * VERSIONS:
  * 
  * (just historical interest)
+ * 17 - model READ_INVALID resolvedVersionState
  * 16 - disallow covariant return types
  * 
  * 
@@ -308,7 +309,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 16;
+		private static final transient int VERSION = 17;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -1156,13 +1157,15 @@ class ClassTransformer {
 						// changes must work
 						boolean setter = method.getName().matches("set[A-Z].*")
 								&& method.getParameterTypes().length == 1;
-						boolean propertyChangeListenerModifier = method
+						boolean propertyChangeListenersMutator = method
 								.getName().matches(
 										"(?:(?:add|remove).*PropertyChangeListener)|propertyChangeSupport");
-						// FIXME - mvcc.4
+						// Tristaate resolvedversions
+						//
 						// propertyChangeListeners are problematic because of,
 						// among other things, circular calls to TLTM.listenTo
-						// when removing if we have them be 'writeresolve'
+						// when removing if we have them be 'writeresolve' (and
+						// creation of unnecessaary writeable versions)
 						//
 						// if the object version is already in write state (i.e.
 						// called from a setter), all good.
@@ -1176,14 +1179,15 @@ class ClassTransformer {
 						// throw-or-warn-if object is not in writeable state (if
 						// object is an mvcc object)
 						//
-						// a solution would be tristate resolve
-						// (read,write,listener) which returns a marker object
-						// ignoreable by TLTM... but is that elegant?
+						// The solution would be tristate resolve
+						// (read,write,read_invalid) which logs or throws
 						//
-						// actually, read/write/write_required - throw if
-						// write_required and not writeable
-						boolean writeResolve = setter;
-						// || propertyChangeListenerModifier;
+						ResolvedVersionState state = ResolvedVersionState.READ;
+						if (setter) {
+							state = ResolvedVersionState.WRITE;
+						} else if (propertyChangeListenersMutator) {
+							state = ResolvedVersionState.READ_INVALID;
+						}
 						MvccAccessType accessType = null;
 						if (method.hasAnnotation(MvccAccess.class)) {
 							MvccAccess annotation = (MvccAccess) method
@@ -1206,7 +1210,7 @@ class ClassTransformer {
 									method);
 							String parameterList = argumentNames.stream()
 									.collect(Collectors.joining(","));
-							if (!writeResolve) {
+							if (state == ResolvedVersionState.READ) {
 								bodyBuilder.line(
 										"if (__mvccObjectVersions__ == null){\n\t%s super.%s(%s);\n%s}\n",
 										returnPhrase, method.getName(),
@@ -1225,11 +1229,13 @@ class ClassTransformer {
 							 * remember, 99.9% of the time we don't reach this
 							 * point...
 							 */
+							ResolvedVersionState emitState = accessType == MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY
+									? ResolvedVersionState.READ
+									: state;
 							bodyBuilder.line(
-									"%s __instance__ = (%s) cc.alcina.framework.entity.persistence.mvcc.Transactions.resolve(this, %s, %s);",
-									cf.getName(), cf.getName(),
-									writeResolve
-											&& accessType != MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY,
+									"%s __instance__ = (%s) cc.alcina.framework.entity.persistence.mvcc.Transactions.resolve(this, "
+											+ "cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState.%s, %s);",
+									cf.getName(), cf.getName(), emitState,
 									accessType == MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY);
 							bodyBuilder.line(
 									"if (__instance__ != this){\n\t%s __instance__.%s(%s);\n}\n",

@@ -55,10 +55,6 @@ public class Transactions {
 		return counter.get();
 	}
 
-	public static <T extends Entity> boolean checkResolved(T t) {
-		return resolve(t, false, false) == t;
-	}
-
 	public static void copyIdFieldsToCurrentVersion(Entity entity) {
 		MvccObjectVersions versions = ((MvccObject) entity)
 				.__getMvccVersions__();
@@ -96,14 +92,14 @@ public class Transactions {
 
 	/*
 	 * The 'domainIdentity' parameter is used by ClassTransformer rewritten
-	 * classes (to get domainIdentity())
+	 * classes (to obtain the domainIdentity version of the object)
 	 */
-	public static <T extends Entity> T resolve(T t, boolean write,
+	public static <T extends Entity> T resolve(T t, ResolvedVersionState state,
 			boolean domainIdentity) {
 		if (t instanceof MvccObject) {
 			MvccObject mvccObject = (MvccObject) t;
 			MvccObjectVersions<T> versions = mvccObject.__getMvccVersions__();
-			if (versions == null && !write) {
+			if (versions == null && state == ResolvedVersionState.READ) {
 				// no transactional versions, return base
 				return t;
 			} else {
@@ -135,7 +131,14 @@ public class Transactions {
 							versions = MvccObjectVersions.ensureEntity(t,
 									transaction, false);
 						}
-						return versions.resolve(write);
+						boolean writeableVersion = state == ResolvedVersionState.WRITE;
+						/*
+						 * see docs for READ_INVALID
+						 */
+						if (state == ResolvedVersionState.READ_INVALID) {
+							versions.verifyWritable(transaction);
+						}
+						return versions.resolve(writeableVersion);
 					}
 				}
 			}

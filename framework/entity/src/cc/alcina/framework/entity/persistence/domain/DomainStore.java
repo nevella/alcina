@@ -114,6 +114,7 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
+import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
@@ -711,7 +712,8 @@ public class DomainStore implements IDomainStore {
 			Entity existing = cache.getAnyTransaction(clazz, id);
 			// the Transactions.resolve calls force a visible version
 			if (existing != null) {
-				Transactions.resolve(existing, true, false);
+				Transactions.resolve(existing, ResolvedVersionState.WRITE,
+						false);
 				cache.ensureVersion(existing);
 				return existing;
 			}
@@ -719,7 +721,7 @@ public class DomainStore implements IDomainStore {
 				// this below is all a bit fancy - but is the only place where
 				// said fanciness is needed
 				Entity local = cache.getCreatedLocals().get(localId);
-				Transactions.resolve(local, true, false);
+				Transactions.resolve(local, ResolvedVersionState.WRITE, false);
 				Preconditions.checkState(local != null);
 				// The created local is the 'domain identity', so need to
 				// preserve it but revert
@@ -1729,7 +1731,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public <V extends Entity> V resolve(V v) {
-			return Transactions.resolve(v, false, false);
+			return Transactions.resolve(v, ResolvedVersionState.READ, false);
 		}
 
 		@Override
@@ -2005,7 +2007,7 @@ public class DomainStore implements IDomainStore {
 		protected void beforeDirectCollectionModification(Entity obj,
 				String propertyName, Object newTargetValue,
 				CollectionModificationType collectionModificationType) {
-			Transactions.resolve(obj, true, false);
+			Transactions.resolve(obj, ResolvedVersionState.WRITE, false);
 		}
 
 		@Override

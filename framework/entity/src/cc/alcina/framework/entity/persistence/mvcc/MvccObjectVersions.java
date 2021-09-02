@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
@@ -49,7 +50,9 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 public abstract class MvccObjectVersions<T> implements Vacuumable {
 	static Logger logger = LoggerFactory.getLogger(MvccObjectVersions.class);
 
-	protected static int notifyResolveNullCount = 100000;
+	protected static int notifyResolveNullCount = 100;
+
+	protected static int notifyInvalidReadStateCount = 100;
 
 	// called in a synchronized block (synchronized on domainIdentity)
 	static <E extends Entity> MvccObjectVersions<E> ensureEntity(
@@ -450,6 +453,36 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		version.writeable = true;
 		versions.put(transaction, version);
 		updateCached(transaction, domainIdentity, true);
+	}
+
+	void verifyWritable(Transaction transaction) {
+		if (notifyInvalidReadStateCount < 0) {
+			return;
+		}
+		CachedResolution cachedResolution = this.cachedResolution;
+		boolean verified = cachedResolution != null
+				&& cachedResolution.writableTransactionId == transaction
+						.getId();
+		if ((size.get() == 0 || (transaction.isEmptyCommittedTransactions()
+				&& !versions.containsKey(transaction)))) {
+			// no
+		} else {
+			ObjectVersion<T> version = versions.get(transaction);
+			if (version != null && version.writeable) {
+				verified = true;
+			}
+		}
+		if (!verified) {
+			IllegalStateException exception = new IllegalStateException(
+					Ax.format("Invalid read state: %s", domainIdentity));
+			if (ResourceUtilities.is(MvccObjectVersions.class,
+					"throwOnInvalidReadState")) {
+				throw exception;
+			} else {
+				notifyInvalidReadStateCount--;
+				logger.warn("Invalid state", exception);
+			}
+		}
 	}
 
 	class CachedResolution {

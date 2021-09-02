@@ -19,7 +19,9 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.function.Predicate;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
@@ -28,6 +30,10 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
  * @author Nick Reddel
  */
 public interface IGroup extends IVersionable, HasDisplayName.Settable {
+	public static IGroup byId(long id) {
+		return Domain.find(PersistentImpl.getImplementation(IGroup.class), id);
+	}
+
 	@Override
 	public long getId();
 
