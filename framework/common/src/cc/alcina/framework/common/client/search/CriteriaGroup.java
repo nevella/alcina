@@ -54,6 +54,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 	private Set<SC> criteria = new LightSet<SC>();
 
 	public CriteriaGroup() {
+		ensureDefaultCriteria();
 	}
 
 	@Override
@@ -95,6 +96,10 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		return result.length() == 0 ? result : displayName + result;
 	}
 
+	public void clearCriteria() {
+		criteria.clear();
+	}
+
 	public <S extends SearchCriterion> S ensureCriterion(S criterion) {
 		for (SC sc : getCriteria()) {
 			if (sc.getClass() == criterion.getClass()) {
@@ -103,6 +108,9 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		}
 		addCriterion((SC) criterion);
 		return criterion;
+	}
+
+	public void ensureDefaultCriteria() {
 	}
 
 	public abstract Class entityClass();

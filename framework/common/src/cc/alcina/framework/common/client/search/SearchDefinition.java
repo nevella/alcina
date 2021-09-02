@@ -548,6 +548,27 @@ public abstract class SearchDefinition extends WrapperPersistable
 		}
 
 		@Override
+		public void onAfterTreeDeserialize() {
+			super.onAfterTreeDeserialize();
+			serializable.getCriteriaGroups()
+					.forEach(CriteriaGroup::ensureDefaultCriteria);
+		}
+
+		@Override
+		public void onAfterTreeSerialize() {
+			super.onAfterTreeSerialize();
+			serializable.getCriteriaGroups()
+					.forEach(CriteriaGroup::ensureDefaultCriteria);
+		}
+
+		@Override
+		public void onBeforeTreeDeserialize() {
+			super.onBeforeTreeDeserialize();
+			serializable.getCriteriaGroups()
+					.forEach(CriteriaGroup::clearCriteria);
+		}
+
+		@Override
 		public void onBeforeTreeSerialize() {
 			serializable.getCriteriaGroups().forEach(cg -> cg.getCriteria()
 					.removeIf(sc -> ((SearchCriterion) sc).emptyCriterion()));
