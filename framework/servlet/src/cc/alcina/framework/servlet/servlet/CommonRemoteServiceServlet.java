@@ -506,8 +506,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 							AppPersistenceBase.checkNotReadOnly();
 						} catch (ReadOnlyException e) {
 							ExceptionMessage exceptionMessage = new OutOfBandMessage.ExceptionMessage();
-							exceptionMessage
-									.setMessageHtml(ReadonlySupportServletLayer.get()
+							exceptionMessage.setMessageHtml(
+									ReadonlySupportServletLayer.get()
 											.getNotPerformedBecauseReadonlyMessage());
 							OutOfBandMessages.get()
 									.addMessage(exceptionMessage);
@@ -555,9 +555,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	public abstract PublicationResult
+	public PublicationResult
 			publish(ContentRequestBase<? extends ContentDefinition> cr)
-					throws WebException;
+					throws WebException {
+		return Registry.impl(PublicationRequestHandler.class).publish(cr);
+	}
 
 	@Override
 	public SearchResultsBase search(SearchDefinition def) {
