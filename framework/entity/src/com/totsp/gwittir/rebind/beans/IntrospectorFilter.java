@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.CountingMap;
 
 public interface IntrospectorFilter {
 	public static final String ALCINA_INTROSPECTOR_FILTER_CLASSNAME = "alcina.introspectorFilter.classname";
@@ -40,7 +41,7 @@ public interface IntrospectorFilter {
 			.asList(ArrayList.class, LinkedList.class, HashSet.class,
 					LinkedHashSet.class, TreeSet.class, HashMap.class,
 					LinkedHashMap.class, TreeMap.class, LightSet.class,
-					LiSet.class, LightMap.class)
+					LiSet.class, LightMap.class, CountingMap.class)
 			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 
 	public static final Set<String> CORE_CLASS_NAMES = Arrays
