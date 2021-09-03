@@ -1373,7 +1373,9 @@ public class ThreadlocalTransformManager extends TransformManager
 		} else {
 			if (handlesAssociationsFor(entity.entityClass())) {
 				entity = getObject(entity);
-				deregisterDomainObject(entity);
+				// will be deregistered with resetTltm, and not wanted if the
+				// version is not writeable
+				// deregisterDomainObject(entity);
 				DomainStore.stores().storeFor(entity.entityClass())
 						.remove(entity);
 			}

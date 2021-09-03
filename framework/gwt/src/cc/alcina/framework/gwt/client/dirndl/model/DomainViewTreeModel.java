@@ -187,7 +187,7 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 				}
 				TreePath<DomainViewNodeModel> parent = getRoot().getTreePath()
 						.ensurePath(parentPathStr);
-				if (!parent.hasChildrenLoaded()) {
+				if (!parent.hasChildrenLoaded() && !isDepthFirst()) {
 					return;
 				}
 				if (transform.getBeforePath() != null && !getRoot()

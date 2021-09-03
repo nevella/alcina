@@ -65,6 +65,8 @@ public class LiveTree {
 
 	private List<ChangeListener> changeListeners = new ArrayList<>();
 
+	private DomainView rootEntity;
+
 	public LiveTree(Key key) {
 		earliestPosition = DomainStore.writableStore()
 				.getTransformCommitPosition();
@@ -131,14 +133,15 @@ public class LiveTree {
 
 	public void index(DomainTransformPersistenceEvent event, boolean add) {
 		if (!add) {
-			generatorContext = new GeneratorContext();
+			// first phase of two (remove, then add)
+			newGeneratorContext();
 		}
 		indexers.forEach(g -> g.indexTransformPersistenceEvent(event,
 				generatorContext, add));
 		if (add) {
 			if (generatorContext.pathChanged.size() > 0) {
 				currentPosition = event.getPosition();
-				processEvents(generatorContext);
+				processEvents();
 			}
 		}
 	}
@@ -174,7 +177,7 @@ public class LiveTree {
 			node.segment = segment;
 			node.generator = generator;
 			if (generator.isIndexer()) {
-				indexers.add(generator);
+				generatorContext.createdIndexers.add(generator);
 			}
 			node.path = path;
 			path.setValue(node);
@@ -184,6 +187,7 @@ public class LiveTree {
 
 	private void generateTree1(DomainView rootEntity) {
 		root = TreePath.root(rootEntity);
+		this.rootEntity = rootEntity;
 		root.putSortedChildren();
 		PathChange change = new PathChange();
 		change.operation = Operation.INSERT;
@@ -191,17 +195,23 @@ public class LiveTree {
 				.impl(RootGeneratorFactory.class);
 		NodeGenerator<? extends DomainView, ?> rootGenerator = rootGeneratorFactory
 				.generatorFor(rootEntity);
+		newGeneratorContext();
+		generatorContext.treeCreation = true;
 		change.path = ensureNode(root, rootGenerator, rootEntity).path;
 		modelChanges.add(change);
-		GeneratorContext generatorContext = new GeneratorContext();
-		generatorContext.treeCreation = true;
-		processEvents(generatorContext);
+		processEvents();
 		rootGenerator.generationComplete();
 	}
 
 	private long getEvictMillis() {
 		return ResourceUtilities.getInteger(LiveTree.class, "evictSeconds")
 				* TimeConstants.ONE_SECOND_MS;
+	}
+
+	private void newGeneratorContext() {
+		this.generatorContext = new GeneratorContext();
+		generatorContext.root = root;
+		generatorContext.rootEntity = rootEntity;
 	}
 
 	/*
@@ -222,9 +232,9 @@ public class LiveTree {
 	 * 
 	 * 
 	 */
-	private void processEvents(GeneratorContext context) {
+	private void processEvents() {
 		// modelchange collation
-		context.root = root;
+		GeneratorContext context = this.generatorContext;
 		modelChanges.forEach(context::addPathChange);
 		modelChanges.clear();
 		LinkedHashSet<TreePath<LiveNode>> pathChanged = context.pathChanged;
@@ -266,6 +276,7 @@ public class LiveTree {
 		modifiedNodes.clear();
 		transactionTransforms.put(currentPosition, result);
 		checkChangeListeners();
+		context.finish();
 		root.trace(false);
 	}
 
@@ -373,6 +384,12 @@ public class LiveTree {
 	}
 
 	public class GeneratorContext {
+		public List<NodeGenerator> createdIndexers = new ArrayList<>();
+
+		public List<NodeGenerator> removedIndexers = new ArrayList<>();
+
+		public DomainView rootEntity;
+
 		public TreePath<LiveNode> root;
 
 		// This field is used as a queue of changes-to-process. End of
@@ -433,6 +450,11 @@ public class LiveTree {
 			return transactionResult.add(liveNode.path);
 		}
 
+		public void finish() {
+			indexers.removeAll(removedIndexers);
+			indexers.addAll(createdIndexers);
+		}
+
 		public List<Transform> generateTransformResult() {
 			List<Transform> result = new ArrayList<>();
 			if (treeCreation) {
@@ -459,7 +481,6 @@ public class LiveTree {
 			depthChanged.remove(path.depth(), path);
 		}
 
-		// TODO - views.1 - remove generator if removed?
 		private TreePath<LiveNode> removeChild(LiveNode liveNode,
 				Object discriminator) {
 			if (liveNode.path.hasChildPath(discriminator)) {
@@ -640,6 +661,9 @@ public class LiveTree {
 				break;
 			case REMOVE:
 				path.removeFromParent();
+				if (generator != null) {
+					context.removedIndexers.add(generator);
+				}
 				break;
 			case CHANGE:
 				break;
