@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel;
@@ -11,16 +12,14 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentMod
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.WaitPolicy;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTreeModel.DomainViewNodeModel;
-import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTreeModel.DomainViewNodeModel.Generator;
 
 /*
  * Non-abstract to export reflected annotations
  */
 public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
-	DomainViewNodeModel.Generator generator = new Generator();
+	DomainViewNodeModel.LabelGenerator labelGenerator = new DomainViewNodeModel.TextGenerator();
 
 	private TreePath<DomainViewNodeModel> openingToPath = null;
 
@@ -30,8 +29,8 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 
 	private int selfAndDescendantCount = -1;
 
-	public DomainViewNodeModel.Generator getGenerator() {
-		return this.generator;
+	public DomainViewNodeModel.LabelGenerator getLabelGenerator() {
+		return this.labelGenerator;
 	}
 
 	public DomainViewNodeContentModel.Response getLastResponse() {
@@ -156,8 +155,9 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		this.depthFirst = depthFirst;
 	}
 
-	public void setGenerator(DomainViewNodeModel.Generator generator) {
-		this.generator = generator;
+	public void setLabelGenerator(
+			DomainViewNodeModel.LabelGenerator labelGenerator) {
+		this.labelGenerator = labelGenerator;
 	}
 
 	public void
@@ -220,10 +220,15 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 
 		private TreePath<DomainViewNodeModel> treePath;
 
+		private LabelGenerator labelGenerator;
+
 		public DomainViewNodeModel() {
 		}
 
-		public DomainViewNodeModel(DomainViewNodeModel parent, String path) {
+		public DomainViewNodeModel(LabelGenerator labelGenerator,
+				DomainViewNodeModel parent, String path) {
+			this.labelGenerator = labelGenerator == null ? new TextGenerator()
+					: labelGenerator;
 			setParent(parent);
 			if (parent == null) {
 				treePath = TreePath.absolutePath(path);
@@ -249,11 +254,11 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 				DomainViewNodeModel parent = otherTreePath.getParent() == null
 						? null
 						: otherTreePath.getParent().getValue();
-				Generator generator = provideContainingTree() == null
-						? new Generator()
-						: provideContainingTree().generator;
-				DomainViewNodeModel model = generator.generate(valueModel,
-						parent, path);
+				LabelGenerator labelGenerator = provideContainingTree() == null
+						? null
+						: provideContainingTree().labelGenerator;
+				DomainViewNodeModel model = new DomainViewNodeModel(
+						labelGenerator, parent, path);
 				if (parent != null) {
 					parent.modifyChildren(Operation.INSERT, beforePath, model,
 							fireCollectionModificationEvents);
@@ -343,43 +348,26 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		}
 
 		protected void constructLabel(DomainViewNodeContentModel<?> node) {
-			NodeLabelText nodeLabelText = new NodeLabelText();
-			nodeLabelText.setText(node.getName());
-			getLabel().setLabel(nodeLabelText);
+			getLabel().setLabel(labelGenerator.apply(node));
 		}
 
-		public static class FullLabel extends DomainViewNodeModel {
-			public FullLabel() {
-			}
-
-			public FullLabel(DomainViewNodeModel parent, String path) {
-				super(parent, path);
-			}
-
+		public static class ContentModelGenerator implements LabelGenerator {
 			@Override
-			protected void constructLabel(DomainViewNodeContentModel<?> node) {
-				getLabel().setLabel(node);
+			public Object apply(DomainViewNodeContentModel<?> t) {
+				return t;
 			}
 		}
 
-		@ClientInstantiable
-		// TODO - the dirndl way would be scoped annotation resolution which
-		// resolves NodeLabel.getLabel to either return the name or the object
-		// itself...
-		public static class Generator {
-			public DomainViewNodeModel generate(
-					DomainViewNodeContentModel valueModel,
-					DomainViewNodeModel parent, String path) {
-				return new DomainViewNodeModel(parent, path);
-			}
+		public static interface LabelGenerator
+				extends Function<DomainViewNodeContentModel<?>, Object> {
+		}
 
-			public static class FullLabel extends Generator {
-				@Override
-				public DomainViewNodeModel generate(
-						DomainViewNodeContentModel valueModel,
-						DomainViewNodeModel parent, String path) {
-					return new DomainViewNodeModel.FullLabel(parent, path);
-				}
+		public static class TextGenerator implements LabelGenerator {
+			@Override
+			public Object apply(DomainViewNodeContentModel<?> t) {
+				NodeLabelText nodeLabelText = new NodeLabelText();
+				nodeLabelText.setText(t.getName());
+				return nodeLabelText;
 			}
 		}
 	}
