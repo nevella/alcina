@@ -161,11 +161,16 @@ public class TableModel extends Model {
 		}
 	}
 
-	public interface SearchTableColumnClickHandler
-			extends DomEvents.Click.Handler {
+	public static class SearchTableColumnClickHandler
+			implements DomEvents.Click.Handler {
+		private TableColumn column;
+
+		public SearchTableColumnClickHandler(TableColumn column) {
+			this.column = column;
+		}
+
 		@Override
-		default void onClick(Click Click) {
-			TableColumn column = (TableColumn) this;
+		public void onClick(Click Click) {
 			Place rawPlace = Client.currentPlace();
 			if (!(rawPlace instanceof BindablePlace)) {
 				return;

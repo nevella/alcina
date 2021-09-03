@@ -8,7 +8,6 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEventBinding;
 
@@ -51,12 +50,6 @@ public abstract class TopicEvent<T, H extends NodeEvent.Handler>
 				unbind();
 			}
 		});
-	}
-
-	/*
-	 * Indicates topic event will be fired from code, not an annotation
-	 */
-	public static class CodeTopic extends NodeTopic {
 	}
 
 	public static class TopicListeners {

@@ -12,7 +12,6 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.IntersectionObserved;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererArgs;
@@ -104,9 +103,6 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 	protected void loadNextPage() {
 		throw new UnsupportedOperationException();
-	}
-
-	public static class ChildrenLoaded extends NodeTopic {
 	}
 
 	/**

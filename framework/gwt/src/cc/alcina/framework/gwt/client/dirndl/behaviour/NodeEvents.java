@@ -36,6 +36,22 @@ public class NodeEvents {
 		}
 	}
 
+	public static class Close extends TopicEvent<Object, Close.Handler> {
+		@Override
+		public void dispatch(Close.Handler handler) {
+			handler.onClose(this);
+		}
+
+		@Override
+		public Class<Close.Handler> getHandlerClass() {
+			return Close.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onClose(Close event);
+		}
+	}
+
 	public static class Forward extends TopicEvent<Object, Forward.Handler> {
 		@Override
 		public void dispatch(Forward.Handler handler) {
