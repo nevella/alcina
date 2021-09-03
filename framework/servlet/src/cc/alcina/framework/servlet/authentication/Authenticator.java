@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.module.login.LoginAttempts;
@@ -135,13 +136,25 @@ public abstract class Authenticator<U extends Entity & IUser> {
 					new TwoFactorAuthentication().generateSecret());
 		}
 		Transaction.commit();
-		if (!LooseContext.is(CONTEXT_BYPASS_PASSWORD_CHECK)
-				&& !PasswordEncryptionSupport.get().check(
+		if (LooseContext.is(CONTEXT_BYPASS_PASSWORD_CHECK)) {
+			// Programmatic password bypass - allow
+			return true;
+		}
+		if (AppPersistenceBase.isTestServer() && 
+				ResourceUtilities.is(Authenticator.class, "bypassPasswordCheck")) {
+			// App server/dev instance bypass - allow
+			// Extra AppPersistenceBase.isTestServer() check to make sure we don't engage this
+			//  even by accident in prod
+			return true;
+		}
+		if (!PasswordEncryptionSupport.get().check(
 						loginModel.loginBean.getPassword(), user.getSalt(),
 						user.getPasswordHash())) {
+			// Failed password check - deny
 			loginModel.loginResponse.setErrorMsg("Password incorrect");
 			return false;
 		} else {
+			// Passwork check success - allow
 			return true;
 		}
 	}
