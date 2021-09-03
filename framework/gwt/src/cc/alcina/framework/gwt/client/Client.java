@@ -29,6 +29,7 @@ import cc.alcina.framework.gwt.client.entity.view.UiController;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @RegistryLocation(registryPoint = Client.class, implementationType = ImplementationType.SINGLETON)
@@ -122,7 +123,6 @@ public abstract class Client {
 			LiSet liSet = new LiSet();
 			CommonUtils.setSupplier = () -> new LightSet();
 			LocalDom.mutations.setDisabled(true);
-			//
 			if (GWT.isScript()) {
 				Registry.setDelegateCreator(new JsRegistryDelegateCreator());
 			}
@@ -134,6 +134,15 @@ public abstract class Client {
 			Reflections.registerClassLookup(ClientReflector.get());
 			Reflections.registerPropertyAccessor(GwittirBridge.get());
 			Reflections.registerBeanDescriptorProvider(GwittirBridge.get());
+		}
+	}
+
+	@ClientInstantiable
+	@RegistryLocation(registryPoint = PlaceNavigator.class, implementationType = ImplementationType.INSTANCE)
+	public static class PlaceNavigatorImpl implements PlaceNavigator {
+		@Override
+		public void go(Place place) {
+			Client.goTo(place);
 		}
 	}
 }

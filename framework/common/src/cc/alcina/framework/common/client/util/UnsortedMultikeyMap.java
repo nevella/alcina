@@ -100,11 +100,14 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 	@Override
 	protected DelegateMapCreator ensureDelegateMapCreator() {
 		if (this.delegateMapCreator == null) {
-			this.delegateMapCreator = new UnsortedMapCreator();
+			this.delegateMapCreator = new CollectionCreators.UnsortedMapCreator();
 		}
 		return delegateMapCreator;
 	}
 
+	/*
+	 * For backwards (serialization) compatibility
+	 */
 	public static class UnsortedMapCreator implements DelegateMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {

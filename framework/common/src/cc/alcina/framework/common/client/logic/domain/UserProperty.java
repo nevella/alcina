@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
+import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
@@ -49,7 +50,7 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
  * TODO - check this with a precondition server side
  */
 public abstract class UserProperty<T extends UserProperty>
-		extends VersionableEntity<T> implements HasIUser {
+		extends VersionableEntity<T> implements HasIUser, HasOwner {
 	public static final transient String CONTEXT_NO_COMMIT = UserProperty.class
 			.getName() + ".CONTEXT_NO_COMMIT";
 
@@ -125,8 +126,8 @@ public abstract class UserProperty<T extends UserProperty>
 			} catch (Exception e) {
 			}
 		}
-		return (V) TransformManager.resolveMaybeDeserialize(null, getValue(),
-				null, clazz);
+		return (V) TransformManager.Serializer.get().deserialize(getValue(),
+				clazz);
 	}
 
 	public synchronized UserPropertyPersistable.Support
@@ -150,6 +151,17 @@ public abstract class UserProperty<T extends UserProperty>
 		return this.key;
 	}
 
+	@Override
+	@Transient
+	public IUser getOwner() {
+		return getUser();
+	}
+
+	@Transient
+	public UserPropertyPersistable.Support getUserPropertySupport() {
+		return this.userPropertySupport;
+	}
+
 	@Lob
 	@Transient
 	public String getValue() {
@@ -157,8 +169,8 @@ public abstract class UserProperty<T extends UserProperty>
 	}
 
 	public void serializeObject(Object object) {
-		setValue(TransformManager.serialize(object));
 		setCategory(object.getClass().getName());
+		setValue(TransformManager.serialize(object));
 	}
 
 	public void setCategory(String category) {

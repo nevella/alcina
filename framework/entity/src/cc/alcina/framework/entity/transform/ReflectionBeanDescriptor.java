@@ -24,6 +24,7 @@ public class ReflectionBeanDescriptor implements BeanDescriptor {
 			props = new Property[propertyDescriptors.size() - 1];
 			int index = 0;
 			Class enumSubclass = null;
+			// FIXME - mvcc.5 - is this 'enumSubclass' necessary?
 			for (PropertyDescriptor d : propertyDescriptors) {
 				Class<?> propertyType = d.getPropertyType();
 				if (propertyType != null && propertyType.isEnum()

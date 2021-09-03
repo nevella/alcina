@@ -178,6 +178,9 @@ public class DevConsoleRemote {
 			resourceHandler.addServlet(holderPwd, "/");
 			handlers.addHandler(resourceHandler);
 		}
+		server.setAttribute("org.mortbay.jetty.Request.maxFormContentSize", -1);
+		server.setAttribute(
+				"org.eclipse.jetty.server.Request.maxFormContentSize", -1);
 		server.setHandler(handlers);
 		server.start();
 		// server.dumpStdErr();

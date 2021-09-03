@@ -9,8 +9,8 @@ import cc.alcina.framework.common.client.domain.search.SearchOrders.ColumnSearch
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.search.ReflectCloneable;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)

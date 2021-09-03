@@ -63,7 +63,7 @@ public class BasicGridPublisher {
 						.sanitiseFileName(defName.replace(" ", "_")));
 				SearchResultsBase results = Registry
 						.impl(CommonRemoteServletProvider.class)
-						.getCommonRemoteServiceServlet().search(def, 0);
+						.getCommonRemoteServiceServlet().search(def);
 				publicationContent.resultRows = results.getResults();
 			} else if (def instanceof BindableSearchDefinition) {
 				BindableSearchDefinition bdef = (BindableSearchDefinition) def;
@@ -75,7 +75,8 @@ public class BasicGridPublisher {
 				ModelSearchResults modelSearchResults = Registry
 						.impl(CommonRemoteServletProvider.class)
 						.getCommonRemoteServiceServlet().searchModel(bdef);
-				publicationContent.resultRows = modelSearchResults.getQueriedResultObjects();
+				publicationContent.resultRows = modelSearchResults
+						.getQueriedResultObjects();
 			} else {
 				throw new UnsupportedOperationException();
 			}

@@ -20,6 +20,7 @@ import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -61,6 +62,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -77,23 +79,32 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.stat.DevStats;
+import cc.alcina.framework.entity.stat.StatCategory;
 import cc.alcina.framework.entity.stat.StatCategory_Console;
-import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole;
-import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitJaxbServices;
-import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitLightweightServices;
-import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitPostObjectServices;
-import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_Start;
-import cc.alcina.framework.entity.stat.StatCategory_DomainStore;
+import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole;
+import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole.InitJaxbServices;
+import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole.InitLightweightServices;
+import cc.alcina.framework.entity.stat.StatCategory_Console.InitPostObjectServices;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable.AlcinaChildContextRunner;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
+/*
+ * Startup speed doc
+ * @formatter:off
+ * 
+ * domainstore	prepare-domainstore	initialise-descriptor
+									mvcc
+				cluster-tr-listener	mark
+ * @formatter:on
+ */
 @RegistryLocation(registryPoint = DevConsole.class, implementationType = ImplementationType.SINGLETON)
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
 		implements ClipboardOwner {
@@ -202,18 +213,20 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	private DevConsoleStyle style = DevConsoleStyle.NORMAL;
 
+	private Set<StatCategory> emitted = new LinkedHashSet<>();
+
 	public DevConsole() {
 		shells.push(DevConsoleCommand.class);
 		DevConsoleRunnable.console = this;
 	}
 
 	public void atEndOfDomainStoreLoad() {
-		new StatCategory_Console.PostDomainStore.End().emit();
-		new StatCategory_DomainStore().emit();
+		new StatCategory_Console.PostDomainStore().emit();
 		new StatCategory_Console().emit();
 		new DevStats().parse(logProvider).dump(true);
 		logProvider.startRemote();
 		JobRegistry.get();
+		AlcinaTopics.applicationRestart.add((k, v) -> getInstance().restart());
 	}
 
 	public String breakAndPad(int tabCount, int width, String text,
@@ -254,6 +267,27 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 	}
 
+	public void disablePathLinks(boolean disable) {
+		Runnable r = () -> ResourceUtilities.registerCustomProperty(
+				"MethodHandler_GET_RECORDS.disablePathLinks",
+				String.valueOf(disable));
+		if (disable) {
+			r.run();
+		} else {
+			new Thread() {
+				@Override
+				public void run() {
+					try {
+						Thread.sleep(500);
+						r.run();
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+			}.start();
+		}
+	}
+
 	public void doCommandHistoryDelta(int delta) {
 		String cmd = history.getCommand(delta);
 		if (!cmd.isEmpty()) {
@@ -281,6 +315,12 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		setStyle(DevConsoleStyle.COMMAND);
 		Ax.out("\n>%s", commandString);
 		setStyle(DevConsoleStyle.NORMAL);
+	}
+
+	public void emitIfFirst(StatCategory statCategory) {
+		if (emitted.add(statCategory)) {
+			statCategory.emit();
+		}
 	}
 
 	public String endRecordingSysout() {
@@ -421,6 +461,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		if (command.isEmpty()) {
 			command = this.lastCommand;
 		}
+		emitIfFirst(new StatCategory_Console.InitCommands.Start());
 		this.lastCommand = command;
 		StreamTokenizer tokenizer = new StreamTokenizer(
 				new StringReader(command));
@@ -595,6 +636,19 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		loadCommandMap();
 	}
 
+	public void restart() {
+		String command = props.restartCommand;
+		if (Ax.isBlank(command)) {
+			Ax.err("Property 'restartCommand' not set");
+		} else {
+			try {
+				new ShellWrapper().runBashScript(command).throwOnException();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	public void saveConfig() throws Exception {
 		serializeObject(props, consolePropertiesFile);
 		serializeObject(history, consoleHistoryFile);
@@ -742,6 +796,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	protected void init() throws Exception {
 		instance = this;
+		Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
 		Registry.registerSingleton(DevConsole.class, this);
 		long statStartInit = System.currentTimeMillis();
 		createDevHelper();
@@ -793,16 +848,14 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		MetricLogging.get().setStart("init-console", statStartInit);
 		MetricLogging.get().end("init-console");
 		this.logProvider = new ConsoleStatLogProvider();
-		new StatCategory_Start().emit(startupTime);
-		new StatCategory_InitLightweightServices()
-				.emit(statEndInitLightweightServices);
-		new StatCategory_InitJaxbServices().emit(statEndInitJaxbServices);
+		new StatCategory_Console.Start().emit(startupTime);
+		new InitLightweightServices().emit(statEndInitLightweightServices);
+		new InitJaxbServices().emit(statEndInitJaxbServices);
 		devHelper.initPostObjectServices();
 		// FIXME - to consort
 		BackendTransformQueue.get().start();
-		new StatCategory_InitPostObjectServices()
-				.emit(System.currentTimeMillis());
-		new StatCategory_InitConsole().emit(System.currentTimeMillis());
+		new InitPostObjectServices().emit(System.currentTimeMillis());
+		new InitConsole().emit(System.currentTimeMillis());
 		if (!props.lastCommand.matches("|q|re|restart")) {
 			runningLastCommand = true;
 			performCommand(props.lastCommand);

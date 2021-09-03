@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 
 @MappedSuperclass
-@Bean
 public abstract class DomainView extends VersionableEntity<DomainView> {
 	private ContentDefinition entityDefinition;
 

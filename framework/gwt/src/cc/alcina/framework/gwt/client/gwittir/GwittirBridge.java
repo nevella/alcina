@@ -648,7 +648,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			@Override
 			public <A extends Annotation> A
 					getAnnotation(Class<A> annotationClass) {
-				throw new UnsupportedOperationException();
+				return Reflections.propertyAccessor().getAnnotationForProperty(
+						clazz, annotationClass, propertyName);
 			}
 
 			@Override

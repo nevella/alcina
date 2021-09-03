@@ -39,6 +39,8 @@ public interface ClassLookup {
 
 	public Class getClassForName(String fqn);
 
+	public List<Class> getInterfaces(Class clazz);
+
 	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass);
 
 	public Class getPropertyType(Class clazz, String propertyName);
@@ -46,6 +48,8 @@ public interface ClassLookup {
 	public <T> T getTemplateInstance(Class<T> clazz);
 
 	public List<PropertyInfo> getWritableProperties(Class clazz);
+
+	public boolean isAssignableFrom(Class from, Class to);
 
 	public <T> T newInstance(Class<T> clazz);
 

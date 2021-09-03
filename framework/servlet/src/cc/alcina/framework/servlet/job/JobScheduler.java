@@ -251,6 +251,9 @@ public class JobScheduler {
 			timer.cancel();
 			allocatorService.shutdown();
 			finished = true;
+		} else {
+			// A reasonable place to hook this up
+			TowardsAMoreDesirableSituation.get().tend();
 		}
 		if (event.type == Type.ALLOCATION_EVENT) {
 			AllocationQueue queue = event.queueEvent.queue;
@@ -387,6 +390,7 @@ public class JobScheduler {
 					"Not processing orphans - visible instances size: {}, minimum size: {}",
 					activeInstances.size(),
 					minimumVisibleInstancesForOrphanProcessing);
+			return;
 		}
 		String visibleInstanceRegex = ResourceUtilities
 				.get("visibleInstanceRegex");

@@ -27,9 +27,11 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.OneToMany;
@@ -80,7 +82,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -91,6 +93,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.WrappedObject;
@@ -98,7 +101,9 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
+import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy;
@@ -150,7 +155,7 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public static Map<Long, String> setIgnoreTrace = new LinkedHashMap<>();
 
-	private static AtomicInteger removeListenerCounter = new AtomicInteger();
+	private static AtomicInteger removeListenerExceptionCounter = new AtomicInteger();
 
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
@@ -188,13 +193,13 @@ public class ThreadlocalTransformManager extends TransformManager
 			return true;
 		}
 		return false;
-	};
+	}
 
 	// for testing
 	public static void registerPerThreadTransformManager(
 			TransformManager perThreadTransformManager) {
 		threadLocalInstance.set(perThreadTransformManager);
-	}
+	};
 
 	public static Topic<Thread> topicTransformManagerWasReset() {
 		return Topic.global(TOPIC_RESET_THREAD_TRANSFORM_MANAGER);
@@ -222,6 +227,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	protected EntityLocatorMap clientInstanceEntityMap;
 
 	private EntityManager entityManager;
+
+	private TransactionId listeningToTransactionId;
 
 	private IdentityHashMap<Entity, Entity> listeningTo = new IdentityHashMap<Entity, Entity>();
 
@@ -309,6 +316,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (entity == null) {
 			return null;
 		}
+		Preconditions.checkState(Transaction.current().isWriteable());
 		entity = ensureNonProxy(entity);
 		DomainTransformEvent event = super.delete(entity);
 		if (event != null) {
@@ -415,6 +423,11 @@ public class ThreadlocalTransformManager extends TransformManager
 		return entityManager;
 	}
 
+	@Override
+	public List<Class> getInterfaces(Class clazz) {
+		return ObjectPersistenceHelper.get().getInterfaces(clazz);
+	}
+
 	public Map<Long, Entity> getLocalIdToEntityMap() {
 		return this.localIdToEntityMap;
 	}
@@ -498,8 +511,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
-		//
-		//
 		MethodIndividualPropertyAccessor accessor = new MethodIndividualPropertyAccessor(
 				clazz, propertyName);
 		return accessor.isInvalid() ? null : accessor;
@@ -567,6 +578,11 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public boolean isApplyingExternalTransforms() {
 		return this.applyingExternalTransforms;
+	}
+
+	@Override
+	public boolean isAssignableFrom(Class from, Class to) {
+		return ObjectPersistenceHelper.get().isAssignableFrom(from, to);
 	}
 
 	public boolean isExternalCreate() {
@@ -667,6 +683,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			boolean externalLocal) {
 		try {
 			if (Entity.class.isAssignableFrom(clazz)) {
+				Preconditions.checkState(Transaction.current().isWriteable());
 				Entity newInstance = null;
 				if (entityManager == null) {
 					DomainStore store = DomainStore.stores().storeFor(clazz);
@@ -1091,6 +1108,18 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	private void listenTo(Entity entity) {
 		if (!listeningTo.containsKey(entity)) {
+			TransactionId transactionId = Transaction.current().getId();
+			if (listeningToTransactionId == null) {
+				listeningToTransactionId = transactionId;
+			} else {
+				if (!Objects.equals(listeningToTransactionId, transactionId)) {
+					logger.warn(
+							"DEVEX:0 - Listening to object from wrong tx: {} - current : {} - incoming : {}",
+							entity.toStringEntity(), listeningToTransactionId,
+							Transaction.current());
+					throw new IllegalStateException();
+				}
+			}
 			listeningTo.put(entity, entity);
 			entity.addPropertyChangeListener(this);
 		}
@@ -1125,21 +1154,21 @@ public class ThreadlocalTransformManager extends TransformManager
 				} catch (Exception e) {
 					logger.warn("DEVEX:0 - Exception removing listener: {} ",
 							entity.toStringEntity());
-					if (removeListenerCounter.incrementAndGet() < 50) {
+					if (removeListenerExceptionCounter.incrementAndGet() < 50) {
 						logger.warn("DEVEX:0 - Exception removing listener ",
 								e);
 					}
 				}
 			}
 		}
+		listeningToTransactionId = null;
 		listeningTo = new IdentityHashMap<>();
 		Set<DomainTransformEvent> pendingTransforms = getTransformsByCommitType(
 				CommitType.TO_LOCAL_BEAN);
 		if (!pendingTransforms.isEmpty() && !AppPersistenceBase.isTest()) {
-			System.out.println(
-					"**WARNING ** TLTM - cleared (but still pending) transforms:\n "
-							+ pendingTransforms);
-			Thread.dumpStack();
+			Ax.out("**WARNING ** TLTM - cleared (but still pending) transforms [%s]:\n %s",
+					pendingTransforms.size(), pendingTransforms.stream()
+							.limit(1000).collect(Collectors.toList()));
 			try {
 				AlcinaTopics
 						.notifyDevWarning(new UncomittedTransformsException());
@@ -1149,6 +1178,8 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
+		// user cache invalidation
+		addDomainTransformListener(ThreadedPermissionsManager.cast());
 		for (DomainTransformListener listener : threadLocalListeners) {
 			addDomainTransformListener(listener);
 		}
@@ -1167,7 +1198,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	protected void beforeDirectCollectionModification(Entity obj,
 			String propertyName, Object newTargetValue,
 			CollectionModificationType collectionModificationType) {
-		Transactions.resolve(obj, true, false);
+		Transactions.resolve(obj, ResolvedVersionState.WRITE, false);
 	}
 
 	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {
@@ -1229,7 +1260,8 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	@Override
 	protected Entity ensureEndpointWriteable(Entity targetObject) {
-		return Transactions.resolve(targetObject, true, false);
+		return Transactions.resolve(targetObject, ResolvedVersionState.WRITE,
+				false);
 	}
 
 	protected <T extends Entity> T ensureNonProxy(T entity) {
@@ -1341,7 +1373,9 @@ public class ThreadlocalTransformManager extends TransformManager
 		} else {
 			if (handlesAssociationsFor(entity.entityClass())) {
 				entity = getObject(entity);
-				deregisterDomainObject(entity);
+				// will be deregistered with resetTltm, and not wanted if the
+				// version is not writeable
+				// deregisterDomainObject(entity);
 				DomainStore.stores().storeFor(entity.entityClass())
 						.remove(entity);
 			}

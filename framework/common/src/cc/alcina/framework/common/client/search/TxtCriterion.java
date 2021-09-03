@@ -14,13 +14,14 @@
 package cc.alcina.framework.common.client.search;
 
 import javax.xml.bind.annotation.XmlTransient;
+
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
-import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;

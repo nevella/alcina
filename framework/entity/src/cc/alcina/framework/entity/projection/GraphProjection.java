@@ -321,14 +321,6 @@ public class GraphProjection {
 		return genericTypeLookup.get(field);
 	}
 
-	public static boolean isEnumOrEnumSubclass(Class c) {
-		return c.isEnum() || isEnumSubclass(c);
-	}
-
-	public static boolean isEnumSubclass(Class c) {
-		return c.getSuperclass() != null && c.getSuperclass().isEnum();
-	}
-
 	public static boolean isGenericEntityType(Field field) {
 		if (!genericEntityTypeLookup.containsKey(field)) {
 			Type pt = getGenericType(field);
@@ -350,7 +342,8 @@ public class GraphProjection {
 		return c.isPrimitive() || c == String.class || c == Boolean.class
 				|| c == Character.class || c.isEnum() || c == Class.class
 				|| Number.class.isAssignableFrom(c)
-				|| Date.class.isAssignableFrom(c) || isEnumOrEnumSubclass(c)
+				|| Date.class.isAssignableFrom(c)
+				|| CommonUtils.isEnumOrEnumSubclass(c)
 				|| ProjectByValue.class.isAssignableFrom(c)
 				|| SafeHtml.class.isAssignableFrom(c);
 	}

@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 public class RegistryKeys {
-	Map<String, RegistryKey> keys = new LinkedHashMap<>();
+	Map<String, RegistryKey> keys = Registry.delegateCreator
+			.createDelegateMap(0, 0);
 
 	final RegistryKey emptyLookupKey = get(Void.class);
 

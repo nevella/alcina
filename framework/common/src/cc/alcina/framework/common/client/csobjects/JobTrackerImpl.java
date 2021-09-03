@@ -20,15 +20,17 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 /**
  *
  * @author Nick Reddel
  */
-public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents
+public class JobTrackerImpl extends Model
 		implements Serializable, Cloneable, JobTracker {
 	static final transient long serialVersionUID = -3L;
 
@@ -75,6 +77,8 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents
 
 	@GwtTransient
 	private LogLevel logLevel = LogLevel.DEBUG;
+
+	private String serializedResult;
 
 	public JobTrackerImpl() {
 	}
@@ -159,6 +163,7 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents
 	}
 
 	@Override
+	@AlcinaTransient
 	public String getLog() {
 		return this.log;
 	}
@@ -186,6 +191,11 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents
 	@Override
 	public String getProgressMessage() {
 		return this.progressMessage;
+	}
+
+	@Override
+	public String getSerializedResult() {
+		return this.serializedResult;
 	}
 
 	@Override
@@ -352,6 +362,10 @@ public class JobTrackerImpl extends BaseSourcesPropertyChangeEvents
 		this.progressMessage = progressMessage;
 		propertyChangeSupport().firePropertyChange("progressMessage",
 				old_progressMessage, progressMessage);
+	}
+
+	public void setSerializedResult(String serializedResult) {
+		this.serializedResult = serializedResult;
 	}
 
 	@Override

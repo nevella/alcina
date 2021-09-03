@@ -245,6 +245,15 @@ public class JobRegistry {
 		return job.domain().ensurePopulated();
 	}
 
+	public String dumpActiveJobsThisInstance() {
+		return MethodContext.instance().withWrappingTransaction()
+				.call(() -> activeJobs.keySet().stream()
+						.filter(Objects::nonNull).map(j -> {
+							return Ax.format("%s\n\t%s", j.toString(),
+									j.getTask());
+						}).collect(Collectors.joining("\n")));
+	}
+
 	public ContextAwaiter ensureAwaiter(Job job) {
 		return contextAwaiters.computeIfAbsent(job, ContextAwaiter::new);
 	}
@@ -395,7 +404,7 @@ public class JobRegistry {
 			ResourceRecord record = processState.addResourceRecord(resource);
 			if (antecedentAcquired.isPresent()) {
 				record.setAcquired(true);
-				record.setAcquiredFromAncestor(true);
+				record.setAcquiredFromAntecedent(true);
 				forJob.persistProcessState();
 				Transaction.commit();
 			} else {
@@ -498,6 +507,7 @@ public class JobRegistry {
 			context.persistMetadata();
 			LooseContext.pop();
 			activeJobs.remove(job);
+			context.clearRefs();
 			context.remove();
 			if (trackInternalMetrics()) {
 				InternalMetrics.get().endTracker(job);
@@ -507,30 +517,30 @@ public class JobRegistry {
 
 	private void releaseResources(Job job, boolean inSequenceRelease) {
 		List<JobResource> resources = jobResources.get(job);
-		if (resources == null) {
-			return;
-		}
-		Iterator<JobResource> itr = resources.iterator();
-		while (itr.hasNext()) {
-			JobResource resource = itr.next();
-			boolean release = true;
-			if (job.provideHasIncompleteSubsequent()
-					&& resource.isSharedWithSubsequents()) {
-				// FIXME - mvcc.1 - tmp remove
-				// release = false;
+		if (resources != null) {
+			Iterator<JobResource> itr = resources.iterator();
+			while (itr.hasNext()) {
+				JobResource resource = itr.next();
+				boolean release = true;
+				if (job.provideHasIncompleteSubsequent()
+						&& resource.isSharedWithSubsequents()) {
+					release = false;
+				}
+				if (release) {
+					resource.release();
+					itr.remove();
+				}
 			}
-			if (release) {
-				resource.release();
-				itr.remove();
+			if (resources.isEmpty()) {
+				jobResources.remove(job);
 			}
 		}
-		if (resources.isEmpty()) {
-			jobResources.remove(job);
-		}
-		if (!inSequenceRelease) {
+		if (!inSequenceRelease && !job.provideHasIncompleteSubsequent()) {
+			// at end of sequence, re-release resources for all jobs in the
+			// sequence
 			List<Job> relatedSequential = job.provideRelatedSequential();
 			for (Job related : relatedSequential) {
-				releaseResources(job, true);
+				releaseResources(related, true);
 			}
 		}
 	}
@@ -548,16 +558,23 @@ public class JobRegistry {
 
 	protected TaskPerformer getTaskPerformer(Job job) {
 		Task task = job.getTask();
+		TaskPerformer performer = null;
 		if (task instanceof TaskPerformer) {
-			return (TaskPerformer) task;
-		}
-		Optional<TaskPerformer> performer = Registry
-				.optional(TaskPerformer.class, task.getClass());
-		if (performer.isPresent()) {
-			return performer.get();
+			performer = (TaskPerformer) task;
 		} else {
-			return new MissingPerformerPerformer();
+			Optional<TaskPerformer> o_performer = Registry
+					.optional(TaskPerformer.class, task.getClass());
+			if (o_performer.isPresent()) {
+				performer = o_performer.get();
+			} else {
+				performer = new MissingPerformerPerformer();
+			}
 		}
+		if (performer instanceof HasRoutingPerformer) {
+			performer = ((HasRoutingPerformer) performer).routingPerformer()
+					.route(performer);
+		}
+		return performer;
 	}
 
 	protected boolean trackInternalMetrics() {
@@ -680,10 +697,13 @@ public class JobRegistry {
 
 		private boolean awaiter;
 
-		public void addSibling(Task task) {
+		public Job addSibling(Task task) {
+			// only run to add a sibling to a child job - otherwise use
+			// followWith()
+			Preconditions.checkState(JobContext.has());
 			this.task = task;
 			withContextParent();
-			create();
+			return create();
 		}
 
 		public Job create() {
@@ -725,12 +745,13 @@ public class JobRegistry {
 			return this;
 		}
 
-		public void followWith(Task task) {
+		public Job followWith(Task task) {
 			this.task = task;
 			relationType = JobRelationType.SEQUENCE;
 			Preconditions.checkArgument(lastCreated != null);
 			related = lastCreated;
 			create();
+			return lastCreated;
 		}
 
 		public Builder withAwaiter() {
@@ -905,39 +926,6 @@ public class JobRegistry {
 		public void performAction(Task task) throws Exception {
 			throw new Exception(Ax.format("No performer found for task %s",
 					task.getClass().getName()));
-		}
-	}
-
-	class SequenceCompletionLatch {
-		private CountDownLatch latch = new CountDownLatch(1);
-
-		JobContext context;
-
-		void await() {
-			try {
-				// FIXME - mvcc.jobs - remove timeout
-				while (true) {
-					try {
-						Transaction.ensureEnded();
-						if (latch.await(10, TimeUnit.SECONDS)) {
-							break;
-						}
-						int debug = 3;
-					} finally {
-						Transaction.begin();
-						if (context != null) {
-							context.checkCancelled0(true);
-						}
-					}
-				}
-				context.awaitSequenceCompletion();
-			} catch (InterruptedException e) {
-				throw WrappedRuntimeException.wrapIfNotRuntime(e);
-			}
-		}
-
-		void onChildJobsCompleted() {
-			latch.countDown();
 		}
 	}
 

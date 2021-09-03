@@ -61,7 +61,8 @@ public class MvccEntitySortedIndexTest2<IU extends Entity & IUser, IG extends En
 		list = Collections.singletonList(
 				(Entity) projection.getSince(date).iterator().next());
 		debug(list);
-		// FIXME - also check iterator length == actual length (after change not
+		// FIXME - mvcc.4 - lso check iterator length == actual length (after
+		// change not
 		// add-delete)
 	}
 }

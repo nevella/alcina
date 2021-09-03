@@ -35,6 +35,8 @@ import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 
+import com.google.gwt.core.shared.GWT;
+
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
@@ -48,9 +50,11 @@ import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMetadataCacheProvider;
@@ -66,17 +70,17 @@ import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
-import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
+import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
@@ -178,6 +182,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initServletConfig = servletConfig;
 			// push to registry
 			Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+			Registry.setDelegateCreator(
+					new DelegateMapCreatorConcurrentNoNulls());
 			AppPersistenceBase.setInstanceReadOnly(false);
 			initBootstrapRegistry();
 			initNames();
@@ -185,7 +191,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initDevConsoleAndWebApp();
 			initJPA();
 			initServices();
-			initEntityLayerRegistry();
 			initCluster();
 			getStatusNotifier().deploying();
 			initEntityLayer();
@@ -262,6 +267,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Registry.registerSingleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
+		GWT.setBridge(new GWTBridgeHeadless());
 	}
 
 	protected abstract void initCustom();
@@ -287,7 +293,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected abstract void initEntityLayer() throws Exception;
 
-	protected void initEntityLayerRegistry() throws Exception {
+	protected void initEntityLayerRegistry() {
 	}
 
 	protected abstract void initJPA();
@@ -411,6 +417,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		initDataFolder();
 		clearJarCache();
 		initRegistry();
+		initEntityLayerRegistry();
 		initCommonImplServices();
 		initCustomServices();
 		MetricLogging.get().end(key);
@@ -461,7 +468,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void onAppServletInitialised() {
-		ReadonlySupportServlet.get();
+		ReadonlySupportServletLayer.get();
 		if (usesJobs()) {
 			Transaction.begin();
 			JobRegistry.get();
@@ -481,8 +488,20 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected void runFinalPreInitTasks() {
 		if (serializationSignatureListener != null) {
-			MethodContext.instance().withRunInNewThread(Sx.isTestServer()).call(
-					() -> serializationSignatureListener.ensureSignature());
+			boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities
+					.is(AppLifecycleServletBase.class,
+							"cancelStartupOnSignatureGenerationFailure")
+					|| !EntityLayerUtils.isTestServer();
+			MethodContext.instance()
+					.withRunInNewThread(
+							!cancelStartupOnSignatureGenerationFailure)
+					.call(() -> serializationSignatureListener
+							.ensureSignature());
+			if (serializationSignatureListener.isEnsureFailed()
+					&& cancelStartupOnSignatureGenerationFailure) {
+				throw new RuntimeException(
+						"Task signature generation failed: cancelling startup");
+			}
 		}
 	}
 

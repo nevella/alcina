@@ -8,6 +8,7 @@ import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
@@ -34,6 +35,7 @@ public class DtrSimpleAdminPersistenceAction
 	}
 
 	@Override
+	@AlcinaTransient
 	public String getDisplayName() {
 		return "Submit user transforms";
 	}

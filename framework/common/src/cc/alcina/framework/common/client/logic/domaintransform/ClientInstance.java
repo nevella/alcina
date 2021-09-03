@@ -31,7 +31,6 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 
 @MappedSuperclass
-@Bean
 /**
  * 
  * @author nick@alcina.cc

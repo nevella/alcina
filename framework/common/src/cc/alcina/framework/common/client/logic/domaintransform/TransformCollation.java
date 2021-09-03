@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,8 +13,10 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 //FIXME - mvcc.jobs.2 - make query/queryresult typed?
@@ -26,7 +29,7 @@ public class TransformCollation {
 	private Map<EntityLocator, EntityCollation> perLocator;
 
 	public TransformCollation(List<? extends DomainTransformEvent> allEvents) {
-		this.allEvents = (List<DomainTransformEvent>) allEvents;
+		refresh(allEvents);
 	}
 
 	public TransformCollation(Set<? extends DomainTransformEvent> allEvents) {
@@ -36,6 +39,24 @@ public class TransformCollation {
 	public Stream<EntityCollation> allEntityCollations() {
 		ensureLookups();
 		return perLocator.values().stream();
+	}
+
+	public void filterNonpersistentPropertyTransforms() {
+		ensureLookups();
+		Set<DomainTransformEvent> events = allEvents.stream()
+				.collect(AlcinaCollectors.toLinkedHashSet());
+		allEntityCollations().forEach(ec -> {
+			if (ec.isCreatedAndDeleted()) {
+				ec.transforms.forEach(events::remove);
+			} else {
+				ec.ensureByPropertyName().values().forEach(list -> {
+					for (int idx = 0; idx < list.size() - 1; idx++) {
+						events.remove(list.get(idx));
+					}
+				});
+			}
+		});
+		allEvents = events.stream().collect(Collectors.toList());
 	}
 
 	public EntityCollation forLocator(EntityLocator locator) {
@@ -103,8 +124,19 @@ public class TransformCollation {
 		}
 	}
 
-	protected void removeTransformsFromRequest(QueryResult queryResult) {
+	protected void refresh(List<? extends DomainTransformEvent> allEvents) {
+		this.allEvents = (List<DomainTransformEvent>) allEvents.stream()
+				.collect(Collectors.toList());
+		perClass = null;
+		perLocator = null;
+	}
+
+	protected void removeTransformFromRequest(DomainTransformEvent event) {
 		throw new UnsupportedOperationException();
+	}
+
+	protected void removeTransformsFromRequest(QueryResult queryResult) {
+		queryResult.events.forEach(this::removeTransformFromRequest);
 	}
 
 	public class EntityCollation implements HasId {
@@ -112,7 +144,7 @@ public class TransformCollation {
 
 		private List<DomainTransformEvent> transforms = new ArrayList<>();
 
-		private Set<String> transformedPropertyNames;
+		Multimap<String, List<DomainTransformEvent>> transformsByPropertyName;
 
 		EntityCollation(EntityLocator locator) {
 			this.locator = locator;
@@ -140,12 +172,7 @@ public class TransformCollation {
 		}
 
 		public Set<String> getTransformedPropertyNames() {
-			if (transformedPropertyNames == null) {
-				transformedPropertyNames = transforms.stream()
-						.map(DomainTransformEvent::getPropertyName)
-						.filter(Objects::nonNull).collect(Collectors.toSet());
-			}
-			return transformedPropertyNames;
+			return ensureByPropertyName().keySet();
 		}
 
 		public List<DomainTransformEvent> getTransforms() {
@@ -172,6 +199,17 @@ public class TransformCollation {
 		@Override
 		public String toString() {
 			return locator.toIdPairString();
+		}
+
+		protected Multimap<String, List<DomainTransformEvent>>
+				ensureByPropertyName() {
+			if (transformsByPropertyName == null) {
+				transformsByPropertyName = transforms.stream()
+						.filter(dte -> dte.getPropertyName() != null)
+						.collect(AlcinaCollectors.toKeyMultimap(
+								DomainTransformEvent::getPropertyName));
+			}
+			return transformsByPropertyName;
 		}
 
 		boolean isCreatedAndDeleted() {
@@ -267,6 +305,10 @@ public class TransformCollation {
 					e -> e.getTransformType() == TransformType.DELETE_OBJECT);
 		}
 
+		public boolean hasNoCreateTransform() {
+			return !hasCreateTransform();
+		}
+
 		public boolean hasNoDeleteTransform() {
 			return !hasDeleteTransform();
 		}
@@ -274,6 +316,15 @@ public class TransformCollation {
 		public boolean hasPropertyName(String name) {
 			return events.stream()
 					.anyMatch(e -> Objects.equals(e.getPropertyName(), name));
+		}
+
+		public boolean hasPropertyNames(String... names) {
+			return events.stream().anyMatch(e -> Arrays.stream(names).anyMatch(
+					name -> Objects.equals(e.getPropertyName(), name)));
+		}
+
+		public void removeTransform(DomainTransformEvent event) {
+			TransformCollation.this.removeTransformFromRequest(event);
 		}
 
 		public void removeTransformsFromRequest() {

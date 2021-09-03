@@ -159,6 +159,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 																_default_: @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent(*),
 																dragenter: @com.google.gwt.user.client.impl.DOMImplStandard::dispatchDragEvent(*),
 																dragover:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchDragEvent(*),
+																submit:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchDragEvent(*)
 																};
 																}-*/;
 
@@ -259,8 +260,7 @@ public abstract class DOMImplStandard extends DOMImpl {
 	}
 
 	@Override
-	public native void insertChild(Element parent, Element toAdd,
-			int index) /*-{
+	public native void insertChild(Element parent, Element toAdd, int index) /*-{
     var count = 0, child = parent.firstChild, before = null;
     while (child) {
       if (child.nodeType == 1) {
@@ -440,8 +440,7 @@ public abstract class DOMImplStandard extends DOMImpl {
     return null;
 	}-*/;
 
-	native int getChildIndex0(ElementRemote parent,
-			ElementRemote toFind) /*-{
+	native int getChildIndex0(ElementRemote parent, ElementRemote toFind) /*-{
     var count = 0, child = parent.firstChild;
     while (child) {
       if (child === toFind) {

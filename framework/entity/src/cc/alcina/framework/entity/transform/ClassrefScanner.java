@@ -148,8 +148,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 					Class type = field.getType();
 					Class checkType = null;
 					if (GraphProjection.isPrimitiveOrDataClass(type)) {
-						if (GraphProjection.isEnumSubclass(type)
-								|| type.isEnum()) {
+						if (CommonUtils.isEnumOrEnumSubclass(type)) {
 							checkType = type;
 						}
 					} else if (Entity.class.isAssignableFrom(type)) {

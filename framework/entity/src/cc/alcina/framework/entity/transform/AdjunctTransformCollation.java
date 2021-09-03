@@ -29,6 +29,9 @@ public class AdjunctTransformCollation extends TransformCollation {
 		this.token = transformPersistenceToken;
 	}
 
+	/*
+	 * Don't perform any modifications in the snapshot - return to base
+	 */
 	public <T> T callHandleDeleted(QueryResult result, Callable<T> callable) {
 		try {
 			if (result.hasDeleteTransform()) {
@@ -97,9 +100,19 @@ public class AdjunctTransformCollation extends TransformCollation {
 		return this;
 	}
 
+	public void refreshFromRequest() {
+		refresh(token.getRequest().allTransforms());
+	}
+
+	public void removeCreateDeleteTransforms() {
+		ensureLookups();
+		allEvents.stream().filter(this::isCreatedAndDeleted)
+				.forEach(this::removeTransformFromRequest);
+	}
+
 	@Override
-	protected void removeTransformsFromRequest(QueryResult queryResult) {
+	protected void removeTransformFromRequest(DomainTransformEvent event) {
 		Preconditions.checkState(token.getTransformResult() == null);
-		queryResult.events.forEach(token.getRequest()::removeTransform);
+		token.getRequest().removeTransform(event);
 	}
 }

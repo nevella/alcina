@@ -1080,7 +1080,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							// handle cascading resolution in initialising phase
 							withResolveRefs(true).withReturnResults(true)
 							.loadEntities();
-					int debug = 3;
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -2112,7 +2111,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						hasId = transaction.create(clazz, store, id, 0L);
 						store.transformManager.store.mapObject((Entity) hasId);
 					} else {
-						hasId = store.ensureEntity(clazz, id);
+						hasId = store.ensureEntity(clazz, id, 0L);
 					}
 				} else {
 					hasId = (HasId) clazz.newInstance();
@@ -2154,31 +2153,31 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 
 		private List<HasId> loadHasIds() throws Exception {
+			if (connection == null) {
+				connection = getConnection();
+			}
+			List<HasId> result = load0();
+			return result;
+		}
+
+		<T extends Entity> List<T> loadEntities() throws Exception {
 			boolean ignorePropertyChanges = TransformManager.get()
 					.isIgnorePropertyChanges();
 			try {
 				TransformManager.get().setIgnorePropertyChanges(true);
-				if (connection == null) {
-					connection = getConnection();
+				List<T> result = (List<T>) (List<?>) loadHasIds();
+				if (store.initialised || resolveRefs) {
+					entityRefs.resolve();
 				}
-				List<HasId> result = load0();
+				if (store.initialised) {
+					result.forEach(e -> store.index(e, true, null, true));
+				}
 				return result;
 			} finally {
 				releaseConn(connection);
 				TransformManager.get()
 						.setIgnorePropertyChanges(ignorePropertyChanges);
 			}
-		}
-
-		<T extends Entity> List<T> loadEntities() throws Exception {
-			List<T> result = (List<T>) (List<?>) loadHasIds();
-			if (store.initialised || resolveRefs) {
-				entityRefs.resolve();
-			}
-			if (store.initialised) {
-				result.forEach(e -> store.index(e, true, null, true));
-			}
-			return result;
 		}
 	}
 

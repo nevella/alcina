@@ -29,4 +29,9 @@ public abstract class DataFolderProvider {
 		childFile.mkdirs();
 		return childFile;
 	}
+
+	public File getSubFolderFile(String subFolderName, String fileName) {
+		File subFolder = getSubFolder(subFolderName);
+		return SEUtilities.getChildFile(subFolder, fileName);
+	}
 }

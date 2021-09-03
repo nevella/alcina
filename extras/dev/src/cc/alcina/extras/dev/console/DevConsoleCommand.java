@@ -58,6 +58,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.stat.StatCategory_Console;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.ShellWrapper;
 
@@ -481,6 +482,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						}
 						if (runnable.requiresDomainStore()
 								&& DevHelper.getDefaultUser() == null) {
+							DevConsole.getInstance().emitIfFirst(
+									new StatCategory_Console.InitCommands());
 							console.ensureDomainStore();
 							pushedUser = DevHelper.getDefaultUser();
 							PermissionsManager.get().pushUser(pushedUser,
@@ -1004,12 +1007,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String command = console.props.restartCommand;
-			if (Ax.isBlank(command)) {
-				Ax.err("Property 'restartCommand' not set");
-			} else {
-				new ShellWrapper().runBashScript(command);
-			}
+			console.restart();
 			return "control message sent";
 		}
 	}
@@ -1397,6 +1395,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			} else {
 				System.err.format("Unknown subcommand - %s\n", cmd);
 			}
+			console.saveConfig();
 			return "";
 		}
 

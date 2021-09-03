@@ -1,9 +1,11 @@
 package cc.alcina.framework.common.client.csobjects;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 public interface JobTracker {
@@ -103,6 +105,8 @@ public interface JobTracker {
 
 	public abstract void updateJob(int completedDelta);
 
+	String getSerializedResult();
+
 	default void startup(Class jobClass, String jobName, String message) {
 		setComplete(false);
 		setJobName(jobName == null ? CommonUtils.simpleClassName(jobClass)
@@ -115,5 +119,29 @@ public interface JobTracker {
 	default void updatePercent() {
 		setPercentComplete((getItemCount() == 0 ? 0.0
 				: ((double) getItemsCompleted()) / ((double) getItemCount())));
+	}
+
+	public static class Request extends Model {
+		private List<Long> ids = new ArrayList<>();
+
+		public List<Long> getIds() {
+			return this.ids;
+		}
+
+		public void setIds(List<Long> ids) {
+			this.ids = ids;
+		}
+	}
+
+	public static class Response extends Model {
+		private List<JobTracker> trackers = new ArrayList<>();
+
+		public List<JobTracker> getTrackers() {
+			return this.trackers;
+		}
+
+		public void setTrackers(List<JobTracker> trackers) {
+			this.trackers = trackers;
+		}
 	}
 }

@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiPredicate;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -100,12 +101,11 @@ public class AlcinaHistoryItem {
 	}
 
 	public SearchHistoryInfo getSearchHistoryInfo() {
-		if (!hasParameter(SEARCH_INDEX) && !hasParameter(SEARCH_SERIALIZED)) {
+		if (!hasParameter(SEARCH_SERIALIZED)) {
 			return null;
 		}
-		return new SearchHistoryInfo(getIntParameter(SEARCH_INDEX),
-				getIntParameter(SEARCH_PAGE),
-				getStringParameter(SEARCH_SERIALIZED));
+		return new SearchHistoryInfo(getStringParameter(SEARCH_SERIALIZED),
+				getStringParameter(SEARCH_MARKER));
 	}
 
 	public String getStringParameter(String key) {
@@ -132,8 +132,9 @@ public class AlcinaHistoryItem {
 		return getBooleanParameter(NO_HISTORY_KEY);
 	}
 
-	public Map<String, String> parseParameters(String s) {
-		params = AlcinaHistory.fromHash(s);
+	public Map<String, String> parseParameters(String s,
+			BiPredicate<String, String> nonDecoder) {
+		params = AlcinaHistory.fromHash(s, nonDecoder);
 		return params;
 	}
 
@@ -203,10 +204,11 @@ public class AlcinaHistoryItem {
 		if (searchHistoryInfo.searchDefinitionSerialized != null) {
 			setParameter(SEARCH_SERIALIZED,
 					searchHistoryInfo.searchDefinitionSerialized);
+			setParameter(SEARCH_MARKER,
+					searchHistoryInfo.searchDefinitionMarker);
 		} else {
-			setParameter(SEARCH_INDEX, searchHistoryInfo.defId, true);
+			throw new UnsupportedOperationException();
 		}
-		setParameter(SEARCH_PAGE, searchHistoryInfo.pageNumber);
 	}
 
 	public void setSubTabName(String subTabName) {

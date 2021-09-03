@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.persistence.domain;
 
 import java.lang.annotation.Annotation;
+import java.util.Arrays;
 import java.util.List;
 
 import cc.alcina.framework.common.client.domain.Domain;
@@ -88,6 +89,11 @@ public class PermissionsTestingTransformManager
 		}
 
 		@Override
+		public List<Class> getInterfaces(Class clazz) {
+			return Arrays.asList(clazz.getInterfaces());
+		}
+
+		@Override
 		public List<PropertyReflector>
 				getPropertyReflectors(Class<?> beanClass) {
 			return this.delegate.getPropertyReflectors(beanClass);
@@ -106,6 +112,11 @@ public class PermissionsTestingTransformManager
 		@Override
 		public List<PropertyInfo> getWritableProperties(Class clazz) {
 			return this.delegate.getWritableProperties(clazz);
+		}
+
+		@Override
+		public boolean isAssignableFrom(Class from, Class to) {
+			return this.delegate.isAssignableFrom(from, to);
 		}
 
 		@Override

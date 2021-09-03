@@ -103,7 +103,7 @@ public class DevConsoleCommandInternalMetrics {
 
 		@Override
 		public String getUsage() {
-			return "ims filters:{host|args|call|threadName|age|nearDate|duration} modifiers:{tz|format|ignoreables}";
+			return "ims filters:{host|args|call|threadName|age|nearDate|duration|withend|from|to} modifiers:{tz|format|ignoreables}";
 		}
 
 		@Override
@@ -138,16 +138,21 @@ public class DevConsoleCommandInternalMetrics {
 			p = new FilterArgvParam(argv, "threadName");
 			String threadName = p.valueOrDefault("");
 			p = new FilterArgvParam(argv, "age");
-			long age = Long.parseLong(p.valueOrDefault(p.valueOrDefault("0")));
+			long age = Long.parseLong(p.valueOrDefault("0"));
 			p = new FilterArgvParam(argv, "duration");
-			long duration = Long
-					.parseLong(p.valueOrDefault(p.valueOrDefault("0")));
+			long duration = Long.parseLong(p.valueOrDefault("0"));
 			p = new FilterArgvParam(argv, "tz");
 			String tz = p.valueOrDefault("AEST");
 			p = new FilterArgvParam(argv, "format");
 			Format format = Format.valueOf(p.valueOrDefault("list"));
 			p = new FilterArgvParam(argv, "order");
 			String order = p.valueOrDefault("updatetime");
+			p = new FilterArgvParam(argv, "withend");
+			boolean withEnd = p.value == null ? false : true;
+			p = new FilterArgvParam(argv, "from");
+			String startFrom = p.value;
+			p = new FilterArgvParam(argv, "to");
+			String startTo = p.value;
 			Connection conn = getConn();
 			CommonPersistenceLocal cpl = Registry
 					.impl(CommonPersistenceProvider.class)
@@ -184,6 +189,12 @@ public class DevConsoleCommandInternalMetrics {
 				filters.add(Ax.format(
 						"extract    (epoch from (CASE when endtime is null then now() ELSE endtime END)-starttime)*1000>%s",
 						duration));
+			}
+			if (startFrom != null) {
+				filters.add(Ax.format("starttime>='%s'", startFrom));
+			}
+			if (startTo != null) {
+				filters.add(Ax.format("starttime<='%s'", startTo));
 			}
 			if (nearDate.length() > 0) {
 				DateFormat dbDateFormat = new SynchronizedSimpleDateFormat(

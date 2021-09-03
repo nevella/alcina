@@ -24,6 +24,11 @@ public class NativeMethodWrapper implements Method {
 	}
 
 	@Override
+	public Class getDeclaringClass() {
+		return declaringClass;
+	}
+
+	@Override
 	public String getName() {
 		return name;
 	}
@@ -57,39 +62,37 @@ public class NativeMethodWrapper implements Method {
 		}
 	}
 
-	private native Object invoke0(Object target, Object arg)
-			throws Exception /*-{
-								var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
-								return nativeMethod(target, arg);
-								}-*/;
+	private native Object invoke0(Object target, Object arg) throws Exception /*-{
+    var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
+    return nativeMethod(target, arg);
+	}-*/;
 
 	private native Object invoke0ArgBoolean(Object target, boolean arg)
 			throws Exception /*-{
-								var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
-								return nativeMethod(target, arg);
-								}-*/;
+    var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
+    return nativeMethod(target, arg);
+	}-*/;
 
 	private native Object invoke0ArgDouble(Object target, double arg)
 			throws Exception /*-{
-								   var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
-								   return nativeMethod(target, arg);
-								   }-*/;
+    var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
+    return nativeMethod(target, arg);
+	}-*/;
 
-	private native int invoke0Int(Object target, Object arg)
-			throws Exception /*-{
-								var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
-								return nativeMethod(target, arg);
-								}-*/;
+	private native int invoke0Int(Object target, Object arg) throws Exception /*-{
+    var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
+    return nativeMethod(target, arg);
+	}-*/;
 
 	private native boolean invoke0RetBoolean(Object target, Object arg)
 			throws Exception /*-{
-								var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
-								return nativeMethod(target, arg);
-								}-*/;
+    var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
+    return nativeMethod(target, arg);
+	}-*/;
 
 	private native double invoke0RetDouble(Object target, Object arg)
 			throws Exception /*-{
-								   var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
-								   return nativeMethod(target, arg);
-								   }-*/;
+    var nativeMethod = this.@com.totsp.gwittir.client.beans.NativeMethodWrapper::nativeMethod;
+    return nativeMethod(target, arg);
+	}-*/;
 }

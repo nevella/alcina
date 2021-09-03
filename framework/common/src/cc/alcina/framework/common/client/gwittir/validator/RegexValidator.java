@@ -27,6 +27,8 @@ import cc.alcina.framework.common.client.util.Ax;
 public class RegexValidator implements ParameterisedValidator {
 	public static final String PARAM_REGEX = "regex";
 
+	public static final String PARAM_FEEDBACK_MESSAGE = "feedback-message";
+
 	public static final String REGEX_REPLACE = "234IBBDA";
 
 	private String regex;
@@ -49,16 +51,18 @@ public class RegexValidator implements ParameterisedValidator {
 		return this.regex;
 	}
 
+	@Override
 	public void setParameters(NamedParameter[] params) {
-		NamedParameter p = NamedParameter.Support.getParameter(params,
-				PARAM_REGEX);
-		regex = p.stringValue();
+		regex = NamedParameter.Support.stringValue(params, PARAM_REGEX, null);
+		feedbackMessage = NamedParameter.Support.stringValue(params,
+				PARAM_FEEDBACK_MESSAGE, null);
 	}
 
 	public void setRegex(String regex) {
 		this.regex = regex;
 	}
 
+	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null) {
 			return null;

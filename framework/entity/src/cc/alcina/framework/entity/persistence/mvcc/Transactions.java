@@ -10,8 +10,11 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -20,6 +23,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -33,8 +37,22 @@ public class Transactions {
 
 	private static ConcurrentHashMap<Class, Constructor> copyConstructors = new ConcurrentHashMap<>();
 
-	public static <T extends Entity> boolean checkResolved(T t) {
-		return resolve(t, false, false) == t;
+	public static <T> int callWithCommits(long size, String streamName,
+			Stream<T> stream, Consumer<T> consumer,
+			int commitEveryNTransforms) {
+		AtomicInteger counter = new AtomicInteger();
+		SystemoutCounter ticks = SystemoutCounter.standardJobCounter((int) size,
+				streamName);
+		stream.forEach(t -> {
+			consumer.accept(t);
+			int delta = Transaction
+					.commitIfTransformCount(commitEveryNTransforms);
+			counter.addAndGet(delta);
+			ticks.tick();
+		});
+		int delta = Transaction.commit();
+		counter.addAndGet(delta);
+		return counter.get();
 	}
 
 	public static void copyIdFieldsToCurrentVersion(Entity entity) {
@@ -74,14 +92,14 @@ public class Transactions {
 
 	/*
 	 * The 'domainIdentity' parameter is used by ClassTransformer rewritten
-	 * classes (to get domainIdentity())
+	 * classes (to obtain the domainIdentity version of the object)
 	 */
-	public static <T extends Entity> T resolve(T t, boolean write,
+	public static <T extends Entity> T resolve(T t, ResolvedVersionState state,
 			boolean domainIdentity) {
 		if (t instanceof MvccObject) {
 			MvccObject mvccObject = (MvccObject) t;
 			MvccObjectVersions<T> versions = mvccObject.__getMvccVersions__();
-			if (versions == null && !write) {
+			if (versions == null && state == ResolvedVersionState.READ) {
 				// no transactional versions, return base
 				return t;
 			} else {
@@ -102,13 +120,25 @@ public class Transactions {
 						&& transaction == versions.initialWriteableTransaction)) {
 					return t;
 				} else {
+					// FIXME - mvcc.5 - this synchronization means that (a) a
+					// bunch of entities have issues with
+					// System.identityHashCode and that all the concurrency in
+					// MvccObjectVersions is unneccesary. But it's safe, at
+					// least...
 					synchronized (t) {
 						versions = mvccObject.__getMvccVersions__();
 						if (versions == null) {
 							versions = MvccObjectVersions.ensureEntity(t,
 									transaction, false);
 						}
-						return versions.resolve(write);
+						boolean writeableVersion = state == ResolvedVersionState.WRITE;
+						/*
+						 * see docs for READ_INVALID
+						 */
+						if (state == ResolvedVersionState.READ_INVALID) {
+							versions.verifyWritable(transaction);
+						}
+						return versions.resolve(writeableVersion);
 					}
 				}
 			}

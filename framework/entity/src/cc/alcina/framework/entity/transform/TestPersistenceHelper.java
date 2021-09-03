@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.transform;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -66,7 +67,11 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	CachingMap<String, Class> fqnLookup = new CachingMap<String, Class>(fqn -> {
 		try {
-			return reflectiveClassLoader.loadClass(fqn);
+			try {
+				return reflectiveClassLoader.loadClass(fqn);
+			} catch (Exception e) {
+				return Class.forName(fqn);
+			}
 		} catch (Exception e) {
 			throw e;
 		}
@@ -142,6 +147,11 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	@Override
+	public List<Class> getInterfaces(Class clazz) {
+		return Arrays.asList(clazz.getInterfaces());
+	}
+
+	@Override
 	public <T extends Entity> T getObject(Class<? extends T> c, long id,
 			long localId) {
 		// uses thread-local instance
@@ -157,7 +167,9 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	@Override
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+		MethodIndividualPropertyAccessor accessor = new MethodIndividualPropertyAccessor(
+				clazz, propertyName);
+		return accessor.isInvalid() ? null : accessor;
 	}
 
 	@Override
@@ -215,6 +227,11 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	public boolean isAssignableFrom(Class from, Class to) {
+		return from.isAssignableFrom(to);
 	}
 
 	@Override

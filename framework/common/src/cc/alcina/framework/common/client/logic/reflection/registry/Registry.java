@@ -42,10 +42,10 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
-import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
@@ -88,6 +88,11 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * 
  *         FIXME - dirndl.1a - the registrylocation->registration/keys (and dox)
  * 
+ *         Thread-safety: operations which can logically conflict (register(),
+ *         singleton creation) are synchronized on the instance - or the
+ *         registrykey if possible. All maps are concurrent in a threaded
+ *         environment
+ * 
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class Registry {
@@ -95,7 +100,11 @@ public class Registry {
 
 	private static RegistryProvider provider = new BasicRegistryProvider();
 
-	private static DelegateMapCreator delegateCreator = new CollectionCreators.UnsortedMapCreator();
+	// must be concurrent if in a concurrent environment
+	static DelegateMapCreator delegateCreator = new CollectionCreators.UnsortedMapCreator();
+
+	public static Topic<RegisteredSingletonInfo> topicRegisteredSingleton = Topic
+			.local();
 
 	public static void appShutdown() {
 		provider.appShutdown();
@@ -133,13 +142,19 @@ public class Registry {
 				}
 			}
 			for (RegistryLocation loc : locs) {
-				if (!pointsForPrecedingSubclass
-						.containsKey(loc.registryPoint())) {
-					uniques.put(loc.registryPoint(), loc.targetClass(), loc);
+				Class registryPoint = null;
+				try {
+					registryPoint = loc.registryPoint();
+				} catch (Exception e) {
+					Ax.out(loc.getClass());
+					e.printStackTrace();
+					continue;
+				}
+				if (!pointsForPrecedingSubclass.containsKey(registryPoint)) {
+					uniques.put(registryPoint, loc.targetClass(), loc);
 				} else {
-					if (uniques.get(loc.registryPoint(),
-							loc.targetClass()) == loc
-							|| loc.registryPoint() == JaxbContextRegistration.class) {
+					if (uniques.get(registryPoint, loc.targetClass()) == loc
+							|| registryPoint == JaxbContextRegistration.class) {
 						// inherited, ignore
 					} else {
 						// System.out
@@ -266,11 +281,11 @@ public class Registry {
 		targetPriority = new UnsortedMultikeyMap<Integer>(2, 0,
 				delegateCreator);
 		singletons = new UnsortedMultikeyMap<Object>(2, 0, delegateCreator);
-		voidPointSingletons = new LinkedHashMap<String, Object>(1000);
+		voidPointSingletons = delegateCreator.createDelegateMap(0, 0);
 		exactMap = new UnsortedMultikeyMap<RegistryKey>(2, 0, delegateCreator);
 		implementationTypeMap = new UnsortedMultikeyMap<ImplementationType>(2,
 				0, delegateCreator);
-		implClassesRegistered = new LinkedHashMap<>();
+		implClassesRegistered = delegateCreator.createDelegateMap(0, 0);
 	}
 
 	public List<Class> allImplementationKeys(Class registryPoint) {
@@ -286,8 +301,8 @@ public class Registry {
 				.collect(Collectors.toList());
 	}
 
-	public void copyFrom(Registry sourceInstance, Class<?> clazz) {
-		RegistryKey key = keys.get(clazz);
+	public void copyFrom(Registry sourceInstance, Class<?> registryPoint) {
+		RegistryKey key = keys.get(registryPoint);
 		registry.asMap(key).putMulti(sourceInstance.registry.asMap(key));
 		targetPriority.asMap(key)
 				.putMulti(sourceInstance.targetPriority.asMap(key));
@@ -295,6 +310,15 @@ public class Registry {
 		exactMap.asMap(key).putMulti(sourceInstance.exactMap.asMap(key));
 		implementationTypeMap.asMap(key)
 				.putMulti(sourceInstance.implementationTypeMap.asMap(key));
+		sourceInstance.registry
+				.asMap(key).typedKeySet(
+						RegistryKey.class)
+				.forEach(
+						childKey -> sourceInstance
+								.impl0(registryPoint,
+										((RegistryKey) childKey).clazz(
+												sourceInstance.classLookup),
+										false));
 		if (sourceInstance.singletons.containsKey(key)) {
 			singletons.asMap(key)
 					.putMulti(sourceInstance.singletons.asMap(key));
@@ -433,12 +457,10 @@ public class Registry {
 					false);
 			cachedKey = lookup.size() > 0 ? keys.get(lookup.get(0))
 					: keys.emptyLookupKey();
-			synchronized (exactMap) {
-				exactMap.put(registryPoint, targetClassKey, cachedKey);
-			}
+			exactMap.put(registryPoint, targetClassKey, cachedKey);
 		}
 		if (cachedKey == keys.emptyLookupKey() && errorOnNull) {
-			throw new RegistryException(
+			throw new RegistryException(this,
 					Ax.format("singleton/factory not registered - %s:%s",
 							CommonUtils.classSimpleName(registryPoint),
 							CommonUtils.classSimpleName(targetClass)));
@@ -482,7 +504,7 @@ public class Registry {
 		if (implementationType == ImplementationType.MULTIPLE
 				&& targetClassKey == keys.undefinedTargetKey()
 				&& infoPriority != RegistryLocation.DEFAULT_PRIORITY) {
-			throw new RegistryException(Ax.format(
+			throw new RegistryException(this, Ax.format(
 					"Non-default priority " + "with Multiple impl type -"
 							+ " probably should be instance - %s",
 					registeringClassKey.name()));
@@ -502,6 +524,9 @@ public class Registry {
 		registered.put(registeringClassKey, registeringClassKey);
 		implementationTypeMap.put(registryPointKey, targetClassKey,
 				implementationType);
+		topicRegisteredSingleton.publish(new RegisteredSingletonInfo(
+				registeringClassKey, registryPointKey, targetClassKey,
+				implementationType, infoPriority));
 		targetPriority.put(registryPointKey, targetClassKey, infoPriority);
 	}
 
@@ -640,6 +665,8 @@ public class Registry {
 			voidPointSingletons.put(registryPoint.getName(), t);
 		}
 		implClassesRegistered.put(t.getClass(), t);
+		topicRegisteredSingleton
+				.publish(new RegisteredSingletonInfo(registryPoint, t));
 		return t;
 	}
 
@@ -693,6 +720,7 @@ public class Registry {
 		switch (type) {
 		case SINGLETON:
 		case FACTORY:
+			// synchronize to prevent double-creation
 			synchronized (registryPointKey) {
 				if (voidTarget) {
 					singleton = voidPointSingletons
@@ -746,7 +774,7 @@ public class Registry {
 				"Registry: no resolved implementation type for %s :: %s",
 				registryPointKey.simpleName(), targetClassKey.simpleName());
 		System.out.println(message);
-		throw new RegistryException(message);
+		throw new RegistryException(this, message);
 	}
 
 	protected <T> T singleton0(Class<T> clazz,
@@ -804,6 +832,72 @@ public class Registry {
 			super(Ax.format(
 					"Constructor of singleton %s invoked more than once",
 					clazz.getName()));
+		}
+	}
+
+	public static class RegisteredSingletonInfo {
+		public Class<? extends Object> class1;
+
+		public Object t;
+
+		public RegistryKey registeringClassKey;
+
+		public RegistryKey registryPointKey;
+
+		public RegistryKey targetClassKey;
+
+		public ImplementationType implementationType;
+
+		public int infoPriority;
+
+		public RegisteredSingletonInfo(Class<? extends Object> class1,
+				Object t) {
+			this.class1 = class1;
+			this.t = t;
+		}
+
+		public RegisteredSingletonInfo(RegistryKey registeringClassKey,
+				RegistryKey registryPointKey, RegistryKey targetClassKey,
+				ImplementationType implementationType, int infoPriority) {
+			this.registeringClassKey = registeringClassKey;
+			this.registryPointKey = registryPointKey;
+			this.targetClassKey = targetClassKey;
+			this.implementationType = implementationType;
+			this.infoPriority = infoPriority;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder sb = new StringBuilder();
+			sb.append("class1");
+			sb.append(":");
+			sb.append(class1);
+			sb.append("\n");
+			sb.append("t");
+			sb.append(":");
+			sb.append(t);
+			sb.append("\n");
+			sb.append("registeringClassKey");
+			sb.append(":");
+			sb.append(registeringClassKey);
+			sb.append("\n");
+			sb.append("registryPointKey");
+			sb.append(":");
+			sb.append(registryPointKey);
+			sb.append("\n");
+			sb.append("targetClassKey");
+			sb.append(":");
+			sb.append(targetClassKey);
+			sb.append("\n");
+			sb.append("implementationType");
+			sb.append(":");
+			sb.append(implementationType);
+			sb.append("\n");
+			sb.append("infoPriority");
+			sb.append(":");
+			sb.append(infoPriority);
+			sb.append("\n");
+			return sb.toString();
 		}
 	}
 

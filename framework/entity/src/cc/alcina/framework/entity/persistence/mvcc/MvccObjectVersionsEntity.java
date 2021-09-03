@@ -4,7 +4,9 @@ import java.lang.reflect.Field;
 import java.util.Iterator;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.MvccObjectVersionsMvccObject;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
@@ -85,6 +87,26 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	@Override
 	protected void copyObject(T fromObject, T baseObject) {
 		Transactions.copyObjectFields(fromObject, baseObject);
+	}
+
+	@Override
+	protected void debugNotResolved() {
+		FormatBuilder fb = new FormatBuilder();
+		fb.line("visibleAllTransactions: %s",
+				EntityLocator.instanceLocator(visibleAllTransactions));
+		fb.line("domainIdentity: %s",
+				EntityLocator.instanceLocator(domainIdentity));
+		logger.warn(fb.toString());
+		super.debugNotResolved();
+	}
+
+	@Override
+	protected void onResolveNull(boolean write) {
+		if (notifyResolveNullCount > 0) {
+			logger.warn("onResolveNull - {}/{}", domainIdentity.getId(),
+					domainIdentity.getClass().getSimpleName());
+		}
+		super.onResolveNull(write);
 	}
 
 	@Override

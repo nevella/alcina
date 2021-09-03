@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 
 /**
  * 
@@ -42,22 +43,25 @@ public class LongCriterion extends SearchCriterion implements HasValue<Long> {
 		return result;
 	}
 
+	@PropertySerialization(ignore = true)
 	public Long getLong() {
-		return value;
+		return getValue();
 	}
 
 	@Override
 	public Long getValue() {
-		return getLong();
+		return value;
 	}
 
 	public void setLong(Long value) {
-		this.value = value;
+		setValue(value);
 	}
 
 	@Override
 	public void setValue(Long value) {
-		setLong(value);
+		Long old_value = this.value;
+		this.value = value;
+		propertyChangeSupport().firePropertyChange("value", old_value, value);
 	}
 
 	@Override

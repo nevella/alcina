@@ -48,11 +48,9 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 
 	public static final String CONTENT_KEY = "c";
 
-	public static final String SEARCH_INDEX = "sdi";
-
-	public static final String SEARCH_PAGE = "sdp";
-
 	public static final String SEARCH_SERIALIZED = "sds";
+
+	public static final String SEARCH_MARKER = "sdm";
 
 	public static final String NO_HISTORY_KEY = "nh";
 
@@ -314,6 +312,11 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	}
 
 	public I parseToken(String historyToken) {
+		return parseToken(historyToken, null);
+	}
+
+	public I parseToken(String historyToken,
+			BiPredicate<String, String> nonDecoder) {
 		if (historyToken.startsWith("#")) {
 			historyToken = historyToken.substring(1);
 		}
@@ -324,7 +327,8 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 			historyToken = historyToken.substring(1);
 		}
 		I item = createHistoryInfo();
-		Map<String, String> params = item.parseParameters(historyToken);
+		Map<String, String> params = item.parseParameters(historyToken,
+				nonDecoder);
 		if (params.size() == 0) {
 			item.notAHistoryToken = true;
 			return item;
@@ -345,16 +349,15 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 		this.noHistoryDisabled = noHistoryDisabled;
 	}
 
-	public String tokenForSearch(SearchDefinition def, int pageNumber) {
-		return tokenForSearch(def, pageNumber, null);
+	public String tokenForSearch(SearchDefinition def) {
+		return tokenForSearch(def, null, null);
 	}
 
-	public String tokenForSearch(SearchDefinition def, int pageNumber,
-			String searchDefinitionSerialized) {
+	public String tokenForSearch(SearchDefinition def,
+			String searchDefinitionSerialized, String searchDefinitionMarker) {
 		AlcinaHistoryItem hib = createHistoryInfo();
-		hib.setSearchHistoryInfo(
-				new SearchHistoryInfo(def.getClientSearchIndex(), pageNumber,
-						searchDefinitionSerialized));
+		hib.setSearchHistoryInfo(new SearchHistoryInfo(
+				searchDefinitionSerialized, searchDefinitionMarker));
 		return hib.toTokenString();
 	}
 
@@ -370,17 +373,14 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	}
 
 	public static class SearchHistoryInfo {
-		public int defId;
-
-		public int pageNumber;
-
 		public String searchDefinitionSerialized;
 
-		public SearchHistoryInfo(int defId, int pageNumber,
-				String searchDefinitionSerialized) {
-			this.defId = defId;
-			this.pageNumber = pageNumber;
+		public String searchDefinitionMarker;
+
+		public SearchHistoryInfo(String searchDefinitionSerialized,
+				String searchDefinitionMarker) {
 			this.searchDefinitionSerialized = searchDefinitionSerialized;
+			this.searchDefinitionMarker = searchDefinitionMarker;
 		}
 	}
 

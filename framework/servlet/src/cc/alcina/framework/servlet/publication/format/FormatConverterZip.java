@@ -1,6 +1,5 @@
 package cc.alcina.framework.servlet.publication.format;
 
-import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;

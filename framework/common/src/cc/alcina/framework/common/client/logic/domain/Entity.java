@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -135,7 +136,8 @@ public abstract class Entity<T extends Entity> extends Bindable
 	 * (Unused but viable) Can be 'packed' with the lower 31 bits of the
 	 * clientInstance id (and negated) to make an effectively globally unique id
 	 * (for the given domainstore/db) that can be used in the same set as the id
-	 * field (per-class, db-generated) ids
+	 * field (per-class, db-generated) ids - assumption being that at most 2^32
+	 * creations per client instance, 2^31 client instances
 	 */
 	public long getLocalId() {
 		return this.localId;
@@ -253,13 +255,23 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return toLocator().toString();
 		}
 		if (this instanceof HasDisplayName) {
-			return ((HasDisplayName) this).displayName();
+			try {
+				return ((HasDisplayName) this).displayName();
+			} catch (Exception e) {
+				return CommonUtils.toSimpleExceptionMessage(e) + " - "
+						+ toLocator().toString();
+			}
 		}
 		return toLocator().toString();
 	}
 
 	public final String toStringEntity() {
-		return toLocator().toString();
+		try {
+			return toLocator().toString();
+		} catch (Exception e) {
+			return Ax.format("Unable to return locator - class %s - id %s",
+					getClass().getSimpleName(), id);
+		}
 	}
 
 	protected int _compareTo(Entity o) {
@@ -348,6 +360,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 		public boolean isNonDomain() {
 			return !Domain.isDomainVersion(Entity.this);
+		}
+
+		public void persistSerializables() {
+			TransformManager.get().persistSerializables(Entity.this);
 		}
 
 		public T register() {

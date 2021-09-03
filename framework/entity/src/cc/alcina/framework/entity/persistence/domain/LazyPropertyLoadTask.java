@@ -19,6 +19,10 @@ public class LazyPropertyLoadTask<T extends Entity>
 	public static final String CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES = LazyLoadProvideTask.class
 			.getName() + ".CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES";
 
+	public static boolean inLazyPropertyLoad() {
+		return LooseContext.is(CONTEXT_IN_LAZY_PROPERTY_LOAD);
+	}
+
 	public LazyPropertyLoadTask(Class<T> clazz, DomainStore domainStore) {
 		super(clazz);
 		registerStore(domainStore);
@@ -53,7 +57,7 @@ public class LazyPropertyLoadTask<T extends Entity>
 
 	@Override
 	protected void lazyLoad(Collection objects) {
-		if (LooseContext.is(CONTEXT_IN_LAZY_PROPERTY_LOAD)) {
+		if (inLazyPropertyLoad()) {
 			return;
 		}
 		if (LooseContext

@@ -14,11 +14,13 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 @XmlRootElement
 @Bean
 @ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
+@TypeSerialization(flatSerializable = false)
 public class RowExportContentDefinition extends WrapperPersistable
 		implements ContentDefinition, GwtMultiplePersistable {
 	private EntitySearchDefinition searchDefinition;
@@ -55,6 +57,7 @@ public class RowExportContentDefinition extends WrapperPersistable
 
 	public enum RowExportFormat {
 		CSV, HTML;
+
 		public FormatConversionTarget toConversionTarget() {
 			switch (this) {
 			case CSV:

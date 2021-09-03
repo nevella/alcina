@@ -66,16 +66,10 @@ public abstract class AppPersistenceBase {
 
 	protected CommonPersistenceLocal commonPersistence;
 
-	protected ServletClassMetadataCacheProvider classMetadataCacheProvider;
-
 	protected AppPersistenceBase() {
 	}
 
-	public void
-			init(ServletClassMetadataCacheProvider classMetadataCacheProvider)
-					throws Exception {
-		this.classMetadataCacheProvider = classMetadataCacheProvider;
-		initNonDb();
+	public void init() throws Exception {
 		runDbUpdaters(true);
 		scanClassRefs();
 		initDb();
@@ -98,9 +92,25 @@ public abstract class AppPersistenceBase {
 		}
 	}
 
-	private ClassMetadataCache getClassInfo(Logger mainLogger)
-			throws Exception {
-		return classMetadataCacheProvider.getClassInfo(mainLogger, true);
+	// Call this method this on an entity-manager-injected bean (so the
+	// registry is loaded for the ejb jar classloader)
+	public void scanRegistry() {
+		Logger mainLogger = Logger
+				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
+		try {
+			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
+			ClassMetadataCache classInfo = new ServletClassMetadataCacheProvider()
+					.getClassInfo(mainLogger, true);
+			new RegistryScanner().scan(classInfo, new ArrayList<String>(),
+					Registry.get(), "entity-layer");
+			Registry.get()
+					.registerBootstrapServices(ObjectPersistenceHelper.get());
+		} catch (Exception e) {
+			mainLogger.warn("", e);
+		} finally {
+			Registry.impl(JPAImplementation.class)
+					.muteClassloaderLogging(false);
+		}
 	}
 
 	protected void createSystemGroupsAndUsers() {
@@ -118,13 +128,6 @@ public abstract class AppPersistenceBase {
 		populateEntities();
 	}
 
-	protected void initNonDb() throws Exception {
-		initServiceImpl();
-		scanRegistry();
-	}
-
-	protected abstract void initServiceImpl();
-
 	protected void populateEntities() throws Exception {
 		// override to populate initial entities -
 		// normally do a JVM property check to ensure only once per JVM creation
@@ -139,24 +142,9 @@ public abstract class AppPersistenceBase {
 			if (AppPersistenceBase.isInstanceReadOnly()) {
 				classrefScanner.noPersistence();
 			}
-			classrefScanner.scan(getClassInfo(mainLogger));
-		} catch (Exception e) {
-			mainLogger.warn("", e);
-		} finally {
-			Registry.impl(JPAImplementation.class)
-					.muteClassloaderLogging(false);
-		}
-	}
-
-	protected void scanRegistry() {
-		Logger mainLogger = Logger
-				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
-		try {
-			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
-			new RegistryScanner().scan(getClassInfo(mainLogger),
-					new ArrayList<String>(), Registry.get(), "entity-layer");
-			Registry.get()
-					.registerBootstrapServices(ObjectPersistenceHelper.get());
+			ClassMetadataCache classInfo = new ServletClassMetadataCacheProvider()
+					.getClassInfo(mainLogger, true);
+			classrefScanner.scan(classInfo);
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {

@@ -15,13 +15,17 @@ import java.util.Set;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.locks.ReentrantReadWriteLock;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.domain.BaseProjection;
+import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainProjection;
@@ -39,7 +43,9 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
@@ -116,6 +122,8 @@ public class JobDomain {
 				DomainTransformPersistenceEvent event) {
 			switch (event.getPersistenceEventType()) {
 			case COMMIT_OK: {
+				jobDescriptor.allocationQueueProjection
+						.releaseModificationLocks();
 				for (AllocationQueue queue : queuesWithBufferedEvents) {
 					queue.flushBufferedEvents();
 				}
@@ -237,6 +245,11 @@ public class JobDomain {
 				createdBySelf);
 	}
 
+	public Stream<Job> getFutureConsistencyJobs() {
+		return jobDescriptor.futureConsistencyProjection.getLookup().delegate()
+				.values().stream();
+	}
+
 	public Stream<Job> getIncompleteJobs() {
 		cleanupQueues();
 		return getVisibleQueues().flatMap(AllocationQueue::getIncompleteJobs);
@@ -310,6 +323,11 @@ public class JobDomain {
 				.filter(q -> !q.job.domain().wasRemoved());
 	}
 
+	/*
+	 * This class is essentially a view over the contained SubqueueProjection.
+	 * Because the projection is not transactional, access is locked via a
+	 * readwrite lock - write lock taken before first modification is processed
+	 */
 	public class AllocationQueue {
 		public Job job;
 
@@ -331,6 +349,8 @@ public class JobDomain {
 		List<Event> bufferedEvents = new ArrayList<>();
 
 		private AllocationQueue parentQueue;
+
+		ReentrantReadWriteLock lock = new ReentrantReadWriteLock();
 
 		public AllocationQueue(Job job) {
 			this.job = job;
@@ -457,6 +477,11 @@ public class JobDomain {
 			return perStateJobCount(JobState.PROCESSING) > 0;
 		}
 
+		@Override
+		public int hashCode() {
+			return job.hashCode();
+		}
+
 		public void incrementPhase() {
 			currentPhase = SubqueuePhase.values()[currentPhase.ordinal() + 1];
 		}
@@ -501,6 +526,10 @@ public class JobDomain {
 			} else {
 				publish0(event);
 			}
+		}
+
+		public void refreshProjection() {
+			// TODO Auto-generated method stub
 		}
 
 		public void remove(Job job) {
@@ -612,10 +641,15 @@ public class JobDomain {
 
 		private Set<? extends Job> subQueueJobs(SubqueuePhase type,
 				JobState state) {
-			MultikeyMap<Job> map = subqueues.getLookup().asMapEnsure(false,
-					type, state);
-			return map == null ? Collections.emptySet()
-					: map.typedKeySet(Job.class);
+			try {
+				lock.readLock().lock();
+				MultikeyMap<Job> map = subqueues.getLookup().asMapEnsure(false,
+						type, state);
+				return map == null ? Collections.emptySet()
+						: map.typedKeySet(Job.class);
+			} finally {
+				lock.readLock().unlock();
+			}
 		}
 
 		void fireInitialCreationEvents() {
@@ -773,6 +807,8 @@ public class JobDomain {
 		private TransactionalSet<Job> undeserializableJobs = new TransactionalSet(
 				PersistentImpl.getImplementation(Job.class));
 
+		private Set<AllocationQueue> ensuredQueues = new LinkedHashSet<>();
+
 		public AllocationQueueProjection() {
 		}
 
@@ -805,6 +841,11 @@ public class JobDomain {
 		 * or not the job is present in the projection)
 		 */
 		public void insert(Job job) {
+			if (LazyPropertyLoadTask.inLazyPropertyLoad()) {
+				// will not affect allocation queues (and wreaks havoc with
+				// locking)
+				return;
+			}
 			/*
 			 * avoid deserializing if possible - hence the try/catch
 			 */
@@ -829,12 +870,22 @@ public class JobDomain {
 			return true;
 		}
 
+		public void releaseModificationLocks() {
+			ensuredQueues.forEach(queue -> queue.lock.writeLock().unlock());
+			ensuredQueues.clear();
+		}
+
 		@Override
 		/*
 		 * Doesn't try to track result of removal (i.e. returns null whether or
 		 * not the job is present in the projection)
 		 */
 		public void remove(Job job) {
+			if (LazyPropertyLoadTask.inLazyPropertyLoad()) {
+				// will not affect allocation queues (and wreaks havoc with
+				// locking)
+				return;
+			}
 			/*
 			 * avoid deserializing if possible - hence the try/catch
 			 */
@@ -855,6 +906,18 @@ public class JobDomain {
 		}
 
 		private AllocationQueue ensureQueue(Job job, AllocationQueue queue) {
+			queue = ensureQueue0(job, queue);
+			if (!Transaction.current().isBaseTransaction()) {
+				if (ensuredQueues.add(queue)) {
+					Preconditions.checkState(LooseContext
+							.is(DomainStore.CONTEXT_IN_POST_PROCESS));
+					queue.lock.writeLock().lock();
+				}
+			}
+			return queue;
+		}
+
+		private AllocationQueue ensureQueue0(Job job, AllocationQueue queue) {
 			if (queue != null) {
 				return queue;
 			} else {
@@ -875,6 +938,9 @@ public class JobDomain {
 			if (job.getTaskClassName() == null) {
 				return;
 			}
+			if (job.getState() == JobState.FUTURE_CONSISTENCY) {
+				return;
+			}
 			AllocationQueue queue = queues.get(job);
 			if (job.provideIsFuture()) {
 				if (!job.provideCanDeserializeTask()) {
@@ -893,7 +959,10 @@ public class JobDomain {
 				}
 			} else if (job.provideIsComplete()) {
 				if (queue != null) {
+					// modification tracking
+					ensureQueue(job, queue);
 					queue.insert(job);
+					// FIXME - at end
 					queue.checkComplete();
 				} else {
 				}
@@ -922,14 +991,14 @@ public class JobDomain {
 				return;
 			}
 			queue = ensureQueue(relatedQueueOwner, queue);
-			if (job.provideIsComplete()) {
-				int debug = 3;
-			}
 			queue.insert(job);
 		}
 
 		private void remove0(Job job) {
 			if (job.getTaskClassName() == null) {
+				return;
+			}
+			if (job.getState() == JobState.FUTURE_CONSISTENCY) {
 				return;
 			}
 			AllocationQueue queue = queues.get(job);
@@ -940,11 +1009,13 @@ public class JobDomain {
 				futuresByTask.remove(job.provideTaskClass(), job);
 			} else if (job.provideIsComplete()) {
 				if (queue != null) {
+					ensureQueue(job, queue);
 					queue.remove(job);
 				} else {
 				}
 			} else {
 				if (queue != null) {
+					ensureQueue(job, queue);
 					queue.remove(job);
 				}
 				if (!job.provideCanDeserializeTask()) {
@@ -979,6 +1050,8 @@ public class JobDomain {
 
 		private CompletedReverseDateProjection reverseDateCompletedTopLevelProjection;
 
+		private FutureConsistencyProjection futureConsistencyProjection;
+
 		private CompletedReverseDateProjection reverseDateCompletedChildProjection;
 
 		public JobDescriptor() {
@@ -1004,6 +1077,8 @@ public class JobDomain {
 			reverseDateCompletedChildProjection = new CompletedReverseDateProjection(
 					false);
 			projections.add(reverseDateCompletedChildProjection);
+			futureConsistencyProjection = new FutureConsistencyProjection();
+			projections.add(futureConsistencyProjection);
 		}
 
 		private class CompletedReverseDateProjection
@@ -1041,6 +1116,50 @@ public class JobDomain {
 			@Override
 			protected Date getDate(Job job) {
 				return job.getEndTime();
+			}
+		}
+
+		private class FutureConsistencyProjection extends BaseProjection<Job> {
+			private FutureConsistencyProjection() {
+				super(Long.class, new Class[] { (Class<Job>) jobImplClass });
+			}
+
+			@Override
+			public Class<? extends Job> getListenedClass() {
+				return jobImplClass;
+			}
+
+			@Override
+			public void insert(Job t) {
+				if (t.getState() != JobState.FUTURE_CONSISTENCY) {
+					return;
+				}
+				super.insert(t);
+			}
+
+			@Override
+			public boolean isCommitOnly() {
+				return true;
+			}
+
+			@Override
+			protected MultikeyMap<Job> createLookup() {
+				return new BaseProjectionLookupBuilder(this)
+						.withMapCreators(new CollectionCreators.MapCreator[] {
+								Registry.impl(
+										CollectionCreators.TreeMapCreator.class)
+										.withTypes(types) })
+						.createMultikeyMap();
+			}
+
+			@Override
+			protected int getDepth() {
+				return 1;
+			}
+
+			@Override
+			protected Object[] project(Job job) {
+				return new Object[] { job.getId(), job };
 			}
 		}
 	}

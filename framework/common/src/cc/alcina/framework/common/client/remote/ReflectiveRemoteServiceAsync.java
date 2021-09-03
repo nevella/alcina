@@ -7,31 +7,41 @@ import java.util.stream.Collectors;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class ReflectiveRemoteServiceAsync {
 	protected <T> void call(String methodName, Class[] methodArgumentTypes,
 			AsyncCallback callback, Object... methodArguments) {
-		ReflectiveRemoteServicePayload payload = new ReflectiveRemoteServicePayload(
-				getClass(), methodName, methodArgumentTypes, methodArguments);
-		String serializedPayload = AlcinaBeanSerializer
-				.serializeHolder(payload);
-		// FIXME - 2021 - this can just use an http call - just need to
-		// integrate Alcina header insertion/handling
-		Registry.impl(ReflectiveRpcRemoteServiceAsync.class).callRpc(serializedPayload,
-				new AsyncCallback<String>() {
-					@Override
-					public void onFailure(Throwable caught) {
-						callback.onFailure(caught);
-					}
+		try {
+			ReflectiveRemoteServicePayload payload = new ReflectiveRemoteServicePayload(
+					getClass(), methodName, methodArgumentTypes,
+					methodArguments);
+			String serializedPayload = ReflectiveSerializer.serialize(payload);
+			// FIXME - 2021.refactor - shift to a different serializationstream
+			// (but using gwt-rpc infrastructure)
+			Registry.impl(ReflectiveRpcRemoteServiceAsync.class)
+					.callRpc(serializedPayload, new AsyncCallback<String>() {
+						@Override
+						public void onFailure(Throwable caught) {
+							callback.onFailure(caught);
+						}
 
-					@Override
-					public void onSuccess(String result) {
-						T t = AlcinaBeanSerializer.deserializeHolder(result);
-						callback.onSuccess(t);
-					}
-				});
+						@Override
+						public void onSuccess(String result) {
+							T t = null;
+							try {
+								t = ReflectiveSerializer.deserialize(result);
+							} catch (Exception e) {
+								onFailure(e);
+								return;
+							}
+							callback.onSuccess(t);
+						}
+					});
+		} catch (Exception e) {
+			callback.onFailure(e);
+		}
 	}
 
 	public static class ReflectiveRemoteServicePayload extends Model {

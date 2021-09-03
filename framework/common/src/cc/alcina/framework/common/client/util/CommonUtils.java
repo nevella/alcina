@@ -103,8 +103,11 @@ public class CommonUtils {
 	 */
 	public static final int SAFE_VARCHAR_MAX_CHARS = 230;
 
+	/*
+	 * name,friendly,string
+	 */
 	private static UnsortedMultikeyMap<Enum> enumValueLookup = new UnsortedMultikeyMap<Enum>(
-			2);
+			3);
 
 	private static Set<String> done = new LinkedHashSet<>();
 
@@ -332,6 +335,19 @@ public class CommonUtils {
 			buf.append(i == 0 ? c.toUpperCase() : c.toLowerCase());
 		}
 		return buf.toString();
+	}
+
+	public static String deInfixCss(String s) {
+		if (isNullOrEmpty(s)) {
+			return s;
+		}
+		StringBuilder builder = new StringBuilder();
+		for (int i = 0; i < s.length(); i++) {
+			String c = s.substring(i, i + 1);
+			builder.append(c.toUpperCase().equals(c) ? "-" : "");
+			builder.append(c.toLowerCase());
+		}
+		return builder.toString();
 	}
 
 	public static void doOnce(Class clazz, Runnable runnable) {
@@ -763,23 +779,29 @@ public class CommonUtils {
 	public static synchronized <E extends Enum> E getEnumValueOrNull(
 			Class<E> enumClass, String value, boolean withFriendlyNames,
 			E defaultValue) {
-		if (!enumValueLookup.containsKey(enumClass)) {
+		if (enumValueLookup.asMapEnsure(false, enumClass,
+				withFriendlyNames) == null) {
 			for (E ev : enumClass.getEnumConstants()) {
-				enumValueLookup.put(enumClass, ev.toString(), ev);
-				enumValueLookup.put(enumClass, ev.toString().toLowerCase(), ev);
+				enumValueLookup.put(enumClass, withFriendlyNames, ev.toString(),
+						ev);
+				enumValueLookup.put(enumClass, withFriendlyNames,
+						ev.toString().toLowerCase(), ev);
 				if (withFriendlyNames) {
-					enumValueLookup.put(enumClass,
+					// handle double__ default
+					enumValueLookup.put(enumClass, withFriendlyNames,
+							ev.toString().toLowerCase().replace('_', '-'), ev);
+					enumValueLookup.put(enumClass, withFriendlyNames,
 							friendlyConstant(ev, "-").toLowerCase(), ev);
-					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"),
-							ev);
-					enumValueLookup.put(enumClass, friendlyConstant(ev, " "),
-							ev);
-					enumValueLookup.put(enumClass,
+					enumValueLookup.put(enumClass, withFriendlyNames,
+							friendlyConstant(ev, "-"), ev);
+					enumValueLookup.put(enumClass, withFriendlyNames,
+							friendlyConstant(ev, " "), ev);
+					enumValueLookup.put(enumClass, withFriendlyNames,
 							friendlyConstant(ev, " ").toLowerCase(), ev);
 				}
 			}
 		}
-		E result = (E) enumValueLookup.get(enumClass, value);
+		E result = (E) enumValueLookup.get(enumClass, withFriendlyNames, value);
 		return result == null ? defaultValue : result;
 	}
 
@@ -974,6 +996,10 @@ public class CommonUtils {
 		return clazz.isEnum() || isEnumSubclass(clazz);
 	}
 
+	public static boolean isEnumOrEnumSubclass(Class c) {
+		return c.isEnum() || isEnumSubclass(c);
+	}
+
 	public static boolean isEnumSubclass(Class c) {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
@@ -1074,6 +1100,7 @@ public class CommonUtils {
 		StringBuilder sb = new StringBuilder();
 		for (Object obj : objects) {
 			String app = obj == null ? "null" : obj.toString();
+			app = app == null ? "null" : app;
 			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties)
 					&& separator != null) {
 				sb.append(separator);
@@ -1786,6 +1813,8 @@ public class CommonUtils {
 				+ s.substring(1).toLowerCase();
 	}
 
+	// see also
+	// https://stackoverflow.com/questions/11441666/java-error-comparison-method-violates-its-general-contract
 	public static <T> void validateComparator(List<T> list,
 			Comparator<T> comparator) {
 		SystemoutCounter counter = SystemoutCounter
@@ -1793,12 +1822,23 @@ public class CommonUtils {
 		for (int idx0 = 0; idx0 < list.size(); idx0++) {
 			for (int idx1 = 0; idx1 < list.size(); idx1++) {
 				for (int idx2 = 0; idx2 < list.size(); idx2++) {
-					if (idx0 == idx1 || idx1 == idx2 || idx0 == idx2) {
-						continue;
-					}
+					// if (idx0 == idx1 || idx1 == idx2 || idx0 == idx2) {
+					// continue;
+					// }
 					T o0 = list.get(idx0);
 					T o1 = list.get(idx1);
 					T o2 = list.get(idx2);
+					int cmp0_1 = comparator.compare(o0, o1);
+					int cmp1_0 = comparator.compare(o1, o0);
+					if (cmp0_1 != -cmp1_0) {
+						comparator.compare(o0, o1);
+						comparator.compare(o1, o0);
+						throw Ax.runtimeException(
+								"Comparator relation issue: %s %s %s :: %s %s %s",
+								o0, o1, o2, comparator.compare(o0, o1),
+								comparator.compare(o1, o2),
+								comparator.compare(o0, o2));
+					}
 					if (!CommonUtils.validateComparator(o0, o1, o2,
 							comparator.compare(o0, o1),
 							comparator.compare(o1, o2),
