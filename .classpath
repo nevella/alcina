@@ -91,5 +91,6 @@
 	<classpathentry kind="lib" path="lib/framework/google/google-api-services-drive-v3-rev161-1.25.0.jar"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/cluster/kafka-clients-2.7.1.jar" sourcepath="/g/minor/kafka"/>
 	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl-2.12.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
