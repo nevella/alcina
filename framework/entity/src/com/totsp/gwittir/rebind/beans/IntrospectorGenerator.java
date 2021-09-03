@@ -449,9 +449,10 @@ public class IntrospectorGenerator extends Generator {
 				String boxPrefix = boxPrefix(
 						method.getBaseMethod().getReturnType());
 				String boxSuffix = boxPrefix.isEmpty() ? "" : ")";
-				writer.println(String.format("return %sobject.%s()%s;",
+				String body = String.format("return %sobject.%s()%s;",
 						boxPrefix, getNonParameterisedJsniSignature(method),
-						boxSuffix));
+						boxSuffix);
+				writer.println(body);
 			} else {
 				// setter
 				String arg = unbox(param0type);

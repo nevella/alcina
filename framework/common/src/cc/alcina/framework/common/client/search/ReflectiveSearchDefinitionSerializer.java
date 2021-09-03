@@ -13,10 +13,10 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.DeserializerOptions;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
-import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.DeserializerOptions;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -29,7 +29,7 @@ public class ReflectiveSearchDefinitionSerializer
 
 	public static final String RS0 = "rs0_";
 
-	public static boolean flatTreeSerializationEnabled = false;
+	public static boolean flatTreeSerializationEnabled = true;
 
 	public static String escapeJsonForUrl(String str) {
 		StringBuilder sb = new StringBuilder();
@@ -169,12 +169,6 @@ public class ReflectiveSearchDefinitionSerializer
 		return lastStringDef;
 	}
 
-	private boolean
-			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
-		return Reflections.classLookup().getAnnotationForClass(defClass,
-				TypeSerialization.class) != null;
-	}
-
 	private void ensureLookups() {
 		if (abbrevLookup.isEmpty()) {
 			List<Class> classes = Registry.get()
@@ -208,11 +202,8 @@ public class ReflectiveSearchDefinitionSerializer
 								.withElideDefaults(true)
 								.withTestSerialized(true));
 			} catch (Exception e) {
-				if (!LooseContext
-						.is(FlatTreeSerializer.CONTEXT_SUPPRESS_EXCEPTIONS)) {
-					e.printStackTrace();
-					flatTreeException = e;
-				}
+				e.printStackTrace();
+				flatTreeException = e;
 			}
 		}
 		ensureLookups();
@@ -249,5 +240,11 @@ public class ReflectiveSearchDefinitionSerializer
 			flatTreeException.printStackTrace();
 		}
 		return RS0 + escapeJsonForUrl(str);
+	}
+
+	protected boolean
+			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
+		return Reflections.classLookup().getAnnotationForClass(defClass,
+				TypeSerialization.class) != null;
 	}
 }

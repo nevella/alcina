@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.search.OrderGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 
 /*

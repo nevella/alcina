@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -142,7 +143,12 @@ public abstract class DomainQuery<E extends Entity> {
 	}
 
 	public DomainQuery<E> sorted(Comparator<?> comparator) {
-		this.comparator = (Comparator<E>) comparator;
+		Comparator<E> cast = (Comparator<E>) comparator;
+		if (this.comparator == null) {
+			this.comparator = cast;
+		} else {
+			this.comparator = this.comparator.thenComparing(cast);
+		}
 		return this;
 	}
 
@@ -165,6 +171,10 @@ public abstract class DomainQuery<E extends Entity> {
 	public DomainQuery<E> withHint(Hint hint) {
 		hints.add(hint);
 		return this;
+	}
+
+	public abstract static class DebugConsumer implements Consumer<Entity> {
+		public Object queryToken;
 	}
 
 	public static class DomainIdFilter {

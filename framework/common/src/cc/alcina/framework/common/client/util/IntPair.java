@@ -10,11 +10,25 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.stream.IntStream;
 
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
+
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
+import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
+
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class IntPair
-		implements Comparable<IntPair>, Serializable, Iterable<Integer> {
+@RegistryLocations({
+		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
+		@RegistryLocation(registryPoint = TreeSerializable.class) })
+@Bean
+@XmlAccessorType(XmlAccessType.FIELD)
+public class IntPair implements Comparable<IntPair>, Serializable,
+		Iterable<Integer>, TreeSerializable {
 	static final transient long serialVersionUID = -1L;
 
 	public static List<IntPair> asRangeList(List<Integer> ints) {
@@ -224,6 +238,14 @@ public class IntPair
 		i2 = Math.max(i2, other.i2);
 	}
 
+	public int getI1() {
+		return this.i1;
+	}
+
+	public int getI2() {
+		return this.i2;
+	}
+
 	@Override
 	public int hashCode() {
 		return i1 << 16 ^ i2;
@@ -276,6 +298,14 @@ public class IntPair
 			return 0;
 		}
 		return Math.min(Math.abs(other.i1 - i2), Math.abs(other.i2 - i1));
+	}
+
+	public void setI1(int i1) {
+		this.i1 = i1;
+	}
+
+	public void setI2(int i2) {
+		this.i2 = i2;
 	}
 
 	public IntPair shiftRight(int offset) {

@@ -176,7 +176,7 @@ public class XmlUtils {
 	}
 
 	public static void cleanNamespacedAttributes(Document doc) {
-		DomDoc.documentFor(doc).children.flat().filter(DomNode::isElement)
+		DomDoc.documentFor(doc).children.stream().filter(DomNode::isElement)
 				.forEach(n -> {
 					if (n.domElement().hasAttributes()) {
 						n.attributes().keySet().stream()
@@ -671,7 +671,7 @@ public class XmlUtils {
 			m.appendTail(out);
 			if (LooseContext.is(CONTEXT_XSL_STRIP_WHITESPACE)) {
 				DomDoc doc = new DomDoc(out.toString());
-				doc.children.flat().filter(DomNode::isText).forEach(
+				doc.children.stream().filter(DomNode::isText).forEach(
 						n -> n.setText(trimAndNormaliseWrappingNewlines(
 								n.parent().nameIs("xsl:text"),
 								n.textContent())));

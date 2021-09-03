@@ -101,6 +101,9 @@ public class TransformCommit {
 	public static final transient String CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH = TransformCommit.class
 			.getName() + ".CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH";
 
+	public static final transient String CONTEXT_COMMIT_WITH_BACKOFF = TransformCommit.class
+			.getName() + ".CONTEXT_COMMIT_WITH_BACKOFF";
+
 	public static final transient String CONTEXT_TRANSFORM_PRIORITY = TransformCommit.class
 			.getName() + ".CONTEXT_TRANSFORM_PRIORITY";
 
@@ -481,21 +484,24 @@ public class TransformCommit {
 	}
 
 	public static int commitTransformsAsRoot() {
-		return commitTransforms(true);
+		if (LooseContext.is(CONTEXT_COMMIT_WITH_BACKOFF)) {
+			return commitWithBackoff();
+		} else {
+			return commitTransforms(true);
+		}
 	}
 
-	public static void commitWithBackoff() {
-		commitWithBackoff(0, 5, 40, 2.0);
+	public static int commitWithBackoff() {
+		return commitWithBackoff(0, 5, 40, 2.0);
 	}
 
-	public static void commitWithBackoff(int initialDelayMs, int retries,
+	public static int commitWithBackoff(int initialDelayMs, int retries,
 			double delayMs, double retryMultiplier) {
 		try {
 			Thread.sleep(initialDelayMs);
 			while (retries-- > 0) {
 				try {
-					commitTransforms(true);
-					break;
+					return commitTransforms(true);
 				} catch (Exception e) {
 					Ax.simpleExceptionOut(e);
 					logger.warn("Exception in commitWithBackoff, retrying");
@@ -506,6 +512,7 @@ public class TransformCommit {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		return -1;
 	}
 
 	public static void enqueueTransforms(String transformQueueName,
@@ -920,12 +927,18 @@ public class TransformCommit {
 			if (!PermissionsManager.get().isRoot()) {
 				AppPersistenceBase.checkNotReadOnly();
 			}
+			persistenceToken.getTransformCollation().refreshFromRequest();
+			persistenceToken.getTransformCollation()
+					.removeCreateDeleteTransforms();
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
 									persistenceToken, null,
 									DomainTransformPersistenceEventType.PRE_COMMIT,
 									true));
+			persistenceToken.getTransformCollation().refreshFromRequest();
+			persistenceToken.getTransformCollation()
+					.removeCreateDeleteTransforms();
 			MetricLogging.get().start("transform-commit");
 			Transaction.current().toDbPersisting();
 			DomainTransformLayerWrapper wrapper = Registry

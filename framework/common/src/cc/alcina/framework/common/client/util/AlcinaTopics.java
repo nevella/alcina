@@ -113,4 +113,6 @@ public class AlcinaTopics {
 		GlobalTopicPublisher.get().listenerDelta(TOPIC_DEV_WARNING, listener,
 				add);
 	}
+
+	public static Topic<Boolean> applicationRestart = Topic.local();
 }

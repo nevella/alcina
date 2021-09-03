@@ -34,6 +34,24 @@ import java.util.zip.ZipOutputStream;
  * @author Nick Reddel
  */
 public class ZipUtil {
+	private static void writeStreamToStream(InputStream in, OutputStream os,
+			boolean keepOutputOpen) throws IOException {
+		OutputStream bos = os instanceof ByteArrayOutputStream ? os
+				: new BufferedOutputStream(os);
+		int bufLength = in.available() <= 1024 ? 1024 * 64
+				: Math.min(1024 * 1024, in.available());
+		byte[] buffer = new byte[bufLength];
+		int result;
+		while ((result = in.read(buffer)) != -1) {
+			bos.write(buffer, 0, result);
+		}
+		bos.flush();
+		if (!keepOutputOpen) {
+			bos.close();
+		}
+		in.close();
+	}
+
 	public void createZip(File outputFile, File root,
 			Map<String, File> substitutes) throws Exception {
 		String dInfMname = root.getAbsolutePath();
@@ -86,6 +104,9 @@ public class ZipUtil {
 
 	public void unzip(File outputFolder, InputStream zipStream)
 			throws Exception {
+		if (zipStream instanceof ZipInputStream) {
+			throw new IllegalArgumentException();
+		}
 		ZipInputStream s = new ZipInputStream(zipStream);
 		ZipEntry theEntry;
 		while ((theEntry = s.getNextEntry()) != null) {
@@ -124,23 +145,5 @@ public class ZipUtil {
 			}
 		}
 		s.close();
-	}
-
-	private static void writeStreamToStream(InputStream in, OutputStream os,
-			boolean keepOutputOpen) throws IOException {
-		OutputStream bos = os instanceof ByteArrayOutputStream ? os
-				: new BufferedOutputStream(os);
-		int bufLength = in.available() <= 1024 ? 1024 * 64
-				: Math.min(1024 * 1024, in.available());
-		byte[] buffer = new byte[bufLength];
-		int result;
-		while ((result = in.read(buffer)) != -1) {
-			bos.write(buffer, 0, result);
-		}
-		bos.flush();
-		if (!keepOutputOpen) {
-			bos.close();
-		}
-		in.close();
 	}
 }

@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -10,9 +12,14 @@ import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Arrays;
 import java.util.Base64;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
 import org.apache.commons.pool2.PooledObject;
@@ -66,7 +73,7 @@ public class KryoUtils {
 	private static final String CONTEXT_V20210124 = KryoUtils.class.getName()
 			+ ".CONTEXT_V20210124";
 
-	private static final String CONTEXT_BYPASS_POOL = KryoUtils.class.getName()
+	public static final String CONTEXT_BYPASS_POOL = KryoUtils.class.getName()
 			+ ".CONTEXT_BYPASS_POOL";
 
 	// concurrency - access synchronized on Kryo.class
@@ -114,8 +121,9 @@ public class KryoUtils {
 
 	public static <T> T deserializeFromFile(File file, Class<T> knownType) {
 		try {
-			return deserializeFromStream(new FileInputStream(file), knownType,
-					() -> new FileInputStream(file));
+			return deserializeFromStream(
+					new BufferedInputStream(new FileInputStream(file)),
+					knownType, () -> new FileInputStream(file));
 		} catch (Exception e) {
 			throw new KryoDeserializationException(e);
 		}
@@ -165,7 +173,7 @@ public class KryoUtils {
 
 	public static void serializeToFile(Object object, File file) {
 		try (OutputStream os = new FileOutputStream(file)) {
-			serializeToStream(object, os);
+			serializeToStream(object, new BufferedOutputStream(os));
 		} catch (Exception e) {
 			throw new KryoDeserializationException(e);
 		}
@@ -207,14 +215,14 @@ public class KryoUtils {
 				try {
 					LooseContext.pushWithTrue(CONTEXT_V20210124);
 					LooseContext.setTrue(CONTEXT_BYPASS_POOL);
-					EntitySerializer.checkVersionCheck = true;
+					EntitySerializer.checkVersionCheck.incrementAndGet();
 					logger.warn("retry deserialize with old serializer");
 					InputStream retryStream = retry.get();
 					return deserializeFromStream(retryStream, clazz, null);
 				} catch (Exception e1) {
 					throw new KryoDeserializationException(e1);
 				} finally {
-					EntitySerializer.checkVersionCheck = false;
+					EntitySerializer.checkVersionCheck.decrementAndGet();
 					LooseContext.pop();
 				}
 			}
@@ -304,10 +312,46 @@ public class KryoUtils {
 		return pool.borrow(key);
 	}
 
+	public static class ArraysArrayListSerializer extends Serializer {
+		public ArraysArrayListSerializer(Kryo kryo, Class<?> type) {
+		}
+
+		@Override
+		public Object read(Kryo kryo, Input input, Class type) {
+			int len = input.readInt();
+			Object[] array = new Object[len];
+			for (int idx = 0; idx < len; idx++) {
+				array[idx] = kryo.readClassAndObject(input);
+			}
+			return Arrays.asList(array);
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output, Object object) {
+			List list = (List) object;
+			output.writeInt(list.size());
+			for (Object element : list) {
+				kryo.writeClassAndObject(output, element);
+			}
+		}
+	}
+
 	@RegistryLocation(registryPoint = KryoCreationCustomiser.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class KryoCreationCustomiser {
 		public void configure(Kryo kryo) {
+			try {
+				Class<?> arraysArrayList = Class
+						.forName("java.util.Arrays$ArrayList");
+				kryo.addDefaultSerializer(arraysArrayList,
+						ArraysArrayListSerializer.class);
+				Class<?> unmodifiableRandomAccessList = Class.forName(
+						"java.util.Collections$UnmodifiableRandomAccessList");
+				kryo.addDefaultSerializer(unmodifiableRandomAccessList,
+						UnmodifiableRandomAccessListSerializer.class);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 	}
 
@@ -329,10 +373,37 @@ public class KryoUtils {
 		}
 	}
 
+	public static class UnmodifiableRandomAccessListSerializer
+			extends Serializer {
+		public UnmodifiableRandomAccessListSerializer(Kryo kryo,
+				Class<?> type) {
+		}
+
+		@Override
+		public Object read(Kryo kryo, Input input, Class type) {
+			int len = input.readInt();
+			Object[] array = new Object[len];
+			for (int idx = 0; idx < len; idx++) {
+				array[idx] = kryo.readClassAndObject(input);
+			}
+			return Collections.unmodifiableList(
+					Arrays.stream(array).collect(Collectors.toList()));
+		}
+
+		@Override
+		public void write(Kryo kryo, Output output, Object object) {
+			List list = (List) object;
+			output.writeInt(list.size());
+			for (Object element : list) {
+				kryo.writeClassAndObject(output, element);
+			}
+		}
+	}
+
 	private static class EntitySerializer extends FieldSerializer {
 		private static transient long VERSION_1 = 980250682;
 
-		private static volatile boolean checkVersionCheck = false;
+		private static AtomicInteger checkVersionCheck = new AtomicInteger();
 
 		public EntitySerializer(Kryo kryo, Class<?> type) {
 			super(kryo, type);
@@ -340,7 +411,8 @@ public class KryoUtils {
 
 		@Override
 		public int compare(CachedField o1, CachedField o2) {
-			if (checkVersionCheck && LooseContext.is(CONTEXT_V20210124)) {
+			if (checkVersionCheck.get() > 0
+					&& LooseContext.is(CONTEXT_V20210124)) {
 				return super.compare(o1, o2);
 			}
 			boolean entityType = false;
@@ -376,7 +448,8 @@ public class KryoUtils {
 
 		@Override
 		public Object read(Kryo kryo, Input input, Class type) {
-			if (!checkVersionCheck || !LooseContext.is(CONTEXT_V20210124)) {
+			if (checkVersionCheck.get() == 0
+					|| !LooseContext.is(CONTEXT_V20210124)) {
 				long version = input.readLong();
 				if (version != VERSION_1) {
 					throw new InvalidVersionException();
@@ -405,6 +478,8 @@ public class KryoUtils {
 			}
 			if (Entity.class.isAssignableFrom(type)
 					&& (Ax.isTest() || AppPersistenceBase.isTestServer())) {
+				// this could go to production, but it's mostly needed for
+				// console/webapp comms
 				return new EntitySerializer(kryo, type);
 			}
 			return new FieldSerializer<>(kryo, type);

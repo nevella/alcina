@@ -60,6 +60,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -343,7 +344,7 @@ public abstract class DevHelper {
 			Method m = GWT.class.getDeclaredMethod("setBridge",
 					GWTBridge.class);
 			m.setAccessible(true);
-			m.invoke(null, new GWTBridgeDummy());
+			m.invoke(null, new GWTBridgeHeadless());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -537,27 +538,6 @@ public abstract class DevHelper {
 		@Override
 		public String getValue(String prompt) {
 			return SEUtilities.consoleReadline(String.format("%s\n> ", prompt));
-		}
-	}
-
-	public class GWTBridgeDummy extends GWTBridge {
-		@Override
-		public <T> T create(Class<?> classLiteral) {
-			return null;
-		}
-
-		@Override
-		public String getVersion() {
-			return null;
-		}
-
-		@Override
-		public boolean isClient() {
-			return false;
-		}
-
-		@Override
-		public void log(String message, Throwable e) {
 		}
 	}
 

@@ -59,6 +59,8 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import javax.swing.ImageIcon;
 
 import org.cyberneko.html.parsers.DOMParser;
@@ -525,7 +527,7 @@ public class ResourceUtilities {
 	public static byte[] readClassPathResourceAsByteArray(Class clazz,
 			String path) {
 		try {
-			return readStreamToByteArray(clazz.getResourceAsStream(path));
+			return readStreamToByteArray(getResourceAsStream(clazz, path));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -534,7 +536,7 @@ public class ResourceUtilities {
 	public static String readClassPathResourceAsString(Class clazz,
 			String path) {
 		try {
-			return readStreamToString(clazz.getResourceAsStream(path));
+			return readStreamToString(getResourceAsStream(clazz, path));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -615,6 +617,11 @@ public class ResourceUtilities {
 		return readClassPathResourceAsString(StackWalker
 				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 				.getCallerClass(), path);
+	}
+
+	public static byte[] readRelativeResourceAsBytes(String string) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	public static byte[] readStreamToByteArray(InputStream is)
@@ -947,6 +954,15 @@ public class ResourceUtilities {
 		bw.close();
 	}
 
+	private static InputStream getResourceAsStream(Class clazz, String path) {
+		InputStream stream = clazz.getResourceAsStream(path);
+		if (stream == null) {
+			stream = Thread.currentThread().getContextClassLoader()
+					.getResourceAsStream(path);
+		}
+		return stream;
+	}
+
 	private static <T> T newInstanceForCopy(T t)
 			throws NoSuchMethodException, InstantiationException,
 			IllegalAccessException, InvocationTargetException {
@@ -985,6 +1001,8 @@ public class ResourceUtilities {
 
 		private StringMap queryStringParameters;
 
+		private HostnameVerifier hostnameVerifier;
+
 		public SimpleQuery(String strUrl) {
 			this.strUrl = strUrl;
 		}
@@ -1010,6 +1028,11 @@ public class ResourceUtilities {
 				connection.setDoOutput(true);
 				connection.setDoInput(true);
 				connection.setUseCaches(false);
+				if (hostnameVerifier != null
+						&& connection instanceof HttpsURLConnection) {
+					((HttpsURLConnection) connection)
+							.setHostnameVerifier(hostnameVerifier);
+				}
 				if (postBody != null) {
 					connection.setRequestMethod("POST");
 				}
@@ -1106,6 +1129,12 @@ public class ResourceUtilities {
 
 		public SimpleQuery withHeaders(StringMap headers) {
 			this.headers = headers;
+			return this;
+		}
+
+		public SimpleQuery
+				withHostnameVerifier(HostnameVerifier hostnameVerifier) {
+			this.hostnameVerifier = hostnameVerifier;
 			return this;
 		}
 

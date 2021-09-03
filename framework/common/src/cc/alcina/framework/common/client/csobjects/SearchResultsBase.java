@@ -34,6 +34,9 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 
 	private int totalResultCount;
 
+	/*
+	 * 0-based
+	 */
 	private int pageNumber;
 
 	private int pageResultCount;
@@ -77,7 +80,7 @@ public class SearchResultsBase<B extends SearchResult> implements Serializable {
 		}
 		String orderDef = def.orderDescription(true);
 		return tplt == noResultsTemplate ? Ax.format(tplt, searchDef)
-				: Ax.format(tplt, pageNumber, pageCount(), totalResultCount,
+				: Ax.format(tplt, pageNumber + 1, pageCount(), totalResultCount,
 						searchDef, orderDef);
 	}
 

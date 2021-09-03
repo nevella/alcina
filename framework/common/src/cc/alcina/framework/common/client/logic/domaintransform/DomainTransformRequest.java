@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 
@@ -43,6 +44,7 @@ import cc.alcina.framework.common.client.util.IntPair;
  *
  * @author Nick Reddel
  */
+@Bean
 public class DomainTransformRequest implements Serializable {
 	public static List<DomainTransformEvent>
 			allEvents(Collection<? extends DomainTransformRequest> requests) {
@@ -136,14 +138,13 @@ public class DomainTransformRequest implements Serializable {
 
 	private String tag;
 
-	@Transient
-	public Map<String, String> properties;
+	private Map<String, String> properties;
 
 	public DomainTransformRequest() {
 	}
 
 	/*
-	 * These will be in order of application
+	 * These will be in order of application/creation
 	 */
 	public List<DomainTransformRequest> allRequests() {
 		List<DomainTransformRequest> dtrs = new ArrayList<DomainTransformRequest>();
@@ -210,6 +211,14 @@ public class DomainTransformRequest implements Serializable {
 	}
 
 	@Transient
+	/*
+	 * Unused - but could be used to modify transform request processing
+	 */
+	public Map<String, String> getProperties() {
+		return this.properties;
+	}
+
+	@Transient
 	public String getProtocolVersion() {
 		return protocolVersion;
 	}
@@ -273,6 +282,10 @@ public class DomainTransformRequest implements Serializable {
 	public void setPriorRequestsWithoutResponse(
 			List<DomainTransformRequest> priorRequestsWithoutResponse) {
 		this.priorRequestsWithoutResponse = priorRequestsWithoutResponse;
+	}
+
+	public void setProperties(Map<String, String> properties) {
+		this.properties = properties;
 	}
 
 	public void setProtocolVersion(String protocolVersion) {

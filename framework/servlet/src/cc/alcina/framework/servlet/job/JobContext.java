@@ -11,6 +11,8 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
@@ -25,6 +27,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -57,6 +60,16 @@ public class JobContext {
 			resource.acquire();
 			LooseContext.ensure(CONTEXT_EX_JOB_RESOURCES,
 					() -> new ArrayList<JobResource>()).add(resource);
+		}
+	}
+
+	public static void adopt(JobContext jobContext, boolean adopt) {
+		if (adopt) {
+			Preconditions.checkState(!has());
+			LooseContext.set(CONTEXT_CURRENT, jobContext);
+		} else {
+			Preconditions.checkState(has());
+			LooseContext.remove(CONTEXT_CURRENT);
 		}
 	}
 
@@ -150,16 +163,32 @@ public class JobContext {
 
 	public static void setCompletion(double completion) {
 		if (has()) {
-			get().getJob().setCompletion(completion);
+			get().maybeEnqueue(() -> get().getJob().setCompletion(completion));
 		} else {
 			LoggerFactory.getLogger(JobContext.class)
 					.info("(no-job) job completion => {}", completion);
 		}
 	}
 
+	public static void
+			setEnqueueProgressOnBackend(boolean enqueueProgressOnBackend) {
+		if (has()) {
+			get().enqueueProgressOnBackend = enqueueProgressOnBackend;
+		}
+	}
+
+	public static void setLargeResult(Object largeResult) {
+		if (has()) {
+			get().getJob().setLargeResult(largeResult);
+		} else {
+			ResourceUtilities.logToFile(largeResult.toString());
+		}
+	}
+
 	public static void setStatusMessage(String template, Object... args) {
 		if (has()) {
-			get().getJob().setStatusMessage(Ax.format(template, args));
+			get().maybeEnqueue(() -> get().getJob()
+					.setStatusMessage(Ax.format(template, args)));
 		} else {
 			LoggerFactory.getLogger(JobContext.class).info(
 					"(no-job) status message: {}", Ax.format(template, args));
@@ -178,6 +207,8 @@ public class JobContext {
 			get().getLogger().warn(template, args);
 		}
 	}
+
+	private boolean enqueueProgressOnBackend;
 
 	private TaskPerformer performer;
 
@@ -337,6 +368,14 @@ public class JobContext {
 		endedLatch.countDown();
 	}
 
+	private void maybeEnqueue(Runnable runnable) {
+		if (enqueueProgressOnBackend) {
+			TransformCommit.get().enqueueBackendTransform(runnable);
+		} else {
+			runnable.run();
+		}
+	}
+
 	protected void persistMetadata() {
 		if (performer.deferMetadataPersistence(job)) {
 			TransformCommit.enqueueTransforms(JobRegistry.TRANSFORM_QUEUE_NAME);
@@ -389,6 +428,14 @@ public class JobContext {
 		}
 	}
 
+	void clearRefs() {
+		performer = null;
+		// not allocator - it's a circular reference anyway, and required for
+		// awaitSequenceCompletion
+		// allocator = null;
+		thread = null;
+	}
+
 	String describeTask(Task task, String msg) {
 		msg += "Clazz: " + task.getClass().getName() + "\n";
 		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
@@ -419,8 +466,9 @@ public class JobContext {
 		thread = Thread.currentThread();
 		threadStartName = thread.getName();
 		if (job.provideIsNotComplete()) {
-			thread.setName(job.getTask().getClass().getSimpleName() + "::"
-					+ threadStartName);
+			thread.setName(Ax.format("%s::%s::%s",
+					job.provideTaskClass().getSimpleName(), job.getId(),
+					threadStartName));
 			job.setStartTime(new Date());
 			job.setState(JobState.PROCESSING);
 			job.setPerformerVersionNumber(performer.getVersionNumber());

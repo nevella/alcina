@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -54,7 +55,6 @@ import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.domain.search.DomainSearcher;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.log.ILogRecord;
@@ -89,12 +89,13 @@ import cc.alcina.framework.common.client.remote.ReflectiveRemoteServiceHandler;
 import cc.alcina.framework.common.client.remote.ReflectiveRpcRemoteService;
 import cc.alcina.framework.common.client.remote.SearchRemoteService;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -123,7 +124,7 @@ import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 import cc.alcina.framework.servlet.job.JobRegistry;
-import cc.alcina.framework.servlet.misc.ReadonlySupportServlet;
+import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 
 /**
  *
@@ -219,8 +220,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public String callRpc(String encodedRpcPayload) {
 		try {
-			ReflectiveRemoteServicePayload payload = AlcinaBeanSerializer
-					.deserializeHolder(encodedRpcPayload);
+			ReflectiveRemoteServicePayload payload = ReflectiveSerializer
+					.deserialize(encodedRpcPayload);
 			ReflectiveRemoteServiceHandler handler = Registry.impl(
 					ReflectiveRemoteServiceHandler.class,
 					payload.getAsyncInterfaceClass());
@@ -232,8 +233,15 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Method method = handler.getClass()
 					.getMethod(payload.getMethodName(), methodArgumentTypes);
 			method.setAccessible(true);
-			Object result = method.invoke(handler, methodArguments);
-			return AlcinaBeanSerializer.serializeHolder(result);
+			String key = Ax.format("callRpc::%s.%s",
+					handler.getClass().getSimpleName(), method.getName());
+			try {
+				MetricLogging.get().start(key);
+				Object result = method.invoke(handler, methodArguments);
+				return ReflectiveSerializer.serialize(result);
+			} finally {
+				MetricLogging.get().end(key);
+			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -393,21 +401,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	public <G extends WrapperPersistable> Long persist(G gwpo)
-			throws WebException {
-		try {
-			Long id = Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().persist(gwpo);
-			TransformCommit.get().handleWrapperTransforms();
-			return id;
-		} catch (Exception e) {
-			logger.warn("Exception in persist wrappable", e);
-			logRpcException(e);
-			throw new WebException(e.getMessage());
-		}
-	}
-
-	@Override
 	public void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted) throws WebException {
 		TransformCommit.commitBulkTransforms(uncommitted, true, false);
@@ -418,8 +411,20 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
+	public JobTracker.Response pollJobStatus(JobTracker.Request request) {
+		List<Job> jobs = MethodContext.instance().withContextTrue(
+				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
+				.call(() -> request.getIds().stream().map(Job::byId)
+						.filter(Objects::nonNull).collect(Collectors.toList()));
+		JobTracker.Response response = new JobTracker.Response();
+		response.setTrackers(jobs.stream().map(Job::asJobTracker)
+				.collect(Collectors.toList()));
+		return response;
+	}
+
+	@Override
 	public JobTracker pollJobStatus(String id, boolean cancel) {
-		return MethodContext.instance().withContextTrue(
+		Job job0 = MethodContext.instance().withContextTrue(
 				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
 				.call(() -> {
 					Job job = Job.byId(Long.parseLong(id));
@@ -430,8 +435,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						job.cancel();
 						Transaction.commit();
 					}
-					return job.asJobTracker();
+					return job;
 				});
+		return job0 == null ? null : job0.asJobTracker();
 	}
 
 	@Override
@@ -500,8 +506,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 							AppPersistenceBase.checkNotReadOnly();
 						} catch (ReadOnlyException e) {
 							ExceptionMessage exceptionMessage = new OutOfBandMessage.ExceptionMessage();
-							exceptionMessage
-									.setMessageHtml(ReadonlySupportServlet.get()
+							exceptionMessage.setMessageHtml(
+									ReadonlySupportServletLayer.get()
 											.getNotPerformedBecauseReadonlyMessage());
 							OutOfBandMessages.get()
 									.addMessage(exceptionMessage);
@@ -549,14 +555,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	public abstract PublicationResult
+	public PublicationResult
 			publish(ContentRequestBase<? extends ContentDefinition> cr)
-					throws WebException;
+					throws WebException {
+		return Registry.impl(PublicationRequestHandler.class).publish(cr);
+	}
 
 	@Override
-	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
+	public SearchResultsBase search(SearchDefinition def) {
 		return Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence().search(def, pageNumber);
+				.getCommonPersistence().search(def);
 	}
 
 	@Override

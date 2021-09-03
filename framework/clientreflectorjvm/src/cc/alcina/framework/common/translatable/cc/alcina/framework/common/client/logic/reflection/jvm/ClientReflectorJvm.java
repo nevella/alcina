@@ -76,6 +76,10 @@ public class ClientReflectorJvm extends ClientReflector {
 		public Object invoke(Object target, Object[] args) throws Exception {
 			return null;
 		}
+		@Override
+		public Class getDeclaringClass() {
+			return null;
+		}
 	}
 	@Override
 	protected void initialiseNewInstance(Class clazz) {

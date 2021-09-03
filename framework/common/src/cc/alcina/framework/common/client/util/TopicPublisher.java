@@ -10,6 +10,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /*
  * Key 'null' (when passed to addTopicListener) receives all topics
+ * 
+ * Thread-safe (accesses to lookup are synchronized - defensive copy made for publishTopic)
  */
 public class TopicPublisher {
 	// use a list - the listener may be added/removed multiple times (although

@@ -23,13 +23,9 @@ import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.util.Date;
 
 import com.google.gwt.core.client.GWTBridge;
 import com.google.gwt.dev.About;
-
-import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
 /**
  * This class is the hosted-mode peer for {@link com.google.gwt.core.client.GWT}
@@ -116,15 +112,5 @@ public class GWTBridgeImpl extends GWTBridge {
 	public void log(String message, Throwable e) {
 		// host.log(message + (e == null ? "" : " - see log file"), null);
 		host.log(message, e);
-		try {
-			appendStringToFile(
-					String.format("%s - %s\n%s\n",
-							CommonUtils.formatDate(new Date(),
-									DateStyle.AU_DATE_TIME_MS),
-							message, getFullExceptionMessage(e)),
-					new File("/tmp/gwt-err.log"));
-		} catch (IOException e1) {
-			e1.printStackTrace();
-		}
 	}
 }

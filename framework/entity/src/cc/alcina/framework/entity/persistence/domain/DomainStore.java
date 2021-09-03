@@ -114,6 +114,7 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
+import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionId;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
@@ -155,6 +156,9 @@ public class DomainStore implements IDomainStore {
 
 	public static final String CONTEXT_DEBUG_QUERY_METRICS = DomainStore.class
 			.getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
+
+	public static final String CONTEXT_IN_POST_PROCESS = DomainStore.class
+			.getName() + ".CONTEXT_IN_POST_PROCESS";
 
 	public static final String CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS = DomainStore.class
 			.getName() + ".CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS";
@@ -693,10 +697,10 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	Entity ensureEntity(Class<? extends Entity> clazz, long id) {
+	Entity ensureEntity(Class<? extends Entity> clazz, long id, long localId) {
 		EntityLocatorMap map = EntityLayerObjects.get()
 				.getServerAsClientInstanceEntityLocatorMap();
-		long localId = map.getLocalId(clazz, id);
+		localId = id < 0 ? localId : map.getLocalId(clazz, id);
 		ClassIdLock lock = LockUtils.obtainClassIdLock(clazz, id);
 		synchronized (lock) {
 			// thereby preserving the 'entity uniqueness unless vacuumed'
@@ -708,7 +712,8 @@ public class DomainStore implements IDomainStore {
 			Entity existing = cache.getAnyTransaction(clazz, id);
 			// the Transactions.resolve calls force a visible version
 			if (existing != null) {
-				Transactions.resolve(existing, true, false);
+				Transactions.resolve(existing, ResolvedVersionState.WRITE,
+						false);
 				cache.ensureVersion(existing);
 				return existing;
 			}
@@ -716,7 +721,7 @@ public class DomainStore implements IDomainStore {
 				// this below is all a bit fancy - but is the only place where
 				// said fanciness is needed
 				Entity local = cache.getCreatedLocals().get(localId);
-				Transactions.resolve(local, true, false);
+				Transactions.resolve(local, ResolvedVersionState.WRITE, false);
 				Preconditions.checkState(local != null);
 				// The created local is the 'domain identity', so need to
 				// preserve it but revert
@@ -858,6 +863,7 @@ public class DomainStore implements IDomainStore {
 		try {
 			LooseContext.pushWithTrue(
 					TransformManager.CONTEXT_DO_NOT_POPULATE_SOURCE);
+			LooseContext.setTrue(CONTEXT_IN_POST_PROCESS);
 			LooseContext.set(LiSet.CONTEXT_NON_DOMAIN_NOTIFIER,
 					new NonDomainNotifier() {
 						@Override
@@ -893,9 +899,6 @@ public class DomainStore implements IDomainStore {
 			// this is also checked in TransformCommit
 			// filtered.removeIf(collation::isCreatedAndDeleted);
 			Set<Long> uncommittedToLocalGraphLids = new LinkedHashSet<Long>();
-			if (filtered.toString().contains("JobImpl")) {
-				int debug = 3;
-			}
 			for (DomainTransformEventPersistent transform : filtered) {
 				postProcessTransform = transform;
 				// remove from indicies before first change - and only if
@@ -1481,8 +1484,18 @@ public class DomainStore implements IDomainStore {
 			Stream<Entity> stream = ids.stream()
 					.map(id -> (Entity) cache.get(associationClass, id))
 					.filter(Objects::nonNull);
-			stream = stream.map(e -> ((Set<Entity>) associationReflector
-					.getPropertyValue(e))).flatMap(Collection::stream);
+			boolean propertyIsSet = Set.class
+					.isAssignableFrom(associationReflector.getPropertyType());
+			if (propertyIsSet) {
+				stream = stream
+						.map(e -> ((Set<Entity>) associationReflector
+								.getPropertyValue(e)))
+						.flatMap(Collection::stream);
+			} else {
+				stream = stream.map(
+						e -> (Entity) associationReflector.getPropertyValue(e))
+						.filter(Objects::nonNull);
+			}
 			return new StreamOrSet<>(stream);
 		}
 	}
@@ -1718,7 +1731,7 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public <V extends Entity> V resolve(V v) {
-			return Transactions.resolve(v, false, false);
+			return Transactions.resolve(v, ResolvedVersionState.READ, false);
 		}
 
 		@Override
@@ -1867,7 +1880,7 @@ public class DomainStore implements IDomainStore {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 			case CHANGE_PROPERTY_REF:
-				return GraphProjection.isEnumOrEnumSubclass(evt.getValueClass())
+				return CommonUtils.isEnumOrEnumSubclass(evt.getValueClass())
 						|| domainDescriptor
 								.applyPostTransform(evt.getValueClass(), evt);
 			}
@@ -1934,6 +1947,9 @@ public class DomainStore implements IDomainStore {
 					stream = streamFromCacheValues();
 				}
 				if (LooseContext.has(DomainQuery.CONTEXT_DEBUG_CONSUMER)) {
+					DomainQuery.DebugConsumer consumer = LooseContext
+							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER);
+					consumer.queryToken = this;
 					stream = stream.peek(LooseContext
 							.get(DomainQuery.CONTEXT_DEBUG_CONSUMER));
 				}
@@ -1983,10 +1999,15 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
+		public boolean isIgnorePropertyChanges() {
+			return true;
+		}
+
+		@Override
 		protected void beforeDirectCollectionModification(Entity obj,
 				String propertyName, Object newTargetValue,
 				CollectionModificationType collectionModificationType) {
-			Transactions.resolve(obj, true, false);
+			Transactions.resolve(obj, ResolvedVersionState.WRITE, false);
 		}
 
 		@Override
@@ -1997,7 +2018,8 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		protected Entity getEntityForCreate(DomainTransformEvent event) {
-			return ensureEntity(event.getObjectClass(), event.getObjectId());
+			return ensureEntity(event.getObjectClass(), event.getObjectId(),
+					event.getObjectLocalId());
 		}
 
 		@Override

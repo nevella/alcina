@@ -2,11 +2,11 @@ package cc.alcina.framework.servlet.task;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
-import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
-@TypeSerialization(notSerializable = true)
+@TypeSerialization(flatSerializable = false)
 public class TaskPublishContentRequest
 		extends ServerTask<TaskPublishContentRequest> {
 	private ContentRequestBase request;

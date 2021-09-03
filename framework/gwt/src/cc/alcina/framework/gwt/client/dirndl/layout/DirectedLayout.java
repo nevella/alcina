@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Panel;
@@ -36,16 +37,15 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringFunction;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.annotation.ImmutableModel;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Handler;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -61,7 +61,9 @@ public class DirectedLayout {
 	public static boolean isDefault(Directed annotation) {
 		return annotation.renderer() == ModelClassNodeRenderer.class
 				&& annotation.cssClass().isEmpty() && annotation.tag().isEmpty()
-				&& annotation.behaviours().length == 0
+				&& annotation.emits().length == 0
+				&& annotation.reemits().length == 0
+				&& annotation.receives().length == 0
 				&& annotation.bindings().length == 0;
 	}
 
@@ -77,14 +79,21 @@ public class DirectedLayout {
 	}
 
 	@ClientInstantiable
-	public static class ContextResolver implements AnnotationLocation.Resolver {
+	public static class ContextResolver<M>
+			implements AnnotationLocation.Resolver {
+		private M model;
+
 		public ContextResolver() {
 		}
 
+		public M getModel() {
+			return this.model;
+		}
+
 		@Override
-		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
-				AnnotationLocation location) {
-			return AnnotationLocation.Resolver.super.getAnnotation(
+		public <A extends Annotation> A resolveAnnotation(
+				Class<A> annotationClass, AnnotationLocation location) {
+			return AnnotationLocation.Resolver.super.resolveAnnotation(
 					annotationClass, location);
 		}
 
@@ -94,6 +103,10 @@ public class DirectedLayout {
 
 		public <T> T resolveRenderContextProperty(String key) {
 			return null;
+		}
+
+		public void setModel(M model) {
+			this.model = model;
 		}
 	}
 
@@ -116,7 +129,7 @@ public class DirectedLayout {
 	 * </p>
 	 */
 	public static class Node {
-		private ContextResolver resolver;
+		private ContextResolver<?> resolver;
 
 		final Object model;
 
@@ -165,7 +178,7 @@ public class DirectedLayout {
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			AnnotationLocation location = new AnnotationLocation(
 					model == null ? null : model.getClass(), propertyReflector);
-			A annotation = resolver.getAnnotation(clazz, location);
+			A annotation = resolver.resolveAnnotation(clazz, location);
 			if (annotation != null) {
 				return annotation;
 			}
@@ -182,13 +195,27 @@ public class DirectedLayout {
 			return idx == 0 ? null : children.get(idx - 1);
 		}
 
+		public Node childWithModel(Predicate<Object> test) {
+			if (test.test(this.model)) {
+				return this;
+			}
+			for (Node child : children) {
+				Node childWithModel = child.childWithModel(test);
+				if (childWithModel != null) {
+					return childWithModel;
+				}
+			}
+			return null;
+		}
+
 		public AnnotationLocation.Resolver contextResolver() {
 			return resolver;
 		}
 
 		public void fireEvent(TopicEvent topicEvent) {
-			if (rendered.behaviours != null) {
-				rendered.behaviours.forEach(bb -> bb.onTopicEvent(topicEvent));
+			if (rendered.eventBindings != null) {
+				rendered.eventBindings
+						.forEach(bb -> bb.onTopicEvent(topicEvent));
 			}
 		}
 
@@ -245,10 +272,6 @@ public class DirectedLayout {
 				 * if the property has a simple @Directed annotation, and the
 				 * class has a non-simple @Directed, use the class
 				 */
-				if (clazz != null
-						&& clazz.getSimpleName().contains("TreeModel")) {
-					int debug = 3;
-				}
 				directed = Registry.impl(DirectedResolver.class, clazz);
 				AnnotationLocation annotationLocation = new AnnotationLocation(
 						clazz, propertyReflector);
@@ -338,7 +361,8 @@ public class DirectedLayout {
 		}
 
 		private void bindBehaviours() {
-			if (directed == null || directed.behaviours().length == 0) {
+			if (directed == null || directed.receives().length == 0
+					|| model == null) {
 				return;
 			}
 			rendered.bindBehaviours();
@@ -366,6 +390,9 @@ public class DirectedLayout {
 			 * without adding model children until the final Directed
 			 */
 			if (renderer instanceof HasWrappingDirecteds) {
+				if (model == null) {
+					return;
+				}
 				List<Directed> wrappers = ((HasWrappingDirecteds) renderer)
 						.getWrappingDirecteds(this);
 				Widget rootResult = null;
@@ -414,10 +441,20 @@ public class DirectedLayout {
 						.getPropertyReflectors((model.getClass()));
 				if (propertyReflectors != null) {
 					for (PropertyReflector propertyReflector : propertyReflectors) {
-						if (propertyReflector
-								.getAnnotation(Directed.class) != null) {
+						AnnotationLocation propertyLocation = new AnnotationLocation(
+								model.getClass(), propertyReflector, resolver,
+								false);
+						if (propertyLocation.hasAnnotation(Directed.class)) {
 							Object childModel = propertyReflector
 									.getPropertyValue(model);
+							if (childModel == null && propertyLocation
+									.hasAnnotation(ImmutableModel.class)) {
+								/*
+								 * There will never be a non-null value, so
+								 * don't render a placeholder
+								 */
+								continue;
+							}
 							Node child = addChild(childModel, propertyReflector,
 									propertyReflector);
 						}
@@ -445,6 +482,7 @@ public class DirectedLayout {
 			if (directedContextResolver != null) {
 				resolver = Reflections
 						.newInstance(directedContextResolver.value());
+				((ContextResolver) resolver).setModel(model);
 			}
 			populateWidgets(intermediateChild);
 			bindBehaviours();
@@ -537,29 +575,30 @@ public class DirectedLayout {
 		public class Rendered {
 			List<Widget> widgets = new ArrayList<>();
 
-			public List<BehaviourBinding> behaviours;
+			public List<NodeEventBinding> eventBindings;
 
 			public List<PropertyBinding> bindings;
 
-			private Map<Behaviour, BehaviourBinding> preRenderListeners;
+			private Map<Class<? extends NodeEvent>, NodeEventBinding> preRenderListeners;
 
-			public void addBehaviourBinding(Behaviour behaviour,
-					BehaviourBinding behaviourBinding) {
-				if (behaviours != null) {
-					behaviourBindingFor(behaviour).topicListeners
+			public void addBehaviourBinding(
+					Class<? extends NodeEvent> eventType,
+					NodeEventBinding behaviourBinding) {
+				if (eventBindings != null) {
+					eventBindingFor(eventType).topicListeners
 							.addListener(behaviourBinding);
 				} else {
 					if (preRenderListeners == null) {
 						preRenderListeners = new LinkedHashMap<>();
 					}
-					preRenderListeners.put(behaviour, behaviourBinding);
+					preRenderListeners.put(eventType, behaviourBinding);
 				}
 			}
 
-			public BehaviourBinding behaviourBindingFor(Behaviour behaviour) {
-				return behaviours.stream()
-						.filter(bb -> bb.behaviour == behaviour).findFirst()
-						.get();
+			public NodeEventBinding
+					eventBindingFor(Class<? extends NodeEvent> eventType) {
+				return eventBindings.stream().filter(bb -> bb.type == eventType)
+						.findFirst().get();
 			}
 
 			public int getChildIndex(Widget childWidget) {
@@ -605,14 +644,16 @@ public class DirectedLayout {
 
 			void bindBehaviours() {
 				Preconditions.checkState(widgets.size() == 1);
-				behaviours = Arrays.stream(directed.behaviours())
-						.map(BehaviourBinding::new)
-						.collect(Collectors.toList());
-				behaviours.forEach(BehaviourBinding::bind);
+				eventBindings = new ArrayList<>();
+				for (int idx = 0; idx < directed.receives().length; idx++) {
+					Class<? extends NodeEvent> clazz = directed.receives()[idx];
+					eventBindings.add(new NodeEventBinding(clazz, idx));
+				}
+				eventBindings.forEach(NodeEventBinding::bind);
 				if (preRenderListeners != null) {
 					preRenderListeners
 							.forEach((behaviour, behaviourBinding) -> {
-								behaviourBindingFor(behaviour).topicListeners
+								eventBindingFor(behaviour).topicListeners
 										.addListener(behaviourBinding);
 							});
 					preRenderListeners = null;
@@ -673,97 +714,111 @@ public class DirectedLayout {
 			}
 		}
 
-		class BehaviourBinding implements NodeEventReceiver {
-			Behaviour behaviour;
+		class NodeEventBinding implements NodeEventReceiver {
+			Class<? extends NodeEvent> type;
 
-			NodeEvent eventBinding;
+			// FIXME - dirndl 1.3 - why binding? why not bound event?
+			// also .... shouldn't we create these events on demand, and just
+			// use type? or call it 'template'?
+			NodeEvent<? extends EventHandler> eventTemplate;
 
 			TopicListeners topicListeners = new TopicListeners();
 
-			public BehaviourBinding(Behaviour behaviour) {
-				this.behaviour = behaviour;
+			private int receiverIndex;
+
+			public NodeEventBinding(Class<? extends NodeEvent> type, int idx) {
+				this.type = type;
+				this.receiverIndex = idx;
 			}
 
 			@Override
 			public void onEvent(GwtEvent event) {
 				Context context = new NodeEvent.Context();
 				context.gwtEvent = event;
-				fireEvent(context);
+				fireEvent(context, Node.this.getModel());
 			}
 
 			@Override
 			public String toString() {
 				return Ax.format("Binding :: %s :: %s",
-						model.getClass().getSimpleName(), behaviour);
+						model.getClass().getSimpleName(), type);
 			}
 
 			private void bindEvent(boolean bind) {
 				if (bind) {
-					if (eventBinding == null) {
-						eventBinding = Reflections
-								.newInstance(behaviour.event());
-						eventBinding.setEventReceiver(this);
+					if (eventTemplate == null) {
+						eventTemplate = Reflections.newInstance(type);
+						eventTemplate.setEventReceiver(this);
 					}
-					eventBinding.bind(getBindingWidget(), true);
+					eventTemplate.bind(getBindingWidget(), true);
 				} else {
-					eventBinding.bind(null, false);
+					eventTemplate.bind(null, false);
 				}
 			}
 
-			private void fireEvent(Context context) {
-				context.nodeEvent = eventBinding;
-				context.behaviour = behaviour;
+			private void fireEvent(Context context, Object model) {
+				NodeEvent nodeEvent = Reflections.newInstance(type);
+				context.setNodeEvent(nodeEvent);
+				nodeEvent.setModel(model);
 				context.node = Node.this;
+				// FIXME - dirndl 1.3 - do we still need to pass topicListeners?
 				context.topicListeners = topicListeners;
-				Class<? extends Handler> handlerClass = behaviour.handler();
-				Handler handler = null;
-				// allow context-sensitive handlers
-				if (context.node.renderer.getClass() == handlerClass) {
-					handler = (Handler) context.node.renderer;
-				} else if (context.node.model.getClass() == handlerClass) {
-					handler = (Handler) context.node.model;
-				} else if (handlerClass == NodeEvent.Handler.Self.class) {
-					handler = (Handler) context.node.model;
+				Class<? extends EventHandler> handlerClass = eventTemplate
+						.getHandlerClass();
+				NodeEvent.Handler handler = null;
+				if (Reflections.isAssignableFrom(handlerClass,
+						context.node.renderer.getClass())) {
+					handler = (NodeEvent.Handler) context.node.renderer;
+				} else if (Reflections.isAssignableFrom(handlerClass,
+						context.node.model.getClass())) {
+					handler = (NodeEvent.Handler) context.node.model;
 				} else {
-					// FIXME - remove (with ancestor model)
-					Handler ancestorHandler = context.node
-							.ancestorModel(handlerClass);
-					if (ancestorHandler == null) {
-						handler = Reflections.newInstance(handlerClass);
-					} else {
-						handler = ancestorHandler;
-					}
+					// fire a logical topic event, based on correspondence
+					// between Directed.reemits and receives
+					Context eventContext = NodeEvent.Context
+							.newTopicContext(context, Node.this);
+					Preconditions.checkState(directed
+							.receives().length == directed.reemits().length);
+					Class<? extends TopicEvent> emitTopic = (Class<? extends TopicEvent>) directed
+							.reemits()[receiverIndex];
+					TopicEvent event = Reflections.newInstance(emitTopic);
+					TopicEvent.fire(eventContext, emitTopic,
+							Node.this.getModel());
+					return;
 				}
 				logger.trace("Firing behaviour {} on {} to {}",
-						eventBinding.getClass().getSimpleName(),
+						eventTemplate.getClass().getSimpleName(),
 						Node.this.pathSegment(), handlerClass.getSimpleName());
-				handler.onEvent(context);
+				nodeEvent.dispatch(handler);
 			}
 
 			void bind() {
-				if (!Behaviour.Util.hasActivationTopic(behaviour)) {
-					bindEvent(true);
-				}
-				for (TopicBehaviour topicBehaviour : behaviour.topics()) {
-					if (Behaviour.Util.isListenerTopic(topicBehaviour)) {
-						Node cursor = Node.this;
-						while (cursor != null) {
-							Behaviour behaviour = Behaviour.Util.getEmitter(
-									cursor.directed, topicBehaviour.topic());
-							if (behaviour != null) {
-								cursor.rendered.addBehaviourBinding(behaviour,
-										this);
-								logger.warn(
-										"Binding topic behaviour {} on {} to {}\n",
-										topicBehaviour.topic().getSimpleName(),
-										Node.this.pathSegment(),
-										cursor.pathSegment());
-								break;
-							}
-							cursor = cursor.parent;
-						}
-					}
-				}
+				bindEvent(true);
+				// FIXME - dirndl.emit
+				/// go up the node tree until we find an emitter
+				//
+				// but - is this even used? maybe for search/form filters - but
+				// not sure it's needed/wanted
+				// for (TopicBehaviour topicBehaviour : type.topics()) {
+				// if (Behaviour.Util.isListenerTopic(topicBehaviour)) {
+				// Node cursor = Node.this;
+				// while (cursor != null) {
+				// Behaviour behaviour = Behaviour.Util.getEmitter(
+				// cursor.directed, topicBehaviour.topic());
+				// if (behaviour != null) {
+				// cursor.rendered.addBehaviourBinding(behaviour,
+				// this);
+				// logger.warn(
+				// "Binding topic behaviour {} on {} to {}\n",
+				// topicBehaviour.topic().getSimpleName(),
+				// Node.this.pathSegment(),
+				// cursor.pathSegment());
+				// break;
+				// }
+				// cursor = cursor.parent;
+				// }
+				// }
+				// }
 			}
 
 			Widget getBindingWidget() {
@@ -771,15 +826,13 @@ public class DirectedLayout {
 			}
 
 			void onTopicEvent(TopicEvent topicEvent) {
-				if (Behaviour.Util.hasActivationTopic(behaviour,
-						topicEvent.topic)) {
-					bindEvent((boolean) topicEvent.payload);
-				}
-				if (Behaviour.Util.hasListenerTopic(behaviour,
-						topicEvent.topic)) {
-					Context context = new NodeEvent.Context();
-					context.topicEvent = topicEvent;
-					fireEvent(context);
+				if (topicEvent.getClass() == type) {
+					Context context = NodeEvent.Context.newTopicContext(
+							topicEvent.getContext(), Node.this);
+					// set before we dispatch to the handler, so the handler can
+					// unset
+					topicEvent.setHandled(true);
+					fireEvent(context, topicEvent.getModel());
 				}
 			}
 		}
@@ -797,12 +850,10 @@ public class DirectedLayout {
 				switch (binding.type()) {
 				case CSS_CLASS:
 					/*
-					 * requires from/transform or from/literal
+					 * requires from. If both transform and literal are
+					 * undefined, uses the de-infixed form of the property name
 					 */
-					Preconditions.checkArgument(
-							binding.from().length() > 0 && (binding
-									.transform() != ToStringFunction.Identity.class
-									^ binding.literal().length() > 0));
+					Preconditions.checkArgument(binding.from().length() > 0);
 					break;
 				case SWITCH_CSS_CLASS:
 					/*
@@ -842,10 +893,14 @@ public class DirectedLayout {
 				Element element = rendered.widgets.get(0).getElement();
 				switch (binding.type()) {
 				case INNER_HTML:
-					element.setInnerHTML(stringValue);
+					if (value != null) {
+						element.setInnerHTML(stringValue);
+					}
 					break;
 				case INNER_TEXT:
-					element.setInnerText(stringValue);
+					if (value != null) {
+						element.setInnerText(stringValue);
+					}
 					break;
 				case PROPERTY:
 					if (value == null) {
@@ -858,8 +913,11 @@ public class DirectedLayout {
 					if (hasTransform) {
 						element.setClassName(value == null ? "" : stringValue);
 					} else {
+						String cssClass = binding.literal().isEmpty()
+								? CommonUtils.deInfixCss(binding.from())
+								: binding.literal();
 						boolean present = (boolean) value;
-						element.setClassName(binding.literal(), present);
+						element.setClassName(cssClass, present);
 					}
 				}
 					break;
@@ -898,8 +956,9 @@ public class DirectedLayout {
 		public void onEvent(GwtEvent event);
 	}
 
-	private static class DelegatingContextResolver extends ContextResolver {
-		private ContextResolver parent = null;
+	private static class DelegatingContextResolver<M>
+			extends ContextResolver<M> {
+		private ContextResolver<?> parent = null;
 
 		private Resolver locationResolver;
 
@@ -910,9 +969,10 @@ public class DirectedLayout {
 		}
 
 		@Override
-		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
-				AnnotationLocation location) {
-			return locationResolver.getAnnotation(annotationClass, location);
+		public <A extends Annotation> A resolveAnnotation(
+				Class<A> annotationClass, AnnotationLocation location) {
+			return locationResolver.resolveAnnotation(annotationClass,
+					location);
 		}
 
 		@Override

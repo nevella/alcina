@@ -81,6 +81,11 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 
 		@Override
+		public List<Class> getInterfaces(Class clazz) {
+			return ObjectPersistenceHelper.get().getInterfaces(clazz);
+		}
+
+		@Override
 		public List<PropertyReflector>
 				getPropertyReflectors(Class<?> beanClass) {
 			return ObjectPersistenceHelper.get()
@@ -101,6 +106,11 @@ public class SubgraphTransformManager extends TransformManager {
 		@Override
 		public List<PropertyInfo> getWritableProperties(Class clazz) {
 			return ObjectPersistenceHelper.get().getWritableProperties(clazz);
+		}
+
+		@Override
+		public boolean isAssignableFrom(Class from, Class to) {
+			return ObjectPersistenceHelper.get().isAssignableFrom(from, to);
 		}
 
 		@Override

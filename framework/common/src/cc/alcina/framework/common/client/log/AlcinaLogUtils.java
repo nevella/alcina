@@ -6,6 +6,7 @@ import java.util.logging.Level;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.logging.client.SystemLogHandler;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -32,11 +33,13 @@ public class AlcinaLogUtils {
 	}
 
 	public static void sysLogClient(Class clazz, Level level) {
-		java.util.logging.Logger logger = java.util.logging.Logger
-				.getLogger(clazz.getName());
-		Arrays.stream(logger.getHandlers()).forEach(logger::removeHandler);
-		logger.addHandler(
-				new SystemLogHandler(new SimpleTextFormatter(false), level));
-		logger.setUseParentHandlers(false);
+		if (GWT.isClient()) {
+			java.util.logging.Logger logger = java.util.logging.Logger
+					.getLogger(clazz.getName());
+			Arrays.stream(logger.getHandlers()).forEach(logger::removeHandler);
+			logger.addHandler(new SystemLogHandler(
+					new SimpleTextFormatter(false), level));
+			logger.setUseParentHandlers(false);
+		}
 	}
 }

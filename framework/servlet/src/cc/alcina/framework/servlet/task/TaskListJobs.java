@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.task;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -14,6 +15,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -25,8 +27,10 @@ import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.job.JobRegistry.FutureStat;
 import cc.alcina.framework.servlet.servlet.JobServlet;
+import cc.alcina.framework.servlet.servlet.TaskWithHtmlResult;
 
-public class TaskListJobs extends AbstractTaskPerformer {
+public class TaskListJobs extends AbstractTaskPerformer
+		implements TaskWithHtmlResult {
 	private String filter;
 
 	private transient Pattern filterPattern;
@@ -99,12 +103,21 @@ public class TaskListJobs extends AbstractTaskPerformer {
 			Predicate<? extends Job> topLevelAdditional = topLevel
 					? Job::provideIsFirstInSequence
 					: job -> true;
-			Stream<? extends Job> stream = JobDomain.get()
-					.getRecentlyCompletedJobs(topLevel).parallel()
+			Stream<? extends Job> recentlyCompletedJobs = JobDomain.get()
+					.getRecentlyCompletedJobs(topLevel);
+			if (Ax.notBlank(filter)) {
+				recentlyCompletedJobs = recentlyCompletedJobs.parallel();
+			}
+			Stream<? extends Job> stream = recentlyCompletedJobs
 					.filter(textFilter).filter((Predicate) topLevelAdditional)
 					.limit(limit);
-			List<Job> jobs = DomainStore.queryPool()
-					.call(() -> stream.collect(Collectors.toList()), stream);
+			if (Ax.notBlank(filter)) {
+				stream = stream.sorted(
+						Comparator.comparing(Job::getEndTime).reversed());
+			}
+			Stream<? extends Job> f_stream = stream;
+			List<Job> jobs = DomainStore.queryPool().call(
+					() -> f_stream.collect(Collectors.toList()), f_stream);
 			jobs.forEach(job -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(String.valueOf(job.getId()))

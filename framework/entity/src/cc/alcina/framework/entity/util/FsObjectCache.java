@@ -31,7 +31,9 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 			Class<?> forClass) {
 		return new FsObjectCache<>(
 				DataFolderProvider.get().getChildFile(forClass.getName()), type,
-				p -> type.newInstance());
+				p -> {
+					return type.newInstance();
+				});
 	}
 
 	private SerializationStrategy serializationStrategy = new SerializationStrategy_Kryo();
@@ -269,6 +271,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 				throw e;
 			} else {
 				logger.warn("Retrying from remote (cannot deserialize)", e);
+				e.printStackTrace();
 				return get(path, false);
 			}
 		}

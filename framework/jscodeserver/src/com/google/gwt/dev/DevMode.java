@@ -93,6 +93,8 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 		 * termination is still implementation-dependent.
 		 */
 		DevMode hostedMode = new DevMode();
+		hostedMode.setHeadless(
+				Boolean.getBoolean("com.google.gwt.dev.DevMode.headless"));
 		if (new ArgProcessor(hostedMode.options).processArgs(args)) {
 			hostedMode.run();
 			// Exit w/ success code.
@@ -128,6 +130,8 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 	 * Default constructor for testing; no public API yet.
 	 */
 	protected DevMode() {
+		System.setProperty("java.awt.headless", "true");
+		System.setProperty("awt.toolkit", "sun.awt.HToolkit");
 	}
 
 	/**

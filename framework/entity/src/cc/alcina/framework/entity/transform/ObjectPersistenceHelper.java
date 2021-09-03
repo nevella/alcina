@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.transform;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -74,7 +75,11 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	private CachingConcurrentMap<String, Class> classNameLookup = new CachingConcurrentMap<String, Class>(
 			cn -> {
 				if (servletLayerClassloader != null) {
-					return servletLayerClassloader.loadClass(cn);
+					try {
+						return servletLayerClassloader.loadClass(cn);
+					} catch (Exception e) {
+						return Class.forName(cn);
+					}
 				} else {
 					return Class.forName(cn);
 				}
@@ -152,6 +157,11 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 			cache.put(object.getClass(), result);
 		}
 		return result;
+	}
+
+	@Override
+	public List<Class> getInterfaces(Class clazz) {
+		return Arrays.asList(clazz.getInterfaces());
 	}
 
 	@Override
@@ -251,6 +261,11 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	public boolean isAssignableFrom(Class from, Class to) {
+		return from.isAssignableFrom(to);
 	}
 
 	@Override

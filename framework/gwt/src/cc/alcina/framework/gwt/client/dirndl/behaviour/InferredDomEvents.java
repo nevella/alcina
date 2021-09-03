@@ -1,7 +1,9 @@
 package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
+import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
@@ -10,23 +12,18 @@ import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.ui.Widget;
 
 public class InferredDomEvents {
-	/**
-	 * @author nick@alcina.cc
-	 *
-	 */
-	public static class ClickOutside extends NodeEvent
+	public static class ClickOutside extends NodeEvent<ClickOutside.Handler>
 			implements NativePreviewHandler {
 		private Widget widget;
 
 		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			this.widget = widget;
-			widget.addAttachHandler(evt -> {
-				if (!evt.isAttached()) {
-					unbind();
-				}
-			});
-			return Event.addNativePreviewHandler(this);
+		public void dispatch(ClickOutside.Handler handler) {
+			handler.onClickOutside(this);
+		}
+
+		@Override
+		public Class<ClickOutside.Handler> getHandlerClass() {
+			return ClickOutside.Handler.class;
 		}
 
 		@Override
@@ -54,5 +51,105 @@ public class InferredDomEvents {
 			}
 			return false;
 		}
-	};
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			this.widget = widget;
+			widget.addAttachHandler(evt -> {
+				if (!evt.isAttached()) {
+					unbind();
+				}
+			});
+			return Event.addNativePreviewHandler(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onClickOutside(ClickOutside event);
+		}
+	}
+
+	public static class IntersectionObserved
+			extends NodeEvent<IntersectionObserved.Handler> {
+		private IntersectionObserver intersectionObserver;
+
+		private boolean intersecting;
+
+		@Override
+		public void dispatch(Handler handler) {
+			handler.onIntersectionObserved(this);
+		}
+
+		public void fireEvent(boolean visible) {
+			IntersectionObserved event = new IntersectionObserved();
+			event.setIntersecting(visible);
+			super.fireEvent(event);
+		}
+
+		@Override
+		public Class<Handler> getHandlerClass() {
+			return IntersectionObserved.Handler.class;
+		}
+
+		public boolean isIntersecting() {
+			return getContext() == null ? this.intersecting
+					: ((IntersectionObserved) getContext().gwtEvent).intersecting;
+		}
+
+		public void setIntersecting(boolean intersecting) {
+			this.intersecting = intersecting;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			widget.addAttachHandler(evt -> {
+				if (evt.isAttached()) {
+					intersectionObserver = IntersectionObserver.observerFor(
+							this,
+							widget.getElement().implAccess().ensureRemote());
+				} else {
+					intersectionObserver.disconnect();
+				}
+			});
+			return null;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onIntersectionObserved(IntersectionObserved event);
+		}
+
+		public static final class IntersectionObserver
+				extends JavaScriptObject {
+			public static final native IntersectionObserver observerFor(
+					IntersectionObserved intersectionObserved,
+					ElementRemote elt) /*-{
+        var callback = function(entries, observer) {
+          for ( var k in entries) {
+            intersectionObserved.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.IntersectionObserved::fireEvent(Z)(entries[k].isIntersecting);
+          }
+        };
+        var scrollCursor = elt;
+        while (scrollCursor != document.body) {
+          var style = $wnd.getComputedStyle(scrollCursor);
+          if (style.overflow == 'scroll' || style.overflowX == 'scroll'
+              || style.overflowY == 'scroll') {
+            break;
+          }
+          scrollCursor = scrollCursor.parentElement;
+        }
+        var observer = new IntersectionObserver(callback, {
+          root : scrollCursor,
+          threshold : 1.0
+        });
+        observer.observe(elt);
+        return observer;
+			}-*/;
+
+			protected IntersectionObserver() {
+			}
+
+			final native void disconnect() /*-{
+        this.disconnect();
+			}-*/;
+		}
+	}
 }

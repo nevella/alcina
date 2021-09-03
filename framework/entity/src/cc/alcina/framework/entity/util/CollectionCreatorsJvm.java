@@ -8,7 +8,9 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
+import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.HashMapCreator;
+import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCreator;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class CollectionCreatorsJvm {
@@ -17,6 +19,14 @@ public class CollectionCreatorsJvm {
 	public static class ConcurrentMapCreatorJvm extends ConcurrentMapCreator {
 		@Override
 		public <K, V> Map<K, V> createMap() {
+			return new ConcurrentHashMap<>();
+		}
+	}
+
+	public static class DelegateMapCreatorConcurrentNoNulls
+			implements DelegateMapCreator {
+		@Override
+		public Map createDelegateMap(int depthFromRoot, int depth) {
 			return new ConcurrentHashMap<>();
 		}
 	}
@@ -35,6 +45,14 @@ public class CollectionCreatorsJvm {
 
 		@Override
 		public <K, V> Map<K, V> create() {
+			return new Object2ObjectLinkedOpenHashMap<>();
+		}
+	}
+
+	@RegistryLocation(registryPoint = UnsortedMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class UnsortedMapCreatorJvm extends UnsortedMapCreator {
+		@Override
+		public Map createDelegateMap(int depthFromRoot, int depth) {
 			return new Object2ObjectLinkedOpenHashMap<>();
 		}
 	}

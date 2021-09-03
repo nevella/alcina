@@ -14,7 +14,7 @@
 package cc.alcina.framework.common.client.actions;
 
 import cc.alcina.framework.common.client.logic.HasParameters;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 
 /**
  * Marker subclass, to be run on the server

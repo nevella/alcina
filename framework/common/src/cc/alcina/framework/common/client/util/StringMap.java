@@ -4,12 +4,12 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.TreeMap;
 
 public class StringMap extends LinkedHashMap<String, String> {
 	private static final transient long serialVersionUID = 8219302205025519855L;
@@ -38,7 +38,7 @@ public class StringMap extends LinkedHashMap<String, String> {
 				key = key.trim();
 				value = value.trim();
 			}
-			map.put(unescape(key), unescape(value));
+			map.put(unescapeList(key), unescapeList(value));
 		}
 		return map;
 	}
@@ -52,15 +52,23 @@ public class StringMap extends LinkedHashMap<String, String> {
 		if (props == null) {
 			return map;
 		}
+		Escaper replacer = new Escaper();
+		char[] from = { 'n', '=', '\\' };
+		String[] to = { "\n", "=", "\\" };
 		for (String line : props.split("\n")) {
 			int idx = line.indexOf("=");
 			if (idx != -1 && !line.startsWith("#")) {
-				String value = line.substring(idx + 1).replace("\\n", "\n")
-						.replace("\\=", "=").replace("\\\\", "\\");
-				if (unQuote && value.startsWith("\"") && value.endsWith("\"")) {
-					value = value.substring(1, value.length() - 1);
+				int end = line.length();
+				int idx1 = idx + 1;
+				if (unQuote && idx1 < line.length() && line.charAt(idx1) == '\"'
+						&& line.charAt(end - 1) == '\"') {
+					idx1++;
+					end--;
 				}
-				map.put(line.substring(0, idx), value);
+				String value = line.substring(idx1, end);
+				String unescaped = replacer.unescapeBackslahed(value, from, to);
+				String key = line.substring(0, idx);
+				map.put(key, unescaped);
 			}
 		}
 		return map;
@@ -93,9 +101,10 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return map;
 	}
 
-	private static String unescape(String string) {
-		return string.replace("\\n", "\n").replace("\\r", "\r").replace("\\\\",
-				"\\");
+	private static String unescapeList(String string) {
+		char[] from = { 'n', 'r', '\\' };
+		String[] to = { "\n", "\r", "\\" };
+		return new Escaper().unescapeBackslahed(string, from, to);
 	}
 
 	public StringMap() {
@@ -169,7 +178,14 @@ public class StringMap extends LinkedHashMap<String, String> {
 	}
 
 	public StringMap sorted() {
-		return new StringMap(new TreeMap(this));
+		return sorted(Comparator.naturalOrder());
+	}
+
+	public StringMap sorted(Comparator<String> comparator) {
+		StringMap result = new StringMap();
+		keySet().stream().sorted(comparator)
+				.forEach(key -> result.put(key, get(key)));
+		return result;
 	}
 
 	public String toKvStringList() {
@@ -180,30 +196,90 @@ public class StringMap extends LinkedHashMap<String, String> {
 			}
 			sb.append(entry.getKey());
 			sb.append("\n");
-			sb.append(escape(entry.getValue()));
+			sb.append(escapeListString(entry.getValue()));
 		}
 		return sb.toString();
 	}
 
 	public String toPropertyString() {
 		StringBuilder sb = new StringBuilder();
+		char[] from = { '\n', '=', '\\' };
+		String[] to = { "\\n", "\\=", "\\\\" };
 		for (Map.Entry<String, String> entry : entrySet()) {
-			if (entry.getValue() == null) {
+			String value = entry.getValue();
+			if (value == null) {
 				continue;
 			}
 			if (sb.length() != 0) {
 				sb.append("\n");
 			}
-			sb.append(entry.getKey());
+			String key = entry.getKey();
+			sb.append(key);
 			sb.append('=');
-			sb.append(entry.getValue().replace("\\", "\\\\").replace("=", "\\=")
-					.replace("\n", "\\n"));
+			sb.append(new Escaper().escape(value, from, to));
 		}
 		return sb.toString();
 	}
 
-	private String escape(String string) {
-		return string.replace("\\", "\\\\").replace("\r", "\\r").replace("\n",
-				"\\n");
+	private String escapeListString(String string) {
+		char[] from = { '\n', '\r', '\\' };
+		String[] to = { "\\n", "\\r", "\\\\" };
+		return new Escaper().escape(string, from, to);
+	}
+
+	public static class Escaper {
+		public String escape(String string, char[] from, String[] to) {
+			StringBuilder sb = new StringBuilder();
+			int end = string.length();
+			for (int idx = 0; idx < end;) {
+				char c = string.charAt(idx++);
+				boolean replaced = false;
+				for (int idx1 = 0; idx1 < from.length; idx1++) {
+					char check = from[idx1];
+					if (c == check) {
+						sb.append(to[idx1]);
+						replaced = true;
+						break;
+					}
+				}
+				if (!replaced) {
+					sb.append(c);
+				}
+			}
+			return sb.toString();
+		}
+
+		public String unescapeBackslahed(String string, char[] from,
+				String[] to) {
+			StringBuilder sb = new StringBuilder();
+			int end = string.length() - 1;
+			int idx = 0;
+			for (; idx < end;) {
+				char c = string.charAt(idx++);
+				if (c == '\\') {
+					char next = string.charAt(idx++);
+					boolean replaced = false;
+					for (int idx1 = 0; idx1 < from.length; idx1++) {
+						char check = from[idx1];
+						if (next == check) {
+							sb.append(to[idx1]);
+							replaced = true;
+							break;
+						}
+					}
+					if (!replaced) {
+						sb.append(c);
+						sb.append(next);
+					}
+				} else {
+					sb.append(c);
+				}
+			}
+			if (idx < string.length()) {
+				char c = string.charAt(idx++);
+				sb.append(c);
+			}
+			return sb.toString();
+		}
 	}
 }

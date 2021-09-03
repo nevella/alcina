@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.entity;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
-import cc.alcina.framework.common.client.actions.instances.DeleteAction;
+import cc.alcina.framework.common.client.actions.instances.DeleteViewAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 
@@ -27,7 +27,7 @@ public enum EntityAction {
 	DELETE {
 		@Override
 		public Class<? extends PermissibleAction> actionClass() {
-			return DeleteAction.class;
+			return DeleteViewAction.class;
 		}
 	},
 	CREATE {

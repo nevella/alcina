@@ -18,7 +18,6 @@ import java.util.Date;
 import javax.persistence.PrePersist;
 import javax.persistence.PreUpdate;
 
-import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 
 /**
@@ -27,17 +26,10 @@ import cc.alcina.framework.common.client.logic.permissions.IVersionable;
  * @author Nick Reddel
  */
 public class VersioningEntityListener {
-	public static ThreadLocal<Boolean> disabled = new ThreadLocal() {
-		@Override
-		protected synchronized Boolean initialValue() {
-			return false;
-		}
-	};
-
 	@PrePersist
 	@PreUpdate
 	public void setVersioningInfo(Object obj) {
-		if (obj instanceof IVersionable && !disabled.get()) {
+		if (obj instanceof IVersionable) {
 			IVersionable iv = (IVersionable) obj;
 			Date now = new Date();
 			if (iv.getLastModificationDate() == null
@@ -45,8 +37,6 @@ public class VersioningEntityListener {
 				iv.setCreationDate(now);
 			}
 			iv.setLastModificationDate(now);
-		}
-		if (obj instanceof IUser) {
 		}
 	}
 }

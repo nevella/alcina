@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -54,7 +53,10 @@ public interface CommonRemoteServiceAsync {
 	public void performAction(RemoteAction action,
 			AsyncCallback<String> callback);
 
-	public void search(SearchDefinition def, int pageNumber,
+	public void pollJobStatus(JobTracker.Request request,
+			AsyncCallback<JobTracker.Response> callback);
+
+	public void search(SearchDefinition def,
 			AsyncCallback<SearchResultsBase> callback);
 
 	public void transform(DomainTransformRequest request,
@@ -70,9 +72,6 @@ public interface CommonRemoteServiceAsync {
 
 	void logClientRecords(String serializedLogRecords,
 			AsyncCallback<Void> callback);
-
-	<G extends WrapperPersistable> void persist(G gwpo,
-			AsyncCallback<Long> callback);
 
 	void persistOfflineTransforms(List<DeltaApplicationRecord> uncommitted,
 			AsyncCallback<Void> callback);

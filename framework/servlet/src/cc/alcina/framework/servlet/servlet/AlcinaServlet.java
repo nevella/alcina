@@ -121,6 +121,11 @@ public abstract class AlcinaServlet extends HttpServlet {
 					request.getRequestURI());
 			logger.warn("Exception detail:", t);
 			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, t);
+			// If the connection has been reset, we can't print anything to the response
+			if (t instanceof IOException &&
+					t.getMessage().equals("Connection reset by peer")) {
+				return;
+			}
 			try {
 				response.setStatus(500);
 				writeTextResponse(response,

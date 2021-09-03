@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.csobjects.WebException;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -71,10 +70,6 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod()
 	public String performAction(RemoteAction action);
 
-	@WebMethod
-	public <G extends WrapperPersistable> Long persist(G gwpo)
-			throws WebException;
-
 	public void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted) throws WebException;
 
@@ -83,7 +78,7 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod()
 	public JobTracker pollJobStatus(String id, boolean cancel);
 
-	public SearchResultsBase search(SearchDefinition def, int pageNumber);
+	public SearchResultsBase search(SearchDefinition def);
 
 	@WebMethod
 	public DomainTransformResponse transform(DomainTransformRequest request)
@@ -95,4 +90,6 @@ public interface CommonRemoteService extends RemoteService {
 	@WebMethod
 	public DomainUpdate waitForTransforms(
 			DomainTransformCommitPosition position) throws PermissionsException;
+
+	JobTracker.Response pollJobStatus(JobTracker.Request request);
 }

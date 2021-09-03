@@ -9,6 +9,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.domain.HasEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -32,7 +33,14 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 
 	@Override
 	public int compareTo(DomainViewNodeContentModel o) {
-		return comparatorString().compareTo(o.comparatorString());
+		int stringCmp = comparatorString().compareTo(o.comparatorString());
+		if (stringCmp != 0) {
+			return stringCmp;
+		}
+		if (entity != null && o.entity != null) {
+			return EntityComparator.INSTANCE.compare(entity, o.getEntity());
+		}
+		return 0;
 	}
 
 	public abstract Class<E> entityClass();
@@ -164,8 +172,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 
 		private int waitId;
 
-		// FIXME - should be a treepath ("from offest exclusive")
-		private int offset;
+		private String fromOffsetExclusivePath;
 
 		private int count = 100;
 
@@ -177,8 +184,8 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			return this.count;
 		}
 
-		public int getOffset() {
-			return this.offset;
+		public String getFromOffsetExclusivePath() {
+			return this.fromOffsetExclusivePath;
 		}
 
 		public ReturnType getReturnType() {
@@ -217,8 +224,8 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			this.count = count;
 		}
 
-		public void setOffset(int offset) {
-			this.offset = offset;
+		public void setFromOffsetExclusivePath(String fromOffsetExclusivePath) {
+			this.fromOffsetExclusivePath = fromOffsetExclusivePath;
 		}
 
 		public void setReturnType(ReturnType returnType) {
@@ -251,7 +258,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 
 		@Override
 		public String toString() {
-			return Ax.format("%s :: %s", treePath, children);
+			return Ax.format("%s :: %s :: %s", treePath, children, waitPolicy);
 		}
 	}
 
@@ -263,17 +270,15 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 
 		private boolean clearExisting;
 
-		private int childCount;
-
 		private Request<?> request;
 
 		private boolean noChangeListener;
 
-		public Response() {
-		}
+		private boolean delayBeforeReturn;
 
-		public int getChildCount() {
-			return this.childCount;
+		private int selfAndDescendantCount;
+
+		public Response() {
 		}
 
 		public DomainTransformCommitPosition getPosition() {
@@ -284,6 +289,10 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			return this.request;
 		}
 
+		public int getSelfAndDescendantCount() {
+			return this.selfAndDescendantCount;
+		}
+
 		public List<Transform> getTransforms() {
 			return this.transforms;
 		}
@@ -292,16 +301,23 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			return this.clearExisting;
 		}
 
+		/*
+		 * Server delays before returning
+		 */
+		public boolean isDelayBeforeReturn() {
+			return this.delayBeforeReturn;
+		}
+
 		public boolean isNoChangeListener() {
 			return this.noChangeListener;
 		}
 
-		public void setChildCount(int childCount) {
-			this.childCount = childCount;
-		}
-
 		public void setClearExisting(boolean clearExisting) {
 			this.clearExisting = clearExisting;
+		}
+
+		public void setDelayBeforeReturn(boolean delayBeforeReturn) {
+			this.delayBeforeReturn = delayBeforeReturn;
 		}
 
 		public void setNoChangeListener(boolean noChangeListener) {
@@ -317,13 +333,17 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			this.request = request;
 		}
 
+		public void setSelfAndDescendantCount(int selfAndDescendantCount) {
+			this.selfAndDescendantCount = selfAndDescendantCount;
+		}
+
 		public void setTransforms(List<Transform> transforms) {
 			this.transforms = transforms;
 		}
 	}
 
 	/*
-	 * For request return type specification
+	 * For request return type specification (currently unused)
 	 */
 	public interface ReturnType {
 	}
@@ -374,8 +394,8 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 		public String toString() {
 			String before = beforePath == null ? ""
 					: Ax.format("[<<%s] ", beforePath);
-			return Ax.format("%s %s%s %s", treePath, before, operation,
-					node.getClass().getSimpleName());
+			return Ax.format("%s %s%s %s %s", treePath, before, operation,
+					node.getClass().getSimpleName(), node.getName());
 		}
 	}
 

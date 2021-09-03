@@ -71,6 +71,18 @@ public class ClusterDefinition {
 
 		public String tunnelAliasTo;
 
+		public String getBpxConfigurationFilePath() {
+			return Ax.format("/g/barpub/provisioning/dk/container/%s/%s.json",
+					containerName.replace(".", "/"), containerName);
+		}
+
+		public String getBpxPropertiesFilePath() {
+			String suffix = containerName.contains("portal") ? ".template" : "";
+			return Ax.format(
+					"/g/barpub/provisioning/dk/container/%s/%s.properties%s",
+					containerName.replace(".", "/"), containerName, suffix);
+		}
+
 		@Override
 		public String toString() {
 			return hostName;

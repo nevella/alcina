@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -41,6 +42,8 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue.Event.Type;
 import cc.alcina.framework.entity.util.OffThreadLogger;
+import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 /**
  * Improvement: rather than a strict dtrp-id queue, use 'happens after' field of
@@ -116,6 +119,10 @@ public class DomainTransformPersistenceQueue {
 
 	public DomainTransformCommitPosition getTransformCommitPosition() {
 		return state.transformCommitPosition;
+	}
+
+	public void onLocalVmTxTimeout() {
+		eventQueue.debugState();
 	}
 
 	public void onPersistedRequestPreCommitted(
@@ -321,6 +328,11 @@ public class DomainTransformPersistenceQueue {
 		private DomainTransformPersistenceQueue queue;
 
 		@Override
+		public long getCurrentTransactionId() {
+			return Transaction.current().getId().id;
+		}
+
+		@Override
 		public DomainTransformCommitPosition getPosition() {
 			if (queue == null) {
 				queue = DomainStore.writableStore().getPersistenceEvents()
@@ -333,6 +345,12 @@ public class DomainTransformPersistenceQueue {
 	public class PersistenceEvents extends Thread {
 		Logger fireEventThreadLogger = OffThreadLogger.getLogger(getClass()
 				.getName().replace("DomainTransformPersistenceQueue$", ""));
+
+		public void debugState() {
+			String stacktraceSlice = SEUtilities.getStacktraceSlice(this);
+			logger.warn("Queue debug: firing event: {}\n============\n{}",
+					firingEvent, stacktraceSlice);
+		}
 
 		@Override
 		public void run() {
@@ -474,9 +492,6 @@ public class DomainTransformPersistenceQueue {
 
 		private void publishTransformEvent(Event event) {
 			boolean local = false;
-			/*
-			 * REVISIT - null if of type ERROR?
-			 */
 			Long requestId = event.requestId;
 			fireEventThreadLogger.debug("publishTransformEvent - dtr {}",
 					requestId);
@@ -497,7 +512,7 @@ public class DomainTransformPersistenceQueue {
 					request.setEvents(new ArrayList<>());
 				}
 			}
-			Transaction.current().toNoActiveTransaction();
+			Transaction.current().toReadonly();
 			DomainTransformPersistenceEvent persistenceEvent = createPersistenceEventFromPersistedRequest(
 					request, event.type, event.commitPosition);
 			persistenceEvent.ensureTransformsValidForVm();
@@ -671,15 +686,15 @@ public class DomainTransformPersistenceQueue {
 	class State {
 		// most recent event
 		// REVISIT - remove?
-		private Set<Long> lastFired = new LinkedHashSet<>();
+		private Set<Long> lastFired = new LongLinkedOpenHashSet();
 
-		private Set<String> appLifetimeEventUuidsThisVm = new LinkedHashSet<>();
+		private Set<String> appLifetimeEventUuidsThisVm = new ObjectLinkedOpenHashSet<>();
 
-		private Set<Long> appLifetimeEventIdsThisVm = new LinkedHashSet<>();
+		private Set<Long> appLifetimeEventIdsThisVm = new LongLinkedOpenHashSet();
 
-		private Set<Long> appLifetimeEventsFired = new LinkedHashSet<>();
+		private Set<Long> appLifetimeEventsFired = new LongLinkedOpenHashSet();
 
-		private Set<Long> appLifetimeCommitEventsRegistered = new LinkedHashSet<>();
+		private Set<Long> appLifetimeCommitEventsRegistered = new LongLinkedOpenHashSet();
 
 		private DomainTransformCommitPosition transformCommitPosition;
 

@@ -1,19 +1,26 @@
 package cc.alcina.extras.dev.console;
 
-import cc.alcina.framework.entity.stat.StatCategory_Console;
-import cc.alcina.framework.entity.stat.StatCategory_DomainStore;
 import cc.alcina.framework.entity.stat.DevStats.KeyedStat;
-import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole;
-import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitPostObjectServices;
-import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_Start;
-import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitJaxbServices;
-import cc.alcina.framework.entity.stat.StatCategory_Console.StatCategory_InitConsole.StatCategory_InitLightweightServices;
-import cc.alcina.framework.entity.stat.StatCategory_DomainStore.Start;
+import cc.alcina.framework.entity.stat.StatCategory_Console;
+import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole;
+import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole.InitJaxbServices;
+import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole.InitLightweightServices;
+import cc.alcina.framework.entity.stat.StatCategory_Console.InitPostObjectServices;
+import cc.alcina.framework.entity.stat.StatCategory_Console.Start;
+import cc.alcina.framework.entity.stat.StatCategory_DomainStore;
 
 public class KeyedStat_Console {
 	public static class ConsoleStat_StatCategory_DomainStore extends KeyedStat {
 		public ConsoleStat_StatCategory_DomainStore() {
-			super(Start.class, StatCategory_DomainStore.class);
+			super(StatCategory_DomainStore.Start.class,
+					StatCategory_DomainStore.class);
+		}
+
+		public static class GetDescriptor extends KeyedStat {
+			public GetDescriptor() {
+				super(StatCategory_DomainStore.Start.class,
+						StatCategory_DomainStore.GetDescriptor.class);
+			}
 		}
 
 		public static class Load extends KeyedStat {
@@ -25,7 +32,7 @@ public class KeyedStat_Console {
 
 		public static class Prepare extends KeyedStat {
 			public Prepare() {
-				super(StatCategory_DomainStore.Start.class,
+				super(StatCategory_DomainStore.GetDescriptor.class,
 						StatCategory_DomainStore.Prepare.class);
 			}
 		}
@@ -112,70 +119,68 @@ public class KeyedStat_Console {
 							StatCategory_DomainStore.Warmup.Mvcc.class);
 				}
 			}
+		}
+	}
 
-			public static class PostDomainStore extends KeyedStat {
-				public PostDomainStore() {
-					super(StatCategory_Console.PostDomainStore.class,
-							StatCategory_Console.PostDomainStore.End.class);
-				}
-
-				public static class ClassrefScanner extends KeyedStat {
-					public ClassrefScanner() {
-						super(StatCategory_Console.PostDomainStore.class,
-								StatCategory_Console.PostDomainStore.ClassrefScanner.class);
-					}
-				}
-
-				public static class Knowns extends KeyedStat {
-					public Knowns() {
-						super(StatCategory_Console.PostDomainStore.SetupInstance.class,
-								StatCategory_Console.PostDomainStore.Knowns.class);
-					}
-				}
-
-				public static class SetupInstance extends KeyedStat {
-					public SetupInstance() {
-						super(StatCategory_Console.PostDomainStore.ClassrefScanner.class,
-								StatCategory_Console.PostDomainStore.SetupInstance.class);
-					}
-				}
-			}
+	public static class ConsoleStat_StatCategory_InitCommands
+			extends KeyedStat {
+		public ConsoleStat_StatCategory_InitCommands() {
+			super(StatCategory_Console.InitCommands.Start.class,
+					StatCategory_Console.InitCommands.class);
 		}
 	}
 
 	public static class ConsoleStat_StatCategory_InitConsole extends KeyedStat {
 		public ConsoleStat_StatCategory_InitConsole() {
-			super(StatCategory_Start.class, StatCategory_InitConsole.class);
+			super(StatCategory_Console.Start.class, InitConsole.class);
 		}
 
 		public static class ConsoleStat_StatCategory_InitJaxbServices
 				extends KeyedStat {
 			public ConsoleStat_StatCategory_InitJaxbServices() {
-				super(StatCategory_InitLightweightServices.class,
-						StatCategory_InitJaxbServices.class);
+				super(InitLightweightServices.class, InitJaxbServices.class);
 			}
 		}
 
 		public static class ConsoleStat_StatCategory_InitLightweightServices
 				extends KeyedStat {
 			public ConsoleStat_StatCategory_InitLightweightServices() {
-				super(StatCategory_Start.class,
-						StatCategory_InitLightweightServices.class);
+				super(Start.class, InitLightweightServices.class);
 			}
 		}
 
 		public static class ConsoleStat_StatCategory_InitPostObjectServices
 				extends KeyedStat {
 			public ConsoleStat_StatCategory_InitPostObjectServices() {
-				super(StatCategory_InitJaxbServices.class,
-						StatCategory_InitPostObjectServices.class);
+				super(InitJaxbServices.class, InitPostObjectServices.class);
 			}
 		}
 	}
 
 	public static class ConsoleStatAll extends KeyedStat {
 		public ConsoleStatAll() {
-			super(StatCategory_Start.class, StatCategory_Console.class);
+			super(Start.class, StatCategory_Console.class);
+		}
+	}
+
+	public static class PostDomainStore extends KeyedStat {
+		public PostDomainStore() {
+			super(StatCategory_Console.PostDomainStore.Start.class,
+					StatCategory_Console.PostDomainStore.class);
+		}
+
+		public static class Knowns extends KeyedStat {
+			public Knowns() {
+				super(StatCategory_Console.PostDomainStore.SetupInstance.class,
+						StatCategory_Console.PostDomainStore.Knowns.class);
+			}
+		}
+
+		public static class SetupInstance extends KeyedStat {
+			public SetupInstance() {
+				super(StatCategory_Console.PostDomainStore.class,
+						StatCategory_Console.PostDomainStore.SetupInstance.class);
+			}
 		}
 	}
 }

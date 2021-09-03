@@ -17,7 +17,7 @@ import org.hibernate.Session;
 
 import cc.alcina.framework.common.client.search.OrderCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.JPAImplementation;

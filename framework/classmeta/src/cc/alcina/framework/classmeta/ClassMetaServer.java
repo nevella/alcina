@@ -102,16 +102,17 @@ public class ClassMetaServer {
 			ctx.setHandler(new ClassPersistenceScanHandler(metaHandler));
 			handlers.addHandler(ctx);
 		}
-		{
-			ContextHandler ctx = new ContextHandler(handlers, "/ant");
-			ctx.setHandler(new AntHandler());
-			handlers.addHandler(ctx);
-		}
 		// GzipHandler gzipHandler = new GzipHandler();
 		// {
 		// ContextHandler ctx = new ContextHandler(handlers, "/rdb");
 		// gzipHandler.setHandler(new HttpAcceptorHandler());
 		// ctx.setHandler(gzipHandler);
+		// handlers.addHandler(ctx);
+		// }
+		// unused
+		// {
+		// ContextHandler ctx = new ContextHandler(handlers, "/ant");
+		// ctx.setHandler(new AntHandler());
 		// handlers.addHandler(ctx);
 		// }
 		server.setHandler(handlers);

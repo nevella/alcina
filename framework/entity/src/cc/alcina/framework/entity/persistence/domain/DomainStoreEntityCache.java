@@ -24,8 +24,11 @@ class DomainStoreEntityCache extends DetachedEntityCache {
 	}
 
 	@Override
+	/*
+	 * Don't use outside of transitional, backend bulk jobs
+	 */
 	public void invalidate(Class clazz) {
-		throw new UnsupportedOperationException();
+		super.invalidate(clazz);
 	}
 
 	@Override

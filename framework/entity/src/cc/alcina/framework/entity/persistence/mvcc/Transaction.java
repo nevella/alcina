@@ -62,6 +62,10 @@ public class Transaction implements Comparable<Transaction> {
 	public static void beginDomainPreparing() {
 		begin(TransactionPhase.TO_DOMAIN_PREPARING);
 	}
+	/*
+	 * Essentially run within another tx to access graph state before any
+	 * changes in the current tx were applied
+	 */
 
 	public static <T> T callInSnapshotTransaction(Callable<T> callable)
 			throws Exception {
@@ -69,7 +73,7 @@ public class Transaction implements Comparable<Transaction> {
 		Preconditions.checkNotNull(preSnapshot);
 		threadLocalInstance.set(null);
 		begin();
-		current().snapshot = true;
+		current().toReadonly(true);
 		T t = callable.call();
 		end();
 		threadLocalInstance.set(preSnapshot);
@@ -82,7 +86,7 @@ public class Transaction implements Comparable<Transaction> {
 			Preconditions.checkState(!TransformManager.get().hasTransforms());
 			return 0;
 		} else {
-			Preconditions.checkState(!transaction.snapshot);
+			Preconditions.checkState(transaction.isWriteable());
 			int transformCount = TransformCommit.commitTransformsAsRoot();
 			return transformCount;
 		}
@@ -109,6 +113,7 @@ public class Transaction implements Comparable<Transaction> {
 		threadLocalInstance.set(null);
 		begin();
 		Transaction snapshot = current();
+		snapshot.toReadonly(true);
 		split();
 		threadLocalInstance.set(preSnapshot);
 		return snapshot;
@@ -156,7 +161,8 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public static void ensureBegun() {
-		if (threadLocalInstance.get() == null) {
+		if (threadLocalInstance.get() == null
+				|| threadLocalInstance.get().isEnded()) {
 			begin();
 		}
 	}
@@ -254,12 +260,6 @@ public class Transaction implements Comparable<Transaction> {
 					.getCurrentThreadStacktraceSlice();
 		}
 	}
-
-	/*
-	 * Essentially run within another tx to access graph state before any
-	 * changes in the current tx were applied
-	 */
-	private boolean snapshot;
 
 	private ConcurrentHashMap<MvccObjectVersions, Transaction> resolvedMostRecentVisibleTransactions = new ConcurrentHashMap<>(
 			Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
@@ -410,6 +410,10 @@ public class Transaction implements Comparable<Transaction> {
 				&& committedTransactionId.id <= highestVisibleCommittedTransactionId.id;
 	}
 
+	public boolean isWriteable() {
+		return !isReadonly();
+	}
+
 	public long provideAge() {
 		return System.currentTimeMillis() - startTime;
 	}
@@ -432,7 +436,8 @@ public class Transaction implements Comparable<Transaction> {
 		// handling
 		Preconditions.checkState(getPhase() == TransactionPhase.TO_DB_PERSISTING
 				|| getPhase() == TransactionPhase.TO_DB_PREPARING
-				|| getPhase() == TransactionPhase.TO_DB_ABORTED);
+				|| getPhase() == TransactionPhase.TO_DB_ABORTED
+				|| getPhase() == TransactionPhase.READ_ONLY);
 		setPhase(TransactionPhase.TO_DB_ABORTED);
 	}
 
@@ -491,14 +496,8 @@ public class Transaction implements Comparable<Transaction> {
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTING);
 	}
 
-	public void toNoActiveTransaction() {
-		if (this.phase == TransactionPhase.NO_ACTIVE_TRANSACTION) {
-			return;
-		}
-		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
-				|| phase == TransactionPhase.TO_DOMAIN_PREPARING)
-				&& TransformManager.get().getTransforms().isEmpty());
-		this.phase = TransactionPhase.NO_ACTIVE_TRANSACTION;
+	public void toReadonly() {
+		toReadonly(false);
 	}
 
 	@Override
@@ -535,6 +534,17 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	private void toReadonly(boolean allowExistingTransforms) {
+		if (this.phase == TransactionPhase.READ_ONLY) {
+			return;
+		}
+		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
+				|| phase == TransactionPhase.TO_DOMAIN_PREPARING)
+				&& (allowExistingTransforms
+						|| TransformManager.get().getTransforms().isEmpty()));
+		this.phase = TransactionPhase.READ_ONLY;
+	}
+
 	void endTransaction() {
 		originatingThread = null;
 		ended = true;
@@ -545,7 +555,7 @@ public class Transaction implements Comparable<Transaction> {
 		case TO_DOMAIN_COMMITTED:
 		case TO_DOMAIN_ABORTED:
 		case VACUUM_ENDED:
-		case NO_ACTIVE_TRANSACTION:
+		case READ_ONLY:
 		case TO_DB_PREPARING:
 			break;
 		default:
@@ -562,7 +572,7 @@ public class Transaction implements Comparable<Transaction> {
 						endPhase);
 			}
 		}
-		if (!snapshot) {
+		if (isWriteable()) {
 			if (TransformManager.get().getTransforms().size() == 0) {
 			} else {
 				// FIXME - mvcc.4 - mvcc exception
@@ -599,7 +609,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	boolean isReadonly() {
-		return threadCount.get() != 1;
+		return threadCount.get() != 1 || phase == TransactionPhase.READ_ONLY;
 	}
 
 	/*

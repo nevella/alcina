@@ -35,9 +35,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.MethodContext;
-import cc.alcina.framework.servlet.Sx;
 import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.State;
 
 public class TransformCommitLog {
@@ -131,7 +131,7 @@ public class TransformCommitLog {
 	 * to ensure position should generally throw that exception and retry later)
 	 */
 	public void refreshCurrentPosition() {
-		if (Sx.isTest() && currentConsumerThread.currentOffset != -1) {
+		if (EntityLayerUtils.isTest() && currentConsumerThread.currentOffset != -1) {
 			return;
 		}
 		currentConsumerThread.checkCurrentPosition();
@@ -313,7 +313,7 @@ public class TransformCommitLog {
 						logger.info(
 								"Started consumer :: thread {} :: groupId :: {} :: topicPartion :: {}",
 								tName, groupId, topicPartition);
-						if (!Sx.isTest() && !Sx.isTestServer()) {
+						if (!EntityLayerUtils.isTest() && !EntityLayerUtils.isTestServer()) {
 							/*
 							 * We've just created a new consumer group, and
 							 * kafka seems to hang more than it should at this

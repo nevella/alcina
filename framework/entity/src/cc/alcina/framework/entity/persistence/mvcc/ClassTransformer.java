@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
+import java.beans.PropertyDescriptor;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.DataInputStream;
@@ -11,6 +12,7 @@ import java.lang.reflect.Modifier;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -66,6 +68,7 @@ import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderType
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.GraphProjectionTransient;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -96,7 +99,12 @@ import javassist.bytecode.LocalVariableAttribute;
 import javassist.bytecode.MethodInfo;
 
 /*
- * TODO - rewriting
+ * 
+ * VERSIONS:
+ * 
+ * (just historical interest)
+ * 17 - model READ_INVALID resolvedVersionState
+ * 16 - disallow covariant return types
  * 
  * 
  */
@@ -301,7 +309,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 14;
+		private static final transient int VERSION = 17;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -375,6 +383,35 @@ class ClassTransformer {
 					});
 		}
 
+		/*
+		 * Only getters are required (for graph projection - that will project
+		 * using field.set() on a non-mvcc object)
+		 */
+		private void checkFieldsHaveGetters() {
+			SEUtilities.allFields(originalClass).stream()
+					.filter(f -> (f.getModifiers() & Modifier.PRIVATE) != 0)
+					.filter(f -> (f.getModifiers() & Modifier.STATIC) == 0)
+					.filter(f -> (f.getModifiers() & Modifier.TRANSIENT) == 0)
+					.filter(f -> f.getAnnotation(
+							GraphProjectionTransient.class) == null)
+					.forEach(f -> {
+						PropertyDescriptor propertyDescriptor = SEUtilities
+								.getPropertyDescriptorByName(originalClass,
+										f.getName());
+						if (propertyDescriptor != null
+								&& propertyDescriptor.getReadMethod() != null) {
+						} else {
+							fieldsWithProblematicAccess.add(f.getName());
+							correctnessIssueTopic
+									.publish(new MvccCorrectnessIssue(
+											MvccCorrectnessIssueType.Invalid_field_access,
+											Ax.format(
+													"Missing getter/setter: field '%s'",
+													f.getName())));
+						}
+					});
+		}
+
 		private String findSource(Class clazz) throws Exception {
 			for (SourceFinder finder : SourceFinder.sourceFinders) {
 				String source = finder.findSource(clazz);
@@ -408,6 +445,7 @@ class ClassTransformer {
 				Ax.out("checking unit : %s", originalClass.getSimpleName());
 				checkFieldModifiers();
 				checkDuplicateFieldNames();
+				checkFieldsHaveGetters();
 				for (String source : classSources) {
 					if (token.checkedSources.add(source)) {
 						compilationUnit = StaticJavaParser.parse(source);
@@ -568,9 +606,6 @@ class ClassTransformer {
 			 */
 			public void visit(FieldAccessExpr expr, Void arg) {
 				super.visit(expr, arg);
-				if (expr.toString().contains("startOffsetInOverlay")) {
-					int debug = 3;
-				}
 				if (isDefinedOk(expr)) {
 					// annotation etc
 					return;
@@ -605,10 +640,6 @@ class ClassTransformer {
 				if (isDefinedOk(expr)) {
 					return;
 				}
-				if (expr.toString()
-						.contains("invalidInnerClassAccessMethod2")) {
-					int debug = 3;
-				}
 				super.visit(expr, arg);
 				try {
 					SymbolReference<ResolvedMethodDeclaration> ref = transformer.solver
@@ -622,9 +653,10 @@ class ClassTransformer {
 					boolean privateOrPackageMethod = decl
 							.accessSpecifier() == AccessSpecifier.PRIVATE
 							|| decl.accessSpecifier() == AccessSpecifier.PACKAGE_PRIVATE;
+					boolean staticMethod = decl.isStatic();
 					boolean entityMethod = decl.declaringType()
 							.getQualifiedName().equals(originalClass.getName());
-					if (privateOrPackageMethod && entityMethod
+					if (privateOrPackageMethod && entityMethod && !staticMethod
 							&& (expressionIsInNestedType
 									|| expressionIsInNestedAnonymousType)) {
 						addProblematicAccess(
@@ -660,9 +692,6 @@ class ClassTransformer {
 				if (isDefinedOk(expr)) {
 					// constant expression
 					return;
-				}
-				if (expr.toString().contains("disallowedInnerAccessField2")) {
-					int debug = 3;
 				}
 				try {
 					SymbolReference<? extends ResolvedValueDeclaration> ref = transformer.solver
@@ -1068,6 +1097,7 @@ class ClassTransformer {
 					 */
 					List<Method> allClassMethods = SEUtilities
 							.allClassMethods(originalClass);
+					checkCovariantReturnTypeMethods(allClassMethods);
 					for (CtMethod method : ctClass.getMethods()) {
 						/*
 						 * Interface methods don't (can't) refer to fields, so
@@ -1127,26 +1157,37 @@ class ClassTransformer {
 						// changes must work
 						boolean setter = method.getName().matches("set[A-Z].*")
 								&& method.getParameterTypes().length == 1;
-						boolean propertyChangeListenerModifier = method
+						boolean propertyChangeListenersMutator = method
 								.getName().matches(
 										"(?:(?:add|remove).*PropertyChangeListener)|propertyChangeSupport");
-						// FIXME - mvcc.4
+						// Tristaate resolvedversions
+						//
 						// propertyChangeListeners are problematic because of,
 						// among other things, circular calls to TLTM.listenTo
-						// when removing if we have them be 'writeresolve'
+						// when removing if we have them be 'writeresolve' (and
+						// creation of unnecessaary writeable versions)
 						//
 						// if the object version is already in write state (i.e.
-						// called frorm a setter), all good.
+						// called from a setter), all good.
 						//
-						// if not, listener will be added to immutable prior-tx
+						// if not, listener will be added to
+						// data-field-immutable prior-tx
 						// object (since it'll be read-resolved) which is
-						// inelegant but harmless
+						// inelegant but harmless. Or is it? It is, because
+						// generation of writeable version doesn't copy
+						// transients. Cleanup is more a question of
+						// throw-or-warn-if object is not in writeable state (if
+						// object is an mvcc object)
 						//
-						// a solution would be tristate resolve
-						// (read,write,listener) which returns a marker object
-						// ignoreable by TLTM... but is that elegant?
-						boolean writeResolve = setter;
-						// || propertyChangeListenerModifier;
+						// The solution would be tristate resolve
+						// (read,write,read_invalid) which logs or throws
+						//
+						ResolvedVersionState state = ResolvedVersionState.READ;
+						if (setter) {
+							state = ResolvedVersionState.WRITE;
+						} else if (propertyChangeListenersMutator) {
+							state = ResolvedVersionState.READ_INVALID;
+						}
 						MvccAccessType accessType = null;
 						if (method.hasAnnotation(MvccAccess.class)) {
 							MvccAccess annotation = (MvccAccess) method
@@ -1169,7 +1210,7 @@ class ClassTransformer {
 									method);
 							String parameterList = argumentNames.stream()
 									.collect(Collectors.joining(","));
-							if (!writeResolve) {
+							if (state == ResolvedVersionState.READ) {
 								bodyBuilder.line(
 										"if (__mvccObjectVersions__ == null){\n\t%s super.%s(%s);\n%s}\n",
 										returnPhrase, method.getName(),
@@ -1188,11 +1229,13 @@ class ClassTransformer {
 							 * remember, 99.9% of the time we don't reach this
 							 * point...
 							 */
+							ResolvedVersionState emitState = accessType == MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY
+									? ResolvedVersionState.READ
+									: state;
 							bodyBuilder.line(
-									"%s __instance__ = (%s) cc.alcina.framework.entity.persistence.mvcc.Transactions.resolve(this, %s, %s);",
-									cf.getName(), cf.getName(),
-									writeResolve
-											&& accessType != MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY,
+									"%s __instance__ = (%s) cc.alcina.framework.entity.persistence.mvcc.Transactions.resolve(this, "
+											+ "cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState.%s, %s);",
+									cf.getName(), cf.getName(), emitState,
 									accessType == MvccAccessType.RESOLVE_TO_DOMAIN_IDENTITY);
 							bodyBuilder.line(
 									"if (__instance__ != this){\n\t%s __instance__.%s(%s);\n}\n",
@@ -1227,6 +1270,28 @@ class ClassTransformer {
 							.add(() -> ThrowingRunnable.runAll(tasks));
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			private void checkCovariantReturnTypeMethods(
+					List<Method> allClassMethods) {
+				Multimap<MethodNameArgTypes, List<Method>> covariantBeanMethods = allClassMethods
+						.stream()
+						.filter(m -> m.getName().matches("(get|set|is)[A-Z].*"))
+						.sorted(Comparator.comparing(Method::getName))
+						.collect(AlcinaCollectors
+								.toKeyMultimap(MethodNameArgTypes::new));
+				covariantBeanMethods.entrySet()
+						.removeIf(e -> e.getValue().stream()
+								.map(Method::getReturnType).distinct()
+								.count() == 1);
+				if (covariantBeanMethods.size() > 0) {
+					Ax.err("Covariant methods (disallowed for mvcc)");
+					covariantBeanMethods.entrySet().stream().forEach(e -> {
+						Ax.out(e.getValue());
+						Ax.out("");
+					});
+					throw new IllegalStateException();
 				}
 			}
 
@@ -1295,6 +1360,31 @@ class ClassTransformer {
 
 			private boolean matches(CtClass ctClass, Class<?> clazz) {
 				return getClassName(ctClass).equals(clazz.getName());
+			}
+
+			private class MethodNameArgTypes {
+				private Method method;
+
+				MethodNameArgTypes(Method method) {
+					this.method = method;
+				}
+
+				@Override
+				public boolean equals(Object obj) {
+					MethodNameArgTypes o = (MethodNameArgTypes) obj;
+					try {
+						return o.method.getName().equals(method.getName())
+								&& Arrays.equals(o.method.getParameterTypes(),
+										method.getParameterTypes());
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+
+				@Override
+				public int hashCode() {
+					return method.getName().hashCode();
+				}
 			}
 		}
 	}

@@ -37,8 +37,8 @@ public class UnsubscribeServlet extends AlcinaServlet {
 
 	public static String defaultHref(PublicationResult publicationResult, String action) {
 		UnsubscribeRequest request = new UnsubscribeRequest();
-		request.publicationId = publicationResult.publicationId;
-		request.publicationUid = publicationResult.publicationUid;
+		request.publicationId = publicationResult.getPublicationId();
+		request.publicationUid = publicationResult.getPublicationUid();
 		request.action = action;
 		return Ax.format("%s?%s", DEFAULT_SERVLET_PATH, request.serialize());
 	}

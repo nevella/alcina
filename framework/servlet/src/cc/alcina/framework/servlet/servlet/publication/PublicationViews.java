@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.servlet.Sx;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 import cc.alcina.framework.servlet.publication.Publisher.PublicationPersister;
 
@@ -29,7 +29,7 @@ public class PublicationViews {
 	private String html;
 
 	public String asHtml(long id) {
-		if (!PermissionsManager.get().isAdmin() && !Sx.isTest()) {
+		if (!PermissionsManager.get().isAdmin() && !EntityLayerUtils.isTest()) {
 			throw new RuntimeException("Not permitted");
 		}
 		build(id, null);

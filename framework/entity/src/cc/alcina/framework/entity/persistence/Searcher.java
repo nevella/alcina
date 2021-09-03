@@ -23,5 +23,5 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  * @author Nick Reddel
  */
 public interface Searcher<T extends SearchDefinition> {
-	public SearchResultsBase search(T def, int pageNumber, EntityManager em);
+	public SearchResultsBase search(T def, EntityManager em);
 }
