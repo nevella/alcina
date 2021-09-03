@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.GraphNo
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import elemental.json.Json;
@@ -96,6 +97,18 @@ public class ReflectiveSerializers {
 					.createArrayContainer();
 			serialNode.write(node, container);
 			node.serialNode = container;
+		}
+	}
+
+	public static class TypeSerializer_CountingMap extends TypeSerializer_Map {
+		@Override
+		public List<Class> handlesTypes() {
+			return Arrays.asList(CountingMap.class);
+		}
+
+		@Override
+		public Class serializeAs(Class incoming) {
+			return CountingMap.class;
 		}
 	}
 
@@ -271,6 +284,11 @@ public class ReflectiveSerializers {
 	 */
 	public static class TypeSerializer_Value
 			extends ReflectiveSerializer.TypeSerializer {
+		@Override
+		public boolean handlesDeclaredTypeSubclasses() {
+			return true;
+		}
+
 		@Override
 		public List<Class> handlesTypes() {
 			return Arrays.asList(String.class, Long.class, Double.class,

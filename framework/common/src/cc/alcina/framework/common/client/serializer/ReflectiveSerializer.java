@@ -18,6 +18,7 @@ import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
@@ -29,6 +30,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.Proper
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import elemental.json.Json;
@@ -135,7 +137,7 @@ public class ReflectiveSerializer {
 		return root.toJson();
 	}
 
-	static TypeSerializer resolveSerializer(Class clazz) {
+	static TypeSerializer resolveSerializer(Class clazz, Class declaredType) {
 		if (typeSerializers.isEmpty()) {
 			synchronized (typeSerializers) {
 				if (typeSerializers.isEmpty()) {
@@ -147,6 +149,9 @@ public class ReflectiveSerializer {
 				}
 			}
 		}
+		if (declaredType == CountingMap.class) {
+			int debug = 3;
+		}
 		Class lookupClass = serializationClass(clazz);
 		return typeSerializers.computeIfAbsent(lookupClass, k -> {
 			List<Class> toResolve = Arrays.asList(lookupClass);
@@ -154,7 +159,21 @@ public class ReflectiveSerializer {
 				Optional<Class> match = toResolve.stream()
 						.filter(typeSerializers::containsKey).findFirst();
 				if (match.isPresent()) {
-					return typeSerializers.get(match.get());
+					Class serializerType = match.get();
+					TypeSerializer typeSerializer = typeSerializers
+							.get(serializerType);
+					if (declaredType != null && !typeSerializer
+							.handlesDeclaredTypeSubclasses()) {
+						if (serializerType != Enum.class
+								&& serializerType != Entity.class
+								&& !Reflections.isAssignableFrom(declaredType,
+										serializerType)) {
+							throw new IllegalStateException(Ax.format(
+									"Declared type %s cannot be serialized by resolved serializer for type %s",
+									declaredType, serializerType));
+						}
+					}
+					return typeSerializer;
 				}
 				List<Class> next = new ArrayList<>();
 				toResolve.forEach(c2 -> {
@@ -258,6 +277,11 @@ public class ReflectiveSerializer {
 		}
 
 		@Override
+		public boolean handlesDeclaredTypeSubclasses() {
+			return true;
+		}
+
+		@Override
 		public List<Class> handlesTypes() {
 			return Collections.emptyList();
 		}
@@ -331,6 +355,10 @@ public class ReflectiveSerializer {
 				graphNode.parent.serializer.childDeserializationComplete(
 						graphNode.parent, graphNode);
 			}
+		}
+
+		public boolean handlesDeclaredTypeSubclasses() {
+			return false;
 		}
 
 		public abstract List<Class> handlesTypes();
@@ -465,7 +493,7 @@ public class ReflectiveSerializer {
 				if (type == null) {
 					type = serialNode.readType(this);
 				}
-				serializer = resolveSerializer(type);
+				serializer = resolveSerializer(type, null);
 				value = serializer.readValue(this);
 				if (serializer.isReferenceSerializer()) {
 					state.identityIdx.put(state.identityIdx.size(), value);
@@ -532,7 +560,9 @@ public class ReflectiveSerializer {
 		void setValue(Object value) {
 			this.value = value;
 			serializer = resolveSerializer(
-					value == null ? void.class : value.getClass());
+					value == null ? void.class : value.getClass(),
+					propertyReflector == null ? null
+							: propertyReflector.getPropertyType());
 		}
 
 		void writeValue() {
