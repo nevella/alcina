@@ -8,8 +8,8 @@
 	<classpathentry excluding="registry.properties" kind="src" path="framework/jscodeserver/src"/>
 	<classpathentry kind="src" path="framework/classmeta/src"/>
 	<classpathentry kind="src" path="extras/jsdom/src-regex"/>
-	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/build" path="framework/clientreflectorjvm/src"/>
-	<classpathentry kind="src" output="framework/jvmclient/build" path="framework/jvmclient/src"/>
+	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/bin" path="framework/clientreflectorjvm/src"/>
+	<classpathentry kind="src" output="framework/jvmclient/bin" path="framework/jvmclient/src"/>
 	<classpathentry kind="src" path="extras/collections/src"/>
 	<classpathentry excluding="org/json/|registry.properties" kind="src" path="framework/entity/src"/>
 	<classpathentry kind="src" path="framework/impl/jboss-hibernate/src"/>
@@ -19,10 +19,10 @@
 	<classpathentry kind="src" output="extras/dev/bin" path="extras/dev/src"/>
 	<classpathentry excluding="cc/alcina/extras/misc/ie/override/" kind="src" path="extras/misc/src"/>
 	<classpathentry kind="src" path="extras/ios6/src"/>
-	<classpathentry excluding="com.google.gwt.regexp.super.com.google.gwt.regexp.shared/" kind="src" output="extras/jsdom/build" path="extras/jsdom/src"/>
-	<classpathentry kind="src" output="extras/jsdom/build-element" path="extras/jsdom/src-element"/>
+	<classpathentry excluding="com.google.gwt.regexp.super.com.google.gwt.regexp.shared/" kind="src" output="extras/jsdom/bin" path="extras/jsdom/src"/>
+	<classpathentry kind="src" output="extras/jsdom/bin" path="extras/jsdom/src-element"/>
 	<classpathentry kind="src" path="extras/wd/src"/>
-	<classpathentry kind="src" output="extras/patches/nekohtml/build" path="extras/patches/nekohtml/src"/>
+	<classpathentry kind="src" output="extras/patches/nekohtml/bin" path="extras/patches/nekohtml/src"/>
 	<classpathentry kind="lib" path="lib/framework/entity/nekohtml.jar"/>
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
