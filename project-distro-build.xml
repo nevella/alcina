@@ -218,8 +218,8 @@
 	<target name="compile-client" depends="compile">
 		<property name="project.compile-client.dirs" value="${project.client.src.dir}" />
 
-		<mkdir dir="${project.client.bin.dir}" />
-		<javac includeantruntime="false" debug="on" srcdir="${project.compile-client.dirs}" destdir="${project.client.bin.dir}">
+		<mkdir dir="${project.client.build.dir}" />
+		<javac includeantruntime="false" debug="on" srcdir="${project.compile-client.dirs}" destdir="${project.client.build.dir}">
 			<classpath>
 				<path refid="project.classpath" />
 
@@ -239,10 +239,10 @@
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
-				<pathelement path="${project.gwt.classpath.bin}" />
+				<pathelement path="${project.gwt.classpath.build}" />
 				<pathelement path="${framework.gwt.classpath.src}" />
 				<pathelement path="${project.gwt.classpath.lib}" />
-				<pathelement path="${framework.gwt.classpath.bin}" />
+				<pathelement path="${framework.gwt.classpath.build}" />
 				<pathelement path="${framework.gwt.classpath.lib}" />
 				<pathelement location="${gwt.sdk.dir}/gwt-dev-patch.jar" />
 				<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />

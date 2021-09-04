@@ -49,30 +49,30 @@
 	</path>
 	<path id="project.gwt.classpath">
 		<pathelement path="${project.gwt.classpath.src}" />
-		<pathelement path="${project.gwt.classpath.bin}" />
+		<pathelement path="${project.gwt.classpath.build}" />
 		<pathelement path="${project.gwt.classpath.lib}" />
 		<pathelement path="${framework.gwt.classpath.src}" />
-		<pathelement path="${framework.gwt.classpath.bin}" />
+		<pathelement path="${framework.gwt.classpath.build}" />
 		<pathelement path="${framework.gwt.classpath.lib}" />
 		<pathelement location="${gwt.sdk.dir}/gwt-dev-patch.jar" />
 		<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
 	</path>
 	<path id="framework.gwt.classpath">
 		<pathelement path="${framework.gwt.classpath.src}" />
-		<pathelement path="${framework.gwt.classpath.bin}" />
+		<pathelement path="${framework.gwt.classpath.build}" />
 		<pathelement path="${framework.gwt.classpath.lib}" />
 		<pathelement location="${gwt.sdk.dir}/gwt-dev-patch.jar" />
 		<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
 	</path>
 	<path id="framework.javadoc.classpath">
 		<pathelement path="${framework.gwt.classpath.src}" />
-		<pathelement path="${framework.gwt.classpath.bin}" />
+		<pathelement path="${framework.gwt.classpath.build}" />
 		<pathelement path="${framework.gwt.classpath.lib}" />
 		<pathelement path="${framework.gwt.classpath.dev.lib}" />
 	</path>
 	<path id="framework.javadoc.sourcepath">
 		<pathelement path="${framework.gwt.classpath.src}" />
-		<pathelement path="${framework.gwt.classpath.bin}" />
+		<pathelement path="${framework.gwt.classpath.build}" />
 		<pathelement path="${framework.gwt.classpath.lib}" />
 	</path>
 	<macrodef name="git">
