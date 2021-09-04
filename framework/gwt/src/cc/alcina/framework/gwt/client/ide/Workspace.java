@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
 import cc.alcina.framework.common.client.actions.instances.CloneAction;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
-import cc.alcina.framework.common.client.actions.instances.DeleteViewAction;
+import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -247,7 +247,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 				handlerClass = ViewActionHandler.class;
 			} else if (evt.getAction().getClass() == EditAction.class) {
 				handlerClass = EditActionHandler.class;
-			} else if (evt.getAction().getClass() == DeleteViewAction.class) {
+			} else if (evt.getAction().getClass() == DeleteAction.class) {
 				handlerClass = DeleteActionHandler.class;
 			} else if (evt.getAction().getClass() == CloneAction.class) {
 				handlerClass = CloneActionHandler.class;

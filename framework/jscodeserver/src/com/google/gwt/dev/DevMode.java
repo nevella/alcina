@@ -42,8 +42,9 @@ import com.google.gwt.dev.ui.RestartServerEvent;
 import com.google.gwt.dev.util.InstalledHelpInfo;
 import com.google.gwt.dev.util.Util;
 import com.google.gwt.dev.util.arg.ArgHandlerDeployDir;
-import com.google.gwt.dev.util.arg.ArgHandlerDisableUpdateCheck;
+import com.google.gwt.dev.util.arg.ArgHandlerDeprecatedDisableUpdateCheck;
 import com.google.gwt.dev.util.arg.ArgHandlerExtraDir;
+import com.google.gwt.dev.util.arg.ArgHandlerFilterJsInteropExports;
 import com.google.gwt.dev.util.arg.ArgHandlerIncrementalCompile;
 import com.google.gwt.dev.util.arg.ArgHandlerMethodNameDisplayMode;
 import com.google.gwt.dev.util.arg.ArgHandlerModuleName;
@@ -606,6 +607,7 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 	 * The argument processor.
 	 */
 	protected static class ArgProcessor extends DevModeBase.ArgProcessor {
+		@SuppressWarnings("deprecation")
 		public ArgProcessor(HostedModeOptions options) {
 			super(options, false);
 			registerHandler(new ArgHandlerSuperDevMode(options));
@@ -616,10 +618,10 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 			registerHandler(new ArgHandlerExtraDir(options));
 			registerHandler(new ArgHandlerModulePathPrefix(options));
 			registerHandler(new ArgHandlerWorkDirOptional(options));
-			registerHandler(new ArgHandlerDisableUpdateCheck(options));
+		      registerHandler(new ArgHandlerDeprecatedDisableUpdateCheck());
 			registerHandler(new ArgHandlerMethodNameDisplayMode(options));
 			registerHandler(new ArgHandlerSourceLevel(options));
-			// registerHandler(new ArgHandlerJsInteropMode(options));
+			 registerHandler(new ArgHandlerFilterJsInteropExports(options));
 			registerHandler(new ArgHandlerIncrementalCompile(options));
 			registerHandler(new ArgHandlerModuleName(options) {
 				@Override

@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.provider.TextProvider;
  *
  * @author Nick Reddel
  */
-public class DeleteViewAction extends RequiresTargetAction {
+public class DeleteAction extends RequiresTargetAction {
 	@Override
 	@AlcinaTransient
 	public String getDisplayName() {

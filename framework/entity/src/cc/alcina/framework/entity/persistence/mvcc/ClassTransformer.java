@@ -20,6 +20,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
@@ -167,11 +168,7 @@ class ClassTransformer {
 				.sorted(Comparator.comparing(Class::getSimpleName))
 				.collect(AlcinaCollectors.toValueMap(ClassTransform::new));
 		MvccCorrectnessToken token = new MvccCorrectnessToken();
-		Stream<ClassTransform> stream = ResourceUtilities
-				.is("checkClassCorrectnessParallel")
-						? classTransforms.values().parallelStream()
-						: classTransforms.values().stream();
-		stream.forEach(ct -> {
+		Function<ClassTransform, Runnable> mapper = ct -> () -> {
 			ct.setTransformer(this);
 			ct.init(false);
 			if (ResourceUtilities.is(ClassTransformer.class,
@@ -182,7 +179,14 @@ class ClassTransformer {
 				}
 			}
 			ct.generateMvccClass();
-		});
+		};
+		AlcinaParallel.builder().withThreadCount(8)
+				.withThreadName("ClassTransformer-generate")
+				.withSerial(
+						!ResourceUtilities.is("checkClassCorrectnessParallel"))
+				.withCancelOnException(true)
+				.withRunnables(classTransforms.values().stream().map(mapper)
+						.collect(Collectors.toList())).run();
 		if (ResourceUtilities.is(ClassTransformer.class,
 				"cancelStartupIfInvalid")) {
 			if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {

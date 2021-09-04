@@ -293,9 +293,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected abstract void initEntityLayer() throws Exception;
 
-	protected void initEntityLayerRegistry() {
-	}
-
+	protected abstract void initEntityLayerRegistry() ;
 	protected abstract void initJPA();
 
 	protected void initLoggers() {
@@ -471,7 +469,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		ReadonlySupportServletLayer.get();
 		if (usesJobs()) {
 			Transaction.begin();
-			JobRegistry.get();
+			JobRegistry.get().init();
 			Transaction.end();
 		}
 	}

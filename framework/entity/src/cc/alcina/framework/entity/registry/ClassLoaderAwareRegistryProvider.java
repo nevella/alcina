@@ -172,39 +172,44 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 
 	@Override
 	public Registry getRegistry() {
-		ClassLoader contextClassLoader = Thread.currentThread()
+		ClassLoader classLoader = Thread.currentThread()
 				.getContextClassLoader();
-		if (contextClassLoader == lastClassLoader) {
+		if(classLoader.getName().equals("jdk.internal.loader.ClassLoaders$AppClassLoader")){
+			if(getClass().getClassLoader()!=classLoader){
+				throw new RuntimeException("Context classloader not set");
+			}
+		}
+		if (classLoader == lastClassLoader) {
 			return lastRegistry;
 		}
-		Registry registry = perClassLoader.get(contextClassLoader);
+		Registry registry = perClassLoader.get(classLoader);
 		if (registry == null) {
 			synchronized (this) {
-				if (perClassLoader.get(contextClassLoader) == null) {
+				if (perClassLoader.get(classLoader) == null) {
 					if (perClassLoader.size() < 2) {
 						Registry existing = CommonUtils
 								.first(perClassLoader.values());
 						registry = new Registry();
-						registry.setName(contextClassLoader.toString());
+						registry.setName(classLoader.toString());
 						if (existing != null) {
 							existing.shareSingletonMapTo(registry);
 						}
-						perClassLoader.put(contextClassLoader, registry);
+						perClassLoader.put(classLoader, registry);
 						System.out.format(
 								"Created registry for classloader %s - %s\n",
-								contextClassLoader,
-								contextClassLoader.hashCode());
+								classLoader,
+								classLoader.hashCode());
 					} else {
 						throw new RuntimeException(String.format(
 								"Too many registries: \n%s\n%s\n%s\n",
-								contextClassLoader,
-								contextClassLoader.hashCode(),
+								classLoader,
+								classLoader.hashCode(),
 								perClassLoader.keySet()));
 					}
 				}
 			}
 		}
-		lastClassLoader = contextClassLoader;
+		lastClassLoader = classLoader;
 		lastRegistry = registry;
 		return registry;
 	}

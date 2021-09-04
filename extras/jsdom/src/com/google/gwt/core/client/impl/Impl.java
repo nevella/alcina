@@ -26,6 +26,8 @@ import com.google.gwt.dom.client.LocalDom;
 /**
  * Private implementation class for GWT core. This API is should not be
  * considered public or stable.
+ * 
+ * Alcina - not updated from 2.8.0 rc3. FIXME - dirndl 1.2 - revisit and merge
  */
 public final class Impl {
     static {
@@ -94,7 +96,7 @@ public final class Impl {
         return _;
       }
     };
-    }-*/;
+	}-*/;
 
     public static native String getHostPageBaseURL() /*-{
     var s = $doc.location.href;
@@ -116,7 +118,7 @@ public final class Impl {
 
     // Ensure a final slash if non-empty.
     return s.length > 0 ? s + "/" : "";
-    }-*/;
+	}-*/;
 
     public static native String getModuleBaseURL() /*-{
     // Check to see if DevModeRedirectHook has set an alternate value.
@@ -124,15 +126,15 @@ public final class Impl {
     var key = "__gwtDevModeHook:" + $moduleName + ":moduleBase";
     var global = $wnd || self;
     return global[key] || $moduleBase;
-    }-*/;
+	}-*/;
 
     public static native String getModuleBaseURLForStaticFiles() /*-{
     return $moduleBase;
-    }-*/;
+	}-*/;
 
     public static native String getModuleName() /*-{
     return $moduleName;
-    }-*/;
+	}-*/;
 
     /**
      * Returns the obfuscated name of members in the compiled output. This is a
@@ -160,7 +162,7 @@ public final class Impl {
 
     public static native String getPermutationStrongName() /*-{
     return $strongName;
-    }-*/;
+	}-*/;
 
     /**
      * Indicates if <code>$entry</code> has been called.
@@ -244,7 +246,7 @@ public final class Impl {
       }
       return _;
     }
-    }-*/;
+	}-*/;
 
     /**
      * Called by ModuleSpace in Development Mode when running onModuleLoads.
@@ -334,7 +336,7 @@ public final class Impl {
     $wnd.setTimeout(function() {
       throw e;
     }, 0);
-    }-*/;
+	}-*/;
 
     private static void reportToBrowser(Throwable e) {
         reportToBrowser(e instanceof JavaScriptException
@@ -345,11 +347,11 @@ public final class Impl {
     private static native Object undefined() /*-{
     // Intentionally not returning a value
     return;
-    }-*/;
+	}-*/;
 
     private static native void watchdogEntryDepthCancel(int timerId) /*-{
     $wnd.clearTimeout(timerId);
-    }-*/;
+	}-*/;
 
     private static void watchdogEntryDepthRun() {
         // Note: this must NEVER be called nested in a $entry() call.
@@ -363,6 +365,10 @@ public final class Impl {
 
     private static native int watchdogEntryDepthSchedule() /*-{
     return $wnd.setTimeout(@Impl::watchdogEntryDepthRun(), 10);
-    }-*/;
+	}-*/;
+    
+    public static void maybeInitializeWindowOnError() {
+    	//noop, not updated from 2.8.0
+    }
 }
 // @formatter:on

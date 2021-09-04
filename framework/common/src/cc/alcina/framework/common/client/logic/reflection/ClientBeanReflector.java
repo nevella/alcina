@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
-import cc.alcina.framework.common.client.actions.instances.DeleteViewAction;
+import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
@@ -66,7 +66,7 @@ public class ClientBeanReflector {
 				boolean noPermissionsCheck = actionClass == CreateAction.class
 						|| actionClass == EditAction.class
 						|| actionClass == ViewAction.class
-						|| actionClass == DeleteViewAction.class;
+						|| actionClass == DeleteAction.class;
 				if (noPermissionsCheck || PermissionsManager.get().isPermitted(
 						userObject,
 						new AnnotatedPermissible(action.permission()))) {

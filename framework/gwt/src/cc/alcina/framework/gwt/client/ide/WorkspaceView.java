@@ -46,7 +46,7 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
-import cc.alcina.framework.common.client.actions.instances.DeleteViewAction;
+import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
@@ -380,7 +380,7 @@ public class WorkspaceView extends Composite implements HasName,
 		@Override
 		public void vetoableAction(PermissibleActionEvent evt) {
 			TreeItem item = dataTree.getSelectedItem();
-			if (evt.getAction().getClass() == DeleteViewAction.class) {
+			if (evt.getAction().getClass() == DeleteAction.class) {
 				onTreeItemSelected(item);
 			}
 			// hack - do better when we rework this for dirndl
@@ -473,7 +473,7 @@ public class WorkspaceView extends Composite implements HasName,
 						if (actionClass == ViewAction.class) {
 							p = op.read();
 						}
-						if (actionClass == DeleteViewAction.class) {
+						if (actionClass == DeleteAction.class) {
 							p = op.delete();
 						}
 						if (p != null) {

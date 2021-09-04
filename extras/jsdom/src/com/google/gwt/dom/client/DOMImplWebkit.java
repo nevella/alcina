@@ -26,15 +26,15 @@ class DOMImplWebkit extends DOMImplStandardBase {
 	 * @return true if using Webkit 525.x (Safari 3) or earlier.
 	 */
 	private static native boolean isWebkit525OrBefore() /*-{
-														var result = /safari\/([\d.]+)/.exec(navigator.userAgent.toLowerCase());
-														if (result) {
-														var version = (parseFloat(result[1]));
-														if (version < 526) {
-														return true;
-														}
-														}
-														return false;
-														}-*/;
+    var result = /safari\/([\d.]+)/.exec(navigator.userAgent.toLowerCase());
+    if (result) {
+      var version = (parseFloat(result[1]));
+      if (version < 526) {
+        return true;
+      }
+    }
+    return false;
+	}-*/;
 
 	/**
 	 * Webkit events sometimes target the Text_Dom Node_Dom inside of the
@@ -43,13 +43,13 @@ class DOMImplWebkit extends DOMImplStandardBase {
 	 */
 	@Override
 	public native EventTarget eventGetTarget(NativeEvent evt) /*-{
-																var target = evt.target;
-																if (target && target.nodeType == 3) {
-																target = target.parentNode;
-																}
-																var wrapped = @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(target);
-																return wrapped;
-																}-*/;
+    var target = evt.target;
+    if (target && target.nodeType == 3) {
+      target = target.parentNode;
+    }
+    var wrapped = @com.google.gwt.dom.client.EventTarget::new(Lcom/google/gwt/core/client/JavaScriptObject;)(target);
+    return wrapped;
+	}-*/;
 
 	/**
 	 * Webkit based browsers require that we set the webkit-user-drag style
@@ -63,5 +63,11 @@ class DOMImplWebkit extends DOMImplStandardBase {
 		} else {
 			elem.getStyle().clearProperty("webkitUserDrag");
 		}
+	}
+
+	@Override
+	Element getLegacyDocumentScrollingElement(DocumentRemote doc) {
+		// Old WebKit needs body.scrollLeft in both quirks mode and strict mode.
+		return doc.getBody();
 	}
 }

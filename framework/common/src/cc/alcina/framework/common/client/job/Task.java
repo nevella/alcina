@@ -8,17 +8,17 @@ import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
 
-public interface Task extends TreeSerializable, HasEquivalenceHash<Task> {
+public interface Task extends TreeSerializable, HasEquivalenceHash {
 	@Override
 	default int equivalenceHash() {
 		return getClass().hashCode();
 	}
 
 	@Override
-	default boolean equivalentTo(Task other) {
+	default boolean equivalentTo(Object other) {
 		if (getClass() == other.getClass()) {
 			return Objects.equals(FlatTreeSerializer.serialize(this),
-					FlatTreeSerializer.serialize(other));
+					FlatTreeSerializer.serialize((Task)other));
 		} else {
 			return false;
 		}

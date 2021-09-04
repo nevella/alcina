@@ -325,8 +325,8 @@ public class CellTree extends AbstractCellTree
 		final CellTreeNodeView<?> nodeView = findItemByChain(chain, 0,
 				rootNode);
 		if (nodeView != null) {
+			Element showMoreElem = nodeView.getShowMoreElement();
 			if (isMouseDown) {
-				Element showMoreElem = nodeView.getShowMoreElement();
 				if (nodeView.getImageElement().isOrHasChild(target)) {
 					// Open the node when the open image is clicked.
 					nodeView.setOpen(!nodeView.isOpen(), true);
@@ -337,7 +337,10 @@ public class CellTree extends AbstractCellTree
 					nodeView.showMore();
 					return;
 				}
-			}
+			} else if (isClick && showMoreElem != null && showMoreElem.isOrHasChild(target)) {
+		        // Prevents strict-CSP violation due to javascript:'' link target
+		        event.preventDefault();
+		      }
 			// Forward the event to the cell
 			if (nodeView != rootNode
 					&& nodeView.getSelectionElement().isOrHasChild(target)) {

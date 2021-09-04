@@ -611,6 +611,7 @@ class CellTreeNodeView<T> extends UIObject {
 			showOrHide(emptyMessageElem, false);
 			contentContainer.appendChild(emptyMessageElem);
 			showMoreElem = Document.get().createAnchorElement();
+		      // CellTree prevents strict-CSP violation by cancelling event default action.
 			showMoreElem.setHref("javascript:;");
 			showMoreElem.setInnerText("Show more");
 			setStyleName(showMoreElem, tree.getStyle().cellTreeShowMoreButton(),
@@ -1282,7 +1283,7 @@ class CellTreeNodeView<T> extends UIObject {
 	}
 
 	interface Template extends SafeHtmlTemplates {
-		@Template("<div onclick=\"\" style=\"{0}position:relative;\""
+		@Template("<div style=\"{0}position:relative;\""
 				+ " class=\"{1}\">{2}<div class=\"{3}\">{4}</div></div>")
 		SafeHtml innerDiv(SafeStyles cssString, String classes, SafeHtml image,
 				String itemValueStyle, SafeHtml cellContents);

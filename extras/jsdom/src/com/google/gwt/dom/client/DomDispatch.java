@@ -295,7 +295,7 @@ public class DomDispatch implements IDomDispatch {
 
 	public int getScrollLeft(Document doc) {
 		resolveAllPending();
-		return remoteImpl().getScrollLeft(doc);
+		return remoteImpl().getScrollLeft(doc.typedRemote());
 	}
 
 	public int getScrollLeft(Element elem) {
@@ -305,7 +305,7 @@ public class DomDispatch implements IDomDispatch {
 
 	public int getScrollTop(Document doc) {
 		resolveAllPending();
-		return remoteImpl().getScrollTop(doc);
+		return remoteImpl().getScrollTop(doc.typedRemote());
 	}
 
 	public String getStyleProperty(Style style, String name) {

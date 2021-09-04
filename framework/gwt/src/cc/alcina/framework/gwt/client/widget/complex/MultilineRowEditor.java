@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CreateAction;
-import cc.alcina.framework.common.client.actions.instances.DeleteViewAction;
+import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -33,7 +33,7 @@ public abstract class MultilineRowEditor<H extends Entity>
 			if (evt.getAction() instanceof CreateAction) {
 				doCreateRow();
 				renderTable();
-			} else if (evt.getAction() instanceof DeleteViewAction) {
+			} else if (evt.getAction() instanceof DeleteAction) {
 				doDeleteRows();
 				renderTable();
 			} else {
@@ -89,7 +89,7 @@ public abstract class MultilineRowEditor<H extends Entity>
 		holder.clear();
 		List<PermissibleAction> actions = new ArrayList<>(
 				Arrays.asList(new PermissibleAction[] { new CreateAction(),
-						new DeleteViewAction() }));
+						new DeleteAction() }));
 		customiseActions(actions);
 		FlowPanel tableToolbarHolder = UsefulWidgetFactory
 				.styledPanel("table-toolbar-holder");
