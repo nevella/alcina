@@ -159,6 +159,7 @@ public class TextUtils {
 					case ',':// value separator
 					case '+':// space
 					case ':':// k-v separator
+					case '/':// possible path separator (url)
 						break;
 					// never reached
 					// case '&':// query-string separator

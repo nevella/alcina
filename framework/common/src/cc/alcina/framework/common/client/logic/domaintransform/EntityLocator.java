@@ -248,4 +248,8 @@ public class EntityLocator implements Serializable, TreeSerializable {
 						: CommonUtils.simpleClassName(clazz),
 				id);
 	}
+
+	public boolean wasRemoved() {
+		return find() == null;
+	}
 }
