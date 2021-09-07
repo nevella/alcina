@@ -1179,7 +1179,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		clearTransforms();
 		addDomainTransformListener(new ServerTransformListener());
 		// user cache invalidation
-		addDomainTransformListener(ThreadedPermissionsManager.cast());
+		addDomainTransformListener(PermissionsManager.get());
 		for (DomainTransformListener listener : threadLocalListeners) {
 			addDomainTransformListener(listener);
 		}
