@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
@@ -55,9 +56,7 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 			return;
 		}
 		if (response.isClearExisting()) {
-			getRoot().clearChildren();
-			getRoot().getTreePath().clearNonRoot();
-			loadChildren(getRoot());
+			reload();
 			return;
 		}
 		Request<?> request = response.getRequest();
@@ -145,6 +144,12 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 				loadChildren(nodeModel);
 			}
 		}
+	}
+
+	public void reload() {
+		getRoot().clearChildren();
+		getRoot().getTreePath().clearNonRoot();
+		loadChildren(getRoot());
 	}
 
 	public void sendRequest(Request<?> request) {

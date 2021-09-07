@@ -215,9 +215,6 @@ public class ReflectiveSerializer {
 			GraphNode node = state.pending.peek();
 			node.readValue();
 			Iterator<GraphNode> itr = node.iterator;
-			if (Objects.equals(node.name, "memberUsers")) {
-				int debug = 3;
-			}
 			if (itr != null && itr.hasNext()) {
 				GraphNode next = itr.next();
 				state.pending.push(next);

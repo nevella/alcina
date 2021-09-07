@@ -14,7 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 public class TextNodeRenderer extends LeafNodeRenderer {
 	@Override
 	public Widget render(Node node) {
-		// TODO bind to the reflector;
+		// FIXME - dirndl1.3 - bind to the reflector (does it already?)
 		Widget rendered = super.render(node);
 		rendered.getElement().setInnerText(getText(node));
 		return rendered;

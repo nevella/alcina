@@ -35,8 +35,10 @@ public class DomainLookup<T, E extends Entity>
 
 	public DomainLookup(DomainStoreLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
-		this.propertyPathAccesor = new PropertyPathAccessor(
-				descriptor.propertyPath);
+		if (descriptor.propertyPath != null) {
+			this.propertyPathAccesor = new PropertyPathAccessor(
+					descriptor.propertyPath);
+		}
 		Class indexClass = CommonUtils.getWrapperType(
 				descriptor.getLookupIndexClass(this.propertyPathAccesor));
 		this.store = Registry.impl(MultisetCreator.class).create(indexClass,

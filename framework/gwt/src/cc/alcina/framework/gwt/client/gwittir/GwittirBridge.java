@@ -71,6 +71,7 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -936,12 +937,34 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	class FieldDisplayNameComparator implements Comparator<Field> {
 		private final ClientBeanReflector bi;
 
+		private PropertyOrder propertyOrder;
+
 		FieldDisplayNameComparator(ClientBeanReflector bi) {
 			this.bi = bi;
+			this.propertyOrder = bi.getAnnotation(Bean.class).propertyOrder();
 		}
 
 		@Override
 		public int compare(Field o1, Field o2) {
+			if (propertyOrder.value().length > 0) {
+				int idx1 = Arrays.asList(propertyOrder.value())
+						.indexOf(o1.getPropertyName());
+				int idx2 = Arrays.asList(propertyOrder.value())
+						.indexOf(o2.getPropertyName());
+				if (idx1 == -1) {
+					if (idx2 == -1) {
+						// fall through
+					} else {
+						return 1;
+					}
+				} else {
+					if (idx2 == -1) {
+						return -1;
+					} else {
+						return idx1 - idx2;
+					}
+				}
+			}
 			return bi.getPropertyReflectors().get(o1.getPropertyName())
 					.compareTo(bi.getPropertyReflectors()
 							.get(o2.getPropertyName()));

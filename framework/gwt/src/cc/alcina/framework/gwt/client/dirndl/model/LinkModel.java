@@ -53,6 +53,8 @@ public class LinkModel extends Model {
 
 	private String href;
 
+	private Class<? extends TopicEvent> topicClass;
+
 	private boolean newTab;
 
 	public LinkModel() {
@@ -85,6 +87,10 @@ public class LinkModel extends Model {
 
 	public String getText() {
 		return text;
+	}
+
+	public Class<? extends TopicEvent> getTopicClass() {
+		return topicClass;
 	}
 
 	public boolean isNewTab() {
@@ -171,6 +177,11 @@ public class LinkModel extends Model {
 		return this;
 	}
 
+	public LinkModel withTopic(Class<? extends TopicEvent> topicClass) {
+		this.topicClass = topicClass;
+		return this;
+	}
+
 	public LinkModel withWithoutLink(boolean withoutLink) {
 		this.withoutLink = withoutLink;
 		return this;
@@ -205,6 +216,13 @@ public class LinkModel extends Model {
 				}
 				if (model.isNewTab()) {
 					rendered.getElement().setAttribute("target", "_blank");
+				}
+				if (model.getTopicClass() != null) {
+					rendered.addDomHandler(event -> {
+						Context context = NodeEvent.Context
+								.newTopicContext(event, node);
+						TopicEvent.fire(context, model.getTopicClass(), null);
+					}, ClickEvent.getType());
 				}
 			} else {
 				rendered.getElement().setAttribute("href",

@@ -15,40 +15,18 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-/**
- * Types with this annotation have reflection metadata available client-side -
- * including, but not limited to:
- * 
- * clientInstantiable
- * 
- * forName
- * 
- * bean property introspection
- * 
- * type/method annotation access
- * 
- * FIXME - dirndl.1.2 - move the visualisation properties to another annotation
- * (since this is often used for pure model types)
- * 
- * @author nick@alcina.cc
- * 
- */
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited
 @Documented
-@Target({ ElementType.TYPE })
 @ClientVisible
-public @interface Bean {
-	ObjectActions actions() default @ObjectActions({});
-
-	boolean allPropertiesVisualisable() default false;
-
-	Display displayInfo() default @Display(name = "");
-
-	PropertyOrder propertyOrder() default @PropertyOrder(value = {});
+@Target({ ElementType.TYPE })
+/**
+ *
+ * @author Nick Reddel
+ */
+public @interface PropertyOrder {
+	public String[] value();
 }

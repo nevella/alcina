@@ -50,6 +50,8 @@ import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.Type;
  * TODO - document logic of happens-before (task sequencing means any query
  * executed before a domain commit will be sequentially correct)
  * 
+ * FIXME - dirndl 1.2 - document
+ * 
  * @author nick@alcina.cc
  *
  */

@@ -90,7 +90,10 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
-					.stream().map(pd -> new JvmPropertyReflector(clazz, pd))
+					.stream()
+					.filter(pd -> !(pd.getName().equals("class")
+							|| pd.getName().equals("propertyChangeListeners")))
+					.map(pd -> new JvmPropertyReflector(clazz, pd))
 					.collect(Collectors.toList()),
 			100);
 

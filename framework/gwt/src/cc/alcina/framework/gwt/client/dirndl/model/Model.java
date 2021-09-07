@@ -66,7 +66,7 @@ public abstract class Model extends Bindable {
 		}
 	}
 
-	@Directed
+	@Directed(tag = "div")
 	public static class StringModel extends Model {
 		private String string;
 

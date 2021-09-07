@@ -1,9 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
+import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -107,29 +106,6 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 	}
 
 	public static class ChildrenLoaded extends NodeTopic {
-	}
-
-	/**
-	 * Overrides List.equals to force a property change (plus, list.equals is
-	 * expensive)
-	 * 
-	 * @author nick@alcina.cc
-	 *
-	 * @param <T>
-	 */
-	public static class IdentityArrayList<T> extends ArrayList<T> {
-		public IdentityArrayList() {
-			super();
-		}
-
-		public IdentityArrayList(Collection<? extends T> c) {
-			super(c);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			return this == obj;
-		}
 	}
 
 	public static class LabelClicked
