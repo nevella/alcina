@@ -16,10 +16,10 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.view.DomainView;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Transform;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Request;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Response;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Transform;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
@@ -510,7 +510,7 @@ public class LiveTree {
 
 		private Operation collatedOperation;
 
-		DomainViewNodeContentModel<?> viewNode;
+		DomainViewNodeContent<?> viewNode;
 
 		private List<ExceptionChild> exceptionChildren = new ArrayList<>();
 
@@ -557,7 +557,7 @@ public class LiveTree {
 			return this.segment;
 		}
 
-		public DomainViewNodeContentModel<?> getViewNode() {
+		public DomainViewNodeContent<?> getViewNode() {
 			return this.viewNode;
 		}
 
@@ -622,7 +622,7 @@ public class LiveTree {
 		}
 
 		void generateNode(GeneratorContext context) {
-			DomainViewNodeContentModel<?> generatedNode = generator
+			DomainViewNodeContent<?> generatedNode = generator
 					.generate(segment, context);
 			dirty = viewNode == null || !GraphProjection
 					.nonTransientFieldwiseEqual(generatedNode, viewNode);
@@ -699,7 +699,7 @@ public class LiveTree {
 	}
 
 	// <P,I,N> -- Parent, Input segment object, Output node
-	public interface NodeGenerator<I, O extends DomainViewNodeContentModel> {
+	public interface NodeGenerator<I, O extends DomainViewNodeContent> {
 		public O generate(I in, GeneratorContext context);
 
 		public boolean isIndexer();
@@ -736,7 +736,7 @@ public class LiveTree {
 
 	public static class SegmentComparable
 			implements Comparable<SegmentComparable> {
-		private DomainViewNodeContentModel comparable;
+		private DomainViewNodeContent comparable;
 
 		public SegmentComparable(GeneratorContext context,
 				NodeGenerator generator, Object discriminator) {

@@ -19,8 +19,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
-		implements Comparable<DomainViewNodeContentModel<E>> {
+public abstract class DomainViewNodeContent<E extends Entity> extends Model
+		implements Comparable<DomainViewNodeContent<E>> {
 	private String name;
 
 	private String publicationText;
@@ -32,7 +32,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 	private transient String __comparatorString;
 
 	@Override
-	public int compareTo(DomainViewNodeContentModel o) {
+	public int compareTo(DomainViewNodeContent o) {
 		int stringCmp = comparatorString().compareTo(o.comparatorString());
 		if (stringCmp != 0) {
 			return stringCmp;
@@ -94,7 +94,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 				comparatorString());
 	}
 
-	public <DV extends DomainViewNodeContentModel<E>> DV withEntity(E entity) {
+	public <DV extends DomainViewNodeContent<E>> DV withEntity(E entity) {
 		setEntity(entity);
 		return (DV) this;
 	}
@@ -132,7 +132,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 	}
 
 	public static abstract class EntityNode<E extends Entity>
-			extends DomainViewNodeContentModel<E> implements HasEntity {
+			extends DomainViewNodeContent<E> implements HasEntity {
 		private E entity;
 
 		@Override
@@ -354,7 +354,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 
 		private Operation operation;
 
-		private DomainViewNodeContentModel node;
+		private DomainViewNodeContent node;
 
 		private String beforePath;
 
@@ -362,7 +362,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			return this.beforePath;
 		}
 
-		public DomainViewNodeContentModel getNode() {
+		public DomainViewNodeContent getNode() {
 			return this.node;
 		}
 
@@ -378,7 +378,7 @@ public abstract class DomainViewNodeContentModel<E extends Entity> extends Model
 			this.beforePath = beforePath;
 		}
 
-		public void setNode(DomainViewNodeContentModel node) {
+		public void setNode(DomainViewNodeContent node) {
 			this.node = node;
 		}
 

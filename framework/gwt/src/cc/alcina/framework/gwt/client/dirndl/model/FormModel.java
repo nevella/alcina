@@ -57,6 +57,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
+//FIXME - dirndl 1.3 - FormModel -> Form
 public class FormModel extends Model {
 	protected List<FormElement> elements = new ArrayList<>();
 

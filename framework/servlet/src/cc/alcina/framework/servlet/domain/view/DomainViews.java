@@ -18,9 +18,9 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.view.DomainView;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.WaitPolicy;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Request;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Response;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.WaitPolicy;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.logic.domain.Entity;
