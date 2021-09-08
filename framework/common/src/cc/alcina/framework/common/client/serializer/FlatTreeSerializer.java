@@ -349,9 +349,10 @@ public class FlatTreeSerializer {
 			T value, Node cursor) {
 		T existingValue = map.put(key, value);
 		if (existingValue != null) {
-			throw new IllegalStateException(
-					Ax.format("Key collision %s at path %s :: %s",
-							state.rootClass.getSimpleName(), cursor.path, key));
+			throw new IllegalStateException(Ax.format(
+					"Key collision %s at path %s :: %s - existing value %s",
+					state.rootClass.getSimpleName(), cursor.path, key,
+					existingValue));
 		}
 	}
 
