@@ -41,7 +41,7 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 
 	@Override
 	public boolean emptyCriterion() {
-		return id == 0;
+		return getId() == 0;
 	}
 
 	public E ensurePlaceholderObject() {
