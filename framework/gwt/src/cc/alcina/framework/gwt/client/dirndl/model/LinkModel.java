@@ -57,6 +57,8 @@ public class LinkModel extends Model {
 
 	private boolean newTab;
 
+	private String title;
+
 	public LinkModel() {
 	}
 
@@ -87,6 +89,10 @@ public class LinkModel extends Model {
 
 	public String getText() {
 		return text;
+	}
+
+	public String getTitle() {
+		return this.title;
 	}
 
 	public Class<? extends TopicEvent> getTopicClass() {
@@ -133,6 +139,10 @@ public class LinkModel extends Model {
 		this.text = text;
 	}
 
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
 	public void setWithoutLink(boolean withoutLink) {
 		this.withoutLink = withoutLink;
 	}
@@ -177,6 +187,11 @@ public class LinkModel extends Model {
 		return this;
 	}
 
+	public LinkModel withTitle(String title) {
+		this.title = title;
+		return this;
+	}
+
 	public LinkModel withTopic(Class<? extends TopicEvent> topicClass) {
 		this.topicClass = topicClass;
 		return this;
@@ -194,6 +209,7 @@ public class LinkModel extends Model {
 			LinkModel model = model(node);
 			Widget rendered = super.render(node);
 			rendered.getElement().setInnerText(getText(node));
+			rendered.getElement().setTitle(model.getTitle());
 			if (model.isWithoutLink() && model.getText() != null) {
 				return rendered;
 			}

@@ -25,7 +25,8 @@ public class ShellWrapper {
 			LoggerFactory.getLogger(ShellWrapper.class).info(command);
 			ShellWrapper shellWrapper = new ShellWrapper();
 			shellWrapper.logToStdOut = false;
-			ShellOutputTuple tuple = shellWrapper.runBashScript(command, false);
+			ShellOutputTuple tuple = shellWrapper.runBashScript(command, false)
+					.throwOnException();
 			if (Ax.notBlank(tuple.error)) {
 				Ax.err(tuple.error);
 			}
