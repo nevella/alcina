@@ -6,6 +6,22 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
  * A collection of standard logical events
  */
 public class NodeEvents {
+	public static class Add extends TopicEvent<Object, Add.Handler> {
+		@Override
+		public void dispatch(Add.Handler handler) {
+			handler.onAdd(this);
+		}
+
+		@Override
+		public Class<Add.Handler> getHandlerClass() {
+			return Add.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onAdd(Add event);
+		}
+	}
+
 	public static class Back extends TopicEvent<Object, Back.Handler> {
 		@Override
 		public void dispatch(Back.Handler handler) {
@@ -52,6 +68,22 @@ public class NodeEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onChange(Change event);
+		}
+	}
+
+	public static class Clear extends TopicEvent<Object, Clear.Handler> {
+		@Override
+		public void dispatch(Clear.Handler handler) {
+			handler.onClear(this);
+		}
+
+		@Override
+		public Class<Clear.Handler> getHandlerClass() {
+			return Clear.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onClear(Clear event);
 		}
 	}
 
@@ -116,6 +148,22 @@ public class NodeEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onOptions(Options event);
+		}
+	}
+
+	public static class Remove extends TopicEvent<Object, Remove.Handler> {
+		@Override
+		public void dispatch(Remove.Handler handler) {
+			handler.onRemove(this);
+		}
+
+		@Override
+		public Class<Remove.Handler> getHandlerClass() {
+			return Remove.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onRemove(Remove event);
 		}
 	}
 

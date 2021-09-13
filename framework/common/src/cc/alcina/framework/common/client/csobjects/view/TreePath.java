@@ -26,7 +26,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 /*
  * This could be implemented with each treepath having a Map<String,Child> - but this way seems a lot slimmer
  */
-public class TreePath<T> extends Model {
+public class TreePath<T> extends Model
+		implements HasFilteredSelfAndDescendantCount {
 	public static TreePath absolutePath(String path) {
 		Preconditions.checkArgument(path.length() > 0);
 		TreePath<?> root = root(path.split("\\.")[0]);
@@ -203,6 +204,20 @@ public class TreePath<T> extends Model {
 
 	public boolean provideIsEmpty() {
 		return toString().isEmpty();
+	}
+
+	@Override
+	public int provideSelfAndDescendantCount(Object filter) {
+		if (getValue() != null
+				&& (getValue() instanceof HasFilteredSelfAndDescendantCount)) {
+			HasFilteredSelfAndDescendantCount filtered = (HasFilteredSelfAndDescendantCount) getValue();
+			int selfAndDescendantCount = filtered
+					.provideSelfAndDescendantCount(filter);
+			if (selfAndDescendantCount != -1) {
+				return selfAndDescendantCount;
+			}
+		}
+		return getSelfAndDescendantCount();
 	}
 
 	public String provideSuccessorPath() {

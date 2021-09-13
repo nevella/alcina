@@ -358,6 +358,8 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 
 		private String beforePath;
 
+		public transient TreePath localPath;
+
 		public String getBeforePath() {
 			return this.beforePath;
 		}
@@ -372,6 +374,11 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 
 		public String getTreePath() {
 			return this.treePath;
+		}
+
+		public void putPath(TreePath path) {
+			setTreePath(path.toString());
+			localPath = path;
 		}
 
 		public void setBeforePath(String beforePath) {

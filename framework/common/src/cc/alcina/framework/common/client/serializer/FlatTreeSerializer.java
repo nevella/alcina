@@ -267,6 +267,13 @@ public class FlatTreeSerializer {
 						.withShortPaths(true).withElideDefaults(true));
 	}
 
+	public static String serializeSingleLine(TreeSerializable object) {
+		return serialize(object,
+				new SerializerOptions().withTopLevelTypeInfo(false)
+						.withShortPaths(true).withElideDefaults(true)
+						.withSingleLine(true));
+	}
+
 	private static boolean isCollection(Class clazz) {
 		return Reflections.isAssignableFrom(Collection.class, clazz);
 	}

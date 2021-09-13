@@ -13,13 +13,13 @@ public abstract class EntityCriteriaGroup extends CriteriaGroup {
 	}
 
 	@Override
-	@AlcinaTransient
-	public String getDisplayName() {
-		return "filters";
+	public Class entityClass() {
+		return null;
 	}
 
 	@Override
-	public Class entityClass() {
-		return null;
+	@AlcinaTransient
+	public String getDisplayName() {
+		return "filters";
 	}
 }

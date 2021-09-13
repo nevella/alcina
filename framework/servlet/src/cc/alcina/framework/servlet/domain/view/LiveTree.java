@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Re
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Response;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Transform;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
+import cc.alcina.framework.common.client.csobjects.view.HasFilteredSelfAndDescendantCount;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -48,9 +49,6 @@ public class LiveTree {
 
 	private DomainTransformCommitPosition currentPosition;
 
-	@SuppressWarnings("unused")
-	private SearchPredicate searchPredicate;
-
 	private TreePath<LiveNode> root;
 
 	private Deque<PathChange> modelChanges = new LinkedList<>();
@@ -67,12 +65,14 @@ public class LiveTree {
 
 	private DomainView rootEntity;
 
+	private NodeGenerator<? extends DomainView, ?> rootGenerator;
+
+	private Set<String> initialisedNodeFilters = new LinkedHashSet<>();
+
 	public LiveTree(Key key) {
 		earliestPosition = DomainStore.writableStore()
 				.getTransformCommitPosition();
 		currentPosition = earliestPosition;
-		searchPredicate = new SearchPredicate(
-				key.request.getSearchDefinition());
 		generateTree1(key.request.getRoot().find());
 	}
 
@@ -109,16 +109,21 @@ public class LiveTree {
 
 	public Response generateResponse(
 			Request<? extends DomainViewSearchDefinition> request) {
+		TransformFilter transformFilter = rootGenerator
+				.transformFilter(request.getSearchDefinition());
 		Response response = new Response();
 		response.setClearExisting(request.getSince() != null
 				&& request.getSince().compareTo(earliestPosition) < 0);
-		response.getTransforms().addAll(requestToTransform(request, response));
+		response.getTransforms()
+				.addAll(requestToTransform(request, response, transformFilter));
 		response.setRequest(request);
 		response.setPosition(currentPosition);
-		response.setSelfAndDescendantCount(
-				request.getTreePath() == null ? root.getSelfAndDescendantCount()
-						: root.ensurePath(request.getTreePath())
-								.getSelfAndDescendantCount());
+		response.setSelfAndDescendantCount(request.getTreePath() == null
+				? root.provideSelfAndDescendantCount(
+						transformFilter.filterKey())
+				: root.ensurePath(request.getTreePath())
+						.provideSelfAndDescendantCount(
+								transformFilter.filterKey()));
 		return response;
 	}
 
@@ -160,7 +165,7 @@ public class LiveTree {
 		List<Transform> result = new ArrayList<>();
 		while (path != null) {
 			Transform transform = new Transform();
-			transform.setTreePath(path.toString());
+			transform.putPath(path);
 			transform.setNode(path.getValue().viewNode);
 			transform.setOperation(Operation.INSERT);
 			result.add(transform);
@@ -193,8 +198,7 @@ public class LiveTree {
 		change.operation = Operation.INSERT;
 		RootGeneratorFactory rootGeneratorFactory = Registry
 				.impl(RootGeneratorFactory.class);
-		NodeGenerator<? extends DomainView, ?> rootGenerator = rootGeneratorFactory
-				.generatorFor(rootEntity);
+		rootGenerator = rootGeneratorFactory.generatorFor(rootEntity);
 		newGeneratorContext();
 		generatorContext.treeCreation = true;
 		change.path = ensureNode(root, rootGenerator, rootEntity).path;
@@ -282,7 +286,7 @@ public class LiveTree {
 
 	private List<Transform> requestToTransform(
 			Request<? extends DomainViewSearchDefinition> request,
-			Response response) {
+			Response response, TransformFilter transformFilter) {
 		switch (request.getWaitPolicy()) {
 		case RETURN_NODES:
 			if (request.getSince() != null
@@ -294,16 +298,17 @@ public class LiveTree {
 				response.setDelayBeforeReturn(true);
 				return new ArrayList<>();
 			}
-			return requestToTransforms_returnNodes(request);
+			return requestToTransforms_returnNodes(request, transformFilter);
 		case WAIT_FOR_DELTAS:
-			return requestToTransforms_returnDeltas(request);
+			return requestToTransforms_returnDeltas(request, transformFilter);
 		default:
 			throw new UnsupportedOperationException();
 		}
 	}
 
 	private List<Transform> requestToTransforms_returnDeltas(
-			Request<? extends DomainViewSearchDefinition> request) {
+			Request<? extends DomainViewSearchDefinition> request,
+			TransformFilter transformFilter) {
 		List<List<Transform>> since = new ArrayList<>();
 		for (Entry<DomainTransformCommitPosition, List<Transform>> entry : transactionTransforms
 				.descendingMap().entrySet()) {
@@ -315,19 +320,48 @@ public class LiveTree {
 		Collections.reverse(since);
 		List<Transform> transforms = since.stream().flatMap(Collection::stream)
 				.collect(Collectors.toList());
+		transforms.removeIf(t -> !transformFilter.test(t));
 		return transforms;
 	}
 
 	private List<Transform> requestToTransforms_returnNodes(
-			Request<? extends DomainViewSearchDefinition> request) {
+			Request<? extends DomainViewSearchDefinition> request,
+			TransformFilter transformFilter) {
 		List<Transform> result = new ArrayList<>();
 		LiveNode node = root.ensurePath(request.getTreePath()).getValue();
 		if (node != null) {
+			String filterKey = transformFilter.filterKey();
+			if (Ax.notBlank(filterKey)
+					&& initialisedNodeFilters.add(filterKey)) {
+				// apply filter test bottom up to all tree nodes
+				// parents will be visisted before children
+				Deque<TreePath<LiveNode>> deque = new LinkedList<>();
+				Set<TreePath<LiveNode>> childrenVisisted = new LinkedHashSet<>();
+				deque.push(node.path);
+				while (deque.size() > 0) {
+					TreePath<LiveNode> last = deque.peekLast();
+					LiveNode cursor = last.getValue();
+					if (childrenVisisted.contains(last)) {
+						Transform transform = new Transform();
+						transform.putPath(cursor.path);
+						transform.setNode(cursor.viewNode);
+						transform.setOperation(Operation.INSERT);
+						transformFilter.test(transform);
+						deque.removeLast();
+					} else {
+						for (TreePath<LiveNode> childPath : last
+								.getChildren()) {
+							deque.addLast(childPath);
+						}
+						childrenVisisted.add(last);
+					}
+				}
+			}
 			switch (request.getChildren()) {
 			case IMMEDIATE_ONLY: {
 				{
 					Transform transform = new Transform();
-					transform.setTreePath(request.getTreePath());
+					transform.putPath(node.path);
 					transform.setNode(node.viewNode);
 					transform.setOperation(Operation.INSERT);
 					result.add(transform);
@@ -336,12 +370,13 @@ public class LiveTree {
 				for (TreePath<LiveNode> childPath : node.path.getChildren()) {
 					{
 						Transform transform = new Transform();
-						transform.setTreePath(childPath.toString());
+						transform.putPath(childPath);
 						transform.setNode(childPath.getValue().viewNode);
 						transform.setOperation(Operation.INSERT);
 						result.add(transform);
 					}
 				}
+				result.removeIf(t -> !transformFilter.test(t));
 			}
 				break;
 			case DEPTH_FIRST: {
@@ -356,22 +391,28 @@ public class LiveTree {
 						.getFromOffsetExclusivePath() == null;
 				while (deque.size() > 0 && result.size() < request.getCount()) {
 					LiveNode liveNode = deque.removeFirst();
+					Transform transform = new Transform();
+					transform.putPath(liveNode.path);
+					transform.setNode(liveNode.viewNode);
+					transform.setOperation(Operation.INSERT);
+					boolean emit = transformFilter.test(transform);
 					if (seenStart) {
-						Transform transform = new Transform();
-						transform.setTreePath(liveNode.path.toString());
-						transform.setNode(liveNode.viewNode);
-						transform.setOperation(Operation.INSERT);
-						result.add(transform);
+						if (emit) {
+							result.add(transform);
+						}
 					}
 					seenStart |= Objects.equals(liveNode.path.toString(),
 							request.getFromOffsetExclusivePath());
-					Deque<LiveNode> toAddRev = new LinkedList<>();
-					for (TreePath<LiveNode> child : liveNode.getPath()
-							.getChildren()) {
-						toAddRev.add(child.getValue());
-					}
-					while (toAddRev.size() > 0) {
-						deque.push(toAddRev.removeLast());
+					if (emit) {
+						// only traverse children if parent matches filter
+						Deque<LiveNode> toAddRev = new LinkedList<>();
+						for (TreePath<LiveNode> child : liveNode.getPath()
+								.getChildren()) {
+							toAddRev.add(child.getValue());
+						}
+						while (toAddRev.size() > 0) {
+							deque.push(toAddRev.removeLast());
+						}
 					}
 				}
 			}
@@ -398,8 +439,6 @@ public class LiveTree {
 		public LinkedHashSet<TreePath<LiveNode>> pathChanged = new LinkedHashSet<>();
 
 		Set<TreePath<LiveNode>> transactionResult = new LinkedHashSet<>();
-
-		public SearchPredicate searchPredicate;
 
 		public TreeMap<Integer, Set<TreePath<LiveNode>>> depthChanged = new TreeMap<>();
 
@@ -465,7 +504,7 @@ public class LiveTree {
 				LiveNode liveNode = path.getValue();
 				if (liveNode.isDirty()) {
 					Transform transform = new Transform();
-					transform.setTreePath(liveNode.path.toString());
+					transform.putPath(liveNode.path);
 					transform.setNode(liveNode.viewNode);
 					transform.setOperation(liveNode.collateOperations());
 					transform.setBeforePath(
@@ -499,7 +538,8 @@ public class LiveTree {
 		}
 	}
 
-	public class LiveNode implements Comparable<LiveNode> {
+	public class LiveNode
+			implements Comparable<LiveNode>, HasFilteredSelfAndDescendantCount {
 		Object segment;
 
 		TreePath<LiveNode> path;
@@ -559,6 +599,17 @@ public class LiveTree {
 
 		public DomainViewNodeContent<?> getViewNode() {
 			return this.viewNode;
+		}
+
+		@Override
+		public int provideSelfAndDescendantCount(Object filter) {
+			if (getViewNode() != null
+					&& (getViewNode() instanceof HasFilteredSelfAndDescendantCount)) {
+				return ((HasFilteredSelfAndDescendantCount) getViewNode())
+						.provideSelfAndDescendantCount(filter);
+			} else {
+				return -1;
+			}
 		}
 
 		public void
@@ -622,8 +673,8 @@ public class LiveTree {
 		}
 
 		void generateNode(GeneratorContext context) {
-			DomainViewNodeContent<?> generatedNode = generator
-					.generate(segment, context);
+			DomainViewNodeContent<?> generatedNode = generator.generate(segment,
+					context);
 			dirty = viewNode == null || !GraphProjection
 					.nonTransientFieldwiseEqual(generatedNode, viewNode);
 			if (dirty) {
@@ -713,25 +764,16 @@ public class LiveTree {
 				DomainTransformPersistenceEvent event,
 				GeneratorContext generatorContext, boolean add) {
 		}
+
+		default TransformFilter
+				transformFilter(DomainViewSearchDefinition def) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	public interface RootGeneratorFactory {
 		NodeGenerator<? extends DomainView, ?>
 				generatorFor(DomainView rootEntity);
-	}
-
-	public static class SearchPredicate implements Predicate {
-		@SuppressWarnings("unused")
-		private DomainViewSearchDefinition searchDefinition;
-
-		public SearchPredicate(DomainViewSearchDefinition searchDefinition) {
-			this.searchDefinition = searchDefinition;
-		}
-
-		@Override
-		public boolean test(Object t) {
-			return true;
-		}
 	}
 
 	public static class SegmentComparable
@@ -746,6 +788,20 @@ public class LiveTree {
 		@Override
 		public int compareTo(SegmentComparable o) {
 			return comparable.compareTo(o.comparable);
+		}
+	}
+
+	public interface TransformFilter extends Predicate<Transform> {
+		public String filterKey();
+
+		public boolean test0(Transform transform);
+
+		@Override
+		default boolean test(Transform t) {
+			if (t.getOperation() == Operation.REMOVE) {
+				return true;
+			}
+			return test0(t);
 		}
 	}
 

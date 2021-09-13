@@ -10,7 +10,10 @@ import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
@@ -22,6 +25,9 @@ class SerializationSupport {
 			.impl(ConcurrentMapCreator.class).createMap();
 
 	private static Map<Class, Map<String, PropertyReflector>> serializationReflectors = Registry
+			.impl(ConcurrentMapCreator.class).createMap();
+
+	private static Map<Class, Class> solePossibleImplementation = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
 
 	public static final Comparator<Property> PROPERTY_COMPARATOR = new Comparator<Property>() {
@@ -60,7 +66,32 @@ class SerializationSupport {
 		return map.get(propertyName);
 	}
 
-	private static List<Property> getProperties0(Class clazz) {
+	public static Class solePossibleImplementation(Class type) {
+		Class clazz = Domain.resolveEntityClass(type);
+		// FIXME - mvcc.wrap - remove wrapperpersistable from searchdef, then
+		// versionableentity->entity (here)
+		return solePossibleImplementation.computeIfAbsent(clazz, valueClass -> {
+			if (Reflections.isEffectivelyFinal(clazz) || (Reflections
+					.isAssignableFrom(VersionableEntity.class, clazz) &&
+			// FXIME - meta - Modifiers.nonAbstract emul
+			// non-abstract entity classes have no serializable subclasses (but
+			// do have mvcc subclass...)
+			Reflections.classLookup().isNonAbstract(clazz))) {
+				return valueClass;
+			} else if (Reflections.isAssignableFrom(VersionableEntity.class,
+					clazz)
+					&& Registry.get().lookupSingle(PersistentImpl.class, type,
+							false) != null) {
+				return Registry.get().lookupSingle(PersistentImpl.class, type,
+						false);
+			} else {
+				return null;
+			}
+		});
+	}
+
+	private static List<Property> getProperties0(Class forClass) {
+		Class clazz = Domain.resolveEntityClass(forClass);
 		return serializationProperties.computeIfAbsent(clazz, valueClass -> {
 			BeanDescriptor descriptor = Reflections.beanDescriptorProvider()
 					.getDescriptor(Reflections.classLookup()

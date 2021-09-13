@@ -162,7 +162,8 @@ public class DirectedLayout {
 		}
 
 		public <T> T ancestorModel(Class<T> clazz) {
-			return ancestorModel(model -> model.getClass() == clazz);
+			return ancestorModel(model -> Reflections.isAssignableFrom(clazz,
+					model.getClass()));
 		}
 
 		public <T> T ancestorModel(Predicate predicate) {
