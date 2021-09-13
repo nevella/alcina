@@ -4,6 +4,9 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -22,6 +25,11 @@ public class TopicPublisher {
 		synchronized (lookup) {
 			lookup.add(key, listener);
 		}
+	}
+
+	public void clearListeners(String topic) {
+		Preconditions.checkState(GWT.isClient());
+		lookup.getAndEnsure(topic).clear();
 	}
 
 	public void listenerDelta(String key, TopicListener listener, boolean add) {
@@ -132,6 +140,10 @@ public class TopicPublisher {
 					runnable.run();
 				}
 			}, fireIfWasPublished);
+		}
+
+		public void clearListeners() {
+			topicPublisher.clearListeners(topic);
 		}
 
 		public void delta(TopicListener<T> listener, boolean add) {

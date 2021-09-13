@@ -236,8 +236,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	protected Entity ignorePropertyChangesTo;
 
-	DomainTransformEvent lastTransform = null;
-
 	private boolean initialised = false;
 
 	protected Set<EntityLocator> createdObjectLocators = new LinkedHashSet<>();
@@ -752,23 +750,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (isIgnorePropertyChangesForEvent(event)) {
 			return;
 		}
-		if (isIgnorePropertyChanges()
-				|| UNSPECIFIC_PROPERTY_CHANGE.equals(event.getPropertyName())) {
-			return;
-		}
-		if (getEntityManager() != null) {
-			DomainTransformEvent currentTransform = createTransformFromPropertyChange(
-					event);
-			convertToTargetObject(currentTransform);
-			if (lastTransform != null
-					&& lastTransform.equivalentTo(currentTransform)) {
-				// hibernate manipulations can cause a bunch of theses
-				// FIXME - mvcc.4 - do they really?
-				logger.info("ignoring repeat transform: {}", currentTransform);
-				return;
-			}
-			lastTransform = currentTransform;
-		}
 		super.propertyChange(event);
 	}
 
@@ -1146,7 +1127,6 @@ public class ThreadlocalTransformManager extends TransformManager
 			explicitlyPermittedTransforms.clear();
 			flushAfterTransforms.clear();
 		}
-		this.lastTransform = null;
 		for (Entity entity : listeningTo.keySet()) {
 			if (entity != null) {
 				try {
@@ -1293,6 +1273,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		return entityManager == null;
 	}
 
+	// can disappear at end of mvcc.wrap
 	protected boolean isIgnorePropertyChangesForEvent(PropertyChangeEvent evt) {
 		return evt.getSource() == ignorePropertyChangesTo
 				|| (evt.getSource() instanceof WrappedObject

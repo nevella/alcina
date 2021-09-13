@@ -2208,8 +2208,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		public int idx;
 
-		Class mappedClass;
-
 		DomainStoreProperty domainStoreProperty;
 
 		DomainStorePropertyLoadOracle lazyLoadOracle;
@@ -2228,10 +2226,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			this.joinTable = readMethod.getAnnotation(JoinTable.class);
 			this.oneToMany = readMethod.getAnnotation(OneToMany.class);
 			this.oneToOne = readMethod.getAnnotation(OneToOne.class);
-			// FIXME - mvcc.4 - do we need DomainStoreMapping?
-			DomainStoreMapping mapping = readMethod
-					.getAnnotation(DomainStoreMapping.class);
-			this.mappedClass = mapping == null ? null : mapping.mapping();
 			this.domainStoreProperty = store.domainStoreProperties.get(clazz,
 					pd.getName());
 			if (this.domainStoreProperty != null && this.domainStoreProperty
