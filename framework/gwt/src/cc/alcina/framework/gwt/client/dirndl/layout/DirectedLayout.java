@@ -933,10 +933,6 @@ public class DirectedLayout {
 					}
 				}
 					break;
-				case TOGGLE_CSS_CLASS:
-					element.setClassName(stringValue,
-							element.hasClassName(stringValue));
-					break;
 				case STYLE_ATTRIBUTE:
 					element.getStyle().setProperty(binding.to(), stringValue);
 					break;

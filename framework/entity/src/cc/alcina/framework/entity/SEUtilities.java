@@ -882,6 +882,22 @@ public class SEUtilities {
 		return cached;
 	}
 
+	/**
+	 * <p>
+	 * This ordering respects PropertyOrder annotations on the subclass chain.
+	 * 
+	 * Ordering rules are (in descending precedence) (note that the
+	 * PropertyOrder annotation is not inherited):
+	 * </p>
+	 * <ol>
+	 * <li>PropertyOrder.value[] (array of property names) explicit ordering on
+	 * the class
+	 * <li>Field order of the class, with superclass fields ordered before the
+	 * subclass unless the superclass has PropertyOrder beforeSubclass:=false -
+	 * in which case they are ordered after.
+	 * </ol>
+	 * 
+	 */
 	public static List<PropertyDescriptor>
 			getPropertyDescriptorsSortedByField(Class<?> clazz0) {
 		return propertyDescriptorSortedByFieldLookup.computeIfAbsent(clazz0,

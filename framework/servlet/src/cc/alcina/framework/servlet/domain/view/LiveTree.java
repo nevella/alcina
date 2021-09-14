@@ -111,11 +111,14 @@ public class LiveTree {
 			Request<? extends DomainViewSearchDefinition> request) {
 		TransformFilter transformFilter = rootGenerator
 				.transformFilter(request.getSearchDefinition());
+		NodeAnnotator annotator = rootGenerator
+				.getAnnotator(request.getSearchDefinition());
 		Response response = new Response();
 		response.setClearExisting(request.getSince() != null
 				&& request.getSince().compareTo(earliestPosition) < 0);
 		response.getTransforms()
 				.addAll(requestToTransform(request, response, transformFilter));
+		response.getTransforms().forEach(annotator::annotate);
 		response.setRequest(request);
 		response.setPosition(currentPosition);
 		response.setSelfAndDescendantCount(request.getTreePath() == null
@@ -749,6 +752,11 @@ public class LiveTree {
 		}
 	}
 
+	public static class NodeAnnotator {
+		public void annotate(Transform transform) {
+		}
+	}
+
 	// <P,I,N> -- Parent, Input segment object, Output node
 	public interface NodeGenerator<I, O extends DomainViewNodeContent> {
 		public O generate(I in, GeneratorContext context);
@@ -758,6 +766,11 @@ public class LiveTree {
 		public void onTreeAddition(GeneratorContext context, LiveNode liveNode);
 
 		default void generationComplete() {
+		}
+
+		default NodeAnnotator getAnnotator(
+				DomainViewSearchDefinition domainViewSearchDefinition) {
+			return new NodeAnnotator();
 		}
 
 		default void indexTransformPersistenceEvent(
