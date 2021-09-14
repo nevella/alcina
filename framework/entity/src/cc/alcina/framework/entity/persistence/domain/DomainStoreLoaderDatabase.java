@@ -768,7 +768,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			throws Exception {
 		Class clazz = classDescriptor.clazz;
 		List<PropertyDescriptor> pds = SEUtilities
-				.getSortedPropertyDescriptors(clazz).stream()
+				.getPropertyDescriptorsSortedByName(clazz).stream()
 				.collect(Collectors.toList());
 		PropertyDescriptor id = SEUtilities.getPropertyDescriptorByName(clazz,
 				"id");

@@ -237,7 +237,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		try {
 			List<PropertyInfo> infos = new ArrayList<PropertyInfo>();
 			for (PropertyDescriptor pd : SEUtilities
-					.getSortedPropertyDescriptors(clazz)) {
+					.getPropertyDescriptorsSortedByName(clazz)) {
 				Class<?> propertyType = pd.getPropertyType();
 				if (pd.getWriteMethod() == null || pd.getReadMethod() == null) {
 					continue;

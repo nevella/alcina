@@ -840,7 +840,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		result.setHasId(wrapper);
 		try {
 			for (PropertyDescriptor pd : SEUtilities
-					.getSortedPropertyDescriptors(wrapper.getClass())) {
+					.getPropertyDescriptorsSortedByName(wrapper.getClass())) {
 				if (pd.getReadMethod() != null) {
 					Wrapper info = pd.getReadMethod()
 							.getAnnotation(Wrapper.class);
@@ -1076,7 +1076,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		AppPersistenceBase.checkNotReadOnly();
 		try {
 			for (PropertyDescriptor pd : SEUtilities
-					.getSortedPropertyDescriptors(hi.getClass())) {
+					.getPropertyDescriptorsSortedByName(hi.getClass())) {
 				if (pd.getReadMethod() != null) {
 					Wrapper info = pd.getReadMethod()
 							.getAnnotation(Wrapper.class);

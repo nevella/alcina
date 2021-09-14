@@ -14,7 +14,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 public class TextNodeRenderer extends LeafNodeRenderer {
 	@Override
 	public Widget render(Node node) {
-		// FIXME - dirndl1.3 - bind to the reflector (does it already?)
 		Widget rendered = super.render(node);
 		rendered.getElement().setInnerText(getText(node));
 		return rendered;
@@ -29,8 +28,8 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		return node.model == null ? "<null text>" : node.model.toString();
 	}
 
-	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Number.class)
-	public static class NumberNodeRenderer extends TextNodeRenderer {
+	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Enum.class)
+	public static class EnumNodeRenderer extends TextNodeRenderer {
 	}
 
 	@Directed(tag = "div", bindings = @Binding(from = "text", type = Type.INNER_TEXT))

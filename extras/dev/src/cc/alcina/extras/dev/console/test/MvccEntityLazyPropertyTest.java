@@ -30,7 +30,7 @@ public class MvccEntityLazyPropertyTest<IU extends Entity & IUser, IG extends En
 		Class<? extends Entity> clazz = Registry.impl(TestSupport.class)
 				.getTypeWithLazyProperties();
 		List<PropertyDescriptor> withLazy = SEUtilities
-				.getSortedPropertyDescriptors(clazz).stream().filter(pd -> {
+				.getPropertyDescriptorsSortedByName(clazz).stream().filter(pd -> {
 					DomainStoreProperty domainStoreProperty = pd.getReadMethod()
 							.getAnnotation(DomainStoreProperty.class);
 					if (domainStoreProperty != null) {

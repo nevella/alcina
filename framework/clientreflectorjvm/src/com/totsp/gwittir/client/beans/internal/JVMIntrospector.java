@@ -133,7 +133,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 				List<Property> properties = new ArrayList<>();
 				Class enumSubclass = null;
 				for (PropertyDescriptor d : SEUtilities
-						.getSortedPropertyDescriptors(clazz)) {
+						.getPropertyDescriptorsSortedByName(clazz)) {
 					Class<?> propertyType = d.getPropertyType();
 					if (propertyType != null && propertyType.isEnum()
 							&& propertyType.getSuperclass() == Enum.class
@@ -143,7 +143,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 					}
 				}
 				for (PropertyDescriptor d : SEUtilities
-						.getSortedPropertyDescriptors(clazz)) {
+						.getPropertyDescriptorsSortedByName(clazz)) {
 					Class<?> propertyType = d.getPropertyType();
 					if (propertyType == Enum.class
 							&& d.getName().equals("value")) {

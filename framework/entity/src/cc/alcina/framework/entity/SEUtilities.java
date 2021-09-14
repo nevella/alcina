@@ -83,10 +83,13 @@ import javax.swing.JTree;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
+import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
@@ -94,6 +97,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
 import cc.alcina.framework.common.client.util.CommonUtils.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TextUtils;
 
@@ -110,7 +114,9 @@ public class SEUtilities {
 
 	private static Map<Class, Map<String, PropertyDescriptor>> propertyDescriptorLookup = new ConcurrentHashMap<>();
 
-	private static Map<Class, List<PropertyDescriptor>> sortedPropertyDescriptorLookup = new ConcurrentHashMap<>();
+	private static Map<Class, List<PropertyDescriptor>> propertyDescriptorSortedByNameLookup = new ConcurrentHashMap<>();
+
+	private static Map<Class, List<PropertyDescriptor>> propertyDescriptorSortedByFieldLookup = new ConcurrentHashMap<>();
 
 	private static Map<Class, List<Method>> allMethodsPerClass = new ConcurrentHashMap<>();
 
@@ -877,29 +883,114 @@ public class SEUtilities {
 	}
 
 	public static List<PropertyDescriptor>
-			getPropertyDescriptorsSortedByField(Class clazz) {
-		ensureDescriptorLookup(clazz);
-		List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
-				propertyDescriptorLookup.get(clazz).values());
-		Map<String, Integer> fieldOrdinals = new LinkedHashMap<>();
-		allFields(clazz).stream().map(Field::getName).distinct()
-				.forEach(name -> fieldOrdinals.put(name, fieldOrdinals.size()));
-		Comparator<PropertyDescriptor> comparator = new Comparator<PropertyDescriptor>() {
-			@Override
-			public int compare(PropertyDescriptor o1, PropertyDescriptor o2) {
-				int ordinal1 = fieldOrdinals.computeIfAbsent(o1.getName(),
-						key -> -1);
-				int ordinal2 = fieldOrdinals.computeIfAbsent(o2.getName(),
-						key -> -1);
-				int i = ordinal1 - ordinal2;
-				if (i != 0) {
-					return i;
-				}
-				return o1.getName().compareTo(o2.getName());
-			}
-		};
-		Collections.sort(result, comparator);
-		return result;
+			getPropertyDescriptorsSortedByField(Class<?> clazz0) {
+		return propertyDescriptorSortedByFieldLookup.computeIfAbsent(clazz0,
+				clazz -> {
+					ensureDescriptorLookup(clazz);
+					List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
+							propertyDescriptorLookup.get(clazz).values());
+					Multimap<Class, List<Field>> declaredFieldsByClass = new Multimap<>();
+					Class cursor = clazz;
+					while (cursor != Object.class) {
+						declaredFieldsByClass.put(cursor,
+								Arrays.stream(cursor.getDeclaredFields())
+										.collect(Collectors.toList()));
+						cursor = cursor.getSuperclass();
+					}
+					List<Class> classOrder = declaredFieldsByClass.keySet()
+							.stream().collect(Collectors.toList());
+					Comparator<Class> classOrderComparator = new Comparator<Class>() {
+						@Override
+						public int compare(Class o1, Class o2) {
+							Class ancestor = o1.isAssignableFrom(o2) ? o1 : o2;
+							Class descendant = o1.isAssignableFrom(o2) ? o2
+									: o1;
+							if (descendant.getSuperclass() == ancestor) {
+								// possible annotation re-ordering
+								PropertyOrder propertyOrder = (PropertyOrder) ancestor
+										.getAnnotation(PropertyOrder.class);
+								if (propertyOrder != null
+										&& !propertyOrder.beforeSubclass()) {
+									Preconditions.checkState(
+											propertyOrder.value().length == 0);
+									return o1 == ancestor ? 1 : -1;
+								} else {
+									return o1 == ancestor ? -1 : 1;
+								}
+							} else {
+								return o1 == ancestor ? -1 : 1;
+							}
+						}
+					};
+					Collections.sort(classOrder, classOrderComparator);
+					List<Field> fieldOrder = new ArrayList<>();
+					for (Class classOrdered : classOrder) {
+						declaredFieldsByClass.get(classOrdered)
+								.forEach(fieldOrder::add);
+					}
+					Map<String, Integer> fieldOrdinals = new LinkedHashMap<>();
+					fieldOrder.stream().map(Field::getName).distinct()
+							.forEach(name -> fieldOrdinals.put(name,
+									fieldOrdinals.size()));
+					PropertyOrder propertyOrder = (PropertyOrder) clazz
+							.getAnnotation(PropertyOrder.class);
+					Comparator<PropertyDescriptor> pdComparator = new Comparator<PropertyDescriptor>() {
+						@Override
+						public int compare(PropertyDescriptor o1,
+								PropertyDescriptor o2) {
+							if (propertyOrder != null
+									&& propertyOrder.value().length > 0) {
+								int idx1 = Arrays.asList(propertyOrder.value())
+										.indexOf(o1.getName());
+								int idx2 = Arrays.asList(propertyOrder.value())
+										.indexOf(o2.getName());
+								if (idx1 == -1) {
+									if (idx2 == -1) {
+										// fall through
+									} else {
+										return 1;
+									}
+								} else {
+									if (idx2 == -1) {
+										return -1;
+									} else {
+										return idx1 - idx2;
+									}
+								}
+							}
+							int ordinal1 = fieldOrdinals
+									.computeIfAbsent(o1.getName(), key -> -1);
+							int ordinal2 = fieldOrdinals
+									.computeIfAbsent(o2.getName(), key -> -1);
+							int i = ordinal1 - ordinal2;
+							if (i != 0) {
+								return i;
+							}
+							return o1.getName().compareTo(o2.getName());
+						}
+					};
+					Collections.sort(result, pdComparator);
+					return result;
+				});
+	}
+
+	public static List<PropertyDescriptor>
+			getPropertyDescriptorsSortedByName(Class clazz0) {
+		return propertyDescriptorSortedByNameLookup.computeIfAbsent(clazz0,
+				clazz -> {
+					ensureDescriptorLookup(clazz);
+					List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
+							propertyDescriptorLookup.get(clazz).values());
+					Comparator<PropertyDescriptor> pdNameComparator = new Comparator<PropertyDescriptor>() {
+						@Override
+						public int compare(PropertyDescriptor o1,
+								PropertyDescriptor o2) {
+							return o1.getName().compareTo(o2.getName());
+						}
+					};
+					Collections.sort(result, pdNameComparator);
+					return result;
+				});
 	}
 
 	public static Object getPropertyValue(Object bean, String propertyName) {
@@ -927,24 +1018,6 @@ public class SEUtilities {
 			t = t.getCause();
 		}
 		return t;
-	}
-
-	public static List<PropertyDescriptor>
-			getSortedPropertyDescriptors(Class clazz0) {
-		return sortedPropertyDescriptorLookup.computeIfAbsent(clazz0, clazz -> {
-			ensureDescriptorLookup(clazz);
-			List<PropertyDescriptor> result = new ArrayList<PropertyDescriptor>(
-					propertyDescriptorLookup.get(clazz).values());
-			Comparator<PropertyDescriptor> pdNameComparator = new Comparator<PropertyDescriptor>() {
-				@Override
-				public int compare(PropertyDescriptor o1,
-						PropertyDescriptor o2) {
-					return o1.getName().compareTo(o2.getName());
-				}
-			};
-			Collections.sort(result, pdNameComparator);
-			return result;
-		});
 	}
 
 	public static String getStacktraceSlice(Thread t) {
@@ -1028,6 +1101,17 @@ public class SEUtilities {
 
 	public static boolean isNullOrEmpty(String string) {
 		return string == null || string.length() == 0;
+	}
+
+	public static boolean isToday(Date date) {
+		Calendar today = Calendar.getInstance();
+		Calendar specifiedDate = Calendar.getInstance();
+		specifiedDate.setTime(date);
+		return today.get(Calendar.DAY_OF_MONTH) == specifiedDate
+				.get(Calendar.DAY_OF_MONTH)
+				&& today.get(Calendar.MONTH) == specifiedDate
+						.get(Calendar.MONTH)
+				&& today.get(Calendar.YEAR) == specifiedDate.get(Calendar.YEAR);
 	}
 
 	public static boolean isWhitespace(char c) {
@@ -1396,16 +1480,6 @@ public class SEUtilities {
 			return s;
 		}
 		return String.format("%s/%s/%s", m.group(2), m.group(1), m.group(3));
-	}
-
-	public static boolean isToday(Date date) {
-		Calendar today = Calendar.getInstance();
-        Calendar specifiedDate  = Calendar.getInstance();
-        specifiedDate.setTime(date);
-
-        return today.get(Calendar.DAY_OF_MONTH) == specifiedDate.get(Calendar.DAY_OF_MONTH)
-                &&  today.get(Calendar.MONTH) == specifiedDate.get(Calendar.MONTH)
-                &&  today.get(Calendar.YEAR) == specifiedDate.get(Calendar.YEAR);
 	}
 
 	public static IntPair yearRange(String s) {

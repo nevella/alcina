@@ -607,7 +607,7 @@ public class DomainStore implements IDomainStore {
 			Class clazz = classDescriptor.clazz;
 			classDescriptor.setDomainDescriptor(domainDescriptor);
 			for (PropertyDescriptor pd : SEUtilities
-					.getSortedPropertyDescriptors(clazz)) {
+					.getPropertyDescriptorsSortedByName(clazz)) {
 				if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
 					continue;
 				}

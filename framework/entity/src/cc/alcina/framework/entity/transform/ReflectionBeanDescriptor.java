@@ -20,7 +20,7 @@ public class ReflectionBeanDescriptor implements BeanDescriptor {
 		try {
 			className = clazz.getName();
 			List<PropertyDescriptor> propertyDescriptors = SEUtilities
-					.getSortedPropertyDescriptors(clazz);
+					.getPropertyDescriptorsSortedByName(clazz);
 			props = new Property[propertyDescriptors.size() - 1];
 			int index = 0;
 			Class enumSubclass = null;

@@ -299,7 +299,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (!reflectors.containsKey(clazz)) {
 			Map<String, ClientPropertyReflector> propertyReflectors = new HashMap<String, ClientPropertyReflector>();
 			for (PropertyDescriptor pd : SEUtilities
-					.getSortedPropertyDescriptors(clazz)) {
+					.getPropertyDescriptorsSortedByName(clazz)) {
 				if (pd.getName().equals("class")
 						|| pd.getName().equals("propertyChangeListeners")) {
 					continue;
@@ -371,7 +371,7 @@ public class ClientReflectorJvm extends ClientReflector {
 	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		List<PropertyInfo> infos = new ArrayList<>();
 		for (PropertyDescriptor pd : SEUtilities
-				.getSortedPropertyDescriptors(clazz)) {
+				.getPropertyDescriptorsSortedByName(clazz)) {
 			if (pd.getName().equals("class")
 					|| pd.getName().equals("propertyChangeListeners")
 					|| pd.getWriteMethod() == null) {

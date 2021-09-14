@@ -24,9 +24,12 @@ import java.lang.annotation.Target;
 @ClientVisible
 @Target({ ElementType.TYPE })
 /**
- *
+ * *Not* inherited
+ * 
  * @author Nick Reddel
  */
 public @interface PropertyOrder {
+	public boolean beforeSubclass() default true;
+
 	public String[] value();
 }

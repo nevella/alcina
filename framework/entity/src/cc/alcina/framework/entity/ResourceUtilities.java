@@ -122,7 +122,7 @@ public class ResourceUtilities {
 			Class methodFilterAnnotation, boolean cloneCollections,
 			Collection<String> ignorePropertyNames) {
 		for (PropertyDescriptor targetDescriptor : SEUtilities
-				.getSortedPropertyDescriptors(tgtBean.getClass())) {
+				.getPropertyDescriptorsSortedByName(tgtBean.getClass())) {
 			if (ignorePropertyNames.contains(targetDescriptor.getName())) {
 				continue;
 			}
