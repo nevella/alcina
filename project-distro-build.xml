@@ -189,8 +189,8 @@
 		<copy file="${project.web-inf.dir}/MANIFEST.MF" todir="${j2ee-server.unwar.target}/META-INF" preservelastmodified="true">
 
 		</copy>
-		<echo file="${j2ee-server.unwar.target}/WEB-INF/classes/alcina.repo_hashes" append="false" message="${alcina.repo_hashes}"/>
-		
+		<echo file="${j2ee-server.unwar.target}/WEB-INF/classes/alcina.repo_hashes" append="false" message="${alcina.repo_hashes}" />
+
 	</target>
 	<target name="hot-deploy-static" description="deploy static client files" depends="prepare-war">
 		<mkdir dir="${j2ee-server.unwar.target}" />
@@ -234,6 +234,14 @@
 		<property name="project.gwt.compile.jvmarg1" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg2" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg3" value="-Dblank" />
+		<if>
+			<available file="${project.gwt-unitcache.script.dir}" type="dir" />
+			<then>
+				<delete includeEmptyDirs="true">
+					<fileset dir="${project.gwt-unitcache.script.dir}" includes="**/*" defaultexcludes="no" />
+				</delete>
+			</then>
+		</if>
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
