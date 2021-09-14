@@ -729,7 +729,8 @@ public class Registry {
 		List<Class> impls = lookup(false, registryPoint, targetClass, false);
 		List<V> result = new ArrayList<V>();
 		for (Class c : impls) {
-			result.add((V) classLookup.newInstance(c));
+			V impl = (V) impl(c, void.class, true);
+			result.add(impl != null ? impl : (V) classLookup.newInstance(c));
 		}
 		return result;
 	}

@@ -17,7 +17,6 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
-import cc.alcina.framework.entity.transform.event.ExternalTransformPersistenceListener;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.State;
 
@@ -28,7 +27,7 @@ import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.Sta
  * 
  */
 public class ClusterTransformListener
-		extends ExternalTransformPersistenceListener {
+		implements ExternalTransformPersistenceListener {
 	private TransformCommitLog transformCommitLog;
 
 	private DomainStore domainStore;
@@ -52,14 +51,6 @@ public class ClusterTransformListener
 	 */
 	public boolean isPreBarrierListener() {
 		return true;
-	}
-
-	@Override
-	public void onApplicationShutdown() {
-		if (domainStore == DomainStore.writableStore()) {
-			domainStore.getPersistenceEvents()
-					.removeDomainTransformPersistenceListener(this);
-		}
 	}
 
 	@Override
@@ -121,6 +112,13 @@ public class ClusterTransformListener
 					.addDomainTransformPersistenceListener(this);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public void stopService() {
+		if (domainStore == DomainStore.writableStore()) {
+			domainStore.getPersistenceEvents()
+					.removeDomainTransformPersistenceListener(this);
 		}
 	}
 

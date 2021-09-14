@@ -129,7 +129,6 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.RunnableCallable;
-import cc.alcina.framework.servlet.LifecycleService;
 
 /**
  * <h3>Locking notes:</h3>
@@ -1196,7 +1195,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	@RegistryLocation(registryPoint = DomainStores.class, implementationType = ImplementationType.SINGLETON)
-	public static class DomainStores extends LifecycleService {
+	public static class DomainStores {
 		// not concurrent, handle in methods
 		private Map<DomainDescriptor, DomainStore> descriptorMap = new LinkedHashMap<>();
 
@@ -1212,6 +1211,10 @@ public class DomainStore implements IDomainStore {
 			Domain.registerHandler(storesHandler);
 		}
 
+		public void appShutdown() {
+			descriptorMap.values().forEach(DomainStore::appShutdown);
+		}
+
 		public synchronized boolean hasInitialisedDatabaseStore() {
 			return writableStore0() != null && writableStore0().initialised;
 		}
@@ -1220,11 +1223,6 @@ public class DomainStore implements IDomainStore {
 				isInitialised(DomainDescriptor domainDescriptor) {
 			return descriptorMap.containsKey(domainDescriptor)
 					&& descriptorMap.get(domainDescriptor).initialised;
-		}
-
-		@Override
-		public void onApplicationShutdown() {
-			descriptorMap.values().forEach(DomainStore::appShutdown);
 		}
 
 		public <V extends Entity> DomainStoreQuery<V> query(Class<V> clazz) {

@@ -176,9 +176,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			getStatusNotifier().destroyed();
 			BackendTransformQueue.get().stop();
 			Transactions.shutdown();
-			// entity layerr services
+			// entity layer services
 			ObjectPersistenceHelper.get().appShutdown();
 			OffThreadLogger.get().appShutdown();
+			DomainStore.stores().appShutdown();
+			// servlet layer (LifecycleService) services
 			Registry.appShutdown();
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();
