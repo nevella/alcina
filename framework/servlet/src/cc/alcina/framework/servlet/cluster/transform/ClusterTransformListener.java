@@ -28,7 +28,7 @@ import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.Sta
  * 
  */
 public class ClusterTransformListener
-		implements ExternalTransformPersistenceListener {
+		extends ExternalTransformPersistenceListener {
 	private TransformCommitLog transformCommitLog;
 
 	private DomainStore domainStore;
@@ -52,6 +52,14 @@ public class ClusterTransformListener
 	 */
 	public boolean isPreBarrierListener() {
 		return true;
+	}
+
+	@Override
+	public void onApplicationShutdown() {
+		if (domainStore == DomainStore.writableStore()) {
+			domainStore.getPersistenceEvents()
+					.removeDomainTransformPersistenceListener(this);
+		}
 	}
 
 	@Override
@@ -103,7 +111,6 @@ public class ClusterTransformListener
 		}
 	}
 
-	@Override
 	public void startService() {
 		try {
 			transformCommitLog.consumer(commitLogHost,
@@ -114,14 +121,6 @@ public class ClusterTransformListener
 					.addDomainTransformPersistenceListener(this);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	@Override
-	public void stopService() {
-		if (domainStore == DomainStore.writableStore()) {
-			domainStore.getPersistenceEvents()
-					.removeDomainTransformPersistenceListener(this);
 		}
 	}
 

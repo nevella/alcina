@@ -39,7 +39,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.entity.SEUtilities;
@@ -56,7 +55,7 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
-		PropertyAccessor, RegistrableService, BeanDescriptorProvider {
+		PropertyAccessor, BeanDescriptorProvider {
 	static volatile ObjectPersistenceHelper singleton;
 
 	public static ObjectPersistenceHelper get() {
@@ -106,7 +105,6 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		init();
 	}
 
-	@Override
 	public void appShutdown() {
 		ThreadlocalTransformManager.get().appShutdown();
 	}

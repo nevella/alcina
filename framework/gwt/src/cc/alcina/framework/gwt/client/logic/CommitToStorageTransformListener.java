@@ -71,8 +71,6 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
  *         ditto localRequestId ditto committingRequest
  *         </ul>
  * 
- *         //FIXME - mvcc.4 - get rid of statelistenable - publish a typed topic
- *         event
  * 
  */
 public class CommitToStorageTransformListener

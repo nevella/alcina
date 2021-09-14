@@ -24,7 +24,6 @@ import com.google.gwt.user.client.Window.ClosingEvent;
 import com.google.gwt.user.client.Window.ClosingHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -49,7 +48,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *         </ul>
  *
  */
-public class ClientSession implements ClosingHandler, RegistrableService {
+public class ClientSession implements ClosingHandler {
 	public static final int KEEP_ALIVE_TIMER = 1000;
 
 	public static final long EXPIRES_TIME = 2500;
@@ -196,6 +195,7 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 			callback.onSuccess(null);
 		}
 
+		@Override
 		public boolean isInitialObjectsPersisted() {
 			return this.initialObjectsPersisted;
 		}
@@ -213,6 +213,7 @@ public class ClientSession implements ClosingHandler, RegistrableService {
 		public void resetCookies() {
 		}
 
+		@Override
 		public void
 				setInitialObjectsPersisted(boolean initialObjectsPersisted) {
 			this.initialObjectsPersisted = initialObjectsPersisted;

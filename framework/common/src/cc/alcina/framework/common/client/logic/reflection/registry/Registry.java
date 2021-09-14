@@ -558,22 +558,8 @@ public class Registry {
 
 	public void shutdownSingletons() {
 		Logger logger = LoggerFactory.getLogger(Registry.class);
-		logger.debug("Shutting singletons for registry {}\n{}", name,
+		logger.debug("CLearing singletons for registry {}\n{}", name,
 				singletons.allValues());
-		for (Object o : singletons.allValues()) {
-			if (o instanceof RegistrableService) {
-				try {
-					logger.debug("Shutting down registrable service: {}",
-							o.getClass().getName());
-					((RegistrableService) o).appShutdown();
-					if (o instanceof LifecycleService) {
-						((LifecycleService) o).stopService();
-					}
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
-			}
-		}
 		singletons.clear();
 	}
 
@@ -812,7 +798,6 @@ public class Registry {
 
 		@Override
 		public void appShutdown() {
-			getRegistry().shutdownSingletons();
 			Registry.setProvider(null);
 		}
 

@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
@@ -24,7 +23,7 @@ import cc.alcina.framework.common.client.util.ThrowingRunnable;
  * For infrastructure components where blocking due to log emission > writer speed can cause feedback
  */
 @RegistryLocation(registryPoint = OffThreadLogger.class, implementationType = ImplementationType.SINGLETON)
-public class OffThreadLogger implements RegistrableService, InvocationHandler {
+public class OffThreadLogger implements InvocationHandler {
 	public static OffThreadLogger get() {
 		return Registry.impl(OffThreadLogger.class);
 	}
@@ -54,7 +53,6 @@ public class OffThreadLogger implements RegistrableService, InvocationHandler {
 		thread.start();
 	}
 
-	@Override
 	public void appShutdown() {
 		eventQueue.add(new Event());
 	}

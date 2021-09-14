@@ -1,11 +1,11 @@
 package cc.alcina.framework.entity.transform.event;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.LifecycleService;
+import cc.alcina.framework.servlet.LifecycleService;
 
-public interface ExternalTransformPersistenceListener
-		extends DomainTransformPersistenceListener, LifecycleService {
+public abstract class ExternalTransformPersistenceListener
+		extends LifecycleService implements DomainTransformPersistenceListener {
 	@Override
-	default boolean isAllVmEventsListener() {
+	public boolean isAllVmEventsListener() {
 		return true;
 	}
 }
