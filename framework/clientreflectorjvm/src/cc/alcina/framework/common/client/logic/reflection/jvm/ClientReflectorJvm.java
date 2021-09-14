@@ -244,6 +244,8 @@ public class ClientReflectorJvm extends ClientReflector {
 			};
 			CollectionFilters.filterInPlace(classes.classData.keySet(),
 					defaultExcludes);
+			// FIXME - 2023 - (requires some introspection info) - ignore result
+			// if registrylocation has @NonClientRegistryPointType
 			new RegistryScanner() {
 				@Override
 				protected File getHomeDir() {
