@@ -44,9 +44,10 @@ import elemental.json.JsonValue;
 /**
  * <p>
  * This class serializes possibly cyclic graphs to a javascript object. It
- * extensively from Jackson - including supporting async
- * serialization/deserialization, by using a stack-based serializtion structure
- * instead of recursion. Notional serialization algorithm is:
+ * borrows extensively from Jackson, but also differs markedly: it supports
+ * async (incremental) serialization/deserialization - by using a stack-based
+ * serializtion structure instead of recursion, it is gwt-compatible, and it
+ * uses different controlling annotations. Notional serialization algorithm is:
  * </p>
  * <ul>
  * <li>For any unreached, non-data-like point x in the source graph:
