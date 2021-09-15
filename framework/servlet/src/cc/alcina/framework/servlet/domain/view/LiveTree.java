@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.domain.view;
 
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -29,6 +30,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.Doma
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -68,6 +70,19 @@ public class LiveTree {
 	private NodeGenerator<? extends DomainView, ?> rootGenerator;
 
 	private Set<String> initialisedNodeFilters = new LinkedHashSet<>();
+
+	/*
+	 * FIXME - index - this is possibly a stopgap. Really, no mutable entity in
+	 * the tree should not have a generator (this may require generator lookup
+	 * optimisations). Primarily because, even if an entity node has no
+	 * children, it may have categorising project nodes (e.g. first letter) that
+	 * are affected by a change to it. On the other hand, maybe it's the
+	 * projections which should listen...
+	 * 
+	 * In any case, 'entityPaths' causing treepath deltas to fire is a good
+	 * first path
+	 */
+	private Multimap<Entity, List<LiveNode>> entityNodes = new Multimap<>();
 
 	public LiveTree(Key key) {
 		earliestPosition = DomainStore.writableStore()
@@ -147,6 +162,7 @@ public class LiveTree {
 		indexers.forEach(g -> g.indexTransformPersistenceEvent(event,
 				generatorContext, add));
 		if (add) {
+			processEntityChanges(event);
 			if (generatorContext.pathChanged.size() > 0) {
 				currentPosition = event.getPosition();
 				processEvents();
@@ -221,6 +237,22 @@ public class LiveTree {
 		generatorContext.rootEntity = rootEntity;
 	}
 
+	private void processEntityChanges(DomainTransformPersistenceEvent event) {
+		event.getTransformPersistenceToken().getTransformCollation()
+				.allEntityCollations().forEach(coll -> {
+					Entity entity = coll.getObject();
+					List<LiveNode> nodes = entityNodes.get(entity);
+					if (nodes != null) {
+						nodes.forEach(n -> {
+							PathChange change = new PathChange();
+							change.operation = Operation.CHANGE;
+							change.path = n.path;
+							generatorContext.addPathChange(change);
+						});
+					}
+				});
+	}
+
 	/*
 	 * 
 	 * Phase 1: modelchange collation Transform model changes to path changes.
@@ -260,12 +292,13 @@ public class LiveTree {
 			TreePath<LiveNode> pathChange = iterator.next();
 			iterator.remove();
 			LiveNode liveNode = pathChange.getValue();
-			liveNode.onChange(context);
+			liveNode.onChange();
 			context.ensureInTransactionResult(liveNode);
 		} while (pathChanged.size() > 0);
 		// Phase 3 - bottom up (re)-generate dirty path content models. Parent
 		// content models
-		// will be regenerated and added to the transform list if changed
+		// will be regenerated and added to the transform list if any
+		// descendants have changed
 		while (context.depthChanged.size() > 0) {
 			Entry<Integer, Set<TreePath<LiveNode>>> lastEntry = context.depthChanged
 					.lastEntry();
@@ -274,7 +307,7 @@ public class LiveTree {
 			for (TreePath<LiveNode> path : lastPaths) {
 				LiveNode liveNode = path.getValue();
 				context.collateChildren = liveNode;
-				liveNode.generateNode(context);
+				liveNode.generateNode();
 				context.ensureInTransactionResult(liveNode);
 			}
 		}
@@ -630,6 +663,30 @@ public class LiveTree {
 			}
 		}
 
+		private void indexInEntityMap(boolean add) {
+			Entity entity = provideEntity();
+			if (entity == null) {
+				return;
+			}
+			if (add) {
+				entityNodes.add(entity, this);
+			} else {
+				// remove entities reachable from subtree
+				Deque<LiveNode> removes = new ArrayDeque<>();
+				removes.push(this);
+				while (removes.size() > 0) {
+					LiveNode node = removes.pop();
+					entityNodes.remove(node.provideEntity(), this);
+					node.path.getChildren().stream().map(TreePath::getValue)
+							.forEach(removes::add);
+				}
+			}
+		}
+
+		protected Entity provideEntity() {
+			return viewNode.getEntity();
+		}
+
 		void addOperation(Operation operation) {
 			operations.add(operation);
 			modifiedNodes.add(this);
@@ -675,9 +732,9 @@ public class LiveTree {
 			return collatedOperation;
 		}
 
-		void generateNode(GeneratorContext context) {
+		void generateNode() {
 			DomainViewNodeContent<?> generatedNode = generator.generate(segment,
-					context);
+					generatorContext);
 			dirty = viewNode == null || !GraphProjection
 					.nonTransientFieldwiseEqual(generatedNode, viewNode);
 			if (dirty) {
@@ -686,12 +743,12 @@ public class LiveTree {
 			viewNode = generatedNode;
 			if (dirty && path.getParent() != null) {
 				// give parents a chance to refresh if their children change
-				if (context.ensureInTransactionResult(
+				if (generatorContext.ensureInTransactionResult(
 						path.getParent().getValue())) {
 					PathChange pathChange = new PathChange();
 					pathChange.path = path.getParent();
 					pathChange.operation = Operation.CHANGE;
-					context.addPathChange(pathChange);
+					generatorContext.addPathChange(pathChange);
 				}
 			}
 		}
@@ -708,15 +765,17 @@ public class LiveTree {
 			}
 		}
 
-		void onChange(GeneratorContext context) {
+		void onChange() {
 			switch (collateOperations()) {
 			case INSERT:
-				generator.onTreeAddition(context, this);
+				indexInEntityMap(true);
+				generator.onTreeAddition(generatorContext, this);
 				break;
 			case REMOVE:
+				indexInEntityMap(false);
 				path.removeFromParent();
 				if (generator != null) {
-					context.removedIndexers.add(generator);
+					generatorContext.removedIndexers.add(generator);
 				}
 				break;
 			case CHANGE:
