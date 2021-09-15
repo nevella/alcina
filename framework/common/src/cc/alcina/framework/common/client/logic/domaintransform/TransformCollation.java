@@ -313,9 +313,18 @@ public class TransformCollation {
 			return !hasDeleteTransform();
 		}
 
+		public boolean hasPropertyName(Enum e) {
+			return hasPropertyName(e.name());
+		}
+
 		public boolean hasPropertyName(String name) {
 			return events.stream()
 					.anyMatch(e -> Objects.equals(e.getPropertyName(), name));
+		}
+
+		public boolean hasPropertyNames(Enum... names) {
+			return events.stream().anyMatch(e -> Arrays.stream(names).anyMatch(
+					name -> Objects.equals(e.getPropertyName(), name.name())));
 		}
 
 		public boolean hasPropertyNames(String... names) {
