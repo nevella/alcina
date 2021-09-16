@@ -684,7 +684,7 @@ public class LiveTree {
 		}
 
 		protected Entity provideEntity() {
-			return viewNode.getEntity();
+			return viewNode == null ? null : viewNode.getEntity();
 		}
 
 		void addOperation(Operation operation) {
