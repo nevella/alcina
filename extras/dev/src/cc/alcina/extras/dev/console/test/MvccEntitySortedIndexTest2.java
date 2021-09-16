@@ -28,7 +28,7 @@ public class MvccEntitySortedIndexTest2<IU extends Entity & IUser, IG extends En
 		extends MvccEntityTransactionTest {
 	transient List<Entity> entitiesInCreationOrder = new ArrayList<>();
 
-	private Entity lastInstance;
+	transient Entity lastInstance;
 
 	private void debug(List<Entity> list) {
 		if (lastInstance == null) {
