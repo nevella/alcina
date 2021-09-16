@@ -78,11 +78,9 @@ class SerializationSupport {
 			// do have mvcc subclass...)
 			Reflections.classLookup().isNonAbstract(clazz))) {
 				return valueClass;
-			} else if (Reflections.isAssignableFrom(VersionableEntity.class,
-					clazz)
-					&& Registry.get().lookupSingle(PersistentImpl.class, type,
-							false) != null) {
-				return Registry.get().lookupSingle(PersistentImpl.class, type,
+			} else if (Registry.get().lookupSingle(PersistentImpl.class, clazz,
+					false) != Void.class) {
+				return Registry.get().lookupSingle(PersistentImpl.class, clazz,
 						false);
 			} else {
 				return null;

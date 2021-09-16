@@ -10,7 +10,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = String.class)
 public class TextNodeRenderer extends LeafNodeRenderer {
 	@Override
 	public Widget render(Node node) {
@@ -30,6 +29,10 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Enum.class)
 	public static class EnumNodeRenderer extends TextNodeRenderer {
+	}
+
+	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = String.class)
+	public static class StringNodeRenderer extends TextNodeRenderer {
 	}
 
 	@Directed(tag = "div", bindings = @Binding(from = "text", type = Type.INNER_TEXT))
