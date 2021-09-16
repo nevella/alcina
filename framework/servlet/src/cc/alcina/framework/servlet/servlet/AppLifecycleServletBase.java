@@ -525,30 +525,37 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		 * If custom LifecycleService impl init is required, call it earlier
 		 * (initCustom) and don't override LifecycleService.onApplicationStartup
 		 */
-		Registry.impls(LifecycleService.class).forEach(service -> {
-			try {
-				service.onApplicationStartup();
-			} catch (Exception e) {
-				Ax.sysLogHigh("Exception starting up %s",
-						service.getClass().getSimpleName());
-				e.printStackTrace();
+		try {
+			Transaction.begin();
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			Registry.impls(LifecycleService.class).forEach(service -> {
+				try {
+					service.onApplicationStartup();
+				} catch (Exception e) {
+					Ax.sysLogHigh("Exception starting up %s",
+							service.getClass().getSimpleName());
+					e.printStackTrace();
+				}
+			});
+			if (serializationSignatureListener != null) {
+				boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities
+						.is(AppLifecycleServletBase.class,
+								"cancelStartupOnSignatureGenerationFailure")
+						|| !EntityLayerUtils.isTestServer();
+				MethodContext.instance()
+						.withRunInNewThread(
+								!cancelStartupOnSignatureGenerationFailure)
+						.call(() -> serializationSignatureListener
+								.ensureSignature());
+				if (serializationSignatureListener.isEnsureFailed()
+						&& cancelStartupOnSignatureGenerationFailure) {
+					throw new RuntimeException(
+							"Task signature generation failed: cancelling startup");
+				}
 			}
-		});
-		if (serializationSignatureListener != null) {
-			boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities
-					.is(AppLifecycleServletBase.class,
-							"cancelStartupOnSignatureGenerationFailure")
-					|| !EntityLayerUtils.isTestServer();
-			MethodContext.instance()
-					.withRunInNewThread(
-							!cancelStartupOnSignatureGenerationFailure)
-					.call(() -> serializationSignatureListener
-							.ensureSignature());
-			if (serializationSignatureListener.isEnsureFailed()
-					&& cancelStartupOnSignatureGenerationFailure) {
-				throw new RuntimeException(
-						"Task signature generation failed: cancelling startup");
-			}
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+			Transaction.end();
 		}
 	}
 
