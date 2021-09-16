@@ -1702,7 +1702,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected void collectionChanged(Object obj, Object tgt) {
 		// changes won't be noticed unless we do this -
 		//
-		// FIXME - mvcc.4 - maybe can get rid
+		// FIXME - mvcc.wrap - remove
 		// of this (check if all wrapperpersistable changes use new collections)
 		if (obj instanceof WrapperPersistable) {
 			((WrapperPersistable) obj)

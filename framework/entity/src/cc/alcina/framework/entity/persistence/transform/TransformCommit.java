@@ -492,7 +492,7 @@ public class TransformCommit {
 	}
 
 	public static int commitWithBackoff() {
-		return commitWithBackoff(0, 5, 40, 2.0);
+		return commitWithBackoff(0, 8, 40, 2.0);
 	}
 
 	public static int commitWithBackoff(int initialDelayMs, int retries,

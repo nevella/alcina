@@ -18,6 +18,19 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorr
 public class Mvcc {
 	private static Logger logger = LoggerFactory.getLogger(Mvcc.class);
 
+	public static void debugNotFound(Entity entity, RuntimeException e) {
+		logger.warn("mvcc.debugNotFound :: {} :: {}/{}",
+				e.getClass().getSimpleName(), entity.getClass().getSimpleName(),
+				entity.getId());
+		if (isMvccObject(entity)) {
+			MvccObjectVersions versions = ((MvccObject) entity)
+					.__getMvccVersions__();
+			if (versions != null) {
+				versions.debugNotResolved();
+			}
+		}
+	}
+
 	public static <T extends Entity> T getEntity(EntityManager entityManager,
 			T t) {
 		if (t instanceof MvccObject) {
@@ -105,18 +118,5 @@ public class Mvcc {
 			}
 			logger.info("(All tests passed)");
 		}
-	}
-
-	public static void debugNotFound(Entity entity, RuntimeException e) {
-		logger.warn("mvcc.debugNotFound :: {} :: {}/{}", e.getClass().getSimpleName(),
-				entity.getClass().getSimpleName(), entity.getId());
-		if(isMvccObject(entity)){
-			 MvccObjectVersions versions = ((MvccObject) entity).__getMvccVersions__();
-			 if(versions!=null){
-				 versions.debugNotResolved();
-			 }
-			 
-		}
-		
 	}
 }

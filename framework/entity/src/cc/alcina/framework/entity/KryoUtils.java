@@ -42,22 +42,16 @@ import com.esotericsoftware.kryo.serializers.FieldSerializer;
 import com.esotericsoftware.minlog.Log;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingSupplier;
 import cc.alcina.framework.entity.KryoUtils.KryoPool.KryoPoolObjectFactory;
-import cc.alcina.framework.entity.persistence.AppPersistenceBase;
-import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class KryoUtils {
@@ -336,71 +330,7 @@ public class KryoUtils {
 		}
 	}
 
-	@RegistryLocation(registryPoint = KryoCreationCustomiser.class, implementationType = ImplementationType.SINGLETON)
-	@ClientInstantiable
-	public static class KryoCreationCustomiser {
-		public void configure(Kryo kryo) {
-			try {
-				Class<?> arraysArrayList = Class
-						.forName("java.util.Arrays$ArrayList");
-				kryo.addDefaultSerializer(arraysArrayList,
-						ArraysArrayListSerializer.class);
-				Class<?> unmodifiableRandomAccessList = Class.forName(
-						"java.util.Collections$UnmodifiableRandomAccessList");
-				kryo.addDefaultSerializer(unmodifiableRandomAccessList,
-						UnmodifiableRandomAccessListSerializer.class);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
-	public static class KryoDeserializationException extends RuntimeException {
-		public KryoDeserializationException() {
-			super();
-		}
-
-		public KryoDeserializationException(String message) {
-			super(message);
-		}
-
-		public KryoDeserializationException(String message, Throwable cause) {
-			super(message, cause);
-		}
-
-		public KryoDeserializationException(Throwable cause) {
-			super(cause);
-		}
-	}
-
-	public static class UnmodifiableRandomAccessListSerializer
-			extends Serializer {
-		public UnmodifiableRandomAccessListSerializer(Kryo kryo,
-				Class<?> type) {
-		}
-
-		@Override
-		public Object read(Kryo kryo, Input input, Class type) {
-			int len = input.readInt();
-			Object[] array = new Object[len];
-			for (int idx = 0; idx < len; idx++) {
-				array[idx] = kryo.readClassAndObject(input);
-			}
-			return Collections.unmodifiableList(
-					Arrays.stream(array).collect(Collectors.toList()));
-		}
-
-		@Override
-		public void write(Kryo kryo, Output output, Object object) {
-			List list = (List) object;
-			output.writeInt(list.size());
-			for (Object element : list) {
-				kryo.writeClassAndObject(output, element);
-			}
-		}
-	}
-
-	private static class EntitySerializer extends FieldSerializer {
+	public static class EntitySerializer extends FieldSerializer {
 		private static transient long VERSION_1 = 980250682;
 
 		private static AtomicInteger checkVersionCheck = new AtomicInteger();
@@ -465,41 +395,71 @@ public class KryoUtils {
 		}
 	}
 
-	private static class InvalidVersionException extends RuntimeException {
-	}
-
-	// FIXME - mvcc.4 - inject from mvcc to here
-	private static class MvccInterceptorSerializer
-			implements SerializerFactory {
-		@Override
-		public Serializer makeSerializer(Kryo kryo, Class<?> type) {
-			if (MvccObject.class.isAssignableFrom(type)) {
-				return new MvccObjectSerializer(kryo, type);
+	@RegistryLocation(registryPoint = KryoCreationCustomiser.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class KryoCreationCustomiser {
+		public void configure(Kryo kryo) {
+			try {
+				Class<?> arraysArrayList = Class
+						.forName("java.util.Arrays$ArrayList");
+				kryo.addDefaultSerializer(arraysArrayList,
+						ArraysArrayListSerializer.class);
+				Class<?> unmodifiableRandomAccessList = Class.forName(
+						"java.util.Collections$UnmodifiableRandomAccessList");
+				kryo.addDefaultSerializer(unmodifiableRandomAccessList,
+						UnmodifiableRandomAccessListSerializer.class);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
 			}
-			if (Entity.class.isAssignableFrom(type)
-					&& (Ax.isTest() || AppPersistenceBase.isTestServer())) {
-				// this could go to production, but it's mostly needed for
-				// console/webapp comms
-				return new EntitySerializer(kryo, type);
-			}
-			return new FieldSerializer<>(kryo, type);
 		}
 	}
 
-	private static class MvccObjectSerializer extends Serializer {
-		public MvccObjectSerializer(Kryo kryo, Class<?> type) {
+	public static class KryoDeserializationException extends RuntimeException {
+		public KryoDeserializationException() {
+			super();
+		}
+
+		public KryoDeserializationException(String message) {
+			super(message);
+		}
+
+		public KryoDeserializationException(String message, Throwable cause) {
+			super(message, cause);
+		}
+
+		public KryoDeserializationException(Throwable cause) {
+			super(cause);
+		}
+	}
+
+	public static class UnmodifiableRandomAccessListSerializer
+			extends Serializer {
+		public UnmodifiableRandomAccessListSerializer(Kryo kryo,
+				Class<?> type) {
 		}
 
 		@Override
 		public Object read(Kryo kryo, Input input, Class type) {
-			return Domain.find(Mvcc.resolveEntityClass(type), input.readLong());
+			int len = input.readInt();
+			Object[] array = new Object[len];
+			for (int idx = 0; idx < len; idx++) {
+				array[idx] = kryo.readClassAndObject(input);
+			}
+			return Collections.unmodifiableList(
+					Arrays.stream(array).collect(Collectors.toList()));
 		}
 
 		@Override
 		public void write(Kryo kryo, Output output, Object object) {
-			Entity entity = (Entity) object;
-			output.writeLong(entity.getId());
+			List list = (List) object;
+			output.writeInt(list.size());
+			for (Object element : list) {
+				kryo.writeClassAndObject(output, element);
+			}
 		}
+	}
+
+	private static class InvalidVersionException extends RuntimeException {
 	}
 
 	static class KryoPool {
@@ -551,7 +511,8 @@ public class KryoUtils {
 				kryo.setClassLoader(key.classLoader);
 				kryo.setInstantiatorStrategy(new DefaultInstantiatorStrategy(
 						new SerializingInstantiatorStrategy()));
-				kryo.setDefaultSerializer(new MvccInterceptorSerializer());
+				Registry.optional(SerializerFactory.class)
+						.ifPresent(kryo::setDefaultSerializer);
 				KryoCreationCustomiser customiser = Registry
 						.implOrNull(KryoCreationCustomiser.class);
 				if (customiser != null) {
