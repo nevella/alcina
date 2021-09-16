@@ -575,7 +575,7 @@ public class Transaction implements Comparable<Transaction> {
 		if (isWriteable()) {
 			if (TransformManager.get().getTransforms().size() == 0) {
 			} else {
-				// FIXME - mvcc.4 - mvcc exception
+				// FIXME - mvcc.5 - mvcc exception (after cleanup)
 				logger.warn(
 						"Ending transaction with uncommitted transforms: {} {}",
 						endPhase,
