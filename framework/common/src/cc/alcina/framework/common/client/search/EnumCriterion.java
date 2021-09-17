@@ -48,6 +48,10 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  *         serialization - best to have an explicit serialverisionUID
  *         </p>
  * 
+ *         JDK8+ - this seems to be resolved. Note that serialization will
+ *         require type info, either by overriding get/setValue with covariant
+ *         types, or via TypeSerialization/PropertySerialization annotations
+ * 
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		implements HasWithNull, HasValue<E> {
