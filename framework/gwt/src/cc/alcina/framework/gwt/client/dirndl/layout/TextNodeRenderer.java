@@ -4,6 +4,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -18,17 +19,29 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		return rendered;
 	}
 
+	protected String getModelText(Object model) {
+		return model.toString();
+	}
+
 	@Override
 	protected String getTag(Node node) {
 		return Ax.blankTo(super.getTag(node), "span");
 	}
 
 	protected String getText(Node node) {
-		return node.model == null ? "<null text>" : node.model.toString();
+		return node.model == null ? "<null text>" : getModelText(node.model);
 	}
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Enum.class)
 	public static class EnumNodeRenderer extends TextNodeRenderer {
+		@Override
+		protected String getModelText(Object model) {
+			if (model instanceof HasDisplayName) {
+				return ((HasDisplayName) model).displayName();
+			} else {
+				return super.getModelText(model);
+			}
+		}
 	}
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = String.class)
