@@ -9,6 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -416,7 +417,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	T resolve(boolean write, boolean notifyResolveNull) {
 		Transaction transaction = Transaction.current();
-		if (write && transaction.isReadonly()) {
+		if (write && transaction.isReadonly()
+				&& !TransformManager.get().isIgnorePropertyChanges()) {
 			throw new MvccException("Writing within a readonly transaction");
 		}
 		// try cached

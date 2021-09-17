@@ -51,6 +51,11 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		return (EntityCriteriaGroup) getCriteriaGroups().iterator().next();
 	}
 
+	@PropertySerialization(ignore = true)
+	public Set<OrderGroup> getOrderGroups() {
+		return super.getOrderGroups();
+	}
+
 	@XmlTransient
 	public GroupingParameters getGroupingParameters() {
 		return groupingParameters;

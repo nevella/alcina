@@ -104,6 +104,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					"Remote invocation access: address %s does not match permitted %s for API %s",
 					remoteAddress, permittedAddressPattern, params.api);
 		}
+		boolean pushedUser = false;
 		try {
 			ClientInstance clientInstance = AuthenticationPersistence.get()
 					.getClientInstance(params.clientInstanceId);
@@ -120,6 +121,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			PermissionsManager.get().pushUser(
 					clientInstance.getAuthenticationSession().getUser(),
 					LoginState.LOGGED_IN, asRoot);
+			pushedUser = true;
 			PermissionsManager.get().setClientInstance(clientInstance);
 			Object invocationTarget = getInvocationTarget(params);
 			Class<? extends Object> targetClass = invocationTarget.getClass();
@@ -249,7 +251,9 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 		} catch (Exception e) {
 			throw new ServletException(e);
 		} finally {
-			PermissionsManager.get().popUser();
+			if (pushedUser) {
+				PermissionsManager.get().popUser();
+			}
 		}
 	}
 
