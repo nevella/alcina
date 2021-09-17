@@ -103,8 +103,12 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		if (request.getWaitPolicy() == WaitPolicy.RETURN_NODES) {
 			selfAndDescendantCount = response.getSelfAndDescendantCount();
 		}
-		if (isDepthFirst() && selfAndDescendantCount > root.getTreePath()
-				.getSelfAndDescendantCount()) {
+		// FIXME - dirndl 1.3 - not sure about the logic for which
+		// selfAndDescendantCount
+		if (isDepthFirst()
+				&& selfAndDescendantCount > root.getTreePath()
+						.getSelfAndDescendantCount()
+				&& response.getTransforms().size() > 0) {
 			Paginator paginator = new Paginator();
 			paginator.setText("Loading ...");
 			setPaginator(paginator);
@@ -160,13 +164,12 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		this.depthFirst = depthFirst;
 	}
 
-	public void setLabelGenerator(
-			DomainViewNode.LabelGenerator labelGenerator) {
+	public void
+			setLabelGenerator(DomainViewNode.LabelGenerator labelGenerator) {
 		this.labelGenerator = labelGenerator;
 	}
 
-	public void
-			setLastResponse(DomainViewNodeContent.Response lastResponse) {
+	public void setLastResponse(DomainViewNodeContent.Response lastResponse) {
 		DomainViewNodeContent.Response old_lastResponse = this.lastResponse;
 		this.lastResponse = lastResponse;
 		propertyChangeSupport().firePropertyChange("lastResponse",
@@ -219,8 +222,7 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		}
 	}
 
-	public static class DomainViewNode
-			extends Tree.TreeNode<DomainViewNode> {
+	public static class DomainViewNode extends Tree.TreeNode<DomainViewNode> {
 		private DomainViewNodeContent<?> node;
 
 		private TreePath<DomainViewNode> treePath;
@@ -250,20 +252,18 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			populated = false;
 		}
 
-		public DomainViewNode ensureNode(
-				DomainViewNodeContent nodeContent, String path,
-				String beforePath, boolean fireCollectionModificationEvents) {
-			TreePath<DomainViewNode> otherTreePath = treePath
-					.ensurePath(path);
+		public DomainViewNode ensureNode(DomainViewNodeContent nodeContent,
+				String path, String beforePath,
+				boolean fireCollectionModificationEvents) {
+			TreePath<DomainViewNode> otherTreePath = treePath.ensurePath(path);
 			if (otherTreePath.getValue() == null) {
-				DomainViewNode parent = otherTreePath.getParent() == null
-						? null
+				DomainViewNode parent = otherTreePath.getParent() == null ? null
 						: otherTreePath.getParent().getValue();
 				LabelGenerator labelGenerator = provideContainingTree() == null
 						? null
 						: provideContainingTree().labelGenerator;
-				DomainViewNode node = new DomainViewNode(
-						labelGenerator, parent, path);
+				DomainViewNode node = new DomainViewNode(labelGenerator, parent,
+						path);
 				if (parent != null) {
 					parent.modifyChildren(Operation.INSERT, beforePath, node,
 							fireCollectionModificationEvents);
@@ -318,8 +318,7 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		}
 
 		private void modifyChildren(Operation operation, String beforePath,
-				DomainViewNode node,
-				boolean fireCollectionModificationEvents) {
+				DomainViewNode node, boolean fireCollectionModificationEvents) {
 			List<TreeNode<DomainViewNode>> newValue = getChildren();
 			if (fireCollectionModificationEvents) {
 				newValue = new ArrayList<>(newValue);
@@ -329,9 +328,8 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 				int index = newValue.size();
 				if (beforePath != null) {
 					if (node.getTreePath().hasPath(beforePath)) {
-						DomainViewNode beforePathNode = node
-								.getTreePath().ensurePath(beforePath)
-								.getValue();
+						DomainViewNode beforePathNode = node.getTreePath()
+								.ensurePath(beforePath).getValue();
 						index = beforePathNode.getParent().getChildren()
 								.indexOf(beforePathNode);
 					}

@@ -545,6 +545,7 @@ public class LiveTree {
 					transform.setOperation(liveNode.collateOperations());
 					transform.setBeforePath(
 							liveNode.path.provideSuccessorPath());
+					Ax.out(transform);
 					result.add(transform);
 				}
 			});
@@ -741,6 +742,7 @@ public class LiveTree {
 				modifiedNodes.add(this);
 			}
 			viewNode = generatedNode;
+			indexInEntityMap(true);
 			if (dirty && path.getParent() != null) {
 				// give parents a chance to refresh if their children change
 				if (generatorContext.ensureInTransactionResult(
@@ -768,7 +770,8 @@ public class LiveTree {
 		void onChange() {
 			switch (collateOperations()) {
 			case INSERT:
-				indexInEntityMap(true);
+				// will not have a viewNode yet
+				// indexInEntityMap(true);
 				generator.onTreeAddition(generatorContext, this);
 				break;
 			case REMOVE:

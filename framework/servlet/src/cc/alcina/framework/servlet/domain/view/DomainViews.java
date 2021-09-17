@@ -238,6 +238,10 @@ public abstract class DomainViews {
 		}
 	}
 
+	protected boolean filterViewTransformCollation(QueryResult qr) {
+		return true;
+	}
+
 	protected abstract Class<? extends Entity>[] getIndexableEntityClasses();
 
 	protected boolean
@@ -273,6 +277,7 @@ public abstract class DomainViews {
 					.getTransformCollation()
 					.query(PersistentImpl.getImplementation(DomainView.class))
 					.stream().filter(QueryResult::hasNoDeleteTransform)
+					.filter(this::filterViewTransformCollation)
 					.forEach(qr -> onViewModified((DomainView) qr.getObject()));
 			;
 			Transaction.end();
