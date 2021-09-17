@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
@@ -112,7 +111,9 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			ProcessState processState = active.getProcessState();
 			ProcessState messageState = active.getStateMessages().stream()
 					.sorted(EntityComparator.REVERSED_INSTANCE).findFirst()
-					.map(m -> Domain.find(m).getProcessState()).orElse(null);
+					.map(m -> ((Job) m.domain().ensurePopulated())
+							.getProcessState())
+					.orElse(null);
 			DomNode threadDiv = body.builder().tag("div")
 					.className("thread-data").append();
 			DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
@@ -163,10 +164,12 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			List<Job> threadData = JobRegistry.get().getThreadData(job);
 			job.domain().ensurePopulated();
 			DomDoc doc = DomDoc.basicHtmlDoc();
-			String css = ResourceUtilities.readRelativeResource("res/TaskListJobs.css");
+			String css = ResourceUtilities
+					.readRelativeResource("res/TaskListJobs.css");
 			doc.xpath("//head").node().builder().tag("style").text(css)
 					.append();
-			css = ResourceUtilities.readRelativeResource("res/TaskLogJobDetails.css");
+			css = ResourceUtilities
+					.readRelativeResource("res/TaskLogJobDetails.css");
 			doc.xpath("//head").node().builder().tag("style").text(css)
 					.append();
 			DomNode body = doc.html().body();
