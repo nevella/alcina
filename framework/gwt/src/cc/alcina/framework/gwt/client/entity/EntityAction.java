@@ -53,9 +53,24 @@ public enum EntityAction {
 			throw new UnsupportedOperationException();
 		}
 	};
+
 	public abstract Class<? extends PermissibleAction> actionClass();
 
 	public boolean isEditable() {
 		return false;
+	}
+
+	public boolean requiresWritePermission() {
+		switch (this) {
+		case EDIT:
+		case CREATE:
+		case DELETE:
+			return true;
+		case PREVIEW:
+		case SEARCH:
+		case VIEW:
+			return false;
+		}
+		throw new UnsupportedOperationException();
 	}
 }
