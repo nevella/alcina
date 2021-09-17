@@ -128,6 +128,9 @@ public class Domain {
 		return handler.find(locator);
 	}
 
+	/*
+	 * Only access via entity.domain().domainVersion/ensurePopulated();
+	 */
 	public static <V extends Entity> V find(V v) {
 		return handler.find(v);
 	}
