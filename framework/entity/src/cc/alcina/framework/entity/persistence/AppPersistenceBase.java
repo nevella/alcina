@@ -144,7 +144,7 @@ public abstract class AppPersistenceBase {
 			}
 			ClassMetadataCache classInfo = new ServletClassMetadataCacheProvider()
 					.getClassInfo(mainLogger, true);
-			classrefScanner.scan(classInfo);
+			classrefScanner.scan(classInfo, getEntityManager());
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {

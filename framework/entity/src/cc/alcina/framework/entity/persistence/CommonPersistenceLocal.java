@@ -16,7 +16,6 @@ package cc.alcina.framework.entity.persistence;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
-import java.util.Set;
 
 import javax.persistence.EntityManager;
 
@@ -28,7 +27,6 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -54,15 +52,11 @@ public interface CommonPersistenceLocal {
 
 	public <V> V callWithEntityManager(ThrowingFunction<EntityManager, V> call);
 
-	public <T> T ensureObject(T t, String key, String value) throws Exception;
-
 	public <T extends HasId> T ensurePersistent(T obj);
 
 	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper);
 
 	public <T> T findImplInstance(Class<? extends T> clazz, long id);
-
-	public <A> Set<A> getAll(Class<A> clazz);
 
 	public <T> T getItemById(Class<T> clazz, Long id);
 
@@ -111,10 +105,6 @@ public interface CommonPersistenceLocal {
 	public long log(String message, String componentKey);
 
 	public long log(String message, String componentKey, String data);
-
-	public abstract void logActionItem(ActionLogItem result);
-
-	public abstract IUser mergeUser(IUser user);
 
 	public <G extends WrapperPersistable> Long persist(G gwpo) throws Exception;
 
@@ -170,8 +160,6 @@ public interface CommonPersistenceLocal {
 	<W extends WrappedObject> List<W> getWrappedObjects(long from, long to);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
-
-	<E extends Entity> E merge(E entity);
 
 	<T extends HasId> UnwrapWithExceptionsResult<T>
 			unwrapWithExceptions(Collection<T> wrappers);

@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -271,19 +270,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public <T> T ensureObject(T t, String key, String value) throws Exception {
-		T newT = (T) getItemByKeyValue(t.getClass(), key, value, false);
-		if (newT != null) {
-			return newT;
-		}
-		AppPersistenceBase.checkNotReadOnly();
-		PropertyDescriptor descriptor = SEUtilities
-				.getPropertyDescriptorByName(t.getClass(), key);
-		descriptor.getWriteMethod().invoke(t, value);
-		return getEntityManager().merge(t);
-	}
-
-	@Override
 	public <T extends HasId> T ensurePersistent(T obj) {
 		if (!(obj instanceof MvccObject) && getEntityManager().contains(obj)) {
 			return obj;
@@ -338,14 +324,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	public <T> T findImplInstance(Class<? extends T> clazz, long id) {
 		Class<?> implClazz = getImplementation(clazz);
 		return (T) getEntityManager().find(implClazz, id);
-	}
-
-	@Override
-	public <A> Set<A> getAll(Class<A> clazz) {
-		Query query = getEntityManager()
-				.createQuery(String.format("from %s ", clazz.getSimpleName()));
-		List results = query.getResultList();
-		return new LinkedHashSet<A>(results);
 	}
 
 	public abstract EntityManager getEntityManager();
@@ -747,35 +725,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	public long log(String message, String componentKey, String data) {
 		// not required...useful but
 		return 0;
-	}
-
-	@Override
-	// FIXME - mvcc.4 - persist with transforms
-	public void logActionItem(ActionLogItem actionItem) {
-		AppPersistenceBase.checkNotReadOnly();
-		getEntityManager().merge(actionItem);
-	}
-
-	@Override
-	// FIXME - mvcc.4 - persist with transforms
-	public <E extends Entity> E merge(E entity) {
-		AppPersistenceBase.checkNotReadOnly();
-		if (entity instanceof Publication) {
-			((Publication) entity).setUser(
-					getEntityManager().find(getImplementation(IUser.class),
-							((Publication) entity).getUser().getId()));
-		}
-		persistWrappables(entity);
-		return getEntityManager().merge(entity);
-	}
-
-	@Override
-	// FIXME - mvcc.4 - persist with transforms
-	public IUser mergeUser(IUser user) {
-		AppPersistenceBase.checkNotReadOnly();
-		IUser merge = getEntityManager().merge(user);
-		getEntityManager().flush();
-		return merge;
 	}
 
 	@Override
