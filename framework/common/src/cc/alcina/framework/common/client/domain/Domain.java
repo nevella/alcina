@@ -70,7 +70,7 @@ public class Domain {
 		}
 		Class<V> clazz = entity.entityClass();
 		V writeable = entity.domain().wasPersisted()
-				? detachedVersion(Domain.find(entity))
+				? (V) detachedVersion(entity.domain().domainVersion())
 				: Domain.create(clazz);
 		List<PropertyInfo> writableProperties = Reflections.classLookup()
 				.getWritableProperties(clazz);

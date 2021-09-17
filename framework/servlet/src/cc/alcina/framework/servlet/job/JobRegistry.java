@@ -440,9 +440,8 @@ public class JobRegistry {
 				MethodContext.instance().withExecuteOutsideTransaction(true)
 						.run(resource::acquire);
 				try {
-					// ensure lazy (process state) field. FIXME - mvcc.jobs.4 -
-					// remove process state (in job)
-					forJob = forJob.domain().domainVersion();
+					// ensure lazy (process state) field.
+					forJob = forJob.domain().ensurePopulated();
 					forJob.ensureProcessState().provideRecord(record)
 							.setAcquired(true);
 					forJob.persistProcessState();

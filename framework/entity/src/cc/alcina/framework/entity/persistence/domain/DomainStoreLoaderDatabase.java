@@ -52,7 +52,6 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
 import cc.alcina.framework.common.client.domain.DomainProjection;
@@ -910,7 +909,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		ClientInstance instance = EntityLayerObjects.get()
 				.getServerAsClientInstance();
 		EntityLayerObjects.get()
-				.setServerAsClientInstance(Domain.find(instance));
+				.setServerAsClientInstance(instance.domain().domainVersion());
 	}
 
 	private void setupInitialJoinTableCalls(List<Callable> calls) {

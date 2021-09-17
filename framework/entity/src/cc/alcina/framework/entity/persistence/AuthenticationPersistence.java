@@ -82,7 +82,7 @@ public class AuthenticationPersistence {
 				new BootstrapInstanceCreator());
 		ClientInstance persistent = bootstrapInstanceResult.clientInstance;
 		EntityLayerObjects.get().setServerAsClientInstance(persistent);
-		ClientInstance preCommit = Domain.find(persistent);
+		ClientInstance preCommit = persistent.domain().domainVersion();
 		EntityLayerObjects.get().setServerAsClientInstance(preCommit);
 		// publish as transforms (repeating the direct ejb create) to (a)
 		// force consistency in local domain and (b) allow for replay
@@ -90,7 +90,8 @@ public class AuthenticationPersistence {
 		bootstrapInstanceResult.createdDetached.stream()
 				.forEach(e -> TransformManager.get()
 						.objectsToDtes(
-								Collections.singletonList(Domain.find(e)),
+								Collections.singletonList(
+										e.domain().domainVersion()),
 								e.entityClass(), false)
 						.forEach(events::add));
 		/*
@@ -104,7 +105,7 @@ public class AuthenticationPersistence {
 		MethodContext.instance().withContextTrue(
 				TransformPersisterInPersistenceContext.CONTEXT_REPLAYING_FOR_LOGS)
 				.run(() -> Transaction.commit());
-		ClientInstance domainVersion = Domain.find(persistent);
+		ClientInstance domainVersion = persistent.domain().domainVersion();
 		// ensure this instance is the only one ever created in the domain
 		EntityLayerObjects.get().setServerAsClientInstance(domainVersion);
 	}
