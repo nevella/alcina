@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -460,6 +461,10 @@ public class ReflectiveSerializer {
 		}
 
 		public Class knownType() {
+			if (toString().contains("NodeFilterNumericCitableMappingCriterion")
+					&& GWT.isClient()) {
+				int debug = 3;
+			}
 			Class type = null;
 			if (propertyReflector == null) {
 				type = parentSerialization() != null
@@ -524,10 +529,6 @@ public class ReflectiveSerializer {
 
 		void ensureValueWritten() {
 			if (serialNode == null) {
-				if (toString().contains(
-						"[null,ReflectiveRemoteServicePayload].[methodArguments,ArrayList].[null,Request]")) {
-					int debug = 3;
-				}
 				if (serializer.isReferenceSerializer()) {
 					Object idx = state.identityIdx.get(value);
 					if (idx != null) {
