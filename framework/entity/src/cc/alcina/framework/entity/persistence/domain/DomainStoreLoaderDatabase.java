@@ -65,7 +65,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -87,7 +86,6 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.DomainSegmentLoader.DomainSegmentLoaderPhase;
@@ -289,7 +287,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("xrefs");
 		new StatCategory_DomainStore.Warmup.Loader.Xrefs().emit();
-		serverClientInstanceToDomainStoreVersion();
 		warmupEntityRefss.clear();
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {
@@ -903,13 +900,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					.add(new LazyPropertyLoadTask<>(clazz, store));
 			logger.trace("Adding lazy property load task for: {}", clazz);
 		}
-	}
-
-	private void serverClientInstanceToDomainStoreVersion() {
-		ClientInstance instance = EntityLayerObjects.get()
-				.getServerAsClientInstance();
-		EntityLayerObjects.get()
-				.setServerAsClientInstance(instance.domain().domainVersion());
 	}
 
 	private void setupInitialJoinTableCalls(List<Callable> calls) {
