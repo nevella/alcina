@@ -80,7 +80,7 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 	@Override
 	public boolean provideIsDefaultDefs() {
 		return def.provideHasNoCriteria() && def.getGroupingParameters() == null
-				&& def.provideIsDefaultSortOrder();
+				&& def.provideIsDefaultSortOrder()&&def.getPageNumber()==0;
 	}
 
 	@Override
