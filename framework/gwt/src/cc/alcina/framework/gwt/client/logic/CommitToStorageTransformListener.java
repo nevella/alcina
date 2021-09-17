@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -356,6 +357,9 @@ public class CommitToStorageTransformListener extends StateListenable
 			request.setTag(DomainTransformRequestTagProvider.get().getTag());
 			updateTransformQueueVersions();
 			transformQueue.clear();
+		}
+		if(request.getEvents().isEmpty()){
+			return;
 		}
 		final AsyncCallback<DomainTransformResponse> commitRemoteCallback = new ResponseCallback(
 				request);

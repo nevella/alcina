@@ -163,6 +163,6 @@ abstract class DOMImplStandard extends DOMImpl {
 	}
 
 	final native Element getNativeDocumentScrollingElement(DocumentRemote doc) /*-{
-    return doc.scrollingElement;
+		return @com.google.gwt.dom.client.LocalDom::nodeFor(Lcom/google/gwt/core/client/JavaScriptObject;)(doc.scrollingElement);
 	}-*/;
 }

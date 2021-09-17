@@ -752,7 +752,6 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	@Override
 	public void setPropertyJSO(String name, JavaScriptObject value) {
 		ensureRemoteCheck();
-		local().setPropertyJSO(name, value);
 		remote().setPropertyJSO(name, value);
 	}
 
