@@ -266,21 +266,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public void apply(DomainTransformEvent evt)
-			throws DomainTransformException {
-		super.apply(evt);
-		if (getEntityManager() != null
-				&& evt.getTransformType() != TransformType.DELETE_OBJECT) {
-			// FIXME - mvcc.4 - remove this method
-			// for use in IVersionable/DomainStore
-			if (evt.getSource() instanceof MvccObject) {
-				evt.setSource(null);
-			}
-			maybeEnsureSource(evt);
-		}
-	}
-
-	@Override
 	public boolean checkForExistingLocallyCreatedObjects() {
 		// if in db-commit mode, we want a nice crisp fresh untouched instance
 		return getEntityManager() == null;
@@ -1289,16 +1274,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		 * clone/modify
 		 */
 		return entity.getPropertyChangeListeners().length == 1;
-	}
-
-	protected void maybeEnsureSource(DomainTransformEvent evt) {
-		if (WrapperPersistable.class.isAssignableFrom(evt.getObjectClass())) {
-			return;
-		}
-		if (evt.getSource() == null
-				|| !getEntityManager().contains(evt.getSource())) {
-			getObject(evt);
-		}
 	}
 
 	@Override
