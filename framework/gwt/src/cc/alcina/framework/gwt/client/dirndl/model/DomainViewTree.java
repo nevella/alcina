@@ -105,10 +105,11 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		}
 		// FIXME - dirndl 1.3 - not sure about the logic for which
 		// selfAndDescendantCount
-		if (isDepthFirst()
-				&& selfAndDescendantCount > root.getTreePath()
-						.getSelfAndDescendantCount()
-				&& response.getTransforms().size() > 0) {
+		if (isDepthFirst() && selfAndDescendantCount > root.getTreePath()
+				.getSelfAndDescendantCount()
+		// doesn't work with proxy/keep-alive empty responses
+		// && response.getTransforms().size() > 0
+		) {
 			Paginator paginator = new Paginator();
 			paginator.setText("Loading ...");
 			setPaginator(paginator);
