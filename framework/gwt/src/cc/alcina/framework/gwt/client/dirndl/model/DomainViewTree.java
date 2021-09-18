@@ -108,8 +108,8 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		if (isDepthFirst() && selfAndDescendantCount > root.getTreePath()
 				.getSelfAndDescendantCount()
 		// doesn't work with proxy/keep-alive empty responses
-		// && response.getTransforms().size() > 0
-		) {
+				&& response.getTransforms().size() > 0 && response.getRequest()
+						.getWaitPolicy() == WaitPolicy.WAIT_FOR_DELTAS) {
 			Paginator paginator = new Paginator();
 			paginator.setText("Loading ...");
 			setPaginator(paginator);
