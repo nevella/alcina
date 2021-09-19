@@ -341,7 +341,7 @@ public class GraphProjection {
 	public static boolean isPrimitiveOrDataClass(Class c) {
 		return c.isPrimitive() || c == String.class || c == Boolean.class
 				|| c == Character.class || c.isEnum() || c == Class.class
-				|| Number.class.isAssignableFrom(c)
+				|| c == Enum.class || Number.class.isAssignableFrom(c)
 				|| Date.class.isAssignableFrom(c)
 				|| CommonUtils.isEnumOrEnumSubclass(c)
 				|| ProjectByValue.class.isAssignableFrom(c)
@@ -600,7 +600,7 @@ public class GraphProjection {
 	public <T> T project(T source, GraphProjectionContext context)
 			throws Exception {
 		if (context != null) {
-			return project(source, null, context, false);
+			return project(source, null, context);
 		} else {
 			GraphProjection last = LooseContext
 					.get(CONTEXT_LAST_CONTEXT_LOOKUPS);
@@ -617,7 +617,7 @@ public class GraphProjection {
 				GlobalTopicPublisher.get()
 						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, 1);
 				start = System.nanoTime();
-				return project(source, null, context, false);
+				return project(source, null, context);
 			} finally {
 				GlobalTopicPublisher.get()
 						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, -1);
@@ -649,8 +649,8 @@ public class GraphProjection {
 		}
 	}
 
-	public <T> T project(T source, T projected, GraphProjectionContext context,
-			boolean easysChecked) throws Exception {
+	public <T> T project(T source, T projected, GraphProjectionContext context)
+			throws Exception {
 		traversalCount++;
 		if (source == null) {
 			return null;
@@ -664,42 +664,37 @@ public class GraphProjection {
 		}
 		Class sourceClass = source.getClass();
 		boolean checkReachable = false;
-		if (!easysChecked) {
-			if (sourceClass == Timestamp.class && replaceTimestampsWithDates
-					&& context.field.getType() == Date.class) {
-				// actually breaks the (T) contract here - naughty
-				// this is because the arithmetic involved in reconstructing
-				// timestamps in a gwt js client
-				// is expensive
-				return (T) new Date(((Timestamp) source).getTime());
-			}
-			if (isPrimitiveOrDataClass(sourceClass)) {
-				return source;
-			}
-			if (replaceMap != null && source instanceof Entity
-					&& replaceMap.containsKey(source)) {
-				source = (T) replaceMap.get(source);
-				sourceClass = source.getClass();
-			}
-			checkReachable = checkReachable(source);
-			// check here unlikely to matter
-			// if (!reachableBySinglePath) {
-			if (checkReachable) {
-				Object reachedInstance = reached.get(source);
-				if (reachedInstance != null) {
-					if (projected != null && projected != reachedInstance) {
+		if (sourceClass == Timestamp.class && replaceTimestampsWithDates
+				&& context.field.getType() == Date.class) {
+			// actually breaks the (T) contract here - naughty
+			// this is because the arithmetic involved in reconstructing
+			// timestamps in a gwt js client
+			// is expensive
+			return (T) new Date(((Timestamp) source).getTime());
+		}
+		if (isPrimitiveOrDataClass(sourceClass)) {
+			return source;
+		}
+		if (replaceMap != null && source instanceof Entity
+				&& replaceMap.containsKey(source)) {
+			source = (T) replaceMap.get(source);
+			sourceClass = source.getClass();
+		}
+		checkReachable = checkReachable(source);
+		// check here unlikely to matter
+		// if (!reachableBySinglePath) {
+		if (checkReachable) {
+			Object reachedInstance = reached.get(source);
+			if (reachedInstance != null) {
+				if (projected != null && projected != reachedInstance) {
+				} else {
+					if (reachedInstance == NULL_MARKER) {
+						return null;
 					} else {
-						if (reachedInstance == NULL_MARKER) {
-							return null;
-						} else {
-							return (T) reachedInstance;
-						}
+						return (T) reachedInstance;
 					}
 				}
 			}
-			// }
-		} else {
-			checkReachable = checkReachable(source);
 		}
 		if (!checkObjectPermissions(source)) {
 			return null;
@@ -840,7 +835,7 @@ public class GraphProjection {
 				}
 				childContext.adopt(sourceClass, field, context, projected,
 						source);
-				Object cv = project(value, null, childContext, true);
+				Object cv = project(value, null, childContext);
 				field.set(projected, cv);
 			}
 		}

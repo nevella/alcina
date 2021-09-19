@@ -78,7 +78,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				// key in the reached map, so .project() wouldn't work)
 				if (entity != value) {
 					entity = (Entity) graphProjection.project(entity, value,
-							context, false);
+							context);
 					getCache().put((Entity) entity);
 					return (T) entity;
 				}
@@ -103,8 +103,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 						impl = ((HibernateProxy) value)
 								.getHibernateLazyInitializer()
 								.getImplementation();
-						impl = graphProjection.project(impl, value, context,
-								false);
+						impl = graphProjection.project(impl, value, context);
 						getCache().put((Entity) impl);
 					} else if (shellInstantiator != null) {
 						impl = shellInstantiator.instantiateShellObject(lazy,
@@ -199,8 +198,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 							.getHibernateLazyInitializer();
 					Object impl = ((HibernateProxy) value)
 							.getHibernateLazyInitializer().getImplementation();
-					projected = graphProjection.project(impl, value, context,
-							false);
+					projected = graphProjection.project(impl, value, context);
 					getCache().put((Entity) projected);
 				} else {
 					projected = graphProjection.project(value, context);

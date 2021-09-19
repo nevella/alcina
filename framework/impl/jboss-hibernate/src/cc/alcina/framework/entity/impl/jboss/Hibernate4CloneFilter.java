@@ -56,7 +56,7 @@ public class Hibernate4CloneFilter extends CollectionProjectionFilter {
 			if (instantiateProps.contains(context)) {
 				Object impl = ((HibernateProxy) value)
 						.getHibernateLazyInitializer().getImplementation();
-				value = (T) graphCloner.project(impl, value, context, false);
+				value = (T) graphCloner.project(impl, value, context);
 				return value;
 			} else {
 				return null;
