@@ -33,20 +33,22 @@ class SerializationSupport {
 	public static final Comparator<Property> PROPERTY_COMPARATOR = new Comparator<Property>() {
 		@Override
 		public int compare(Property f1, Property f2) {
-			Class checkType = f1.getAccessorMethod().getDeclaringClass();
-			boolean entityType = Reflections.isAssignableFrom(Entity.class,
-					checkType);
-			if (entityType) {
-				/*
-				 * serialize id, localid, other - to ensure population before
-				 * hash
-				 */
-				int idx1 = f1.getName().equals("id") ? 0
-						: f1.getName().equals("localId") ? 1 : 2;
-				int idx2 = f2.getName().equals("id") ? 0
-						: f2.getName().equals("localId") ? 1 : 2;
-				if (idx1 != idx2) {
-					return idx1 - idx2;
+			if (f1.getAccessorMethod() != null) {
+				Class checkType = f1.getAccessorMethod().getDeclaringClass();
+				boolean entityType = Reflections.isAssignableFrom(Entity.class,
+						checkType);
+				if (entityType) {
+					/*
+					 * serialize id, localid, other - to ensure population
+					 * before hash
+					 */
+					int idx1 = f1.getName().equals("id") ? 0
+							: f1.getName().equals("localId") ? 1 : 2;
+					int idx2 = f2.getName().equals("id") ? 0
+							: f2.getName().equals("localId") ? 1 : 2;
+					if (idx1 != idx2) {
+						return idx1 - idx2;
+					}
 				}
 			}
 			return f1.getName().compareTo(f2.getName());
