@@ -37,18 +37,15 @@ public class PersistentAppProperties {
 				});
 	}
 
-	public static <T> void persist(T t, String key) {
+	public static <T> void persistSingleton(T t) {
 		Transaction.commit();
 		ThreadedPermissionsManager.cast()
 				.runWithPushedSystemUserIfNeeded(() -> {
-					UserProperty.ensure(key).serializeObject(t);
+					UserProperty.ensure(t.getClass()).serializeObject(t);
 					Transaction.commit();
 				});
 	}
 
-	public static <T> void persistSingleton(T t) {
-		persist(t, t.getClass().getName());
-	}
 
 	public static void set(String key, String value) {
 		Transaction.commit();

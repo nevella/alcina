@@ -58,6 +58,15 @@ public class EntityLocatorMap implements Serializable {
 		return localToPersistent.get(entity.getLocalId());
 	}
 
+	public synchronized EntityLocator getFor(ObjectRef ref) {
+		long id = ref.getId();
+		if (id != 0) {
+			return new EntityLocator(ref.getClassRef().getRefClass(), id,
+					ref.getLocalId());
+		}
+		return localToPersistent.get(ref.getLocalId());
+	}
+
 	public synchronized EntityLocator getForLocalId(Long localId) {
 		return localToPersistent.get(localId);
 	}

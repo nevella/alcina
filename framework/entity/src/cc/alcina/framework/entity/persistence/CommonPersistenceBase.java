@@ -46,7 +46,6 @@ import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
-import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
@@ -1019,46 +1018,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			result.invalid = true;
 		}
 		return result;
-	}
-
-	private void persistWrappables(HasId hi) {
-		AppPersistenceBase.checkNotReadOnly();
-		try {
-			for (PropertyDescriptor pd : SEUtilities
-					.getPropertyDescriptorsSortedByName(hi.getClass())) {
-				if (pd.getReadMethod() != null) {
-					Wrapper info = pd.getReadMethod()
-							.getAnnotation(Wrapper.class);
-					if (info != null) {
-						Object obj = pd.getReadMethod().invoke(hi,
-								CommonUtils.EMPTY_OBJECT_ARRAY);
-						if (obj instanceof WrapperPersistable) {
-							if (!(GwtMultiplePersistable.class
-									.isAssignableFrom(obj.getClass()))) {
-								throw new Exception(
-										"Trying to persist a per-user object via wrapping");
-							}
-							WrapperPersistable gwpo = (WrapperPersistable) obj;
-							if (info.toStringPropertyName().length() != 0) {
-								PropertyDescriptor tspd = SEUtilities
-										.getPropertyDescriptorByName(
-												hi.getClass(),
-												info.toStringPropertyName());
-								tspd.getWriteMethod().invoke(hi,
-										gwpo.toString());
-							}
-							Long persistId = persist(gwpo);
-							PropertyDescriptor idpd = SEUtilities
-									.getPropertyDescriptorByName(hi.getClass(),
-											info.idPropertyName());
-							idpd.getWriteMethod().invoke(hi, persistId);
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	private <T extends HasId> void
