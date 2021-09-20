@@ -27,7 +27,6 @@ import java.util.Set;
 
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.rpc.impl.AbstractSerializationStreamWriter;
-import com.google.gwt.user.client.rpc.impl.ClientSerializationStreamWriter2;
 import com.google.gwt.user.client.rpc.impl.Serializer;
 import com.google.gwt.user.server.rpc.SerializationPolicy;
 import com.google.gwt.user.server.rpc.impl.SerializabilityUtil;
