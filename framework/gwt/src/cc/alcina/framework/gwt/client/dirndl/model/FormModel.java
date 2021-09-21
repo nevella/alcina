@@ -182,8 +182,6 @@ public class FormModel extends Model {
 	}
 
 	public static class FormElement extends Model {
-		private static transient int formElementIdxCounter;
-
 		protected LabelModel label;
 
 		protected FormValueModel value;
@@ -191,8 +189,6 @@ public class FormModel extends Model {
 		private Field field;
 
 		private Bindable bindable;
-
-		private int formElementIdx;
 
 		private boolean focusOnAttach;
 
@@ -202,7 +198,6 @@ public class FormModel extends Model {
 		public FormElement(Field field, Bindable bindable) {
 			this.field = field;
 			this.bindable = bindable;
-			this.formElementIdx = ++formElementIdxCounter;
 			this.label = new LabelModel(this);
 			this.value = new FormValueModel(this);
 		}
@@ -221,8 +216,8 @@ public class FormModel extends Model {
 			return this.focusOnAttach;
 		}
 
-		public String provideId() {
-			return Ax.format("_dl_form_%s", formElementIdx);
+		public String provideElementName() {
+			return Ax.format("_dl_form_%s", field.getPropertyName());
 		}
 
 		public void setFocusOnAttach(boolean focusOnAttach) {
@@ -373,8 +368,8 @@ public class FormModel extends Model {
 		}
 
 		@Override
-		public String getValueId() {
-			return formElement.provideId();
+		public String getGroupName() {
+			return formElement.provideElementName();
 		}
 	}
 
@@ -466,6 +461,6 @@ public class FormModel extends Model {
 
 		Field getField();
 
-		String getValueId();
+		String getGroupName();
 	}
 }
