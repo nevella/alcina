@@ -86,7 +86,8 @@ public class Transaction implements Comparable<Transaction> {
 			Preconditions.checkState(!TransformManager.get().hasTransforms());
 			return 0;
 		} else {
-			Preconditions.checkState(transaction.isWriteable());
+			Preconditions.checkState(transaction.isWriteable()
+					|| TransformManager.get().getTransforms().isEmpty());
 			int transformCount = TransformCommit.commitTransformsAsRoot();
 			return transformCount;
 		}

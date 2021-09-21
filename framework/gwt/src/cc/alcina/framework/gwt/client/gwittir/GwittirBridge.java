@@ -941,7 +941,10 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 		FieldDisplayNameComparator(ClientBeanReflector bi) {
 			this.bi = bi;
-			this.propertyOrder = bi.getAnnotation(Bean.class).propertyOrder();
+			PropertyOrder classAnnotation = bi
+					.getAnnotation(PropertyOrder.class);
+			this.propertyOrder = classAnnotation != null ? classAnnotation
+					: bi.getAnnotation(Bean.class).propertyOrder();
 		}
 
 		@Override

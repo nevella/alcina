@@ -570,11 +570,11 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public Response suggest(BoundSuggestOracleRequest request) {
 		try {
-			LooseContext.set(DomainSearcher.CONTEXT_HINT, request.hint);
+			LooseContext.set(DomainSearcher.CONTEXT_HINT, request.getHint());
 			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
-					.forName(request.targetClassName);
+					.forName(request.getTargetClassName());
 			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
-					.handleRequest(clazz, request, request.hint);
+					.handleRequest(clazz, request, request.getHint());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -839,7 +839,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		public Response handleRequest(Class<T> clazz,
 				BoundSuggestOracleRequest request, String hint) {
 			Response response = new Response();
-			List<T> responses = getResponses(request.getQuery(), request.model,
+			List<T> responses = getResponses(request.getQuery(), request.getModel(),
 					hint);
 			responses = projectResponses(responses, clazz);
 			response.setSuggestions(responses.stream()

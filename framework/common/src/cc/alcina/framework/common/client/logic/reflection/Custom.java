@@ -34,6 +34,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 @Target({ ElementType.METHOD, ElementType.FIELD })
 @ClientVisible
 public @interface Custom {
+	// FIXME - dirndl 1.2 - directed??
 	Class<? extends Customiser> customiserClass();
 
 	NamedParameter[] parameters() default {};
