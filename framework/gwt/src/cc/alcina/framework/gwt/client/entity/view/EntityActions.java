@@ -23,56 +23,6 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 
 public class EntityActions {
-	@Ref("edit")
-	@ActionRefHandler(EditHandler.class)
-	public static class EditRef extends ActionRef {
-	}
-
-	public static class EditHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
-					.copy();
-			entityPlace.action = EntityAction.EDIT;
-			Client.goTo(entityPlace);
-		}
-	}
-
-	public static class VoidHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-		}
-	}
-
-	@Ref("delete")
-	@ActionRefHandler(DeleteHandler.class)
-	public static class DeleteRef extends ActionRef {
-	}
-
-	public static class DeleteHandler extends ActionHandler {
-		@Override
-		public void handleAction(Node node, GwtEvent event,
-				ActionRefPlace place) {
-			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
-					.copy();
-			if (Window.confirm(Ax.format(
-					"Are you sure you want to delete the selected %s?",
-					entityPlace.provideCategoryString(1, false)))) {
-				entityPlace.provideEntity().delete();
-				MessageManager.get().icyMessage(Ax.format("%s deleted",
-						entityPlace.provideCategoryString(1, false)));
-				Client.refreshCurrentPlace();
-			}
-		}
-	}
-
-	@Ref("create")
-	@ActionRefHandler(CreateHandler.class)
-	public static class CreateRef extends ActionRef {
-	}
-
 	public static class CreateHandler extends ActionHandler {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
@@ -104,6 +54,54 @@ public class EntityActions {
 		}
 	}
 
+	@Ref("create")
+	@ActionRefHandler(CreateHandler.class)
+	public static class CreateRef extends ActionRef {
+	}
+
+	public static class DeleteHandler extends ActionHandler {
+		@Override
+		public void handleAction(Node node, GwtEvent event,
+				ActionRefPlace place) {
+			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
+					.copy();
+			if (Window.confirm(Ax.format(
+					"Are you sure you want to delete the selected %s?",
+					entityPlace.provideCategoryString(1, false)))) {
+				entityPlace.provideEntity().delete();
+				MessageManager.get().icyMessage(Ax.format("%s deleted",
+						entityPlace.provideCategoryString(1, false)));
+				Client.refreshCurrentPlace();
+			}
+		}
+	}
+
+	@Ref("delete")
+	@ActionRefHandler(DeleteHandler.class)
+	public static class DeleteRef extends ActionRef {
+	}
+
+	public static class EditHandler extends ActionHandler {
+		@Override
+		public void handleAction(Node node, GwtEvent event,
+				ActionRefPlace place) {
+			EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
+					.copy();
+			entityPlace.action = EntityAction.EDIT;
+			Client.goTo(entityPlace);
+		}
+	}
+
+	@Ref("edit")
+	@ActionRefHandler(EditHandler.class)
+	public static class EditRef extends ActionRef {
+	}
+
+	@Ref("preview")
+	@ActionRefHandler(VoidHandler.class)
+	public static class PreviewRef extends ActionRef {
+	}
+
 	public static class ViewHandler extends ActionHandler {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
@@ -120,8 +118,10 @@ public class EntityActions {
 	public static class ViewRef extends ActionRef {
 	}
 
-	@Ref("preview")
-	@ActionRefHandler(VoidHandler.class)
-	public static class PreviewRef extends ActionRef {
+	public static class VoidHandler extends ActionHandler {
+		@Override
+		public void handleAction(Node node, GwtEvent event,
+				ActionRefPlace place) {
+		}
 	}
 }
