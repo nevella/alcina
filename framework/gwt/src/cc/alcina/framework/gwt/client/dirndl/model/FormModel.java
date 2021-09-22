@@ -186,7 +186,7 @@ public class FormModel extends Model {
 
 		protected FormValueModel value;
 
-		private Field field;
+		protected Field field;
 
 		private Bindable bindable;
 
@@ -202,6 +202,14 @@ public class FormModel extends Model {
 			this.value = new FormValueModel(this);
 		}
 
+		public String getElementName() {
+			return Ax.format("_dl_form_%s", field.getPropertyName());
+		}
+
+		public Field getField() {
+			return this.field;
+		}
+
 		@Directed
 		public LabelModel getLabel() {
 			return this.label;
@@ -214,10 +222,6 @@ public class FormModel extends Model {
 
 		public boolean isFocusOnAttach() {
 			return this.focusOnAttach;
-		}
-
-		public String provideElementName() {
-			return Ax.format("_dl_form_%s", field.getPropertyName());
 		}
 
 		public void setFocusOnAttach(boolean focusOnAttach) {
@@ -369,7 +373,7 @@ public class FormModel extends Model {
 
 		@Override
 		public String getGroupName() {
-			return formElement.provideElementName();
+			return formElement.getElementName();
 		}
 	}
 
