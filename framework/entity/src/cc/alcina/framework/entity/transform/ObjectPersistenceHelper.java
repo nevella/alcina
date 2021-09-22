@@ -92,7 +92,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 					.stream()
 					.filter(pd -> !(pd.getName().equals("class")
 							|| pd.getName().equals("propertyChangeListeners")))
-					.map(pd -> new JvmPropertyReflector(clazz, pd))
+					.map(pd -> JvmPropertyReflector.get(clazz, pd))
 					.collect(Collectors.toList()),
 			100);
 

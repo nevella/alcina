@@ -83,6 +83,8 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceValueCustomiser;
@@ -277,6 +279,10 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	private List<String> ignoreProperties;
 
 	private GwittirDateRendererProvider dateRendererProvider = new GwittirDateRendererProvider();
+
+	// FIXME - dirndl.meta
+	private MultikeyMap<PropertyReflector> reflectors = new UnsortedMultikeyMap<>(
+			2);
 
 	private GwittirBridge() {
 		super();
@@ -645,58 +651,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
 		Property property = getPropertyForClass(clazz, propertyName);
-		return new PropertyReflector() {
-			@Override
-			public <A extends Annotation> A
-					getAnnotation(Class<A> annotationClass) {
-				return Reflections.propertyAccessor().getAnnotationForProperty(
-						clazz, annotationClass, propertyName);
-			}
-
-			@Override
-			public Class getDefiningType() {
-				return clazz;
-			}
-
-			@Override
-			public String getPropertyName() {
-				return property.getName();
-			}
-
-			@Override
-			public Class getPropertyType() {
-				try {
-					return property.getType();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			@Override
-			public Object getPropertyValue(Object value) {
-				try {
-					return property.getAccessorMethod().invoke(value,
-							new Object[0]);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			@Override
-			public boolean isReadOnly() {
-				return property.getMutatorMethod() == null;
-			}
-
-			@Override
-			public void setPropertyValue(Object bean, Object value) {
-				try {
-					property.getMutatorMethod().invoke(bean,
-							new Object[] { value });
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		};
+		return reflectors.ensure(
+				() -> new PropertyReflectorImpl(property, clazz, propertyName),
+				clazz, propertyName);
 	}
 
 	@Override
@@ -930,6 +887,72 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				return AU_DATE_TIME_TITLE_PROVIDER;
 			} else {
 				return AU_DATE_PROVIDER;
+			}
+		}
+	}
+
+	private static class PropertyReflectorImpl implements PropertyReflector {
+		private final Property property;
+
+		private final Class clazz;
+
+		private final String propertyName;
+
+		private PropertyReflectorImpl(Property property, Class clazz,
+				String propertyName) {
+			this.property = property;
+			this.clazz = clazz;
+			this.propertyName = propertyName;
+		}
+
+		@Override
+		public <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass) {
+			return Reflections.propertyAccessor().getAnnotationForProperty(
+					this.clazz, annotationClass, this.propertyName);
+		}
+
+		@Override
+		public Class getDefiningType() {
+			return this.clazz;
+		}
+
+		@Override
+		public String getPropertyName() {
+			return this.property.getName();
+		}
+
+		@Override
+		public Class getPropertyType() {
+			try {
+				return this.property.getType();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		@Override
+		public Object getPropertyValue(Object value) {
+			try {
+				return this.property.getAccessorMethod().invoke(value,
+						new Object[0]);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		@Override
+		public boolean isReadOnly() {
+			return this.property.getMutatorMethod() == null;
+		}
+
+		@Override
+		public void setPropertyValue(Object bean, Object value) {
+			try {
+				this.property.getMutatorMethod().invoke(bean,
+						new Object[] { value });
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
 			}
 		}
 	}
