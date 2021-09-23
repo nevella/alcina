@@ -12,6 +12,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.Ax;
@@ -25,8 +26,10 @@ public class MethodIndividualPropertyReflector implements PropertyReflector {
 
 	public static synchronized MethodIndividualPropertyReflector
 			get(Class clazz, String propertyName) {
-		return cache.ensure(() -> new MethodIndividualPropertyReflector(clazz,
-				propertyName), clazz, propertyName);
+		return cache.ensure(
+				() -> new MethodIndividualPropertyReflector(
+						Domain.resolveEntityClass(clazz), propertyName),
+				Domain.resolveEntityClass(clazz), propertyName);
 	}
 
 	private Object[] emptyValue = new Object[0];
@@ -174,7 +177,8 @@ public class MethodIndividualPropertyReflector implements PropertyReflector {
 	}
 
 	protected void ensureMethods(Object value) throws IntrospectionException {
-		Class<? extends Object> clazz = value.getClass();
+		Class<? extends Object> clazz = Domain
+				.resolveEntityClass(value.getClass());
 		if (clazz != methodDeclaringClass) {
 			PropertyDescriptor pd = SEUtilities
 					.getPropertyDescriptorByName(clazz, propertyName);

@@ -4,6 +4,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -16,8 +17,9 @@ public class JvmPropertyReflector implements PropertyReflector {
 	public static synchronized JvmPropertyReflector get(Class clazz,
 			PropertyDescriptor propertyDescriptor) {
 		return cache.ensure(
-				() -> new JvmPropertyReflector(clazz, propertyDescriptor),
-				clazz, propertyDescriptor);
+				() -> new JvmPropertyReflector(Domain.resolveEntityClass(clazz),
+						propertyDescriptor),
+				Domain.resolveEntityClass(clazz), propertyDescriptor);
 	}
 
 	private Class clazz;
