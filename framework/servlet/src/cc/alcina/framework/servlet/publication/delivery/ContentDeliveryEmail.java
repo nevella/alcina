@@ -13,23 +13,22 @@ import java.util.List;
 import java.util.Properties;
 import java.util.UUID;
 
-import javax.activation.DataHandler;
-import javax.activation.DataSource;
-import javax.activation.FileDataSource;
-import javax.mail.BodyPart;
-import javax.mail.Message;
-import javax.mail.MessagingException;
-import javax.mail.Multipart;
-import javax.mail.NoSuchProviderException;
-import javax.mail.Session;
-import javax.mail.Transport;
-import javax.mail.internet.AddressException;
-import javax.mail.internet.InternetAddress;
-import javax.mail.internet.MimeBodyPart;
-import javax.mail.internet.MimeMultipart;
-import javax.mail.util.ByteArrayDataSource;
-
-import com.sun.mail.smtp.SMTPMessage;
+import jakarta.activation.DataSource;
+import jakarta.activation.FileDataSource;
+import jakarta.activation.DataHandler;
+import jakarta.mail.BodyPart;
+import jakarta.mail.Message;
+import jakarta.mail.MessagingException;
+import jakarta.mail.Multipart;
+import jakarta.mail.NoSuchProviderException;
+import jakarta.mail.Session;
+import jakarta.mail.Transport;
+import jakarta.mail.internet.AddressException;
+import jakarta.mail.internet.InternetAddress;
+import jakarta.mail.internet.MimeBodyPart;
+import jakarta.mail.internet.MimeMessage;
+import jakarta.mail.internet.MimeMultipart;
+import jakarta.mail.util.ByteArrayDataSource;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -130,6 +129,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				"smtp.from.address");
 		String fromName = ResourceUtilities.getBundledString(c,
 				"smtp.from.name");
+		String replyTo = null;
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
 		}
@@ -138,12 +138,25 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		props.put("mail.smtp.host", host);
 		props.put("mail.smtp.auth", authenticate.toString());
+		props.put("mail.transport.protocol", "smtp");
 		if (ResourceUtilities.is(c, "smtp.ttls")) {
 			props.setProperty("mail.smtp.starttls.enable", "true");
 		}
+		if (isUseVerp() && PublicationContext.get() != null) {
+			String publicationUid = PublicationContext
+					.get().publicationResult.getPublicationUid();
+			// will be null if non-persistent
+			if (publicationUid != null) {
+				replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
+						String.format("$1+.r.%s@$2", publicationUid));
+				String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
+						String.format("$1+.b.%s@$2", publicationUid));
+				props.put("mail.smtp.from", bounceTo);
+			}
+		}
 		Session session = Session.getInstance(props, null);
 		session.setDebug(debug);
-		SMTPMessage msg = new SMTPMessage(session);
+		MimeMessage msg = new MimeMessage(session); 
 		msg.setSentDate(new Date());
 		msg.setFrom(new InternetAddress(fromAddress, fromName));
 		List<InternetAddress> addresses = new ArrayList<InternetAddress>();
@@ -278,20 +291,10 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			multipart.addBodyPart(messageBodyPart);
 			msg.setContent(multipart);
 		}
-		if (isUseVerp() && PublicationContext.get() != null) {
-			String publicationUid = PublicationContext
-					.get().publicationResult.getPublicationUid();
-			// will be null if non-persistent
-			if (publicationUid != null) {
-				String replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
-						String.format("$1+.r.%s@$2", publicationUid));
-				String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
-						String.format("$1+.b.%s@$2", publicationUid));
-				msg.setEnvelopeFrom(bounceTo);
-				msg.setHeader("Reply-to", replyTo);
-			}
+		if (replyTo != null) {
+			msg.setHeader("Reply-to", replyTo);
 		}
-		Transport transport = session.getTransport("smtp");
+		Transport transport = session.getTransport();
 		transport.connect(host, port, userName, password);
 		transport.sendMessage(msg, msg.getAllRecipients());
 		if (PublicationContext.get() != null) {
