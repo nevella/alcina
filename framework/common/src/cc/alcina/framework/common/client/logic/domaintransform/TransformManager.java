@@ -774,7 +774,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	public void deregisterDomainObjects(Collection<Entity> entities) {
+	public void deregisterDomainObjects(Collection<? extends Entity> entities) {
 		entities.forEach(this::deregisterDomainObject);
 	}
 
@@ -1425,6 +1425,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void pushTransformsInCurrentThread(
 			Collection<DomainTransformEvent> dtes) {
 		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
+	}
+
+	public void register(List<? extends Entity> entities, boolean register) {
+		if (register) {
+			registerDomainObjects(entities);
+		} else {
+			deregisterDomainObjects(entities);
+		}
 	}
 
 	// FIXME - mvcc.adjunt - most app-level calls to this are legacy and can be

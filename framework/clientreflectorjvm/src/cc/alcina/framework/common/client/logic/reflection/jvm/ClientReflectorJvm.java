@@ -301,7 +301,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (!reflectors.containsKey(clazz)) {
 			Map<String, ClientPropertyReflector> propertyReflectors = new HashMap<String, ClientPropertyReflector>();
 			for (PropertyDescriptor pd : SEUtilities
-					.getPropertyDescriptorsSortedByName(clazz)) {
+					.getPropertyDescriptorsSortedByField(clazz)) {
 				if (pd.getName().equals("class")
 						|| pd.getName().equals("propertyChangeListeners")) {
 					continue;

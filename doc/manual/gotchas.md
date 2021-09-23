@@ -13,6 +13,7 @@ PersistentUnitCacheDir line 355
 
 # gwt compilation error logging?
 CompilationStateBuilder l 373 
+(and set suppressErrors=false)
 
 # the dangers of alcina-entity.jar
 gwt serialization issues? clean & rebuild that jar
