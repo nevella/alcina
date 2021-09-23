@@ -417,6 +417,8 @@ public abstract class Entity<T extends Entity> extends Bindable
 	public static class EntityComparator implements Comparator<Entity> {
 		public static final EntityComparator INSTANCE = new EntityComparator();
 
+		public static final EntityComparatorLocalsHigh LOCALS_HIGH = new EntityComparatorLocalsHigh();
+
 		public static final Comparator<Entity> REVERSED_INSTANCE = new EntityComparator()
 				.reversed();
 

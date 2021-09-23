@@ -167,7 +167,34 @@ public class PermissionsManager implements DomainTransformListener {
 		return permissionsExtension;
 	}
 
+	public static boolean hasDeletePermission(Object object) {
+		AnnotationLocation clazzLocation = new AnnotationLocation(
+				object.getClass(), null);
+		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
+		ObjectPermissions op = clazzLocation
+				.getAnnotation(ObjectPermissions.class);
+		if (op == null) {
+			return false;
+		} else {
+			return PermissionsManager.get().isPermitted(object, op.delete());
+		}
+	}
+
 	public static boolean hasReadPermission(Object object) {
+		AnnotationLocation clazzLocation = new AnnotationLocation(
+				object.getClass(), null);
+		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
+		ObjectPermissions op = clazzLocation
+				.getAnnotation(ObjectPermissions.class);
+		if (op == null) {
+			return false;
+		} else {
+			return PermissionsManager.get().checkEffectivePropertyPermission(op,
+					null, object, true);
+		}
+	}
+
+	public static boolean hasWritePermission(Object object) {
 		AnnotationLocation clazzLocation = new AnnotationLocation(
 				object.getClass(), null);
 		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);

@@ -19,6 +19,19 @@ public class IdentityArrayList<T> extends ArrayList<T> {
 		return result;
 	}
 
+	public static <T> List<T> insert(List<T> original, T insert, T after) {
+		IdentityArrayList<T> result = new IdentityArrayList<>(original);
+		int index = result.indexOf(after);
+		result.add(index + 1, insert);
+		return result;
+	}
+
+	public static <T> IdentityArrayList<T> remove(List<T> original, T delta) {
+		IdentityArrayList<T> result = new IdentityArrayList<>(original);
+		result.remove(delta);
+		return result;
+	}
+
 	public IdentityArrayList() {
 		super();
 	}

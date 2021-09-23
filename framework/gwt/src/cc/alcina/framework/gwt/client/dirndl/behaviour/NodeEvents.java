@@ -103,6 +103,22 @@ public class NodeEvents {
 		}
 	}
 
+	public static class Delete extends TopicEvent<Object, Delete.Handler> {
+		@Override
+		public void dispatch(Delete.Handler handler) {
+			handler.onDelete(this);
+		}
+
+		@Override
+		public Class<Delete.Handler> getHandlerClass() {
+			return Delete.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onDelete(Delete event);
+		}
+	}
+
 	public static class Filter extends TopicEvent<Object, Filter.Handler> {
 		@Override
 		public void dispatch(Filter.Handler handler) {

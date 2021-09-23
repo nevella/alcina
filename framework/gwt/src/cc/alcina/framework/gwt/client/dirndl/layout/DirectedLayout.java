@@ -909,10 +909,13 @@ public class DirectedLayout {
 					}
 					break;
 				case PROPERTY:
+					String propertyName = binding.to().isEmpty()
+							? binding.from()
+							: binding.to();
 					if (value == null) {
-						element.removeAttribute(binding.to());
+						element.removeAttribute(propertyName);
 					} else {
-						element.setAttribute(binding.to(), stringValue);
+						element.setAttribute(propertyName, stringValue);
 					}
 					break;
 				case CSS_CLASS: {

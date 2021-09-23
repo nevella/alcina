@@ -123,6 +123,7 @@ public class DomainObjectSuggestCustomiser
 			cssClassName = args.cssClassName();
 			hintValue = args.hint();
 			placeholderText = args.placeholder();
+			rendererClassValue = args.rendererClass();
 		}
 		return editable ? this
 				: readonlyCustomiserClassValue == null
@@ -174,9 +175,11 @@ public class DomainObjectSuggestCustomiser
 
 		String placeholder() default "Type for suggestions";
 
+		Class<? extends Renderer> rendererClass() default BoundSuggestOracleResponseTypeRenderer.class;
+
 		boolean showOnFocus() default false;
 
-		Class targetClass();
+		Class<? extends BoundSuggestOracleResponseType> targetClass();
 	}
 
 	@ClientInstantiable
