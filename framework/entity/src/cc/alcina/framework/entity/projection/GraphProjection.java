@@ -445,7 +445,7 @@ public class GraphProjection {
 
 	private String contextDebugPath;
 
-	protected Map reached = new ProjectionIdentityMap();
+	protected Map reached;
 
 	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>(
 			LOOKUP_SIZE);
@@ -499,6 +499,8 @@ public class GraphProjection {
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
 		this.disablePerObjectPermissions = LooseContext
 				.is(CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS);
+		reached = new ProjectionIdentityMap(ResourceUtilities
+				.getInteger(GraphProjection.class, "maxReached"));
 	}
 
 	public GraphProjection(GraphProjectionFieldFilter fieldFilter,
@@ -1262,6 +1264,12 @@ public class GraphProjection {
 		JPAImplementation jpaImplementation = Registry
 				.implOrNull(JPAImplementation.class);
 
+		private int maxSize;
+
+		public ProjectionIdentityMap(int maxSize) {
+			this.maxSize = maxSize;
+		}
+
 		@Override
 		public Set entrySet() {
 			throw new UnsupportedOperationException();
@@ -1285,6 +1293,7 @@ public class GraphProjection {
 
 		@Override
 		public Object put(Object key, Object value) {
+			Preconditions.checkState(size() < maxSize, "Oversized projection");
 			if (key instanceof Entity) {
 				Entity entityKey = (Entity) key;
 				if (useNonEntityMap(entityKey)) {
@@ -1298,6 +1307,11 @@ public class GraphProjection {
 				nonEntities.put(key, value);
 				return null;
 			}
+		}
+
+		@Override
+		public int size() {
+			return entities.size() + nonEntities.size();
 		}
 
 		boolean useNonEntityMap(Entity entity) {
