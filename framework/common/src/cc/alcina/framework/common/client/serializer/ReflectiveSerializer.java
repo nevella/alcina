@@ -152,9 +152,6 @@ public class ReflectiveSerializer {
 		}
 		Class lookupClass = serializationClass(clazz);
 		return typeSerializers.computeIfAbsent(lookupClass, k -> {
-			if (!GWT.isClient()) {
-				int debug = 3;
-			}
 			List<Class> toResolve = Arrays.asList(lookupClass);
 			while (toResolve.size() > 0) {
 				Optional<Class> match = toResolve.stream()
@@ -464,6 +461,10 @@ public class ReflectiveSerializer {
 		}
 
 		public Class knownType() {
+			if (toString().contains("NodeFilterNumericCitableMappingCriterion")
+					&& GWT.isClient()) {
+				int debug = 3;
+			}
 			Class type = null;
 			if (propertyReflector == null) {
 				type = parentSerialization() != null

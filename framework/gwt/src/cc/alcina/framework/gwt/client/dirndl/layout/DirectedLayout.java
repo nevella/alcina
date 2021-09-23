@@ -49,16 +49,6 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
-/**
- * FIXME - dirndl.perf
- * 
- * Minimise annotation resolution by caching an intermediate renderer object
- * which itself caches property/reflector annotation tuples. Also apply to
- * reflective serializer
- * 
- * @author nick@alcina.cc
- *
- */
 public class DirectedLayout {
 	private static Logger logger = LoggerFactory
 			.getLogger(DirectedLayout.class);
@@ -89,7 +79,8 @@ public class DirectedLayout {
 	}
 
 	@ClientInstantiable
-	public static class ContextResolver<M> extends AnnotationLocation.Resolver {
+	public static class ContextResolver<M>
+			implements AnnotationLocation.Resolver {
 		private M model;
 
 		public ContextResolver() {
@@ -97,6 +88,13 @@ public class DirectedLayout {
 
 		public M getModel() {
 			return this.model;
+		}
+
+		@Override
+		public <A extends Annotation> A resolveAnnotation(
+				Class<A> annotationClass, AnnotationLocation location) {
+			return AnnotationLocation.Resolver.super.resolveAnnotation(
+					annotationClass, location);
 		}
 
 		public Object resolveModel(Object model) {
@@ -179,9 +177,6 @@ public class DirectedLayout {
 		}
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
-			if (model == null && propertyReflector == null) {
-				return null;
-			}
 			AnnotationLocation location = new AnnotationLocation(
 					model == null ? null : model.getClass(), propertyReflector);
 			A annotation = resolver.resolveAnnotation(clazz, location);

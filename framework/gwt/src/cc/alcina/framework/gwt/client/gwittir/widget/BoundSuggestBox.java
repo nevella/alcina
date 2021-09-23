@@ -173,7 +173,7 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 		base.addSelectionHandler(evt -> {
 			if (evt.getSelectedItem() != null) {
 				setValue((T) ((BoundSuggestOracleSuggestion) evt
-						.getSelectedItem()).getTypedValue());
+						.getSelectedItem()).typedValue);
 			}
 		});
 		base.addFocusListener(new FocusListener() {
@@ -241,10 +241,10 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 			BoundSuggestOracleRequest boundRequest = new BoundSuggestOracleRequest();
 			boundRequest.setLimit(request.getLimit());
 			boundRequest.setQuery(request.getQuery());
-			boundRequest.setTargetClassName(clazz.getName());
-			boundRequest.setHint(hint);
+			boundRequest.targetClassName = clazz.getName();
+			boundRequest.hint = hint;
 			if (model instanceof BoundSuggestOracleModel) {
-				boundRequest.setModel((BoundSuggestOracleModel) model);
+				boundRequest.model = (BoundSuggestOracleModel) model;
 			}
 			Optional.ofNullable(runningCallback)
 					.ifPresent(sc -> sc.setCancelled(true));
@@ -277,34 +277,10 @@ public class BoundSuggestBox<T> extends AbstractBoundWidget<T>
 	}
 
 	public static class BoundSuggestOracleRequest extends Request {
-		private BoundSuggestOracleModel model;
+		public BoundSuggestOracleModel model;
 
-		private String targetClassName;
+		public String targetClassName;
 
-		private String hint;
-
-		public String getHint() {
-			return hint;
-		}
-
-		public BoundSuggestOracleModel getModel() {
-			return model;
-		}
-
-		public String getTargetClassName() {
-			return targetClassName;
-		}
-
-		public void setHint(String hint) {
-			this.hint = hint;
-		}
-
-		public void setModel(BoundSuggestOracleModel model) {
-			this.model = model;
-		}
-
-		public void setTargetClassName(String targetClassName) {
-			this.targetClassName = targetClassName;
-		}
+		public String hint;
 	}
 }

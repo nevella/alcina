@@ -6,25 +6,13 @@ import java.lang.annotation.Annotation;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class JvmPropertyReflector implements PropertyReflector {
-	private static MultikeyMap<JvmPropertyReflector> cache = new UnsortedMultikeyMap<>(
-			2);
-
-	public static synchronized JvmPropertyReflector get(Class clazz,
-			PropertyDescriptor propertyDescriptor) {
-		return cache.ensure(
-				() -> new JvmPropertyReflector(clazz, propertyDescriptor),
-				clazz, propertyDescriptor);
-	}
-
 	private Class clazz;
 
 	private PropertyDescriptor propertyDescriptor;
 
-	private JvmPropertyReflector(Class clazz,
+	public JvmPropertyReflector(Class clazz,
 			PropertyDescriptor propertyDescriptor) {
 		this.clazz = clazz;
 		this.propertyDescriptor = propertyDescriptor;
@@ -35,11 +23,6 @@ public class JvmPropertyReflector implements PropertyReflector {
 		return propertyDescriptor.getReadMethod() == null ? null
 				: propertyDescriptor.getReadMethod()
 						.getAnnotation(annotationClass);
-	}
-
-	@Override
-	public Class getDefiningType() {
-		return clazz;
 	}
 
 	@Override
@@ -59,11 +42,6 @@ public class JvmPropertyReflector implements PropertyReflector {
 	}
 
 	@Override
-	public boolean isReadOnly() {
-		return propertyDescriptor.getWriteMethod() == null;
-	}
-
-	@Override
 	public void setPropertyValue(Object bean, Object newValue) {
 		Reflections.propertyAccessor().setPropertyValue(bean, getPropertyName(),
 				newValue);
@@ -72,5 +50,15 @@ public class JvmPropertyReflector implements PropertyReflector {
 	@Override
 	public String toString() {
 		return Ax.format("%s.%s", clazz.getSimpleName(), getPropertyName());
+	}
+
+	@Override
+	public Class getDefiningType() {
+		return clazz;
+	}
+
+	@Override
+	public boolean isReadOnly() {
+		return propertyDescriptor.getWriteMethod() == null;
 	}
 }

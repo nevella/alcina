@@ -103,7 +103,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	private boolean reverse;
 
-	private boolean skipGwtTransient;
+	private boolean bypassGwtTransient;
 
 	private boolean dumpPaths;
 
@@ -114,6 +114,11 @@ public class StatsFilter extends CollectionProjectionFilter {
 	private boolean noPath;
 
 	public StatsFilter() {
+	}
+
+	public StatsFilter bypassGwtTransient() {
+		this.bypassGwtTransient = true;
+		return this;
 	}
 
 	public StatsFilter dumpPaths() {
@@ -127,7 +132,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 			throws Exception {
 		T filtered = super.filterData(original, projected, context,
 				graphProjection);
-		if (skip(context.field)) {
+		if (bypass(context.field)) {
 			return null;
 		}
 		String toPath = noPath ? "..." : context.toPath(!noPathToString);
@@ -170,9 +175,14 @@ public class StatsFilter extends CollectionProjectionFilter {
 		return this;
 	}
 
-	public StatsFilter skipGwtTransient() {
-		this.skipGwtTransient = true;
-		return this;
+	private boolean bypass(Field field) {
+		if (bypassGwtTransient) {
+			if (field != null
+					&& field.getAnnotation(GwtTransient.class) != null) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private Field[] getFieldsForClass(Object projected) {
@@ -199,16 +209,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 		return projectableFields.get(clazz);
 	}
 
-	private boolean skip(Field field) {
-		if (skipGwtTransient) {
-			if (field != null
-					&& field.getAnnotation(GwtTransient.class) != null) {
-				return true;
-			}
-		}
-		return false;
-	}
-
 	void dumpStats() {
 		try {
 			Set<Object> owned = new LinkedHashSet<Object>();
@@ -224,7 +224,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 				statsItemLookup.put(o, item);
 				Field[] fields = getFieldsForClass(o);
 				for (Field field : fields) {
-					if (skip(field)) {
+					if (bypass(field)) {
 						continue;
 					}
 					Object o3 = field.get(o);

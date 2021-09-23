@@ -61,6 +61,11 @@ public class DomainObjectSuggestCustomiser
 
 	private Class classValue;
 
+	public DomainObjectSuggestCustomiser withClassValue(Class classValue) {
+		this.classValue = classValue;
+		return this;
+	}
+
 	private Class rendererClassValue = ReflectInstantiableToStringRenderer.class;
 
 	private String hintValue = "";
@@ -73,9 +78,33 @@ public class DomainObjectSuggestCustomiser
 
 	private String placeholderText;
 
-	private String cssClassName = "";
 
+	private String cssClassName = "";
 	private String suggestBoxCssClassName = "";
+
+	public DomainObjectSuggestCustomiser withCssClassName(String cssClassName) {
+		this.cssClassName = cssClassName;
+		return this;
+	}
+
+	public DomainObjectSuggestCustomiser withSuggestBoxCssClassName(String suggestBoxCssClassName) {
+		this.suggestBoxCssClassName = suggestBoxCssClassName;
+		return this;
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface Args {
+		Class targetClass();
+
+		boolean showOnFocus() default false;
+
+		String cssClassName() default "";
+		
+		
+	}
 
 	@Override
 	public BoundWidget get() {
@@ -101,8 +130,8 @@ public class DomainObjectSuggestCustomiser
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom custom,
 			AnnotationLocation propertyLocation) {
-		classValue = NamedParameter.Support.classValue(custom.parameters(),
-				TARGET_CLASS, void.class);
+		classValue = NamedParameter.Support
+				.classValue(custom.parameters(), TARGET_CLASS,void.class);
 		rendererClassValue = NamedParameter.Support.classValue(
 				custom.parameters(), RENDERER_CLASS,
 				BoundSuggestOracleResponseTypeRenderer.class);
@@ -121,8 +150,6 @@ public class DomainObjectSuggestCustomiser
 			classValue = args.targetClass();
 			showOnFocus = args.showOnFocus();
 			cssClassName = args.cssClassName();
-			hintValue = args.hint();
-			placeholderText = args.placeholder();
 		}
 		return editable ? this
 				: readonlyCustomiserClassValue == null
@@ -142,41 +169,9 @@ public class DomainObjectSuggestCustomiser
 		return this.showOnFocus;
 	}
 
-	public DomainObjectSuggestCustomiser withClassValue(Class classValue) {
-		this.classValue = classValue;
-		return this;
-	}
-
-	public DomainObjectSuggestCustomiser withCssClassName(String cssClassName) {
-		this.cssClassName = cssClassName;
-		return this;
-	}
-
 	public DomainObjectSuggestCustomiser withShowOnFocus(boolean showOnFocus) {
 		this.showOnFocus = showOnFocus;
 		return this;
-	}
-
-	public DomainObjectSuggestCustomiser
-			withSuggestBoxCssClassName(String suggestBoxCssClassName) {
-		this.suggestBoxCssClassName = suggestBoxCssClassName;
-		return this;
-	}
-
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface Args {
-		String cssClassName() default "";
-
-		String hint() default "";
-
-		String placeholder() default "Type for suggestions";
-
-		boolean showOnFocus() default false;
-
-		Class targetClass();
 	}
 
 	@ClientInstantiable

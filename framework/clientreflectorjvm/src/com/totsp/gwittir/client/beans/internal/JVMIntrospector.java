@@ -131,7 +131,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 				ClientReflectorJvm.checkClassAnnotations(clazz);
 				List<Property> properties = new ArrayList<>();
 				for (PropertyDescriptor d : SEUtilities
-						.getPropertyDescriptorsSortedByField(clazz)) {
+						.getPropertyDescriptorsSortedByName(clazz)) {
 					Class<?> propertyType = d.getPropertyType();
 					if (d.getReadMethod() != null
 							&& d.getReadMethod().getReturnType() != propertyType

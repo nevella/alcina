@@ -9,7 +9,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -62,15 +61,14 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	public static final String PROP_FILTER_CLASSNAME = "ClientReflectorJvm.filterClassName";
 
-	// String seems better perf than class (jdk8)
-	static Set<String> checkedClassAnnotationsForInstantiation = new LinkedHashSet<>();
+	static Set<Class> checkedClassAnnotationsForInstantiation = new LinkedHashSet<Class>();
 
-	static Set<String> checkedClassAnnotationsForForName = new LinkedHashSet<>();
+	static Set<Class> checkedClassAnnotationsForForName = new LinkedHashSet<Class>();
 
-	static Set<String> checkedClassAnnotations = new LinkedHashSet<>();
+	static Set<Class> checkedClassAnnotations = new LinkedHashSet<Class>();
 
 	public static boolean canIntrospect(Class clazz) {
-		if (checkedClassAnnotations.contains(clazz.getName())) {
+		if (checkedClassAnnotations.contains(clazz)) {
 			return true;
 		}
 		return checkClassAnnotationsGenerateException(clazz, false,
@@ -78,7 +76,7 @@ public class ClientReflectorJvm extends ClientReflector {
 	}
 
 	public static void checkClassAnnotations(Class clazz) {
-		if (checkedClassAnnotations.contains(clazz.getName())) {
+		if (checkedClassAnnotations.contains(clazz)) {
 			return;
 		}
 		IntrospectionCheckResult checkResult = checkClassAnnotationsGenerateException(
@@ -86,11 +84,11 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (!checkResult.canIntrospect) {
 			throw checkResult.exception;
 		}
-		checkedClassAnnotations.add(clazz.getName());
+		checkedClassAnnotations.add(clazz);
 	}
 
 	public static void checkClassAnnotationsForForName(Class clazz) {
-		if (checkedClassAnnotationsForForName.contains(clazz.getName())) {
+		if (checkedClassAnnotationsForForName.contains(clazz)) {
 			return;
 		}
 		IntrospectionCheckResult checkResult = checkClassAnnotationsGenerateException(
@@ -109,11 +107,11 @@ public class ClientReflectorJvm extends ClientReflector {
 					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
 					clazz);
 		}
-		checkedClassAnnotationsForForName.add(clazz.getName());
+		checkedClassAnnotationsForForName.add(clazz);
 	}
 
 	public static void checkClassAnnotationsForInstantiation(Class clazz) {
-		if (checkedClassAnnotationsForInstantiation.contains(clazz.getName())) {
+		if (checkedClassAnnotationsForInstantiation.contains(clazz)) {
 			return;
 		}
 		checkClassAnnotations(clazz);
@@ -128,7 +126,7 @@ public class ClientReflectorJvm extends ClientReflector {
 					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
 					clazz);
 		}
-		checkedClassAnnotationsForInstantiation.add(clazz.getName());
+		checkedClassAnnotationsForInstantiation.add(clazz);
 	}
 
 	// FIXME - metagen - clean all this up (unify annotation reflection/property
@@ -200,11 +198,9 @@ public class ClientReflectorJvm extends ClientReflector {
 					// FIXME - mvcc.adjunct - generalise ignored properties
 					.filter(pd -> !(pd.getName().equals("class")
 							|| pd.getName().equals("propertyChangeListeners")))
-					.map(pd -> JvmPropertyReflector.get(clazz, pd))
+					.map(pd -> new JvmPropertyReflector(clazz, pd))
 					.collect(Collectors.toList()),
 			100);
-
-	private Map<String, Class> forName = new LinkedHashMap<>();
 
 	public ClientReflectorJvm() {
 		try {
@@ -305,7 +301,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (!reflectors.containsKey(clazz)) {
 			Map<String, ClientPropertyReflector> propertyReflectors = new HashMap<String, ClientPropertyReflector>();
 			for (PropertyDescriptor pd : SEUtilities
-					.getPropertyDescriptorsSortedByField(clazz)) {
+					.getPropertyDescriptorsSortedByName(clazz)) {
 				if (pd.getName().equals("class")
 						|| pd.getName().equals("propertyChangeListeners")) {
 					continue;
@@ -353,16 +349,14 @@ public class ClientReflectorJvm extends ClientReflector {
 	}
 
 	@Override
-	public Class getClassForName(String name) {
-		return forName.computeIfAbsent(name, fqn -> {
-			try {
-				Class<?> clazz = Class.forName(fqn);
-				checkClassAnnotationsForForName(clazz);
-				return clazz;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		});
+	public Class getClassForName(String fqn) {
+		try {
+			Class<?> clazz = Class.forName(fqn);
+			checkClassAnnotationsForForName(clazz);
+			return clazz;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	@Override

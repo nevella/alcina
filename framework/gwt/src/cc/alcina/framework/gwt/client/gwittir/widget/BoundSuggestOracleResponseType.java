@@ -4,8 +4,6 @@ import java.io.Serializable;
 
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
-
 public interface BoundSuggestOracleResponseType {
 	default String toSuggestionResultString() {
 		return toSuggestionString();
@@ -20,7 +18,7 @@ public interface BoundSuggestOracleResponseType {
 			implements BoundSuggestOracleModel {
 	}
 
-	public static class BoundSuggestOracleSuggestion extends Model
+	public static class BoundSuggestOracleSuggestion
 			implements Suggestion, Serializable {
 		public static Object nullSuggestion() {
 			BoundSuggestOracleSuggestion suggestion = new BoundSuggestOracleSuggestion();
@@ -30,14 +28,14 @@ public interface BoundSuggestOracleResponseType {
 
 		private String displayString;
 
-		private BoundSuggestOracleResponseType typedValue;
+		public BoundSuggestOracleResponseType typedValue;
 
 		public BoundSuggestOracleSuggestion() {
 		}
 
 		public BoundSuggestOracleSuggestion(
 				BoundSuggestOracleResponseType typedValue) {
-			this.setTypedValue(typedValue);
+			this.typedValue = typedValue;
 			displayString = typedValue.toSuggestionString();
 		}
 
@@ -49,18 +47,6 @@ public interface BoundSuggestOracleResponseType {
 		@Override
 		public String getReplacementString() {
 			return null;
-		}
-
-		public BoundSuggestOracleResponseType getTypedValue() {
-			return typedValue;
-		}
-
-		public void setDisplayString(String displayString) {
-			this.displayString = displayString;
-		}
-
-		public void setTypedValue(BoundSuggestOracleResponseType typedValue) {
-			this.typedValue = typedValue;
 		}
 	}
 }

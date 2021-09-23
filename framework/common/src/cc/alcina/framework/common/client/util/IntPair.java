@@ -74,13 +74,12 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 
 	public static IntPair parseIntPair(String string) {
 		try {
-			String cleaned = string.replaceAll("[\\[\\]]", "");
-			String[] split = cleaned.split("[,-]");
+			String[] split = string.replaceAll("[\\[\\]]", "").split("[,-]");
 			if (split.length == 2) {
 				return new IntPair(Integer.parseInt(split[0]),
 						Integer.parseInt(split[1]));
 			}
-			int point = Integer.parseInt(cleaned);
+			int point = Integer.parseInt(string);
 			return new IntPair(point, point);
 		} catch (NumberFormatException nfe) {
 			return null;
@@ -210,7 +209,6 @@ public class IntPair implements Comparable<IntPair>, Serializable,
 		return continues(range, tolerance);
 	}
 
-	@Override
 	public IntPair copy() {
 		return new IntPair(i1, i2);
 	}

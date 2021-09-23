@@ -38,7 +38,7 @@ public @interface ModalDisplay {
 		Validator[] validator() default {};
 	}
 
-	public static class ModalResolver extends Resolver {
+	public static class ModalResolver implements Resolver {
 		public static ModalResolver multiple(boolean readOnly) {
 			return new ModalResolver(
 					readOnly ? Mode.MULTIPLE_READ : Mode.MULTIPLE_WRITE);
@@ -56,29 +56,18 @@ public @interface ModalDisplay {
 		}
 
 		@Override
-		public boolean equals(Object obj) {
-			return obj instanceof ModalResolver
-					&& ((ModalResolver) obj).mode == mode;
-		}
-
-		@Override
-		public int hashCode() {
-			return mode.hashCode();
-		}
-
-		@Override
-		public <A extends Annotation> A resolveAnnotation(
-				Class<A> annotationClass, AnnotationLocation location) {
+		public <A extends Annotation> A resolveAnnotation(Class<A> annotationClass,
+				AnnotationLocation location) {
 			boolean customResolution = annotationClass == Display.class
 					|| annotationClass == Custom.class
 					|| annotationClass == Validator.class;
-			A defaultResolution = super.resolveAnnotation(annotationClass,
+			A defaultResolution = Resolver.super.resolveAnnotation(annotationClass,
 					location);
 			if (customResolution) {
 				RequireSpecified requireSpecified = Reflections.classLookup()
 						.getAnnotationForClass(location.classLocation,
 								RequireSpecified.class);
-				ModalDisplay modalDisplay = super.resolveAnnotation(
+				ModalDisplay modalDisplay = Resolver.super.resolveAnnotation(
 						ModalDisplay.class, location);
 				A modalResolution = null;
 				Optional<Modal> matchingModal = Optional.empty();

@@ -2,12 +2,11 @@ package cc.alcina.framework.entity.util;
 
 import java.text.DateFormatSymbols;
 import java.text.FieldPosition;
+import java.text.ParseException;
 import java.text.ParsePosition;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Locale;
-
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class SynchronizedDateFormat extends SimpleDateFormat {
 	public SynchronizedDateFormat() {
@@ -34,12 +33,8 @@ public class SynchronizedDateFormat extends SimpleDateFormat {
 	}
 
 	@Override
-	public synchronized Date parse(String source) {
-		try {
-			return super.parse(source);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+	public synchronized Date parse(String source) throws ParseException {
+		return super.parse(source);
 	}
 
 	@Override
