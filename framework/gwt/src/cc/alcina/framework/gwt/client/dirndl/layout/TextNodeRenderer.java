@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasDisplayName;
@@ -30,6 +31,18 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 	protected String getText(Node node) {
 		return node.model == null ? "<null text>" : getModelText(node.model);
+	}
+
+	/*
+	 * Normally entities, if directly rendered, are the models for actions - so
+	 * just some simple text...
+	 */
+	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Entity.class)
+	public static class EntityNodeRenderer extends TextNodeRenderer {
+		@Override
+		protected String getModelText(Object model) {
+			return "";
+		}
 	}
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Enum.class)

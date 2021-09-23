@@ -494,8 +494,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
-		MethodIndividualPropertyAccessor accessor = new MethodIndividualPropertyAccessor(
-				clazz, propertyName);
+		MethodIndividualPropertyReflector accessor = MethodIndividualPropertyReflector
+				.get(clazz, propertyName);
 		return accessor.isInvalid() ? null : accessor;
 	}
 
