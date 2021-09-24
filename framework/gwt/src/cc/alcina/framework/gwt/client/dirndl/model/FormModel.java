@@ -18,6 +18,8 @@ import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
+import cc.alcina.framework.common.client.logic.domain.UserProperty;
+import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -230,6 +232,8 @@ public class FormModel extends Model {
 	}
 
 	public static class FormModelState {
+		public Bindable presentationModel;
+
 		public boolean expectsModel;
 
 		public boolean editable;
@@ -266,14 +270,26 @@ public class FormModel extends Model {
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			node.pushResolver(ModalResolver.single(!state.editable));
 			if (state.model != null) {
+				if (state.model instanceof UserProperty) {
+					state.presentationModel = (Bindable) ((UserProperty) state.model)
+							.ensureUserPropertySupport().getPersistable();
+				}
+				if (state.presentationModel == null) {
+					state.presentationModel = state.model;
+				}
+			}
+			if (state.presentationModel != null) {
 				List<Field> fields = GwittirBridge.get()
 						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-								state.model, factory, state.editable,
-								state.adjunct, node.getResolver());
-				fields.stream().filter(
-						field -> fieldModulator.accept(state.model, field))
+								state.presentationModel, factory,
+								state.editable, state.adjunct,
+								node.getResolver());
+				fields.stream()
+						.filter(field -> fieldModulator
+								.accept(state.presentationModel, field))
 						.map(field -> {
-							FormElement e = new FormElement(field, state.model);
+							FormElement e = new FormElement(field,
+									state.presentationModel);
 							if (args != null && args.focusOnAttach()
 									.equals(field.getPropertyName())) {
 								e.setFocusOnAttach(true);
@@ -288,9 +304,9 @@ public class FormModel extends Model {
 				model.actions.add(new LinkModel()
 						.withPlace(new ActionRefPlace(CancelRef.class)));
 			} else {
-				if (state.model != null) {
+				if (state.presentationModel != null) {
 					Bean bean = Reflections.classLookup().getAnnotationForClass(
-							state.model.getClass(), Bean.class);
+							state.presentationModel.getClass(), Bean.class);
 					if (bean != null) {
 						Arrays.stream(bean.actions().value())
 								.map(a -> Reflections

@@ -54,6 +54,7 @@ public interface UserPropertyPersistable
 			return this.property;
 		}
 
+
 		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			property.serializeObject(persistable);
