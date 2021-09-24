@@ -886,6 +886,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			LooseContext.push();
 			PermissionsManager.get().pushUser(DevHelper.getDefaultUser(),
 					LoginState.LOGGED_IN);
+			
 			runningJobs.add(c);
 			history.addCommand(lastCommand);
 			if (!c.silent()) {

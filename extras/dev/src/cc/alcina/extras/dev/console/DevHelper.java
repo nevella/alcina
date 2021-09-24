@@ -42,6 +42,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -87,6 +88,16 @@ public abstract class DevHelper {
 	private static final String JBOSS_CONFIG_PATH = "jboss-config-path";
 
 	private static IUser defaultUser;
+
+	private static ClientInstance clientInstance;
+
+	public static ClientInstance getDefaultClientInstance() {
+		return clientInstance;
+	}
+
+	public static void setDefaultClientInstance(ClientInstance clientInstance) {
+		DevHelper.clientInstance = clientInstance;
+	}
 
 	public static IUser getDefaultUser() {
 		return DevHelper.defaultUser;

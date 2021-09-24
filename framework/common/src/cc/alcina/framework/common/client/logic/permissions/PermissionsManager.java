@@ -604,17 +604,24 @@ public class PermissionsManager implements DomainTransformListener {
 		}
 		if (!permitted && !doNotEvaluateNullObjectPermissions) {
 			if (getPermissionsExtension() != null) {
-				Boolean b = null;
-				if (assigningTo != null) {
-					b = getPermissionsExtension().isPermitted(o, assigningTo,
-							p);
-				} else {
-					b = getPermissionsExtension().isPermitted(o, p);
-				}
-				if (b != null) {
-					permitted = b;
-				}
+				permitted = evaluatePermissionsExtension(o, assigningTo, p,
+						permitted);
 			}
+		}
+		return permitted;
+	}
+
+	private boolean evaluatePermissionsExtension(Object o, Object assigningTo,
+			Permissible p, boolean permitted) {
+		Boolean b = null;
+		if (assigningTo != null) {
+			b = getPermissionsExtension().isPermitted(o, assigningTo,
+					p);
+		} else {
+			b = getPermissionsExtension().isPermitted(o, p);
+		}
+		if (b != null) {
+			permitted = b;
 		}
 		return permitted;
 	}
