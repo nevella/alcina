@@ -40,8 +40,8 @@
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.3.7.Final.jar" sourcepath="/Users/ouiji/git/minor/hibernate-orm"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.3.7.Final.jar" sourcepath="/jboss-hibernate-orm"/>
-	<classpathentry kind="lib" path="lib/framework/servlet/activation.jar"/>
-	<classpathentry kind="lib" path="lib/framework/servlet/mail-1.4.4.jar"/>
+	<classpathentry kind="lib" path="lib/framework/servlet/jakarta.activation-1.2.1.jar"/>
+	<classpathentry kind="lib" path="lib/framework/servlet/jakarta.mail-1.6.7.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/javax.ejb-api-3.2.jar"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/requestfactory-server.jar"/>
