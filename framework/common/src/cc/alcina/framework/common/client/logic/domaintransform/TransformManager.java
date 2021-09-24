@@ -850,10 +850,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		try {
 			this.transformListenerSupport.fireDomainTransform(event);
 		} catch (DomainTransformException e) {
-			// if (e.getType() ==
-			// DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND) {
-			// Mvcc.debugSourceNotFound(e);
-			// }
 			throw e;
 		}
 	}
@@ -2371,4 +2367,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 			}
 		}
 	}
+
+	
 }

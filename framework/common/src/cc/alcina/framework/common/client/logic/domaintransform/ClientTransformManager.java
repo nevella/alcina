@@ -16,6 +16,8 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CommitToLocalDomainTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.RecordTransformListener;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -53,6 +55,10 @@ public abstract class ClientTransformManager extends TransformManager {
 	public void clearUserObjects() {
 		requiresEditPrep.clear();
 		super.clearUserObjects();
+	}
+	public void setupClientListeners() {
+		addDomainTransformListener(new RecordTransformListener());
+		addDomainTransformListener(new CommitToLocalDomainTransformListener());
 	}
 
 	public Entity ensureEditable(Entity entity) {
