@@ -159,7 +159,7 @@ public class ClientReflectorJvm extends ClientReflector {
 			introspectable = true;
 		}
 		if (IntrospectorFilter.COLLECTION_CLASS_NAMES
-				.contains(clazz.getCanonicalName())) {
+				.contains(clazz.getName().replace("$","."))) {
 			introspectable = true;
 		}
 		for (Class iface : getAllImplementedInterfaces(clazz)) {

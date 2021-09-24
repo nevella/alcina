@@ -147,6 +147,10 @@ public class DomainObjectSuggestCustomiser
 		this.classValue = classValue;
 		return this;
 	}
+	public DomainObjectSuggestCustomiser withHint(String hint) {
+		this.hintValue= hint;
+		return this;
+	}
 
 	public DomainObjectSuggestCustomiser withCssClassName(String cssClassName) {
 		this.cssClassName = cssClassName;
