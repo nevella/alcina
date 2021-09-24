@@ -47,7 +47,16 @@ public class GraphTraversal {
 		if (object == null) {
 			return;
 		}
-		if (filter != null && !filter.test(object.getClass())) {
+		Class<? extends Object> clazz = object.getClass();
+		if (filter != null && !filter.test(clazz)) {
+			return;
+		}
+		if (clazz == Module.class) {
+			// not introspectable(much)
+			return;
+		}
+		if (clazz.getName().startsWith("jdk.internal")) {
+			// not introspectable(much)
 			return;
 		}
 		if (!reached.containsKey(object)) {
