@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -22,6 +23,7 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
@@ -336,7 +338,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		/*
 		 * Basically server-side, connected version from a DomainStore
 		 * 
-		 * //FIXME - mvcc.4 - remove...ahhh...but this populatees lazy fields.
+		 * //FIXME - apdm - remove...ahhh...but this populatees lazy fields.
 		 * Maybe not, eh? Also there's the possibility of needing to access the
 		 * domain version from a non-domain (say de-serialized) instance. Fixme
 		 * is to check codebase, remove if unnecessary, rename to populate() if
@@ -414,6 +416,8 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 	public static class EntityComparator implements Comparator<Entity> {
 		public static final EntityComparator INSTANCE = new EntityComparator();
+
+		public static final EntityComparatorLocalsHigh LOCALS_HIGH = new EntityComparatorLocalsHigh();
 
 		public static final Comparator<Entity> REVERSED_INSTANCE = new EntityComparator()
 				.reversed();
@@ -497,6 +501,13 @@ public abstract class Entity<T extends Entity> extends Bindable
 					return result;
 				}
 			}
+		}
+	}
+
+	public interface PropertyEnum {
+		default Predicate<? super DomainTransformEvent> transformFilter() {
+			return event -> Objects.equals(event.getPropertyName(),
+					((Enum) this).name());
 		}
 	}
 }

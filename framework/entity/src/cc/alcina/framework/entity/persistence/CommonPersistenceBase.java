@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -47,7 +46,6 @@ import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
-import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
 import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
@@ -271,19 +269,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public <T> T ensureObject(T t, String key, String value) throws Exception {
-		T newT = (T) getItemByKeyValue(t.getClass(), key, value, false);
-		if (newT != null) {
-			return newT;
-		}
-		AppPersistenceBase.checkNotReadOnly();
-		PropertyDescriptor descriptor = SEUtilities
-				.getPropertyDescriptorByName(t.getClass(), key);
-		descriptor.getWriteMethod().invoke(t, value);
-		return getEntityManager().merge(t);
-	}
-
-	@Override
 	public <T extends HasId> T ensurePersistent(T obj) {
 		if (!(obj instanceof MvccObject) && getEntityManager().contains(obj)) {
 			return obj;
@@ -338,14 +323,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	public <T> T findImplInstance(Class<? extends T> clazz, long id) {
 		Class<?> implClazz = getImplementation(clazz);
 		return (T) getEntityManager().find(implClazz, id);
-	}
-
-	@Override
-	public <A> Set<A> getAll(Class<A> clazz) {
-		Query query = getEntityManager()
-				.createQuery(String.format("from %s ", clazz.getSimpleName()));
-		List results = query.getResultList();
-		return new LinkedHashSet<A>(results);
 	}
 
 	public abstract EntityManager getEntityManager();
@@ -750,35 +727,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	// FIXME - mvcc.4 - persist with transforms
-	public void logActionItem(ActionLogItem actionItem) {
-		AppPersistenceBase.checkNotReadOnly();
-		getEntityManager().merge(actionItem);
-	}
-
-	@Override
-	// FIXME - mvcc.4 - persist with transforms
-	public <E extends Entity> E merge(E entity) {
-		AppPersistenceBase.checkNotReadOnly();
-		if (entity instanceof Publication) {
-			((Publication) entity).setUser(
-					getEntityManager().find(getImplementation(IUser.class),
-							((Publication) entity).getUser().getId()));
-		}
-		persistWrappables(entity);
-		return getEntityManager().merge(entity);
-	}
-
-	@Override
-	// FIXME - mvcc.4 - persist with transforms
-	public IUser mergeUser(IUser user) {
-		AppPersistenceBase.checkNotReadOnly();
-		IUser merge = getEntityManager().merge(user);
-		getEntityManager().flush();
-		return merge;
-	}
-
-	@Override
 	public <WP extends WrapperPersistable> Long persist(WP gwpo)
 			throws Exception {
 		AppPersistenceBase.checkNotReadOnly();
@@ -840,7 +788,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		result.setHasId(wrapper);
 		try {
 			for (PropertyDescriptor pd : SEUtilities
-					.getSortedPropertyDescriptors(wrapper.getClass())) {
+					.getPropertyDescriptorsSortedByName(wrapper.getClass())) {
 				if (pd.getReadMethod() != null) {
 					Wrapper info = pd.getReadMethod()
 							.getAnnotation(Wrapper.class);
@@ -1070,46 +1018,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			result.invalid = true;
 		}
 		return result;
-	}
-
-	private void persistWrappables(HasId hi) {
-		AppPersistenceBase.checkNotReadOnly();
-		try {
-			for (PropertyDescriptor pd : SEUtilities
-					.getSortedPropertyDescriptors(hi.getClass())) {
-				if (pd.getReadMethod() != null) {
-					Wrapper info = pd.getReadMethod()
-							.getAnnotation(Wrapper.class);
-					if (info != null) {
-						Object obj = pd.getReadMethod().invoke(hi,
-								CommonUtils.EMPTY_OBJECT_ARRAY);
-						if (obj instanceof WrapperPersistable) {
-							if (!(GwtMultiplePersistable.class
-									.isAssignableFrom(obj.getClass()))) {
-								throw new Exception(
-										"Trying to persist a per-user object via wrapping");
-							}
-							WrapperPersistable gwpo = (WrapperPersistable) obj;
-							if (info.toStringPropertyName().length() != 0) {
-								PropertyDescriptor tspd = SEUtilities
-										.getPropertyDescriptorByName(
-												hi.getClass(),
-												info.toStringPropertyName());
-								tspd.getWriteMethod().invoke(hi,
-										gwpo.toString());
-							}
-							Long persistId = persist(gwpo);
-							PropertyDescriptor idpd = SEUtilities
-									.getPropertyDescriptorByName(hi.getClass(),
-											info.idPropertyName());
-							idpd.getWriteMethod().invoke(hi, persistId);
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	private <T extends HasId> void

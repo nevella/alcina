@@ -30,7 +30,7 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 
 	public void addIntMap(Map<K, Integer> m) {
 		for (Map.Entry<K, Integer> entry : m.entrySet()) {
-			put(entry.getKey(), entry.getValue());
+			add(entry.getKey(), entry.getValue());
 		}
 	}
 

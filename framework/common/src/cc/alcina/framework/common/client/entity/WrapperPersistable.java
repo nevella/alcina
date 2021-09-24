@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.entity;
 
 import javax.xml.bind.annotation.XmlTransient;
 
-import cc.alcina.framework.common.client.logic.MuteablePropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.LazyPropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
@@ -44,7 +44,7 @@ public class WrapperPersistable extends Entity<WrapperPersistable>
 	 */
 	@Override
 	public void fireUnspecifiedPropertyChange(String name) {
-		((MuteablePropertyChangeSupport) this.propertyChangeSupport())
+		((LazyPropertyChangeSupport) this.propertyChangeSupport())
 				.fireUnspecifiedPropertyChange(name);
 	}
 

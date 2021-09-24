@@ -774,7 +774,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	public void deregisterDomainObjects(Collection<Entity> entities) {
+	public void deregisterDomainObjects(Collection<? extends Entity> entities) {
 		entities.forEach(this::deregisterDomainObject);
 	}
 
@@ -1427,6 +1427,21 @@ public abstract class TransformManager implements PropertyChangeListener,
 		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
 	}
 
+	public void register(Collection<? extends Entity> entities,
+			boolean register) {
+		if (register) {
+			registerDomainObjects(entities);
+		} else {
+			deregisterDomainObjects(entities);
+		}
+	}
+
+	public void register(Entity entity, boolean register) {
+		register(Collections.singleton(entity), register);
+	}
+
+	// FIXME - mvcc.adjunct - most app-level calls to this are legacy and can be
+	// removed (there should only be a few framework calls)
 	public <T extends Entity> T registerDomainObject(T entity) {
 		if (getDomainObjects() != null && entity != null) {
 			if (entity.getId() == 0) {
@@ -1702,7 +1717,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected void collectionChanged(Object obj, Object tgt) {
 		// changes won't be noticed unless we do this -
 		//
-		// FIXME - mvcc.4 - maybe can get rid
+		// FIXME - mvcc.wrap - remove
 		// of this (check if all wrapperpersistable changes use new collections)
 		if (obj instanceof WrapperPersistable) {
 			((WrapperPersistable) obj)

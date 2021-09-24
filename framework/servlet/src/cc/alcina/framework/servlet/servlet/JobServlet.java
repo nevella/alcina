@@ -166,7 +166,7 @@ public class JobServlet extends AlcinaServlet {
 			JobRegistry.get().await(job);
 			break;
 		}
-		job = Domain.find(job);
+		job = job.domain().ensurePopulated();
 		if (job.getResultType().isFail() || job.getLargeResult() == null) {
 			String message = Ax.blankTo(job.getLog(),
 					Ax.format("Job %s - complete", job));

@@ -98,7 +98,6 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -607,7 +606,7 @@ public class DomainStore implements IDomainStore {
 			Class clazz = classDescriptor.clazz;
 			classDescriptor.setDomainDescriptor(domainDescriptor);
 			for (PropertyDescriptor pd : SEUtilities
-					.getSortedPropertyDescriptors(clazz)) {
+					.getPropertyDescriptorsSortedByName(clazz)) {
 				if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
 					continue;
 				}
@@ -1196,7 +1195,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	@RegistryLocation(registryPoint = DomainStores.class, implementationType = ImplementationType.SINGLETON)
-	public static class DomainStores implements RegistrableService {
+	public static class DomainStores {
 		// not concurrent, handle in methods
 		private Map<DomainDescriptor, DomainStore> descriptorMap = new LinkedHashMap<>();
 
@@ -1212,7 +1211,6 @@ public class DomainStore implements IDomainStore {
 			Domain.registerHandler(storesHandler);
 		}
 
-		@Override
 		public void appShutdown() {
 			descriptorMap.values().forEach(DomainStore::appShutdown);
 		}

@@ -13,10 +13,10 @@
  */
 package cc.alcina.framework.entity.gwt.reflection;
 
+import java.beans.PropertyDescriptor;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
-import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -677,19 +677,21 @@ public class ClientReflectionGenerator extends Generator {
 								.substring(propertyMethodPrefixLength + 1));
 			}
 		}
-		Map<String, Integer> fieldOrdinals = new LinkedHashMap<>();
+		Map<String, Integer> getterOrdinals = new LinkedHashMap<>();
 		Class clazz = MethodContext.uncheckExceptions(
 				() -> Class.forName(jct.getQualifiedBinaryName()));
-		SEUtilities.allFields(clazz).stream().map(Field::getName).distinct()
-				.forEach(name -> fieldOrdinals.put(name, fieldOrdinals.size()));
+		SEUtilities.getPropertyDescriptorsSortedByField(clazz).stream()
+				.map(PropertyDescriptor::getName).distinct()
+				.forEach(name -> getterOrdinals.put(name,
+						getterOrdinals.size()));
 		Comparator<JMethod> comparator = new Comparator<JMethod>() {
 			@Override
 			public int compare(JMethod o1, JMethod o2) {
 				String methodPropertyName1 = methodPropertyName.get(o1);
 				String methodPropertyName2 = methodPropertyName.get(o2);
-				int ordinal1 = fieldOrdinals
+				int ordinal1 = getterOrdinals
 						.computeIfAbsent(methodPropertyName1, key -> -1);
-				int ordinal2 = fieldOrdinals
+				int ordinal2 = getterOrdinals
 						.computeIfAbsent(methodPropertyName2, key -> -1);
 				int i = ordinal1 - ordinal2;
 				if (i != 0) {

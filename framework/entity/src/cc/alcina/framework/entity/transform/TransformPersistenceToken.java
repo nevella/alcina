@@ -15,6 +15,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -68,6 +69,8 @@ public class TransformPersistenceToken implements Serializable {
 
 	private TransformPropagationPolicy transformPropagationPolicy;
 
+	Set<DomainTransformEvent> prepend = new LinkedHashSet<>();
+
 	public TransformPersistenceToken(DomainTransformRequest request,
 			EntityLocatorMap locatorMap, boolean requestorExternalToThisJvm,
 			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
@@ -86,13 +89,14 @@ public class TransformPersistenceToken implements Serializable {
 				.impl(TransformPropagationPolicy.class);
 	}
 
-	public boolean addCascadedEvents(boolean toStart) {
+	public boolean addCascadedEvents() {
 		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		boolean cascaded = false;
 		int idx = 0;
 		for (DomainTransformEvent pending : pendingTransforms) {
 			pending.setCommitType(CommitType.TO_STORAGE);
+			boolean toStart = prepend.contains(pending);
 			if (toStart) {
 				request.getEvents().add(idx++, pending);
 			} else {
@@ -100,6 +104,7 @@ public class TransformPersistenceToken implements Serializable {
 			}
 			cascaded = true;
 		}
+		prepend.clear();
 		TransformManager.get().clearTransforms();
 		return cascaded;
 	}
@@ -187,6 +192,16 @@ public class TransformPersistenceToken implements Serializable {
 
 	public boolean isRequestorExternalToThisJvm() {
 		return this.requestorExternalToThisJvm;
+	}
+
+	public void markForPrepend(Runnable runnable) {
+		DomainTransformListener listener = prepend::add;
+		try {
+			TransformManager.get().addDomainTransformListener(listener);
+			runnable.run();
+		} finally {
+			TransformManager.get().removeDomainTransformListener(listener);
+		}
 	}
 
 	public boolean provideTargetsWritableStore() {

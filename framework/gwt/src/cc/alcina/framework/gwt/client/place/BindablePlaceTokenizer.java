@@ -15,9 +15,17 @@ public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends Bin
 
 	public abstract Class<HL> getModelClass();
 
+	protected SD deserializeDef(P place) {
+		SD def = searchDefinitionSerializer().deserialize(place.def.getClass(),
+				getStringParameter(P_DEF));
+		if (def == null) {
+			def = (SD) Reflections.newInstance(place.def.getClass());
+		}
+		return def;
+	}
+
 	protected void deserializeSearchDefinition(P place) {
-		place.def = searchDefinitionSerializer()
-				.deserialize(place.def.getClass(), getStringParameter(P_DEF));
+		place.def = deserializeDef(place);
 	}
 
 	@Override

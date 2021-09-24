@@ -49,6 +49,16 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+/**
+ * FIXME - dirndl.perf
+ * 
+ * Minimise annotation resolution by caching an intermediate renderer object
+ * which itself caches property/reflector annotation tuples. Also apply to
+ * reflective serializer
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 public class DirectedLayout {
 	private static Logger logger = LoggerFactory
 			.getLogger(DirectedLayout.class);
@@ -79,8 +89,7 @@ public class DirectedLayout {
 	}
 
 	@ClientInstantiable
-	public static class ContextResolver<M>
-			implements AnnotationLocation.Resolver {
+	public static class ContextResolver<M> extends AnnotationLocation.Resolver {
 		private M model;
 
 		public ContextResolver() {
@@ -88,13 +97,6 @@ public class DirectedLayout {
 
 		public M getModel() {
 			return this.model;
-		}
-
-		@Override
-		public <A extends Annotation> A resolveAnnotation(
-				Class<A> annotationClass, AnnotationLocation location) {
-			return AnnotationLocation.Resolver.super.resolveAnnotation(
-					annotationClass, location);
 		}
 
 		public Object resolveModel(Object model) {
@@ -162,7 +164,8 @@ public class DirectedLayout {
 		}
 
 		public <T> T ancestorModel(Class<T> clazz) {
-			return ancestorModel(model -> model.getClass() == clazz);
+			return ancestorModel(model -> Reflections.isAssignableFrom(clazz,
+					model.getClass()));
 		}
 
 		public <T> T ancestorModel(Predicate predicate) {
@@ -176,6 +179,9 @@ public class DirectedLayout {
 		}
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
+			if (model == null && propertyReflector == null) {
+				return null;
+			}
 			AnnotationLocation location = new AnnotationLocation(
 					model == null ? null : model.getClass(), propertyReflector);
 			A annotation = resolver.resolveAnnotation(clazz, location);
@@ -903,10 +909,13 @@ public class DirectedLayout {
 					}
 					break;
 				case PROPERTY:
+					String propertyName = binding.to().isEmpty()
+							? binding.from()
+							: binding.to();
 					if (value == null) {
-						element.removeAttribute(binding.to());
+						element.removeAttribute(propertyName);
 					} else {
-						element.setAttribute(binding.to(), stringValue);
+						element.setAttribute(propertyName, stringValue);
 					}
 					break;
 				case CSS_CLASS: {
@@ -931,10 +940,6 @@ public class DirectedLayout {
 						element.setClassName(parts[1], part1);
 					}
 				}
-					break;
-				case TOGGLE_CSS_CLASS:
-					element.setClassName(stringValue,
-							element.hasClassName(stringValue));
 					break;
 				case STYLE_ATTRIBUTE:
 					element.getStyle().setProperty(binding.to(), stringValue);

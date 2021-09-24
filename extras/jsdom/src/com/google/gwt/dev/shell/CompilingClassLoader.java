@@ -16,6 +16,7 @@
 package com.google.gwt.dev.shell;
 
 import java.beans.Beans;
+import java.beans.Introspector;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -867,6 +868,7 @@ public final class CompilingClassLoader extends ClassLoader
 		weakJsoCache.clear();
 		weakJavaWrapperCache.clear();
 		dispClassInfoOracle.clear();
+		Introspector.flushCaches();
 		setGwtBridge(null);
 	}
 

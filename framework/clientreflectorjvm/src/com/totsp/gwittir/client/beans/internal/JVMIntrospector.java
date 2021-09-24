@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm;
-import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
@@ -131,25 +130,21 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 				className = clazz.getName();
 				ClientReflectorJvm.checkClassAnnotations(clazz);
 				List<Property> properties = new ArrayList<>();
-				Class enumSubclass = null;
 				for (PropertyDescriptor d : SEUtilities
-						.getSortedPropertyDescriptors(clazz)) {
+						.getPropertyDescriptorsSortedByField(clazz)) {
 					Class<?> propertyType = d.getPropertyType();
-					if (propertyType != null && propertyType.isEnum()
-							&& propertyType.getSuperclass() == Enum.class
-							&& propertyType != Direction.class) {
-						// hacky - but works
-						enumSubclass = propertyType;
+					if (d.getReadMethod() != null
+							&& d.getReadMethod().getReturnType() != propertyType
+							&& d.getReadMethod()
+									.getReturnType() == Enum.class) {
+						// GWT compiler returning more exact generic type?
+						propertyType = Enum.class;
 					}
-				}
-				for (PropertyDescriptor d : SEUtilities
-						.getSortedPropertyDescriptors(clazz)) {
-					Class<?> propertyType = d.getPropertyType();
-					if (propertyType == Enum.class
-							&& d.getName().equals("value")) {
-						propertyType = enumSubclass;
-						assert propertyType != null;
-					}
+					// if (propertyType == Enum.class
+					// && d.getName().equals("value")) {
+					// propertyType = enumSubclass;
+					// assert propertyType != null;
+					// }
 					if (d.getName().equals("class")
 							|| d.getName().equals("propertyChangeListeners")) {
 						continue;

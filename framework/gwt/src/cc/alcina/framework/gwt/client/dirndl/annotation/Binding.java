@@ -22,13 +22,13 @@ public @interface Binding {
 
 	String to() default "";
 
-	Type type();
-
 	Class<? extends ToStringFunction> transform() default ToStringFunction.Identity.class;
+
+	Type type();
 
 	@ClientInstantiable
 	public enum Type {
-		PROPERTY, INNER_HTML, INNER_TEXT, CSS_CLASS, TOGGLE_CSS_CLASS,
-		STYLE_ATTRIBUTE, SWITCH_CSS_CLASS;
+		PROPERTY, INNER_HTML, INNER_TEXT, CSS_CLASS, STYLE_ATTRIBUTE,
+		SWITCH_CSS_CLASS;
 	}
 }

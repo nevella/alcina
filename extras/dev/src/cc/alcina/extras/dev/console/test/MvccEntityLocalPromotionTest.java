@@ -29,7 +29,8 @@ public class MvccEntityLocalPromotionTest<IU extends Entity & IUser, IG extends 
 		createdUser.setUserName("testuser-" + suffix);
 		createdGroup.domain().addToProperty("memberUsers", createdUser);
 		Transaction.commit();
-		Preconditions.checkState(Domain.find(createdUser) == createdUser);
+		Preconditions.checkState(
+				createdUser.domain().domainVersion() == createdUser);
 		IU testInstance = userClass.newInstance();
 		testInstance.setId(createdUser.getId());
 		testInstance.hashCode();

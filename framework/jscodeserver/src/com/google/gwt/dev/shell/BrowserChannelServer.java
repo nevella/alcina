@@ -25,6 +25,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.HelpInfo;
@@ -32,6 +33,8 @@ import com.google.gwt.dev.shell.BrowserChannel.SessionHandler.ExceptionOrReturnV
 import com.google.gwt.dev.shell.JsValue.DispatchObject;
 import com.google.gwt.dev.util.log.dashboard.DashboardNotifier;
 import com.google.gwt.dev.util.log.dashboard.DashboardNotifierFactory;
+
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Server-side of the browser channel protocol.
@@ -46,6 +49,8 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 	private static Map<String, byte[]> iconCache = new HashMap<String, byte[]>();
 
 	private static final Object cacheLock = new Object();
+
+	private static AtomicInteger threadGroupCounter = new AtomicInteger();
 
 	private DevModeSession devModeSession;
 
@@ -394,7 +399,10 @@ public class BrowserChannelServer extends BrowserChannel implements Runnable {
 
 	private void init(TreeLogger initialLogger) {
 		this.logger = initialLogger;
-		Thread thread = new Thread(this);
+		ThreadGroup threadGroup = new ThreadGroup(
+				Ax.format("Code server isolated thread group #%s",
+						threadGroupCounter.getAndIncrement()));
+		Thread thread = new Thread(threadGroup, this);
 		thread.setDaemon(true);
 		thread.setName("Code server (initializing)");
 		thread.start();

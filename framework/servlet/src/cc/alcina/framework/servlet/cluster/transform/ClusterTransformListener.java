@@ -17,7 +17,6 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
-import cc.alcina.framework.entity.transform.event.ExternalTransformPersistenceListener;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.State;
 
@@ -103,7 +102,6 @@ public class ClusterTransformListener
 		}
 	}
 
-	@Override
 	public void startService() {
 		try {
 			transformCommitLog.consumer(commitLogHost,
@@ -117,7 +115,6 @@ public class ClusterTransformListener
 		}
 	}
 
-	@Override
 	public void stopService() {
 		if (domainStore == DomainStore.writableStore()) {
 			domainStore.getPersistenceEvents()

@@ -1,5 +1,8 @@
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
+import com.google.gwt.core.client.GWT;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 
 public class RegistryKey {
@@ -61,7 +64,14 @@ public class RegistryKey {
 			} catch (Exception e) {
 				// null will be filtered down-stream - FIXME mvcc.jobs.2 -
 				// caching issue
-				e.printStackTrace();
+				//
+				// days/weeks later...throw if filtered, implies probable
+				// reachability issue
+				if (!GWT.isScript()) {
+					throw new WrappedRuntimeException(e);
+				} else {
+					e.printStackTrace();
+				}
 			}
 		}
 		return clazz;

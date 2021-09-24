@@ -5,35 +5,36 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Transform;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.WaitPolicy;
+import cc.alcina.framework.common.client.collections.IdentityArrayList;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Request;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Response;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Transform;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.WaitPolicy;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTreeModel.DomainViewNodeModel;
+import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
 
 /*
  * Non-abstract to export reflected annotations
  */
-public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
-	DomainViewNodeModel.LabelGenerator labelGenerator = new DomainViewNodeModel.TextGenerator();
+public class DomainViewTree extends Tree<DomainViewNode> {
+	DomainViewNode.LabelGenerator labelGenerator = new DomainViewNode.TextGenerator();
 
-	private TreePath<DomainViewNodeModel> openingToPath = null;
+	private TreePath<DomainViewNode> openingToPath = null;
 
 	private boolean depthFirst;
 
-	private DomainViewNodeContentModel.Response lastResponse;
+	private DomainViewNodeContent.Response lastResponse;
 
 	private int selfAndDescendantCount = -1;
 
-	public DomainViewNodeModel.LabelGenerator getLabelGenerator() {
+	public DomainViewNode.LabelGenerator getLabelGenerator() {
 		return this.labelGenerator;
 	}
 
-	public DomainViewNodeContentModel.Response getLastResponse() {
+	public DomainViewNodeContent.Response getLastResponse() {
 		return this.lastResponse;
 	}
 
@@ -41,9 +42,9 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		return this.depthFirst;
 	}
 
-	public void mergeResponse(DomainViewNodeContentModel.Response response) {
-		DomainViewNodeModel root = null;
-		DomainViewNodeModel target = null;
+	public void mergeResponse(DomainViewNodeContent.Response response) {
+		DomainViewNode root = null;
+		DomainViewNode target = null;
 		// TODO - handle interrupt/fail
 		if (response == null) {
 			Response lastResponse = getLastResponse();
@@ -55,9 +56,7 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 			return;
 		}
 		if (response.isClearExisting()) {
-			getRoot().clearChildren();
-			getRoot().getTreePath().clearNonRoot();
-			loadChildren(getRoot());
+			reload();
 			return;
 		}
 		Request<?> request = response.getRequest();
@@ -66,13 +65,13 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		// multiple txs in this response. But the server would be a better
 		// place to implement this filtering...
 		String requestPath = response.getRequest().getTreePath();
-		root = (DomainViewNodeModel) getRoot();
+		root = (DomainViewNode) getRoot();
 		root.putTree(this);
 		if (requestPath != null) {
-			DomainViewNodeContentModel rootModel = response.getTransforms()
+			DomainViewNodeContent rootContent = response.getTransforms()
 					.isEmpty() ? null
 							: response.getTransforms().get(0).getNode();
-			target = root.ensureNode(rootModel, requestPath, null, false);
+			target = root.ensureNode(rootContent, requestPath, null, false);
 		}
 		// TODO - requestPath ....hmmm, if switching backends, probably just
 		// do a redraw/open to ...
@@ -87,7 +86,7 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 			// delta children at the end to generate visual nodes after node
 			// tree complete
 			if (requestPath != null) {
-				IdentityArrayList<NodeModel<DomainViewNodeModel>> forceEmitEvent = new IdentityArrayList<>(
+				IdentityArrayList<TreeNode<DomainViewNode>> forceEmitEvent = new IdentityArrayList<>(
 						target.getChildren());
 				boolean mustSetTwice = target.getChildren()
 						.equals(forceEmitEvent);
@@ -104,8 +103,13 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		if (request.getWaitPolicy() == WaitPolicy.RETURN_NODES) {
 			selfAndDescendantCount = response.getSelfAndDescendantCount();
 		}
+		// FIXME - dirndl 1.3 - not sure about the logic for which
+		// selfAndDescendantCount
 		if (isDepthFirst() && selfAndDescendantCount > root.getTreePath()
-				.getSelfAndDescendantCount()) {
+				.getSelfAndDescendantCount()
+		// doesn't work with proxy/keep-alive empty responses
+				&& response.getTransforms().size() > 0 && response.getRequest()
+						.getWaitPolicy() == WaitPolicy.WAIT_FOR_DELTAS) {
 			Paginator paginator = new Paginator();
 			paginator.setText("Loading ...");
 			setPaginator(paginator);
@@ -115,36 +119,42 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		setLastResponse(response);
 	}
 
-	public void openToPath(TreePath<DomainViewNodeModel> initialPath) {
+	public void openToPath(TreePath<DomainViewNode> initialPath) {
 		if (initialPath != null) {
 			openingToPath = initialPath;
 		}
 		boolean initialCall = initialPath != null;
-		TreePath<DomainViewNodeModel> path = openingToPath;
-		DomainViewNodeModel nodeModel = path.getValue();
-		if (nodeModel != null) {
-			selectedNodeModel = nodeModel;
-			nodeModel.setSelected(true);
+		TreePath<DomainViewNode> path = openingToPath;
+		DomainViewNode node = path.getValue();
+		if (node != null) {
+			selectedNodeModel = node;
+			node.setSelected(true);
 			return;
 		} else {
-			while (nodeModel == null) {
+			while (node == null) {
 				path = path.getParent();
-				nodeModel = path.getValue();
+				node = path.getValue();
 			}
-			if (nodeModel.isOpen()) {
+			if (node.isOpen()) {
 				if (!initialCall) {
 					openingToPath = null;// path not reachable
 				}
 				return;
 			}
 			{
-				// FIXME - should move most event/handling down to nodemodel
+				// FIXME - should move most event/handling down to node
 				// (it fires 'requires_children')
-				nodeModel.setOpen(true);
-				nodeModel.populated = true;
-				loadChildren(nodeModel);
+				node.setOpen(true);
+				node.populated = true;
+				loadChildren(node);
 			}
 		}
+	}
+
+	public void reload() {
+		getRoot().clearChildren();
+		getRoot().getTreePath().clearNonRoot();
+		loadChildren(getRoot());
 	}
 
 	public void sendRequest(Request<?> request) {
@@ -155,14 +165,13 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		this.depthFirst = depthFirst;
 	}
 
-	public void setLabelGenerator(
-			DomainViewNodeModel.LabelGenerator labelGenerator) {
+	public void
+			setLabelGenerator(DomainViewNode.LabelGenerator labelGenerator) {
 		this.labelGenerator = labelGenerator;
 	}
 
-	public void
-			setLastResponse(DomainViewNodeContentModel.Response lastResponse) {
-		DomainViewNodeContentModel.Response old_lastResponse = this.lastResponse;
+	public void setLastResponse(DomainViewNodeContent.Response lastResponse) {
+		DomainViewNodeContent.Response old_lastResponse = this.lastResponse;
 		this.lastResponse = lastResponse;
 		propertyChangeSupport().firePropertyChange("lastResponse",
 				old_lastResponse, lastResponse);
@@ -185,7 +194,7 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 				if (!getRoot().getTreePath().hasPath(parentPathStr)) {
 					return;
 				}
-				TreePath<DomainViewNodeModel> parent = getRoot().getTreePath()
+				TreePath<DomainViewNode> parent = getRoot().getTreePath()
 						.ensurePath(parentPathStr);
 				if (!parent.hasChildrenLoaded() && !isDepthFirst()) {
 					return;
@@ -200,7 +209,7 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 				break;
 			}
 		}
-		DomainViewNodeModel node = getRoot().ensureNode(transform.getNode(),
+		DomainViewNode node = getRoot().ensureNode(transform.getNode(),
 				transform.getTreePath(), transform.getBeforePath(),
 				fireCollectionModificationEvents);
 		switch (transform.getOperation()) {
@@ -214,19 +223,18 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		}
 	}
 
-	public static class DomainViewNodeModel
-			extends TreeModel.NodeModel<DomainViewNodeModel> {
-		private DomainViewNodeContentModel<?> node;
+	public static class DomainViewNode extends Tree.TreeNode<DomainViewNode> {
+		private DomainViewNodeContent<?> node;
 
-		private TreePath<DomainViewNodeModel> treePath;
+		private TreePath<DomainViewNode> treePath;
 
 		private LabelGenerator labelGenerator;
 
-		public DomainViewNodeModel() {
+		public DomainViewNode() {
 		}
 
-		public DomainViewNodeModel(LabelGenerator labelGenerator,
-				DomainViewNodeModel parent, String path) {
+		public DomainViewNode(LabelGenerator labelGenerator,
+				DomainViewNode parent, String path) {
 			this.labelGenerator = labelGenerator == null ? new TextGenerator()
 					: labelGenerator;
 			setParent(parent);
@@ -239,56 +247,54 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		}
 
 		public void clearChildren() {
-			List<DomainViewNodeModel> list = (List) getChildren().stream()
+			List<DomainViewNode> list = (List) getChildren().stream()
 					.collect(Collectors.toList());
-			list.forEach(DomainViewNodeModel::removeFromParent);
+			list.forEach(DomainViewNode::removeFromParent);
 			populated = false;
 		}
 
-		public DomainViewNodeModel ensureNode(
-				DomainViewNodeContentModel valueModel, String path,
-				String beforePath, boolean fireCollectionModificationEvents) {
-			TreePath<DomainViewNodeModel> otherTreePath = treePath
-					.ensurePath(path);
+		public DomainViewNode ensureNode(DomainViewNodeContent nodeContent,
+				String path, String beforePath,
+				boolean fireCollectionModificationEvents) {
+			TreePath<DomainViewNode> otherTreePath = treePath.ensurePath(path);
 			if (otherTreePath.getValue() == null) {
-				DomainViewNodeModel parent = otherTreePath.getParent() == null
-						? null
+				DomainViewNode parent = otherTreePath.getParent() == null ? null
 						: otherTreePath.getParent().getValue();
 				LabelGenerator labelGenerator = provideContainingTree() == null
 						? null
 						: provideContainingTree().labelGenerator;
-				DomainViewNodeModel model = new DomainViewNodeModel(
-						labelGenerator, parent, path);
+				DomainViewNode node = new DomainViewNode(labelGenerator, parent,
+						path);
 				if (parent != null) {
-					parent.modifyChildren(Operation.INSERT, beforePath, model,
+					parent.modifyChildren(Operation.INSERT, beforePath, node,
 							fireCollectionModificationEvents);
 				}
-				otherTreePath.setValue(model);
+				otherTreePath.setValue(node);
 			}
 			return otherTreePath.getValue();
 		}
 
-		public DomainViewNodeContentModel<?> getNode() {
+		public DomainViewNodeContent<?> getNode() {
 			return this.node;
 		}
 
-		public TreePath<DomainViewNodeModel> getTreePath() {
+		public TreePath<DomainViewNode> getTreePath() {
 			return this.treePath;
 		}
 
-		public DomainViewTreeModel provideContainingTree() {
+		public DomainViewTree provideContainingTree() {
 			return getTreePath().provideContainingTree();
 		}
 
 		public String provideLastPath() {
-			DomainViewNodeModel cursor = this;
+			DomainViewNode cursor = this;
 			while (cursor.getChildren().size() > 0) {
-				cursor = (DomainViewNodeModel) Ax.last(cursor.getChildren());
+				cursor = (DomainViewNode) Ax.last(cursor.getChildren());
 			}
 			return cursor.getTreePath().toString();
 		}
 
-		public void putTree(DomainViewTreeModel tree) {
+		public void putTree(DomainViewTree tree) {
 			getTreePath().putTree(tree);
 		}
 
@@ -299,7 +305,7 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 			setParent(null);
 		}
 
-		public void setNode(DomainViewNodeContentModel<?> node) {
+		public void setNode(DomainViewNodeContent<?> node) {
 			this.node = node;
 			constructLabel(node);
 			getLabel().setTitle(node.getTitle());
@@ -313,9 +319,8 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 		}
 
 		private void modifyChildren(Operation operation, String beforePath,
-				DomainViewNodeModel model,
-				boolean fireCollectionModificationEvents) {
-			List<NodeModel<DomainViewNodeModel>> newValue = getChildren();
+				DomainViewNode node, boolean fireCollectionModificationEvents) {
+			List<TreeNode<DomainViewNode>> newValue = getChildren();
 			if (fireCollectionModificationEvents) {
 				newValue = new ArrayList<>(newValue);
 			}
@@ -323,23 +328,22 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 			case INSERT:
 				int index = newValue.size();
 				if (beforePath != null) {
-					if (model.getTreePath().hasPath(beforePath)) {
-						DomainViewNodeModel beforePathModel = model
-								.getTreePath().ensurePath(beforePath)
-								.getValue();
-						index = beforePathModel.getParent().getChildren()
-								.indexOf(beforePathModel);
+					if (node.getTreePath().hasPath(beforePath)) {
+						DomainViewNode beforePathNode = node.getTreePath()
+								.ensurePath(beforePath).getValue();
+						index = beforePathNode.getParent().getChildren()
+								.indexOf(beforePathNode);
 					}
 				}
 				if (index == newValue.size()) {
-					newValue.add(model);
+					newValue.add(node);
 				} else {
-					newValue.add(index, model);
+					newValue.add(index, node);
 				}
 				break;
 			case REMOVE:
-				newValue.remove(model);
-				model.getTreePath().removeFromParent();
+				newValue.remove(node);
+				node.getTreePath().removeFromParent();
 				break;
 			default:
 				throw new UnsupportedOperationException();
@@ -347,24 +351,24 @@ public class DomainViewTreeModel extends TreeModel<DomainViewNodeModel> {
 			setChildren(newValue);
 		}
 
-		protected void constructLabel(DomainViewNodeContentModel<?> node) {
+		protected void constructLabel(DomainViewNodeContent<?> node) {
 			getLabel().setLabel(labelGenerator.apply(node));
 		}
 
-		public static class ContentModelGenerator implements LabelGenerator {
+		public static class ContentGenerator implements LabelGenerator {
 			@Override
-			public Object apply(DomainViewNodeContentModel<?> t) {
+			public Object apply(DomainViewNodeContent<?> t) {
 				return t;
 			}
 		}
 
 		public static interface LabelGenerator
-				extends Function<DomainViewNodeContentModel<?>, Object> {
+				extends Function<DomainViewNodeContent<?>, Object> {
 		}
 
 		public static class TextGenerator implements LabelGenerator {
 			@Override
-			public Object apply(DomainViewNodeContentModel<?> t) {
+			public Object apply(DomainViewNodeContent<?> t) {
 				NodeLabelText nodeLabelText = new NodeLabelText();
 				nodeLabelText.setText(t.getName());
 				return nodeLabelText;

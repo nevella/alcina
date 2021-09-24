@@ -23,6 +23,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 /**
  * 
  * @author Nick Reddel
+ * 
+ *         FIXME - mvcc.cascade - remove
  */
 public class ObjectRef implements Serializable {
 	private long localId;

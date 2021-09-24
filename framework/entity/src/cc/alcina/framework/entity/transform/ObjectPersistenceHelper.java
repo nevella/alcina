@@ -39,7 +39,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.entity.SEUtilities;
@@ -56,7 +55,7 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
-		PropertyAccessor, RegistrableService, BeanDescriptorProvider {
+		PropertyAccessor, BeanDescriptorProvider {
 	static volatile ObjectPersistenceHelper singleton;
 
 	public static ObjectPersistenceHelper get() {
@@ -90,7 +89,10 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
-					.stream().map(pd -> new JvmPropertyReflector(clazz, pd))
+					.stream()
+					.filter(pd -> !(pd.getName().equals("class")
+							|| pd.getName().equals("propertyChangeListeners")))
+					.map(pd -> JvmPropertyReflector.get(clazz, pd))
 					.collect(Collectors.toList()),
 			100);
 
@@ -103,7 +105,6 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		init();
 	}
 
-	@Override
 	public void appShutdown() {
 		ThreadlocalTransformManager.get().appShutdown();
 	}
@@ -234,7 +235,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		try {
 			List<PropertyInfo> infos = new ArrayList<PropertyInfo>();
 			for (PropertyDescriptor pd : SEUtilities
-					.getSortedPropertyDescriptors(clazz)) {
+					.getPropertyDescriptorsSortedByName(clazz)) {
 				Class<?> propertyType = pd.getPropertyType();
 				if (pd.getWriteMethod() == null || pd.getReadMethod() == null) {
 					continue;

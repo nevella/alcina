@@ -28,13 +28,8 @@ import cc.alcina.framework.servlet.task.TaskGenerateTreeSerializableSignatures;
 public class SerializationSignatureListener
 		implements DomainTransformPersistenceListener {
 	private String signature;
-	
-	private boolean ensureFailed=false;
 
-	public boolean isEnsureFailed() {
-		return this.ensureFailed;
-	}
-
+	private boolean ensureFailed = false;
 
 	public synchronized String ensureSignature() {
 		if (signature == null) {
@@ -63,12 +58,16 @@ public class SerializationSignatureListener
 			}
 			signature = task.getSignature();
 			if (signature == null) {
-				ensureFailed=true;
+				ensureFailed = true;
 				signature = Ax.format("(Exception generating signature) %s",
 						System.currentTimeMillis());
 			}
 		}
 		return signature;
+	}
+
+	public boolean isEnsureFailed() {
+		return this.ensureFailed;
 	}
 
 	@Override
@@ -124,7 +123,7 @@ public class SerializationSignatureListener
 				if (!entityCollation.isDeleted()) {
 					serializedSignatureReflector.setPropertyValue(
 							entityCollation.getObject(), ensureSignature());
-					token.addCascadedEvents(false);
+					token.addCascadedEvents();
 				}
 			}
 		}

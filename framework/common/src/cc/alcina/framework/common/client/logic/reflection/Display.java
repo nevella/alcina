@@ -53,6 +53,8 @@ public @interface Display {
 	 */
 	public static final int DISPLAY_EDITABLE = 64;
 
+	String autocompleteName() default "";
+
 	// note, if you want a r-o property, don't use DISPLAY_RO, you need to set
 	// DISPLAY_AS_PROPERTY | DISPLAY_RO
 	int displayMask() default DISPLAY_AS_PROPERTY;
@@ -64,11 +66,11 @@ public @interface Display {
 	String helpText() default "";
 
 	String iconName() default "";// indicates no icon
-
-	String autocompleteName() default "";
+	// FIXME - dirndl.1 - default to "", de-infixd property name
 
 	String name();
-//FIXME - dirndl.1 - this should be defined in @Bean (with sections)
+
+	// FIXME - dirndl.1 - this should be defined in @Bean (with sections)
 	int orderingHint() default 100;
 
 	String rendererHint() default "";

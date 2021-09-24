@@ -86,7 +86,8 @@ public class Transaction implements Comparable<Transaction> {
 			Preconditions.checkState(!TransformManager.get().hasTransforms());
 			return 0;
 		} else {
-			Preconditions.checkState(transaction.isWriteable());
+			Preconditions.checkState(transaction.isWriteable()
+					|| TransformManager.get().getTransforms().isEmpty());
 			int transformCount = TransformCommit.commitTransformsAsRoot();
 			return transformCount;
 		}
@@ -575,7 +576,7 @@ public class Transaction implements Comparable<Transaction> {
 		if (isWriteable()) {
 			if (TransformManager.get().getTransforms().size() == 0) {
 			} else {
-				// FIXME - mvcc.4 - mvcc exception
+				// FIXME - mvcc.5 - mvcc exception (after cleanup)
 				logger.warn(
 						"Ending transaction with uncommitted transforms: {} {}",
 						endPhase,

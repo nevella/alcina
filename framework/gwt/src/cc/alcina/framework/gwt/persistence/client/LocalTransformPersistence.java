@@ -15,7 +15,6 @@ import java.util.Set;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientUIThreadWorker;
@@ -75,8 +74,9 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
  * @author nick@alcina.cc
  * 
  */
-public abstract class LocalTransformPersistence implements StateChangeListener,
-		ClientTransformManager.PersistableTransformListener {
+public abstract class LocalTransformPersistence
+		implements ClientTransformManager.PersistableTransformListener,
+		TopicListener<CommitToStorageTransformListener.State> {
 	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED = LocalTransformPersistence.class
 			.getName() + "." + "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED";
 
@@ -191,6 +191,11 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		return serializationPolicy;
 	}
 
+	public void getTransforms(DeltaApplicationRecordType type,
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
+		getTransforms(new DeltaApplicationRecordType[] { type }, callback);
+	}
+
 	public void
 			handleUncommittedTransformsOnLoad(final AsyncCallback<Void> cb) {
 		if (!isLocalStorageInstalled()) {
@@ -294,8 +299,10 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	 * Access check - only called by synchronized blocks in
 	 * CommitToStorageTransformListener
 	 */
-	public void stateChanged(Object source, String newState) {
-		if (newState == CommitToStorageTransformListener.COMMITTING) {
+	public void topicPublished(String key,
+			CommitToStorageTransformListener.State newState) {
+		switch (newState) {
+		case COMMITTING: {
 			DomainTransformRequest rq = LooseContext.get(
 					CommitToStorageTransformListener.CONTEXT_COMMITTING_REQUEST);
 			final int requestId = rq.getRequestId();
@@ -319,7 +326,9 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 					}
 				});
 			}
-		} else if (newState == CommitToStorageTransformListener.COMMITTED) {
+		}
+			break;
+		case COMMITTED:
 			List<DomainTransformRequest> requests = getCommitToStorageTransformListener()
 					.getPriorRequestsWithoutResponse();
 			final Set<Integer> removeIds = new HashSet(
@@ -362,8 +371,8 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			};
 			transformPersisted(persistedWrappers,
 					afterTransformsMarkedAsPersistedCallback);
-			return;
-		} else if (newState == CommitToStorageTransformListener.RELOAD) {
+			break;
+		case RELOAD:
 			clearAllPersisted(new AsyncCallbackNull());
 		}
 	}
@@ -403,11 +412,6 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	protected abstract void getTransforms(DeltaApplicationFilters filters,
 			AsyncCallback<Iterator<DeltaApplicationRecord>> callback);
-
-	public void getTransforms(DeltaApplicationRecordType type,
-			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
-		getTransforms(new DeltaApplicationRecordType[] { type }, callback);
-	}
 
 	protected void getTransforms(final DeltaApplicationRecordType[] types,
 			final AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
@@ -479,9 +483,8 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	protected void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted, ModalNotifier notifier,
 			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
-		Client.commonRemoteService()
-				.persistOfflineTransforms(uncommitted,
-						postPersistOfflineTransformsCallback);
+		Client.commonRemoteService().persistOfflineTransforms(uncommitted,
+				postPersistOfflineTransformsCallback);
 	}
 
 	protected void setClientInstanceIdForGet(Long clientInstanceIdForGet) {

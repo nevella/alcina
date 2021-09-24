@@ -217,7 +217,7 @@ public class SyncMerger<T> {
 		list.addAll(Arrays.asList("id", "localId", "propertyChangeListeners",
 				"class"));
 		List<PropertyDescriptor> sortedPropertyDescriptors = SEUtilities
-				.getSortedPropertyDescriptors(mergedClass);
+				.getPropertyDescriptorsSortedByName(mergedClass);
 		Stream<PropertyDescriptor> stream = sortedPropertyDescriptors.stream()
 				.filter(pd -> !list.contains(pd.getName()))
 				.filter(pd -> pd.getReadMethod()
@@ -234,7 +234,7 @@ public class SyncMerger<T> {
 		list.addAll(Arrays.asList("id", "localId", "propertyChangeListeners",
 				"class"));
 		List<PropertyDescriptor> sortedPropertyDescriptors = SEUtilities
-				.getSortedPropertyDescriptors(mergedClass);
+				.getPropertyDescriptorsSortedByName(mergedClass);
 		Stream<PropertyDescriptor> stream = sortedPropertyDescriptors.stream()
 				.filter(pd -> !list.contains(pd.getName()))
 				.filter(pd -> pd.getReadMethod()

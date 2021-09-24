@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -30,7 +31,6 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.Proper
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import elemental.json.Json;
@@ -45,9 +45,10 @@ import elemental.json.JsonValue;
 /**
  * <p>
  * This class serializes possibly cyclic graphs to a javascript object. It
- * extensively from Jackson - including supporting async
- * serialization/deserialization, by using a stack-based serializtion structure
- * instead of recursion. Notional serialization algorithm is:
+ * borrows extensively from Jackson, but also differs markedly: it supports
+ * async (incremental) serialization/deserialization - by using a stack-based
+ * serializtion structure instead of recursion, it is gwt-compatible, and it
+ * uses different controlling annotations. Notional serialization algorithm is:
  * </p>
  * <ul>
  * <li>For any unreached, non-data-like point x in the source graph:
@@ -149,11 +150,11 @@ public class ReflectiveSerializer {
 				}
 			}
 		}
-		if (declaredType == CountingMap.class) {
-			int debug = 3;
-		}
 		Class lookupClass = serializationClass(clazz);
 		return typeSerializers.computeIfAbsent(lookupClass, k -> {
+			if (!GWT.isClient()) {
+				int debug = 3;
+			}
 			List<Class> toResolve = Arrays.asList(lookupClass);
 			while (toResolve.size() > 0) {
 				Optional<Class> match = toResolve.stream()
@@ -215,9 +216,6 @@ public class ReflectiveSerializer {
 			GraphNode node = state.pending.peek();
 			node.readValue();
 			Iterator<GraphNode> itr = node.iterator;
-			if (Objects.equals(node.name, "memberUsers")) {
-				int debug = 3;
-			}
 			if (itr != null && itr.hasNext()) {
 				GraphNode next = itr.next();
 				state.pending.push(next);
@@ -231,7 +229,7 @@ public class ReflectiveSerializer {
 	private void serialize0() {
 		do {
 			GraphNode node = state.pending.peek();
-			node.ensureValue();
+			node.ensureValueWritten();
 			if (node.depth() > 4) {
 				int debug = 3;
 			}
@@ -466,15 +464,22 @@ public class ReflectiveSerializer {
 		}
 
 		public Class knownType() {
+			Class type = null;
 			if (propertyReflector == null) {
-				return parentSerialization() != null
+				type = parentSerialization() != null
 						&& parentSerialization().types().length == 1
 								? parentSerialization().types()[0]
 								: null;
+			} else {
+				type = propertyReflector.getPropertyType();
 			}
-			Class type = propertyReflector.getPropertyType();
-			if (Reflections.isEffectivelyFinal(type)) {
-				return type;
+			if (type == null) {
+				return null;
+			}
+			Class solePossibleImplementation = SerializationSupport
+					.solePossibleImplementation(type);
+			if (solePossibleImplementation != null) {
+				return solePossibleImplementation;
 			} else {
 				return null;
 			}
@@ -483,10 +488,11 @@ public class ReflectiveSerializer {
 		public void readValue() {
 			if (value == null) {
 				type = knownType();
-				if (type == null) {
+				if (type == null || resolveSerializer(type, null)
+						.isReferenceSerializer()) {
 					int idx = serialNode.peekInt();
 					if (idx != -1) {
-						value = state.identityIdx.get(idx);
+						value = state.idxIdentity.get(idx);
 						return;
 					}
 				}
@@ -496,7 +502,7 @@ public class ReflectiveSerializer {
 				serializer = resolveSerializer(type, null);
 				value = serializer.readValue(this);
 				if (serializer.isReferenceSerializer()) {
-					state.identityIdx.put(state.identityIdx.size(), value);
+					state.idxIdentity.put(state.idxIdentity.size(), value);
 				}
 				iterator = serializer.readIterator(this);
 			}
@@ -510,30 +516,17 @@ public class ReflectiveSerializer {
 		}
 
 		private boolean hasFinalClass() {
-			// TODO - 2022 - || Reflections.isFinal()
 			if (value == null) {
 				return true;
 			}
-			Class<? extends Object> clazz = value.getClass();
-			if (Reflections.isEffectivelyFinal(clazz)) {
-				/*
-				 * still require explicit type info (since we may be in a
-				 * collection - or array)
-				 */
-				if (propertyReflector != null) {
-					return true;
-				}
-				return parentSerialization() != null
-						&& parentSerialization().types().length == 1;
-			}
-			return false;
+			return knownType() != null;
 		}
 
 		int depth() {
 			return parent == null ? 0 : parent.depth() + 1;
 		}
 
-		void ensureValue() {
+		void ensureValueWritten() {
 			if (serialNode == null) {
 				if (serializer.isReferenceSerializer()) {
 					Object idx = state.identityIdx.get(value);
@@ -844,8 +837,9 @@ public class ReflectiveSerializer {
 	static class State {
 		public Object value;
 
-		// obj->id serializing, id->obj deserializing
-		Map identityIdx = new IdentityHashMap<>();
+		Map<Object, Integer> identityIdx = new IdentityHashMap<>();
+
+		Map<Integer, Object> idxIdentity = new LinkedHashMap<>();
 
 		public SerializerOptions serializerOptions;
 

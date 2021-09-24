@@ -236,8 +236,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	protected Entity ignorePropertyChangesTo;
 
-	DomainTransformEvent lastTransform = null;
-
 	private boolean initialised = false;
 
 	protected Set<EntityLocator> createdObjectLocators = new LinkedHashSet<>();
@@ -265,21 +263,6 @@ public class ThreadlocalTransformManager extends TransformManager
 			markFlushTransforms();
 		}
 		super.addTransform(evt);
-	}
-
-	@Override
-	public void apply(DomainTransformEvent evt)
-			throws DomainTransformException {
-		super.apply(evt);
-		if (getEntityManager() != null
-				&& evt.getTransformType() != TransformType.DELETE_OBJECT) {
-			// FIXME - mvcc.4 - remove this method
-			// for use in IVersionable/DomainStore
-			if (evt.getSource() instanceof MvccObject) {
-				evt.setSource(null);
-			}
-			maybeEnsureSource(evt);
-		}
 	}
 
 	@Override
@@ -511,8 +494,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
-		MethodIndividualPropertyAccessor accessor = new MethodIndividualPropertyAccessor(
-				clazz, propertyName);
+		MethodIndividualPropertyReflector accessor = MethodIndividualPropertyReflector
+				.get(clazz, propertyName);
 		return accessor.isInvalid() ? null : accessor;
 	}
 
@@ -751,23 +734,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	public synchronized void propertyChange(PropertyChangeEvent event) {
 		if (isIgnorePropertyChangesForEvent(event)) {
 			return;
-		}
-		if (isIgnorePropertyChanges()
-				|| UNSPECIFIC_PROPERTY_CHANGE.equals(event.getPropertyName())) {
-			return;
-		}
-		if (getEntityManager() != null) {
-			DomainTransformEvent currentTransform = createTransformFromPropertyChange(
-					event);
-			convertToTargetObject(currentTransform);
-			if (lastTransform != null
-					&& lastTransform.equivalentTo(currentTransform)) {
-				// hibernate manipulations can cause a bunch of theses
-				// FIXME - mvcc.4 - do they really?
-				logger.info("ignoring repeat transform: {}", currentTransform);
-				return;
-			}
-			lastTransform = currentTransform;
 		}
 		super.propertyChange(event);
 	}
@@ -1146,7 +1112,6 @@ public class ThreadlocalTransformManager extends TransformManager
 			explicitlyPermittedTransforms.clear();
 			flushAfterTransforms.clear();
 		}
-		this.lastTransform = null;
 		for (Entity entity : listeningTo.keySet()) {
 			if (entity != null) {
 				try {
@@ -1293,6 +1258,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		return entityManager == null;
 	}
 
+	// can disappear at end of mvcc.wrap
 	protected boolean isIgnorePropertyChangesForEvent(PropertyChangeEvent evt) {
 		return evt.getSource() == ignorePropertyChangesTo
 				|| (evt.getSource() instanceof WrappedObject
@@ -1308,16 +1274,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		 * clone/modify
 		 */
 		return entity.getPropertyChangeListeners().length == 1;
-	}
-
-	protected void maybeEnsureSource(DomainTransformEvent evt) {
-		if (WrapperPersistable.class.isAssignableFrom(evt.getObjectClass())) {
-			return;
-		}
-		if (evt.getSource() == null
-				|| !getEntityManager().contains(evt.getSource())) {
-			getObject(evt);
-		}
 	}
 
 	@Override

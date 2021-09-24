@@ -1234,11 +1234,17 @@ public class DomNode {
 			return node() != null;
 		}
 
+		public Stream<DomNode> matching(String pattern) {
+			return matching(pattern, false);
+		}
+
 		/**
 		 * Warning - uses 'find', not 'matches'
 		 */
-		public Stream<DomNode> matching(String pattern) {
-			RegExp regex = RegExp.compile(pattern);
+		public Stream<DomNode> matching(String pattern, boolean ignoreCase) {
+			RegExp regex = ignoreCase 
+				? RegExp.compile(pattern, "i") 
+				: RegExp.compile(pattern);
 			return stream().filter(n -> regex.exec(n.ntc()) != null);
 		}
 

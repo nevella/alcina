@@ -49,4 +49,6 @@ public @interface Bean {
 	boolean allPropertiesVisualisable() default false;
 
 	Display displayInfo() default @Display(name = "");
+
+	PropertyOrder propertyOrder() default @PropertyOrder(value = {});
 }

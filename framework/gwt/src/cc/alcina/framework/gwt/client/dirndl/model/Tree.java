@@ -1,9 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
+import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -18,25 +17,25 @@ import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererArgs;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.NodeModel;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeModel.SelectionChanged;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeModelEvents.NodeLabelClicked;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeModelEvents.NodeToggleButtonClicked;
-import cc.alcina.framework.gwt.client.dirndl.model.TreeModelEvents.PaginatorVisible;
+import cc.alcina.framework.gwt.client.dirndl.model.Tree.SelectionChanged;
+import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeLabelClicked;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeToggleButtonClicked;
+import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.PaginatorVisible;
 
 @Directed(tag = "div", cssClass = "dl-tree", bindings = {
 		@Binding(from = "hideRoot", type = Type.CSS_CLASS) }, receives = {
-				TreeModelEvents.NodeLabelClicked.class,
-				TreeModelEvents.NodeToggleButtonClicked.class,
-				TreeModelEvents.PaginatorVisible.class }, emits = SelectionChanged.class)
-public class TreeModel<NM extends NodeModel<NM>> extends Model
+				TreeEvents.NodeLabelClicked.class,
+				TreeEvents.NodeToggleButtonClicked.class,
+				TreeEvents.PaginatorVisible.class }, emits = SelectionChanged.class)
+public class Tree<TN extends TreeNode<TN>> extends Model
 		implements NodeLabelClicked.Handler, NodeToggleButtonClicked.Handler,
 		PaginatorVisible.Handler {
 	private boolean hideRoot;
 
-	private NM root;
+	private TN root;
 
-	protected NM selectedNodeModel;
+	protected TN selectedNodeModel;
 
 	private Paginator paginator;
 
@@ -46,7 +45,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 	}
 
 	@Directed
-	public NM getRoot() {
+	public TN getRoot() {
 		return this.root;
 	}
 
@@ -56,7 +55,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 	@Override
 	public void onNodeLabelClicked(NodeLabelClicked event) {
-		NM model = event.getModel();
+		TN model = event.getModel();
 		if (selectedNodeModel != null) {
 			selectedNodeModel.setSelected(false);
 		}
@@ -69,7 +68,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 
 	@Override
 	public void onNodeToggleButtonClicked(NodeToggleButtonClicked event) {
-		NM model = event.getModel();
+		TN model = event.getModel();
 		model.setOpen(!model.isOpen());
 		if (model.isOpen() && !model.populated) {
 			model.populated = true;
@@ -93,13 +92,13 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 				paginator);
 	}
 
-	public void setRoot(NM root) {
-		NM old_root = this.root;
+	public void setRoot(TN root) {
+		TN old_root = this.root;
 		this.root = root;
 		propertyChangeSupport().firePropertyChange("root", old_root, root);
 	}
 
-	protected void loadChildren(NM model) {
+	protected void loadChildren(TN model) {
 	}
 
 	protected void loadNextPage() {
@@ -107,29 +106,6 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 	}
 
 	public static class ChildrenLoaded extends NodeTopic {
-	}
-
-	/**
-	 * Overrides List.equals to force a property change (plus, list.equals is
-	 * expensive)
-	 * 
-	 * @author nick@alcina.cc
-	 *
-	 * @param <T>
-	 */
-	public static class IdentityArrayList<T> extends ArrayList<T> {
-		public IdentityArrayList() {
-			super();
-		}
-
-		public IdentityArrayList(Collection<? extends T> c) {
-			super(c);
-		}
-
-		@Override
-		public boolean equals(Object obj) {
-			return this == obj;
-		}
 	}
 
 	public static class LabelClicked
@@ -149,6 +125,66 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		}
 	}
 
+	@Directed(tag = "paginator", bindings = @Binding(type = Type.INNER_TEXT, from = "text"), receives = InferredDomEvents.IntersectionObserved.class)
+	public static class Paginator extends Model
+			implements InferredDomEvents.IntersectionObserved.Handler {
+		private String text;
+
+		private boolean fired;
+
+		public String getText() {
+			return this.text;
+		}
+
+		@Override
+		public void onIntersectionObserved(IntersectionObserved event) {
+			if (event.isIntersecting() && !fired) {
+				fired = true;
+				Context context = NodeEvent.Context
+						.newTopicContext(event.getContext(), null);
+				TopicEvent.fire(context, PaginatorVisible.class, null);
+			}
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
+	}
+
+	public static class SelectionChanged
+			extends TopicEvent<TreeNode, SelectionChanged.Handler> {
+		@Override
+		public void dispatch(SelectionChanged.Handler handler) {
+			handler.onSelectionChanged(this);
+		}
+
+		@Override
+		public Class<SelectionChanged.Handler> getHandlerClass() {
+			return SelectionChanged.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionChanged(SelectionChanged event);
+		}
+	}
+
+	public static class ToggleButtonClicked
+			extends TopicEvent<Object, ToggleButtonClicked.Handler> {
+		@Override
+		public void dispatch(ToggleButtonClicked.Handler handler) {
+			handler.onToggleButtonClicked(this);
+		}
+
+		@Override
+		public Class<ToggleButtonClicked.Handler> getHandlerClass() {
+			return ToggleButtonClicked.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onToggleButtonClicked(ToggleButtonClicked event);
+		}
+	}
+
 	@Directed(tag = "div", cssClass = "dl-tree-node", bindings = {
 			@Binding(from = "open", type = Type.CSS_CLASS, literal = "open"),
 			@Binding(from = "selected", type = Type.CSS_CLASS, literal = "selected"),
@@ -156,14 +192,14 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 					LabelClicked.class, ToggleButtonClicked.class }, reemits = {
 							NodeLabelClicked.class,
 							NodeToggleButtonClicked.class })
-	public static class NodeModel<NM extends NodeModel> extends Model {
+	public static class TreeNode<NM extends TreeNode> extends Model {
 		public boolean populated;
 
 		private boolean open;
 
 		private NodeLabel label = new NodeLabel();
 
-		private List<NodeModel<NM>> children = new IdentityArrayList<>();
+		private List<TreeNode<NM>> children = new IdentityArrayList<>();
 
 		private NM parent;
 
@@ -174,7 +210,7 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 		@Directed(renderer = MultipleNodeRenderer.class)
 		@MultipleNodeRendererArgs(tags = { "div" }, cssClasses = { "" })
 		@MultipleNodeRendererLeaf(@Directed(renderer = CollectionNodeRenderer.class))
-		public List<NodeModel<NM>> getChildren() {
+		public List<TreeNode<NM>> getChildren() {
 			return this.children;
 		}
 
@@ -199,8 +235,8 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			return this.selected;
 		}
 
-		public void setChildren(List<NodeModel<NM>> children) {
-			List<NodeModel<NM>> old_children = this.children;
+		public void setChildren(List<TreeNode<NM>> children) {
+			List<TreeNode<NM>> old_children = this.children;
 			this.children = children;
 			propertyChangeSupport().firePropertyChange("children", old_children,
 					children);
@@ -276,66 +312,6 @@ public class TreeModel<NM extends NodeModel<NM>> extends Model
 			public void setText(String text) {
 				this.text = text;
 			}
-		}
-	}
-
-	@Directed(tag = "paginator", bindings = @Binding(type = Type.INNER_TEXT, from = "text"), receives = InferredDomEvents.IntersectionObserved.class)
-	public static class Paginator extends Model
-			implements InferredDomEvents.IntersectionObserved.Handler {
-		private String text;
-
-		private boolean fired;
-
-		public String getText() {
-			return this.text;
-		}
-
-		@Override
-		public void onIntersectionObserved(IntersectionObserved event) {
-			if (event.isIntersecting() && !fired) {
-				fired = true;
-				Context context = NodeEvent.Context
-						.newTopicContext(event.getContext(), null);
-				TopicEvent.fire(context, PaginatorVisible.class, null);
-			}
-		}
-
-		public void setText(String text) {
-			this.text = text;
-		}
-	}
-
-	public static class SelectionChanged
-			extends TopicEvent<NodeModel, SelectionChanged.Handler> {
-		@Override
-		public void dispatch(SelectionChanged.Handler handler) {
-			handler.onSelectionChanged(this);
-		}
-
-		@Override
-		public Class<SelectionChanged.Handler> getHandlerClass() {
-			return SelectionChanged.Handler.class;
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onSelectionChanged(SelectionChanged event);
-		}
-	}
-
-	public static class ToggleButtonClicked
-			extends TopicEvent<Object, ToggleButtonClicked.Handler> {
-		@Override
-		public void dispatch(ToggleButtonClicked.Handler handler) {
-			handler.onToggleButtonClicked(this);
-		}
-
-		@Override
-		public Class<ToggleButtonClicked.Handler> getHandlerClass() {
-			return ToggleButtonClicked.Handler.class;
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onToggleButtonClicked(ToggleButtonClicked event);
 		}
 	}
 }

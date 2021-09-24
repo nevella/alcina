@@ -17,43 +17,18 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
-import com.google.gwt.core.client.GWT;
-
 /**
  * @author nick@alcina.cc
  * 
  */
-public class MuteablePropertyChangeSupport {
+public class LazyPropertyChangeSupport {
 	public static final transient Object UNSPECIFIED_PROPERTY_CHANGE = new Object();
-
-	private static boolean muteAll = false;
-
-	public static boolean isMuteAll() {
-		return muteAll;
-	}
-
-	public static void setMuteAll(boolean muteAll) {
-		setMuteAll(muteAll, false);
-	}
-	// FIXME - mvcc.4 - get rid of this - and maybe add context muting (for
-	// projection) which returns a muted singletong
-	//
-
-	// ooh, singletong ... yes
-	public static void setMuteAll(boolean muteAll,
-			boolean initLifecycleThread) {
-		if (!GWT.isClient() && !initLifecycleThread) {
-			throw new RuntimeException(
-					"Mute all should only be set on a single-threaded VM");
-		}
-		MuteablePropertyChangeSupport.muteAll = muteAll;
-	}
 
 	private PropertyChangeSupport delegate;
 
 	private Object sourceBean;
 
-	public MuteablePropertyChangeSupport(Object sourceBean) {
+	public LazyPropertyChangeSupport(Object sourceBean) {
 		this.sourceBean = sourceBean;
 	}
 
@@ -70,7 +45,7 @@ public class MuteablePropertyChangeSupport {
 	}
 
 	public void firePropertyChange(PropertyChangeEvent evt) {
-		if (isMuteAll() || delegate == null) {
+		if (delegate == null) {
 			return;
 		}
 		this.delegate.firePropertyChange(evt);
@@ -78,8 +53,7 @@ public class MuteablePropertyChangeSupport {
 
 	public void firePropertyChange(String propertyName, Object oldValue,
 			Object newValue) {
-		if (isMuteAll() || delegate == null
-				|| (oldValue == null && newValue == null)) {
+		if (delegate == null || (oldValue == null && newValue == null)) {
 			return;
 		}
 		delegate.firePropertyChange(propertyName, oldValue, newValue);
@@ -89,6 +63,9 @@ public class MuteablePropertyChangeSupport {
 	 * Taking advantage of propertychangesupport null != null - note that the
 	 * old/newvalues of the propertychangeevent should !not! be read. Indicates
 	 * "this object has changed - possibly below the child/field level"
+	 *
+	 * Normally there are other ways to skin this cat - FIXME - dirndl1.3 -
+	 * possibly remove
 	 */
 	public void fireUnspecifiedPropertyChange(Object propagationId) {
 		fireUnspecifiedPropertyChange(null, propagationId);
@@ -131,7 +108,7 @@ public class MuteablePropertyChangeSupport {
 
 	private void fireUnspecifiedPropertyChange(String name,
 			Object propagationId) {
-		if (isMuteAll() || delegate == null) {
+		if (delegate == null) {
 			return;
 		}
 		PropertyChangeEvent changeEvent = new PropertyChangeEvent(sourceBean,

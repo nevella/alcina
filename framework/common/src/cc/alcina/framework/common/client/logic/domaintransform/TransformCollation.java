@@ -251,6 +251,11 @@ public class TransformCollation {
 			return this;
 		}
 
+		public Query withPropertyName(Enum propertyEnum) {
+			this.propertyName = propertyEnum.name();
+			return this;
+		}
+
 		public Query withPropertyName(String propertyName) {
 			this.propertyName = propertyName;
 			return this;
@@ -313,14 +318,33 @@ public class TransformCollation {
 			return !hasDeleteTransform();
 		}
 
+		public boolean hasPropertyName(Enum e) {
+			return hasPropertyName(e.name());
+		}
+
 		public boolean hasPropertyName(String name) {
+			return events.stream().anyMatch(e -> e.getPropertyName() != null
+					&& Objects.equals(e.getPropertyName(), name));
+		}
+
+		public boolean hasPropertyNameExcluding(Enum... names) {
 			return events.stream()
-					.anyMatch(e -> Objects.equals(e.getPropertyName(), name));
+					.anyMatch(e -> e.getPropertyName() != null
+							&& Arrays.stream(names).noneMatch(name -> Objects
+									.equals(e.getPropertyName(), name.name())));
+		}
+
+		public boolean hasPropertyNames(Enum... names) {
+			return events.stream()
+					.anyMatch(e -> e.getPropertyName() != null
+							&& Arrays.stream(names).anyMatch(name -> Objects
+									.equals(e.getPropertyName(), name.name())));
 		}
 
 		public boolean hasPropertyNames(String... names) {
-			return events.stream().anyMatch(e -> Arrays.stream(names).anyMatch(
-					name -> Objects.equals(e.getPropertyName(), name)));
+			return events.stream().anyMatch(e -> e.getPropertyName() != null
+					&& Arrays.stream(names).anyMatch(
+							name -> Objects.equals(e.getPropertyName(), name)));
 		}
 
 		public void removeTransform(DomainTransformEvent event) {

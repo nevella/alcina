@@ -75,6 +75,16 @@ public interface ClassLookup {
 				.anyMatch(pr -> pr.getPropertyName().equals(propertyName));
 	}
 
+	default boolean isNonAbstract(Class<? extends Object> clazz) {
+		try {
+			Object templateInstance = getTemplateInstance(clazz);
+			return templateInstance != null;
+		} catch (Exception e) {
+			// instantiation (clazz is abstract)
+			return false;
+		}
+	}
+
 	default boolean isPrimitive(Class<?> clazz) {
 		return clazz.isPrimitive();
 	}

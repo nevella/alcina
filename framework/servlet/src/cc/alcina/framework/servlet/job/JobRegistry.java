@@ -167,7 +167,34 @@ public class JobRegistry {
 	}
 
 	public static boolean isActiveInstance(ClientInstance instance) {
-		return get().jobExecutors.getActiveServers().contains(instance);
+		int retryCount = 0;
+		while (retryCount++ < 5) {
+			List<ClientInstance> activeInstances = get().jobExecutors
+					.getActiveServers();
+			boolean contains = activeInstances.contains(instance);
+			if (contains) {
+				return true;
+			}
+			if (activeInstances.contains(ClientInstance.self())) {
+				return false;
+			}
+			int minimumVisibleInstancesForOrphanProcessing = ResourceUtilities
+					.getInteger(JobScheduler.class,
+							"minimumVisibleInstancesForOrphanProcessing");
+			if (activeInstances
+					.size() < minimumVisibleInstancesForOrphanProcessing) {
+				try {
+					Thread.sleep((int) (500 * Math.pow(2, retryCount)));
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			} else {
+				return false;
+			}
+		}
+		throw Ax.runtimeException(
+				"Unable to determine active instance (timeout): %s",
+				instance.toLocator());
 	}
 
 	public static boolean isInitialised() {
@@ -413,9 +440,8 @@ public class JobRegistry {
 				MethodContext.instance().withExecuteOutsideTransaction(true)
 						.run(resource::acquire);
 				try {
-					// ensure lazy (process state) field. FIXME - mvcc.jobs.4 -
-					// remove process state (in job)
-					forJob = forJob.domain().domainVersion();
+					// ensure lazy (process state) field.
+					forJob = forJob.domain().ensurePopulated();
 					forJob.ensureProcessState().provideRecord(record)
 							.setAcquired(true);
 					forJob.persistProcessState();

@@ -19,6 +19,10 @@ public interface TreeSerializable extends Serializable {
 	public static final String CONTEXT_IGNORE_CUSTOM_CHECKS = TreeSerializable.class
 			.getName() + ".CONTEXT_IGNORE_CUSTOM_CHECKS";
 
+	default <T extends TreeSerializable> T copy() {
+		return (T) FlatTreeSerializer.clone(this);
+	}
+
 	default Customiser treeSerializationCustomiser() {
 		return Customiser.INSTANCE;
 	}

@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.logic.CancellableAsyncCallback;
@@ -148,7 +149,7 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 
 		@Override
 		protected void search(int pageNumber, SearchCallback callback) {
-			SearchDefinition target = (SearchDefinition) def.cloneObject();
+			SearchDefinition target = ReflectiveSerializer.clone(def);
 			target.setPageNumber(pageNumber);
 			Client.commonRemoteService().search(target, callback);
 		}
