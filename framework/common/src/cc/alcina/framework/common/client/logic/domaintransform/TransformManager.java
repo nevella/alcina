@@ -1427,12 +1427,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 		getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).addAll(dtes);
 	}
 
-	public void register(List<? extends Entity> entities, boolean register) {
+	public void register(Collection<? extends Entity> entities,
+			boolean register) {
 		if (register) {
 			registerDomainObjects(entities);
 		} else {
 			deregisterDomainObjects(entities);
 		}
+	}
+
+	public void register(Entity entity, boolean register) {
+		register(Collections.singleton(entity), register);
 	}
 
 	// FIXME - mvcc.adjunct - most app-level calls to this are legacy and can be

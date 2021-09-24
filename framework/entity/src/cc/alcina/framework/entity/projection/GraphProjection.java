@@ -499,8 +499,8 @@ public class GraphProjection {
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
 		this.disablePerObjectPermissions = LooseContext
 				.is(CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS);
-		reached = new ProjectionIdentityMap(ResourceUtilities
-				.getInteger(GraphProjection.class, "maxReached"));
+		reached = new ProjectionIdentityMap(ResourceUtilities.getInteger(
+				GraphProjection.class, "maxReached", Integer.MAX_VALUE));
 	}
 
 	public GraphProjection(GraphProjectionFieldFilter fieldFilter,
