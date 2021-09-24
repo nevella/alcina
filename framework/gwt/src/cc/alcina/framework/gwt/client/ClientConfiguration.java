@@ -54,7 +54,7 @@ public class ClientConfiguration {
 		TransformManager.register(createTransformManager());
 		Domain.registerHandler(new DomainHandlerClient());
 		LooseContext.register(new ClientLooseContextProvider());
-		TransformManager.get().setupClientListeners();
+		ClientTransformManager.cast().setupClientListeners();
 		TransformManager.get()
 				.addDomainTransformListener(PermissionsManager.get());
 		Registry.registerSingleton(CommitToStorageTransformListener.class,

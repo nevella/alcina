@@ -1635,15 +1635,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		this.undoManager = undoManager;
 	}
 
-	/**
-	 * If we're running a TM directly in the entity layer (to both commit to the
-	 * db and pass the transforms back to a client), the TLTM will want these
-	 * listeners...
-	 */
-	public void setupClientListeners() {
-		addDomainTransformListener(new RecordTransformListener());
-		addDomainTransformListener(new CommitToLocalDomainTransformListener());
-	}
+	
 
 	public void setUseCreatedLocals(boolean useCreatedLocals) {
 		this.useCreatedLocals = useCreatedLocals;
