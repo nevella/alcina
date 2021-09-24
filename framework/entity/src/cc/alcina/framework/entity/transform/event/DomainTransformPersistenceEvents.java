@@ -250,7 +250,8 @@ public class DomainTransformPersistenceEvents {
 						event.getPersistenceEventType());
 	}
 
-	// FIXME - mvcc.4 - add optional - actually remove all cascadedtransforms
+	// FIXME - mvcc.cascade - add optional - actually remove all
+	// cascadedtransforms
 	// (replace with jobs where necessary)
 	//
 	// cluster-level counter (allowing for proxy swap etc)

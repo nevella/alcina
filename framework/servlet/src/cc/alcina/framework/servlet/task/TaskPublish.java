@@ -7,11 +7,18 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.schedule.ServerTask;
-import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
+import cc.alcina.framework.servlet.servlet.PublicationRequestHandler;
 
 @TypeSerialization(flatSerializable = false)
 public class TaskPublish extends ServerTask<TaskPublish> {
 	private ContentRequestBase publicationRequest;
+
+	public TaskPublish() {
+	}
+
+	public TaskPublish(ContentRequestBase publicationRequest) {
+		setPublicationRequest(publicationRequest);
+	}
 
 	public ContentRequestBase getPublicationRequest() {
 		return this.publicationRequest;
@@ -24,7 +31,7 @@ public class TaskPublish extends ServerTask<TaskPublish> {
 	@Override
 	protected void performAction0(TaskPublish task) throws Exception {
 		PublicationResult result = Registry
-				.impl(CommonRemoteServiceServlet.class)
+				.impl(PublicationRequestHandler.class)
 				.publish(getPublicationRequest());
 		result.ensureMinimal();
 		JobContext.get().getJob().setResult(result);

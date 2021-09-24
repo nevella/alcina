@@ -7,4 +7,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TextNodeRenderer;
 
 @RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = TreePath.class)
 public class TreePathNodeRenderer extends TextNodeRenderer {
+	public TreePathNodeRenderer() {
+		int debug = 3;
+	}
 }

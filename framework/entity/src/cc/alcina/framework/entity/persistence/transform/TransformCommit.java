@@ -261,8 +261,8 @@ public class TransformCommit {
 								LoginState.LOGGED_IN, asRoot);
 					} else {
 						if (!Objects.equals(
-								Domain.find(request.getClientInstance())
-										.provideUser(),
+								request.getClientInstance().domain()
+										.domainVersion().provideUser(),
 								PermissionsManager.get().getUser())) {
 							throw new UnsupportedOperationException(
 									"May need to create an additional authenticationSession");
@@ -492,7 +492,7 @@ public class TransformCommit {
 	}
 
 	public static int commitWithBackoff() {
-		return commitWithBackoff(0, 5, 40, 2.0);
+		return commitWithBackoff(0, 8, 40, 2.0);
 	}
 
 	public static int commitWithBackoff(int initialDelayMs, int retries,
@@ -633,8 +633,8 @@ public class TransformCommit {
 
 	public EntityLocatorMap
 			getLocatorMapForClient(DomainTransformRequest request) {
-		return getLocatorMapForClient(Domain.find(request.getClientInstance()),
-				false);
+		return getLocatorMapForClient(
+				request.getClientInstance().domain().domainVersion(), false);
 	}
 
 	public void handleWrapperTransforms() {

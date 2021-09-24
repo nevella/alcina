@@ -236,6 +236,14 @@
 		<property name="project.gwt.compile.jvmarg1" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg2" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg3" value="-Dblank" />
+		<if>
+			<available file="${project.gwt-unitcache.script.dir}" type="dir" />
+			<then>
+				<delete includeEmptyDirs="true">
+					<fileset dir="${project.gwt-unitcache.script.dir}" includes="**/*" defaultexcludes="no" />
+				</delete>
+			</then>
+		</if>
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />

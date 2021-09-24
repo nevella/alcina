@@ -202,7 +202,8 @@ public class DomainStoreCriteria implements Criteria {
 
 	@Override
 	public String getAlias() {
-		return this.entityManagerCriteria.getAlias();
+		return this.entityManagerCriteria == null ? alias
+				: this.entityManagerCriteria.getAlias();
 	}
 
 	public ResultTransformer getResultTransformer() {
@@ -232,6 +233,11 @@ public class DomainStoreCriteria implements Criteria {
 			throw new HibernateException(ex);
 			// return this.entityManagerCriteria.list();
 		}
+	}
+
+	public DomainStoreCriteria provideSubCriteria(String alias) {
+		return subs.stream().filter(sub -> sub.getAlias().equals(alias))
+				.findFirst().get();
 	}
 
 	@Override

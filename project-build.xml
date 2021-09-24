@@ -41,6 +41,22 @@
 				</delete>
 			</then>
 		</if>
+		<if>
+			<available file="${project.gwt-unitcache.script.dir}" type="dir" />
+			<then>
+				<delete includeEmptyDirs="true">
+					<fileset dir="${project.gwt-unitcache.script.dir}" includes="**/*" defaultexcludes="no" />
+				</delete>
+			</then>
+		</if>
+		<if>
+			<available file="${project.gwt-unitcache.hosted.dir}" type="dir" />
+			<then>
+				<delete includeEmptyDirs="true">
+					<fileset dir="${project.gwt-unitcache.hosted.dir}" includes="**/*" defaultexcludes="no" />
+				</delete>
+			</then>
+		</if>
 	</target>
 	<target name="clean-gwt">
 		<delete dir="${project.gwt.build.dir}" />

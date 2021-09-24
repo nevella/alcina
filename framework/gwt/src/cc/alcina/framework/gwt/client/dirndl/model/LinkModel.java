@@ -53,7 +53,11 @@ public class LinkModel extends Model {
 
 	private String href;
 
+	private Class<? extends TopicEvent> topicClass;
+
 	private boolean newTab;
+
+	private String title;
 
 	public LinkModel() {
 	}
@@ -85,6 +89,14 @@ public class LinkModel extends Model {
 
 	public String getText() {
 		return text;
+	}
+
+	public String getTitle() {
+		return this.title;
+	}
+
+	public Class<? extends TopicEvent> getTopicClass() {
+		return topicClass;
 	}
 
 	public boolean isNewTab() {
@@ -125,6 +137,10 @@ public class LinkModel extends Model {
 
 	public void setText(String text) {
 		this.text = text;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
 	}
 
 	public void setWithoutLink(boolean withoutLink) {
@@ -171,6 +187,16 @@ public class LinkModel extends Model {
 		return this;
 	}
 
+	public LinkModel withTitle(String title) {
+		this.title = title;
+		return this;
+	}
+
+	public LinkModel withTopic(Class<? extends TopicEvent> topicClass) {
+		this.topicClass = topicClass;
+		return this;
+	}
+
 	public LinkModel withWithoutLink(boolean withoutLink) {
 		this.withoutLink = withoutLink;
 		return this;
@@ -183,6 +209,7 @@ public class LinkModel extends Model {
 			LinkModel model = model(node);
 			Widget rendered = super.render(node);
 			rendered.getElement().setInnerText(getText(node));
+			rendered.getElement().setTitle(model.getTitle());
 			if (model.isWithoutLink() && model.getText() != null) {
 				return rendered;
 			}
@@ -205,6 +232,13 @@ public class LinkModel extends Model {
 				}
 				if (model.isNewTab()) {
 					rendered.getElement().setAttribute("target", "_blank");
+				}
+				if (model.getTopicClass() != null) {
+					rendered.addDomHandler(event -> {
+						Context context = NodeEvent.Context
+								.newTopicContext(event, node);
+						TopicEvent.fire(context, model.getTopicClass(), null);
+					}, ClickEvent.getType());
 				}
 			} else {
 				rendered.getElement().setAttribute("href",

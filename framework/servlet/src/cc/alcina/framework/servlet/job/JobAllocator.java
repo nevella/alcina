@@ -202,12 +202,12 @@ class JobAllocator {
 			try {
 				LooseContext.pushWithTrue(
 						LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED);
-				if (job.domain().domainVersion() == null) {
+				if (job.domain().wasRemoved()) {
 					try {
 						// production issue -- revisit
 						Thread.sleep(1000);
 						DomainStore.waitUntilCurrentRequestsProcessed();
-						if (job.domain().domainVersion() != null) {
+						if (!job.domain().wasRemoved()) {
 							logger.debug(
 									"DEVEX-12 ::  event with incomplete domain tx -  job {}",
 									job.toDisplayName());

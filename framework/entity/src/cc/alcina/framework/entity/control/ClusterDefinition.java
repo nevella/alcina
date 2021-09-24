@@ -45,8 +45,8 @@ public class ClusterDefinition {
 		return member.get();
 	}
 
-	public ClusterMember provideCurrentWriterHost() {
-		return clusterMembers.stream().filter(m -> m.writerHost).findFirst()
+	public ClusterMember provideCompilaationMember() {
+		return clusterMembers.stream().filter(m -> m.compilationMember).findFirst()
 				.get();
 	}
 
@@ -65,7 +65,7 @@ public class ClusterDefinition {
 
 		public String hostName;
 
-		public boolean writerHost;
+		public boolean compilationMember;
 
 		public boolean proxiedTo;
 

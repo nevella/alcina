@@ -13,12 +13,18 @@
  */
 package cc.alcina.framework.common.client.search;
 
+import java.util.Arrays;
+
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
+import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
+import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
@@ -41,6 +47,10 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  *         Also - there seems to be something dodgy wrt HasValue<E> in
  *         serialization - best to have an explicit serialverisionUID
  *         </p>
+ * 
+ *         JDK8+ - this seems to be resolved. Note that serialization will
+ *         require type info, either by overriding get/setValue with covariant
+ *         types, or via TypeSerialization/PropertySerialization annotations
  * 
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
@@ -106,5 +116,36 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 	 */
 	protected boolean valueAsString() {
 		return false;
+	}
+
+	public static abstract class Searchable<E extends Enum, C extends EnumCriterion<E>>
+			extends FlatSearchable<C> {
+		protected Class<E> enumClass;
+
+		protected int maxSelectedItems = 999;
+
+		public Searchable(Class<C> clazz, Class<E> enumClass, String objectName,
+				String criteriaName) {
+			super(clazz, objectName, criteriaName,
+					Arrays.asList(StandardSearchOperator.EQUALS));
+			this.enumClass = enumClass;
+		}
+
+		@Override
+		public AbstractBoundWidget createEditor() {
+			return new FlatSearchSelector(enumClass, 1,
+					FriendlyEnumRenderer.INSTANCE,
+					() -> Arrays.asList(enumClass.getEnumConstants()));
+		}
+
+		@Override
+		public String getCriterionPropertyName() {
+			return "value";
+		}
+
+		@Override
+		public boolean hasValue(C sc) {
+			return sc.getValue() != null;
+		}
 	}
 }

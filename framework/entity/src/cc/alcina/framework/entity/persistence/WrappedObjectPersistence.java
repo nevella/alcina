@@ -58,7 +58,7 @@ public class WrappedObjectPersistence {
 		try {
 			for (HasId wrapper : wrappers) {
 				for (PropertyDescriptor pd : SEUtilities
-						.getSortedPropertyDescriptors(wrapper.getClass())) {
+						.getPropertyDescriptorsSortedByName(wrapper.getClass())) {
 					if (pd.getReadMethod() != null) {
 						Wrapper info = pd.getReadMethod()
 								.getAnnotation(Wrapper.class);
@@ -196,7 +196,7 @@ public class WrappedObjectPersistence {
 		if (!wrapperDescriptors.containsKey(clazz)) {
 			List<PropertyDescriptor> perClassWrapperDescriptors = new ArrayList<PropertyDescriptor>();
 			List<PropertyDescriptor> descriptors = SEUtilities
-					.getSortedPropertyDescriptors(clazz);
+					.getPropertyDescriptorsSortedByName(clazz);
 			for (PropertyDescriptor pd : descriptors) {
 				if (pd.getReadMethod() != null) {
 					Wrapper info = pd.getReadMethod()

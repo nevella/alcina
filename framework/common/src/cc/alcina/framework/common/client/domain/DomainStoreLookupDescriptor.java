@@ -88,8 +88,8 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		if (lookupIndexClass != null) {
 			return lookupIndexClass;
 		}
-		Class chainedPropertyType = propertyPathAccesor.getChainedPropertyType(
-				Reflections.newInstance(clazz));
+		Class chainedPropertyType = propertyPathAccesor
+				.getChainedPropertyType(Reflections.newInstance(clazz));
 		if (chainedPropertyType != null) {
 			return chainedPropertyType;
 		}
@@ -150,7 +150,12 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		private IdLookup idLookup;
 
 		public IdLookupDescriptor(Class clazz, String propertyPath) {
-			super(clazz, propertyPath, null, null);
+			this(clazz, propertyPath, null, null);
+		}
+
+		public IdLookupDescriptor(Class clazz, String propertyPath,
+				Function<? super T, ?> valueFunction, Class lookupIndexClass) {
+			super(clazz, propertyPath, valueFunction, lookupIndexClass);
 		}
 
 		@Override

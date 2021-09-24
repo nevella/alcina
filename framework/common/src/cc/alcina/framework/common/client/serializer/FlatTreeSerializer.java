@@ -256,7 +256,7 @@ public class FlatTreeSerializer {
 			// "Unequal serialized (bean):\n\n%s\n========\n%s",
 			// reflectiveCheck0, reflectiveCheck1);
 			// }
-			// FIXME - mvcc.4 - implement once reflectiveserializer up
+			// FIXME - mvcc.5 - implement once reflectiveserializer up
 		}
 		return serialized;
 	}
@@ -265,6 +265,13 @@ public class FlatTreeSerializer {
 		return serialize(object,
 				new SerializerOptions().withTopLevelTypeInfo(true)
 						.withShortPaths(true).withElideDefaults(true));
+	}
+
+	public static String serializeSingleLine(TreeSerializable object) {
+		return serialize(object,
+				new SerializerOptions().withTopLevelTypeInfo(false)
+						.withShortPaths(true).withElideDefaults(true)
+						.withSingleLine(true));
 	}
 
 	private static boolean isCollection(Class clazz) {
@@ -349,9 +356,10 @@ public class FlatTreeSerializer {
 			T value, Node cursor) {
 		T existingValue = map.put(key, value);
 		if (existingValue != null) {
-			throw new IllegalStateException(
-					Ax.format("Key collision %s at path %s :: %s",
-							state.rootClass.getSimpleName(), cursor.path, key));
+			throw new IllegalStateException(Ax.format(
+					"Key collision %s at path %s :: %s - existing value %s - adding value %s",
+					state.rootClass.getSimpleName(), cursor.path, key,
+					existingValue, value));
 		}
 	}
 

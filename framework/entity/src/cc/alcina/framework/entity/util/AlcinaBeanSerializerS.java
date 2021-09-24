@@ -353,7 +353,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			seenOut.put(object, index);
 		}
 		List<PropertyDescriptor> unsortedPropertyDescriptors = SEUtilities
-				.getSortedPropertyDescriptors(clazz);
+				.getPropertyDescriptorsSortedByName(clazz);
 		List<PropertyDescriptor> propertyDescriptors = unsortedPropertyDescriptors
 				.stream()
 				.sorted(Comparator.comparing(PropertyDescriptor::getName))

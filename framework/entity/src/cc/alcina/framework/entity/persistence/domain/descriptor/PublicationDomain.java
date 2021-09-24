@@ -61,23 +61,25 @@ public class PublicationDomain {
 								PublicationCounter counter = PersistentImpl
 										.create(PublicationCounter.class);
 								counter.setUser(iUser);
-								event.getTransformPersistenceToken()
-										.addCascadedEvents(false);
 							}
 						} else if (qr.hasDeleteTransform()) {
 							// will have been deleted from graph, so use locator
 							EntityLocator locator = qr.events.get(0)
 									.toObjectLocator();
-							Domain.stream(PersistentImpl.getImplementation(
-									PublicationCounter.class))
-									.filter(pc -> ((Entity) pc.getUser())
-											.toLocator().equals(locator))
-									.forEach(Entity::delete);
 							event.getTransformPersistenceToken()
-									.addCascadedEvents(true);
+									.markForPrepend(() -> Domain.stream(
+											PersistentImpl.getImplementation(
+													PublicationCounter.class))
+											.filter(pc -> ((Entity) pc
+													.getUser()).toLocator()
+															.equals(locator))
+											.forEach(Entity::delete));
+							event.getTransformPersistenceToken()
+									.addCascadedEvents();
 						}
 					});
 				}
+				event.getTransformPersistenceToken().addCascadedEvents();
 			}
 		}
 	}

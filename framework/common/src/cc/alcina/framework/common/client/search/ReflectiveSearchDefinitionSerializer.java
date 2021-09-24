@@ -80,7 +80,12 @@ public class ReflectiveSearchDefinitionSerializer
 			char c = serializedDef.charAt(idx);
 			if (c == '.') {
 				char c2 = serializedDef.charAt(++idx);
-				sb.append(unescapeMap.charAt(((int) c2) - 48));
+				int index = ((int) c2) - 48;
+				if (index < unescapeMap.length()) {
+					sb.append(unescapeMap.charAt(index));
+				} else {
+					throw new IllegalArgumentException("Not json serialized");
+				}
 			} else {
 				sb.append(c);
 			}
@@ -106,6 +111,7 @@ public class ReflectiveSearchDefinitionSerializer
 	@Override
 	public <SD extends SearchDefinition> SD deserialize(
 			Class<? extends SearchDefinition> clazz, String serializedDef) {
+		Exception flatTreeDeserializationException = null;
 		if (clazz != null
 				&& (serializedDef.contains("=") || serializedDef.isEmpty())
 				&& canFlatTreeSerialize(clazz)) {
@@ -114,13 +120,14 @@ public class ReflectiveSearchDefinitionSerializer
 						new DeserializerOptions().withShortPaths(true));
 			} catch (Exception e) {
 				Ax.simpleExceptionOut(e);
+				flatTreeDeserializationException = e;
 			}
-		}
-		if (serializedDef.startsWith(RS0)) {
-			serializedDef = serializedDef.substring(RS0.length());
 		}
 		ensureLookups();
 		try {
+			if (serializedDef.startsWith(RS0)) {
+				serializedDef = serializedDef.substring(RS0.length());
+			}
 			serializedDef = unescapeJsonForUrl(serializedDef);
 			SearchDefinition def = Registry.impl(AlcinaBeanSerializer.class)
 					.registerLookups(abbrevLookup, reverseAbbrevLookup)

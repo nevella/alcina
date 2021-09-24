@@ -37,7 +37,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
-import cc.alcina.framework.common.client.logic.MuteablePropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.LazyPropertyChangeSupport;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.Client;
@@ -53,7 +53,7 @@ public class ActionProgress extends Composite
 
 	public static int REFRESH_DELAY_MS = 3500;
 
-	protected transient MuteablePropertyChangeSupport propertyChangeSupport = new MuteablePropertyChangeSupport(
+	protected transient LazyPropertyChangeSupport propertyChangeSupport = new LazyPropertyChangeSupport(
 			this);
 
 	private FlowPanel fp;

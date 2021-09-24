@@ -124,7 +124,7 @@ public class EntityHelper {
 	}
 
 	public static boolean notRemoved(Entity e) {
-		return !e.domain().wasRemoved();
+		return e != null && !e.domain().wasRemoved();
 	}
 
 	public static String strGetIdOrZero(HasId hasId) {

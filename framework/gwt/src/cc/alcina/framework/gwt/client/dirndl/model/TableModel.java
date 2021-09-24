@@ -337,7 +337,7 @@ public class TableModel extends Model {
 		}
 
 		@Override
-		public String getValueId() {
+		public String getGroupName() {
 			return null;
 		}
 	}

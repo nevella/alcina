@@ -161,6 +161,10 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return previous.hasPrevious(eventClass);
 		}
 
+		/*
+		 * FIXME - dirndl 1.1 - nodeevents should bubble by default, and
+		 * TopicEvent->ModelEvent
+		 */
 		public void markCauseTopicAsNotHandled() {
 			((TopicEvent) previous.getNodeEvent()).setHandled(false);
 		}

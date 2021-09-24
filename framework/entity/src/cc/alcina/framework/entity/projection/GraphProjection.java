@@ -341,7 +341,7 @@ public class GraphProjection {
 	public static boolean isPrimitiveOrDataClass(Class c) {
 		return c.isPrimitive() || c == String.class || c == Boolean.class
 				|| c == Character.class || c.isEnum() || c == Class.class
-				|| Number.class.isAssignableFrom(c)
+				|| c == Enum.class || Number.class.isAssignableFrom(c)
 				|| Date.class.isAssignableFrom(c)
 				|| CommonUtils.isEnumOrEnumSubclass(c)
 				|| ProjectByValue.class.isAssignableFrom(c)
@@ -445,7 +445,7 @@ public class GraphProjection {
 
 	private String contextDebugPath;
 
-	protected Map reached = new ProjectionIdentityMap();
+	protected Map reached;
 
 	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>(
 			LOOKUP_SIZE);
@@ -499,6 +499,8 @@ public class GraphProjection {
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
 		this.disablePerObjectPermissions = LooseContext
 				.is(CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS);
+		reached = new ProjectionIdentityMap(ResourceUtilities.getInteger(
+				GraphProjection.class, "maxReached", Integer.MAX_VALUE));
 	}
 
 	public GraphProjection(GraphProjectionFieldFilter fieldFilter,
@@ -600,7 +602,7 @@ public class GraphProjection {
 	public <T> T project(T source, GraphProjectionContext context)
 			throws Exception {
 		if (context != null) {
-			return project(source, null, context, false);
+			return project(source, null, context);
 		} else {
 			GraphProjection last = LooseContext
 					.get(CONTEXT_LAST_CONTEXT_LOOKUPS);
@@ -617,7 +619,7 @@ public class GraphProjection {
 				GlobalTopicPublisher.get()
 						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, 1);
 				start = System.nanoTime();
-				return project(source, null, context, false);
+				return project(source, null, context);
 			} finally {
 				GlobalTopicPublisher.get()
 						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, -1);
@@ -649,8 +651,8 @@ public class GraphProjection {
 		}
 	}
 
-	public <T> T project(T source, T projected, GraphProjectionContext context,
-			boolean easysChecked) throws Exception {
+	public <T> T project(T source, T projected, GraphProjectionContext context)
+			throws Exception {
 		traversalCount++;
 		if (source == null) {
 			return null;
@@ -664,42 +666,37 @@ public class GraphProjection {
 		}
 		Class sourceClass = source.getClass();
 		boolean checkReachable = false;
-		if (!easysChecked) {
-			if (sourceClass == Timestamp.class && replaceTimestampsWithDates
-					&& context.field.getType() == Date.class) {
-				// actually breaks the (T) contract here - naughty
-				// this is because the arithmetic involved in reconstructing
-				// timestamps in a gwt js client
-				// is expensive
-				return (T) new Date(((Timestamp) source).getTime());
-			}
-			if (isPrimitiveOrDataClass(sourceClass)) {
-				return source;
-			}
-			if (replaceMap != null && source instanceof Entity
-					&& replaceMap.containsKey(source)) {
-				source = (T) replaceMap.get(source);
-				sourceClass = source.getClass();
-			}
-			checkReachable = checkReachable(source);
-			// check here unlikely to matter
-			// if (!reachableBySinglePath) {
-			if (checkReachable) {
-				Object reachedInstance = reached.get(source);
-				if (reachedInstance != null) {
-					if (projected != null && projected != reachedInstance) {
+		if (sourceClass == Timestamp.class && replaceTimestampsWithDates
+				&& context.field.getType() == Date.class) {
+			// actually breaks the (T) contract here - naughty
+			// this is because the arithmetic involved in reconstructing
+			// timestamps in a gwt js client
+			// is expensive
+			return (T) new Date(((Timestamp) source).getTime());
+		}
+		if (isPrimitiveOrDataClass(sourceClass)) {
+			return source;
+		}
+		if (replaceMap != null && source instanceof Entity
+				&& replaceMap.containsKey(source)) {
+			source = (T) replaceMap.get(source);
+			sourceClass = source.getClass();
+		}
+		checkReachable = checkReachable(source);
+		// check here unlikely to matter
+		// if (!reachableBySinglePath) {
+		if (checkReachable) {
+			Object reachedInstance = reached.get(source);
+			if (reachedInstance != null) {
+				if (projected != null && projected != reachedInstance) {
+				} else {
+					if (reachedInstance == NULL_MARKER) {
+						return null;
 					} else {
-						if (reachedInstance == NULL_MARKER) {
-							return null;
-						} else {
-							return (T) reachedInstance;
-						}
+						return (T) reachedInstance;
 					}
 				}
 			}
-			// }
-		} else {
-			checkReachable = checkReachable(source);
 		}
 		if (!checkObjectPermissions(source)) {
 			return null;
@@ -840,7 +837,7 @@ public class GraphProjection {
 				}
 				childContext.adopt(sourceClass, field, context, projected,
 						source);
-				Object cv = project(value, null, childContext, true);
+				Object cv = project(value, null, childContext);
 				field.set(projected, cv);
 			}
 		}
@@ -1267,6 +1264,12 @@ public class GraphProjection {
 		JPAImplementation jpaImplementation = Registry
 				.implOrNull(JPAImplementation.class);
 
+		private int maxSize;
+
+		public ProjectionIdentityMap(int maxSize) {
+			this.maxSize = maxSize;
+		}
+
 		@Override
 		public Set entrySet() {
 			throw new UnsupportedOperationException();
@@ -1290,6 +1293,7 @@ public class GraphProjection {
 
 		@Override
 		public Object put(Object key, Object value) {
+			Preconditions.checkState(size() < maxSize, "Oversized projection");
 			if (key instanceof Entity) {
 				Entity entityKey = (Entity) key;
 				if (useNonEntityMap(entityKey)) {
@@ -1303,6 +1307,11 @@ public class GraphProjection {
 				nonEntities.put(key, value);
 				return null;
 			}
+		}
+
+		@Override
+		public int size() {
+			return entities.size() + nonEntities.size();
 		}
 
 		boolean useNonEntityMap(Entity entity) {

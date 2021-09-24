@@ -81,7 +81,10 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
-					.stream().map(pd -> new JvmPropertyReflector(clazz, pd))
+					.stream()
+					.filter(pd -> !(pd.getName().equals("class")
+							|| pd.getName().equals("propertyChangeListeners")))
+					.map(pd -> JvmPropertyReflector.get(clazz, pd))
 					.collect(Collectors.toList()),
 			100);
 
@@ -167,8 +170,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	@Override
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
-		MethodIndividualPropertyAccessor accessor = new MethodIndividualPropertyAccessor(
-				clazz, propertyName);
+		MethodIndividualPropertyReflector accessor = MethodIndividualPropertyReflector
+				.get(clazz, propertyName);
 		return accessor.isInvalid() ? null : accessor;
 	}
 
@@ -202,7 +205,7 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		try {
 			List<PropertyInfo> infos = new ArrayList<PropertyInfo>();
 			for (PropertyDescriptor pd : SEUtilities
-					.getSortedPropertyDescriptors(clazz)) {
+					.getPropertyDescriptorsSortedByName(clazz)) {
 				Class<?> propertyType = pd.getPropertyType();
 				if (pd.getWriteMethod() == null || pd.getReadMethod() == null) {
 					continue;

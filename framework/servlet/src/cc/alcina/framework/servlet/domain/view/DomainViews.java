@@ -18,9 +18,9 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.view.DomainView;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Request;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.Response;
-import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContentModel.WaitPolicy;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Request;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Response;
+import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.WaitPolicy;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -32,8 +32,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
@@ -49,6 +47,8 @@ import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.Type;
 /**
  * TODO - document logic of happens-before (task sequencing means any query
  * executed before a domain commit will be sequentially correct)
+ * 
+ * FIXME - dirndl 1.2 - document
  * 
  * @author nick@alcina.cc
  *
@@ -238,6 +238,10 @@ public abstract class DomainViews {
 		}
 	}
 
+	protected boolean filterViewTransformCollation(QueryResult qr) {
+		return true;
+	}
+
 	protected abstract Class<? extends Entity>[] getIndexableEntityClasses();
 
 	protected boolean
@@ -273,6 +277,7 @@ public abstract class DomainViews {
 					.getTransformCollation()
 					.query(PersistentImpl.getImplementation(DomainView.class))
 					.stream().filter(QueryResult::hasNoDeleteTransform)
+					.filter(this::filterViewTransformCollation)
 					.forEach(qr -> onViewModified((DomainView) qr.getObject()));
 			;
 			Transaction.end();
@@ -378,9 +383,7 @@ public abstract class DomainViews {
 
 		public Key(Request<?> request) {
 			this.request = request;
-			this.stringKey = Ax.format("%s::%s", request.getRoot(),
-					FlatTreeSerializer
-							.serializeElided(request.getSearchDefinition()));
+			this.stringKey = request.getRoot().toString();
 		}
 
 		@Override

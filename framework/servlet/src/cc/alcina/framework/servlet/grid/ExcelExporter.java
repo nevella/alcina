@@ -143,7 +143,7 @@ public class ExcelExporter {
 		Object o = coll.iterator().next();
 		Class clazz = o.getClass();
 		List<PropertyDescriptor> pds = SEUtilities
-				.getSortedPropertyDescriptors(clazz);
+				.getPropertyDescriptorsSortedByName(clazz);
 		List<PdMultiplexer> pdMultis = CollectionFilters.convertAndFilter(pds,
 				new ToPdMultiConverterFilter());
 		Collections.sort(pdMultis);

@@ -14,6 +14,7 @@ import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Label;
+import com.google.gwt.user.client.ui.TextBox;
 
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
 import cc.alcina.framework.gwt.client.widget.Link;
@@ -48,12 +49,20 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 		search.getFilter().clear();
 	}
 
+	public void focus() {
+		search.checkShowPopup(true);
+	}
+
 	public String getFilterText() {
-		return search.getFilter().getTextBox().getText();
+		return getTextBox().getText();
 	}
 
 	public String getLastFilterText() {
 		return search.getFilter().getLastText();
+	}
+
+	public TextBox getTextBox() {
+		return search.getFilter().getTextBox();
 	}
 
 	@Override
@@ -70,7 +79,7 @@ public class FlatSearchSelector extends BoundSelectorMinimal {
 	}
 
 	public void setFilterText(String lastFilterText) {
-		search.getFilter().getTextBox().setValue(lastFilterText);
+		getTextBox().setValue(lastFilterText);
 	}
 
 	public void showOptions() {

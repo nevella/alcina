@@ -52,7 +52,6 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor.DomainStoreTask;
 import cc.alcina.framework.common.client.domain.DomainProjection;
@@ -66,7 +65,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
-import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -88,7 +86,6 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.DomainSegmentLoader.DomainSegmentLoaderPhase;
@@ -290,7 +287,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("xrefs");
 		new StatCategory_DomainStore.Warmup.Loader.Xrefs().emit();
-		serverClientInstanceToDomainStoreVersion();
 		warmupEntityRefss.clear();
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {
@@ -768,7 +764,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			throws Exception {
 		Class clazz = classDescriptor.clazz;
 		List<PropertyDescriptor> pds = SEUtilities
-				.getSortedPropertyDescriptors(clazz).stream()
+				.getPropertyDescriptorsSortedByName(clazz).stream()
 				.collect(Collectors.toList());
 		PropertyDescriptor id = SEUtilities.getPropertyDescriptorByName(clazz,
 				"id");
@@ -904,13 +900,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					.add(new LazyPropertyLoadTask<>(clazz, store));
 			logger.trace("Adding lazy property load task for: {}", clazz);
 		}
-	}
-
-	private void serverClientInstanceToDomainStoreVersion() {
-		ClientInstance instance = EntityLayerObjects.get()
-				.getServerAsClientInstance();
-		EntityLayerObjects.get()
-				.setServerAsClientInstance(Domain.find(instance));
 	}
 
 	private void setupInitialJoinTableCalls(List<Callable> calls) {
@@ -2208,8 +2197,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		public int idx;
 
-		Class mappedClass;
-
 		DomainStoreProperty domainStoreProperty;
 
 		DomainStorePropertyLoadOracle lazyLoadOracle;
@@ -2228,10 +2215,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			this.joinTable = readMethod.getAnnotation(JoinTable.class);
 			this.oneToMany = readMethod.getAnnotation(OneToMany.class);
 			this.oneToOne = readMethod.getAnnotation(OneToOne.class);
-			// FIXME - mvcc.4 - do we need DomainStoreMapping?
-			DomainStoreMapping mapping = readMethod
-					.getAnnotation(DomainStoreMapping.class);
-			this.mappedClass = mapping == null ? null : mapping.mapping();
 			this.domainStoreProperty = store.domainStoreProperties.get(clazz,
 					pd.getName());
 			if (this.domainStoreProperty != null && this.domainStoreProperty

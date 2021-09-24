@@ -51,7 +51,8 @@ public @interface PropertySerialization {
 	boolean ignore() default false;
 
 	/*
-	 * Only use if this annotation is part of a TypeSerialization definition
+	 * The property name - only use if this annotation is part of a
+	 * TypeSerialization definition
 	 */
 	String name() default "";
 

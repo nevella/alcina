@@ -32,7 +32,7 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 	@Override
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+		return MethodIndividualPropertyReflector.get(clazz, propertyName);
 	}
 
 	@Override
@@ -54,6 +54,11 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 	}
 
 	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return false;
+	}
+
+	@Override
 	public void setPropertyValue(Object bean, String propertyName,
 			Object value) {
 		ensureAccessor(propertyName).setChainedProperty(bean, value);
@@ -66,10 +71,5 @@ public class JvmPropertyAccessor implements PropertyAccessor {
 			pathAccessors.put(propertyName, pathAccessor);
 		}
 		return pathAccessor;
-	}
-
-	@Override
-	public boolean isReadOnly(Class objectClass, String propertyName) {
-		return false;
 	}
 }

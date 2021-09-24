@@ -342,7 +342,8 @@ public class CommonUtils {
 			return s;
 		}
 		StringBuilder builder = new StringBuilder();
-		for (int i = 0; i < s.length(); i++) {
+		builder.append(s.substring(0, 1).toLowerCase());
+		for (int i = 1; i < s.length(); i++) {
 			String c = s.substring(i, i + 1);
 			builder.append(c.toUpperCase().equals(c) ? "-" : "");
 			builder.append(c.toLowerCase());

@@ -100,6 +100,12 @@ public class AdjunctTransformCollation extends TransformCollation {
 		return this;
 	}
 
+	public void ensureCurrent() {
+		if (token.addCascadedEvents()) {
+			refreshFromRequest();
+		}
+	}
+
 	public void refreshFromRequest() {
 		refresh(token.getRequest().allTransforms());
 	}

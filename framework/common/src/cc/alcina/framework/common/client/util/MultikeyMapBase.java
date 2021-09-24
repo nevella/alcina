@@ -152,7 +152,7 @@ public abstract class MultikeyMapBase<V>
 	@Override
 	public V ensure(Supplier<V> supplier, Object... objects) {
 		V v = get(objects);
-		if (v == null) {
+		if (v == null && !containsKey(objects)) {
 			Object[] arr = new Object[objects.length + 1];
 			System.arraycopy(objects, 0, arr, 0, objects.length);
 			v = supplier.get();

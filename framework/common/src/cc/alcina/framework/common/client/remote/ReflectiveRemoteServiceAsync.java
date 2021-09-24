@@ -18,7 +18,8 @@ public class ReflectiveRemoteServiceAsync {
 					getClass(), methodName, methodArgumentTypes,
 					methodArguments);
 			String serializedPayload = ReflectiveSerializer.serialize(payload);
-			// FIXME - 2021.refactor - shift to a different serializationstream
+			// FIXME - 2021.refactor; FIXME - dirndl 1.1 shift to a different
+			// serializationstream
 			// (but using gwt-rpc infrastructure)
 			Registry.impl(ReflectiveRpcRemoteServiceAsync.class)
 					.callRpc(serializedPayload, new AsyncCallback<String>() {

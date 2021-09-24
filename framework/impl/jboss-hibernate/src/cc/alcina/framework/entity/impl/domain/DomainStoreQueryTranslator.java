@@ -33,6 +33,9 @@ import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.PropertyProjection;
 import org.hibernate.criterion.SQLCriterion;
 import org.hibernate.criterion.SimpleExpression;
+import org.hibernate.criterion.SimpleSubqueryExpression;
+import org.hibernate.internal.CriteriaImpl;
+import org.hibernate.internal.CriteriaImpl.CriterionEntry;
 import org.hibernate.transform.ResultTransformer;
 
 import com.google.common.base.Preconditions;
@@ -318,8 +321,8 @@ public class DomainStoreQueryTranslator {
 
 		protected abstract Class<C> getHandledClass();
 
-		protected Object getValue(Criterion criterion, String... fieldNames) {
-			return fieldHelper.getValue(criterion, fieldNames);
+		protected Object getValue(Object object, String... fieldNames) {
+			return fieldHelper.getValue(object, fieldNames);
 		}
 
 		protected abstract DomainFilter handle(C criterion,
@@ -547,6 +550,45 @@ public class DomainStoreQueryTranslator {
 			}
 			return new DomainFilter(propertyName, getValue(criterion, "value"),
 					fop);
+		}
+	}
+
+	public static class SimpleSubqueryExpressionTranslator
+			extends CriterionTranslator<SimpleSubqueryExpression> {
+		@Override
+		protected Class<SimpleSubqueryExpression> getHandledClass() {
+			return SimpleSubqueryExpression.class;
+		}
+
+		@Override
+		protected DomainFilter handle(SimpleSubqueryExpression criterion,
+				DomainStoreCriteria domainStoreCriteria,
+				DomainStoreQueryTranslator translator) {
+			CriteriaImpl criteriaImpl = (CriteriaImpl) getValue(criterion,
+					"criteriaImpl");
+			List<CriteriaImpl.Subcriteria> subcriteria = (List) getValue(
+					criteriaImpl, "subcriteriaList");
+			String alias = subcriteria.get(0).getAlias();
+			DomainStoreCriteria subDomainStoreCriteria = domainStoreCriteria
+					.provideSubCriteria(alias);
+			List<CriteriaImpl.CriterionEntry> criterionEntries = (List) getValue(
+					criteriaImpl, "criterionEntries");
+			CompositeFilter filter = new CompositeFilter();
+			for (CriterionEntry criterionEntry : criterionEntries) {
+				if (criterionEntry.toString().contains("vt_")) {
+					continue;
+				} else {
+					try {
+						DomainFilter child = translator.criterionToFilter(
+								subDomainStoreCriteria,
+								criterionEntry.getCriterion());
+						filter.add(child);
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+			}
+			return filter;
 		}
 	}
 

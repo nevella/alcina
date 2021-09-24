@@ -44,6 +44,19 @@ public class TowardsAMoreDesirableSituation {
 							if (next.isPresent()) {
 								Job job = next.get();
 								job.setPerformer(ClientInstance.self());
+								// FIXME - mvcc.cascade - this class is where
+								// futureconsistency
+								// deduplication should happen.
+								// on (transform-based) job switch to
+								// 'processing', for performer, snapshot
+								// all future consistency jobs with same
+								// signature
+								// (taskserialized/taskclass)
+								//
+								// note resubmit is required for future
+								// consistency aborts (unless task has other
+								// logical consistency
+								// ensurance mechanism - e.g. jade parsers)
 								job.setState(JobState.PENDING);
 								activeJobs.add(job);
 								Transaction.commit();

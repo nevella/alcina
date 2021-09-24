@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.ui.Widget;
 
@@ -59,7 +60,7 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 		return result;
 	}
 
-	public abstract static class AbstractContextSensitiveModelTransform<A, B extends Bindable>
+	public abstract static class AbstractContextSensitiveModelTransform<A, B>
 			extends AbstractModelTransform<A, B>
 			implements ContextSensitiveTransform<A, B> {
 		protected Node node;
@@ -73,18 +74,29 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 	}
 
 	@ClientInstantiable
-	public abstract static class AbstractModelTransform<A, B extends Bindable>
+	public abstract static class AbstractModelTransform<A, B>
 			implements ModelTransform<A, B> {
 	}
 
-	public interface ContextSensitiveTransform<A, B extends Bindable>
+	public interface ContextSensitiveTransform<A, B>
 			extends ModelTransform<A, B> {
 		public ContextSensitiveTransform<A, B>
 				withContextNode(DirectedLayout.Node node);
 	}
 
-	public interface ModelTransform<A, B extends Bindable>
-			extends Function<A, B> {
+	@ClientInstantiable
+	public static abstract class ListModelTransform<A, B>
+			implements ModelTransform<List<A>, List<B>> {
+		@Override
+		public List<B> apply(List<A> t) {
+			return t.stream().map(this::mapElement)
+					.collect(Collectors.toList());
+		}
+
+		protected abstract B mapElement(A a);
+	}
+
+	public interface ModelTransform<A, B> extends Function<A, B> {
 	}
 
 	@ClientVisible

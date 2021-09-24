@@ -98,7 +98,7 @@ public abstract class ClassRef extends Entity implements TreeSerializable {
 				this.refClass = Reflections.classLookup()
 						.getClassForName(this.refClassName);
 			} catch (Exception e) {
-				Ax.simpleExceptionOut(e);
+				// Ax.simpleExceptionOut(e);
 			}
 		}
 		return this.refClass;
@@ -123,6 +123,10 @@ public abstract class ClassRef extends Entity implements TreeSerializable {
 			}
 		}
 		return false;
+	}
+
+	public boolean provideExists() {
+		return getRefClass() != null;
 	}
 
 	public void setRefClass(Class refClass) {

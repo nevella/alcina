@@ -41,12 +41,15 @@ import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -72,9 +75,11 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.MethodContext;
+import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
+import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -84,7 +89,18 @@ import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
+@RegistryLocation(registryPoint = AppLifecycleServletBase.class, implementationType = ImplementationType.SINGLETON)
 public abstract class AppLifecycleServletBase extends GenericServlet {
+	private static Topic<Void> topicConfigurationReloaded = Topic.local();
+
+	public static AppLifecycleServletBase get() {
+		return Registry.impl(AppLifecycleServletBase.class);
+	}
+
+	public static Topic<Void> topicConfigurationReloaded() {
+		return topicConfigurationReloaded;
+	}
+
 	protected ServletConfig initServletConfig;
 
 	private Date startupTime;
@@ -148,9 +164,23 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				JobRegistry.get().stopService();
 				Transaction.end();
 			}
+			Registry.impls(LifecycleService.class).forEach(service -> {
+				try {
+					service.onApplicationShutdown();
+				} catch (Exception e) {
+					Ax.sysLogHigh("Exception shutting down %s",
+							service.getClass().getSimpleName());
+					e.printStackTrace();
+				}
+			});
 			getStatusNotifier().destroyed();
 			BackendTransformQueue.get().stop();
 			Transactions.shutdown();
+			// entity layer services
+			ObjectPersistenceHelper.get().appShutdown();
+			OffThreadLogger.get().appShutdown();
+			DomainStore.stores().appShutdown();
+			// servlet layer (LifecycleService) services
 			Registry.appShutdown();
 			SEUtilities.appShutdown();
 			ResourceUtilities.appShutdown();
@@ -214,6 +244,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	public void refreshProperties() {
 		loadCustomProperties();
+		ResourceUtilities.loadSystemPropertiesFromCustomProperties();
+		topicConfigurationReloaded.publish(null);
+		EntityLayerLogging.setLogLevelsFromCustomProperties();
 	}
 
 	@Override
@@ -247,6 +280,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());
 		Registry.registerSingleton(AlcinaWebappConfig.class, config);
+		Registry.registerSingleton(AppLifecycleServletBase.class, this);
 	}
 
 	protected void initCluster() {
@@ -485,21 +519,41 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void runFinalPreInitTasks() {
-		if (serializationSignatureListener != null) {
-			boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities
-					.is(AppLifecycleServletBase.class,
-							"cancelStartupOnSignatureGenerationFailure")
-					|| !EntityLayerUtils.isTestServer();
-			MethodContext.instance()
-					.withRunInNewThread(
-							!cancelStartupOnSignatureGenerationFailure)
-					.call(() -> serializationSignatureListener
-							.ensureSignature());
-			if (serializationSignatureListener.isEnsureFailed()
-					&& cancelStartupOnSignatureGenerationFailure) {
-				throw new RuntimeException(
-						"Task signature generation failed: cancelling startup");
+		/*
+		 * If custom LifecycleService impl init is required, call it earlier
+		 * (initCustom) and don't override LifecycleService.onApplicationStartup
+		 */
+		try {
+			Transaction.begin();
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			Registry.impls(LifecycleService.class).forEach(service -> {
+				try {
+					service.onApplicationStartup();
+				} catch (Exception e) {
+					Ax.sysLogHigh("Exception starting up %s",
+							service.getClass().getSimpleName());
+					e.printStackTrace();
+				}
+			});
+			if (serializationSignatureListener != null) {
+				boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities
+						.is(AppLifecycleServletBase.class,
+								"cancelStartupOnSignatureGenerationFailure")
+						|| !EntityLayerUtils.isTestServer();
+				MethodContext.instance()
+						.withRunInNewThread(
+								!cancelStartupOnSignatureGenerationFailure)
+						.call(() -> serializationSignatureListener
+								.ensureSignature());
+				if (serializationSignatureListener.isEnsureFailed()
+						&& cancelStartupOnSignatureGenerationFailure) {
+					throw new RuntimeException(
+							"Task signature generation failed: cancelling startup");
+				}
 			}
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+			Transaction.end();
 		}
 	}
 

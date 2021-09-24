@@ -70,7 +70,7 @@ public class Domain {
 		}
 		Class<V> clazz = entity.entityClass();
 		V writeable = entity.domain().wasPersisted()
-				? detachedVersion(Domain.find(entity))
+				? (V) detachedVersion(entity.domain().domainVersion())
 				: Domain.create(clazz);
 		List<PropertyInfo> writableProperties = Reflections.classLookup()
 				.getWritableProperties(clazz);
@@ -128,6 +128,9 @@ public class Domain {
 		return handler.find(locator);
 	}
 
+	/*
+	 * Only access via entity.domain().domainVersion/ensurePopulated();
+	 */
 	public static <V extends Entity> V find(V v) {
 		return handler.find(v);
 	}

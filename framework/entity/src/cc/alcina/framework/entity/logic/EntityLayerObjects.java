@@ -85,6 +85,13 @@ public class EntityLayerObjects {
 	}
 
 	public EntityLocatorMap getServerAsClientInstanceEntityLocatorMap() {
+		if (serverAsClientInstanceEntityLocatorMap == null) {
+			synchronized (this) {
+				if (serverAsClientInstanceEntityLocatorMap == null) {
+					this.serverAsClientInstanceEntityLocatorMap = new EntityLocatorMap();
+				}
+			}
+		}
 		return this.serverAsClientInstanceEntityLocatorMap;
 	}
 
@@ -119,9 +126,6 @@ public class EntityLayerObjects {
 	public void
 			setServerAsClientInstance(ClientInstance serverAsClientInstance) {
 		this.serverAsClientInstance = serverAsClientInstance;
-		if (serverAsClientInstanceEntityLocatorMap == null) {
-			serverAsClientInstanceEntityLocatorMap = new EntityLocatorMap();
-		}
 	}
 
 	public void

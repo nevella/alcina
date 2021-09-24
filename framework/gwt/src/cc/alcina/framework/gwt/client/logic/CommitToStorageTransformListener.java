@@ -28,8 +28,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.logic.StateChangeListener;
-import cc.alcina.framework.common.client.logic.StateListenable;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -74,23 +72,11 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
  *         ditto localRequestId ditto committingRequest
  *         </ul>
  * 
- *         //FIXME - mvcc.4 - get rid of statelistenable - publish a typed topic
- *         event
  * 
  */
-public class CommitToStorageTransformListener extends StateListenable
+public class CommitToStorageTransformListener
 		implements DomainTransformListener {
 	public static final int DELAY_MS = 100;
-
-	public static final String COMMITTING = "COMMITTING";
-
-	public static final String COMMITTED = "COMMITTED";
-
-	public static final String ERROR = "ERROR";
-
-	public static final String OFFLINE = "OFFLINE";
-
-	public static final String RELOAD = "RELOAD";
 
 	public static final transient String CONTEXT_REPLAYING_SYNTHESISED_EVENTS = CommitToStorageTransformListener.class
 			.getName() + ".CONTEXT_REPLAYING_SYNTHESISED_EVENTS";
@@ -145,6 +131,8 @@ public class CommitToStorageTransformListener extends StateListenable
 				message);
 	}
 
+	private Topic<State> topicStateChanged = Topic.local();
+
 	protected Object collectionsMonitor = new Object();
 
 	private EntityLocator lastCreatedObjectLocator;
@@ -171,7 +159,7 @@ public class CommitToStorageTransformListener extends StateListenable
 
 	protected Set<Long> eventIdsToIgnore = new HashSet<Long>();
 
-	private String currentState;
+	private State currentState;
 
 	private boolean localStorageOnly;
 
@@ -181,21 +169,13 @@ public class CommitToStorageTransformListener extends StateListenable
 
 	private Object commitMonitor = new Object();
 
+	private TopicListener<State> stateListener = (k, v) -> currentState = v;
+
 	public CommitToStorageTransformListener() {
 		if (GWT.isClient()) {
 			new WindowClosingHandler().add();
 		}
-	}
-
-	private static class WindowClosingHandler {
-		public void add() {
-			Window.addWindowClosingHandler(evt -> {
-				CommitToStorageTransformListener transformListener = CommitToStorageTransformListener
-						.get();
-				transformListener.setPaused(false);
-				transformListener.flush();
-			});
-		}
+		topicStateChanged.add(stateListener);
 	}
 
 	public void clearPriorRequestsWithoutResponse() {
@@ -231,7 +211,7 @@ public class CommitToStorageTransformListener extends StateListenable
 	}
 
 	public synchronized void flush() {
-		if (currentState == RELOAD) {
+		if (currentState == State.RELOAD) {
 			return;
 		}
 		commit();
@@ -253,11 +233,11 @@ public class CommitToStorageTransformListener extends StateListenable
 			callback.onSuccess(null);
 			return;
 		}
-		addStateChangeListener(new OneoffListenerWrapper(callback));
+		topicStateChanged().add(new OneoffListenerWrapper(callback));
 		flush();
 	}
 
-	public String getCurrentState() {
+	public State getCurrentState() {
 		return this.currentState;
 	}
 
@@ -338,6 +318,26 @@ public class CommitToStorageTransformListener extends StateListenable
 		this.suppressErrors = suppressErrors;
 	}
 
+	public Topic<State> topicStateChanged() {
+		return this.topicStateChanged;
+	}
+
+	protected boolean canTransitionToOnline() {
+		return true;
+	}
+
+	protected void commit() {
+		synchronized (collectionsMonitor) {
+			if ((priorRequestsWithoutResponse.size() == 0
+					&& transformQueue.size() == 0) || isPaused()) {
+				return;
+			}
+		}
+		synchronized (commitMonitor) {
+			commit0();
+		}
+	}
+
 	protected synchronized void commit0() {
 		if (queueingFinishedTimer != null) {
 			queueingFinishedTimer.cancel();
@@ -379,7 +379,7 @@ public class CommitToStorageTransformListener extends StateListenable
 		}
 		try {
 			LooseContext.pushWithKey(CONTEXT_COMMITTING_REQUEST, request);
-			fireStateChanged(COMMITTING);
+			topicStateChanged().publish(State.COMMITTING);
 		} finally {
 			LooseContext.pop();
 		}
@@ -387,7 +387,7 @@ public class CommitToStorageTransformListener extends StateListenable
 			priorRequestsWithoutResponse.add(request);
 		}
 		if (isLocalStorageOnly()) {
-			fireStateChanged(OFFLINE);
+			topicStateChanged().publish(State.OFFLINE);
 			return;
 		}
 		if (PermissionsManager.get().getOnlineState() == OnlineState.OFFLINE) {
@@ -397,7 +397,7 @@ public class CommitToStorageTransformListener extends StateListenable
 					// ignore - expected(ish) behaviour - if it's a
 					// non-'offline' error, it's more graceful to ignore
 					// here than not
-					fireStateChanged(OFFLINE);
+					topicStateChanged().publish(State.OFFLINE);
 				}
 
 				@Override
@@ -412,36 +412,14 @@ public class CommitToStorageTransformListener extends StateListenable
 		}
 	}
 
-	protected void customProcessTransformQueue(
-			List<DomainTransformEvent> transformQueue) {
-		// for outré subclassed persistence
-	}
-
-	protected boolean canTransitionToOnline() {
-		return true;
-	}
-
-	protected void commit() {
-		synchronized (collectionsMonitor) {
-			if ((priorRequestsWithoutResponse.size() == 0
-					&& transformQueue.size() == 0) || isPaused()) {
-				return;
-			}
-		}
-		synchronized (commitMonitor) {
-			commit0();
-		}
-	}
-
 	protected void commitRemote(DomainTransformRequest request,
 			AsyncCallback<DomainTransformResponse> callback) {
 		Client.commonRemoteService().transform(request, callback);
 	}
 
-	@Override
-	protected void fireStateChanged(String newState) {
-		currentState = newState;
-		super.fireStateChanged(newState);
+	protected void customProcessTransformQueue(
+			List<DomainTransformEvent> transformQueue) {
+		// for outré subclassed persistence
 	}
 
 	protected Runnable getCommitLoopRunnable() {
@@ -465,6 +443,10 @@ public class CommitToStorageTransformListener extends StateListenable
 	 * accelerate change conflict checking
 	 */
 	void updateTransformQueueVersions() {
+	}
+
+	public static enum State {
+		COMMITTING, COMMITTED, ERROR, OFFLINE, RELOAD
 	}
 
 	public static class UnknownTransformFailedException
@@ -516,12 +498,12 @@ public class CommitToStorageTransformListener extends StateListenable
 					return;
 				}
 				if (ClientUtils.maybeOffline(caught)) {
-					fireStateChanged(OFFLINE);
+					topicStateChanged().publish(State.OFFLINE);
 				}
 				throw new UnknownTransformFailedException(caught);
 			}
 			notifyCommitDomainException(caught);
-			fireStateChanged(ERROR);
+			topicStateChanged().publish(State.ERROR);
 		}
 
 		@Override
@@ -654,13 +636,24 @@ public class CommitToStorageTransformListener extends StateListenable
 				} finally {
 					tm.setReplayingRemoteEvent(false);
 					if (reloadRequired) {
-						fireStateChanged(RELOAD);
+						topicStateChanged().publish(State.RELOAD);
 					} else {
-						fireStateChanged(COMMITTED);
+						topicStateChanged().publish(State.COMMITTED);
 						topicTransformsCommitted().publish(response);
 					}
 				}
 			}
+		}
+	}
+
+	private static class WindowClosingHandler {
+		public void add() {
+			Window.addWindowClosingHandler(evt -> {
+				CommitToStorageTransformListener transformListener = CommitToStorageTransformListener
+						.get();
+				transformListener.setPaused(false);
+				transformListener.flush();
+			});
 		}
 	}
 
@@ -677,7 +670,7 @@ public class CommitToStorageTransformListener extends StateListenable
 		}
 	}
 
-	class OneoffListenerWrapper implements StateChangeListener {
+	class OneoffListenerWrapper implements TopicListener<State> {
 		private final AsyncCallback callback;
 
 		public OneoffListenerWrapper(AsyncCallback callback) {
@@ -685,18 +678,21 @@ public class CommitToStorageTransformListener extends StateListenable
 		}
 
 		@Override
-		public void stateChanged(Object source, String newState) {
-			if (newState.equals(COMMITTING)) {
-			} else if (newState.equals(COMMITTED) || newState.equals(OFFLINE)) {
-				removeStateChangeListener(OneoffListenerWrapper.this);
+		public void topicPublished(String key, State state) {
+			switch (state) {
+			case COMMITTING:
+				return;
+			case COMMITTED:
+			case OFFLINE:
+				topicStateChanged().remove(this);
 				if (!reloadRequired) {
 					callback.onSuccess(null);
 				}
-			} else {
-				removeStateChangeListener(OneoffListenerWrapper.this);
-				if (!reloadRequired) {
-					callback.onFailure(new Exception("flush failed on server"));
-				}
+				break;
+			}
+			topicStateChanged().remove(this);
+			if (!reloadRequired) {
+				callback.onFailure(new Exception("flush failed on server"));
 			}
 		}
 	}

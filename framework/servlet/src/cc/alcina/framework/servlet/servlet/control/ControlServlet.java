@@ -37,6 +37,7 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.publication.delivery.ContentDelivery;
 import cc.alcina.framework.servlet.publication.delivery.ContentDeliveryEmail;
 import cc.alcina.framework.servlet.servlet.AlcinaServlet;
+import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 
 public class ControlServlet extends AlcinaServlet {
 	public static String createTaskUrl(Task task) {
@@ -52,6 +53,10 @@ public class ControlServlet extends AlcinaServlet {
 		return urlBuilder.build();
 	}
 
+	public static String getApiKey() {
+		return ResourceUtilities.get("apiKey");
+	}
+
 	public static String invokeTask(Task task, String url, String apiKey) {
 		StringMap queryParameters = new StringMap();
 		queryParameters.put("cmd", "perform-task");
@@ -65,10 +70,6 @@ public class ControlServlet extends AlcinaServlet {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	private static String getApiKey() {
-		return Registry.impl(AppLifecycleManager.class).getState().getApiKey();
 	}
 
 	Logger logger = LoggerFactory.getLogger(getClass());
@@ -115,24 +116,10 @@ public class ControlServlet extends AlcinaServlet {
 		}
 		switch (csr.getCommand()) {
 		case REFRESH_CONFIG:
-			Registry.impl(AppLifecycleManager.class).refreshProperties();
+			Registry.impl(AppLifecycleServletBase.class).refreshProperties();
 			writeAndClose(
 					String.format("Properties refreshed - %s", new Date()),
 					response);
-			break;
-		case GET_STATUS:
-			ControlServletState status = Registry
-					.impl(AppLifecycleManager.class).getState();
-			if (csr.isJson()) {
-				writeAndClose(new AlcinaBeanSerializerS().serialize(status),
-						response);
-			} else {
-				String msg = status.toString();
-				msg += "\n";
-				msg += Registry.impl(AppLifecycleManager.class)
-						.getLifecycleServlet().dumpCustomProperties();
-				writeAndClose(msg, response);
-			}
 			break;
 		case CLUSTER_STATUS:
 			writeAndCloseHtml(Registry.impl(ClusterStateProvider.class)
@@ -187,9 +174,6 @@ public class ControlServlet extends AlcinaServlet {
 		ControlServletRequest csr = new ControlServletRequest();
 		if (cmd.equals("refresh-config")) {
 			csr.setCommand(ControlServletRequestCommand.REFRESH_CONFIG);
-			return csr;
-		} else if (cmd.equals("get-status")) {
-			csr.setCommand(ControlServletRequestCommand.GET_STATUS);
 			return csr;
 		} else if (cmd.equals("cluster-status")) {
 			csr.setCommand(ControlServletRequestCommand.CLUSTER_STATUS);

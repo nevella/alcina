@@ -25,10 +25,18 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 @Inherited
 @ClientVisible
 public @interface Directed {
+	/**
+	 * Bind model object properties to various aspects of the generated (DOM)
+	 * view - css class, element property, inner text...
+	 */
 	public Binding[] bindings() default {};
 
 	public String cssClass() default "";
 
+	/**
+	 * Informative only (not required for a node/model to emit the corresponding
+	 * event)
+	 */
 	public Class<? extends NodeEvent>[] emits() default {};
 
 	/**
@@ -37,10 +45,25 @@ public @interface Directed {
 	 */
 	public boolean merge() default false;
 
+	/**
+	 * If non-empty and the same length as the reemits() array, these events
+	 * will simply be reemitted by the DirectedLayout event subsystem. Otherwise
+	 * the event will bubble up the DirectedLayout.Node/Model tuples, looking
+	 * for handler implementations in this order:
+	 * DirectedLayout.Node.nodeRenderer, DirectedLayout.Node.model. Currently,
+	 * events stop propagation by default when handled by a handler - this will
+	 * probably change to bubble by default.
+	 */
 	public Class<? extends NodeEvent>[] receives() default {};
 
 	public Class<? extends NodeEvent>[] reemits() default {};
 
+	/**
+	 * The class responsible for rendering a view (DOM subtree) from a model
+	 * object. It's normally better style to register a renderer for a model
+	 * class (see e.g. CollectionNodeRenderer), rather than assign via
+	 * annotation, when using @Directed on a class.
+	 */
 	public Class<? extends DirectedNodeRenderer> renderer() default ModelClassNodeRenderer.class;
 
 	public String tag() default "";
