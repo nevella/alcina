@@ -118,6 +118,13 @@ public class ClientReflectorJvm extends ClientReflector {
 				|| clazz.getAnnotation(
 						cc.alcina.framework.common.client.logic.reflection.Bean.class) != null
 				|| clazz.getAnnotation(Introspectable.class) != null;
+		if (clazz.getName().startsWith("java.lang")) {
+			introspectable = true;
+		}
+		if (IntrospectorFilter.COLLECTION_CLASS_NAMES
+				.contains(clazz.getName().replace("$","."))) {
+			introspectable = true;
+		}
 		for (Class iface : getAllImplementedInterfaces(clazz)) {
 			introspectable |= iface.getAnnotation(Introspectable.class) != null;
 		}
