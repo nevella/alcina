@@ -1375,7 +1375,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					connection.setReadOnly(false);
 					connection.close();
 				} catch (SQLException e) {
-					e.printStackTrace();
+					if (e.toString().contains(
+							"Cannot commit when autoCommit is enabled")) {
+					} else {
+						e.printStackTrace();
+					}
 				}
 			}
 		}
