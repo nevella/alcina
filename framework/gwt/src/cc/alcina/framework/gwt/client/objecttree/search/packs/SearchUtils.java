@@ -213,6 +213,12 @@ public class SearchUtils {
 	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class)
 	@ClientInstantiable
 	public static abstract class SearchUtilsIdsHelper {
+		public static SearchUtils.SearchUtilsIdsHelper get() {
+			return Registry.impl(SearchUtils.SearchUtilsIdsHelper.class);
+		}
+
+		public abstract Set<Long> getIds(String query);
+
 		public boolean matches(String query, Entity entity) {
 			return false;
 		}
@@ -227,11 +233,17 @@ public class SearchUtils {
 				getMap());
 
 		@Override
-		public boolean matches(String query, Entity entity) {
+		public Set<Long> getIds(String query) {
 			Set<Long> ids = null;
 			synchronized (stringIdLookup) {
 				ids = stringIdLookup.get(query);
 			}
+			return ids;
+		}
+
+		@Override
+		public boolean matches(String query, Entity entity) {
+			Set<Long> ids = getIds(query);
 			return entity != null && ids.contains(entity.getId());
 		}
 
