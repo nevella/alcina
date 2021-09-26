@@ -1377,9 +1377,9 @@ public class DomainStore implements IDomainStore {
 	public static class QueryPool {
 		private final ForkJoinPool pool;
 
-		AtomicInteger activeQueries = new AtomicInteger();
-
 		private Transaction transaction;
+
+		private AtomicInteger activeQueries = new AtomicInteger();
 
 		QueryPool() {
 			pool = new ForkJoinPool(
@@ -1398,23 +1398,25 @@ public class DomainStore implements IDomainStore {
 
 		public <T> T call(Callable<T> callable,
 				Stream<? extends Entity> stream) {
-			boolean runInPool = true;
-			synchronized (activeQueries) {
-				if (activeQueries.get() > 0) {
-					runInPool = false;
-				} else {
+			boolean runInPool = false;
+			synchronized (this) {
+				Transaction current = Transaction.current();
+				if (transaction == null || current == transaction) {
+					runInPool = true;
+					transaction = current;
 					activeQueries.incrementAndGet();
 				}
 			}
 			if (runInPool) {
 				try {
-					transaction = Transaction.current();
+					stream.parallel();
 					return pool.submit(callable).get();
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				} finally {
-					synchronized (activeQueries) {
-						activeQueries.decrementAndGet();
+					activeQueries.decrementAndGet();
+					if (activeQueries.get() == 0) {
+						transaction = null;
 					}
 				}
 			} else {
