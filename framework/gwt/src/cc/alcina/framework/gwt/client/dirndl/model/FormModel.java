@@ -396,6 +396,9 @@ public class FormModel extends Model {
 		}
 	}
 
+	public static class ModelEventContext {
+	}
+
 	@ClientInstantiable
 	public static class PermissibleActionFormTransformer extends
 			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
