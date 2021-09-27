@@ -1100,8 +1100,7 @@ public class DOM {
 	 *            the name of the attribute to be retrieved
 	 * @return the style attribute's value as an integer
 	 */
-	public static native int getIntStyleAttribute(Element elem,
-			String attr) /*-{
+	public static native int getIntStyleAttribute(Element elem, String attr) /*-{
     return parseInt(elem.style[attr]) || 0;
 	}-*/;
 
@@ -1487,7 +1486,8 @@ public class DOM {
 	 * @deprecated Use {@link Element#setInnerHTML(String)} instead.
 	 */
 	@Deprecated
-	public static void setInnerHTML(Element elem, @IsSafeHtml String html) {
+	public static void setInnerHTML(Element elem, @IsSafeHtml
+	String html) {
 		elem.setInnerHTML(html);
 	}
 
@@ -1580,6 +1580,29 @@ public class DOM {
 	 *            name of the event to sink on this element
 	 */
 	public static void sinkBitlessEvent(Element elem, String eventTypeName) {
+		if (elem.implAccess().linkedToRemote()) {
+			impl.sinkBitlessEvent(elem, eventTypeName);
+		} else {
+			Element attachedAncestor = (Element) elem.implAccess()
+					.provideSelfOrAncestorLinkedToRemote();
+			boolean attachToAncestor = attachedAncestor != null
+					&& attachedAncestor != elem;
+			if (attachToAncestor && attachedAncestor.uiObject != null) {
+				if (attachedAncestor.uiObject instanceof FlexTable) {
+					// celltable hack
+					attachToAncestor = false;
+				}
+			}
+			if (attachToAncestor) {
+				impl.sinkBitlessEvent(attachedAncestor, eventTypeName);
+			} else {
+			}
+			if (attachedAncestor != elem) {
+				elem.sinkBitlessEvent(eventTypeName);
+				// since sinking normally takes place only onAttach, should
+				// maybe throw an exception here (except, see celltable hack)
+			}
+		}
 		impl.sinkBitlessEvent(elem, eventTypeName);
 	}
 
@@ -1595,7 +1618,6 @@ public class DOM {
 	 *            possible values are described in {@link Event})
 	 */
 	public static void sinkEvents(Element elem, int eventBits) {
-		// elem.resolveIfAppropriate();
 		if (elem.implAccess().linkedToRemote()) {
 			impl.sinkEvents(elem, eventBits);
 		} else {

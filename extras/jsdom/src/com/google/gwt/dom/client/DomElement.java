@@ -297,6 +297,8 @@ public interface DomElement extends DomNode {
 
 	void setTitle(String title);
 
+	void sinkBitlessEvent(String eventTypeName);
+
 	void sinkEvents(int eventBits);
 
 	/**

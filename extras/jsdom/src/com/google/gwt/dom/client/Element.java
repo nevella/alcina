@@ -519,6 +519,10 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		return new ElementImplAccess();
 	}
 
+	public List<String> localBitlessEventsSunk() {
+		return local().bitlessEvents;
+	}
+
 	public int localEventBitsSunk() {
 		return local().eventBits;
 	}
@@ -625,6 +629,14 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		ensureRemoteCheck();
 		local().setClassName(className);
 		remote().setClassName(className);
+	}
+
+	public void setClassName(String className, boolean present) {
+		if (present) {
+			addClassName(className);
+		} else {
+			removeClassName(className);
+		}
 	}
 
 	@Override
@@ -792,6 +804,12 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		ensureRemoteCheck();
 		local().setTitle(title);
 		remote().setTitle(title);
+	}
+
+	@Override
+	public void sinkBitlessEvent(String eventTypeName) {
+		local().sinkBitlessEvent(eventTypeName);
+		remote().sinkBitlessEvent(eventTypeName);
 	}
 
 	@Override
@@ -1091,14 +1109,6 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 		public boolean wasResolved() {
 			return Element.this.wasResolved();
-		}
-	}
-
-	public void setClassName(String className, boolean present) {
-		if (present) {
-			addClassName(className);
-		} else {
-			removeClassName(className);
 		}
 	}
 }
