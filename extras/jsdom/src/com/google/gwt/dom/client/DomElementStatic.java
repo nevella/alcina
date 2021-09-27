@@ -255,14 +255,15 @@ public class DomElementStatic {
 	 */
 	static boolean removeClassName(DomElement domElement, String className) {
 		className = trimClassName(className);
-		// Get the current style string.
-		String oldStyle = domElement.getClassName();
-		int idx = indexOfName(oldStyle, className);
+		// Get the current className string.
+		String oldClassName = domElement.getClassName();
+		int idx = indexOfName(oldClassName, className);
 		// Don't try to remove the style if it's not there.
 		if (idx != -1) {
 			// Get the leading and trailing parts, without the removed name.
-			String begin = oldStyle.substring(0, idx).trim();
-			String end = oldStyle.substring(idx + className.length()).trim();
+			String begin = oldClassName.substring(0, idx).trim();
+			String end = oldClassName.substring(idx + className.length())
+					.trim();
 			// Some contortions to make sure we don't leave extra spaces.
 			String newClassName;
 			if (begin.length() == 0) {

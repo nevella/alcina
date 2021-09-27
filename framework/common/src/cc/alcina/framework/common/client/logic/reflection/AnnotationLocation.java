@@ -8,6 +8,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
@@ -20,27 +21,19 @@ public class AnnotationLocation {
 	 */
 	public Class classLocation;
 
-	private Resolver resolver;
-
-	private boolean fallbackToClassLocation;
+	public Resolver resolver;
 
 	public AnnotationLocation(Class clazz,
 			PropertyReflector propertyReflector) {
-		this(clazz, propertyReflector, Resolver.get(), true);
+		this(clazz, propertyReflector, Resolver.get());
 	}
 
 	public AnnotationLocation(Class clazz, PropertyReflector propertyReflector,
 			Resolver resolver) {
-		this(clazz, propertyReflector, resolver, true);
-	}
-
-	public AnnotationLocation(Class clazz, PropertyReflector propertyReflector,
-			Resolver resolver, boolean fallbackToClassLocation) {
 		Preconditions.checkArgument(clazz != null || propertyReflector != null);
 		this.classLocation = clazz;
 		this.propertyReflector = propertyReflector;
 		this.resolver = resolver;
-		this.fallbackToClassLocation = fallbackToClassLocation;
 	}
 
 	@Override
@@ -49,8 +42,7 @@ public class AnnotationLocation {
 			AnnotationLocation o = (AnnotationLocation) obj;
 			return propertyReflector == o.propertyReflector
 					&& classLocation == o.classLocation
-					&& Objects.equals(resolver, o.resolver)
-					&& fallbackToClassLocation == o.fallbackToClassLocation;
+					&& Objects.equals(resolver, o.resolver);
 		} else {
 			return false;
 		}
@@ -67,8 +59,7 @@ public class AnnotationLocation {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(propertyReflector, classLocation, resolver,
-				fallbackToClassLocation);
+		return Objects.hash(propertyReflector, classLocation, resolver);
 	}
 
 	public boolean isPropertyName(String propertyName) {
@@ -81,14 +72,25 @@ public class AnnotationLocation {
 				&& clazz == propertyReflector.getPropertyType();
 	}
 
+	public AnnotationLocation parent() {
+		if (propertyReflector != null) {
+			return new AnnotationLocation(classLocation, null);
+		}
+		if (classLocation.getSuperclass() != null) {
+			return new AnnotationLocation(classLocation.getSuperclass(), null);
+		}
+		return null;
+	}
+
 	@Override
 	public String toString() {
 		if (propertyReflector != null) {
-			return propertyReflector.toString();
+			String declaringPrefix = propertyReflector
+					.getDefiningType() == classLocation ? ""
+							: Ax.format("(%s)", classLocation.getSimpleName());
+			return Ax.format("%s%s", declaringPrefix,
+					propertyReflector.toString());
 		} else {
-			if (classLocation == null) {
-				int debug = 3;
-			}
 			return classLocation.getSimpleName();
 		}
 	}
@@ -100,7 +102,7 @@ public class AnnotationLocation {
 				return annotation;
 			}
 		}
-		if (classLocation == null || !fallbackToClassLocation) {
+		if (classLocation == null) {
 			return null;
 		} else {
 			return Reflections.classLookup()

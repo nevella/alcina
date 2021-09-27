@@ -31,10 +31,23 @@ public class CollectionNodeRenderer extends DirectedNodeRenderer {
 				.annotation(CollectionNodeRendererArgs.class);
 		Collection collection = (Collection) node.model;
 		int idx = 0;
+		// FIXME - dirndl1.3 - this prevents some sort of caching issue
+		node.directed.bindings();
 		for (Object object : collection) {
 			Node child = node.addChild(object, null, null);
+			/*
+			 * FIXME - dirndl.context - remove (since resolveModel will go)
+			 */
+			Class<? extends Object> modelClass = node.contextResolver()
+					.resolveModel(object).getClass();
 			if (args != null) {
-				child.directed = args.value();
+				child.directed = CustomReflectorResolver.forParentAndValue(
+						CollectionNodeRendererArgs.class, node, modelClass,
+						args.value());
+			} else {
+				child.directed = CustomReflectorResolver.forParentAndValue(
+						CollectionNodeRendererArgs.class, node, modelClass,
+						Directed.Default.INSTANCE);
 			}
 			result.addAll(child.render().widgets);
 		}
