@@ -2085,30 +2085,23 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// No! Only should check one end of the relation for permissions
 		// checkPermissions(hTgt, evt, assoc.propertyName());
 		if (assocObjIsCollection) {
-			Collection coll = (Collection) associatedObject;
+			Collection collection = (Collection) associatedObject;
 			if (isPerformDirectAssociationUpdates(associated)) {
 				performDirectAssociationUpdate(associated,
-						association.propertyName(), coll, delta, remove);
+						association.propertyName(), collection, delta, remove);
 			} else {
 				try {
-					coll = CommonUtils.shallowCollectionClone(coll);
+					collection = CommonUtils.shallowCollectionClone(collection);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
 				if (remove) {
-					boolean wasContained = coll.remove(delta);
-					if (!wasContained) {
-						// FIXME - mvcc.4 - these are only for JPA contexts, and
-						// this method is only called ex-JPA - remove
-						doubleCheckRemoval(coll, delta);
-					}
+					collection.remove(delta);
 				} else {
-					if (!coll.contains(delta)) {
-						doubleCheckAddition(coll, delta);
-					}
+					collection.add(delta);
 				}
 				propertyAccessor().setPropertyValue(associated,
-						association.propertyName(), coll);
+						association.propertyName(), collection);
 			}
 		} else {
 			/*
