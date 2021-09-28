@@ -18,12 +18,12 @@
 	<classpathentry excluding="com.google.gwt.regexp.super.com.google.gwt.regexp.shared/" kind="src" output="extras/jsdom/bin" path="extras/jsdom/src"/>
 	<classpathentry kind="src" output="extras/jsdom/bin" path="extras/jsdom/src-element"/>
 	<classpathentry kind="src" path="extras/wd/src"/>
+	<classpathentry kind="src" output="extras/patches/nekohtml/bin" path="extras/patches/nekohtml/src"/>
 	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-11">
 		<attributes>
 			<attribute name="module" value="true"/>
 		</attributes>
 	</classpathentry>
-	<classpathentry kind="src" output="extras/patches/nekohtml/bin" path="extras/patches/nekohtml/src"/>
 	<classpathentry kind="lib" path="lib/framework/entity/nekohtml.jar"/>
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
@@ -39,7 +39,6 @@
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-core-4.3.7.Final.jar" sourcepath="/Users/ouiji/git/minor/hibernate-orm"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-user.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.3.7.Final.jar" sourcepath="/jboss-hibernate-orm"/>
-	<classpathentry kind="lib" path="lib/framework/servlet/activation.jar"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/mail-1.4.4.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/javax.ejb-api-3.2.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/requestfactory-server.jar"/>
@@ -90,5 +89,6 @@
 	<classpathentry kind="lib" path="lib/framework/servlet/cluster/kafka-clients-2.7.1.jar" sourcepath="/g/minor/kafka"/>
 	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl-2.12.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
+	<classpathentry kind="lib" path="lib/framework/servlet/jakarta.activation-1.2.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
