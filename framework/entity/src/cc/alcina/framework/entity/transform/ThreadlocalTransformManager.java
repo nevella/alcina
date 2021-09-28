@@ -702,8 +702,23 @@ public class ThreadlocalTransformManager extends TransformManager
 						// entityManager.persist(newInstance);
 					}
 				}
-				// FIXME - mvcc.4 - there's probably some consolidation that can
-				// be done, since createdlocals are tracked by domainstore
+				//
+				// FIXME - alcina.doc -
+				//
+				// why maintain localIdToEntityMap (reason: cross-cutting
+				// concern to domainstore - it's from pov of the ClientInstance
+				// - which may have persisted local objects unknown to this VM's
+				// store)
+				//
+				// localIdToEntityMap needs to be distinct from
+				// clientInstanceEntityMap for applying transforms from other
+				// servers (don't want to store localids if we don't have to)
+				//
+				// createdObjectLocators *could* be replaced with a collation,
+				// but perf would be worse and layering too - so leave (and
+				// explain) - they're only used in (entityManager != null)
+				// contexts, but code is cleaner this way
+				//
 				EntityLocator entityLocator = newInstance.toLocator();
 				localIdToEntityMap.put(localId, newInstance);
 				createdObjectLocators.add(entityLocator);

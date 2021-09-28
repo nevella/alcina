@@ -609,11 +609,13 @@ public class TransformCommit {
 		if (!clientInstanceLocatorMap.containsKey(clientInstanceId)
 				|| forceRefresh) {
 			/*
-			 * If clientinstance was lazy-loaded in this transaction, it will
-			 * not be globally visible.
+			 * Note that synchronisation in DomainStore.ensureEntity means there
+			 * will only be one visible clientInstance with id x *at any one
+			 * time*, but that doesn't mean the clientInstance object instance
+			 * won't change (since the object is potentially lazy loaded and
+			 * thus vacuumed). So - to avoid confusion - use the id (guaranteed
+			 * non-zero)
 			 * 
-			 * FIXME - mvcc.4 - should those objects always be unique, even
-			 * during lazyload?
 			 */
 			// synchronized (clientInstance) {
 			synchronized (LockUtils.obtainClassIdLock(clientInstance)) {

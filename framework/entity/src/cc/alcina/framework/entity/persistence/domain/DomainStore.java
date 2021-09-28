@@ -838,10 +838,11 @@ public class DomainStore implements IDomainStore {
 
 	// We only have one thread allowed here - but that doesn't block any
 	// non-to-domain transactions
-	// FIXME - mvcc.4 - review optimiseation
+	// FIXME - mvcc.5 - review optimiseation
 	/*
 	 * Main remaining optimisation would be to remove unneccessary index() calls
-	 * - where the before-and-after states are identical.
+	 * - where the before-and-after states are identical. But time spent is now
+	 * ~1ms for 1000 transforms, so speed issues are possibly elsewhere
 	 * 
 	 * That, however, is possibly better left to application-level code (at
 	 * least to the DomainClassDescriptor instance) - see
