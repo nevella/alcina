@@ -41,6 +41,10 @@ import java.util.zip.CRC32;
  * Utilities used for implementing serialization.
  */
 public class SerializationUtils {
+	
+	static String debugSignatureTypeName = System.getProperty("com.google.gwt.user.rebind.rpc.SerializationUtils.debugType");
+	static boolean debugSignatureGeneration=false;
+	
   static final Comparator<JField> FIELD_COMPARATOR = new Comparator<JField>() {
     public int compare(JField f1, JField f2) {
     	boolean entityType=false;
@@ -184,12 +188,18 @@ public class SerializationUtils {
     CRC32 crc = new CRC32();
 
     try {
+    	if(debugSignatureTypeName!=null&&debugSignatureTypeName.equals(type.getQualifiedSourceName())){
+    	debugSignatureGeneration=true;
+    	
+    	}
       generateSerializationSignature(context, type, crc);
+      return Long.toString(crc.getValue());
     } catch (UnsupportedEncodingException e) {
       throw new RuntimeException("Could not compute the serialization signature", e);
+    }finally{
+    	debugSignatureGeneration=false;	
     }
 
-    return Long.toString(crc.getValue());
   }
 
   /**
@@ -264,6 +274,13 @@ public class SerializationUtils {
     return false;
   }
 
+  private static void maybeDebug(JType type,
+			String message,CRC32 crc) {
+		  if(debugSignatureGeneration){
+			 System.out.format("%s - %s - %s\n",type.getSimpleSourceName(),message,crc.getValue());
+		  }
+		
+	}
   private static void generateSerializationSignature(GeneratorContext context, JType type, CRC32 crc)
       throws UnsupportedEncodingException {
     JParameterizedType parameterizedType = type.isParameterized();
@@ -275,6 +292,7 @@ public class SerializationUtils {
 
     String serializedTypeName = getRpcTypeName(type);
     crc.update(serializedTypeName.getBytes(Util.DEFAULT_ENCODING));
+    maybeDebug(type,serializedTypeName,crc);
 
     if (excludeImplementationFromSerializationSignature(type)) {
       return;
@@ -306,15 +324,18 @@ public class SerializationUtils {
       });
       for (JEnumConstant constant : constants) {
         crc.update(constant.getName().getBytes(Util.DEFAULT_ENCODING));
+        maybeDebug(type,constant.getName(),crc);
       }
     } else if (type.isClassOrInterface() != null) {
       JClassType isClassOrInterface = type.isClassOrInterface();
       JField[] fields = getSerializableFields(context, isClassOrInterface);
       for (JField field : fields) {
         assert (field != null);
-
         crc.update(field.getName().getBytes(Util.DEFAULT_ENCODING));
-        crc.update(getRpcTypeName(field.getType()).getBytes(Util.DEFAULT_ENCODING));
+        maybeDebug(type,field.getName(),crc);
+        String rpcTypeName = getRpcTypeName(field.getType());
+		crc.update(rpcTypeName.getBytes(Util.DEFAULT_ENCODING));
+		maybeDebug(type,rpcTypeName,crc);
       }
 
       JClassType superClass = isClassOrInterface.getSuperclass();

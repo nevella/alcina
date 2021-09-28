@@ -382,19 +382,26 @@ public class SerializabilityUtil {
 
   public static String getSerializationSignature(Class<?> instanceType,
       SerializationPolicy policy) {
-    String result;
-    result = classCRC32Cache.get(instanceType);
-    if (result == null) {
-      CRC32 crc = new CRC32();
-      try {
-        generateSerializationSignature(instanceType, crc, policy);
-      } catch (UnsupportedEncodingException e) {
-        throw new RuntimeException("Could not compute the serialization signature", e);
-      }
-      result = Long.toString(crc.getValue());
-      classCRC32Cache.put(instanceType, result);
-    }
-    return result;
+		String result;
+		result = classCRC32Cache.get(instanceType);
+		if (result == null) {
+			CRC32 crc = new CRC32();
+			try {
+				if (debugSignatureTypeName != null && debugSignatureTypeName
+						.equals(instanceType.getCanonicalName())) {
+					debugSignatureGeneration = true;
+				}
+				generateSerializationSignature(instanceType, crc, policy);
+				result = Long.toString(crc.getValue());
+				classCRC32Cache.put(instanceType, result);
+			} catch (UnsupportedEncodingException e) {
+				throw new RuntimeException(
+						"Could not compute the serialization signature", e);
+			} finally {
+				debugSignatureGeneration = false;
+			}
+		}
+		return result;
   }
 
   public static String getSerializedTypeName(Class<?> instanceType) {
@@ -915,9 +922,14 @@ public class SerializabilityUtil {
     }
   }
 
+  
+  static String debugSignatureTypeName = System.getProperty("com.google.gwt.user.rebind.rpc.SerializationUtils.debugType");
+	static boolean debugSignatureGeneration=false;
+  
   private static void generateSerializationSignature(Class<?> instanceType, CRC32 crc,
       SerializationPolicy policy) throws UnsupportedEncodingException {
     crc.update(getSerializedTypeName(instanceType).getBytes(RPCServletUtils.CHARSET_UTF8));
+    maybeDebug(instanceType,getSerializedTypeName(instanceType),crc);
 
     if (excludeImplementationFromSerializationSignature(instanceType)) {
       return;
@@ -935,6 +947,7 @@ public class SerializabilityUtil {
       Enum<?>[] constants = instanceType.asSubclass(Enum.class).getEnumConstants();
       for (Enum<?> constant : constants) {
         crc.update(constant.name().getBytes(RPCServletUtils.CHARSET_UTF8));
+        maybeDebug(instanceType,constant.name(),crc);
       }
     } else if (!instanceType.isPrimitive()) {
       Field[] fields = applyFieldSerializationPolicy(instanceType, policy);
@@ -947,7 +960,10 @@ public class SerializabilityUtil {
          */
         if ((clientFieldNames == null) || clientFieldNames.contains(field.getName())) {
           crc.update(field.getName().getBytes(RPCServletUtils.CHARSET_UTF8));
-          crc.update(getSerializedTypeName(field.getType()).getBytes(RPCServletUtils.CHARSET_UTF8));
+          maybeDebug(instanceType,field.getName(),crc);
+          String serializedTypeName = getSerializedTypeName(field.getType());
+          crc.update(serializedTypeName.getBytes(RPCServletUtils.CHARSET_UTF8));
+          maybeDebug(instanceType,serializedTypeName,crc);
         }
       }
 
@@ -958,7 +974,15 @@ public class SerializabilityUtil {
     }
   }
 
-  private static Class<?> getCustomFieldSerializer(ClassLoader classLoader,
+  private static void maybeDebug(Class<?> instanceType,
+		String message,CRC32 crc) {
+	  if(debugSignatureGeneration){
+		 System.out.format("%s - %s - %s\n",instanceType.getSimpleName(),message,crc.getValue());
+	  }
+	
+}
+
+private static Class<?> getCustomFieldSerializer(ClassLoader classLoader,
       String qualifiedSerialzierName) {
     try {
       Class<?> customSerializerClass = Class.forName(qualifiedSerialzierName, false, classLoader);
