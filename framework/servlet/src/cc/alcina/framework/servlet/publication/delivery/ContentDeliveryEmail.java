@@ -116,19 +116,18 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			FileNotFoundException, NoSuchProviderException {
 		boolean debug = false;
 		Properties props = new Properties();
-		Class c = ContentDeliveryEmail.class;
-		String host = ResourceUtilities.getBundledString(c, "smtp.host.name");
+		String host = ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.host.name");
 		Integer port = Integer.valueOf(
-				ResourceUtilities.getBundledString(c, "smtp.host.port"));
+				ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.host.port"));
 		Boolean authenticate = Boolean.valueOf(
-				ResourceUtilities.getBundledString(c, "smtp.authenticate"));
-		String userName = ResourceUtilities.getBundledString(c,
+				ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.authenticate"));
+		String userName = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
 				"smtp.username");
-		String password = ResourceUtilities.getBundledString(c,
+		String password = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
 				"smtp.password");
-		String fromAddress = ResourceUtilities.getBundledString(c,
+		String fromAddress = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
 				"smtp.from.address");
-		String fromName = ResourceUtilities.getBundledString(c,
+		String fromName = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
 				"smtp.from.name");
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
@@ -138,8 +137,12 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		props.put("mail.smtp.host", host);
 		props.put("mail.smtp.auth", authenticate.toString());
-		if (ResourceUtilities.is(c, "smtp.ttls")) {
+		if (ResourceUtilities.is(ContentDeliveryEmail.class, "smtp.ttls")) {
 			props.setProperty("mail.smtp.starttls.enable", "true");
+			String protocols = ResourceUtilities.get(ContentDeliveryEmail.class, "smtp.ttls");
+			if(Ax.notBlank(protocols)){
+				props.setProperty("mail.smtp.ssl.protocols", protocols);	
+			}
 		}
 		Session session = Session.getInstance(props, null);
 		session.setDebug(debug);
