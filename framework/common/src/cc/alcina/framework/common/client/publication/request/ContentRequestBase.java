@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -159,7 +160,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 
 	@Override
 	public String getEmailSubjectForRequestor() {
-		if (emailSubjectForRequestor == null) {
+		if (Ax.isBlank(emailSubjectForRequestor)) {
 			return getEmailSubject();
 		}
 		return emailSubjectForRequestor;
