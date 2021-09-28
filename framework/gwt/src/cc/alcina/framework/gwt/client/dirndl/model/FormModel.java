@@ -271,7 +271,8 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 					? Reflections.newInstance(args.fieldModulator())
 					: new FieldModulator();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			node.pushResolver(ModalResolver.single(!state.editable));
+			node.pushResolver(
+					ModalResolver.single(node.getResolver(), !state.editable));
 			if (state.model != null) {
 				List<Field> fields = GwittirBridge.get()
 						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(

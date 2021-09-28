@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -180,10 +179,6 @@ public class DirectedLayout {
 			return null;
 		}
 
-		public ContextResolver<?> contextResolver() {
-			return resolver;
-		}
-
 		public void fireEvent(TopicEvent topicEvent) {
 			if (rendered.eventBindings != null) {
 				rendered.eventBindings
@@ -203,9 +198,8 @@ public class DirectedLayout {
 			return rendered.verifySingleWidget();
 		}
 
-		public void pushResolver(AnnotationLocation.Resolver locationResolver) {
-			resolver = new DelegatingContextResolver(resolver,
-					locationResolver);
+		public void pushResolver(ContextResolver resolver) {
+			this.resolver = resolver;
 		}
 
 		public Node resolveNode(String path) {
@@ -238,7 +232,7 @@ public class DirectedLayout {
 				AnnotationLocation annotationLocation = new AnnotationLocation(
 						clazz, propertyReflector);
 				directed = new DirectedResolver(
-						contextResolver().getTreeResolver(Directed.class),
+						getResolver().getTreeResolver(Directed.class),
 						annotationLocation);
 			}
 			Class<? extends DirectedNodeRenderer> rendererClass = directed
@@ -414,8 +408,12 @@ public class DirectedLayout {
 				return;
 			}
 			if (model instanceof DirectedLayout.Lifecycle) {
+				// FIXME - dirndl 1.0 - lifecycle -> abstract class,
+				// HasLifecycle, yadda
+				// beforeRRender -> (maybe) first time render
 				((DirectedLayout.Lifecycle) model).beforeRender();
 			}
+			resolver.beforeRender();
 			current = this;
 			DirectedContextResolver directedContextResolver = annotation(
 					DirectedContextResolver.class);
@@ -893,35 +891,5 @@ public class DirectedLayout {
 
 	public interface NodeEventReceiver {
 		public void onEvent(GwtEvent event);
-	}
-
-	private static class DelegatingContextResolver<M>
-			extends ContextResolver<M> {
-		private ContextResolver<?> parent = null;
-
-		private Resolver locationResolver;
-
-		public DelegatingContextResolver(ContextResolver parent,
-				Resolver locationResolver) {
-			this.parent = parent;
-			this.locationResolver = locationResolver;
-		}
-
-		@Override
-		public <A extends Annotation> A resolveAnnotation(
-				Class<A> annotationClass, AnnotationLocation location) {
-			return locationResolver.resolveAnnotation(annotationClass,
-					location);
-		}
-
-		@Override
-		public Object resolveModel(Object model) {
-			return parent.resolveModel(model);
-		}
-
-		@Override
-		public <T> T resolveRenderContextProperty(String key) {
-			return parent.resolveRenderContextProperty(key);
-		}
 	}
 }

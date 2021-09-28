@@ -9,7 +9,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 class CustomReflectorResolver extends TreeResolver<Directed> {
 	public static Directed forParentAndValue(Class discriminator, Node node,
 			Class locationResolutionClass, Directed reflectorValue) {
-		TreeResolver<Directed> parentResolver = node.contextResolver()
+		TreeResolver<Directed> parentResolver = node.getResolver()
 				.getTreeResolver(Directed.class);
 		CustomReflectorResolver resolver = parentResolver.finalChildResolver(
 				discriminator,

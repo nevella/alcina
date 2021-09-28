@@ -13,8 +13,20 @@ public class ContextResolver<M> extends AnnotationLocation.Resolver {
 
 	protected TreeResolver<Directed> directedResolver;
 
+	protected ContextResolver parent;
+
 	public ContextResolver() {
+		this(null);
+	}
+
+	public ContextResolver(ContextResolver parent) {
+		this.parent = parent;
 		init();
+	}
+
+	public void beforeRender() {
+		// FIXME - dirndl 1.0 - Registry.get.push(this)
+		// TODO Auto-generated method stub
 	}
 
 	public M getModel() {
@@ -42,6 +54,7 @@ public class ContextResolver<M> extends AnnotationLocation.Resolver {
 	}
 
 	protected void init() {
-		directedResolver = new TreeResolver<>(Directed.class, Directed::merge);
+		directedResolver = parent != null ? parent.directedResolver
+				: new TreeResolver<>(Directed.class, Directed::merge);
 	}
 }
