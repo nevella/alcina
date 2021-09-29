@@ -276,10 +276,14 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper) {
 		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
 		tm.resetTltm(wrapper.locatorMap);
-		tm.setEntityManager(getEntityManager());
-		for (DomainTransformException ex : wrapper.response
-				.getTransformExceptions()) {
-			tryAddSourceObjectName(ex);
+		try {
+			tm.setEntityManager(getEntityManager());
+			for (DomainTransformException ex : wrapper.response
+					.getTransformExceptions()) {
+				tryAddSourceObjectName(ex);
+			}
+		} finally {
+			tm.setEntityManager(null);
 		}
 	}
 
@@ -328,20 +332,26 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	@Override
 	public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
 		// presumably null, but no harm in being light-on-the-ground
-		EntityManager cachedEntityManager = ThreadlocalTransformManager.get()
+		EntityManager entryEntityManager = ThreadlocalTransformManager.get()
 				.getEntityManager();
-		ThreadlocalTransformManager.get().setEntityManager(getEntityManager());
-		ThreadlocalTransformManager.get()
-				.setClientInstanceEntityMap(new EntityLocatorMap());
-		ClientInstance clientInstanceImpl = PersistentImpl
-				.getNewImplementationInstance(ClientInstance.class);
-		clientInstanceImpl.setId(clientInstanceId);
-		// don't get the real client instance - don't want to attach
-		// live permissions objects
-		ThreadlocalTransformManager.get().setClientInstance(clientInstanceImpl);
-		EntityLocatorMap map = ThreadlocalTransformManager.get()
-				.reconstituteEntityMap();
-		ThreadlocalTransformManager.get().setEntityManager(cachedEntityManager);
+		EntityLocatorMap map;
+		try {
+			ThreadlocalTransformManager.get()
+					.setEntityManager(getEntityManager());
+			ThreadlocalTransformManager.get()
+					.setClientInstanceEntityMap(new EntityLocatorMap());
+			ClientInstance clientInstanceImpl = PersistentImpl
+					.getNewImplementationInstance(ClientInstance.class);
+			clientInstanceImpl.setId(clientInstanceId);
+			// don't get the real client instance - don't want to attach
+			// live permissions objects
+			ThreadlocalTransformManager.get()
+					.setClientInstance(clientInstanceImpl);
+			map = ThreadlocalTransformManager.get().reconstituteEntityMap();
+		} finally {
+			ThreadlocalTransformManager.get()
+					.setEntityManager(entryEntityManager);
+		}
 		return map;
 	}
 
@@ -556,18 +566,22 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	@Override
 	public EntityLocatorMap reconstituteEntityMap(long clientInstanceId) {
-		ThreadlocalTransformManager tm = new ThreadlocalTransformManager();
-		tm.resetTltm(new EntityLocatorMap());
-		tm.setEntityManager(getEntityManager());
-		ClientInstance clientInstance = PersistentImpl
-				.getNewImplementationInstance(ClientInstance.class);
-		clientInstance.setId(clientInstanceId);
-		// don't use the real client instance, requires
-		// permissionsmanager>>liveobjects
-		tm.setClientInstance(clientInstance);
-		EntityLocatorMap result = tm.reconstituteEntityMap();
-		tm.resetTltm(null);
-		return result;
+		ThreadlocalTransformManager tltm = new ThreadlocalTransformManager();
+		tltm.resetTltm(new EntityLocatorMap());
+		EntityLocatorMap result;
+		try {
+			tltm.setEntityManager(getEntityManager());
+			ClientInstance clientInstance = PersistentImpl
+					.getNewImplementationInstance(ClientInstance.class);
+			clientInstance.setId(clientInstanceId);
+			// don't use the real client instance, requires
+			// permissionsmanager>>liveobjects
+			tltm.setClientInstance(clientInstance);
+			result = tltm.reconstituteEntityMap();
+			return result;
+		} finally {
+			tltm.resetTltm(null);
+		}
 	}
 
 	@Override

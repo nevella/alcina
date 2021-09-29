@@ -495,6 +495,7 @@ public class TransformPersisterInPersistenceContext {
 			throw new DeliberatelyThrownWrapperException();
 		} finally {
 			tlTransformManager.setUseCreatedLocals(true);
+			tlTransformManager.setEntityManager(null);
 		}
 	}
 

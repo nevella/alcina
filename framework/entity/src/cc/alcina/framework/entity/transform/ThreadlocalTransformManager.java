@@ -846,9 +846,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public void setEntityManager(EntityManager entityManager) {
-		// System.err.format("%s: %s\n", Thread.currentThread().getId(),
-		// entityManager);
-		// Thread.dumpStack();
 		this.entityManager = entityManager;
 	}
 
