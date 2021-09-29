@@ -359,6 +359,7 @@ public class CommitToStorageTransformListener
 			transformQueue.clear();
 		}
 		if(request.getEvents().isEmpty()){
+			topicStateChanged().publish(State.COMMITTED);
 			return;
 		}
 		final AsyncCallback<DomainTransformResponse> commitRemoteCallback = new ResponseCallback(
