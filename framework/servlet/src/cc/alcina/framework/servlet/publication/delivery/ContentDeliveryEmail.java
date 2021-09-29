@@ -97,9 +97,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			throws Exception {
 		byte[] msgBytes = ResourceUtilities
 				.readStreamToByteArray(convertedContent);
-		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
+		String result = deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
 		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
-		return "OK";
+		return result;
 	}
 
 	protected boolean isUseVerp() {
