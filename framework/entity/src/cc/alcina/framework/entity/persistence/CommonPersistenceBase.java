@@ -21,12 +21,9 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
@@ -41,16 +38,12 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
-import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -64,7 +57,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -74,16 +66,12 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DurationCounter;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.domain.DomainLinker;
 import cc.alcina.framework.entity.persistence.metric.InternalMetric;
-import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.transform.TransformCache;
 import cc.alcina.framework.entity.persistence.transform.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
@@ -98,7 +86,6 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
-import cc.alcina.framework.entity.transform.WrappedObjectProvider;
 import cc.alcina.framework.entity.util.MethodContext;
 
 /**
@@ -239,6 +226,25 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
+	public <T> T ensure(Class<T> clazz, String key, Object value) {
+		String eql = Ax.format("from %s where %s = ?1", clazz.getSimpleName(),
+				key);
+		Query q = getEntityManager().createQuery(eql).setParameter(1, value);
+		List list = q.getResultList();
+		if (list.isEmpty()) {
+			AppPersistenceBase.checkNotReadOnly();
+			T instance = Reflections.newInstance(clazz);
+			getEntityManager().persist(instance);
+			Reflections.propertyAccessor().setPropertyValue(instance, key,
+					value);
+			return instance;
+		} else {
+			Preconditions.checkState(list.size() == 1);
+			return (T) list.get(0);
+		}
+	}
+
+	@Override
 	public void ensurePublicationCounters() {
 		try (Connection conn = Registry
 				.impl(CommonPersistenceConnectionProvider.class)
@@ -300,6 +306,17 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		Integer result = (Integer) getEntityManager().createQuery(eql)
 				.getSingleResult();
 		return result;
+	}
+
+	@Override
+	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
+			Object value1, String key2, Object value2) {
+		String eql = String.format("from %s where %s=?1 and %s=?2",
+				clazz.getSimpleName(), key1, key2);
+		Query q = getEntityManager().createQuery(eql).setParameter(1, value1)
+				.setParameter(2, value2);
+		List l = q.getResultList();
+		return (T) ((l.size() == 0) ? null : l.get(0));
 	}
 
 	@Override
@@ -570,25 +587,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	public abstract void setEntityManager(EntityManager entityManager);
-
-	@Override
-	public <T> T ensure(Class<T> clazz, String key, Object value) {
-		String eql = Ax.format("from %s where %s = ?1", clazz.getSimpleName(),
-				key);
-		Query q = getEntityManager().createQuery(eql).setParameter(1, value);
-		List list = q.getResultList();
-		if (list.isEmpty()) {
-			AppPersistenceBase.checkNotReadOnly();
-			T instance = Reflections.newInstance(clazz);
-			getEntityManager().persist(instance);
-			Reflections.propertyAccessor().setPropertyValue(instance, key,
-					value);
-			return instance;
-		} else {
-			Preconditions.checkState(list.size() == 1);
-			return (T) list.get(0);
-		}
-	}
 
 	@Override
 	public void setField(Class clazz, Long id, String key, Object value)

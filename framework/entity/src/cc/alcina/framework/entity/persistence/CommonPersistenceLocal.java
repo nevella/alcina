@@ -48,7 +48,8 @@ public interface CommonPersistenceLocal {
 
 	public <T> T findImplInstance(Class<? extends T> clazz, long id);
 
-	
+	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
+			Object value1, String key2, Object value2);
 
 	public long getLastTransformId();
 
