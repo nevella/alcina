@@ -41,8 +41,8 @@ public abstract class LocalDbPropertyBase extends Entity {
 				.impl(CommonPersistenceProvider.class).getCommonPersistence();
 		Class<? extends LocalDbPropertyBase> implClass = PersistentImpl
 				.getImplementation(LocalDbPropertyBase.class);
-		LocalDbPropertyBase dbProperty = cpl.getItemByKeyValue(implClass,
-				KEY_FIELD_NAME, key, true, null, false);
+		LocalDbPropertyBase dbProperty = cpl.ensure(implClass,
+				KEY_FIELD_NAME, key);
 		return dbProperty;
 	}
 

@@ -12,7 +12,7 @@ import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.sheets.v4.SheetsScopes;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.servlet.google.DriveAccessor.DriveAccess;
 import cc.alcina.framework.servlet.google.SheetAccessor.SheetAccess;
 
@@ -27,7 +27,7 @@ public class GalleryConfiguration {
 		element.spreadSheetId = "---";
 		element.credentialsPath = "---";
 		element.credentialsStorageLocalPath = "---";
-		Ax.out(WrappedObjectHelper.xmlSerialize(config));
+		Ax.out(JaxbUtils.xmlSerialize(config));
 	}
 
 	List<Element> elements = new ArrayList<>();

@@ -23,9 +23,9 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
+import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 
@@ -92,7 +92,7 @@ public class ClassMetaServer {
 		int port = 10005;
 		Server server = new Server(port);
 		HandlerCollection handlers = new HandlerCollection(true);
-		WrappedObjectHelper.withoutRegistry();
+		JaxbUtils.withoutRegistry();
 		initLoggers();
 		initRegistry();
 		ClassMetaHandler metaHandler = new ClassMetaHandler();

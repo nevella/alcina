@@ -50,7 +50,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase.UnwrapWithExceptionsResult;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.WrappedObject;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.persistence.domain.DataSourceAdapter;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask.SimpleLoaderTask;
@@ -60,6 +59,7 @@ import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphWalker;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
+import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.schedule.ServerTask;
@@ -334,7 +334,7 @@ public class TaskCleanWrappedObjects
 				List<WrappedObject> list = publicationWrapperExceptionsWrappedObjects
 						.get(e.getKey());
 				try {
-					WrappedObjectHelper.xmlDeserialize(
+					JaxbUtils.xmlDeserialize(
 							Reflections.forName(list.get(0).getClassName()),
 							list.get(0).getSerializedXml());
 					int debug = 3;
