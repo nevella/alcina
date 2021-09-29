@@ -80,14 +80,14 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			boolean requestorPass) throws Exception {
 		byte[] msgBytes = ResourceUtilities
 				.readStreamToByteArray(convertedContent);
-		send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
+		String result = send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
 				requestorPass, deliveryModel.getEmailAddress());
 		if (LooseContext.has(CONTEXT_ALSO_SEND_TO_ADDRESS)) {
 			send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
 					requestorPass,
 					LooseContext.get(CONTEXT_ALSO_SEND_TO_ADDRESS));
 		}
-		return "OK";
+		return result;
 	}
 
 	@Override
@@ -97,9 +97,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			throws Exception {
 		byte[] msgBytes = ResourceUtilities
 				.readStreamToByteArray(convertedContent);
-		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
+		String result = deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
 		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
-		return "OK";
+		return result;
 	}
 
 	protected boolean isUseVerp() {
