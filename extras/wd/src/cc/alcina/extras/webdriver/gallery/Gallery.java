@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.servlet.google.SheetAccessor;
 import cc.alcina.framework.servlet.google.SheetAccessor.SheetAccess;
 
@@ -74,7 +74,7 @@ public class Gallery {
 			try {
 				String configurationXml = ResourceUtilities
 						.readStreamToString(this.configurationUrl.openStream());
-				this.galleryConfiguration = WrappedObjectHelper.xmlDeserialize(
+				this.galleryConfiguration = JaxbUtils.xmlDeserialize(
 						GalleryConfiguration.class, configurationXml);
 				configuration = this.galleryConfiguration.find(appName);
 				if (configuration == null) {
