@@ -22,7 +22,6 @@ import org.slf4j.Logger;
 
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
-import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -40,9 +39,7 @@ import cc.alcina.framework.entity.transform.TransformPersistenceToken;
  * @author Nick Reddel
  */
 public interface CommonPersistenceLocal {
-
 	public <V> V callWithEntityManager(ThrowingFunction<EntityManager, V> call);
-
 
 	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper);
 
@@ -55,20 +52,14 @@ public interface CommonPersistenceLocal {
 
 	public EntityLocatorMap getLocatorMap(Long clientInstanceId);
 
-
-
 	public List<DomainTransformRequestPersistent>
 			getPersistentTransformRequests(long fromId, long toId,
 					Collection<Long> specificIds, boolean mostRecentOnly,
 					boolean populateTransformSourceObjects, Logger logger);
 
-
-
-
 	public long log(String message, String componentKey);
 
 	public long log(String message, String componentKey, String data);
-
 
 	public void persistClientLogRecords(List<ClientLogRecords> records);
 
@@ -79,7 +70,6 @@ public interface CommonPersistenceLocal {
 	public void ping();
 
 	public EntityLocatorMap reconstituteEntityMap(long clientInstanceId);
-
 
 	public SearchResultsBase search(SearchDefinition def);
 
@@ -94,8 +84,6 @@ public interface CommonPersistenceLocal {
 	public void updatePublicationMimeMessageId(Long publicationId,
 			String mimeMessageId);
 
-	public <T extends ServerValidator> List<T> validate(List<T> validators);
-
 	/**
 	 * Used for supporting mixed rpc/transform domain loads
 	 * 
@@ -103,6 +91,8 @@ public interface CommonPersistenceLocal {
 	public TransformCache warmupTransformCache();
 
 	void changeJdbcConnectionUrl(String newUrl);
+
+	<T> T ensure(Class<T> clazz, String key, Object value);
 
 	void ensurePublicationCounters();
 
@@ -112,7 +102,4 @@ public interface CommonPersistenceLocal {
 	long getNextPublicationIdForUser(IUser user);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
-
-
-	<T> T ensure(Class<T> clazz, String key, Object value);
 }

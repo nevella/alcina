@@ -42,7 +42,6 @@ import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
-import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -619,57 +618,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 										Publication.class)))
 				.setParameter(1, mimeMessageId).setParameter(2, publicationId)
 				.executeUpdate();
-	}
-
-	@Override
-	public <T extends ServerValidator> List<T> validate(List<T> validators) {
-		// FIXME - mvcc.wrap
-		throw new UnsupportedOperationException();
-		// ArrayList<T> result = new ArrayList<T>();
-		// for (T serverValidator : validators) {
-		// if (serverValidator instanceof ServerUniquenessValidator) {
-		// ServerUniquenessValidator suv = (ServerUniquenessValidator)
-		// serverValidator;
-		// int ctr = 0;
-		// String value = suv.getValue();
-		// suv.setSuggestedValue(value);
-		// while (true) {
-		// Object item = getItemByKeyValue(suv.getObjectClass(),
-		// suv.getPropertyName(), value, false, suv.getOkId(),
-		// suv.isCaseInsensitive());
-		// if (item == null) {
-		// if (ctr != 0) {
-		// suv.setSuggestedValue(value);
-		// suv.setMessage(
-		// "Item exists. Suggested value: " + value);
-		// }
-		// break;
-		// }
-		// // no suggestions, just error
-		// if (suv.getValueTemplate() == null) {
-		// suv.setMessage("Item exists");
-		// break;
-		// }
-		// ctr++;
-		// value = String.format(suv.getValueTemplate(),
-		// suv.getValue() == null ? "" : suv.getValue(), ctr);
-		// }
-		// } else {
-		// Class c = EntityLayerObjects.get().getServletLayerRegistry()
-		// .lookupSingle(ServerValidator.class,
-		// serverValidator.getClass());
-		// if (c != null) {
-		// ServerValidatorHandler handler = (ServerValidatorHandler)
-		// EntityLayerObjects
-		// .get().getServletLayerRegistry()
-		// .instantiateSingle(ServerValidator.class,
-		// serverValidator.getClass());
-		// handler.handle(serverValidator, getEntityManager());
-		// }
-		// }
-		// result.add(serverValidator);
-		// }
-		// return result;
 	}
 
 	/**

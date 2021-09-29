@@ -18,7 +18,6 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -102,7 +101,6 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
-import cc.alcina.framework.entity.persistence.ServerValidatorHandler;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -120,7 +118,6 @@ import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage;
 import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage.ExceptionMessage;
 import cc.alcina.framework.servlet.ServletLayerUtils;
-import cc.alcina.framework.servlet.ServletLayerValidatorHandler;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -604,25 +601,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	@Override
 	public List<ServerValidator>
 			validateOnServer(List<ServerValidator> validators) {
-		List<ServerValidator> entityLayer = new ArrayList<ServerValidator>();
 		List<ServerValidator> results = new ArrayList<ServerValidator>();
 		for (ServerValidator validator : validators) {
-			Class clazz = Registry.get().lookupSingle(ServerValidator.class,
-					validator.getClass());
-			ServerValidatorHandler handler = null;
-			if (ServerValidatorHandler.class.isAssignableFrom(clazz)) {
-				handler = (ServerValidatorHandler) Registry.get()
-						.instantiateSingle(ServerValidator.class,
-								validator.getClass());
-			}
-			if (handler instanceof ServletLayerValidatorHandler) {
-				handler.handle(validator, null);
-				results.add(validator);
-			} else {
-				results.addAll(Registry.impl(CommonPersistenceProvider.class)
-						.getCommonPersistence()
-						.validate(Collections.singletonList(validator)));
-			}
+			ServerValidatorHandler handler = Registry
+					.impl(ServerValidatorHandler.class, validator.getClass());
+			handler.handle(validator);
+			results.add(validator);
 		}
 		return results;
 	}

@@ -11,9 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.entity.persistence;
-
-import javax.persistence.EntityManager;
+package cc.alcina.framework.servlet.servlet;
 
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 
@@ -22,5 +20,5 @@ import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
  * @author Nick Reddel
  */
 public interface ServerValidatorHandler<T extends ServerValidator> {
-	public void handle(T serverValidator, EntityManager entityManager);
+	public void handle(T serverValidator);
 }
