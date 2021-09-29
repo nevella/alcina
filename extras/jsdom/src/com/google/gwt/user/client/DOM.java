@@ -951,7 +951,7 @@ public class DOM {
 	 * @param prop
 	 *            the name of the property
 	 * @return the property's value
-	 * @deprecated Use {@link Element#getProperty(String)} instead.
+	 * @deprecated Use {@link Element#getProperties(String)} instead.
 	 */
 	@Deprecated
 	public static String getElementProperty(Element elem, String prop) {

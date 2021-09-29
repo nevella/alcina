@@ -111,7 +111,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
-import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -411,30 +410,6 @@ public class DomainStore implements IDomainStore {
 
 	public void putExternalLocal(Entity instance) {
 		cache.putExternalLocal(instance);
-	}
-
-	// FIXME - mvcc.wrap - goes away
-	public void reloadEntity(Entity wrapped) {
-		Preconditions.checkArgument(wrapped instanceof WrappedObject);
-		cache.remove(wrapped);
-		Entity reloaded = Domain.find(wrapped.entityClass(), wrapped.getId());
-		try {
-			// note that reloaded will be discarded because we're not in a
-			// to-domain
-			// tx
-			if (reloaded != null) {
-				SEUtilities.getFieldByName(wrapped.entityClass(), "object")
-						.set(wrapped, null);
-				SEUtilities
-						.getFieldByName(wrapped.entityClass(), "serializedXml")
-						.set(wrapped,
-								((WrappedObject) reloaded).getSerializedXml());
-				cache.remove(reloaded);
-				cache.put(wrapped);
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	public void remove(Entity entity) {

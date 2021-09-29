@@ -32,9 +32,9 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.transform.WrappedObjectProvider;
 
 /**
  * 
@@ -43,6 +43,34 @@ import cc.alcina.framework.entity.transform.WrappedObjectProvider;
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class JaxbUtils {
 	private static JaxbUtils singleton;
+
+	public static final String CONTEXT_CLASSES = JaxbUtils.class.getName()
+			+ ".CONTEXT_CLASSES";
+
+	static List<Class> jaxbSubclasses = null;
+
+	public static <T> T clone(T object) {
+		try {
+			String s = xmlSerialize(object);
+			return (T) xmlDeserialize(object.getClass(), s);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static synchronized List<Class>
+			ensureJaxbSubclasses(Class addClass) {
+		if (jaxbSubclasses == null) {
+			jaxbSubclasses = Registry.get()
+					.lookup(JaxbContextRegistration.class);
+		}
+		if (addClass == null) {
+			return new ArrayList<Class>(jaxbSubclasses);
+		}
+		ArrayList<Class> classes = new ArrayList<Class>(jaxbSubclasses);
+		classes.add(0, addClass);
+		return classes;
+	}
 
 	public static JaxbUtils get() {
 		if (singleton == null) {
@@ -57,60 +85,6 @@ public class JaxbUtils {
 		return get().getContext0(classes);
 	}
 
-	private JAXBContext jc = null;
-
-	private Set<Class> jcClasses = new HashSet<Class>();
-
-	public static final String CONTEXT_CLASSES = JaxbUtils.class.getName()
-	+ ".CONTEXT_CLASSES";
-
-	static List<Class> jaxbSubclasses = null;
-
-	private JaxbUtils() {
-	}
-
-	private JAXBContext getContext0(Collection<Class> classes)
-			throws JAXBException {
-		if (jc == null || !jcClasses.containsAll(classes)) {
-			synchronized (jcClasses) {
-				Map<String, String> emptyProps = new HashMap<String, String>();
-				jcClasses.addAll(classes);
-				Class[] clazzez = (Class[]) jcClasses
-						.toArray(new Class[jcClasses.size()]);
-				try {
-					jc = JAXBContext.newInstance(clazzez, emptyProps);
-				} catch (RuntimeException e) {
-					jcClasses = new HashSet<Class>();
-					throw e;
-				}
-			}
-		}
-		return jc;
-	}
-
-	public static <T> T clone(T object) {
-		try {
-			String s = xmlSerialize(object);
-			return (T) xmlDeserialize(object.getClass(), s);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static synchronized List<Class>
-			ensureJaxbSubclasses(Class addClass) {
-		if (jaxbSubclasses == null) {
-			jaxbSubclasses = Registry.impl(WrappedObjectProvider.class)
-					.getJaxbSubclasses();
-		}
-		if (addClass == null) {
-			return new ArrayList<Class>(jaxbSubclasses);
-		}
-		ArrayList<Class> classes = new ArrayList<Class>(jaxbSubclasses);
-		classes.add(0, addClass);
-		return classes;
-	}
-
 	public static synchronized void withoutRegistry() {
 		jaxbSubclasses = new ArrayList<>();
 	}
@@ -120,7 +94,8 @@ public class JaxbUtils {
 			return null;
 		}
 		try {
-			String preProcessed = Registry.optional(JaxbUtils.PreProcessor.class)
+			String preProcessed = Registry
+					.optional(JaxbUtils.PreProcessor.class)
 					.map(pp -> pp.preprocess(xmlStr)).orElse(xmlStr);
 			List<Class> classes = getContextClasses(clazz);
 			JAXBContext jc = getContext(classes);
@@ -147,8 +122,7 @@ public class JaxbUtils {
 	}
 
 	public static String xmlSerialize(Object object,
-			Collection<Class> jaxbClasses, boolean tight)
-			throws JAXBException {
+			Collection<Class> jaxbClasses, boolean tight) throws JAXBException {
 		JAXBContext jc = getContext(jaxbClasses);
 		Marshaller m = jc.createMarshaller();
 		if (!tight) {
@@ -177,6 +151,32 @@ public class JaxbUtils {
 					(List) LooseContext.get(JaxbUtils.CONTEXT_CLASSES));
 		}
 		return classes;
+	}
+
+	private JAXBContext jc = null;
+
+	private Set<Class> jcClasses = new HashSet<Class>();
+
+	private JaxbUtils() {
+	}
+
+	private JAXBContext getContext0(Collection<Class> classes)
+			throws JAXBException {
+		if (jc == null || !jcClasses.containsAll(classes)) {
+			synchronized (jcClasses) {
+				Map<String, String> emptyProps = new HashMap<String, String>();
+				jcClasses.addAll(classes);
+				Class[] clazzez = (Class[]) jcClasses
+						.toArray(new Class[jcClasses.size()]);
+				try {
+					jc = JAXBContext.newInstance(clazzez, emptyProps);
+				} catch (RuntimeException e) {
+					jcClasses = new HashSet<Class>();
+					throw e;
+				}
+			}
+		}
+		return jc;
 	}
 
 	@RegistryLocation(registryPoint = JaxbUtils.PreProcessor.class, implementationType = ImplementationType.INSTANCE)

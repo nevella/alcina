@@ -247,19 +247,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	@WebMethod(readonlyPermitted = true)
-	public <T extends Entity> T getItemById(String className, Long id)
-			throws WebException {
-		try {
-			Class<T> clazz = (Class<T>) Class.forName(className);
-			return Registry.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence().getItemById(clazz, id, true, false);
-		} catch (Exception e) {
-			logRpcException(e);
-			throw new WebException(e.getMessage());
-		}
-	}
-
 	@Override
 	@WebMethod(readonlyPermitted = true)
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
@@ -839,8 +826,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		public Response handleRequest(Class<T> clazz,
 				BoundSuggestOracleRequest request, String hint) {
 			Response response = new Response();
-			List<T> responses = getResponses(request.getQuery(), request.getModel(),
-					hint);
+			List<T> responses = getResponses(request.getQuery(),
+					request.getModel(), hint);
 			responses = projectResponses(responses, clazz);
 			response.setSuggestions(responses.stream()
 					.map(BoundSuggestOracleSuggestion::new)

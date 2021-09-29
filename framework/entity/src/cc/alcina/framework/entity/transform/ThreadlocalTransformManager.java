@@ -51,7 +51,6 @@ import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
@@ -92,11 +91,9 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
-import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
@@ -233,8 +230,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	private IdentityHashMap<Entity, Entity> listeningTo = new IdentityHashMap<Entity, Entity>();
 
 	private DetachedEntityCache detachedEntityCache;
-
-	protected Entity ignorePropertyChangesTo;
 
 	private boolean initialised = false;
 
@@ -446,19 +441,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		if (id != 0) {
 			if (getEntityManager() != null) {
-				if (WrapperPersistable.class.isAssignableFrom(clazz)) {
-					try {
-						WrappedObject wrapper = Registry
-								.impl(WrappedObjectProvider.class)
-								.getObjectWrapperForUser((Class) clazz, id,
-										entityManager);
-						maybeListenToObjectWrapper(wrapper);
-						T wofu = (T) wrapper.getObject();
-						return (T) wofu;
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
 				T t = getEntityManager().find(clazz, id);
 				// this may be a performance hit - but worth it - otherwise all
 				// sorts of potential problems
@@ -609,15 +591,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		flushAfterTransforms.add(CommonUtils.last(getTransforms().iterator()));
 	}
 
-	public void maybeListenToObjectWrapper(WrappedObject wrapper) {
-		EntityLayerTransformPropagation transformPropagation = Registry
-				.impl(EntityLayerTransformPropagation.class, void.class, true);
-		if (transformPropagation != null
-				&& transformPropagation.listenToWrappedObject(wrapper)) {
-			registerDomainObject((Entity) wrapper);
-		}
-	}
-
 	@Override
 	public void modifyCollectionProperty(Object objectWithCollection,
 			String collectionPropertyName, Object delta,
@@ -743,14 +716,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public void persist(Object object) {
 		entityManager.persist(object);
-	}
-
-	@Override
-	public synchronized void propertyChange(PropertyChangeEvent event) {
-		if (isIgnorePropertyChangesForEvent(event)) {
-			return;
-		}
-		super.propertyChange(event);
 	}
 
 	public boolean provideIsMarkedFlushTransform(DomainTransformEvent event) {
@@ -886,15 +851,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		// entityManager);
 		// Thread.dumpStack();
 		this.entityManager = entityManager;
-	}
-
-	// FIXME - mvcc.wrap - can remove
-	public void setIgnorePropertyChangesTo(DomainTransformEvent event) {
-		this.ignorePropertyChangesTo = null;
-		if (event != null
-				&& event.getTransformType() != TransformType.CREATE_OBJECT) {
-			this.ignorePropertyChangesTo = getObject(event, true);
-		}
 	}
 
 	public void
@@ -1271,14 +1227,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	protected boolean isAddToDomainObjects() {
 		return entityManager == null;
-	}
-
-	// can disappear at end of mvcc.wrap
-	protected boolean isIgnorePropertyChangesForEvent(PropertyChangeEvent evt) {
-		return evt.getSource() == ignorePropertyChangesTo
-				|| (evt.getSource() instanceof WrappedObject
-						&& ((WrappedObject) evt.getSource())
-								.getObject() == ignorePropertyChangesTo);
 	}
 
 	@Override

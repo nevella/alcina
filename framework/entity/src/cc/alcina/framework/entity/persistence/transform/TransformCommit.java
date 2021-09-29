@@ -24,8 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -62,14 +60,12 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
-import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LockUtils;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -639,43 +635,6 @@ public class TransformCommit {
 				request.getClientInstance().domain().domainVersion(), false);
 	}
 
-	public void handleWrapperTransforms() {
-		EntityLayerTransformPropagation transformPropagation = Registry
-				.impl(EntityLayerTransformPropagation.class, void.class, true);
-		if (transformPropagation == null) {
-			return;
-		}
-		ThreadlocalTransformManager.cast().getTransforms();
-		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
-				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-		if (pendingTransforms.isEmpty()) {
-			return;
-		}
-		final List<DomainTransformEvent> items = CollectionFilters
-				.filter(pendingTransforms, new IsWrappedObjectDteFilter());
-		pendingTransforms.removeAll(items);
-		if (!items.isEmpty() && !pendingTransforms.isEmpty()) {
-			throw new RuntimeException("Non-wrapped and wrapped object"
-					+ " transforms registered after transformPerist()");
-		}
-		if (items.isEmpty()) {
-			return;
-		}
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					int depth = LooseContext.depth();
-					transformFromServletLayer(items, null);
-					LooseContext.confirmDepth(depth);
-					ThreadlocalTransformManager.cast().resetTltm(null);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			};
-		}.start();
-	}
-
 	public int nextTransformRequestId() {
 		return transformRequestCounter.incrementAndGet();
 	}
@@ -964,7 +923,6 @@ public class TransformCommit {
 				Transaction.current().toDbAborted();
 			}
 			MetricLogging.get().end("transform-commit");
-			handleWrapperTransforms();
 			wrapper.ignored = persistenceToken.ignored;
 			DomainTransformPersistenceEvent event = new DomainTransformPersistenceEvent(
 					persistenceToken, wrapper,
@@ -1013,16 +971,6 @@ public class TransformCommit {
 			this.clientInstanceId = clientInstanceId;
 			this.userId = userId;
 			this.committerIpAddress = committerIpAddress;
-		}
-	}
-
-	static class IsWrappedObjectDteFilter
-			implements CollectionFilter<DomainTransformEvent> {
-		Class clazz = PersistentImpl.getImplementation(WrappedObject.class);
-
-		@Override
-		public boolean allow(DomainTransformEvent o) {
-			return o.getObjectClass() == clazz;
 		}
 	}
 }
