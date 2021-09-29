@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 @PermissibleChildClasses({ TxtCriterion.class })
 @TypeSerialization(flatSerializable = false)
 public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private String displayName = "Text";
 

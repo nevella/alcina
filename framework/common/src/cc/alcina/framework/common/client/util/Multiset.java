@@ -31,7 +31,7 @@ import cc.alcina.framework.common.client.domain.DomainCollections;
  * @param <V>
  */
 public class Multiset<K, V extends Set> implements Serializable {
-	static final transient long serialVersionUID = -1L;
+	
 
 	protected Map<K, V> map;
 

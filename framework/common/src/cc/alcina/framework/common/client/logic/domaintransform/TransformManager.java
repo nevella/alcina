@@ -46,7 +46,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
@@ -532,7 +531,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 				}
 			}
 			objectModified(token.object, event, false);
-			collectionChanged(token.object, token.newTargetObject);
 		}
 			break;
 		case REMOVE_REF_FROM_COLLECTION: {
@@ -547,7 +545,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 					doubleCheckRemoval(set, token.newTargetObject);
 				}
 			}
-			collectionChanged(token.object, token.newTargetObject);
 			break;
 		}
 		case DELETE_OBJECT:
@@ -1712,17 +1709,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected ClassLookup classLookup() {
 		return Reflections.classLookup();
-	}
-
-	protected void collectionChanged(Object obj, Object tgt) {
-		// changes won't be noticed unless we do this -
-		//
-		// FIXME - mvcc.wrap - remove
-		// of this (check if all wrapperpersistable changes use new collections)
-		if (obj instanceof WrapperPersistable) {
-			((WrapperPersistable) obj)
-					.fireUnspecifiedPropertyChange(UNSPECIFIC_PROPERTY_CHANGE);
-		}
 	}
 
 	protected void createObjectLookup() {

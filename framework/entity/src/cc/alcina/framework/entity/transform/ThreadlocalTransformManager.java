@@ -81,7 +81,6 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -1139,8 +1138,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {
 		return entity.getId() != 0
-				// FIXME - mvcc.wrap - treeserializable->non-entity
-				|| entity instanceof TreeSerializable
 				|| (localIdToEntityMap.get(entity.getLocalId()) != null)
 				|| (entity instanceof SourcesPropertyChangeEvents && listeningTo
 						.containsKey((SourcesPropertyChangeEvents) entity))

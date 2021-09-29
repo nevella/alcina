@@ -47,7 +47,7 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		implements TreeRenderable, Permissible, HasPermissionsValidation,
 		HasReflectiveEquivalence<CriteriaGroup>, TreeSerializable,
 		TreeSerializable.NonMultiple {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private FilterCombinator combinator = FilterCombinator.AND;
 

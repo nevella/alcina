@@ -92,8 +92,6 @@ import cc.alcina.framework.entity.util.MethodContext;
  *
  * @author Nick Reddel
  * 
- *         FIXME - mvcc.wrap - de-generify; remove getitemby methods; remove
- *         wrap methods
  */
 @RegistryLocation(registryPoint = CommonPersistenceBase.class, implementationType = ImplementationType.INSTANCE)
 public abstract class CommonPersistenceBase implements CommonPersistenceLocal {

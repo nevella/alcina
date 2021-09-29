@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.actions.InlineButtonHandler;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
-import cc.alcina.framework.gwt.client.tour.Tour.PopupInfo;
 
 public class StepPopupView extends Composite {
 	private FlowPanel fp;

@@ -15,12 +15,12 @@
  */
 package com.google.gwt.dev.util.log;
 
+import java.util.Comparator;
+import java.util.HashSet;
+
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.thirdparty.guava.common.collect.ComparisonChain;
-
-import java.util.Comparator;
-import java.util.HashSet;
 
 /**
  * Abstract base class for TreeLoggers.

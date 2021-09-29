@@ -15,18 +15,6 @@
  */
 package com.google.gwt.user.server.rpc.impl;
 
-import com.google.gwt.core.ext.typeinfo.JClassType;
-import com.google.gwt.core.shared.GWT;
-import com.google.gwt.user.client.rpc.CustomFieldSerializer;
-import com.google.gwt.user.client.rpc.GwtTransient;
-import com.google.gwt.user.client.rpc.SerializationException;
-import com.google.gwt.user.client.rpc.SerializationStreamReader;
-import com.google.gwt.user.client.rpc.SerializationStreamWriter;
-import com.google.gwt.user.server.rpc.RPCServletUtils;
-import com.google.gwt.user.server.rpc.SerializationPolicy;
-import com.google.gwt.user.server.rpc.ServerCustomFieldSerializer;
-import com.sun.tools.doclint.Entity;
-
 import java.io.UnsupportedEncodingException;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Field;
@@ -45,6 +33,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.zip.CRC32;
+
+import com.google.gwt.core.shared.GWT;
+import com.google.gwt.user.client.rpc.CustomFieldSerializer;
+import com.google.gwt.user.client.rpc.GwtTransient;
+import com.google.gwt.user.client.rpc.SerializationException;
+import com.google.gwt.user.client.rpc.SerializationStreamReader;
+import com.google.gwt.user.client.rpc.SerializationStreamWriter;
+import com.google.gwt.user.server.rpc.RPCServletUtils;
+import com.google.gwt.user.server.rpc.SerializationPolicy;
+import com.google.gwt.user.server.rpc.ServerCustomFieldSerializer;
 
 /**
  * Serialization utility class used by the server-side RPC code.

@@ -70,7 +70,7 @@ public class BasicGridPublisher {
 				deliveryModel.setSuggestedFileName(SEUtilities
 						.sanitiseFileName(defName.replace(" ", "_")));
 				defName = Ax.blankTo(defName, () -> Ax.format("%s-%s",
-						bdef.entityClass().getSimpleName(), CommonUtils
+						bdef.getClass().getSimpleName(), CommonUtils
 								.formatDate(new Date(), DateStyle.TIMESTAMP)));
 				ModelSearchResults modelSearchResults = Registry
 						.impl(CommonRemoteServletProvider.class)

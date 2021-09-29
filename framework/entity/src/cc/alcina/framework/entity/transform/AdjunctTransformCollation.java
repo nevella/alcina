@@ -5,7 +5,6 @@ import java.util.concurrent.Callable;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
@@ -83,10 +82,6 @@ public class AdjunctTransformCollation extends TransformCollation {
 									event.getObjectLocalId(), true);
 							token.getTargetStore().putExternalLocal(instance);
 						}
-					}
-					if (WrapperPersistable.class
-							.isAssignableFrom(event.getObjectClass())) {
-						continue;
 					}
 					TransformManager.get().apply(event);
 				}
