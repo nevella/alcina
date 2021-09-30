@@ -25,7 +25,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  * @author Nick Reddel
  */
 public class DateCriterion extends AbstractDateCriterion {
-	static final transient long serialVersionUID = -1L;
+	
 
 	public DateCriterion() {
 		setOperator(StandardSearchOperator.EQUALS);

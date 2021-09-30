@@ -375,8 +375,11 @@ public class InternalMetrics {
 	private File telemetryFile(MetricType type) {
 		Date date = new Date();
 		File out = DataFolderProvider.get().getSubFolderFile(
-				profilerFolder(date), Ax.format("%s.%s.txt.gz", CommonUtils
-						.formatDate(date, DateStyle.TIMESTAMP_NO_DAY), type));
+				profilerFolder(date),
+				Ax.format("%s.%s.txt.gz",
+						CommonUtils.formatDate(date, DateStyle.TIMESTAMP_NO_DAY)
+								.replace(":", "_"),
+						type));
 		return out;
 	}
 

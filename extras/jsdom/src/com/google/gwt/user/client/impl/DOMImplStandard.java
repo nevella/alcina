@@ -159,7 +159,6 @@ public abstract class DOMImplStandard extends DOMImpl {
 																_default_: @com.google.gwt.user.client.impl.DOMImplStandard::dispatchEvent(*),
 																dragenter: @com.google.gwt.user.client.impl.DOMImplStandard::dispatchDragEvent(*),
 																dragover:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchDragEvent(*),
-																submit:  @com.google.gwt.user.client.impl.DOMImplStandard::dispatchDragEvent(*)
 																};
 																}-*/;
 

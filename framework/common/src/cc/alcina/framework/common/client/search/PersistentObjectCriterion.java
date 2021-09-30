@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 @TypeSerialization(flatSerializable = false)
 public class PersistentObjectCriterion extends SearchCriterion {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private ClassRef classRef;
 

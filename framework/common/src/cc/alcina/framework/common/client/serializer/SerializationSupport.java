@@ -12,7 +12,6 @@ import com.totsp.gwittir.client.beans.Property;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
@@ -70,11 +69,9 @@ class SerializationSupport {
 
 	public static Class solePossibleImplementation(Class type) {
 		Class clazz = Domain.resolveEntityClass(type);
-		// FIXME - mvcc.wrap - remove wrapperpersistable from searchdef, then
-		// versionableentity->entity (here)
 		return solePossibleImplementation.computeIfAbsent(clazz, valueClass -> {
-			if (Reflections.isEffectivelyFinal(clazz) || (Reflections
-					.isAssignableFrom(VersionableEntity.class, clazz) &&
+			if (Reflections.isEffectivelyFinal(clazz)
+					|| (Reflections.isAssignableFrom(Entity.class, clazz) &&
 			// FXIME - meta - Modifiers.nonAbstract emul
 			// non-abstract entity classes have no serializable subclasses (but
 			// do have mvcc subclass...)

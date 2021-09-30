@@ -180,10 +180,9 @@ public class DomainClassDescriptor<T extends Entity>
 	public DomainStoreProperty
 			resolveDomainStoreProperty(AnnotationLocation propertyLocation) {
 		DomainStorePropertyResolver resolver = new DomainStorePropertyResolver(
+				domainDescriptor.domainStorePropertyTreeResolver(),
 				propertyLocation);
-		DomainStorePropertyResolver parent = domainDescriptor
-				.resolveDomainStoreProperty(resolver);
-		return parent.resolver.hasValue() ? parent : null;
+		return resolver.hasValue() ? resolver : null;
 	}
 
 	public void setDomainDescriptor(DomainDescriptor domainDescriptor) {

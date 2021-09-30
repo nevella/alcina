@@ -111,7 +111,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
-import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -411,30 +410,6 @@ public class DomainStore implements IDomainStore {
 
 	public void putExternalLocal(Entity instance) {
 		cache.putExternalLocal(instance);
-	}
-
-	// FIXME - mvcc.wrap - goes away
-	public void reloadEntity(Entity wrapped) {
-		Preconditions.checkArgument(wrapped instanceof WrappedObject);
-		cache.remove(wrapped);
-		Entity reloaded = Domain.find(wrapped.entityClass(), wrapped.getId());
-		try {
-			// note that reloaded will be discarded because we're not in a
-			// to-domain
-			// tx
-			if (reloaded != null) {
-				SEUtilities.getFieldByName(wrapped.entityClass(), "object")
-						.set(wrapped, null);
-				SEUtilities
-						.getFieldByName(wrapped.entityClass(), "serializedXml")
-						.set(wrapped,
-								((WrappedObject) reloaded).getSerializedXml());
-				cache.remove(reloaded);
-				cache.put(wrapped);
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	public void remove(Entity entity) {
@@ -838,10 +813,11 @@ public class DomainStore implements IDomainStore {
 
 	// We only have one thread allowed here - but that doesn't block any
 	// non-to-domain transactions
-	// FIXME - mvcc.4 - review optimiseation
+	// FIXME - mvcc.5 - review optimiseation
 	/*
 	 * Main remaining optimisation would be to remove unneccessary index() calls
-	 * - where the before-and-after states are identical.
+	 * - where the before-and-after states are identical. But time spent is now
+	 * ~1ms for 1000 transforms, so speed issues are possibly elsewhere
 	 * 
 	 * That, however, is possibly better left to application-level code (at
 	 * least to the DomainClassDescriptor instance) - see
@@ -1377,9 +1353,9 @@ public class DomainStore implements IDomainStore {
 	public static class QueryPool {
 		private final ForkJoinPool pool;
 
-		AtomicInteger activeQueries = new AtomicInteger();
-
 		private Transaction transaction;
+
+		private AtomicInteger activeQueries = new AtomicInteger();
 
 		QueryPool() {
 			pool = new ForkJoinPool(
@@ -1398,23 +1374,25 @@ public class DomainStore implements IDomainStore {
 
 		public <T> T call(Callable<T> callable,
 				Stream<? extends Entity> stream) {
-			boolean runInPool = true;
-			synchronized (activeQueries) {
-				if (activeQueries.get() > 0) {
-					runInPool = false;
-				} else {
+			boolean runInPool = false;
+			synchronized (this) {
+				Transaction current = Transaction.current();
+				if (transaction == null || current == transaction) {
+					runInPool = true;
+					transaction = current;
 					activeQueries.incrementAndGet();
 				}
 			}
 			if (runInPool) {
 				try {
-					transaction = Transaction.current();
+					stream.parallel();
 					return pool.submit(callable).get();
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				} finally {
-					synchronized (activeQueries) {
-						activeQueries.decrementAndGet();
+					activeQueries.decrementAndGet();
+					if (activeQueries.get() == 0) {
+						transaction = null;
 					}
 				}
 			} else {

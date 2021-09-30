@@ -32,18 +32,11 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 
-/*
- * FIXME - mvcc.4 - the threading is overly complex - or could be abstracted out maybe? With a task queue?
+/**
  * 
- * Actually we want an 'acceptor' thread that runs tasks as they come in (if not persisting), persists to disk, and commits after the delay
+ * FIXME - mvcc.5 - backup (zk) persistence of transforms? - use the
+ * cli-id/dtr-uuid/event-id path. cluster leader to TCOB
  * 
- *  It should run for the app lifetime (other cases of AtEndOfEventSeriesTimer may be misapplied too)
- * 
- * FIXME - mvcc.5 - backup (fs?) persistence of transforms? (get em via scp on fail) (why aren't the runnables run on the originating thread?)
- * 
- * synchronization - all access to internal collections synchronized on this
- * 
- * ...yes, definitely an event queue...FIXME - mvcc.jobs.2 - see note re AtEndOfEventSeriesTimer and local persistence
  */
 @RegistryLocation(registryPoint = BackendTransformQueue.class, implementationType = ImplementationType.SINGLETON)
 public class BackendTransformQueue {

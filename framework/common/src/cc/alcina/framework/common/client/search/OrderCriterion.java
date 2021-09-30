@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class OrderCriterion extends SearchCriterion {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private Direction direction = Direction.ASCENDING;
 

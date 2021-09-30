@@ -21,6 +21,14 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+/**
+ * 
+ * Transforms an input model to a renderable model, and renders. Note that the
+ * renderable model class must be annotated with @Directed
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 		HasDirectedModel, HandlesModelBinding, RendersToParentContainer {
 	@Override
@@ -86,16 +94,22 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 
 	@ClientInstantiable
 	public static abstract class ListModelTransform<A, B>
-			implements ModelTransform<List<A>, List<B>> {
+			implements ModelTransform<List<A>, Model> {
 		@Override
-		public List<B> apply(List<A> t) {
-			return t.stream().map(this::mapElement)
+		public Model apply(List<A> t) {
+			List<B> list = t.stream().map(this::mapElement)
 					.collect(Collectors.toList());
+			return new DelegatingNodeRenderer.SimpleDelegate(list);
 		}
 
 		protected abstract B mapElement(A a);
 	}
 
+	/*
+	 * Note that this *must* return a result with an @Directed annotation - if
+	 * transforming to (say) a list, use DelegatingNodeRenderer.SimpleDelegate
+	 * to wrap
+	 */
 	public interface ModelTransform<A, B> extends Function<A, B> {
 	}
 

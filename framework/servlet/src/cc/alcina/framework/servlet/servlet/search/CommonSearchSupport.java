@@ -162,7 +162,10 @@ public class CommonSearchSupport {
 			}
 			Stream<Entity> search = new DomainSearcher().search(def, clazz,
 					searchContext.orders);
-			List<Entity> rows = search.collect(Collectors.toList());
+			// FIXME - 2022 - there may be places where we can get result set
+			// size without collecting (i.e. index-only)
+			List<Entity> rows = DomainStore.queryPool()
+					.call(() -> search.collect(Collectors.toList()), search);
 			IntPair range = new IntPair(
 					def.getResultsPerPage() * (def.getPageNumber()),
 					def.getResultsPerPage() * (def.getPageNumber() + 1));

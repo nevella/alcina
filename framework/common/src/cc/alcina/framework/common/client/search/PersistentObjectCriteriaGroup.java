@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 @TypeSerialization(flatSerializable = false)
 public class PersistentObjectCriteriaGroup
 		extends CriteriaGroup<PersistentObjectCriterion> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	public PersistentObjectCriteriaGroup() {
 		super();

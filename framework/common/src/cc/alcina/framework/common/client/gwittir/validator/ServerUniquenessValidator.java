@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.gwittir.validator;
 import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 
@@ -33,7 +34,7 @@ public class ServerUniquenessValidator extends ServerValidator {
 
 	public static final String CASE_INSENSITIVE = "caseInsensitive";
 
-	private transient Class objectClass;
+	private transient Class<? extends Entity> objectClass;
 
 	private String objectClassName;
 
@@ -55,7 +56,7 @@ public class ServerUniquenessValidator extends ServerValidator {
 		initProperties();
 	}
 
-	public Class getObjectClass() {
+	public Class<? extends Entity> getObjectClass() {
 		if (objectClass == null && objectClassName != null) {
 			objectClass = Reflections.classLookup()
 					.getClassForName(objectClassName);

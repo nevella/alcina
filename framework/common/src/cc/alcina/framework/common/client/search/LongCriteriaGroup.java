@@ -28,7 +28,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 // TODO - make flat-serializable when needed
 @TypeSerialization(flatSerializable = false)
 public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private String displayName = "Long";
 

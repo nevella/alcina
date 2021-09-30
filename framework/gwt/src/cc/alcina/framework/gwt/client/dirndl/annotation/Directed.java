@@ -3,17 +3,13 @@ package cc.alcina.framework.gwt.client.dirndl.annotation;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
@@ -22,7 +18,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Target({ ElementType.TYPE, ElementType.METHOD })
-@Inherited
+// Not inherited - annottion resolution uses merging algorithm which would
+// conflict
+// @Inherited
 @ClientVisible
 public @interface Directed {
 	/**
@@ -40,10 +38,10 @@ public @interface Directed {
 	public Class<? extends NodeEvent>[] emits() default {};
 
 	/**
-	 * if true, the resolved value will return the union of the property and
-	 * class annotation - or class and superclass (max 1)
+	 * if true, the resolved value be determined by ascending the tree resolver
+	 * resolution chain
 	 */
-	public boolean merge() default false;
+	public boolean merge() default true;
 
 	/**
 	 * If non-empty and the same length as the reemits() array, these events
@@ -68,18 +66,72 @@ public @interface Directed {
 
 	public String tag() default "";
 
-	@RegistryLocation(registryPoint = DirectedResolver.class, implementationType = ImplementationType.INSTANCE)
-	@ClientInstantiable
-	public static class DirectedResolver implements Directed {
-		protected TreeResolver<Directed> resolver;
+	public static class Default implements Directed {
+		public static final Directed INSTANCE = new Directed.Default();
 
-		private AnnotationLocation mergeLocation;
+		private Binding[] bindings = new Binding[0];
 
-		public DirectedResolver() {
+		private Class[] emits = new Class[0];
+
+		private Class[] receives = new Class[0];
+
+		private Class[] reemits = new Class[0];
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return Directed.class;
 		}
 
-		public DirectedResolver(DirectedResolver childResolver) {
-			resolver = createResolver(childResolver.resolver);
+		@Override
+		public Binding[] bindings() {
+			return bindings;
+		}
+
+		@Override
+		public String cssClass() {
+			return "";
+		}
+
+		@Override
+		public Class<? extends NodeEvent>[] emits() {
+			return emits;
+		}
+
+		@Override
+		public boolean merge() {
+			return true;
+		}
+
+		@Override
+		public Class<? extends NodeEvent>[] receives() {
+			return receives;
+		}
+
+		@Override
+		public Class<? extends NodeEvent>[] reemits() {
+			return reemits;
+		}
+
+		@Override
+		public Class<? extends DirectedNodeRenderer> renderer() {
+			return ModelClassNodeRenderer.class;
+		}
+
+		@Override
+		public String tag() {
+			return "";
+		}
+	}
+
+	public static class DirectedResolver extends Directed.Default {
+		private TreeResolver<Directed> treeResolver;
+
+		private AnnotationLocation location;
+
+		public DirectedResolver(TreeResolver<Directed> treeResolver,
+				AnnotationLocation location) {
+			this.treeResolver = treeResolver;
+			this.location = location;
 		}
 
 		@Override
@@ -90,19 +142,26 @@ public @interface Directed {
 		@Override
 		public Binding[] bindings() {
 			Function<Directed, Binding[]> function = Directed::bindings;
-			return resolver.resolve(function, "bindings", new Binding[0]);
+			return treeResolver.resolve(location, function, "bindings",
+					super.bindings());
 		}
 
 		@Override
 		public String cssClass() {
 			Function<Directed, String> function = Directed::cssClass;
-			return resolver.resolve(function, "cssClass", "");
+			return treeResolver.resolve(location, function, "cssClass",
+					super.cssClass());
 		}
 
 		@Override
 		public Class<? extends NodeEvent>[] emits() {
 			Function<Directed, Class<? extends NodeEvent>[]> function = Directed::emits;
-			return resolver.resolve(function, "emits", new Class[0]);
+			return treeResolver.resolve(location, function, "emits",
+					super.emits());
+		}
+
+		public AnnotationLocation getLocation() {
+			return this.location;
 		}
 
 		@Override
@@ -113,44 +172,28 @@ public @interface Directed {
 		@Override
 		public Class<? extends NodeEvent>[] receives() {
 			Function<Directed, Class<? extends NodeEvent>[]> function = Directed::receives;
-			return resolver.resolve(function, "receives", new Class[0]);
+			return treeResolver.resolve(location, function, "receives",
+					super.receives());
 		}
 
 		@Override
 		public Class<? extends NodeEvent>[] reemits() {
 			Function<Directed, Class<? extends NodeEvent>[]> function = Directed::reemits;
-			return resolver.resolve(function, "reemits", new Class[0]);
+			return treeResolver.resolve(location, function, "reemits",
+					super.reemits());
 		}
 
 		@Override
 		public Class<? extends DirectedNodeRenderer> renderer() {
 			Function<Directed, Class<? extends DirectedNodeRenderer>> function = Directed::renderer;
-			return resolver.resolve(function, "renderer",
-					ModelClassNodeRenderer.class);
-		}
-
-		public void setLocation(AnnotationLocation annotationLocation) {
-			Directed leafValue = annotationLocation
-					.getAnnotation(Directed.class);
-			Directed leafSecondaryValue = mergeLocation == null ? null
-					: mergeLocation.getAnnotation(Directed.class);
-			resolver = createResolver(new TreeResolver<Directed>(
-					annotationLocation, leafValue, leafSecondaryValue));
-		}
-
-		public void setMergeLocation(AnnotationLocation mergeLocation) {
-			this.mergeLocation = mergeLocation;
+			return treeResolver.resolve(location, function, "renderer",
+					super.renderer());
 		}
 
 		@Override
 		public String tag() {
 			Function<Directed, String> function = Directed::tag;
-			return resolver.resolve(function, "tag", "");
-		}
-
-		protected TreeResolver<Directed>
-				createResolver(TreeResolver<Directed> resolver) {
-			return new TreeResolver<Directed>(resolver);
+			return treeResolver.resolve(location, function, "tag", super.tag());
 		}
 	}
 }

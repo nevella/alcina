@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.util.Ax;
 
 public class ClassMetadataCache<T extends ClassMetadata>
 		implements Serializable {
-	static final transient long serialVersionUID = -1L;
+	
 
 	public Map<String, T> classData = new LinkedHashMap<String, T>();
 

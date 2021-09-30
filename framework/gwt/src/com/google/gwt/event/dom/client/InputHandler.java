@@ -1,4 +1,6 @@
-/* 
+/*
+ * Copyright 2008 Google Inc.
+ * 
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
@@ -11,10 +13,19 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.entity;
+package com.google.gwt.event.dom.client;
+
+import com.google.gwt.event.shared.EventHandler;
 
 /**
- * Marker interface, specifies that multiple instances will be created if id==0
+ * Handler for {@link InputEvent} events.
  */
-public interface GwtMultiplePersistable {
+public interface InputHandler extends EventHandler {
+	/**
+	 * Called when a change event is fired.
+	 * 
+	 * @param event
+	 *            the {@link InputEvent} that was fired
+	 */
+	void onInput(InputEvent event);
 }

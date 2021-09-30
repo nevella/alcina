@@ -7,9 +7,9 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
-import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;

@@ -44,7 +44,7 @@ import com.google.gwt.user.server.rpc.SerializationPolicy;
  *         than the code deployed to the tested server.
  */
 public class AutoSyncProxy implements Serializable {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private static final transient String GWT_RPC_POLICY_FILE_EXT = ".gwt.rpc";
 

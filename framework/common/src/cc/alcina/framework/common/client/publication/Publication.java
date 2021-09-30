@@ -32,8 +32,6 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.Wrapper;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.customiser.FriendlyEnumCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ObjectActionLinkCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.StandardLabelCustomiser;
@@ -53,14 +51,6 @@ public abstract class Publication extends Entity<Publication>
 		implements HasOwner, HasIUser, SearchResult {
 	public static final transient String REPUBLISH_ACTION_NAME = "View";
 
-	private Long contentDefinitionWrapperId;
-
-	private ContentDefinition contentDefinition;
-
-	private Long deliveryModelWrapperId;
-
-	private DeliveryModel deliveryModel;
-
 	private Definition definition;
 
 	private String publicationType;
@@ -68,10 +58,6 @@ public abstract class Publication extends Entity<Publication>
 	private Date publicationDate;
 
 	private Long userPublicationId;
-
-	private String contentDefinitionDescription;
-
-	private String deliveryModelDescription;
 
 	@GwtTransient
 	private String publicationUid;
@@ -99,22 +85,6 @@ public abstract class Publication extends Entity<Publication>
 	}
 
 	@Transient
-	@Wrapper(idPropertyName = "contentDefinitionWrapperId", toStringPropertyName = "contentDefinitionDescription")
-	public ContentDefinition getContentDefinition() {
-		return contentDefinition;
-	}
-
-	@Lob
-	@Transient
-	public String getContentDefinitionDescription() {
-		return this.contentDefinitionDescription;
-	}
-
-	public Long getContentDefinitionWrapperId() {
-		return contentDefinitionWrapperId;
-	}
-
-	@Transient
 	@DomainProperty(serialize = true)
 	public Definition getDefinition() {
 		definition = TransformManager.resolveMaybeDeserialize(definition,
@@ -129,6 +99,8 @@ public abstract class Publication extends Entity<Publication>
 
 	@Lob
 	@Transient
+	@Display(name = "Content", orderingHint = 50, visible = @Permission(access = AccessLevel.LOGGED_IN))
+	@Custom(customiserClass = StandardLabelCustomiser.class)
 	public String getDefinitionDescription() {
 		return this.definitionDescription;
 	}
@@ -141,22 +113,6 @@ public abstract class Publication extends Entity<Publication>
 
 	public String getDefinitionSignature() {
 		return this.definitionSignature;
-	}
-
-	@Transient
-	@Wrapper(idPropertyName = "deliveryModelWrapperId", toStringPropertyName = "deliveryModelDescription")
-	public DeliveryModel getDeliveryModel() {
-		return deliveryModel;
-	}
-
-	@Lob
-	@Transient
-	public String getDeliveryModelDescription() {
-		return this.deliveryModelDescription;
-	}
-
-	public Long getDeliveryModelWrapperId() {
-		return deliveryModelWrapperId;
 	}
 
 	public String getMimeMessageId() {
@@ -188,16 +144,6 @@ public abstract class Publication extends Entity<Publication>
 		return this.publicationUid;
 	}
 
-	@Display(name = "Content", orderingHint = 50, visible = @Permission(access = AccessLevel.LOGGED_IN))
-	@Custom(customiserClass = StandardLabelCustomiser.class)
-	@Lob
-	@Transient
-	@AlcinaTransient
-	public String getResolvedDescription() {
-		return Ax.blankTo(this.definitionDescription,
-				this.contentDefinitionDescription);
-	}
-
 	@Transient
 	@Lob
 	public String getSerializedPublication() {
@@ -214,27 +160,11 @@ public abstract class Publication extends Entity<Publication>
 	}
 
 	public ContentDefinition provideContentDefinition() {
-		return getDefinition() != null
-				? getDefinition().provideContentDefinition()
-				: contentDefinition;
+		return getDefinition().provideContentDefinition();
 	}
 
 	public DeliveryModel provideDeliveryModel() {
-		return getDefinition() != null ? getDefinition().provideDeliveryModel()
-				: deliveryModel;
-	}
-
-	public void setContentDefinition(ContentDefinition contentDefinition) {
-		this.contentDefinition = contentDefinition;
-	}
-
-	public void setContentDefinitionDescription(
-			String contentDefinitionDescription) {
-		this.contentDefinitionDescription = contentDefinitionDescription;
-	}
-
-	public void setContentDefinitionWrapperId(Long contentDefinitionWrapperId) {
-		this.contentDefinitionWrapperId = contentDefinitionWrapperId;
+		return getDefinition().provideDeliveryModel();
 	}
 
 	public void setDefinition(Definition definition) {
@@ -270,18 +200,6 @@ public abstract class Publication extends Entity<Publication>
 		this.definitionSignature = definitionSignature;
 		propertyChangeSupport().firePropertyChange("definitionSignature",
 				old_definitionSignature, definitionSignature);
-	}
-
-	public void setDeliveryModel(DeliveryModel deliveryModel) {
-		this.deliveryModel = deliveryModel;
-	}
-
-	public void setDeliveryModelDescription(String deliveryModelDescription) {
-		this.deliveryModelDescription = deliveryModelDescription;
-	}
-
-	public void setDeliveryModelWrapperId(Long deliveryModelWrapperId) {
-		this.deliveryModelWrapperId = deliveryModelWrapperId;
 	}
 
 	@Override

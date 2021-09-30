@@ -3,16 +3,12 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.Arrays;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
-import cc.alcina.framework.common.client.logic.reflection.Validator;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.model.FormModel.FormModelTransformer;
 
 /**
  * Thoughts on binding :: particularly in the case of UI bindings, a.b->c.d is
@@ -39,31 +35,6 @@ public abstract class Model extends Bindable {
 				.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
 				.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)
 						.unbind());
-	}
-
-	@FormModelTransformer.Args(focusOnAttach = "string")
-	public static class EditableStringModel extends Model {
-		private String string;
-
-		public EditableStringModel() {
-		}
-
-		public EditableStringModel(String string) {
-			this.string = string;
-		}
-
-		@Display(name = "String")
-		@Validator(validator = NotBlankValidator.class)
-		public String getString() {
-			return this.string;
-		}
-
-		public void setString(String string) {
-			String old_string = this.string;
-			this.string = string;
-			propertyChangeSupport().firePropertyChange("string", old_string,
-					string);
-		}
 	}
 
 	@Directed(tag = "div")

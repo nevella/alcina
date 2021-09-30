@@ -55,6 +55,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class CommonUtils {
+	private static final Predicate<?> PREDICATE_FALSE = o -> false;
+
+	private static final Predicate<?> PREDICATE_TRUE = o -> true;
+
 	public static final String XML_PI = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
 	// for GWT reflection gets, this gets used...a lot
@@ -1406,6 +1410,14 @@ public class CommonUtils {
 
 	public static String pluraliseWithCount(String s, Collection c) {
 		return pluralise(s, c == null ? 0 : c.size(), true);
+	}
+
+	public static <T> Predicate<T> predicateFalse() {
+		return (Predicate<T>) PREDICATE_FALSE;
+	}
+
+	public static <T> Predicate<T> predicateTrue() {
+		return (Predicate<T>) PREDICATE_TRUE;
 	}
 
 	public static void putIfKeyNotNull(Map m, Object k, Object v) {

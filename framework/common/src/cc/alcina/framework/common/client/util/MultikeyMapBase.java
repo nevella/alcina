@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCrea
 
 public abstract class MultikeyMapBase<V>
 		implements MultikeyMap<V>, Serializable {
-	static final transient long serialVersionUID = -1L;
+	
 
 	protected int depth;
 

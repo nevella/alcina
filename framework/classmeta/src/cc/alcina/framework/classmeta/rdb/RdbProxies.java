@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.entity.util.ShellWrapper;
 
 @RegistryLocation(registryPoint = RdbProxies.class, implementationType = ImplementationType.SINGLETON)
@@ -70,7 +70,7 @@ public class RdbProxies {
 		if (modelXml == null) {
 			return;
 		} else {
-			schema = WrappedObjectHelper.xmlDeserialize(RdbEndpointSchema.class,
+			schema = JaxbUtils.xmlDeserialize(RdbEndpointSchema.class,
 					modelXml);
 		}
 		schema.endpointDescriptors.forEach(this::start);

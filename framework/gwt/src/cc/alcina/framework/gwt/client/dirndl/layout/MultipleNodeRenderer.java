@@ -1,6 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
@@ -12,11 +11,8 @@ import java.util.List;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public class MultipleNodeRenderer extends DirectedNodeRenderer
@@ -29,29 +25,24 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 		FlowPanel parent = null;
 		FlowPanel root = null;
 		for (int idx = 0; idx < args.tags().length; idx++) {
-			Directed tagClassName = new DirectedImplementation(idx, args);
+			/*
+			 * No @Directed resolution - these are just tag/className tuples
+			 */
+			Directed tagClassName = new IntermediateDirected(idx, args);
 			result.add(tagClassName);
 		}
 		MultipleNodeRendererLeaf leaf = node
 				.annotation(MultipleNodeRendererLeaf.class);
+		/*
+		 * the leaf annotation carries the @Directed for the innermost widget
+		 * rendered. It resolves normally
+		 */
 		if (leaf != null) {
-			Directed leafDirected = leaf.value();
-			/*
-			 * if the property has a simple @Directed annotation, and the class
-			 * has a non-simple @Directed, use the class
-			 */
-			if (DirectedLayout.isDefault(leafDirected)) {
-				Object model = node.getModel();
-				Class clazz = model == null ? void.class : model.getClass();
-				if (clazz != null) {
-					Directed directed = Reflections.classLookup()
-							.getAnnotationForClass(clazz, Directed.class);
-					if (directed != null) {
-						leafDirected = directed;
-					}
-				}
-			}
-			result.add(leafDirected);
+			Directed leafValue = leaf.value();
+			Directed directed = CustomReflectorResolver.forParentAndValue(
+					MultipleNodeRendererArgs.class, node, node.model.getClass(),
+					leafValue);
+			result.add(directed);
 		}
 		return result;
 	}
@@ -82,24 +73,14 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 	/*
 	 * Fabricates a 'directed' out of the supplied tag & css class
 	 */
-	private final class DirectedImplementation implements Directed {
+	private final class IntermediateDirected extends Directed.Default {
 		private final int idx;
 
 		private final MultipleNodeRendererArgs args;
 
-		private DirectedImplementation(int idx, MultipleNodeRendererArgs args) {
+		private IntermediateDirected(int idx, MultipleNodeRendererArgs args) {
 			this.idx = idx;
 			this.args = args;
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return Directed.class;
-		}
-
-		@Override
-		public Binding[] bindings() {
-			return new Binding[0];
 		}
 
 		@Override
@@ -108,23 +89,8 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 		}
 
 		@Override
-		public Class<? extends NodeEvent>[] emits() {
-			return new Class[0];
-		}
-
-		@Override
 		public boolean merge() {
 			return false;
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] receives() {
-			return new Class[0];
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] reemits() {
-			return new Class[0];
 		}
 
 		@Override

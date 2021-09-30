@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
  * @author Nick Reddel
  */
 public class LongCriterion extends SearchCriterion implements HasValue<Long> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private Long value;
 

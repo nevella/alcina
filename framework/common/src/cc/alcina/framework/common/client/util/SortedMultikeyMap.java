@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCrea
  * 
  */
 public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	/**
 	 * Ensures that RPC will consider type parameter V to be exposed. It will be

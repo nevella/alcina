@@ -46,7 +46,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
@@ -532,7 +531,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 				}
 			}
 			objectModified(token.object, event, false);
-			collectionChanged(token.object, token.newTargetObject);
 		}
 			break;
 		case REMOVE_REF_FROM_COLLECTION: {
@@ -547,7 +545,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 					doubleCheckRemoval(set, token.newTargetObject);
 				}
 			}
-			collectionChanged(token.object, token.newTargetObject);
 			break;
 		}
 		case DELETE_OBJECT:
@@ -1714,17 +1711,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return Reflections.classLookup();
 	}
 
-	protected void collectionChanged(Object obj, Object tgt) {
-		// changes won't be noticed unless we do this -
-		//
-		// FIXME - mvcc.wrap - remove
-		// of this (check if all wrapperpersistable changes use new collections)
-		if (obj instanceof WrapperPersistable) {
-			((WrapperPersistable) obj)
-					.fireUnspecifiedPropertyChange(UNSPECIFIC_PROPERTY_CHANGE);
-		}
-	}
-
 	protected void createObjectLookup() {
 		setDomainObjects(new MapObjectLookupClient(this));
 	}
@@ -2085,30 +2071,23 @@ public abstract class TransformManager implements PropertyChangeListener,
 		// No! Only should check one end of the relation for permissions
 		// checkPermissions(hTgt, evt, assoc.propertyName());
 		if (assocObjIsCollection) {
-			Collection coll = (Collection) associatedObject;
+			Collection collection = (Collection) associatedObject;
 			if (isPerformDirectAssociationUpdates(associated)) {
 				performDirectAssociationUpdate(associated,
-						association.propertyName(), coll, delta, remove);
+						association.propertyName(), collection, delta, remove);
 			} else {
 				try {
-					coll = CommonUtils.shallowCollectionClone(coll);
+					collection = CommonUtils.shallowCollectionClone(collection);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
 				if (remove) {
-					boolean wasContained = coll.remove(delta);
-					if (!wasContained) {
-						// FIXME - mvcc.4 - these are only for JPA contexts, and
-						// this method is only called ex-JPA - remove
-						doubleCheckRemoval(coll, delta);
-					}
+					collection.remove(delta);
 				} else {
-					if (!coll.contains(delta)) {
-						doubleCheckAddition(coll, delta);
-					}
+					collection.add(delta);
 				}
 				propertyAccessor().setPropertyValue(associated,
-						association.propertyName(), coll);
+						association.propertyName(), collection);
 			}
 		} else {
 			/*

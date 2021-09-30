@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

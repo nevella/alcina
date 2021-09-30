@@ -1,5 +1,7 @@
 package com.google.gwt.dom.client;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -20,6 +22,8 @@ public class ElementLocal extends NodeLocal
 	private String tagName;
 
 	int eventBits;
+
+	List<String> bitlessEvents;
 
 	private Element element;
 
@@ -599,6 +603,16 @@ public class ElementLocal extends NodeLocal
 	@Override
 	public void setTitle(String title) {
 		setAttribute("title", title);
+	}
+
+	@Override
+	public void sinkBitlessEvent(String eventTypeName) {
+		if (bitlessEvents == null) {
+			bitlessEvents = new ArrayList<>();
+		}
+		if (!bitlessEvents.contains(eventTypeName)) {
+			bitlessEvents.add(eventTypeName);
+		}
 	}
 
 	@Override

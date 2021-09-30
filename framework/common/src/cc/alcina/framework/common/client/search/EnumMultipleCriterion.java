@@ -42,7 +42,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  */
 public abstract class EnumMultipleCriterion<E extends Enum>
 		extends SearchCriterion implements HasValue<Set<E>> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private Set<E> value = new LinkedHashSet<>();
 
