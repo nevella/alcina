@@ -29,7 +29,7 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 @XmlAccessorType(XmlAccessType.FIELD)
 public class IntPair implements Comparable<IntPair>, Serializable,
 		Iterable<Integer>, TreeSerializable {
-	static final transient long serialVersionUID = -1L;
+	
 
 	public static List<IntPair> asRangeList(List<Integer> ints) {
 		int start = -1;

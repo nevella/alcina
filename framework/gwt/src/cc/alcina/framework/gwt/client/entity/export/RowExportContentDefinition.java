@@ -2,9 +2,8 @@ package cc.alcina.framework.gwt.client.entity.export;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
-import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -21,8 +20,8 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 @Bean
 @ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
 @TypeSerialization(flatSerializable = false)
-public class RowExportContentDefinition extends WrapperPersistable
-		implements ContentDefinition, GwtMultiplePersistable {
+public class RowExportContentDefinition extends Bindable
+		implements ContentDefinition {
 	private EntitySearchDefinition searchDefinition;
 
 	private RowExportFormat format = RowExportFormat.CSV;

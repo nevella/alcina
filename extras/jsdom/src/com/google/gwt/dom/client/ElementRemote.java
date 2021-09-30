@@ -760,6 +760,11 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	}-*/;
 
 	@Override
+	public final void sinkBitlessEvent(String eventTypeName) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final void sinkEvents(int eventBits) {
 		throw new UnsupportedOperationException();
 	}

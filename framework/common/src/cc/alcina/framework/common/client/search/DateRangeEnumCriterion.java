@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
  */
 @TypeSerialization("daterange")
 public class DateRangeEnumCriterion extends EnumCriterion<DateRange> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private DateRange dateRange;
 

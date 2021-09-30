@@ -32,8 +32,6 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.Resolver;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -43,7 +41,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
-import cc.alcina.framework.gwt.client.dirndl.annotation.ImmutableModel;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
@@ -68,15 +65,6 @@ public class DirectedLayout {
 
 	public static Node current = null;
 
-	public static boolean isDefault(Directed annotation) {
-		return annotation.renderer() == ModelClassNodeRenderer.class
-				&& annotation.cssClass().isEmpty() && annotation.tag().isEmpty()
-				&& annotation.emits().length == 0
-				&& annotation.reemits().length == 0
-				&& annotation.receives().length == 0
-				&& annotation.bindings().length == 0;
-	}
-
 	Widget parent;
 
 	public Widget render(ContextResolver resolver, Widget parent,
@@ -88,28 +76,8 @@ public class DirectedLayout {
 		return rendered.get(0);
 	}
 
-	@ClientInstantiable
-	public static class ContextResolver<M> extends AnnotationLocation.Resolver {
-		private M model;
-
-		public ContextResolver() {
-		}
-
-		public M getModel() {
-			return this.model;
-		}
-
-		public Object resolveModel(Object model) {
-			return model;
-		}
-
-		public <T> T resolveRenderContextProperty(String key) {
-			return null;
-		}
-
-		public void setModel(M model) {
-			this.model = model;
-		}
+	public interface Lifecycle {
+		public void beforeRender();
 	}
 
 	/**
@@ -179,9 +147,6 @@ public class DirectedLayout {
 		}
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
-			if (model == null && propertyReflector == null) {
-				return null;
-			}
 			AnnotationLocation location = new AnnotationLocation(
 					model == null ? null : model.getClass(), propertyReflector);
 			A annotation = resolver.resolveAnnotation(clazz, location);
@@ -214,10 +179,6 @@ public class DirectedLayout {
 			return null;
 		}
 
-		public AnnotationLocation.Resolver contextResolver() {
-			return resolver;
-		}
-
 		public void fireEvent(TopicEvent topicEvent) {
 			if (rendered.eventBindings != null) {
 				rendered.eventBindings
@@ -237,9 +198,8 @@ public class DirectedLayout {
 			return rendered.verifySingleWidget();
 		}
 
-		public void pushResolver(AnnotationLocation.Resolver locationResolver) {
-			resolver = new DelegatingContextResolver(resolver,
-					locationResolver);
+		public void pushResolver(ContextResolver resolver) {
+			this.resolver = resolver;
 		}
 
 		public Node resolveNode(String path) {
@@ -268,54 +228,18 @@ public class DirectedLayout {
 		public DirectedNodeRenderer resolveRenderer() {
 			DirectedNodeRenderer renderer = null;
 			if (directed == null) {
-				// FIXME - dirndl.0 - no, resolver is from the node tree, not
-				// the class
-				//
-				// another FIXME - this should be merged with
-				// MultipleNodeRenderer
-				Class clazz = model == null ? void.class : model.getClass();
-				/*
-				 * if the property has a simple @Directed annotation, and the
-				 * class has a non-simple @Directed, use the class
-				 */
-				directed = Registry.impl(DirectedResolver.class, clazz);
+				Class clazz = model.getClass();
 				AnnotationLocation annotationLocation = new AnnotationLocation(
 						clazz, propertyReflector);
-				if (propertyReflector != null
-						&& propertyReflector
-								.getAnnotation(Directed.class) != null
-						&& clazz != null
-						&& Reflections.classLookup().getAnnotationForClass(
-								clazz, Directed.class) != null) {
-					if (isDefault(
-							propertyReflector.getAnnotation(Directed.class))) {
-						annotationLocation = new AnnotationLocation(clazz,
-								null);
-						Directed classAnnotation = annotationLocation
-								.getAnnotation(Directed.class);
-						if (classAnnotation != null
-								&& classAnnotation.merge()) {
-							((DirectedResolver) directed)
-									.setMergeLocation(new AnnotationLocation(
-											clazz.getSuperclass(), null));
-						}
-					} else if (propertyReflector.getAnnotation(Directed.class)
-							.merge()) {
-						((DirectedResolver) directed).setMergeLocation(
-								new AnnotationLocation(clazz, null));
-					}
-				}
-				((DirectedResolver) directed).setLocation(annotationLocation);
+				directed = new DirectedResolver(
+						getResolver().getTreeResolver(Directed.class),
+						annotationLocation);
 			}
 			Class<? extends DirectedNodeRenderer> rendererClass = directed
 					.renderer();
 			if (rendererClass == ModelClassNodeRenderer.class) {
-				if (model != null) {
-					rendererClass = Registry.get().lookupSingle(
-							DirectedNodeRenderer.class, model.getClass());
-				} else {
-					rendererClass = DefaultNodeRenderer.class;
-				}
+				rendererClass = Registry.get().lookupSingle(
+						DirectedNodeRenderer.class, model.getClass());
 			}
 			renderer = Reflections.newInstance(rendererClass);
 			return renderer;
@@ -367,38 +291,47 @@ public class DirectedLayout {
 		}
 
 		private void bindBehaviours() {
-			if (directed == null || directed.receives().length == 0
-					|| model == null) {
+			if (directed == null || directed.receives().length == 0) {
 				return;
 			}
 			rendered.bindBehaviours();
 		}
 
 		private void bindProperties() {
-			if (directed == null || directed.bindings().length == 0) {
+			if (directed == null || directed.bindings().length == 0
+					|| model == null) {
 				return;
 			}
 			/*
 			 * TODO - can probably relax this (just apply to outermost widget)
 			 */
+			/*
+			 * FIXME - index - actions.{ArrayList}. actions.{ArrayList}(div).
+			 * actions.{ArrayList}(ul). actions.{ArrayList} - child annotation
+			 * being applied to parent?
+			 * 
+			 */
+			if (rendered.widgets.size() != 1) {
+				directed.bindings();
+				return;
+			}
 			Preconditions.checkState(rendered.widgets.size() == 1);
 			rendered.bindings = Arrays.stream(directed.bindings())
 					.map(PropertyBinding::new).collect(Collectors.toList());
 		}
 
 		private void populateWidgets(boolean intermediateChild) {
-			this.descriptor = model == null ? null
-					: Reflections.beanDescriptorProvider()
-							.getDescriptorOrNull(model);
+			if (model == null) {
+				return;
+			}
+			this.descriptor = Reflections.beanDescriptorProvider()
+					.getDescriptorOrNull(model);
 			renderer = resolveRenderer();
 			/*
 			 * allow insertion of multiple nodes for one model object - loop
 			 * without adding model children until the final Directed
 			 */
 			if (renderer instanceof HasWrappingDirecteds) {
-				if (model == null) {
-					return;
-				}
 				List<Directed> wrappers = ((HasWrappingDirecteds) renderer)
 						.getWrappingDirecteds(this);
 				Widget rootResult = null;
@@ -447,21 +380,10 @@ public class DirectedLayout {
 						.getPropertyReflectors((model.getClass()));
 				if (propertyReflectors != null) {
 					for (PropertyReflector propertyReflector : propertyReflectors) {
-						AnnotationLocation propertyLocation = new AnnotationLocation(
-								model.getClass(), propertyReflector, resolver,
-								false);
-						if (propertyLocation.hasAnnotation(Directed.class)) {
+						if (propertyReflector.hasAnnotation(Directed.class)) {
 							Object childModel = propertyReflector
 									.getPropertyValue(model);
-							if (childModel == null && propertyLocation
-									.hasAnnotation(ImmutableModel.class)) {
-								/*
-								 * There will never be a non-null value, so
-								 * don't render a placeholder
-								 */
-								continue;
-							}
-							Node child = addChild(childModel, propertyReflector,
+							addChild(childModel, propertyReflector,
 									propertyReflector);
 						}
 					}
@@ -482,6 +404,16 @@ public class DirectedLayout {
 		}
 
 		private void render(boolean intermediateChild) {
+			if (model == null) {
+				return;
+			}
+			if (model instanceof DirectedLayout.Lifecycle) {
+				// FIXME - dirndl 1.0 - lifecycle -> abstract class,
+				// HasLifecycle, yadda
+				// beforeRRender -> (maybe) first time render
+				((DirectedLayout.Lifecycle) model).beforeRender();
+			}
+			resolver.beforeRender();
 			current = this;
 			DirectedContextResolver directedContextResolver = annotation(
 					DirectedContextResolver.class);
@@ -959,35 +891,5 @@ public class DirectedLayout {
 
 	public interface NodeEventReceiver {
 		public void onEvent(GwtEvent event);
-	}
-
-	private static class DelegatingContextResolver<M>
-			extends ContextResolver<M> {
-		private ContextResolver<?> parent = null;
-
-		private Resolver locationResolver;
-
-		public DelegatingContextResolver(ContextResolver parent,
-				Resolver locationResolver) {
-			this.parent = parent;
-			this.locationResolver = locationResolver;
-		}
-
-		@Override
-		public <A extends Annotation> A resolveAnnotation(
-				Class<A> annotationClass, AnnotationLocation location) {
-			return locationResolver.resolveAnnotation(annotationClass,
-					location);
-		}
-
-		@Override
-		public Object resolveModel(Object model) {
-			return parent.resolveModel(model);
-		}
-
-		@Override
-		public <T> T resolveRenderContextProperty(String key) {
-			return parent.resolveRenderContextProperty(key);
-		}
 	}
 }

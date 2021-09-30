@@ -22,8 +22,7 @@ import java.util.Map;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
-import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -37,6 +36,7 @@ import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -45,9 +45,8 @@ import cc.alcina.framework.common.client.util.StringMap;
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = TreeSerializable.class)
-public abstract class ContentRequestBase<CD extends ContentDefinition>
-		extends WrapperPersistable implements GwtMultiplePersistable,
-		DeliveryModel, TreeSerializable, Definition {
+public abstract class ContentRequestBase<CD extends ContentDefinition> extends
+		Bindable implements DeliveryModel, TreeSerializable, Definition {
 	static final long serialVersionUID = -1L;
 
 	private String outputFormat = FormatConversionTarget.HTML.serializedForm();
@@ -159,7 +158,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 
 	@Override
 	public String getEmailSubjectForRequestor() {
-		if (emailSubjectForRequestor == null) {
+		if (Ax.isBlank(emailSubjectForRequestor)) {
 			return getEmailSubject();
 		}
 		return emailSubjectForRequestor;

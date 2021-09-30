@@ -51,7 +51,6 @@ import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
@@ -82,7 +81,6 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -92,11 +90,9 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
-import cc.alcina.framework.entity.persistence.WrappedObject;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
 import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
@@ -233,8 +229,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	private IdentityHashMap<Entity, Entity> listeningTo = new IdentityHashMap<Entity, Entity>();
 
 	private DetachedEntityCache detachedEntityCache;
-
-	protected Entity ignorePropertyChangesTo;
 
 	private boolean initialised = false;
 
@@ -446,19 +440,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		}
 		if (id != 0) {
 			if (getEntityManager() != null) {
-				if (WrapperPersistable.class.isAssignableFrom(clazz)) {
-					try {
-						WrappedObject wrapper = Registry
-								.impl(WrappedObjectProvider.class)
-								.getObjectWrapperForUser((Class) clazz, id,
-										entityManager);
-						maybeListenToObjectWrapper(wrapper);
-						T wofu = (T) wrapper.getObject();
-						return (T) wofu;
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
 				T t = getEntityManager().find(clazz, id);
 				// this may be a performance hit - but worth it - otherwise all
 				// sorts of potential problems
@@ -609,15 +590,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		flushAfterTransforms.add(CommonUtils.last(getTransforms().iterator()));
 	}
 
-	public void maybeListenToObjectWrapper(WrappedObject wrapper) {
-		EntityLayerTransformPropagation transformPropagation = Registry
-				.impl(EntityLayerTransformPropagation.class, void.class, true);
-		if (transformPropagation != null
-				&& transformPropagation.listenToWrappedObject(wrapper)) {
-			registerDomainObject((Entity) wrapper);
-		}
-	}
-
 	@Override
 	public void modifyCollectionProperty(Object objectWithCollection,
 			String collectionPropertyName, Object delta,
@@ -702,8 +674,23 @@ public class ThreadlocalTransformManager extends TransformManager
 						// entityManager.persist(newInstance);
 					}
 				}
-				// FIXME - mvcc.4 - there's probably some consolidation that can
-				// be done, since createdlocals are tracked by domainstore
+				//
+				// FIXME - alcina.doc -
+				//
+				// why maintain localIdToEntityMap (reason: cross-cutting
+				// concern to domainstore - it's from pov of the ClientInstance
+				// - which may have persisted local objects unknown to this VM's
+				// store)
+				//
+				// localIdToEntityMap needs to be distinct from
+				// clientInstanceEntityMap for applying transforms from other
+				// servers (don't want to store localids if we don't have to)
+				//
+				// createdObjectLocators *could* be replaced with a collation,
+				// but perf would be worse and layering too - so leave (and
+				// explain) - they're only used in (entityManager != null)
+				// contexts, but code is cleaner this way
+				//
 				EntityLocator entityLocator = newInstance.toLocator();
 				localIdToEntityMap.put(localId, newInstance);
 				createdObjectLocators.add(entityLocator);
@@ -728,14 +715,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	public void persist(Object object) {
 		entityManager.persist(object);
-	}
-
-	@Override
-	public synchronized void propertyChange(PropertyChangeEvent event) {
-		if (isIgnorePropertyChangesForEvent(event)) {
-			return;
-		}
-		super.propertyChange(event);
 	}
 
 	public boolean provideIsMarkedFlushTransform(DomainTransformEvent event) {
@@ -867,19 +846,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	public void setEntityManager(EntityManager entityManager) {
-		// System.err.format("%s: %s\n", Thread.currentThread().getId(),
-		// entityManager);
-		// Thread.dumpStack();
 		this.entityManager = entityManager;
-	}
-
-	// FIXME - mvcc.wrap - can remove
-	public void setIgnorePropertyChangesTo(DomainTransformEvent event) {
-		this.ignorePropertyChangesTo = null;
-		if (event != null
-				&& event.getTransformType() != TransformType.CREATE_OBJECT) {
-			this.ignorePropertyChangesTo = getObject(event, true);
-		}
 	}
 
 	public void
@@ -1168,8 +1135,6 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	protected boolean checkHasSufficientInfoForPropertyPersist(Entity entity) {
 		return entity.getId() != 0
-				// FIXME - mvcc.wrap - treeserializable->non-entity
-				|| entity instanceof TreeSerializable
 				|| (localIdToEntityMap.get(entity.getLocalId()) != null)
 				|| (entity instanceof SourcesPropertyChangeEvents && listeningTo
 						.containsKey((SourcesPropertyChangeEvents) entity))
@@ -1256,14 +1221,6 @@ public class ThreadlocalTransformManager extends TransformManager
 	@Override
 	protected boolean isAddToDomainObjects() {
 		return entityManager == null;
-	}
-
-	// can disappear at end of mvcc.wrap
-	protected boolean isIgnorePropertyChangesForEvent(PropertyChangeEvent evt) {
-		return evt.getSource() == ignorePropertyChangesTo
-				|| (evt.getSource() instanceof WrappedObject
-						&& ((WrappedObject) evt.getSource())
-								.getObject() == ignorePropertyChangesTo);
 	}
 
 	@Override

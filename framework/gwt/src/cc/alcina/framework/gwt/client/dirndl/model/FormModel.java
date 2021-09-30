@@ -46,6 +46,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandl
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Submit;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvents;
@@ -60,7 +62,7 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
 //FIXME - dirndl 1.3 - FormModel -> Form
-public class FormModel extends Model {
+public class FormModel extends Model implements DomEvents.Submit.Handler {
 	protected List<FormElement> elements = new ArrayList<>();
 
 	protected List<LinkModel> actions = new ArrayList<>();
@@ -79,7 +81,12 @@ public class FormModel extends Model {
 		return this.state;
 	}
 
-	public boolean onSubmit(Node node) {
+	@Override
+	public void onSubmit(Submit event) {
+		submit();
+	}
+
+	public boolean submit() {
 		Consumer<Void> onValid = o -> {
 			if (getState().model instanceof Entity) {
 				ClientTransformManager.cast()
@@ -95,7 +102,7 @@ public class FormModel extends Model {
 				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
 						.currentPlace();
 				DefaultPermissibleActionHandler.handleAction(null,
-						categoryNamePlace.ensureAction(), node);
+						categoryNamePlace.ensureAction(), this);
 			}
 		};
 		return new FormValidation().validate(onValid, getState().formBinding);
@@ -268,7 +275,8 @@ public class FormModel extends Model {
 					? Reflections.newInstance(args.fieldModulator())
 					: new FieldModulator();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			node.pushResolver(ModalResolver.single(!state.editable));
+			node.pushResolver(
+					ModalResolver.single(node.getResolver(), !state.editable));
 			if (state.model != null) {
 				if (state.model instanceof UserProperty) {
 					state.presentationModel = (Bindable) ((UserProperty) state.model)
@@ -412,6 +420,9 @@ public class FormModel extends Model {
 		}
 	}
 
+	public static class ModelEventContext {
+	}
+
 	@ClientInstantiable
 	public static class PermissibleActionFormTransformer extends
 			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
@@ -460,7 +471,7 @@ public class FormModel extends Model {
 			((DomEvent) event).preventDefault();
 			FormModel formModel = (FormModel) node
 					.ancestorModel(m -> m instanceof FormModel);
-			if (formModel.onSubmit(node)) {
+			if (formModel.submit()) {
 				Optional<EmitsTopic> emitsTopic = place.emitsTopic();
 				Class<? extends TopicEvent> type = emitsTopic.get().value();
 				Context context = NodeEvent.Context.newTopicContext(event,

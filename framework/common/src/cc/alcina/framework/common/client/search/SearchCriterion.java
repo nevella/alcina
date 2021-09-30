@@ -89,6 +89,7 @@ public abstract class SearchCriterion extends Bindable
 
 	@Override
 	@AlcinaTransient
+	@HasReflectiveEquivalence.Ignore
 	public String getDisplayName() {
 		if (CommonUtils.isNullOrEmpty(displayName)
 				&& LooseContext.is(CONTEXT_ENSURE_DISPLAY_NAME)) {

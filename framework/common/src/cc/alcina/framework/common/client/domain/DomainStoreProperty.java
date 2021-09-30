@@ -11,9 +11,6 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -41,26 +38,17 @@ public @interface DomainStoreProperty {
 		EAGER;
 	}
 
-	@RegistryLocation(registryPoint = DomainStorePropertyResolver.class, implementationType = ImplementationType.INSTANCE)
-	@ClientInstantiable
 	public static class DomainStorePropertyResolver
 			implements DomainStoreProperty {
 		protected TreeResolver<DomainStoreProperty> resolver;
 
-		// for reflection
-		public DomainStorePropertyResolver() {
-		}
+		private AnnotationLocation location;
 
 		public DomainStorePropertyResolver(
-				AnnotationLocation propertyLocation) {
-			resolver = new TreeResolver<DomainStoreProperty>(propertyLocation,
-					propertyLocation.propertyReflector
-							.getAnnotation(DomainStoreProperty.class));
-		}
-
-		public DomainStorePropertyResolver(
-				DomainStorePropertyResolver childResolver) {
-			resolver = createResolver(childResolver.resolver);
+				TreeResolver<DomainStoreProperty> resolver,
+				AnnotationLocation location) {
+			this.resolver = resolver;
+			this.location = location;
 		}
 
 		@Override
@@ -72,20 +60,26 @@ public @interface DomainStoreProperty {
 		public Class<? extends DomainStorePropertyLoadOracle>
 				customLoadOracle() {
 			Function<DomainStoreProperty, Class<? extends DomainStorePropertyLoadOracle>> function = DomainStoreProperty::customLoadOracle;
-			return resolver.resolve(function, "customLoadOracle");
+			return resolver.resolve(location, function, "customLoadOracle",
+					DomainStorePropertyLoadOracle.class);
+		}
+
+		public boolean hasValue() {
+			return loadType() != null;
 		}
 
 		@Override
 		public boolean ignoreMismatchedCollectionModifications() {
 			Function<DomainStoreProperty, Boolean> function = DomainStoreProperty::ignoreMismatchedCollectionModifications;
-			return resolver.resolve(function,
-					"ignoreMismatchedCollectionModifications");
+			return resolver.resolve(location, function,
+					"ignoreMismatchedCollectionModifications", false);
 		}
 
 		@Override
 		public DomainStorePropertyLoadType loadType() {
 			Function<DomainStoreProperty, DomainStorePropertyLoadType> function = DomainStoreProperty::loadType;
-			return resolver.resolve(function, "loadType");
+			return resolver.resolve(location, function, "loadType",
+					DomainStorePropertyLoadType.TRANSIENT);
 		}
 
 		protected TreeResolver<DomainStoreProperty>

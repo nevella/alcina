@@ -28,7 +28,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -53,11 +53,11 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
 		@RegistryLocation(registryPoint = TreeSerializable.class) })
 @Bean
-public abstract class SearchDefinition extends WrapperPersistable
+public abstract class SearchDefinition extends Bindable
 		implements TreeSerializable, TreeRenderable, ContentDefinition,
 		HasPermissionsValidation, HasReflectiveEquivalence<SearchDefinition>,
 		ReflectCloneable<SearchDefinition> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	public static final transient int LARGE_SEARCH = 0xFF0000;
 
@@ -272,18 +272,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 	@AlcinaTransient
 	public String getDisplayName() {
 		return "";
-	}
-
-	@Override
-	@PropertySerialization(ignore = true)
-	public long getId() {
-		return super.getId();
-	}
-
-	@Override
-	@PropertySerialization(ignore = true)
-	public long getLocalId() {
-		return super.getLocalId();
 	}
 
 	public String getName() {

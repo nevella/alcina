@@ -28,7 +28,6 @@ import java.util.function.Function;
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  * 
- *         FIXME - mvcc.4 - switch to 'apply' (ditto renderer)
  */
 public interface Converter<T, C> extends Function<T, C> {
 	public static final Converter<Object, String> TO_STRING_CONVERTER = new Converter<Object, String>() {
@@ -113,13 +112,6 @@ public interface Converter<T, C> extends Function<T, C> {
 		}
 	};
 
-	@Override
-	default C apply(T t) {
-		return convert(t);
-	}
-
-	C convert(T original);
-
 	static <T, C> Converter<T, C> wrap(Function<T, C> function) {
 		return new Converter<T, C>() {
 			@Override
@@ -128,4 +120,11 @@ public interface Converter<T, C> extends Function<T, C> {
 			}
 		};
 	}
+
+	@Override
+	default C apply(T t) {
+		return convert(t);
+	}
+
+	C convert(T original);
 }

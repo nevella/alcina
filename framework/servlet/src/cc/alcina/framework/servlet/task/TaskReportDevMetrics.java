@@ -20,8 +20,8 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.stat.DevStats;
 import cc.alcina.framework.entity.stat.DevStats.KeyedStat;
 import cc.alcina.framework.entity.stat.DevStats.LogProvider;
-import cc.alcina.framework.entity.stat.DevStats.StatResults;
 import cc.alcina.framework.entity.stat.DevStats.LogProvider.StringLogProvider;
+import cc.alcina.framework.entity.stat.DevStats.StatResults;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
 

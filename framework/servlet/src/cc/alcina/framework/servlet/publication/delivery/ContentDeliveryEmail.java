@@ -26,10 +26,9 @@ import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
-
-import com.sun.mail.smtp.SMTPMessage;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -81,14 +80,14 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			boolean requestorPass) throws Exception {
 		byte[] msgBytes = ResourceUtilities
 				.readStreamToByteArray(convertedContent);
-		send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
+		String result = send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
 				requestorPass, deliveryModel.getEmailAddress());
 		if (LooseContext.has(CONTEXT_ALSO_SEND_TO_ADDRESS)) {
 			send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
 					requestorPass,
 					LooseContext.get(CONTEXT_ALSO_SEND_TO_ADDRESS));
 		}
-		return "OK";
+		return result;
 	}
 
 	@Override
@@ -98,9 +97,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			throws Exception {
 		byte[] msgBytes = ResourceUtilities
 				.readStreamToByteArray(convertedContent);
-		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
+		String result = deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
 		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
-		return "OK";
+		return result;
 	}
 
 	protected boolean isUseVerp() {
@@ -129,6 +128,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				"smtp.from.address");
 		String fromName = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
 				"smtp.from.name");
+		String replyTo = null;
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
 		}
@@ -144,9 +144,21 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				props.setProperty("mail.smtp.ssl.protocols", protocols);	
 			}
 		}
+		if (isUseVerp() && PublicationContext.get() != null) {
+			String publicationUid = PublicationContext
+					.get().publicationResult.getPublicationUid();
+			// will be null if non-persistent
+			if (publicationUid != null) {
+				replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
+						String.format("$1+.r.%s@$2", publicationUid));
+				String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
+						String.format("$1+.b.%s@$2", publicationUid));
+				props.put("mail.smtp.from", bounceTo);
+			}
+		}
 		Session session = Session.getInstance(props, null);
 		session.setDebug(debug);
-		SMTPMessage msg = new SMTPMessage(session);
+		MimeMessage msg = new MimeMessage(session); 
 		msg.setSentDate(new Date());
 		msg.setFrom(new InternetAddress(fromAddress, fromName));
 		List<InternetAddress> addresses = new ArrayList<InternetAddress>();
@@ -281,18 +293,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			multipart.addBodyPart(messageBodyPart);
 			msg.setContent(multipart);
 		}
-		if (isUseVerp() && PublicationContext.get() != null) {
-			String publicationUid = PublicationContext
-					.get().publicationResult.getPublicationUid();
-			// will be null if non-persistent
-			if (publicationUid != null) {
-				String replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
-						String.format("$1+.r.%s@$2", publicationUid));
-				String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
-						String.format("$1+.b.%s@$2", publicationUid));
-				msg.setEnvelopeFrom(bounceTo);
-				msg.setHeader("Reply-to", replyTo);
-			}
+		if (replyTo != null) {
+			msg.setHeader("Reply-to", replyTo);
 		}
 		Transport transport = session.getTransport("smtp");
 		transport.connect(host, port, userName, password);

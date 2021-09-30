@@ -73,8 +73,6 @@ import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.WrappedObject;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
@@ -90,6 +88,7 @@ import cc.alcina.framework.entity.util.AlcinaChildRunnable.AlcinaChildContextRun
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
+import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
@@ -736,7 +735,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		return WrappedObjectHelper.xmlDeserialize(clazz,
+		return JaxbUtils.xmlDeserialize(clazz,
 				ResourceUtilities.readFileToString(file));
 	}
 
@@ -817,7 +816,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				"true");
 		// need to be before ui init, cos window height is a preference
 		initFiles();
-		LooseContext.runWithKeyValue(WrappedObject.CONTEXT_CLASSES,
+		LooseContext.runWithKeyValue(JaxbUtils.CONTEXT_CLASSES,
 				getInitClasses(), () -> {
 					loadConfig();
 					return null;

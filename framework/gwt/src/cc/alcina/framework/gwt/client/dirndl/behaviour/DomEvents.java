@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.behaviour;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.InputEvent;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyUpEvent;
 import com.google.gwt.event.dom.client.ScrollEvent;
@@ -49,6 +50,27 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onClick(Click event);
+		}
+	}
+
+	public static class Input extends NodeEvent<Input.Handler> {
+		@Override
+		public void dispatch(Input.Handler handler) {
+			handler.onInput(this);
+		}
+
+		@Override
+		public Class<Input.Handler> getHandlerClass() {
+			return Input.Handler.class;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::fireEvent, InputEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onInput(Input event);
 		}
 	}
 

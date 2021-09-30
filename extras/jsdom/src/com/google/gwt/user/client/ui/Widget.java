@@ -15,6 +15,8 @@
  */
 package com.google.gwt.user.client.ui;
 
+import java.util.List;
+
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.event.dom.client.DomEvent;
@@ -391,6 +393,14 @@ public class Widget extends UIObject
 		eventsToSink = -1;
 		if (bitsToAdd > 0) {
 			sinkEvents(bitsToAdd);
+		}
+		List<String> localBitlessEventsSunk = getElement()
+				.localBitlessEventsSunk();
+		if (localBitlessEventsSunk != null) {
+			localBitlessEventsSunk.forEach(eventTypeName -> {
+				DOM.sinkBitlessEvent(getElement(), eventTypeName);
+			});
+			localBitlessEventsSunk = null;
 		}
 		doAttachChildren();
 		// onLoad() gets called only *after* all of the children are attached

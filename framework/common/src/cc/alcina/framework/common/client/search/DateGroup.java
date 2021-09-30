@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @Bean
 @TypeSerialization(flatSerializable = false)
 public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	public DateGroup() {
 		super();

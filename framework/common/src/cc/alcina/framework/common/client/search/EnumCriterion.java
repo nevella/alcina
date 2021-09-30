@@ -55,7 +55,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		implements HasWithNull, HasValue<E> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private boolean withNull = true;
 

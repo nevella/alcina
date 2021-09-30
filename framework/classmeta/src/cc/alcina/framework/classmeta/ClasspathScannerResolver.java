@@ -17,10 +17,10 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.util.ClasspathScanner;
+import cc.alcina.framework.entity.util.JaxbUtils;
 
 public class ClasspathScannerResolver {
 	Map<URL, ListeningCache> caches = new LinkedHashMap<>();
@@ -37,7 +37,7 @@ public class ClasspathScannerResolver {
 					ClassPersistenceScanHandler.class,
 					Ax.format("schema/%s/meta.translation.%s.xml", folder,
 							translationKey));
-			translationData = WrappedObjectHelper
+			translationData = JaxbUtils
 					.xmlDeserialize(TranslationData.class, translationXml);
 		}
 		for (URL url : typedRequest.classPaths) {

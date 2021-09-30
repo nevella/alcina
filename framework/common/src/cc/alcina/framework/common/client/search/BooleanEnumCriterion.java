@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private BooleanEnum booleanEnum;
 

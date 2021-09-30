@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -735,7 +736,15 @@ public class JobScheduler {
 				} catch (Throwable e) {
 					e.printStackTrace();
 				} finally {
-					Transaction.end();
+					try {
+						Transaction.end();
+					} catch (RuntimeException e) {
+						if (TransformManager.get() == null) {
+							// shutting down
+						} else {
+							throw e;
+						}
+					}
 				}
 			}
 		}

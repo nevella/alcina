@@ -35,7 +35,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
@@ -108,9 +107,6 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			if (!Entity.class.isAssignableFrom(ref)) {
 				continue;
 			}
-			if (WrapperPersistable.class.isAssignableFrom(ref)) {
-				continue;
-			}
 			Class c = ref;
 			while (c != Object.class) {
 				Field[] fields = c.getDeclaredFields();
@@ -148,13 +144,9 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 						}
 					}
 					if (checkType != null && !reffed.contains(checkType)) {
-						if (WrapperPersistable.class
-								.isAssignableFrom(checkType)) {
-						} else {
-							errClassRef.add(String.format("%-30s: %s.%s",
-									checkType.getSimpleName(),
-									ref.getSimpleName(), field.getName()));
-						}
+						errClassRef.add(String.format("%-30s: %s.%s",
+								checkType.getSimpleName(), ref.getSimpleName(),
+								field.getName()));
 					}
 					PropertyDescriptor leftPd = SEUtilities
 							.getPropertyDescriptorByName(ref, field.getName());
