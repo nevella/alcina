@@ -56,9 +56,13 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 			}
 		}
 	}
+	
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = String.class)
 	public static class StringNodeRenderer extends TextNodeRenderer {
+	}
+	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Number.class)
+	public static class NumberNodeRenderer extends TextNodeRenderer {
 	}
 
 	@Directed(tag = "div", bindings = @Binding(from = "text", type = Type.INNER_TEXT))

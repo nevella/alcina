@@ -14,7 +14,6 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 @TypeSerialization(flatSerializable = false)
 public class BasicGridRequest
 		extends ContentRequestBase<BasicGridContentDefinition> {
-	static final long serialVersionUID = -1L;
 
 	public BasicGridRequest() {
 		putContentDeliveryType(ContentDeliveryType.DOWNLOAD);

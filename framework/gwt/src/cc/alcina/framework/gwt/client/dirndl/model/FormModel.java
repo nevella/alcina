@@ -83,10 +83,10 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 
 	@Override
 	public void onSubmit(Submit event) {
-		submit();
+		submit(event.getContext().node);
 	}
 
-	public boolean submit() {
+	public boolean submit(Node node) {
 		Consumer<Void> onValid = o -> {
 			if (getState().model instanceof Entity) {
 				ClientTransformManager.cast()
@@ -102,7 +102,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
 						.currentPlace();
 				DefaultPermissibleActionHandler.handleAction(null,
-						categoryNamePlace.ensureAction(), this);
+						categoryNamePlace.ensureAction(), node);
 			}
 		};
 		return new FormValidation().validate(onValid, getState().formBinding);
@@ -471,7 +471,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 			((DomEvent) event).preventDefault();
 			FormModel formModel = (FormModel) node
 					.ancestorModel(m -> m instanceof FormModel);
-			if (formModel.submit()) {
+			if (formModel.submit(node)) {
 				Optional<EmitsTopic> emitsTopic = place.emitsTopic();
 				Class<? extends TopicEvent> type = emitsTopic.get().value();
 				Context context = NodeEvent.Context.newTopicContext(event,
