@@ -23,54 +23,23 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.TreeMap;
 
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.Multimap;
 
 /**
  *
  * @author Nick Reddel
  */
 public class CollectionFilters {
-	public static final CollectionFilter PASSTHROUGH_FILTER = new CollectionFilter() {
-		@Override
-		public boolean allow(Object o) {
-			return true;
-		}
-	};
-
-	public static final CollectionFilter NO_FILTER = new CollectionFilter() {
-		@Override
-		public boolean allow(Object o) {
-			return false;
-		}
-	};
-
-	public static final Converter TO_NULL_CONVERTER = new Converter() {
-		@Override
-		public Object convert(Object original) {
-			return null;
-		}
-	};
-
-	public static final CollectionFilter<String> IS_NOT_NULL_OR_EMPTY_FILTER = new CollectionFilter<String>() {
-		@Override
-		public boolean allow(String o) {
-			return CommonUtils.isNotNullOrEmpty(o);
-		}
-	};
-
 	public static <V> void apply(Collection<? extends V> collection,
 			Callback<V> callback) {
 		for (Iterator<V> itr = (Iterator<V>) collection.iterator(); itr
 				.hasNext();) {
-			callback.apply(itr.next());
+			callback.accept(itr.next());
 		}
 	}
 
@@ -263,20 +232,6 @@ public class CollectionFilters {
 		return result;
 	}
 
-	public static <K, V, O> Map<K, V> map(Collection<O> values,
-			KeyValueMapper<K, V, O> mapper) {
-		Map<K, V> result = new LinkedHashMap<K, V>();
-		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
-			O o = itr.next();
-			if (mapper instanceof CollectionFilter
-					&& !((CollectionFilter) mapper).allow(o)) {
-				continue;
-			}
-			result.put(mapper.getKey(o), mapper.getValue(o));
-		}
-		return result;
-	}
-
 	public static <T extends Comparable<T>> T max(Collection<T> collection) {
 		return max(collection, null);
 	}
@@ -309,16 +264,6 @@ public class CollectionFilters {
 		return min;
 	}
 
-	public static <K, V, O> Multimap<K, List<V>> multimap(Collection<O> values,
-			KeyValueMapper<K, V, O> mapper) {
-		Multimap<K, List<V>> result = new Multimap<K, List<V>>();
-		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
-			O o = itr.next();
-			result.add(mapper.getKey(o), mapper.getValue(o));
-		}
-		return result;
-	}
-
 	public static <V, T> V project(Collection<T> values,
 			CollectionProjector<T, V> projector) {
 		for (T t : values) {
@@ -340,20 +285,6 @@ public class CollectionFilters {
 			}
 		}
 		return null;
-	}
-
-	public static <K, V, O> SortedMap<K, V> sortedMap(Collection<O> values,
-			KeyValueMapper<K, V, O> mapper) {
-		SortedMap<K, V> result = new TreeMap<K, V>();
-		for (Iterator<O> itr = values.iterator(); itr.hasNext();) {
-			O o = itr.next();
-			if (mapper instanceof CollectionFilter
-					&& !((CollectionFilter) mapper).allow(o)) {
-				continue;
-			}
-			result.put(mapper.getKey(o), mapper.getValue(o));
-		}
-		return result;
 	}
 
 	public static <K, V1, V2> Map<K, V2> transformMap(Map<K, V1> mapIn,

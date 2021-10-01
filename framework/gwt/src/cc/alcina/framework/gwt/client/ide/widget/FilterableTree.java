@@ -96,7 +96,7 @@ public class FilterableTree extends Tree
 		TreeItem item = getSelectedItem();
 		new TreeNodeWalker().walk(this, new Callback<TreeItem>() {
 			@Override
-			public void apply(TreeItem target) {
+			public void accept(TreeItem target) {
 				boolean open = target.getParentItem() == null;
 				if (shouldExpandCallback != null
 						&& !shouldExpandCallback.allow(target)) {
@@ -369,7 +369,7 @@ public class FilterableTree extends Tree
 			counter = 200;
 			walk();
 			if (counter > 0) {
-				callback.apply(null);
+				callback.accept(null);
 				return false;
 			}
 			return true;

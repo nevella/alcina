@@ -14,8 +14,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.FromObjectKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
@@ -227,14 +225,8 @@ public interface HasEquivalence<T> {
 				return null;
 			}
 			HasEquivalenceHashMap<T> result = new HasEquivalenceHashMap<T>();
-			result.putAll(CollectionFilters.multimap(coll,
-					new FromObjectKeyValueMapper<Integer, T>() {
-						@Override
-						public Integer getKey(T o) {
-							return ((HasEquivalenceHash<T>) o)
-									.equivalenceHash();
-						}
-					}));
+			result.putAll(coll.stream().collect(AlcinaCollectors.toKeyMultimap(
+					o -> ((HasEquivalenceHash<T>) o).equivalenceHash())));
 			return result;
 		}
 

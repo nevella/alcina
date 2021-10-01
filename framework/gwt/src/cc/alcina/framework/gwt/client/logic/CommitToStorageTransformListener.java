@@ -468,7 +468,7 @@ public class CommitToStorageTransformListener
 					final DomainTransformRequestException dtre = (DomainTransformRequestException) caught;
 					Callback<ClientTransformExceptionResolutionToken> callback = new Callback<ClientTransformExceptionResolutionToken>() {
 						@Override
-						public void apply(
+						public void accept(
 								ClientTransformExceptionResolutionToken resolutionToken) {
 							if (resolutionToken
 									.getResolverAction() == ClientTransformExceptionResolverAction.RESUBMIT) {

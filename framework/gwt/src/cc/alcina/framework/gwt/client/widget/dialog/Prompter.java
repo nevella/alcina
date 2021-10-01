@@ -65,7 +65,7 @@ public class Prompter implements PermissibleActionListener, KeyDownHandler {
 			}
 		};
 		if (positioningCallback != null) {
-			positioningCallback.apply(box);
+			positioningCallback.accept(box);
 		}
 		text.setSelectionRange(0, text.getValue().length());
 		text.setFocus(true);
@@ -83,7 +83,7 @@ public class Prompter implements PermissibleActionListener, KeyDownHandler {
 			event.preventDefault();
 			event.stopPropagation();
 			box.hide();
-			callback.apply(text.getValue());
+			callback.accept(text.getValue());
 		}
 	}
 
@@ -96,7 +96,7 @@ public class Prompter implements PermissibleActionListener, KeyDownHandler {
 				Window.alert(requiredMessage);
 				box.okButton.setEnabled(true);
 			} else {
-				callback.apply(text.getValue());
+				callback.accept(text.getValue());
 			}
 		} else {
 		}

@@ -114,7 +114,7 @@ public class ModuleIntrospectionHelper {
 		if (soft) {
 			Callback<ModuleIntrospectionClassInfo> removeModulesCallback = new Callback<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>() {
 				@Override
-				public void apply(ModuleIntrospectionClassInfo value) {
+				public void accept(ModuleIntrospectionClassInfo value) {
 					if (value.provenance == ModuleIntrospectionClassInfoProvenance.AUTO) {
 						value.modules.clear();
 					}

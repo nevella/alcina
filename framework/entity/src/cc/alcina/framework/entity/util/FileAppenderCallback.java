@@ -17,7 +17,7 @@ public class FileAppenderCallback implements Callback<String> {
 	}
 
 	@Override
-	public void apply(String value) {
+	public void accept(String value) {
 		try {
 			FileOutputStream fos = new FileOutputStream(path, true);
 			ResourceUtilities.writeStringToOutputStream(

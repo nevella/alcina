@@ -23,6 +23,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -35,7 +36,6 @@ import cc.alcina.extras.dev.console.DevConsoleStrings.DevConsoleString;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.StringKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -413,8 +414,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public static class CmdExecRunnable extends DevConsoleCommand {
 		static void listRunnables(List<Class> classes, String runnableNamePart)
 				throws InstantiationException, IllegalAccessException {
-			SortedMap<String, Class> map = CollectionFilters.sortedMap(classes,
-					new ClassSimpleNameMapper());
+			SortedMap<String, Class> map = new TreeMap<>(classes.stream()
+					.collect(AlcinaCollectors.toKeyMap(Class::getSimpleName)));
 			if (CommonUtils.isNotNullOrEmpty(runnableNamePart)) {
 				map.entrySet().removeIf(e -> !e.getKey().toLowerCase()
 						.contains(runnableNamePart.toLowerCase()));
@@ -1194,15 +1195,18 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			Map<String, Field> fieldsByAnnName = CollectionFilters.sortedMap(
-					Arrays.asList(console.props.getClass().getFields()),
-					new FieldFilter());
-			if (argv.length == 0) {
-				System.out.println(ResourceUtilities
-						.readFileToString(console.consolePropertiesFile));
-				dumpProps(fieldsByAnnName);
-				return "";
-			}
+			Function<Field, String> getKey = field -> {
+				SetPropInfo ann = field.getAnnotation(SetPropInfo.class);
+				if (ann != null) {
+					return ann.key();
+				}
+				return null;
+			};
+			Map<String, Field> map = Arrays
+					.stream(console.props.getClass().getFields())
+					.filter(field -> getKey.apply(field) != null)
+					.collect(AlcinaCollectors.toKeyMap(getKey));
+			Map<String, Field> fieldsByAnnName = new TreeMap<>(map);
 			String key = argv[0];
 			String fieldName = null;
 			Object value = null;
@@ -1240,23 +1244,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				desc = desc.replace("\n", descPad);
 				System.out.format("%-30s%-50s%s\n", ann.key(),
 						field.get(console.props), desc);
-			}
-		}
-
-		private static class FieldFilter extends StringKeyValueMapper<Field>
-				implements CollectionFilter<Field> {
-			@Override
-			public boolean allow(Field o) {
-				return getKey(o) != null;
-			}
-
-			@Override
-			public String getKey(Field o) {
-				SetPropInfo ann = o.getAnnotation(SetPropInfo.class);
-				if (ann != null) {
-					return ann.key();
-				}
-				return null;
 			}
 		}
 	}

@@ -7,11 +7,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.apache.log4j.Logger;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
@@ -115,12 +114,12 @@ public class KeyMatchStrategy<T> implements MatchStrategy<T> {
 	}
 
 	@Override
-	public void log(CollectionFilter<T> ignoreAmbiguityForReportingFilter,
+	public void log(Predicate<T> ignoreAmbiguityForReportingFilter,
 			Logger logger, Class<T> mergedClass) {
-		CollectionFilters.filterInPlace(ambiguousLeft.keySet(),
-				ignoreAmbiguityForReportingFilter);
-		CollectionFilters.filterInPlace(ambiguousRight.keySet(),
-				ignoreAmbiguityForReportingFilter);
+		ambiguousLeft.keySet()
+				.removeIf(ignoreAmbiguityForReportingFilter.negate());
+		ambiguousRight.keySet()
+				.removeIf(ignoreAmbiguityForReportingFilter.negate());
 		if (ambiguousLeft.isEmpty() && ambiguousRight.isEmpty()) {
 			logger.info(
 					String.format("Merge [%s]", mergedClass.getSimpleName()));

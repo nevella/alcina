@@ -27,25 +27,18 @@ import cc.alcina.framework.common.client.util.Callback;
 public class TreeNodeWalker {
 	private boolean cancelled;
 
-	protected void cancel() {
-		this.cancelled = true;
-	}
-
-	public abstract static class TreeNodeWalkerCallback
-			implements Callback<TreeItem> {
-		protected TreeNodeWalker walker;
-
-		protected void cancel() {
-			walker.cancel();
-		}
-	}
-
 	public void walk(Tree tree, Callback callback) {
 		Stack<TreeItem> items = new Stack<TreeItem>();
 		int itemCount = tree.getItemCount();
 		for (int i = 0; i < itemCount; i++) {
 			items.push(tree.getItem(i));
 		}
+		walk(items, callback);
+	}
+
+	public void walk(TreeItem item, Callback callback) {
+		Stack<TreeItem> items = new Stack<TreeItem>();
+		items.push(item);
 		walk(items, callback);
 	}
 
@@ -58,16 +51,23 @@ public class TreeNodeWalker {
 				return;
 			}
 			TreeItem pop = items.pop();
-			callback.apply(pop);
+			callback.accept(pop);
 			for (int i = 0; i < pop.getChildCount(); i++) {
 				items.push(pop.getChild(i));
 			}
 		}
 	}
 
-	public void walk(TreeItem item, Callback callback) {
-		Stack<TreeItem> items = new Stack<TreeItem>();
-		items.push(item);
-		walk(items, callback);
+	protected void cancel() {
+		this.cancelled = true;
+	}
+
+	public abstract static class TreeNodeWalkerCallback
+			implements Callback<TreeItem> {
+		protected TreeNodeWalker walker;
+
+		protected void cancel() {
+			walker.cancel();
+		}
 	}
 }

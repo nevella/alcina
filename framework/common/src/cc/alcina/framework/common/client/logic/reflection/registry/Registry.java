@@ -32,7 +32,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.PropertyKeyValueMapper;
+import cc.alcina.framework.common.client.collections.PropertyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -340,10 +340,10 @@ public class Registry {
 			String propertyName) {
 		List<T> handlers = Registry.impls(registryPoint);
 		Map<Enum, T> byKey = new LinkedHashMap<>();
-		PropertyKeyValueMapper mapper = new PropertyKeyValueMapper(
-				propertyName);
+		PropertyValueMapper<T, Object> mapper = new PropertyValueMapper<>(
+				registryPoint, propertyName);
 		for (T handler : handlers) {
-			Enum key = (Enum) mapper.getKey(handler);
+			Enum key = (Enum) mapper.apply(handler);
 			if (byKey.containsKey(key)) {
 				throw new RuntimeException(
 						Ax.format("Duplicate key for enum lookup - %s %s %s",
