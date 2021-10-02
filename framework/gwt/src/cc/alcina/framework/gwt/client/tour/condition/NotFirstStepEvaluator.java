@@ -8,6 +8,6 @@ import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
 public class NotFirstStepEvaluator implements ConditionEvaluator {
 	@Override
 	public boolean evaluate(ConditionEvaluationContext context) {
-		return context.getTourState().getCurrentStepIndex() != 0;
+		return !context.provideIsFirstStep();
 	}
 }

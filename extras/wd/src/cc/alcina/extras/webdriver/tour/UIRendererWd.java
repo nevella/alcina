@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.openqa.selenium.WebElement;
 
+import cc.alcina.extras.webdriver.WDUtils;
 import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -46,7 +47,15 @@ public class UIRendererWd extends UIRenderer {
 	}
 
 	@Override
-	protected void clearPopups() {
+	protected void clearPopups(int delay) {
+		if (delay != 0) {
+			try {
+				WDUtils.activateOsxChrome();
+				Thread.sleep(delay);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 		popups.forEach(RenderedPopup::remove);
 		popups.clear();
 	}
@@ -90,6 +99,16 @@ public class UIRendererWd extends UIRenderer {
 		case CLICK:
 			exec.click();
 			break;
+		case SCRIPT:
+			try {
+				exec.executeScript(step.getActionValue());
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+			break;
+		case SELECT:
+			exec.selectItemByText(step.getActionValue());
+			break;
 		case SET_TEXT:
 			exec.clearAndSetText(step.getActionValue());
 			break;
@@ -104,7 +123,7 @@ public class UIRendererWd extends UIRenderer {
 
 	@Override
 	protected void render(Step step) {
-		clearPopups();
+		clearPopups(step.getDelay());
 		for (Tour.PopupInfo popupInfo : step.providePopups()) {
 			RenderedPopup popup = new RenderedPopup(popupInfo);
 			popups.add(popup);

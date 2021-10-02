@@ -55,7 +55,16 @@ public class UIRendererClient extends UIRenderer
 	}
 
 	@Override
-	protected void clearPopups() {
+	protected void clearPopups(int delay) {
+		if (delay != 0) {
+			new Timer() {
+				@Override
+				public void run() {
+					clearPopups(0);
+				}
+			}.schedule(delay);
+			return;
+		}
 		for (DecoratedRelativePopupPanel popupPanel : popups) {
 			StepPopupView stepView = (StepPopupView) popupPanel.getWidget();
 			stepView.topicPublisher.removeTopicListener(null,
@@ -123,7 +132,7 @@ public class UIRendererClient extends UIRenderer
 
 	@Override
 	protected void render(Step step) {
-		clearPopups();
+		clearPopups(step.getDelay());
 		int idx = 0;
 		for (Tour.PopupInfo popupInfo : step.providePopups()) {
 			DecoratedRelativePopupPanel popup = new DecoratedRelativePopupPanel(
