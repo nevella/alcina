@@ -38,6 +38,7 @@ public class StreamBuffer extends Thread {
 		return getBuf().toString();
 	}
 
+	@Override
 	public synchronized void run() {
 		try {
 			InputStreamReader isr = new InputStreamReader(is);
@@ -48,7 +49,7 @@ public class StreamBuffer extends Thread {
 					buf.append("\n");
 				}
 				buf.append(line);
-				outputCallback.apply(line);
+				outputCallback.accept(line);
 			}
 			closed = true;
 			notifyAll();

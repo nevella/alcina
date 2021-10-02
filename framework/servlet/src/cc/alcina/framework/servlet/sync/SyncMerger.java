@@ -8,13 +8,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -274,8 +273,8 @@ public class SyncMerger<T> {
 		}
 	}
 
-	protected CollectionFilter<T> getIgnoreAmbiguityForReportingFilter() {
-		return CollectionFilters.PASSTHROUGH_FILTER;
+	protected Predicate<T> getIgnoreAmbiguityForReportingFilter() {
+		return CommonUtils.predicateTrue();
 	}
 
 	protected boolean ignoreElementsWithAmbiguity() {

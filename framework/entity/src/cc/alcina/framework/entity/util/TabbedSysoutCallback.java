@@ -10,7 +10,7 @@ public class TabbedSysoutCallback implements Callback<String> {
 	}
 
 	@Override
-	public void apply(String value) {
+	public void accept(String value) {
 		System.out.println(prompt + value);
 	}
 }

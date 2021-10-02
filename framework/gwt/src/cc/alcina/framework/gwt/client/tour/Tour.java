@@ -13,7 +13,7 @@ public interface Tour {
 
 	@ClientInstantiable
 	enum Action {
-		CLICK, SET_TEXT, NONE
+		CLICK, SET_TEXT, NONE, SCRIPT, SELECT
 	}
 
 	interface Condition {
@@ -45,6 +45,10 @@ public interface Tour {
 
 		public TourState getTourState() {
 			return this.tourState;
+		}
+
+		public boolean provideIsFirstStep() {
+			return getTourState().getCurrentStepIndex() == 0;
 		}
 	}
 
@@ -98,6 +102,8 @@ public interface Tour {
 		public Action getAction();
 
 		public String getActionValue();
+
+		public int getDelay();
 
 		public Condition getIgnoreActionIf();
 

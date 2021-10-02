@@ -38,10 +38,11 @@ public abstract class TourManager {
 				if (consort != null) {
 					consort.cancel();
 				}
-				UIRenderer.get().clearPopups();
+				UIRenderer.get().clearPopups(step.getDelay());
 				break;
 			case NEXT:
 				currentTour.gotoStep(currentTour.getCurrentStepIndex() + 1);
+				onNext();
 				refreshTourView();
 				break;
 			case BACK:
@@ -64,6 +65,7 @@ public abstract class TourManager {
 		while (step != Ax.last(tour.getSteps())) {
 			currentTour.gotoStep(currentTour.getCurrentStepIndex() + 1);
 			refreshTourView();
+			onNext();
 		}
 	}
 
@@ -97,8 +99,15 @@ public abstract class TourManager {
 		refreshTourView();
 	}
 
+	protected ConditionEvaluationContext createConditionEvaluationContext() {
+		return new ConditionEvaluationContext(currentTour);
+	}
+
 	protected void exitTour(String message) {
 		UIRenderer.get().exitTour(message);
+	}
+
+	protected void onNext() {
 	}
 
 	protected void refreshTourView() {
@@ -130,7 +139,7 @@ public abstract class TourManager {
 
 		protected abstract void afterStepListenerAction();
 
-		protected abstract void clearPopups();
+		protected abstract void clearPopups(int delay);
 
 		protected abstract void exitTour(String message);
 
@@ -152,7 +161,7 @@ public abstract class TourManager {
 			@Override
 			public void topicPublished(String key, Object message) {
 				if (!Consort.FINISHED.equals(key)) {
-					UIRenderer.get().clearPopups();
+					UIRenderer.get().clearPopups(step.getDelay());
 				}
 			}
 		};
@@ -264,7 +273,7 @@ public abstract class TourManager {
 					.provideEvaluator();
 			if (evaluator.isPresent()) {
 				return evaluator.get()
-						.evaluate(new ConditionEvaluationContext(currentTour));
+						.evaluate(createConditionEvaluationContext());
 			}
 			Tour.Operator operator = condition.getOperator();
 			int conditionCount = 0;

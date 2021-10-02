@@ -229,6 +229,8 @@ public class TourImpl implements Tour {
 
 		private String description;
 
+		private int delay;
+
 		private RelativeTo relativeTo;
 
 		@Override
@@ -247,6 +249,12 @@ public class TourImpl implements Tour {
 		}
 
 		@Override
+		public int getDelay() {
+			return this.delay;
+		}
+
+		@Override
+		// blank for no popup
 		public String getDescription() {
 			return this.description;
 		}
@@ -302,6 +310,10 @@ public class TourImpl implements Tour {
 
 		public void setCaption(String caption) {
 			this.caption = caption;
+		}
+
+		public void setDelay(int delay) {
+			this.delay = delay;
 		}
 
 		public void setDescription(String description) {

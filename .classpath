@@ -2,7 +2,7 @@
 <classpath>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/|de/benediktmeurer/gwt/slf4j/api/|org/w3c/dom/" kind="src" path="framework/common/src"/>
 	<classpathentry excluding="registry.properties" kind="src" path="framework/jscodeserver/src"/>
-	<classpathentry excluding="cc/alcina/framework/classmeta/rdb/|com/sun/tools/jdi/" kind="src" path="framework/classmeta/src"/>
+	<classpathentry kind="src" path="framework/classmeta/src"/>
 	<classpathentry kind="src" path="extras/jsdom/src-regex"/>
 	<classpathentry excluding="cc/alcina/framework/common/translatable/" kind="src" output="framework/clientreflectorjvm/bin" path="framework/clientreflectorjvm/src"/>
 	<classpathentry kind="src" output="framework/jvmclient/bin" path="framework/jvmclient/src"/>
@@ -28,7 +28,9 @@
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/jsr173_api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/log4j-1.2.17.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-log4j-1.2.17/"/>
+	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl_2.9.jar" sourcepath="/Users/ouiji/Documents/programmin/java/xerces-2_9_1/"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar" sourcepath="/g/gwt"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwittir-trunk.jar"/>
@@ -42,6 +44,7 @@
 	<classpathentry kind="lib" path="lib/framework/servlet/jakarta.activation-1.2.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/jakarta.mail-1.6.7.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/javax.ejb-api-3.2.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/requestfactory-server.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-vfs-3.2.5.Final.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/fastutil-7.0.6.jar" sourcepath="/g/minor/fastutil"/>

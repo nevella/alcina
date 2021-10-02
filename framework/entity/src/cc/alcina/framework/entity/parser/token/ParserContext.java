@@ -659,6 +659,18 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			return false;
 		}
 
+		@Override
+		public int hashCode() {
+			return texts.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return String.format("(%s) (%s%s) %s", offset,
+					(emphasised ? "emph" : "not-emph"),
+					(superscript ? ":super" : ""), textContent);
+		}
+
 		public void extendMatch(AbstractParserSlice slice, String string) {
 			int offset = string.length();
 			for (Text text : texts) {
@@ -670,18 +682,6 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 				offset -= text.getLength();
 			}
 			throw new IllegalArgumentException();
-		}
-
-		@Override
-		public int hashCode() {
-			return texts.hashCode();
-		}
-
-		@Override
-		public String toString() {
-			return String.format("(%s) (%s%s) %s", offset,
-					(emphasised ? "emph" : "not-emph"),
-					(superscript ? ":super" : ""), textContent);
 		}
 	}
 

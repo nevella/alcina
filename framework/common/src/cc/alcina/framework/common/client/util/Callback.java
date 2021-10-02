@@ -13,11 +13,11 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.util.function.Consumer;
+
 /**
  *
  * @author Nick Reddel
  */
-@FunctionalInterface
-public interface Callback<V> {
-	public void apply(V value);
+public interface Callback<V> extends Consumer<V> {
 }

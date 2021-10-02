@@ -176,6 +176,11 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		}-*/;
 
 		@Override
+		final public native int getDelay()/*-{
+      return this.delay || 0;
+		}-*/;
+
+		@Override
 		final public native ConditionJso getIgnoreActionIf()/*-{
       return this.ignoreActionIf;
 		}-*/;

@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.collections;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.beans.Converter;
 
@@ -85,9 +86,9 @@ public class PropertyMapper {
 
 		private Converter rightToLeftConverter;
 
-		private CollectionFilter applyToLeftFilter;
+		private Predicate applyToLeftFilter;
 
-		private CollectionFilter applyToRightFilter;
+		private Predicate applyToRightFilter;
 
 		private boolean required;
 
@@ -106,13 +107,12 @@ public class PropertyMapper {
 			this.rightName = right;
 		}
 
-		public PropertyMapping applyToLeftFilter(CollectionFilter leftFilter) {
+		public PropertyMapping applyToLeftFilter(Predicate leftFilter) {
 			this.applyToLeftFilter = leftFilter;
 			return this;
 		}
 
-		public PropertyMapping
-				applyToRightFilter(CollectionFilter rightFilter) {
+		public PropertyMapping applyToRightFilter(Predicate rightFilter) {
 			this.applyToRightFilter = rightFilter;
 			return this;
 		}
@@ -165,7 +165,7 @@ public class PropertyMapper {
 		}
 
 		void map(Object left, Object right) {
-			if (applyToRightFilter != null && !applyToRightFilter.allow(left)) {
+			if (applyToRightFilter != null && !applyToRightFilter.test(left)) {
 				return;
 			}
 			try {

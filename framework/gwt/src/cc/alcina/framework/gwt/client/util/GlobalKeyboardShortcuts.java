@@ -9,6 +9,8 @@ import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 public class GlobalKeyboardShortcuts implements NativePreviewHandler {
 	private List<GlobalKeyboardShortcuts.Handler> handlers = new ArrayList<>();
 
@@ -33,14 +35,22 @@ public class GlobalKeyboardShortcuts implements NativePreviewHandler {
 		int charCode = nativeEvent.getCharCode();
 		EventTarget eventTarget = nativeEvent.getEventTarget();
 		if (Element.is(eventTarget)) {
-			String name = Element.as(eventTarget).getTagName();
-			switch (name.toLowerCase()) {
-			case "input":
-			case "checkbox":
-			case "select":
-			case "textarea":
-				// TODO - richtext?
-				return;
+			try {
+				Element as = Element.as(eventTarget);
+				String name = as.getTagName();
+				switch (name.toLowerCase()) {
+				case "input":
+				case "checkbox":
+				case "select":
+				case "textarea":
+					// TODO - richtext?
+					return;
+				}
+			} catch (Exception e) {
+				// if under webdriver, possibly event source has already been
+				// removed
+				// FIXME - dirndl1.4 - narrow the catch
+				Ax.simpleExceptionOut(e);
 			}
 		}
 		switch (type) {

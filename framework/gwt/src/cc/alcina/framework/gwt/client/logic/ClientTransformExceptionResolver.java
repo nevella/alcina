@@ -4,7 +4,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
-import cc.alcina.framework.common.client.util.Callback;
 /*
  * REVISIT: At the moment, there's a mismatch between local and remote 
  * in terms of exception resolution - i.e. if some transforms are skipped
@@ -15,6 +14,7 @@ import cc.alcina.framework.common.client.util.Callback;
  * marked as all_committed locally, so they won't be retried and shouldn't
  * cause inconsistency...I think). 
  */
+import cc.alcina.framework.common.client.util.Callback;
 
 public interface ClientTransformExceptionResolver {
 	public void resolve(DomainTransformRequestException dtre,
@@ -59,9 +59,10 @@ public interface ClientTransformExceptionResolver {
 
 	public static class ClientTransformExceptionResolverThrow
 			implements ClientTransformExceptionResolver {
+		@Override
 		public void resolve(DomainTransformRequestException dtre,
 				Callback<ClientTransformExceptionResolutionToken> callback) {
-			callback.apply(new ClientTransformExceptionResolutionToken());
+			callback.accept(new ClientTransformExceptionResolutionToken());
 		}
 	}
 }

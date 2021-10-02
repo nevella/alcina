@@ -14,9 +14,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.FromObjectKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -146,8 +145,8 @@ public class EntityHelper {
 
 	public static <T extends Entity> Map<Long, T>
 			toIdMap(Collection<T> entities) {
-		return (Map<Long, T>) CollectionFilters
-				.map((Collection<Entity>) entities, new EntityToIdMapper());
+		return entities.stream()
+				.collect(AlcinaCollectors.toKeyMap(Entity::getId));
 	}
 
 	public static <E extends Entity> Collector<E, ?, Set<Long>> toIdSet() {
@@ -187,14 +186,6 @@ public class EntityHelper {
 		@Override
 		public boolean test(Entity t) {
 			return id == 0 || t.getId() == id;
-		}
-	}
-
-	public static class EntityToIdMapper
-			extends FromObjectKeyValueMapper<Long, Entity> {
-		@Override
-		public Long getKey(Entity o) {
-			return o.getId();
 		}
 	}
 

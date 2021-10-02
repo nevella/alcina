@@ -4,6 +4,7 @@ import java.lang.reflect.Array;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -38,6 +39,8 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.PermissibleFieldFilter.AllFieldsFilter;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
+import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator;
+import jdk.nashorn.internal.ir.debug.ObjectSizeCalculator.MemoryLayoutSpecification;
 
 public abstract class DomainStoreDescriptor extends DomainDescriptor
 		implements MemoryStatProvider {
@@ -285,7 +288,8 @@ root
 						"Encountered unexpected primitive type "
 								+ type.getName());
 			}
-			// private ObjectSizeCalculator objectSizeCalculator;
+
+			private ObjectSizeCalculator objectSizeCalculator;
 
 			private Map<Class, Long> instanceSize = new LinkedHashMap<>();
 
@@ -301,30 +305,28 @@ root
 
 			public ShallowObjectSizeCalculator() {
 				try {
-					// MemoryLayoutSpecification memoryLayoutSpecification =
-					// ObjectSizeCalculator
-					// .getEffectiveMemoryLayoutSpecification();
-					// this.objectSizeCalculator = new ObjectSizeCalculator(
-					// memoryLayoutSpecification);
-					// classInfoMethod = Arrays
-					// .stream(objectSizeCalculator.getClass()
-					// .getDeclaredMethods())
-					// .filter(m -> m.getName().equals("getClassSizeInfo"))
-					// .findFirst().get();
-					// classInfoMethod.setAccessible(true);
-					// Object objectSizeInfo = classInfoMethod.invoke(
-					// objectSizeCalculator,
-					// new Object[] { Object.class });
-					// objectSizeField = objectSizeInfo.getClass()
-					// .getDeclaredField("objectSize");
-					// objectSizeField.setAccessible(true);
-					// arrayHeaderSize = memoryLayoutSpecification
-					// .getArrayHeaderSize();
-					// objectPadding = memoryLayoutSpecification
-					// .getObjectPadding();
-					// referenceSize = memoryLayoutSpecification
-					// .getReferenceSize();
-					throw new UnsupportedOperationException();
+					MemoryLayoutSpecification memoryLayoutSpecification = ObjectSizeCalculator
+							.getEffectiveMemoryLayoutSpecification();
+					this.objectSizeCalculator = new ObjectSizeCalculator(
+							memoryLayoutSpecification);
+					classInfoMethod = Arrays
+							.stream(objectSizeCalculator.getClass()
+									.getDeclaredMethods())
+							.filter(m -> m.getName().equals("getClassSizeInfo"))
+							.findFirst().get();
+					classInfoMethod.setAccessible(true);
+					Object objectSizeInfo = classInfoMethod.invoke(
+							objectSizeCalculator,
+							new Object[] { Object.class });
+					objectSizeField = objectSizeInfo.getClass()
+							.getDeclaredField("objectSize");
+					objectSizeField.setAccessible(true);
+					arrayHeaderSize = memoryLayoutSpecification
+							.getArrayHeaderSize();
+					objectPadding = memoryLayoutSpecification
+							.getObjectPadding();
+					referenceSize = memoryLayoutSpecification
+							.getReferenceSize();
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
@@ -356,10 +358,9 @@ root
 
 			private long getClassInstanceSize(Class clazz) {
 				try {
-					// Object objectSizeInfo = classInfoMethod.invoke(
-					// objectSizeCalculator, new Object[] { clazz });
-					// return objectSizeField.getLong(objectSizeInfo);
-					throw new UnsupportedOperationException();
+					Object objectSizeInfo = classInfoMethod.invoke(
+							objectSizeCalculator, new Object[] { clazz });
+					return objectSizeField.getLong(objectSizeInfo);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}

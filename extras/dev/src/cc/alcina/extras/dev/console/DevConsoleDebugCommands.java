@@ -16,6 +16,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -33,7 +34,6 @@ import cc.alcina.extras.dev.console.DevConsoleDebugCommands.CmdDrillClientExcept
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.CollectionFilters.ConverterFilter;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ReplayInstruction;
@@ -155,8 +155,9 @@ public class DevConsoleDebugCommands {
 			if (filterArgvResult.value != null) {
 				long userId = Long.parseLong(filterArgvResult.value);
 				if (userId != 0) {
-					logRecords = CollectionFilters.filterByProperty(logRecords,
-							ILogRecord.USER_ID, userId);
+					logRecords = logRecords.stream()
+							.filter(l -> Objects.equals(l.getUserId(), userId))
+							.collect(Collectors.toList());
 				}
 			}
 			filterArgvResult = new FilterArgvParam(argv, "-r");
@@ -691,24 +692,9 @@ public class DevConsoleDebugCommands {
 		private String extractReplay(String serializedLogRecords) {
 			List<ClientLogRecord> clrs = parseSerializedLogRecords(
 					serializedLogRecords);
-			ConverterFilter<ClientLogRecord, ReplayInstruction> converterFilter = new ConverterFilter<ClientLogRecord, ReplayInstruction>() {
-				@Override
-				public boolean allowPostConvert(ReplayInstruction c) {
-					return c != null;
-				}
-
-				@Override
-				public boolean allowPreConvert(ClientLogRecord t) {
-					return true;
-				}
-
-				@Override
-				public ReplayInstruction convert(ClientLogRecord original) {
-					return ReplayInstruction.fromClientLogRecord(original);
-				}
-			};
-			List<ReplayInstruction> ris = CollectionFilters
-					.convertAndFilter(clrs, converterFilter);
+			List<ReplayInstruction> ris = clrs.stream()
+					.map(o -> ReplayInstruction.fromClientLogRecord(o))
+					.filter(Objects::nonNull).collect(Collectors.toList());
 			return CommonUtils.join(ris, "\n");
 		}
 

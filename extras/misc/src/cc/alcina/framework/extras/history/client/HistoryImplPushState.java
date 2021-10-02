@@ -149,8 +149,7 @@ public class HistoryImplPushState extends HistoryImpl {
 		setToken(token);
 	}
 
-	public static class HrefProviderPushState
-			implements BasePlace.HrefProvider {
+	public static class HrefProviderPushState extends BasePlace.HrefProvider {
 		@Override
 		public String toHrefString(BasePlace basePlace) {
 			String path = "/" + BasePlace.tokenFor(basePlace);

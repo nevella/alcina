@@ -48,9 +48,9 @@ class UIRendererWd {
 				elem.style.left = Math.max(0, absRect.left + (absRect.right - absRect.left) / 2 - bubbleOffset + fudge) + "px";
 			}
 				break;
-			case "RIGHT":{
+			case "RIGHT": {
 				elem.style.right = (clientWidth - absRect.right + (absRect.right - absRect.left) / 2 - bubbleOffset) + "px";
-				}
+			}
 				break;
 			case "TOP": {
 				let fudge = 15;
@@ -107,7 +107,10 @@ class UIRendererWd {
 		return null;
 	}
 	remove(id) {
-		document.getElementById(id).remove();
+		let elt = document.getElementById(id);
+		if (elt) {
+			elt.remove();
+		}
 		let bubble = document.getElementById(id + "_bubble");
 		if (bubble) {
 			bubble.remove();

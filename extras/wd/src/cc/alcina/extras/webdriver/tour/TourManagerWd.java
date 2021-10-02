@@ -15,6 +15,7 @@ import com.fasterxml.jackson.databind.SerializerProvider;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
+import cc.alcina.extras.webdriver.WDToken;
 import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -22,10 +23,15 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.tour.Tour;
+import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
 import cc.alcina.framework.gwt.client.tour.TourImpl;
 import cc.alcina.framework.gwt.client.tour.TourManager;
+import cc.alcina.framework.gwt.client.tour.TourState;
 
 public class TourManagerWd extends TourManager {
+	public static final String PROP_FIRST_SUITE_STEP_PERFORMED = TourManagerWd.class
+			.getName() + ".PROP_FIRST_STEP_PERFORMED";
+
 	public static Tour deseralize(String json) {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
@@ -43,8 +49,22 @@ public class TourManagerWd extends TourManager {
 		}
 	}
 
-	public TourManagerWd(WdExec exec) {
+	private WDToken token;
+
+	public TourManagerWd(WdExec exec, WDToken token) {
 		UIRendererWd.get().exec = exec;
+		this.token = token;
+	}
+
+	@Override
+	protected ConditionEvaluationContext createConditionEvaluationContext() {
+		return new ConditionEvaluationContextWd(currentTour);
+	}
+
+	@Override
+	protected void onNext() {
+		token.getTestInfo().put(PROP_FIRST_SUITE_STEP_PERFORMED,
+				Boolean.toString(true));
 	}
 
 	@Override
@@ -100,6 +120,19 @@ public class TourManagerWd extends TourManager {
 			} else {
 				return string;
 			}
+		}
+	}
+
+	class ConditionEvaluationContextWd extends ConditionEvaluationContext {
+		public ConditionEvaluationContextWd(TourState tourState) {
+			super(tourState);
+		}
+
+		@Override
+		public boolean provideIsFirstStep() {
+			boolean result = super.provideIsFirstStep() && !Boolean.valueOf(
+					token.getTestInfo().get(PROP_FIRST_SUITE_STEP_PERFORMED));
+			return result;
 		}
 	}
 

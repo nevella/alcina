@@ -11,7 +11,10 @@ import org.apache.log4j.PatternLayout;
 import org.eclipse.jetty.server.Server;
 import org.eclipse.jetty.server.handler.ContextHandler;
 import org.eclipse.jetty.server.handler.HandlerCollection;
+import org.eclipse.jetty.servlets.gzip.GzipHandler;
 
+import cc.alcina.framework.classmeta.rdb.HttpAcceptorHandler;
+import cc.alcina.framework.classmeta.rdb.RdbProxies;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -48,8 +51,9 @@ public class ClassMetaServer {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-	// @SuppressWarnings("unused")
-	// private RdbProxies rdbProxies;
+
+	@SuppressWarnings("unused")
+	private RdbProxies rdbProxies;
 
 	private void initLoggers() {
 		Logger logger = Logger.getRootLogger();
@@ -81,7 +85,7 @@ public class ClassMetaServer {
 	private void initRegistry() {
 		Registry.registerSingleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
-		// Registry.registerSingleton(RdbProxies.class, new RdbProxies());
+		Registry.registerSingleton(RdbProxies.class, new RdbProxies());
 	}
 
 	private void start() throws Exception {
@@ -102,24 +106,24 @@ public class ClassMetaServer {
 			ctx.setHandler(new ClassPersistenceScanHandler(metaHandler));
 			handlers.addHandler(ctx);
 		}
-		// GzipHandler gzipHandler = new GzipHandler();
-		// {
-		// ContextHandler ctx = new ContextHandler(handlers, "/rdb");
-		// gzipHandler.setHandler(new HttpAcceptorHandler());
-		// ctx.setHandler(gzipHandler);
-		// handlers.addHandler(ctx);
-		// }
 		// unused
 		// {
 		// ContextHandler ctx = new ContextHandler(handlers, "/ant");
 		// ctx.setHandler(new AntHandler());
 		// handlers.addHandler(ctx);
 		// }
+		GzipHandler gzipHandler = new GzipHandler();
+		{
+			ContextHandler ctx = new ContextHandler(handlers, "/rdb");
+			gzipHandler.setHandler(new HttpAcceptorHandler());
+			ctx.setHandler(gzipHandler);
+			handlers.addHandler(ctx);
+		}
 		server.setHandler(handlers);
 		server.start();
-		// gzipHandler.start();
+		gzipHandler.start();
 		// server.dumpStdErr();
-		// RdbProxies.get().start();
+		RdbProxies.get().start();
 		server.join();
 	}
 }

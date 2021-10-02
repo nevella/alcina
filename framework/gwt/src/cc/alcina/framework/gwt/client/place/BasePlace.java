@@ -101,21 +101,15 @@ public abstract class BasePlace extends Place implements Serializable {
 		}
 	}
 
+	@RegistryLocation(registryPoint = HrefProvider.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
-	public static interface HrefProvider {
+	public static class HrefProvider {
 		public static BasePlace.HrefProvider get() {
 			return Registry.impl(BasePlace.HrefProvider.class);
 		}
 
-		String toHrefString(BasePlace basePlace);
-
-		@RegistryLocation(registryPoint = HrefProvider.class, implementationType = ImplementationType.SINGLETON)
-		@ClientInstantiable
-		public static class Hash implements HrefProvider {
-			@Override
-			public String toHrefString(BasePlace basePlace) {
-				return "#" + BasePlace.tokenFor(basePlace);
-			}
+		public String toHrefString(BasePlace basePlace) {
+			return "#" + BasePlace.tokenFor(basePlace);
 		}
 	}
 

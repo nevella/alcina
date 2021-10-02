@@ -21,10 +21,20 @@ public class JacksonUtils {
 		return defaultSerializer().createObjectMapper();
 	}
 
+	public static ObjectMapper wsGraphMapper() {
+		return wsSerializer().createObjectMapper();
+	}
+
 	public static JacksonJsonObjectSerializer defaultSerializer() {
 		return new JacksonJsonObjectSerializer().withIdRefs().withTypeInfo()
 				.withDefaults(true).withAllowUnknownProperties()
 				.withPrettyPrint();
+	}
+
+	// Special defaults for web services
+	// Should be closer to a plain JSON
+	public static JacksonJsonObjectSerializer wsSerializer() {
+		return new JacksonJsonObjectSerializer().withDefaults(true);
 	}
 
 	public static <T> T deserialize(InputStream stream, Class<T> clazz) {

@@ -163,7 +163,7 @@ public abstract class LocalTransformPersistence
 							.write(wrapper));
 					sb.append("\n");
 				});
-				callback.apply(sb.toString());
+				callback.accept(sb.toString());
 			}
 		};
 		getTransforms(new DeltaApplicationRecordType[0], transformCallback);
@@ -583,7 +583,7 @@ public abstract class LocalTransformPersistence
 				if (loadIterator.hasNext()) {
 					localTransformPersistence.persist(loadIterator.next(), pcb);
 				} else {
-					callback.apply(null);
+					callback.accept(null);
 				}
 			}
 		}
