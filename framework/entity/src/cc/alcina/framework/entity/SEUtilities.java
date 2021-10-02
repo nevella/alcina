@@ -85,6 +85,7 @@ import javax.swing.tree.TreePath;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -185,7 +186,8 @@ public class SEUtilities {
 	public static void clearAllFields(Object object) {
 		try {
 			List<Field> fields = allFields(object.getClass());
-			Object template = object.getClass().newInstance();
+			Object template = 
+					Reflections.newInstance(object.getClass());
 			for (Field field : fields) {
 				int modifiers = field.getModifiers();
 				if (Modifier.isFinal(modifiers)

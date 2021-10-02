@@ -78,13 +78,15 @@ public class GraphTraversal {
 					add(e.getValue());
 				});
 			} else {
-				List<Field> fields = projectionHelper
-						.getFieldsForClass(object.getClass());
-				for (Field f : fields) {
-					if (GraphProjection.isPrimitiveOrDataClass(f.getType())
-							&& !Date.class.isAssignableFrom(f.getType())) {
-					} else {
-						add(f.get(object));
+				Class clazz = object.getClass();
+				if (clazz.getModule().isOpen(clazz.getPackageName())) {
+					List<Field> fields = projectionHelper.getFieldsForClass(clazz);
+					for (Field f : fields) {
+						if (GraphProjection.isPrimitiveOrDataClass(f.getType())
+								&& !Date.class.isAssignableFrom(f.getType())) {
+						} else {
+							add(f.get(object));
+						}
 					}
 				}
 			}

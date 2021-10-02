@@ -5,7 +5,7 @@ import java.util.stream.Collectors;
 
 public interface PublicCloneable<T> {
 	static <T extends PublicCloneable<T>> List<T> clone(List<T> source) {
-		return source.stream().map(o -> new CloneProjector<>().apply(o))
+		return source.stream().map(o -> new CloneProjector<T>().apply(o))
 				.collect(Collectors.toList());
 	}
 

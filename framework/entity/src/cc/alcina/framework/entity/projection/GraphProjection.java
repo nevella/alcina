@@ -931,8 +931,8 @@ public class GraphProjection {
 			Field[] fields = c.getDeclaredFields();
 			List<Field> nonStatic = new ArrayList<Field>();
 			for (Field field : fields) {
-				if (Modifier.isStatic(field.getModifiers()) || field.getType()
-						.getName().startsWith("jdk.internal")) {
+				if (Modifier.isStatic(field.getModifiers())
+						||!c.getModule().isOpen(c.getPackageName())) {
 					continue;
 				} else {
 					field.setAccessible(true);
