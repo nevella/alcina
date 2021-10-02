@@ -1977,6 +1977,18 @@ public class CommonUtils {
 		return false;
 	}
 
+	public static <I, O> List<O> filterByClass(
+			Collection<? extends I> collection,
+			Class<? extends O> filterClass) {
+		ArrayList<O> result = new ArrayList<O>();
+		for (I i : collection) {
+			if (i.getClass() == filterClass) {
+				result.add((O) i);
+			}
+		}
+		return result;
+	}
+
 	public enum ComparatorResult {
 		BOTH_NON_NULL, BOTH_NULL, FIRST_NULL, SECOND_NULL;
 

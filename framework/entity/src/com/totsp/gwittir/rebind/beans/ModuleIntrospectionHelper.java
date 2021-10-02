@@ -27,7 +27,6 @@ import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
-import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class ModuleIntrospectionHelper {
@@ -112,15 +111,9 @@ public class ModuleIntrospectionHelper {
 
 	public void reset(boolean soft) throws Exception {
 		if (soft) {
-			Callback<ModuleIntrospectionClassInfo> removeModulesCallback = new Callback<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>() {
-				@Override
-				public void accept(ModuleIntrospectionClassInfo value) {
-					if (value.provenance == ModuleIntrospectionClassInfoProvenance.AUTO) {
-						value.modules.clear();
-					}
-				}
-			};
-			CollectionFilters.apply(info.classInfo, removeModulesCallback);
+			info.classInfo.stream().filter(
+					info -> info.provenance == ModuleIntrospectionClassInfoProvenance.AUTO)
+					.forEach(info -> info.modules.clear());
 		} else {
 			info.mode = ModuleIntrospectionHelper.ModuleIntrospectionMode.DISALLOW_ALL;
 			filterForHumans();
