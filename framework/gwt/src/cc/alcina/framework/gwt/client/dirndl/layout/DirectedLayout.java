@@ -53,6 +53,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * which itself caches property/reflector annotation tuples. Also apply to
  * reflective serializer
  * 
+ * Gotchas - don't use abstract class hierarchies, since (for instance) methods
+ * are repeated on concrete children without annotations
+ * 
  * @author nick@alcina.cc
  *
  */
@@ -380,6 +383,10 @@ public class DirectedLayout {
 						.getPropertyReflectors((model.getClass()));
 				if (propertyReflectors != null) {
 					for (PropertyReflector propertyReflector : propertyReflectors) {
+						if (propertyReflector.toString()
+								.contains("TrialAnalysisSummary.caption")) {
+							int debug = 3;
+						}
 						if (propertyReflector.hasAnnotation(Directed.class)) {
 							Object childModel = propertyReflector
 									.getPropertyValue(model);
