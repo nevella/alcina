@@ -19,6 +19,8 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.HistoryImpl;
 import com.google.gwt.user.client.Window;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -148,7 +150,7 @@ public class HistoryImplPushState extends HistoryImpl {
 		}
 		setToken(token);
 	}
-
+	@RegistryLocation(registryPoint = BasePlace.HrefProvider.class,implementationType = ImplementationType.NONE)
 	public static class HrefProviderPushState extends BasePlace.HrefProvider {
 		@Override
 		public String toHrefString(BasePlace basePlace) {
