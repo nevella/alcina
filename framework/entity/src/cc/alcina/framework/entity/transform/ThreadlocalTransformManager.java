@@ -481,7 +481,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+	public Map<String, PropertyReflector>
+			getPropertyReflectors(Class<?> beanClass) {
 		return ObjectPersistenceHelper.get().getPropertyReflectors(beanClass);
 	}
 

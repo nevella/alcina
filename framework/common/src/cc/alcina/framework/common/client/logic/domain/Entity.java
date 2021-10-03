@@ -471,7 +471,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		public static Stream<PropertyReflector>
 				getOwnerReflectors(Class<?> beanClass) {
 			return Reflections.classLookup().getPropertyReflectors(beanClass)
-					.stream()
+					.values().stream()
 					.filter(pr -> pr
 							.getAnnotation(DomainProperty.class) != null)
 					.filter(Objects::nonNull).filter(pr -> pr

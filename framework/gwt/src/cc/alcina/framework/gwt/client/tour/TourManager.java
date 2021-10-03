@@ -69,6 +69,10 @@ public abstract class TourManager {
 		}
 	}
 
+	public ConditionEvaluationContext createConditionEvaluationContext() {
+		return new ConditionEvaluationContext(currentTour);
+	}
+
 	public Tour.Step getStep() {
 		return this.step;
 	}
@@ -97,10 +101,6 @@ public abstract class TourManager {
 		this.tourJson = tourJson.replaceFirst("var sample = ", "");
 		currentTour = TourState.fromJson(this.tourJson);
 		refreshTourView();
-	}
-
-	protected ConditionEvaluationContext createConditionEvaluationContext() {
-		return new ConditionEvaluationContext(currentTour);
 	}
 
 	protected void exitTour(String message) {

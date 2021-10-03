@@ -51,13 +51,16 @@ public class TourManagerWd extends TourManager {
 
 	private WDToken token;
 
+	private WdExec exec;
+
 	public TourManagerWd(WdExec exec, WDToken token) {
+		this.exec = exec;
 		UIRendererWd.get().exec = exec;
 		this.token = token;
 	}
 
 	@Override
-	protected ConditionEvaluationContext createConditionEvaluationContext() {
+	public ConditionEvaluationContext createConditionEvaluationContext() {
 		return new ConditionEvaluationContextWd(currentTour);
 	}
 
@@ -70,6 +73,24 @@ public class TourManagerWd extends TourManager {
 	@Override
 	protected boolean shouldRetry(DisplayStepPhase state) {
 		return false;
+	}
+
+	public class ConditionEvaluationContextWd
+			extends ConditionEvaluationContext {
+		public ConditionEvaluationContextWd(TourState tourState) {
+			super(tourState);
+		}
+
+		public WdExec getExec() {
+			return exec;
+		}
+
+		@Override
+		public boolean provideIsFirstStep() {
+			boolean result = super.provideIsFirstStep() && !Boolean.valueOf(
+					token.getTestInfo().get(PROP_FIRST_SUITE_STEP_PERFORMED));
+			return result;
+		}
 	}
 
 	public static class EnumDeserializer extends JsonDeserializer<Enum> {
@@ -120,19 +141,6 @@ public class TourManagerWd extends TourManager {
 			} else {
 				return string;
 			}
-		}
-	}
-
-	class ConditionEvaluationContextWd extends ConditionEvaluationContext {
-		public ConditionEvaluationContextWd(TourState tourState) {
-			super(tourState);
-		}
-
-		@Override
-		public boolean provideIsFirstStep() {
-			boolean result = super.provideIsFirstStep() && !Boolean.valueOf(
-					token.getTestInfo().get(PROP_FIRST_SUITE_STEP_PERFORMED));
-			return result;
 		}
 	}
 

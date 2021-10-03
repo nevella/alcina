@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.SelfDescribed;
@@ -40,6 +39,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
@@ -87,13 +87,14 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	private CachingConcurrentMap<Class, String> simpleClassNames = new CachingConcurrentMap<Class, String>(
 			Class::getSimpleName, 1000);
 
-	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
+	private CachingConcurrentMap<Class, Map<String, PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
 					.stream()
 					.filter(pd -> !(pd.getName().equals("class")
 							|| pd.getName().equals("propertyChangeListeners")))
 					.map(pd -> JvmPropertyReflector.get(clazz, pd))
-					.collect(Collectors.toList()),
+					.collect(AlcinaCollectors
+							.toKeyMap(PropertyReflector::getPropertyName)),
 			100);
 
 	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
@@ -186,7 +187,8 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	@Override
-	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+	public Map<String, PropertyReflector>
+			getPropertyReflectors(Class<?> beanClass) {
 		return classPropertyReflectorLookup.get(beanClass);
 	}
 

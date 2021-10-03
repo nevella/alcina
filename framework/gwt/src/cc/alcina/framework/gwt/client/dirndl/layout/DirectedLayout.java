@@ -4,6 +4,7 @@ import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
@@ -375,9 +376,9 @@ public class DirectedLayout {
 			}
 			if (model instanceof Bindable
 					&& !(renderer instanceof HandlesModelBinding)) {
-				List<PropertyReflector> propertyReflectors = Reflections
-						.classLookup()
-						.getPropertyReflectors((model.getClass()));
+				Collection<PropertyReflector> propertyReflectors = Reflections
+						.classLookup().getPropertyReflectors((model.getClass()))
+						.values();
 				if (propertyReflectors != null) {
 					for (PropertyReflector propertyReflector : propertyReflectors) {
 						if (propertyReflector.hasAnnotation(Directed.class)) {
@@ -435,9 +436,9 @@ public class DirectedLayout {
 			case "..":
 				return parent;
 			default:
-				List<PropertyReflector> propertyReflectors = Reflections
-						.classLookup()
-						.getPropertyReflectors((model.getClass()));
+				Collection<PropertyReflector> propertyReflectors = Reflections
+						.classLookup().getPropertyReflectors((model.getClass()))
+						.values();
 				int idx = 0;
 				for (PropertyReflector propertyReflector : propertyReflectors) {
 					if (propertyReflector.getPropertyName().equals(segment)) {

@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.spi;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import com.totsp.gwittir.client.beans.Method;
@@ -41,7 +42,8 @@ public interface ClassLookup {
 
 	public List<Class> getInterfaces(Class clazz);
 
-	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass);
+	public Map<String, PropertyReflector>
+			getPropertyReflectors(Class<?> beanClass);
 
 	public Class getPropertyType(Class clazz, String propertyName);
 
@@ -57,9 +59,7 @@ public interface ClassLookup {
 
 	default PropertyReflector getPropertyReflector(Class<?> beanClass,
 			String propertyName) {
-		return getPropertyReflectors(beanClass).stream()
-				.filter(pr -> pr.getPropertyName().equals(propertyName))
-				.findFirst().orElse(null);
+		return getPropertyReflectors(beanClass).get(propertyName);
 	}
 
 	default String getSimpleClassName(Class<?> clazz) {
@@ -71,8 +71,7 @@ public interface ClassLookup {
 	}
 
 	default boolean hasProperty(Class beanClass, String propertyName) {
-		return getPropertyReflectors(beanClass).stream()
-				.anyMatch(pr -> pr.getPropertyName().equals(propertyName));
+		return getPropertyReflector(beanClass, propertyName) != null;
 	}
 
 	default boolean isNonAbstract(Class<? extends Object> clazz) {
@@ -99,7 +98,7 @@ public interface ClassLookup {
 			Class<?> beanClass, Class<A> annotationClass,
 			BiConsumer<A, PropertyReflector> callback) {
 		for (PropertyReflector propertyReflector : getPropertyReflectors(
-				beanClass)) {
+				beanClass).values()) {
 			A annotation = propertyReflector.getAnnotation(annotationClass);
 			if (annotation != null) {
 				callback.accept(annotation, propertyReflector);

@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.persistence.domain;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -86,7 +87,7 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 
 		@Override
-		public List<PropertyReflector>
+		public Map<String, PropertyReflector>
 				getPropertyReflectors(Class<?> beanClass) {
 			return ObjectPersistenceHelper.get()
 					.getPropertyReflectors(beanClass);

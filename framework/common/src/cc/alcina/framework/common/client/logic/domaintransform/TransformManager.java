@@ -1260,7 +1260,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public void persistSerializables(Entity entity) {
 		Reflections.classLookup().getPropertyReflectors(entity.entityClass())
-				.stream()
+				.values().stream()
 				.filter(reflector -> reflector != null
 						&& reflector.getAnnotation(DomainProperty.class) != null
 						&& reflector.getAnnotation(DomainProperty.class)

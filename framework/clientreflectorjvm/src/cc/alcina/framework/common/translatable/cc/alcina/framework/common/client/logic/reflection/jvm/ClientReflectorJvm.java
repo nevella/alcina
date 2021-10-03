@@ -25,7 +25,8 @@ import com.google.gwt.core.client.GwtScriptOnly;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
 /**
- * never actually used, but means we don't have to do weird things for hosted-mode version
+ * never actually used, but means we don't have to do weird things for
+ * hosted-mode version
  */
 @GwtScriptOnly
 public class ClientReflectorJvm extends ClientReflector {
@@ -41,11 +42,13 @@ public class ClientReflectorJvm extends ClientReflector {
 	public Class getClassForName(String fqn) {
 		return null;
 	}
+
 	@Override
 	protected <T> T newInstance0(Class<T> clazz, long objectId, long localId) {
-		//not called
+		// not called
 		return null;
 	}
+
 	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		return null;
@@ -54,16 +57,18 @@ public class ClientReflectorJvm extends ClientReflector {
 	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		return null;
 	}
+
 	public static void checkClassAnnotations(Class clazz) {
 		return;
 	}
+
 	@Override
-	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+	public Map<String, PropertyReflector>
+			getPropertyReflectors(Class<?> beanClass) {
 		return null;
 	}
 
 	class MethodWrapper implements com.totsp.gwittir.client.beans.Method {
-
 		public MethodWrapper(Method method) {
 		}
 
@@ -76,11 +81,13 @@ public class ClientReflectorJvm extends ClientReflector {
 		public Object invoke(Object target, Object[] args) throws Exception {
 			return null;
 		}
+
 		@Override
 		public Class getDeclaringClass() {
 			return null;
 		}
 	}
+
 	@Override
 	protected void initialiseNewInstance(Class clazz) {
 	}

@@ -434,8 +434,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			boolean editableWidgets, boolean multiple,
 			BoundWidgetTypeFactory factory, Object obj,
 			AnnotationLocation.Resolver resolver) {
-		List<PropertyReflector> propertyReflectors = Reflections.classLookup()
-				.getPropertyReflectors(clazz);
+		Collection<PropertyReflector> propertyReflectors = Reflections
+				.classLookup().getPropertyReflectors(clazz).values();
 		AnnotationLocation clazzLocation = new AnnotationLocation(clazz, null,
 				resolver);
 		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);

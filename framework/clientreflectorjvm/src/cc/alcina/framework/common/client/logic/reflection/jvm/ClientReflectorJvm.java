@@ -14,7 +14,6 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
@@ -35,6 +34,7 @@ import cc.alcina.framework.common.client.logic.reflection.IgnoreIntrospectionChe
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -194,14 +194,15 @@ public class ClientReflectorJvm extends ClientReflector {
 
 	private CollectionFilter<String> filter;
 
-	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
+	private CachingConcurrentMap<Class, Map<String, PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
 					.stream()
 					// FIXME - mvcc.adjunct - generalise ignored properties
 					.filter(pd -> !(pd.getName().equals("class")
 							|| pd.getName().equals("propertyChangeListeners")))
 					.map(pd -> JvmPropertyReflector.get(clazz, pd))
-					.collect(Collectors.toList()),
+					.collect(AlcinaCollectors
+							.toKeyMap(PropertyReflector::getPropertyName)),
 			100);
 
 	private Map<String, Class> forName = new LinkedHashMap<>();
@@ -371,7 +372,8 @@ public class ClientReflectorJvm extends ClientReflector {
 	}
 
 	@Override
-	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+	public Map<String, PropertyReflector>
+			getPropertyReflectors(Class<?> beanClass) {
 		return classPropertyReflectorLookup.get(beanClass);
 	}
 
