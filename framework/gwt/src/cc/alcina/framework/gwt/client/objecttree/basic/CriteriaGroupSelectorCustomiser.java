@@ -6,8 +6,8 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
@@ -43,7 +43,7 @@ public abstract class CriteriaGroupSelectorCustomiser<C extends CriteriaGroup, S
 	};
 
 	public CriteriaGroupSelectorCustomiser(Class selectionObjectClass,
-			CollectionFilter filter) {
+			Predicate filter) {
 		super();
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;

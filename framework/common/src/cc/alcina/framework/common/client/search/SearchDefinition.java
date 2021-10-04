@@ -22,11 +22,11 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
@@ -57,8 +57,6 @@ public abstract class SearchDefinition extends Bindable
 		implements TreeSerializable, TreeRenderable, ContentDefinition,
 		HasPermissionsValidation, HasReflectiveEquivalence<SearchDefinition>,
 		ReflectCloneable<SearchDefinition> {
-	
-
 	public static final transient int LARGE_SEARCH = 0xFF0000;
 
 	public static final transient String CONTEXT_CURRENT_SEARCH_DEFINITION = SearchDefinition.class
@@ -122,8 +120,8 @@ public abstract class SearchDefinition extends Bindable
 	}
 
 	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
-		return (List<SC>) CollectionFilters.filter(allCriteria(),
-				new IsClassFilter(clazz));
+		return (List<SC>) allCriteria().stream()
+				.filter(new IsClassFilter(clazz)).collect(Collectors.toList());
 	}
 
 	public Set<OrderCriterion> allOrderCriteria() {

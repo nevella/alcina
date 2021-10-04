@@ -1,9 +1,8 @@
 package cc.alcina.framework.entity.util;
 
 import java.util.List;
+import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class Decl {
@@ -16,8 +15,8 @@ public class Decl {
 
 		private String propertyName;
 
-		public Operation filter(CollectionFilter filter) {
-			list = CollectionFilters.filter(list, filter);
+		public Operation filter(Predicate filter) {
+			list.removeIf(filter.negate());
 			return this;
 		}
 

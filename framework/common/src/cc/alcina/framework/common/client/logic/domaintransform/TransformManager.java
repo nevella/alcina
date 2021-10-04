@@ -32,6 +32,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -43,8 +44,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
@@ -804,12 +803,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public <V extends Entity> V ensure(Collection<V> instances, Class<V> clazz,
 			String key, Object value, Entity parent,
 			String parentPropertyName) {
-		V instance = CommonUtils.first(CollectionFilters.filter(instances,
-				new PropertyFilter<V>(key, value)));
-		if (instance != null) {
-			return instance;
+		Optional<V> optional = instances.stream()
+				.filter(new PropertyFilter<V>(key, value)).findFirst();
+		if (optional.isPresent()) {
+			return optional.get();
 		}
-		instance = createDomainObject(clazz);
+		V instance = createDomainObject(clazz);
 		propertyAccessor().setPropertyValue(instance, key, value);
 		if (parent != null) {
 			propertyAccessor().setPropertyValue(instance, parentPropertyName,
@@ -819,12 +818,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public <V extends Entity> List<V> filter(Class<V> clazz,
-			CollectionFilter<V> filter) {
-		List<V> result = new ArrayList<V>(
-				getDomainObjects().getCollection(clazz));
-		if (filter != null) {
-			result = CollectionFilters.filter(result, filter);
-		}
+			Predicate<V> filter) {
+		List<V> result = getDomainObjects().getCollection(clazz).stream()
+				.filter(filter).collect(Collectors.toList());
 		if (!result.isEmpty() && result.get(0) instanceof Comparable) {
 			Collections.sort((List) result);
 		}

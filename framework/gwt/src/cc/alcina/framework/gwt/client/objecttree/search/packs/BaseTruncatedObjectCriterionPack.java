@@ -2,9 +2,9 @@ package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -26,9 +26,9 @@ public class BaseTruncatedObjectCriterionPack {
 				return new DomainFilter(getPropertyPath(),
 						Domain.find(sc.getObjectClass(), sc.getId()));
 			}
-			return new DomainFilter(new CollectionFilter<I>() {
+			return new DomainFilter(new Predicate<I>() {
 				@Override
-				public boolean allow(I i) {
+				public boolean test(I i) {
 					if (i == null) {
 						return false;
 					}
@@ -81,9 +81,9 @@ public class BaseTruncatedObjectCriterionPack {
 			if (id == 0) {
 				return null;
 			}
-			return new DomainFilter(new CollectionFilter<I>() {
+			return new DomainFilter(new Predicate<I>() {
 				@Override
-				public boolean allow(I i) {
+				public boolean test(I i) {
 					if (i == null) {
 						return false;
 					}

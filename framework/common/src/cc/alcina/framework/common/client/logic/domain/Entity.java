@@ -19,7 +19,6 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
@@ -392,7 +391,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		}
 	}
 
-	public static class EntityByIdFilter implements CollectionFilter<Entity> {
+	public static class EntityByIdFilter implements Predicate<Entity> {
 		private final boolean allowAllExceptId;
 
 		private final long id;
@@ -403,7 +402,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		}
 
 		@Override
-		public boolean allow(Entity o) {
+		public boolean test(Entity o) {
 			return o != null && (o.getId() == id ^ allowAllExceptId);
 		}
 	}

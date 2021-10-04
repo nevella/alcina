@@ -2,10 +2,10 @@ package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -23,9 +23,9 @@ public class BaseTextCriterionPack {
 			if (text.isEmpty()) {
 				return null;
 			}
-			return new DomainFilter(new CollectionFilter<T>() {
+			return new DomainFilter(new Predicate<T>() {
 				@Override
-				public boolean allow(T o) {
+				public boolean test(T o) {
 					return BaseTextCriterionHandler.this.test(o, text);
 				}
 			}).invertIf(sc

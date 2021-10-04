@@ -31,6 +31,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
@@ -54,8 +55,6 @@ import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
@@ -85,9 +84,9 @@ import cc.alcina.framework.entity.util.MethodContext;
  * @author Nick Reddel
  */
 public class ClientReflectionGenerator extends Generator {
-	public static final CollectionFilter<RegistryLocation> CLIENT_VISIBLE_ANNOTATION_FILTER = new CollectionFilter<RegistryLocation>() {
+	public static final Predicate<RegistryLocation> CLIENT_VISIBLE_ANNOTATION_FILTER = new Predicate<RegistryLocation>() {
 		@Override
-		public boolean allow(RegistryLocation o) {
+		public boolean test(RegistryLocation o) {
 			return o.registryPoint()
 					.getAnnotation(NonClientRegistryPointType.class) == null;
 		}
@@ -742,8 +741,7 @@ public class ClientReflectionGenerator extends Generator {
 				Set<RegistryLocation> locations = Registry
 						.filterForRegistryPointUniqueness(
 								superclassAnnotations);
-				CollectionFilters.filterInPlace(locations,
-						CLIENT_VISIBLE_ANNOTATION_FILTER);
+				locations.removeIf(CLIENT_VISIBLE_ANNOTATION_FILTER.negate());
 				if (locations.size() > 0) {
 					results.put(jct, locations);
 				}

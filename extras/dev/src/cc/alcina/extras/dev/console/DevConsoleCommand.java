@@ -27,6 +27,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -34,8 +35,6 @@ import org.apache.log4j.Logger;
 import cc.alcina.extras.dev.console.DevConsoleProperties.SetPropInfo;
 import cc.alcina.extras.dev.console.DevConsoleStrings.DevConsoleString;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -832,9 +831,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		public String run(final String[] argv) throws Exception {
 			List<Class> classes = Registry.get()
 					.lookup(DevConsoleRunnable.class);
-			CollectionFilter<Class> filter = new CollectionFilter<Class>() {
+			Predicate<Class> filter = new Predicate<Class>() {
 				@Override
-				public boolean allow(Class o) {
+				public boolean test(Class o) {
 					try {
 						String[] tags = ((DevConsoleRunnable) o.newInstance())
 								.tagStrings();
@@ -852,8 +851,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					}
 				}
 			};
-			CmdExecRunnable.listRunnables(
-					CollectionFilters.filter(classes, filter), null);
+			CmdExecRunnable.listRunnables(classes.stream().filter(filter)
+					.collect(Collectors.toList()), null);
 			return "";
 		}
 	}
@@ -1103,13 +1102,13 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			List<String> matches = new ArrayList<String>(
 					console.history.getMatches(argv[0]));
 			Collections.reverse(matches);
-			CollectionFilter<String> filter = new CollectionFilter<String>() {
+			Predicate<String> filter = new Predicate<String>() {
 				@Override
-				public boolean allow(String o) {
+				public boolean test(String o) {
 					return !o.startsWith("sh ");
 				}
 			};
-			CollectionFilters.filterInPlace(matches, filter);
+			matches.removeIf(filter.negate());
 			if (matches.size() > 1) {
 				System.out.format("Matches:\n-------\n%s\n\n",
 						CommonUtils.join(matches, "\n"));

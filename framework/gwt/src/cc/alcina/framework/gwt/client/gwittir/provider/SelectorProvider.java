@@ -16,6 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.provider;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -23,7 +24,6 @@ import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelector;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
@@ -36,7 +36,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 public class SelectorProvider implements BoundWidgetProvider {
 	private final Class selectionObjectClass;
 
-	private final CollectionFilter filter;
+	private final Predicate filter;
 
 	private final int maxSelectedItems;
 
@@ -54,7 +54,7 @@ public class SelectorProvider implements BoundWidgetProvider {
 
 	private boolean withNull;
 
-	public SelectorProvider(Class selectionObjectClass, CollectionFilter filter,
+	public SelectorProvider(Class selectionObjectClass, Predicate filter,
 			int maxSelectedItems, Renderer renderer, boolean useCellList,
 			boolean useMinimalSelector, boolean useFlatSelector, String hint,
 			Class providerClass, boolean withNull) {

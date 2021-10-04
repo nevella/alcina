@@ -16,15 +16,16 @@ package cc.alcina.framework.common.client.util;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
-
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 
 /**
  *
@@ -238,7 +239,9 @@ public class Multimap<K, V extends List>
 	public <T extends Comparable> Map<K, T> maxMap() {
 		Map<K, T> result = new LinkedHashMap<K, T>();
 		for (java.util.Map.Entry<K, V> e : entrySet()) {
-			result.put(e.getKey(), (T) CollectionFilters.max(e.getValue()));
+			Optional<T> optional = (Optional<T>) e.getValue().stream()
+					.collect(Collectors.maxBy(Comparator.naturalOrder()));
+			result.put(e.getKey(), optional.orElse(null));
 		}
 		return result;
 	}
@@ -256,7 +259,9 @@ public class Multimap<K, V extends List>
 	public <T extends Comparable> Map<K, T> minMap() {
 		Map<K, T> result = new LinkedHashMap<K, T>();
 		for (java.util.Map.Entry<K, V> e : entrySet()) {
-			result.put(e.getKey(), (T) CollectionFilters.min(e.getValue()));
+			Optional<T> optional = (Optional<T>) e.getValue().stream()
+					.collect(Collectors.minBy(Comparator.naturalOrder()));
+			result.put(e.getKey(), optional.orElse(null));
 		}
 		return result;
 	}

@@ -5,17 +5,16 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Multimap;
 
 public interface UmbrellaProvider<T> {
-	public void forCollection(Collection<T> collection,
-			CollectionFilter<T> collectionFilter);
+	public void forCollection(Collection<T> collection, Predicate<T> predicate);
 
 	public List<String> getUmbrellaNames(String prefix);
 
@@ -37,8 +36,8 @@ public interface UmbrellaProvider<T> {
 
 		@Override
 		public void forCollection(Collection<T> collection,
-				CollectionFilter<T> collectionFilter) {
-			ensureLookups(collection, collectionFilter);
+				Predicate<T> predicate) {
+			ensureLookups(collection, predicate);
 		}
 
 		@Override
@@ -52,7 +51,7 @@ public interface UmbrellaProvider<T> {
 		}
 
 		private void ensureLookups(Collection<T> collection,
-				CollectionFilter<T> collectionFilter) {
+				Predicate<T> predicate) {
 			childObjects = new Multimap<String, List<T>>();
 			childPrefixes = new Multimap<String, List<String>>();
 			childPrefixLkp = new HashSet<String>();
@@ -63,7 +62,7 @@ public interface UmbrellaProvider<T> {
 			ClientBeanReflector reflector = ClientReflector.get()
 					.beanInfoForClass(collection.iterator().next().getClass());
 			for (T t : collection) {
-				if (collectionFilter != null && !collectionFilter.allow(t)) {
+				if (predicate != null && !predicate.test(t)) {
 					continue;
 				}
 				String objectName = textProvider.getObjectName(t, reflector)
@@ -95,8 +94,9 @@ public interface UmbrellaProvider<T> {
 
 		@Override
 		public void forCollection(Collection<T> collection,
-				CollectionFilter<T> collectionFilter) {
-			objects = CollectionFilters.filter(collection, collectionFilter);
+				Predicate<T> predicate) {
+			objects = collection.stream().filter(predicate)
+					.collect(Collectors.toList());
 		}
 
 		@Override

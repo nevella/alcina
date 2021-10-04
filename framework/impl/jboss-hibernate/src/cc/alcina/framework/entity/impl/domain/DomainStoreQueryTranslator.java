@@ -39,10 +39,8 @@ import org.hibernate.internal.CriteriaImpl.CriterionEntry;
 import org.hibernate.transform.ResultTransformer;
 
 import com.google.common.base.Preconditions;
-import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
@@ -739,13 +737,8 @@ public class DomainStoreQueryTranslator {
 		}
 
 		public List asTuples() {
-			return CollectionFilters.convert(rows,
-					new Converter<GroupedRow, Object>() {
-						@Override
-						public Object convert(GroupedRow original) {
-							return original.asTuple();
-						}
-					});
+			return rows.stream().map(GroupedRow::asTuple)
+					.collect(Collectors.toList());
 		}
 
 		public void handleProjection(Object obj,
@@ -782,20 +775,10 @@ public class DomainStoreQueryTranslator {
 
 		@Override
 		public String toString() {
-			return CommonUtils.join(CollectionFilters.convert(projectionHelpers,
-					new Converter<ProjectionHelper, String>() {
-						@Override
-						public String convert(ProjectionHelper original) {
-							return original.toString();
-						}
-					}), "\n") + "==============\n"
-					+ CommonUtils.join(CollectionFilters.convert(rows,
-							new Converter<GroupedRow, String>() {
-								@Override
-								public String convert(GroupedRow original) {
-									return original.toString();
-								}
-							}), "\n");
+			return projectionHelpers.stream().map(ProjectionHelper::toString)
+					.collect(Collectors.joining("\n")) + "==============\n"
+					+ rows.stream().map(GroupedRow::toString)
+							.collect(Collectors.joining("\n"));
 		}
 	}
 

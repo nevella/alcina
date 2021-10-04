@@ -6,6 +6,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +15,6 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaLookup;
@@ -153,14 +152,14 @@ public class DeltaStore {
 		if (cache == null) {
 			return null;
 		}
-		CollectionFilter<DomainModelDeltaMetadata> hasDomainObjectsFilter = new CollectionFilter<DomainModelDeltaMetadata>() {
+		Predicate<DomainModelDeltaMetadata> hasDomainObjectsFilter = new Predicate<DomainModelDeltaMetadata>() {
 			@Override
-			public boolean allow(DomainModelDeltaMetadata o) {
+			public boolean test(DomainModelDeltaMetadata o) {
 				return o.isDomainObjectsFieldSet();
 			}
 		};
-		return CollectionFilters.first(cache.metadataCache.values(),
-				hasDomainObjectsFilter);
+		return cache.metadataCache.values().stream()
+				.filter(hasDomainObjectsFilter).findFirst().orElse(null);
 	}
 
 	public List<String> getExistingDeltaSignatures() {

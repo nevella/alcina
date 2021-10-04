@@ -11,10 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientUIThreadWorker;
@@ -427,9 +427,9 @@ public abstract class LocalTransformPersistence
 		List<String> clauses = new ArrayList<String>();
 		if (filters.types.length > 0) {
 			String typeClause = "transform_request_type in "
-					+ stringListToClause(CollectionFilters.convert(
-							Arrays.asList(filters.types),
-							new ToStringConverter()));
+					+ stringListToClause(Arrays.stream(filters.types)
+							.map(new ToStringConverter())
+							.collect(Collectors.toList()));
 			clauses.add(typeClause);
 		}
 		if (filters.clientInstanceId != null) {

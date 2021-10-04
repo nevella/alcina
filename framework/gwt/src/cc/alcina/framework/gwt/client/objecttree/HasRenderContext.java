@@ -1,16 +1,17 @@
 package cc.alcina.framework.gwt.client.objecttree;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
+import java.util.function.Predicate;
+
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 
 public interface HasRenderContext {
 	public abstract LooseContextInstance getRenderContext();
 
-	public static class IsHasRenderContext implements CollectionFilter<Object> {
+	public static class IsHasRenderContext implements Predicate<Object> {
 		public static final IsHasRenderContext INSTANCE = new IsHasRenderContext();
 
 		@Override
-		public boolean allow(Object o) {
+		public boolean test(Object o) {
 			return o instanceof HasRenderContext;
 		}
 	}

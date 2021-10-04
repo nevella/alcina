@@ -11,7 +11,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -170,8 +169,8 @@ public class DomainSearcher<T extends Entity> {
 		}
 
 		@Override
-		public CollectionFilter asCollectionFilter() {
-			return this.filter.asCollectionFilter();
+		public Predicate asPredicate() {
+			return this.filter.asPredicate();
 		}
 
 		@Override

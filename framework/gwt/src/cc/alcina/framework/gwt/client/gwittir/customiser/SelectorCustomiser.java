@@ -13,12 +13,13 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import java.util.function.Predicate;
+
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -74,16 +75,16 @@ public class SelectorCustomiser implements Customiser {
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, Custom info) {
 		if (editable) {
-			CollectionFilter filter = null;
+			Predicate filter = null;
 			int maxSelectedItems = 0;
 			NamedParameter parameter = NamedParameter.Support
 					.getParameter(info.parameters(), FILTER_CLASS);
 			if (parameter != null) {
 				Object impl = Registry.implOrNull(parameter.classValue());
 				if (impl != null) {
-					filter = (CollectionFilter) impl;
+					filter = (Predicate) impl;
 				} else {
-					filter = (CollectionFilter) Reflections.classLookup()
+					filter = (Predicate) Reflections.classLookup()
 							.newInstance(parameter.classValue(), 0, 0);
 				}
 			}

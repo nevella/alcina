@@ -18,6 +18,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.GenericRow;
@@ -28,7 +29,6 @@ import com.google.code.gwt.database.client.SQLTransaction;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -283,8 +283,8 @@ public class WebDatabaseTransformPersistence
 				return original.getId();
 			}
 		};
-		List<Integer> ids = CollectionFilters.convert(persistedWrappers,
-				getIdConverter);
+		List<Integer> ids = persistedWrappers.stream().map(getIdConverter)
+				.collect(Collectors.toList());
 		executeSql(Ax.format(
 				"update  TransformRequests  set "
 						+ "transform_request_type='%s'" + " where id in (%s)",
@@ -352,9 +352,9 @@ public class WebDatabaseTransformPersistence
 		@Override
 		protected Iterator<DomainModelDelta> getResult() {
 			if (iterator == null) {
-				iterator = CollectionFilters.convert(transforms,
+				iterator = transforms.stream().map(
 						new DeltaApplicationRecordToDomainModelDeltaConverter())
-						.iterator();
+						.collect(Collectors.toList()).iterator();
 			}
 			return iterator;
 		}

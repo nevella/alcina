@@ -16,11 +16,11 @@ package cc.alcina.framework.gwt.client.objecttree.basic;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
@@ -66,7 +66,7 @@ public abstract class AbstractRenderer<T extends TreeRenderable>
 	}
 
 	@Override
-	public CollectionFilter collectionFilter() {
+	public Predicate predicate() {
 		return null;
 	}
 

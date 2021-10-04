@@ -5,6 +5,7 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
@@ -12,7 +13,6 @@ import javax.xml.bind.annotation.XmlAccessorType;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 		@RegistryLocation(registryPoint = TreeSerializable.class) })
 @ClientInstantiable
 @XmlAccessorType(XmlAccessType.FIELD)
-public class LongPair implements Comparable<LongPair>, CollectionFilter<Long>,
+public class LongPair implements Comparable<LongPair>, Predicate<Long>,
 		TreeSerializable {
 	public static boolean isContinuous(List<LongPair> matchedRanges) {
 		LongPair union = unionOf(matchedRanges);
@@ -88,7 +88,7 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long>,
 	}
 
 	@Override
-	public boolean allow(Long o) {
+	public boolean test(Long o) {
 		return o != null && o >= l1 && o < l2;
 	}
 

@@ -1,10 +1,10 @@
 package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
 import java.util.Arrays;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.search.EnumCriterion;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
@@ -21,9 +21,9 @@ public class BaseEnumCriterionPack {
 			if (e == null) {
 				return null;
 			}
-			return new DomainFilter(new CollectionFilter<T>() {
+			return new DomainFilter(new Predicate<T>() {
 				@Override
-				public boolean allow(T t) {
+				public boolean test(T t) {
 					return BaseEnumCriterionHandler.this.test(t, e);
 				}
 			}).invertIf(

@@ -2,9 +2,9 @@ package cc.alcina.extras.dev.console;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.PropertyConverter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -13,10 +13,9 @@ import cc.alcina.framework.common.client.util.StringMap;
 public abstract class DevConsoleFilter {
 	public static String
 			describeFilters(Class<? extends DevConsoleFilter> registryPoint) {
-		return CommonUtils.join(
-				CollectionFilters.convert(Registry.impls(registryPoint),
-						new PropertyConverter<DevConsoleFilter, String>("key")),
-				"|");
+		return Registry.impls(registryPoint).stream()
+				.map(new PropertyConverter<DevConsoleFilter, String>("key"))
+				.collect(Collectors.joining("|"));
 	}
 
 	public static String getFilters(
@@ -26,7 +25,7 @@ public abstract class DevConsoleFilter {
 
 	public static String getFilters(
 			Class<? extends DevConsoleFilter> registryPoint, String[] argv,
-			CollectionFilter<String> allowFilter) {
+			Predicate<String> allowFilter) {
 		List<String> filters = new ArrayList<String>();
 		List<? extends DevConsoleFilter> impls = Registry.impls(registryPoint);
 		StringMap kv = new StringMap();
@@ -36,7 +35,7 @@ public abstract class DevConsoleFilter {
 		for (DevConsoleFilter impl : impls) {
 			if (kv.containsKey(impl.getKey()) || impl.hasDefault()) {
 				String filterString = impl.getFilter(kv.get(impl.getKey()));
-				if (allowFilter == null || allowFilter.allow(filterString)) {
+				if (allowFilter == null || allowFilter.test(filterString)) {
 					filters.add(filterString);
 				}
 			}

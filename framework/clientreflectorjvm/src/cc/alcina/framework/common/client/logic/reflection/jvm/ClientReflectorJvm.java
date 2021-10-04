@@ -14,6 +14,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
@@ -22,8 +23,6 @@ import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
 
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -192,7 +191,7 @@ public class ClientReflectorJvm extends ClientReflector {
 	UnsortedMultikeyMap<Annotation> annotationLookup = new UnsortedMultikeyMap<Annotation>(
 			2);
 
-	private CollectionFilter<String> filter;
+	private Predicate<String> test;
 
 	private CachingConcurrentMap<Class, Map<String, PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
@@ -226,14 +225,13 @@ public class ClientReflectorJvm extends ClientReflector {
 			 * outweigh the (possible) crud IMO
 			 */
 			if (filterClassName != null) {
-				filter = (CollectionFilter<String>) Class
-						.forName(filterClassName).newInstance();
-				CollectionFilters.filterInPlace(classes.classData.keySet(),
-						filter);
+				test = (Predicate<String>) Class.forName(filterClassName)
+						.newInstance();
+				classes.classData.keySet().removeIf(test.negate());
 			}
-			CollectionFilter<String> defaultExcludes = new CollectionFilter<String>() {
+			Predicate<String> defaultExcludes = new Predicate<String>() {
 				@Override
-				public boolean allow(String o) {
+				public boolean test(String o) {
 					if (o.contains("AlcinaBeanSerializerJvm")) {
 						return false;
 					}
@@ -247,8 +245,7 @@ public class ClientReflectorJvm extends ClientReflector {
 					return true;
 				}
 			};
-			CollectionFilters.filterInPlace(classes.classData.keySet(),
-					defaultExcludes);
+			classes.classData.keySet().removeIf(defaultExcludes.negate());
 			// FIXME - 2023 - (requires some introspection info) - ignore result
 			// if registrylocation has @NonClientRegistryPointType
 			new RegistryScanner() {
@@ -298,7 +295,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (!hasBeanInfo(clazz)) {
 			return null;
 		}
-		if (filter != null && !filter.allow(clazz.getName())) {
+		if (test != null && !test.test(clazz.getName())) {
 			GWT.log(Ax.format(
 					"Warn: accessing filtered (reflection) class:\n%s",
 					clazz.getName()));
@@ -406,7 +403,7 @@ public class ClientReflectorJvm extends ClientReflector {
 	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
 		try {
-			if (filter != null && !filter.allow(clazz.getName())) {
+			if (test != null && !test.test(clazz.getName())) {
 				GWT.log(Ax.format(
 						"Warn: accessing filtered (reflection) class:\n%s",
 						clazz.getName()));

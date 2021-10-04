@@ -1,11 +1,11 @@
 package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
 import java.util.Arrays;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
 import cc.alcina.framework.common.client.search.LongCriterion;
@@ -22,9 +22,9 @@ public class BaseLongCriterionPack {
 			if (value == null) {
 				return null;
 			}
-			return new DomainFilter(new CollectionFilter<T>() {
+			return new DomainFilter(new Predicate<T>() {
 				@Override
-				public boolean allow(T o) {
+				public boolean test(T o) {
 					return BaseLongCriterionHandler.this.test(o, value);
 				}
 			}).invertIf(sc

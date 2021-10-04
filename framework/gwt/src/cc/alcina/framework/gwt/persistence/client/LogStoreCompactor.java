@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import java.util.Map;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecordIsNonCriticalFilter;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecordKeepNonCriticalPrecedingContextFilter;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
@@ -67,11 +66,10 @@ public class LogStoreCompactor extends Consort<Phase> {
 
 	public boolean isCompacted(ClientLogRecords records) {
 		records.recalcSize();
-		boolean hasNonCritical = CollectionFilters.first(
-				records.getLogRecords(),
-				new ClientLogRecordIsNonCriticalFilter()) != null;
-		boolean hasException = CollectionFilters.first(records.getLogRecords(),
-				new ClientLogRecordKeepNonCriticalPrecedingContextFilter()) != null;
+		boolean hasNonCritical = records.getLogRecords().stream()
+				.anyMatch(new ClientLogRecordIsNonCriticalFilter());
+		boolean hasException = records.getLogRecords().stream().anyMatch(
+				new ClientLogRecordKeepNonCriticalPrecedingContextFilter());
 		return (hasException || !hasNonCritical)
 				&& records.size > RemoteLogPersister.PREFERRED_MAX_PUSH_SIZE;
 	}
@@ -117,6 +115,7 @@ public class LogStoreCompactor extends Consort<Phase> {
 			super(Phase.GOT_RECORDS_AFTER_MERGE_SOURCE_TO_CHECK_FOR_EXCEPTION);
 		}
 
+		@Override
 		protected boolean continueIfCompacted() {
 			return false;
 		}
@@ -188,6 +187,7 @@ public class LogStoreCompactor extends Consort<Phase> {
 			return "increment until we find a compactable or otherwise worthwhile record chunk";
 		}
 
+		@Override
 		public void loop() {
 			LogStore.get().getRange(recordId, recordId, this);
 		}
@@ -260,21 +260,19 @@ public class LogStoreCompactor extends Consort<Phase> {
 				finished("nothing to merge");
 			}
 			if (mergeCheck != null) {
-				boolean hasExceptionKeepContext = CollectionFilters.first(
-						mergeCheck.getLogRecords(),
-						new ClientLogRecordKeepNonCriticalPrecedingContextFilter()) != null;
+				boolean hasExceptionKeepContext = mergeCheck.getLogRecords()
+						.stream().anyMatch(
+								new ClientLogRecordKeepNonCriticalPrecedingContextFilter());
 				if (hasExceptionKeepContext) {
 					minNonCompactedLogRecordId = mergeCheckId + 1;
 					restart();
 					return;
 				}
 			}
-			CollectionFilters.filterInPlace(mergeTo.getLogRecords(),
-					CollectionFilters
-							.inverse(new ClientLogRecordIsNonCriticalFilter()));
-			CollectionFilters.filterInPlace(mergeFrom.getLogRecords(),
-					CollectionFilters
-							.inverse(new ClientLogRecordIsNonCriticalFilter()));
+			mergeTo.getLogRecords()
+					.removeIf(new ClientLogRecordIsNonCriticalFilter());
+			mergeFrom.getLogRecords()
+					.removeIf(new ClientLogRecordIsNonCriticalFilter());
 			while (!mergeFrom.getLogRecords().isEmpty()
 					&& !isCompacted(mergeTo)) {
 				mergeTo.addLogRecord(mergeFrom.getLogRecords().remove(0));

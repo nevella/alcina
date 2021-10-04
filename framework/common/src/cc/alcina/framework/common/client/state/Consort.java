@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +15,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
@@ -170,13 +169,7 @@ public class Consort<D> {
 	}
 
 	public void clear() {
-		CollectionFilter<Player> isCancellableFilter = new CollectionFilter<Player>() {
-			@Override
-			public boolean allow(Player o) {
-				return !o.isCancellable();
-			}
-		};
-		CollectionFilters.filterInPlace(players, isCancellableFilter);
+		players.removeIf(Player::isCancellable);
 		clearReachedStates();
 	}
 
@@ -239,8 +232,8 @@ public class Consort<D> {
 	}
 
 	public <P extends Player> List<P> getTasksForClass(Class<P> clazz) {
-		return (List) CollectionFilters.filter(players,
-				new IsClassFilter(clazz));
+		return (List) players.stream().filter(new IsClassFilter(clazz))
+				.collect(Collectors.toList());
 	}
 
 	public boolean isRunning() {

@@ -20,6 +20,7 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
@@ -53,8 +54,6 @@ import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -78,7 +77,7 @@ public class FastROBoundTable extends BoundTableExt {
 
 	public boolean reallyClear;
 
-	public CollectionFilter<CheckEditableTuple> checkEditableFilter;
+	public Predicate<CheckEditableTuple> checkEditableFilter;
 
 	private EditOverlayHandler editOverlayHandler;
 
@@ -94,7 +93,7 @@ public class FastROBoundTable extends BoundTableExt {
 	public boolean checkEditable(SourcesPropertyChangeEvents target,
 			Field editableField) {
 		return checkEditableFilter == null || checkEditableFilter
-				.allow(new CheckEditableTuple(target, editableField));
+				.test(new CheckEditableTuple(target, editableField));
 	}
 
 	public void edit(Object target, final String fieldName) {
@@ -104,13 +103,11 @@ public class FastROBoundTable extends BoundTableExt {
 			return;
 		}
 		row += ((this.masks & BoundTableExt.HEADER_MASK) > 0) ? 1 : 0;
-		int col = CollectionFilters.indexOf(Arrays.asList(columns),
-				new CollectionFilter<Field>() {
-					@Override
-					public boolean allow(Field field) {
-						return field.getPropertyName().equals(fieldName);
-					}
-				});
+		List<Field> list = Arrays.asList(columns);
+		Field match = list.stream()
+				.filter(field -> field.getPropertyName().equals(fieldName))
+				.findFirst().orElse(null);
+		int col = list.indexOf(match);
 		col += ((this.masks & BoundTableExt.ROW_HANDLE_MASK) > 0) ? 1 : 0;
 		editOverlayHandler.edit(new RowCol(row, col));
 	}
@@ -128,7 +125,7 @@ public class FastROBoundTable extends BoundTableExt {
 		table.addStyleName("editable");
 	}
 
-	public CollectionFilter<CheckEditableTuple> getCheckEditableFilter() {
+	public Predicate<CheckEditableTuple> getCheckEditableFilter() {
 		return this.checkEditableFilter;
 	}
 
@@ -181,7 +178,7 @@ public class FastROBoundTable extends BoundTableExt {
 	}
 
 	public void setCheckEditableFilter(
-			CollectionFilter<CheckEditableTuple> checkEditableFilter) {
+			Predicate<CheckEditableTuple> checkEditableFilter) {
 		this.checkEditableFilter = checkEditableFilter;
 	}
 

@@ -14,11 +14,11 @@
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import java.util.Comparator;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -51,11 +51,12 @@ public class ListCustomiser implements Customiser {
 
 	public static final String REFRESH_ON_MODEL_CHANGE = "refreshOnModelChange";
 
+	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class clazz,
 			boolean multiple, Custom info) {
 		NamedParameter[] parameters = info.parameters();
 		if (editable) {
-			CollectionFilter filter = NamedParameter.Support
+			Predicate filter = NamedParameter.Support
 					.instantiateClass(parameters, FILTER_CLASS);
 			Renderer renderer = NamedParameter.Support
 					.instantiateClass(parameters, RENDERER_CLASS);

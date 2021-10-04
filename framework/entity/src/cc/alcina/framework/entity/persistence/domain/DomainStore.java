@@ -43,7 +43,6 @@ import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.ComplexFilter;
 import cc.alcina.framework.common.client.domain.ComplexFilter.ComplexFilterContext;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -522,7 +521,7 @@ public class DomainStore implements IDomainStore {
 				break;
 			}
 		}
-		token.appendFilter(filter.asCollectionFilter());
+		token.appendFilter(filter.asPredicate());
 	}
 
 	private DomainTransformEventPersistent
@@ -1828,7 +1827,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	class InSubgraphFilter
-			implements CollectionFilter<DomainTransformEventPersistent> {
+			implements Predicate<DomainTransformEventPersistent> {
 		private boolean filterUnknownTransformProperties;
 
 		public InSubgraphFilter() {
@@ -1837,7 +1836,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public boolean allow(DomainTransformEventPersistent evt) {
+		public boolean test(DomainTransformEventPersistent evt) {
 			if (!domainDescriptor.applyPostTransform(evt.getObjectClass(),
 					evt)) {
 				return false;

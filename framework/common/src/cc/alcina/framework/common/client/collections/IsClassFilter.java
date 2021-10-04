@@ -1,6 +1,8 @@
 package cc.alcina.framework.common.client.collections;
 
-public class IsClassFilter implements CollectionFilter {
+import java.util.function.Predicate;
+
+public class IsClassFilter implements Predicate {
 	private Class clazz;
 
 	public IsClassFilter(Class clazz) {
@@ -8,7 +10,7 @@ public class IsClassFilter implements CollectionFilter {
 	}
 
 	@Override
-	public boolean allow(Object o) {
+	public boolean test(Object o) {
 		return o.getClass() == clazz;
 	}
 }

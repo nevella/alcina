@@ -2,8 +2,9 @@ package cc.alcina.framework.common.client.collections;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.function.Predicate;
 
-public class IsClassesFilter implements CollectionFilter {
+public class IsClassesFilter implements Predicate {
 	private Collection<Class> classes;
 
 	private boolean checkingClassObjects;
@@ -17,7 +18,7 @@ public class IsClassesFilter implements CollectionFilter {
 	}
 
 	@Override
-	public boolean allow(Object o) {
+	public boolean test(Object o) {
 		return o != null && (checkingClassObjects ? classes.contains(o)
 				: classes.contains(o.getClass()));
 	}

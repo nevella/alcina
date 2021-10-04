@@ -16,9 +16,9 @@ package cc.alcina.framework.common.client.logic.reflection;
 import java.lang.annotation.Annotation;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -78,13 +78,13 @@ public class ClientPropertyReflector
 		return (A) annotations.get(annotationClass);
 	}
 
-	public CollectionFilter getCollectionFilter() {
+	public Predicate getCollectionFilter() {
 		if (getDisplayInfo() == null || getDisplayInfo() == null) {
 			return null;
 		}
 		Display displayInfo = getDisplayInfo();
 		Class clazz = displayInfo.filterClass();
-		return (CollectionFilter) (clazz == null || clazz == Void.class ? null
+		return (Predicate) (clazz == null || clazz == Void.class ? null
 				: Reflections.newInstance(clazz));
 	}
 
