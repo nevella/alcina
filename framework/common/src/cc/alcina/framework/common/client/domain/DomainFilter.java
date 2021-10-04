@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
 import cc.alcina.framework.common.client.util.Ax;
@@ -43,10 +42,10 @@ public class DomainFilter {
 	protected DomainFilter() {
 	}
 
-	public CollectionFilter asCollectionFilter() {
-		return predicate != null ? new CollectionFilter() {
+	public Predicate asPredicate() {
+		return predicate != null ? new Predicate() {
 			@Override
-			public boolean allow(Object o) {
+			public boolean test(Object o) {
 				return predicate.test(o);
 			}
 

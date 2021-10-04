@@ -17,9 +17,9 @@ public class DomainStoreQuery<V extends Entity> extends DomainQuery<V> {
 		this.store = store;
 	}
 
-	public Predicate<V> asFilter() {
+	public Predicate<V> asPredicate() {
 		return v -> getFilters().stream()
-				.allMatch(f -> f.asCollectionFilter().allow(v));
+				.allMatch(f -> f.asPredicate().test(v));
 	}
 
 	@Override

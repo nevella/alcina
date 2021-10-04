@@ -16,6 +16,8 @@ package cc.alcina.framework.gwt.client.objecttree.basic;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.totsp.gwittir.client.beans.Binding;
@@ -23,8 +25,6 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef.ClassRefSimpleNameRenderer;
@@ -51,6 +51,7 @@ public class PersistentObjectCriteriaGroupRenderer
 	@Override
 	public BoundWidgetProvider renderCustomiser() {
 		return new BoundWidgetProvider() {
+			@Override
 			public BoundWidget get() {
 				return new EntitySelectBox();
 			}
@@ -69,9 +70,10 @@ public class PersistentObjectCriteriaGroupRenderer
 			this.fp = new FlowPanel();
 			box = new SetBasedListBox();
 			Set<ClassRef> all = ClassRef.all();
-			List<ClassRef> list = CollectionFilters.filter(all,
-					new CollectionFilter<ClassRef>() {
-						public boolean allow(ClassRef o) {
+			List<ClassRef> list = all.stream()
+					.filter(new Predicate<ClassRef>() {
+						@Override
+						public boolean test(ClassRef o) {
 							try {
 								Object templateInstance = ClientReflector.get()
 										.getTemplateInstance(o.getRefClass());
@@ -80,7 +82,7 @@ public class PersistentObjectCriteriaGroupRenderer
 								return false;
 							}
 						}
-					});
+					}).collect(Collectors.toList());
 			list.add(0, null);
 			ArrayList sorted = GwittirUtils.sortByStringValue(list,
 					ClassRefSimpleNameRenderer.INSTANCE);
@@ -92,10 +94,12 @@ public class PersistentObjectCriteriaGroupRenderer
 			setAction(new EntitySelectBoxBindingAction());
 		}
 
+		@Override
 		public PersistentObjectCriteriaGroup getValue() {
 			return this.value;
 		}
 
+		@Override
 		public void setValue(PersistentObjectCriteriaGroup value) {
 			this.value = value;
 		}

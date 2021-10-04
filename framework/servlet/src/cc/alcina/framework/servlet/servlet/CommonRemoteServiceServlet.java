@@ -46,7 +46,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.SynchronousAction;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
@@ -316,10 +315,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			}
 		};
 		List<String> lines = Arrays.asList(serializedLogRecords.split("\n"));
-		List<ClientLogRecords> records = CollectionFilters.convert(lines,
-				converter);
-		while (records.remove(null)) {
-		}
+		List<ClientLogRecords> records = lines.stream().map(converter)
+				.filter(Objects::nonNull).collect(Collectors.toList());
 		String remoteAddr = getRemoteAddress();
 		for (ClientLogRecords r : records) {
 			for (ClientLogRecord clr : r.getLogRecords()) {

@@ -13,7 +13,7 @@ public interface Tour {
 
 	@ClientInstantiable
 	enum Action {
-		CLICK, SET_TEXT, NONE, SCRIPT, SELECT
+		CLICK, SET_TEXT, NONE, SCRIPT, SELECT, EVAL
 	}
 
 	interface Condition {

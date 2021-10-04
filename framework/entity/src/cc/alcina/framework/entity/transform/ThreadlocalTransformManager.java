@@ -46,7 +46,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -333,9 +332,9 @@ public class ThreadlocalTransformManager extends TransformManager
 			}
 		}
 		if (detachedEntityCache != null) {
-			first = CommonUtils.first(
-					CollectionFilters.filter(detachedEntityCache.values(clazz),
-							new PropertyFilter<V>(key, value)));
+			first = detachedEntityCache.values(clazz).stream()
+					.filter(new PropertyFilter<V>(key, value)).findFirst()
+					.orElse(null);
 			if (first != null) {
 				return first;
 			}
@@ -481,7 +480,8 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+	public Map<String, PropertyReflector>
+			getPropertyReflectors(Class<?> beanClass) {
 		return ObjectPersistenceHelper.get().getPropertyReflectors(beanClass);
 	}
 

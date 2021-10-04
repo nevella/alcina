@@ -23,7 +23,7 @@ public class CompositeFilter extends DomainFilter {
 	public void add(DomainFilter filter) {
 		filters.add(filter);
 		((cc.alcina.framework.common.client.collections.CompositeFilter) getPredicate())
-				.add(filter.asCollectionFilter());
+				.add(filter.asPredicate());
 	}
 
 	@Override

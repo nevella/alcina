@@ -1,6 +1,7 @@
 package cc.alcina.extras.webdriver.tour;
 
 import java.beans.PropertyDescriptor;
+import java.io.File;
 import java.io.IOException;
 import java.util.Objects;
 
@@ -49,15 +50,27 @@ public class TourManagerWd extends TourManager {
 		}
 	}
 
+	public static String readFile(String absolutePath, Class<?> clazz) {
+		try {
+			return ResourceUtilities.read(absolutePath);
+		} catch (Exception e) {
+			return ResourceUtilities.readClassPathResourceAsString(clazz,
+					"res/" + new File(absolutePath).getName());
+		}
+	}
+
 	private WDToken token;
 
+	private WdExec exec;
+
 	public TourManagerWd(WdExec exec, WDToken token) {
+		this.exec = exec;
 		UIRendererWd.get().exec = exec;
 		this.token = token;
 	}
 
 	@Override
-	protected ConditionEvaluationContext createConditionEvaluationContext() {
+	public ConditionEvaluationContext createConditionEvaluationContext() {
 		return new ConditionEvaluationContextWd(currentTour);
 	}
 
@@ -70,6 +83,24 @@ public class TourManagerWd extends TourManager {
 	@Override
 	protected boolean shouldRetry(DisplayStepPhase state) {
 		return false;
+	}
+
+	public class ConditionEvaluationContextWd
+			extends ConditionEvaluationContext {
+		public ConditionEvaluationContextWd(TourState tourState) {
+			super(tourState);
+		}
+
+		public WdExec getExec() {
+			return exec;
+		}
+
+		@Override
+		public boolean provideIsFirstStep() {
+			boolean result = super.provideIsFirstStep() && !Boolean.valueOf(
+					token.getTestInfo().get(PROP_FIRST_SUITE_STEP_PERFORMED));
+			return result;
+		}
 	}
 
 	public static class EnumDeserializer extends JsonDeserializer<Enum> {
@@ -115,24 +146,15 @@ public class TourManagerWd extends TourManager {
 				return null;
 			}
 			if (string.startsWith("file://")) {
-				return ResourceUtilities
-						.read(string.substring("file:/".length()));
+				String path = string.substring("file:/".length());
+				try {
+					return ResourceUtilities.read(path);
+				} catch (Exception e) {
+					return "No file at path: " + path;
+				}
 			} else {
 				return string;
 			}
-		}
-	}
-
-	class ConditionEvaluationContextWd extends ConditionEvaluationContext {
-		public ConditionEvaluationContextWd(TourState tourState) {
-			super(tourState);
-		}
-
-		@Override
-		public boolean provideIsFirstStep() {
-			boolean result = super.provideIsFirstStep() && !Boolean.valueOf(
-					token.getTestInfo().get(PROP_FIRST_SUITE_STEP_PERFORMED));
-			return result;
 		}
 	}
 

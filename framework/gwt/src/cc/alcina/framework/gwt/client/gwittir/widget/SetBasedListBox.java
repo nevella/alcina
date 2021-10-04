@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.function.Predicate;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -68,7 +69,6 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.actions.InlineButtonHandler;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -610,7 +610,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 	public static class DomainListBox extends SetBasedListBox {
 		private Class domainClass;
 
-		private CollectionFilter filter;
+		private Predicate predicate;
 
 		private boolean hasNullOption;
 
@@ -625,19 +625,19 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			}
 		};
 
-		public DomainListBox(Class domainClass, CollectionFilter filter,
+		public DomainListBox(Class domainClass, Predicate filter,
 				boolean hasNullOption, ListAddItemHandler addHandler) {
 			super(addHandler);
 			this.domainClass = domainClass;
-			this.filter = filter;
+			this.predicate = filter;
 			this.hasNullOption = hasNullOption;
 			if (!(filter instanceof RequiresContextBindable)) {
 				refreshOptions();
 			}
 		}
 
-		public CollectionFilter getFilter() {
-			return this.filter;
+		public Predicate getPredicate() {
+			return this.predicate;
 		}
 
 		public boolean isHasNullOption() {
@@ -652,17 +652,17 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			Collection<HasId> collection = TransformManager.get()
 					.getCollection(domainClass);
 			ArrayList options = new ArrayList();
-			if (filter == null) {
+			if (predicate == null) {
 				options.addAll(collection);
 			} else {
-				if (filter instanceof RequiresContextBindable) {
-					((RequiresContextBindable) filter).setBindable(
+				if (predicate instanceof RequiresContextBindable) {
+					((RequiresContextBindable) predicate).setBindable(
 							(SourcesPropertyChangeEvents) getModel());
 				}
 				Iterator itr = collection.iterator();
 				while (itr.hasNext()) {
 					Object obj = itr.next();
-					if (filter.allow(obj)) {
+					if (predicate.test(obj)) {
 						options.add(obj);
 					}
 				}
@@ -683,11 +683,6 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			setOptions(options);
 		}
 
-		public void setFilter(CollectionFilter filter) {
-			this.filter = filter;
-			refreshOptions();
-		}
-
 		public void setHasNullOption(boolean hasNullOption) {
 			this.hasNullOption = hasNullOption;
 			refreshOptions();
@@ -700,6 +695,11 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 				refreshOptions();
 			}
 			ensureModelListener(true);
+		}
+
+		public void setPredicate(Predicate predicate) {
+			this.predicate = predicate;
+			refreshOptions();
 		}
 
 		public void setRefreshOnModelChange(boolean refreshOnModelChange) {

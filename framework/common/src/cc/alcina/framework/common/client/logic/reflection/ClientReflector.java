@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMa
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -90,10 +91,11 @@ public abstract class ClientReflector implements ClassLookup {
 
 	private Map<Class, List<Class>> perClassInterfaces;
 
-	CachingMap<Class<?>, List<PropertyReflector>> propertyReflectorsCache = new CachingMap<>(
+	CachingMap<Class<?>, Map<String, PropertyReflector>> propertyReflectorsCache = new CachingMap<>(
 			beanClass -> ClientReflector.get().beanInfoForClass(beanClass)
 					.getPropertyReflectors().values().stream()
-					.collect(Collectors.toList()));
+					.collect(AlcinaCollectors
+							.toKeyMap(PropertyReflector::getPropertyName)));
 
 	public ClientReflector() {
 		gwbiMap = createClassKeyMap();
@@ -169,7 +171,8 @@ public abstract class ClientReflector implements ClassLookup {
 	}
 
 	@Override
-	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+	public Map<String, PropertyReflector>
+			getPropertyReflectors(Class<?> beanClass) {
 		return propertyReflectorsCache.get(beanClass);
 	}
 

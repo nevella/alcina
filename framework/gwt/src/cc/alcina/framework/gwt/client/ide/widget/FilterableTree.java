@@ -14,6 +14,7 @@
 package cc.alcina.framework.gwt.client.ide.widget;
 
 import java.util.Stack;
+import java.util.function.Predicate;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
@@ -27,7 +28,6 @@ import com.google.gwt.user.client.ui.ScrollPanel;
 import com.google.gwt.user.client.ui.Tree;
 import com.google.gwt.user.client.ui.TreeItem;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.node.TreeOrItem;
@@ -83,7 +83,7 @@ public class FilterableTree extends Tree
 
 	boolean lastKeyWasDown = false;
 
-	private CollectionFilter shouldExpandCallback;
+	private Predicate shouldExpandCallback;
 
 	private String lastFilteredText = "";
 
@@ -99,7 +99,7 @@ public class FilterableTree extends Tree
 			public void accept(TreeItem target) {
 				boolean open = target.getParentItem() == null;
 				if (shouldExpandCallback != null
-						&& !shouldExpandCallback.allow(target)) {
+						&& !shouldExpandCallback.test(target)) {
 					open = false;
 				}
 				target.setState(open);
@@ -193,7 +193,7 @@ public class FilterableTree extends Tree
 		}
 	}
 
-	public CollectionFilter getShouldExpandCallback() {
+	public Predicate getShouldExpandCallback() {
 		return this.shouldExpandCallback;
 	}
 
@@ -269,12 +269,12 @@ public class FilterableTree extends Tree
 		}
 	}
 
-	public void setShouldExpandCallback(CollectionFilter shouldExpandCallback) {
+	public void setShouldExpandCallback(Predicate shouldExpandCallback) {
 		this.shouldExpandCallback = shouldExpandCallback;
 	}
 
 	private void expandAll(TreeItem ti, int depth) {
-		if (shouldExpandCallback != null && !shouldExpandCallback.allow(ti)) {
+		if (shouldExpandCallback != null && !shouldExpandCallback.test(ti)) {
 			return;
 		}
 		ti.setState(true);

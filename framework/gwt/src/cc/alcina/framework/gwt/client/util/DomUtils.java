@@ -8,6 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Stack;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -20,7 +21,6 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.RootPanel;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -934,9 +934,9 @@ public class DomUtils implements NodeFromXpathProvider {
 		}
 	}
 
-	public static class IsBlockFilter implements CollectionFilter<Node> {
+	public static class IsBlockFilter implements Predicate<Node> {
 		@Override
-		public boolean allow(Node o) {
+		public boolean test(Node o) {
 			return o.getNodeType() == Node.ELEMENT_NODE
 					&& isBlockHTMLElement((Element) o);
 		}

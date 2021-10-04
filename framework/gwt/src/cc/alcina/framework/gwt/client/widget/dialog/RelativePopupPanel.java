@@ -17,6 +17,7 @@ package cc.alcina.framework.gwt.client.widget.dialog;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.google.gwt.animation.client.Animation;
 import com.google.gwt.core.client.GWT;
@@ -53,8 +54,6 @@ import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.user.client.ui.impl.PopupImpl;
-
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 
 /**
  * A panel that can "pop up" over other widgets. It overlays the browser's
@@ -1243,9 +1242,9 @@ public class RelativePopupPanel extends SimplePanel
 	}
 
 	public static class RelativePopupPanelFilter
-			implements CollectionFilter<Widget> {
+			implements Predicate<Widget> {
 		@Override
-		public boolean allow(Widget o) {
+		public boolean test(Widget o) {
 			return o instanceof RelativePopupPanel;
 		}
 	}

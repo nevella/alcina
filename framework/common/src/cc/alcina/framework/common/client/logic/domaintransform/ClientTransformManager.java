@@ -4,14 +4,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
@@ -214,24 +211,6 @@ public abstract class ClientTransformManager extends TransformManager {
 		} finally {
 			setReplayingRemoteEvent(false);
 		}
-	}
-
-	public void serializeDomainObjects(ClientInstance clientInstance)
-			throws Exception {
-		Map<Class<? extends Entity>, Collection<Entity>> collectionMap = getDomainObjects()
-				.getCollectionMap();
-		Map<Class, List> objCopy = new LinkedHashMap<Class, List>();
-		for (Class<? extends Entity> clazz : collectionMap.keySet()) {
-			List values = CollectionFilters.filter(collectionMap.get(clazz),
-					new CollectionFilter<Entity>() {
-						@Override
-						public boolean allow(Entity o) {
-							return o.getId() != 0;
-						}
-					});
-			objCopy.put(clazz, values);
-		}
-		new ClientDteWorker(objCopy, clientInstance).start();
 	}
 
 	public void setDomainTransformExceptionFilter(

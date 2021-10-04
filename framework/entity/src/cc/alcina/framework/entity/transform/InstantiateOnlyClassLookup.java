@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.transform;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
@@ -46,7 +47,8 @@ public class InstantiateOnlyClassLookup implements ClassLookup {
 	}
 
 	@Override
-	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+	public Map<String, PropertyReflector>
+			getPropertyReflectors(Class<?> beanClass) {
 		throw new UnsupportedOperationException();
 	}
 

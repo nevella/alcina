@@ -42,7 +42,6 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -565,6 +564,18 @@ public class CommonUtils {
 		return url.replaceFirst("(.+?://.+?)(/.+)", "$1");
 	}
 
+	public static <I, O> List<O> filterByClass(
+			Collection<? extends I> collection,
+			Class<? extends O> filterClass) {
+		ArrayList<O> result = new ArrayList<O>();
+		for (I i : collection) {
+			if (i.getClass() == filterClass) {
+				result.add((O) i);
+			}
+		}
+		return result;
+	}
+
 	public static <T> T first(Collection<T> coll) {
 		if (coll != null && coll.iterator().hasNext()) {
 			return coll.iterator().next();
@@ -905,9 +916,9 @@ public class CommonUtils {
 	}
 
 	public static boolean hasCauseOfClass(Throwable throwable,
-			CollectionFilter<Throwable> causeFilter) {
+			Predicate<Throwable> causeFilter) {
 		while (true) {
-			if (causeFilter.allow(throwable)) {
+			if (causeFilter.test(throwable)) {
 				return true;
 			}
 			if (throwable.getCause() == throwable
@@ -1975,18 +1986,6 @@ public class CommonUtils {
 			}
 		}
 		return false;
-	}
-
-	public static <I, O> List<O> filterByClass(
-			Collection<? extends I> collection,
-			Class<? extends O> filterClass) {
-		ArrayList<O> result = new ArrayList<O>();
-		for (I i : collection) {
-			if (i.getClass() == filterClass) {
-				result.add((O) i);
-			}
-		}
-		return result;
 	}
 
 	public enum ComparatorResult {

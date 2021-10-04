@@ -930,7 +930,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 				String filterable = CommonUtils
 						.nullToEmpty(((String) renderer.apply(item)))
 						.toLowerCase();
-				if (itemFilter.allow(item, filterable, filterText)
+				if (itemFilter.test(item, filterable, filterText)
 						&& !selectedItems.contains(item)) {
 					items.add(item);
 				}
@@ -1221,7 +1221,7 @@ public class SelectWithSearch<G, T> implements VisualFilterable, FocusHandler,
 
 		@Override
 		public boolean filter(String filterText) {
-			boolean b = filter.allow(item, filterableText, filterText)
+			boolean b = filter.test(item, filterableText, filterText)
 					&& (!selectedItems.contains(item)
 							|| showSelectedItemsInSearch);
 			setVisible(b);

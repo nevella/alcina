@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.persistence.domain;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters.InverseFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 
 public class NotCacheFilter extends DomainFilter {
@@ -9,7 +8,7 @@ public class NotCacheFilter extends DomainFilter {
 	public NotCacheFilter(DomainFilter filter) {
 		super(null);
 		this.filter = filter;
-		this.setPredicate(new InverseFilter(filter.asCollectionFilter()));
+		this.setPredicate(filter.asPredicate().negate());
 	}
 
 	@Override

@@ -9,7 +9,6 @@ import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.typeinfo.JAnnotationType;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -33,8 +32,8 @@ public class IntrospectorFilterPassthrough implements IntrospectorFilter {
 
 	@Override
 	public void filterProperties(BeanResolver resolver) {
-		CollectionFilters.filterInPlace(resolver.getProperties().entrySet(),
-				new AlwaysIgnorePropertyFilter());
+		resolver.getProperties().entrySet()
+				.removeIf(new AlwaysIgnorePropertyFilter());
 	}
 
 	@Override

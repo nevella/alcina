@@ -1,11 +1,12 @@
 package cc.alcina.framework.common.client.collections;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public class PropertyFilter<T> implements CollectionFilter<T> {
+public class PropertyFilter<T> implements Predicate<T> {
 	public static final transient Object NOT_NULL = new Object();
 
 	PropertyFilterTuple tuple;
@@ -25,14 +26,6 @@ public class PropertyFilter<T> implements CollectionFilter<T> {
 			FilterOperator operator) {
 		tuple = new PropertyFilterTuple(key, value, operator);
 		return this;
-	}
-
-	@Override
-	public boolean allow(T o) {
-		Object propertyValue = Reflections.propertyAccessor()
-				.getPropertyValue(o, tuple.propertyName);
-		boolean match = matchesValue(propertyValue);
-		return match;
 	}
 
 	public boolean matchesValue(Object propertyValue) {
@@ -94,6 +87,14 @@ public class PropertyFilter<T> implements CollectionFilter<T> {
 			return ((Collection) tupleValue).contains(propertyValue);
 		}
 		}
+		return match;
+	}
+
+	@Override
+	public boolean test(T o) {
+		Object propertyValue = Reflections.propertyAccessor()
+				.getPropertyValue(o, tuple.propertyName);
+		boolean match = matchesValue(propertyValue);
 		return match;
 	}
 

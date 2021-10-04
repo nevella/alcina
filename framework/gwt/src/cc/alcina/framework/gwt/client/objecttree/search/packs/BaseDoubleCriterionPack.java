@@ -2,12 +2,12 @@ package cc.alcina.framework.gwt.client.objecttree.search.packs;
 
 import java.util.Arrays;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.gwittir.validator.DoubleValidator;
 import cc.alcina.framework.common.client.search.DoubleCriterion;
@@ -26,9 +26,9 @@ public class BaseDoubleCriterionPack {
 				return null;
 			}
 			double p_value = value;
-			return new DomainFilter(new CollectionFilter<T>() {
+			return new DomainFilter(new Predicate<T>() {
 				@Override
-				public boolean allow(T o) {
+				public boolean test(T o) {
 					Double d = apply(o);
 					if (d == null) {
 						return false;
@@ -94,9 +94,9 @@ public class BaseDoubleCriterionPack {
 				return null;
 			}
 			double p_value = value;
-			return new DomainFilter(new CollectionFilter<T>() {
+			return new DomainFilter(new Predicate<T>() {
 				@Override
-				public boolean allow(T o) {
+				public boolean test(T o) {
 					Stream<Double> stream = apply(o);
 					if (stream == null) {
 						return false;

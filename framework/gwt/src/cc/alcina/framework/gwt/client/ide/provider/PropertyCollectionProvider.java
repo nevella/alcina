@@ -17,10 +17,10 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
@@ -34,7 +34,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
  */
 public class PropertyCollectionProvider<E>
 		implements CollectionProvider<E>, PropertyChangeListener {
-	private CollectionFilter<E> filter;
+	private Predicate<E> filter;
 
 	private final SourcesPropertyChangeEvents domainObject;
 
@@ -48,19 +48,20 @@ public class PropertyCollectionProvider<E>
 		this.propertyReflector = propertyReflector;
 		domainObject.addPropertyChangeListener(
 				propertyReflector.getPropertyName(), this);
-		CollectionFilter collectionFilter = propertyReflector
-				.getCollectionFilter();
-		if (collectionFilter != null) {
-			filter = collectionFilter;
+		Predicate predicate = propertyReflector.getCollectionFilter();
+		if (predicate != null) {
+			filter = predicate;
 		}
 	}
 
+	@Override
 	public void addCollectionModificationListener(
 			CollectionModificationListener listener) {
 		this.collectionModificationSupport
 				.addCollectionModificationListener(listener);
 	}
 
+	@Override
 	public Collection<E> getCollection() {
 		Collection<E> colln = (Collection) GwittirBridge.get().getPropertyValue(
 				getDomainObject(), getPropertyReflector().getPropertyName());
@@ -69,13 +70,14 @@ public class PropertyCollectionProvider<E>
 		}
 		ArrayList<E> l = new ArrayList<E>();
 		for (E e : colln) {
-			if (filter.allow(e)) {
+			if (filter.test(e)) {
 				l.add(e);
 			}
 		}
 		return l;
 	}
 
+	@Override
 	public Class<? extends E> getCollectionMemberClass() {
 		return getPropertyReflector().getAnnotation(Association.class)
 				.implementationClass();
@@ -90,7 +92,7 @@ public class PropertyCollectionProvider<E>
 		return domainObject;
 	}
 
-	public CollectionFilter<E> getFilter() {
+	public Predicate<E> getFilter() {
 		return this.filter;
 	}
 
@@ -98,23 +100,26 @@ public class PropertyCollectionProvider<E>
 		return propertyReflector;
 	}
 
+	@Override
 	public void onDetach() {
 		getDomainObject().removePropertyChangeListener(
 				getPropertyReflector().getPropertyName(), this);
 	}
 
+	@Override
 	public void propertyChange(PropertyChangeEvent evt) {
 		this.collectionModificationSupport.fireCollectionModificationEvent(
 				new CollectionModificationEvent(getDomainObject()));
 	}
 
+	@Override
 	public void removeCollectionModificationListener(
 			CollectionModificationListener listener) {
 		this.collectionModificationSupport
 				.removeCollectionModificationListener(listener);
 	}
 
-	public void setFilter(CollectionFilter<E> filter) {
+	public void setFilter(Predicate<E> filter) {
 		this.filter = filter;
 	}
 }

@@ -8,6 +8,7 @@ import java.beans.PropertyDescriptor;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
@@ -18,7 +19,6 @@ import com.totsp.gwittir.client.beans.SelfDescribed;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm;
@@ -35,7 +35,7 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
 
-	private CollectionFilter<String> filter;
+	private Predicate<String> filter;
 
 	public JVMIntrospector() {
 		Reflections.registerBeanDescriptorProvider(this);
@@ -43,8 +43,8 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 				.getProperty(ClientReflectorJvm.PROP_FILTER_CLASSNAME);
 		if (filterClassName != null) {
 			try {
-				filter = (CollectionFilter<String>) Class
-						.forName(filterClassName).newInstance();
+				filter = (Predicate<String>) Class.forName(filterClassName)
+						.newInstance();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -64,7 +64,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 			result = ((SelfDescribed) object).__descriptor();
 		} else {
 			// System.out.println("Reflection\t"+ object.getClass().getName());
-			if (filter != null && !filter.allow(clazz.getName())) {
+			if (filter != null && !filter.test(clazz.getName())) {
 				GWT.log(Ax.format(
 						"Warn: accessing filtered (reflection) class:\n%s",
 						clazz.getName()));

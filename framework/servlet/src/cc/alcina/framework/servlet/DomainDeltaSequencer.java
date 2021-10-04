@@ -7,6 +7,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.function.Predicate;
 
 import com.google.gwt.user.client.rpc.impl.AbstractSerializationStream;
 import com.google.gwt.user.server.rpc.RPC;
@@ -15,8 +16,6 @@ import com.google.gwt.user.server.rpc.SerializationPolicy;
 import com.google.gwt.user.server.rpc.impl.StandardSerializationPolicy;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -82,10 +81,9 @@ public class DomainDeltaSequencer {
 		List<DomainTransformEvent> dtes = TransformManager.get()
 				.objectsToDtes(entities, clazz, false);
 		// flatten
-		CollectionFilter<DomainTransformEvent> changePropertyRefAndNonDvUserFilter = new ReachableAndTrimmedFilter(
+		Predicate<DomainTransformEvent> changePropertyRefAndNonDvUserFilter = new ReachableAndTrimmedFilter(
 				reachableCache);
-		CollectionFilters.filterInPlace(dtes,
-				changePropertyRefAndNonDvUserFilter);
+		dtes.removeIf(changePropertyRefAndNonDvUserFilter.negate());
 		DomainTranche tranche = new DomainTranche();
 		tranche.setReplayEvents(dtes);
 		tranche.setUnlinkedObjects(
@@ -273,7 +271,7 @@ public class DomainDeltaSequencer {
 	}
 
 	public static class ReachableAndTrimmedFilter
-			implements CollectionFilter<DomainTransformEvent> {
+			implements Predicate<DomainTransformEvent> {
 		private final DetachedEntityCache reachableCache;
 
 		ReachableAndTrimmedFilter(DetachedEntityCache reachableCache) {
@@ -281,7 +279,7 @@ public class DomainDeltaSequencer {
 		}
 
 		@Override
-		public boolean allow(DomainTransformEvent o) {
+		public boolean test(DomainTransformEvent o) {
 			if (o.getTransformType() == TransformType.CHANGE_PROPERTY_REF || o
 					.getTransformType() == TransformType.ADD_REF_TO_COLLECTION) {
 				if (o.getValueClass() == null || this.reachableCache

@@ -19,7 +19,6 @@ import com.google.gwt.user.client.ui.Grid;
 import com.google.gwt.user.client.ui.Label;
 import com.totsp.gwittir.client.ui.Renderer;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.widget.FlowPanelClickable;
@@ -46,17 +45,17 @@ public class BoundSelectorMinimal extends BoundSelector {
 	}
 
 	public BoundSelectorMinimal(Class selectionObjectClass,
-			CollectionFilter filter) {
+			Predicate filter) {
 		super(selectionObjectClass, filter);
 	}
 
 	public BoundSelectorMinimal(Class selectionObjectClass,
-			CollectionFilter filter, int maxSelectedItems) {
+			Predicate filter, int maxSelectedItems) {
 		super(selectionObjectClass, filter, maxSelectedItems);
 	}
 
 	public BoundSelectorMinimal(Class selectionObjectClass,
-			CollectionFilter filter, int maxSelectedItems, Renderer renderer,
+			Predicate filter, int maxSelectedItems, Renderer renderer,
 			String hint) {
 		super(selectionObjectClass, filter, maxSelectedItems, renderer, false,
 				() -> TransformManager.get()

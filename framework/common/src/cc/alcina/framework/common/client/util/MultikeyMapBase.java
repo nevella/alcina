@@ -9,18 +9,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.ImmutableMap;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 
 public abstract class MultikeyMapBase<V>
 		implements MultikeyMap<V>, Serializable {
-	
-
 	protected int depth;
 
 	@GwtTransient
@@ -93,7 +91,7 @@ public abstract class MultikeyMapBase<V>
 	public <T> List<T> asTupleObjects(int maxDepth,
 			Converter<List, T> converter) {
 		List<List> tuples = asTuples(maxDepth);
-		return CollectionFilters.convert(tuples, converter);
+		return tuples.stream().map(converter).collect(Collectors.toList());
 	}
 
 	@Override

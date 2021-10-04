@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.transform.event;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,11 +14,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
@@ -298,8 +299,15 @@ public class DomainTransformPersistenceQueue {
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				event.getTransformPersistenceToken().getRequest().getEvents()
 						.size(),
-				new LongPair(CollectionFilters.min(persistedRequestIds),
-						CollectionFilters.max(persistedRequestIds)));
+				new LongPair(
+						persistedRequestIds.stream()
+								.collect(Collectors
+										.minBy(Comparator.naturalOrder()))
+								.get(),
+						persistedRequestIds.stream()
+								.collect(Collectors
+										.maxBy(Comparator.naturalOrder()))
+								.get()));
 	}
 
 	void onEventListenerFiringCompleted(DomainTransformPersistenceEvent event) {

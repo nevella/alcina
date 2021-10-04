@@ -6,11 +6,11 @@ import java.util.LinkedHashSet;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -29,7 +29,7 @@ public class DomainLookup<T, E extends Entity>
 
 	private boolean enabled = true;
 
-	private CollectionFilter<E> relevanceFilter;
+	private Predicate<E> relevanceFilter;
 
 	private Converter<T, T> normaliser;
 
@@ -97,7 +97,7 @@ public class DomainLookup<T, E extends Entity>
 
 	@Override
 	public void insert(E entity) {
-		if (relevanceFilter != null && !relevanceFilter.allow(entity)) {
+		if (relevanceFilter != null && !relevanceFilter.test(entity)) {
 			return;
 		}
 		Object v1 = getChainedProperty(entity);

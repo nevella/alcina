@@ -10,6 +10,7 @@ import org.openqa.selenium.WebElement;
 import cc.alcina.extras.webdriver.WDUtils;
 import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.extras.webdriver.WdExec;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -18,6 +19,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.gwt.client.tour.Tour;
+import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
 import cc.alcina.framework.gwt.client.tour.Tour.PopupInfo;
 import cc.alcina.framework.gwt.client.tour.Tour.Step;
 import cc.alcina.framework.gwt.client.tour.TourManager;
@@ -105,6 +107,15 @@ public class UIRendererWd extends UIRenderer {
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
+			break;
+		case EVAL:
+			exec.externalElement(null);
+			Class<? extends ConditionEvaluator> clazz = Reflections
+					.forName(step.getActionValue());
+			ConditionEvaluator evaluator = Reflections.newInstance(clazz);
+			evaluator.evaluate(tourManager.createConditionEvaluationContext());
+			exec.externalElement(target);
+			exec.clearBy();
 			break;
 		case SELECT:
 			exec.selectItemByText(step.getActionValue());

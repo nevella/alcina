@@ -14,13 +14,13 @@
 package cc.alcina.framework.gwt.client.objecttree;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 
@@ -45,7 +45,7 @@ public interface TreeRenderer<T extends TreeRenderable> {
 
 	public Collection<? extends TreeRenderer> childRenderers();
 
-	public CollectionFilter collectionFilter();
+	public Predicate predicate();
 
 	public CollectionProvider collectionProvider();
 

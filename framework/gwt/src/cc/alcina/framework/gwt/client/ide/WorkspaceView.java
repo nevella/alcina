@@ -20,6 +20,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.Scheduler;
@@ -49,7 +50,6 @@ import cc.alcina.framework.common.client.actions.instances.CreateAction;
 import cc.alcina.framework.common.client.actions.instances.DeleteAction;
 import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -143,6 +143,16 @@ public class WorkspaceView extends Composite implements HasName,
 	@Override
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	protected Class<? extends Entity> getDefaultEntityClass() {
+		return null;
+	}
+
+	protected Collection<? extends Class<? extends PermissibleAction>>
+			getUnselectedActions() {
+		return getDefaultEntityClass() == null ? Collections.emptyList()
+				: Collections.singletonList(CreateAction.class);
 	}
 
 	@Override
@@ -452,9 +462,8 @@ public class WorkspaceView extends Composite implements HasName,
 				}
 			}
 			if (domainClass != null) {
-				ObjectPermissions op = 
-						
-						PermissionsManager.getObjectPermissions(domainClass);
+				ObjectPermissions op = PermissionsManager
+						.getObjectPermissions(domainClass);
 				try {
 					LooseContext.pushWithKey(
 							PermissionsManager.CONTEXT_CREATION_PARENT,
@@ -510,30 +519,28 @@ public class WorkspaceView extends Composite implements HasName,
 		}
 
 		protected <C> ContainerNode getFilteredCollectionNode(String name,
-				Class<C> clazz, ImageResource imageResource,
-				CollectionFilter cf) {
+				Class<C> clazz, ImageResource imageResource, Predicate cf) {
 			return getFilteredCollectionNode(name, clazz, imageResource, cf,
 					null);
 		}
 
 		protected <C> ContainerNode getFilteredCollectionNode(String name,
-				Class<C> clazz, ImageResource imageResource,
-				CollectionFilter cf, NodeFactory nodeFactory) {
+				Class<C> clazz, ImageResource imageResource, Predicate cf,
+				NodeFactory nodeFactory) {
 			return getFilteredCollectionNode(name, clazz, imageResource, cf,
 					nodeFactory, null);
 		}
 
 		protected <C> ContainerNode getFilteredCollectionNode(String name,
-				Class<C> clazz, ImageResource imageResource,
-				CollectionFilter cf, NodeFactory nodeFactory,
-				Comparator<C> comparator) {
+				Class<C> clazz, ImageResource imageResource, Predicate cf,
+				NodeFactory nodeFactory, Comparator<C> comparator) {
 			Collection domainCollection = TransformManager.get()
 					.getCollection(clazz);
 			SimpleCollectionProvider<C> provider = new SimpleCollectionProvider<C>(
 					domainCollection, clazz);
 			provider.setComparator(comparator);
 			// will fire change event
-			provider.setFilter(cf);
+			provider.setPredicate(cf);
 			CollectionProviderNode node = new CollectionProviderNode(provider,
 					name, imageResource, comparator != null, nodeFactory);
 			TransformManager.get().addCollectionModificationListener(provider,
@@ -553,13 +560,12 @@ public class WorkspaceView extends Composite implements HasName,
 
 		protected <C> ContainerNode getUmbrellaProviderNode(String name,
 				Class<C> clazz, ImageResource imageResource,
-				UmbrellaProvider umbrellaProvider,
-				CollectionFilter collectionFilter, NodeFactory nodeFactory) {
+				UmbrellaProvider umbrellaProvider, Predicate predicate,
+				NodeFactory nodeFactory) {
 			Collection domainCollection = TransformManager.get()
 					.getCollection(clazz);
 			UmbrellaCollectionProviderMultiplexer<C> collectionProvider = new UmbrellaCollectionProviderMultiplexer<C>(
-					domainCollection, clazz, umbrellaProvider, collectionFilter,
-					3);
+					domainCollection, clazz, umbrellaProvider, predicate, 3);
 			UmbrellaProviderNode node = new UmbrellaProviderNode(
 					collectionProvider.getRootSubprovider(), name,
 					imageResource, nodeFactory);
@@ -622,15 +628,5 @@ public class WorkspaceView extends Composite implements HasName,
 		protected boolean useNodeImages() {
 			return false;
 		}
-	}
-
-	protected Class<? extends Entity> getDefaultEntityClass() {
-		return null;
-	}
-
-	protected Collection<? extends Class<? extends PermissibleAction>>
-			getUnselectedActions() {
-		return getDefaultEntityClass() == null ? Collections.emptyList()
-				: Collections.singletonList(CreateAction.class);
 	}
 }

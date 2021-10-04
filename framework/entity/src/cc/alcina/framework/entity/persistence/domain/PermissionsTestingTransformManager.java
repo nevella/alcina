@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.persistence.domain;
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -94,7 +95,7 @@ public class PermissionsTestingTransformManager
 		}
 
 		@Override
-		public List<PropertyReflector>
+		public Map<String, PropertyReflector>
 				getPropertyReflectors(Class<?> beanClass) {
 			return this.delegate.getPropertyReflectors(beanClass);
 		}

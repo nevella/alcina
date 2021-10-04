@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Predicate;
 
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
@@ -11,7 +12,6 @@ import javax.persistence.Transient;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -130,9 +130,9 @@ public class ClientLogRecord implements Serializable {
 	}
 
 	public static class ClientLogRecordIsNonCriticalFilter
-			implements CollectionFilter<ClientLogRecord> {
+			implements Predicate<ClientLogRecord> {
 		@Override
-		public boolean allow(ClientLogRecord o) {
+		public boolean test(ClientLogRecord o) {
 			if (o.topic == null || o.message == null) {
 				return false;
 			}
@@ -144,9 +144,9 @@ public class ClientLogRecord implements Serializable {
 	}
 
 	public static class ClientLogRecordKeepNonCriticalPrecedingContextFilter
-			implements CollectionFilter<ClientLogRecord> {
+			implements Predicate<ClientLogRecord> {
 		@Override
-		public boolean allow(ClientLogRecord o) {
+		public boolean test(ClientLogRecord o) {
 			if (o.topic == null || o.message == null) {
 				return false;
 			}

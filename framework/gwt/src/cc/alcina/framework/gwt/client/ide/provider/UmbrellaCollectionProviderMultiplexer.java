@@ -22,8 +22,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.Stack;
+import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
@@ -48,20 +48,21 @@ public class UmbrellaCollectionProviderMultiplexer<T>
 
 	private final int minFilterableDepth;
 
-	private CollectionFilter<T> collectionFilter;
+	private Predicate<T> predicate;
 
 	public UmbrellaCollectionProviderMultiplexer(Collection<T> colln,
 			Class<? extends T> baseClass, UmbrellaProvider<T> umbrellaProvider,
-			CollectionFilter<T> collectionFilter, int minFilterableLength) {
+			Predicate<T> predicate, int minFilterableLength) {
 		this.collection = colln;
 		this.baseClass = baseClass;
 		this.umbrellaProvider = umbrellaProvider;
-		this.collectionFilter = collectionFilter;
+		this.predicate = predicate;
 		this.minFilterableDepth = minFilterableLength;
 		remap(null);
 	}
 
 	// chained through to the node
+	@Override
 	public void collectionModification(CollectionModificationEvent evt) {
 		CollectionModificationEvent simpleEvent = new CollectionModificationEvent(
 				evt.getSource());
@@ -76,8 +77,8 @@ public class UmbrellaCollectionProviderMultiplexer<T>
 		return null;
 	}
 
-	public CollectionFilter<T> getCollectionFilter() {
-		return this.collectionFilter;
+	public Predicate<T> getPredicate() {
+		return this.predicate;
 	}
 
 	public UmbrellaCollectionProvider getRootSubprovider() {
@@ -88,13 +89,13 @@ public class UmbrellaCollectionProviderMultiplexer<T>
 		TransformManager.get().removeCollectionModificationListener(this);
 	}
 
-	public void setCollectionFilter(CollectionFilter<T> collectionFilter) {
-		this.collectionFilter = collectionFilter;
+	public void setPredicate(Predicate<T> predicate) {
+		this.predicate = predicate;
 		collectionModification(new CollectionModificationEvent(this));
 	}
 
 	private void remap(CollectionModificationEvent simpleEvent) {
-		umbrellaProvider.forCollection(collection, collectionFilter);
+		umbrellaProvider.forCollection(collection, predicate);
 		Stack<UmbrellaCollectionProvider> providerStack = new Stack<UmbrellaCollectionProvider>();
 		String key = "";
 		for (UmbrellaCollectionProvider existing : items.values()) {

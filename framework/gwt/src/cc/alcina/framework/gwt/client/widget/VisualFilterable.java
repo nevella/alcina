@@ -26,7 +26,7 @@ public interface VisualFilterable {
 	}
 
 	public static class VisualFilterableItemFilter<T> {
-		public boolean allow(T item, String itemToLcString, String filterText) {
+		public boolean test(T item, String itemToLcString, String filterText) {
 			return itemToLcString.contains(filterText);
 		}
 	}

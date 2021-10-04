@@ -19,8 +19,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import cc.alcina.framework.common.client.collections.CollectionFilter;
+import java.util.function.Predicate;
 
 /**
  * 
@@ -44,8 +43,8 @@ public class ContentNode implements Serializable {
 	public ContentNode() {
 	}
 
-	public ContentNode cloneWithFilter(CollectionFilter<ContentNode> filter) {
-		if (!filter.allow(this)) {
+	public ContentNode cloneWithFilter(Predicate<ContentNode> predicate) {
+		if (!predicate.test(this)) {
 			return null;
 		}
 		ContentNode copy = new ContentNode();
@@ -55,7 +54,7 @@ public class ContentNode implements Serializable {
 		copy.setTitle(getTitle());
 		copy.setUrl(getUrl());
 		for (ContentNode child : getChildren()) {
-			ContentNode childCopy = child.cloneWithFilter(filter);
+			ContentNode childCopy = child.cloneWithFilter(predicate);
 			if (childCopy != null) {
 				copy.getChildren().add(childCopy);
 			}
