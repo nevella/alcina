@@ -97,15 +97,7 @@ class UIRendererWd {
 			return document.querySelector(selector);
 		}
 	}
-	getForSelectors(selectors) {
-		for (const selector of selectors) {
-			let relativeTo = this.evalSelector(selector);
-			if (relativeTo != null) {
-				return relativeTo;
-			}
-		}
-		return null;
-	}
+	
 	remove(id) {
 		let elt = document.getElementById(id);
 		if (elt) {
