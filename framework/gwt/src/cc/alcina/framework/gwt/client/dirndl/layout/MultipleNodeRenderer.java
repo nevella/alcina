@@ -14,7 +14,13 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf;
 
+/**
+ * FIXME - dirndl 1.1 - this: @MultipleNodeRendererLeaf(@Directed) - shouldn't be needed 
+ * @author nick@alcina.cc
+ *
+ */
 public class MultipleNodeRenderer extends DirectedNodeRenderer
 		implements HasWrappingDirecteds {
 	@Override
@@ -57,7 +63,7 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 	@Documented
 	@Target({ ElementType.TYPE, ElementType.METHOD })
 	public @interface MultipleNodeRendererArgs {
-		String[] cssClasses();
+		String[] cssClasses() default {};
 
 		String[] tags();
 	}
@@ -85,7 +91,7 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 
 		@Override
 		public String cssClass() {
-			return this.args.cssClasses()[this.idx];
+			return this.args.cssClasses().length==0?"":this.args.cssClasses()[this.idx];
 		}
 
 		@Override

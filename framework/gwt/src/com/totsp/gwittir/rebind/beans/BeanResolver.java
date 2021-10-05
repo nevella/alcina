@@ -123,9 +123,6 @@ public class BeanResolver {
 
 	private void buildMethods(JClassType type) {
 		JMethod[] methods = type.getMethods();
-		if (type.getQualifiedSourceName().equals("java.lang.Throwable")) {
-			int debug = 3;
-		}
 		logger = logger.branch(TreeLogger.DEBUG,
 				type.getQualifiedSourceName() + " " + type.getMethods().length,
 				null);
@@ -177,6 +174,9 @@ public class BeanResolver {
 	private void examineGetters() {
 		for (Iterator it = methodSet.iterator(); it.hasNext();) {
 			MethodWrapper w = (MethodWrapper) it.next();
+			if (w.getBaseMethod().getParameterTypes().length > 0) {
+				continue;
+			}
 			String methodName = w.getBaseMethod().getName();
 			RProperty p = null;
 			if (methodName.startsWith("get") && (methodName.length() >= 4)
@@ -212,6 +212,9 @@ public class BeanResolver {
 		for (Iterator it = methodSet.iterator(); it.hasNext();) {
 			MethodWrapper w = (MethodWrapper) it.next();
 			String methodName = w.getBaseMethod().getName();
+			if (w.getBaseMethod().getParameterTypes().length != 1) {
+				continue;
+			}
 			if (methodName.startsWith("set") && (methodName.length() >= 4)
 					&& (methodName.charAt(3) == methodName.toUpperCase()
 							.charAt(3))) {
