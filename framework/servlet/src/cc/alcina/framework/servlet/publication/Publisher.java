@@ -270,16 +270,18 @@ public class Publisher {
 
 		public long getNextPublicationIdForUser(IUser user) {
 			boolean wasMuted = MetricLogging.get().isMuted();
-			try {
-				MetricLogging.get().setMuted(false);
-				return MethodContext.instance()
-						.withMetricKey(
-								"publication-getNextPublicationIdForUser")
-						.call(() -> CommonPersistenceProvider.get()
-								.getCommonPersistence()
-								.getNextPublicationIdForUser(user));
-			} finally {
-				MetricLogging.get().setMuted(wasMuted);
+			synchronized (user) {
+				try {
+					MetricLogging.get().setMuted(false);
+					return MethodContext.instance()
+							.withMetricKey(
+									"publication-getNextPublicationIdForUser")
+							.call(() -> CommonPersistenceProvider.get()
+									.getCommonPersistence()
+									.getNextPublicationIdForUser(user));
+				} finally {
+					MetricLogging.get().setMuted(wasMuted);
+				}
 			}
 		}
 
