@@ -8,6 +8,9 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
 public interface SearcherCollectionSource {
+	default void beforeQuery(Class clazz, BindableSearchDefinition def) {
+	}
+
 	<T> Optional<Stream<T>> getSourceStreamFor(Class<T> clazz,
 			SearchDefinition def);
 
