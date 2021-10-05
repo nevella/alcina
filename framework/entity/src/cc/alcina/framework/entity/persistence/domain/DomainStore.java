@@ -154,6 +154,9 @@ public class DomainStore implements IDomainStore {
 	public static final String CONTEXT_DEBUG_QUERY_METRICS = DomainStore.class
 			.getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
 
+	public static final String CONTEXT_SERIAL_QUERY = DomainStore.class
+			.getName() + ".CONTEXT_SERIAL_QUERY";
+
 	public static final String CONTEXT_IN_POST_PROCESS = DomainStore.class
 			.getName() + ".CONTEXT_IN_POST_PROCESS";
 
@@ -1374,12 +1377,14 @@ public class DomainStore implements IDomainStore {
 		public <T> T call(Callable<T> callable,
 				Stream<? extends Entity> stream) {
 			boolean runInPool = false;
-			synchronized (this) {
-				Transaction current = Transaction.current();
-				if (transaction == null || current == transaction) {
-					runInPool = true;
-					transaction = current;
-					activeQueries.incrementAndGet();
+			if (!LooseContext.is(CONTEXT_SERIAL_QUERY)) {
+				synchronized (this) {
+					Transaction current = Transaction.current();
+					if (transaction == null || current == transaction) {
+						runInPool = true;
+						transaction = current;
+						activeQueries.incrementAndGet();
+					}
 				}
 			}
 			if (runInPool) {

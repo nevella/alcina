@@ -19,6 +19,7 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -29,6 +30,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -139,6 +141,7 @@ public class TransformPersisterInPersistenceContext {
 			// add the entity version checker now
 			tlTransformManager.resetTltm(locatorMap,
 					token.getTransformExceptionPolicy(), true);
+			token.getTransformCollation().refreshFromRequest();
 			tlTransformManager.setEntityManager(getEntityManager());
 			ClientInstance persistentClientInstance = (ClientInstance) commonPersistenceBase
 					.findImplInstance(ClientInstance.class,
@@ -260,7 +263,7 @@ public class TransformPersisterInPersistenceContext {
 							if (event
 									.getCommitType() == CommitType.TO_STORAGE) {
 								if (!replaying) {
-									persistEvent(tlTransformManager,
+									persistEvent(tlTransformManager, token,
 											delayedEntityPersister, event);
 									if (tlTransformManager
 											.provideIsMarkedFlushTransform(
@@ -530,37 +533,9 @@ public class TransformPersisterInPersistenceContext {
 	}
 
 	protected void persistEvent(ThreadlocalTransformManager tlTransformManager,
+			TransformPersistenceToken token,
 			DelayedEntityPersister delayedEntityPersister,
 			DomainTransformEvent event) throws DomainTransformException {
-		// do not apply parent association transforms (although they'll be used
-		// in domainstore processing)
-		switch (event.getTransformType()) {
-		case ADD_REF_TO_COLLECTION:
-		case REMOVE_REF_FROM_COLLECTION:
-			OneToMany oneToMany = Reflections.classLookup()
-					.getPropertyReflector(event.getObjectClass(),
-							event.getPropertyName())
-					.getAnnotation(OneToMany.class);
-			if (oneToMany != null) {
-				/*
-				 * Ensure the source/target object exist (otherwise there'll be
-				 * an invalid attempt to apply to the graph). But ignore for db
-				 * persistence
-				 */
-				if (tlTransformManager
-						.getObject(event.toObjectLocator()) == null) {
-					throw new DomainTransformException(event,
-							DomainTransformExceptionType.SOURCE_ENTITY_NOT_FOUND);
-				}
-				if (tlTransformManager
-						.getObject(event.toValueLocator()) == null) {
-					throw new DomainTransformException(event,
-							DomainTransformExceptionType.TARGET_ENTITY_NOT_FOUND);
-				}
-				return;
-			}
-			break;
-		}
 		try {
 			tlTransformManager.setIgnorePropertyChanges(true);
 			if (event.getNewStringValue() != null
@@ -575,25 +550,85 @@ public class TransformPersisterInPersistenceContext {
 				event.setNewValue(null);
 			}
 			tlTransformManager.fireDomainTransform(event);
-			delayedEntityPersister.checkPersistEntity(event);
+			if (delayedEntityPersister.checkPersistEntity(event)) {
+			} else {
+				delayedEntityPersister.checkUpdateVersions(tlTransformManager,
+						token, event);
+			}
 		} finally {
 			tlTransformManager.setIgnorePropertyChanges(false);
 		}
 	}
 
-	/*
-	 * Most insertion transform patterns will be
-	 * "create - modify modify modify - next entity" - this persistence approach
-	 * means no need to worry about persisting associations of not-yet-persisted
-	 * entities
-	 */
 	private class DelayedEntityPersister {
 		DomainTransformEvent lastCreationEvent = null;
 
 		Set<Long> persistedLocals = new LongOpenHashSet(
 				Hash.DEFAULT_INITIAL_SIZE, Hash.VERY_FAST_LOAD_FACTOR);
 
-		void checkPersistEntity(DomainTransformEvent event) {
+		/*
+		 * Only update version metadata if entity has a db property (i.e.
+		 * non-one-to-many-collection-ref property) change
+		 */
+		public void checkUpdateVersions(
+				ThreadlocalTransformManager tlTransformManager,
+				TransformPersistenceToken token, DomainTransformEvent event) {
+			if (event.provideIsDeletionTransform()) {
+				return;
+			}
+			EntityCollation entityCollation = token.getTransformCollation()
+					.forLocator(event.toObjectLocator());
+			if (event == entityCollation.last()) {
+				/*
+				 * 
+				 */
+				if (entityCollation.getTransforms().stream().anyMatch(e -> {
+					switch (e.getTransformType()) {
+					case CREATE_OBJECT:
+					case CHANGE_PROPERTY_REF:
+					case NULL_PROPERTY_REF:
+					case CHANGE_PROPERTY_SIMPLE_VALUE:
+						return true;
+					case ADD_REF_TO_COLLECTION:
+					case REMOVE_REF_FROM_COLLECTION:
+						OneToMany oneToMany = Reflections.classLookup()
+								.getPropertyReflector(e.getObjectClass(),
+										e.getPropertyName())
+								.getAnnotation(OneToMany.class);
+						// if null, manytomany and it *is* an update
+						return oneToMany != null;
+					case DELETE_OBJECT:
+					default:
+						throw new UnsupportedOperationException();
+					}
+				})) {
+					Entity entity = tlTransformManager
+							.getObject(event.toObjectLocator());
+					updateVersions(entity);
+				}
+			}
+		}
+
+		private void updateVersions(Entity entity) {
+			if (entity instanceof VersionableEntity) {
+				Date now = new Date();
+				VersionableEntity versionableEntity = (VersionableEntity) entity;
+				versionableEntity.setLastModificationDate(now);
+				if (versionableEntity.getCreationDate() == null) {
+					versionableEntity.setCreationDate(now);
+				}
+			}
+		}
+
+		/*
+		 * Most insertion transform patterns will be
+		 * "create - modify modify modify - next entity" - this persister
+		 * optimises (by only writing when required) and prevents ensures
+		 * entities are persisted before (incoming) association with other
+		 * entities
+		 */
+		boolean checkPersistEntity(DomainTransformEvent event) {
+			boolean updatedVersions = false;
 			if (lastCreationEvent != null
 					&& (event == null || event.getObjectId() != 0
 							|| event.getObjectLocalId() != lastCreationEvent
@@ -601,18 +636,21 @@ public class TransformPersisterInPersistenceContext {
 				Entity entity = ThreadlocalTransformManager.cast()
 						.getLocalIdToEntityMap()
 						.get(lastCreationEvent.getObjectLocalId());
+				updateVersions(entity);
 				getEntityManager().persist(entity);
 				persistedLocals.add(lastCreationEvent.getObjectLocalId());
 				lastCreationEvent.setGeneratedServerId(entity.getId());
 				ThreadlocalTransformManager.cast().getClientInstanceEntityMap()
 						.putToLookups(entity.toLocator());
 				lastCreationEvent = null;
+				updatedVersions = true;
 			}
 			if (event != null
 					&& event.getTransformType() == TransformType.CREATE_OBJECT
 					&& !persistedLocals.contains(event.getObjectLocalId())) {
 				lastCreationEvent = event;
 			}
+			return updatedVersions;
 		}
 	}
 

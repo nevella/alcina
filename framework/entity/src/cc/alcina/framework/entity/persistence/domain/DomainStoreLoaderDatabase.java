@@ -1108,6 +1108,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					.get(clazz, pd.getName());
 			if (domainStoreProperty != null) {
 				loadType = domainStoreProperty.loadType();
+				if (!domainStoreProperty
+						.optimiseOneToManyCollectionModifications()) {
+					Preconditions.checkState(
+							loadType == DomainStorePropertyLoadType.EAGER);
+				}
 			}
 		}
 

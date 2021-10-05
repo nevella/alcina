@@ -7,7 +7,6 @@ import java.util.concurrent.TimeUnit;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import cc.alcina.framework.common.client.entity.VersioningEntityListener;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
@@ -21,7 +20,6 @@ import cc.alcina.framework.common.client.util.LooseContext;
 
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ADMIN))
 @MappedSuperclass
-@javax.persistence.EntityListeners(VersioningEntityListener.class)
 @RegistryLocation(registryPoint = VersionableEntity.class)
 @Bean
 public abstract class VersionableEntity<T extends VersionableEntity>
