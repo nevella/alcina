@@ -4,6 +4,7 @@ import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
@@ -39,6 +40,10 @@ public class ContextResolver<M> extends AnnotationLocation.Resolver {
 			return (TreeResolver<A>) directedResolver;
 		}
 		throw new UnsupportedOperationException();
+	}
+
+	public boolean hasDirectedAnnotation(PropertyReflector propertyReflector) {
+		return propertyReflector.hasAnnotation(Directed.class);
 	}
 
 	public Object resolveModel(Object model) {

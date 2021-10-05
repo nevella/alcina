@@ -62,6 +62,11 @@ public class AnnotationLocation {
 		return Objects.hash(propertyReflector, classLocation, resolver);
 	}
 
+	public boolean isDefiningType(Class<?> clazz) {
+		return propertyReflector != null
+				&& propertyReflector.getDefiningType() == clazz;
+	}
+
 	public boolean isPropertyName(String propertyName) {
 		return propertyReflector != null
 				&& propertyName.equals(propertyReflector.getPropertyName());
