@@ -82,7 +82,7 @@ public class BasicSearcher implements Searcher {
 			Query idQuery = searchStub(sdef, sdef.idEqlPrefix(), "", false);
 			resultCount = (Long) idQuery.getSingleResult();
 		} else {
-			resultCount = new Long(resultList.size());
+			resultCount = Long.valueOf(resultList.size());
 		}
 		result.setTotalResultCount(
 				resultCount == null ? 0 : resultCount.intValue());
