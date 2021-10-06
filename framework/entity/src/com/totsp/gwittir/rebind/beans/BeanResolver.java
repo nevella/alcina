@@ -38,6 +38,7 @@ import com.google.gwt.core.ext.typeinfo.JType;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  *
@@ -48,15 +49,21 @@ public class BeanResolver {
 	public static JType normaliseErasedType(JClassType jct, JMethod method,
 			String propertyName) {
 		JType returnType = method.getReturnType();
-		if (propertyName.equals("value") && returnType instanceof JEnumType) {
-			if (jct.getFlattenedSupertypeHierarchy().stream()
-					.anyMatch(t -> t.getQualifiedSourceName().equals(
-							"cc.alcina.framework.common.client.search.BaseEnumCriterion"))) {
+		// FIXME - dirdnl 1.4 - make this an erasure annotation (if there's no
+		if (jct.getFlattenedSupertypeHierarchy().stream()
+				.anyMatch(t -> t.getQualifiedSourceName().equals(
+						"cc.alcina.framework.common.client.search.BaseEnumCriterion"))) {
+			if (propertyName.equals("value")
+					&& returnType instanceof JEnumType) {
 				if (!returnType.toString().equals("class java.lang.Enum")) {
-					com.google.gwt.dev.javac.typemodel.JEnumType t = (com.google.gwt.dev.javac.typemodel.JEnumType) returnType;
-					com.google.gwt.core.ext.typeinfo.JParameterizedType superclass = (JParameterizedType) t
-							.getSuperclass();
-					returnType = superclass.getBaseType().getRawType();
+					JEnumType t = (JEnumType) returnType;
+					if (t.getSuperclass() instanceof JParameterizedType) {
+						JParameterizedType superclass = (JParameterizedType) t
+								.getSuperclass();
+						Ax.out("Normalised erased type: %s",
+								returnType.getQualifiedSourceName());
+						returnType = superclass.getBaseType().getRawType();
+					}
 				}
 			}
 		}
@@ -155,6 +162,9 @@ public class BeanResolver {
 			if (jMethod.isStatic()) {
 				continue;
 			}
+			if (jMethod.isAbstract()) {
+				continue;
+			}
 			if (type.getQualifiedSourceName().startsWith("java.")) {
 				Set<String> jdkNames = jdkClassMethodNames.computeIfAbsent(type,
 						t -> {
@@ -181,10 +191,11 @@ public class BeanResolver {
 				methodSet.add(w);
 			}
 		}
-		JClassType[] interfaces = type.getImplementedInterfaces();
-		for (int i = 0; i < interfaces.length; i++) {
-			buildMethods(interfaces[i]);
-		}
+		// nope - not wanted for getter/setter
+		// JClassType[] interfaces = type.getImplementedInterfaces();
+		// for (int i = 0; i < interfaces.length; i++) {
+		// buildMethods(interfaces[i]);
+		// }
 		if (type.getSuperclass() != null) {
 			buildMethods(type.getSuperclass());
 		} else {
