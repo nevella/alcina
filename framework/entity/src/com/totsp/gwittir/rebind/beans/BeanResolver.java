@@ -31,7 +31,10 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JEnumType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
+import com.google.gwt.core.ext.typeinfo.JParameterizedType;
+import com.google.gwt.core.ext.typeinfo.JType;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -42,6 +45,24 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
  *         Cooper</a>
  */
 public class BeanResolver {
+	public static JType normaliseErasedType(JClassType jct, JMethod method,
+			String propertyName) {
+		JType returnType = method.getReturnType();
+		if (propertyName.equals("value") && returnType instanceof JEnumType) {
+			if (jct.getFlattenedSupertypeHierarchy().stream()
+					.anyMatch(t -> t.getQualifiedSourceName().equals(
+							"cc.alcina.framework.common.client.search.BaseEnumCriterion"))) {
+				if (!returnType.toString().equals("class java.lang.Enum")) {
+					com.google.gwt.dev.javac.typemodel.JEnumType t = (com.google.gwt.dev.javac.typemodel.JEnumType) returnType;
+					com.google.gwt.core.ext.typeinfo.JParameterizedType superclass = (JParameterizedType) t
+							.getSuperclass();
+					returnType = superclass.getBaseType().getRawType();
+				}
+			}
+		}
+		return returnType;
+	}
+
 	private HashMap<String, RProperty> properties = new HashMap<String, RProperty>();
 
 	private HashSet<MethodWrapper> methodSet = new HashSet<MethodWrapper>();
@@ -123,9 +144,6 @@ public class BeanResolver {
 
 	private void buildMethods(JClassType type) {
 		JMethod[] methods = type.getMethods();
-		if (type.getQualifiedSourceName().equals("java.lang.Throwable")) {
-			int debug = 3;
-		}
 		logger = logger.branch(TreeLogger.DEBUG,
 				type.getQualifiedSourceName() + " " + type.getMethods().length,
 				null);
@@ -201,7 +219,10 @@ public class BeanResolver {
 			if (p == null) {
 				continue;
 			}
-			p.setType(w.getBaseMethod().getReturnType());
+			JType returnType = normaliseErasedType(
+					w.getBaseMethod().getEnclosingType(), w.getBaseMethod(),
+					p.getName());
+			p.setType(returnType);
 			logger.log(TreeLogger.DEBUG, "Found new property: " + p.getName(),
 					null);
 			properties.put(p.getName(), p);
