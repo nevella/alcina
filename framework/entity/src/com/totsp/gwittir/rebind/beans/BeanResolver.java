@@ -34,6 +34,7 @@ import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JEnumType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
+import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JType;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
@@ -208,6 +209,9 @@ public class BeanResolver {
 			MethodWrapper w = (MethodWrapper) it.next();
 			String methodName = w.getBaseMethod().getName();
 			RProperty p = null;
+			if (w.getBaseMethod().getParameterTypes().length > 0) {
+				continue;
+			}
 			if (methodName.startsWith("get") && (methodName.length() >= 4)
 					&& (methodName.charAt(3) == methodName.toUpperCase()
 							.charAt(3))) {
@@ -244,6 +248,10 @@ public class BeanResolver {
 		for (Iterator it = methodSet.iterator(); it.hasNext();) {
 			MethodWrapper w = (MethodWrapper) it.next();
 			String methodName = w.getBaseMethod().getName();
+			if (w.getBaseMethod().getParameterTypes().length != 1 || w
+					.getBaseMethod().getReturnType() != JPrimitiveType.VOID) {
+				continue;
+			}
 			if (methodName.startsWith("set") && (methodName.length() >= 4)
 					&& (methodName.charAt(3) == methodName.toUpperCase()
 							.charAt(3))) {
