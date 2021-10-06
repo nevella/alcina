@@ -561,7 +561,8 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	@Override
 	public boolean isInCreationRequest(Entity entity) {
-		return createdObjectLocators.contains(entity.toLocator());
+		return createdObjectLocators.contains(new EntityLocator(
+				entity.entityClass(), 0, entity.getLocalId()));
 	}
 
 	public boolean isListeningTo(SourcesPropertyChangeEvents spce) {
