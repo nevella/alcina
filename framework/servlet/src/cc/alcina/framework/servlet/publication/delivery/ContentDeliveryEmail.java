@@ -141,7 +141,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		String fromName = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
 				"smtp.from.name");
 		Integer maxMessageSize = Integer.valueOf(
-				ResourceUtilities.getBundledString(c,"smtp.maxMessageSize"));
+				ResourceUtilities.getBundledString(ContentDeliveryEmail.class,"smtp.maxMessageSize"));
 		String replyTo = null;
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
