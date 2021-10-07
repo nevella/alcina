@@ -30,6 +30,9 @@ import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
+import org.apache.commons.io.output.CountingOutputStream;
+import org.apache.commons.io.output.NullOutputStream;
+
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
@@ -102,6 +105,15 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		return result;
 	}
 
+	// From https://stackoverflow.com/a/48305769
+	private long getMessageSize(Message message)
+			throws IOException, MessagingException {
+		try (CountingOutputStream out = new CountingOutputStream(NullOutputStream.NULL_OUTPUT_STREAM)) {
+			message.writeTo(out);
+			return out.getByteCount();
+		}
+	}
+
 	protected boolean isUseVerp() {
 		return false;
 	}
@@ -129,6 +141,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 				"smtp.from.address");
 		String fromName = ResourceUtilities.getBundledString(c,
 				"smtp.from.name");
+		Integer maxMessageSize = Integer.valueOf(
+				ResourceUtilities.getBundledString(c,"smtp.maxMessageSize"));
 		String replyTo = null;
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
@@ -293,6 +307,18 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		if (replyTo != null) {
 			msg.setHeader("Reply-to", replyTo);
 		}
+		// Check message size if we have a max size set
+		if (maxMessageSize != -1) {
+			try {
+				long messageSize = getMessageSize(msg);
+				Ax.out("Message size: %s", messageSize);
+				if (messageSize > maxMessageSize) {
+					throw new MessageTooLargeException(messageSize);
+				}
+			} catch (IOException | MessagingException e) {
+				throw new MessageSizeUndeterminedException(e);
+			}
+		}
 		Transport transport = session.getTransport("smtp");
 		transport.connect(host, port, userName, password);
 		transport.sendMessage(msg, msg.getAllRecipients());
@@ -304,5 +330,19 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			deliveryModel.removeAttachment(pdfAttachment);
 		}
 		return "OK";
+	}
+
+	public static class MessageTooLargeException extends Exception {
+		long size;
+
+		MessageTooLargeException(long size) {
+			this.size = size;
+		}
+	}
+
+	public static class MessageSizeUndeterminedException extends Exception {
+		public MessageSizeUndeterminedException(Throwable cause) {
+			super(cause);
+		}
 	}
 }
