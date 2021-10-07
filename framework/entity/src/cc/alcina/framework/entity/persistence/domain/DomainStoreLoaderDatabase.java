@@ -1155,7 +1155,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			if (interns == null) {
 				return object;
 			}
-			return interns.computeIfAbsent(object, Function.identity());
+			if (object instanceof String || object instanceof Date) {
+				return interns.computeIfAbsent(object, Function.identity());
+			} else {
+				return object;
+			}
 		}
 
 		private Object getObject0(ResultSet rs, int idx) throws Exception {
