@@ -234,7 +234,7 @@ public class DirectedLayout {
 			if (directed == null) {
 				Class clazz = model.getClass();
 				AnnotationLocation annotationLocation = new AnnotationLocation(
-						clazz, propertyReflector);
+						clazz, propertyReflector, resolver);
 				directed = new DirectedResolver(
 						getResolver().getTreeResolver(Directed.class),
 						annotationLocation);
@@ -384,11 +384,7 @@ public class DirectedLayout {
 						.values();
 				if (propertyReflectors != null) {
 					for (PropertyReflector propertyReflector : propertyReflectors) {
-						if (propertyReflector.toString()
-								.contains("TrialAnalysisSummary.caption")) {
-							int debug = 3;
-						}
-						if (propertyReflector.hasAnnotation(Directed.class)) {
+						if (resolver.hasDirectedAnnotation(propertyReflector)) {
 							Object childModel = propertyReflector
 									.getPropertyValue(model);
 							addChild(childModel, propertyReflector,

@@ -561,7 +561,8 @@ public class ThreadlocalTransformManager extends TransformManager
 
 	@Override
 	public boolean isInCreationRequest(Entity entity) {
-		return createdObjectLocators.contains(entity.toLocator());
+		return createdObjectLocators.contains(new EntityLocator(
+				entity.entityClass(), 0, entity.getLocalId()));
 	}
 
 	public boolean isListeningTo(SourcesPropertyChangeEvents spce) {
@@ -1312,14 +1313,22 @@ public class ThreadlocalTransformManager extends TransformManager
 	protected boolean
 			shouldApplyCollectionModification(DomainTransformEvent event) {
 		// significant optimisation - avoids need to iterate/instantiate the
-		// persistent collection if it's @OneToMany and has an @Association
+		// persistent collection if it's @OneToMany and has an @Association.
+		// Cannot be used if object permissions depend on child collection
+		// removal
 		if (entityManager != null) {
-			return Reflections.propertyAccessor().getAnnotationForProperty(
-					event.getObjectClass(), OneToMany.class,
-					event.getPropertyName()) == null
-					|| Reflections.propertyAccessor().getAnnotationForProperty(
-							event.getObjectClass(), Association.class,
-							event.getPropertyName()) == null;
+			PropertyReflector reflector = Reflections.classLookup()
+					.getPropertyReflector(event.getObjectClass(),
+							event.getPropertyName());
+			if (reflector.hasAnnotation(OneToMany.class)
+					&& reflector.hasAnnotation(Association.class)) {
+				DomainStoreProperty domainStoreProperty = reflector
+						.getAnnotation(DomainStoreProperty.class);
+				if (domainStoreProperty == null || domainStoreProperty
+						.optimiseOneToManyCollectionModifications()) {
+					return false;
+				}
+			}
 		}
 		return true;
 	}

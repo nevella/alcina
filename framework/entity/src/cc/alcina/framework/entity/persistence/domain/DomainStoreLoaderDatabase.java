@@ -26,11 +26,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.Column;
@@ -103,7 +103,9 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SqlUtils;
+import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 /*
  */
@@ -159,8 +161,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					new NamedThreadFactory("domainStore-iLoader"));
 
 	private Transaction warmupTransaction;
-
-	Map<Object, Object> interns = new ConcurrentHashMap<>();
 
 	private ConnectionPool connectionPool;
 
@@ -276,7 +276,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		invokeAllWithThrow(calls);
 		new StatCategory_DomainStore.Warmup.Loader.JoinTables().emit();
 		MetricLogging.get().end("tables");
-		interns = null;
+		columnDescriptors.allValues().forEach(cd -> cd.interns = null);
 		MetricLogging.get().start("xrefs");
 		for (EntityRefs ll : warmupEntityRefss) {
 			calls.add(() -> {
@@ -367,10 +367,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		new StatCategory_DomainStore.Warmup.Loader.End().emit();
 	}
 
-	private void addColumnName(Class clazz, PdOperator pdOperator,
-			Class propertyType) {
-		columnDescriptors.add(clazz,
-				new ColumnDescriptor(clazz, pdOperator.pd, propertyType));
+	private void addColumnName(Class clazz, Map<Object, Object> interns,
+			PdOperator pdOperator, Class propertyType) {
+		columnDescriptors.add(clazz, new ColumnDescriptor(clazz, interns,
+				pdOperator.pd, propertyType));
 		propertyDescriptorFetchTypes.put(pdOperator, propertyType);
 	}
 
@@ -773,6 +773,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		PropertyDescriptor result = null;
 		List<PdOperator> mapped = new ArrayList<PdOperator>();
 		descriptors.put(clazz, mapped);
+		Map<Object, Object> interns = new Object2ObjectOpenHashMap<>(10000,
+				Hash.VERY_FAST_LOAD_FACTOR);
 		for (PropertyDescriptor pd : pds) {
 			if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
 				continue;
@@ -884,10 +886,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						continue;
 					}
 				}
-				addColumnName(clazz, pdOperator,
+				addColumnName(clazz, interns, pdOperator,
 						getEntityType(getTargetEntityType(pd.getReadMethod())));
 			} else {
-				addColumnName(clazz, pdOperator,
+				addColumnName(clazz, interns, pdOperator,
 						getEntityType(pd.getPropertyType()));
 			}
 			mapped.add(pdOperator);
@@ -1093,9 +1095,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		// debugging
 		Class clazz;
 
-		public ColumnDescriptor(Class clazz, PropertyDescriptor pd,
-				Class propertyType) {
+		private Map<Object, Object> interns;
+
+		public ColumnDescriptor(Class clazz, Map<Object, Object> interns,
+				PropertyDescriptor pd, Class propertyType) {
 			this.clazz = clazz;
+			this.interns = interns;
 			this.pd = pd;
 			type = propertyType;
 			typeIdHasId = HasId.class.isAssignableFrom(type);
@@ -1108,6 +1113,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					.get(clazz, pd.getName());
 			if (domainStoreProperty != null) {
 				loadType = domainStoreProperty.loadType();
+				if (!domainStoreProperty
+						.optimiseOneToManyCollectionModifications()) {
+					Preconditions.checkState(
+							loadType == DomainStorePropertyLoadType.EAGER);
+				}
 			}
 		}
 
@@ -1145,15 +1155,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			if (interns == null) {
 				return object;
 			}
-			// don't use computeIfAbsent - we're not concerned about the odd
-			// duplicate
-			// return interns.computeIfAbsent(object, Function.identity());
-			Object v;
-			if ((v = interns.get(object)) == null) {
-				interns.put(object, object);
-				v = object;
+			if (object instanceof String || object instanceof Date) {
+				return interns.computeIfAbsent(object, Function.identity());
+			} else {
+				return object;
 			}
-			return v;
 		}
 
 		private Object getObject0(ResultSet rs, int idx) throws Exception {

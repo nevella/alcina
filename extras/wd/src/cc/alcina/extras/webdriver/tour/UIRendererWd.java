@@ -44,6 +44,24 @@ public class UIRendererWd extends UIRenderer {
 		return System.currentTimeMillis() + 2000;
 	}
 
+	private WebElement getElement(String selector) {
+		if (selector.startsWith("/")) {
+			exec.xpath(selector);
+		} else {
+			exec.css(selector);
+		}
+		if (exec.immediateTest()) {
+			return exec.getElement();
+		} else {
+			try {
+				Thread.sleep(200);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+			return null;
+		}
+	}
+
 	@Override
 	protected void afterStepListenerAction() {
 	}
@@ -69,10 +87,11 @@ public class UIRendererWd extends UIRenderer {
 	protected WebElement getElement(List<String> selectors) {
 		long timeout = timeout();
 		while (System.currentTimeMillis() < timeout) {
-			WebElement result = wdJsInvoke(false, "getForSelectors(%s)",
-					JacksonUtils.serializeNoTypes(selectors));
-			if (result != null) {
-				return result;
+			for (String selector : selectors) {
+				WebElement result = getElement(selector);
+				if (result != null) {
+					return result;
+				}
 			}
 		}
 		throw new TimedOutException(selectors.size() == 1 ? selectors.get(0)
@@ -94,7 +113,6 @@ public class UIRendererWd extends UIRenderer {
 		if (target == null) {
 			return false;
 		}
-		exec.externalElement(target);
 		switch (step.getAction()) {
 		case NONE:
 			break;
@@ -109,12 +127,10 @@ public class UIRendererWd extends UIRenderer {
 			}
 			break;
 		case EVAL:
-			exec.externalElement(null);
 			Class<? extends ConditionEvaluator> clazz = Reflections
 					.forName(step.getActionValue());
 			ConditionEvaluator evaluator = Reflections.newInstance(clazz);
 			evaluator.evaluate(tourManager.createConditionEvaluationContext());
-			exec.externalElement(target);
 			exec.clearBy();
 			break;
 		case SELECT:
@@ -124,7 +140,6 @@ public class UIRendererWd extends UIRenderer {
 			exec.clearAndSetText(step.getActionValue());
 			break;
 		}
-		exec.externalElement(null);
 		return true;
 	}
 

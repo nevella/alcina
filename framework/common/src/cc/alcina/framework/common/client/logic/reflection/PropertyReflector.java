@@ -23,6 +23,14 @@ public interface PropertyReflector {
 		return getAnnotation(annotationClass) != null;
 	}
 
+	default boolean isDefiningType(Class type) {
+		return getDefiningType() == type;
+	}
+
+	default boolean isPropertyName(String name) {
+		return getPropertyName().equals(name);
+	}
+
 	default boolean provideWriteableNonTransient() {
 		return !isReadOnly()
 				&& !getPropertyName().equals("propertyChangeListeners");

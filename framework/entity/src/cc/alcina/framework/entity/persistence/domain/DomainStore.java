@@ -102,6 +102,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
@@ -153,6 +154,9 @@ public class DomainStore implements IDomainStore {
 
 	public static final String CONTEXT_DEBUG_QUERY_METRICS = DomainStore.class
 			.getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
+
+	public static final String CONTEXT_SERIAL_QUERY = DomainStore.class
+			.getName() + ".CONTEXT_SERIAL_QUERY";
 
 	public static final String CONTEXT_IN_POST_PROCESS = DomainStore.class
 			.getName() + ".CONTEXT_IN_POST_PROCESS";
@@ -1356,6 +1360,8 @@ public class DomainStore implements IDomainStore {
 
 		private AtomicInteger activeQueries = new AtomicInteger();
 
+		private LooseContextInstance contextInstance;
+
 		QueryPool() {
 			pool = new ForkJoinPool(
 					ResourceUtilities.getInteger(DomainStore.class,
@@ -1374,12 +1380,16 @@ public class DomainStore implements IDomainStore {
 		public <T> T call(Callable<T> callable,
 				Stream<? extends Entity> stream) {
 			boolean runInPool = false;
-			synchronized (this) {
-				Transaction current = Transaction.current();
-				if (transaction == null || current == transaction) {
-					runInPool = true;
-					transaction = current;
-					activeQueries.incrementAndGet();
+			if (!LooseContext.is(CONTEXT_SERIAL_QUERY)) {
+				synchronized (this) {
+					Transaction current = Transaction.current();
+					if (transaction == null || current == transaction) {
+						runInPool = true;
+						transaction = current;
+						this.contextInstance = LooseContext.getContext()
+								.snapshot();
+						activeQueries.incrementAndGet();
+					}
 				}
 			}
 			if (runInPool) {
@@ -1392,6 +1402,7 @@ public class DomainStore implements IDomainStore {
 					activeQueries.decrementAndGet();
 					if (activeQueries.get() == 0) {
 						transaction = null;
+						contextInstance = null;
 					}
 				}
 			} else {
@@ -1416,7 +1427,13 @@ public class DomainStore implements IDomainStore {
 			@Override
 			public void run() {
 				Transaction.setSupplier(() -> transaction);
-				super.run();
+				try {
+					LooseContext.push();
+					LooseContext.putSnapshotProperties(contextInstance);
+					super.run();
+				} finally {
+					LooseContext.pop();
+				}
 			};
 		}
 

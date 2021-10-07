@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.domain.search.SearchContext;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
+import cc.alcina.framework.common.client.domain.search.SearcherCollectionSource;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -162,6 +163,8 @@ public class CommonSearchSupport {
 			}
 			Stream<Entity> search = new DomainSearcher().search(def, clazz,
 					searchContext.orders);
+			Registry.impl(SearcherCollectionSource.class).beforeQuery(clazz,
+					def);
 			// FIXME - 2022 - there may be places where we can get result set
 			// size without collecting (i.e. index-only)
 			List<Entity> rows = DomainStore.queryPool()

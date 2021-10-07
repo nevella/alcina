@@ -44,8 +44,6 @@ public class WdExec {
 
 	private TestCallback testCallback;
 
-	private WebElement externalElement;
-
 	public void clear() {
 		getElement().clear();
 	}
@@ -98,18 +96,11 @@ public class WdExec {
 		return WDUtils.executeScript(driver, getElement(), script);
 	}
 
-	public void externalElement(WebElement element) {
-		externalElement = element;
-	}
-
 	public WebDriver getDriver() {
 		return driver;
 	}
 
 	public WebElement getElement() {
-		if (externalElement != null) {
-			return externalElement;
-		}
 		By by = getBy();
 		if (by == null) {
 			return null;
@@ -187,7 +178,8 @@ public class WdExec {
 	public boolean performAction(boolean returnIfNotVisible,
 			Consumer<WebElement> actor) {
 		RuntimeException lastException = null;
-		for (int i = 0; i < Math.max(1, timeoutSecs * 5); i++) {
+		int maxTries = Math.max(1, timeoutSecs * 5);
+		for (int attempt = 0; attempt < maxTries; attempt++) {
 			WebElement elem = getElement();
 			Actions actions = new Actions(driver);
 			actions.moveToElement(elem);

@@ -52,11 +52,12 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  *         require type info, either by overriding get/setValue with covariant
  *         types, or via TypeSerialization/PropertySerialization annotations
  * 
+ *         FIXME - dirndl 1.4 - revisit this javadoc (particularly in light of
+ *         BaseEnumCriterion)
+ * 
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		implements HasWithNull, HasValue<E> {
-	
-
 	private boolean withNull = true;
 
 	public EnumCriterion() {

@@ -22,7 +22,12 @@ public @interface DomainStoreProperty {
 
 	boolean ignoreMismatchedCollectionModifications() default false;
 
-	DomainStorePropertyLoadType loadType() default DomainStorePropertyLoadType.TRANSIENT;
+	DomainStorePropertyLoadType loadType();
+
+	/*
+	 * false requires loadType EAGER
+	 */
+	boolean optimiseOneToManyCollectionModifications() default true;
 
 	public static class DomainStorePropertyLoadOracle<E extends Entity> {
 		public boolean shouldLoad(E entity, boolean duringWarmup) {
@@ -80,6 +85,13 @@ public @interface DomainStoreProperty {
 			Function<DomainStoreProperty, DomainStorePropertyLoadType> function = DomainStoreProperty::loadType;
 			return resolver.resolve(location, function, "loadType",
 					DomainStorePropertyLoadType.TRANSIENT);
+		}
+
+		@Override
+		public boolean optimiseOneToManyCollectionModifications() {
+			Function<DomainStoreProperty, Boolean> function = DomainStoreProperty::optimiseOneToManyCollectionModifications;
+			return resolver.resolve(location, function,
+					"optimiseOneToManyCollectionModifications", true);
 		}
 
 		protected TreeResolver<DomainStoreProperty>

@@ -118,16 +118,15 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		throw new UnsupportedOperationException();
 	}
 
+	public <T> T get(Class<T> clazz, long id) {
+		return getUnboxed(clazz, id);
+	}
+
 	public <T> T get(Class<T> clazz, Long id) {
 		if (id == null) {
 			return null;
 		}
-		Map<Long, Entity> map = domain.get(clazz);
-		if (map == null || id == null) {
-			return null;
-		}
-		T t = (T) map.get(id);
-		return t;
+		return getUnboxed(clazz, id.longValue());
 	}
 
 	public <T> T get(EntityLocator locator) {
@@ -254,6 +253,18 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	public <T> Set<T> values(Class<T> clazz) {
 		ensureMap(clazz);
 		return stream(clazz).collect(AlcinaCollectors.toLinkedHashSet());
+	}
+
+	private <T> T getUnboxed(Class<T> clazz, long id) {
+		Map<Long, Entity> map = domain.get(clazz);
+		if (map == null) {
+			return null;
+		}
+		if (map instanceof UnboxedLongMap) {
+			return (T) ((UnboxedLongMap) map).get(id);
+		} else {
+			return (T) map.get(id);
+		}
 	}
 
 	private Map<Long, Entity> local(Class clazz, boolean ensure) {

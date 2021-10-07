@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -56,6 +57,7 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
@@ -455,6 +457,14 @@ public class IntrospectorGenerator extends Generator {
 				writer.println(body);
 			} else {
 				// setter
+				if (param0type == null) {
+					Ax.err("Missing param0type :: %s %s %s %s",
+							method.getDeclaringType(),
+							method.getBaseMethod().getName(),
+							method.getBaseMethod().getReturnType(),
+							Arrays.asList(method.getBaseMethod()
+									.getParameterTypes()));
+				}
 				String arg = unbox(param0type);
 				writer.println(String.format("object.%s(%s);",
 						getNonParameterisedJsniSignature(method), arg));

@@ -31,10 +31,15 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JEnumType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
+import com.google.gwt.core.ext.typeinfo.JParameterizedType;
+import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
+import com.google.gwt.core.ext.typeinfo.JType;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  *
@@ -42,6 +47,30 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
  *         Cooper</a>
  */
 public class BeanResolver {
+	public static JType normaliseErasedType(JClassType jct, JMethod method,
+			String propertyName) {
+		JType returnType = method.getReturnType();
+		// FIXME - dirdnl 1.4 - make this an erasure annotation (if there's no
+		if (jct.getFlattenedSupertypeHierarchy().stream()
+				.anyMatch(t -> t.getQualifiedSourceName().equals(
+						"cc.alcina.framework.common.client.search.BaseEnumCriterion"))) {
+			if (propertyName.equals("value")
+					&& returnType instanceof JEnumType) {
+				if (!returnType.toString().equals("class java.lang.Enum")) {
+					JEnumType t = (JEnumType) returnType;
+					if (t.getSuperclass() instanceof JParameterizedType) {
+						JParameterizedType superclass = (JParameterizedType) t
+								.getSuperclass();
+						Ax.out("Normalised erased type: %s",
+								returnType.getQualifiedSourceName());
+						returnType = superclass.getBaseType().getRawType();
+					}
+				}
+			}
+		}
+		return returnType;
+	}
+
 	private HashMap<String, RProperty> properties = new HashMap<String, RProperty>();
 
 	private HashSet<MethodWrapper> methodSet = new HashSet<MethodWrapper>();
@@ -134,6 +163,9 @@ public class BeanResolver {
 			if (jMethod.isStatic()) {
 				continue;
 			}
+			if (jMethod.isAbstract()) {
+				continue;
+			}
 			if (type.getQualifiedSourceName().startsWith("java.")) {
 				Set<String> jdkNames = jdkClassMethodNames.computeIfAbsent(type,
 						t -> {
@@ -160,10 +192,11 @@ public class BeanResolver {
 				methodSet.add(w);
 			}
 		}
-		JClassType[] interfaces = type.getImplementedInterfaces();
-		for (int i = 0; i < interfaces.length; i++) {
-			buildMethods(interfaces[i]);
-		}
+		// nope - not wanted for getter/setter
+		// JClassType[] interfaces = type.getImplementedInterfaces();
+		// for (int i = 0; i < interfaces.length; i++) {
+		// buildMethods(interfaces[i]);
+		// }
 		if (type.getSuperclass() != null) {
 			buildMethods(type.getSuperclass());
 		} else {
@@ -179,6 +212,9 @@ public class BeanResolver {
 			}
 			String methodName = w.getBaseMethod().getName();
 			RProperty p = null;
+			if (w.getBaseMethod().getParameterTypes().length > 0) {
+				continue;
+			}
 			if (methodName.startsWith("get") && (methodName.length() >= 4)
 					&& (methodName.charAt(3) == methodName.toUpperCase()
 							.charAt(3))) {
@@ -201,7 +237,10 @@ public class BeanResolver {
 			if (p == null) {
 				continue;
 			}
-			p.setType(w.getBaseMethod().getReturnType());
+			JType returnType = normaliseErasedType(
+					w.getBaseMethod().getEnclosingType(), w.getBaseMethod(),
+					p.getName());
+			p.setType(returnType);
 			logger.log(TreeLogger.DEBUG, "Found new property: " + p.getName(),
 					null);
 			properties.put(p.getName(), p);
@@ -212,7 +251,8 @@ public class BeanResolver {
 		for (Iterator it = methodSet.iterator(); it.hasNext();) {
 			MethodWrapper w = (MethodWrapper) it.next();
 			String methodName = w.getBaseMethod().getName();
-			if (w.getBaseMethod().getParameterTypes().length != 1) {
+			if (w.getBaseMethod().getParameterTypes().length != 1 || w
+					.getBaseMethod().getReturnType() != JPrimitiveType.VOID) {
 				continue;
 			}
 			if (methodName.startsWith("set") && (methodName.length() >= 4)

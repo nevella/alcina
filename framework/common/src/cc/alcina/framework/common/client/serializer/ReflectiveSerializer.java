@@ -15,7 +15,6 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -152,9 +151,6 @@ public class ReflectiveSerializer {
 		}
 		Class lookupClass = serializationClass(clazz);
 		return typeSerializers.computeIfAbsent(lookupClass, k -> {
-			if (!GWT.isClient()) {
-				int debug = 3;
-			}
 			List<Class> toResolve = Arrays.asList(lookupClass);
 			while (toResolve.size() > 0) {
 				Optional<Class> match = toResolve.stream()
@@ -230,9 +226,6 @@ public class ReflectiveSerializer {
 		do {
 			GraphNode node = state.pending.peek();
 			node.ensureValueWritten();
-			if (node.depth() > 4) {
-				int debug = 3;
-			}
 			Iterator<GraphNode> itr = node.iterator;
 			if (itr != null && itr.hasNext()) {
 				GraphNode next = itr.next();
@@ -471,6 +464,8 @@ public class ReflectiveSerializer {
 								? parentSerialization().types()[0]
 								: null;
 			} else {
+				// FIXME - dirndl 1.3 - use annotationlocation to resolve sole
+				// type of property if possible
 				type = propertyReflector.getPropertyType();
 			}
 			if (type == null) {

@@ -50,6 +50,7 @@ import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.totsp.gwittir.client.beans.annotations.Omit;
+import com.totsp.gwittir.rebind.beans.BeanResolver;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
@@ -377,12 +378,13 @@ public class ClientReflectionGenerator extends Generator {
 					annArray += "a" + aCount;
 					sw.println(annImpl);
 				}
+				JType returnType = BeanResolver.normaliseErasedType(jct, method,
+						propertyName);
 				sw.println(String.format("ClientPropertyReflector reflector = "
 						+ "new ClientPropertyReflector(%s.class,\"%s\",%s.class,"
 						+ " new Annotation[]{%s}) ;",
 						getQualifiedSourceName(jct), propertyName,
-						getQualifiedSourceName(method.getReturnType()),
-						annArray));
+						getQualifiedSourceName(returnType), annArray));
 				sw.println(
 						"propertyReflectors.put(reflector.getPropertyName(), reflector);");
 				sw.outdent();
