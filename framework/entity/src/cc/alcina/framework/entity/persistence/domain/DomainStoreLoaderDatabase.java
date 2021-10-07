@@ -1162,6 +1162,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 		}
 
+		public void loadObject(ResultSet rs, int idx,
+				ValueContainer valueContainer) {
+			// TODO Auto-generated method stub
+		}
+
 		private Object getObject0(ResultSet rs, int idx) throws Exception {
 			if (typeIdHasId || type == Long.class || type == long.class) {
 				Long v = rs.getLong(idx);
@@ -1627,9 +1632,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 
 		class ConnResultsIterator implements Iterator<Object[]> {
-			Object[] cached = null;
+			ValueContainer[] current = null;
+
+			boolean peeked = false;
 
 			boolean finished = false;
+
+			public ConnResultsIterator() {
+				int length = joinTable ? 2 : columnDescriptors.size();
+				current = new ValueContainer[length];
+				for (int idx = 0; idx < length; idx++) {
+					current[idx] = new ValueContainer();
+				}
+			}
 
 			@Override
 			public boolean hasNext() {
@@ -1643,9 +1658,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					throw new NoSuchElementException();
 				}
 				peekNext();
-				Object[] result = cached;
-				cached = null;
-				return result;
+				peeked = false;
+				return current;
 			}
 
 			@Override
@@ -1654,35 +1668,33 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 
 			private void peekNext() {
-				if (cached == null && !finished) {
+				if (!peeked && !finished) {
 					ensureRs();
 					try {
 						if (rs.next()) {
 							if (joinTable) {
-								cached = new Object[2];
-								cached[0] = rs.getLong(1);
+								current[0].l = rs.getLong(1);
 								if (joinHandler != null) {
 									// currently only one implementation (that
 									// expects a String)
-									cached[1] = rs.getString(2);
+									current[1].o = rs.getString(2);
 								} else {
-									cached[1] = rs.getLong(2);
+									current[1].l = rs.getLong(2);
 								}
 							} else {
-								cached = new Object[columnDescriptors.size()];
 								for (int idx = 1; idx <= columnDescriptors
 										.size(); idx++) {
 									ColumnDescriptor descriptor = columnDescriptors
 											.get(idx - 1);
-									Object value = descriptor.getObject(rs,
-											idx);
-									cached[idx - 1] = value;
+									descriptor.loadObject(rs, idx,
+											current[idx - 1]);
 								}
 							}
 							ConnResults.this.rsReuse.onNext(ConnResults.this,
-									cached);
+									current);
 						} else {
 							finished = true;
+							current = null;
 							rs.close();
 							stmt.close();
 						}
@@ -1695,12 +1707,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	interface ConnResultsReuse {
-		default Iterator<Object[]> getIterator(ConnResults connResults,
+		default Iterator<ValueContainer[]> getIterator(ConnResults connResults,
 				ConnResultsIterator itr) {
 			return itr;
 		}
 
-		default void onNext(ConnResults connResults, Object[] cached) {
+		default void onNext(ConnResults connResults, ValueContainer[] cached) {
 		}
 	}
 
@@ -2307,5 +2319,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				return customResolver.resolveCustom(PdOperator.this, item);
 			}
 		}
+	}
+
+	static class ValueContainer {
+		boolean b;
+
+		int i;
+
+		float f;
+
+		double d;
+
+		long l;
+
+		Object o;
 	}
 }
