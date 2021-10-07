@@ -25,11 +25,13 @@ import cc.alcina.framework.common.client.logic.domain.InvariantOnceCreated;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MultiIterator;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.UnboxedLongMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.longs.Long2BooleanLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.longs.Long2ObjectFunction;
 import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
@@ -44,7 +46,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  *   
  */
 public class TransactionalMap<K, V> extends AbstractMap<K, V>
-		implements TransactionalCollection {
+		implements TransactionalCollection, UnboxedLongMap<V> {
 	private static transient final Object NULL_KEY_MARKER = new Object();
 
 	private static transient final Object REMOVED_VALUE_MARKER = new Object();
@@ -145,6 +147,15 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	@Override
 	public boolean equals(Object o) {
 		return this == o;
+	}
+
+	@Override
+	public V get(long key) {
+		if (concurrent != null) {
+			return get((Object) key);
+		} else {
+			return ((Long2ObjectFunction<V>) nonConcurrent).get(key);
+		}
 	}
 
 	@Override
