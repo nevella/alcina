@@ -138,7 +138,7 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 	}
 
 	@Override
-	public void onNext(ConnResults connResults, Object[] cached) {
+	public void onNext(ConnResults connResults, ValueContainer[] cached) {
 		connResults.cachedValues.add(cached);
 	}
 
@@ -290,7 +290,7 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 	}
 
 	public static class SavedSegmentDataHolder {
-		public Map<ConnRsKey, List<Object[]>> savedRsResults = new LinkedHashMap<>();
+		public Map<ConnRsKey, List<ValueContainer[]>> savedRsResults = new LinkedHashMap<>();
 
 		public Multiset<Class, Set<Long>> initialToLoadIds = new Multiset<>();
 	}
