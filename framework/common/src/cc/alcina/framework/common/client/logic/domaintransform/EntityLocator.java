@@ -185,6 +185,10 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		return entity.toLocator().equals(this);
 	}
 
+	public boolean provideIsZeroIdAndLocalId() {
+		return id == 0 && localId == 0;
+	}
+
 	public void setClazz(Class<? extends Entity> clazz) {
 		this.clazz = (Class<? extends Entity>) Domain.resolveEntityClass(clazz);
 	}

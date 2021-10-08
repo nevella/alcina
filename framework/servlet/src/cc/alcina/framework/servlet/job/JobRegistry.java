@@ -244,6 +244,10 @@ public class JobRegistry {
 		scheduler = new JobScheduler(this);
 		JobDomain.get().stateMessageEvents.add((k, messages) -> {
 			for (JobStateMessage message : messages) {
+				if (message == null) {
+					// FIXME - mvcc.5 - should not be
+					continue;
+				}
 				if (message.getProcessState() == null
 						&& activeJobs.containsKey(message.getJob())) {
 					updateThreadData(message);

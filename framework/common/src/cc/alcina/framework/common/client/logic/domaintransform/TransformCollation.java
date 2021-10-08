@@ -115,6 +115,10 @@ public class TransformCollation {
 			perLocator = new HashMap<>();
 			allEvents.forEach(event -> {
 				EntityLocator locator = event.toObjectLocator();
+				if (locator.provideIsZeroIdAndLocalId()) {
+					// FIXME - mvcc.5 - DEVEX (probably on transform creation)
+					return;
+				}
 				EntityCollation collation = perClass.ensure(
 						() -> new EntityCollation(locator), locator.clazz,
 						locator);
