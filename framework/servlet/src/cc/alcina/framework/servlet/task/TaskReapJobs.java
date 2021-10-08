@@ -25,6 +25,7 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 		}
 		AtomicInteger counter = new AtomicInteger(0);
 		AtomicInteger reaped = new AtomicInteger(0);
+		AtomicInteger exceptions = new AtomicInteger(0);
 		jobs.forEach(job -> {
 			if (counter.incrementAndGet() % 100000 == 0
 					|| TransformManager.get().getTransforms().size() > 5000) {
@@ -40,7 +41,9 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 							RetentionPolicy.class, job.getTask().getClass());
 					delete = !policy.retain(job);
 				} catch (Exception e) {
-					e.printStackTrace();
+					if (exceptions.incrementAndGet() < 20) {
+						e.printStackTrace();
+					}
 				}
 			}
 			if (delete) {
