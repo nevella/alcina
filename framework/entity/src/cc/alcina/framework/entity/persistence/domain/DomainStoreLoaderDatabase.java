@@ -1113,9 +1113,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							loadType == DomainStorePropertyLoadType.EAGER);
 				}
 			}
-			if (propertyType == Date.class) {
-				Ax.out("%s.%s", clazz, pd.getName());
-			}
 		}
 
 		public String getColumnName() {
