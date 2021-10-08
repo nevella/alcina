@@ -1,10 +1,10 @@
 package cc.alcina.framework.servlet.task;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -23,21 +23,41 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 		if (Ax.notBlank(value)) {
 			jobs = Stream.of(Job.byId(Long.valueOf(value)));
 		}
-		List<? extends Job> reap = jobs.filter(job -> {
-			if (!job.provideCanDeserializeTask()) {
-				return true;
+		AtomicInteger counter = new AtomicInteger(0);
+		AtomicInteger reaped = new AtomicInteger(0);
+		jobs.forEach(job -> {
+			if (counter.incrementAndGet() % 100000 == 0
+					|| TransformManager.get().getTransforms().size() > 5000) {
+				Transaction.commit();
+				Transaction.endAndBeginNew();
 			}
-			RetentionPolicy policy = Registry.impl(RetentionPolicy.class,
-					job.getTask().getClass());
-			return !policy.retain(job);
-		}).collect(Collectors.toList());
-		logger.info("Reaping {} jobs", reap.size());
-		for (Job job : reap) {
-			job.delete();
-			Transaction.commitIfTransformCount(5000);
-		}
+			boolean delete = false;
+			if (!job.provideCanDeserializeTask()) {
+				delete = true;
+			} else {
+				try {
+					RetentionPolicy policy = Registry.impl(
+							RetentionPolicy.class, job.getTask().getClass());
+					delete = !policy.retain(job);
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			}
+			if (delete) {
+				reaped.incrementAndGet();
+				job.delete();
+			}
+			if (counter.incrementAndGet() % 100000 == 0
+					|| TransformManager.get().getTransforms().size() > 5000) {
+				logger.info("Reaping jobs: counter {} - transforms {}",
+						counter.get(),
+						TransformManager.get().getTransforms().size());
+				Transaction.commit();
+				Transaction.endAndBeginNew();
+			}
+		});
 		Transaction.commit();
-		logger.info("Reaped {} jobs", reap.size());
+		logger.info("Reaped {} jobs", reaped.get());
 	}
 
 	@RegistryLocation(registryPoint = Schedule.class, targetClass = TaskReapJobs.class, implementationType = ImplementationType.FACTORY)
