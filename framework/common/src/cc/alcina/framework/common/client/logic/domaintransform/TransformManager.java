@@ -1374,6 +1374,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 							transform.setNewValue(null);
 							Preconditions.checkArgument(entity.getId() != 0
 									|| entity.getLocalId() != 0);
+							transform.setValueId(entity.getId());
+							transform.setValueLocalId(entity.getLocalId());
 							transform.setValueClass(entity.entityClass());
 							transform.setTransformType(
 									TransformType.REMOVE_REF_FROM_COLLECTION);
