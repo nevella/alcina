@@ -706,18 +706,20 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public DomainTransformEvent
-			createTransformFromPropertyChange(PropertyChangeEvent evt) {
-		DomainTransformEvent dte = createTransformEvent();
-		dte.setSource((Entity) evt.getSource());
-		dte.setNewValue(evt.getNewValue());
-		dte.setPropertyName(evt.getPropertyName());
-		Entity dObj = (Entity) evt.getSource();
-		dte.setObjectId(dObj.getId());
-		dte.setObjectLocalId(dObj.getLocalId());
-		dte.setObjectClass(dObj.entityClass());
-		dte.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
-		maybeAddVersionNumbers(dte, dObj, evt.getNewValue());
-		return dte;
+			createTransformFromPropertyChange(PropertyChangeEvent event) {
+		DomainTransformEvent transform = createTransformEvent();
+		transform.setSource((Entity) event.getSource());
+		transform.setNewValue(event.getNewValue());
+		transform.setPropertyName(event.getPropertyName());
+		Entity entity = (Entity) event.getSource();
+		Preconditions
+				.checkArgument(entity.getId() != 0 || entity.getLocalId() != 0);
+		transform.setObjectId(entity.getId());
+		transform.setObjectLocalId(entity.getLocalId());
+		transform.setObjectClass(entity.entityClass());
+		transform.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+		maybeAddVersionNumbers(transform, entity, event.getNewValue());
+		return transform;
 	}
 
 	public boolean currentTransformIsDuringCreationRequest() {
@@ -1327,16 +1329,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 			throw e;
 		}
 		List<DomainTransformEvent> transforms = new ArrayList<DomainTransformEvent>();
-		DomainTransformEvent dte = createTransformFromPropertyChange(event);
-		dte.setOldValue(event.getOldValue());
-		convertToTargetObject(dte);
-		if (dte.getNewValue() == null) {
-			dte.setTransformType(TransformType.NULL_PROPERTY_REF);
+		DomainTransformEvent transform = createTransformFromPropertyChange(
+				event);
+		transform.setOldValue(event.getOldValue());
+		convertToTargetObject(transform);
+		if (transform.getNewValue() == null) {
+			transform.setTransformType(TransformType.NULL_PROPERTY_REF);
 		}
-		if (dte.getValueId() != 0 || dte.getValueLocalId() != 0) {
-			dte.setTransformType(TransformType.CHANGE_PROPERTY_REF);
+		if (transform.getValueId() != 0 || transform.getValueLocalId() != 0) {
+			transform.setTransformType(TransformType.CHANGE_PROPERTY_REF);
 		}
-		if (dte.getNewValue() instanceof Set) {
+		if (transform.getNewValue() instanceof Set) {
 			Set typeCheck = (Set) event.getNewValue();
 			typeCheck = (Set) (typeCheck.isEmpty()
 					&& event.getOldValue() != null ? event.getOldValue()
@@ -1351,26 +1354,30 @@ public abstract class TransformManager implements PropertyChangeListener,
 					newValues.remove(null);
 					for (Entity entity : newValues) {
 						if (!oldValues.contains(entity)) {
-							dte = createTransformFromPropertyChange(event);
-							dte.setNewValue(null);
-							dte.setValueId(entity.getId());
-							dte.setValueLocalId(entity.getLocalId());
-							dte.setValueClass(entity.entityClass());
-							dte.setTransformType(
+							transform = createTransformFromPropertyChange(
+									event);
+							transform.setNewValue(null);
+							Preconditions.checkArgument(entity.getId() != 0
+									|| entity.getLocalId() != 0);
+							transform.setValueId(entity.getId());
+							transform.setValueLocalId(entity.getLocalId());
+							transform.setValueClass(entity.entityClass());
+							transform.setTransformType(
 									TransformType.ADD_REF_TO_COLLECTION);
-							transforms.add(dte);
+							transforms.add(transform);
 						}
 					}
 					for (Entity entity : oldValues) {
 						if (!newValues.contains(entity)) {
-							dte = createTransformFromPropertyChange(event);
-							dte.setNewValue(null);
-							dte.setValueId(entity.getId());
-							dte.setValueLocalId(entity.getLocalId());
-							dte.setValueClass(entity.entityClass());
-							dte.setTransformType(
+							transform = createTransformFromPropertyChange(
+									event);
+							transform.setNewValue(null);
+							Preconditions.checkArgument(entity.getId() != 0
+									|| entity.getLocalId() != 0);
+							transform.setValueClass(entity.entityClass());
+							transform.setTransformType(
 									TransformType.REMOVE_REF_FROM_COLLECTION);
-							transforms.add(dte);
+							transforms.add(transform);
 						}
 					}
 				} else if (typeCheck.iterator().next() instanceof Enum) {
@@ -1380,30 +1387,32 @@ public abstract class TransformManager implements PropertyChangeListener,
 					newValues.remove(null);
 					for (Enum e : newValues) {
 						if (!oldValues.contains(e)) {
-							dte = createTransformFromPropertyChange(event);
-							dte.setNewValue(null);
-							dte.setNewStringValue(e.name());
-							dte.setValueClass(e.getDeclaringClass());
-							dte.setTransformType(
+							transform = createTransformFromPropertyChange(
+									event);
+							transform.setNewValue(null);
+							transform.setNewStringValue(e.name());
+							transform.setValueClass(e.getDeclaringClass());
+							transform.setTransformType(
 									TransformType.ADD_REF_TO_COLLECTION);
-							transforms.add(dte);
+							transforms.add(transform);
 						}
 					}
 					for (Enum e : oldValues) {
 						if (!newValues.contains(e)) {
-							dte = createTransformFromPropertyChange(event);
-							dte.setNewValue(null);
-							dte.setNewStringValue(e.name());
-							dte.setValueClass(e.getDeclaringClass());
-							dte.setTransformType(
+							transform = createTransformFromPropertyChange(
+									event);
+							transform.setNewValue(null);
+							transform.setNewStringValue(e.name());
+							transform.setValueClass(e.getDeclaringClass());
+							transform.setTransformType(
 									TransformType.REMOVE_REF_FROM_COLLECTION);
-							transforms.add(dte);
+							transforms.add(transform);
 						}
 					}
 				}
 			}
 		} else {
-			transforms.add(dte);
+			transforms.add(transform);
 		}
 		addTransformsFromPropertyChange(transforms);
 		Entity entity = (Entity) event.getSource();
