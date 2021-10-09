@@ -32,7 +32,9 @@ public class CollectionNodeRenderer extends DirectedNodeRenderer {
 		Collection collection = (Collection) node.model;
 		int idx = 0;
 		// FIXME - dirndl1.0 - this prevents some sort of caching issue - fix
-		// annotationlocation to allow custom res paths
+		// annotationlocation to allow custom res paths (2021.10.09 - may
+		// already be fixed
+		// with CustomReflectorResolver fix)
 		node.directed.bindings();
 		for (Object object : collection) {
 			Node child = node.addChild(object, null, null);
