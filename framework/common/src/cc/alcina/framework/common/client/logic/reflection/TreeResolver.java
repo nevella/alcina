@@ -39,7 +39,8 @@ public class TreeResolver<A extends Annotation> {
 
 	private MultikeyMap cache = new UnsortedMultikeyMap<>(2);
 
-	private Map<Class, TreeResolver<?>> finalChildren = new LinkedHashMap<>();
+	private MultikeyMap<TreeResolver<?>> finalChildren = new UnsortedMultikeyMap<>(
+			2);
 
 	public TreeResolver(Class<A> annotationClass,
 			Predicate<A> mergeWithParent) {
@@ -53,10 +54,11 @@ public class TreeResolver<A extends Annotation> {
 		this.mergeWithParent = parent.mergeWithParent;
 	}
 
-	public <TR extends TreeResolver<A>> TR
-			finalChildResolver(Class discriminator, Supplier<TR> supplier) {
-		return (TR) finalChildren.computeIfAbsent(discriminator,
-				c -> (TreeResolver) supplier.get());
+	public <TR extends TreeResolver<A>> TR finalChildResolver(
+			PropertyReflector propertyReflector, Class discriminator,
+			Supplier<TR> supplier) {
+		return (TR) finalChildren.ensure((Supplier) supplier, propertyReflector,
+				discriminator);
 	}
 
 	public <T> T resolve(AnnotationLocation annotationLocation,
