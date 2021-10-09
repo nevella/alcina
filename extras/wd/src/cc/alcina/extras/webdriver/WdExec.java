@@ -93,7 +93,8 @@ public class WdExec {
 	}
 
 	public Object executeScript(String script) {
-		return WDUtils.executeScript(driver, getElement(), script);
+		return performAction(false,
+				e -> WDUtils.executeScript(driver, e, script));
 	}
 
 	public WebDriver getDriver() {
