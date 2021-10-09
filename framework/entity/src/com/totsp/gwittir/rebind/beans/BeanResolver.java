@@ -39,7 +39,6 @@ import com.google.gwt.core.ext.typeinfo.JType;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.util.Ax;
 
 /**
  *
@@ -61,8 +60,6 @@ public class BeanResolver {
 					if (t.getSuperclass() instanceof JParameterizedType) {
 						JParameterizedType superclass = (JParameterizedType) t
 								.getSuperclass();
-						Ax.out("Normalised erased type: %s",
-								returnType.getQualifiedSourceName());
 						returnType = superclass.getBaseType().getRawType();
 					}
 				}
