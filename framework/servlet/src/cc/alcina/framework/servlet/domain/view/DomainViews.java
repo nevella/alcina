@@ -278,7 +278,7 @@ public abstract class DomainViews {
 					.query(PersistentImpl.getImplementation(DomainView.class))
 					.stream().filter(QueryResult::hasNoDeleteTransform)
 					.filter(this::filterViewTransformCollation)
-					.forEach(qr -> onViewModified((DomainView) qr.getObject()));
+					.forEach(qr -> onViewModified((DomainView) qr.getEntity()));
 			;
 			Transaction.end();
 			break;

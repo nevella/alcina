@@ -3,7 +3,9 @@ package cc.alcina.framework.servlet.task;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -11,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobScheduler.RetentionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 import cc.alcina.framework.servlet.schedule.ServerTask;
@@ -27,11 +30,6 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 		AtomicInteger reaped = new AtomicInteger(0);
 		AtomicInteger exceptions = new AtomicInteger(0);
 		jobs.forEach(job -> {
-			if (counter.incrementAndGet() % 100000 == 0
-					|| TransformManager.get().getTransforms().size() > 5000) {
-				Transaction.commit();
-				Transaction.endAndBeginNew();
-			}
 			boolean delete = false;
 			if (!job.provideCanDeserializeTask()) {
 				delete = true;
@@ -51,13 +49,17 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 				job.delete();
 			}
 			if (counter.incrementAndGet() % 100000 == 0
-					|| TransformManager.get().getTransforms().size() > 5000) {
-				logger.info("Reaping jobs: counter {} - transforms {}",
+					|| TransformManager.get().getTransforms().size() > 500) {
+				logger.info(
+						"Reaping jobs: counter {} - transforms {} - jobs {}",
 						counter.get(),
-						TransformManager.get().getTransforms().size());
+						TransformManager.get().getTransforms().size(),
+						Domain.size(
+								PersistentImpl.getImplementation(Job.class)));
 				Transaction.commit();
 				Transaction.endAndBeginNew();
 			}
+			JobContext.checkCancelled();
 		});
 		Transaction.commit();
 		logger.info("Reaped {} jobs", reaped.get());

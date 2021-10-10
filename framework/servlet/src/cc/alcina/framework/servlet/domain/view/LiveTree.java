@@ -240,7 +240,7 @@ public class LiveTree {
 	private void processEntityChanges(DomainTransformPersistenceEvent event) {
 		event.getTransformPersistenceToken().getTransformCollation()
 				.allEntityCollations().forEach(coll -> {
-					Entity entity = coll.getObject();
+					Entity entity = coll.getEntity();
 					List<LiveNode> nodes = entityNodes.get(entity);
 					if (nodes != null) {
 						nodes.forEach(n -> {

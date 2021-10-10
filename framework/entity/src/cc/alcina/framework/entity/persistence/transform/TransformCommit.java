@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.WebException;
@@ -803,39 +802,13 @@ public class TransformCommit {
 			} else {
 				tpm.pushCurrentUser();
 			}
-			CascadingTransformSupport cascadingTransformSupport = CascadingTransformSupport
-					.get();
-			try {
-				cascadingTransformSupport.beforeTransform();
-				DomainTransformLayerWrapper wrapper = get()
-						.transformFromServletLayer(tag);
-				// see preamble to cascading transform support
-				while (cascadingTransformSupport.hasChildren()) {
-					logger.debug(
-							"Servlet layer - waiting for cascading transforms");
-					synchronized (cascadingTransformSupport) {
-						if (cascadingTransformSupport.hasChildren()) {
-							cascadingTransformSupport.wait(1000);
-						}
-					}
-				}
-				UmbrellaException childException = cascadingTransformSupport
-						.getException();
-				if (childException != null) {
-					throw childException;
-				}
-				return wrapper;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			} finally {
-				cascadingTransformSupport.afterTransform();
-			}
-		} catch (RuntimeException re) {
-			re.printStackTrace();
+			return get().transformFromServletLayer(tag);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			Transaction.current().toDbAborted();
 			Transaction.endAndBeginNew();
-			throw re;
+			throw WrappedRuntimeException.wrapIfNotRuntime(ex);
 		} finally {
 			tpm.popUser();
 			Preconditions.checkState(
@@ -928,7 +901,6 @@ public class TransformCommit {
 					persistenceToken, wrapper,
 					wrapper.providePersistenceEventType(), true);
 			event.setFiringFromQueue(wrapper.fireAsQueueEvent);
-			CascadingTransformSupport.register(event);
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.fireDomainTransformPersistenceEvent(event);
 			unexpectedException = false;

@@ -122,7 +122,7 @@ public class SerializationSignatureListener
 						.forLocator(transform.toObjectLocator());
 				if (!entityCollation.isDeleted()) {
 					serializedSignatureReflector.setPropertyValue(
-							entityCollation.getObject(), ensureSignature());
+							entityCollation.getEntity(), ensureSignature());
 					token.addCascadedEvents();
 				}
 			}

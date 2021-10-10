@@ -57,7 +57,7 @@ public class PublicationDomain {
 					collation.query(iUserImpl).stream().forEach(qr -> {
 						if (qr.hasCreateTransform()) {
 							if (!qr.hasDeleteTransform()) {
-								IUser iUser = qr.getObject();
+								IUser iUser = qr.getEntity();
 								PublicationCounter counter = PersistentImpl
 										.create(PublicationCounter.class);
 								counter.setUser(iUser);

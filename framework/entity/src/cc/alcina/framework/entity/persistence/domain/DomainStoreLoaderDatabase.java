@@ -736,11 +736,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			Multimap<Class, List<EntityCollation>> toLoad = collation
 					.allEntityCollations()
 					.filter(ec -> !ec.isDeleted()
-							&& store.isCached(ec.getObjectClass())
+							&& store.isCached(ec.getEntityClass())
 							&& IVersionable.class
-									.isAssignableFrom(ec.getObjectClass()))
+									.isAssignableFrom(ec.getEntityClass()))
 					.collect(AlcinaCollectors
-							.toKeyMultimap(EntityCollation::getObjectClass));
+							.toKeyMultimap(EntityCollation::getEntityClass));
 			List<Callable> tasks = new ArrayList<>();
 			toLoad.entrySet().forEach(e -> {
 				tasks.add(new IVersionableLoaderTask(conn, e.getKey(),
