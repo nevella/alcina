@@ -336,7 +336,7 @@ public class TransformPersistenceToken implements Serializable {
 				"TransformPersistenceToken - requests: %s %s; localToVm: %s; requestorExternalToThisJvm: %s; \nrequests:\n%s",
 				getRequest().allRequests().size(), requestIds, localToVm,
 				requestorExternalToThisJvm, CommonUtils
-						.trimToWsChars(getRequest().toString(), 200000, true));
+						.trimToWsChars(getRequest().toString(), 800000, true));
 	}
 
 	public enum Pass {

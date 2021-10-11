@@ -122,6 +122,10 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		return getUnboxed(clazz, id);
 	}
 
+	public <T> T get(Class<T> clazz, long id, long localId) {
+		return (T) (id != 0 ? get(clazz, id) : getLocal(clazz, localId));
+	}
+
 	public <T> T get(Class<T> clazz, Long id) {
 		if (id == null) {
 			return null;
