@@ -10,6 +10,9 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
+/*
+ * For legacy compatiblity only. Use ReflectiveSerializer if possible
+ */
 public abstract class AlcinaBeanSerializer {
 	protected static final String PROPERTIES = "props";
 

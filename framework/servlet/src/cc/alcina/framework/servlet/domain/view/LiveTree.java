@@ -425,7 +425,10 @@ public class LiveTree {
 				 */
 				boolean seenStart = request
 						.getFromOffsetExclusivePath() == null;
-				while (deque.size() > 0 && result.size() < request.getCount()) {
+				int resultNodeMaxSize = Math.min(request.getCount(),
+						ResourceUtilities.getInteger(LiveTree.class,
+								"resultNodeMaxSize"));
+				while (deque.size() > 0 && result.size() < resultNodeMaxSize) {
 					LiveNode liveNode = deque.removeFirst();
 					Transform transform = new Transform();
 					transform.putPath(liveNode.path);
