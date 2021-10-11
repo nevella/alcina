@@ -73,6 +73,7 @@ import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
+import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -730,9 +731,8 @@ public class GraphProjection {
 				context.adopt(sourceClass, null, null, projected, source);
 				contexts.add(context);
 			}
-			// FIXME - mvcc.4 - why can't replaceprojected just sub for initial
-			// projected? and what is 'alsomapto'? actually there's a reason -
-			// may switch (A->B) to (A'->B')
+			// The reason replaceprojected can't just sub for initial
+			// projected? The action may switch (A->B) to (A'->B')
 			// so the dataFilter should handle its own projection
 			T replaceProjected = dataFilter.filterData(source, projected,
 					context, this);
@@ -1061,10 +1061,15 @@ public class GraphProjection {
 		return valid;
 	}
 
+	/*
+	 * Optimisation to avoid adding unnecessarily to reached lookup
+	 */
 	boolean reachableBySinglePath(Class clazz) {
-		if (clazz == Set.class || clazz == List.class
-				|| clazz == ArrayList.class || clazz == Multimap.class
-				|| clazz == UnsortedMultikeyMap.class) {
+		if (Set.class.isAssignableFrom(clazz)
+				|| List.class.isAssignableFrom(clazz)
+				|| Map.class.isAssignableFrom(clazz) || clazz == Multimap.class
+				|| clazz == UnsortedMultikeyMap.class
+				|| clazz == SortedMultikeyMap.class) {
 			return true;
 		} else {
 			return false;
