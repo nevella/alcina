@@ -19,7 +19,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 @RegistryLocation(registryPoint = TowardsAMoreDesirableSituation.class, implementationType = ImplementationType.SINGLETON)
 /*
- * FIXME - mvcc.jobs.1 - add to listjobs report
+ * FIXME - mvcc.cascade - add to listjobs report
  */
 public class TowardsAMoreDesirableSituation {
 	public static TowardsAMoreDesirableSituation get() {
