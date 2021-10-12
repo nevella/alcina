@@ -189,8 +189,8 @@ public class ReflectiveSerializer {
 			boolean resolveWithReflectiveTypeSerializer = bean != null;
 			// FIXME - reflection - move to Reflector
 			if (!GWT.isClient()) {
-				resolveWithReflectiveTypeSerializer |= TreeSerializable.class
-						.isAssignableFrom(lookupClass);
+				resolveWithReflectiveTypeSerializer |= Reflections
+						.isAssignableFrom(TreeSerializable.class, lookupClass);
 			}
 			if (resolveWithReflectiveTypeSerializer) {
 				return new ReflectiveTypeSerializer();
