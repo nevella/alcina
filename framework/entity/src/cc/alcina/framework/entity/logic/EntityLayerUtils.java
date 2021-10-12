@@ -44,8 +44,7 @@ public class EntityLayerUtils {
 							+ "|LoadImpactPageAnalyzer|LoadImpactRload|servlet"
 							+ "|WebCache|WebQL|WeCrawlForThePeace|Wget"
 							+ "|python-requests|FlipboardProxy"
-							+ "|BingPreview|Baiduspider|YandexBot|Java|rogerbot|Slackbot"
-							+ "|SkypeUriPreview)",
+							+ "|BingPreview|Baiduspider|YandexBot|Java|rogerbot|Slackbot)",
 					Pattern.CASE_INSENSITIVE);
 			String botExtraRegex = ResourceUtilities.get(EntityLayerUtils.class,
 					"botUserAgentExtra");
