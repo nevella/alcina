@@ -1092,7 +1092,8 @@ public class FlatTreeSerializer {
 			if (serialized == null) {
 				return null;
 			}
-			if ((clazz != null && !serialized.startsWith("{"))
+			if ((clazz != null && !serialized.startsWith("{")
+					&& !serialized.startsWith("["))
 					|| serialized.contains("class$=")) {
 				FlatTreeSerializer.DeserializerOptions options = new FlatTreeSerializer.DeserializerOptions()
 						.withShortPaths(true);

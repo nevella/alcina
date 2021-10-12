@@ -9,6 +9,9 @@ import org.slf4j.LoggerFactory;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.logging.client.SystemLogHandler;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class AlcinaLogUtils {
@@ -32,6 +35,10 @@ public class AlcinaLogUtils {
 				.getLogger(Ax.format("%s.__%s", clazz.getName(), tag));
 	}
 
+	public static void muteAllLogging(boolean muteAll) {
+		Registry.impl(LogMuter.class).muteAllLogging(muteAll);
+	}
+
 	public static void sysLogClient(Class clazz, Level level) {
 		if (GWT.isClient()) {
 			java.util.logging.Logger logger = java.util.logging.Logger
@@ -40,6 +47,13 @@ public class AlcinaLogUtils {
 			logger.addHandler(new SystemLogHandler(
 					new SimpleTextFormatter(false), level));
 			logger.setUseParentHandlers(false);
+		}
+	}
+
+	@RegistryLocation(registryPoint = LogMuter.class, implementationType = ImplementationType.SINGLETON)
+	public static class LogMuter {
+		public void muteAllLogging(boolean muteAll) {
+			// noop
 		}
 	}
 }

@@ -118,6 +118,9 @@ public class TransformCommit {
 	public static final transient String CONTEXT_DISABLED = TransformCommit.class
 			.getName() + ".CONTEXT_DISABLED";
 
+	public static final transient String CONTEXT_COMMITTING = TransformCommit.class
+			.getName() + ".CONTEXT_COMMITTING";
+
 	static Logger logger = LoggerFactory.getLogger(TransformCommit.class);
 
 	public static int commitBulkTransforms(List<DeltaApplicationRecord> records,
@@ -820,33 +823,43 @@ public class TransformCommit {
 	protected DomainTransformLayerWrapper submitAndHandleTransforms(
 			TransformPersistenceToken persistenceToken)
 			throws DomainTransformRequestException {
-		List<TransformPersistenceToken> perStoreTokens = persistenceToken
-				.toPerStoreTokens();
-		if (perStoreTokens.size() == 1) {
-			TransformPersistenceToken perStoreToken = perStoreTokens.get(0);
-			if (perStoreToken.provideTargetsWritableStore()) {
-				return submitAndHandleTransformsWritableStore(perStoreToken);
+		Preconditions.checkState(!LooseContext.is(CONTEXT_COMMITTING),
+				"Already in commit section");
+		try {
+			LooseContext.pushWithTrue(CONTEXT_COMMITTING);
+			List<TransformPersistenceToken> perStoreTokens = persistenceToken
+					.toPerStoreTokens();
+			if (perStoreTokens.size() == 1) {
+				TransformPersistenceToken perStoreToken = perStoreTokens.get(0);
+				if (perStoreToken.provideTargetsWritableStore()) {
+					return submitAndHandleTransformsWritableStore(
+							perStoreToken);
+				}
 			}
-		}
-		TransformPersistenceToken targetingWriteableStore = perStoreTokens
-				.stream().filter(token -> token.provideTargetsWritableStore())
-				.findFirst().orElse(null);
-		DomainTransformLayerWrapper result = new DomainTransformLayerWrapper(
-				targetingWriteableStore);
-		for (TransformPersistenceToken perStoreToken : perStoreTokens) {
-			if (perStoreToken.provideTargetsWritableStore()) {
-				result.merge(
-						submitAndHandleTransformsWritableStore(perStoreToken));
-			} else {
-				DomainTransformLayerWrapper remoteWrapperResult = Registry
-						.impl(RemoteTransformPersister.class,
-								perStoreToken.getTargetStore()
-										.getDomainDescriptor().getClass())
-						.submitAndHandleTransformsRemoteStore(perStoreToken);
-				result.merge(remoteWrapperResult);
+			TransformPersistenceToken targetingWriteableStore = perStoreTokens
+					.stream()
+					.filter(token -> token.provideTargetsWritableStore())
+					.findFirst().orElse(null);
+			DomainTransformLayerWrapper result = new DomainTransformLayerWrapper(
+					targetingWriteableStore);
+			for (TransformPersistenceToken perStoreToken : perStoreTokens) {
+				if (perStoreToken.provideTargetsWritableStore()) {
+					result.merge(submitAndHandleTransformsWritableStore(
+							perStoreToken));
+				} else {
+					DomainTransformLayerWrapper remoteWrapperResult = Registry
+							.impl(RemoteTransformPersister.class,
+									perStoreToken.getTargetStore()
+											.getDomainDescriptor().getClass())
+							.submitAndHandleTransformsRemoteStore(
+									perStoreToken);
+					result.merge(remoteWrapperResult);
+				}
 			}
+			return result;
+		} finally {
+			LooseContext.pop();
 		}
-		return result;
 	}
 
 	protected DomainTransformLayerWrapper

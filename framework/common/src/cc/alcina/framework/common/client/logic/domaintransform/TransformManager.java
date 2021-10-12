@@ -70,6 +70,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -2280,11 +2281,18 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 
 		public <V> V deserialize(String serialized, Class<V> clazz) {
-			return AlcinaBeanSerializer.deserializeHolder(serialized);
+			if (serialized == null) {
+				return null;
+			}
+			if (serialized.startsWith("{")) {
+				return AlcinaBeanSerializer.deserializeHolder(serialized);
+			} else {
+				return ReflectiveSerializer.deserialize(serialized);
+			}
 		}
 
 		public String serialize(Object object, boolean hasClassNameProperty) {
-			return AlcinaBeanSerializer.serializeHolder(object);
+			return ReflectiveSerializer.serialize(object);
 		}
 	}
 
