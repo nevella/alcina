@@ -652,6 +652,12 @@ public class ResourceUtilities {
 				.withHeaders(headers).asBytes();
 	}
 
+	public static byte[] readUrlAsBytesWithPut(String strUrl, String body,
+			StringMap headers) throws Exception {
+		return new SimpleQuery(strUrl).asPut().withBody(body)
+				.withHeaders(headers).asBytes();
+	}
+
 	public static String readUrlAsString(String strUrl) throws Exception {
 		return readUrlAsString(strUrl, null);
 	}
@@ -708,6 +714,12 @@ public class ResourceUtilities {
 	public static String readUrlAsStringWithPost(String strUrl, String postBody,
 			StringMap headers) throws Exception {
 		byte[] bytes = readUrlAsBytesWithPost(strUrl, postBody, headers);
+		return new String(bytes, StandardCharsets.UTF_8);
+	}
+
+	public static String readUrlAsStringWithPut(String strUrl, String body,
+			StringMap headers) throws Exception {
+		byte[] bytes = readUrlAsBytesWithPut(strUrl, body, headers);
 		return new String(bytes, StandardCharsets.UTF_8);
 	}
 
@@ -991,11 +1003,15 @@ public class ResourceUtilities {
 	public static class SimpleQuery {
 		private String strUrl;
 
-		private String postBody;
+		private String body;
 
 		private StringMap headers = new StringMap();
 
 		private HttpURLConnection connection;
+
+		private boolean asPut = false;
+
+		private boolean asPost = false;
 
 		private boolean gzip;
 
@@ -1039,8 +1055,10 @@ public class ResourceUtilities {
 					((HttpsURLConnection) connection)
 							.setHostnameVerifier(hostnameVerifier);
 				}
-				if (postBody != null) {
+				if (asPost) {
 					connection.setRequestMethod("POST");
+				} else if (asPut) {
+					connection.setRequestMethod("PUT");
 				}
 				if (gzip) {
 					headers.put("accept-encoding", "gzip");
@@ -1048,10 +1066,10 @@ public class ResourceUtilities {
 				for (Entry<String, String> e : headers.entrySet()) {
 					connection.setRequestProperty(e.getKey(), e.getValue());
 				}
-				if (postBody != null) {
+				if (body != null) {
 					OutputStream out = connection.getOutputStream();
 					Writer wout = new OutputStreamWriter(out, "UTF-8");
-					wout.write(postBody);
+					wout.write(body);
 					wout.flush();
 					wout.close();
 				}
@@ -1144,14 +1162,26 @@ public class ResourceUtilities {
 			return this;
 		}
 
+		public SimpleQuery withBody(String body) {
+			this.body = body;
+			return this;
+		}
+
 		public SimpleQuery withPostBody(String postBody) {
-			this.postBody = postBody;
+			this.asPost = true;
+			this.body = postBody;
+			return this;
+		}
+
+		public SimpleQuery asPut() {
+			this.asPut = true;
 			return this;
 		}
 
 		public SimpleQuery
 				withPostBodyQueryParameters(StringMap queryParameters) {
-			postBody = queryParameters.entrySet().stream().map(e -> {
+			asPost = true;
+			body = queryParameters.entrySet().stream().map(e -> {
 				return Ax.format("%s=%s", e.getKey(),
 						UrlComponentEncoder.get().encode(e.getValue()));
 			}).collect(Collectors.joining("&"));
