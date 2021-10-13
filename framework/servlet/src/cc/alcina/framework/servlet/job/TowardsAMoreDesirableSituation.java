@@ -37,7 +37,10 @@ public class TowardsAMoreDesirableSituation {
 		activeJobs.removeIf(Job::provideIsSequenceComplete);
 		boolean delta = false;
 		while (activeJobs.size() < JobRegistry.get().jobExecutors
-				.getMaxConsistencyJobCount()) {
+				.getMaxConsistencyJobCount()
+				&& JobRegistry.get().getActiveJobCount() <= ResourceUtilities
+						.getInteger(TowardsAMoreDesirableSituation.class,
+								"maxVmActiveJobCount")) {
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
 					.isPresent()) {
 				JobRegistry.get()
