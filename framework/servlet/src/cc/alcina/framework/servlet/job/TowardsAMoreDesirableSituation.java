@@ -64,7 +64,7 @@ public class TowardsAMoreDesirableSituation {
 								activeJobs.add(job);
 								Transaction.commit();
 								logger.info(
-										"TowardsAMoreDesirableSituation - consitency-to-pending - {} - {} remaining",
+										"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} remaining",
 										job,
 										JobDomain.get()
 												.getFutureConsistencyJobs()

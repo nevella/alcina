@@ -190,7 +190,9 @@ public class ReflectiveSerializer {
 			// FIXME - reflection - move to Reflector
 			if (!GWT.isClient()) {
 				resolveWithReflectiveTypeSerializer |= Reflections
-						.isAssignableFrom(TreeSerializable.class, lookupClass);
+						.isAssignableFrom(TreeSerializable.class, lookupClass)
+						|| Reflections.isAssignableFrom(
+								ReflectiveSerializable.class, lookupClass);
 			}
 			if (resolveWithReflectiveTypeSerializer) {
 				return new ReflectiveTypeSerializer();
@@ -264,6 +266,9 @@ public class ReflectiveSerializer {
 	}
 
 	public static class DeserializerOptions {
+	}
+
+	public interface ReflectiveSerializable {
 	}
 
 	public static class ReflectiveTypeSerializer extends TypeSerializer {

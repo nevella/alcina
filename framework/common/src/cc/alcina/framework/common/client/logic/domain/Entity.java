@@ -363,6 +363,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return !Domain.isDomainVersion(Entity.this);
 		}
 
+		public boolean isZeroIds() {
+			return getId() == 0 && getLocalId() == 0;
+		}
+
 		public void persistSerializables() {
 			TransformManager.get().persistSerializables(Entity.this);
 		}

@@ -7,11 +7,19 @@ import java.util.Map;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.util.StringMap;
 
-/**
+/*
  * Important! (because hard to enforce) - any class that implements
  * TreeSerializable should also have (usually via a superclass)
  * 
  * @RegistryLocation(registryPoint = TreeSerializable.class)
+ * 
+ * That is used by app server code to generate
+ * the serialization signature of the reachable
+ * serializables at startup time, and to
+ * validate the serializable classes (most
+ * importantly that any non-property fields are
+ * transient)
+ * 
  * @author nick@alcina.cc
  *
  */

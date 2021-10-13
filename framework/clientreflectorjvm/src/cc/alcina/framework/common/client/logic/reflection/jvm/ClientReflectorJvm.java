@@ -19,7 +19,6 @@ import java.util.function.Predicate;
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.beans.annotations.Omit;
-import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
 
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -102,7 +101,7 @@ public class ClientReflectorJvm extends ClientReflector {
 				&& clazz.getAnnotation(
 						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null
 				&& !clazz.getName().startsWith("java.lang")
-				&& !IntrospectorFilter.COLLECTION_CLASS_NAMES
+				&& !CommonUtils.COLLECTION_CLASS_NAMES
 						.contains(clazz.getCanonicalName())) {
 			throw new IntrospectionException(
 					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
@@ -121,7 +120,7 @@ public class ClientReflectorJvm extends ClientReflector {
 				&& clazz.getAnnotation(
 						cc.alcina.framework.common.client.logic.reflection.Bean.class) == null
 				&& !clazz.getName().startsWith("java.lang")
-				&& !IntrospectorFilter.COLLECTION_CLASS_NAMES
+				&& !CommonUtils.COLLECTION_CLASS_NAMES
 						.contains(clazz.getCanonicalName())) {
 			throw new IntrospectionException(
 					"not reflect-instantiable class - no clientinstantiable/beandescriptor annotation",
@@ -157,7 +156,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		if (clazz.getName().startsWith("java.lang")) {
 			introspectable = true;
 		}
-		if (IntrospectorFilter.COLLECTION_CLASS_NAMES
+		if (CommonUtils.COLLECTION_CLASS_NAMES
 				.contains(clazz.getCanonicalName())) {
 			introspectable = true;
 		}

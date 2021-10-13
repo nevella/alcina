@@ -351,6 +351,13 @@ public class TransformCollation {
 							name -> Objects.equals(e.getPropertyName(), name)));
 		}
 
+		public boolean hasTransformsOtherThan(Enum... names) {
+			return events.stream()
+					.anyMatch(e -> e.getPropertyName() == null
+							|| Arrays.stream(names).noneMatch(name -> Objects
+									.equals(e.getPropertyName(), name.name())));
+		}
+
 		public void removeTransform(DomainTransformEvent event) {
 			TransformCollation.this.removeTransformFromRequest(event);
 		}
