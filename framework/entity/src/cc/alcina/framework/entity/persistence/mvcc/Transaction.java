@@ -135,6 +135,9 @@ public class Transaction implements Comparable<Transaction> {
 		if (!Transactions.isInitialised()) {
 			return;
 		}
+		if (threadLocalInstance.get() == null) {
+			logger.error("Attempting to end transaction when one is not present");
+		}
 		threadLocalInstance.get().endTransaction();
 		logger.debug("Removing tx - {} {} {}", threadLocalInstance.get(),
 				Thread.currentThread().getName(),
