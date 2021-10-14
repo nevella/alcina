@@ -12,7 +12,8 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 public class SortedChildren<T> implements List<TreePath<T>> {
-	private TreeSet<TreePath<T>> children = new TreeSet<>(Cmp.INSTANCE);
+	private TreeSet<TreePath<T>> children = new TreeSet<>(
+			TreePath.SegmentComparator.INSTANCE);
 
 	@Override
 	public void add(int index, TreePath<T> element) {
@@ -75,6 +76,7 @@ public class SortedChildren<T> implements List<TreePath<T>> {
 
 	@Override
 	public int indexOf(Object o) {
+		int index = 0;
 		throw new UnsupportedOperationException();
 	}
 
@@ -106,6 +108,29 @@ public class SortedChildren<T> implements List<TreePath<T>> {
 	@Override
 	public Stream<TreePath<T>> parallelStream() {
 		return this.children.parallelStream();
+	}
+
+	public TreePath previous(TreePath<?> from) {
+		TreePath current = from;
+		while (true) {
+			if (current.getParent() == null) {
+				return null;
+			} else {
+				SortedChildren<TreePath> siblings = (SortedChildren) current
+						.getParent().getChildren();
+				TreePath lower = siblings.children.lower(current);
+				if (lower != null) {
+					current = lower;
+					while (current.getChildren().size() > 0) {
+						current = (TreePath) ((SortedChildren) current
+								.getChildren()).children.last();
+					}
+					return current;
+				} else {
+					current = current.getParent();
+				}
+			}
+		}
 	}
 
 	@Override
@@ -175,14 +200,5 @@ public class SortedChildren<T> implements List<TreePath<T>> {
 	@Override
 	public String toString() {
 		return this.children.toString();
-	}
-
-	private static class Cmp implements Comparator<TreePath> {
-		private static final Cmp INSTANCE = new Cmp();
-
-		@Override
-		public int compare(TreePath o1, TreePath o2) {
-			return o1.segmentComparable.compareTo(o2.segmentComparable);
-		}
 	}
 }

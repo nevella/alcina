@@ -360,6 +360,16 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 
 		public transient TreePath localPath;
 
+		public Transform copy() {
+			Transform transform = new Transform();
+			transform.beforePath = beforePath;
+			transform.localPath = localPath;
+			transform.node = node;
+			transform.operation = operation;
+			transform.treePath = treePath;
+			return transform;
+		}
+
 		public String getBeforePath() {
 			return this.beforePath;
 		}
