@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Wa
 import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefinition;
 import cc.alcina.framework.common.client.domain.DomainListener;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.QueryResult;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -110,6 +111,10 @@ public abstract class DomainViews {
 				.add(afterDomainCommittedListener);
 		thread = new TaskProcessorThread();
 		thread.start();
+	}
+
+	public void clearTree(EntityLocator viewLocator) {
+		trees.remove(new Key(viewLocator.getId()));
 	}
 
 	public void clearTrees() {
@@ -380,6 +385,10 @@ public abstract class DomainViews {
 		Request<?> request;
 
 		private String stringKey;
+
+		public Key(long viewId) {
+			this.stringKey = String.valueOf(viewId);
+		}
 
 		public Key(Request<?> request) {
 			this.request = request;

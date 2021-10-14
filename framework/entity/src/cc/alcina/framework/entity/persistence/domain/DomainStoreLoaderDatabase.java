@@ -82,6 +82,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -239,6 +240,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
 		warmupTransaction = Transaction.current();
+		warmupTransaction.setTimeout(60 * TimeConstants.ONE_MINUTE_MS);
 		transformSequencer.setInitialised(true);
 		transformSequencer.initialEnsureTimestamps();
 		{
