@@ -30,6 +30,8 @@ public abstract class TourManager {
 
 	public Topic<Step> stepRendered = Topic.local();
 
+	boolean exit;
+
 	public TopicListener<StepPopupView.Action> stepListener = new TopicListener<StepPopupView.Action>() {
 		@Override
 		public void topicPublished(String key, Action message) {
@@ -62,7 +64,7 @@ public abstract class TourManager {
 
 	public void allSteps(Tour tour) {
 		startTour(tour);
-		while (step != Ax.last(tour.getSteps())) {
+		while (step != Ax.last(tour.getSteps()) && !exit) {
 			currentTour.gotoStep(currentTour.getCurrentStepIndex() + 1);
 			refreshTourView();
 			onNext();

@@ -96,6 +96,11 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		final public native RelativeToJso getRelativeTo()/*-{
       return this.relativeTo;
 		}-*/;
+
+		@Override
+		final public native String getStyle()/*-{
+      return this.style;
+		}-*/;
 	}
 
 	static final class RelativeToJso extends JavaScriptObject
@@ -218,7 +223,8 @@ public final class TourJso extends JavaScriptObject implements Tour {
       return (this.popups) ? this.popups : [ {
         caption : this.caption,
         description : this.description,
-        relativeTo : this.relativeTo
+        relativeTo : this.relativeTo,
+        style : this.style
 
       } ];
 		}-*/;
