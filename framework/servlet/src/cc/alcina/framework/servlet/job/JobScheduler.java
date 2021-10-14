@@ -38,7 +38,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -738,15 +737,13 @@ public class JobScheduler {
 					e.printStackTrace();
 				} finally {
 					try {
-						Transaction.end();
-					} catch (NullPointerException e) {
-						Ax.err("Hopefully non-fatal error");
-						e.printStackTrace();
-					} catch (RuntimeException e) {
+						Transaction.ensureEnded();
+					} catch (Exception e) {
 						if (TransformManager.get() == null) {
 							// shutting down
 						} else {
-							throw e;
+							// FIXME :: DEVEX.0
+							e.printStackTrace();
 						}
 					}
 				}
