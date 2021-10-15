@@ -26,15 +26,15 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  * 
  */
 @ClientInstantiable
-public class ShortDateValidator implements Validator {
-	public static final ShortDateValidator INSTANCE = new ShortDateValidator();
+public class ShortIso8601DateValidator implements Validator {
+	public static final ShortIso8601DateValidator INSTANCE = new ShortIso8601DateValidator();
 
 	public static final transient String ERR_FMT = "Dates must be "
-			+ "entered in the following format: dd/mm/yyyy";
+			+ "entered in the following format: yyyy-mm-dd";
 
 	public static final transient String ERR_INVALID = "The date entered does not exist";
 
-	public ShortDateValidator() {
+	public ShortIso8601DateValidator() {
 	}
 
 	@Override
@@ -48,19 +48,14 @@ public class ShortDateValidator implements Validator {
 			return value;
 		}
 		String sValue = value.toString();
-		String[] splits = sValue.split("/");
-		boolean iso8601probable = sValue.matches("\\d+.*T.*");
-		if (iso8601probable) {
-			throw new ValidationException(
-					"Date must match the ISO 8601 spec (e.g. 2019-11-08T00:00:00.000-08:00)");
-		}
-		if (splits.length != 3) {
+		if (!sValue.matches("\\d{4}-\\d{2}-\\d{2}")) {
 			throw new ValidationException(ERR_FMT);
 		}
 		try {
-			Date result = new Date(Integer.parseInt(splits[2]) - 1900,
+			String[] splits = sValue.split("-");
+			Date result = new Date(Integer.parseInt(splits[0]) - 1900,
 					Integer.parseInt(splits[1]) - 1,
-					Integer.parseInt(splits[0]));
+					Integer.parseInt(splits[2]));
 			return result;
 		} catch (Exception e) {
 			throw new ValidationException(ERR_INVALID);
