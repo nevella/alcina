@@ -153,7 +153,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		props.put("mail.smtp.auth", authenticate.toString());
 		if (ResourceUtilities.is(ContentDeliveryEmail.class, "smtp.ttls")) {
 			props.setProperty("mail.smtp.starttls.enable", "true");
-			String protocols = ResourceUtilities.get(ContentDeliveryEmail.class, "smtp.ttls");
+			String protocols = ResourceUtilities.get(ContentDeliveryEmail.class, "smtp.ssl.protocols");
 			if(Ax.notBlank(protocols)){
 				props.setProperty("mail.smtp.ssl.protocols", protocols);	
 			}
@@ -186,7 +186,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			emailAddresses = new String[] {
 					LooseContext.get(CONTEXT_OVERRIDE_TO_ADDRESS) };
 		}
-		if (!SEUtilities.isNullOrEmpty(filterClassName)) {
+		if (Ax.notBlank(filterClassName)) {
 			AddressFilter filter = (AddressFilter) Class
 					.forName(filterClassName).newInstance();
 			emailAddresses = filter.filterAddresses(emailAddresses);
