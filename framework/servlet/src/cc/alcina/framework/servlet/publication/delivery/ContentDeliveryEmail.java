@@ -42,7 +42,6 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget.Form
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.publication.EntityCleaner;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
@@ -116,19 +115,21 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			FileNotFoundException, NoSuchProviderException {
 		boolean debug = false;
 		Properties props = new Properties();
-		String host = ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.host.name");
-		Integer port = Integer.valueOf(
-				ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.host.port"));
+		String host = ResourceUtilities
+				.getBundledString(ContentDeliveryEmail.class, "smtp.host.name");
+		Integer port = Integer.valueOf(ResourceUtilities.getBundledString(
+				ContentDeliveryEmail.class, "smtp.host.port"));
 		Boolean authenticate = Boolean.valueOf(
-				ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.authenticate"));
-		String userName = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
-				"smtp.username");
-		String password = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
-				"smtp.password");
-		String fromAddress = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
-				"smtp.from.address");
-		String fromName = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
-				"smtp.from.name");
+				ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
+						"smtp.authenticate"));
+		String userName = ResourceUtilities
+				.getBundledString(ContentDeliveryEmail.class, "smtp.username");
+		String password = ResourceUtilities
+				.getBundledString(ContentDeliveryEmail.class, "smtp.password");
+		String fromAddress = ResourceUtilities.getBundledString(
+				ContentDeliveryEmail.class, "smtp.from.address");
+		String fromName = ResourceUtilities
+				.getBundledString(ContentDeliveryEmail.class, "smtp.from.name");
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
 		}
@@ -139,9 +140,10 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		props.put("mail.smtp.auth", authenticate.toString());
 		if (ResourceUtilities.is(ContentDeliveryEmail.class, "smtp.ttls")) {
 			props.setProperty("mail.smtp.starttls.enable", "true");
-			String protocols = ResourceUtilities.get(ContentDeliveryEmail.class, "smtp.ttls");
-			if(Ax.notBlank(protocols)){
-				props.setProperty("mail.smtp.ssl.protocols", protocols);	
+			String protocols = ResourceUtilities.get(ContentDeliveryEmail.class,
+					"smtp.ssl.protocols");
+			if (Ax.notBlank(protocols)) {
+				props.setProperty("mail.smtp.ssl.protocols", protocols);
 			}
 		}
 		Session session = Session.getInstance(props, null);
@@ -160,7 +162,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			emailAddresses = new String[] {
 					LooseContext.get(CONTEXT_OVERRIDE_TO_ADDRESS) };
 		}
-		if (!SEUtilities.isNullOrEmpty(filterClassName)) {
+		if (Ax.notBlank(filterClassName)) {
 			AddressFilter filter = (AddressFilter) Class
 					.forName(filterClassName).newInstance();
 			emailAddresses = filter.filterAddresses(emailAddresses);
