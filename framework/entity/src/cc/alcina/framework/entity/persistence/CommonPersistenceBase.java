@@ -733,4 +733,13 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	public abstract static class CommonPersistenceConnectionProvider {
 		public abstract Connection getConnection();
 	}
+	@Override
+	/**
+	 * return true if has non-zero unprocessed requests
+	 */
+	public boolean removeProcessedRequests(
+			TransformPersistenceToken persistenceToken) {
+		return new TransformPersisterInPersistenceContext()
+		.removeProcessedRequests(this,persistenceToken);		
+	}
 }

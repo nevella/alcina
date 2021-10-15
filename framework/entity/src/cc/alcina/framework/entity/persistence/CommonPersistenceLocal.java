@@ -102,4 +102,7 @@ public interface CommonPersistenceLocal {
 	long getNextPublicationIdForUser(IUser user);
 
 	List<Long> listRecentClientInstanceIds(String iidKey);
+
+	public boolean
+			removeProcessedRequests(TransformPersistenceToken persistenceToken);
 }
