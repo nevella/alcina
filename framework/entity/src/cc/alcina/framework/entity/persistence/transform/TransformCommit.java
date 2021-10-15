@@ -189,7 +189,8 @@ public class TransformCommit {
 						.getId()) {
 					clientInstance = ClientInstance.self();
 				} else {
-					clientInstance = clientInstanceClass.newInstance();
+					clientInstance = clientInstanceClass
+							.getDeclaredConstructor().newInstance();
 					clientInstance.setAuth(deltaRecord.getClientInstanceAuth());
 					clientInstance.setId(deltaRecord.getClientInstanceId());
 				}
@@ -680,13 +681,50 @@ public class TransformCommit {
 			boolean blockUntilAllListenersNotified)
 			throws DomainTransformRequestException {
 		EntityLocatorMap locatorMap = getLocatorMapForClient(request);
-		synchronized (locatorMap) {
-			TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
-					request, locatorMap,
-					request.getClientInstance() != ClientInstance.self(),
-					ignoreClientAuthMismatch, forOfflineTransforms, logger,
-					blockUntilAllListenersNotified);
-			return submitAndHandleTransforms(persistenceToken);
+		try {
+			ExternalTransformLocks.get().lock(true,
+					request.getClientInstance());
+			synchronized (locatorMap) {
+				TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
+						request, locatorMap,
+						request.getClientInstance() != ClientInstance.self(),
+						ignoreClientAuthMismatch, forOfflineTransforms, logger,
+						blockUntilAllListenersNotified);
+				boolean hasUnprocessedRequests = CommonPersistenceProvider.get()
+						.getCommonPersistence()
+						.removeProcessedRequests(persistenceToken);
+				if (hasUnprocessedRequests) {
+					return submitAndHandleTransforms(persistenceToken);
+				} else {
+					throw new IllegalArgumentException(
+							Ax.format("Request %s - %s already processed",
+									request.toStringForError(),
+									request.getChunkUuidString()));
+				}
+			}
+		} finally {
+			ExternalTransformLocks.get().lock(false,
+					request.getClientInstance());
+		}
+	}
+
+	@RegistryLocation(registryPoint = ExternalTransformLocks.class, implementationType = ImplementationType.SINGLETON)
+	public static class ExternalTransformLocks {
+		public static TransformCommit.ExternalTransformLocks get() {
+			TransformCommit.ExternalTransformLocks singleton = Registry
+					.checkSingleton(
+							TransformCommit.ExternalTransformLocks.class);
+			if (singleton == null) {
+				singleton = new TransformCommit.ExternalTransformLocks();
+				Registry.registerSingleton(
+						TransformCommit.ExternalTransformLocks.class,
+						singleton);
+			}
+			return singleton;
+		}
+
+		public void lock(boolean lock, ClientInstance clientInstance) {
+			// NOOP - always succeed
 		}
 	}
 

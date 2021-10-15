@@ -199,22 +199,6 @@ public class TransformPersisterInPersistenceContext {
 				return;
 			}
 			Integer highestPersistedRequestId = null;
-			if (token.isRequestorExternalToThisJvm()) {
-				highestPersistedRequestId = commonPersistenceBase
-						.getHighestPersistedRequestIdForClientInstance(
-								request.getClientInstance().getId());
-				for (int i = transformRequests.size() - 1; i >= 0; i--) {
-					DomainTransformRequest dtr = transformRequests.get(i);
-					if (highestPersistedRequestId != null && dtr
-							.getRequestId() <= highestPersistedRequestId) {
-						Ax.out("transformpersister - removing already processed "
-								+ "request :: %s/%s",
-								request.getClientInstance().getId(),
-								transformRequests.get(i).getRequestId());
-						transformRequests.remove(i);
-					}
-				}
-			}
 			if (token.getPass() == Pass.TRY_COMMIT) {
 				EntityLayerObjects.get().getMetricLogger().debug(String.format(
 						"domain transform - %s - %s/%s",
@@ -392,6 +376,7 @@ public class TransformPersisterInPersistenceContext {
 								.getImplementation(
 										DomainTransformEventPersistent.class);
 						DomainTransformRequestPersistent persistentRequest = persistentRequestClass
+								.getDeclaredConstructor()
 								.newInstance();
 						tlTransformManager.persist(persistentRequest);
 						persistentRequest.setStartPersistTime(startPersistTime);
@@ -610,5 +595,37 @@ public class TransformPersisterInPersistenceContext {
 	}
 
 	static class DeliberatelyThrownWrapperException extends RuntimeException {
+	}
+
+	public boolean removeProcessedRequests(
+			CommonPersistenceBase commonPersistenceBase,
+			TransformPersistenceToken token) {
+		if (token.isRequestorExternalToThisJvm()) {
+			Integer highestPersistedRequestId = commonPersistenceBase
+					.getHighestPersistedRequestIdForClientInstance(
+							token.getRequest().getClientInstance().getId());
+			if (highestPersistedRequestId == null) {
+				return true;
+			}
+			if (token.getRequest()
+					.getRequestId() <= highestPersistedRequestId) {
+				return false;
+			}
+			List<DomainTransformRequest> toRemove = token.getRequest()
+					.getPriorRequestsWithoutResponse().stream()
+					.filter(request -> request
+							.getRequestId() <= highestPersistedRequestId)
+					.collect(Collectors.toList());
+			toRemove.forEach(request -> logger.info(
+					"transformpersister - removing already processed "
+							+ "request :: {}/{}",
+					request.getClientInstance().getId(),
+					request.getRequestId()));
+			token.getRequest().getPriorRequestsWithoutResponse()
+					.removeAll(toRemove);
+			return true;
+		} else {
+			return true;
+		}
 	}
 }
