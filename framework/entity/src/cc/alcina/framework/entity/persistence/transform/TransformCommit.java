@@ -694,7 +694,16 @@ public class TransformCommit {
 						.getCommonPersistence()
 						.removeProcessedRequests(persistenceToken);
 				if (hasUnprocessedRequests) {
-					return submitAndHandleTransforms(persistenceToken);
+					DomainTransformLayerWrapper result = submitAndHandleTransforms(
+							persistenceToken);
+					if (result.response == null) {
+						Preconditions.checkState(request.getEvents().isEmpty());
+						result.response = new DomainTransformResponse();
+						// empty request, empty response
+						result.response
+								.setResult(DomainTransformResponseResult.OK);
+					}
+					return result;
 				} else {
 					throw new IllegalArgumentException(
 							Ax.format("Request %s - %s already processed",
@@ -705,26 +714,6 @@ public class TransformCommit {
 		} finally {
 			ExternalTransformLocks.get().lock(false,
 					request.getClientInstance());
-		}
-	}
-
-	@RegistryLocation(registryPoint = ExternalTransformLocks.class, implementationType = ImplementationType.SINGLETON)
-	public static class ExternalTransformLocks {
-		public static TransformCommit.ExternalTransformLocks get() {
-			TransformCommit.ExternalTransformLocks singleton = Registry
-					.checkSingleton(
-							TransformCommit.ExternalTransformLocks.class);
-			if (singleton == null) {
-				singleton = new TransformCommit.ExternalTransformLocks();
-				Registry.registerSingleton(
-						TransformCommit.ExternalTransformLocks.class,
-						singleton);
-			}
-			return singleton;
-		}
-
-		public void lock(boolean lock, ClientInstance clientInstance) {
-			// NOOP - always succeed
 		}
 	}
 
@@ -1010,6 +999,26 @@ public class TransformCommit {
 				}
 			}
 			LooseContext.getContext().pop();
+		}
+	}
+
+	@RegistryLocation(registryPoint = ExternalTransformLocks.class, implementationType = ImplementationType.SINGLETON)
+	public static class ExternalTransformLocks {
+		public static TransformCommit.ExternalTransformLocks get() {
+			TransformCommit.ExternalTransformLocks singleton = Registry
+					.checkSingleton(
+							TransformCommit.ExternalTransformLocks.class);
+			if (singleton == null) {
+				singleton = new TransformCommit.ExternalTransformLocks();
+				Registry.registerSingleton(
+						TransformCommit.ExternalTransformLocks.class,
+						singleton);
+			}
+			return singleton;
+		}
+
+		public void lock(boolean lock, ClientInstance clientInstance) {
+			// NOOP - always succeed
 		}
 	}
 
