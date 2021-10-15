@@ -26,11 +26,11 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import javax.persistence.Column;
@@ -82,6 +82,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -103,9 +104,7 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SqlUtils;
-import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.longs.LongArrayList;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
 /*
  */
@@ -163,6 +162,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	private Transaction warmupTransaction;
 
 	private ConnectionPool connectionPool;
+
+	private Map<Object, Object> interns = new ConcurrentHashMap<>();
 
 	public DomainStoreLoaderDatabase(DomainStore store,
 			RetargetableDataSource dataSource,
@@ -239,6 +240,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		domainStoreColumnRev = new UnsortedMultikeyMap<PropertyDescriptor>(2);
 		columnDescriptors = new Multimap<Class, List<ColumnDescriptor>>();
 		warmupTransaction = Transaction.current();
+		warmupTransaction.setTimeout(60 * TimeConstants.ONE_MINUTE_MS);
 		transformSequencer.setInitialised(true);
 		transformSequencer.initialEnsureTimestamps();
 		{
@@ -276,7 +278,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		invokeAllWithThrow(calls);
 		new StatCategory_DomainStore.Warmup.Loader.JoinTables().emit();
 		MetricLogging.get().end("tables");
-		columnDescriptors.allValues().forEach(cd -> cd.interns = null);
+		interns = null;
 		MetricLogging.get().start("xrefs");
 		for (EntityRefs ll : warmupEntityRefss) {
 			calls.add(() -> {
@@ -367,10 +369,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		new StatCategory_DomainStore.Warmup.Loader.End().emit();
 	}
 
-	private void addColumnName(Class clazz, Map<Object, Object> interns,
-			PdOperator pdOperator, Class propertyType) {
-		columnDescriptors.add(clazz, new ColumnDescriptor(clazz, interns,
-				pdOperator.pd, propertyType));
+	private void addColumnName(Class clazz, PdOperator pdOperator,
+			Class propertyType) {
+		columnDescriptors.add(clazz,
+				new ColumnDescriptor(clazz, pdOperator.pd, propertyType));
 		propertyDescriptorFetchTypes.put(pdOperator, propertyType);
 	}
 
@@ -621,14 +623,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			ConnResults connResults = ConnResults.builder().withLoader(this)
 					.withConn(conn).withSqlFilter(sql)
 					.withJoinHandler(joinHandler).build();
-			for (Object[] row : connResults) {
+			for (ValueContainer[] row : connResults) {
 				Entity src = (Entity) store.cache.get(targetEntityClass,
-						(Long) row[0]);
+						row[0].l);
 				assert src != null;
 				if (joinHandler == null) {
 					Entity tgt = (Entity) store.cache.get(
-							rev.getReadMethod().getDeclaringClass(),
-							(Long) row[1]);
+							rev.getReadMethod().getDeclaringClass(), row[1].l);
 					assert tgt != null;
 					entityRefs.add(tgt, pdFwd, src);
 					entityRefs.add(src, pdRev, tgt);
@@ -737,11 +738,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			Multimap<Class, List<EntityCollation>> toLoad = collation
 					.allEntityCollations()
 					.filter(ec -> !ec.isDeleted()
-							&& store.isCached(ec.getObjectClass())
+							&& store.isCached(ec.getEntityClass())
 							&& IVersionable.class
-									.isAssignableFrom(ec.getObjectClass()))
+									.isAssignableFrom(ec.getEntityClass()))
 					.collect(AlcinaCollectors
-							.toKeyMultimap(EntityCollation::getObjectClass));
+							.toKeyMultimap(EntityCollation::getEntityClass));
 			List<Callable> tasks = new ArrayList<>();
 			toLoad.entrySet().forEach(e -> {
 				tasks.add(new IVersionableLoaderTask(conn, e.getKey(),
@@ -773,8 +774,6 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		PropertyDescriptor result = null;
 		List<PdOperator> mapped = new ArrayList<PdOperator>();
 		descriptors.put(clazz, mapped);
-		Map<Object, Object> interns = new Object2ObjectOpenHashMap<>(10000,
-				Hash.VERY_FAST_LOAD_FACTOR);
 		for (PropertyDescriptor pd : pds) {
 			if (pd.getReadMethod() == null || pd.getWriteMethod() == null) {
 				continue;
@@ -886,10 +885,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						continue;
 					}
 				}
-				addColumnName(clazz, interns, pdOperator,
+				addColumnName(clazz, pdOperator,
 						getEntityType(getTargetEntityType(pd.getReadMethod())));
 			} else {
-				addColumnName(clazz, interns, pdOperator,
+				addColumnName(clazz, pdOperator,
 						getEntityType(pd.getPropertyType()));
 			}
 			mapped.add(pdOperator);
@@ -1095,12 +1094,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		// debugging
 		Class clazz;
 
-		private Map<Object, Object> interns;
-
-		public ColumnDescriptor(Class clazz, Map<Object, Object> interns,
-				PropertyDescriptor pd, Class propertyType) {
+		public ColumnDescriptor(Class clazz, PropertyDescriptor pd,
+				Class propertyType) {
 			this.clazz = clazz;
-			this.interns = interns;
 			this.pd = pd;
 			type = propertyType;
 			typeIdHasId = HasId.class.isAssignableFrom(type);
@@ -1147,71 +1143,89 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 		}
 
-		public Object getObject(ResultSet rs, int idx) throws Exception {
-			Object object = getObject0(rs, idx);
-			if (object == null) {
-				return null;
+		public void loadObject(ResultSet rs, int idx,
+				ValueContainer valueContainer) throws Exception {
+			if (typeIdHasId || type == long.class) {
+				valueContainer.l = rs.getLong(idx);
+				return;
 			}
-			if (interns == null) {
-				return object;
-			}
-			if (object instanceof String || object instanceof Date) {
-				return interns.computeIfAbsent(object, Function.identity());
-			} else {
-				return object;
-			}
-		}
-
-		private Object getObject0(ResultSet rs, int idx) throws Exception {
-			if (typeIdHasId || type == Long.class || type == long.class) {
+			if (type == Long.class) {
 				Long v = rs.getLong(idx);
 				if (rs.wasNull()) {
 					v = null;
 				}
-				return v;
+				valueContainer.o = intern(v);
+				return;
 			}
 			if (type == String.class) {
-				return rs.getString(idx);
+				valueContainer.o = intern(rs.getString(idx));
+				return;
 			}
-			if (type == Double.class || type == double.class) {
+			if (type == double.class) {
+				valueContainer.d = rs.getDouble(idx);
+				return;
+			}
+			if (type == Double.class) {
 				Double v = rs.getDouble(idx);
 				if (rs.wasNull()) {
 					v = null;
 				}
-				return v;
+				valueContainer.o = intern(v);
+				return;
 			}
-			if (type == Float.class || type == float.class) {
+			if (type == float.class) {
+				valueContainer.f = rs.getFloat(idx);
+				return;
+			}
+			if (type == Float.class) {
 				Float v = rs.getFloat(idx);
 				if (rs.wasNull()) {
 					v = null;
 				}
-				return v;
+				valueContainer.o = intern(v);
+				return;
 			}
-			if (type == Integer.class || type == int.class) {
+			if (type == int.class) {
+				valueContainer.i = rs.getInt(idx);
+				return;
+			}
+			if (type == Integer.class) {
 				Integer v = rs.getInt(idx);
 				if (rs.wasNull()) {
 					v = null;
 				}
-				return v;
+				valueContainer.o = intern(v);
+				return;
 			}
-			if (type == Boolean.class || type == boolean.class) {
+			if (type == boolean.class) {
+				valueContainer.b = rs.getBoolean(idx);
+				return;
+			}
+			if (type == Boolean.class) {
 				Boolean v = rs.getBoolean(idx);
 				if (rs.wasNull()) {
 					v = null;
 				}
-				return v;
+				valueContainer.o = intern(v);
+				return;
 			}
 			if (type == Date.class) {
 				long utcTime = rs.getLong(idx);
+				Date v = null;
 				if (rs.wasNull()) {
-					return null;
+					//
+				} else {
+					// it seems getLong mostly returns utc timestamp (not
+					// locale)
+					// now mandating that with the 'at timezone utc' above
+					// note these cols are currently pg timestamp without tz
+					v = utcTimeToDate(utcTime);
 				}
-				// it seems getLong mostly returns utc timestamp (not locale)
-				// now mandating that with the 'at timezone utc' above
-				// note these cols are currently pg timestamp without tz
-				return utcTimeToDate(utcTime);
+				valueContainer.o = intern(v);
+				return;
 			}
 			if (Enum.class.isAssignableFrom(type)) {
+				valueContainer.o = null;
 				switch (enumType) {
 				case ORDINAL:
 					int eIdx = rs.getInt(idx);
@@ -1219,26 +1233,47 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					if (eIdx >= enumConstants.length) {
 						store.logger.warn("Invalid enum index : {}:{}",
 								type.getSimpleName(), eIdx);
-						return null;
+						return;
 					}
-					return rs.wasNull() ? null : enumConstants[eIdx];
+					valueContainer.o = rs.wasNull() ? null
+							: enumConstants[eIdx];
+					return;
 				case STRING:
 					String enumString = rs.getString(idx);
 					if (enumString == null) {
-						return null;
+						return;
 					}
 					Enum enumValue = CommonUtils
 							.getEnumValueOrNull((Class) type, enumString);
 					if (enumValue == null) {
 						store.logger.warn("Invalid enum value : {}:{}",
 								type.getSimpleName(), enumString);
-						return null;
+						return;
 					}
-					return enumValue;
+					valueContainer.o = enumValue;
+					return;
 				}
 			}
 			throw new RuntimeException(
 					"Unhandled rs type: " + type.getSimpleName());
+		}
+
+		private Object intern(Object object) {
+			if (object == null) {
+				return null;
+			}
+			if (interns == null) {
+				return object;
+			}
+			// don't use computeIfAbsent - we're not concerned about the odd
+			// duplicate
+			// return interns.computeIfAbsent(object, Function.identity());
+			Object v;
+			if ((v = interns.get(object)) == null) {
+				interns.put(object, object);
+				v = object;
+			}
+			return v;
 		}
 	}
 
@@ -1445,12 +1480,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 	}
 
-	static class ConnResults implements Iterable<Object[]> {
+	static class ConnResults implements Iterable<ValueContainer[]> {
 		public static Builder builder() {
 			return new Builder();
 		}
 
-		ConnResultsIterator itr = new ConnResultsIterator();
+		ConnResultsIterator itr;
 
 		private Connection conn;
 
@@ -1462,7 +1497,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		ResultSet rs = null;
 
-		List<Object[]> cachedValues;
+		List<ValueContainer[]> cachedValues;
 
 		ConnResultsReuse rsReuse;
 
@@ -1497,6 +1532,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					: (ConnResultsReuse) domainDescriptor
 							.getDomainSegmentLoader();
 			this.lazyProperties = builder.populateLazyPropertyValues;
+			itr = new ConnResultsIterator();
 		}
 
 		public ResultSet ensureRs() {
@@ -1504,7 +1540,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		}
 
 		@Override
-		public Iterator<Object[]> iterator() {
+		public Iterator<ValueContainer[]> iterator() {
 			return rsReuse.getIterator(this, itr);
 		}
 
@@ -1626,10 +1662,20 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 		}
 
-		class ConnResultsIterator implements Iterator<Object[]> {
-			Object[] cached = null;
+		class ConnResultsIterator implements Iterator<ValueContainer[]> {
+			ValueContainer[] current = null;
+
+			boolean peeked = false;
 
 			boolean finished = false;
+
+			public ConnResultsIterator() {
+				int length = joinTable ? 2 : columnDescriptors.size();
+				current = new ValueContainer[length];
+				for (int idx = 0; idx < length; idx++) {
+					current[idx] = new ValueContainer();
+				}
+			}
 
 			@Override
 			public boolean hasNext() {
@@ -1638,14 +1684,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 
 			@Override
-			public Object[] next() {
+			public ValueContainer[] next() {
 				if (finished) {
 					throw new NoSuchElementException();
 				}
 				peekNext();
-				Object[] result = cached;
-				cached = null;
-				return result;
+				peeked = false;
+				return current;
 			}
 
 			@Override
@@ -1654,38 +1699,37 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 
 			private void peekNext() {
-				if (cached == null && !finished) {
+				if (!peeked && !finished) {
 					ensureRs();
 					try {
 						if (rs.next()) {
 							if (joinTable) {
-								cached = new Object[2];
-								cached[0] = rs.getLong(1);
+								current[0].l = rs.getLong(1);
 								if (joinHandler != null) {
 									// currently only one implementation (that
 									// expects a String)
-									cached[1] = rs.getString(2);
+									current[1].o = rs.getString(2);
 								} else {
-									cached[1] = rs.getLong(2);
+									current[1].l = rs.getLong(2);
 								}
 							} else {
-								cached = new Object[columnDescriptors.size()];
 								for (int idx = 1; idx <= columnDescriptors
 										.size(); idx++) {
 									ColumnDescriptor descriptor = columnDescriptors
 											.get(idx - 1);
-									Object value = descriptor.getObject(rs,
-											idx);
-									cached[idx - 1] = value;
+									descriptor.loadObject(rs, idx,
+											current[idx - 1]);
 								}
 							}
 							ConnResults.this.rsReuse.onNext(ConnResults.this,
-									cached);
+									current);
 						} else {
 							finished = true;
+							current = null;
 							rs.close();
 							stmt.close();
 						}
+						peeked = true;
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
 					}
@@ -1695,12 +1739,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	interface ConnResultsReuse {
-		default Iterator<Object[]> getIterator(ConnResults connResults,
+		default Iterator<ValueContainer[]> getIterator(ConnResults connResults,
 				ConnResultsIterator itr) {
 			return itr;
 		}
 
-		default void onNext(ConnResults connResults, Object[] cached) {
+		default void onNext(ConnResults connResults, ValueContainer[] cached) {
 		}
 	}
 
@@ -1724,7 +1768,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			list.add(new Ref(target, pd, source));
 		}
 
-		void add(Long id, PdOperator pd, HasId hasId) {
+		void add(long id, PdOperator pd, HasId hasId) {
 			list.add(new Ref(id, pd, hasId));
 		}
 
@@ -2102,8 +2146,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					: null;
 			boolean transactional = DomainStore.stores()
 					.storeFor(clazz) != null;
-			for (Object[] objects : connResults) {
-				long id = (Long) objects[idOperator.idx];
+			for (ValueContainer[] row : connResults) {
+				long id = row[idOperator.idx].l;
 				HasId hasId = null;
 				if (transactional) {
 					if (store.initialising) {
@@ -2118,33 +2162,23 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				if (returnResults) {
 					loaded.add(hasId);
 				}
-				for (int i = 0; i < objects.length; i++) {
+				for (int i = 0; i < row.length; i++) {
 					PdOperator pdOperator = pds.get(i);
 					ColumnDescriptor columnDescriptor = connResults.columnDescriptors
 							.get(i);
 					Method rm = pdOperator.readMethod;
-					Object value = objects[i];
+					ValueContainer value = row[i];
 					if (pdOperator.manyToOne != null
 							|| pdOperator.oneToOne != null) {
-						Long refId = (Long) value;
-						if (refId != null) {
+						long refId = value.l;
+						if (refId != 0) {
 							if (hasId != null) {
 								entityRefs.add(refId, pdOperator, hasId);
 							}
 						}
 					} else {
-						boolean illegalNull = (pdOperator.field
-								.getType() == int.class
-								|| pdOperator.field.getType() == long.class)
-								&& value == null;
-						if (illegalNull) {
-							value = -1;
-							logger.warn(
-									"Replaced int/null with int/-1 :: {}.{} - id: {}",
-									pdOperator.clazz.getSimpleName(),
-									pdOperator.field.getName(), hasId.getId());
-						}
-						pdOperator.set(hasId, value);
+						pdOperator.setValue(hasId, value,
+								columnDescriptor.type);
 					}
 				}
 			}
@@ -2242,11 +2276,32 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			}
 		}
 
-		public void set(HasId hasId, Object value) throws Exception {
+		public void setValue(HasId hasId, ValueContainer value, Class<?> type)
+				throws Exception {
 			if (store.initialising) {
-				field.set(hasId, value);
+				if (type == long.class) {
+					field.setLong(hasId, value.l);
+					return;
+				}
+				if (type == double.class) {
+					field.setDouble(hasId, value.d);
+					return;
+				}
+				if (type == float.class) {
+					field.setFloat(hasId, value.f);
+					return;
+				}
+				if (type == boolean.class) {
+					field.setBoolean(hasId, value.b);
+					return;
+				}
+				if (type == int.class) {
+					field.setInt(hasId, value.i);
+					return;
+				}
+				field.set(hasId, value.o);
 			} else {
-				writeMethod.invoke(hasId, new Object[] { value });
+				writeMethod.invoke(hasId, new Object[] { value.boxed(type) });
 			}
 		}
 
@@ -2254,6 +2309,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		public String toString() {
 			return Ax.format("%s.%s [%s]", clazz.getSimpleName(), name,
 					readMethod.getReturnType().getSimpleName());
+		}
+
+		void set(HasId hasId, Object object) throws Exception {
+			if (store.initialising) {
+				field.set(hasId, object);
+			} else {
+				writeMethod.invoke(hasId, new Object[] { object });
+			}
 		}
 
 		class ResolveHelper {
@@ -2305,6 +2368,36 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 			Object resolveCustom(CustomResolver customResolver, Ref item) {
 				return customResolver.resolveCustom(PdOperator.this, item);
+			}
+		}
+	}
+
+	static class ValueContainer {
+		boolean b;
+
+		int i;
+
+		float f;
+
+		double d;
+
+		long l;
+
+		Object o;
+
+		public Object boxed(Class<?> type) {
+			if (type == long.class) {
+				return l;
+			} else if (type == double.class) {
+				return d;
+			} else if (type == float.class) {
+				return f;
+			} else if (type == boolean.class) {
+				return b;
+			} else if (type == int.class) {
+				return i;
+			} else {
+				return o;
 			}
 		}
 	}

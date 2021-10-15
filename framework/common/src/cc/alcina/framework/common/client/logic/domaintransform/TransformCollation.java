@@ -80,7 +80,7 @@ public class TransformCollation {
 		return this.perClass;
 	}
 
-	public <E extends Entity> boolean has(Class<E>... classes) {
+	public boolean has(Class<? extends Entity>... classes) {
 		ensureLookups();
 		for (Class clazz : classes) {
 			if (perClass.containsKey(clazz)) {
@@ -115,6 +115,10 @@ public class TransformCollation {
 			perLocator = new HashMap<>();
 			allEvents.forEach(event -> {
 				EntityLocator locator = event.toObjectLocator();
+				if (locator.provideIsZeroIdAndLocalId()) {
+					// FIXME - mvcc.5 - DEVEX (probably on transform creation)
+					return;
+				}
 				EntityCollation collation = perClass.ensure(
 						() -> new EntityCollation(locator), locator.clazz,
 						locator);
@@ -154,6 +158,14 @@ public class TransformCollation {
 			return Ax.first(transforms);
 		}
 
+		public <E extends Entity> E getEntity() {
+			return TransformManager.get().getObject(locator);
+		}
+
+		public Class<? extends Entity> getEntityClass() {
+			return first().getObjectClass();
+		}
+
 		@Override
 		public long getId() {
 			return first().getObjectId();
@@ -161,14 +173,6 @@ public class TransformCollation {
 
 		public EntityLocator getLocator() {
 			return this.locator;
-		}
-
-		public <E extends Entity> E getObject() {
-			return TransformManager.get().getObject(locator);
-		}
-
-		public Class<? extends Entity> getObjectClass() {
-			return first().getObjectClass();
 		}
 
 		public Set<String> getTransformedPropertyNames() {
@@ -296,8 +300,8 @@ public class TransformCollation {
 			this.events = events;
 		}
 
-		public <E extends Entity> E getObject() {
-			return entityCollation.getObject();
+		public <E extends Entity> E getEntity() {
+			return entityCollation.getEntity();
 		}
 
 		public boolean hasCreateTransform() {
@@ -345,6 +349,13 @@ public class TransformCollation {
 			return events.stream().anyMatch(e -> e.getPropertyName() != null
 					&& Arrays.stream(names).anyMatch(
 							name -> Objects.equals(e.getPropertyName(), name)));
+		}
+
+		public boolean hasTransformsOtherThan(Enum... names) {
+			return events.stream()
+					.anyMatch(e -> e.getPropertyName() == null
+							|| Arrays.stream(names).noneMatch(name -> Objects
+									.equals(e.getPropertyName(), name.name())));
 		}
 
 		public void removeTransform(DomainTransformEvent event) {

@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Wa
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
 
 /*
@@ -29,6 +30,8 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 	private DomainViewNodeContent.Response lastResponse;
 
 	private int selfAndDescendantCount = -1;
+
+	public Topic<BeforeNodeRemovalEvent> beforeNodeRemoval = Topic.local();
 
 	public DomainViewNode.LabelGenerator getLabelGenerator() {
 		return this.labelGenerator;
@@ -108,8 +111,11 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		if (isDepthFirst() && selfAndDescendantCount > root.getTreePath()
 				.getSelfAndDescendantCount()
 		// doesn't work with proxy/keep-alive empty responses
-				&& response.getTransforms().size() > 0 && response.getRequest()
-						.getWaitPolicy() == WaitPolicy.WAIT_FOR_DELTAS) {
+				&& response.getTransforms().size() > 0
+				&& (response.getRequest()
+						.getWaitPolicy() == WaitPolicy.WAIT_FOR_DELTAS
+						|| response.getRequest()
+								.getWaitPolicy() == WaitPolicy.RETURN_NODES)) {
 			Paginator paginator = new Paginator();
 			paginator.setText("Loading ...");
 			setPaginator(paginator);
@@ -203,9 +209,6 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 						.getTreePath().hasPath(transform.getBeforePath())) {
 					return;
 				}
-				// TODO - (requires pagination) --
-				// transform.getBeforePath()==null and not all pages
-				// displayed, drop
 				break;
 			}
 		}
@@ -218,8 +221,26 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			node.setNode(transform.getNode());
 			break;
 		case REMOVE:
+			TreePath next = node.getTreePath().walker().next();
+			if (next == null) {
+				next = node.getTreePath().walker().previous();
+			}
+			beforeNodeRemoval.publish(new BeforeNodeRemovalEvent(
+					node.getTreePath(), next == null ? null : next));
 			node.removeFromParent();
 			break;
+		}
+	}
+
+	public class BeforeNodeRemovalEvent {
+		public TreePath removed;
+
+		public TreePath next;
+
+		public BeforeNodeRemovalEvent(TreePath removed, TreePath next) {
+			super();
+			this.removed = removed;
+			this.next = next;
 		}
 	}
 

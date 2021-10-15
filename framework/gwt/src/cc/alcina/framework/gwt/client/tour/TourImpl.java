@@ -87,6 +87,8 @@ public class TourImpl implements Tour {
 
 		private RelativeTo relativeTo;
 
+		private String style;
+
 		@Override
 		public String getCaption() {
 			return this.caption;
@@ -102,6 +104,11 @@ public class TourImpl implements Tour {
 			return this.relativeTo;
 		}
 
+		@Override
+		public String getStyle() {
+			return this.style;
+		}
+
 		public void setCaption(String caption) {
 			this.caption = caption;
 		}
@@ -112,6 +119,10 @@ public class TourImpl implements Tour {
 
 		public void setRelativeTo(RelativeTo relativeTo) {
 			this.relativeTo = relativeTo;
+		}
+
+		public void setStyle(String style) {
+			this.style = style;
 		}
 	}
 
@@ -233,6 +244,8 @@ public class TourImpl implements Tour {
 
 		private RelativeTo relativeTo;
 
+		private String style;
+
 		@Override
 		public Action getAction() {
 			return this.action;
@@ -276,6 +289,11 @@ public class TourImpl implements Tour {
 		@Override
 		public RelativeTo getRelativeTo() {
 			return this.relativeTo;
+		}
+
+		@Override
+		public String getStyle() {
+			return this.style;
 		}
 
 		public String getTarget() {
@@ -334,6 +352,10 @@ public class TourImpl implements Tour {
 
 		public void setRelativeTo(RelativeTo relativeTo) {
 			this.relativeTo = relativeTo;
+		}
+
+		public void setStyle(String style) {
+			this.style = style;
 		}
 
 		public void setTarget(String target) {

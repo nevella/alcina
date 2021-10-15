@@ -246,6 +246,7 @@ public class UIRendererWd extends UIRenderer {
 					.append();
 			root.builder().tag("description").text(popupInfo.getDescription())
 					.append();
+			root.setAttr("style", Ax.blankToEmpty(popupInfo.getStyle()));
 			root.setAttr("id", id);
 			wdJsInvoke("renderRelative('%s','%s')",
 					JacksonUtils.serializeNoTypes(popupInfo),

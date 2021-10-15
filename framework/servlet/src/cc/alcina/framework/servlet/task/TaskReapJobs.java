@@ -1,16 +1,19 @@
 package cc.alcina.framework.servlet.task;
 
-import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobScheduler.RetentionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
 import cc.alcina.framework.servlet.schedule.ServerTask;
@@ -23,21 +26,43 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 		if (Ax.notBlank(value)) {
 			jobs = Stream.of(Job.byId(Long.valueOf(value)));
 		}
-		List<? extends Job> reap = jobs.filter(job -> {
+		AtomicInteger counter = new AtomicInteger(0);
+		AtomicInteger reaped = new AtomicInteger(0);
+		AtomicInteger exceptions = new AtomicInteger(0);
+		jobs.forEach(job -> {
+			boolean delete = false;
 			if (!job.provideCanDeserializeTask()) {
-				return true;
+				delete = true;
+			} else {
+				try {
+					RetentionPolicy policy = Registry.impl(
+							RetentionPolicy.class, job.getTask().getClass());
+					delete = !policy.retain(job);
+				} catch (Exception e) {
+					if (exceptions.incrementAndGet() < 20) {
+						e.printStackTrace();
+					}
+				}
 			}
-			RetentionPolicy policy = Registry.impl(RetentionPolicy.class,
-					job.getTask().getClass());
-			return !policy.retain(job);
-		}).collect(Collectors.toList());
-		logger.info("Reaping {} jobs", reap.size());
-		for (Job job : reap) {
-			job.delete();
-			Transaction.commitIfTransformCount(5000);
-		}
+			if (delete) {
+				reaped.incrementAndGet();
+				job.delete();
+			}
+			if (counter.incrementAndGet() % 100000 == 0
+					|| TransformManager.get().getTransforms().size() > 500) {
+				logger.info(
+						"Reaping jobs: counter {} - transforms {} - jobs {}",
+						counter.get(),
+						TransformManager.get().getTransforms().size(),
+						Domain.size(
+								PersistentImpl.getImplementation(Job.class)));
+				Transaction.commit();
+				Transaction.endAndBeginNew();
+			}
+			JobContext.checkCancelled();
+		});
 		Transaction.commit();
-		logger.info("Reaped {} jobs", reap.size());
+		logger.info("Reaped {} jobs", reaped.get());
 	}
 
 	@RegistryLocation(registryPoint = Schedule.class, targetClass = TaskReapJobs.class, implementationType = ImplementationType.FACTORY)

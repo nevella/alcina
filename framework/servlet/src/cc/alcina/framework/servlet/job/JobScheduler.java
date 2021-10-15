@@ -737,12 +737,13 @@ public class JobScheduler {
 					e.printStackTrace();
 				} finally {
 					try {
-						Transaction.end();
-					} catch (RuntimeException e) {
+						Transaction.ensureEnded();
+					} catch (Exception e) {
 						if (TransformManager.get() == null) {
 							// shutting down
 						} else {
-							throw e;
+							// FIXME :: DEVEX.0
+							e.printStackTrace();
 						}
 					}
 				}

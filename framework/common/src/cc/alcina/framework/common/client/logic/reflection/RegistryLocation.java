@@ -35,6 +35,8 @@ import java.lang.annotation.Target;
 public @interface RegistryLocation {
 	public static final int DEFAULT_PRIORITY = 10;
 
+	public static final int INTERMEDIATE_LIBRARY_PRIORITY = 15;
+
 	public static final int PREFERRED_LIBRARY_PRIORITY = 20;
 
 	public static final int MANUAL_PRIORITY = 50;

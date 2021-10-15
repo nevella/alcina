@@ -34,8 +34,8 @@ public class LocalDomain {
 		return new LocalDomainQuery(this, clazz, alias, key);
 	}
 
-	public <T extends Entity> T find(Class<T> clazz, long id) {
-		return cache.get(clazz, id);
+	public <T extends Entity> T find(Class<T> clazz, long id, long localId) {
+		return cache.get(clazz, id, localId);
 	}
 
 	public DetachedEntityCache getCache() {

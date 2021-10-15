@@ -1429,7 +1429,9 @@ public class DomainStore implements IDomainStore {
 				Transaction.setSupplier(() -> transaction);
 				try {
 					LooseContext.push();
-					LooseContext.putSnapshotProperties(contextInstance);
+					if (contextInstance != null) {
+						LooseContext.putSnapshotProperties(contextInstance);
+					}
 					super.run();
 				} finally {
 					LooseContext.pop();

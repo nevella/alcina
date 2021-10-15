@@ -45,9 +45,9 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
-// FIXME - mvcc.4 - use gwt.elemental to make one single version (bar
-// classloader refs)
-// hack for some classloader issues causing AlcinaBeanSerializerS to be unusable
+/*
+ * Essentially deprecated - see superclass
+ */
 public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 	private static boolean useContextClassloader;
 

@@ -132,6 +132,8 @@ public class FlatTreeSerializer {
 
 	public static Topic<StringPair> unequalSerialized = Topic.local();
 
+	static int unknownPropertyWarningCount = 20;
+
 	public static <R extends TreeSerializable> R clone(R object) {
 		return deserialize(serialize(object));
 	}
@@ -556,9 +558,11 @@ public class FlatTreeSerializer {
 						}
 						if (property == null) {
 							unknownProperty = true;
-							LoggerFactory.getLogger(getClass()).info(
-									"Unknown property: {} {}",
-									state.rootClass.getSimpleName(), path);
+							if (unknownPropertyWarningCount-- > 0) {
+								LoggerFactory.getLogger(getClass()).info(
+										"Unknown property: {} {}",
+										state.rootClass.getSimpleName(), path);
+							}
 							break;
 						}
 						PropertySerialization propertySerialization = SerializationSupport
@@ -1088,7 +1092,8 @@ public class FlatTreeSerializer {
 			if (serialized == null) {
 				return null;
 			}
-			if ((clazz != null && !serialized.startsWith("{"))
+			if ((clazz != null && !serialized.startsWith("{")
+					&& !serialized.startsWith("["))
 					|| serialized.contains("class$=")) {
 				FlatTreeSerializer.DeserializerOptions options = new FlatTreeSerializer.DeserializerOptions()
 						.withShortPaths(true);

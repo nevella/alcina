@@ -48,7 +48,6 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
-//FIXME - mvcc.4 - this shouldn't extend entity
 @RegistryLocations({
 		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
 		@RegistryLocation(registryPoint = TreeSerializable.class) })

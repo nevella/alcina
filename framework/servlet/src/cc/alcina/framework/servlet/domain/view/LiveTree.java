@@ -4,6 +4,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
@@ -25,6 +26,7 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewSearchDefiniti
 import cc.alcina.framework.common.client.csobjects.view.HasFilteredSelfAndDescendantCount;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
+import cc.alcina.framework.common.client.csobjects.view.TreePath.Walker;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -231,6 +233,47 @@ public class LiveTree {
 				* TimeConstants.ONE_SECOND_MS;
 	}
 
+	private Transform modifyTransformForFilter(TransformFilter transformFilter,
+			Transform t) {
+		if (transformFilter.test(t)) {
+			if (t.getOperation() == Operation.CHANGE) {
+				// FIXME - dirndl1.1 - this may fail (not
+				// properly
+				// update client) if transforms are not in tree
+				// order. need to fix navigation server-side
+				t = t.copy();
+				t.setBeforePath(null);
+				TreePath<LiveNode> path = root.ensurePath(t.getTreePath());
+				Walker<LiveNode> walker = path.walker();
+				while (true) {
+					TreePath<LiveNode> previous = walker.previous();
+					if (previous == null) {
+						break;
+					}
+					Transform test = new Transform();
+					test.setNode(previous.getValue().getViewNode());
+					test.setTreePath(previous.toString());
+					test.setOperation(Operation.INSERT);
+					if (transformFilter.test(test)) {
+						t.setBeforePath(previous.toString());
+						break;
+					}
+				}
+				t.setOperation(Operation.INSERT);
+				return t;
+			} else {
+				return t;
+			}
+		} else {
+			// any filtered transform should be a remove
+			// operation(rather
+			// than just dropping)...think about it
+			t = t.copy();
+			t.setOperation(Operation.REMOVE);
+			return t;
+		}
+	}
+
 	private void newGeneratorContext() {
 		this.generatorContext = new GeneratorContext();
 		generatorContext.root = root;
@@ -240,7 +283,7 @@ public class LiveTree {
 	private void processEntityChanges(DomainTransformPersistenceEvent event) {
 		event.getTransformPersistenceToken().getTransformCollation()
 				.allEntityCollations().forEach(coll -> {
-					Entity entity = coll.getObject();
+					Entity entity = coll.getEntity();
 					List<LiveNode> nodes = entityNodes.get(entity);
 					if (nodes != null) {
 						nodes.forEach(n -> {
@@ -312,6 +355,7 @@ public class LiveTree {
 			}
 		}
 		List<Transform> result = context.generateTransformResult();
+		result.forEach(Ax::out);
 		modifiedNodes.forEach(LiveNode::clearContextData);
 		modifiedNodes.clear();
 		transactionTransforms.put(currentPosition, result);
@@ -354,9 +398,14 @@ public class LiveTree {
 			since.add(entry.getValue());
 		}
 		Collections.reverse(since);
-		List<Transform> transforms = since.stream().flatMap(Collection::stream)
-				.collect(Collectors.toList());
-		transforms.removeIf(t -> !transformFilter.test(t));
+		List<Transform> transforms = new ArrayList<>();
+		for (List<Transform> perTransaction : since) {
+			perTransaction.stream()
+					.map(t -> transformFilter.isPassthrough() ? t
+							: modifyTransformForFilter(transformFilter, t))
+					.sorted(new TransformApplicationOrder())
+					.forEach(transforms::add);
+		}
 		return transforms;
 	}
 
@@ -425,7 +474,10 @@ public class LiveTree {
 				 */
 				boolean seenStart = request
 						.getFromOffsetExclusivePath() == null;
-				while (deque.size() > 0 && result.size() < request.getCount()) {
+				int resultNodeMaxSize = Math.min(request.getCount(),
+						ResourceUtilities.getInteger(LiveTree.class,
+								"resultNodeMaxSize"));
+				while (deque.size() > 0 && result.size() < resultNodeMaxSize) {
 					LiveNode liveNode = deque.removeFirst();
 					Transform transform = new Transform();
 					transform.putPath(liveNode.path);
@@ -869,6 +921,8 @@ public class LiveTree {
 	public interface TransformFilter extends Predicate<Transform> {
 		public String filterKey();
 
+		public boolean isPassthrough();
+
 		public boolean test0(Transform transform);
 
 		@Override
@@ -923,6 +977,19 @@ public class LiveTree {
 		@Override
 		public String toString() {
 			return Ax.format("%s: %s", path, operation);
+		}
+	}
+
+	class TransformApplicationOrder implements Comparator<Transform> {
+		@Override
+		public int compare(Transform o1, Transform o2) {
+			int i = o1.getOperation().compareTo(o2.getOperation());
+			if (i != 0) {
+				return i;
+			}
+			return new TreePath.DepthSegmentComparator().compare(
+					root.ensurePath(o1.getTreePath()),
+					root.ensurePath(o2.getTreePath()));
 		}
 	}
 }

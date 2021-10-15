@@ -24,11 +24,15 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -43,6 +47,7 @@ import com.google.gwt.core.client.GWT;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -1987,6 +1992,17 @@ public class CommonUtils {
 		}
 		return false;
 	}
+
+	public static final Set<String> COLLECTION_CLASS_NAMES = Arrays
+	.asList(ArrayList.class, LinkedList.class, HashSet.class,
+			LinkedHashSet.class, TreeSet.class, HashMap.class,
+			LinkedHashMap.class, TreeMap.class, LightSet.class,
+			LiSet.class, LightMap.class, CountingMap.class)
+	.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
+
+	public static final Set<String> CORE_CLASS_NAMES = Arrays
+	.asList(Class.class, Timestamp.class, Date.class).stream()
+	.map(Class::getCanonicalName).collect(Collectors.toSet());
 
 	public enum ComparatorResult {
 		BOTH_NON_NULL, BOTH_NULL, FIRST_NULL, SECOND_NULL;

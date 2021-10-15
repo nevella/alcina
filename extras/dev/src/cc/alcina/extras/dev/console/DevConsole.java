@@ -54,6 +54,7 @@ import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.log.AlcinaLogUtils.LogMuter;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -1188,6 +1189,14 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 					r.run();
 				}
 			}
+		}
+	}
+
+	@RegistryLocation(registryPoint = LogMuter.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class LogMuter_DevConsole extends LogMuter {
+		@Override
+		public void muteAllLogging(boolean muteAll) {
+			instance.setConsoleOuputMuted(muteAll);
 		}
 	}
 

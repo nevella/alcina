@@ -21,7 +21,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.WebException;
@@ -118,6 +117,9 @@ public class TransformCommit {
 
 	public static final transient String CONTEXT_DISABLED = TransformCommit.class
 			.getName() + ".CONTEXT_DISABLED";
+
+	public static final transient String CONTEXT_COMMITTING = TransformCommit.class
+			.getName() + ".CONTEXT_COMMITTING";
 
 	static Logger logger = LoggerFactory.getLogger(TransformCommit.class);
 
@@ -803,39 +805,13 @@ public class TransformCommit {
 			} else {
 				tpm.pushCurrentUser();
 			}
-			CascadingTransformSupport cascadingTransformSupport = CascadingTransformSupport
-					.get();
-			try {
-				cascadingTransformSupport.beforeTransform();
-				DomainTransformLayerWrapper wrapper = get()
-						.transformFromServletLayer(tag);
-				// see preamble to cascading transform support
-				while (cascadingTransformSupport.hasChildren()) {
-					logger.debug(
-							"Servlet layer - waiting for cascading transforms");
-					synchronized (cascadingTransformSupport) {
-						if (cascadingTransformSupport.hasChildren()) {
-							cascadingTransformSupport.wait(1000);
-						}
-					}
-				}
-				UmbrellaException childException = cascadingTransformSupport
-						.getException();
-				if (childException != null) {
-					throw childException;
-				}
-				return wrapper;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			} finally {
-				cascadingTransformSupport.afterTransform();
-			}
-		} catch (RuntimeException re) {
-			re.printStackTrace();
+			return get().transformFromServletLayer(tag);
+		} catch (Exception ex) {
+			ex.printStackTrace();
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			Transaction.current().toDbAborted();
 			Transaction.endAndBeginNew();
-			throw re;
+			throw WrappedRuntimeException.wrapIfNotRuntime(ex);
 		} finally {
 			tpm.popUser();
 			Preconditions.checkState(
@@ -847,33 +823,43 @@ public class TransformCommit {
 	protected DomainTransformLayerWrapper submitAndHandleTransforms(
 			TransformPersistenceToken persistenceToken)
 			throws DomainTransformRequestException {
-		List<TransformPersistenceToken> perStoreTokens = persistenceToken
-				.toPerStoreTokens();
-		if (perStoreTokens.size() == 1) {
-			TransformPersistenceToken perStoreToken = perStoreTokens.get(0);
-			if (perStoreToken.provideTargetsWritableStore()) {
-				return submitAndHandleTransformsWritableStore(perStoreToken);
+		Preconditions.checkState(!LooseContext.is(CONTEXT_COMMITTING),
+				"Already in commit section");
+		try {
+			LooseContext.pushWithTrue(CONTEXT_COMMITTING);
+			List<TransformPersistenceToken> perStoreTokens = persistenceToken
+					.toPerStoreTokens();
+			if (perStoreTokens.size() == 1) {
+				TransformPersistenceToken perStoreToken = perStoreTokens.get(0);
+				if (perStoreToken.provideTargetsWritableStore()) {
+					return submitAndHandleTransformsWritableStore(
+							perStoreToken);
+				}
 			}
-		}
-		TransformPersistenceToken targetingWriteableStore = perStoreTokens
-				.stream().filter(token -> token.provideTargetsWritableStore())
-				.findFirst().orElse(null);
-		DomainTransformLayerWrapper result = new DomainTransformLayerWrapper(
-				targetingWriteableStore);
-		for (TransformPersistenceToken perStoreToken : perStoreTokens) {
-			if (perStoreToken.provideTargetsWritableStore()) {
-				result.merge(
-						submitAndHandleTransformsWritableStore(perStoreToken));
-			} else {
-				DomainTransformLayerWrapper remoteWrapperResult = Registry
-						.impl(RemoteTransformPersister.class,
-								perStoreToken.getTargetStore()
-										.getDomainDescriptor().getClass())
-						.submitAndHandleTransformsRemoteStore(perStoreToken);
-				result.merge(remoteWrapperResult);
+			TransformPersistenceToken targetingWriteableStore = perStoreTokens
+					.stream()
+					.filter(token -> token.provideTargetsWritableStore())
+					.findFirst().orElse(null);
+			DomainTransformLayerWrapper result = new DomainTransformLayerWrapper(
+					targetingWriteableStore);
+			for (TransformPersistenceToken perStoreToken : perStoreTokens) {
+				if (perStoreToken.provideTargetsWritableStore()) {
+					result.merge(submitAndHandleTransformsWritableStore(
+							perStoreToken));
+				} else {
+					DomainTransformLayerWrapper remoteWrapperResult = Registry
+							.impl(RemoteTransformPersister.class,
+									perStoreToken.getTargetStore()
+											.getDomainDescriptor().getClass())
+							.submitAndHandleTransformsRemoteStore(
+									perStoreToken);
+					result.merge(remoteWrapperResult);
+				}
 			}
+			return result;
+		} finally {
+			LooseContext.pop();
 		}
-		return result;
 	}
 
 	protected DomainTransformLayerWrapper
@@ -928,7 +914,6 @@ public class TransformCommit {
 					persistenceToken, wrapper,
 					wrapper.providePersistenceEventType(), true);
 			event.setFiringFromQueue(wrapper.fireAsQueueEvent);
-			CascadingTransformSupport.register(event);
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.fireDomainTransformPersistenceEvent(event);
 			unexpectedException = false;

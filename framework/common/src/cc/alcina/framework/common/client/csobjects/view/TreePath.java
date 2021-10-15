@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.csobjects.view;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -285,6 +286,10 @@ public class TreePath<T> extends Model
 		paths.trace = trace;
 	}
 
+	public Walker<T> walker() {
+		return new Walker(this);
+	}
+
 	public TreePath withSegment(Object object) {
 		segment = asSegment(object);
 		return this;
@@ -344,9 +349,107 @@ public class TreePath<T> extends Model
 		}
 	}
 
+	public static class DepthSegmentComparator
+			implements Comparator<TreePath<?>> {
+		static final SegmentComparator INSTANCE = new SegmentComparator();
+
+		@Override
+		public int compare(TreePath<?> o1, TreePath<?> o2) {
+			if (o1.hasAncestorMatching(t -> t == o2)) {
+				return 1;
+			}
+			if (o2.hasAncestorMatching(t -> t == o1)) {
+				return -1;
+			}
+			TreePath<?> c1 = o1;
+			TreePath<?> c2 = o2;
+			while (c1.depth() != c2.depth()) {
+				if (c1.depth() > c2.depth()) {
+					c1 = c1.getParent();
+				} else {
+					c2 = c2.getParent();
+				}
+			}
+			while (c1.getParent() != c2.getParent()) {
+				c1 = c1.getParent();
+				c2 = c2.getParent();
+			}
+			return SegmentComparator.INSTANCE.compare(c1, c2);
+		}
+	}
+
 	@ClientInstantiable
 	public static enum Operation {
-		INSERT, REMOVE, CHANGE;
+		INSERT, CHANGE, REMOVE;
+	}
+
+	public static class SegmentComparator implements Comparator<TreePath> {
+		static final SegmentComparator INSTANCE = new SegmentComparator();
+
+		@Override
+		public int compare(TreePath o1, TreePath o2) {
+			Preconditions.checkArgument(o1.parent == o2.parent);
+			return o1.segmentComparable.compareTo(o2.segmentComparable);
+		}
+	}
+
+	public static class Walker<T> {
+		TreePath<T> current;
+
+		public Walker(TreePath<T> from) {
+			current = from;
+		}
+
+		public TreePath next() {
+			boolean tryDepth = true;
+			while (true) {
+				if (tryDepth && current.getChildren().size() > 0) {
+					current = current.getChildren().get(0);
+					return current;
+				} else {
+					if (current.getParent() == null) {
+						return null;
+					} else {
+						List<TreePath<T>> siblings = current.getParent()
+								.getChildren();
+						int idx = siblings.indexOf(current);
+						if (idx < siblings.size() - 1) {
+							current = siblings.get(idx + 1);
+							return current;
+						} else {
+							tryDepth = false;
+							current = current.getParent();
+						}
+					}
+				}
+			}
+		}
+
+		public TreePath previous() {
+			while (true) {
+				if (current.getParent() == null) {
+					return null;
+				} else {
+					List<TreePath<T>> siblings = current.getParent()
+							.getChildren();
+					if (siblings instanceof SortedChildren) {
+						current = ((SortedChildren) siblings).previous(current);
+						return current;
+					} else {
+						int idx = siblings.indexOf(current);
+						if (idx > 0) {
+							current = siblings.get(idx - 1);
+							while (current.getChildren().size() > 0) {
+								current = Ax.last(current.getChildren());
+							}
+							return current;
+						} else {
+							current = current.getParent();
+						}
+					}
+				}
+			}
+		}
 	}
 
 	static class Paths {

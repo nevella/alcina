@@ -15,6 +15,7 @@ import java.util.Optional;
 import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -185,7 +186,15 @@ public class ReflectiveSerializer {
 				toResolve = next;
 			}
 			Bean bean = Annotations.resolve(lookupClass, Bean.class);
-			if (bean != null) {
+			boolean resolveWithReflectiveTypeSerializer = bean != null;
+			// FIXME - reflection - move to Reflector
+			if (!GWT.isClient()) {
+				resolveWithReflectiveTypeSerializer |= Reflections
+						.isAssignableFrom(TreeSerializable.class, lookupClass)
+						|| Reflections.isAssignableFrom(
+								ReflectiveSerializable.class, lookupClass);
+			}
+			if (resolveWithReflectiveTypeSerializer) {
 				return new ReflectiveTypeSerializer();
 			}
 			throw new IllegalArgumentException(
@@ -257,6 +266,9 @@ public class ReflectiveSerializer {
 	}
 
 	public static class DeserializerOptions {
+	}
+
+	public interface ReflectiveSerializable {
 	}
 
 	public static class ReflectiveTypeSerializer extends TypeSerializer {

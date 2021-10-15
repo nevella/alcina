@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
@@ -41,6 +42,11 @@ public class SerializationSignatureListener
 			AlcinaChildContextRunner
 					.runInTransactionNewThread("Ensure signatures", () -> {
 						try {
+							/*
+							 * in particular, lose
+							 * TransformCommit.CONTEXT_COMMITTING
+							 */
+							LooseContext.getContext().properties.clear();
 							/*
 							 * NOT perform()
 							 */
@@ -122,7 +128,7 @@ public class SerializationSignatureListener
 						.forLocator(transform.toObjectLocator());
 				if (!entityCollation.isDeleted()) {
 					serializedSignatureReflector.setPropertyValue(
-							entityCollation.getObject(), ensureSignature());
+							entityCollation.getEntity(), ensureSignature());
 					token.addCascadedEvents();
 				}
 			}

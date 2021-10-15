@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -42,13 +43,21 @@ import cc.alcina.framework.entity.projection.PermissibleFieldFilter;
 import cc.alcina.framework.entity.util.MethodContext;
 
 public class DomainLinker<E extends Entity> {
+	public static final String CONTEXT_LINKING_TO_DOMAIN = DomainLinker.class
+			.getName() + ".CONTEXT_LINKING_TO_DOMAIN";
+
 	public static <T> T linkToDomain(T t) {
-		GraphProjectionDataFilter dataFilter = Registry
-				.impl(JPAImplementation.class)
-				.getResolvingFilter(null, null, true);
-		return GraphProjections.defaultProjections()
-				.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
-				.dataFilter(dataFilter).project(t);
+		try {
+			LooseContext.pushWithTrue(CONTEXT_LINKING_TO_DOMAIN);
+			GraphProjectionDataFilter dataFilter = Registry
+					.impl(JPAImplementation.class)
+					.getResolvingFilter(null, null, true);
+			return GraphProjections.defaultProjections()
+					.fieldFilter(Registry.impl(PermissibleFieldFilter.class))
+					.dataFilter(dataFilter).project(t);
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	private EntityManager em;

@@ -172,7 +172,7 @@ public class JobDomain {
 			}
 			List<JobStateMessage> stateMessageEvents = collation
 					.query(jobStateMessageImplClass).stream()
-					.map(qr -> (JobStateMessage) qr.entityCollation.getObject())
+					.map(qr -> (JobStateMessage) qr.entityCollation.getEntity())
 					.collect(Collectors.toList());
 			if (stateMessageEvents.size() > 0) {
 				/*

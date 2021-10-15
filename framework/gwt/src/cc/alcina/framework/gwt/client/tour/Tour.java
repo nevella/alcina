@@ -71,6 +71,8 @@ public interface Tour {
 		public String getDescription();
 
 		public RelativeTo getRelativeTo();
+
+		public String getStyle();
 	}
 
 	@ClientInstantiable

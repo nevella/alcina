@@ -18,6 +18,9 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 @RegistryLocation(registryPoint = TowardsAMoreDesirableSituation.class, implementationType = ImplementationType.SINGLETON)
+/*
+ * FIXME - mvcc.cascade - add to listjobs report
+ */
 public class TowardsAMoreDesirableSituation {
 	public static TowardsAMoreDesirableSituation get() {
 		return Registry.impl(TowardsAMoreDesirableSituation.class);
@@ -34,7 +37,10 @@ public class TowardsAMoreDesirableSituation {
 		activeJobs.removeIf(Job::provideIsSequenceComplete);
 		boolean delta = false;
 		while (activeJobs.size() < JobRegistry.get().jobExecutors
-				.getMaxConsistencyJobCount()) {
+				.getMaxConsistencyJobCount()
+				&& JobRegistry.get().getActiveJobCount() <= ResourceUtilities
+						.getInteger(TowardsAMoreDesirableSituation.class,
+								"maxVmActiveJobCount")) {
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
 					.isPresent()) {
 				JobRegistry.get()
@@ -61,7 +67,7 @@ public class TowardsAMoreDesirableSituation {
 								activeJobs.add(job);
 								Transaction.commit();
 								logger.info(
-										"TowardsAMoreDesirableSituation - consitency-to-pending - {} - {} remaining",
+										"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} remaining",
 										job,
 										JobDomain.get()
 												.getFutureConsistencyJobs()

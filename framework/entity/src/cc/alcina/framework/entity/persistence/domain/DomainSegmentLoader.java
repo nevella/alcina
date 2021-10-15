@@ -24,6 +24,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.C
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResults.ConnResultsIterator;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ConnResultsReuse;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.EntityRefs.Ref;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.ValueContainer;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.SimpleAtomModel.AtomKey;
 
@@ -43,7 +44,7 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 	// clazz,property,id,id
 	MultikeyMap<Long> queried = new UnsortedMultikeyMap<>(3);
 
-	Map<ConnRsKey, List<Object[]>> savedRsResults = new LinkedHashMap<>();
+	Map<ConnRsKey, List<ValueContainer[]>> savedRsResults = new LinkedHashMap<>();
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -72,11 +73,11 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 	public abstract String getFilename();
 
 	@Override
-	public Iterator<Object[]> getIterator(ConnResults connResults,
+	public Iterator<ValueContainer[]> getIterator(ConnResults connResults,
 			ConnResultsIterator itr) {
 		ConnRsKey key = new ConnRsKey(connResults);
 		synchronized (savedRsResults) {
-			List<Object[]> savedResults = savedRsResults.get(key);
+			List<ValueContainer[]> savedResults = savedRsResults.get(key);
 			if (savedResults == null) {
 				savedResults = new ArrayList<>();
 				connResults.cachedValues = savedResults;
@@ -137,7 +138,7 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 	}
 
 	@Override
-	public void onNext(ConnResults connResults, Object[] cached) {
+	public void onNext(ConnResults connResults, ValueContainer[] cached) {
 		connResults.cachedValues.add(cached);
 	}
 
@@ -204,6 +205,7 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 
 	public enum DomainSegmentLoaderPhase {
 		ALL_PHASES, ONE, TWO;
+
 		public static List<DomainSegmentLoaderPhase> iterateOver() {
 			return Arrays.asList(ONE, TWO);
 		}
@@ -288,7 +290,7 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 	}
 
 	public static class SavedSegmentDataHolder {
-		public Map<ConnRsKey, List<Object[]>> savedRsResults = new LinkedHashMap<>();
+		public Map<ConnRsKey, List<ValueContainer[]>> savedRsResults = new LinkedHashMap<>();
 
 		public Multiset<Class, Set<Long>> initialToLoadIds = new Multiset<>();
 	}

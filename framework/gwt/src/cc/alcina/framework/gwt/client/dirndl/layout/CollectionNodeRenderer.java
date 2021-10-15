@@ -35,6 +35,8 @@ public class CollectionNodeRenderer extends DirectedNodeRenderer {
 		// annotationlocation to allow custom res paths (2021.10.09 - may
 		// already be fixed
 		// with CustomReflectorResolver fix)
+		//
+		// FIXME - dirndl1.2 - reuse previously created widgets (or elements)
 		node.directed.bindings();
 		for (Object object : collection) {
 			Node child = node.addChild(object, null, null);
