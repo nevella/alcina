@@ -1,15 +1,15 @@
 package cc.alcina.framework.entity.transform.event;
 
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
@@ -24,6 +24,8 @@ public class DomainTransformPersistenceEvent {
 	private boolean firingFromQueue;
 
 	private DomainTransformCommitPosition position;
+
+	private TransformCollation postProcessCollation;
 
 	public long firingStartTime;
 
@@ -47,7 +49,9 @@ public class DomainTransformPersistenceEvent {
 	}
 
 	public long getMaxPersistedRequestId() {
-		return CommonUtils.lv(CollectionFilters.max(getPersistedRequestIds()));
+		return getPersistedRequestIds().stream()
+				.collect(Collectors.maxBy(Comparator.naturalOrder()))
+				.orElse(0L);
 	}
 
 	public List<Long> getPersistedRequestIds() {
@@ -70,6 +74,15 @@ public class DomainTransformPersistenceEvent {
 		return position;
 	}
 
+	// not adjunct - immutable
+	public TransformCollation getPostProcessCollation() {
+		if (postProcessCollation == null) {
+			postProcessCollation = new TransformCollation(
+					domainTransformLayerWrapper.persistentEvents);
+		}
+		return postProcessCollation;
+	}
+
 	public TransformPersistenceToken getTransformPersistenceToken() {
 		return this.transformPersistenceToken;
 	}
@@ -80,6 +93,11 @@ public class DomainTransformPersistenceEvent {
 
 	public boolean isLocalToVm() {
 		return transformPersistenceToken.isLocalToVm();
+	}
+
+	public boolean isPostProcessCascade() {
+		return transformPersistenceToken.isLocalToVm()
+				|| transformPersistenceToken.isRequestorExternalToThisJvm();
 	}
 
 	public void setFiringFromQueue(boolean firingFromQueue) {

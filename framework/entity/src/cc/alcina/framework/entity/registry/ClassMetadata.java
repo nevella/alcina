@@ -10,7 +10,7 @@ import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
-	static final transient long serialVersionUID = -1L;
+	
 
 	public static boolean USE_MD5_CHANGE_CHECK;
 

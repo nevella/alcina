@@ -15,6 +15,11 @@ public interface  StyleType{
 		return widget;
 	}
 
+	default Widget removeFrom(Widget widget) {
+		widget.setStyleName(toName(), false);
+		return widget;
+	}
+
 	default boolean hasStyle(UIObject uiObject) {
 		String name = toName();
 		String current = uiObject.getStyleName();

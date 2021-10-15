@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
@@ -20,16 +21,15 @@ import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.XmlUtils;
-import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
-import cc.alcina.framework.servlet.Sx;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
-import cc.alcina.framework.servlet.publication.Publisher.PublicationContentPersister;
+import cc.alcina.framework.servlet.publication.Publisher.PublicationPersister;
 
 public class PublicationViews {
 	private String html;
 
 	public String asHtml(long id) {
-		if (!PermissionsManager.get().isAdmin() && !Sx.isTest()) {
+		if (!PermissionsManager.get().isAdmin() && !EntityLayerUtils.isTest()) {
 			throw new RuntimeException("Not permitted");
 		}
 		build(id, null);
@@ -37,8 +37,7 @@ public class PublicationViews {
 	}
 
 	public void build(long id, String delta) {
-		Publication publication = CommonPersistenceProvider.get()
-				.getCommonPersistence().getPublication(id);
+		Publication publication = PersistentImpl.find(Publication.class, id);
 		DomDoc doc = DomDoc.basicHtmlDoc();
 		String css = ResourceUtilities.readClassPathResourceAsString(
 				PublicationViews.class, "publication-view.css");
@@ -52,7 +51,7 @@ public class PublicationViews {
 					.cell(publication.getUser().toIdNameString());
 			builder.row().cell("Date").cell(publication.getPublicationDate());
 			builder.row().cell("Type").cell(publication.getPublicationType());
-			DeliveryModel deliveryModel = publication.getDeliveryModel();
+			DeliveryModel deliveryModel = publication.provideDeliveryModel();
 			builder.row().cell("Subject").cell(deliveryModel.getEmailSubject());
 			builder.row().cell("To").cell(deliveryModel.getEmailAddress());
 			builder.append();
@@ -61,11 +60,11 @@ public class PublicationViews {
 		DomNode content = body.builder().tag("iframe").append().setAttr("id",
 				"content-frame");
 		content.style().addClassName("content");
-		PublicationContentPersister publicationContentPersister = Registry
-				.impl(PublicationContentPersister.class);
+		PublicationPersister publicationContentPersister = Registry
+				.impl(PublicationPersister.class);
 		DomNode script = body.builder().tag("script").append();
 		ContentRendererResults crr = publicationContentPersister
-				.getContentRendererResults(id);
+				.getContentRendererResults(publication);
 		String nodeHtml = StringEscapeUtils.escapeJavaScript(crr.htmlContent);
 		FormatBuilder fb = new FormatBuilder();
 		fb.line("var content=\"%s\";", nodeHtml);
@@ -158,12 +157,20 @@ public class PublicationViews {
 				doc.getDocumentElementNode().domNode());
 	}
 
-	static class Message {
-		String path;
-
-		String text;
-
-		public boolean textIsLocator;
+	private String untilFirstCamel(String text) {
+		List<String> out = new ArrayList<>();
+		List<String> words = Arrays.asList(text.split(" "));
+		Pattern pattern = Pattern.compile("(\\w[a-z]+)[A-Z].*");
+		for (String word : words) {
+			Matcher matcher = pattern.matcher(word);
+			if (matcher.matches()) {
+				out.add(matcher.group(1));
+				break;
+			} else {
+				out.add(word);
+			}
+		}
+		return out.stream().collect(Collectors.joining(" "));
 	}
 
 	protected Message parseMessage(ClientLogRecord record) {
@@ -191,19 +198,11 @@ public class PublicationViews {
 		return out;
 	}
 
-	private String untilFirstCamel(String text) {
-		List<String> out = new ArrayList<>();
-		List<String> words = Arrays.asList(text.split(" "));
-		Pattern pattern = Pattern.compile("(\\w[a-z]+)[A-Z].*");
-		for (String word : words) {
-			Matcher matcher = pattern.matcher(word);
-			if (matcher.matches()) {
-				out.add(matcher.group(1));
-				break;
-			} else {
-				out.add(word);
-			}
-		}
-		return out.stream().collect(Collectors.joining(" "));
+	static class Message {
+		String path;
+
+		String text;
+
+		public boolean textIsLocator;
 	}
 }

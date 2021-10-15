@@ -3,9 +3,9 @@ package cc.alcina.framework.common.client.domain;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -30,7 +30,7 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 
 	public List<String> propertyPathAlia = new ArrayList<String>();
 
-	private CollectionFilter<T> relevanceFilter;
+	private Predicate<T> relevanceFilter;
 
 	Function<? super T, ?> valueFunction;
 
@@ -88,8 +88,8 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		if (lookupIndexClass != null) {
 			return lookupIndexClass;
 		}
-		Class chainedPropertyType = propertyPathAccesor.getChainedPropertyType(
-				Reflections.newInstance(clazz));
+		Class chainedPropertyType = propertyPathAccesor
+				.getChainedPropertyType(Reflections.newInstance(clazz));
 		if (chainedPropertyType != null) {
 			return chainedPropertyType;
 		}
@@ -105,7 +105,7 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		return this.propertyPath;
 	}
 
-	public CollectionFilter<T> getRelevanceFilter() {
+	public Predicate<T> getRelevanceFilter() {
 		return this.relevanceFilter;
 	}
 
@@ -135,7 +135,7 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		this.enabled = enabled;
 	}
 
-	public void setRelevanceFilter(CollectionFilter<T> relevanceFilter) {
+	public void setRelevanceFilter(Predicate<T> relevanceFilter) {
 		this.relevanceFilter = relevanceFilter;
 	}
 
@@ -150,7 +150,12 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		private IdLookup idLookup;
 
 		public IdLookupDescriptor(Class clazz, String propertyPath) {
-			super(clazz, propertyPath, null, null);
+			this(clazz, propertyPath, null, null);
+		}
+
+		public IdLookupDescriptor(Class clazz, String propertyPath,
+				Function<? super T, ?> valueFunction, Class lookupIndexClass) {
+			super(clazz, propertyPath, valueFunction, lookupIndexClass);
 		}
 
 		@Override

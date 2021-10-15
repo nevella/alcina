@@ -319,10 +319,10 @@ public class ObjectTreeRenderer {
 						.setWithNull(((HasWithNull) renderable).isWithNull());
 			}
 			if (f.getCellProvider() instanceof ListBoxCollectionProvider
-					&& node.collectionFilter() != null) {
+					&& node.predicate() != null) {
 				ListBoxCollectionProvider lbcp = (ListBoxCollectionProvider) f
 						.getCellProvider();
-				lbcp.setFilter(node.collectionFilter());
+				lbcp.setFilter(node.predicate());
 			}
 			if (f.getCellProvider() instanceof ListBoxEnumProvider) {
 				Renderer renderer = node.renderer();

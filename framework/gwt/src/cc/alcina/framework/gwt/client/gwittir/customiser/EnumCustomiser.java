@@ -17,14 +17,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.EnumSet;
 import java.util.List;
+import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
@@ -54,6 +54,7 @@ public class EnumCustomiser implements Customiser {
 
 	public static final String VISIBLE_ITEM_COUNT = "VISIBLE_ITEM_COUNT";
 
+	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
 		NamedParameter parameter = NamedParameter.Support
@@ -106,13 +107,14 @@ public class EnumCustomiser implements Customiser {
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				FILTER_CLASS);
 		if (parameter != null) {
-			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
-			hiddenValues.removeAll(CollectionFilters.filter(hiddenValues,
-					(CollectionFilter) Reflections.classLookup()
-							.newInstance(parameter.classValue())));
+			Predicate filter = (Predicate) Reflections.classLookup()
+					.newInstance(parameter.classValue());
+			List hiddenValues = (List) EnumSet.allOf(clazz).stream()
+					.filter(filter.negate()).collect(Collectors.toList());
 			provider.setHiddenValues(hiddenValues);
 		}
 		return editable ? provider : new BoundWidgetProvider() {
+			@Override
 			public BoundWidget get() {
 				RenderingLabel<Enum> label = new RenderingLabel<Enum>();
 				if (renderer != null) {

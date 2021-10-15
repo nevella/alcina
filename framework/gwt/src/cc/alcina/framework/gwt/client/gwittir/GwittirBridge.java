@@ -71,6 +71,7 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -82,6 +83,8 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.MultikeyMap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceValueCustomiser;
@@ -277,6 +280,10 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	private GwittirDateRendererProvider dateRendererProvider = new GwittirDateRendererProvider();
 
+	// FIXME - dirndl.meta
+	private MultikeyMap<PropertyReflector> reflectors = new UnsortedMultikeyMap<>(
+			2);
+
 	private GwittirBridge() {
 		super();
 	}
@@ -427,8 +434,8 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			boolean editableWidgets, boolean multiple,
 			BoundWidgetTypeFactory factory, Object obj,
 			AnnotationLocation.Resolver resolver) {
-		List<PropertyReflector> propertyReflectors = Reflections.classLookup()
-				.getPropertyReflectors(clazz);
+		Collection<PropertyReflector> propertyReflectors = Reflections
+				.classLookup().getPropertyReflectors(clazz).values();
 		AnnotationLocation clazzLocation = new AnnotationLocation(clazz, null,
 				resolver);
 		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
@@ -644,57 +651,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
 		Property property = getPropertyForClass(clazz, propertyName);
-		return new PropertyReflector() {
-			@Override
-			public <A extends Annotation> A
-					getAnnotation(Class<A> annotationClass) {
-				throw new UnsupportedOperationException();
-			}
-
-			@Override
-			public Class getDefiningType() {
-				return clazz;
-			}
-
-			@Override
-			public String getPropertyName() {
-				return property.getName();
-			}
-
-			@Override
-			public Class getPropertyType() {
-				try {
-					return property.getType();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			@Override
-			public Object getPropertyValue(Object value) {
-				try {
-					return property.getAccessorMethod().invoke(value,
-							new Object[0]);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-
-			@Override
-			public boolean isReadOnly() {
-				return property.getMutatorMethod() == null;
-			}
-
-			@Override
-			public void setPropertyValue(Object bean, Object value) {
-				try {
-					property.getMutatorMethod().invoke(bean,
-							new Object[] { value });
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		};
+		return reflectors.ensure(
+				() -> new PropertyReflectorImpl(property, clazz, propertyName),
+				clazz, propertyName);
 	}
 
 	@Override
@@ -932,15 +891,106 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 	}
 
+	private static class PropertyReflectorImpl implements PropertyReflector {
+		private final Property property;
+
+		private final Class clazz;
+
+		private final String propertyName;
+
+		private PropertyReflectorImpl(Property property, Class clazz,
+				String propertyName) {
+			this.property = property;
+			this.clazz = clazz;
+			this.propertyName = propertyName;
+		}
+
+		@Override
+		public <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass) {
+			return Reflections.propertyAccessor().getAnnotationForProperty(
+					this.clazz, annotationClass, this.propertyName);
+		}
+
+		@Override
+		public Class getDefiningType() {
+			return this.clazz;
+		}
+
+		@Override
+		public String getPropertyName() {
+			return this.property.getName();
+		}
+
+		@Override
+		public Class getPropertyType() {
+			try {
+				return this.property.getType();
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		@Override
+		public Object getPropertyValue(Object value) {
+			try {
+				return this.property.getAccessorMethod().invoke(value,
+						new Object[0]);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
+		@Override
+		public boolean isReadOnly() {
+			return this.property.getMutatorMethod() == null;
+		}
+
+		@Override
+		public void setPropertyValue(Object bean, Object value) {
+			try {
+				this.property.getMutatorMethod().invoke(bean,
+						new Object[] { value });
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
 	class FieldDisplayNameComparator implements Comparator<Field> {
 		private final ClientBeanReflector bi;
 
+		private PropertyOrder propertyOrder;
+
 		FieldDisplayNameComparator(ClientBeanReflector bi) {
 			this.bi = bi;
+			PropertyOrder classAnnotation = bi
+					.getAnnotation(PropertyOrder.class);
+			this.propertyOrder = classAnnotation != null ? classAnnotation
+					: bi.getAnnotation(Bean.class).propertyOrder();
 		}
 
 		@Override
 		public int compare(Field o1, Field o2) {
+			if (propertyOrder.value().length > 0) {
+				int idx1 = Arrays.asList(propertyOrder.value())
+						.indexOf(o1.getPropertyName());
+				int idx2 = Arrays.asList(propertyOrder.value())
+						.indexOf(o2.getPropertyName());
+				if (idx1 == -1) {
+					if (idx2 == -1) {
+						// fall through
+					} else {
+						return 1;
+					}
+				} else {
+					if (idx2 == -1) {
+						return -1;
+					} else {
+						return idx1 - idx2;
+					}
+				}
+			}
 			return bi.getPropertyReflectors().get(o1.getPropertyName())
 					.compareTo(bi.getPropertyReflectors()
 							.get(o2.getPropertyName()));

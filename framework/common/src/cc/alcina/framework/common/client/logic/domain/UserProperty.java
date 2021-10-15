@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.logic.domain;
 
+import java.util.Objects;
 import java.util.Optional;
 
 import javax.persistence.Lob;
@@ -13,12 +14,16 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
+import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CloneHelper;
+import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
@@ -37,34 +42,48 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
  * UserProperty.key value rather than an id ref/foreign key. This means a
  * possible breach of "referential integrity", (quotes intended) - this is once
  * place where the tradeoff comes down on the side of avoiding the constraint.
+ * 
+ * Editing notes - the tm-registered object should be the userProperty -
+ * UserPropertyPersistable.getUserPropertySupport().getProperty(). The
+ * UserPropertyPersistable object will not be transaction-aware (it's
+ * effectively a snapshot - writeable only within the snapshot-creation tx).
+ * TODO - check this with a precondition server side
  */
 public abstract class UserProperty<T extends UserProperty>
-		extends VersionableEntity<T> implements HasIUser {
+		extends VersionableEntity<T> implements HasIUser, HasOwner {
 	public static final transient String CONTEXT_NO_COMMIT = UserProperty.class
 			.getName() + ".CONTEXT_NO_COMMIT";
 
-	public static <P extends UserProperty> P byId(long id) {
+	public static <P extends UserProperty<?>> P byId(long id) {
 		return Domain.find(implementation(), id);
 	}
 
-	public static <P extends UserProperty> Optional<P> byKey(String key) {
+	public static <P extends UserProperty<?>> Optional<P> byKey(String key) {
 		return byUserKey(PermissionsManager.get().getUser(), key);
 	}
 
-	public static <P extends UserProperty> Optional<P> byUserClass(IUser user,
-			Class<? extends UserPropertyPersistable> clazz) {
+	public static <P extends UserProperty<?>> Optional<P> byUserClass(
+			IUser user, Class<? extends UserPropertyPersistable> clazz) {
 		return byUserKey(user, clazz.getName());
 	}
 
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	public static <P extends UserProperty> Optional<P> byUserKey(IUser user,
+	public static <P extends UserProperty<?>> Optional<P> byUserKey(IUser user,
 			String key) {
 		return (Optional<P>) Domain.query(implementation()).filter("user", user)
 				.filter("key", key).optional();
 	}
 
+	public static <T, P extends UserProperty<?>> P ensure(Class<T> clazz) {
+		UserProperty<?> property = ensure(clazz.getName());
+		if (property.getValue() == null) {
+			property.serializeObject(Reflections.newInstance(clazz));
+		}
+		return (P) property;
+	}
+
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	public static <P extends UserProperty> P ensure(IUser user, String key) {
+	public static <P extends UserProperty<?>> P ensure(IUser user, String key) {
 		Optional<P> existing = byUserKey(user, key);
 		return existing.orElseGet(() -> {
 			P created = Domain.create(implementation());
@@ -78,7 +97,7 @@ public abstract class UserProperty<T extends UserProperty>
 		return ensure(PermissionsManager.get().getUser(), key);
 	}
 
-	private static <P extends UserProperty> Class<P> implementation() {
+	private static <P extends UserProperty<?>> Class<P> implementation() {
 		return (Class<P>) PersistentImpl.getImplementation(UserProperty.class);
 	}
 
@@ -88,7 +107,18 @@ public abstract class UserProperty<T extends UserProperty>
 
 	private String value;
 
-	public <UPP extends UserPropertyPersistable> UPP deserialize() {
+	private UserPropertyPersistable.Support userPropertySupport;
+
+	public UserProperty copy() {
+		UserProperty copy = new CloneHelper()
+				.shallowishBeanClone(domainIdentity());
+		copy.userPropertySupport = new UserPropertyPersistable.Support(copy);
+		// no need to set copy.userPropertySupport.persistable, since it'll be
+		// generated on demand
+		return copy;
+	}
+
+	public <V> V deserialize() {
 		Class clazz = null;
 		if (category != null) {
 			try {
@@ -96,8 +126,17 @@ public abstract class UserProperty<T extends UserProperty>
 			} catch (Exception e) {
 			}
 		}
-		return (UPP) TransformManager.resolveMaybeDeserialize(null, getValue(),
-				null, clazz);
+		return (V) TransformManager.Serializer.get().deserialize(getValue(),
+				clazz);
+	}
+
+	public synchronized UserPropertyPersistable.Support
+			ensureUserPropertySupport() {
+		if (userPropertySupport == null) {
+			userPropertySupport = new UserPropertyPersistable.Support(
+					domainIdentity());
+		}
+		return this.userPropertySupport;
 	}
 
 	@Lob
@@ -112,6 +151,17 @@ public abstract class UserProperty<T extends UserProperty>
 		return this.key;
 	}
 
+	@Override
+	@Transient
+	public IUser getOwner() {
+		return getUser();
+	}
+
+	@Transient
+	public UserPropertyPersistable.Support getUserPropertySupport() {
+		return this.userPropertySupport;
+	}
+
 	@Lob
 	@Transient
 	public String getValue() {
@@ -119,8 +169,8 @@ public abstract class UserProperty<T extends UserProperty>
 	}
 
 	public void serializeObject(Object object) {
-		setValue(TransformManager.serialize(object));
 		setCategory(object.getClass().getName());
+		setValue(TransformManager.serialize(object));
 	}
 
 	public void setCategory(String category) {
@@ -145,5 +195,16 @@ public abstract class UserProperty<T extends UserProperty>
 		String old_value = this.value;
 		this.value = value;
 		propertyChangeSupport().firePropertyChange("value", old_value, value);
+		if (!Objects.equals(old_value, value) && Ax.notBlank(value)) {
+			if (userPropertySupport != null
+					&& userPropertySupport.getPersistable() != null) {
+				if (userPropertySupport != null
+						&& userPropertySupport.getPersistable() != null) {
+					new CloneHelper().copyBeanProperties(deserialize(),
+							userPropertySupport.getPersistable(),
+							DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING);
+				}
+			}
+		}
 	}
 }

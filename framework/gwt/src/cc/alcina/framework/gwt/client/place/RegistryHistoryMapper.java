@@ -4,7 +4,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
@@ -14,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
@@ -50,6 +53,12 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return getToken(place1).equals(getToken(place2));
 	}
 
+	public Class<? extends Entity>
+			getEntityClass(Class<? extends EntityPlace> placeClass) {
+		return ((EntityPlaceTokenizer) tokenizersByPlace.get(placeClass))
+				.getModelClass();
+	}
+
 	@Override
 	public Place getPlace(String token) {
 		return getPlace(token, false);
@@ -71,7 +80,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			return "";
 		}
 		String token = tokenizersByPlace.get(place.getClass()).getToken(place);
-		return getAppPrefix() + token;
+		return getAppPrefix().isEmpty() ? token : getAppPrefix() + "/" + token;
 	}
 
 	public synchronized BasePlaceTokenizer getTokenizer(Place place) {
@@ -79,6 +88,31 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			return null;
 		}
 		return tokenizersByPlace.get(place.getClass());
+	}
+
+	public String removeAppPrefixAndLeadingSlashes(String tokenString) {
+		String appPrefix = getAppPrefix();
+		if (tokenString.startsWith("/")) {
+			tokenString = tokenString.substring(1);
+		}
+		if (appPrefix.length() > 0) {
+			String matchesPattern = Ax.format("/?%s(/.*|$)", appPrefix);
+			if (tokenString.matches(matchesPattern)) {
+				tokenString = tokenString.substring(appPrefix.length());
+			}
+		}
+		if (tokenString.startsWith("/")) {
+			tokenString = tokenString.substring(1);
+		}
+		return tokenString;
+	}
+
+	public void removeTokenizer(Predicate<BasePlaceTokenizer> matcher) {
+		tokenizersByModelClass.entrySet()
+				.removeIf(e -> matcher.test(e.getValue()));
+		tokenizersByPlace.entrySet().removeIf(e -> matcher.test(e.getValue()));
+		tokenizersByPrefix.values()
+				.forEach(l -> l.removeIf(tokenizer -> matcher.test(tokenizer)));
 	}
 
 	private synchronized void ensurePlaceLookup() {
@@ -118,21 +152,20 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	}
 
 	protected synchronized Place getPlace(String i_token, boolean copy) {
-		if (i_token.startsWith(getAppPrefix())) {
-			i_token = i_token.substring(getAppPrefix().length());
-		}
-		if (i_token.startsWith("/")) {
-			i_token = i_token.substring(1);
-		}
+		i_token = removeAppPrefixAndLeadingSlashes(i_token);
 		String token = i_token;
 		if (!copy) {
-			System.out.println("get place:" + token);
+			// System.out.println("get place:" + token);
 		}
 		String[] split = token.split("/");
 		String top = split[0];
 		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix
 				.getAndEnsure(top).stream()
 				.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		if (!o_tokenizer.isPresent() && tokenizersByPrefix.containsKey("")) {
+			o_tokenizer = tokenizersByPrefix.getAndEnsure("").stream()
+					.filter(tokenizer -> tokenizer.handles(token)).findFirst();
+		}
 		if (!o_tokenizer.isPresent() && top.length() > 1 && split.length > 1) {
 			top = split[0] + "/" + split[1];
 			o_tokenizer = tokenizersByPrefix.getAndEnsure(top).stream()
@@ -142,16 +175,12 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 				? o_tokenizer.get().getPlace(token)
 				: null;
 		if (place == null) {
-			// handle doc internal hrefs
-			place = lastPlace;
+			if (GWT.isClient()) {
+				// handle doc internal hrefs
+				place = lastPlace;
+			}
 		}
 		lastPlace = place;
 		return place;
-	}
-
-	public Class<? extends Entity>
-			getEntityClass(Class<? extends EntityPlace> placeClass) {
-		return ((EntityPlaceTokenizer) tokenizersByPlace.get(placeClass))
-				.getModelClass();
 	}
 }

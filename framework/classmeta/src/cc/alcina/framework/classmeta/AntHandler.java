@@ -24,7 +24,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
@@ -42,7 +42,7 @@ public class AntHandler extends AbstractHandler {
 	public AntHandler() {
 		String modelXml = ResourceUtilities
 				.read(ClassPersistenceScanHandler.class, "schema/antModel.xml");
-		model = WrappedObjectHelper.xmlDeserialize(CachingAntModel.class,
+		model = JaxbUtils.xmlDeserialize(CachingAntModel.class,
 				modelXml);
 	}
 

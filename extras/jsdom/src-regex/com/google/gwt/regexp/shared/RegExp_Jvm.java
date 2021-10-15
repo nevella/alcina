@@ -2,10 +2,14 @@ package com.google.gwt.regexp.shared;
 
 import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+
+import cc.alcina.framework.common.client.util.StringPair;
 
 public class RegExp_Jvm implements IRegExp {
 	// In JS syntax, a \ in the replacement string has no special meaning.
@@ -54,6 +58,15 @@ public class RegExp_Jvm implements IRegExp {
 	// \$
 	private static final String REPLACEMENT_DOLLAR_DOLLAR_FOR_JAVA = "\\\\\\$";
 
+	private static Map<StringPair, Pattern> cachedPatterns = new LinkedHashMap<StringPair, Pattern>(
+			10, 0.75f, true) {
+		@Override
+		protected boolean
+				removeEldestEntry(Map.Entry<StringPair, Pattern> eldest) {
+			return size() > 10;
+		};
+	};
+
 	/**
 	 * Creates a regular expression object from a pattern with no flags.
 	 *
@@ -101,7 +114,7 @@ public class RegExp_Jvm implements IRegExp {
 						"Unknown regexp flag: '" + flag + "'");
 			}
 		}
-		Pattern javaPattern = Pattern.compile(pattern, javaPatternFlags);
+		Pattern javaPattern = getPattern(pattern, javaPatternFlags);
 		return new RegExp(new RegExp_Jvm(pattern, javaPattern, globalFlag));
 	}
 
@@ -123,6 +136,13 @@ public class RegExp_Jvm implements IRegExp {
 	 */
 	public static String quote(String input) {
 		return Pattern.quote(input);
+	}
+
+	private static Pattern getPattern(String pattern, int javaPatternFlags) {
+		StringPair key = new StringPair(pattern,
+				String.valueOf(javaPatternFlags));
+		return cachedPatterns.computeIfAbsent(key,
+				k -> Pattern.compile(pattern, javaPatternFlags));
 	}
 
 	/**
@@ -215,6 +235,7 @@ public class RegExp_Jvm implements IRegExp {
 	 * Returns whether the regular expression captures all occurrences of the
 	 * pattern.
 	 */
+	@Override
 	public boolean getGlobal() {
 		return globalFlag;
 	}
@@ -222,6 +243,7 @@ public class RegExp_Jvm implements IRegExp {
 	/**
 	 * Returns whether the regular expression ignores case.
 	 */
+	@Override
 	public boolean getIgnoreCase() {
 		return (pattern.flags() & Pattern.CASE_INSENSITIVE) != 0;
 	}
@@ -234,6 +256,7 @@ public class RegExp_Jvm implements IRegExp {
 	 *
 	 * @see #getGlobal()
 	 */
+	@Override
 	public int getLastIndex() {
 		return lastIndex;
 	}
@@ -242,6 +265,7 @@ public class RegExp_Jvm implements IRegExp {
 	 * Returns whether '$' and '^' match line returns ('\n' and '\r') in
 	 * addition to the beginning or end of the string.
 	 */
+	@Override
 	public boolean getMultiline() {
 		return (pattern.flags() & Pattern.MULTILINE) != 0;
 	}
@@ -249,6 +273,7 @@ public class RegExp_Jvm implements IRegExp {
 	/**
 	 * Returns the pattern string of the regular expression.
 	 */
+	@Override
 	public String getSource() {
 		return source;
 	}
@@ -278,6 +303,7 @@ public class RegExp_Jvm implements IRegExp {
 	 * @throws RuntimeException
 	 *             if {@code replacement} is invalid
 	 */
+	@Override
 	public String replace(String input, String replacement) {
 		// Replace \ in the replacement with \\ to escape it for Java replace.
 		replacement = REPLACEMENT_BACKSLASH.matcher(replacement)
@@ -304,6 +330,7 @@ public class RegExp_Jvm implements IRegExp {
 	/**
 	 * Sets the zero-based position at which to start the next match.
 	 */
+	@Override
 	public void setLastIndex(int lastIndex) {
 		this.lastIndex = lastIndex;
 	}
@@ -318,6 +345,7 @@ public class RegExp_Jvm implements IRegExp {
 	 *            the string to be split.
 	 * @return the strings split off, any of which may be empty.
 	 */
+	@Override
 	public SplitResult split(String input) {
 		return split(input, -1);
 	}
@@ -341,6 +369,7 @@ public class RegExp_Jvm implements IRegExp {
 	 *            no limit.
 	 * @return the strings split off, any of which may be empty.
 	 */
+	@Override
 	public SplitResult split(String input, int limit) {
 		String[] result;
 		if (source.length() == 0) {
@@ -379,6 +408,7 @@ public class RegExp_Jvm implements IRegExp {
 	 *            the string to apply the regular expression to
 	 * @return whether the regular expression matches the given string.
 	 */
+	@Override
 	public boolean test(String input) {
 		return exec(input) != null;
 	}

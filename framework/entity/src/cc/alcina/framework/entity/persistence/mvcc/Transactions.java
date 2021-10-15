@@ -8,15 +8,22 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -24,11 +31,34 @@ import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class Transactions {
 	private static Transactions instance;
 
-	public static <T extends Entity> boolean checkResolved(T t) {
-		return resolve(t, false, false) == t;
+	private static ConcurrentHashMap<Class, Constructor> copyConstructors = new ConcurrentHashMap<>();
+
+	public static <T> int callWithCommits(long size, String streamName,
+			Stream<T> stream, Consumer<T> consumer,
+			int commitEveryNTransforms) {
+		AtomicInteger counter = new AtomicInteger();
+		SystemoutCounter ticks = SystemoutCounter.standardJobCounter((int) size,
+				streamName);
+		stream.forEach(t -> {
+			consumer.accept(t);
+			int delta = Transaction
+					.commitIfTransformCount(commitEveryNTransforms);
+			counter.addAndGet(delta);
+			ticks.tick();
+		});
+		int delta = Transaction.commit();
+		counter.addAndGet(delta);
+		return counter.get();
+	}
+
+	public static void copyIdFieldsToCurrentVersion(Entity entity) {
+		MvccObjectVersions versions = ((MvccObject) entity)
+				.__getMvccVersions__();
+		((MvccObjectVersionsEntity) versions).copyIdFieldsToCurrentVersion();
 	}
 
 	public static void enqueueLazyLoad(EntityLocator locator) {
@@ -61,39 +91,54 @@ public class Transactions {
 	}
 
 	/*
-	 * The 'base' parameter is used by ClassTransformer rewritten classes (to
-	 * get domainIdentity())
+	 * The 'domainIdentity' parameter is used by ClassTransformer rewritten
+	 * classes (to obtain the domainIdentity version of the object)
 	 */
-	public static <T extends Entity> T resolve(T t, boolean write,
-			boolean base) {
+	public static <T extends Entity> T resolve(T t, ResolvedVersionState state,
+			boolean domainIdentity) {
 		if (t instanceof MvccObject) {
 			MvccObject mvccObject = (MvccObject) t;
 			MvccObjectVersions<T> versions = mvccObject.__getMvccVersions__();
-			if (versions == null && !write) {
+			if (versions == null && state == ResolvedVersionState.READ) {
 				// no transactional versions, return base
 				return t;
 			} else {
-				// if returning 'base', no need to synchronize (it's being
+				// if returning 'domainIdentity', no need to synchronize (it's
+				// being
 				// returned as domainIdentity(), not for fields - and the
 				// identity itself is immutable)
-				if (base) {
-					return versions.getBaseObject();
+				if (domainIdentity) {
+					return versions.domainIdentity;
 				}
 				Transaction transaction = Transaction.current();
 				// TODO - possibly optimise (app level 'in warmup')
 				// although - doesn't warmup write fields, not via setters? In
 				// which case this isn't called in warmup?
+				// FIXME - mvcc.5 - yep, setters (so resolve) shouldn't be
+				// called _at_all during warmup. Precondition me
 				if (transaction.isBaseTransaction() || (versions != null
 						&& transaction == versions.initialWriteableTransaction)) {
 					return t;
 				} else {
+					// FIXME - mvcc.5 - this synchronization means that (a) a
+					// bunch of entities have issues with
+					// System.identityHashCode and that all the concurrency in
+					// MvccObjectVersions is unneccesary. But it's safe, at
+					// least...
 					synchronized (t) {
 						versions = mvccObject.__getMvccVersions__();
 						if (versions == null) {
 							versions = MvccObjectVersions.ensureEntity(t,
 									transaction, false);
 						}
-						return versions.resolve(write);
+						boolean writeableVersion = state == ResolvedVersionState.WRITE;
+						/*
+						 * see docs for READ_INVALID
+						 */
+						if (state == ResolvedVersionState.READ_INVALID) {
+							versions.verifyWritable(transaction);
+						}
+						return versions.resolve(writeableVersion);
 					}
 				}
 			}
@@ -105,6 +150,8 @@ public class Transactions {
 	public static void revertToDefaultFieldValues(Entity entity) {
 		Entity defaults = (Entity) Reflections
 				.newInstance(entity.entityClass());
+		// because copying fields without resolution, entity will be the
+		// domainVersion
 		copyObjectFields(defaults, entity);
 	}
 
@@ -121,7 +168,8 @@ public class Transactions {
 		get().waitForAllToCompleteExSelf0();
 	}
 
-	static <T extends MvccObject> T copyObject(T from) {
+	static <T extends MvccObject> T copyObject(T from,
+			boolean withFieldValues) {
 		T clone = null;
 		try {
 			if (from instanceof TransactionalSet) {
@@ -129,15 +177,26 @@ public class Transactions {
 			} else if (from instanceof TransactionalTrieEntry) {
 				clone = (T) new TransactionalTrieEntry();
 			} else {
-				Constructor<T> constructor = (Constructor<T>) from.getClass()
-						.getConstructor(new Class[0]);
-				constructor.setAccessible(true);
+				Constructor<T> constructor = copyConstructors
+						.computeIfAbsent(from.getClass(), clazz -> {
+							try {
+								Constructor<T> constructor0 = (Constructor<T>) from
+										.getClass()
+										.getConstructor(new Class[0]);
+								constructor0.setAccessible(true);
+								return constructor0;
+							} catch (Exception e) {
+								throw new WrappedRuntimeException(e);
+							}
+						});
 				clone = constructor.newInstance();
 			}
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-		ResourceUtilities.fieldwiseCopy(from, clone, false, true);
+		if (withFieldValues) {
+			ResourceUtilities.fieldwiseCopy(from, clone, false, true);
+		}
 		MvccObjectVersions __getMvccVersions__ = from.__getMvccVersions__();
 		clone.__setMvccVersions__(__getMvccVersions__);
 		return clone;
@@ -149,6 +208,14 @@ public class Transactions {
 
 	static Transactions get() {
 		return instance;
+	}
+
+	// FIXME - mvcc.5 - only implement if performance warrants (as opposed to
+	// current 'synchronize on the object' logic)
+	static Object identityMutex(Object o) {
+		// to avoid synchronizing on o - slower, but means that object can
+		// maintain an identity hashcode
+		throw new UnsupportedOperationException();
 	}
 
 	static <K, V> TransactionalTrieEntry<K, V>
@@ -209,6 +276,10 @@ public class Transactions {
 	public void onDomainTransactionCommited(Transaction transaction) {
 		synchronized (transactionMetadataLock) {
 			committedTransactions.add(transaction);
+			/*
+			 * these occur sequentially, so transaction will always have the
+			 * highest visible id (for a tx of this type)
+			 */
 			highestVisibleCommittedTransactionId = transaction.getId();
 			committedTransactionIds.add(transaction.getId());
 		}
@@ -313,21 +384,23 @@ public class Transactions {
 					} else {
 						timeout = transaction.getTimeout();
 					}
-					if (age > ResourceUtilities.getInteger(Transaction.class,
-							"maxAgeSecs") * TimeConstants.ONE_SECOND_MS) {
+					if (age > timeout) {
 						try {
 							Transaction.logger.error(
-									"Cancelling timed out transaction :: {}",
-									transaction);
+									"Cancelling timed out transaction :: {} :: timeout {}",
+									transaction, timeout);
 							transaction.toTimedOut();
 							// only the tx thread should end the transaction
-							// (calls
+							// (otherwise calls
 							// to Transaction.current() will throw)
+							// so - we let the Tx stay in the threadlocalmap,
+							// but remove from the app lookups in the finally
+							// clause
 							// oldest.endTransaction();
 						} catch (Exception e) {
 							Transaction.logger.error("Cancel exception",
 									new MvccException(e));
-							// ignore phase checks
+						} finally {
 							onTransactionEnded(transaction);
 						}
 					}

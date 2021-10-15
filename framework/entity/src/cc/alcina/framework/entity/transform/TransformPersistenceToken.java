@@ -15,6 +15,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -22,7 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicy;
 import cc.alcina.framework.entity.transform.policy.PersistenceLayerTransformExceptionPolicyFactory;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
@@ -68,6 +69,8 @@ public class TransformPersistenceToken implements Serializable {
 
 	private TransformPropagationPolicy transformPropagationPolicy;
 
+	Set<DomainTransformEvent> prepend = new LinkedHashSet<>();
+
 	public TransformPersistenceToken(DomainTransformRequest request,
 			EntityLocatorMap locatorMap, boolean requestorExternalToThisJvm,
 			boolean ignoreClientAuthMismatch, boolean forOfflineTransforms,
@@ -90,11 +93,18 @@ public class TransformPersistenceToken implements Serializable {
 		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
 		boolean cascaded = false;
+		int idx = 0;
 		for (DomainTransformEvent pending : pendingTransforms) {
 			pending.setCommitType(CommitType.TO_STORAGE);
-			request.getEvents().add(pending);
+			boolean toStart = prepend.contains(pending);
+			if (toStart) {
+				request.getEvents().add(idx++, pending);
+			} else {
+				request.getEvents().add(pending);
+			}
 			cascaded = true;
 		}
+		prepend.clear();
 		TransformManager.get().clearTransforms();
 		return cascaded;
 	}
@@ -182,6 +192,16 @@ public class TransformPersistenceToken implements Serializable {
 
 	public boolean isRequestorExternalToThisJvm() {
 		return this.requestorExternalToThisJvm;
+	}
+
+	public void markForPrepend(Runnable runnable) {
+		DomainTransformListener listener = prepend::add;
+		try {
+			TransformManager.get().addDomainTransformListener(listener);
+			runnable.run();
+		} finally {
+			TransformManager.get().removeDomainTransformListener(listener);
+		}
 	}
 
 	public boolean provideTargetsWritableStore() {

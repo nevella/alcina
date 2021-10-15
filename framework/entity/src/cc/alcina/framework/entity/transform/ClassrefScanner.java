@@ -24,18 +24,17 @@ import java.util.Arrays;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.TreeSet;
 
 import javax.persistence.EntityManager;
+import javax.persistence.Query;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
@@ -44,14 +43,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
-import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
-import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreDbColumn;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreDbColumn;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.CachingScanner;
 import cc.alcina.framework.entity.registry.ClassMetadata;
@@ -74,29 +70,6 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	// persistableClasses.addAll(Arrays.asList(new Class[] { long.class,
-	// double.class, float.class, int.class, short.class,
-	// boolean.class }));
-	public void fixEntities(Class entityClass, String strPropName,
-			String crPropName, EntityManager em,
-			CommonPersistenceLocal persister) {
-		Set all = persister.getAll(entityClass);
-		for (Object o : all) {
-			String cName = (String) SEUtilities.getPropertyValue(o,
-					strPropName);
-			if (cName == null) {
-				continue;
-			}
-			ClassRef ref = ClassRef.forName(cName);
-			if (ref == null) {
-				throw new WrappedRuntimeException("Classref not found:" + cName,
-						SuggestedAction.NOTIFY_WARNING);
-			}
-			SEUtilities.setPropertyValue(o, crPropName, ref);
-		}
-		em.flush();
-	}
-
 	public ClassrefScanner noPersistence() {
 		persistent = false;
 		return this;
@@ -107,7 +80,8 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 		return this;
 	}
 
-	public void scan(ClassMetadataCache cache) throws Exception {
+	public void scan(ClassMetadataCache cache, EntityManager entityManager)
+			throws Exception {
 		String cachePath = getHomeDir().getPath() + File.separator
 				+ getClass().getSimpleName() + "-cache.ser";
 		persistableClasses = new LinkedHashSet<Class>();
@@ -115,7 +89,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 				Double.class, Float.class, Integer.class, Short.class,
 				String.class, Date.class, Boolean.class }));
 		scan(cache, cachePath);
-		commit();
+		commit(entityManager);
 		if (reachabilityCheck) {
 			checkReachability();
 		}
@@ -133,9 +107,6 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			if (!Entity.class.isAssignableFrom(ref)) {
 				continue;
 			}
-			if (WrapperPersistable.class.isAssignableFrom(ref)) {
-				continue;
-			}
 			Class c = ref;
 			while (c != Object.class) {
 				Field[] fields = c.getDeclaredFields();
@@ -148,8 +119,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 					Class type = field.getType();
 					Class checkType = null;
 					if (GraphProjection.isPrimitiveOrDataClass(type)) {
-						if (GraphProjection.isEnumSubclass(type)
-								|| type.isEnum()) {
+						if (CommonUtils.isEnumOrEnumSubclass(type)) {
 							checkType = type;
 						}
 					} else if (Entity.class.isAssignableFrom(type)) {
@@ -174,13 +144,9 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 						}
 					}
 					if (checkType != null && !reffed.contains(checkType)) {
-						if (WrapperPersistable.class
-								.isAssignableFrom(checkType)) {
-						} else {
-							errClassRef.add(String.format("%-30s: %s.%s",
-									checkType.getSimpleName(),
-									ref.getSimpleName(), field.getName()));
-						}
+						errClassRef.add(String.format("%-30s: %s.%s",
+								checkType.getSimpleName(), ref.getSimpleName(),
+								field.getName()));
 					}
 					PropertyDescriptor leftPd = SEUtilities
 							.getPropertyDescriptorByName(ref, field.getName());
@@ -239,7 +205,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 		}
 	}
 
-	private void commit() throws Exception {
+	private void commit(EntityManager entityManager) throws Exception {
 		if (ResourceUtilities.is("commitDisabled")) {
 			return;
 		}
@@ -251,9 +217,6 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			}
 		}
 		if (!persistent) {
-			CommonPersistenceLocal cp = Registry
-					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistenceExTransaction();
 			Class<? extends ClassRef> crimpl = PersistentImpl
 					.getImplementation(ClassRef.class);
 			long idCtr = 0;
@@ -265,12 +228,11 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 				ClassRef.add(CommonUtils.wrapInCollection(ref));
 			}
 		} else {
-			CommonPersistenceLocal cp = Registry
-					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence();
-			Class<? extends ClassRef> crimpl = PersistentImpl
+			Class<? extends ClassRef> classRefImplClass = PersistentImpl
 					.getImplementation(ClassRef.class);
-			Set<? extends ClassRef> classrefs = cp.getAll(crimpl);
+			Query query = entityManager.createQuery(String.format("from %s ",
+					classRefImplClass.getSimpleName()));
+			List<? extends ClassRef> classrefs = query.getResultList();
 			Set<? extends ClassRef> deleteClassrefs = new HashSet<ClassRef>();
 			ClassRef.add(classrefs);
 			((Set) deleteClassrefs).addAll(classrefs);
@@ -280,13 +242,13 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 				ClassRef ref = ClassRef.forClass(clazz);
 				if (ref == null) {
 					delta = true;
-					ref = crimpl.newInstance();
+					ref = classRefImplClass.newInstance();
 					ref.setRefClass(clazz);
 					long id = 0;
 					if (AppPersistenceBase.isInstanceReadOnly()) {
 						id = --roIdCounter;
 					} else {
-						id = cp.merge(ref);
+						id = entityManager.merge(ref).getId();
 					}
 					ref.setId(id);
 					ClassRef.add(CommonUtils.wrapInCollection(ref));
@@ -304,7 +266,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 							ref.getRefClassName());
 					if (ResourceUtilities.is(ClassrefScanner.class,
 							"removePersistentClassrefs")) {
-						cp.remove(ref);
+						entityManager.remove(ref);
 					}
 					ClassRef.remove(ref);
 				}

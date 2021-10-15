@@ -3,6 +3,7 @@ package cc.alcina.framework.entity.transform.event;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
@@ -13,12 +14,11 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
@@ -26,16 +26,15 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPositionProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
@@ -44,6 +43,8 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue.Event.Type;
 import cc.alcina.framework.entity.util.OffThreadLogger;
+import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 /**
  * Improvement: rather than a strict dtrp-id queue, use 'happens after' field of
@@ -69,7 +70,7 @@ public class DomainTransformPersistenceQueue {
 
 	BlockingDeque<Event> events = new LinkedBlockingDeque<>();
 
-	private FireEventsThread eventQueue;
+	private PersistenceEvents eventQueue;
 
 	private DomainTransformPersistenceEvents persistenceEvents;
 
@@ -119,6 +120,10 @@ public class DomainTransformPersistenceQueue {
 
 	public DomainTransformCommitPosition getTransformCommitPosition() {
 		return state.transformCommitPosition;
+	}
+
+	public void onLocalVmTxTimeout() {
+		eventQueue.debugState();
 	}
 
 	public void onPersistedRequestPreCommitted(
@@ -191,7 +196,7 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public void startEventQueue() {
-		eventQueue = new FireEventsThread();
+		eventQueue = new PersistenceEvents();
 		eventQueue.start();
 	}
 
@@ -294,8 +299,15 @@ public class DomainTransformPersistenceQueue {
 				event.getTransformPersistenceToken().getRequest().shortId(),
 				event.getTransformPersistenceToken().getRequest().getEvents()
 						.size(),
-				new LongPair(CollectionFilters.min(persistedRequestIds),
-						CollectionFilters.max(persistedRequestIds)));
+				new LongPair(
+						persistedRequestIds.stream()
+								.collect(Collectors
+										.minBy(Comparator.naturalOrder()))
+								.get(),
+						persistedRequestIds.stream()
+								.collect(Collectors
+										.maxBy(Comparator.naturalOrder()))
+								.get()));
 	}
 
 	void onEventListenerFiringCompleted(DomainTransformPersistenceEvent event) {
@@ -324,6 +336,11 @@ public class DomainTransformPersistenceQueue {
 		private DomainTransformPersistenceQueue queue;
 
 		@Override
+		public long getCurrentTransactionId() {
+			return Transaction.current().getId().id;
+		}
+
+		@Override
 		public DomainTransformCommitPosition getPosition() {
 			if (queue == null) {
 				queue = DomainStore.writableStore().getPersistenceEvents()
@@ -333,12 +350,19 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
-	public class FireEventsThread extends Thread {
-		Logger fireEventThreadLogger = OffThreadLogger.getLogger(getClass());
+	public class PersistenceEvents extends Thread {
+		Logger fireEventThreadLogger = OffThreadLogger.getLogger(getClass()
+				.getName().replace("DomainTransformPersistenceQueue$", ""));
+
+		public void debugState() {
+			String stacktraceSlice = SEUtilities.getStacktraceSlice(this);
+			logger.warn("Queue debug: firing event: {}\n============\n{}",
+					firingEvent, stacktraceSlice);
+		}
 
 		@Override
 		public void run() {
-			setName(Ax.format("DomainTransformPersistenceQueue-fire::%s",
+			setName(Ax.format("persistence-queue:%s",
 					persistenceEvents.domainStore.name));
 			while (true) {
 				Exception logged = null;
@@ -355,18 +379,18 @@ public class DomainTransformPersistenceQueue {
 					}
 					logger.debug("Polled event from queue: {}", firingEvent);
 					try {
-						LooseContext.pushWithKey(
-								DetachedEntityCache.CONTEXT_CREATED_LOCAL_DEBUG,
-								new DetachedEntityCache.CreatedLocalDebug() {
-									@Override
-									public void debugCreation(long localId,
-											Entity entity) {
-										logger.warn(
-												"Adding created local - localId {} entity {} dtr {}",
-												localId, entity,
-												firingEvent.requestId);
-									}
-								});
+						// LooseContext.pushWithKey(
+						// DetachedEntityCache.CONTEXT_CREATED_LOCAL_DEBUG,
+						// new DetachedEntityCache.CreatedLocalDebug() {
+						// @Override
+						// public void debugCreation(long localId,
+						// Entity entity) {
+						// logger.warn(
+						// "Adding created local - localId {} entity {} dtr {}",
+						// localId, entity,
+						// firingEvent.requestId);
+						// }
+						// });
 						Transaction.ensureBegun();
 						ThreadedPermissionsManager.cast().pushSystemUser();
 						publishTransformEvent(firingEvent);
@@ -378,7 +402,7 @@ public class DomainTransformPersistenceQueue {
 						Transaction.ensureBegun();
 						ThreadedPermissionsManager.cast().popSystemUser();
 						Transaction.ensureEnded();
-						LooseContext.pop();
+						// LooseContext.pop();
 					}
 				} catch (Exception e) {
 					if (e != logged) {
@@ -476,9 +500,6 @@ public class DomainTransformPersistenceQueue {
 
 		private void publishTransformEvent(Event event) {
 			boolean local = false;
-			/*
-			 * REVISIT - null if of type ERROR?
-			 */
 			Long requestId = event.requestId;
 			fireEventThreadLogger.debug("publishTransformEvent - dtr {}",
 					requestId);
@@ -492,13 +513,14 @@ public class DomainTransformPersistenceQueue {
 						requestId);
 			}
 			if (event.commitPosition != null) {
-				Timestamp transactionCommitTime = event.commitPosition.commitTimestamp;
+				Timestamp transactionCommitTime = event.commitPosition
+						.getCommitTimestamp();
 				if (transactionCommitTime.before(muteEventsOnOrBefore)
 						|| transactionCommitTime.equals(muteEventsOnOrBefore)) {
 					request.setEvents(new ArrayList<>());
 				}
 			}
-			Transaction.current().toNoActiveTransaction();
+			Transaction.current().toReadonly();
 			DomainTransformPersistenceEvent persistenceEvent = createPersistenceEventFromPersistedRequest(
 					request, event.type, event.commitPosition);
 			persistenceEvent.ensureTransformsValidForVm();
@@ -528,7 +550,7 @@ public class DomainTransformPersistenceQueue {
 
 		static Event committed(DomainTransformCommitPosition commitPosition) {
 			Event event = new Event().withType(Type.COMMIT);
-			event.requestId = commitPosition.commitRequestId;
+			event.requestId = commitPosition.getCommitRequestId();
 			event.commitPosition = commitPosition;
 			return event;
 		}
@@ -672,15 +694,15 @@ public class DomainTransformPersistenceQueue {
 	class State {
 		// most recent event
 		// REVISIT - remove?
-		private Set<Long> lastFired = new LinkedHashSet<>();
+		private Set<Long> lastFired = new LongLinkedOpenHashSet();
 
-		private Set<String> appLifetimeEventUuidsThisVm = new LinkedHashSet<>();
+		private Set<String> appLifetimeEventUuidsThisVm = new ObjectLinkedOpenHashSet<>();
 
-		private Set<Long> appLifetimeEventIdsThisVm = new LinkedHashSet<>();
+		private Set<Long> appLifetimeEventIdsThisVm = new LongLinkedOpenHashSet();
 
-		private Set<Long> appLifetimeEventsFired = new LinkedHashSet<>();
+		private Set<Long> appLifetimeEventsFired = new LongLinkedOpenHashSet();
 
-		private Set<Long> appLifetimeCommitEventsRegistered = new LinkedHashSet<>();
+		private Set<Long> appLifetimeCommitEventsRegistered = new LongLinkedOpenHashSet();
 
 		private DomainTransformCommitPosition transformCommitPosition;
 
@@ -688,7 +710,7 @@ public class DomainTransformPersistenceQueue {
 			if (transformCommitPosition == null) {
 				return false;
 			}
-			int dir = transformCommitPosition.commitTimestamp
+			int dir = transformCommitPosition.getCommitTimestamp()
 					.compareTo(timestamp);
 			if (dir < 0) {
 				return false;
@@ -713,7 +735,7 @@ public class DomainTransformPersistenceQueue {
 			if (transformCommitPosition == null) {
 				return false;
 			}
-			int dir = transformCommitPosition.commitTimestamp
+			int dir = transformCommitPosition.getCommitTimestamp()
 					.compareTo(timestamp);
 			return dir <= 0;
 		}

@@ -2,11 +2,14 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+
 /*
  * Either delta will be null, or all the other fields
  *  - delta non-null if we know the client will use it 
  *  immediately, saves an unnecessary double eval()
  */
+@Bean
 public class DomainModelDeltaTransport implements Serializable, Cloneable {
 	private String signature;
 
@@ -27,6 +30,7 @@ public class DomainModelDeltaTransport implements Serializable, Cloneable {
 		this.delta = delta;
 	}
 
+	@Override
 	public DomainModelDeltaTransport clone() {
 		DomainModelDeltaTransport o = new DomainModelDeltaTransport();
 		o.signature = signature;

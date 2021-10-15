@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 
 /**
  * 
@@ -45,7 +46,10 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 	}
 
 	private long getUsersSize() {
-		return Domain.stream(getUserClass()).count();
+		long count1 = Domain.stream(getUserClass()).count();
+		long count2 = Domain.size(getUserClass());
+		Preconditions.checkState(count1 == count2);
+		return count1;
 	}
 
 	private void startTx1() {
@@ -147,5 +151,13 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 			txLatch.await();
 			Transaction.endAndBeginNew();
 		}
+		// horribly slow
+		AlcinaChildRunnable.runInTransactionNewThread("Delete-created", () -> {
+			Ax.out("Deleting...");
+			Domain.stream(getUserClass()).filter(u -> u.getId() > minDeletionId)
+					.forEach(Entity::delete);
+			Transaction.commit();
+			Ax.out("Deleted");
+		});
 	}
 }

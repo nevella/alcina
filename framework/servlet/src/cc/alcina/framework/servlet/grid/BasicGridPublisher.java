@@ -14,6 +14,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import org.w3c.dom.Document;
 
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
+import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
+import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -33,8 +35,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.util.CsvCols;
 import cc.alcina.framework.entity.util.JacksonUtils;
-import cc.alcina.framework.gwt.client.entity.search.BindableSearchDefinition;
-import cc.alcina.framework.gwt.client.entity.search.ModelSearchResults;
 import cc.alcina.framework.servlet.CommonRemoteServletProvider;
 import cc.alcina.framework.servlet.publication.ContentModelHandler;
 import cc.alcina.framework.servlet.publication.ContentRenderer;
@@ -63,19 +63,20 @@ public class BasicGridPublisher {
 						.sanitiseFileName(defName.replace(" ", "_")));
 				SearchResultsBase results = Registry
 						.impl(CommonRemoteServletProvider.class)
-						.getCommonRemoteServiceServlet().search(def, 0);
+						.getCommonRemoteServiceServlet().search(def);
 				publicationContent.resultRows = results.getResults();
 			} else if (def instanceof BindableSearchDefinition) {
 				BindableSearchDefinition bdef = (BindableSearchDefinition) def;
 				deliveryModel.setSuggestedFileName(SEUtilities
 						.sanitiseFileName(defName.replace(" ", "_")));
 				defName = Ax.blankTo(defName, () -> Ax.format("%s-%s",
-						bdef.entityClass().getSimpleName(), CommonUtils
+						bdef.getClass().getSimpleName(), CommonUtils
 								.formatDate(new Date(), DateStyle.TIMESTAMP)));
 				ModelSearchResults modelSearchResults = Registry
 						.impl(CommonRemoteServletProvider.class)
 						.getCommonRemoteServiceServlet().searchModel(bdef);
-				publicationContent.resultRows = modelSearchResults.queriedResultObjects;
+				publicationContent.resultRows = modelSearchResults
+						.getQueriedResultObjects();
 			} else {
 				throw new UnsupportedOperationException();
 			}

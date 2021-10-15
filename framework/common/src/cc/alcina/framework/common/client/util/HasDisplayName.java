@@ -6,8 +6,16 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 public interface HasDisplayName {
 	public static String displayName(Object o) {
-		return displayName(o,"(Undefined)");
-		
+		return displayName(o, "(Undefined)");
+	}
+
+	public static String displayName(Object o, String placeholderText) {
+		if (o == null) {
+			return placeholderText;
+		}
+		return (o instanceof HasDisplayName)
+				? ((HasDisplayName) o).displayName()
+				: (o instanceof Enum) ? Ax.friendly(o) : o.toString();
 	}
 
 	public String displayName();
@@ -34,12 +42,9 @@ public interface HasDisplayName {
 		}
 	}
 
-	public static String displayName(Object o, String placeholderText) {
-		if(o==null) {
-			return placeholderText;
+	public static interface Settable extends HasDisplayName {
+		default void putDisplayName(String name) {
+			throw new UnsupportedOperationException();
 		}
-		return (o instanceof HasDisplayName)
-				? ((HasDisplayName) o).displayName()
-				: (o instanceof Enum) ? Ax.friendly(o) : o.toString();
 	}
 }

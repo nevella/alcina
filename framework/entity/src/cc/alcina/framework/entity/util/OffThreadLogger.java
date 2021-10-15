@@ -15,21 +15,25 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 
 /*
  * For infrastructure components where blocking due to log emission > writer speed can cause feedback
  */
 @RegistryLocation(registryPoint = OffThreadLogger.class, implementationType = ImplementationType.SINGLETON)
-public class OffThreadLogger implements RegistrableService, InvocationHandler {
+public class OffThreadLogger implements InvocationHandler {
 	public static OffThreadLogger get() {
 		return Registry.impl(OffThreadLogger.class);
 	}
 
 	public static Logger getLogger(Class clazz) {
-		Logger delegate = LoggerFactory.getLogger(clazz);
+		return getLogger(clazz.getName());
+	}
+
+	public static Logger getLogger(String name) {
+		Logger delegate = LoggerFactory.getLogger(name);
 		Logger proxy = (Logger) Proxy.newProxyInstance(
 				Thread.currentThread().getContextClassLoader(),
 				new Class[] { Logger.class }, OffThreadLogger.get());
@@ -49,7 +53,6 @@ public class OffThreadLogger implements RegistrableService, InvocationHandler {
 		thread.start();
 	}
 
-	@Override
 	public void appShutdown() {
 		eventQueue.add(new Event());
 	}
@@ -90,8 +93,18 @@ public class OffThreadLogger implements RegistrableService, InvocationHandler {
 						return;
 					}
 					Thread.currentThread().setName(event.threadName);
-					event.method.invoke(event.delegate, event.args);
-				} catch (Exception e) {
+					ThrowingRunnable runnable = () -> event.method
+							.invoke(event.delegate, event.args);
+					runnable.run();
+					// FIXME - mvcc.5 - throw if any args are mvcc objects -
+					// require the strinng be evaluated on the originatinng
+					// thread
+					// } catch (MvccException e) {
+					// // FIXME - mvcc.5 - inject handler from mvcc
+					// MethodContext.instance().withWrappingTransaction()
+					// .run(runnable);
+					// }
+				} catch (Throwable e) {
 					Ax.out("DEVEX::0 - OffThreadLogger.LoggerThread exception");
 					e.printStackTrace();
 				} finally {

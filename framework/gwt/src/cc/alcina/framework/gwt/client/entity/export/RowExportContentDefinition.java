@@ -2,8 +2,8 @@ package cc.alcina.framework.gwt.client.entity.export;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -13,14 +13,15 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
-import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 @XmlRootElement
 @Bean
 @ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
-public class RowExportContentDefinition extends WrapperPersistable
-		implements ContentDefinition, GwtMultiplePersistable {
+@TypeSerialization(flatSerializable = false)
+public class RowExportContentDefinition extends Bindable
+		implements ContentDefinition {
 	private EntitySearchDefinition searchDefinition;
 
 	private RowExportFormat format = RowExportFormat.CSV;
@@ -55,6 +56,7 @@ public class RowExportContentDefinition extends WrapperPersistable
 
 	public enum RowExportFormat {
 		CSV, HTML;
+
 		public FormatConversionTarget toConversionTarget() {
 			switch (this) {
 			case CSV:

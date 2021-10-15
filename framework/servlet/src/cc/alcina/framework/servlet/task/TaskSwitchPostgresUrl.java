@@ -1,7 +1,7 @@
 package cc.alcina.framework.servlet.task;
 
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 public class TaskSwitchPostgresUrl extends AbstractTaskPerformer {

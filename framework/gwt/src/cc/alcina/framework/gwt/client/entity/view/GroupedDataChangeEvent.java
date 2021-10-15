@@ -20,8 +20,8 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.event.shared.HasHandlers;
 
+import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
-import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 
 /**
  * Event thrown when data provider's data

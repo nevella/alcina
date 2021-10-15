@@ -5,15 +5,13 @@ import java.util.Collection;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import javax.xml.bind.annotation.XmlRootElement;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.CollectionFilters.InverseFilter;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Ax;
 
 @RegistryLocation(registryPoint = JaxbContextRegistration.class)
 @XmlRootElement
@@ -29,24 +27,13 @@ public class DevConsoleStrings {
 	}
 
 	public DevConsoleString get(final String name) {
-		CollectionFilter<DevConsoleString> hasNameFilter = new CollectionFilter<DevConsoleStrings.DevConsoleString>() {
-			@Override
-			public boolean allow(DevConsoleString o) {
-				return o.name.equals(name);
-			}
-		};
-		return CommonUtils
-				.last(CollectionFilters.filter(strings, hasNameFilter));
+		return strings.stream().filter(o -> o.name.equals(name))
+				.reduce(Ax.last()).orElse(null);
 	}
 
 	public List<DevConsoleString> list(final List<String> tags) {
-		CollectionFilter<DevConsoleString> hasTagsFilter = new CollectionFilter<DevConsoleStrings.DevConsoleString>() {
-			@Override
-			public boolean allow(DevConsoleString o) {
-				return o.hasTags(tags);
-			}
-		};
-		return CollectionFilters.filter(strings, hasTagsFilter);
+		return strings.stream().filter(o -> o.hasTags(tags))
+				.collect(Collectors.toList());
 	}
 
 	public Collection<String> listTags() {
@@ -54,14 +41,7 @@ public class DevConsoleStrings {
 	}
 
 	public void remove(final String name) {
-		CollectionFilter<DevConsoleString> hasNameFilter = new CollectionFilter<DevConsoleStrings.DevConsoleString>() {
-			@Override
-			public boolean allow(DevConsoleString o) {
-				return o.name.toLowerCase().startsWith(name);
-			}
-		};
-		CollectionFilters.filterInPlace(strings,
-				new InverseFilter(hasNameFilter));
+		strings.removeIf(o -> o.name.toLowerCase().startsWith(name));
 		remap();
 	}
 

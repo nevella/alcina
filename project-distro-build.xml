@@ -4,6 +4,8 @@
 	<property name="distributable.name" value="${ant.project.name}" />
 	<property name="update.jars" value="false" />
 	<property name="compress.jars" value="true" />
+	<property name="ant.build.javac.source" value="11" />
+	<property name="ant.build.javac.target" value="11" />
 	<target name="make-war" description="Create the project WAR" depends="compile">
 		<mkdir dir="${project.dist.dir}" />
 		<delete file="${project.dist.dir}/${distributable.name}.war" unless:true="${update.jars}" />
@@ -189,8 +191,8 @@
 		<copy file="${project.web-inf.dir}/MANIFEST.MF" todir="${j2ee-server.unwar.target}/META-INF" preservelastmodified="true">
 
 		</copy>
-		<echo file="${j2ee-server.unwar.target}/WEB-INF/classes/alcina.repo_hashes" append="false" message="${alcina.repo_hashes}"/>
-		
+		<echo file="${j2ee-server.unwar.target}/WEB-INF/classes/alcina.repo_hashes" append="false" message="${alcina.repo_hashes}" />
+
 	</target>
 	<target name="hot-deploy-static" description="deploy static client files" depends="prepare-war">
 		<mkdir dir="${j2ee-server.unwar.target}" />
@@ -216,8 +218,8 @@
 	<target name="compile-client" depends="compile">
 		<property name="project.compile-client.dirs" value="${project.client.src.dir}" />
 
-		<mkdir dir="${project.client.bin.dir}" />
-		<javac includeantruntime="false" debug="on" srcdir="${project.compile-client.dirs}" destdir="${project.client.bin.dir}">
+		<mkdir dir="${project.client.build.dir}" />
+		<javac includeantruntime="false" debug="on" srcdir="${project.compile-client.dirs}" destdir="${project.client.build.dir}">
 			<classpath>
 				<path refid="project.classpath" />
 
@@ -234,13 +236,21 @@
 		<property name="project.gwt.compile.jvmarg1" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg2" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg3" value="-Dblank" />
+		<if>
+			<available file="${project.gwt-unitcache.script.dir}" type="dir" />
+			<then>
+				<delete includeEmptyDirs="true">
+					<fileset dir="${project.gwt-unitcache.script.dir}" includes="**/*" defaultexcludes="no" />
+				</delete>
+			</then>
+		</if>
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
-				<pathelement path="${project.gwt.classpath.bin}" />
+				<pathelement path="${project.gwt.classpath.build}" />
 				<pathelement path="${framework.gwt.classpath.src}" />
 				<pathelement path="${project.gwt.classpath.lib}" />
-				<pathelement path="${framework.gwt.classpath.bin}" />
+				<pathelement path="${framework.gwt.classpath.build}" />
 				<pathelement path="${framework.gwt.classpath.lib}" />
 				<pathelement location="${gwt.sdk.dir}/gwt-dev-patch.jar" />
 				<pathelement location="${gwt.sdk.dir}/gwt-dev.jar" />
@@ -255,8 +265,6 @@
 			<arg line="-style ${gwt.codestyle}" />
 			<arg value="-sourceLevel" />
 			<arg value="1.8" />
-
-
 			<arg line="${project.gwt.compile.flags}" />
 			<arg value="${project.gwt.module.name}" />
 		</java>

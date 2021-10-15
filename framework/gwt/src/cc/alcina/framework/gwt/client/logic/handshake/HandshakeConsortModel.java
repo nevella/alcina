@@ -5,11 +5,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IteratorWithCurrent;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
@@ -153,8 +153,8 @@ public class HandshakeConsortModel {
 	public void prepareInitialPlaySequence() {
 		persistableApplicationRecords = new ArrayList<DeltaApplicationRecord>();
 		// nuclear - if we're here, these should have been cleared
-		CommitToStorageTransformListener.get().clearPriorRequestsWithoutResponse()
-				;
+		CommitToStorageTransformListener.get()
+				.clearPriorRequestsWithoutResponse();
 		if (deltasToApply != null) {
 			// do nothing, iterator set up when local delta applications
 			// retrieved
@@ -166,13 +166,13 @@ public class HandshakeConsortModel {
 				deltasToApply = new IteratorWithCurrent<DomainModelDelta>(
 						Collections.singletonList(firstDelta).iterator());
 			} else {
-				List<DeltaApplicationRecord> persistable = CollectionFilters
-						.convert(
-								loadObjectsResponse.getLoadSequenceTransports(),
-								new TransportToDeltaConverter());
-				List<DomainModelDelta> deltas = CollectionFilters.convert(
-						persistable,
-						new DeltaApplicationRecordToDomainModelDeltaConverter());
+				List<DeltaApplicationRecord> persistable = loadObjectsResponse
+						.getLoadSequenceTransports().stream()
+						.map(new TransportToDeltaConverter())
+						.collect(Collectors.toList());
+				List<DomainModelDelta> deltas = persistable.stream().map(
+						new DeltaApplicationRecordToDomainModelDeltaConverter())
+						.collect(Collectors.toList());
 				deltasToApply = new IteratorWithCurrent<DomainModelDelta>(
 						deltas.iterator());
 				persistableApplicationRecords = persistable;

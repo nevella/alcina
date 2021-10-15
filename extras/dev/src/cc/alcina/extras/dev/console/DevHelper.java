@@ -21,6 +21,7 @@ import java.util.Date;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.CountDownLatch;
 import java.util.prefs.Preferences;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -41,6 +42,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -59,6 +61,7 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
+import cc.alcina.framework.entity.gwt.headless.GWTBridgeHeadless;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -71,8 +74,8 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.transform.TestPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
-import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.entity.util.WriterAccessWriterAppender;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -85,6 +88,16 @@ public abstract class DevHelper {
 	private static final String JBOSS_CONFIG_PATH = "jboss-config-path";
 
 	private static IUser defaultUser;
+
+	private static ClientInstance clientInstance;
+
+	public static ClientInstance getDefaultClientInstance() {
+		return clientInstance;
+	}
+
+	public static void setDefaultClientInstance(ClientInstance clientInstance) {
+		DevHelper.clientInstance = clientInstance;
+	}
 
 	public static IUser getDefaultUser() {
 		return DevHelper.defaultUser;
@@ -132,6 +145,48 @@ public abstract class DevHelper {
 		File cacheFile = SEUtilities.getChildFile(getDataFolder(),
 				"servlet-classpath.ser");
 		cacheFile.delete();
+	}
+
+	public void doParallelEarlyClassInit() {
+		CountDownLatch latch = new CountDownLatch(3);
+		new Thread("clinit-jackson") {
+			@Override
+			public void run() {
+				try {
+					JacksonUtils.serialize(new ArrayList());
+					latch.countDown();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			};
+		}.start();
+		new Thread("clinit-servlet") {
+			@Override
+			public void run() {
+				try {
+					loadDefaultLoggingProperties();
+					latch.countDown();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			};
+		}.start();
+		new Thread("clinit-logging") {
+			@Override
+			public void run() {
+				try {
+					MetricLogging.get();
+					latch.countDown();
+				} catch (Exception e) {
+					e.printStackTrace();
+				}
+			};
+		}.start();
+		try {
+			latch.await();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public Set<DomainTransformEvent> dumpTransforms() {
@@ -290,7 +345,6 @@ public abstract class DevHelper {
 		TransformManager.register(createTransformManager());
 		initCustomServicesFirstHalf();
 		setupJobsToSysout();
-		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		XmlUtils.noTransformerCaching = true;
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		AlcinaTopics.notifyDevWarningListenerDelta(devWarningListener, true);
@@ -301,7 +355,7 @@ public abstract class DevHelper {
 			Method m = GWT.class.getDeclaredMethod("setBridge",
 					GWTBridge.class);
 			m.setAccessible(true);
-			m.invoke(null, new GWTBridgeDummy());
+			m.invoke(null, new GWTBridgeHeadless());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -495,27 +549,6 @@ public abstract class DevHelper {
 		@Override
 		public String getValue(String prompt) {
 			return SEUtilities.consoleReadline(String.format("%s\n> ", prompt));
-		}
-	}
-
-	public class GWTBridgeDummy extends GWTBridge {
-		@Override
-		public <T> T create(Class<?> classLiteral) {
-			return null;
-		}
-
-		@Override
-		public String getVersion() {
-			return null;
-		}
-
-		@Override
-		public boolean isClient() {
-			return false;
-		}
-
-		@Override
-		public void log(String message, Throwable e) {
 		}
 	}
 

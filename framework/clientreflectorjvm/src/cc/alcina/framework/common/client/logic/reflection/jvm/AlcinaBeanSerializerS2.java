@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection.jvm;
 
 import java.beans.PropertyDescriptor;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -34,14 +35,18 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.gen.Base64;
+import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
+// FIXME - mvcc.4 - use gwt.elemental to make one single version (bar
+// classloader refs)
 // hack for some classloader issues causing AlcinaBeanSerializerS to be unusable
 public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 	private static boolean useContextClassloader;
@@ -54,13 +59,17 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		AlcinaBeanSerializerS2.useContextClassloader = useContextClassloader;
 	}
 
-	private ClassLoader cl;
+	private ClassLoader classLoader;
 
 	private boolean pretty;
 
 	IdentityHashMap seenOut = new IdentityHashMap();
 
 	Map seenIn = new LinkedHashMap();
+
+	private int depth = 0;
+
+	protected Map<String, Class> resolvedClassLookup = new LinkedHashMap<>();
 
 	public AlcinaBeanSerializerS2() {
 		propertyFieldName = PROPERTIES;
@@ -72,9 +81,9 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 			JSONObject obj = new JSONObject(jsonString);
 			if (GWT.isClient() && !useContextClassloader) {
 				// devmode
-				cl = getClass().getClassLoader().getParent();
+				classLoader = getClass().getClassLoader().getParent();
 			} else {
-				cl = Thread.currentThread().getContextClassLoader();
+				classLoader = Thread.currentThread().getContextClassLoader();
 			}
 			return (T) deserializeObject(obj);
 		} catch (Exception e) {
@@ -107,8 +116,20 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		if (type == String.class) {
 			return o.toString();
 		}
-		if (type == Date.class) {
-			return new Date(Long.parseLong(o.toString()));
+		if (type == Date.class || type == Timestamp.class) {
+			String s = o.toString();
+			if (s.contains(",")) {
+				String[] parts = s.split(",");
+				Timestamp timestamp = new Timestamp(Long.parseLong(parts[0]));
+				timestamp.setNanos(Integer.parseInt(parts[1]));
+				return timestamp;
+			} else {
+				if (type == Date.class) {
+					return new Date(Long.parseLong(s));
+				} else {
+					return new Timestamp(Long.parseLong(s));
+				}
+			}
 		}
 		if (type.isEnum()) {
 			return Enum.valueOf(type, o.toString());
@@ -123,7 +144,7 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 			return ((Boolean) o).booleanValue();
 		}
 		if (type == Class.class) {
-			return cl.loadClass(o.toString());
+			return getClassMaybeAbbreviated(o.toString());
 		}
 		if (type.isArray() && type.getComponentType() == byte.class) {
 			return Base64.decode(o.toString());
@@ -163,6 +184,9 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		if (m != null) {
 			return deserializeMap(o, m);
 		}
+		if (CommonUtils.isOrHasSuperClass(type, BasePlace.class)) {
+			return RegistryHistoryMapper.get().getPlace(o.toString());
+		}
 		return deserializeObject((JSONObject) o);
 	}
 
@@ -175,7 +199,7 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 		try {
 			clazz = getClassMaybeAbbreviated(cn);
 		} catch (Exception e1) {
-			if (isThrowOnUnrecognisedProperty()) {
+			if (isThrowOnUnrecognisedClass()) {
 				throw new Exception(Ax.format("class not found - %s", cn));
 			} else {
 				return null;
@@ -262,7 +286,12 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 			return ((Class) value).getName();
 		}
 		if (type == Date.class) {
-			return (String.valueOf(((Date) value).getTime()));
+			return String.valueOf(((Date) value).getTime());
+		}
+		if (type == Timestamp.class) {
+			return Ax.format("%s,%s",
+					String.valueOf(((Timestamp) value).getTime()),
+					String.valueOf(((Timestamp) value).getNanos()));
 		}
 		if (type.isArray() && type.getComponentType() == byte.class) {
 			return Base64.encodeBytes((byte[]) value);
@@ -279,10 +308,25 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 			Collection c = (Collection) value;
 			return serializeCollection(c);
 		}
+		if (value instanceof BasePlace) {
+			return ((BasePlace) value).toTokenString();
+		}
 		return serializeObject(value);
 	}
 
 	private JSONObject serializeObject(Object object) throws Exception {
+		try {
+			depth++;
+			if (depth > 10) {
+				int debug = 4;
+			}
+			return serializeObject0(object);
+		} finally {
+			depth--;
+		}
+	}
+
+	private JSONObject serializeObject0(Object object) throws Exception {
 		if (object == null) {
 			return null;
 		}
@@ -319,7 +363,7 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 			seenOut.put(object, index);
 		}
 		List<PropertyDescriptor> unsortedPropertyDescriptors = SEUtilities
-				.getSortedPropertyDescriptors(clazz);
+				.getPropertyDescriptorsSortedByName(clazz);
 		List<PropertyDescriptor> propertyDescriptors = unsortedPropertyDescriptors
 				.stream()
 				.sorted(Comparator.comparing(PropertyDescriptor::getName))
@@ -392,16 +436,34 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 	}
 
 	@Override
-	protected Class getClassMaybeAbbreviated(String cns) {
+	protected Class getClassMaybeAbbreviated(String className) {
 		try {
-			Class clazz;
-			if (abbrevLookup.containsKey(cns)) {
-				clazz = abbrevLookup.get(cns);
+			Class clazz = null;
+			if (abbrevLookup.containsKey(className)) {
+				return abbrevLookup.get(className);
 			} else {
-				clazz = cl.loadClass(cns);
+				Class resolved = resolvedClassLookup.get(className);
+				if (resolved == null) {
+					clazz = CommonUtils.stdAndPrimitivesMap.get(className);
+					if (clazz == null) {
+						if (GWT.isClient()) {
+							Reflections.forName(className);
+							// throw if not reflectively accessible
+						}
+						try {
+							clazz = classLoader.loadClass(className);
+						} catch (Exception e) {
+							clazz = Reflections.forName(className);
+						}
+					}
+					resolvedClassLookup.put(className, clazz);
+					return clazz;
+				} else {
+					return resolved;
+				}
 			}
-			return clazz;
 		} catch (Exception e) {
+			Ax.simpleExceptionOut(e);
 			throw new WrappedRuntimeException(e);
 		}
 	}

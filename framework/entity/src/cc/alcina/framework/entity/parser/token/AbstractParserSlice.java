@@ -34,6 +34,8 @@ public class AbstractParserSlice<T extends ParserToken> {
 	 */
 	public int startOffsetInRun;
 
+	private String cachedCleanedContents = null;
+
 	private String cachedContents = null;
 
 	private String overrideText;
@@ -58,21 +60,32 @@ public class AbstractParserSlice<T extends ParserToken> {
 		this.startOffsetInRun = startOffsetInRun;
 	}
 
+	// for projection
+	protected AbstractParserSlice() {
+	}
+
 	public String cleanedContents() {
-		if (cachedContents == null) {
-			cachedContents = SEUtilities.normalizeWhitespace(contents()).trim();
+		if (cachedCleanedContents == null) {
+			cachedCleanedContents = SEUtilities.normalizeWhitespace(contents())
+					.trim();
 		}
-		return cachedContents;
+		return cachedCleanedContents;
+	}
+
+	public int consumedCharCount() {
+		return startOffsetInRun + contents().length();
 	}
 
 	public String contents() {
 		if (overrideText != null) {
 			return overrideText;
 		}
-		Range r = createRange(this, this);
-		String s = r.toString();
-		r.detach();
-		return s;
+		if (cachedContents == null) {
+			Range r = createRange(this, this);
+			cachedContents = r.toString();
+			r.detach();
+		}
+		return cachedContents;
 	}
 
 	@Override

@@ -15,10 +15,39 @@ import javax.persistence.metamodel.Metamodel;
 
 import org.hibernate.Session;
 
+import cc.alcina.framework.common.client.search.OrderCriterion;
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.persistence.JPAImplementation;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreQuery;
 
 public class DomainStoreEntityManager implements EntityManager {
+	public static final String ORDER_HANDLER = "orderHandler:";
+
+	public static final String CRITERION_HANDLER = "criterionHandler:";
+
+	public static String criterionHandlerHint(SearchCriterion searchCriterion) {
+		return CRITERION_HANDLER
+				+ FlatTreeSerializer.serializeElided(searchCriterion);
+	}
+
+	public static boolean isUseDomainStore() {
+		return ResourceUtilities.is(DomainStoreEntityManager.class,
+				"useDomainStore")
+				|| LooseContext
+						.is(JPAImplementation.CONTEXT_USE_DOMAIN_QUERIES);
+	}
+
+	public static String orderHandlerHint(OrderCriterion orderCriterion) {
+		return ORDER_HANDLER
+				+ FlatTreeSerializer.serializeElided(orderCriterion);
+	}
+
 	private EntityManager delegate;
+
+	private DomainStoreQuery lastQuery;
 
 	public DomainStoreEntityManager(EntityManager delegate) {
 		this.delegate = delegate;
@@ -119,9 +148,8 @@ public class DomainStoreEntityManager implements EntityManager {
 	public Object getDelegate() {
 		Object subDelegate = this.delegate == null ? null
 				: this.delegate.getDelegate();
-		if (ResourceUtilities.is(DomainStoreEntityManager.class,
-				"useDomainStore")) {
-			return new DomainStoreSession((Session) subDelegate);
+		if (isUseDomainStore()) {
+			return new DomainStoreSession(this, (Session) subDelegate);
 		} else {
 			return subDelegate;
 		}
@@ -135,6 +163,10 @@ public class DomainStoreEntityManager implements EntityManager {
 	@Override
 	public FlushModeType getFlushMode() {
 		return this.delegate.getFlushMode();
+	}
+
+	public DomainStoreQuery getLastQuery() {
+		return lastQuery;
 	}
 
 	@Override
@@ -221,6 +253,10 @@ public class DomainStoreEntityManager implements EntityManager {
 	@Override
 	public void setFlushMode(FlushModeType arg0) {
 		this.delegate.setFlushMode(arg0);
+	}
+
+	public void setLastQuery(DomainStoreQuery lastQuery) {
+		this.lastQuery = lastQuery;
 	}
 
 	@Override

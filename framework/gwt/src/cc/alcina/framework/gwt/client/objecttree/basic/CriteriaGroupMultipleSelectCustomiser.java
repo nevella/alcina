@@ -6,8 +6,8 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.gwittir.widget.SetBasedListBox;
@@ -52,7 +52,7 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 
 	protected Class selectionObjectClass;
 
-	protected CollectionFilter filter;
+	protected Predicate filter;
 
 	private PropertyChangeListener cgListener = new PropertyChangeListener() {
 		@Override
@@ -65,7 +65,7 @@ public abstract class CriteriaGroupMultipleSelectCustomiser<C extends CriteriaGr
 	};
 
 	public CriteriaGroupMultipleSelectCustomiser(Class selectionObjectClass,
-			CollectionFilter filter) {
+			Predicate filter) {
 		super();
 		this.selectionObjectClass = selectionObjectClass;
 		this.filter = filter;

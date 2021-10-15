@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.URL;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashSet;
@@ -53,8 +54,10 @@ import com.google.gwt.user.rebind.SourceWriter;
 import com.totsp.gwittir.client.beans.TreeIntrospector;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
@@ -295,9 +298,6 @@ public class IntrospectorGenerator extends Generator {
 		}
 		sb.append(")");
 		String result = sb.toString();
-		if (result.contains("BoundWidget")) {
-			int j = 3;
-		}
 		return result;
 	}
 
@@ -307,6 +307,9 @@ public class IntrospectorGenerator extends Generator {
 		JClassType ct = type.isClassOrInterface();
 		if (ct != null) {
 			if (ct.getAnnotation(Introspectable.class) != null) {
+				return true;
+			}
+			if (ct.getAnnotation(Bean.class) != null) {
 				return true;
 			}
 			for (JClassType iface : ct.getImplementedInterfaces()) {
@@ -364,10 +367,27 @@ public class IntrospectorGenerator extends Generator {
 			writer.print("Method readMethod = ");
 			String returnType = p.getReadMethod().getBaseMethod()
 					.getReturnType().getQualifiedSourceName();
-			String extendsMarker = " extends ";
-			int idx = returnType.indexOf(extendsMarker);
-			if (idx != -1) {
-				returnType = returnType.substring(idx + extendsMarker.length());
+			{
+				String extendsMarker = " extends ";
+				int idx = returnType.indexOf(extendsMarker);
+				if (idx != -1) {
+					returnType = returnType
+							.substring(idx + extendsMarker.length());
+				}
+			}
+			{
+				String implementsMarker = " & ";
+				int idx = returnType.indexOf(implementsMarker);
+				if (idx != -1) {
+					returnType = returnType.substring(0, idx);
+				}
+			}
+			{
+				String genericMarker = "<";
+				int idx = returnType.indexOf(genericMarker);
+				if (idx != -1) {
+					returnType = returnType.substring(0, idx);
+				}
 			}
 			if (p.getReadMethod() == null) {
 				writer.println("null;");
@@ -431,11 +451,20 @@ public class IntrospectorGenerator extends Generator {
 				String boxPrefix = boxPrefix(
 						method.getBaseMethod().getReturnType());
 				String boxSuffix = boxPrefix.isEmpty() ? "" : ")";
-				writer.println(String.format("return %sobject.%s()%s;",
+				String body = String.format("return %sobject.%s()%s;",
 						boxPrefix, getNonParameterisedJsniSignature(method),
-						boxSuffix));
+						boxSuffix);
+				writer.println(body);
 			} else {
 				// setter
+				if (param0type == null) {
+					Ax.err("Missing param0type :: %s %s %s %s",
+							method.getDeclaringType(),
+							method.getBaseMethod().getName(),
+							method.getBaseMethod().getReturnType(),
+							Arrays.asList(method.getBaseMethod()
+									.getParameterTypes()));
+				}
 				String arg = unbox(param0type);
 				writer.println(String.format("object.%s(%s);",
 						getNonParameterisedJsniSignature(method), arg));

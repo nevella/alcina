@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
@@ -13,28 +14,31 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
+import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
+import cc.alcina.framework.gwt.client.dirndl.model.LinkModel.LinkModelRendererPrimaryClassName;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
-//FIXME - ert.dirndl.2 - baseplace should implement a  'link provider' interface
+//FIXME - dirndl.2 - baseplace should implement a  'link provider' interface
 // and various subtypes should be subclasses...
 @Bean
-public class LinkModel {
+@LinkModelRendererPrimaryClassName("-ol-primary")
+public class LinkModel extends Model {
 	private BasePlace place;
 
 	private boolean withoutLink;
@@ -45,8 +49,34 @@ public class LinkModel {
 
 	private String text;
 
+	private String className;
+
+	private String href;
+
+	private Class<? extends TopicEvent> topicClass;
+
+	private boolean newTab;
+
+	private String title;
+
+	public LinkModel() {
+	}
+
+	public LinkModel(Entity entity) {
+		withPlace(EntityPlace.forEntity(entity));
+		withText(TextProvider.get().getObjectName(entity));
+	}
+
 	public void addTo(List<LinkModel> actions) {
 		actions.add(this);
+	}
+
+	public String getClassName() {
+		return this.className;
+	}
+
+	public String getHref() {
+		return this.href;
 	}
 
 	public NonstandardObjectAction getObjectAction() {
@@ -57,6 +87,22 @@ public class LinkModel {
 		return this.place;
 	}
 
+	public String getText() {
+		return text;
+	}
+
+	public String getTitle() {
+		return this.title;
+	}
+
+	public Class<? extends TopicEvent> getTopicClass() {
+		return topicClass;
+	}
+
+	public boolean isNewTab() {
+		return this.newTab;
+	}
+
 	public boolean isPrimaryAction() {
 		return this.primaryAction;
 	}
@@ -65,8 +111,59 @@ public class LinkModel {
 		return this.withoutLink;
 	}
 
+	public void setClassName(String className) {
+		this.className = className;
+	}
+
+	public void setHref(String href) {
+		this.href = href;
+	}
+
+	public void setNewTab(boolean newTab) {
+		this.newTab = newTab;
+	}
+
+	public void setObjectAction(NonstandardObjectAction objectAction) {
+		this.objectAction = objectAction;
+	}
+
+	public void setPlace(BasePlace place) {
+		this.place = place;
+	}
+
+	public void setPrimaryAction(boolean primaryAction) {
+		this.primaryAction = primaryAction;
+	}
+
+	public void setText(String text) {
+		this.text = text;
+	}
+
+	public void setTitle(String title) {
+		this.title = title;
+	}
+
+	public void setWithoutLink(boolean withoutLink) {
+		this.withoutLink = withoutLink;
+	}
+
 	public LinkModel withActionRef(Class<? extends ActionRef> clazz) {
 		return withPlace(new ActionRefPlace(clazz));
+	}
+
+	public LinkModel withClassName(String className) {
+		this.className = className;
+		return this;
+	}
+
+	public LinkModel withHref(String href) {
+		this.href = href;
+		return this;
+	}
+
+	public LinkModel withNewTab(boolean newTab) {
+		this.newTab = newTab;
+		return this;
 	}
 
 	public LinkModel
@@ -90,13 +187,19 @@ public class LinkModel {
 		return this;
 	}
 
-	public LinkModel withWithoutLink(boolean withoutLink) {
-		this.withoutLink = withoutLink;
+	public LinkModel withTitle(String title) {
+		this.title = title;
 		return this;
 	}
 
-	public String getText() {
-		return text;
+	public LinkModel withTopic(Class<? extends TopicEvent> topicClass) {
+		this.topicClass = topicClass;
+		return this;
+	}
+
+	public LinkModel withWithoutLink(boolean withoutLink) {
+		this.withoutLink = withoutLink;
+		return this;
 	}
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = LinkModel.class)
@@ -106,6 +209,7 @@ public class LinkModel {
 			LinkModel model = model(node);
 			Widget rendered = super.render(node);
 			rendered.getElement().setInnerText(getText(node));
+			rendered.getElement().setTitle(model.getTitle());
 			if (model.isWithoutLink() && model.getText() != null) {
 				return rendered;
 			}
@@ -122,29 +226,46 @@ public class LinkModel {
 				return rendered;
 			}
 			BasePlace place = model.getPlace();
-			rendered.getElement().setAttribute("href", place.toHrefString());
-			if (place instanceof ActionRefPlace) {
-				ActionRefPlace actionRefPlace = (ActionRefPlace) place;
-				Optional<ActionHandler> actionHandler = actionRefPlace
-						.getActionHandler();
-				if (actionHandler.isPresent()) {
-					rendered.getElement().setAttribute("href", "#");
-					rendered.addDomHandler(evt -> actionHandler.get()
-							.handleAction(node, evt, actionRefPlace),
-							ClickEvent.getType());
+			if (place == null) {
+				if (model.getHref() != null) {
+					rendered.getElement().setAttribute("href", model.getHref());
 				}
-				Optional<TopicBehaviour> actionTopic = actionRefPlace
-						.getActionTopic();
-				if (actionTopic.isPresent()) {
+				if (model.isNewTab()) {
+					rendered.getElement().setAttribute("target", "_blank");
+				}
+				if (model.getTopicClass() != null) {
 					rendered.addDomHandler(event -> {
-						TopicBehaviour behaviour = actionTopic.get();
-						Context context = new NodeEvent.Context();
-						context.gwtEvent = event;
-						context.node = node;
-						context.topicListeners = new TopicListeners();
-						TopicEvent.fire(context, behaviour.topic(),
-								behaviour.payloadTransformer(), false);
+						Context context = NodeEvent.Context
+								.newTopicContext(event, node);
+						TopicEvent.fire(context, model.getTopicClass(), null);
 					}, ClickEvent.getType());
+				}
+			} else {
+				rendered.getElement().setAttribute("href",
+						place.toHrefString());
+				if (place instanceof ActionRefPlace) {
+					ActionRefPlace actionRefPlace = (ActionRefPlace) place;
+					Optional<ActionHandler> actionHandler = actionRefPlace
+							.getActionHandler();
+					if (actionHandler.isPresent()) {
+						rendered.getElement().setAttribute("href", "#");
+						rendered.addDomHandler(
+								evt -> actionHandler.get().handleAction(node,
+										evt, actionRefPlace),
+								ClickEvent.getType());
+					}
+					Optional<EmitsTopic> emitsTopic = actionRefPlace
+							.emitsTopic();
+					if (emitsTopic.isPresent()
+							&& !emitsTopic.get().hasValidation()) {
+						rendered.addDomHandler(event -> {
+							Class<? extends TopicEvent> type = emitsTopic.get()
+									.value();
+							Context context = NodeEvent.Context
+									.newTopicContext(event, node);
+							TopicEvent.fire(context, type, null);
+						}, ClickEvent.getType());
+					}
 				}
 			}
 			if (model.isPrimaryAction()) {
@@ -187,6 +308,7 @@ public class LinkModel {
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
+	@Inherited
 	@Target({ ElementType.TYPE, ElementType.METHOD })
 	public @interface LinkModelRendererPrimaryClassName {
 		String value();

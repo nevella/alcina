@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceTokenizer;
 
@@ -25,9 +26,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	protected String[] parts;
 
-	private StringMap params;
-
-	boolean added = false;
+	protected StringMap params;
 
 	public P copyPlace(P place) {
 		String token = getToken(place);
@@ -60,8 +59,13 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		try {
 			return getPlace0(token);
 		} catch (Exception e) {
-			e.printStackTrace();
-			return getPlace(getPrefix());
+			if (e.getClass() == RuntimeException.class || !GWT.isScript()) {
+				// key collisions etc
+				throw e;
+			} else {
+				e.printStackTrace();
+				return getPlace(getPrefix());
+			}
 		}
 	}
 
@@ -79,7 +83,6 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	public String getToken(P place) {
 		tokenBuilder = new StringBuilder();
 		params = null;
-		added = false;
 		addTokenPart(getPrefix());
 		getToken0(place);
 		if (params != null && !params.isEmpty()) {
@@ -135,11 +138,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		if (part == null) {
 			return;
 		}
-		if (added) {
+		if (tokenBuilder.length() > 0) {
 			tokenBuilder.append("/");
 		}
 		tokenBuilder.append(part);
-		added = true;
 	}
 
 	protected List<String> encodedValues() {

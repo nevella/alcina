@@ -32,9 +32,8 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  */
 @Introspectable
 public class Bindable extends BaseSourcesPropertyChangeEvents
-		implements Serializable {
-	@Bean( actions = @ObjectActions({
-			@Action(actionClass = ViewAction.class) }))
+		implements Serializable, IsBindable {
+	@Bean(actions = @ObjectActions({ @Action(actionClass = ViewAction.class) }))
 	@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT), delete = @Permission(access = AccessLevel.ROOT))
 	public static class BindableAdapter extends Bindable {
 	}

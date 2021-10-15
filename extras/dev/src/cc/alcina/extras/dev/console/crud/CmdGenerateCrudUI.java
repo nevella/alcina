@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.console.FilterArgvParam;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.util.JaxbUtils;
 
 public class CmdGenerateCrudUI extends DevConsoleCommand {
 	Spec spec;
@@ -49,7 +49,7 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 		FilterArgvParam argvParam = new FilterArgvParam(argv);
 		String specPath = argvParam.value;
 		String specXml = ResourceUtilities.read(specPath);
-		spec = WrappedObjectHelper.xmlDeserialize(Spec.class, specXml);
+		spec = JaxbUtils.xmlDeserialize(Spec.class, specXml);
 		TemplateGenerator gen = new TemplateGenerator();
 		gen.generateLookup();
 		gen.generateFile(GeneratedUnitType.Place);
@@ -169,7 +169,7 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 
 		public void generateFile(GeneratedUnitType unitType) {
 			String template = ResourceUtilities
-					.readClazzp(unitType.templateRelativePath());
+					.readRelativeResource(unitType.templateRelativePath());
 			String out = replaceLookup.replaceSubstrings(template);
 			String outPath = unitType.outputPath(this);
 			outPath = outPath.replace("/persistent/", "/");

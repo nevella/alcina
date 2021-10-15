@@ -1,6 +1,6 @@
 package cc.alcina.framework.entity.persistence.mvcc;
 
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 
 /**
  *

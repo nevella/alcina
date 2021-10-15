@@ -26,6 +26,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 
@@ -34,6 +36,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
  *
  * @author Nick Reddel
  */
+@Bean
 public class DomainTransformEvent
 		implements Serializable, Comparable<DomainTransformEvent>, Cloneable {
 	public static transient final String CONTEXT_IGNORE_UNHANDLED_DOMAIN_CLASSES = DomainTransformEvent.class
@@ -119,7 +122,7 @@ public class DomainTransformEvent
 	/*
 	 * Better naming would have been 'CommitPhase' but this is good enough
 	 * 
-	 * FIXME - mvcc.4
+	 * FIXME - mvcc.dbnames
 	 */
 	public CommitType getCommitType() {
 		return this.commitType;
@@ -147,12 +150,14 @@ public class DomainTransformEvent
 
 	@Transient
 	@JsonIgnore
+	@AlcinaTransient
 	public Object getNewValue() {
 		return this.newValue;
 	}
 
 	@Transient
 	@JsonIgnore
+	@AlcinaTransient
 	public Class getObjectClass() {
 		if (this.objectClass == null) {
 			if (this.objectClassName != null && this.objectClassRef == null) {
@@ -186,6 +191,7 @@ public class DomainTransformEvent
 
 	@Transient
 	@JsonIgnore
+	@AlcinaTransient
 	public ClassRef getObjectClassRef() {
 		if (this.objectClassRef == null) {
 			if (this.getObjectClass() != null) {
@@ -209,6 +215,7 @@ public class DomainTransformEvent
 
 	@Transient
 	@JsonIgnore
+	@AlcinaTransient
 	public Object getOldValue() {
 		return this.oldValue;
 	}
@@ -219,6 +226,7 @@ public class DomainTransformEvent
 
 	@Transient
 	@JsonIgnore
+	@AlcinaTransient
 	public Entity getSource() {
 		return this.source;
 	}
@@ -233,6 +241,7 @@ public class DomainTransformEvent
 
 	@Transient
 	@JsonIgnore
+	@AlcinaTransient
 	public Class getValueClass() {
 		if (this.valueClass == null) {
 			if (this.valueClassName != null && this.valueClassRef == null) {
@@ -264,6 +273,7 @@ public class DomainTransformEvent
 
 	@Transient
 	@JsonIgnore
+	@AlcinaTransient
 	public ClassRef getValueClassRef() {
 		if (this.valueClassRef == null) {
 			if (getValueClass() != null) {
@@ -283,6 +293,11 @@ public class DomainTransformEvent
 
 	public Integer getValueVersionNumber() {
 		return valueVersionNumber;
+	}
+
+	@Override
+	public int hashCode() {
+		return (int) (eventId != 0 ? eventId : super.hashCode());
 	}
 
 	@Transient

@@ -32,7 +32,7 @@ public class Domain {
 
 	static Logger logger = LoggerFactory.getLogger(Domain.class);
 
-	// FIXME - mvcc.4 - deprecate (ditto asSet)
+	// FIXME - mvcc.sky - deprecate (ditto asSet)
 	public static <V extends Entity> List<V> asList(Class<V> clazz) {
 		return handler.stream(clazz).collect(Collectors.toList());
 	}
@@ -70,7 +70,7 @@ public class Domain {
 		}
 		Class<V> clazz = entity.entityClass();
 		V writeable = entity.domain().wasPersisted()
-				? detachedVersion(Domain.find(entity))
+				? (V) detachedVersion(entity.domain().domainVersion())
 				: Domain.create(clazz);
 		List<PropertyInfo> writableProperties = Reflections.classLookup()
 				.getWritableProperties(clazz);
@@ -109,18 +109,6 @@ public class Domain {
 		return v == null ? null : handler.detachedVersion(v);
 	}
 
-	public static <V extends Entity> V find(Class clazz, long id) {
-		return handler.find(clazz, id);
-	}
-
-	public static <V extends Entity> V find(EntityLocator locator) {
-		return handler.find(locator);
-	}
-
-	public static <V extends Entity> V find(V v) {
-		return handler.find(v);
-	}
-
 	public static <V extends Entity> V ensure(Class<V> clazz,
 			String propertyName, Object value) {
 		V first = by(clazz, propertyName, value);
@@ -130,6 +118,21 @@ public class Domain {
 					value);
 		}
 		return first;
+	}
+
+	public static <V extends Entity> V find(Class clazz, long id) {
+		return handler.find(clazz, id);
+	}
+
+	public static <V extends Entity> V find(EntityLocator locator) {
+		return handler.find(locator);
+	}
+
+	/*
+	 * Only access via entity.domain().domainVersion/ensurePopulated();
+	 */
+	public static <V extends Entity> V find(V v) {
+		return handler.find(v);
 	}
 
 	public static <V extends Entity> boolean isDomainVersion(V v) {
@@ -176,6 +179,10 @@ public class Domain {
 
 	public static <V extends Entity> Stream<V> stream(Class<V> clazz) {
 		return handler.stream(clazz);
+	}
+
+	public static boolean wasRemoved(Entity entity) {
+		return handler.wasRemoved(entity);
 	}
 
 	public interface DomainHandler {
@@ -231,6 +238,10 @@ public class Domain {
 
 		default <V extends Entity> long size(Class<V> clazz) {
 			return stream(clazz).count();
+		}
+
+		default boolean wasRemoved(Entity entity) {
+			return false;
 		}
 	}
 

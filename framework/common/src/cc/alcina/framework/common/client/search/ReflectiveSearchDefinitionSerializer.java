@@ -13,10 +13,10 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.DeserializerOptions;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.DeserializerOptions;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -27,9 +27,9 @@ public class ReflectiveSearchDefinitionSerializer
 	public static final String CONTEXT_GUARANTEE_LAST_DEF_NOT_CHANGED = ReflectiveSearchDefinitionSerializer.class
 			.getName() + ".CONTEXT_GUARANTEE_LAST_DEF_NOT_CHANGED";
 
-	private static final String RS0 = "rs0_";
+	public static final String RS0 = "rs0_";
 
-	public static boolean flatTreeSerializationEnabled = false;
+	public static boolean flatTreeSerializationEnabled = true;
 
 	public static String escapeJsonForUrl(String str) {
 		StringBuilder sb = new StringBuilder();
@@ -80,7 +80,12 @@ public class ReflectiveSearchDefinitionSerializer
 			char c = serializedDef.charAt(idx);
 			if (c == '.') {
 				char c2 = serializedDef.charAt(++idx);
-				sb.append(unescapeMap.charAt(((int) c2) - 48));
+				int index = ((int) c2) - 48;
+				if (index < unescapeMap.length()) {
+					sb.append(unescapeMap.charAt(index));
+				} else {
+					throw new IllegalArgumentException("Not json serialized");
+				}
 			} else {
 				sb.append(c);
 			}
@@ -106,20 +111,23 @@ public class ReflectiveSearchDefinitionSerializer
 	@Override
 	public <SD extends SearchDefinition> SD deserialize(
 			Class<? extends SearchDefinition> clazz, String serializedDef) {
-		if (clazz != null && serializedDef.contains("=")
+		Exception flatTreeDeserializationException = null;
+		if (clazz != null
+				&& (serializedDef.contains("=") || serializedDef.isEmpty())
 				&& canFlatTreeSerialize(clazz)) {
 			try {
 				return (SD) FlatTreeSerializer.deserialize(clazz, serializedDef,
 						new DeserializerOptions().withShortPaths(true));
 			} catch (Exception e) {
 				Ax.simpleExceptionOut(e);
+				flatTreeDeserializationException = e;
 			}
-		}
-		if (serializedDef.startsWith(RS0)) {
-			serializedDef = serializedDef.substring(RS0.length());
 		}
 		ensureLookups();
 		try {
+			if (serializedDef.startsWith(RS0)) {
+				serializedDef = serializedDef.substring(RS0.length());
+			}
 			serializedDef = unescapeJsonForUrl(serializedDef);
 			SearchDefinition def = Registry.impl(AlcinaBeanSerializer.class)
 					.registerLookups(abbrevLookup, reverseAbbrevLookup)
@@ -168,13 +176,6 @@ public class ReflectiveSearchDefinitionSerializer
 		return lastStringDef;
 	}
 
-	private boolean
-			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
-		return Reflections.classLookup()
-				.getPropertyReflector(defClass, "criteriaGroups")
-				.getAnnotation(PropertySerialization.class) != null;
-	}
-
 	private void ensureLookups() {
 		if (abbrevLookup.isEmpty()) {
 			List<Class> classes = Registry.get()
@@ -205,13 +206,11 @@ public class ReflectiveSearchDefinitionSerializer
 				return FlatTreeSerializer.serialize(def,
 						new SerializerOptions().withTopLevelTypeInfo(false)
 								.withShortPaths(true).withSingleLine(true)
+								.withElideDefaults(true)
 								.withTestSerialized(true));
 			} catch (Exception e) {
-				if (!LooseContext
-						.is(FlatTreeSerializer.CONTEXT_SUPPRESS_EXCEPTIONS)) {
-					e.printStackTrace();
-					flatTreeException = e;
-				}
+				e.printStackTrace();
+				flatTreeException = e;
 			}
 		}
 		ensureLookups();
@@ -248,5 +247,11 @@ public class ReflectiveSearchDefinitionSerializer
 			flatTreeException.printStackTrace();
 		}
 		return RS0 + escapeJsonForUrl(str);
+	}
+
+	protected boolean
+			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
+		return Reflections.classLookup().getAnnotationForClass(defClass,
+				TypeSerialization.class) != null;
 	}
 }

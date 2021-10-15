@@ -1,11 +1,13 @@
 package cc.alcina.framework.entity.persistence.metric;
 
+import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +33,19 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreLockState;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreWaitStats;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
+import cc.alcina.framework.entity.util.DataFolderProvider;
+import cc.alcina.framework.entity.util.ShellWrapper;
+import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 
 @RegistryLocation(registryPoint = InternalMetrics.class, implementationType = ImplementationType.SINGLETON)
 public class InternalMetrics {
@@ -51,9 +61,16 @@ public class InternalMetrics {
 		return Registry.impl(InternalMetrics.class);
 	}
 
+	public static String profilerFolder(Date date) {
+		return Ax.format("profiler/%s", CommonUtils
+				.formatDate(date, DateStyle.TIMESTAMP).substring(0, 8));
+	}
+
 	private Timer timer;
 
 	private ThreadPoolExecutor sliceExecutor;
+
+	private ThreadPoolExecutor profilerExecutor;
 
 	private ThreadPoolExecutor persistExecutor;
 
@@ -73,6 +90,17 @@ public class InternalMetrics {
 
 	AtomicInteger healthNotificationCounter = new AtomicInteger();
 
+	private boolean highFrequencyProfiling;
+
+	int parseGcLogFrom = 0;
+
+	public void changeTrackerContext(Object marker, String context) {
+		InternalMetricData metricData = trackers.get(marker);
+		if (metricData != null) {
+			metricData.updateContext(context);
+		}
+	}
+
 	public void endTracker(Object markerObject) {
 		if (!started || markerObject == null) {
 			return;
@@ -82,7 +110,14 @@ public class InternalMetrics {
 			synchronized (tracker) {
 				tracker.endTime = System.currentTimeMillis();
 			}
+			if (!ResourceUtilities.is("persistEnabled")) {
+				trackers.remove(markerObject);
+			}
 		}
+	}
+
+	public boolean isHighFrequencyProfiling() {
+		return this.highFrequencyProfiling;
 	}
 
 	public boolean isStarted() {
@@ -90,7 +125,7 @@ public class InternalMetrics {
 	}
 
 	public void logBlackBox() {
-		if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
+		if (!isEnabled() && EntityLayerUtils.isTestOrTestServer()) {
 			return;
 		}
 		String message = trackers.values().stream()
@@ -102,7 +137,14 @@ public class InternalMetrics {
 				System.currentTimeMillis()));
 	}
 
+	public void setHighFrequencyProfiling(boolean highFrequencyProfiling) {
+		this.highFrequencyProfiling = highFrequencyProfiling;
+	}
+
 	public void startService() {
+		if (!isEnabled() && EntityLayerUtils.isTestOrTestServer()) {
+			return;
+		}
 		this.sliceOracle = Registry.impl(InternalMetricSliceOracle.class);
 		Preconditions.checkState(!started);
 		started = true;
@@ -112,6 +154,10 @@ public class InternalMetrics {
 		persistExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
 		persistExecutor.setThreadFactory(
 				new NamedThreadFactory("internalMetrics-persist"));
+		profilerExecutor = (ThreadPoolExecutor) Executors.newFixedThreadPool(1);
+		profilerExecutor.setThreadFactory(
+				new NamedThreadFactory("internalMetrics-profiler"));
+		profilerExecutor.submit(this::doProfilerLoop);
 		timer = new Timer("internal-metrics-timer");
 		timer.scheduleAtFixedRate(new TimerTask() {
 			@Override
@@ -126,8 +172,7 @@ public class InternalMetrics {
 								slice();
 							} catch (Throwable e) {
 								try {
-									ResourceUtilities.is(InternalMetrics.class,
-											"enabled");
+									isEnabled();
 								} catch (Exception e1) {
 									// webapp finished
 									timer.cancel();
@@ -163,8 +208,7 @@ public class InternalMetrics {
 								persist();
 							} catch (Throwable e) {
 								try {
-									ResourceUtilities.is(InternalMetrics.class,
-											"enabled");
+									isEnabled();
 								} catch (Exception e1) {
 									// webapp finished
 									timer.cancel();
@@ -194,7 +238,7 @@ public class InternalMetrics {
 		if (!started) {
 			return;
 		}
-		if (!ResourceUtilities.is(InternalMetrics.class, "enabled")) {
+		if (!isEnabled()) {
 			return;
 		}
 		if (!trackMetricsEnabled.get()) {
@@ -226,8 +270,13 @@ public class InternalMetrics {
 			started = false;
 			timer.cancel();
 			sliceExecutor.shutdown();
+			profilerExecutor.shutdown();
 			persistExecutor.shutdown();
 		}
+	}
+
+	private boolean isEnabled() {
+		return ResourceUtilities.is("enabled");
 	}
 
 	private boolean shouldSlice(InternalMetricData imd) {
@@ -235,7 +284,7 @@ public class InternalMetrics {
 	}
 
 	private void slice() {
-		if (!ResourceUtilities.is("enabled")) {
+		if (!isEnabled()) {
 			return;
 		}
 		if (trackers.isEmpty()) {
@@ -323,8 +372,19 @@ public class InternalMetrics {
 				});
 	}
 
+	private File telemetryFile(MetricType type) {
+		Date date = new Date();
+		File out = DataFolderProvider.get().getSubFolderFile(
+				profilerFolder(date),
+				Ax.format("%s.%s.txt.gz",
+						CommonUtils.formatDate(date, DateStyle.TIMESTAMP_NO_DAY)
+								.replace(":", "_"),
+						type));
+		return out;
+	}
+
 	protected void persist() {
-		if (!ResourceUtilities.is("enabled")) {
+		if (!isEnabled() || !ResourceUtilities.is("persistEnabled")) {
 			return;
 		}
 		LinkedHashMap<InternalMetricData, InternalMetric> toPersist = null;
@@ -362,8 +422,7 @@ public class InternalMetrics {
 							synchronized (imd) {
 								if (imd.persistent != null
 										&& imd.persistent.getId() == 0) {
-									imd.persistent
-											.setId(internalMetric.getId());
+									imd.setPersistentId(internalMetric.getId());
 								}
 							}
 						});
@@ -378,6 +437,69 @@ public class InternalMetrics {
 			}
 		}
 		trackers.entrySet().removeIf(e -> toRemove.contains(e.getValue()));
+	}
+
+	void doProfilerLoop() {
+		boolean nextIsAlloc = false;
+		String profilerPath = ResourceUtilities.get("profilerPath");
+		String alloc = "--alloc 100k -t -d 5 -e alloc ";
+		String cpu = "-d 5 --cstack no -t -e cpu ";
+		while (isEnabled() && started) {
+			try {
+				if (ResourceUtilities.is("profilerEnabled")) {
+					int frequency = highFrequencyProfiling ? 50 : 200;
+					MetricType type = nextIsAlloc
+							|| !ResourceUtilities.is("cpuProfilingEnabled")
+									? MetricType.alloc
+									: MetricType.cpu;
+					String params = type == MetricType.alloc ? alloc : cpu;
+					String pid = "jps";
+					if (Ax.isTest()) {
+						String name = ManagementFactory.getRuntimeMXBean()
+								.getName();
+						pid = name.replaceFirst("(.+)@.+", "$1");
+					}
+					String cmd = Ax.format("%s %s -i %sus %s", profilerPath,
+							params, frequency, pid);
+					ShellOutputTuple wrapper = new ShellWrapper().noLogging()
+							.runBashScript(cmd);
+					File out = telemetryFile(type);
+					ResourceUtilities.writeStringToFileGz(wrapper.output, out);
+					String runningMetrics = trackers.values().stream()
+							.filter(imd -> !imd.isFinished())
+							.map(InternalMetricData::logForBlackBox)
+							.collect(Collectors.joining("\n"));
+					String metrics = Ax.format("%s\nTrackers:\n%s\n\nJobs:\n%s",
+							ContainerProvider.get().getContainerState(),
+							ContainerProvider.get().getJobsState(),
+							runningMetrics);
+					out = telemetryFile(MetricType.metrics);
+					ResourceUtilities.writeStringToFileGz(runningMetrics, out);
+					String gcLogFile = "/opt/jboss/gc.log";
+					if (new File(gcLogFile).exists()) {
+						GCLogParser.Events events = new GCLogParser().parse(
+								gcLogFile, parseGcLogFrom,
+								ResourceUtilities.getInteger(getClass(),
+										"gcEventThresholdMillis"));
+						out = telemetryFile(MetricType.gc);
+						ResourceUtilities.writeStringToFileGz(events.toString(),
+								out);
+						parseGcLogFrom = events.end;
+					}
+					Arrays.stream(DataFolderProvider.get()
+							.getSubFolder("profiler").listFiles())
+							.filter(f -> System.currentTimeMillis()
+									- f.lastModified() > 2
+											* TimeConstants.ONE_DAY_MS)
+							.forEach(SEUtilities::deleteDirectory);
+					nextIsAlloc = !nextIsAlloc;
+				} else {
+					Thread.sleep(1000);
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
 	}
 
 	String getMemoryStats() {
@@ -406,10 +528,29 @@ public class InternalMetrics {
 		return returnLong;
 	}
 
+	@RegistryLocation(registryPoint = ContainerProvider.class, implementationType = ImplementationType.SINGLETON)
+	public static class ContainerProvider {
+		public static InternalMetrics.ContainerProvider get() {
+			return Registry.impl(InternalMetrics.ContainerProvider.class);
+		}
+
+		public String getContainerState() {
+			return "---";
+		}
+
+		public String getJobsState() {
+			return "---";
+		}
+	}
+
 	public interface InternalMetricType {
 	}
 
 	public enum InternalMetricTypeAlcina implements InternalMetricType {
-		client, service, health, api, servlet, job;
+		client, service, health, api, servlet, job, remote_invocation;
+	}
+
+	public enum MetricType {
+		alloc, cpu, gc, metrics
 	}
 }

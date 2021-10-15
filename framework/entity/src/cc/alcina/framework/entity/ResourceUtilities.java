@@ -17,9 +17,6 @@ import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
-import java.beans.BeanInfo;
-import java.beans.IntrospectionException;
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
@@ -62,6 +59,8 @@ import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import javax.imageio.ImageIO;
+import javax.net.ssl.HostnameVerifier;
+import javax.net.ssl.HttpsURLConnection;
 import javax.swing.ImageIcon;
 
 import org.cyberneko.html.parsers.DOMParser;
@@ -93,15 +92,10 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 public class ResourceUtilities {
 	private static Map<String, String> customProperties = new ConcurrentHashMap<String, String>();
 
-	private static BeanInfoHelper helper;
-
-	private static ConcurrentHashMap<Class, BeanInfo> beanInfoLookup = new ConcurrentHashMap<>();
-
 	private static boolean clientWithJvmProperties;
 
 	private static ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
 
-	private static Method getCallerClassMethod;
 
 	public static void appShutdown() {
 	}
@@ -126,32 +120,30 @@ public class ResourceUtilities {
 	public static <T> T copyBeanProperties(Object srcBean, T tgtBean,
 			Class methodFilterAnnotation, boolean cloneCollections,
 			Collection<String> ignorePropertyNames) {
-		BeanInfo info = getBeanInfo(srcBean.getClass());
-		BeanInfo infoTgt = getBeanInfo(tgtBean.getClass());
-		for (PropertyDescriptor pd : infoTgt.getPropertyDescriptors()) {
-			Method getMethod = null;
-			String tgtPName = pd.getName();
-			if (ignorePropertyNames.contains(tgtPName)) {
+		for (PropertyDescriptor targetDescriptor : SEUtilities
+				.getPropertyDescriptorsSortedByName(tgtBean.getClass())) {
+			if (ignorePropertyNames.contains(targetDescriptor.getName())) {
 				continue;
 			}
-			for (PropertyDescriptor pd2 : info.getPropertyDescriptors()) {
-				if (pd2.getName().equals(tgtPName)) {
-					getMethod = pd2.getReadMethod();
-					break;
-				}
+			PropertyDescriptor sourceDescriptor = SEUtilities
+					.getPropertyDescriptorByName(srcBean.getClass(),
+							targetDescriptor.getName());
+			if (sourceDescriptor == null) {
+				continue;
 			}
-			if (getMethod == null) {
+			Method readMethod = sourceDescriptor.getReadMethod();
+			if (readMethod == null) {
 				continue;
 			}
 			if (methodFilterAnnotation != null) {
-				if (getMethod.isAnnotationPresent(methodFilterAnnotation)) {
+				if (readMethod.isAnnotationPresent(methodFilterAnnotation)) {
 					continue;
 				}
 			}
-			Method setMethod = pd.getWriteMethod();
+			Method setMethod = targetDescriptor.getWriteMethod();
 			if (setMethod != null) {
 				try {
-					Object obj = getMethod.invoke(srcBean, (Object[]) null);
+					Object obj = readMethod.invoke(srcBean, (Object[]) null);
 					if (cloneCollections && obj instanceof Collection
 							&& obj instanceof Cloneable) {
 						Method clone = obj.getClass().getMethod("clone",
@@ -303,36 +295,9 @@ public class ResourceUtilities {
 	}
 
 	public static String get(String propertyName) {
-		return get(getCallerClass(), propertyName);
-	}
-
-	/**
-	 * Retrieves the BeanInfo for a Class
-	 */
-	public static BeanInfo getBeanInfo(Class cls) {
-		if (beanInfoLookup.containsKey(cls)) {
-			return beanInfoLookup.get(cls);
-		}
-		BeanInfo beanInfo = null;
-		try {
-			beanInfo = Introspector.getBeanInfo(cls);
-			if (helper != null) {
-				beanInfo = helper.postProcessBeanInfo(beanInfo);
-			}
-			beanInfoLookup.put(cls, beanInfo);
-			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getReadMethod() != null) {
-					pd.getReadMethod().setAccessible(true);
-				}
-				if (pd.getWriteMethod() != null) {
-					pd.getWriteMethod().setAccessible(true);
-				}
-			}
-		} catch (IntrospectionException ex) {
-			ex.printStackTrace();
-		}
-		return beanInfo;
+		return get(StackWalker
+				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+				.getCallerClass(), propertyName);
 	}
 
 	public static boolean getBoolean(Class clazz, String propertyName) {
@@ -436,7 +401,9 @@ public class ResourceUtilities {
 	}
 
 	public static boolean is(String propertyName) {
-		return is(getCallerClass(), propertyName);
+		return is(StackWalker
+				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+				.getCallerClass(), propertyName);
 	}
 
 	public static boolean isClientWithJvmProperties() {
@@ -561,7 +528,7 @@ public class ResourceUtilities {
 	public static byte[] readClassPathResourceAsByteArray(Class clazz,
 			String path) {
 		try {
-			return readStreamToByteArray(clazz.getResourceAsStream(path));
+			return readStreamToByteArray(getResourceAsStream(clazz, path));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -570,7 +537,7 @@ public class ResourceUtilities {
 	public static String readClassPathResourceAsString(Class clazz,
 			String path) {
 		try {
-			return readStreamToString(clazz.getResourceAsStream(path));
+			return readStreamToString(getResourceAsStream(clazz, path));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -588,10 +555,6 @@ public class ResourceUtilities {
 		} else {
 			return readClassPathResourceAsString(clazz, path);
 		}
-	}
-
-	public static String readClazzp(String path) {
-		return readClassPathResourceAsString(getCallerClass(), path);
 	}
 
 	public static byte[] readFileToByteArray(File f) throws IOException {
@@ -614,12 +577,16 @@ public class ResourceUtilities {
 		return readFileToString(new File(fileName));
 	}
 
-	public static String readFileToStringGz(File f) throws IOException {
+	public static String readFileToStringGz(File f) {
+		try {
 		InputStream fis = new FileInputStream(f);
 		if (f.getName().endsWith(".gz")) {
 			fis = new GZIPInputStream(new BufferedInputStream(fis));
 		}
 		return readStreamToString(fis);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static <T> T readObjectFromBase64(String string) throws IOException {
@@ -645,6 +612,17 @@ public class ResourceUtilities {
 				throw new IOException(e);
 			}
 		}
+	}
+
+	public static String readRelativeResource(String path) {
+		return readClassPathResourceAsString(StackWalker
+				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+				.getCallerClass(), path);
+	}
+
+	public static byte[] readRelativeResourceAsBytes(String string) {
+		// TODO Auto-generated method stub
+		return null;
 	}
 
 	public static byte[] readStreamToByteArray(InputStream is)
@@ -740,10 +718,6 @@ public class ResourceUtilities {
 			StringMap headers) throws Exception {
 		byte[] bytes = readUrlAsBytesWithPost(strUrl, postBody, headers);
 		return new String(bytes, StandardCharsets.UTF_8);
-	}
-
-	public static void registerBeanInfoHelper(BeanInfoHelper theHelper) {
-		helper = theHelper;
 	}
 
 	public static void registerCustomProperties(InputStream ios) {
@@ -981,6 +955,15 @@ public class ResourceUtilities {
 		bw.close();
 	}
 
+	private static InputStream getResourceAsStream(Class clazz, String path) {
+		InputStream stream = clazz.getResourceAsStream(path);
+		if (stream == null) {
+			stream = Thread.currentThread().getContextClassLoader()
+					.getResourceAsStream(path);
+		}
+		return stream;
+	}
+
 	private static <T> T newInstanceForCopy(T t)
 			throws NoSuchMethodException, InstantiationException,
 			IllegalAccessException, InvocationTargetException {
@@ -1000,23 +983,7 @@ public class ResourceUtilities {
 		return instance;
 	}
 
-	protected static Class getCallerClass() {
-		try {
-			if (getCallerClassMethod == null) {
-				Class clazz = Class.forName("sun.reflect.Reflection");
-				getCallerClassMethod = clazz.getMethod("getCallerClass",
-						int.class);
-			}
-			Class callerClass = (Class) getCallerClassMethod.invoke(null, 3);
-			return callerClass;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	public static interface BeanInfoHelper {
-		BeanInfo postProcessBeanInfo(BeanInfo beanInfo);
-	}
+	
 
 	public static class SimpleQuery {
 		private String strUrl;
@@ -1036,6 +1003,8 @@ public class ResourceUtilities {
 		private String contentDisposition;
 
 		private StringMap queryStringParameters;
+
+		private HostnameVerifier hostnameVerifier;
 
 		public SimpleQuery(String strUrl) {
 			this.strUrl = strUrl;
@@ -1062,6 +1031,11 @@ public class ResourceUtilities {
 				connection.setDoOutput(true);
 				connection.setDoInput(true);
 				connection.setUseCaches(false);
+				if (hostnameVerifier != null
+						&& connection instanceof HttpsURLConnection) {
+					((HttpsURLConnection) connection)
+							.setHostnameVerifier(hostnameVerifier);
+				}
 				if (postBody != null) {
 					connection.setRequestMethod("POST");
 				}
@@ -1158,6 +1132,12 @@ public class ResourceUtilities {
 
 		public SimpleQuery withHeaders(StringMap headers) {
 			this.headers = headers;
+			return this;
+		}
+
+		public SimpleQuery
+				withHostnameVerifier(HostnameVerifier hostnameVerifier) {
+			this.hostnameVerifier = hostnameVerifier;
 			return this;
 		}
 

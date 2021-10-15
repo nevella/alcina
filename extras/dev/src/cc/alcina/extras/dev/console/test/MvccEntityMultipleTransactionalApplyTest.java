@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.persistence.mvcc.ResolvedVersionState;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 
@@ -86,16 +87,16 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 					Transaction.ensureBegun();
 					createdGroup.domain().addToProperty("memberUsers",
 							createdUser2);
-					IG resolveFalse = Transactions.resolve(createdGroup, false,
-							false);
-					IG resolveTrue = Transactions.resolve(createdGroup, true,
-							false);
+					IG resolveFalse = Transactions.resolve(createdGroup,
+							ResolvedVersionState.READ, false);
+					IG resolveTrue = Transactions.resolve(createdGroup,
+							ResolvedVersionState.WRITE, false);
 					tx2Latch1.countDown();
 					tx3Latch1.await();
 					// this one to avoid a concurrent db (hibernate) mod
 					tx1Latch2.await();
-					IG resolve3 = Transactions.resolve(createdGroup, false,
-							false);
+					IG resolve3 = Transactions.resolve(createdGroup,
+							ResolvedVersionState.READ, false);
 					if (createdGroup.getMemberUsers().size() != initialSize
 							+ 1) {
 						Set<? extends IUser> memberUsers = createdGroup

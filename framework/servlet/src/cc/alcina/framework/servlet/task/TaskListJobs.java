@@ -1,8 +1,13 @@
 package cc.alcina.framework.servlet.task;
 
+import java.util.Arrays;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.List;
+import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.dom.DomDoc;
@@ -10,18 +15,22 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.QueueStat;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.QueueStat;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.job.JobRegistry.FutureStat;
 import cc.alcina.framework.servlet.servlet.JobServlet;
+import cc.alcina.framework.servlet.servlet.TaskWithHtmlResult;
 
-public class TaskListJobs extends AbstractTaskPerformer {
+public class TaskListJobs extends AbstractTaskPerformer
+		implements TaskWithHtmlResult {
 	private String filter;
 
 	private transient Pattern filterPattern;
@@ -46,32 +55,34 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.accept(Utils::large).cell("Started").accept(Utils::date)
 					.cell("Thread").accept(Utils::medium).cell("Performer")
 					.accept(Utils::instance).cell("Links").accept(Utils::links);
-			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
-			DomainDescriptorJob.get().getActiveJobs().filter(nameFilter)
-					.filter(sectionFilter).forEach(job -> {
-						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-								.cell(String.valueOf(job.getId()))
-								.cell(job.provideName()).accept(Utils::large)
-								.cell(timestamp(job.getStartTime()))
-								.cell(JobRegistry.get()
-										.getPerformerThreadName(job))
-								.accept(Utils::medium).cell(job.getPerformer())
-								.accept(Utils::instance);
-						DomNode td = cellBuilder.append();
-						{
-							String href = JobServlet.createTaskUrl(
-									new TaskLogJobDetails().withValue(
-											String.valueOf(job.getId())));
-							td.html().addLink("Details", href, "_blank");
-						}
-						td.builder().text(" - ").tag("span").append();
-						{
-							String href = JobServlet.createTaskUrl(
-									new TaskCancelJob().withValue(
-											String.valueOf(job.getId())));
-							td.html().addLink("Cancel", href, "_blank");
-						}
-					});
+			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
+					job.getTaskSerialized());
+			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
+					.filter(textFilter).filter(sectionFilter).parallel();
+			List<Job> jobs = DomainStore.queryPool()
+					.call(() -> stream.collect(Collectors.toList()), stream);
+			jobs.forEach(job -> {
+				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+						.cell(String.valueOf(job.getId()))
+						.cell(job.provideName()).accept(Utils::large)
+						.cell(timestamp(job.getStartTime()))
+						.cell(JobRegistry.get().getPerformerThreadName(job))
+						.accept(Utils::medium).cell(job.getPerformer())
+						.accept(Utils::instance);
+				DomNode td = cellBuilder.append();
+				{
+					String href = JobServlet
+							.createTaskUrl(new TaskLogJobDetails()
+									.withValue(String.valueOf(job.getId())));
+					td.html().addLink("Details", href, "_blank");
+				}
+				td.builder().text(" - ").tag("span").append();
+				{
+					String href = JobServlet.createTaskUrl(new TaskCancelJob()
+							.withValue(String.valueOf(job.getId())));
+					td.html().addLink("Cancel", href, "_blank");
+				}
+			});
 		}
 	}
 
@@ -87,29 +98,46 @@ public class TaskListJobs extends AbstractTaskPerformer {
 					.accept(Utils::large).cell("Started").accept(Utils::date)
 					.cell("Finished").accept(Utils::date).cell("Performer")
 					.accept(Utils::instance).cell("Link").accept(Utils::links);
-			Predicate<Job> nameFilter = job -> filter(job.getTaskClassName());
-			DomainDescriptorJob.get().getRecentlyCompletedJobs(topLevel)
-					.filter(nameFilter).limit(limit).forEach(job -> {
-						DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
-								.cell(String.valueOf(job.getId()))
-								.cell(job.provideName()).accept(Utils::large)
-								.cell(timestamp(job.getStartTime()))
-								.cell(timestamp(job.getEndTime()))
-								.cell(job.getPerformer())
-								.accept(Utils::instance);
-						DomNode td = cellBuilder.append();
-						String href = JobServlet.createTaskUrl(
-								new TaskLogJobDetails().withValue(
-										String.valueOf(job.getId())));
-						td.html().addLink("Details", href, "_blank");
-					});
+			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
+					job.getTaskSerialized());
+			Predicate<? extends Job> topLevelAdditional = topLevel
+					? Job::provideIsFirstInSequence
+					: job -> true;
+			Stream<? extends Job> recentlyCompletedJobs = JobDomain.get()
+					.getRecentlyCompletedJobs(topLevel);
+			if (Ax.notBlank(filter)) {
+				recentlyCompletedJobs = recentlyCompletedJobs.parallel();
+			}
+			Stream<? extends Job> stream = recentlyCompletedJobs
+					.filter(textFilter).filter((Predicate) topLevelAdditional)
+					.limit(limit);
+			if (Ax.notBlank(filter)) {
+				stream = stream.sorted(
+						Comparator.comparing(Job::getEndTime).reversed());
+			}
+			Stream<? extends Job> f_stream = stream;
+			List<Job> jobs = DomainStore.queryPool().call(
+					() -> f_stream.collect(Collectors.toList()), f_stream);
+			jobs.forEach(job -> {
+				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
+						.cell(String.valueOf(job.getId()))
+						.cell(job.provideName()).accept(Utils::large)
+						.cell(timestamp(job.getStartTime()))
+						.cell(timestamp(job.getEndTime()))
+						.cell(job.getPerformer()).accept(Utils::instance);
+				DomNode td = cellBuilder.append();
+				String href = JobServlet.createTaskUrl(new TaskLogJobDetails()
+						.withValue(String.valueOf(job.getId())));
+				td.html().addLink("Details", href, "_blank");
+			});
 		}
 	}
 
 	@Override
 	protected void run0() throws Exception {
 		DomDoc doc = DomDoc.basicHtmlDoc();
-		String css = ResourceUtilities.readClazzp("res/TaskListJobs.css");
+		String css = ResourceUtilities
+				.readRelativeResource("res/TaskListJobs.css");
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
 		{
 			Stream<QueueStat> queues = JobRegistry.get().getActiveQueueStats();
@@ -171,17 +199,15 @@ public class TaskListJobs extends AbstractTaskPerformer {
 		logger.info("Log output to job.largeResult");
 	}
 
-	boolean filter(String test) {
+	boolean filter(String... tests) {
 		if (filter == null) {
 			return true;
-		}
-		if (test == null) {
-			return false;
 		}
 		if (filterPattern == null) {
 			filterPattern = Pattern.compile(filter);
 		}
-		return filterPattern.matcher(test).matches();
+		return Arrays.stream(tests).filter(Objects::nonNull)
+				.anyMatch(test -> filterPattern.matcher(test).matches());
 	}
 
 	String timestamp(Date date) {

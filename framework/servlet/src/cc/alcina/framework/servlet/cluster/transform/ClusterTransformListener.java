@@ -11,13 +11,12 @@ import org.slf4j.Logger;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
-import cc.alcina.framework.entity.transform.event.ExternalTransformPersistenceListener;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.State;
 
@@ -84,7 +83,11 @@ public class ClusterTransformListener
 				preFlushLatches.put(event.getMaxPersistedRequestId(), latch);
 				publishRequests(requests, State.PRE_COMMIT);
 				try {
+					long start = System.currentTimeMillis();
 					latch.await();
+					logger.info("Pre-commit await: request {} : {} ms",
+							event.getMaxPersistedRequestId(),
+							System.currentTimeMillis() - start);
 				} catch (InterruptedException e) {
 					throw new WrappedRuntimeException(e);
 				}
@@ -99,7 +102,6 @@ public class ClusterTransformListener
 		}
 	}
 
-	@Override
 	public void startService() {
 		try {
 			transformCommitLog.consumer(commitLogHost,
@@ -113,7 +115,6 @@ public class ClusterTransformListener
 		}
 	}
 
-	@Override
 	public void stopService() {
 		if (domainStore == DomainStore.writableStore()) {
 			domainStore.getPersistenceEvents()
@@ -154,10 +155,13 @@ public class ClusterTransformListener
 		switch (request.state) {
 		case PRE_COMMIT:
 			queue.onRequestDataReceived(request.request);
+			logger.info("Post request data received: {} {}", request.id,
+					request.state);
 			CountDownLatch latch = preFlushLatches
 					.remove(request.request.getId());
 			if (latch != null) {
 				latch.countDown();
+				logger.info("Released latch: {} {}", request.id, request.state);
 			}
 			break;
 		case COMMIT:

@@ -11,10 +11,9 @@ import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.util.JacksonUtils;
 
 public class ClassMetaHandler extends AbstractHandler {
 	ClasspathScannerResolver classpathScannerResolver = new ClasspathScannerResolver();
@@ -24,15 +23,11 @@ public class ClassMetaHandler extends AbstractHandler {
 			HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
 		try {
-			LooseContext.pushWithTrue(
-					KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
 			MetricLogging.get().start("class-meta");
 			ServletInputStream inputStream = request.getInputStream();
-			byte[] byteArray = ResourceUtilities
-					.readStreamToByteArray(inputStream);
-			String payload = new String(byteArray, "UTF-8");
-			ClassMetaRequest typedRequest = KryoUtils
-					.deserializeFromBase64(payload, ClassMetaRequest.class);
+			String json = ResourceUtilities.readStreamToString(inputStream);
+			ClassMetaRequest typedRequest = JacksonUtils.deserialize(json,
+					ClassMetaRequest.class);
 			ClassMetaResponse typedResponse = new ClassMetaResponse();
 			typedResponse.request = typedRequest;
 			switch (typedRequest.type) {
@@ -48,17 +43,15 @@ public class ClassMetaHandler extends AbstractHandler {
 			default:
 				throw new UnsupportedOperationException();
 			}
-			KryoUtils.serializeToStream(typedResponse,
-					response.getOutputStream());
-			response.setContentType("application/octet-stream");
+			String resultJson = JacksonUtils.serialize(typedResponse);
+			response.getWriter().write(resultJson);
+			response.setContentType("application/json");
 			response.setStatus(HttpServletResponse.SC_OK);
 			baseRequest.setHandled(true);
 			Ax.out("Served class meta: %s", typedResponse);
 			MetricLogging.get().end("class-meta");
 		} catch (Exception e) {
 			throw new ServletException(e);
-		} finally {
-			LooseContext.pop();
 		}
 	}
 

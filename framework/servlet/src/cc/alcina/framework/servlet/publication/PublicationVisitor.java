@@ -9,6 +9,14 @@ import cc.alcina.framework.servlet.publication.ContentWrapper.WrapperModel;
  * To allow custom behaviour/composition in the publication pipeline
  * 
  * @author nick@alcina.cc
+ * 
+ *         p.s. I almost named this 'PublicationAccompanist' - in keeping with
+ *         other music-themed naming such as 'Consort' - it's not really a
+ *         visitor, it's more a way to encapsulate customisations of a process,
+ *         based on the initial state (boundary conditions) - the way an
+ *         accompanist will modify the expression of music (but not be the main
+ *         focus). Hmmm....that's not quite right either. What would you call
+ *         this pattern? Apart from the overused 'Custoomiser', huh?
  *
  */
 public class PublicationVisitor {

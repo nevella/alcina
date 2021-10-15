@@ -2,6 +2,7 @@ package cc.alcina.framework.servlet;
 
 import java.util.Enumeration;
 import java.util.Map;
+import java.util.Optional;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
@@ -89,6 +90,19 @@ public class ServletLayerUtils {
 		String forwarded = request.getHeader("X-Forwarded-For");
 		return CommonUtils.isNotNullOrEmpty(forwarded) ? forwarded
 				: request.getRemoteAddr();
+	}
+
+	public static String
+			robustGetRequestHostAndProtocol(HttpServletRequest request) {
+		if (request == null) {
+			return null;
+		}
+		String protocol = Optional
+				.ofNullable(request.getHeader("X-Forwarded-Proto"))
+				.orElse(request.getScheme());
+		String host = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
+				.orElse(request.getServerName());
+		return Ax.format("%s://%s/", protocol, host);
 	}
 
 	public static void setAppServletInitialised(boolean appServletInitialised) {

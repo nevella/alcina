@@ -31,36 +31,43 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
-/*
+/**
  * 
- * This class is intended for transaction-aware indices and lookups. 
- * A 'layer' records deltas to the map state by recording modifications and removals in separate, non-locked submaps.
+ * This class is intended for transaction-aware indices and lookups. A 'layer'
+ * records deltas to the map state by recording modifications and removals in
+ * separate, non-locked submaps.
  * 
- * The map is composed of a base layer, a list of visible-to-all-transactions merged layers 
- * and a list of current transaction layers whose visibility is transaction-dependent.
+ * The map is composed of a base layer, a list of visible-to-all-transactions
+ * merged layers and a list of current transaction layers whose visibility is
+ * transaction-dependent.
  * 
- * The merged layers are generated during vacuum, and are 
- *  intended to avoid runaway map layers for heavily written maps by using the levelled compaction algorithm 
- *   similar to that used in Cassandra and Chromium leveldb compactions.
- *  
- *  
- *  Note that vacuum is probably the most interesting part of this class - it's like sliding plates
- *   (B=merged A1, A2) under other plates (A1, A2) - it would be nice 
- *   to formally prove that the combination (B,A2) === (B) === (B,A1,A2) (in layer order)
+ * The merged layers are generated during vacuum, and are intended to avoid
+ * runaway map layers for heavily written maps by using the levelled compaction
+ * algorithm similar to that used in Cassandra and Chromium leveldb compactions.
  * 
- *   
- *   Operations are resolved to return the most recent value
- *   for the combined sequence of layers, from (per-transaction) youngest-to-oldest
- *   
- *   This class allows null keys and values
- *   
- *   Synchronization:
  * 
- * 'this' acts as a lock on creation addition/removal of a layer (after base transaction)  
+ * Note that vacuum is probably the most interesting part of this class - it's
+ * like sliding plates (B=merged A1, A2) under other plates (A1, A2) - it would
+ * be nice to formally prove that the combination (B,A2) === (B) === (B,A1,A2)
+ * (in layer order)
  * 
- * FIXME - mvcc.4 - _possibly_ optimise with getLong(long l) - putLong(long l) which will lower wrapping/unwrapping overhead
- *   
+ * 
+ * Operations are resolved to return the most recent value for the combined
+ * sequence of layers, from (per-transaction) youngest-to-oldest
+ * 
+ * This class allows null keys and values
+ * 
+ * Synchronization:
+ * 
+ * 'this' acts as a lock on creation addition/removal of a layer (after base
+ * transaction)
+ * 
+ * 
+ * Deprecated - replaced by TransactionalMap which uses a simpler tx resolution
+ * strategy and has better (and non-falling-off-a-cliff-in-worst-case)
+ * performance. Of historical interest only
  */
+@Deprecated
 public class TransactionalMapOld<K, V> extends AbstractMap<K, V>
 		implements Vacuumable, TransactionalCollection {
 	private Layer base;

@@ -17,7 +17,6 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
@@ -38,6 +37,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
+import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ClassSimpleNameCustomiser;
@@ -45,13 +45,15 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.ExpandableLabelCustomis
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.NiceWidthBoundTable;
+import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener.State;
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 
 @RegistryLocation(registryPoint = ClientTransformExceptionResolver.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 public class ClientTransformExceptionResolutionSkipAndReload
-		implements ClientTransformExceptionResolver, StateChangeListener,
+		implements ClientTransformExceptionResolver,
+		TopicListener<CommitToStorageTransformListener.State>,
 		PermissibleActionListener {
 	private FlowPanel fp;
 
@@ -78,13 +80,13 @@ public class ClientTransformExceptionResolutionSkipAndReload
 			@Override
 			protected void onAttach() {
 				super.onAttach();
-				storage.addStateChangeListener(
+				storage.topicStateChanged().add(
 						ClientTransformExceptionResolutionSkipAndReload.this);
 			}
 
 			@Override
 			protected void onDetach() {
-				storage.removeStateChangeListener(
+				storage.topicStateChanged().remove(
 						ClientTransformExceptionResolutionSkipAndReload.this);
 				super.onDetach();
 			}
@@ -117,7 +119,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 			// unknown exception - throw
 			token.setResolverAction(
 					ClientTransformExceptionResolverAction.THROW);
-			callback.apply(token);
+			callback.accept(token);
 			return;
 		}
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
@@ -174,8 +176,9 @@ public class ClientTransformExceptionResolutionSkipAndReload
 	}
 
 	@Override
-	public void stateChanged(Object source, String newState) {
-		if (newState.equals(CommitToStorageTransformListener.RELOAD)) {
+	public void topicPublished(String key, State newState) {
+		switch (newState) {
+		case RELOAD:
 			status.reloading();
 			new Timer() {
 				@Override
@@ -183,12 +186,13 @@ public class ClientTransformExceptionResolutionSkipAndReload
 					Window.Location.reload();
 				}
 			}.schedule(2000);
-		} else if (newState
-				.equals(CommitToStorageTransformListener.COMMITTED)) {
+			break;
+		case COMMITTED:
 			dialog.hide();
-		} else if (newState
-				.equals(CommitToStorageTransformListener.COMMITTING)) {
+			break;
+		case COMMITTING:
 			status.committing();
+			break;
 		}
 	}
 
@@ -201,7 +205,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		} else {
 			token.setResolverAction(
 					ClientTransformExceptionResolverAction.RESUBMIT);
-			callback.apply(token);
+			callback.accept(token);
 		}
 	}
 

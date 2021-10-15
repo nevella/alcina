@@ -13,9 +13,9 @@ import java.util.function.Function;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -38,36 +38,50 @@ public @interface ModalDisplay {
 		Validator[] validator() default {};
 	}
 
-	public static class ModalResolver implements Resolver {
-		public static ModalResolver multiple(boolean readOnly) {
-			return new ModalResolver(
+	public static class ModalResolver extends ContextResolver {
+		public static ModalResolver multiple(ContextResolver parentResolver,
+				boolean readOnly) {
+			return new ModalResolver(parentResolver,
 					readOnly ? Mode.MULTIPLE_READ : Mode.MULTIPLE_WRITE);
 		}
 
-		public static ModalResolver single(boolean readOnly) {
-			return new ModalResolver(
+		public static ModalResolver single(ContextResolver parentResolver,
+				boolean readOnly) {
+			return new ModalResolver(parentResolver,
 					readOnly ? Mode.SINGLE_READ : Mode.SINGLE_WRITE);
 		}
 
 		private final Mode mode;
 
-		private ModalResolver(Mode mode) {
+		private ModalResolver(ContextResolver parentResolver, Mode mode) {
+			super(parentResolver);
 			this.mode = Registry.impl(ModeTransformer.class).apply(mode);
 		}
 
 		@Override
-		public <A extends Annotation> A getAnnotation(Class<A> annotationClass,
-				AnnotationLocation location) {
+		public boolean equals(Object obj) {
+			return obj instanceof ModalResolver
+					&& ((ModalResolver) obj).mode == mode;
+		}
+
+		@Override
+		public int hashCode() {
+			return mode.hashCode();
+		}
+
+		@Override
+		public <A extends Annotation> A resolveAnnotation(
+				Class<A> annotationClass, AnnotationLocation location) {
 			boolean customResolution = annotationClass == Display.class
 					|| annotationClass == Custom.class
 					|| annotationClass == Validator.class;
-			A defaultResolution = Resolver.super.getAnnotation(annotationClass,
+			A defaultResolution = super.resolveAnnotation(annotationClass,
 					location);
 			if (customResolution) {
 				RequireSpecified requireSpecified = Reflections.classLookup()
-						.getAnnotationForClass(location.fallbackToClass,
+						.getAnnotationForClass(location.classLocation,
 								RequireSpecified.class);
-				ModalDisplay modalDisplay = Resolver.super.getAnnotation(
+				ModalDisplay modalDisplay = super.resolveAnnotation(
 						ModalDisplay.class, location);
 				A modalResolution = null;
 				Optional<Modal> matchingModal = Optional.empty();

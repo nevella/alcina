@@ -44,6 +44,8 @@ public class DomainClassDescriptor<T extends Entity>
 
 	private String[] propertyIndicies;
 
+	private String initialLoadFilter = "";
+
 	public DomainClassDescriptor(Class<T> clazz) {
 		this(clazz, new String[0]);
 	}
@@ -105,7 +107,7 @@ public class DomainClassDescriptor<T extends Entity>
 	}
 
 	public String getInitialLoadFilter() {
-		return "";
+		return this.initialLoadFilter;
 	}
 
 	public DomainLookup getLookupFor(String propertyName) {
@@ -178,14 +180,17 @@ public class DomainClassDescriptor<T extends Entity>
 	public DomainStoreProperty
 			resolveDomainStoreProperty(AnnotationLocation propertyLocation) {
 		DomainStorePropertyResolver resolver = new DomainStorePropertyResolver(
+				domainDescriptor.domainStorePropertyTreeResolver(),
 				propertyLocation);
-		DomainStorePropertyResolver parent = domainDescriptor
-				.resolveDomainStoreProperty(resolver);
-		return parent.resolver.hasValue() ? parent : null;
+		return resolver.hasValue() ? resolver : null;
 	}
 
 	public void setDomainDescriptor(DomainDescriptor domainDescriptor) {
 		this.domainDescriptor = domainDescriptor;
+	}
+
+	public void setInitialLoadFilter(String initialLoadFilter) {
+		this.initialLoadFilter = initialLoadFilter;
 	}
 
 	@Override

@@ -70,8 +70,8 @@ public class RegExp_Jso extends JavaScriptObject implements IRegExp {
 	 * @return A literal string replacement
 	 */
 	public static native String quote(String input) /*-{
-													return (input + '').replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
-													}-*/;
+    return (input + '').replace(/([.?*+^$[\]\\(){}|-])/g, "\\$1");
+	}-*/;
 
 	protected RegExp_Jso() {
 	}
@@ -84,24 +84,29 @@ public class RegExp_Jso extends JavaScriptObject implements IRegExp {
 	 *            the string to apply the regular expression to
 	 * @return a match result if the string matches, else {@code null}
 	 */
+	@Override
 	public final native MatchResult exec(String input) /*-{
-														return @com.google.gwt.regexp.shared.MatchResult::new(Lcom/google/gwt/regexp/shared/IMatchResult;)(this.exec(input));
-														}-*/;
+    var jsResult = this.exec(input);
+    return jsResult == null ? null
+        : @com.google.gwt.regexp.shared.MatchResult::new(Lcom/google/gwt/regexp/shared/IMatchResult;)(jsResult);
+	}-*/;
 
 	/**
 	 * Returns whether the regular expression captures all occurences of the
 	 * pattern.
 	 */
+	@Override
 	public final native boolean getGlobal() /*-{
-											return this.global;
-											}-*/;
+    return this.global;
+	}-*/;
 
 	/**
 	 * Returns whether the regular expression ignores case.
 	 */
+	@Override
 	public final native boolean getIgnoreCase() /*-{
-												return this.ignoreCase;
-												}-*/;
+    return this.ignoreCase;
+	}-*/;
 
 	/**
 	 * Returns the zero-based position at which to start the next match. The
@@ -111,24 +116,27 @@ public class RegExp_Jso extends JavaScriptObject implements IRegExp {
 	 *
 	 * @see #getGlobal()
 	 */
+	@Override
 	public final native int getLastIndex() /*-{
-											return this.lastIndex;
-											}-*/;
+    return this.lastIndex;
+	}-*/;
 
 	/**
 	 * Returns whether '$' and '^' match line returns ('\n' and '\r') in
 	 * addition to the beginning or end of the string.
 	 */
+	@Override
 	public final native boolean getMultiline() /*-{
-												return this.multiline;
-												}-*/;
+    return this.multiline;
+	}-*/;
 
 	/**
 	 * Returns the pattern string of the regular expression.
 	 */
+	@Override
 	public final native String getSource() /*-{
-											return this.source;
-											}-*/;
+    return this.source;
+	}-*/;
 
 	/**
 	 * Returns the input string with the part(s) matching the regular expression
@@ -153,17 +161,18 @@ public class RegExp_Jso extends JavaScriptObject implements IRegExp {
 	 * @throws RuntimeException
 	 *             if {@code replacement} is invalid
 	 */
-	public final native String replace(String input,
-			String replacement) /*-{
-								return input.replace(this, replacement);
-								}-*/;
+	@Override
+	public final native String replace(String input, String replacement) /*-{
+    return input.replace(this, replacement);
+	}-*/;
 
 	/**
 	 * Sets the zero-based position at which to start the next match.
 	 */
+	@Override
 	public final native void setLastIndex(int lastIndex) /*-{
-															this.lastIndex = lastIndex;
-															}-*/;
+    this.lastIndex = lastIndex;
+	}-*/;
 
 	/**
 	 * Splits the input string around matches of the regular expression. If the
@@ -176,6 +185,7 @@ public class RegExp_Jso extends JavaScriptObject implements IRegExp {
 	 *
 	 * @return the strings split off, any of which may be empty.
 	 */
+	@Override
 	public final native SplitResult split(String input) /*-{
 														return @com.google.gwt.regexp.shared.SplitResult::new(Lcom/google/gwt/regexp/shared/ISplitResult;)(input.split(this));
 														}-*/;
@@ -195,6 +205,7 @@ public class RegExp_Jso extends JavaScriptObject implements IRegExp {
 	 *
 	 * @return the strings split off, any of which may be empty.
 	 */
+	@Override
 	public final native SplitResult split(String input, int limit) /*-{
 																	return @com.google.gwt.regexp.shared.SplitResult::new(Lcom/google/gwt/regexp/shared/ISplitResult;)(input.split(this, limit));
 																	}-*/;
@@ -208,7 +219,8 @@ public class RegExp_Jso extends JavaScriptObject implements IRegExp {
 	 *            the string to apply the regular expression to
 	 * @return whether the regular expression matches the given string.
 	 */
+	@Override
 	public final native boolean test(String input) /*-{
-													return this.test(input);
-													}-*/;
+    return this.test(input);
+	}-*/;
 }

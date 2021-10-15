@@ -1,18 +1,14 @@
 package cc.alcina.framework.servlet.servlet.remote;
 
-import java.io.IOException;
 import java.io.InputStream;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Method;
 import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.ClientProtocolException;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -21,9 +17,8 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 
-import com.esotericsoftware.minlog.Log;
-
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -35,8 +30,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.projection.GraphProjection;
-import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.transform.ThreadlocalTransformManager.PostTransactionEntityResolver;
+import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationProxy.RemoteInvocationProxyInterceptor;
 
@@ -79,9 +73,7 @@ public class RemoteInvocation {
 	}
 
 	public Object invoke(String methodName, Object[] args,
-			RemoteInvocationParameters params) throws Exception,
-			URISyntaxException, IOException, UnsupportedEncodingException,
-			ClientProtocolException, ClassNotFoundException {
+			RemoteInvocationParameters params) throws Exception {
 		try {
 			LooseContext.pushWithBoolean(
 					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER, false);
@@ -145,10 +137,15 @@ public class RemoteInvocation {
 				throw new Exception("Remote exception");
 			}
 			if (transformMethod) {
-				ThreadlocalTransformManager.get()
-						.setPostTransactionEntityResolver(
-								(PostTransactionEntityResolver) container
-										.get(1));
+				// will be invalid if replaying
+				if (!LooseContext.is(
+						TransformPersisterInPersistenceContext.CONTEXT_REPLAYING_FOR_LOGS)) {
+					EntityLocatorMap returned = ((DomainTransformLayerWrapper) container
+							.get(0)).locatorMap;
+					EntityLocatorMap sent = ((TransformPersistenceToken) params.args[1])
+							.getLocatorMap();
+					sent.merge(returned);
+				}
 			}
 			customiseResult(object);
 			return object;
@@ -158,11 +155,6 @@ public class RemoteInvocation {
 		} finally {
 			LooseContext.pop();
 		}
-	}
-
-	protected ArrayList deserializeResult(InputStream content) {
-		return KryoUtils.deserializeFromStream(content,
-				ArrayList.class);
 	}
 
 	public void setRemoteAddress(String remoteAddress) {
@@ -182,6 +174,10 @@ public class RemoteInvocation {
 	}
 
 	protected void customiseResult(Object obj) {
+	}
+
+	protected ArrayList deserializeResult(InputStream content) {
+		return KryoUtils.deserializeFromStream(content, ArrayList.class);
 	}
 
 	class PostAndClient {

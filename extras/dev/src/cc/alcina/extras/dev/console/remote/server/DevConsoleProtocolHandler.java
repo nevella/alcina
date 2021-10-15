@@ -150,9 +150,12 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 				for (ConsoleRecord consoleRecord : records) {
 					String text = consoleRecord.text;
 					if (Ax.notBlank(text)) {
-						text = text.replaceAll(
-								"(?:^|\\s)(/(?:tmp|Users|~).+?)(?:\n|\t|$)",
-								"<a href='/serve-local.do?$1' target='_blank'>$1</a>");
+						if (!text.contains("<") && !text.contains(">")
+								&& !ResourceUtilities.is("disablePathLinks")) {
+							text = text.replaceAll(
+									"(?:^|\\s)(/(?:tmp|Users|~).+?)(?:\n|\t|$)",
+									"<a href='/serve-local.do?$1' target='_blank'>$1</a>");
+						}
 						String escaped = text.contains("<a href=")
 								&& !text.contains("\"<") ? text
 										: StringEscapeUtils.escapeHtml(text);

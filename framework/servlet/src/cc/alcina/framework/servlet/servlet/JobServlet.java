@@ -13,19 +13,28 @@
  */
 package cc.alcina.framework.servlet.servlet;
 
+import java.util.Objects;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ServerControlAction;
-import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlBuilder;
+import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.ResourceUtilities.SimpleQuery;
+import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.task.TaskCancelJob;
 import cc.alcina.framework.servlet.task.TaskListJobs;
@@ -70,6 +79,25 @@ public class JobServlet extends AlcinaServlet {
 		return createTaskUrl(null, task);
 	}
 
+	public static long invokeAsSystemUser(String taskUrl) {
+		taskUrl += "&return_job_id=true";
+		SimpleQuery query = new ResourceUtilities.SimpleQuery(taskUrl);
+		StringMap headers = new StringMap();
+		ClientInstance clientInstance = EntityLayerObjects.get()
+				.getServerAsClientInstance();
+		headers.put(
+				AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY,
+				String.valueOf(clientInstance.getId()));
+		headers.put(
+				AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY,
+				String.valueOf(clientInstance.getAuth()));
+		try {
+			return Long.parseLong(query.withHeaders(headers).asString());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	@Override
 	protected void handleRequest(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
@@ -81,6 +109,8 @@ public class JobServlet extends AlcinaServlet {
 				.valueOf(Ax.blankTo(request.getParameter("action"), "list"));
 		String id = request.getParameter("id");
 		String filter = request.getParameter("filter");
+		boolean returnJobId = Objects
+				.equals(request.getParameter("return_job_id"), "true");
 		Job job = null;
 		switch (action) {
 		case list:
@@ -116,13 +146,42 @@ public class JobServlet extends AlcinaServlet {
 				task = TransformManager.Serializer.get()
 						.deserialize(serialized);
 			}
-			job = JobRegistry.get().perform(task);
+			job = task.schedule();
+			Transaction.commit();
+			if (returnJobId) {
+				response.setContentType("text/plain");
+				response.getWriter().write(String.valueOf(job.getId()));
+				response.flushBuffer();
+			} else {
+				String href = createTaskUrl(new TaskLogJobDetails()
+						.withValue(String.valueOf(job.getId())));
+				response.setContentType(
+						task instanceof TaskWithHtmlResult ? "text/html"
+								: "text/plain");
+				response.getWriter()
+						.write(Ax.format("Job started:\n%s\n", href));
+				response.flushBuffer();
+			}
+			JobRegistry.get().await(job);
 			break;
 		}
-		job = Domain.find(job);
+		job = job.domain().ensurePopulated();
 		if (job.getResultType().isFail() || job.getLargeResult() == null) {
-			writeTextResponse(response, Ax.blankTo(job.getLog(),
-					Ax.format("Job %s - complete", job)));
+			String message = Ax.blankTo(job.getLog(),
+					Ax.format("Job %s - complete", job));
+			if (Ax.matches(request.getHeader("User-Agent"), ".*Mozilla.*")) {
+				DomDoc doc = DomDoc.basicHtmlDoc();
+				doc.html().head().builder().tag("title")
+						.text(Ax.format("Job - %s",
+								job.getTask().getClass().getSimpleName()))
+						.append();
+				doc.html().body().builder().tag("div")
+						.attr("style", "font-family:monospace").text(message)
+						.append();
+				writeHtmlResponse(response, doc.prettyToString());
+			} else {
+				writeTextResponse(response, message);
+			}
 		} else {
 			writeHtmlResponse(response, job.getLargeResult().toString());
 		}

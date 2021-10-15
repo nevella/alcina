@@ -4,11 +4,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.TreeMap;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.CollectionFilters.PrefixedFilter;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -78,8 +77,9 @@ public class ObjectStoreMemoryImpl
 	@Override
 	public void getKeysPrefixedBy(String keyPrefix,
 			AsyncCallback<List<String>> completedCallback) {
-		List<String> prefixed = CollectionFilters.filter(reverseKeys.keySet(),
-				new PrefixedFilter(keyPrefix));
+		List<String> prefixed = reverseKeys.keySet().stream()
+				.filter(key -> key.startsWith(keyPrefix))
+				.collect(Collectors.toList());
 		completedCallback.onSuccess(prefixed);
 	}
 

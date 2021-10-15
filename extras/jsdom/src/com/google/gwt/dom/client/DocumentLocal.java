@@ -663,6 +663,11 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public String getVisibilityState() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public void importNode(Node node, boolean deep) {
 		throw new UnsupportedOperationException();
 	}

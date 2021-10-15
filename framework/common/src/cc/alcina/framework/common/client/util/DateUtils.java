@@ -7,7 +7,6 @@ import com.google.gwt.user.datepicker.client.CalendarUtil;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.RegistrableService;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /**
@@ -20,7 +19,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 @RegistryLocation(registryPoint = DateUtils.class, implementationType = ImplementationType.SINGLETON)
 @SuppressWarnings("deprecation")
 @ClientInstantiable
-public class DateUtils implements RegistrableService {
+public class DateUtils {
 	private static DateUtils singleton;
 
 	public static int ageInDays(Date date) {
@@ -36,11 +35,6 @@ public class DateUtils implements RegistrableService {
 			singleton = Registry.impl(DateUtils.class);
 		}
 		return singleton;
-	}
-
-	@Override
-	public void appShutdown() {
-		singleton = null;
 	}
 
 	public DatePair getYearRange(int startingMonth, int yearOffset) {

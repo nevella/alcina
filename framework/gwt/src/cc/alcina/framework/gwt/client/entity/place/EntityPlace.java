@@ -4,6 +4,8 @@ import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlTransient;
 
+import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -12,20 +14,32 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
-import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public abstract class EntityPlace<SD extends EntitySearchDefinition>
 		extends BindablePlace<SD> implements ClearableIdPlace, HasEntityAction {
+	public static EntityPlace forClass(Class clazz) {
+		return (EntityPlace) RegistryHistoryMapper.get()
+				.getPlaceByModelClass(clazz);
+	}
+
+	public static EntityPlace forClassAndId(Class clazz, long id) {
+		return (EntityPlace) forClass(clazz).withId(id);
+	}
+
+	public static EntityPlace forEntity(Entity entity) {
+		return forClassAndId(entity.getClass(), entity.getId())
+				.withEntity(entity);
+	}
+
 	public transient Entity entity;
 
 	public EntityAction action = EntityAction.VIEW;
 
-	public <EP extends EntityPlace> EP withAction(EntityAction action) {
-		this.action = action;
-		return (EP) this;
+	public EntityLocator asLocator() {
+		return new EntityLocator(provideEntityClass(), id, 0);
 	}
 
 	@Override
@@ -42,6 +56,25 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 	@Override
 	public SD getSearchDefinition() {
 		return super.getSearchDefinition();
+	}
+
+	public String provideCategoryString() {
+		return CommonUtils.pluralise(provideEntityClass().getSimpleName(), 0,
+				false);
+	}
+
+	public String provideCategoryString(int size, boolean withCount) {
+		return CommonUtils.pluralise(provideEntityClass().getSimpleName(), size,
+				withCount);
+	}
+
+	public <E extends Entity> E provideEntity() {
+		return entity != null ? (E) entity
+				: (E) Domain.find(provideEntityClass(), id);
+	}
+
+	public Class<? extends Entity> provideEntityClass() {
+		return RegistryHistoryMapper.get().getEntityClass(getClass());
 	}
 
 	@Override
@@ -98,46 +131,14 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 		return provideCategoryString();
 	}
 
-	public Class<? extends Entity> provideEntityClass() {
-		return RegistryHistoryMapper.get().getEntityClass(getClass());
+	public <EP extends EntityPlace> EP withAction(EntityAction action) {
+		this.action = action;
+		return (EP) this;
 	}
 
-	public <E extends Entity> E provideEntity() {
-		return entity != null ? (E) entity
-				: (E) TransformManager.get().getObject(provideEntityClass(), id,
-						0);
-	}
-
-	public String provideCategoryString() {
-		return CommonUtils.pluralise(provideEntityClass().getSimpleName(), 0,
-				false);
-	}
-
-	public String provideCategoryString(int size, boolean withCount) {
-		return CommonUtils.pluralise(provideEntityClass().getSimpleName(), size,
-				withCount);
-	}
-
-	public EntityPlace withEntity(Entity entity) {
+	public <EP extends EntityPlace> EP withEntity(Entity entity) {
 		this.entity = entity;
 		withHasId(entity);
-		return this;
-	}
-
-	public static EntityPlace forClassAndId(Class clazz, long id) {
-		return (EntityPlace) forClass(clazz).withId(id);
-	}
-
-	public EntityLocator asLocator() {
-		return new EntityLocator(provideEntityClass(), id, 0);
-	}
-
-	public static EntityPlace forClass(Class clazz) {
-		return (EntityPlace) RegistryHistoryMapper.get()
-				.getPlaceByModelClass(clazz);
-	}
-
-	public static EntityPlace forEntity(Entity entity) {
-		return forClassAndId(entity.getClass(), entity.getId()).withEntity(entity);
+		return (EP) this;
 	}
 }

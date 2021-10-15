@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreDescriptor.TestSupport;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor.TestSupport;
 
 /**
  * 
@@ -30,7 +30,8 @@ public class MvccEntityLazyPropertyTest<IU extends Entity & IUser, IG extends En
 		Class<? extends Entity> clazz = Registry.impl(TestSupport.class)
 				.getTypeWithLazyProperties();
 		List<PropertyDescriptor> withLazy = SEUtilities
-				.getSortedPropertyDescriptors(clazz).stream().filter(pd -> {
+				.getPropertyDescriptorsSortedByName(clazz).stream()
+				.filter(pd -> {
 					DomainStoreProperty domainStoreProperty = pd.getReadMethod()
 							.getAnnotation(DomainStoreProperty.class);
 					if (domainStoreProperty != null) {
@@ -42,17 +43,19 @@ public class MvccEntityLazyPropertyTest<IU extends Entity & IUser, IG extends En
 					}
 					return false;
 				}).collect(Collectors.toList());
-		Domain.stream(clazz).limit(2).map(Domain::find).forEach(e -> {
-			try {
-				for (PropertyDescriptor pd : withLazy) {
-					Object invoke = pd.getReadMethod().invoke(e, new Object[0]);
-					Preconditions.checkNotNull(invoke);
-					Ax.out("%s - %s - %s chars", e.toStringEntity(),
-							pd.getName(), invoke.toString().length());
-				}
-			} catch (Exception e2) {
-				throw new WrappedRuntimeException(e2);
-			}
-		});
+		Domain.stream(clazz).limit(2).map(e -> e.domain().ensurePopulated())
+				.forEach(e -> {
+					try {
+						for (PropertyDescriptor pd : withLazy) {
+							Object invoke = pd.getReadMethod().invoke(e,
+									new Object[0]);
+							Preconditions.checkNotNull(invoke);
+							Ax.out("%s - %s - %s chars", e.toStringEntity(),
+									pd.getName(), invoke.toString().length());
+						}
+					} catch (Exception e2) {
+						throw new WrappedRuntimeException(e2);
+					}
+				});
 	}
 }

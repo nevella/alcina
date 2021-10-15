@@ -117,7 +117,8 @@ public class StackPanel extends ComplexPanel
 	 * @param asHTML
 	 *            <code>true</code> to treat the specified text as HTML
 	 */
-	public void add(Widget w, @IsSafeHtml String stackText, boolean asHTML) {
+	public void add(Widget w, @IsSafeHtml
+	String stackText, boolean asHTML) {
 		add(w);
 		setStackText(getWidgetCount() - 1, stackText, asHTML);
 	}
@@ -150,10 +151,12 @@ public class StackPanel extends ComplexPanel
 		return visibleStack;
 	}
 
+	@Override
 	public void insert(IsWidget w, int beforeIndex) {
 		insert(asWidgetOrNull(w), beforeIndex);
 	}
 
+	@Override
 	public void insert(Widget w, int beforeIndex) {
 		// header
 		Element trh = DOM.createTR();
@@ -273,8 +276,8 @@ public class StackPanel extends ComplexPanel
 	 * @param asHTML
 	 *            <code>true</code> to treat the specified text as HTML
 	 */
-	public void setStackText(int index, @IsSafeHtml String text,
-			boolean asHTML) {
+	public void setStackText(int index, @IsSafeHtml
+	String text, boolean asHTML) {
 		if (index >= getWidgetCount()) {
 			return;
 		}
@@ -307,8 +310,6 @@ public class StackPanel extends ComplexPanel
 
 	private int findDividerIndex(Element elem) {
 		while (elem != null && elem != getElement()) {
-			Ax.out("find divider index: %s %s", elem.getTagName(),
-					elem.hashCode());
 			String expando = elem.getAttribute("__index");
 			if (!Ax.isBlank(expando)) {
 				// Make sure it belongs to me!

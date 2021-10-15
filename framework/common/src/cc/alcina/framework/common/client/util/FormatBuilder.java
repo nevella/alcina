@@ -21,6 +21,11 @@ public class FormatBuilder {
 		return this;
 	}
 
+	public void appendBlock(String text) {
+		// GWT jjs doesn't like this::line (because varargs)
+		Arrays.stream(text.split("\n")).forEach(l -> this.line(l));
+	}
+
 	public void appendIf(boolean test, String string) {
 		if (test) {
 			format(string);
@@ -74,7 +79,7 @@ public class FormatBuilder {
 	public FormatBuilder format(String template, Object... args) {
 		ensureIndent();
 		maybeAppendSeparator();
-		sb.append(Ax.format(template, args));
+		sb.append(args.length == 0 ? template : Ax.format(template, args));
 		return this;
 	}
 

@@ -14,8 +14,8 @@
 package cc.alcina.framework.common.client.search;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 
 /**
@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
  * @author Nick Reddel
  */
 public abstract class LocalSearchDefinition extends SearchDefinition {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private Class resultClass;
 
@@ -32,7 +32,7 @@ public abstract class LocalSearchDefinition extends SearchDefinition {
 	}
 
 	public Collection search() {
-		CollectionFilter filter = buildFilter();
+		Predicate filter = buildFilter();
 		return TransformManager.get().filter(getResultClass(), filter);
 	}
 
@@ -40,7 +40,7 @@ public abstract class LocalSearchDefinition extends SearchDefinition {
 		this.resultClass = resultClass;
 	}
 
-	protected CollectionFilter buildFilter() {
+	protected Predicate buildFilter() {
 		return null;
 	}
 }

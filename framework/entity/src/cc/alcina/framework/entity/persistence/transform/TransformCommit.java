@@ -24,8 +24,6 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -62,16 +60,14 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.EntityLayerTransformPropagation;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
-import cc.alcina.framework.entity.persistence.WrappedObject;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.cache.LockUtils;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.LockUtils;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.AdjunctTransformCollation;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
@@ -100,6 +96,9 @@ public class TransformCommit {
 
 	public static final transient String CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH = TransformCommit.class
 			.getName() + ".CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH";
+
+	public static final transient String CONTEXT_COMMIT_WITH_BACKOFF = TransformCommit.class
+			.getName() + ".CONTEXT_COMMIT_WITH_BACKOFF";
 
 	public static final transient String CONTEXT_TRANSFORM_PRIORITY = TransformCommit.class
 			.getName() + ".CONTEXT_TRANSFORM_PRIORITY";
@@ -258,8 +257,8 @@ public class TransformCommit {
 								LoginState.LOGGED_IN, asRoot);
 					} else {
 						if (!Objects.equals(
-								Domain.find(request.getClientInstance())
-										.provideUser(),
+								request.getClientInstance().domain()
+										.domainVersion().provideUser(),
 								PermissionsManager.get().getUser())) {
 							throw new UnsupportedOperationException(
 									"May need to create an additional authenticationSession");
@@ -481,21 +480,24 @@ public class TransformCommit {
 	}
 
 	public static int commitTransformsAsRoot() {
-		return commitTransforms(true);
+		if (LooseContext.is(CONTEXT_COMMIT_WITH_BACKOFF)) {
+			return commitWithBackoff();
+		} else {
+			return commitTransforms(true);
+		}
 	}
 
-	public static void commitWithBackoff() {
-		commitWithBackoff(0, 5, 40, 2.0);
+	public static int commitWithBackoff() {
+		return commitWithBackoff(0, 8, 40, 2.0);
 	}
 
-	public static void commitWithBackoff(int initialDelayMs, int retries,
+	public static int commitWithBackoff(int initialDelayMs, int retries,
 			double delayMs, double retryMultiplier) {
 		try {
 			Thread.sleep(initialDelayMs);
 			while (retries-- > 0) {
 				try {
-					commitTransforms(true);
-					break;
+					return commitTransforms(true);
 				} catch (Exception e) {
 					Ax.simpleExceptionOut(e);
 					logger.warn("Exception in commitWithBackoff, retrying");
@@ -506,6 +508,7 @@ public class TransformCommit {
 		} catch (InterruptedException e) {
 			e.printStackTrace();
 		}
+		return -1;
 	}
 
 	public static void enqueueTransforms(String transformQueueName,
@@ -593,15 +596,22 @@ public class TransformCommit {
 
 	public EntityLocatorMap getLocatorMapForClient(
 			ClientInstance clientInstance, boolean forceRefresh) {
+		if (clientInstance == EntityLayerObjects.get()
+				.getServerAsClientInstance()) {
+			return EntityLayerObjects.get()
+					.getServerAsClientInstanceEntityLocatorMap();
+		}
 		Long clientInstanceId = clientInstance.getId();
 		if (!clientInstanceLocatorMap.containsKey(clientInstanceId)
 				|| forceRefresh) {
 			/*
-			 * If clientinstance was lazy-loaded in this transaction, it will
-			 * not be globally visible.
+			 * Note that synchronisation in DomainStore.ensureEntity means there
+			 * will only be one visible clientInstance with id x *at any one
+			 * time*, but that doesn't mean the clientInstance object instance
+			 * won't change (since the object is potentially lazy loaded and
+			 * thus vacuumed). So - to avoid confusion - use the id (guaranteed
+			 * non-zero)
 			 * 
-			 * FIXME - mvcc.4 - should those objects always be unique, even
-			 * during lazyload?
 			 */
 			// synchronized (clientInstance) {
 			synchronized (LockUtils.obtainClassIdLock(clientInstance)) {
@@ -621,45 +631,8 @@ public class TransformCommit {
 
 	public EntityLocatorMap
 			getLocatorMapForClient(DomainTransformRequest request) {
-		return getLocatorMapForClient(Domain.find(request.getClientInstance()),
-				false);
-	}
-
-	public void handleWrapperTransforms() {
-		EntityLayerTransformPropagation transformPropagation = Registry
-				.impl(EntityLayerTransformPropagation.class, void.class, true);
-		if (transformPropagation == null) {
-			return;
-		}
-		ThreadlocalTransformManager.cast().getTransforms();
-		Set<DomainTransformEvent> pendingTransforms = TransformManager.get()
-				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN);
-		if (pendingTransforms.isEmpty()) {
-			return;
-		}
-		final List<DomainTransformEvent> items = CollectionFilters
-				.filter(pendingTransforms, new IsWrappedObjectDteFilter());
-		pendingTransforms.removeAll(items);
-		if (!items.isEmpty() && !pendingTransforms.isEmpty()) {
-			throw new RuntimeException("Non-wrapped and wrapped object"
-					+ " transforms registered after transformPerist()");
-		}
-		if (items.isEmpty()) {
-			return;
-		}
-		new Thread() {
-			@Override
-			public void run() {
-				try {
-					int depth = LooseContext.depth();
-					transformFromServletLayer(items, null);
-					LooseContext.confirmDepth(depth);
-					ThreadlocalTransformManager.cast().resetTltm(null);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			};
-		}.start();
+		return getLocatorMapForClient(
+				request.getClientInstance().domain().domainVersion(), false);
 	}
 
 	public int nextTransformRequestId() {
@@ -694,7 +667,8 @@ public class TransformCommit {
 			Collection<DomainTransformEvent> transforms, String tag)
 			throws DomainTransformRequestException {
 		int requestId = nextTransformRequestId();
-		EntityLocatorMap map = new EntityLocatorMap();
+		EntityLocatorMap map = EntityLayerObjects.get()
+				.getServerAsClientInstanceEntityLocatorMap();
 		ClientInstance clientInstance = EntityLayerObjects.get()
 				.getServerAsClientInstance();
 		DomainTransformRequest request = DomainTransformRequest
@@ -914,12 +888,18 @@ public class TransformCommit {
 			if (!PermissionsManager.get().isRoot()) {
 				AppPersistenceBase.checkNotReadOnly();
 			}
+			persistenceToken.getTransformCollation().refreshFromRequest();
+			persistenceToken.getTransformCollation()
+					.removeCreateDeleteTransforms();
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
 									persistenceToken, null,
 									DomainTransformPersistenceEventType.PRE_COMMIT,
 									true));
+			persistenceToken.getTransformCollation().refreshFromRequest();
+			persistenceToken.getTransformCollation()
+					.removeCreateDeleteTransforms();
 			MetricLogging.get().start("transform-commit");
 			Transaction.current().toDbPersisting();
 			DomainTransformLayerWrapper wrapper = Registry
@@ -943,7 +923,6 @@ public class TransformCommit {
 				Transaction.current().toDbAborted();
 			}
 			MetricLogging.get().end("transform-commit");
-			handleWrapperTransforms();
 			wrapper.ignored = persistenceToken.ignored;
 			DomainTransformPersistenceEvent event = new DomainTransformPersistenceEvent(
 					persistenceToken, wrapper,
@@ -992,16 +971,6 @@ public class TransformCommit {
 			this.clientInstanceId = clientInstanceId;
 			this.userId = userId;
 			this.committerIpAddress = committerIpAddress;
-		}
-	}
-
-	static class IsWrappedObjectDteFilter
-			implements CollectionFilter<DomainTransformEvent> {
-		Class clazz = PersistentImpl.getImplementation(WrappedObject.class);
-
-		@Override
-		public boolean allow(DomainTransformEvent o) {
-			return o.getObjectClass() == clazz;
 		}
 	}
 }

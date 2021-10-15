@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.util;
 
 import java.beans.PropertyDescriptor;
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
@@ -32,13 +33,16 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.gen.Base64;
+import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
@@ -63,6 +67,8 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 
 	protected Map<String, Class> resolvedClassLookup = new LinkedHashMap<>();
 
+	private ClassNameTranslator classNameTranslator;
+
 	public AlcinaBeanSerializerS() {
 		propertyFieldName = PROPERTIES;
 	}
@@ -71,6 +77,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	public <T> T deserialize(String jsonString) {
 		try {
 			JSONObject obj = new JSONObject(jsonString);
+			classNameTranslator = Registry.impl(ClassNameTranslator.class);
 			if (GWT.isClient() && !useContextClassloader) {
 				// devmode
 				classLoader = getClass().getClassLoader().getParent();
@@ -108,8 +115,20 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		if (type == String.class) {
 			return o.toString();
 		}
-		if (type == Date.class) {
-			return new Date(Long.parseLong(o.toString()));
+		if (type == Date.class || type == Timestamp.class) {
+			String s = o.toString();
+			if (s.contains(",")) {
+				String[] parts = s.split(",");
+				Timestamp timestamp = new Timestamp(Long.parseLong(parts[0]));
+				timestamp.setNanos(Integer.parseInt(parts[1]));
+				return timestamp;
+			} else {
+				if (type == Date.class) {
+					return new Date(Long.parseLong(s));
+				} else {
+					return new Timestamp(Long.parseLong(s));
+				}
+			}
 		}
 		if (type.isEnum()) {
 			return Enum.valueOf(type, o.toString());
@@ -164,6 +183,9 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		if (m != null) {
 			return deserializeMap(o, m);
 		}
+		if (CommonUtils.isOrHasSuperClass(type, BasePlace.class)) {
+			return RegistryHistoryMapper.get().getPlace(o.toString());
+		}
 		return deserializeObject((JSONObject) o);
 	}
 
@@ -172,7 +194,16 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			return null;
 		}
 		String cn = (String) jsonObj.get(CLASS_NAME);
-		Class clazz = getClassMaybeAbbreviated(cn);
+		Class clazz = null;
+		try {
+			clazz = getClassMaybeAbbreviated(cn);
+		} catch (Exception e1) {
+			if (isThrowOnUnrecognisedClass()) {
+				throw new Exception(Ax.format("class not found - %s", cn));
+			} else {
+				return null;
+			}
+		}
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)
 				|| clazz == Class.class) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
@@ -238,23 +269,31 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		if (type == Object.class) {
 			type = value.getClass();
 		}
-		if (type == Long.class || type == long.class || type == String.class
-				|| type.isEnum() || (type.getSuperclass() != null
+		if (type == String.class) {
+			return value.toString();
+		}
+		if (type == Long.class || type == long.class || type.isEnum()
+				|| (type.getSuperclass() != null
 						&& type.getSuperclass().isEnum())) {
 			return value.toString();
 		}
 		if (type == Double.class || type == double.class
 				|| type == Integer.class || type == int.class) {
-			return (((Number) value).doubleValue());
+			return ((Number) value).doubleValue();
 		}
 		if (type == Boolean.class || type == boolean.class) {
-			return ((Boolean) value);
+			return (Boolean) value;
 		}
 		if (type == Class.class) {
 			return ((Class) value).getName();
 		}
 		if (type == Date.class) {
-			return (String.valueOf(((Date) value).getTime()));
+			return String.valueOf(((Date) value).getTime());
+		}
+		if (type == Timestamp.class) {
+			return Ax.format("%s,%s",
+					String.valueOf(((Timestamp) value).getTime()),
+					String.valueOf(((Timestamp) value).getNanos()));
 		}
 		if (type.isArray() && type.getComponentType() == byte.class) {
 			return Base64.encodeBytes((byte[]) value);
@@ -270,6 +309,9 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		if (value instanceof Collection) {
 			Collection c = (Collection) value;
 			return serializeCollection(c);
+		}
+		if (value instanceof BasePlace) {
+			return ((BasePlace) value).toTokenString();
 		}
 		return serializeObject(value);
 	}
@@ -311,7 +353,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			seenOut.put(object, index);
 		}
 		List<PropertyDescriptor> unsortedPropertyDescriptors = SEUtilities
-				.getSortedPropertyDescriptors(clazz);
+				.getPropertyDescriptorsSortedByName(clazz);
 		List<PropertyDescriptor> propertyDescriptors = unsortedPropertyDescriptors
 				.stream()
 				.sorted(Comparator.comparing(PropertyDescriptor::getName))
@@ -384,20 +426,28 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	}
 
 	@Override
-	protected Class getClassMaybeAbbreviated(String cns) {
+	protected Class getClassMaybeAbbreviated(String className) {
 		try {
 			Class clazz = null;
-			if (abbrevLookup.containsKey(cns)) {
-				return abbrevLookup.get(cns);
+			if (abbrevLookup.containsKey(className)) {
+				return abbrevLookup.get(className);
 			} else {
-				Class resolved = resolvedClassLookup.get(cns);
+				Class resolved = resolvedClassLookup.get(className);
 				if (resolved == null) {
-					try {
-						clazz = classLoader.loadClass(cns);
-					} catch (Exception e) {
-						clazz = Reflections.forName(cns);
+					clazz = CommonUtils.stdAndPrimitivesMap.get(className);
+					if (clazz == null) {
+						className = classNameTranslator.translate(className);
+						if (GWT.isClient()) {
+							Reflections.forName(className);
+							// throw if not reflectively accessible
+						}
+						try {
+							clazz = classLoader.loadClass(className);
+						} catch (Exception e) {
+							clazz = Reflections.forName(className);
+						}
 					}
-					resolvedClassLookup.put(cns, clazz);
+					resolvedClassLookup.put(className, clazz);
 					return clazz;
 				} else {
 					return resolved;
@@ -440,5 +490,13 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 			arr.put(i++, serializeCollection((Collection) e.getValue()));
 		}
 		return arr;
+	}
+
+	@RegistryLocation(registryPoint = ClassNameTranslator.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class ClassNameTranslator {
+		public String translate(String className) {
+			return className;
+		}
 	}
 }

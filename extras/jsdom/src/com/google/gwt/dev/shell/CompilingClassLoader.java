@@ -16,6 +16,7 @@
 package com.google.gwt.dev.shell;
 
 import java.beans.Beans;
+import java.beans.Introspector;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -89,9 +90,7 @@ public final class CompilingClassLoader extends ClassLoader
 	 * Only loads bootstrap classes, specifically excluding classes from the
 	 * classpath.
 	 */
-	private static final ClassLoader bootstrapClassLoader = new ClassLoader(
-			null) {
-	};
+	private static final ClassLoader bootstrapClassLoader = ClassLoader.getPlatformClassLoader();
 
 	/**
 	 * The names of the bridge classes.
@@ -323,6 +322,8 @@ public final class CompilingClassLoader extends ClassLoader
 
 	private final Map<Integer, Object> weakJsoCache = new MapMaker()
 			.weakValues().makeMap();
+
+	int multiParentDepth = 0;
 
 	public CompilingClassLoader(TreeLogger logger,
 			CompilationState compilationState,
@@ -719,10 +720,23 @@ public final class CompilingClassLoader extends ClassLoader
 			return ClassLoader.getSystemClassLoader().loadClass(className);
 		}
 		loadLock.lock();
+		if(className.equals("com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader")){
+			int debug=3;
+		}	
 		try {
 			if (scriptOnlyClasses.contains(className)) {
-				// Allow the child ClassLoader to handle this
-				throw new ClassNotFoundException();
+				/*
+				 * the scriptOnlyClassLoader reentrancy can have issues - so
+				 * make sure we're in a multiParentClassloader stack before
+				 * throwing the exception (otherwise resolve)
+				 */
+				if (multiParentDepth > 0) {
+					// Allow the child ClassLoader to handle this
+					throw new ClassNotFoundException();
+				} else {
+					return Class.forName(className, false,
+							scriptOnlyClassLoader);
+				}
 			}
 			// Get the bytes, compiling if necessary.
 			// Check for a bridge class that spans hosted and user space.
@@ -745,7 +759,13 @@ public final class CompilingClassLoader extends ClassLoader
 				loadLock.unlock();
 				// Also don't run the static initializer to lower the risk of
 				// deadlock.
-				return Class.forName(className, false, scriptOnlyClassLoader);
+				try {
+					multiParentDepth++;
+					return Class.forName(className, false,
+							scriptOnlyClassLoader);
+				} finally {
+					multiParentDepth--;
+				}
 			}
 			/*
 			 * Prevent reentrant problems where classes that need to be injected
@@ -849,6 +869,7 @@ public final class CompilingClassLoader extends ClassLoader
 		weakJsoCache.clear();
 		weakJavaWrapperCache.clear();
 		dispClassInfoOracle.clear();
+		Introspector.flushCaches();
 		setGwtBridge(null);
 	}
 

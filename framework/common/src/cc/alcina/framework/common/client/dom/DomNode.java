@@ -39,7 +39,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.gwt.client.util.TextUtils;
+import cc.alcina.framework.common.client.util.TextUtils;
 
 public class DomNode {
 	public static final transient String CONTEXT_DEBUG_SUPPORT = DomNode.class
@@ -130,6 +130,10 @@ public class DomNode {
 
 	public boolean attrMatches(String attrName, String regex) {
 		return attr(attrName).matches(regex);
+	}
+
+	public DomNode attrNode(String name) {
+		return doc.nodeFor(node.getAttributes().getNamedItem(name));
 	}
 
 	public DomNodeBuilder builder() {
@@ -357,7 +361,7 @@ public class DomNode {
 	}
 
 	public void removeWhitespaceNodes() {
-		children.flat().filter(n -> n.isText() && n.isWhitespaceTextContent())
+		children.stream().filter(n -> n.isText() && n.isWhitespaceTextContent())
 				.forEach(DomNode::removeFromParent);
 	}
 
@@ -695,12 +699,12 @@ public class DomNode {
 		}
 
 		public DomNode firstNonWhitespaceTextDescendant() {
-			return flat()
+			return stream()
 					.filter(n -> n.isText() && !n.isWhitespaceTextContent())
 					.findFirst().orElse(null);
 		}
 
-		public Stream<DomNode> flat() {
+		public Stream<DomNode> stream() {
 			return flatten();
 		}
 
@@ -1085,7 +1089,7 @@ public class DomNode {
 			if (blockResolver.isBlock(DomNode.this)) {
 				return true;
 			}
-			return children.flat().anyMatch(blockResolver::isBlock);
+			return children.stream().anyMatch(blockResolver::isBlock);
 		}
 
 		public DomNode setClassName(String string) {
@@ -1094,6 +1098,7 @@ public class DomNode {
 		}
 
 		public void setProperty(String key, String value) {
+			key = jsToDom(key);
 			StringMap styles = new StringMap();
 			// t0tes naive
 			if (has("style")) {
@@ -1108,6 +1113,26 @@ public class DomNode {
 					styles.entrySet().stream().map(
 							e -> Ax.format("%s:%s", e.getKey(), e.getValue()))
 							.collect(Collectors.joining("; ")));
+		}
+
+		private String jsToDom(String key) {
+			if (key.equals(key.toLowerCase())) {
+				return key;
+			}
+			StringBuilder builder = new StringBuilder();
+			/*
+			 * Could use a regex...
+			 */
+			for (int idx = 0; idx < key.length(); idx++) {
+				char c = key.charAt(idx);
+				if (c >= 'A' && c <= 'Z') {
+					builder.append('-');
+					builder.append(String.valueOf(c).toLowerCase());
+				} else {
+					builder.append(c);
+				}
+			}
+			return builder.toString();
 		}
 	}
 
@@ -1209,11 +1234,17 @@ public class DomNode {
 			return node() != null;
 		}
 
+		public Stream<DomNode> matching(String pattern) {
+			return matching(pattern, false);
+		}
+
 		/**
 		 * Warning - uses 'find', not 'matches'
 		 */
-		public Stream<DomNode> matching(String pattern) {
-			RegExp regex = RegExp.compile(pattern);
+		public Stream<DomNode> matching(String pattern, boolean ignoreCase) {
+			RegExp regex = ignoreCase 
+				? RegExp.compile(pattern, "i") 
+				: RegExp.compile(pattern);
 			return stream().filter(n -> regex.exec(n.ntc()) != null);
 		}
 
@@ -1276,7 +1307,7 @@ public class DomNode {
 		}
 
 		public void clearContents() {
-			List<DomNode> kids = doc.getDocumentElementNode().children.flat()
+			List<DomNode> kids = doc.getDocumentElementNode().children.stream()
 					.collect(Collectors.toList());
 			boolean inRange = false;
 			List<DomNode> toRemoveNodes = new ArrayList<>();

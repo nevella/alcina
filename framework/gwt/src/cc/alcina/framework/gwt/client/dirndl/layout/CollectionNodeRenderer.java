@@ -19,12 +19,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 @RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = AbstractCollection.class)
 public class CollectionNodeRenderer extends DirectedNodeRenderer {
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface CollectionNodeRendererArgs {
-		public Directed value();
+	@Override
+	public Widget render(Node node) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -34,18 +31,37 @@ public class CollectionNodeRenderer extends DirectedNodeRenderer {
 				.annotation(CollectionNodeRendererArgs.class);
 		Collection collection = (Collection) node.model;
 		int idx = 0;
+		// FIXME - dirndl1.0 - this prevents some sort of caching issue - fix
+		// annotationlocation to allow custom res paths (2021.10.09 - may
+		// already be fixed
+		// with CustomReflectorResolver fix)
+		node.directed.bindings();
 		for (Object object : collection) {
 			Node child = node.addChild(object, null, null);
+			/*
+			 * FIXME - dirndl.context - remove (since resolveModel will go)
+			 */
+			Class<? extends Object> modelClass = node.getResolver()
+					.resolveModel(object).getClass();
 			if (args != null) {
-				child.directed = args.value();
+				child.directed = CustomReflectorResolver.forParentAndValue(
+						CollectionNodeRendererArgs.class, node, modelClass,
+						args.value());
+			} else {
+				child.directed = CustomReflectorResolver.forParentAndValue(
+						CollectionNodeRendererArgs.class, node, modelClass,
+						Directed.Default.INSTANCE);
 			}
 			result.addAll(child.render().widgets);
 		}
 		return result;
 	}
 
-	@Override
-	public Widget render(Node node) {
-		throw new UnsupportedOperationException();
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface CollectionNodeRendererArgs {
+		public Directed value();
 	}
 }

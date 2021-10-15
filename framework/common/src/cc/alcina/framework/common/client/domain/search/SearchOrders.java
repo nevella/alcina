@@ -15,15 +15,16 @@ import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
-@ClientInstantiable
+@Bean
 @Introspectable
 public class SearchOrders<T> implements Comparator<T>, Serializable,
 		HasEquivalence<SearchOrders<T>>, TreeSerializable {
@@ -77,7 +78,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		return _getCmps().keySet().stream().findFirst();
 	}
 
-	@PropertySerialization(defaultProperty = true, childTypes = SerializableSearchOrder.class)
+	@PropertySerialization(defaultProperty = true, types = SerializableSearchOrder.class)
 	public List<SerializableSearchOrder> getSerializableSearchOrders() {
 		return this.serializableSearchOrders;
 	}
@@ -173,9 +174,9 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		return cmps;
 	}
 
-	@ClientInstantiable
-	@Introspectable
-	public static class ColumnSearchOrder implements Serializable {
+	@Bean
+	public static class ColumnSearchOrder
+			implements Serializable, TreeSerializable {
 		private String columnName;
 
 		private boolean ascending;
@@ -184,6 +185,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 			return columnName;
 		}
 
+		@PropertySerialization(path = "asc")
 		public boolean isAscending() {
 			return ascending;
 		}
@@ -214,7 +216,7 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		}
 	}
 
-	@ClientInstantiable
+	@Bean
 	@Introspectable
 	public static class SerializableSearchOrder implements Serializable,
 			HasReflectiveEquivalence<SerializableSearchOrder>,

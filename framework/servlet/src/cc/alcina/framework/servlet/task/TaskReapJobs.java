@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobScheduler.RetentionPolicy;
 import cc.alcina.framework.servlet.job.JobScheduler.Schedule;
@@ -19,7 +19,7 @@ import cc.alcina.framework.servlet.schedule.StandardSchedules.HourlyScheduleFact
 public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 	@Override
 	protected void performAction0(TaskReapJobs task) throws Exception {
-		Stream<? extends Job> jobs = DomainDescriptorJob.get().getAllJobs();
+		Stream<? extends Job> jobs = JobDomain.get().getAllJobs();
 		if (Ax.notBlank(value)) {
 			jobs = Stream.of(Job.byId(Long.valueOf(value)));
 		}

@@ -17,7 +17,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.util.Ax;
-import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
@@ -27,7 +26,7 @@ class Vacuum {
 	 * The per-transaction vacuumables will only be accessed during write by the
 	 * transaction thread
 	 */
-	ConcurrentHashMap<Transaction, ObjectOpenHashSet<Vacuumable>> vacuumables = new ConcurrentHashMap<>();
+	ConcurrentHashMap<Transaction, List<Vacuumable>> vacuumables = new ConcurrentHashMap<>();
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -104,7 +103,7 @@ class Vacuum {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			logger.warn("Vacuum exception", new MvccException(e));
+			logger.warn("DEVEX-1 - Vacuum exception", new MvccException(e));
 		} finally {
 			Transaction.end();
 		}
@@ -117,9 +116,7 @@ class Vacuum {
 	}
 
 	void addVacuumable(Transaction transaction, Vacuumable vacuumable) {
-		vacuumables.computeIfAbsent(transaction,
-				tx -> new ObjectOpenHashSet<>(Hash.DEFAULT_INITIAL_SIZE,
-						Hash.VERY_FAST_LOAD_FACTOR))
+		vacuumables.computeIfAbsent(transaction, tx -> new ArrayList<>())
 				.add(vacuumable);
 	}
 

@@ -4,6 +4,7 @@ import java.io.File;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -17,8 +18,8 @@ import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.cache.LockUtils;
-import cc.alcina.framework.entity.persistence.cache.LockUtils.ClassStringKeyLock;
+import cc.alcina.framework.entity.persistence.domain.LockUtils;
+import cc.alcina.framework.entity.persistence.domain.LockUtils.ClassStringKeyLock;
 import cc.alcina.framework.entity.util.SerializationStrategy.SerializationStrategy_Kryo;
 
 public class FsObjectCache<T> implements PersistentObjectCache<T> {
@@ -30,7 +31,9 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 			Class<?> forClass) {
 		return new FsObjectCache<>(
 				DataFolderProvider.get().getChildFile(forClass.getName()), type,
-				p -> type.newInstance());
+				p -> {
+					return type.newInstance();
+				});
 	}
 
 	private SerializationStrategy serializationStrategy = new SerializationStrategy_Kryo();
@@ -94,6 +97,12 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	public SerializationStrategy getSerializationStrategy() {
 		return this.serializationStrategy;
+	}
+
+	@Override
+	public Optional<Long> lastModified(String path) {
+		return Optional.of(new File(path)).filter(File::exists)
+				.map(File::lastModified);
 	}
 
 	@Override
@@ -262,6 +271,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 				throw e;
 			} else {
 				logger.warn("Retrying from remote (cannot deserialize)", e);
+				e.printStackTrace();
 				return get(path, false);
 			}
 		}

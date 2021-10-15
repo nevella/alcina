@@ -1,11 +1,27 @@
 package cc.alcina.extras.dev.console;
 
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
+import cc.alcina.framework.servlet.servlet.control.ControlServlet;
 
 public class DevConsoleCommandsDeploy {
+	public static String invokeRemoteTask(Task task) {
+		String targetContainerControlServletPath = ResourceUtilities.get(
+				DevConsoleCommandsDeploy.class,
+				"targetContainerControlServletPath");
+		String targetContainerControlServletKey = ResourceUtilities.get(
+				DevConsoleCommandsDeploy.class,
+				"targetContainerControlServletKey");
+		Ax.out("\n****************\n****************\n** Executing **\n****************\n****************\n\n");
+		String response = ControlServlet.invokeTask(task,
+				targetContainerControlServletPath,
+				targetContainerControlServletKey);
+		return response;
+	}
+
 	public static class CmdDeploy extends DevConsoleCommand {
 		@Override
 		public boolean clsBeforeRun() {

@@ -150,7 +150,7 @@ public class AuthenticationManager {
 		}
 		boolean validSession = context.session != null
 				&& context.session.getUser() != null
-				&& !context.session.provideIsExpired();
+				&& !isExpired(context.session);
 		if (validSession) {
 			IUser sessionUser = context.session.getUser();
 			boolean anonymousSession = Objects.equals(sessionUser.getUserName(),
@@ -205,6 +205,18 @@ public class AuthenticationManager {
 		}
 	}
 
+	private boolean isExpired(AuthenticationSession session) {
+		boolean result = session.provideIsExpired();
+		if (result && session.getEndTime() == null) {
+			logger.warn(
+					"Marking authentication session as ended (login disabled?) - {} {}",
+					session, session.getUser());
+			session.setEndTime(new Date());
+			session.setEndReason("Access not permitted");
+		}
+		return result;
+	}
+
 	private void setupClientInstanceFromHeaders(AuthenticationContext context) {
 		try {
 			String headerId = context.tokenStore.getHeaderValue(
@@ -214,7 +226,9 @@ public class AuthenticationManager {
 				ClientInstance instance = persistence
 						.getClientInstance(Long.parseLong(headerId));
 				if (instance != null) {
-					if (instance.getAuthenticationSession() == null) {
+					AuthenticationSession session = instance
+							.getAuthenticationSession();
+					if (session == null) {
 						persistence.putSession(instance, context.session);
 					}
 					String headerAuth = context.tokenStore.getHeaderValue(
@@ -222,13 +236,15 @@ public class AuthenticationManager {
 					if (Ax.matches(headerAuth, "\\d+")) {
 						if (instance.getAuth().intValue() == Integer
 								.parseInt(headerAuth)) {
-							if (!instance.getAuthenticationSession()
-									.provideIsExpired()) {
+							if (!isExpired(session)) {
 								context.clientInstance = instance;
 							} else {
 								context.tokenStore.addHeader(
 										AlcinaRpcRequestBuilder.RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED,
 										"true");
+								logger.warn(
+										"Sending client instance expired:  - {} {} {}",
+										instance, session, session.getUser());
 							}
 						}
 					}

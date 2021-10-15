@@ -26,14 +26,18 @@ import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
-import cc.alcina.framework.entity.persistence.cache.DomainLinker;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainLinker;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
+import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
@@ -48,6 +52,9 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 		return LooseContext.is(CONTEXT_IN);
 	}
 
+	protected void customiseContextBeforePayloadWrite() {
+	}
+
 	@Override
 	protected void doPost(HttpServletRequest req, HttpServletResponse res)
 			throws ServletException, IOException {
@@ -60,7 +67,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			LooseContext.setTrue(
 					TransformPersisterInPersistenceContext.CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM);
 			Transaction.begin();
-			maybeToNoActiveTransaction();
+			maybeToReadonlyTransaction();
 			LooseContext
 					.setTrue(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
 			doPost0(req, res);
@@ -75,18 +82,20 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			throw new ServletException(e);
 		} finally {
 			ThreadlocalTransformManager.get().resetTltm(null);
-			maybeToNoActiveTransaction();
+			// ensure correct phase
+			maybeToReadonlyTransaction();
 			Transaction.end();
 			LooseContext.pop();
 		}
 	}
 
-	protected void doPost0(HttpServletRequest req, HttpServletResponse res)
-			throws Exception {
-		String encodedParams = req.getParameter(REMOTE_INVOCATION_PARAMETERS);
+	protected void doPost0(HttpServletRequest request,
+			HttpServletResponse response) throws Exception {
+		String encodedParams = request
+				.getParameter(REMOTE_INVOCATION_PARAMETERS);
 		RemoteInvocationParameters params = KryoUtils.deserializeFromBase64(
 				encodedParams, RemoteInvocationParameters.class);
-		String remoteAddress = req.getRemoteAddr();
+		String remoteAddress = request.getRemoteAddr();
 		String permittedAddressPattern = ResourceUtilities.get(
 				RemoteInvocationServlet.class,
 				Ax.format("%s.permittedAddresses", params.api));
@@ -95,6 +104,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					"Remote invocation access: address %s does not match permitted %s for API %s",
 					remoteAddress, permittedAddressPattern, params.api);
 		}
+		boolean pushedUser = false;
 		try {
 			ClientInstance clientInstance = AuthenticationPersistence.get()
 					.getClientInstance(params.clientInstanceId);
@@ -111,6 +121,7 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 			PermissionsManager.get().pushUser(
 					clientInstance.getAuthenticationSession().getUser(),
 					LoginState.LOGGED_IN, asRoot);
+			pushedUser = true;
 			PermissionsManager.get().setClientInstance(clientInstance);
 			Object invocationTarget = getInvocationTarget(params);
 			Class<? extends Object> targetClass = invocationTarget.getClass();
@@ -127,8 +138,15 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					clientInstance.getId(), targetClass.getSimpleName(),
 					methodName);
 			try {
-				MetricLogging.get().start(key);
+				if (!methodName.equals("callRpc")) {
+					MetricLogging.get().start(key);
+				}
+				InternalMetrics.get().startTracker(request,
+						() -> "remote-invocation:" + method.toString(),
+						InternalMetricTypeAlcina.remote_invocation,
+						Thread.currentThread().getName(), () -> true);
 				if (transformMethod) {
+					Transaction.endAndBeginNew();
 					TransformPersistenceToken token = (TransformPersistenceToken) args[1];
 					Integer highestPersistedRequestId = CommonPersistenceProvider
 							.get().getCommonPersistence()
@@ -172,7 +190,12 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					LooseContext.set(
 							ThreadedPmClientInstanceResolverImpl.CONTEXT_CLIENT_INSTANCE,
 							clientInstance);
-					params.context.forEach((k, v) -> LooseContext.set(k, v));
+					params.context.forEach((k, v) -> {
+						if (!k.matches(
+								"cc.alcina.framework.entity.KryoUtils.*")) {
+							LooseContext.set(k, v);
+						}
+					});
 					out = method.invoke(invocationTarget, args);
 				} finally {
 					LooseContext.pop();
@@ -188,39 +211,59 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 				if (transformMethod) {
 					PermissionsManager.get().popUser();
 				}
-				MetricLogging.get().end(key);
+				InternalMetrics.get().endTracker(request);
+				if (!methodName.equals("callRpc")) {
+					MetricLogging.get().end(key);
+				}
 			}
 			Object result = out;
 			ArrayList resultHolder = new ArrayList();
 			resultHolder.add(out);
 			if (transformMethod) {
+				Preconditions.checkState(EntityLayerUtils.isTestServer());
 				ThreadlocalTransformManager.get().resetTltm(null);
-				resultHolder.add(ThreadlocalTransformManager.get()
-						.getPostTransactionEntityResolver(
-								DomainStore.writableStore()));
 				DomainStore.writableStore().getPersistenceEvents().getQueue()
 						.refreshPositions();
+				if (resultHolder
+						.get(0) instanceof DomainTransformLayerWrapper) {
+					DomainTransformLayerWrapper wrapper = (DomainTransformLayerWrapper) resultHolder
+							.get(0);
+					wrapper.snapshotEntityLocatorMap();
+				}
 			}
 			if (params.api.isLinkToDomain(method.getName())
 					&& params.mayLinkToDomain) {
 				resultHolder = DomainLinker.linkToDomain(resultHolder);
 			}
-			byte[] outBytes = KryoUtils.serializeToByteArray(resultHolder);
-			ResourceUtilities.writeStreamToStream(
-					new ByteArrayInputStream(outBytes), res.getOutputStream());
+			ArrayList f_resultHolder = resultHolder;
+			try {
+				LooseContext.push();
+				customiseContextBeforePayloadWrite();
+				byte[] outBytes = KryoUtils
+						.serializeToByteArray(f_resultHolder);
+				ResourceUtilities.writeStreamToStream(
+						new ByteArrayInputStream(outBytes),
+						response.getOutputStream());
+			} finally {
+				LooseContext.pop();
+			}
 			return;
 		} catch (Exception e) {
 			throw new ServletException(e);
 		} finally {
-			PermissionsManager.get().popUser();
+			if (pushedUser) {
+				PermissionsManager.get().popUser();
+			}
 		}
 	}
 
 	protected abstract Object getInvocationTarget(
 			RemoteInvocationParameters params) throws Exception;
 
-	protected void maybeToNoActiveTransaction() {
-		// FIXME - (only for EJB API and even then...)
-		Transaction.current().toNoActiveTransaction();
+	protected void maybeToReadonlyTransaction() {
+		/*
+		 * By default, remote invocations are readonly
+		 */
+		Transaction.current().toReadonly();
 	}
 }

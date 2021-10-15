@@ -5,14 +5,33 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
+
+import javax.xml.bind.annotation.XmlAccessType;
+import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
+import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
-public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
+@RegistryLocations({
+		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
+		@RegistryLocation(registryPoint = TreeSerializable.class) })
+@ClientInstantiable
+@XmlAccessorType(XmlAccessType.FIELD)
+public class LongPair implements Comparable<LongPair>, Predicate<Long>,
+		TreeSerializable {
+	public static boolean isContinuous(List<LongPair> matchedRanges) {
+		LongPair union = unionOf(matchedRanges);
+		return provideUncovered(matchedRanges, union).isEmpty();
+	}
+
 	public static LongPair parseLongPair(String string) {
 		try {
 			String[] split = string.replaceAll("[\\[\\] ]", "").split(",");
@@ -27,11 +46,6 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 		}
 	}
 
-	public static boolean isContinuous(List<LongPair> matchedRanges) {
-		LongPair union = unionOf(matchedRanges);
-		return provideUncovered(matchedRanges, union).isEmpty();
-	}
-
 	public static List<LongPair> provideUncovered(List<LongPair> covered,
 			LongPair container) {
 		List<LongPair> result = new ArrayList<LongPair>();
@@ -44,10 +58,6 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 			}
 		}
 		return result;
-	}
-
-	public LongPair shiftRight(int offset) {
-		return new LongPair(l1 + offset, l2 + offset);
 	}
 
 	public static LongPair unionOf(List<LongPair> matchedRanges) {
@@ -66,10 +76,6 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 	public LongPair() {
 	}
 
-	public long length() {
-		return l2 - l1;
-	}
-
 	public LongPair(long l1, long l2) {
 		super();
 		this.l1 = l1;
@@ -82,7 +88,7 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 	}
 
 	@Override
-	public boolean allow(Long o) {
+	public boolean test(Long o) {
 		return o != null && o >= l1 && o < l2;
 	}
 
@@ -122,6 +128,14 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 		l2 = l2 == 0 ? value : Math.max(l2, value);
 	}
 
+	public long getL1() {
+		return this.l1;
+	}
+
+	public long getL2() {
+		return this.l2;
+	}
+
 	@Override
 	public int hashCode() {
 		return Long.valueOf(l1).hashCode() ^ Long.valueOf(l2).hashCode();
@@ -142,9 +156,25 @@ public class LongPair implements Comparable<LongPair>, CollectionFilter<Long> {
 		return l1 == 0 && l2 == 0;
 	}
 
+	public long length() {
+		return l2 - l1;
+	}
+
 	public void max(LongPair ip) {
 		l1 = l1 == 0 ? ip.l1 : Math.min(l1, ip.l1);
 		l2 = l2 == 0 ? ip.l2 : Math.max(l1, ip.l2);
+	}
+
+	public void setL1(long l1) {
+		this.l1 = l1;
+	}
+
+	public void setL2(long l2) {
+		this.l2 = l2;
+	}
+
+	public LongPair shiftRight(int offset) {
+		return new LongPair(l1 + offset, l2 + offset);
 	}
 
 	public void subtract(LongPair ip) {

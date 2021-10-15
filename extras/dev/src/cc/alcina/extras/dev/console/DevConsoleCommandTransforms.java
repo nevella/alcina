@@ -17,18 +17,19 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import javax.persistence.Table;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DeltaApplicationRecordSerializerImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
@@ -390,18 +391,18 @@ public class DevConsoleCommandTransforms {
 			String orderClause = limit < 100 ? ""
 					: outputTransforms ? "order by dte.id"
 							: "order by dte.id desc";
-			CollectionFilter<String> dteIdFilter = new CollectionFilter<String>() {
+			Predicate<String> dteIdFilter = new Predicate<String>() {
 				@Override
-				public boolean allow(String o) {
+				public boolean test(String o) {
 					if (o.contains("dte.id")) {
 						foundDteId = true;
 					}
 					return o.contains("dte.id");
 				}
 			};
-			CollectionFilter<String> dteFilter = new CollectionFilter<String>() {
+			Predicate<String> dteFilter = new Predicate<String>() {
 				@Override
-				public boolean allow(String o) {
+				public boolean test(String o) {
 					return o.contains("dte.");
 				}
 			};
@@ -410,11 +411,11 @@ public class DevConsoleCommandTransforms {
 			if (!noDtrQuery && (!foundDteId || forceGetRqIds)) {
 				filter = DevConsoleFilter.getFilters(
 						CmdListTransformsFilter.class, argv,
-						CollectionFilters.inverse(dteFilter));
+						dteFilter.negate());
 				sql1 = String.format(sql1, dtrName, filter);
 				Statement ps = conn.createStatement();
 				System.out.println(console.breakAndPad(1, 80, sql1, 0));
-				ids = SqlUtils.toIdList(ps, sql1, "id", false);
+				ids = SqlUtils.toIdSet(ps, sql1, "id", false);
 				ps.close();
 				List<String> args = new ArrayList<String>(Arrays.asList(argv));
 				args.add("dtr");
@@ -487,17 +488,17 @@ public class DevConsoleCommandTransforms {
 			@Override
 			public String getFilter(final String arg1) {
 				Set<ClassRef> refs = ClassRef.all();
-				CollectionFilter<ClassRef> classNameFilter = new CollectionFilter<ClassRef>() {
+				Predicate<ClassRef> classNameFilter = new Predicate<ClassRef>() {
 					Pattern namePattern = Pattern.compile(arg1,
 							Pattern.CASE_INSENSITIVE);
 
 					@Override
-					public boolean allow(ClassRef o) {
+					public boolean test(ClassRef o) {
 						return namePattern.matcher(o.getRefClassName()).find();
 					}
 				};
-				List<ClassRef> filteredRefs = CollectionFilters.filter(refs,
-						classNameFilter);
+				List<ClassRef> filteredRefs = refs.stream()
+						.filter(classNameFilter).collect(Collectors.toList());
 				return String.format("dte.objectclassref_id in %s",
 						EntityPersistenceHelper.toInClause(filteredRefs));
 			}
@@ -513,6 +514,10 @@ public class DevConsoleCommandTransforms {
 			@Override
 			public String getFilter(String value) {
 				value = CommonUtils.isNullOrEmpty(value) ? "-1" : value;
+				if (value.contains("/")) {
+					return Ax.format("ci.id=%s AND dtr.requestId=%s",
+							value.split("/")[0], value.split("/")[1]);
+				}
 				return String.format(
 						value.contains(",") ? "ci.id in (%s)" : "ci.id=%s",
 						value);
@@ -846,7 +851,8 @@ public class DevConsoleCommandTransforms {
 				throws Exception {
 			List<DomainTransformEvent> dtes = new ArrayList<DomainTransformEvent>();
 			while (rs.next()) {
-				DomainTransformEvent dte = new DomainTransformEvent();
+				DomainTransformEvent dte = TransformManager
+						.createTransformEvent();
 				dtes.add(dte);
 				dte.setNewStringValue(rs.getString("newStringValue"));
 				dte.setObjectClassRef(ClassRef.forId(rs.getLong(

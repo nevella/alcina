@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<project name="alcina-appcreator" basedir="." default="create-deploy-launch">
+<project name="alcina-appcreator" basedir="." >
 	<copy overwrite="false" file="local.ant.properties.template" tofile="local.ant.properties" />
 	<property file="local.ant.properties" />
 	<property file="build.properties" />
@@ -61,23 +61,5 @@
 		<ant dir="${project.work.dir}/${app.name.lc}/servlet" target="hot-deploy-restart">
 		</ant>
 	</target>
-	<target name="launch-jboss" depends="prepare,launch-jboss-win,launch-jboss-unix">
-		<echo message="Once jboss has started up (1-2 mins), the app will be available at http://localhost:8080/{$app.name}Client.html" />
-	</target>
-	<target name="launch-jboss-win" if="isWindows">
-		<echo message='/c "${deploy.jboss.dir.absolute}\bin\standalone.bat" --server-config=standalone-preview.xml'/>
-		<exec executable="cmd" vmlauncher="false">
-			<arg line='/c "${deploy.jboss.dir.absolute}\bin\standalone.bat" --server-config=standalone-preview.xml' />
-		</exec>
-	</target>
-	<target name="launch-jboss-unix" unless="isWindows">
-		<chmod perm="+x" file="${deploy.jboss.dir}/bin/standalone.sh">
-				</chmod>
-		<exec dir="${deploy.jboss.dir}/bin" executable="/bin/sh" vmlauncher="false">
-			<arg value="-c" />
-			<arg value="${deploy.jboss.dir}/bin/standalone.sh --server-config=standalone-preview.xml" />
-		</exec>
-	</target>
-	<target name="create-deploy-launch" depends="create-app,create-jboss-deployment,build-app,deploy-app,create-database,launch-jboss">
-	</target>
+	
 </project>

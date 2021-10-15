@@ -26,10 +26,10 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
+import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.util.ClientNodeIterator;
-import cc.alcina.framework.gwt.client.util.TextUtils;
 
 public class LogStoreInterceptors {
 	private ValueChangeHandler<String> historyListener = new ValueChangeHandler<String>() {

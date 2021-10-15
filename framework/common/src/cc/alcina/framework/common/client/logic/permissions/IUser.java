@@ -19,12 +19,13 @@ import java.util.Set;
 import java.util.Stack;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
  *
  * @author Nick Reddel
  */
-public interface IUser extends IVersionable, HasObjectName {
+public interface IUser extends IVersionable, HasDisplayName.Settable {
 	public abstract String getEmail();
 
 	public abstract String getFirstName();
@@ -49,6 +50,11 @@ public interface IUser extends IVersionable, HasObjectName {
 
 	public void setUserName(String userName);
 
+	@Override
+	default String displayName() {
+		return Ax.blankTo(getUserName(), "(null)");
+	}
+
 	default boolean provideIsMemberOf(IGroup otherGroup) {
 		Set<IGroup> queued = new HashSet<>();
 		Stack<IGroup> toTraverse = new Stack<>();
@@ -65,7 +71,7 @@ public interface IUser extends IVersionable, HasObjectName {
 	}
 
 	@Override
-	default void putObjectName(String name) {
+	default void putDisplayName(String name) {
 		setUserName(name);
 	}
 

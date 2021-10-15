@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +30,6 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.actions.JobResource;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
@@ -44,7 +44,9 @@ import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.NonRootTask;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.job.TransientFieldTask;
+import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
+import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -52,8 +54,10 @@ import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
@@ -67,10 +71,11 @@ import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.QueueStat;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.QueueStat;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -81,7 +86,6 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
-import cc.alcina.framework.servlet.servlet.control.WriterService;
 
 /**
  * <h2>Overview</h2>
@@ -139,24 +143,62 @@ import cc.alcina.framework.servlet.servlet.control.WriterService;
  * @author nick@alcina.cc
  *
  */
-@RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON)
-public class JobRegistry extends WriterService {
+@RegistryLocations({
+		@RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON),
+		@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class) })
+public class JobRegistry {
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";
 
 	public static final String TRANSFORM_QUEUE_NAME = JobRegistry.class
 			.getName();
 
+	private static JobRegistry instance = null;
+
 	public static Builder createBuilder() {
 		return new Builder();
 	}
 
 	public static JobRegistry get() {
-		return Registry.impl(JobRegistry.class);
+		if (instance == null) {
+			instance = Registry.impl(JobRegistry.class);
+		}
+		return instance;
 	}
 
 	public static boolean isActiveInstance(ClientInstance instance) {
-		return get().jobExecutors.getActiveServers().contains(instance);
+		int retryCount = 0;
+		while (retryCount++ < 5) {
+			List<ClientInstance> activeInstances = get().jobExecutors
+					.getActiveServers();
+			boolean contains = activeInstances.contains(instance);
+			if (contains) {
+				return true;
+			}
+			if (activeInstances.contains(ClientInstance.self())) {
+				return false;
+			}
+			int minimumVisibleInstancesForOrphanProcessing = ResourceUtilities
+					.getInteger(JobScheduler.class,
+							"minimumVisibleInstancesForOrphanProcessing");
+			if (activeInstances
+					.size() < minimumVisibleInstancesForOrphanProcessing) {
+				try {
+					Thread.sleep((int) (500 * Math.pow(2, retryCount)));
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			} else {
+				return false;
+			}
+		}
+		throw Ax.runtimeException(
+				"Unable to determine active instance (timeout): %s",
+				instance.toLocator());
+	}
+
+	public static boolean isInitialised() {
+		return instance != null;
 	}
 
 	private static void checkAnnotatedPermissions(Object o) {
@@ -189,8 +231,9 @@ public class JobRegistry extends WriterService {
 	private AtomicInteger extJobSystemIdCounter = new AtomicInteger();
 
 	Map<Job, ContextAwaiter> contextAwaiters = new ConcurrentHashMap<>();
-
 	public JobRegistry() {
+	}
+	public void init() {
 		TransformCommit.get()
 				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
 		jobExecutors = Registry.impl(JobExecutors.class);
@@ -200,7 +243,7 @@ public class JobRegistry extends WriterService {
 			}
 		});
 		scheduler = new JobScheduler(this);
-		DomainDescriptorJob.get().stateMessageEvents.add((k, messages) -> {
+		JobDomain.get().stateMessageEvents.add((k, messages) -> {
 			for (JobStateMessage message : messages) {
 				if (message.getProcessState() == null
 						&& activeJobs.containsKey(message.getJob())) {
@@ -216,16 +259,31 @@ public class JobRegistry extends WriterService {
 	}
 
 	public Job await(Job job) throws InterruptedException {
-		ContextAwaiter awaiter = contextAwaiters.get(job);
+		return await(job, 0);
+	}
+
+	public Job await(Job job, long maxTime) throws InterruptedException {
+		ContextAwaiter awaiter = ensureAwaiter(job);
 		Transaction.commit();
-		awaiter.await();
+		awaiter.await(maxTime);
 		JobContext jobContext = activeJobs.get(job);
 		contextAwaiters.remove(job);
 		jobContext.awaitSequenceCompletion();
 		DomainStore.waitUntilCurrentRequestsProcessed();
-		// FIXME - mvcc.jobs.1a - *really* make these lazy, mr annotation
-		// you
-		return Domain.find(job);
+		return job.domain().ensurePopulated();
+	}
+
+	public String dumpActiveJobsThisInstance() {
+		return MethodContext.instance().withWrappingTransaction()
+				.call(() -> activeJobs.keySet().stream()
+						.filter(Objects::nonNull).map(j -> {
+							return Ax.format("%s\n\t%s", j.toString(),
+									j.getTask());
+						}).collect(Collectors.joining("\n")));
+	}
+
+	public ContextAwaiter ensureAwaiter(Job job) {
+		return contextAwaiters.computeIfAbsent(job, ContextAwaiter::new);
 	}
 
 	/*
@@ -234,7 +292,7 @@ public class JobRegistry extends WriterService {
 	 */
 	public void ensureScheduled(Task task) {
 		withJobMetadataLock(task.getClass().getName(), () -> {
-			if (DomainDescriptorJob.get().getJobsForTask(task.getClass())
+			if (JobDomain.get().getJobsForTask(task.getClass())
 					.anyMatch(j -> j.getState() == JobState.PENDING)) {
 				return;
 			}
@@ -250,7 +308,7 @@ public class JobRegistry extends WriterService {
 	}
 
 	public Stream<QueueStat> getActiveQueueStats() {
-		return DomainDescriptorJob.get().getAllocationQueues()
+		return JobDomain.get().getAllocationQueues()
 				.filter(AllocationQueue::hasActive)
 				.map(AllocationQueue::asQueueStat).sorted(Comparator
 						// aka reversed date order
@@ -265,17 +323,20 @@ public class JobRegistry extends WriterService {
 	}
 
 	public Stream<FutureStat> getFutureQueueStats() {
-		return DomainDescriptorJob.get().getAllFutureJobs()
-				.map(FutureStat::new);
+		return JobDomain.get().getAllFutureJobs().map(FutureStat::new);
 	}
 
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
-		return DomainDescriptorJob.get().getJobsForTask(action.getClass(), true)
-				.sorted(EntityComparator.REVERSED_INSTANCE)
-				.map(Job::asJobResult).map(JobResult::getActionLogItem)
-				.limit(count).collect(Collectors.toList());
+		Set<Long> ids = JobDomain.get().getJobsForTask(action.getClass(), false)
+				.sorted(EntityComparator.REVERSED_INSTANCE).limit(count)
+				.collect(EntityHelper.toIdSet());
+		return Domain.query(PersistentImpl.getImplementation(Job.class))
+				.contextTrue(
+						LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
+				.filterByIds(ids).stream().map(Job::asJobResult)
+				.map(JobResult::getActionLogItem).collect(Collectors.toList());
 	}
 
 	public String getPerformerThreadName(Job job) {
@@ -293,6 +354,10 @@ public class JobRegistry extends WriterService {
 		ThreadDataWaiter threadDataWaiter = new ThreadDataWaiter(job);
 		threadDataWaiter.await();
 		return threadDataWaiter.queriedJobs;
+	}
+
+	public boolean isActiveCreator(Job job) {
+		return jobExecutors.getActiveServers().contains(job.getCreator());
 	}
 
 	/*
@@ -320,11 +385,13 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
-	@Override
-	public void startService() {
+	public void processOrphans() {
+		// manual because auto-scheduling generally disabled for dev
+		// server/consoles
+		Preconditions.checkState(Ax.isTest());
+		scheduler.processOrphans();
 	}
 
-	@Override
 	public void stopService() {
 		stopped = true;
 		scheduler.stopService();
@@ -365,18 +432,17 @@ public class JobRegistry extends WriterService {
 			ResourceRecord record = processState.addResourceRecord(resource);
 			if (antecedentAcquired.isPresent()) {
 				record.setAcquired(true);
-				record.setAcquiredFromAncestor(true);
+				record.setAcquiredFromAntecedent(true);
 				forJob.persistProcessState();
 				Transaction.commit();
 			} else {
 				forJob.persistProcessState();
 				Transaction.commit();
-				MethodContext.instance().withExecuteOutsideTransaction()
+				MethodContext.instance().withExecuteOutsideTransaction(true)
 						.run(resource::acquire);
 				try {
-					// ensure lazy (process state) field. FIXME - mvcc.jobs.4 -
-					// remove process state (in job)
-					forJob = forJob.domain().domainVersion();
+					// ensure lazy (process state) field.
+					forJob = forJob.domain().ensurePopulated();
 					forJob.ensureProcessState().provideRecord(record)
 							.setAcquired(true);
 					forJob.persistProcessState();
@@ -468,6 +534,7 @@ public class JobRegistry extends WriterService {
 			context.persistMetadata();
 			LooseContext.pop();
 			activeJobs.remove(job);
+			context.clearRefs();
 			context.remove();
 			if (trackInternalMetrics()) {
 				InternalMetrics.get().endTracker(job);
@@ -477,30 +544,30 @@ public class JobRegistry extends WriterService {
 
 	private void releaseResources(Job job, boolean inSequenceRelease) {
 		List<JobResource> resources = jobResources.get(job);
-		if (resources == null) {
-			return;
-		}
-		Iterator<JobResource> itr = resources.iterator();
-		while (itr.hasNext()) {
-			JobResource resource = itr.next();
-			boolean release = true;
-			if (job.provideHasIncompleteSubsequent()
-					&& resource.isSharedWithSubsequents()) {
-				// FIXME - mvcc.1 - tmp remove
-				// release = false;
+		if (resources != null) {
+			Iterator<JobResource> itr = resources.iterator();
+			while (itr.hasNext()) {
+				JobResource resource = itr.next();
+				boolean release = true;
+				if (job.provideHasIncompleteSubsequent()
+						&& resource.isSharedWithSubsequents()) {
+					release = false;
+				}
+				if (release) {
+					resource.release();
+					itr.remove();
+				}
 			}
-			if (release) {
-				resource.release();
-				itr.remove();
+			if (resources.isEmpty()) {
+				jobResources.remove(job);
 			}
 		}
-		if (resources.isEmpty()) {
-			jobResources.remove(job);
-		}
-		if (!inSequenceRelease) {
+		if (!inSequenceRelease && !job.provideHasIncompleteSubsequent()) {
+			// at end of sequence, re-release resources for all jobs in the
+			// sequence
 			List<Job> relatedSequential = job.provideRelatedSequential();
 			for (Job related : relatedSequential) {
-				releaseResources(job, true);
+				releaseResources(related, true);
 			}
 		}
 	}
@@ -518,16 +585,23 @@ public class JobRegistry extends WriterService {
 
 	protected TaskPerformer getTaskPerformer(Job job) {
 		Task task = job.getTask();
+		TaskPerformer performer = null;
 		if (task instanceof TaskPerformer) {
-			return (TaskPerformer) task;
-		}
-		Optional<TaskPerformer> performer = Registry
-				.optional(TaskPerformer.class, task.getClass());
-		if (performer.isPresent()) {
-			return performer.get();
+			performer = (TaskPerformer) task;
 		} else {
-			return new MissingPerformerPerformer();
+			Optional<TaskPerformer> o_performer = Registry
+					.optional(TaskPerformer.class, task.getClass());
+			if (o_performer.isPresent()) {
+				performer = o_performer.get();
+			} else {
+				performer = new MissingPerformerPerformer();
+			}
 		}
+		if (performer instanceof HasRoutingPerformer) {
+			performer = ((HasRoutingPerformer) performer).routingPerformer()
+					.route(performer);
+		}
+		return performer;
 	}
 
 	protected boolean trackInternalMetrics() {
@@ -650,10 +724,13 @@ public class JobRegistry extends WriterService {
 
 		private boolean awaiter;
 
-		public void addSibling(Task task) {
+		public Job addSibling(Task task) {
+			// only run to add a sibling to a child job - otherwise use
+			// followWith()
+			Preconditions.checkState(JobContext.has());
 			this.task = task;
 			withContextParent();
-			create();
+			return create();
 		}
 
 		public Job create() {
@@ -680,8 +757,7 @@ public class JobRegistry extends WriterService {
 						EntityLayerObjects.get().getServerAsClientInstance());
 			}
 			if (awaiter) {
-				JobRegistry.get().contextAwaiters.put(job,
-						new ContextAwaiter());
+				JobRegistry.get().ensureAwaiter(job);
 			}
 			if (task instanceof TransientFieldTask) {
 				TransientFieldTasks.get().registerTask(job, task);
@@ -696,12 +772,13 @@ public class JobRegistry extends WriterService {
 			return this;
 		}
 
-		public void followWith(Task task) {
+		public Job followWith(Task task) {
 			this.task = task;
 			relationType = JobRelationType.SEQUENCE;
 			Preconditions.checkArgument(lastCreated != null);
 			related = lastCreated;
 			create();
+			return lastCreated;
 		}
 
 		public Builder withAwaiter() {
@@ -813,7 +890,10 @@ public class JobRegistry extends WriterService {
 
 		Map<String, Object> copyContext = new LinkedHashMap<>();
 
-		public ContextAwaiter() {
+		private Job job;
+
+		public ContextAwaiter(Job job) {
+			this.job = job;
 			// we don't copy permissions manager/user - since often the launcher
 			// will be triggered by a system user context (because triggered by
 			// a transaction event)
@@ -823,9 +903,16 @@ public class JobRegistry extends WriterService {
 			copyContext.putAll(LooseContext.getContext().properties);
 		}
 
-		public void await() {
+		public void await(long maxTime) {
 			try {
-				latch.await();
+				if (job.provideIsComplete()) {
+					latch.countDown();
+				}
+				if (maxTime == 0) {
+					latch.await();
+				} else {
+					latch.await(maxTime, TimeUnit.MILLISECONDS);
+				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -869,39 +956,6 @@ public class JobRegistry extends WriterService {
 		}
 	}
 
-	class SequenceCompletionLatch {
-		private CountDownLatch latch = new CountDownLatch(1);
-
-		JobContext context;
-
-		void await() {
-			try {
-				// FIXME - mvcc.jobs - remove timeout
-				while (true) {
-					try {
-						Transaction.ensureEnded();
-						if (latch.await(10, TimeUnit.SECONDS)) {
-							break;
-						}
-						int debug = 3;
-					} finally {
-						Transaction.begin();
-						if (context != null) {
-							context.checkCancelled0(true);
-						}
-					}
-				}
-				context.awaitSequenceCompletion();
-			} catch (InterruptedException e) {
-				throw WrappedRuntimeException.wrapIfNotRuntime(e);
-			}
-		}
-
-		void onChildJobsCompleted() {
-			latch.countDown();
-		}
-	}
-
 	class ThreadDataWaiter {
 		List<Job> queriedJobs = new ArrayList<>();
 
@@ -933,7 +987,7 @@ public class JobRegistry extends WriterService {
 						stateMessage.setJob(job);
 					});
 			try {
-				DomainDescriptorJob.get().stateMessageEvents.add(listener);
+				JobDomain.get().stateMessageEvents.add(listener);
 				latch = new CountDownLatch(queriedJobs.size());
 				Transaction.commit();
 				latch.await(1, TimeUnit.SECONDS);
@@ -944,7 +998,7 @@ public class JobRegistry extends WriterService {
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			} finally {
-				DomainDescriptorJob.get().stateMessageEvents.remove(listener);
+				JobDomain.get().stateMessageEvents.remove(listener);
 			}
 		}
 	}

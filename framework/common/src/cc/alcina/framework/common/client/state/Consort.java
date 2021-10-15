@@ -7,6 +7,7 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -14,8 +15,6 @@ import org.slf4j.LoggerFactory;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
@@ -29,7 +28,12 @@ import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 
 /**
- * Manages an ecology of players - a sort of organic state machine
+ * Manages an ecology of players - a sort of organic state machine.
+ * 
+ * 
+ * The usage as per: noun noun: consort; plural noun: consorts a small group of
+ * musicians performing together, typically playing instrumental music of the
+ * Renaissance period. "a consort of viols"
  * 
  * @author nick@alcina.cc
  * 
@@ -165,13 +169,7 @@ public class Consort<D> {
 	}
 
 	public void clear() {
-		CollectionFilter<Player> isCancellableFilter = new CollectionFilter<Player>() {
-			@Override
-			public boolean allow(Player o) {
-				return !o.isCancellable();
-			}
-		};
-		CollectionFilters.filterInPlace(players, isCancellableFilter);
+		players.removeIf(Player::isCancellable);
 		clearReachedStates();
 	}
 
@@ -234,8 +232,8 @@ public class Consort<D> {
 	}
 
 	public <P extends Player> List<P> getTasksForClass(Class<P> clazz) {
-		return (List) CollectionFilters.filter(players,
-				new IsClassFilter(clazz));
+		return (List) players.stream().filter(new IsClassFilter(clazz))
+				.collect(Collectors.toList());
 	}
 
 	public boolean isRunning() {
@@ -348,7 +346,8 @@ public class Consort<D> {
 		wasPlayed(player, resultantStates, true);
 	}
 
-	// FIXME - applifecycle.consort - cleanup - this works - unless we want some
+	// FIXME - 2023 - applifecycle.consort - cleanup - this works - unless we
+	// want some
 	// sort of threaded
 	// queue/consumer model - but it ain't so pretty
 	//
@@ -365,7 +364,8 @@ public class Consort<D> {
 		playedCount++;
 		assert playing.contains(player);
 		playing.remove(player);
-		// FIXME - applifecycle.consort - warn if resultantstates >1 and a
+		// FIXME - 2023 - applifecycle.consort - warn if resultantstates >1 and
+		// a
 		// non-parallel consort?
 		modifyStates(resultantStates, true);
 		metricLogger.debug(Ax.format("%s     %s: %s ms",
@@ -479,8 +479,8 @@ public class Consort<D> {
 							} else if (relPriority < 0) {
 								// keep current;
 							} else {
-								if (!player.isAllowEqualPriority()
-										|| result.isAllowEqualPriority()) {
+								if (!(player.isAllowEqualPriority()
+										|| result.isAllowEqualPriority())) {
 									throw new RuntimeException(Ax.format(
 											PLAYERS_WITH_EQUAL_DEPS_ERR, player,
 											result, providerDependencies));

@@ -16,13 +16,16 @@ package cc.alcina.framework.common.client.search;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.logic.FilterCombinator;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @Bean
+@TypeSerialization(flatSerializable = false)
 public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	public DateGroup() {
 		super();
@@ -43,13 +46,14 @@ public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
 	}
 
 	@Override
-	public String getDisplayName() {
-		return "Date";
+	public Class entityClass() {
+		return null;
 	}
 
 	@Override
-	public Class getEntityClass() {
-		return null;
+	@AlcinaTransient
+	public String getDisplayName() {
+		return "Date";
 	}
 
 	@Override

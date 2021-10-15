@@ -18,10 +18,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
-import javax.xml.bind.annotation.XmlTransient;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
-
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
@@ -32,27 +28,33 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 @Bean
-@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+@RegistryLocations({
+		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
+		@RegistryLocation(registryPoint = TreeSerializable.class) })
 public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		implements TreeRenderable, Permissible, HasPermissionsValidation,
-		HasReflectiveEquivalence<CriteriaGroup>, TreeSerializable {
-	static final transient long serialVersionUID = -1L;
+		HasReflectiveEquivalence<CriteriaGroup>, TreeSerializable,
+		TreeSerializable.NonMultiple {
+	
 
 	private FilterCombinator combinator = FilterCombinator.AND;
 
 	private Set<SC> criteria = new LightSet<SC>();
 
 	public CriteriaGroup() {
+		ensureDefaultCriteria();
 	}
 
 	@Override
@@ -94,6 +96,10 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		return result.length() == 0 ? result : displayName + result;
 	}
 
+	public void clearCriteria() {
+		criteria.clear();
+	}
+
 	public <S extends SearchCriterion> S ensureCriterion(S criterion) {
 		for (SC sc : getCriteria()) {
 			if (sc.getClass() == criterion.getClass()) {
@@ -103,6 +109,11 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		addCriterion((SC) criterion);
 		return criterion;
 	}
+
+	public void ensureDefaultCriteria() {
+	}
+
+	public abstract Class entityClass();
 
 	/*
 	 * only used for single-table search, compiled out for client
@@ -164,11 +175,8 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 	}
 
 	@Override
+	@AlcinaTransient
 	public abstract String getDisplayName();
-
-	@XmlTransient
-	@JsonIgnore
-	public abstract Class getEntityClass();
 
 	/**
 	 * To disallow injection attacks here, the criteria/property name mapping

@@ -18,6 +18,19 @@ public interface PropertyReflector {
 
 	public abstract void setPropertyValue(Object bean, Object newValue);
 
+	default <A extends Annotation> boolean
+			hasAnnotation(Class<A> annotationClass) {
+		return getAnnotation(annotationClass) != null;
+	}
+
+	default boolean isDefiningType(Class type) {
+		return getDefiningType() == type;
+	}
+
+	default boolean isPropertyName(String name) {
+		return getPropertyName().equals(name);
+	}
+
 	default boolean provideWriteableNonTransient() {
 		return !isReadOnly()
 				&& !getPropertyName().equals("propertyChangeListeners");

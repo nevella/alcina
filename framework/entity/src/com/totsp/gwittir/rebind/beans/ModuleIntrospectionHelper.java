@@ -10,6 +10,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 
 import javax.xml.bind.JAXBContext;
@@ -23,11 +24,8 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
-import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 public class ModuleIntrospectionHelper {
@@ -112,15 +110,9 @@ public class ModuleIntrospectionHelper {
 
 	public void reset(boolean soft) throws Exception {
 		if (soft) {
-			Callback<ModuleIntrospectionClassInfo> removeModulesCallback = new Callback<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>() {
-				@Override
-				public void apply(ModuleIntrospectionClassInfo value) {
-					if (value.provenance == ModuleIntrospectionClassInfoProvenance.AUTO) {
-						value.modules.clear();
-					}
-				}
-			};
-			CollectionFilters.apply(info.classInfo, removeModulesCallback);
+			info.classInfo.stream().filter(
+					info -> info.provenance == ModuleIntrospectionClassInfoProvenance.AUTO)
+					.forEach(info -> info.modules.clear());
 		} else {
 			info.mode = ModuleIntrospectionHelper.ModuleIntrospectionMode.DISALLOW_ALL;
 			filterForHumans();
@@ -183,14 +175,14 @@ public class ModuleIntrospectionHelper {
 	}
 
 	protected void filterForHumans() {
-		CollectionFilter<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo> autoFilter = new CollectionFilter<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>() {
+		Predicate<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo> autoFilter = new Predicate<ModuleIntrospectionHelper.ModuleIntrospectionClassInfo>() {
 			@Override
-			public boolean allow(
+			public boolean test(
 					ModuleIntrospectionHelper.ModuleIntrospectionClassInfo o) {
 				return o.provenance == ModuleIntrospectionHelper.ModuleIntrospectionClassInfoProvenance.HUMAN;
 			}
 		};
-		CollectionFilters.filterInPlace(info.classInfo, autoFilter);
+		info.classInfo.removeIf(autoFilter.negate());
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)

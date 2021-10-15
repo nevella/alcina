@@ -5,7 +5,6 @@ import java.io.File;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 
 public interface SerializationStrategy {
 	public <T> T deserializeFromFile(File cacheFile, Class<T> clazz);
@@ -43,7 +42,7 @@ public interface SerializationStrategy {
 			implements SerializationStrategy {
 		@Override
 		public <T> T deserializeFromFile(File cacheFile, Class<T> clazz) {
-			return WrappedObjectHelper.xmlDeserialize(clazz,
+			return JaxbUtils.xmlDeserialize(clazz,
 					ResourceUtilities.read(cacheFile));
 		}
 
@@ -55,7 +54,7 @@ public interface SerializationStrategy {
 		@Override
 		public <T> byte[] serializeToByteArray(T t) {
 			try {
-				return WrappedObjectHelper.xmlSerialize(t).getBytes("UTF-8");
+				return JaxbUtils.xmlSerialize(t).getBytes("UTF-8");
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

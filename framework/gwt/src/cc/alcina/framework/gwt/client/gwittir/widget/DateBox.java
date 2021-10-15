@@ -63,10 +63,6 @@ public class DateBox extends AbstractBoundWidget<Date>
 
 	private DatePicker picker;
 
-	public DatePicker getPicker() {
-		return this.picker;
-	}
-
 	public DateBox() {
 		this(DateTimeFormat.getFormat("dd/MM/yyyy"));
 	}
@@ -78,6 +74,7 @@ public class DateBox extends AbstractBoundWidget<Date>
 		picker.addStyleName("alcina-DatePicker");
 		base = createDateBox(dtFormat, picker);
 		base.getTextBox().addValueChangeHandler(this);
+		base.getTextBox().getElement().setAttribute("autocomplete", "off");
 		base.addValueChangeHandler(this);
 		base.addStyleName("alcina-DateBox");
 		initWidget(base);
@@ -85,6 +82,10 @@ public class DateBox extends AbstractBoundWidget<Date>
 
 	public BidiConverter<Date, Date> getDateTranslator() {
 		return this.dateTranslator;
+	}
+
+	public DatePicker getPicker() {
+		return this.picker;
 	}
 
 	@Override

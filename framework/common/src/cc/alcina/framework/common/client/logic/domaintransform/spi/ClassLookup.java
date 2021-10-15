@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.spi;
 
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.Map;
 import java.util.function.BiConsumer;
 
 import com.totsp.gwittir.client.beans.Method;
@@ -39,7 +40,10 @@ public interface ClassLookup {
 
 	public Class getClassForName(String fqn);
 
-	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass);
+	public List<Class> getInterfaces(Class clazz);
+
+	public Map<String, PropertyReflector>
+			getPropertyReflectors(Class<?> beanClass);
 
 	public Class getPropertyType(Class clazz, String propertyName);
 
@@ -47,15 +51,15 @@ public interface ClassLookup {
 
 	public List<PropertyInfo> getWritableProperties(Class clazz);
 
+	public boolean isAssignableFrom(Class from, Class to);
+
 	public <T> T newInstance(Class<T> clazz);
 
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId);
 
 	default PropertyReflector getPropertyReflector(Class<?> beanClass,
 			String propertyName) {
-		return getPropertyReflectors(beanClass).stream()
-				.filter(pr -> pr.getPropertyName().equals(propertyName))
-				.findFirst().orElse(null);
+		return getPropertyReflectors(beanClass).get(propertyName);
 	}
 
 	default String getSimpleClassName(Class<?> clazz) {
@@ -67,8 +71,17 @@ public interface ClassLookup {
 	}
 
 	default boolean hasProperty(Class beanClass, String propertyName) {
-		return getPropertyReflectors(beanClass).stream()
-				.anyMatch(pr -> pr.getPropertyName().equals(propertyName));
+		return getPropertyReflector(beanClass, propertyName) != null;
+	}
+
+	default boolean isNonAbstract(Class<? extends Object> clazz) {
+		try {
+			Object templateInstance = getTemplateInstance(clazz);
+			return templateInstance != null;
+		} catch (Exception e) {
+			// instantiation (clazz is abstract)
+			return false;
+		}
 	}
 
 	default boolean isPrimitive(Class<?> clazz) {
@@ -85,7 +98,7 @@ public interface ClassLookup {
 			Class<?> beanClass, Class<A> annotationClass,
 			BiConsumer<A, PropertyReflector> callback) {
 		for (PropertyReflector propertyReflector : getPropertyReflectors(
-				beanClass)) {
+				beanClass).values()) {
 			A annotation = propertyReflector.getAnnotation(annotationClass);
 			if (annotation != null) {
 				callback.accept(annotation, propertyReflector);

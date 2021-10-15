@@ -8,17 +8,15 @@ import java.util.Set;
 
 import javax.persistence.EntityManager;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
-import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequest;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -112,17 +110,9 @@ public class TransformConflicts {
 		List<DomainTransformEventPersistent> dteps = em.createQuery(eql)
 				.getResultList();
 		MetricLogging.get().end(CHECK_TRANSFORM_CONFLICTS_QUERY);
-		CollectionFilters.filterInPlace(dteps,
-				new CollectionFilter<DomainTransformEventPersistent>() {
-					@Override
-					public boolean allow(DomainTransformEventPersistent o) {
-						return o.getDomainTransformRequestPersistent()
-								.getClientInstance()
-								.getId() != transformPersistenceToken
-										.getRequest().getClientInstance()
-										.getId();
-					}
-				});
+		dteps.removeIf(o -> o.getDomainTransformRequestPersistent()
+				.getClientInstance().getId() == transformPersistenceToken
+						.getRequest().getClientInstance().getId());
 		if (!dteps.isEmpty()) {
 			TransformConflictEvent conflictEvent = new TransformConflictEvent();
 			conflictEvent.token = transformPersistenceToken;

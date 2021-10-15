@@ -8,14 +8,18 @@ import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Consumer;
 
+import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.place.shared.Place;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
+import cc.alcina.framework.common.client.logic.domain.UserProperty;
+import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -39,13 +43,17 @@ import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Behaviour.TopicBehaviour.TopicBehaviourType;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeTopic;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Submit;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvents;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -53,7 +61,8 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
-public class FormModel extends Model {
+//FIXME - dirndl 1.3 - FormModel -> Form
+public class FormModel extends Model implements DomEvents.Submit.Handler {
 	protected List<FormElement> elements = new ArrayList<>();
 
 	protected List<LinkModel> actions = new ArrayList<>();
@@ -72,7 +81,12 @@ public class FormModel extends Model {
 		return this.state;
 	}
 
-	public void onSubmit(Node node) {
+	@Override
+	public void onSubmit(Submit event) {
+		submit(event.getContext().node);
+	}
+
+	public boolean submit(Node node) {
 		Consumer<Void> onValid = o -> {
 			if (getState().model instanceof Entity) {
 				ClientTransformManager.cast()
@@ -91,7 +105,7 @@ public class FormModel extends Model {
 						categoryNamePlace.ensureAction(), node);
 			}
 		};
-		new FormValidation().validate(onValid, getState().formBinding);
+		return new FormValidation().validate(onValid, getState().formBinding);
 	}
 
 	public static class BindableFormModelTransformer extends
@@ -106,8 +120,21 @@ public class FormModel extends Model {
 			}
 			state.model = bindable;
 			state.adjunct = true;
+			BindableFormModelTransformer.Args args = node
+					.annotation(BindableFormModelTransformer.Args.class);
+			if (args != null) {
+				state.adjunct = args.adjunct();
+			}
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
+		}
+
+		@ClientVisible
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE, ElementType.METHOD })
+		public @interface Args {
+			boolean adjunct() default false;
 		}
 	}
 
@@ -138,12 +165,9 @@ public class FormModel extends Model {
 		}
 	}
 
-	public static class Cancelled extends NodeTopic {
-	}
-
 	@Ref("cancel")
 	@ActionRefHandler(CancelHandler.class)
-	@TopicBehaviour(topic = Cancelled.class, type = TopicBehaviourType.EMIT)
+	@EmitsTopic(NodeEvents.Cancelled.class)
 	public static class CancelRef extends ActionRef {
 	}
 
@@ -167,17 +191,15 @@ public class FormModel extends Model {
 	}
 
 	public static class FormElement extends Model {
-		private static transient int formElementIdxCounter;
-
 		protected LabelModel label;
 
 		protected FormValueModel value;
 
-		private Field field;
+		protected Field field;
 
 		private Bindable bindable;
 
-		private int formElementIdx;
+		private boolean focusOnAttach;
 
 		public FormElement() {
 		}
@@ -185,9 +207,16 @@ public class FormModel extends Model {
 		public FormElement(Field field, Bindable bindable) {
 			this.field = field;
 			this.bindable = bindable;
-			this.formElementIdx = ++formElementIdxCounter;
 			this.label = new LabelModel(this);
 			this.value = new FormValueModel(this);
+		}
+
+		public String getElementName() {
+			return Ax.format("_dl_form_%s", field.getPropertyName());
+		}
+
+		public Field getField() {
+			return this.field;
 		}
 
 		@Directed
@@ -200,12 +229,18 @@ public class FormModel extends Model {
 			return this.value;
 		}
 
-		public String provideId() {
-			return Ax.format("_dl_form_%s", formElementIdx);
+		public boolean isFocusOnAttach() {
+			return this.focusOnAttach;
+		}
+
+		public void setFocusOnAttach(boolean focusOnAttach) {
+			this.focusOnAttach = focusOnAttach;
 		}
 	}
 
 	public static class FormModelState {
+		public Bindable presentationModel;
+
 		public boolean expectsModel;
 
 		public boolean editable;
@@ -232,22 +267,43 @@ public class FormModel extends Model {
 			if (state.model == null && state.expectsModel) {
 				return model;
 			}
-			ActionsModulator actionsModulator = new ActionsModulator();
 			Args args = node.annotation(Args.class);
-			if (args != null) {
-				actionsModulator = Reflections.classLookup()
-						.newInstance(args.actionsModulator());
-			}
+			ActionsModulator actionsModulator = args != null
+					? Reflections.newInstance(args.actionsModulator())
+					: new ActionsModulator();
+			FieldModulator fieldModulator = args != null
+					? Reflections.newInstance(args.fieldModulator())
+					: new FieldModulator();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			node.pushResolver(ModalResolver.single(!state.editable));
+			node.pushResolver(
+					ModalResolver.single(node.getResolver(), !state.editable));
 			if (state.model != null) {
+				if (state.model instanceof UserProperty) {
+					state.presentationModel = (Bindable) ((UserProperty) state.model)
+							.ensureUserPropertySupport().getPersistable();
+				}
+				if (state.presentationModel == null) {
+					state.presentationModel = state.model;
+				}
+			}
+			if (state.presentationModel != null) {
 				List<Field> fields = GwittirBridge.get()
 						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-								state.model, factory, state.editable,
-								state.adjunct, node.getResolver());
+								state.presentationModel, factory,
+								state.editable, state.adjunct,
+								node.getResolver());
 				fields.stream()
-						.map(field -> new FormElement(field, state.model))
-						.forEach(model.elements::add);
+						.filter(field -> fieldModulator
+								.accept(state.presentationModel, field))
+						.map(field -> {
+							FormElement e = new FormElement(field,
+									state.presentationModel);
+							if (args != null && args.focusOnAttach()
+									.equals(field.getPropertyName())) {
+								e.setFocusOnAttach(true);
+							}
+							return e;
+						}).forEach(model.elements::add);
 			}
 			if (state.adjunct) {
 				model.actions.add(new LinkModel()
@@ -256,9 +312,9 @@ public class FormModel extends Model {
 				model.actions.add(new LinkModel()
 						.withPlace(new ActionRefPlace(CancelRef.class)));
 			} else {
-				if (state.model != null) {
+				if (state.presentationModel != null) {
 					Bean bean = Reflections.classLookup().getAnnotationForClass(
-							state.model.getClass(), Bean.class);
+							state.presentationModel.getClass(), Bean.class);
 					if (bean != null) {
 						Arrays.stream(bean.actions().value())
 								.map(a -> Reflections
@@ -301,6 +357,17 @@ public class FormModel extends Model {
 		@ClientVisible
 		public static @interface Args {
 			Class<? extends ActionsModulator> actionsModulator() default ActionsModulator.class;
+
+			Class<? extends FieldModulator> fieldModulator() default FieldModulator.class;
+
+			String focusOnAttach() default "";
+		}
+
+		@ClientInstantiable
+		public static class FieldModulator {
+			public boolean accept(Bindable model, Field field) {
+				return true;
+			}
 		}
 	}
 
@@ -329,8 +396,8 @@ public class FormModel extends Model {
 		}
 
 		@Override
-		public String getValueId() {
-			return formElement.provideId();
+		public String getGroupName() {
+			return formElement.getElementName();
 		}
 	}
 
@@ -351,6 +418,9 @@ public class FormModel extends Model {
 		public FormElement getFormElement() {
 			return this.formElement;
 		}
+	}
+
+	public static class ModelEventContext {
 	}
 
 	@ClientInstantiable
@@ -391,23 +461,30 @@ public class FormModel extends Model {
 		}
 	}
 
+	/*
+	 * FIXME - dirndl 1.2 - move to OlForm
+	 */
 	public static class SubmitHandler extends ActionHandler {
 		@Override
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
+			((DomEvent) event).preventDefault();
 			FormModel formModel = (FormModel) node
 					.ancestorModel(m -> m instanceof FormModel);
-			formModel.onSubmit(node);
+			if (formModel.submit(node)) {
+				Optional<EmitsTopic> emitsTopic = place.emitsTopic();
+				Class<? extends TopicEvent> type = emitsTopic.get().value();
+				Context context = NodeEvent.Context.newTopicContext(event,
+						node);
+				TopicEvent.fire(context, type, formModel);
+			}
 		}
 	}
 
 	@Ref("submit")
 	@ActionRefHandler(SubmitHandler.class)
-	@TopicBehaviour(topic = Submitted.class, type = TopicBehaviourType.EMIT)
+	@EmitsTopic(value = NodeEvents.Submitted.class, hasValidation = true)
 	public static class SubmitRef extends ActionRef {
-	}
-
-	public static class Submitted extends NodeTopic {
 	}
 
 	public interface ValueModel {
@@ -415,6 +492,6 @@ public class FormModel extends Model {
 
 		Field getField();
 
-		String getValueId();
+		String getGroupName();
 	}
 }

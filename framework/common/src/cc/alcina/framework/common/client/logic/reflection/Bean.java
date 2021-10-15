@@ -21,8 +21,19 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * To be applied at the class level Also functions as a GWT ClientInstantiable
- * annotation
+ * Types with this annotation have reflection metadata available client-side -
+ * including, but not limited to:
+ * 
+ * clientInstantiable
+ * 
+ * forName
+ * 
+ * bean property introspection
+ * 
+ * type/method annotation access
+ * 
+ * FIXME - dirndl.1.2 - move the visualisation properties to another annotation
+ * (since this is often used for pure model types)
  * 
  * @author nick@alcina.cc
  * 
@@ -38,4 +49,6 @@ public @interface Bean {
 	boolean allPropertiesVisualisable() default false;
 
 	Display displayInfo() default @Display(name = "");
+
+	PropertyOrder propertyOrder() default @PropertyOrder(value = {});
 }

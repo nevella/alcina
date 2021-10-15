@@ -17,10 +17,14 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+
 /**
  * 
  * @author Nick Reddel
  */
+@Bean
 public class DomainTransformResponse implements Serializable {
 	private long requestId;
 
@@ -104,6 +108,7 @@ public class DomainTransformResponse implements Serializable {
 		return sb.toString();
 	}
 
+	@ClientInstantiable
 	public enum DomainTransformResponseResult {
 		OK, FAILURE
 	}

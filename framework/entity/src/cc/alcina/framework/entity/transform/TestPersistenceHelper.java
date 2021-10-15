@@ -13,15 +13,14 @@
  */
 package cc.alcina.framework.entity.transform;
 
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.SelfDescribed;
@@ -35,9 +34,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ImplementationLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.entity.SEUtilities;
@@ -68,7 +67,11 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	CachingMap<String, Class> fqnLookup = new CachingMap<String, Class>(fqn -> {
 		try {
-			return reflectiveClassLoader.loadClass(fqn);
+			try {
+				return reflectiveClassLoader.loadClass(fqn);
+			} catch (Exception e) {
+				return Class.forName(fqn);
+			}
 		} catch (Exception e) {
 			throw e;
 		}
@@ -76,10 +79,14 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 
 	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
 
-	private CachingConcurrentMap<Class, List<PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
+	private CachingConcurrentMap<Class, Map<String, PropertyReflector>> classPropertyReflectorLookup = new CachingConcurrentMap<>(
 			clazz -> SEUtilities.getPropertyDescriptorsSortedByField(clazz)
-					.stream().map(pd -> new JvmPropertyReflector(clazz, pd))
-					.collect(Collectors.toList()),
+					.stream()
+					.filter(pd -> !(pd.getName().equals("class")
+							|| pd.getName().equals("propertyChangeListeners")))
+					.map(pd -> JvmPropertyReflector.get(clazz, pd))
+					.collect(AlcinaCollectors
+							.toKeyMap(PropertyReflector::getPropertyName)),
 			100);
 
 	private TestPersistenceHelper() {
@@ -97,24 +104,6 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 			return ((HasDisplayName) o).displayName();
 		}
 		return o.toString();
-	}
-
-	public List<String> getAnnotatedPropertyNames(Class clazz) {
-		try {
-			List<String> result = new ArrayList<String>();
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getReadMethod() != null && pd.getWriteMethod() != null
-						&& pd.getReadMethod()
-								.getAnnotation(Display.class) != null) {
-					result.add(pd.getName());
-				}
-			}
-			return result;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	@Override
@@ -162,6 +151,11 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	}
 
 	@Override
+	public List<Class> getInterfaces(Class clazz) {
+		return Arrays.asList(clazz.getInterfaces());
+	}
+
+	@Override
 	public <T extends Entity> T getObject(Class<? extends T> c, long id,
 			long localId) {
 		// uses thread-local instance
@@ -177,28 +171,21 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	@Override
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+		MethodIndividualPropertyReflector accessor = MethodIndividualPropertyReflector
+				.get(clazz, propertyName);
+		return accessor.isInvalid() ? null : accessor;
 	}
 
 	@Override
-	public List<PropertyReflector> getPropertyReflectors(Class<?> beanClass) {
+	public Map<String, PropertyReflector>
+			getPropertyReflectors(Class<?> beanClass) {
 		return classPropertyReflectorLookup.get(beanClass);
 	}
 
 	@Override
 	public Class getPropertyType(Class clazz, String propertyName) {
-		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(clazz)
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getName().equals(propertyName)) {
-					return pd.getPropertyType();
-				}
-			}
-			return null;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		return SEUtilities.getPropertyDescriptorByName(clazz, propertyName)
+				.getPropertyType();
 	}
 
 	@Override
@@ -219,9 +206,8 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 	public List<PropertyInfo> getWritableProperties(Class clazz) {
 		try {
 			List<PropertyInfo> infos = new ArrayList<PropertyInfo>();
-			java.beans.BeanInfo beanInfo = Introspector.getBeanInfo(clazz);
-			PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
+			for (PropertyDescriptor pd : SEUtilities
+					.getPropertyDescriptorsSortedByName(clazz)) {
 				Class<?> propertyType = pd.getPropertyType();
 				if (pd.getWriteMethod() == null || pd.getReadMethod() == null) {
 					continue;
@@ -246,6 +232,11 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	public boolean isAssignableFrom(Class from, Class to) {
+		return from.isAssignableFrom(to);
 	}
 
 	@Override

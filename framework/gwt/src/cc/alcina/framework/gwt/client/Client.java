@@ -22,12 +22,14 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
+import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
 import cc.alcina.framework.gwt.client.entity.view.UiController;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @RegistryLocation(registryPoint = Client.class, implementationType = ImplementationType.SINGLETON)
@@ -73,6 +75,10 @@ public abstract class Client {
 		goTo(place);
 	}
 
+	public static SearchRemoteServiceAsync searchRemoteService() {
+		return Registry.impl(SearchRemoteServiceAsync.class);
+	}
+
 	protected final EventBus eventBus = new SimpleEventBus();
 
 	protected PlaceController placeController;
@@ -110,11 +116,13 @@ public abstract class Client {
 	protected abstract void createPlaceController();
 
 	public static class Init {
+		public static long startTime;
+
 		public static void preRegistry() {
+			startTime = System.currentTimeMillis();
 			LiSet liSet = new LiSet();
 			CommonUtils.setSupplier = () -> new LightSet();
 			LocalDom.mutations.setDisabled(true);
-			//
 			if (GWT.isScript()) {
 				Registry.setDelegateCreator(new JsRegistryDelegateCreator());
 			}
@@ -126,6 +134,15 @@ public abstract class Client {
 			Reflections.registerClassLookup(ClientReflector.get());
 			Reflections.registerPropertyAccessor(GwittirBridge.get());
 			Reflections.registerBeanDescriptorProvider(GwittirBridge.get());
+		}
+	}
+
+	@ClientInstantiable
+	@RegistryLocation(registryPoint = PlaceNavigator.class, implementationType = ImplementationType.INSTANCE)
+	public static class PlaceNavigatorImpl implements PlaceNavigator {
+		@Override
+		public void go(Place place) {
+			Client.goTo(place);
 		}
 	}
 }

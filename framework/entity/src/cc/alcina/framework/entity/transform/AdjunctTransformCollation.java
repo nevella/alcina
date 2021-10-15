@@ -1,9 +1,10 @@
 package cc.alcina.framework.entity.transform;
 
+import java.util.concurrent.Callable;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
@@ -27,12 +28,27 @@ public class AdjunctTransformCollation extends TransformCollation {
 		this.token = transformPersistenceToken;
 	}
 
+	/*
+	 * Don't perform any modifications in the snapshot - return to base
+	 */
+	public <T> T callHandleDeleted(QueryResult result, Callable<T> callable) {
+		try {
+			if (result.hasDeleteTransform()) {
+				return Transaction.callInSnapshotTransaction(callable);
+			} else {
+				return callable.call();
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	// this works because of transactions -
 	/*
 	 * Note that there's a chance some of these requests have already applied -
 	 * but that's harmless, as long as we drop the creation events
 	 */
-	public void ensureApplied() {
+	public AdjunctTransformCollation ensureApplied() {
 		// should only be called by local pre-commit listeners
 		Preconditions.checkState(
 				Transaction.current().isPreCommit() && token.isLocalToVm());
@@ -43,14 +59,14 @@ public class AdjunctTransformCollation extends TransformCollation {
 					&& !LooseContext.is(CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD)) {
 				// on a normal server-thread pre-commit - these transforms have
 				// already been applied to the TLTM
-				return;
+				return this;
 			}
 			ThreadlocalTransformManager tltm = ThreadlocalTransformManager
 					.cast();
 			try {
 				tltm.setIgnorePropertyChanges(true);
-				if (tltm.getUserSessionEntityMap() == null) {
-					tltm.setUserSessionEntityMap(TransformCommit.get()
+				if (tltm.getClientInstanceEntityMap() == null) {
+					tltm.setClientInstanceEntityMap(TransformCommit.get()
 							.getLocatorMapForClient(token.getRequest()));
 				}
 				tltm.setApplyingExternalTransforms(true);
@@ -59,17 +75,13 @@ public class AdjunctTransformCollation extends TransformCollation {
 							.getTransformType() == TransformType.CREATE_OBJECT) {
 						// only create our transient event receiver if this
 						// request hasn't been applied
-						if (tltm.getUserSessionEntityMap().getForLocalId(
+						if (tltm.getClientInstanceEntityMap().getForLocalId(
 								event.getObjectLocalId()) == null) {
 							Entity instance = (Entity) tltm.newInstance(
 									event.getObjectClass(), event.getObjectId(),
-									event.getObjectLocalId());
+									event.getObjectLocalId(), true);
 							token.getTargetStore().putExternalLocal(instance);
 						}
-					}
-					if (WrapperPersistable.class
-							.isAssignableFrom(event.getObjectClass())) {
-						continue;
 					}
 					TransformManager.get().apply(event);
 				}
@@ -80,11 +92,28 @@ public class AdjunctTransformCollation extends TransformCollation {
 				tltm.setIgnorePropertyChanges(false);
 			}
 		}
+		return this;
+	}
+
+	public void ensureCurrent() {
+		if (token.addCascadedEvents()) {
+			refreshFromRequest();
+		}
+	}
+
+	public void refreshFromRequest() {
+		refresh(token.getRequest().allTransforms());
+	}
+
+	public void removeCreateDeleteTransforms() {
+		ensureLookups();
+		allEvents.stream().filter(this::isCreatedAndDeleted)
+				.forEach(this::removeTransformFromRequest);
 	}
 
 	@Override
-	protected void removeTransformsFromRequest(QueryResult queryResult) {
+	protected void removeTransformFromRequest(DomainTransformEvent event) {
 		Preconditions.checkState(token.getTransformResult() == null);
-		queryResult.events.forEach(token.getRequest()::removeTransform);
+		token.getRequest().removeTransform(event);
 	}
 }

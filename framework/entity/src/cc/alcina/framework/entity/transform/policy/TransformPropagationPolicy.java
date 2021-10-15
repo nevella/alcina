@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.transform.policy;
 
+import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.Reflections;
@@ -11,10 +12,14 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 
 @RegistryLocation(registryPoint = TransformPropagationPolicy.class, implementationType = ImplementationType.INSTANCE)
 public class TransformPropagationPolicy {
+	public static final transient String CONTEXT_PROPAGATION_FILTER = TransformPropagationPolicy.class
+			.getName() + ".CONTEXT_PROPAGATION_FILTER";
+
 	public long
 			getProjectedPersistentCount(Stream<DomainTransformEvent> events) {
 		return events.filter(event -> {
@@ -46,7 +51,8 @@ public class TransformPropagationPolicy {
 			/*
 			 * Always persist non-root transforms (if not propogation::NONE)
 			 */
-			return !PermissionsManager.get().isRoot();
+			return propagation.persistNonRoot()
+					&& !PermissionsManager.get().isRoot();
 		default:
 			throw new UnsupportedOperationException();
 		}
@@ -55,6 +61,17 @@ public class TransformPropagationPolicy {
 	public boolean shouldPropagate(DomainTransformEvent event) {
 		DomainTransformPropagation propagation = resolvePropagation(event);
 		if (isNonDomainStoreClass(event.getObjectClass())) {
+			return false;
+		}
+		if (event.getValueClass() != null
+				&& Entity.class.isAssignableFrom(event.getValueClass())) {
+			if (isNonDomainStoreClass(event.getValueClass())) {
+				return false;
+			}
+		}
+		Predicate<DomainTransformEvent> propagationFilter = LooseContext
+				.get(CONTEXT_PROPAGATION_FILTER);
+		if (propagationFilter != null && !propagationFilter.test(event)) {
 			return false;
 		}
 		return propagation.value() == PropagationType.PERSISTENT

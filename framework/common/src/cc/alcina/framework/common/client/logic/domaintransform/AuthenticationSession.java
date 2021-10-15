@@ -21,6 +21,7 @@ import java.util.Set;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
+import cc.alcina.framework.common.client.domain.DomainStoreLazyLoader;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
@@ -31,6 +32,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @DomainTransformPersistable
 @MappedSuperclass
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+@DomainStoreLazyLoader(enqueueLazyLoads = true)
 public abstract class AuthenticationSession
 		extends VersionableEntity<AuthenticationSession> implements HasIUser {
 	private Date startTime;

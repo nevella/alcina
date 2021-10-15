@@ -9,6 +9,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.ui.Widget;
 
@@ -20,6 +21,14 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+/**
+ * 
+ * Transforms an input model to a renderable model, and renders. Note that the
+ * renderable model class must be annotated with @Directed
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 		HasDirectedModel, HandlesModelBinding, RendersToParentContainer {
 	@Override
@@ -59,7 +68,7 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 		return result;
 	}
 
-	public abstract static class AbstractContextSensitiveModelTransform<A, B extends Bindable>
+	public abstract static class AbstractContextSensitiveModelTransform<A, B>
 			extends AbstractModelTransform<A, B>
 			implements ContextSensitiveTransform<A, B> {
 		protected Node node;
@@ -73,18 +82,35 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 	}
 
 	@ClientInstantiable
-	public abstract static class AbstractModelTransform<A, B extends Bindable>
+	public abstract static class AbstractModelTransform<A, B>
 			implements ModelTransform<A, B> {
 	}
 
-	public interface ContextSensitiveTransform<A, B extends Bindable>
+	public interface ContextSensitiveTransform<A, B>
 			extends ModelTransform<A, B> {
 		public ContextSensitiveTransform<A, B>
 				withContextNode(DirectedLayout.Node node);
 	}
 
-	public interface ModelTransform<A, B extends Bindable>
-			extends Function<A, B> {
+	@ClientInstantiable
+	public static abstract class ListModelTransform<A, B>
+			implements ModelTransform<List<A>, Model> {
+		@Override
+		public Model apply(List<A> t) {
+			List<B> list = t.stream().map(this::mapElement)
+					.collect(Collectors.toList());
+			return new DelegatingNodeRenderer.SimpleDelegate(list);
+		}
+
+		protected abstract B mapElement(A a);
+	}
+
+	/*
+	 * Note that this *must* return a result with an @Directed annotation - if
+	 * transforming to (say) a list, use DelegatingNodeRenderer.SimpleDelegate
+	 * to wrap
+	 */
+	public interface ModelTransform<A, B> extends Function<A, B> {
 	}
 
 	@ClientVisible

@@ -22,12 +22,14 @@ import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -35,9 +37,11 @@ import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
-@Bean( allPropertiesVisualisable = true)
+@Bean(allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
-@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+@RegistryLocations({
+		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
+		@RegistryLocation(registryPoint = TreeSerializable.class) })
 public abstract class SearchCriterion extends Bindable
 		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion>,
 		TreeSerializable {
@@ -47,8 +51,6 @@ public abstract class SearchCriterion extends Bindable
 	// TODO: great big injection hole here - should be checked server-side
 	// FIXED: - transient, and set in the server validation phase
 	private transient String targetPropertyName;
-
-	private Direction direction = Direction.ASCENDING;
 
 	private String displayName;
 
@@ -85,12 +87,9 @@ public abstract class SearchCriterion extends Bindable
 		return null;
 	}
 
-	@PropertySerialization(path = "dir")
-	public Direction getDirection() {
-		return this.direction;
-	}
-
 	@Override
+	@AlcinaTransient
+	@HasReflectiveEquivalence.Ignore
 	public String getDisplayName() {
 		if (CommonUtils.isNullOrEmpty(displayName)
 				&& LooseContext.is(CONTEXT_ENSURE_DISPLAY_NAME)) {
@@ -114,13 +113,6 @@ public abstract class SearchCriterion extends Bindable
 		return toString();
 	}
 
-	public void setDirection(Direction direction) {
-		Direction old_direction = this.direction;
-		this.direction = direction;
-		propertyChangeSupport().firePropertyChange("direction", old_direction,
-				direction);
-	}
-
 	public void setDisplayName(String displayName) {
 		this.displayName = displayName;
 	}
@@ -138,11 +130,6 @@ public abstract class SearchCriterion extends Bindable
 
 	public String toHtml() {
 		return toString();
-	}
-
-	public SearchCriterion withDirection(Direction direction) {
-		setDirection(direction);
-		return this;
 	}
 
 	public SearchCriterion withOperator(StandardSearchOperator operator) {
@@ -165,6 +152,7 @@ public abstract class SearchCriterion extends Bindable
 	 * @author nick@alcina.cc
 	 * 
 	 */
+	@ClientInstantiable
 	public enum Direction {
 		ASCENDING, DESCENDING
 	}

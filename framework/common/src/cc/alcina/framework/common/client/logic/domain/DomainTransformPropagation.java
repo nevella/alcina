@@ -30,6 +30,8 @@ import java.lang.annotation.Target;
 @Documented
 @Target({ ElementType.TYPE, ElementType.METHOD })
 public @interface DomainTransformPropagation {
+	boolean persistNonRoot() default true;
+
 	PropagationType value();
 
 	public enum PropagationType {

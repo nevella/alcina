@@ -16,8 +16,8 @@ package cc.alcina.framework.gwt.client.ide.provider;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
@@ -35,7 +35,7 @@ public class SimpleCollectionProvider<E>
 
 	private CollectionModificationSupport collectionModificationSupport = new CollectionModificationSupport();
 
-	private CollectionFilter<E> filter;
+	private Predicate<E> predicate;
 
 	private Comparator<E> comparator;
 
@@ -45,12 +45,13 @@ public class SimpleCollectionProvider<E>
 	}
 
 	public SimpleCollectionProvider(Collection<E> colln,
-			Class<? extends E> baseClass, CollectionFilter<E> filter) {
+			Class<? extends E> baseClass, Predicate<E> filter) {
 		this.colln = colln;
 		this.baseClass = baseClass;
-		this.filter = filter;
+		this.predicate = filter;
 	}
 
+	@Override
 	public void addCollectionModificationListener(
 			CollectionModificationListener listener) {
 		this.collectionModificationSupport
@@ -58,6 +59,7 @@ public class SimpleCollectionProvider<E>
 	}
 
 	// chained through to the node
+	@Override
 	public void collectionModification(CollectionModificationEvent evt) {
 		CollectionModificationEvent simpleEvent = new CollectionModificationEvent(
 				evt.getSource());
@@ -65,16 +67,17 @@ public class SimpleCollectionProvider<E>
 				.fireCollectionModificationEvent(simpleEvent);
 	}
 
+	@Override
 	public Collection<E> getCollection() {
-		if (filter == null && comparator == null) {
+		if (predicate == null && comparator == null) {
 			return colln;
 		}
 		ArrayList<E> l = new ArrayList<E>();
-		if (filter == null) {
+		if (predicate == null) {
 			l = new ArrayList<>(colln);
 		} else {
 			for (E e : colln) {
-				if (filter.allow(e)) {
+				if (predicate.test(e)) {
 					l.add(e);
 				}
 			}
@@ -85,6 +88,7 @@ public class SimpleCollectionProvider<E>
 		return l;
 	}
 
+	@Override
 	public Class<? extends E> getCollectionMemberClass() {
 		return this.baseClass;
 	}
@@ -98,14 +102,16 @@ public class SimpleCollectionProvider<E>
 		return this.comparator;
 	}
 
-	public CollectionFilter<E> getFilter() {
-		return this.filter;
+	public Predicate<E> getPredicate() {
+		return this.predicate;
 	}
 
+	@Override
 	public void onDetach() {
 		TransformManager.get().removeCollectionModificationListener(this);
 	}
 
+	@Override
 	public void removeCollectionModificationListener(
 			CollectionModificationListener listener) {
 		this.collectionModificationSupport
@@ -116,8 +122,8 @@ public class SimpleCollectionProvider<E>
 		this.comparator = comparator;
 	}
 
-	public void setFilter(CollectionFilter<E> filter) {
-		this.filter = filter;
+	public void setPredicate(Predicate<E> predicate) {
+		this.predicate = predicate;
 		collectionModification(new CollectionModificationEvent(this));
 	}
 }

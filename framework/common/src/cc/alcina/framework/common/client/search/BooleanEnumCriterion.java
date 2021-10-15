@@ -1,9 +1,11 @@
 package cc.alcina.framework.common.client.search;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private BooleanEnum booleanEnum;
 
@@ -28,11 +30,13 @@ public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
 		return result;
 	}
 
+	@AlcinaTransient
 	public BooleanEnum getBooleanEnum() {
 		return booleanEnum;
 	}
 
 	@Override
+	@PropertySerialization(defaultProperty = true)
 	public BooleanEnum getValue() {
 		return getBooleanEnum();
 	}

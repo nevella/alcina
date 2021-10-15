@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
+import java.util.function.Predicate;
 
-public interface ClientReflectorClassFilter extends CollectionFilter<String> {
+public interface ClientReflectorClassFilter extends Predicate<String> {
 }

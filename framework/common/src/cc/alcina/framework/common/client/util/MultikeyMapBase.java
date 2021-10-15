@@ -4,22 +4,21 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.ImmutableMap;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 
 public abstract class MultikeyMapBase<V>
 		implements MultikeyMap<V>, Serializable {
-	static final transient long serialVersionUID = -1L;
-
 	protected int depth;
 
 	@GwtTransient
@@ -92,7 +91,7 @@ public abstract class MultikeyMapBase<V>
 	public <T> List<T> asTupleObjects(int maxDepth,
 			Converter<List, T> converter) {
 		List<List> tuples = asTuples(maxDepth);
-		return CollectionFilters.convert(tuples, converter);
+		return tuples.stream().map(converter).collect(Collectors.toList());
 	}
 
 	@Override
@@ -151,7 +150,7 @@ public abstract class MultikeyMapBase<V>
 	@Override
 	public V ensure(Supplier<V> supplier, Object... objects) {
 		V v = get(objects);
-		if (v == null) {
+		if (v == null && !containsKey(objects)) {
 			Object[] arr = new Object[objects.length + 1];
 			System.arraycopy(objects, 0, arr, 0, objects.length);
 			v = supplier.get();
@@ -203,10 +202,12 @@ public abstract class MultikeyMapBase<V>
 	}
 
 	@Override
-	public void put(Object... objects) {
+	public Object put(Object... objects) {
 		Map m = getMapForObjects(true, 2, objects);
 		Object key = objects[objects.length - 2];
+		Object existing = m.get(key);
 		m.put(key, objects[objects.length - 1]);
+		return existing;
 	}
 
 	@Override
@@ -246,6 +247,16 @@ public abstract class MultikeyMapBase<V>
 	@Override
 	public int size() {
 		return this.delegate.size();
+	}
+
+	@Override
+	public void sortKeys(Object... objects) {
+		Map delegate = asMapEnsureDelegate(true, objects);
+		Map copyHolder = new HashMap<>();
+		copyHolder.putAll(delegate);
+		delegate.clear();
+		copyHolder.keySet().stream().sorted()
+				.forEach(key -> delegate.put(key, copyHolder.get(key)));
 	}
 
 	@Override

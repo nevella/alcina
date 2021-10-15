@@ -152,6 +152,8 @@ public class CompilationUnits {
 		try {
 			return fqn0(unit, n);
 		} catch (Error e) {
+			Ax.err(unit.file.getName());
+			Ax.simpleExceptionOut(e);
 			return null;
 		}
 	}
@@ -303,6 +305,10 @@ public class CompilationUnits {
 			unitWrapper.ensureImport(clazz);
 		}
 
+		public void ensureImport(String name) {
+			unitWrapper.ensureImport(name);
+		}
+
 		public ClassOrInterfaceDeclaration getDeclaration() {
 			if (declaration == null) {
 				unitWrapper.unit().accept(new VoidVisitorAdapter<Void>() {
@@ -429,9 +435,13 @@ public class CompilationUnits {
 		}
 
 		public void ensureImport(Class<?> clazz) {
+			ensureImport(clazz.getName().replace("$", "."));
+		}
+
+		public void ensureImport(String name) {
 			if (unit().getImports().stream()
-					.noneMatch(id -> id.getName().equals(clazz.getName()))) {
-				unit().addImport(clazz);
+					.noneMatch(id -> id.getName().toString().equals(name))) {
+				unit().addImport(name);
 				dirty = true;
 			}
 		}

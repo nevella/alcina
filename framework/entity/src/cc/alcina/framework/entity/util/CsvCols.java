@@ -53,6 +53,10 @@ public class CsvCols
 		this(CsvUtils.parseCsv(csv));
 	}
 
+	public void addColumn(Enum e) {
+		addColumn(Ax.friendly(e));
+	}
+
 	public void addColumn(String string) {
 		colLookup.put(string, colLookup.size());
 		colLookup.forEach((k, v) -> colLcLookup.put(k.toLowerCase(), v));
@@ -143,12 +147,21 @@ public class CsvCols
 			return getColumnIndex(key) != -1;
 		}
 
+		public String get(Enum key) {
+			return get(Ax.friendly(key));
+		}
+
 		public String get(String key) {
 			return csvCols.grid.get(rowIdx).get(getColumnIndex(key));
 		}
 
-		public String get(Enum key) {
-			return get(Ax.friendly(key));
+		public boolean getBoolean(String key) {
+			return Boolean.parseBoolean(get(key));
+		}
+
+		public long getLong(String key) {
+			String s = get(key);
+			return Ax.isBlank(s) ? -1 : Long.parseLong(s);
 		}
 
 		public boolean has(String key) {
@@ -161,6 +174,10 @@ public class CsvCols
 				map.put(header, get(header));
 			}
 			return map;
+		}
+
+		public void set(Enum e, String value) {
+			set(Ax.friendly(e), value);
 		}
 
 		public String set(String key, Object value) {
@@ -191,17 +208,5 @@ public class CsvCols
 			}
 			return -1;
 		}
-
-		public long getLong(String key) {
-			return Long.parseLong(get(key));
-		}
-
-		public void set(Enum e, String value) {
-			set(Ax.friendly(e), value);
-		}
-	}
-
-	public void addColumn(Enum e) {
-		addColumn(Ax.friendly(e));
 	}
 }

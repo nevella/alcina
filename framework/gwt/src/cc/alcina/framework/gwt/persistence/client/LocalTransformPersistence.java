@@ -11,11 +11,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.logic.StateChangeListener;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientUIThreadWorker;
@@ -75,8 +74,9 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
  * @author nick@alcina.cc
  * 
  */
-public abstract class LocalTransformPersistence implements StateChangeListener,
-		ClientTransformManager.PersistableTransformListener {
+public abstract class LocalTransformPersistence
+		implements ClientTransformManager.PersistableTransformListener,
+		TopicListener<CommitToStorageTransformListener.State> {
 	public static final String CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED = LocalTransformPersistence.class
 			.getName() + "." + "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED";
 
@@ -163,7 +163,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 							.write(wrapper));
 					sb.append("\n");
 				});
-				callback.apply(sb.toString());
+				callback.accept(sb.toString());
 			}
 		};
 		getTransforms(new DeltaApplicationRecordType[0], transformCallback);
@@ -189,6 +189,11 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 
 	public DTESerializationPolicy getSerializationPolicy() {
 		return serializationPolicy;
+	}
+
+	public void getTransforms(DeltaApplicationRecordType type,
+			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
+		getTransforms(new DeltaApplicationRecordType[] { type }, callback);
 	}
 
 	public void
@@ -294,8 +299,10 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	 * Access check - only called by synchronized blocks in
 	 * CommitToStorageTransformListener
 	 */
-	public void stateChanged(Object source, String newState) {
-		if (newState == CommitToStorageTransformListener.COMMITTING) {
+	public void topicPublished(String key,
+			CommitToStorageTransformListener.State newState) {
+		switch (newState) {
+		case COMMITTING: {
 			DomainTransformRequest rq = LooseContext.get(
 					CommitToStorageTransformListener.CONTEXT_COMMITTING_REQUEST);
 			final int requestId = rq.getRequestId();
@@ -319,7 +326,9 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 					}
 				});
 			}
-		} else if (newState == CommitToStorageTransformListener.COMMITTED) {
+		}
+			break;
+		case COMMITTED:
 			List<DomainTransformRequest> requests = getCommitToStorageTransformListener()
 					.getPriorRequestsWithoutResponse();
 			final Set<Integer> removeIds = new HashSet(
@@ -362,8 +371,8 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 			};
 			transformPersisted(persistedWrappers,
 					afterTransformsMarkedAsPersistedCallback);
-			return;
-		} else if (newState == CommitToStorageTransformListener.RELOAD) {
+			break;
+		case RELOAD:
 			clearAllPersisted(new AsyncCallbackNull());
 		}
 	}
@@ -404,11 +413,6 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	protected abstract void getTransforms(DeltaApplicationFilters filters,
 			AsyncCallback<Iterator<DeltaApplicationRecord>> callback);
 
-	public void getTransforms(DeltaApplicationRecordType type,
-			AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
-		getTransforms(new DeltaApplicationRecordType[] { type }, callback);
-	}
-
 	protected void getTransforms(final DeltaApplicationRecordType[] types,
 			final AsyncCallback<Iterator<DeltaApplicationRecord>> callback) {
 		DeltaApplicationFilters filters = new DeltaApplicationFilters();
@@ -423,9 +427,9 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 		List<String> clauses = new ArrayList<String>();
 		if (filters.types.length > 0) {
 			String typeClause = "transform_request_type in "
-					+ stringListToClause(CollectionFilters.convert(
-							Arrays.asList(filters.types),
-							new ToStringConverter()));
+					+ stringListToClause(Arrays.stream(filters.types)
+							.map(new ToStringConverter())
+							.collect(Collectors.toList()));
 			clauses.add(typeClause);
 		}
 		if (filters.clientInstanceId != null) {
@@ -479,9 +483,8 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 	protected void persistOfflineTransforms(
 			List<DeltaApplicationRecord> uncommitted, ModalNotifier notifier,
 			AsyncCallback<Void> postPersistOfflineTransformsCallback) {
-		Client.commonRemoteService()
-				.persistOfflineTransforms(uncommitted,
-						postPersistOfflineTransformsCallback);
+		Client.commonRemoteService().persistOfflineTransforms(uncommitted,
+				postPersistOfflineTransformsCallback);
 	}
 
 	protected void setClientInstanceIdForGet(Long clientInstanceIdForGet) {
@@ -580,7 +583,7 @@ public abstract class LocalTransformPersistence implements StateChangeListener,
 				if (loadIterator.hasNext()) {
 					localTransformPersistence.persist(loadIterator.next(), pcb);
 				} else {
-					callback.apply(null);
+					callback.accept(null);
 				}
 			}
 		}

@@ -21,6 +21,11 @@ public abstract class Reference {
 		return Resolver.get().forId(clazz, id);
 	}
 
+	public static String id(Class<? extends Reference> refClass) {
+		return Reflections.classLookup()
+				.getAnnotationForClass(refClass, Ref.class).value();
+	}
+
 	@RegistryLocation(registryPoint = Resolver.class, implementationType = ImplementationType.SINGLETON)
 	public static class Resolver {
 		public static Reference.Resolver get() {
@@ -43,19 +48,16 @@ public abstract class Reference {
 				for (Class refClass : classes) {
 					String refId = Reflections.classLookup()
 							.getAnnotationForClass(refClass, Ref.class).value();
-					if (byId.put(refId, refClass) != null) {
+					Class existing = byId.put(refId, refClass);
+					if (existing != null) {
 						throw Ax.runtimeException(
-								"Key collision:: class %s :: key %s",
-								clazz.getSimpleName(), refId);
+								"Key collision:: key %s\n\texisting: %s\n\t incoming: %s ",
+								refId, existing.getCanonicalName(),
+								refClass.getCanonicalName());
 					}
 				}
 				return byId;
 			}).get(id);
 		}
-	}
-
-	public static String id(Class<? extends Reference> refClass) {
-		return Reflections.classLookup()
-				.getAnnotationForClass(refClass, Ref.class).value();
 	}
 }

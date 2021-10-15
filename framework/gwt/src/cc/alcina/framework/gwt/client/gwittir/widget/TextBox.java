@@ -44,6 +44,8 @@ import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.HasEnabled;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 /**
  * 
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
@@ -58,6 +60,8 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 	private ChangeListenerCollection changeListeners = new ChangeListenerCollection();
 
 	private String old;
+
+	private String emptyValue;
 
 	public TextBox() {
 		this(false);
@@ -270,7 +274,7 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 	@Override
 	public String getValue() {
 		try {
-			return this.base.getText().length() == 0 ? null
+			return this.base.getText().length() == 0 ? emptyValue
 					: this.base.getText();
 		} catch (RuntimeException re) {
 			GWT.log("" + this.base, re);
@@ -399,6 +403,9 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 
 	@Override
 	public void setValue(String value) {
+		if (Ax.isBlank(value)) {
+			emptyValue = value;
+		}
 		old = this.getValue();
 		this.setText(value);
 		// if( this.getValue() != old && this.getValue() != null &&

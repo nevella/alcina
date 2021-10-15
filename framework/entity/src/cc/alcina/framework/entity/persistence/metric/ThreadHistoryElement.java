@@ -3,8 +3,8 @@ package cc.alcina.framework.entity.persistence.metric;
 import java.util.Date;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.entity.persistence.cache.DomainStoreLockState;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreWaitStats;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 
 public class ThreadHistoryElement {
 	public Date date;

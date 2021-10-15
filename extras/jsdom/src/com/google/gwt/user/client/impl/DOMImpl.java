@@ -51,12 +51,12 @@ public abstract class DOMImpl {
 		}
 	}
 
-	private static native EventListener
-			getEventListener0(ElementRemote elem) /*-{
-													// Return elem.__listener if and only if it was assigned from our module
-													var maybeListener = elem.__listener;
-													return @com.google.gwt.user.client.impl.DOMImpl::isMyListener(*)(maybeListener) ? maybeListener : null;
-													}-*/;
+	private static native EventListener getEventListener0(ElementRemote elem) /*-{
+    // Return elem.__listener if and only if it was assigned from our module
+    var maybeListener = elem.__listener;
+    return @com.google.gwt.user.client.impl.DOMImpl::isMyListener(*)(maybeListener) ? maybeListener
+        : null;
+	}-*/;
 
 	/**
 	 * Returns <code>true</code>if the object is an instance of EventListener
@@ -91,18 +91,18 @@ public abstract class DOMImpl {
 
 	private static native void setEventListener0(ElementRemote elem,
 			EventListener listener) /*-{
-									elem.__listener = listener;
-									}-*/;
+    elem.__listener = listener;
+	}-*/;
 
 	public native void eventCancelBubble(Event evt, boolean cancel) /*-{
-																	evt.cancelBubble = cancel;
-																	}-*/;
+    evt.cancelBubble = cancel;
+	}-*/;
 
 	public abstract Element eventGetFromElement(Event evt);
 
 	public native boolean eventGetRepeat(Event evt) /*-{
-													return !!evt.repeat;
-													}-*/;
+    return !!evt.repeat;
+	}-*/;
 
 	public abstract Element eventGetToElement(Event evt);
 
@@ -174,8 +174,8 @@ public abstract class DOMImpl {
 	}
 
 	public native void eventSetKeyCode(Event evt, char key) /*-{
-															evt.keyCode = key;
-															}-*/;
+    evt.keyCode = key;
+	}-*/;
 
 	public abstract Element getChild(Element elem, int index);
 
@@ -215,6 +215,6 @@ public abstract class DOMImpl {
 	protected abstract void initEventSystem();
 
 	native int getEventsSunk0(ElementRemote elem) /*-{
-													return elem.__eventBits || 0;
-													}-*/;
+    return elem.__eventBits || 0;
+	}-*/;
 }

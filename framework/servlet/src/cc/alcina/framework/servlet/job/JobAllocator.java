@@ -26,13 +26,12 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.cache.LazyLoadProvideTask;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue.Event;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.EventType;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.SubqueuePhase;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.LazyLoadProvideTask;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue.Event;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventType;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
@@ -203,12 +202,12 @@ class JobAllocator {
 			try {
 				LooseContext.pushWithTrue(
 						LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED);
-				if (job.domain().domainVersion() == null) {
+				if (job.domain().wasRemoved()) {
 					try {
 						// production issue -- revisit
 						Thread.sleep(1000);
 						DomainStore.waitUntilCurrentRequestsProcessed();
-						if (job.domain().domainVersion() != null) {
+						if (!job.domain().wasRemoved()) {
 							logger.debug(
 									"DEVEX-12 ::  event with incomplete domain tx -  job {}",
 									job.toDisplayName());
@@ -251,7 +250,9 @@ class JobAllocator {
 						Transaction.commit();
 					}
 				}
-				DomainDescriptorJob.get().removeAllocationQueue(job);
+				// don't remove directly - breaks deallocation - rely on
+				// jobprojection to do this correctly
+				// JobDomain.get().removeAllocationQueue(job);
 				onFinished();
 				return;
 			}
@@ -284,7 +285,8 @@ class JobAllocator {
 			} else {
 				Transaction.endAndBeginNew();
 				AllocationQueue constraintQueue = queue;
-				if (queue.currentPhase == SubqueuePhase.Sequence
+				if ((queue.currentPhase == SubqueuePhase.Sequence
+						|| queue.currentPhase == SubqueuePhase.Child)
 						&& queue.job.provideParent().isPresent()) {
 					/*
 					 * use the parent constraints
@@ -293,12 +295,19 @@ class JobAllocator {
 				}
 				ExecutionConstraints executionConstraints = ExecutionConstraints
 						.forQueue(constraintQueue);
-				long maxAllocatable = executionConstraints
-						.calculateMaxAllocatable(queue);
+				long maxAllocatable = queue.currentPhase == SubqueuePhase.Sequence
+						? 1// essentially passing the allocation
+							// slot to the next-in-sequence
+						: executionConstraints
+								.calculateMaxAllocatable(constraintQueue);
 				// FIXME - mvcc.jobs.1a - allocate in batches (i.e.
 				// 30...let drain to 10...again)
 				if (maxAllocatable > 0) {
-					if (queue.getUnallocatedJobs()
+					long incompleteAllocated = queue
+							.getIncompleteAllocatedJobCountForCurrentPhaseThisVm();
+					// FIXME - incompleteAllocated should never approach 30 -
+					// but it does...
+					if (incompleteAllocated < 30 && queue.getUnallocatedJobs()
 							.anyMatch(this::isAllocatable)) {
 						ExecutorService executorService = executionConstraints
 								.getExecutorServiceProvider()
@@ -322,7 +331,9 @@ class JobAllocator {
 								} else {
 									j.setState(JobState.ALLOCATED);
 									j.setPerformer(ClientInstance.self());
-									logger.debug("Allocated job {}", j);
+									logger.debug(
+											"Allocated job {} - queue {}/{}", j,
+											queue.job, queue.currentPhase);
 									lastAllocated = System.currentTimeMillis();
 								}
 							});
@@ -379,6 +390,7 @@ class JobAllocator {
 					&& jobContext != null
 					&& jobContext.getJob().getPerformer() == ClientInstance
 							.self()
+					&& jobContext.getPerformer() != null
 					&& jobContext.getPerformer().canAbort(job.getTask())
 					&& ResourceUtilities.is(Transactions.class,
 							"cancelTimedoutTransactions")) {
@@ -468,10 +480,16 @@ class JobAllocator {
 								}
 							}
 						}
+					} catch (Exception e) {
+						logger.warn("Exception in allocator");
+						logger.warn("Trace: ", e);
+						e.printStackTrace();
 					} finally {
 						Transaction.ensureEnded();
 					}
 				} catch (Exception e) {
+					logger.warn("Exception in allocator (outer)");
+					logger.warn("Trace: ", e);
 					e.printStackTrace();
 				}
 			}

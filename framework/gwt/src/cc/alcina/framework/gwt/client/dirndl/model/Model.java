@@ -4,7 +4,11 @@ import java.util.Arrays;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 /**
  * Thoughts on binding :: particularly in the case of UI bindings, a.b->c.d is
@@ -18,6 +22,7 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
  *
  */
 @Bean
+@ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 public abstract class Model extends Bindable {
 	public static final transient Object MODEL_UPDATED = new Object();
 
@@ -30,5 +35,26 @@ public abstract class Model extends Bindable {
 				.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
 				.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)
 						.unbind());
+	}
+
+	@Directed(tag = "div")
+	public static class StringModel extends Model {
+		private String string;
+
+		public StringModel() {
+		}
+
+		public StringModel(String string) {
+			this.string = string;
+		}
+
+		@Directed
+		public String getString() {
+			return this.string;
+		}
+
+		public void setString(String string) {
+			this.string = string;
+		}
 	}
 }

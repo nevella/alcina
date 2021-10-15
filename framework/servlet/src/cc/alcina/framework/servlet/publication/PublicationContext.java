@@ -13,12 +13,13 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
+import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererResults;
 import cc.alcina.framework.servlet.publication.FormatConverter.FormatConversionModel;
 
@@ -80,6 +81,8 @@ public class PublicationContext {
 
 	public FormatConversionModel formatConversionModel;
 
+	public Publication publication;
+
 	public String getContextInfoForPublicationException() {
 		String xmlForm = "Unable to serialize publication request";
 		String modelString = xmlForm;
@@ -88,13 +91,13 @@ public class PublicationContext {
 					Registry.get().lookup(JaxbContextRegistration.class));
 			String contentDefSerialized = "(no xmlrootelement annotation)";
 			try {
-				contentDefSerialized = WrappedObjectHelper
+				contentDefSerialized = JaxbUtils
 						.xmlSerialize(contentDefinition, jaxbClasses);
 			} catch (Exception e) {
 			}
 			xmlForm = Ax.format(
 					"Content definition:\n%s\n\n" + "Delivery model:\n%s",
-					contentDefSerialized, WrappedObjectHelper
+					contentDefSerialized, JaxbUtils
 							.xmlSerialize(deliveryModel, jaxbClasses));
 			if (xmlForm.length() > 5000) {
 				xmlForm = Ax.format(
@@ -104,7 +107,7 @@ public class PublicationContext {
 						contentDefinition.getClass().getSimpleName(),
 						contentDefSerialized.length(),
 						deliveryModel.getClass().getSimpleName(),
-						WrappedObjectHelper
+						JaxbUtils
 								.xmlSerialize(deliveryModel, jaxbClasses)
 								.length());
 			}

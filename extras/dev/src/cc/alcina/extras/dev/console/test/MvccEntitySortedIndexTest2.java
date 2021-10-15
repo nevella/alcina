@@ -4,15 +4,19 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
+
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.ReverseDateProjection;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreDescriptor.TestSupport;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor.TestSupport;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 /**
@@ -24,7 +28,15 @@ public class MvccEntitySortedIndexTest2<IU extends Entity & IUser, IG extends En
 		extends MvccEntityTransactionTest {
 	transient List<Entity> entitiesInCreationOrder = new ArrayList<>();
 
+	transient Entity lastInstance;
+
 	private void debug(List<Entity> list) {
+		if (lastInstance == null) {
+			lastInstance = Ax.first(list);
+		} else {
+			Preconditions.checkArgument(
+					Objects.equals(lastInstance, Ax.first(list)));
+		}
 		Ax.out(list.stream().map(Entity::toLocator)
 				.collect(Collectors.toList()));
 	}
@@ -61,7 +73,12 @@ public class MvccEntitySortedIndexTest2<IU extends Entity & IUser, IG extends En
 		list = Collections.singletonList(
 				(Entity) projection.getSince(date).iterator().next());
 		debug(list);
-		// FIXME - also check iterator length == actual length (after change not
+		Entity instance = Registry.impl(TestSupport.class)
+				.createReversedDateEntityInstance();
+		// Check iterator length == actual length (after
+		// change not
 		// add-delete)
+		Preconditions.checkState(Domain.size(instance.entityClass()) == Domain
+				.stream(instance.entityClass()).count());
 	}
 }

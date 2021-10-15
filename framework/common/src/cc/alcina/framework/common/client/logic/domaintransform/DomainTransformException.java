@@ -15,6 +15,10 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+
+@Bean
 public class DomainTransformException extends Exception
 		implements Serializable {
 	public static DomainTransformException wrap(Exception ex,
@@ -49,6 +53,13 @@ public class DomainTransformException extends Exception
 		this.type = type;
 	}
 
+	public DomainTransformException(DomainTransformEvent event,
+			DomainTransformExceptionType type, String message) {
+		this(message);
+		this.event = event;
+		this.type = type;
+	}
+
 	public DomainTransformException(String message) {
 		super(message);
 	}
@@ -59,13 +70,6 @@ public class DomainTransformException extends Exception
 
 	public DomainTransformException(Throwable t) {
 		super(t);
-	}
-
-	public DomainTransformException(DomainTransformEvent event,
-			DomainTransformExceptionType type, String message) {
-		this(message);
-		this.event = event;
-		this.type = type;
 	}
 
 	public String getDetail() {
@@ -122,6 +126,7 @@ public class DomainTransformException extends Exception
 		this.type = type;
 	}
 
+	@ClientInstantiable
 	public enum DomainTransformExceptionType {
 		OPTIMISTIC_LOCK_EXCEPTION, SOURCE_ENTITY_NOT_FOUND,
 		TARGET_ENTITY_NOT_FOUND, FK_CONSTRAINT_EXCEPTION {
@@ -132,6 +137,7 @@ public class DomainTransformException extends Exception
 		},
 		VALIDATION_EXCEPTION, PERMISSIONS_EXCEPTION, UNKNOWN,
 		TOO_MANY_EXCEPTIONS, INVALID_AUTHENTICATION, INTROSPECTION_EXCEPTION;
+
 		public boolean isOnlyDiscoverableStepping() {
 			return false;
 		}

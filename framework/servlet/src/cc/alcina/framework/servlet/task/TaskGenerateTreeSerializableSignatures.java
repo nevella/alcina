@@ -2,29 +2,31 @@ package cc.alcina.framework.servlet.task;
 
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 import java.util.stream.Collectors;
 
-import org.eclipse.jdt.core.dom.Modifier;
-
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer;
-import cc.alcina.framework.common.client.serializer.flat.FlatTreeSerializer.SerializerOptions;
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
-import cc.alcina.framework.common.client.serializer.flat.TypeSerialization;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions.Reachables;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -42,6 +44,38 @@ public class TaskGenerateTreeSerializableSignatures
 	private transient List<String> serializationIssues = new ArrayList<>();
 
 	private transient String signature;
+
+	public void checkSerializationIssues(TreeSerializable serializable) {
+		try {
+			LooseContext.pushWithTrue(
+					TreeSerializable.CONTEXT_IGNORE_CUSTOM_CHECKS);
+			Reachables reachables = new SerializerOptions.Reachables();
+			FlatTreeSerializer.serialize(serializable,
+					new SerializerOptions().withElideDefaults(false)
+							.withShortPaths(true).withTestSerialized(true)
+							.withTestSerializedReachables(reachables));
+			while (reachables.pending.size() > 0) {
+				Iterator<Class<? extends TreeSerializable>> itr = reachables.pending
+						.iterator();
+				Class<? extends TreeSerializable> clazz = itr.next();
+				itr.remove();
+				reachables.traversed.add(clazz);
+				FlatTreeSerializer.serialize(Reflections.newInstance(clazz),
+						new SerializerOptions().withElideDefaults(false)
+								.withShortPaths(true).withTestSerialized(true)
+								.withTestSerializedReachables(reachables));
+			}
+		} catch (Exception e) {
+			String message = Ax.format("%s - %s",
+					serializable.getClass().getSimpleName(),
+					CommonUtils.toSimpleExceptionMessage(e));
+			// e.printStackTrace();
+			Ax.err(message);
+			serializationIssues.add(message);
+		} finally {
+			LooseContext.pop();
+		}
+	}
 
 	@AlcinaTransient
 	public String getSignature() {
@@ -64,20 +98,6 @@ public class TaskGenerateTreeSerializableSignatures
 		}
 	}
 
-	private void checkSerializationIssues(TreeSerializable serializable) {
-		try {
-			FlatTreeSerializer.serialize(serializable,
-					new SerializerOptions().withDefaults(false)
-							.withShortPaths(true).withTestSerialized(true));
-		} catch (Exception e) {
-			String message = Ax.format("%s - %s",
-					serializable.getClass().getSimpleName(),
-					CommonUtils.toSimpleExceptionMessage(e));
-			Ax.err(message);
-			serializationIssues.add(message);
-		}
-	}
-
 	private void generateSignature(TreeSerializable serializable) {
 		String serializedDefaults = null;
 		try {
@@ -90,12 +110,12 @@ public class TaskGenerateTreeSerializableSignatures
 				}
 			});
 			serializedDefaults = FlatTreeSerializer.serialize(serializable,
-					new SerializerOptions().withDefaults(false)
+					new SerializerOptions().withElideDefaults(false)
 							.withShortPaths(false).withTestSerialized(true));
 		} catch (RuntimeException e) {
 			Ax.simpleExceptionOut(e);
 			serializedDefaults = FlatTreeSerializer.serialize(serializable,
-					new SerializerOptions().withDefaults(false)
+					new SerializerOptions().withElideDefaults(false)
 							.withShortPaths(false).withTestSerialized(false));
 			Ax.out(serializedDefaults);
 			throw e;
@@ -106,11 +126,13 @@ public class TaskGenerateTreeSerializableSignatures
 
 	@Override
 	protected void run0() throws Exception {
-		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
-				.forEach(this::checkSerializationIssues);
+		List<TreeSerializable> serializables = Registry
+				.impls(TreeSerializable.class).stream()
+				.sorted(Comparator.comparing(c -> c.getClass().getName()))
+				.filter(this::filter).collect(Collectors.toList());
+		serializables.forEach(this::checkSerializationIssues);
 		Preconditions.checkState(serializationIssues.isEmpty());
-		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
-				.forEach(this::checkAllFieldsAreProperties);
+		serializables.forEach(this::checkAllFieldsAreProperties);
 		if (!missingPropertyDescriptors.isEmpty()) {
 			missingPropertyDescriptors.stream().collect(
 					AlcinaCollectors.toKeyMultimap(Field::getDeclaringClass))
@@ -121,12 +143,10 @@ public class TaskGenerateTreeSerializableSignatures
 		}
 		Preconditions.checkState(missingPropertyDescriptors.isEmpty(),
 				"Missing property descriptors");
-		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
-				.forEach(this::generateSignature);
+		serializables.forEach(this::generateSignature);
 		TreeSerializableSignatures stableCheck = signatures;
 		signatures = new TreeSerializableSignatures();
-		Registry.impls(TreeSerializable.class).stream().filter(this::filter)
-				.forEach(this::generateSignature);
+		serializables.forEach(this::generateSignature);
 		Preconditions
 				.checkState(
 						signatures.getClassNameDefaultSerializedForms()
@@ -149,24 +169,10 @@ public class TaskGenerateTreeSerializableSignatures
 	}
 
 	boolean filter(TreeSerializable treeSerializable) {
-		if (treeSerializable instanceof SingleTableSearchDefinition) {
-			return false;
-		}
-		if (Ax.isTest()) {
-			try {
-				Class<?> devConsoleRunnableClass = Class.forName(
-						"cc.alcina.extras.dev.console.DevConsoleRunnable");
-				if (devConsoleRunnableClass
-						.isAssignableFrom(treeSerializable.getClass())) {
-					return false;
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
 		TypeSerialization typeSerialization = treeSerializable.getClass()
 				.getAnnotation(TypeSerialization.class);
-		if (typeSerialization != null && typeSerialization.notSerializable()) {
+		if (typeSerialization != null
+				&& !typeSerialization.flatSerializable()) {
 			return false;
 		}
 		return true;

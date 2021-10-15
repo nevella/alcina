@@ -13,12 +13,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -153,6 +152,7 @@ public class DomainTransformPersistenceEvents {
 								"DEVEX::0 - Timed out waiting for local-vm tx - {}\n\n{}\n",
 								event, SEUtilities.getFullStacktrace(
 										Thread.currentThread()));
+						queue.onLocalVmTxTimeout();
 					}
 					Transaction.endAndBeginNew();
 					return;
@@ -187,6 +187,10 @@ public class DomainTransformPersistenceEvents {
 					if (event.isLocalToVm()
 							|| listener.isAllVmEventsListener()) {
 						try {
+							// any transforms that arise are logical cascades
+							// (owned by root) - allow
+							ThreadlocalTransformManager.get()
+									.setTransformsExplicitlyPermitted(true);
 							InternalMetrics.get().startTracker(event,
 									() -> describeEvent(event),
 									InternalMetricTypeAlcina.service,
@@ -205,6 +209,8 @@ public class DomainTransformPersistenceEvents {
 									rex);
 						} finally {
 							InternalMetrics.get().endTracker(event);
+							ThreadlocalTransformManager.get()
+									.setTransformsExplicitlyPermitted(false);
 						}
 					}
 				}
@@ -236,12 +242,18 @@ public class DomainTransformPersistenceEvents {
 	}
 
 	String describeEvent(DomainTransformPersistenceEvent event) {
-		return Ax.format("Persistence event: id: %s - %s",
-				CommonUtils.first(event.getPersistedRequestIds()),
-				event.getPersistenceEventType());
+		return Ax
+				.format("Persistence event: id: %s - %s - %s",
+						Ax.first(event.getPersistedRequestIds()),
+						event.getTransformPersistenceToken().getRequest()
+								.getChunkUuidString(),
+						event.getPersistenceEventType());
 	}
 
-	// FIXME - mvcc.4 - add optional
+	// FIXME - mvcc.cascade - add optional - actually remove all
+	// cascadedtransforms
+	// (replace with jobs where necessary)
+	//
 	// cluster-level counter (allowing for proxy swap etc)
 	//
 	// cluster-level will need reaper and reconstituter

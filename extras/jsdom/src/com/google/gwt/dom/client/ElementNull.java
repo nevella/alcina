@@ -394,6 +394,10 @@ public class ElementNull extends NodeLocalNull
 	}
 
 	@Override
+	public void sinkBitlessEvent(String eventTypeName) {
+	}
+
+	@Override
 	public void sinkEvents(int eventBits) {
 	}
 

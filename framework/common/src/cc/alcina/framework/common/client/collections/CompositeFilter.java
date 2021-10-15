@@ -15,6 +15,7 @@ package cc.alcina.framework.common.client.collections;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -22,8 +23,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *
  * @author Nick Reddel
  */
-public class CompositeFilter<T> implements CollectionFilter<T> {
-	private List<CollectionFilter<T>> filters = new ArrayList<CollectionFilter<T>>();
+public class CompositeFilter<T> implements Predicate<T> {
+	private List<Predicate<T>> predicates = new ArrayList<Predicate<T>>();
 
 	private boolean or;
 
@@ -35,15 +36,19 @@ public class CompositeFilter<T> implements CollectionFilter<T> {
 		this.or = or;
 	}
 
-	public CompositeFilter<T> add(CollectionFilter<T> filter) {
-		filters.add(filter);
+	public CompositeFilter<T> add(Predicate<T> filter) {
+		predicates.add(filter);
 		return this;
 	}
 
+	public List<Predicate<T>> getFilters() {
+		return this.predicates;
+	}
+
 	@Override
-	public boolean allow(T o) {
-		for (CollectionFilter<T> filter : filters) {
-			boolean allow = filter.allow(o);
+	public boolean test(T o) {
+		for (Predicate<T> filter : predicates) {
+			boolean allow = filter.test(o);
 			if (or && allow) {
 				return true;
 			}
@@ -54,17 +59,9 @@ public class CompositeFilter<T> implements CollectionFilter<T> {
 		return !or;
 	}
 
-	public List<CollectionFilter<T>> getFilters() {
-		return this.filters;
-	}
-
-	@Override
-	public void setContext(FilterContext context) {
-		filters.forEach(f -> f.setContext(context));
-	}
-
 	@Override
 	public String toString() {
-		return "(" + CommonUtils.join(filters, (or ? " OR " : " AND ")) + ")";
+		return "(" + CommonUtils.join(predicates, (or ? " OR " : " AND "))
+				+ ")";
 	}
 }

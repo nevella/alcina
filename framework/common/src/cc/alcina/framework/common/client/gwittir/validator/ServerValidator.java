@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.gwittir.validator;
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -230,8 +231,9 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 
 	protected void validateWithCallback(
 			AsyncCallback<List<ServerValidator>> callback) {
-		Client.commonRemoteService().validateOnServer(
-				Arrays.asList(new ServerValidator[] { this }), callback);
+		Client.commonRemoteService()
+				.validateOnServer(Arrays.stream(new ServerValidator[] { this })
+						.collect(Collectors.toList()), callback);
 	}
 
 	public static class ProcessingServerValidationException

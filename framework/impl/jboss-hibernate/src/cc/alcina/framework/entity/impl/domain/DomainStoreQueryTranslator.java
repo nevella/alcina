@@ -5,6 +5,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -15,6 +16,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.hibernate.NullPrecedence;
 import org.hibernate.criterion.AliasedProjection;
 import org.hibernate.criterion.Conjunction;
 import org.hibernate.criterion.CountProjection;
@@ -23,33 +25,40 @@ import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Distinct;
 import org.hibernate.criterion.InExpression;
 import org.hibernate.criterion.NotExpression;
+import org.hibernate.criterion.NotNullExpression;
 import org.hibernate.criterion.NullExpression;
+import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.criterion.ProjectionList;
 import org.hibernate.criterion.PropertyProjection;
 import org.hibernate.criterion.SQLCriterion;
 import org.hibernate.criterion.SimpleExpression;
+import org.hibernate.criterion.SimpleSubqueryExpression;
+import org.hibernate.internal.CriteriaImpl;
+import org.hibernate.internal.CriteriaImpl.CriterionEntry;
 import org.hibernate.transform.ResultTransformer;
 
 import com.google.common.base.Preconditions;
-import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.search.OrderCriterion;
+import cc.alcina.framework.common.client.search.SearchCriterion;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
-import cc.alcina.framework.entity.persistence.cache.DomainStoreQuery;
-import cc.alcina.framework.entity.persistence.cache.NotCacheFilter;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreQuery;
+import cc.alcina.framework.entity.persistence.domain.NotCacheFilter;
 
 public class DomainStoreQueryTranslator {
 	DomainStoreQuery query;
@@ -70,6 +79,7 @@ public class DomainStoreQueryTranslator {
 		this.root = criteria;
 		query = DomainStore.stores().query(root.clazz);
 		addRestrictions(criteria);
+		addOrders();
 		checkHandlesClass(root.clazz);
 		rows = query.list();
 		handleProjections();
@@ -83,16 +93,42 @@ public class DomainStoreQueryTranslator {
 		return results;
 	}
 
+	/*
+	 * FIXME - 2022 - there's a lot of hackery with remapping/resolving -
+	 * possibly revisit 'context' etc
+	 */
 	public String translatePropertyPath(Criterion criterion,
 			DomainStoreCriteria context, String propertyPath) {
-		if (!propertyPath.contains(".") && context != null) {
-			propertyPath = context.alias + "." + propertyPath;
+		if (context != null) {
+			if (propertyPath.contains(".")) {
+				String firstSegment = propertyPath.substring(0,
+						propertyPath.indexOf("."));
+				if (aliasLookup.containsKey(firstSegment)) {
+					context = aliasLookup.get(firstSegment);
+				}
+				// chain to the root
+				DomainStoreCriteria cursor = context;
+				while (cursor.parent != null && (cursor.parent.alias == null
+						|| cursor.parent.joinType != null)) {
+					if (cursor.alias != null) {
+						String aliasSegment = cursor.alias + ".";
+						if (propertyPath.startsWith(aliasSegment)) {
+							propertyPath = propertyPath
+									.substring(aliasSegment.length());
+						}
+					}
+					propertyPath = cursor.associationPath + "." + propertyPath;
+					cursor = cursor.parent;
+				}
+			} else {
+				propertyPath = context.alias + "." + propertyPath;
+			}
 		}
 		if (propertyPath.contains(".")) {
+			// first maybe expand subcriteria, then remove root alias
 			int idx = propertyPath.indexOf(".");
 			String prefix = propertyPath.substring(0, idx);
 			if (prefix.equals(root.alias)) {
-				propertyPath = propertyPath.substring(idx + 1);
 			} else {
 				DomainStoreCriteria sub = aliasLookup.get(prefix);
 				if (sub == null) {
@@ -101,6 +137,11 @@ public class DomainStoreQueryTranslator {
 					propertyPath = sub.associationPath + "."
 							+ propertyPath.substring(idx + 1);
 				}
+			}
+			idx = propertyPath.indexOf(".");
+			prefix = propertyPath.substring(0, idx);
+			if (prefix.equals(root.alias)) {
+				propertyPath = propertyPath.substring(idx + 1);
 			}
 		}
 		propertyPath = query.getCanonicalPropertyPath(root.clazz, propertyPath);
@@ -128,7 +169,12 @@ public class DomainStoreQueryTranslator {
 				sub.joinType, sub.alias);
 	}
 
-	private void addOrders(DomainStoreCriteria criteria) {
+	private void addOrders() throws Exception {
+		for (Order order : root.orders) {
+			DomainComparator comparator = new DomainComparator(this, root,
+					order);
+			query.sorted(comparator);
+		}
 	}
 
 	private void addRestrictions(DomainStoreCriteria criteria)
@@ -141,13 +187,38 @@ public class DomainStoreQueryTranslator {
 		for (DomainStoreCriteria sub : criteria.subs) {
 			addRestrictions(sub);
 		}
-		addOrders(criteria);
+		handleHints(criteria);
 	}
 
 	private void checkHandlesClass(Class clazz) throws NotHandledException {
 		if (!query.getStore().isCached(clazz)) {
 			throw new NotHandledException(
 					"Not handled class - " + clazz.getSimpleName());
+		}
+	}
+
+	private void handleHints(DomainStoreCriteria criteria) {
+		for (String hint : criteria.hints) {
+			if (hint.startsWith(DomainStoreEntityManager.ORDER_HANDLER)) {
+				String payload = hint.substring(
+						DomainStoreEntityManager.ORDER_HANDLER.length());
+				OrderCriterion criterion = FlatTreeSerializer
+						.deserialize(payload);
+				Registry.impl(OrderHandler.class, criterion.getClass())
+						.addOrder(criterion, query);
+			} else if (hint
+					.startsWith(DomainStoreEntityManager.CRITERION_HANDLER)) {
+				String payload = hint.substring(
+						DomainStoreEntityManager.CRITERION_HANDLER.length());
+				SearchCriterion criterion = FlatTreeSerializer
+						.deserialize(payload);
+				String className = hint.substring(
+						DomainStoreEntityManager.CRITERION_HANDLER.length());
+				Registry.impl(CriterionHandler.class, criterion.getClass())
+						.addFilter(criterion, query);
+			} else {
+				throw new UnsupportedOperationException();
+			}
 		}
 	}
 
@@ -229,6 +300,10 @@ public class DomainStoreQueryTranslator {
 		}
 	}
 
+	public interface CriterionHandler<E extends Entity, T extends SearchCriterion> {
+		void addFilter(T criterion, DomainStoreQuery<E> query);
+	}
+
 	@RegistryLocation(registryPoint = CriterionTranslator.class)
 	public abstract static class CriterionTranslator<C extends Criterion> {
 		FieldHelper fieldHelper = new FieldHelper();
@@ -244,8 +319,8 @@ public class DomainStoreQueryTranslator {
 
 		protected abstract Class<C> getHandledClass();
 
-		protected Object getValue(Criterion criterion, String... fieldNames) {
-			return fieldHelper.getValue(criterion, fieldNames);
+		protected Object getValue(Object object, String... fieldNames) {
+			return fieldHelper.getValue(object, fieldNames);
 		}
 
 		protected abstract DomainFilter handle(C criterion,
@@ -281,6 +356,69 @@ public class DomainStoreQueryTranslator {
 		}
 	}
 
+	// FIXME - domainstore.query - use sortedstream in for first
+	// comparator
+	//
+	// Impl - have a reflective 'comparator to source' replacer (which only
+	// operates if the sourcestream is a full class stream)
+	public static class DomainComparator implements Comparator {
+		private Order order;
+
+		private PropertyPathAccessor accessor;
+
+		private NullPrecedence nullPrecedence;
+
+		public DomainComparator(DomainStoreQueryTranslator translator,
+				DomainStoreCriteria context, Order order) throws Exception {
+			this.order = order;
+			String propertyName = order.getPropertyName();
+			String translatedPropertyName = translator
+					.translatePropertyPath(null, context, propertyName);
+			accessor = new PropertyPathAccessor(translatedPropertyName);
+			Field field = Order.class.getDeclaredField("nullPrecedence");
+			field.setAccessible(true);
+			nullPrecedence = (NullPrecedence) field.get(order);
+			if (nullPrecedence == null) {
+				nullPrecedence = NullPrecedence.LAST;
+			}
+		}
+
+		@Override
+		public int compare(Object o1, Object o2) {
+			Comparable v1 = (Comparable) accessor.getChainedProperty(o1);
+			Comparable v2 = (Comparable) accessor.getChainedProperty(o2);
+			int directionMultiplier = order.isAscending() ? 1 : -1;
+			if (v1 == null || v2 == null) {
+				if (v1 == v2) {
+					return 0;
+				}
+				switch (nullPrecedence) {
+				case FIRST:
+					return directionMultiplier * (v1 == null ? -1 : 1);
+				case NONE:
+				case LAST:
+					return directionMultiplier * (v1 == null ? 1 : -1);
+				default:
+					throw new UnsupportedOperationException();
+				}
+			} else {
+				if (v1 instanceof String) {
+					if (order.isIgnoreCase()) {
+						return directionMultiplier
+								* String.CASE_INSENSITIVE_ORDER
+										.compare((String) v1, (String) v2);
+					}
+				}
+				return directionMultiplier * v1.compareTo(v2);
+			}
+		}
+
+		@Override
+		public String toString() {
+			return order.toString();
+		}
+	}
+
 	public static class InExpressionTranslator
 			extends CriterionTranslator<InExpression> {
 		@Override
@@ -308,6 +446,25 @@ public class DomainStoreQueryTranslator {
 							domainStoreCriteria,
 							getStringFieldValue(criterion, "propertyName")),
 					collection, FilterOperator.IN);
+		}
+	}
+
+	public static class NotNullTranslator
+			extends CriterionTranslator<NotNullExpression> {
+		@Override
+		protected Class<NotNullExpression> getHandledClass() {
+			return NotNullExpression.class;
+		}
+
+		@Override
+		protected DomainFilter handle(NotNullExpression criterion,
+				DomainStoreCriteria domainStoreCriteria,
+				DomainStoreQueryTranslator translator)
+				throws NotHandledException {
+			String propertyName = translator.translatePropertyPath(criterion,
+					domainStoreCriteria,
+					getStringFieldValue(criterion, "propertyName"));
+			return new DomainFilter(propertyName, null, FilterOperator.NE);
 		}
 	}
 
@@ -349,6 +506,10 @@ public class DomainStoreQueryTranslator {
 		}
 	}
 
+	public interface OrderHandler<T extends OrderCriterion> {
+		void addOrder(T criterion, DomainStoreQuery query);
+	}
+
 	public static class SimpleExpressionTranslator
 			extends CriterionTranslator<SimpleExpression> {
 		@Override
@@ -387,6 +548,45 @@ public class DomainStoreQueryTranslator {
 			}
 			return new DomainFilter(propertyName, getValue(criterion, "value"),
 					fop);
+		}
+	}
+
+	public static class SimpleSubqueryExpressionTranslator
+			extends CriterionTranslator<SimpleSubqueryExpression> {
+		@Override
+		protected Class<SimpleSubqueryExpression> getHandledClass() {
+			return SimpleSubqueryExpression.class;
+		}
+
+		@Override
+		protected DomainFilter handle(SimpleSubqueryExpression criterion,
+				DomainStoreCriteria domainStoreCriteria,
+				DomainStoreQueryTranslator translator) {
+			CriteriaImpl criteriaImpl = (CriteriaImpl) getValue(criterion,
+					"criteriaImpl");
+			List<CriteriaImpl.Subcriteria> subcriteria = (List) getValue(
+					criteriaImpl, "subcriteriaList");
+			String alias = subcriteria.get(0).getAlias();
+			DomainStoreCriteria subDomainStoreCriteria = domainStoreCriteria
+					.provideSubCriteria(alias);
+			List<CriteriaImpl.CriterionEntry> criterionEntries = (List) getValue(
+					criteriaImpl, "criterionEntries");
+			CompositeFilter filter = new CompositeFilter();
+			for (CriterionEntry criterionEntry : criterionEntries) {
+				if (criterionEntry.toString().contains("vt_")) {
+					continue;
+				} else {
+					try {
+						DomainFilter child = translator.criterionToFilter(
+								subDomainStoreCriteria,
+								criterionEntry.getCriterion());
+						filter.add(child);
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				}
+			}
+			return filter;
 		}
 	}
 
@@ -537,13 +737,8 @@ public class DomainStoreQueryTranslator {
 		}
 
 		public List asTuples() {
-			return CollectionFilters.convert(rows,
-					new Converter<GroupedRow, Object>() {
-						@Override
-						public Object convert(GroupedRow original) {
-							return original.asTuple();
-						}
-					});
+			return rows.stream().map(GroupedRow::asTuple)
+					.collect(Collectors.toList());
 		}
 
 		public void handleProjection(Object obj,
@@ -572,26 +767,18 @@ public class DomainStoreQueryTranslator {
 					rows.add(currentRow);
 					currentRow.added = true;
 				}
-				currentRow = null;
+				if (groupCount != 0 || !aggregateQuery) {
+					currentRow = null;
+				}
 			}
 		}
 
 		@Override
 		public String toString() {
-			return CommonUtils.join(CollectionFilters.convert(projectionHelpers,
-					new Converter<ProjectionHelper, String>() {
-						@Override
-						public String convert(ProjectionHelper original) {
-							return original.toString();
-						}
-					}), "\n") + "==============\n"
-					+ CommonUtils.join(CollectionFilters.convert(rows,
-							new Converter<GroupedRow, String>() {
-								@Override
-								public String convert(GroupedRow original) {
-									return original.toString();
-								}
-							}), "\n");
+			return projectionHelpers.stream().map(ProjectionHelper::toString)
+					.collect(Collectors.joining("\n")) + "==============\n"
+					+ rows.stream().map(GroupedRow::toString)
+							.collect(Collectors.joining("\n"));
 		}
 	}
 
@@ -639,6 +826,9 @@ public class DomainStoreQueryTranslator {
 			try {
 				if (projection instanceof AliasedProjection) {
 					projection = fieldHelper.getValue(projection, "projection");
+				}
+				if (projection.toString().equals("distinct count(cc.id)")) {
+					int debug = 3;
 				}
 				this.rootProjection = projection;
 				if (projection instanceof CountProjection) {
@@ -704,6 +894,8 @@ public class DomainStoreQueryTranslator {
 								.getProjection(idx);
 						addProjection(projection);
 					}
+				} else if (wrapped instanceof PropertyProjection) {
+					addProjection(wrapped);
 				} else {
 					throw new NotHandledException(rootProjection.toString());
 				}

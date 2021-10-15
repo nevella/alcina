@@ -18,9 +18,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.WrappedObject;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
+import cc.alcina.framework.entity.util.JaxbUtils;
 
 public class ClassPersistenceScanHandler extends AbstractHandler {
 	private ClassMetaHandler metaHandler;
@@ -33,7 +32,7 @@ public class ClassPersistenceScanHandler extends AbstractHandler {
 	public void handle(String target, Request baseRequest,
 			HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
-		LooseContext.runWithKeyValue(WrappedObject.CONTEXT_CLASSES,
+		LooseContext.runWithKeyValue(JaxbUtils.CONTEXT_CLASSES,
 				getInitClasses(), () -> {
 					handle0(target, baseRequest, response);
 					return null;
@@ -72,20 +71,20 @@ public class ClassPersistenceScanHandler extends AbstractHandler {
 		String schemaXml = ResourceUtilities.read(
 				ClassPersistenceScanHandler.class,
 				Ax.format("schema/%s/schema.xml", target.replace("/", "")));
-		ClassPersistenceScanSchema schema = WrappedObjectHelper
+		ClassPersistenceScanSchema schema = JaxbUtils
 				.xmlDeserialize(ClassPersistenceScanSchema.class, schemaXml);
 		ClassPersistenceScanData data = calculate(schema);
 		boolean equivalent = false;
 		try {
 			String lastXml = ResourceUtilities
 					.readFileToString(schema.scanResourcePath);
-			ClassPersistenceScanData last = WrappedObjectHelper
+			ClassPersistenceScanData last = JaxbUtils
 					.xmlDeserialize(ClassPersistenceScanData.class, lastXml);
 			equivalent = last.equivalentTo(data);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
-		String dataOut = WrappedObjectHelper.xmlSerialize(data);
+		String dataOut = JaxbUtils.xmlSerialize(data);
 		ResourceUtilities.writeStringToFile(dataOut, schema.scanResourcePath);
 		String message = Ax.format(
 				"Calculated persistence meta: (equivalent: %s)\n%s", equivalent,

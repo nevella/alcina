@@ -7,20 +7,28 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.domain.DomainDescriptor;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
 import cc.alcina.framework.entity.persistence.mvcc.MvccCorrectnessIssue.MvccCorrectnessIssueType;
 
 public class Mvcc {
 	private static Logger logger = LoggerFactory.getLogger(Mvcc.class);
 
-	public static void debugSourceNotFound(DomainTransformException e) {
-		logger.warn("in vacuum?");
+	public static void debugNotFound(Entity entity, RuntimeException e) {
+		logger.warn("mvcc.debugNotFound :: {} :: {}/{}",
+				e.getClass().getSimpleName(), entity.getClass().getSimpleName(),
+				entity.getId());
+		if (isMvccObject(entity)) {
+			MvccObjectVersions versions = ((MvccObject) entity)
+					.__getMvccVersions__();
+			if (versions != null) {
+				versions.debugNotResolved();
+			}
+		}
 	}
 
 	public static <T extends Entity> T getEntity(EntityManager entityManager,
@@ -40,6 +48,11 @@ public class Mvcc {
 		return entity instanceof MvccObject;
 	}
 
+	public static boolean isVisible(Entity e) {
+		MvccObjectVersions versions = ((MvccObject) e).__getMvccVersions__();
+		return versions == null || versions.hasVisibleVersion();
+	}
+
 	public static Class<? extends HasId>
 			resolveEntityClass(Class<? extends HasId> clazz) {
 		if (MvccObject.class.isAssignableFrom(clazz)) {
@@ -51,14 +64,14 @@ public class Mvcc {
 	@SuppressWarnings("unused")
 	private DomainStore domainStore;
 
-	DomainDescriptor domainDescriptor;
+	DomainStoreDescriptor domainDescriptor;
 
 	@SuppressWarnings("unused")
 	private DetachedEntityCache cache;
 
 	private ClassTransformer classTransformer;
 
-	public Mvcc(DomainStore domainStore, DomainDescriptor domainDescriptor,
+	public Mvcc(DomainStore domainStore, DomainStoreDescriptor domainDescriptor,
 			DetachedEntityCache cache) {
 		Transactions.ensureInitialised();
 		this.domainStore = domainStore;

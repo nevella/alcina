@@ -6,8 +6,10 @@ import java.util.List;
 import java.util.Map;
 import java.util.NavigableSet;
 import java.util.SortedSet;
+import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,6 +18,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
@@ -24,8 +27,9 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import it.unimi.dsi.fastutil.Hash;
 
@@ -46,6 +50,9 @@ public class Transaction implements Comparable<Transaction> {
 	private static ThreadLocal<Transaction> threadLocalInstance = new ThreadLocal() {
 	};
 
+	private static ThreadLocal<Supplier<Transaction>> threadLocalSupplier = new ThreadLocal() {
+	};
+
 	static Logger logger = LoggerFactory.getLogger(Transaction.class);
 
 	public static void begin() {
@@ -55,10 +62,35 @@ public class Transaction implements Comparable<Transaction> {
 	public static void beginDomainPreparing() {
 		begin(TransactionPhase.TO_DOMAIN_PREPARING);
 	}
+	/*
+	 * Essentially run within another tx to access graph state before any
+	 * changes in the current tx were applied
+	 */
+
+	public static <T> T callInSnapshotTransaction(Callable<T> callable)
+			throws Exception {
+		Transaction preSnapshot = current();
+		Preconditions.checkNotNull(preSnapshot);
+		threadLocalInstance.set(null);
+		begin();
+		current().toReadonly(true);
+		T t = callable.call();
+		end();
+		threadLocalInstance.set(preSnapshot);
+		return t;
+	}
 
 	public static int commit() {
-		int transformCount = TransformCommit.commitTransformsAsRoot();
-		return transformCount;
+		Transaction transaction = provideCurrentThreadTransaction();
+		if (transaction == null) {
+			Preconditions.checkState(!TransformManager.get().hasTransforms());
+			return 0;
+		} else {
+			Preconditions.checkState(transaction.isWriteable()
+					|| TransformManager.get().getTransforms().isEmpty());
+			int transformCount = TransformCommit.commitTransformsAsRoot();
+			return transformCount;
+		}
 	}
 
 	public static int commitIfTransformCount(int n) {
@@ -69,8 +101,27 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	public static DomainTransformLayerWrapper commitReturnResults() {
+		return TransformCommit.commitTransforms(null, true, true);
+	}
+
+	/*
+	 * For fancy before-and-after (off-store indexing)
+	 */
+	public static Transaction createSnapshotTransaction() {
+		Transaction preSnapshot = current();
+		Preconditions.checkNotNull(preSnapshot);
+		threadLocalInstance.set(null);
+		begin();
+		Transaction snapshot = current();
+		snapshot.toReadonly(true);
+		split();
+		threadLocalInstance.set(preSnapshot);
+		return snapshot;
+	}
+
 	public static Transaction current() {
-		Transaction transaction = threadLocalInstance.get();
+		Transaction transaction = provideCurrentThreadTransaction();
 		if (transaction == null
 				|| (transaction.getPhase() == TransactionPhase.TO_DB_ABORTED
 						&& !LooseContext.is(CONTEXT_ALLOW_ABORTED_TX_ACCESS))) {
@@ -111,7 +162,8 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public static void ensureBegun() {
-		if (threadLocalInstance.get() == null) {
+		if (threadLocalInstance.get() == null
+				|| threadLocalInstance.get().isEnded()) {
 			begin();
 		}
 	}
@@ -129,7 +181,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public static boolean isInTransaction() {
-		return threadLocalInstance.get() != null;
+		return provideCurrentThreadTransaction() != null;
 	}
 
 	/*
@@ -141,12 +193,17 @@ public class Transaction implements Comparable<Transaction> {
 		logger.debug("Joining tx - {} {} {}", transaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
+		Preconditions.checkState(provideCurrentThreadTransaction() == null);
 		transaction.threadCount.incrementAndGet();
 		threadLocalInstance.set(transaction);
 	}
 
 	public static void removePerThreadContext() {
 		threadLocalInstance.remove();
+	}
+
+	public static void setSupplier(Supplier<Transaction> transactionSupplier) {
+		threadLocalSupplier.set(transactionSupplier);
 	}
 
 	// inverse of join
@@ -157,6 +214,17 @@ public class Transaction implements Comparable<Transaction> {
 				Thread.currentThread().getId());
 		threadLocalInstance.remove();
 		transaction.threadCount.decrementAndGet();
+	}
+
+	private static Transaction provideCurrentThreadTransaction() {
+		Transaction transaction = threadLocalInstance.get();
+		if (transaction == null) {
+			Supplier<Transaction> supplier = threadLocalSupplier.get();
+			if (supplier != null) {
+				transaction = supplier.get();
+			}
+		}
+		return transaction;
 	}
 
 	private static boolean retainStartEndTraces() {
@@ -236,6 +304,8 @@ public class Transaction implements Comparable<Transaction> {
 
 	Boolean emptyCommitted = null;
 
+	private DomainTransformCommitPosition commitPosition;
+
 	public Transaction(TransactionPhase initialPhase) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
 				.put(store, new StoreTransaction(store)));
@@ -288,8 +358,16 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	public DomainTransformCommitPosition getCommitPosition() {
+		return this.commitPosition;
+	}
+
 	public TransactionId getId() {
 		return this.id;
+	}
+
+	public DomainTransformCommitPosition getPosition() {
+		return null;
 	}
 
 	public long getTimeout() {
@@ -320,6 +398,10 @@ public class Transaction implements Comparable<Transaction> {
 		return phase == TransactionPhase.TO_DB_PREPARING;
 	}
 
+	public boolean isToDomainCommitted() {
+		return phase == TransactionPhase.TO_DOMAIN_COMMITTED;
+	}
+
 	public boolean isToDomainCommitting() {
 		return phase == TransactionPhase.TO_DOMAIN_COMMITTING;
 	}
@@ -327,6 +409,10 @@ public class Transaction implements Comparable<Transaction> {
 	public boolean isVisible(TransactionId committedTransactionId) {
 		return committedTransactionId != null
 				&& committedTransactionId.id <= highestVisibleCommittedTransactionId.id;
+	}
+
+	public boolean isWriteable() {
+		return !isReadonly();
 	}
 
 	public long provideAge() {
@@ -342,6 +428,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public void setTimeout(long timeout) {
+		logger.info("{} :: Setting timeout to {}", this, timeout);
 		this.timeout = timeout;
 	}
 
@@ -350,7 +437,8 @@ public class Transaction implements Comparable<Transaction> {
 		// handling
 		Preconditions.checkState(getPhase() == TransactionPhase.TO_DB_PERSISTING
 				|| getPhase() == TransactionPhase.TO_DB_PREPARING
-				|| getPhase() == TransactionPhase.TO_DB_ABORTED);
+				|| getPhase() == TransactionPhase.TO_DB_ABORTED
+				|| getPhase() == TransactionPhase.READ_ONLY);
 		setPhase(TransactionPhase.TO_DB_ABORTED);
 	}
 
@@ -388,7 +476,9 @@ public class Transaction implements Comparable<Transaction> {
 		setPhase(TransactionPhase.TO_DOMAIN_ABORTED);
 	}
 
-	public void toDomainCommitted() {
+	public void
+			toDomainCommitted(DomainTransformCommitPosition commitPosition) {
+		this.commitPosition = commitPosition;
 		Preconditions.checkState(
 				getPhase() == TransactionPhase.TO_DOMAIN_COMMITTING);
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTED);
@@ -407,14 +497,8 @@ public class Transaction implements Comparable<Transaction> {
 		setPhase(TransactionPhase.TO_DOMAIN_COMMITTING);
 	}
 
-	public void toNoActiveTransaction() {
-		if (this.phase == TransactionPhase.NO_ACTIVE_TRANSACTION) {
-			return;
-		}
-		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
-				|| phase == TransactionPhase.TO_DOMAIN_PREPARING)
-				&& TransformManager.get().getTransforms().isEmpty());
-		this.phase = TransactionPhase.NO_ACTIVE_TRANSACTION;
+	public void toReadonly() {
+		toReadonly(false);
 	}
 
 	@Override
@@ -446,9 +530,20 @@ public class Transaction implements Comparable<Transaction> {
 		case VACUUM_BEGIN:
 			// well..we'd be in trouble here;
 		default:
-			throw new UnsupportedOperationException(
-					"Cannot cancel transaction in phase " + phase);
+			throw new UnsupportedOperationException(Ax.format(
+					"Cannot cancel transaction %s in phase %s", id, phase));
 		}
+	}
+
+	private void toReadonly(boolean allowExistingTransforms) {
+		if (this.phase == TransactionPhase.READ_ONLY) {
+			return;
+		}
+		Preconditions.checkState((phase == TransactionPhase.TO_DB_PREPARING
+				|| phase == TransactionPhase.TO_DOMAIN_PREPARING)
+				&& (allowExistingTransforms
+						|| TransformManager.get().getTransforms().isEmpty()));
+		this.phase = TransactionPhase.READ_ONLY;
 	}
 
 	void endTransaction() {
@@ -461,7 +556,7 @@ public class Transaction implements Comparable<Transaction> {
 		case TO_DOMAIN_COMMITTED:
 		case TO_DOMAIN_ABORTED:
 		case VACUUM_ENDED:
-		case NO_ACTIVE_TRANSACTION:
+		case READ_ONLY:
 		case TO_DB_PREPARING:
 			break;
 		default:
@@ -478,21 +573,26 @@ public class Transaction implements Comparable<Transaction> {
 						endPhase);
 			}
 		}
-		if (TransformManager.get().getTransforms().size() == 0) {
-		} else {
-			// FIXME - mvcc.4 - mvcc exception
-			logger.warn("Ending transaction with uncommitted transforms: {} {}",
-					endPhase, TransformManager.get().getTransforms().size());
-		}
-		// need to do this even if transforms == 0 - to clear listeners setup
-		// during the transaction
-		// the transaction
-		//
-		try {
-			LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
-			ThreadlocalTransformManager.cast().resetTltm(null);
-		} finally {
-			LooseContext.pop();
+		if (isWriteable()) {
+			if (TransformManager.get().getTransforms().size() == 0) {
+			} else {
+				// FIXME - mvcc.5 - mvcc exception (after cleanup)
+				logger.warn(
+						"Ending transaction with uncommitted transforms: {} {}",
+						endPhase,
+						TransformManager.get().getTransforms().size());
+			}
+			// need to do this even if transforms == 0 - to clear listeners
+			// setup
+			// during the transaction
+			// the transaction
+			//
+			try {
+				LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
+				ThreadlocalTransformManager.cast().resetTltm(null);
+			} finally {
+				LooseContext.pop();
+			}
 		}
 		if (retainStartEndTraces()) {
 			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();
@@ -510,11 +610,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	boolean isReadonly() {
-		return threadCount.get() != 1;
-	}
-
-	boolean isToDomainCommitted() {
-		return phase == TransactionPhase.TO_DOMAIN_COMMITTED;
+		return threadCount.get() != 1 || phase == TransactionPhase.READ_ONLY;
 	}
 
 	/*

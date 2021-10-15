@@ -12,7 +12,6 @@ import org.hibernate.criterion.Junction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -74,16 +73,7 @@ public abstract class HibernateEJBSearcherBase {
 	}
 
 	protected Class getEntityClass(CriteriaGroup cg) {
-		Class ec = cg.getEntityClass();
-		if (ec == null) {
-			try {
-				// serialization wiping transient field??
-				ec = cg.getClass().newInstance().getEntityClass();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-		return ec;
+		return cg.entityClass();
 	}
 
 	protected boolean hasCriterion(Set<CriteriaGroup> criteriaGroups,

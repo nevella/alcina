@@ -1,5 +1,7 @@
 package cc.alcina.framework.entity.projection;
 
+import java.io.ByteArrayOutputStream;
+import java.io.ObjectOutputStream;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -17,26 +19,66 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.zip.GZIPOutputStream;
 
 import org.objenesis.Objenesis;
 import org.objenesis.ObjenesisStd;
 import org.objenesis.instantiator.ObjectInstantiator;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Output;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
+import cc.alcina.framework.entity.MetricLogging;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 
 public class StatsFilter extends CollectionProjectionFilter {
+	public static void dumpGraphStats(Object resultObject) {
+		try {
+			StatsFilter statsFilter = new StatsFilter().dumpPaths();
+			// statsFilter.bypassGwtTransient();
+			statsFilter.getGraphStats(resultObject, new Class[] {},
+					new Class[] {}, StatsFilterSortKey.CLASSNAME, true);
+			ByteArrayOutputStream out = new ByteArrayOutputStream();
+			MetricLogging.get().start("serialize-jvm");
+			ObjectOutputStream oos = new ObjectOutputStream(out);
+			oos.writeObject(resultObject);
+			oos.close();
+			MetricLogging.get().end("serialize-jvm");
+			System.out.format("\njava-ser size:%s\n\n", out.size());
+			MetricLogging.get().start("serialize-kryo");
+			Kryo kryo = new Kryo();
+			out = new ByteArrayOutputStream();
+			Output output = new Output(out);
+			kryo.writeObject(output, resultObject);
+			output.flush();
+			MetricLogging.get().end("serialize-kryo");
+			System.out.format("\nkryo-ser size:%s\n\n", out.size());
+			MetricLogging.get().start("serialize-alcina");
+			String string = AlcinaBeanSerializer.serializeHolder(resultObject);
+			MetricLogging.get().end("serialize-alcina");
+			out = new ByteArrayOutputStream();
+			ResourceUtilities.writeStringToOutputStream(string,
+					new GZIPOutputStream(out));
+			System.out.format("\nkryo-ser size:%s\n\n", out.size());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	StatsFilter.MultiIdentityMap ownerMap = new StatsFilter.MultiIdentityMap();
 
 	StatsFilter.MultiIdentityMap owneeMap = new StatsFilter.MultiIdentityMap();
@@ -61,7 +103,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	private boolean reverse;
 
-	private boolean bypassGwtTransient;
+	private boolean skipGwtTransient;
 
 	private boolean dumpPaths;
 
@@ -72,11 +114,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 	private boolean noPath;
 
 	public StatsFilter() {
-	}
-
-	public StatsFilter bypassGwtTransient() {
-		this.bypassGwtTransient = true;
-		return this;
 	}
 
 	public StatsFilter dumpPaths() {
@@ -90,7 +127,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 			throws Exception {
 		T filtered = super.filterData(original, projected, context,
 				graphProjection);
-		if (bypass(context.field)) {
+		if (skip(context.field)) {
 			return null;
 		}
 		String toPath = noPath ? "..." : context.toPath(!noPathToString);
@@ -133,14 +170,9 @@ public class StatsFilter extends CollectionProjectionFilter {
 		return this;
 	}
 
-	private boolean bypass(Field field) {
-		if (bypassGwtTransient) {
-			if (field != null
-					&& field.getAnnotation(GwtTransient.class) != null) {
-				return true;
-			}
-		}
-		return false;
+	public StatsFilter skipGwtTransient() {
+		this.skipGwtTransient = true;
+		return this;
 	}
 
 	private Field[] getFieldsForClass(Object projected) {
@@ -167,6 +199,16 @@ public class StatsFilter extends CollectionProjectionFilter {
 		return projectableFields.get(clazz);
 	}
 
+	private boolean skip(Field field) {
+		if (skipGwtTransient) {
+			if (field != null
+					&& field.getAnnotation(GwtTransient.class) != null) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	void dumpStats() {
 		try {
 			Set<Object> owned = new LinkedHashSet<Object>();
@@ -182,7 +224,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 				statsItemLookup.put(o, item);
 				Field[] fields = getFieldsForClass(o);
 				for (Field field : fields) {
-					if (bypass(field)) {
+					if (skip(field)) {
 						continue;
 					}
 					Object o3 = field.get(o);
@@ -452,6 +494,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 				c = new ArrayList();
 			} else if (coll instanceof LiSet) {
 				c = new LiSet();
+			} else if (coll instanceof TreeSet) {
+				c = new TreeSet();
 			} else if (coll instanceof Set) {
 				c = new LinkedHashSet();
 			} else if (coll instanceof ConcurrentLinkedQueue) {
@@ -497,6 +541,20 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 	}
 
+	static class MultiIdentityMap
+			extends IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
+		public void add(Object o1, Object o2) {
+			ensureKey(o1);
+			get(o1).put(o2, o2);
+		}
+
+		public void ensureKey(Object o1) {
+			if (!containsKey(o1)) {
+				put(o1, new IdentityHashMap<Object, Object>());
+			}
+		}
+	}
+
 	class StatsItem {
 		int size;
 
@@ -523,20 +581,6 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 		public int size() {
 			return size;
-		}
-	}
-
-	static class MultiIdentityMap
-			extends IdentityHashMap<Object, IdentityHashMap<Object, Object>> {
-		public void add(Object o1, Object o2) {
-			ensureKey(o1);
-			get(o1).put(o2, o2);
-		}
-	
-		public void ensureKey(Object o1) {
-			if (!containsKey(o1)) {
-				put(o1, new IdentityHashMap<Object, Object>());
-			}
 		}
 	}
 }

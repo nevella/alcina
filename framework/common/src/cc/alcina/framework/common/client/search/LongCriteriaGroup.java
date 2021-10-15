@@ -15,7 +15,9 @@ package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @Bean
 /**
@@ -23,8 +25,10 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
  * @author Nick Reddel
  */
 @PermissibleChildClasses({ LongCriterion.class })
+// TODO - make flat-serializable when needed
+@TypeSerialization(flatSerializable = false)
 public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private String displayName = "Long";
 
@@ -42,12 +46,13 @@ public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
 	}
 
 	@Override
+	@AlcinaTransient
 	public String getDisplayName() {
 		return this.displayName;
 	}
 
 	@Override
-	public Class getEntityClass() {
+	public Class entityClass() {
 		return null;
 	}
 

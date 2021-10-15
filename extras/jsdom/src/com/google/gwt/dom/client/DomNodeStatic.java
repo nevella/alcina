@@ -4,7 +4,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.util.TextUtils;
+import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
  * All 'static' classes are a workaround for jsos not allowing default methods

@@ -6,6 +6,11 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
+import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -13,6 +18,8 @@ public interface HasPermissionsValidation {
 	public String validatePermissions();
 
 	public static class DefaultValidation {
+		public static boolean validateWithFlatTreeSerializer = false;
+
 		public static String validatePermissions(HasPermissionsValidation hpv,
 				Collection children) {
 			if (hpv instanceof Permissible) {
@@ -21,6 +28,24 @@ public interface HasPermissionsValidation {
 					return "Access not permitted to "
 							+ CommonUtils.simpleClassName(hpv.getClass());
 				}
+			}
+			TypeSerialization typeSerialization = Reflections.classLookup()
+					.getAnnotationForClass(hpv.getClass(),
+							TypeSerialization.class);
+			if (typeSerialization != null && validateWithFlatTreeSerializer
+					&& typeSerialization.flatSerializable()) {
+				// serialization-with-test checks valid type membership
+				SerializerOptions options = new FlatTreeSerializer.SerializerOptions()
+						.withTestSerialized(true).withTopLevelTypeInfo(true);
+				try {
+					FlatTreeSerializer.serialize((TreeSerializable) hpv,
+							options);
+				} catch (RuntimeException e) {
+					Ax.err("HasPermissionsValidation exception (unequal serialized): %s",
+							AlcinaBeanSerializer.serializeHolder(hpv));
+					e.printStackTrace();
+				}
+				return null;
 			}
 			List<Class> permissibleChildClasses = new ArrayList<Class>();
 			PermissibleChildClasses pcc = Reflections.classLookup()

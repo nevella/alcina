@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAcces
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.entity.transform.MethodIndividualPropertyAccessor;
+import cc.alcina.framework.entity.transform.MethodIndividualPropertyReflector;
 
 public class JsonPropertyAccessor implements PropertyAccessor {
 	public static final String TOPIC_NOTIFICATION_MULTIPLE_JSON_SINGLE_JAVA = JsonPropertyAccessor.class
@@ -58,7 +58,7 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 	@Override
 	public PropertyReflector getPropertyReflector(Class clazz,
 			String propertyName) {
-		return new MethodIndividualPropertyAccessor(clazz, propertyName);
+		return MethodIndividualPropertyReflector.get(clazz, propertyName);
 	}
 
 	@Override
@@ -74,6 +74,11 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 	@Override
 	public boolean hasPropertyKey(Object bean, String propertyName) {
 		return getPropertyValue0(bean, propertyName, true) != nullKeyMarker;
+	}
+
+	@Override
+	public boolean isReadOnly(Class objectClass, String propertyName) {
+		return false;
 	}
 
 	public JsonPropertyAccessor returnJsonArray() {
@@ -221,10 +226,5 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 				}
 			}
 		}
-	}
-
-	@Override
-	public boolean isReadOnly(Class objectClass, String propertyName) {
-		return false;
 	}
 }

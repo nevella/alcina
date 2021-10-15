@@ -36,7 +36,10 @@ public class MultiTrie<K, V extends Set<? extends Entity>>
 		extends PatriciaTrie<K, V> {
 	private boolean loadingOnly;
 
-	private LoadingCache loadingCache = new LoadingCache();
+	private transient LoadingCache loadingCache = new LoadingCache();
+
+	public MultiTrie() {
+	}
 
 	public MultiTrie(KeyAnalyzer<? super K> arg0) {
 		super(arg0);
@@ -99,7 +102,7 @@ public class MultiTrie<K, V extends Set<? extends Entity>>
 				// in *seems* harmless
 				// remove(key);
 				//
-				// FIXME - mvcc.2021
+				// FIXME - mvcc.5
 			}
 		}
 	}

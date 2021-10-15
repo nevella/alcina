@@ -22,25 +22,31 @@ import java.util.Map;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
-import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.publication.Publication.Definition;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.StringMap;
 
 /**
  * 
  * @author Nick Reddel
  */
-public abstract class ContentRequestBase<CD extends ContentDefinition>
-		extends WrapperPersistable
-		implements GwtMultiplePersistable, DeliveryModel, TreeSerializable {
+@RegistryLocation(registryPoint = TreeSerializable.class)
+public abstract class ContentRequestBase<CD extends ContentDefinition> extends
+		Bindable implements DeliveryModel, TreeSerializable, Definition {
 	static final long serialVersionUID = -1L;
 
 	private String outputFormat = FormatConversionTarget.HTML.serializedForm();
@@ -101,6 +107,8 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 
 	private Map<String, String> properties = new LinkedHashMap<String, String>();
 
+	private String propertiesSerialized = "";
+
 	public transient List<MailInlineImage> images = new ArrayList<>();
 
 	public transient List<MailAttachment> attachments = new ArrayList<>();
@@ -150,7 +158,7 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 
 	@Override
 	public String getEmailSubjectForRequestor() {
-		if (emailSubjectForRequestor == null) {
+		if (Ax.isBlank(emailSubjectForRequestor)) {
 			return getEmailSubject();
 		}
 		return emailSubjectForRequestor;
@@ -191,12 +199,19 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 	}
 
 	@Override
+	@AlcinaTransient
 	public Map<String, String> getProperties() {
 		return this.properties;
 	}
 
+	@PropertySerialization(notTestable = true)
+	public String getPropertiesSerialized() {
+		return this.propertiesSerialized;
+	}
+
 	@Override
 	@Transient
+	@AlcinaTransient
 	public PropertyChangeListener[] getPropertyChangeListeners() {
 		return this.propertyChangeSupport().getPropertyChangeListeners();
 	}
@@ -285,8 +300,23 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 	}
 
 	@Override
+	public ContentDefinition provideContentDefinition() {
+		return contentDefinition;
+	}
+
+	@Override
 	public ContentDeliveryType provideContentDeliveryType() {
 		return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
+	}
+
+	@Override
+	public Definition provideDefinition() {
+		return this;
+	}
+
+	@Override
+	public DeliveryModel provideDeliveryModel() {
+		return this;
 	}
 
 	@Override
@@ -444,6 +474,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 		this.properties = properties;
 	}
 
+	public void setPropertiesSerialized(String propertiesSerialized) {
+		this.propertiesSerialized = propertiesSerialized;
+	}
+
 	public void setPublicationRange(PublicationRange publicationRange) {
 		PublicationRange old_publicationRange = this.publicationRange;
 		this.publicationRange = publicationRange;
@@ -504,6 +538,11 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 				+ " Format: " + CommonUtils.friendlyConstant(getOutputFormat());
 	}
 
+	@Override
+	public TreeSerializable.Customiser treeSerializationCustomiser() {
+		return new Customiser(this);
+	}
+
 	public static class TestContentDefinition implements ContentDefinition {
 		@Override
 		public String getPublicationType() {
@@ -511,10 +550,15 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 		}
 	}
 
+	@TypeSerialization(flatSerializable = false)
+	// FIXME - mvcc.flat - this fails because FTS can't differentiate between
+	// default content definition and null - it *is* an issue (possibly
+	// requiring __FTS_DEFAULT__)
+	//
+	// yep - for objects where presence/absence is meaningful and there are no
+	// fields, have that - *IFF* require field type to be final
 	public static class TestContentRequest
 			extends ContentRequestBase<TestContentDefinition> {
-		private TestContentDefinition contentDefinition = new TestContentDefinition();
-
 		@Override
 		public TestContentDefinition getContentDefinition() {
 			return this.contentDefinition;
@@ -524,6 +568,49 @@ public abstract class ContentRequestBase<CD extends ContentDefinition>
 		public void
 				setContentDefinition(TestContentDefinition contentDefinition) {
 			this.contentDefinition = contentDefinition;
+		}
+	}
+
+	private static class Customiser
+			extends TreeSerializable.Customiser<ContentRequestBase> {
+		public Customiser(ContentRequestBase serializable) {
+			super(serializable);
+		}
+
+		@Override
+		public void onAfterTreeDeserialize() {
+			StringMap.fromPropertyString(serializable.propertiesSerialized)
+					.forEach((k, v) -> serializable.properties.put(k, v));
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onAfterTreeDeserialize();
+			}
+		}
+
+		@Override
+		public void onAfterTreeSerialize() {
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onAfterTreeSerialize();
+			}
+		}
+
+		@Override
+		public void onBeforeTreeDeserialize() {
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onBeforeTreeDeserialize();
+			}
+		}
+
+		@Override
+		public void onBeforeTreeSerialize() {
+			serializable.propertiesSerialized = new StringMap(
+					serializable.properties).toPropertyString();
+			if (serializable.contentDefinition != null) {
+				serializable.contentDefinition.treeSerializationCustomiser()
+						.onBeforeTreeSerialize();
+			}
 		}
 	}
 }

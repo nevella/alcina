@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 	public CountingMap() {
@@ -29,7 +30,7 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 
 	public void addIntMap(Map<K, Integer> m) {
 		for (Map.Entry<K, Integer> entry : m.entrySet()) {
-			put(entry.getKey(), entry.getValue());
+			add(entry.getKey(), entry.getValue());
 		}
 	}
 
@@ -44,11 +45,6 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 			return 0;
 		}
 		return get(key);
-	}
-
-	public void dumpReverseMap(boolean dir) {
-		reverseMap(dir).forEach((k, v) -> Ax.out("%s%s",
-				CommonUtils.padStringRight(k.toString(), 30, ' '), v));
 	}
 
 	public K max() {
@@ -102,6 +98,15 @@ public class CountingMap<K> extends LinkedHashMap<K, Integer> {
 			result += v;
 		}
 		return result;
+	}
+
+	public String toAlignedReverseString(boolean descending) {
+		return reverseMap(descending).entrySet().stream()
+				.map(e -> Ax.format("%s%s",
+						CommonUtils.padStringRight(e.getKey().toString(), 30,
+								' '),
+						e.getValue()))
+				.collect(Collectors.joining("\n"));
 	}
 
 	public LinkedHashMap<K, Integer> toLinkedHashMap(boolean descending) {

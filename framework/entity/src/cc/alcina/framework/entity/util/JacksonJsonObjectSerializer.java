@@ -1,5 +1,8 @@
 package cc.alcina.framework.entity.util;
 
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
 import java.io.StringWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.Arrays;
@@ -36,11 +39,15 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
 @RegistryLocation(registryPoint = JsonObjectSerializer.class, implementationType = ImplementationType.INSTANCE)
 public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
+	public static final String CONTEXT_WITHOUT_MAPPER_POOL = JacksonJsonObjectSerializer.class
+			+ ".CONTEXT_NO_MAPPER";
+
 	private static CachingMap<JacksonJsonObjectSerializer, ObjectMapperPool> objectMappersPool = new CachingConcurrentMap<>(
 			serializer -> new ObjectMapperPool(serializer), 10);
 
@@ -62,9 +69,21 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private boolean truncateAtMaxLength;
 
+	private boolean withWrapRootValue;
+
 	public JacksonJsonObjectSerializer() {
 		maxLength = ResourceUtilities.getInteger(
 				JacksonJsonObjectSerializer.class, "maxLength", 10000000);
+	}
+
+	public <T> T deserialize(Reader reader, Class<T> clazz) {
+		return runWithObjectMapper(mapper -> {
+			try {
+				return mapper.readValue(reader, clazz);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		});
 	}
 
 	@Override
@@ -108,7 +127,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 					o.withAllowUnknownProperties, withBase64Encoding,
 					o.withBase64Encoding, maxLength, o.maxLength,
 					withPrettyPrint, o.withPrettyPrint, withDefaults,
-					o.withDefaults);
+					o.withDefaults, withWrapRootValue, o.withWrapRootValue);
 		} else {
 			return false;
 		}
@@ -118,7 +137,7 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public int hashCode() {
 		return Objects.hash(withIdRefs, withTypeInfo,
 				withAllowUnknownProperties, withBase64Encoding, maxLength,
-				withPrettyPrint, withDefaults);
+				withPrettyPrint, withDefaults, withWrapRootValue);
 	}
 
 	@Override
@@ -149,6 +168,19 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		return runWithObjectMapper(mapper -> {
 			try {
 				return mapper.writeValueAsString(node);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		});
+	}
+
+	public void serializeToStream(Object object, OutputStream outputStream) {
+		runWithObjectMapper(mapper -> {
+			try {
+				OutputStreamWriter writer = new OutputStreamWriter(outputStream,
+						StandardCharsets.UTF_8);
+				mapper.writeValue(writer, object);
+				return null;
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -202,6 +234,11 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		return this;
 	}
 
+	public JacksonJsonObjectSerializer withWrapRootValue() {
+		this.withWrapRootValue = true;
+		return this;
+	}
+
 	private <T> T deserialize_v1(String json, Class<T> clazz) {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
@@ -240,12 +277,17 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 
 	private <T> T
 			runWithObjectMapper(Function<ObjectMapper, T> mapperFunction) {
-		ObjectMapperPool pool = objectMappersPool.get(this);
-		ObjectMapper mapper = pool.borrow();
-		try {
+		if (LooseContext.is(CONTEXT_WITHOUT_MAPPER_POOL)) {
+			ObjectMapper mapper = createObjectMapper();
 			return mapperFunction.apply(mapper);
-		} finally {
-			pool.returnObject(mapper);
+		} else {
+			ObjectMapperPool pool = objectMappersPool.get(this);
+			ObjectMapper mapper = pool.borrow();
+			try {
+				return mapperFunction.apply(mapper);
+			} finally {
+				pool.returnObject(mapper);
+			}
 		}
 	}
 
@@ -259,6 +301,9 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		if (withAllowUnknownProperties) {
 			mapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES,
 					false);
+		}
+		if (withWrapRootValue) {
+			mapper.enable(SerializationFeature.WRAP_ROOT_VALUE);
 		}
 		if (withIdRefs) {
 			mapper.setVisibility(mapper.getSerializationConfig()

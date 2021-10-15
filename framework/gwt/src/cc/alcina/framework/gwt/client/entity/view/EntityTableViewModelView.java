@@ -17,6 +17,8 @@ import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.google.gwt.view.client.NoSelectionModel;
 
+import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
+import cc.alcina.framework.common.client.domain.search.GroupingParameters;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.ColumnSearchOrder;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.IdOrder;
 import cc.alcina.framework.common.client.logic.domain.HasId;
@@ -29,8 +31,6 @@ import cc.alcina.framework.gwt.client.cell.ColumnsBuilder.SortableColumn;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilderRows;
 import cc.alcina.framework.gwt.client.cell.ShowMorePager;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
-import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
-import cc.alcina.framework.gwt.client.entity.search.GroupingParameters;
 import cc.alcina.framework.gwt.client.entity.view.GroupedCellTableView.GroupedDataRenderHandler;
 import cc.alcina.framework.gwt.client.entity.view.ViewModel.ViewModelWithDataProvider;
 import cc.alcina.framework.gwt.client.entity.view.res.TableRes;
@@ -179,7 +179,7 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 						} else {
 							return String.valueOf(hi.getId());
 						}
-					}).width(4.0, Unit.EM).build();
+					}).width(5.0, Unit.EM).build();
 		}
 		customSetupTable(builder);
 		table.addColumnSortHandler(model.dataProvider);

@@ -13,7 +13,8 @@
  */
 package cc.alcina.framework.common.client.publication;
 
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
 /**
  * Marker interface for publication content
@@ -22,10 +23,13 @@ import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
  *
  */
 public interface ContentDefinition extends TreeSerializable {
-	public String getPublicationType();
-
 	@Override
 	public String toString();
+
+	@AlcinaTransient
+	default String getPublicationType() {
+		return null;
+	}
 
 	default void initialiseContext() {
 		// for implementations, if complex context-related logic. within a

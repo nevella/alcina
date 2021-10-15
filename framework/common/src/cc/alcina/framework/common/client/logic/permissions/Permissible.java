@@ -22,5 +22,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 public interface Permissible {
 	public AccessLevel accessLevel();
 
-	public String rule();
+	default String rule() {
+		return "";
+	}
 }

@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.util.JaxbUtils;
@@ -42,6 +43,10 @@ import cc.alcina.framework.servlet.publication.ContentRenderer.ContentRendererRe
  * @param <V>
  */
 public abstract class ContentWrapper<D extends ContentDefinition, M extends PublicationContent, V extends DeliveryModel> {
+
+	public static final String CONTEXT_NO_CLEAN_XML_HEADERS = ContentWrapper.class.getName() 
+			+ ".CONTEXT_NO_CLEAN_XML_HEADERS";
+
 	private static final String XSL_OUTPUT_METHOD_XML = "<xsl:output method=\"xml\"";
 
 	private static final String XSL_OUTPUT_METHOD_HTML = "<xsl:output method=\"html\"";
@@ -62,7 +67,9 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		String wrappedContent = XmlUtils.transformDocToString(dataSource,
 				trSource, marker);
 		wrappedContent = XmlUtils.expandEmptyElements(wrappedContent);
-		wrappedContent = XmlUtils.cleanXmlHeaders(wrappedContent);
+		if (!LooseContext.is(CONTEXT_NO_CLEAN_XML_HEADERS)) {
+			wrappedContent = XmlUtils.cleanXmlHeaders(wrappedContent);
+		}
 		// we love MsWord/Outlook sooo much
 		wrappedContent = wrappedContent.replace("<w:anchorlock></w>",
 				"<w:anchorlock />");

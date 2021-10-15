@@ -3,12 +3,9 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 import java.util.Date;
 
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-
-@ClientInstantiable
-@Introspectable
+@Bean
 public class DomainModelDeltaMetadata implements Serializable {
 	private Long maxPersistedTransformIdWhenGenerated;
 

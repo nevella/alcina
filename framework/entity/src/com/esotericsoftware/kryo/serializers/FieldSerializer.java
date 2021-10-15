@@ -150,9 +150,9 @@ public class FieldSerializer<T> extends Serializer<T>
 	 * such a way that primitive fields are grouped together. This option has
 	 * effect only when used with Unsafe-based FieldSerializer.
 	 * <p>
-	 * FIXME: Not all versions of Sun/Oracle JDK properly work with this option.
-	 * Disable it for now. Later add dynamic checks to see if this feature is
-	 * supported by a current JDK version.
+	 * FIX2ME: Not all versions of Sun/Oracle JDK properly work with this
+	 * option. Disable it for now. Later add dynamic checks to see if this
+	 * feature is supported by a current JDK version.
 	 * </p>
 	 */
 	private boolean useMemRegions = false;

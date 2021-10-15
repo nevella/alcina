@@ -10,6 +10,7 @@ import com.google.gwt.user.client.ui.SimplePanel;
 
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.widget.APanel;
 
 public class LuxButton extends Composite implements HasClickHandlers {
@@ -21,6 +22,8 @@ public class LuxButton extends Composite implements HasClickHandlers {
 
 	private boolean performingAsync = false;
 
+	private Boolean active;
+
 	public LuxButton() {
 		initWidget(panel);
 		LuxButtonStyle.LUX_BUTTON.addTo(this);
@@ -31,10 +34,33 @@ public class LuxButton extends Composite implements HasClickHandlers {
 		return addDomHandler(handler, ClickEvent.getType());
 	}
 
+	public void setActive(boolean active) {
+		// Only update if the active state changes
+		if (this.active == null || this.active != active) {
+			this.active = active;
+			if (active) {
+				LuxButtonStyle.LUX_BUTTON_INACTIVE.removeFrom(this);
+				LuxButtonStyle.LUX_BUTTON_ACTIVE.addTo(this);
+			} else {
+				LuxButtonStyle.LUX_BUTTON_ACTIVE.removeFrom(this);
+				LuxButtonStyle.LUX_BUTTON_INACTIVE.addTo(this);
+			}
+		}
+	}
+
 	public void setPerformingAsync(boolean performingAsync) {
 		this.performingAsync = performingAsync;
 		ensureLabel().setVisible(!this.performingAsync);
 		ensureAsyncIndicator().setVisible(this.performingAsync);
+	}
+
+	public void toggleActive() {
+		setActive(!active);
+	}
+
+	public LuxButton withActive(boolean active) {
+		setActive(active);
+		return this;
 	}
 
 	public LuxButton withAsyncTopic(Topic<Boolean> topicAsync) {
@@ -49,6 +75,17 @@ public class LuxButton extends Composite implements HasClickHandlers {
 				clickHandler.onClick(event);
 			}
 		});
+		return this;
+	}
+
+	public LuxButton withHref(String href) {
+		panel.setHref(href);
+		return this;
+	}
+
+	public LuxButton withPlace(BasePlace place) {
+		withText(place.toTitleString());
+		withHref(place.toHrefString());
 		return this;
 	}
 

@@ -6,6 +6,8 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 /**
  * <h2>Thread-safety notes</h2>
@@ -56,7 +58,10 @@ public class ThreadedClientTransformManager
 
 	@Override
 	protected Set<DomainTransformEvent> createTransformSet() {
-		return Collections.synchronizedSet(super.createTransformSet());
+		// not sure why synchronized (git blame anyone?), but it shouldn't be a
+		// performance issue since assuming non-contested
+		return Collections.synchronizedSet(new ObjectOpenHashSet<>(
+				Hash.DEFAULT_INITIAL_SIZE, Hash.VERY_FAST_LOAD_FACTOR));
 	}
 	/*
 	 * all methods that return collections, check iteration

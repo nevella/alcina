@@ -1,11 +1,12 @@
 package cc.alcina.framework.common.client.collections;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 
-public class PropertyPathFilter<T> implements CollectionFilter<T> {
+public class PropertyPathFilter<T> implements Predicate<T> {
 	private PropertyPathAccessor accessor;
 
 	private Object targetValue;
@@ -15,8 +16,6 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 	private FilterOperator filterOperator;
 
 	private PropertyFilter propertyFilter;
-
-	private CollectionFilter contextFilter;
 
 	public PropertyPathFilter() {
 	}
@@ -33,29 +32,6 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 		targetIsCollection = targetValue instanceof Collection;
 		this.propertyFilter = new PropertyFilter(propertyPath, propertyValue,
 				filterOperator);
-	}
-
-	@Override
-	public boolean allow(T o) {
-		if (contextFilter != null) {
-			return contextFilter.allow(o);
-		}
-		Object propertyValue = accessor.getChainedProperty(o);
-		if (targetIsCollection && filterOperator == FilterOperator.EQ) {
-			// FIXME - mvcc.4 - throw an exception (operator should be IN))
-			return ((Collection) targetValue).contains(o);
-		}
-		if (propertyValue instanceof Collection) {
-			for (Object item : (Collection) propertyValue) {
-				if (propertyFilter.matchesValue(item)) {
-					return true;
-				}
-			}
-		}
-		if (propertyFilter.matchesValue(propertyValue)) {
-			return true;
-		}
-		return false;
 	}
 
 	public PropertyPathAccessor getAccessor() {
@@ -75,8 +51,23 @@ public class PropertyPathFilter<T> implements CollectionFilter<T> {
 	}
 
 	@Override
-	public void setContext(FilterContext context) {
-		this.contextFilter = context.createContextFilter(this);
+	public boolean test(T o) {
+		Object propertyValue = accessor.getChainedProperty(o);
+		if (targetIsCollection && filterOperator == FilterOperator.EQ) {
+			// FIXME - mvcc.4 - throw an exception (operator should be IN))
+			return ((Collection) targetValue).contains(o);
+		}
+		if (propertyValue instanceof Collection) {
+			for (Object item : (Collection) propertyValue) {
+				if (propertyFilter.matchesValue(item)) {
+					return true;
+				}
+			}
+		}
+		if (propertyFilter.matchesValue(propertyValue)) {
+			return true;
+		}
+		return false;
 	}
 
 	@Override

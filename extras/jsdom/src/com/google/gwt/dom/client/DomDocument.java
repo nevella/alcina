@@ -1145,6 +1145,8 @@ public interface DomDocument extends DomNode {
 
 	Element getViewportElement();
 
+	String getVisibilityState();
+
 	void importNode(Node node, boolean deep);
 
 	boolean isCSS1Compat();

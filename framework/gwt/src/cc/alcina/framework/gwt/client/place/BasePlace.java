@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.client.place;
 
 import java.io.Serializable;
 
+import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
@@ -15,8 +17,8 @@ import cc.alcina.framework.common.client.util.Ax;
 @ClientInstantiable
 @RegistryLocation(registryPoint = BasePlace.class)
 public abstract class BasePlace extends Place implements Serializable {
-	private static String tokenFor(BasePlace p) {
-		return Registry.impl(RegistryHistoryMapper.class).getToken(p);
+	public static String tokenFor(BasePlace p) {
+		return RegistryHistoryMapper.get().getToken(p);
 	}
 
 	private boolean refreshed;
@@ -41,6 +43,11 @@ public abstract class BasePlace extends Place implements Serializable {
 		}
 	}
 
+	public void go() {
+		Preconditions.checkState(GWT.isClient());
+		Registry.impl(PlaceNavigator.class).go(this);
+	}
+
 	@Override
 	public int hashCode() {
 		return tokenFor(this).hashCode();
@@ -59,7 +66,11 @@ public abstract class BasePlace extends Place implements Serializable {
 	}
 
 	public String toHrefString() {
-		return "#" + tokenFor(this);
+		return HrefProvider.get().toHrefString(this);
+	}
+
+	public String toNameString() {
+		return toString();
 	}
 
 	@Override
@@ -78,6 +89,11 @@ public abstract class BasePlace extends Place implements Serializable {
 		return tokenFor(this);
 	}
 
+	public String toTokenStringWithoutAppPrefix() {
+		return RegistryHistoryMapper.get()
+				.removeAppPrefixAndLeadingSlashes(toTokenString());
+	}
+
 	@RegistryLocation(registryPoint = BasePlaceAbsoluteHrefSupplier.class, implementationType = ImplementationType.SINGLETON)
 	public static class BasePlaceAbsoluteHrefSupplier {
 		public String getHref(BasePlace basePlace) {
@@ -85,7 +101,19 @@ public abstract class BasePlace extends Place implements Serializable {
 		}
 	}
 
-	public String toNameString() {
-		return toString();
+	@RegistryLocation(registryPoint = HrefProvider.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	public static class HrefProvider {
+		public static BasePlace.HrefProvider get() {
+			return Registry.impl(BasePlace.HrefProvider.class);
+		}
+
+		public String toHrefString(BasePlace basePlace) {
+			return "#" + BasePlace.tokenFor(basePlace);
+		}
+	}
+
+	public interface PlaceNavigator {
+		void go(Place place);
 	}
 }

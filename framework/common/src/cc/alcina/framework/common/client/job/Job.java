@@ -20,7 +20,6 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
-import cc.alcina.framework.common.client.actions.JobResource;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
@@ -28,6 +27,7 @@ import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadOracle;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
+import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
@@ -51,16 +51,17 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
-@Bean
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = Job.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
-public abstract class Job extends VersionableEntity<Job> implements HasIUser {
+public abstract class Job extends VersionableEntity<Job>
+		implements HasIUser, Comparable<Job> {
 	public static final transient String PROPERTY_STATE = "state";
 
 	public static Job byId(long id) {
 		return PersistentImpl.find(Job.class, id);
 	}
 
+	@GwtTransient
 	private Task task;
 
 	private String taskSerialized;
@@ -105,12 +106,15 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	private String processStateSerialized;
 
+	@GwtTransient
 	private ProcessState processState;
 
 	private transient String cachedDisplayName;
 
 	@GwtTransient
 	private String taskSignature;
+
+	private transient Job firstInSequence;
 
 	public Job() {
 	}
@@ -155,7 +159,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		tracker.setCancelled(resolveState() == JobState.CANCELLED);
 		tracker.setComplete(resolveState().isComplete());
 		tracker.setEndTime(endTime);
-		tracker.setId(toLocator().toString());
+		tracker.setId(String.valueOf(getId()));
 		tracker.setJobName(getTask().getName());
 		tracker.setJobResult(resultMessage);
 		tracker.setJobResultType(getResultType());
@@ -163,6 +167,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		tracker.setPercentComplete(completion);
 		tracker.setProgressMessage(statusMessage);
 		tracker.setStartTime(startTime);
+		if (tracker.isComplete()) {
+			domain().ensurePopulated();
+			tracker.setSerializedResult(getResultSerialized());
+		}
 		return tracker;
 	}
 
@@ -179,6 +187,11 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return (T) getTask();
 	}
 
+	@Override
+	public int compareTo(Job o) {
+		return EntityComparator.INSTANCE.compare(domainIdentity(), o);
+	}
+
 	public void createRelation(Job to, JobRelationType type) {
 		String invalidMessage = null;
 		Preconditions.checkArgument(to != domainIdentity());
@@ -188,7 +201,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			}
 		} else {
 			if (to.provideToAntecedentRelation().isPresent()) {
-				invalidMessage = "to has existing incoming antecedent relation";
+				invalidMessage = Ax.format(
+						"to has existing incoming antecedent relation: %s",
+						to.provideToAntecedentRelation().get());
 			}
 		}
 		Job from = domainIdentity();
@@ -203,7 +218,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		if (type != JobRelationType.PARENT_CHILD && from.getFromRelations()
 				.stream().anyMatch(r -> r.getType() == type)) {
 			invalidMessage = Ax.format(
-					"from has existing outgoing relation of type %s", type);
+					"from has existing outgoing relation: %s",
+					from.getFromRelations().stream()
+							.filter(r -> r.getType() == type).findFirst()
+							.get());
 		}
 		if (invalidMessage != null) {
 			throw new IllegalStateException(invalidMessage);
@@ -212,6 +230,43 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		relation.setType(type);
 		relation.setFrom(from);
 		relation.setTo(to);
+	}
+
+	// Delete while ensuring job sequencing is still correct after deletion
+	public void deleteEnsuringSequence() {
+		Optional<? extends JobRelation> previousRelation = getToRelations()
+				.stream().filter(r -> r.getType() == JobRelationType.SEQUENCE)
+				.findFirst();
+		Optional<? extends JobRelation> nextRelation = getFromRelations()
+				.stream().filter(r -> r.getType() == JobRelationType.SEQUENCE)
+				.findFirst();
+		if (previousRelation.isPresent() && nextRelation.isPresent()) {
+			// If this job is in the middle of the chain,
+			// re-link it so ensure the sequence stays connected
+			Job previous = previousRelation.get().getFrom();
+			Job next = nextRelation.get().getTo();
+			// Remove old relations
+			Ax.out("Deleting previous relation: %s", previousRelation.get());
+			// FIXME - this relation _really_ should be taken out of this set on
+			// delete
+			previous.getFromRelations().remove(previousRelation.get());
+			previousRelation.get().delete();
+			Ax.out("Deleting next relation: %s", nextRelation.get());
+			// FIXME - see above
+			next.getToRelations().remove(nextRelation.get());
+			nextRelation.get().delete();
+			// Create new relation
+			previous.createRelation(next, JobRelationType.SEQUENCE);
+		} else if (previousRelation.isPresent()) {
+			// If only a previous relation exists,
+			// made sure that is deleted at least
+			Job previous = previousRelation.get().getFrom();
+			// FIXME - see above
+			previous.getFromRelations().remove(previousRelation.get());
+			previousRelation.get().delete();
+		}
+		// Delete this job
+		delete();
 	}
 
 	public ProcessState ensureProcessState() {
@@ -352,6 +407,14 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@Transient
 	public abstract Set<? extends JobRelation> getToRelations();
 
+	public boolean hasSelfOrAncestorTask(Class<? extends Task> taskClass) {
+		if (provideIsTaskClass(taskClass)) {
+			return true;
+		}
+		return provideParent().map(job -> job.hasSelfOrAncestorTask(taskClass))
+				.orElse(false);
+	}
+
 	// not used, replaced by jobstatemessage - FIXME mvcc.jobs.2 - remove
 	public boolean isStacktraceRequested() {
 		return this.stacktraceRequested;
@@ -414,16 +477,16 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	}
 
 	public Job provideFirstInSequence() {
-		Job cursor = domainIdentity();
-		while (true) {
-			Optional<Job> previous = cursor.providePrevious();
+		if (firstInSequence == null) {
+			Optional<Job> previous = providePrevious();
 			if (previous.isPresent()) {
-				cursor = previous.get();
+				firstInSequence = providePrevious().get()
+						.provideFirstInSequence();
 			} else {
-				break;
+				firstInSequence = domainIdentity();
 			}
 		}
-		return cursor;
+		return firstInSequence;
 	}
 
 	public boolean provideHasCompletePredecesorOrNone() {
@@ -466,6 +529,16 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 		return resolvedState == null ? false : resolvedState.isComplete();
 	}
 
+	public boolean provideIsCompletedNormally() {
+		JobState resolvedState = resolveState();
+		return resolvedState == null ? false
+				: resolvedState.isCompletedNormally();
+	}
+
+	public boolean provideIsCompleteWithEndTime() {
+		return provideIsComplete() && getEndTime() != null;
+	}
+
 	public boolean provideIsFirstInSequence() {
 		return provideFirstInSequence() == domainIdentity();
 	}
@@ -497,6 +570,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public boolean provideIsPending() {
 		return resolveState() == JobState.PENDING;
+	}
+
+	public boolean provideIsSequenceComplete() {
+		return provideIsComplete() && !provideHasIncompleteSubsequent();
 	}
 
 	public boolean provideIsSibling(Job job) {
@@ -652,6 +729,10 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 	public JobState resolveState() {
 		return resolveState0(0);
+	}
+
+	public Job root() {
+		return provideParent().map(Job::root).orElse(domainIdentity());
 	}
 
 	public void setCompletion(double completion) {
@@ -999,7 +1080,7 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 	@Bean
 	public static class ResourceRecord extends Model
 			implements HasEquivalenceString<ResourceRecord> {
-		private boolean acquiredFromAncestor;
+		private boolean acquiredFromAntecedent;
 
 		private boolean acquired;
 
@@ -1024,16 +1105,16 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 			return this.acquired;
 		}
 
-		public boolean isAcquiredFromAncestor() {
-			return this.acquiredFromAncestor;
+		public boolean isAcquiredFromAntecedent() {
+			return this.acquiredFromAntecedent;
 		}
 
 		public void setAcquired(boolean acquired) {
 			this.acquired = acquired;
 		}
 
-		public void setAcquiredFromAncestor(boolean acquiredFromAncestor) {
-			this.acquiredFromAncestor = acquiredFromAncestor;
+		public void setAcquiredFromAntecedent(boolean acquiredFromAntecedent) {
+			this.acquiredFromAntecedent = acquiredFromAntecedent;
 		}
 
 		public void setClassName(String className) {
@@ -1046,9 +1127,9 @@ public abstract class Job extends VersionableEntity<Job> implements HasIUser {
 
 		@Override
 		public String toString() {
-			return Ax.format("%s::%s - Acquired: %s - Ancestor: %s",
+			return Ax.format("%s::%s - Acquired: %s - Antecedent: %s",
 					getClassName().replaceFirst("(.+)(\\..+)", "$2"), getPath(),
-					isAcquired(), isAcquiredFromAncestor());
+					isAcquired(), isAcquiredFromAntecedent());
 		}
 	}
 

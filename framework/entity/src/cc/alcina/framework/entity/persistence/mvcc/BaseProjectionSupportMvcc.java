@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.MapCreator;
 import cc.alcina.framework.common.client.util.NullFriendlyComparatorWrapper;
 import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
 import cc.alcina.framework.common.client.util.trie.MultiTrie;
+import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class BaseProjectionSupportMvcc {
@@ -97,6 +98,34 @@ public class BaseProjectionSupportMvcc {
 		@Override
 		public Object get() {
 			return new TransactionalMap(Object.class, Object.class);
+		}
+	}
+
+	@RegistryLocation(registryPoint = CollectionCreators.TreeMapCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	public static class TreeMapCreatorImpl
+			extends CollectionCreators.TreeMapCreator {
+		@Override
+		public Map get() {
+			return new TransactionalTreeMap(types.get(0), types.get(1),
+					new NullFriendlyComparatorWrapper(
+							Comparator.naturalOrder()));
+		}
+	}
+
+	public static class TreeMapCreatorNonTransactional<K, V>
+			implements CollectionCreators.MapCreator<K, V> {
+		private Comparator<K> cmp;
+
+		@Override
+		public Map<K, V> get() {
+			return cmp == null ? new Object2ObjectAVLTreeMap<>()
+					: new Object2ObjectAVLTreeMap<>(cmp);
+		}
+
+		public TreeMapCreatorNonTransactional<K, V>
+				withComparator(Comparator cmp) {
+			this.cmp = cmp;
+			return this;
 		}
 	}
 

@@ -35,7 +35,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  *
@@ -48,13 +47,12 @@ import cc.alcina.framework.common.client.util.LooseContext;
  * 
  */
 public class DetachedEntityCache implements Serializable, MemoryStatProvider {
-	public static final transient String CONTEXT_CREATED_LOCAL_DEBUG = DetachedEntityCache.class
-			.getName() + ".CONTEXT_CREATED_LOCAL_DEBUG";
-
 	protected Map<Class, Map<Long, Entity>> domain;
 
 	protected Map<Class, Map<Long, Entity>> local;
 
+	// TODO - mvcc.4 - we need these because entries in local can *totally* be
+	// vacuumed
 	protected Map<Long, Entity> createdLocals;
 
 	private boolean throwOnExisting;
@@ -120,15 +118,15 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		throw new UnsupportedOperationException();
 	}
 
+	public <T> T get(Class<T> clazz, long id) {
+		return getUnboxed(clazz, id);
+	}
+
 	public <T> T get(Class<T> clazz, Long id) {
-		if (!domain.containsKey(clazz)) {
-			return null;
-		}
 		if (id == null) {
 			return null;
 		}
-		T t = (T) domain.get(clazz).get(id);
-		return t;
+		return getUnboxed(clazz, id.longValue());
 	}
 
 	public <T> T get(EntityLocator locator) {
@@ -147,6 +145,10 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	public Map<Long, Entity> getMap(Class clazz) {
 		ensureMap(clazz);
 		return this.domain.get(clazz);
+	}
+
+	public boolean hasLocals(Class<?> clazz) {
+		return local(clazz, false).values().stream().count() > 0;
 	}
 
 	public void invalidate(Class clazz) {
@@ -253,6 +255,18 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		return stream(clazz).collect(AlcinaCollectors.toLinkedHashSet());
 	}
 
+	private <T> T getUnboxed(Class<T> clazz, long id) {
+		Map<Long, Entity> map = domain.get(clazz);
+		if (map == null) {
+			return null;
+		}
+		if (map instanceof UnboxedLongMap) {
+			return (T) ((UnboxedLongMap) map).get(id);
+		} else {
+			return (T) map.get(id);
+		}
+	}
+
 	private Map<Long, Entity> local(Class clazz, boolean ensure) {
 		Map<Class, Map<Long, Entity>> perClass = local;
 		if (!perClass.containsKey(clazz)) {
@@ -331,11 +345,6 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 			localPerClass.put(localId, entity);
 			external |= isExternalCreate();
 			if (!external) {
-				if (LooseContext.has(CONTEXT_CREATED_LOCAL_DEBUG)) {
-					((CreatedLocalDebug) LooseContext
-							.get(CONTEXT_CREATED_LOCAL_DEBUG))
-									.debugCreation(localId, entity);
-				}
 				Entity existing = createdLocals.get(localId);
 				if (existing != null && existing != entity) {
 					RuntimeException exception = Ax.runtimeException(

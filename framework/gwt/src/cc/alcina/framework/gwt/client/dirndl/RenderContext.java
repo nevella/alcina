@@ -137,13 +137,13 @@ public class RenderContext extends LooseContextInstance {
 
 	public void onAttach(Widget widget) {
 		if (getOnAttachCallback() != null) {
-			getOnAttachCallback().apply(widget);
+			getOnAttachCallback().accept(widget);
 		}
 	}
 
 	public void onDetach(Widget widget) {
 		if (getOnDetachCallback() != null) {
-			getOnDetachCallback().apply(widget);
+			getOnDetachCallback().accept(widget);
 		}
 	}
 

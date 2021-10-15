@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.WrappedObject.WrappedObjectHelper;
+import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.servlet.google.SheetAccessor;
 import cc.alcina.framework.servlet.google.SheetAccessor.SheetAccess;
 
@@ -39,7 +39,9 @@ public class Gallery {
 	}
 
 	public static void snap(String snapName) {
-		instance.snap0(snapName);
+		if (ResourceUtilities.is("snap")) {
+			instance.snap0(snapName);
+		}
 	}
 
 	private String appName;
@@ -72,9 +74,13 @@ public class Gallery {
 			try {
 				String configurationXml = ResourceUtilities
 						.readStreamToString(this.configurationUrl.openStream());
-				this.galleryConfiguration = WrappedObjectHelper.xmlDeserialize(
+				this.galleryConfiguration = JaxbUtils.xmlDeserialize(
 						GalleryConfiguration.class, configurationXml);
 				configuration = this.galleryConfiguration.find(appName);
+				if (configuration == null) {
+					throw Ax.runtimeException("No configuration with name '%s'",
+							appName);
+				}
 				new SheetAccessor()
 						.withSheetAccess(configuration.asSheetAccess())
 						.ensureSpreadsheet();
@@ -97,6 +103,12 @@ public class Gallery {
 	}
 
 	private void snap0(String snapName) {
+		try {
+			Thread.sleep(ResourceUtilities.getInteger(Gallery.class,
+					"preSnapPause"));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 		File toFileImage = SEUtilities.getChildFile(base, snapName + ".png");
 		File toFileHtml = SEUtilities.getChildFile(base, snapName + ".html");
 		RemoteWebDriver remoteDriver = (RemoteWebDriver) driver;

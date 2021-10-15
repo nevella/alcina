@@ -41,6 +41,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Vector;
+import java.util.function.Predicate;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -68,9 +69,9 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.actions.InlineButtonHandler;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.Callback;
@@ -120,6 +121,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		init0();
 	}
 
+	@Override
 	public void addChangeListener(final ChangeListener listener) {
 		this.changeListeners.add(listener);
 	}
@@ -136,6 +138,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		return addDomHandler(handler, FocusEvent.getType());
 	}
 
+	@Override
 	public void addFocusListener(final FocusListener listener) {
 		this.base.addFocusListener(listener);
 	}
@@ -145,6 +148,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.base.addItem((String) this.getRenderer().render(o));
 	}
 
+	@Override
 	public void addKeyboardListener(KeyboardListener listener) {
 		this.base.addKeyboardListener(listener);
 	}
@@ -153,10 +157,12 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		return addDomHandler(handler, MouseDownEvent.getType());
 	}
 
+	@Override
 	public void addStyleName(final String style) {
 		this.base.addStyleName(style);
 	}
 
+	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null || !(obj instanceof SetBasedListBox)) {
 			return false;
@@ -169,12 +175,14 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		return true;
 	}
 
+	@Override
 	public int getAbsoluteLeft() {
 		int retValue;
 		retValue = this.base.getAbsoluteLeft();
 		return retValue;
 	}
 
+	@Override
 	public int getAbsoluteTop() {
 		int retValue;
 		retValue = this.base.getAbsoluteTop();
@@ -199,12 +207,14 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		return retValue;
 	}
 
+	@Override
 	public int getOffsetHeight() {
 		int retValue;
 		retValue = this.base.getOffsetHeight();
 		return retValue;
 	}
 
+	@Override
 	public int getOffsetWidth() {
 		int retValue;
 		retValue = this.base.getOffsetWidth();
@@ -221,24 +231,28 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		return retValue;
 	}
 
+	@Override
 	public String getStyleName() {
 		String retValue;
 		retValue = this.base.getStyleName();
 		return retValue;
 	}
 
+	@Override
 	public int getTabIndex() {
 		int retValue;
 		retValue = this.base.getTabIndex();
 		return retValue;
 	}
 
+	@Override
 	public String getTitle() {
 		String retValue;
 		retValue = this.base.getTitle();
 		return retValue;
 	}
 
+	@Override
 	public Object getValue() {
 		final Object returnValue;
 		if (this.base.isMultipleSelect()) {
@@ -261,10 +275,12 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		return retValue;
 	}
 
+	@Override
 	public int hashCode() {
 		return this.base.hashCode();
 	}
 
+	@Override
 	public boolean isEnabled() {
 		boolean retValue;
 		retValue = this.base.isEnabled();
@@ -295,6 +311,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		return other;
 	}
 
+	@Override
 	public void removeChangeListener(final ChangeListener listener) {
 		this.changeListeners.remove(listener);
 	}
@@ -303,6 +320,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.base.removeClickListener(listener);
 	}
 
+	@Override
 	public void removeFocusListener(final FocusListener listener) {
 		this.base.removeFocusListener(listener);
 	}
@@ -323,10 +341,12 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		}
 	}
 
+	@Override
 	public void removeKeyboardListener(final KeyboardListener listener) {
 		this.base.removeKeyboardListener(listener);
 	}
 
+	@Override
 	public void removeStyleName(final String style) {
 		this.base.removeStyleName(style);
 	}
@@ -340,18 +360,22 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		}
 	}
 
+	@Override
 	public void setAccessKey(char key) {
 		this.base.setAccessKey(key);
 	}
 
+	@Override
 	public void setEnabled(boolean enabled) {
 		this.base.setEnabled(enabled);
 	}
 
+	@Override
 	public void setFocus(boolean focused) {
 		this.base.setFocus(focused);
 	}
 
+	@Override
 	public void setHeight(String height) {
 		this.base.setHeight(height);
 	}
@@ -410,15 +434,18 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		fireChangeListeners();
 	}
 
+	@Override
 	public void setPixelSize(int width, int height) {
 		this.base.setPixelSize(width, height);
 	}
 
+	@Override
 	public void setRenderer(Renderer renderer) {
 		super.setRenderer(renderer);
 		this.setOptions(this.options);
 	}
 
+	@Override
 	public void setSize(String width, String height) {
 		this.base.setSize(width, height);
 	}
@@ -427,18 +454,22 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.sortOptionsByToString = sortOptions;
 	}
 
+	@Override
 	public void setStyleName(String style) {
 		this.base.setStyleName(style);
 	}
 
+	@Override
 	public void setTabIndex(int index) {
 		this.base.setTabIndex(index);
 	}
 
+	@Override
 	public void setTitle(String title) {
 		this.base.setTitle(title);
 	}
 
+	@Override
 	public void setValue(Object value) {
 		int i = 0;
 		ArrayList old = this.selected;
@@ -483,6 +514,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.base.setVisibleItemCount(visibleItems);
 	}
 
+	@Override
 	public void setWidth(final String width) {
 		this.base.setWidth(width);
 	}
@@ -508,11 +540,13 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		this.setRenderer(ToStringRenderer.INSTANCE);
 		this.setComparator(SimpleComparator.INSTANCE);
 		this.base.addClickListener(new ClickListener() {
+			@Override
 			public void onClick(Widget sender) {
 				update();
 			}
 		});
 		this.base.addChangeListener(new ChangeListener() {
+			@Override
 			public void onChange(Widget sender) {
 				update();
 			}
@@ -576,25 +610,34 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 	public static class DomainListBox extends SetBasedListBox {
 		private Class domainClass;
 
-		private CollectionFilter filter;
+		private Predicate predicate;
 
 		private boolean hasNullOption;
 
 		private boolean refreshOnModelChange;
 
-		public DomainListBox(Class domainClass, CollectionFilter filter,
+		private SourcesPropertyChangeEvents listenedModel;
+
+		private PropertyChangeListener refreshListener = new PropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				refreshOptions();
+			}
+		};
+
+		public DomainListBox(Class domainClass, Predicate filter,
 				boolean hasNullOption, ListAddItemHandler addHandler) {
 			super(addHandler);
 			this.domainClass = domainClass;
-			this.filter = filter;
+			this.predicate = filter;
 			this.hasNullOption = hasNullOption;
 			if (!(filter instanceof RequiresContextBindable)) {
 				refreshOptions();
 			}
 		}
 
-		public CollectionFilter getFilter() {
-			return this.filter;
+		public Predicate getPredicate() {
+			return this.predicate;
 		}
 
 		public boolean isHasNullOption() {
@@ -609,17 +652,17 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			Collection<HasId> collection = TransformManager.get()
 					.getCollection(domainClass);
 			ArrayList options = new ArrayList();
-			if (filter == null) {
+			if (predicate == null) {
 				options.addAll(collection);
 			} else {
-				if (filter instanceof RequiresContextBindable) {
-					((RequiresContextBindable) filter).setBindable(
+				if (predicate instanceof RequiresContextBindable) {
+					((RequiresContextBindable) predicate).setBindable(
 							(SourcesPropertyChangeEvents) getModel());
 				}
 				Iterator itr = collection.iterator();
 				while (itr.hasNext()) {
 					Object obj = itr.next();
-					if (filter.allow(obj)) {
+					if (predicate.test(obj)) {
 						options.add(obj);
 					}
 				}
@@ -640,11 +683,6 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			setOptions(options);
 		}
 
-		public void setFilter(CollectionFilter filter) {
-			this.filter = filter;
-			refreshOptions();
-		}
-
 		public void setHasNullOption(boolean hasNullOption) {
 			this.hasNullOption = hasNullOption;
 			refreshOptions();
@@ -659,14 +697,14 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			ensureModelListener(true);
 		}
 
-		private SourcesPropertyChangeEvents listenedModel;
+		public void setPredicate(Predicate predicate) {
+			this.predicate = predicate;
+			refreshOptions();
+		}
 
-		private PropertyChangeListener refreshListener = new PropertyChangeListener() {
-			@Override
-			public void propertyChange(PropertyChangeEvent evt) {
-				refreshOptions();
-			}
-		};
+		public void setRefreshOnModelChange(boolean refreshOnModelChange) {
+			this.refreshOnModelChange = refreshOnModelChange;
+		}
 
 		private void ensureModelListener(boolean add) {
 			if (listenedModel != null) {
@@ -693,14 +731,11 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			super.onDetach();
 			ensureModelListener(false);
 		}
-
-		public void setRefreshOnModelChange(boolean refreshOnModelChange) {
-			this.refreshOnModelChange = refreshOnModelChange;
-		}
 	}
 
 	private class AddItemHandler extends InlineButtonHandler {
 		@Override
+		@AlcinaTransient
 		public String getDisplayName() {
 			return "+";
 		}
@@ -718,7 +753,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			String nameValue = null;
 			Callback<String> actionCallback = new Callback<String>() {
 				@Override
-				public void apply(String nameValue) {
+				public void accept(String nameValue) {
 					Object newItem = listAddItemHandler
 							.createNewItem(nameValue);
 					List optionsCopy = new ArrayList(getOptions());
@@ -729,7 +764,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 			};
 			Callback<OkCancelDialogBox> positioningCallback = new Callback<OkCancelDialogBox>() {
 				@Override
-				public void apply(OkCancelDialogBox box) {
+				public void accept(OkCancelDialogBox box) {
 					box.setPopupPosition(addButton.getAbsoluteLeft(),
 							addButton.getAbsoluteTop()
 									+ addButton.getOffsetHeight());
@@ -740,7 +775,7 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 				new Prompter("Message", namePrompt, defaultName, null,
 						positioningCallback, actionCallback);
 			} else {
-				actionCallback.apply(null);
+				actionCallback.accept(null);
 			}
 		}
 	}

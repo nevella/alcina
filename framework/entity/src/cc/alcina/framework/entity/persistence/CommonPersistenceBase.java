@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.entity.persistence;
 
-import java.beans.Introspector;
 import java.beans.PropertyDescriptor;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
@@ -22,16 +21,11 @@ import java.sql.Statement;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.function.Function;
 
 import javax.persistence.EntityManager;
 import javax.persistence.FlushModeType;
@@ -40,19 +34,15 @@ import javax.persistence.Query;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ClientLogRecordPersistent;
-import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
-import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
-import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -66,10 +56,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.search.SearchDefinition;
@@ -77,16 +65,12 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DurationCounter;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.Multiset;
+import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.persistence.UnwrapInfoItem.UnwrapInfoContainer;
-import cc.alcina.framework.entity.persistence.cache.DomainLinker;
+import cc.alcina.framework.entity.persistence.domain.DomainLinker;
 import cc.alcina.framework.entity.persistence.metric.InternalMetric;
-import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
-import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 import cc.alcina.framework.entity.persistence.transform.TransformCache;
 import cc.alcina.framework.entity.persistence.transform.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
@@ -101,14 +85,12 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
-import cc.alcina.framework.entity.transform.WrappedObjectProvider;
 import cc.alcina.framework.entity.util.MethodContext;
 
 /**
  *
  * @author Nick Reddel
  * 
- *         FIXME - mvcc.4 - de-generify; remove getitemby methods
  */
 @RegistryLocation(registryPoint = CommonPersistenceBase.class, implementationType = ImplementationType.INSTANCE)
 public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
@@ -129,9 +111,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		return PersistentImpl.getImplementationSimpleClassName(clazz);
 	}
 
-	Map<Long, EntityLocatorMap> locatorMaps = Collections
-			.synchronizedMap(new LinkedHashMap<>());
-
 	Logger logger = LoggerFactory.getLogger(CommonPersistenceBase.class);
 
 	public CommonPersistenceBase() {
@@ -141,26 +120,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	public CommonPersistenceBase(EntityManager em) {
 		this();
 		this.setEntityManager(em);
-	}
-
-	/**
-	 * An implementation can perform a (direct sql) accelerated delete - but you
-	 * may want to avoid this if the entities to delete require delete/cascade
-	 */
-	@Override
-	public void bulkDelete(Class clazz, Collection<Long> ids, boolean tryImpl) {
-		AppPersistenceBase.checkNotReadOnly();
-		if (!tryImpl || !Registry.impl(JPAImplementation.class)
-				.bulkDelete(getEntityManager(), clazz, ids)) {
-			List<Object> resultList = getEntityManager()
-					.createQuery(String.format("from %s where id in %s ",
-							clazz.getSimpleName(),
-							EntityPersistenceHelper.toInClause(ids)))
-					.getResultList();
-			for (Object object : resultList) {
-				getEntityManager().remove(object);
-			}
-		}
 	}
 
 	/**
@@ -206,9 +165,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			if (clazz.getAnnotation(javax.persistence.Entity.class) != null) {
 				storageClass = clazz;
 			}
-			if (WrapperPersistable.class.isAssignableFrom(clazz)) {
-				storageClass = getImplementation(WrappedObject.class);
-			}
 			if (storageClass != null) {
 				for (int i = 0; i < ids.size(); i += PRECACHE_RQ_SIZE) {
 					List<Long> idsSlice = ids.subList(i,
@@ -247,8 +203,13 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public <V> V callWithEntityManager(Function<EntityManager, V> call) {
-		return call.apply(getEntityManager());
+	public <V> V
+			callWithEntityManager(ThrowingFunction<EntityManager, V> call) {
+		try {
+			return call.apply(getEntityManager());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	@Override
@@ -262,25 +223,22 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public <T> T ensureObject(T t, String key, String value) throws Exception {
-		T newT = (T) getItemByKeyValue(t.getClass(), key, value, false);
-		if (newT != null) {
-			return newT;
+	public <T> T ensure(Class<T> clazz, String key, Object value) {
+		String eql = Ax.format("from %s where %s = ?1", clazz.getSimpleName(),
+				key);
+		Query q = getEntityManager().createQuery(eql).setParameter(1, value);
+		List list = q.getResultList();
+		if (list.isEmpty()) {
+			AppPersistenceBase.checkNotReadOnly();
+			T instance = Reflections.newInstance(clazz);
+			getEntityManager().persist(instance);
+			Reflections.propertyAccessor().setPropertyValue(instance, key,
+					value);
+			return instance;
+		} else {
+			Preconditions.checkState(list.size() == 1);
+			return (T) list.get(0);
 		}
-		AppPersistenceBase.checkNotReadOnly();
-		PropertyDescriptor descriptor = SEUtilities
-				.getPropertyDescriptorByName(t.getClass(), key);
-		descriptor.getWriteMethod().invoke(t, value);
-		return getEntityManager().merge(t);
-	}
-
-	@Override
-	public <T extends HasId> T ensurePersistent(T obj) {
-		if (!(obj instanceof MvccObject) && getEntityManager().contains(obj)) {
-			return obj;
-		}
-		return (T) getEntityManager()
-				.find(Mvcc.resolveEntityClass(obj.getClass()), obj.getId());
 	}
 
 	@Override
@@ -318,10 +276,14 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	public void expandExceptionInfo(DomainTransformLayerWrapper wrapper) {
 		ThreadlocalTransformManager tm = ThreadlocalTransformManager.cast();
 		tm.resetTltm(wrapper.locatorMap);
-		tm.setEntityManager(getEntityManager());
-		for (DomainTransformException ex : wrapper.response
-				.getTransformExceptions()) {
-			tryAddSourceObjectName(ex);
+		try {
+			tm.setEntityManager(getEntityManager());
+			for (DomainTransformException ex : wrapper.response
+					.getTransformExceptions()) {
+				tryAddSourceObjectName(ex);
+			}
+		} finally {
+			tm.setEntityManager(null);
 		}
 	}
 
@@ -329,14 +291,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	public <T> T findImplInstance(Class<? extends T> clazz, long id) {
 		Class<?> implClazz = getImplementation(clazz);
 		return (T) getEntityManager().find(implClazz, id);
-	}
-
-	@Override
-	public <A> Set<A> getAll(Class<A> clazz) {
-		Query query = getEntityManager()
-				.createQuery(String.format("from %s ", clazz.getSimpleName()));
-		List results = query.getResultList();
-		return new LinkedHashSet<A>(results);
 	}
 
 	public abstract EntityManager getEntityManager();
@@ -353,79 +307,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		Integer result = (Integer) getEntityManager().createQuery(eql)
 				.getSingleResult();
 		return result;
-	}
-
-	@Override
-	public <T> T getItemById(Class<T> clazz, Long id) {
-		return getItemById(clazz, id, false, false);
-	}
-
-	@Override
-	public <T> T getItemById(Class<T> clazz, Long id, boolean clean,
-			boolean unwrap) {
-		T t = getEntityManager().find(clazz, id);
-		if (t == null) {
-			return t;
-		}
-		if (clean) {
-			t = DomainLinker.linkToDomain(t);
-		}
-		if (unwrap) {
-			try {
-				PermissionsManager.get().pushCurrentUser();
-				unwrap((HasId) t);
-			} finally {
-				PermissionsManager.get().popUser();
-			}
-		}
-		return t;
-	}
-
-	@Override
-	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
-			boolean createIfNonexistent) {
-		return getItemByKeyValue(clazz, key, value, createIfNonexistent, null,
-				false);
-	}
-
-	@Override
-	public <T> T getItemByKeyValue(Class<T> clazz, String key, Object value,
-			boolean createIfNonexistent, Long ignoreId,
-			boolean caseInsensitive) {
-		boolean hadException = false;
-		try {
-			String eql = String.format(
-					value == null ? "from %s where %s is null"
-							: caseInsensitive ? "from %s where lower(%s) = ?1"
-									: "from %s where %s = ?1",
-					clazz.getSimpleName(), key);
-			if (ignoreId != null) {
-				eql += " AND id != " + ignoreId;
-			}
-			if (HasId.class.isAssignableFrom(clazz)) {
-				eql += " order by id asc";
-			}
-			Query q = getEntityManager().createQuery(eql);
-			if (value != null) {
-				q.setParameter(1,
-						caseInsensitive ? value.toString().toLowerCase()
-								: value);
-			}
-			List l = q.getResultList();
-			if (l.size() == 0 && createIfNonexistent) {
-				AppPersistenceBase.checkNotReadOnly();
-				T inst = clazz.newInstance();
-				getEntityManager().persist(inst);
-				PropertyDescriptor descriptor = SEUtilities
-						.getPropertyDescriptorByName(inst.getClass(), key);
-				descriptor.getWriteMethod().invoke(inst, value);
-				return inst;
-			}
-			return (T) ((l.size() == 0) ? null : l.get(0));
-		} catch (Exception e) {
-			hadException = true;
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	@Override
@@ -451,44 +332,27 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	@Override
 	public EntityLocatorMap getLocatorMap(Long clientInstanceId) {
 		// presumably null, but no harm in being light-on-the-ground
-		EntityManager cachedEntityManager = ThreadlocalTransformManager.get()
+		EntityManager entryEntityManager = ThreadlocalTransformManager.get()
 				.getEntityManager();
-		ThreadlocalTransformManager.get().setEntityManager(getEntityManager());
-		ThreadlocalTransformManager.get()
-				.setUserSessionEntityMap(new EntityLocatorMap());
-		ClientInstance clientInstanceImpl = PersistentImpl
-				.getNewImplementationInstance(ClientInstance.class);
-		clientInstanceImpl.setId(clientInstanceId);
-		// don't get the real client instance - don't want to attach
-		// live permissions objects
-		ThreadlocalTransformManager.get().setClientInstance(clientInstanceImpl);
-		EntityLocatorMap map = ThreadlocalTransformManager.get()
-				.reconstituteEntityMap();
-		ThreadlocalTransformManager.get().setEntityManager(cachedEntityManager);
+		EntityLocatorMap map;
+		try {
+			ThreadlocalTransformManager.get()
+					.setEntityManager(getEntityManager());
+			ThreadlocalTransformManager.get()
+					.setClientInstanceEntityMap(new EntityLocatorMap());
+			ClientInstance clientInstanceImpl = PersistentImpl
+					.getNewImplementationInstance(ClientInstance.class);
+			clientInstanceImpl.setId(clientInstanceId);
+			// don't get the real client instance - don't want to attach
+			// live permissions objects
+			ThreadlocalTransformManager.get()
+					.setClientInstance(clientInstanceImpl);
+			map = ThreadlocalTransformManager.get().reconstituteEntityMap();
+		} finally {
+			ThreadlocalTransformManager.get()
+					.setEntityManager(entryEntityManager);
+		}
 		return map;
-	}
-
-	@Override
-	public LongPair getMinMaxIdRange(Class clazz) {
-		Class implClass = getImplementation(clazz);
-		clazz = implClass == null ? clazz : implClass;
-		String eql = String.format("select min(id),max(id) from %s",
-				clazz.getSimpleName());
-		Object[] result = (Object[]) getEntityManager().createQuery(eql)
-				.getSingleResult();
-		return result[0] == null ? new LongPair()
-				: new LongPair((Long) result[0], (Long) result[1]);
-	}
-
-	@Override
-	public Date getMostRecentClientInstanceCreationDate(IUser o) {
-		Class<? extends ClientInstance> clientInstanceImpl = (Class<? extends ClientInstance>) getImplementation(
-				ClientInstance.class);
-		List<Date> resultList = getEntityManager().createQuery(String.format(
-				"select ci.helloDate from %s ci where ci.user.id = ?1 order by id desc",
-				clientInstanceImpl.getSimpleName())).setParameter(1, o.getId())
-				.setMaxResults(1).getResultList();
-		return CommonUtils.first(resultList);
 	}
 
 	@Override
@@ -537,21 +401,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 						"update publicationCounter set counter=?1  where id=?2")
 				.setParameter(1, ++counter).setParameter(2, id).executeUpdate();
 		return counter;
-	}
-
-	@Override
-	public <T extends WrapperPersistable> WrappedObject<T>
-			getObjectWrapperForUser(Class<T> c, long id) throws Exception {
-		return getObjectWrapperForUser(null, c, id);
-	}
-
-	public <T extends WrapperPersistable> WrappedObject<T>
-			getObjectWrapperForUser(HasId wrapperOwner, Class<T> c, long id)
-					throws Exception {
-		WrappedObject<T> wrapper = Registry.impl(WrappedObjectProvider.class)
-				.getObjectWrapperForUser(c, id, getEntityManager());
-		checkWrappedObjectAccess(wrapperOwner, wrapper, c);
-		return wrapper;
 	}
 
 	@Override
@@ -653,45 +502,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public Publication getPublication(long id) {
-		return CommonUtils
-				.first(getPublications(Collections.singletonList(id)));
-	}
-
-	@Override
-	public List<Publication> getPublications(Collection<Long> ids) {
-		String sql = Ax.format(
-				"select pub from %s pub where id in %s order by id",
-				getImplementationSimpleClassName(Publication.class),
-				EntityPersistenceHelper.toInClause(ids));
-		List<Publication> publications = getEntityManager().createQuery(sql)
-				.getResultList();
-		unwrap(publications);
-		return DomainLinker.linkToDomain(publications);
-	}
-
-	@Override
-	public <T extends WrapperPersistable> T getWrappedObjectForUser(
-			Class<? extends T> c, long id) throws Exception {
-		T wofu = (T) Registry.impl(WrappedObjectProvider.class)
-				.getWrappedObjectForUser(c, id, getEntityManager());
-		return (T) wofu;
-	}
-
-	@Override
-	public List<ActionLogItem> listLogItemsForClass(String className,
-			int count) {
-		List list = getEntityManager()
-				.createQuery("from "
-						+ getImplementationSimpleClassName(ActionLogItem.class)
-						+ " a where a.actionClassName=?1 order"
-						+ " by a.actionDate DESC")
-				.setParameter(1, className).setMaxResults(count)
-				.getResultList();
-		return DomainLinker.linkToDomain(list);
-	}
-
-	@Override
 	public List<Long> listRecentClientInstanceIds(String iidKey) {
 		Class<? extends ClientInstance> clientInstanceImpl = (Class<? extends ClientInstance>) getImplementation(
 				ClientInstance.class);
@@ -711,46 +521,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	public long log(String message, String componentKey, String data) {
 		// not required...useful but
 		return 0;
-	}
-
-	@Override
-	// FIXME - mvcc.4 - persist with transforms
-	public void logActionItem(ActionLogItem actionItem) {
-		AppPersistenceBase.checkNotReadOnly();
-		getEntityManager().merge(actionItem);
-	}
-
-	@Override
-	// FIXME - mvcc.4 - persist with transforms
-	public long merge(HasId hi) {
-		AppPersistenceBase.checkNotReadOnly();
-		if (hi instanceof Publication) {
-			((Publication) hi).setUser(
-					getEntityManager().find(getImplementation(IUser.class),
-							((Publication) hi).getUser().getId()));
-		}
-		persistWrappables(hi);
-		HasId merge = getEntityManager().merge(hi);
-		return merge.getId();
-	}
-
-	@Override
-	// FIXME - mvcc.4 - persist with transforms
-	public IUser mergeUser(IUser user) {
-		AppPersistenceBase.checkNotReadOnly();
-		IUser merge = getEntityManager().merge(user);
-		getEntityManager().flush();
-		return merge;
-	}
-
-	@Override
-	public <WP extends WrapperPersistable> Long persist(WP gwpo)
-			throws Exception {
-		AppPersistenceBase.checkNotReadOnly();
-		WrappedObject<WP> wrapper = (WrappedObject<WP>) getObjectWrapperForUser(
-				gwpo.getClass(), gwpo.getId());
-		wrapper.setObject(gwpo);
-		return wrapper.getId();
 	}
 
 	@Override
@@ -795,78 +565,27 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	public UnwrapInfoContainer prepareUnwrap(Class<? extends HasId> clazz,
-			Long id) {
-		HasId wrapper = getItemById(clazz, id);
-		if (wrapper == null) {
-			return null;
-		}
-		UnwrapInfoContainer result = new UnwrapInfoContainer();
-		result.setHasId(wrapper);
-		try {
-			PropertyDescriptor[] pds = Introspector
-					.getBeanInfo(wrapper.getClass()).getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getReadMethod() != null) {
-					Wrapper info = pd.getReadMethod()
-							.getAnnotation(Wrapper.class);
-					if (info != null) {
-						PropertyDescriptor idpd = SEUtilities
-								.getPropertyDescriptorByName(wrapper.getClass(),
-										info.idPropertyName());
-						Long wrapperId = (Long) idpd.getReadMethod().invoke(
-								wrapper, CommonUtils.EMPTY_OBJECT_ARRAY);
-						if (wrapperId != null) {
-							Class<? extends WrapperPersistable> pType = (Class<? extends WrapperPersistable>) pd
-									.getPropertyType();
-							if (info.defaultImplementationType() != Void.class) {
-								pType = info.defaultImplementationType();
-							}
-							WrappedObject wrappedObject = (WrappedObject) getObjectWrapperForUser(
-									wrapper, pType, wrapperId);
-							result.getItems().add(new UnwrapInfoItem(
-									pd.getName(), wrappedObject));
-						}
-					}
-				}
-			}
-			return DomainLinker.linkToDomain(result);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	@Override
 	public EntityLocatorMap reconstituteEntityMap(long clientInstanceId) {
-		ThreadlocalTransformManager tm = new ThreadlocalTransformManager();
-		tm.resetTltm(new EntityLocatorMap());
-		tm.setEntityManager(getEntityManager());
-		ClientInstance clientInstance = PersistentImpl
-				.getNewImplementationInstance(ClientInstance.class);
-		clientInstance.setId(clientInstanceId);
-		// don't use the real client instance, requires
-		// permissionsmanager>>liveobjects
-		tm.setClientInstance(clientInstance);
-		EntityLocatorMap result = tm.reconstituteEntityMap();
-		tm.resetTltm(null);
-		return result;
-	}
-
-	@Override
-	public void remove(Object o) {
-		AppPersistenceBase.checkNotReadOnly();
-		if (o instanceof Entity) {
-			Entity entity = (Entity) getEntityManager().find(o.getClass(),
-					((Entity) o).getId());
-			getEntityManager().remove(entity);
-		} else {
-			throw new RuntimeException(
-					"Cannot remove detached non-entity " + o);
+		ThreadlocalTransformManager tltm = new ThreadlocalTransformManager();
+		tltm.resetTltm(new EntityLocatorMap());
+		EntityLocatorMap result;
+		try {
+			tltm.setEntityManager(getEntityManager());
+			ClientInstance clientInstance = PersistentImpl
+					.getNewImplementationInstance(ClientInstance.class);
+			clientInstance.setId(clientInstanceId);
+			// don't use the real client instance, requires
+			// permissionsmanager>>liveobjects
+			tltm.setClientInstance(clientInstance);
+			result = tltm.reconstituteEntityMap();
+			return result;
+		} finally {
+			tltm.resetTltm(null);
 		}
 	}
 
 	@Override
-	public SearchResultsBase search(SearchDefinition def, int pageNumber) {
+	public SearchResultsBase search(SearchDefinition def) {
 		String message = def.validatePermissions();
 		if (message != null) {
 			throw new WrappedRuntimeException(
@@ -874,8 +593,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		}
 		Searcher searcher = (Searcher) Registry.get()
 				.instantiateSingle(Searcher.class, def.getClass());
-		SearchResultsBase result = searcher.search(def, pageNumber,
-				getEntityManager());
+		SearchResultsBase result = searcher.search(def, getEntityManager());
 		return projectSearchResults(result);
 	}
 
@@ -905,36 +623,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	}
 
 	@Override
-	// permissions...? (well, it's going away with FIXME - mvcc.wrapped)
-	public <T extends HasId> Collection<T> unwrap(Collection<T> wrappers) {
-		preloadWrappedObjects(wrappers);
-		RuntimeException lastException = null;
-		for (HasId wrapper : wrappers) {
-			try {
-				unwrap(wrapper);
-			} catch (RuntimeException e) {
-				System.out.println(e.getMessage());
-				lastException = e;
-			}
-		}
-		if (lastException != null) {
-			throw lastException;
-		}
-		return wrappers;
-	}
-
-	@Override
-	public HasId unwrap(HasId wrapper) {
-		try {
-			new WrappedObjectPersistence().unwrap(wrapper, getEntityManager(),
-					Registry.impl(WrappedObjectProvider.class));
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		return wrapper;
-	}
-
-	@Override
 	public void updatePublicationMimeMessageId(Long publicationId,
 			String mimeMessageId) {
 		getEntityManager()
@@ -944,53 +632,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 										Publication.class)))
 				.setParameter(1, mimeMessageId).setParameter(2, publicationId)
 				.executeUpdate();
-	}
-
-	@Override
-	public <T extends ServerValidator> List<T> validate(List<T> validators) {
-		ArrayList<T> result = new ArrayList<T>();
-		for (T serverValidator : validators) {
-			if (serverValidator instanceof ServerUniquenessValidator) {
-				ServerUniquenessValidator suv = (ServerUniquenessValidator) serverValidator;
-				int ctr = 0;
-				String value = suv.getValue();
-				suv.setSuggestedValue(value);
-				while (true) {
-					Object item = getItemByKeyValue(suv.getObjectClass(),
-							suv.getPropertyName(), value, false, suv.getOkId(),
-							suv.isCaseInsensitive());
-					if (item == null) {
-						if (ctr != 0) {
-							suv.setSuggestedValue(value);
-							suv.setMessage(
-									"Item exists. Suggested value: " + value);
-						}
-						break;
-					}
-					// no suggestions, just error
-					if (suv.getValueTemplate() == null) {
-						suv.setMessage("Item exists");
-						break;
-					}
-					ctr++;
-					value = String.format(suv.getValueTemplate(),
-							suv.getValue() == null ? "" : suv.getValue(), ctr);
-				}
-			} else {
-				Class c = EntityLayerObjects.get().getServletLayerRegistry()
-						.lookupSingle(ServerValidator.class,
-								serverValidator.getClass());
-				if (c != null) {
-					ServerValidatorHandler handler = (ServerValidatorHandler) EntityLayerObjects
-							.get().getServletLayerRegistry()
-							.instantiateSingle(ServerValidator.class,
-									serverValidator.getClass());
-					handler.handle(serverValidator, getEntityManager());
-				}
-			}
-			result.add(serverValidator);
-		}
-		return result;
 	}
 
 	/**
@@ -1017,68 +658,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		return result;
 	}
 
-	private void persistWrappables(HasId hi) {
-		AppPersistenceBase.checkNotReadOnly();
-		try {
-			PropertyDescriptor[] pds = Introspector.getBeanInfo(hi.getClass())
-					.getPropertyDescriptors();
-			for (PropertyDescriptor pd : pds) {
-				if (pd.getReadMethod() != null) {
-					Wrapper info = pd.getReadMethod()
-							.getAnnotation(Wrapper.class);
-					if (info != null) {
-						Object obj = pd.getReadMethod().invoke(hi,
-								CommonUtils.EMPTY_OBJECT_ARRAY);
-						if (obj instanceof WrapperPersistable) {
-							if (!(GwtMultiplePersistable.class
-									.isAssignableFrom(obj.getClass()))) {
-								throw new Exception(
-										"Trying to persist a per-user object via wrapping");
-							}
-							WrapperPersistable gwpo = (WrapperPersistable) obj;
-							if (info.toStringPropertyName().length() != 0) {
-								PropertyDescriptor tspd = SEUtilities
-										.getPropertyDescriptorByName(
-												hi.getClass(),
-												info.toStringPropertyName());
-								tspd.getWriteMethod().invoke(hi,
-										gwpo.toString());
-							}
-							Long persistId = persist(gwpo);
-							PropertyDescriptor idpd = SEUtilities
-									.getPropertyDescriptorByName(hi.getClass(),
-											info.idPropertyName());
-							idpd.getWriteMethod().invoke(hi, persistId);
-						}
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	private <T extends HasId> void
-			preloadWrappedObjects(Collection<T> wrappers) {
-		try {
-			List<Long> wrapperIds = new WrappedObjectPersistence()
-					.getWrapperIds(wrappers);
-			for (int i = 0; i < wrapperIds.size(); i += PRECACHE_RQ_SIZE) {
-				List<Long> subList = wrapperIds.subList(i,
-						Math.min(wrapperIds.size(), i + PRECACHE_RQ_SIZE));
-				Query query = getEntityManager()
-						.createQuery("from "
-								+ getImplementation(WrappedObject.class)
-										.getSimpleName()
-								+ " where id in "
-								+ EntityPersistenceHelper.toInClause(subList));
-				query.getResultList();
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	private void tryAddSourceObjectName(
 			DomainTransformException transformException) {
 		if (transformException.getEvent() == null) {
@@ -1097,12 +676,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			// we tried
 			// e.printStackTrace();
 		}
-	}
-
-	protected void checkWrappedObjectAccess(HasId wrapper,
-			WrappedObject wrapped, Class clazz) throws PermissionsException {
-		new WrappedObjectPersistence().checkWrappedObjectAccess(wrapper,
-				wrapped, clazz);
 	}
 
 	protected abstract InstantiateImplCallback createUserAndGroupInstantiator();
@@ -1151,30 +724,9 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		return 100;
 	}
 
-	protected String getUserNamePropertyName() {
-		return "userName";
-	}
-
 	protected SearchResultsBase
 			projectSearchResults(SearchResultsBase results) {
 		return DomainLinker.linkToDomain(results);
-	}
-
-	/**
-	 * Note that this is only for in-tx work - normally use the DomainStore
-	 * access
-	 */
-	IUser getUserByName(String userName) {
-		List<IUser> list = getEntityManager()
-				.createQuery(
-						String.format(
-								"select distinct u from "
-										+ getImplementationSimpleClassName(
-												IUser.class)
-										+ " u " + "where u.%s = ?1",
-								getUserNamePropertyName()))
-				.setParameter(1, userName).getResultList();
-		return Ax.first(list);
 	}
 
 	@RegistryLocation(registryPoint = CommonPersistenceConnectionProvider.class)

@@ -29,8 +29,7 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
  *
  * @param <T>
  */
-public abstract class BaseProjection<T extends Entity>
-		implements DomainProjection<T> {
+public abstract class BaseProjection<T> implements DomainProjection<T> {
 	protected MultikeyMap<T> lookup;
 
 	protected final List<Class> types;
@@ -62,6 +61,23 @@ public abstract class BaseProjection<T extends Entity>
 		return (MultikeyMap<T>) lookup.asMap(objects);
 	}
 
+	public List<Object[]> deltaReturnChanges(T t, boolean insert) {
+		if (insert) {
+			return insertReturnChanges(t);
+		} else {
+			return removeReturnChanges(t);
+		}
+	}
+
+	public Object[] deltaReturnProjected(T t, boolean insert) {
+		if (insert) {
+			insert(t);
+		} else {
+			remove(t);
+		}
+		return project(t);
+	}
+
 	public <V> V first(Object... objects) {
 		return (V) CommonUtils.first(items(objects));
 	}
@@ -88,6 +104,7 @@ public abstract class BaseProjection<T extends Entity>
 					for (Object tuple : values) {
 						lookup.put((Object[]) tuple);
 					}
+					return;
 				} else {
 					if (isUnique()) {
 						Object[] keys = Arrays.copyOf(values,
@@ -117,6 +134,19 @@ public abstract class BaseProjection<T extends Entity>
 				}
 			}
 		}
+	}
+
+	public List<Object[]> insertReturnChanges(T t) {
+		Object[] values = project(t);
+		List<Object[]> result = new ArrayList<>();
+		for (int idx = 0; idx < values.length - 1; idx++) {
+			Object[] keys = Arrays.copyOf(values, idx + 1);
+			if (!lookup.containsKey(keys)) {
+				result.add(Arrays.copyOf(values, idx + 1));
+			}
+		}
+		insert(t);
+		return result;
 	}
 
 	@Override
@@ -170,11 +200,25 @@ public abstract class BaseProjection<T extends Entity>
 						}
 					}
 					lookup.remove(values);
+					return;
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
 		}
+	}
+
+	public List<Object[]> removeReturnChanges(T t) {
+		Object[] values = project(t);
+		remove(t);
+		List<Object[]> result = new ArrayList<>();
+		for (int idx = 0; idx < values.length - 1; idx++) {
+			Object[] keys = Arrays.copyOf(values, idx + 1);
+			if (!lookup.containsKey(keys)) {
+				result.add(Arrays.copyOf(values, idx + 1));
+			}
+		}
+		return result;
 	}
 
 	public void setDerived(boolean derived) {

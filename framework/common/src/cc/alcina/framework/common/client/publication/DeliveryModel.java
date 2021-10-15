@@ -16,7 +16,8 @@ package cc.alcina.framework.common.client.publication;
 import java.util.List;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.publication.Publication.Definition;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
 /**
  *
@@ -66,6 +67,8 @@ public interface DeliveryModel extends TreeSerializable {
 	public List<MailAttachment> provideAttachments();
 
 	public ContentDeliveryType provideContentDeliveryType();
+
+	public Definition provideDefinition();
 
 	public List<MailInlineImage> provideImages();
 

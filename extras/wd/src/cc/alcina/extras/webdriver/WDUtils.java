@@ -98,7 +98,7 @@ public class WDUtils {
 			} catch (RuntimeException e) {
 				if (exceptionCallback != null) {
 					try {
-						exceptionCallback.apply(null);
+						exceptionCallback.accept(null);
 					} catch (Exception e1) {
 						e1.printStackTrace();
 					}

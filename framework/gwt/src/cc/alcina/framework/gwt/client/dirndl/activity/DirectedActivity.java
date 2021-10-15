@@ -33,6 +33,9 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	private static Topic<DirectedActivity> topicActivityStarted = Topic.local();
 
 	public static Activity forPlace(Place place) {
+		if(!(place instanceof BasePlace)){
+			return null;
+		}
 		DirectedActivity directedActivity = null;
 		Optional<Provider> provider = Registry
 				.optional(DirectedActivity.Provider.class, place.getClass());
@@ -86,8 +89,14 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	public DirectedActivity() {
 	}
 
+	
 	public P getPlace() {
 		return this.place;
+	}
+	
+	public <DA extends DirectedActivity> DA withPlace(P place) {
+		setPlace(place);
+		return (DA) this;
 	}
 
 	@Override

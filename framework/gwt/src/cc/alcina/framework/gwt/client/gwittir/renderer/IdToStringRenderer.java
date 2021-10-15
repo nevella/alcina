@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
@@ -37,14 +38,21 @@ public class IdToStringRenderer extends FlexibleToStringRenderer<HasId> {
 		this.nullsAsBlanks = nullsAsBlanks;
 	}
 
+	@Override
 	public String render(HasId hasId) {
 		if (hasId == null) {
 			return nullsAsBlanks ? "" : "(Undefined)";
 		}
 		String dn = ClientReflector.get().displayNameForObject(hasId);
-		if (hasId.toString().equals(String.valueOf(hasId.getId()))) {
-			return hasId.toString();
+		String strId = String.valueOf(hasId.getId());
+		String toString = hasId.toString();
+		if (toString.equals(strId)) {
+			return strId;
 		}
-		return hasId.getId() + " : " + hasId.toString();
+		if (hasId instanceof Entity
+				&& ((Entity) hasId).toLocator().toString().equals(toString)) {
+			return strId;
+		}
+		return hasId.getId() + " : " + toString;
 	}
 }

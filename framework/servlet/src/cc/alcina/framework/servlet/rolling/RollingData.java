@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.persistence.RollingDataItem;
-import cc.alcina.framework.entity.persistence.cache.LazyPropertyLoadTask;
+import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 //REVIEW - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date

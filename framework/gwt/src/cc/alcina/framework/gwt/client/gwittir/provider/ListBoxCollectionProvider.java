@@ -14,11 +14,11 @@
 package cc.alcina.framework.gwt.client.gwittir.provider;
 
 import java.util.Comparator;
+import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.gwt.client.gwittir.Comparators;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ListAddItemHandler;
 import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
@@ -31,7 +31,7 @@ public class ListBoxCollectionProvider implements BoundWidgetProvider {
 
 	private final boolean noNullOption;
 
-	private CollectionFilter filter;
+	private Predicate filter;
 
 	private Renderer renderer;
 
@@ -82,7 +82,7 @@ public class ListBoxCollectionProvider implements BoundWidgetProvider {
 		return listBox;
 	}
 
-	public CollectionFilter getFilter() {
+	public Predicate getFilter() {
 		return filter;
 	}
 
@@ -90,7 +90,7 @@ public class ListBoxCollectionProvider implements BoundWidgetProvider {
 		return this.refreshOnModelChange;
 	}
 
-	public void setFilter(CollectionFilter filter) {
+	public void setFilter(Predicate filter) {
 		this.filter = filter;
 	}
 

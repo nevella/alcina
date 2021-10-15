@@ -11,6 +11,8 @@ import java.lang.annotation.Target;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+
 @Documented
 @Retention(RUNTIME)
 @Target(FIELD)
@@ -23,8 +25,20 @@ public @interface KnownStatusRule {
 
 	public double warnValue() default 0;
 
+	@Bean
 	public static class KnownStatusRuleImpl
 			implements KnownStatusRule, Serializable {
+		@GwtTransient
+		private Class<? extends Annotation> annotationType = KnownStatusRule.class;
+
+		private KnownTagAlcina area;
+
+		private double errorValue;
+
+		private KnownStatusRuleName name;
+
+		private double warnValue;
+
 		public KnownStatusRuleImpl() {
 		}
 
@@ -35,20 +49,9 @@ public @interface KnownStatusRule {
 			warnValue = ann.warnValue();
 		}
 
-		@GwtTransient
-		public Class<? extends Annotation> annotationType = KnownStatusRule.class;
-
-		public KnownTagAlcina area;
-
-		public double errorValue;
-
-		public KnownStatusRuleName name;
-
-		public double warnValue;
-
 		@Override
 		public Class<? extends Annotation> annotationType() {
-			return annotationType;
+			return getAnnotationType();
 		}
 
 		@Override
@@ -69,6 +72,46 @@ public @interface KnownStatusRule {
 		@Override
 		public double warnValue() {
 			return warnValue;
+		}
+
+		public Class<? extends Annotation> getAnnotationType() {
+			return annotationType;
+		}
+
+		public void setAnnotationType(Class<? extends Annotation> annotationType) {
+			this.annotationType = annotationType;
+		}
+
+		public KnownTagAlcina getArea() {
+			return area;
+		}
+
+		public void setArea(KnownTagAlcina area) {
+			this.area = area;
+		}
+
+		public double getErrorValue() {
+			return errorValue;
+		}
+
+		public void setErrorValue(double errorValue) {
+			this.errorValue = errorValue;
+		}
+
+		public KnownStatusRuleName getName() {
+			return name;
+		}
+
+		public void setName(KnownStatusRuleName name) {
+			this.name = name;
+		}
+
+		public double getWarnValue() {
+			return warnValue;
+		}
+
+		public void setWarnValue(double warnValue) {
+			this.warnValue = warnValue;
 		}
 	}
 }

@@ -26,7 +26,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
-import cc.alcina.framework.common.client.serializer.flat.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
@@ -42,7 +42,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  */
 public abstract class EnumMultipleCriterion<E extends Enum>
 		extends SearchCriterion implements HasValue<Set<E>> {
-	static final transient long serialVersionUID = -1L;
+	
 
 	private Set<E> value = new LinkedHashSet<>();
 

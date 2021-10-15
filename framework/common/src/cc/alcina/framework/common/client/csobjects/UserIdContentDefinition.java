@@ -17,23 +17,23 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import cc.alcina.framework.common.client.entity.GwtMultiplePersistable;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 
 /**
  *
  * @author Nick Reddel
  */
-public abstract class UserIdContentDefinition extends WrapperPersistable
-		implements ContentDefinition, GwtMultiplePersistable {
+public abstract class UserIdContentDefinition extends Bindable
+		implements ContentDefinition {
 	private long userId;
 
 	private transient IUser user;
 
 	@XmlTransient
 	@JsonIgnore
+	@AlcinaTransient
 	public IUser getUser() {
 		return this.user;
 	}

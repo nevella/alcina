@@ -35,11 +35,11 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 public class UnsubscribeServlet extends AlcinaServlet {
 	private static final String DEFAULT_SERVLET_PATH = "unsubscribe.do";
 
-	public static String defaultHref(PublicationResult publicationResult) {
+	public static String defaultHref(PublicationResult publicationResult, String action) {
 		UnsubscribeRequest request = new UnsubscribeRequest();
-		request.publicationId = publicationResult.publicationId;
-		request.publicationUid = publicationResult.publicationUid;
-		request.resubscribe = false;
+		request.publicationId = publicationResult.getPublicationId();
+		request.publicationUid = publicationResult.getPublicationUid();
+		request.action = action;
 		return Ax.format("%s?%s", DEFAULT_SERVLET_PATH, request.serialize());
 	}
 
@@ -55,7 +55,7 @@ public class UnsubscribeServlet extends AlcinaServlet {
 			UnsubscribeRequest unsubscribe = new UnsubscribeRequest();
 			unsubscribe.publicationId = Long.parseLong(parts[0]);
 			unsubscribe.publicationUid = parts[1];
-			unsubscribe.resubscribe = parts[2].equals("r");
+			unsubscribe.action = parts[2];
 			logger.info(GraphProjection.fieldwiseToString(unsubscribe));
 			String message = Registry.impl(UnsubscribeHandler.class)
 					.handle(unsubscribe);
@@ -84,11 +84,11 @@ public class UnsubscribeServlet extends AlcinaServlet {
 
 		public String publicationUid;
 
-		public boolean resubscribe;
+		public String action;
 
 		public String serialize() {
 			return new FormatBuilder().separator("/").append(publicationId)
-					.append(publicationUid).append(resubscribe ? "r" : "u")
+					.append(publicationUid).append(action)
 					.toString();
 		}
 	}

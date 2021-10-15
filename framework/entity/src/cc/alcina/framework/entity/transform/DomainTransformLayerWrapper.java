@@ -41,7 +41,7 @@ public class DomainTransformLayerWrapper implements Serializable {
 
 	public DomainTransformResponse response;
 
-	public transient EntityLocatorMap locatorMap;
+	public EntityLocatorMap locatorMap;
 
 	public int ignored;
 
@@ -140,5 +140,9 @@ public class DomainTransformLayerWrapper implements Serializable {
 		return response.getResult() == DomainTransformResponseResult.OK
 				? DomainTransformPersistenceEventType.COMMIT_OK
 				: DomainTransformPersistenceEventType.COMMIT_ERROR;
+	}
+
+	public void snapshotEntityLocatorMap() {
+		locatorMap = locatorMap.copy();
 	}
 }

@@ -22,39 +22,41 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
 import cc.alcina.framework.common.client.collections.IsClassFilter;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
-import cc.alcina.framework.common.client.serializer.flat.TreeSerializable;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 //FIXME - mvcc.4 - this shouldn't extend entity
 @RegistryLocations({
 		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
 		@RegistryLocation(registryPoint = TreeSerializable.class) })
-public abstract class SearchDefinition extends WrapperPersistable
+@Bean
+public abstract class SearchDefinition extends Bindable
 		implements TreeSerializable, TreeRenderable, ContentDefinition,
 		HasPermissionsValidation, HasReflectiveEquivalence<SearchDefinition>,
 		ReflectCloneable<SearchDefinition> {
-	static final transient long serialVersionUID = -1L;
-
 	public static final transient int LARGE_SEARCH = 0xFF0000;
 
 	public static final transient String CONTEXT_CURRENT_SEARCH_DEFINITION = SearchDefinition.class
@@ -72,8 +74,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	private int charWidth;
 
-	private int clientSearchIndex;
-
 	private Set<CriteriaGroup> criteriaGroups = new LightSet<CriteriaGroup>();
 
 	private Set<OrderGroup> orderGroups = new LightSet<OrderGroup>();
@@ -83,6 +83,9 @@ public abstract class SearchDefinition extends WrapperPersistable
 	protected transient Map<String, String> propertyColumnAliases;
 
 	private transient List<PropertyChangeListener> globalListeners = new ArrayList<>();
+
+	// default 0 (rendered as 1 if non-empty results)
+	private int pageNumber;
 
 	public void addCriterionToSoleCriteriaGroup(SearchCriterion sc) {
 		addCriterionToSoleCriteriaGroup(sc, false);
@@ -117,8 +120,8 @@ public abstract class SearchDefinition extends WrapperPersistable
 	}
 
 	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
-		return (List<SC>) CollectionFilters.filter(allCriteria(),
-				new IsClassFilter(clazz));
+		return (List<SC>) allCriteria().stream()
+				.filter(new IsClassFilter(clazz)).collect(Collectors.toList());
 	}
 
 	public Set<OrderCriterion> allOrderCriteria() {
@@ -259,16 +262,12 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return this.charWidth;
 	}
 
-	@AlcinaTransient
-	public int getClientSearchIndex() {
-		return this.clientSearchIndex;
-	}
-
 	public Set<CriteriaGroup> getCriteriaGroups() {
 		return this.criteriaGroups;
 	}
 
 	@Override
+	@AlcinaTransient
 	public String getDisplayName() {
 		return "";
 	}
@@ -291,11 +290,17 @@ public abstract class SearchDefinition extends WrapperPersistable
 		return this.orderName;
 	}
 
+	@PropertySerialization(path = "page")
+	public int getPageNumber() {
+		return this.pageNumber;
+	}
+
 	@Override
 	public String getPublicationType() {
 		return publicationType;
 	}
 
+	@PropertySerialization(path = "pageSize")
 	public int getResultsPerPage() {
 		return this.resultsPerPage;
 	}
@@ -425,10 +430,6 @@ public abstract class SearchDefinition extends WrapperPersistable
 		this.charWidth = charWidth;
 	}
 
-	public void setClientSearchIndex(int clientSearchIndex) {
-		this.clientSearchIndex = clientSearchIndex;
-	}
-
 	public void setCriteriaGroups(Set<CriteriaGroup> criteriaGroups) {
 		this.criteriaGroups = criteriaGroups;
 	}
@@ -443,6 +444,13 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	public void setOrderName(String orderName) {
 		this.orderName = orderName;
+	}
+
+	public void setPageNumber(int pageNumber) {
+		int old_pageNumber = this.pageNumber;
+		this.pageNumber = pageNumber;
+		propertyChangeSupport().firePropertyChange("pageNumber", old_pageNumber,
+				pageNumber);
 	}
 
 	public void setPublicationType(String publicationType) {
@@ -466,6 +474,11 @@ public abstract class SearchDefinition extends WrapperPersistable
 		fb.separator(" - ");
 		fb.appendIfNotBlank(filterDescription(false), orderDescription(false));
 		return fb.toString();
+	}
+
+	@Override
+	public TreeSerializable.Customiser treeSerializationCustomiser() {
+		return new Customiser(this);
 	}
 
 	@Override
@@ -501,5 +514,52 @@ public abstract class SearchDefinition extends WrapperPersistable
 
 	protected void putOrderGroup(OrderGroup og) {
 		orderGroups.add(og);
+	}
+
+	protected static class Customiser<S extends SearchDefinition>
+			extends TreeSerializable.Customiser<S> {
+		public Customiser(S serializable) {
+			super(serializable);
+		}
+
+		@Override
+		public String filterTestSerialized(String serialized) {
+			if (serialized.contains(".displayText=")) {
+				StringMap map = StringMap.fromPropertyString(serialized);
+				map.keySet().removeIf(k -> k.endsWith(".displayText"));
+				return map.toPropertyString();
+			} else {
+				return serialized;
+			}
+		}
+
+		@Override
+		public void onAfterTreeDeserialize() {
+			super.onAfterTreeDeserialize();
+			serializable.getCriteriaGroups()
+					.forEach(CriteriaGroup::ensureDefaultCriteria);
+		}
+
+		@Override
+		public void onAfterTreeSerialize() {
+			super.onAfterTreeSerialize();
+			serializable.getCriteriaGroups()
+					.forEach(CriteriaGroup::ensureDefaultCriteria);
+		}
+
+		@Override
+		public void onBeforeTreeDeserialize() {
+			super.onBeforeTreeDeserialize();
+			serializable.getCriteriaGroups()
+					.forEach(CriteriaGroup::clearCriteria);
+		}
+
+		@Override
+		public void onBeforeTreeSerialize() {
+			serializable.getCriteriaGroups().forEach(cg -> cg.getCriteria()
+					.removeIf(sc -> ((SearchCriterion) sc).emptyCriterion()));
+			serializable.getOrderGroups().forEach(og -> og
+					.treeSerializationCustomiser().onBeforeTreeSerialize());
+		}
 	}
 }

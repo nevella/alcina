@@ -51,11 +51,11 @@ public class ActivityManager
 	 */
 	private final ResettableEventBus stopperedEventBus;
 
-	private Activity currentActivity = NULL_ACTIVITY;
+	protected Activity currentActivity = NULL_ACTIVITY;
 
 	private AcceptsOneWidget display;
 
-	private boolean startingNext = false;
+	protected boolean startingNext = false;
 
 	private HandlerRegistration handlerRegistration;
 
@@ -85,6 +85,10 @@ public class ActivityManager
 	 */
 	public EventBus getActiveEventBus() {
 		return stopperedEventBus;
+	}
+
+	public Activity getCurrentActivity() {
+		return this.currentActivity;
 	}
 
 	/**
@@ -218,6 +222,7 @@ public class ActivityManager
 			 */
 			currentActivity.start(new ProtectedDisplay(currentActivity),
 					stopperedEventBus);
+			onStart();
 		} catch (Throwable t) {
 			caughtOnStart = t;
 		}
@@ -263,6 +268,9 @@ public class ActivityManager
 				handlerRegistration = null;
 			}
 		}
+	}
+
+	protected void onStart() {
 	}
 
 	/**

@@ -10,7 +10,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @ClientInstantiable
 public enum StandardSearchOperator implements SearchOperator {
 	CONTAINS, DOES_NOT_CONTAIN, EQUALS, LESS_THAN, GREATER_THAN, ALL_OF,
-	AT_LEAST_ONE_OF, DOES_NOT_EQUAL, STARTS_WITH;
+	AT_LEAST_ONE_OF, DOES_NOT_EQUAL, STARTS_WITH, LESS_THAN_OR_EQUAL_TO,
+	GREATER_THAN_OR_EQUAL_TO;
+
 	public static transient List LINEAR = Arrays.asList(EQUALS, LESS_THAN,
 			GREATER_THAN);
 

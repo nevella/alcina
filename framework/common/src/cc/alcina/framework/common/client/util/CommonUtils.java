@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -41,7 +42,6 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -54,6 +54,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class CommonUtils {
+	private static final Predicate<?> PREDICATE_FALSE = o -> false;
+
+	private static final Predicate<?> PREDICATE_TRUE = o -> true;
+
 	public static final String XML_PI = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
 
 	// for GWT reflection gets, this gets used...a lot
@@ -70,7 +74,7 @@ public class CommonUtils {
 	static {
 		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
 				Byte.class, Integer.class, Boolean.class, Character.class,
-				Date.class, String.class };
+				Date.class, String.class, Timestamp.class };
 		for (Class std : stds) {
 			stdClassMap.put(std.getName(), std);
 		}
@@ -102,8 +106,11 @@ public class CommonUtils {
 	 */
 	public static final int SAFE_VARCHAR_MAX_CHARS = 230;
 
+	/*
+	 * name,friendly,string
+	 */
 	private static UnsortedMultikeyMap<Enum> enumValueLookup = new UnsortedMultikeyMap<Enum>(
-			2);
+			3);
 
 	private static Set<String> done = new LinkedHashSet<>();
 
@@ -268,6 +275,13 @@ public class CommonUtils {
 		return false;
 	}
 
+	public static boolean containsIgnoreCase(String string, String contains) {
+		if (string == null || contains == null) {
+			return false;
+		}
+		return string.toLowerCase().contains(contains.toLowerCase());
+	}
+
 	public static boolean containsWithNull(Object obj, String lcText) {
 		if (obj == null || lcText == null) {
 			return false;
@@ -324,6 +338,20 @@ public class CommonUtils {
 			buf.append(i == 0 ? c.toUpperCase() : c.toLowerCase());
 		}
 		return buf.toString();
+	}
+
+	public static String deInfixCss(String s) {
+		if (isNullOrEmpty(s)) {
+			return s;
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append(s.substring(0, 1).toLowerCase());
+		for (int i = 1; i < s.length(); i++) {
+			String c = s.substring(i, i + 1);
+			builder.append(c.toUpperCase().equals(c) ? "-" : "");
+			builder.append(c.toLowerCase());
+		}
+		return builder.toString();
 	}
 
 	public static void doOnce(Class clazz, Runnable runnable) {
@@ -534,6 +562,18 @@ public class CommonUtils {
 
 	public static String extractHostAndPort(String url) {
 		return url.replaceFirst("(.+?://.+?)(/.+)", "$1");
+	}
+
+	public static <I, O> List<O> filterByClass(
+			Collection<? extends I> collection,
+			Class<? extends O> filterClass) {
+		ArrayList<O> result = new ArrayList<O>();
+		for (I i : collection) {
+			if (i.getClass() == filterClass) {
+				result.add((O) i);
+			}
+		}
+		return result;
 	}
 
 	public static <T> T first(Collection<T> coll) {
@@ -755,23 +795,29 @@ public class CommonUtils {
 	public static synchronized <E extends Enum> E getEnumValueOrNull(
 			Class<E> enumClass, String value, boolean withFriendlyNames,
 			E defaultValue) {
-		if (!enumValueLookup.containsKey(enumClass)) {
+		if (enumValueLookup.asMapEnsure(false, enumClass,
+				withFriendlyNames) == null) {
 			for (E ev : enumClass.getEnumConstants()) {
-				enumValueLookup.put(enumClass, ev.toString(), ev);
-				enumValueLookup.put(enumClass, ev.toString().toLowerCase(), ev);
+				enumValueLookup.put(enumClass, withFriendlyNames, ev.toString(),
+						ev);
+				enumValueLookup.put(enumClass, withFriendlyNames,
+						ev.toString().toLowerCase(), ev);
 				if (withFriendlyNames) {
-					enumValueLookup.put(enumClass,
+					// handle double__ default
+					enumValueLookup.put(enumClass, withFriendlyNames,
+							ev.toString().toLowerCase().replace('_', '-'), ev);
+					enumValueLookup.put(enumClass, withFriendlyNames,
 							friendlyConstant(ev, "-").toLowerCase(), ev);
-					enumValueLookup.put(enumClass, friendlyConstant(ev, "-"),
-							ev);
-					enumValueLookup.put(enumClass, friendlyConstant(ev, " "),
-							ev);
-					enumValueLookup.put(enumClass,
+					enumValueLookup.put(enumClass, withFriendlyNames,
+							friendlyConstant(ev, "-"), ev);
+					enumValueLookup.put(enumClass, withFriendlyNames,
+							friendlyConstant(ev, " "), ev);
+					enumValueLookup.put(enumClass, withFriendlyNames,
 							friendlyConstant(ev, " ").toLowerCase(), ev);
 				}
 			}
 		}
-		E result = (E) enumValueLookup.get(enumClass, value);
+		E result = (E) enumValueLookup.get(enumClass, withFriendlyNames, value);
 		return result == null ? defaultValue : result;
 	}
 
@@ -870,9 +916,9 @@ public class CommonUtils {
 	}
 
 	public static boolean hasCauseOfClass(Throwable throwable,
-			CollectionFilter<Throwable> causeFilter) {
+			Predicate<Throwable> causeFilter) {
 		while (true) {
-			if (causeFilter.allow(throwable)) {
+			if (causeFilter.test(throwable)) {
 				return true;
 			}
 			if (throwable.getCause() == throwable
@@ -881,16 +927,6 @@ public class CommonUtils {
 			}
 			throwable = throwable.getCause();
 		}
-	}
-
-	public static boolean hasSuperClass(Class clazz, Class superClass) {
-		while (clazz != null && clazz != Object.class) {
-			if (clazz == superClass) {
-				return true;
-			}
-			clazz = clazz.getSuperclass();
-		}
-		return false;
 	}
 
 	public static String highlightForLog(String template, Object... args) {
@@ -976,6 +1012,10 @@ public class CommonUtils {
 		return clazz.isEnum() || isEnumSubclass(clazz);
 	}
 
+	public static boolean isEnumOrEnumSubclass(Class c) {
+		return c.isEnum() || isEnumSubclass(c);
+	}
+
 	public static boolean isEnumSubclass(Class c) {
 		return c.getSuperclass() != null && c.getSuperclass().isEnum();
 	}
@@ -1015,6 +1055,16 @@ public class CommonUtils {
 			if (clazz == c) {
 				return true;
 			}
+		}
+		return false;
+	}
+
+	public static boolean isOrHasSuperClass(Class clazz, Class superClass) {
+		while (clazz != null && clazz != Object.class) {
+			if (clazz == superClass) {
+				return true;
+			}
+			clazz = clazz.getSuperclass();
 		}
 		return false;
 	}
@@ -1066,6 +1116,7 @@ public class CommonUtils {
 		StringBuilder sb = new StringBuilder();
 		for (Object obj : objects) {
 			String app = obj == null ? "null" : obj.toString();
+			app = app == null ? "null" : app;
 			if (sb.length() > 0 && (app.length() != 0 || !ignoreEmpties)
 					&& separator != null) {
 				sb.append(separator);
@@ -1370,6 +1421,14 @@ public class CommonUtils {
 
 	public static String pluraliseWithCount(String s, Collection c) {
 		return pluralise(s, c == null ? 0 : c.size(), true);
+	}
+
+	public static <T> Predicate<T> predicateFalse() {
+		return (Predicate<T>) PREDICATE_FALSE;
+	}
+
+	public static <T> Predicate<T> predicateTrue() {
+		return (Predicate<T>) PREDICATE_TRUE;
 	}
 
 	public static void putIfKeyNotNull(Map m, Object k, Object v) {
@@ -1778,6 +1837,8 @@ public class CommonUtils {
 				+ s.substring(1).toLowerCase();
 	}
 
+	// see also
+	// https://stackoverflow.com/questions/11441666/java-error-comparison-method-violates-its-general-contract
 	public static <T> void validateComparator(List<T> list,
 			Comparator<T> comparator) {
 		SystemoutCounter counter = SystemoutCounter
@@ -1785,12 +1846,23 @@ public class CommonUtils {
 		for (int idx0 = 0; idx0 < list.size(); idx0++) {
 			for (int idx1 = 0; idx1 < list.size(); idx1++) {
 				for (int idx2 = 0; idx2 < list.size(); idx2++) {
-					if (idx0 == idx1 || idx1 == idx2 || idx0 == idx2) {
-						continue;
-					}
+					// if (idx0 == idx1 || idx1 == idx2 || idx0 == idx2) {
+					// continue;
+					// }
 					T o0 = list.get(idx0);
 					T o1 = list.get(idx1);
 					T o2 = list.get(idx2);
+					int cmp0_1 = comparator.compare(o0, o1);
+					int cmp1_0 = comparator.compare(o1, o0);
+					if (cmp0_1 != -cmp1_0) {
+						comparator.compare(o0, o1);
+						comparator.compare(o1, o0);
+						throw Ax.runtimeException(
+								"Comparator relation issue: %s %s %s :: %s %s %s",
+								o0, o1, o2, comparator.compare(o0, o1),
+								comparator.compare(o1, o2),
+								comparator.compare(o0, o2));
+					}
 					if (!CommonUtils.validateComparator(o0, o1, o2,
 							comparator.compare(o0, o1),
 							comparator.compare(o1, o2),
@@ -2001,12 +2073,5 @@ public class CommonUtils {
 
 	public static interface YearResolver {
 		int getYear(Date d);
-	}
-
-	public static boolean containsIgnoreCase(String string, String contains) {
-		if (string == null || contains == null) {
-			return false;
-		}
-		return string.toLowerCase().contains(contains.toLowerCase());
 	}
 }

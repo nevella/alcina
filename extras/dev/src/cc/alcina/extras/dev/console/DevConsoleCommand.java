@@ -23,9 +23,11 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.SortedMap;
 import java.util.TreeMap;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.log4j.Logger;
@@ -33,9 +35,6 @@ import org.apache.log4j.Logger;
 import cc.alcina.extras.dev.console.DevConsoleProperties.SetPropInfo;
 import cc.alcina.extras.dev.console.DevConsoleStrings.DevConsoleString;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.StringKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -45,6 +44,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -54,10 +54,11 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
+import cc.alcina.framework.entity.stat.StatCategory_Console;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.ShellWrapper;
 
@@ -412,8 +413,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	public static class CmdExecRunnable extends DevConsoleCommand {
 		static void listRunnables(List<Class> classes, String runnableNamePart)
 				throws InstantiationException, IllegalAccessException {
-			SortedMap<String, Class> map = CollectionFilters.sortedMap(classes,
-					new ClassSimpleNameMapper());
+			SortedMap<String, Class> map = new TreeMap<>(classes.stream()
+					.collect(AlcinaCollectors.toKeyMap(Class::getSimpleName)));
 			if (CommonUtils.isNotNullOrEmpty(runnableNamePart)) {
 				map.entrySet().removeIf(e -> !e.getKey().toLowerCase()
 						.contains(runnableNamePart.toLowerCase()));
@@ -481,6 +482,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						}
 						if (runnable.requiresDomainStore()
 								&& DevHelper.getDefaultUser() == null) {
+							DevConsole.getInstance().emitIfFirst(
+									new StatCategory_Console.InitCommands());
 							console.ensureDomainStore();
 							pushedUser = DevHelper.getDefaultUser();
 							PermissionsManager.get().pushUser(pushedUser,
@@ -511,6 +514,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 						throw e0;
 					} finally {
 						try {
+							if (pushedUser != null) {
+								PermissionsManager.get().popUser();
+							}
 							if (Transactions.isInitialised()) {
 								Transaction.end();
 							}
@@ -521,9 +527,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 								// additional exception (tx phase) that ain't
 								// helpful
 						} finally {
-							if (pushedUser != null) {
-								PermissionsManager.get().popUser();
-							}
 							LooseContext.pop();
 						}
 					}
@@ -567,8 +570,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 	}
 
 	public static class CmdExtractChromeCacheFile extends DevConsoleCommand {
-		static String lastFileName = "";
-
 		@Override
 		public String[] getCommandIds() {
 			return new String[] { "chrx" };
@@ -589,8 +590,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String chrx = console.getMultilineInput(
 					"Enter the chrome cache file text, or blank for clipboard: ");
 			chrx = chrx.isEmpty() ? console.getClipboardContents() : chrx;
-			lastFileName = console.getSingleLineInput("Save to file:",
-					lastFileName);
 			Pattern p = Pattern.compile("00000000:");
 			Matcher m1 = p.matcher(chrx);
 			m1.find();
@@ -607,12 +606,12 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				}
 			}
 			int size = baos.size();
+			String fileName = "/tmp/CmdExtractChromeCacheFile.dat";
 			BufferedOutputStream bos = new BufferedOutputStream(
-					new FileOutputStream(lastFileName));
+					new FileOutputStream(fileName));
 			ResourceUtilities.writeStreamToStream(
 					new ByteArrayInputStream(baos.toByteArray()), bos);
-			System.out.format("Wrote %s bytes to \n\t'%s'\n", size,
-					lastFileName);
+			System.out.format("Wrote %s bytes to \n\t'%s'\n", size, fileName);
 			return "";
 		}
 	}
@@ -659,34 +658,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			console.setClipboardContents(list);
 			System.out.println("\n");
 			return "";
-		}
-	}
-
-	public static class CmdFind extends DevConsoleCommand {
-		@Override
-		public String[] getCommandIds() {
-			return new String[] { "f" };
-		}
-
-		@Override
-		public String getDescription() {
-			return "Find text in main console";
-		}
-
-		@Override
-		public String getUsage() {
-			return "f <text|last text>";
-		}
-
-		@Override
-		public String run(String[] argv) throws Exception {
-			console.find(argv.length == 0 ? null : argv[0]);
-			return null;
-		}
-
-		@Override
-		public boolean silent() {
-			return true;
 		}
 	}
 
@@ -860,9 +831,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		public String run(final String[] argv) throws Exception {
 			List<Class> classes = Registry.get()
 					.lookup(DevConsoleRunnable.class);
-			CollectionFilter<Class> filter = new CollectionFilter<Class>() {
+			Predicate<Class> filter = new Predicate<Class>() {
 				@Override
-				public boolean allow(Class o) {
+				public boolean test(Class o) {
 					try {
 						String[] tags = ((DevConsoleRunnable) o.newInstance())
 								.tagStrings();
@@ -880,8 +851,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					}
 				}
 			};
-			CmdExecRunnable.listRunnables(
-					CollectionFilters.filter(classes, filter), null);
+			CmdExecRunnable.listRunnables(classes.stream().filter(filter)
+					.collect(Collectors.toList()), null);
 			return "";
 		}
 	}
@@ -1036,12 +1007,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			String command = console.props.restartCommand;
-			if (Ax.isBlank(command)) {
-				Ax.err("Property 'restartCommand' not set");
-			} else {
-				new ShellWrapper().runBashScript(command);
-			}
+			console.restart();
 			return "control message sent";
 		}
 	}
@@ -1136,13 +1102,13 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			List<String> matches = new ArrayList<String>(
 					console.history.getMatches(argv[0]));
 			Collections.reverse(matches);
-			CollectionFilter<String> filter = new CollectionFilter<String>() {
+			Predicate<String> filter = new Predicate<String>() {
 				@Override
-				public boolean allow(String o) {
+				public boolean test(String o) {
 					return !o.startsWith("sh ");
 				}
 			};
-			CollectionFilters.filterInPlace(matches, filter);
+			matches.removeIf(filter.negate());
 			if (matches.size() > 1) {
 				System.out.format("Matches:\n-------\n%s\n\n",
 						CommonUtils.join(matches, "\n"));
@@ -1228,15 +1194,18 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			Map<String, Field> fieldsByAnnName = CollectionFilters.sortedMap(
-					Arrays.asList(console.props.getClass().getFields()),
-					new FieldFilter());
-			if (argv.length == 0) {
-				System.out.println(ResourceUtilities
-						.readFileToString(console.consolePropertiesFile));
-				dumpProps(fieldsByAnnName);
-				return "";
-			}
+			Function<Field, String> getKey = field -> {
+				SetPropInfo ann = field.getAnnotation(SetPropInfo.class);
+				if (ann != null) {
+					return ann.key();
+				}
+				return null;
+			};
+			Map<String, Field> map = Arrays
+					.stream(console.props.getClass().getFields())
+					.filter(field -> getKey.apply(field) != null)
+					.collect(AlcinaCollectors.toKeyMap(getKey));
+			Map<String, Field> fieldsByAnnName = new TreeMap<>(map);
 			String key = argv[0];
 			String fieldName = null;
 			Object value = null;
@@ -1274,23 +1243,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				desc = desc.replace("\n", descPad);
 				System.out.format("%-30s%-50s%s\n", ann.key(),
 						field.get(console.props), desc);
-			}
-		}
-
-		private static class FieldFilter extends StringKeyValueMapper<Field>
-				implements CollectionFilter<Field> {
-			@Override
-			public boolean allow(Field o) {
-				return getKey(o) != null;
-			}
-
-			@Override
-			public String getKey(Field o) {
-				SetPropInfo ann = o.getAnnotation(SetPropInfo.class);
-				if (ann != null) {
-					return ann.key();
-				}
-				return null;
 			}
 		}
 	}
@@ -1429,6 +1381,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			} else {
 				System.err.format("Unknown subcommand - %s\n", cmd);
 			}
+			console.saveConfig();
 			return "";
 		}
 

@@ -33,8 +33,8 @@ import com.google.gwt.user.client.HistoryImpl;
  */
 public class HistoryImplDelegate extends HistoryImpl {
 	public static native boolean isHtml5() /*-{
-											return !!(window['history'] && window['history']['pushState'] && (typeof (window.history.pushState) == "function"));
-											}-*/;
+    return !!(window['history'] && window['history']['pushState'] && (typeof (window.history.pushState) == "function"));
+	}-*/;
 
 	HistoryImpl impl;
 
@@ -63,7 +63,7 @@ public class HistoryImplDelegate extends HistoryImpl {
 		// no hash
 		return History.encodeHistoryToken(targetHistoryToken);
 	}
-
+	
 	@Override
 	public void fireHistoryChangedImpl(String token) {
 		impl.fireHistoryChangedImpl(token);

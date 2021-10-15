@@ -30,10 +30,9 @@ public class DomainTransformSupport {
 	public void fireDomainTransform(DomainTransformEvent event)
 			throws DomainTransformException {
 		for (DomainTransformListener listener : listenerList) {
-			listener.domainTransform(event);
+				listener.domainTransform(event);
 		}
 	}
-
 	public void
 			removeDomainTransformListener(DomainTransformListener listener) {
 		listenerList.remove(listener);

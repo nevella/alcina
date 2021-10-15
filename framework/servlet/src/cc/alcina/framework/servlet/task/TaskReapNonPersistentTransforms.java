@@ -14,9 +14,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.entity.persistence.LocalDbPropertyBase;
-import cc.alcina.framework.entity.persistence.cache.DataSourceAdapter;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.logic.PersistentAppProperties;
+import cc.alcina.framework.entity.persistence.domain.DataSourceAdapter;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
@@ -43,10 +43,9 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 		Connection conn = Registry.impl(DataSourceAdapter.class)
 				.getConnection();
 		try {
-			String lastValue = LocalDbPropertyBase.getOrSetLocalDbProperty(
-					TRANSFORM_REAPER_2_LAST_RQ_ID, null, true);
+			long lastId = PersistentAppProperties
+					.getLong(TRANSFORM_REAPER_2_LAST_RQ_ID);
 			stmt = conn.createStatement();
-			long lastId = lastValue == null ? 1 : Long.parseLong(lastValue);
 			String dtrTableName = PersistentImpl
 					.getImplementation(DomainTransformRequestPersistent.class)
 					.getAnnotation(Table.class).name();
@@ -62,7 +61,7 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 						"select dtrq.id from %s "
 								+ "dtrq where id>=%s and id<%s order by id",
 						dtrTableName, lastId, lastId + SLICE_SIZE);
-				Set<Long> rqIds = SqlUtils.toIdList(stmt, rSql, "id", false);
+				Set<Long> rqIds = SqlUtils.toIdSet(stmt, rSql, "id", false);
 				for (Long id : rqIds) {
 					DomainTransformRequestPersistent request = DomainStore
 							.writableStore().loadTransformRequest(id);
@@ -101,9 +100,8 @@ public class TaskReapNonPersistentTransforms extends AbstractTaskPerformer {
 				}
 				lastId += SLICE_SIZE;
 				Transaction.endAndBeginNew();
-				LocalDbPropertyBase.getOrSetLocalDbProperty(
-						TRANSFORM_REAPER_2_LAST_RQ_ID, String.valueOf(lastId),
-						false);
+				PersistentAppProperties.setLong(TRANSFORM_REAPER_2_LAST_RQ_ID,
+						lastId);
 				Transaction.commit();
 				Transaction.endAndBeginNew();
 				JobContext.checkCancelled();

@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,10 +19,10 @@ import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.Reflections;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
@@ -37,6 +38,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -135,7 +137,8 @@ public abstract class Entity<T extends Entity> extends Bindable
 	 * (Unused but viable) Can be 'packed' with the lower 31 bits of the
 	 * clientInstance id (and negated) to make an effectively globally unique id
 	 * (for the given domainstore/db) that can be used in the same set as the id
-	 * field (per-class, db-generated) ids
+	 * field (per-class, db-generated) ids - assumption being that at most 2^32
+	 * creations per client instance, 2^31 client instances
 	 */
 	public long getLocalId() {
 		return this.localId;
@@ -253,13 +256,23 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return toLocator().toString();
 		}
 		if (this instanceof HasDisplayName) {
-			return ((HasDisplayName) this).displayName();
+			try {
+				return ((HasDisplayName) this).displayName();
+			} catch (Exception e) {
+				return CommonUtils.toSimpleExceptionMessage(e) + " - "
+						+ toLocator().toString();
+			}
 		}
 		return toLocator().toString();
 	}
 
 	public final String toStringEntity() {
-		return toLocator().toString();
+		try {
+			return toLocator().toString();
+		} catch (Exception e) {
+			return Ax.format("Unable to return locator - class %s - id %s",
+					getClass().getSimpleName(), id);
+		}
 	}
 
 	protected int _compareTo(Entity o) {
@@ -324,7 +337,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		/*
 		 * Basically server-side, connected version from a DomainStore
 		 * 
-		 * //FIXME - mvcc.4 - remove...ahhh...but this populatees lazy fields.
+		 * //FIXME - apdm - remove...ahhh...but this populatees lazy fields.
 		 * Maybe not, eh? Also there's the possibility of needing to access the
 		 * domain version from a non-domain (say de-serialized) instance. Fixme
 		 * is to check codebase, remove if unnecessary, rename to populate() if
@@ -350,6 +363,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return !Domain.isDomainVersion(Entity.this);
 		}
 
+		public void persistSerializables() {
+			TransformManager.get().persistSerializables(Entity.this);
+		}
+
 		public T register() {
 			TransformManager.get().registerDomainObject(Entity.this);
 			return (T) Entity.this;
@@ -368,9 +385,13 @@ public abstract class Entity<T extends Entity> extends Bindable
 		public boolean wasPersisted() {
 			return getId() != 0;
 		}
+
+		public boolean wasRemoved() {
+			return Domain.wasRemoved(Entity.this);
+		}
 	}
 
-	public static class EntityByIdFilter implements CollectionFilter<Entity> {
+	public static class EntityByIdFilter implements Predicate<Entity> {
 		private final boolean allowAllExceptId;
 
 		private final long id;
@@ -381,7 +402,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		}
 
 		@Override
-		public boolean allow(Entity o) {
+		public boolean test(Entity o) {
 			return o != null && (o.getId() == id ^ allowAllExceptId);
 		}
 	}
@@ -394,6 +415,8 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 	public static class EntityComparator implements Comparator<Entity> {
 		public static final EntityComparator INSTANCE = new EntityComparator();
+
+		public static final EntityComparatorLocalsHigh LOCALS_HIGH = new EntityComparatorLocalsHigh();
 
 		public static final Comparator<Entity> REVERSED_INSTANCE = new EntityComparator()
 				.reversed();
@@ -447,7 +470,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		public static Stream<PropertyReflector>
 				getOwnerReflectors(Class<?> beanClass) {
 			return Reflections.classLookup().getPropertyReflectors(beanClass)
-					.stream()
+					.values().stream()
 					.filter(pr -> pr
 							.getAnnotation(DomainProperty.class) != null)
 					.filter(Objects::nonNull).filter(pr -> pr
@@ -477,6 +500,13 @@ public abstract class Entity<T extends Entity> extends Bindable
 					return result;
 				}
 			}
+		}
+	}
+
+	public interface PropertyEnum {
+		default Predicate<? super DomainTransformEvent> transformFilter() {
+			return event -> Objects.equals(event.getPropertyName(),
+					((Enum) this).name());
 		}
 	}
 }

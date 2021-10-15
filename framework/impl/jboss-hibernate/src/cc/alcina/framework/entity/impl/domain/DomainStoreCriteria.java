@@ -1,7 +1,9 @@
 package cc.alcina.framework.entity.impl.domain;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.hibernate.CacheMode;
 import org.hibernate.Criteria;
@@ -16,6 +18,11 @@ import org.hibernate.criterion.Order;
 import org.hibernate.criterion.Projection;
 import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
+
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.logic.reflection.Association;
+import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.util.Ax;
 
 @SuppressWarnings("deprecation")
 public class DomainStoreCriteria implements Criteria {
@@ -43,7 +50,11 @@ public class DomainStoreCriteria implements Criteria {
 
 	int firstResult;
 
+	Set<String> hints = new LinkedHashSet<>();
+
 	private ResultTransformer resultTransformer;
+
+	DomainStoreCriteria parent;
 
 	public DomainStoreCriteria(Class clazz, String alias,
 			Criteria entityManagerCriteria,
@@ -90,6 +101,7 @@ public class DomainStoreCriteria implements Criteria {
 
 	@Override
 	public Criteria addQueryHint(String hint) {
+		hints.add(hint);
 		return this;
 	}
 
@@ -161,12 +173,22 @@ public class DomainStoreCriteria implements Criteria {
 
 	@Override
 	public Criteria createCriteria(String associationPath, String alias,
-			JoinType arg2) throws HibernateException {
+			JoinType joinType) throws HibernateException {
 		Criteria subCriteria = this.entityManagerCriteria == null ? null
 				: this.entityManagerCriteria.createCriteria(associationPath,
 						alias);
-		DomainStoreCriteria newCriteria = new DomainStoreCriteria(null, alias,
-				associationPath, subCriteria, arg2, domainStoreSession);
+		PropertyReflector propertyReflector = Reflections.classLookup()
+				.getPropertyReflector(clazz,
+						cleanAssociationPath(associationPath));
+		Class subClazz = propertyReflector.getPropertyType();
+		if (Set.class.isAssignableFrom(subClazz)) {
+			subClazz = propertyReflector.getAnnotation(Association.class)
+					.implementationClass();
+		}
+		DomainStoreCriteria newCriteria = new DomainStoreCriteria(subClazz,
+				alias, associationPath, subCriteria, joinType,
+				domainStoreSession);
+		newCriteria.parent = this;
 		subs.add(newCriteria);
 		return newCriteria;
 	}
@@ -180,7 +202,8 @@ public class DomainStoreCriteria implements Criteria {
 
 	@Override
 	public String getAlias() {
-		return this.entityManagerCriteria.getAlias();
+		return this.entityManagerCriteria == null ? alias
+				: this.entityManagerCriteria.getAlias();
 	}
 
 	public ResultTransformer getResultTransformer() {
@@ -200,12 +223,21 @@ public class DomainStoreCriteria implements Criteria {
 	@Override
 	public List list() throws HibernateException {
 		try {
-			return new DomainStoreQueryTranslator().list(this);
+			DomainStoreQueryTranslator translator = new DomainStoreQueryTranslator();
+			List list = translator.list(this);
+			domainStoreSession.getDomainStoreEntityManager()
+					.setLastQuery(translator.query);
+			return list;
 		} catch (Exception ex) {
 			ex.printStackTrace();
 			throw new HibernateException(ex);
 			// return this.entityManagerCriteria.list();
 		}
+	}
+
+	public DomainStoreCriteria provideSubCriteria(String alias) {
+		return subs.stream().filter(sub -> sub.getAlias().equals(alias))
+				.findFirst().get();
 	}
 
 	@Override
@@ -313,7 +345,26 @@ public class DomainStoreCriteria implements Criteria {
 	}
 
 	@Override
+	public String toString() {
+		if (parent == null) {
+			return clazz.getSimpleName();
+		} else {
+			return Ax.format("%s %s.%s  as %s", joinType,
+					parent.clazz.getSimpleName(), associationPath, alias);
+		}
+	}
+
+	@Override
 	public Object uniqueResult() throws HibernateException {
 		return this.entityManagerCriteria.uniqueResult();
+	}
+
+	private String cleanAssociationPath(String associationPath) {
+		if (parent == null && alias != null && associationPath.startsWith(alias)
+				&& associationPath.charAt(alias.length()) == '.') {
+			return associationPath.substring(alias.length() + 1);
+		} else {
+			return associationPath;
+		}
 	}
 }

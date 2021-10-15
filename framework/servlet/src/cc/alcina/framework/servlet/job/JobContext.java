@@ -11,20 +11,23 @@ import java.util.concurrent.CountDownLatch;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.actions.JobResource;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
@@ -47,6 +50,9 @@ public class JobContext {
 	private static final String CONTEXT_EX_JOB_RESOURCES = JobContext.class
 			.getName() + ".CONTEXT_EX_JOB_RESOURCES";
 
+	public static final String CONTEXT_KNOWN_OUTSIDE_JOB = JobContext.class
+			.getName() + ".CONTEXT_KNOWN_OUTSIDE_JOB";
+
 	public static void acquireResource(JobResource resource) {
 		if (has()) {
 			JobRegistry.get().acquireResource(get().getJob(), resource);
@@ -54,6 +60,16 @@ public class JobContext {
 			resource.acquire();
 			LooseContext.ensure(CONTEXT_EX_JOB_RESOURCES,
 					() -> new ArrayList<JobResource>()).add(resource);
+		}
+	}
+
+	public static void adopt(JobContext jobContext, boolean adopt) {
+		if (adopt) {
+			Preconditions.checkState(!has());
+			LooseContext.set(CONTEXT_CURRENT, jobContext);
+		} else {
+			Preconditions.checkState(has());
+			LooseContext.remove(CONTEXT_CURRENT);
 		}
 	}
 
@@ -110,10 +126,22 @@ public class JobContext {
 
 	public static void info(String template, Object... args) {
 		if (get() == null) {
-			Ax.out("Called JobContext.info() outside job - %s %s", template,
-					Arrays.asList(args));
+			String message = Ax.format(template.replace("{}", "%"), args);
+			if (LooseContext.is(CONTEXT_KNOWN_OUTSIDE_JOB)) {
+				Ax.out(message);
+			} else {
+				Ax.out("Called JobContext.info() outside job - %s", message);
+			}
 		} else {
 			get().getLogger().info(template, args);
+		}
+	}
+
+	public static void jobException(Exception e) {
+		if (has()) {
+			get().onJobException(e);
+		} else {
+			e.printStackTrace();
 		}
 	}
 
@@ -133,6 +161,40 @@ public class JobContext {
 		}
 	}
 
+	public static void setCompletion(double completion) {
+		if (has()) {
+			get().maybeEnqueue(() -> get().getJob().setCompletion(completion));
+		} else {
+			LoggerFactory.getLogger(JobContext.class)
+					.info("(no-job) job completion => {}", completion);
+		}
+	}
+
+	public static void
+			setEnqueueProgressOnBackend(boolean enqueueProgressOnBackend) {
+		if (has()) {
+			get().enqueueProgressOnBackend = enqueueProgressOnBackend;
+		}
+	}
+
+	public static void setLargeResult(Object largeResult) {
+		if (has()) {
+			get().getJob().setLargeResult(largeResult);
+		} else {
+			ResourceUtilities.logToFile(largeResult.toString());
+		}
+	}
+
+	public static void setStatusMessage(String template, Object... args) {
+		if (has()) {
+			get().maybeEnqueue(() -> get().getJob()
+					.setStatusMessage(Ax.format(template, args)));
+		} else {
+			LoggerFactory.getLogger(JobContext.class).info(
+					"(no-job) status message: {}", Ax.format(template, args));
+		}
+	}
+
 	public static void warn(String template, Exception ex) {
 		get().getLogger().warn(template, ex);
 	}
@@ -145,6 +207,8 @@ public class JobContext {
 			get().getLogger().warn(template, args);
 		}
 	}
+
+	private boolean enqueueProgressOnBackend;
 
 	private TaskPerformer performer;
 
@@ -243,10 +307,6 @@ public class JobContext {
 		get().getJob().setResultMessage(resultMessage);
 	}
 
-	public void setStatusMessage(String template, Object... args) {
-		getJob().setStatusMessage(Ax.format(template, args));
-	}
-
 	public void toAwaitingChildren() {
 		Transaction.commit();
 		allocator.toAwaitingChildren();
@@ -298,13 +358,22 @@ public class JobContext {
 			if (job.getResultType() == null) {
 				job.setResultType(JobResultType.OK);
 			}
-			logger.info("Job complete - {} - {}", job, job.getEndTime());
+			logger.info("Job complete - {} - {} - {} ms", job, job.getEndTime(),
+					job.getEndTime().getTime() - job.getStartTime().getTime());
 		}
 		persistMetadata();
 		if (threadStartName != null) {
 			Thread.currentThread().setName(threadStartName);
 		}
 		endedLatch.countDown();
+	}
+
+	private void maybeEnqueue(Runnable runnable) {
+		if (enqueueProgressOnBackend) {
+			TransformCommit.get().enqueueBackendTransform(runnable);
+		} else {
+			runnable.run();
+		}
 	}
 
 	protected void persistMetadata() {
@@ -359,6 +428,14 @@ public class JobContext {
 		}
 	}
 
+	void clearRefs() {
+		performer = null;
+		// not allocator - it's a circular reference anyway, and required for
+		// awaitSequenceCompletion
+		// allocator = null;
+		thread = null;
+	}
+
 	String describeTask(Task task, String msg) {
 		msg += "Clazz: " + task.getClass().getName() + "\n";
 		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
@@ -389,8 +466,9 @@ public class JobContext {
 		thread = Thread.currentThread();
 		threadStartName = thread.getName();
 		if (job.provideIsNotComplete()) {
-			thread.setName(job.getTask().getClass().getSimpleName() + "::"
-					+ threadStartName);
+			thread.setName(Ax.format("%s::%s::%s",
+					job.provideTaskClass().getSimpleName(), job.getId(),
+					threadStartName));
 			job.setStartTime(new Date());
 			job.setState(JobState.PROCESSING);
 			job.setPerformerVersionNumber(performer.getVersionNumber());
@@ -414,13 +492,23 @@ public class JobContext {
 
 		private int total = 1;
 
+		private boolean log;
+
 		public void publish() {
 			setItemCount(total);
 			updateJob(message, delta);
+			if (log) {
+				getLogger().info(message);
+			}
 		}
 
 		public ProgressBuilder withDelta(int delta) {
 			this.delta = delta;
+			return this;
+		}
+
+		public ProgressBuilder withLog(boolean log) {
+			this.log = log;
 			return this;
 		}
 

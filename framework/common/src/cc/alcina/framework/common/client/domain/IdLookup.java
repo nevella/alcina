@@ -35,11 +35,11 @@ public class IdLookup<T, E extends Entity> extends DomainLookup<T, E> {
 	}
 
 	@Override
-	protected void add(T key, E value) {
+	protected boolean add(T key, E value) {
 		if (key == null || key == Long.valueOf(0)) {
-			return;
+			return false;
 		}
-		super.add(key, value);
+		boolean result = super.add(key, value);
 		Set<E> set = get(key);
 		if (set.size() > 1) {
 			// throw new IllegalArgumentException("");
@@ -48,5 +48,6 @@ public class IdLookup<T, E extends Entity> extends DomainLookup<T, E> {
 					this, key, set));
 			duplicateKeys.add(key);
 		}
+		return result;
 	}
 }

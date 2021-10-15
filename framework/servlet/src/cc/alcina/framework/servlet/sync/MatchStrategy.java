@@ -1,16 +1,15 @@
 package cc.alcina.framework.servlet.sync;
 
 import java.util.Collection;
+import java.util.function.Predicate;
 
 import org.apache.log4j.Logger;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-
 public interface MatchStrategy<T> {
-	SyncItemMatch<T> getRight(T left);
-
 	Collection<T> getAmbiguousRightElements();
 
-	void log(CollectionFilter<T> ignoreAmbiguityForReportingFilter,
-			Logger logger, Class<T> mergedClass);
+	SyncItemMatch<T> getRight(T left);
+
+	void log(Predicate<T> ignoreAmbiguityForReportingFilter, Logger logger,
+			Class<T> mergedClass);
 }

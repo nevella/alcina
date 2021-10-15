@@ -47,7 +47,16 @@ public class GraphTraversal {
 		if (object == null) {
 			return;
 		}
-		if (filter != null && !filter.test(object.getClass())) {
+		Class<? extends Object> clazz = object.getClass();
+		if (filter != null && !filter.test(clazz)) {
+			return;
+		}
+		if (clazz == Module.class) {
+			// not introspectable(much)
+			return;
+		}
+		if (clazz.getName().startsWith("jdk.internal")) {
+			// not introspectable(much)
 			return;
 		}
 		if (!reached.containsKey(object)) {
@@ -69,13 +78,15 @@ public class GraphTraversal {
 					add(e.getValue());
 				});
 			} else {
-				List<Field> fields = projectionHelper
-						.getFieldsForClass(object.getClass());
-				for (Field f : fields) {
-					if (GraphProjection.isPrimitiveOrDataClass(f.getType())
-							&& !Date.class.isAssignableFrom(f.getType())) {
-					} else {
-						add(f.get(object));
+				Class clazz = object.getClass();
+				if (clazz.getModule().isOpen(clazz.getPackageName())) {
+					List<Field> fields = projectionHelper.getFieldsForClass(clazz);
+					for (Field f : fields) {
+						if (GraphProjection.isPrimitiveOrDataClass(f.getType())
+								&& !Date.class.isAssignableFrom(f.getType())) {
+						} else {
+							add(f.get(object));
+						}
 					}
 				}
 			}

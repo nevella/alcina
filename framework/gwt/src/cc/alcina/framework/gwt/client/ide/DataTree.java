@@ -64,18 +64,23 @@ public class DataTree extends FilterableTree
 	}
 
 	@Override
-	protected boolean useCssTreeImages() {
-		return useCssTreeImages;
-	}
-
-	@Override
-	protected boolean isToggleSelectionOnLabelClick() {
-		return true;
-	}
-
-	@Override
 	public void addExtraTreeEventListener(ExtraTreeEventListener listener) {
 		this.extraTreeEventSupport.addExtraTreeEventListener(listener);
+	}
+
+	public TreeItem findNode(Predicate<TreeItem> predicate) {
+		result = null;
+		TreeNodeWalkerCallback callback = new TreeNodeWalkerCallback() {
+			@Override
+			public void accept(TreeItem target) {
+				if (predicate.test(target)) {
+					result = target;
+					cancel();
+				}
+			}
+		};
+		new TreeNodeWalker().walk(this, callback);
+		return result;
 	}
 
 	public void fireActionsAvailbleChange(ExtraTreeEventEvent event) {
@@ -87,7 +92,7 @@ public class DataTree extends FilterableTree
 		final boolean classNameTest = (obj instanceof String);
 		TreeNodeWalkerCallback callback = new TreeNodeWalkerCallback() {
 			@Override
-			public void apply(TreeItem target) {
+			public void accept(TreeItem target) {
 				Object userObject = target.getUserObject();
 				if (userObject != null) {
 					if ((classNameTest && userObject.getClass().getName()
@@ -103,19 +108,8 @@ public class DataTree extends FilterableTree
 		return result;
 	}
 
-	public TreeItem findNode(Predicate<TreeItem> predicate) {
-		result = null;
-		TreeNodeWalkerCallback callback = new TreeNodeWalkerCallback() {
-			@Override
-			public void apply(TreeItem target) {
-				if (predicate.test(target)) {
-					result = target;
-					cancel();
-				}
-			}
-		};
-		new TreeNodeWalker().walk(this, callback);
-		return result;
+	public boolean isUseNodeImages() {
+		return useNodeImages;
 	}
 
 	@Override
@@ -148,6 +142,13 @@ public class DataTree extends FilterableTree
 		this.extraTreeEventSupport.removeExtraTreeEventListener(listener);
 	}
 
+	public void reselectCurrentItem() {
+		TreeItem current = getSelectedItem();
+		setSelectedItem(null);
+		setSelectedItem(current);
+		ensureSelectedItemVisible();
+	}
+
 	public TreeItem selectNodeForObject(Object obj) {
 		getNodeForObject(obj);
 		TreeItem current = getSelectedItem();
@@ -160,6 +161,11 @@ public class DataTree extends FilterableTree
 	}
 
 	@Override
+	protected boolean isToggleSelectionOnLabelClick() {
+		return true;
+	}
+
+	@Override
 	protected void onDetach() {
 		super.onDetach();
 		for (int i = 0; i < getItemCount(); i++) {
@@ -169,14 +175,8 @@ public class DataTree extends FilterableTree
 		}
 	}
 
-	public void reselectCurrentItem() {
-		TreeItem current = getSelectedItem();
-		setSelectedItem(null);
-		setSelectedItem(current);
-		ensureSelectedItemVisible();
-	}
-
-	public boolean isUseNodeImages() {
-		return useNodeImages;
+	@Override
+	protected boolean useCssTreeImages() {
+		return useCssTreeImages;
 	}
 }

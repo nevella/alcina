@@ -38,6 +38,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -76,6 +77,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
@@ -319,14 +321,6 @@ public class GraphProjection {
 		return genericTypeLookup.get(field);
 	}
 
-	public static boolean isEnumOrEnumSubclass(Class c) {
-		return c.isEnum() || isEnumSubclass(c);
-	}
-
-	public static boolean isEnumSubclass(Class c) {
-		return c.getSuperclass() != null && c.getSuperclass().isEnum();
-	}
-
 	public static boolean isGenericEntityType(Field field) {
 		if (!genericEntityTypeLookup.containsKey(field)) {
 			Type pt = getGenericType(field);
@@ -347,8 +341,9 @@ public class GraphProjection {
 	public static boolean isPrimitiveOrDataClass(Class c) {
 		return c.isPrimitive() || c == String.class || c == Boolean.class
 				|| c == Character.class || c.isEnum() || c == Class.class
-				|| Number.class.isAssignableFrom(c)
-				|| Date.class.isAssignableFrom(c) || isEnumOrEnumSubclass(c)
+				|| c == Enum.class || Number.class.isAssignableFrom(c)
+				|| Date.class.isAssignableFrom(c)
+				|| CommonUtils.isEnumOrEnumSubclass(c)
 				|| ProjectByValue.class.isAssignableFrom(c)
 				|| SafeHtml.class.isAssignableFrom(c);
 	}
@@ -450,7 +445,7 @@ public class GraphProjection {
 
 	private String contextDebugPath;
 
-	protected Map reached = new ProjectionIdentityMap();
+	protected Map reached;
 
 	Map<Class, Permission> perClassReadPermission = new HashMap<Class, Permission>(
 			LOOKUP_SIZE);
@@ -504,6 +499,8 @@ public class GraphProjection {
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
 		this.disablePerObjectPermissions = LooseContext
 				.is(CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS);
+		reached = new ProjectionIdentityMap(ResourceUtilities.getInteger(
+				GraphProjection.class, "maxReached", Integer.MAX_VALUE));
 	}
 
 	public GraphProjection(GraphProjectionFieldFilter fieldFilter,
@@ -523,6 +520,7 @@ public class GraphProjection {
 			result = new ArrayList<Field>();
 			Set<Field> dynamicPermissionFields = new HashSet<Field>();
 			Class c = clazz;
+			boolean mvccClass = MvccObject.class.isAssignableFrom(clazz);
 			while (c != Object.class) {
 				List<Field> fields = ensureDeclaredNonStaticFields(c);
 				for (Field field : fields) {
@@ -544,17 +542,20 @@ public class GraphProjection {
 							continue;
 						}
 					}
-					// special-case mvcc fields
-					PropertyDescriptor propertyDescriptor = SEUtilities
-							.getPropertyDescriptorByName(c, field.getName());
-					if (propertyDescriptor != null
-							&& propertyDescriptor.getReadMethod() != null) {
-						MvccAccess mvccAccess = propertyDescriptor
-								.getReadMethod()
-								.getAnnotation(MvccAccess.class);
-						if (mvccAccess != null && mvccAccess
-								.type() == MvccAccessType.TRANSACTIONAL_ACCESS_NOT_SUPPORTED) {
-							continue;
+					if (mvccClass) {
+						// special-case mvcc fields
+						PropertyDescriptor propertyDescriptor = SEUtilities
+								.getPropertyDescriptorByName(c,
+										field.getName());
+						if (propertyDescriptor != null
+								&& propertyDescriptor.getReadMethod() != null) {
+							MvccAccess mvccAccess = propertyDescriptor
+									.getReadMethod()
+									.getAnnotation(MvccAccess.class);
+							if (mvccAccess != null && mvccAccess
+									.type() == MvccAccessType.TRANSACTIONAL_ACCESS_NOT_SUPPORTED) {
+								continue;
+							}
 						}
 					}
 					result.add(field);
@@ -601,7 +602,7 @@ public class GraphProjection {
 	public <T> T project(T source, GraphProjectionContext context)
 			throws Exception {
 		if (context != null) {
-			return project(source, null, context, false);
+			return project(source, null, context);
 		} else {
 			GraphProjection last = LooseContext
 					.get(CONTEXT_LAST_CONTEXT_LOOKUPS);
@@ -618,7 +619,7 @@ public class GraphProjection {
 				GlobalTopicPublisher.get()
 						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, 1);
 				start = System.nanoTime();
-				return project(source, null, context, false);
+				return project(source, null, context);
 			} finally {
 				GlobalTopicPublisher.get()
 						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, -1);
@@ -650,8 +651,8 @@ public class GraphProjection {
 		}
 	}
 
-	public <T> T project(T source, T projected, GraphProjectionContext context,
-			boolean easysChecked) throws Exception {
+	public <T> T project(T source, T projected, GraphProjectionContext context)
+			throws Exception {
 		traversalCount++;
 		if (source == null) {
 			return null;
@@ -665,42 +666,37 @@ public class GraphProjection {
 		}
 		Class sourceClass = source.getClass();
 		boolean checkReachable = false;
-		if (!easysChecked) {
-			if (sourceClass == Timestamp.class && replaceTimestampsWithDates
-					&& context.field.getType() == Date.class) {
-				// actually breaks the (T) contract here - naughty
-				// this is because the arithmetic involved in reconstructing
-				// timestamps in a gwt js client
-				// is expensive
-				return (T) new Date(((Timestamp) source).getTime());
-			}
-			if (isPrimitiveOrDataClass(sourceClass)) {
-				return source;
-			}
-			if (replaceMap != null && source instanceof Entity
-					&& replaceMap.containsKey(source)) {
-				source = (T) replaceMap.get(source);
-				sourceClass = source.getClass();
-			}
-			checkReachable = checkReachable(source);
-			// check here unlikely to matter
-			// if (!reachableBySinglePath) {
-			if (checkReachable) {
-				Object reachedInstance = reached.get(source);
-				if (reachedInstance != null) {
-					if (projected != null && projected != reachedInstance) {
+		if (sourceClass == Timestamp.class && replaceTimestampsWithDates
+				&& context.field.getType() == Date.class) {
+			// actually breaks the (T) contract here - naughty
+			// this is because the arithmetic involved in reconstructing
+			// timestamps in a gwt js client
+			// is expensive
+			return (T) new Date(((Timestamp) source).getTime());
+		}
+		if (isPrimitiveOrDataClass(sourceClass)) {
+			return source;
+		}
+		if (replaceMap != null && source instanceof Entity
+				&& replaceMap.containsKey(source)) {
+			source = (T) replaceMap.get(source);
+			sourceClass = source.getClass();
+		}
+		checkReachable = checkReachable(source);
+		// check here unlikely to matter
+		// if (!reachableBySinglePath) {
+		if (checkReachable) {
+			Object reachedInstance = reached.get(source);
+			if (reachedInstance != null) {
+				if (projected != null && projected != reachedInstance) {
+				} else {
+					if (reachedInstance == NULL_MARKER) {
+						return null;
 					} else {
-						if (reachedInstance == NULL_MARKER) {
-							return null;
-						} else {
-							return (T) reachedInstance;
-						}
+						return (T) reachedInstance;
 					}
 				}
 			}
-			// }
-		} else {
-			checkReachable = checkReachable(source);
 		}
 		if (!checkObjectPermissions(source)) {
 			return null;
@@ -708,6 +704,9 @@ public class GraphProjection {
 		creationCount++;
 		if (dumpProjectionStats && context != null) {
 			contextStats.add(context.toPoint());
+		}
+		if (dataFilter != null && dataFilter.retainOriginal(source)) {
+			return source;
 		}
 		if (projected == null) {
 			if (sourceClass.isArray()) {
@@ -752,14 +751,14 @@ public class GraphProjection {
 			return projected;
 		}
 		List<Field> primitiveOrDataFieldsForClass = getPrimitiveOrDataFieldsForClass(
-				projected.getClass());
+				source.getClass());
 		/*
 		 * Force previous statement to evaluate before getting "checkFields"
 		 * value
 		 */
 		Preconditions.checkArgument(primitiveOrDataFieldsForClass.size() >= 0);
 		Set<Field> checkFields = perObjectPermissionFields
-				.get(projected.getClass().getName());
+				.get(source.getClass().getName());
 		// primitive/data before non - to ensure recursively reached collections
 		// are ok
 		for (Field field : primitiveOrDataFieldsForClass) {
@@ -838,7 +837,7 @@ public class GraphProjection {
 				}
 				childContext.adopt(sourceClass, field, context, projected,
 						source);
-				Object cv = project(value, null, childContext, true);
+				Object cv = project(value, null, childContext);
 				field.set(projected, cv);
 			}
 		}
@@ -865,6 +864,8 @@ public class GraphProjection {
 			c = new ArrayList();
 		} else if (coll.getClass() == LiSet.class) {
 			c = new LiSet();
+		} else if (coll.getClass() == TreeSet.class) {
+			c = new TreeSet();
 		} else if (coll.getClass() == LightSet.class) {
 			c = new LightSet();
 		} else if (coll.getClass() == ConcurrentLinkedQueue.class) {
@@ -930,7 +931,8 @@ public class GraphProjection {
 			Field[] fields = c.getDeclaredFields();
 			List<Field> nonStatic = new ArrayList<Field>();
 			for (Field field : fields) {
-				if (Modifier.isStatic(field.getModifiers())) {
+				if (Modifier.isStatic(field.getModifiers())
+						||!c.getModule().isOpen(c.getPackageName())) {
 					continue;
 				} else {
 					field.setAccessible(true);
@@ -957,7 +959,17 @@ public class GraphProjection {
 		// Trying hard to avoid the first case (it's very much not optimal)
 		if (source instanceof MvccObject
 				&& ((MvccObject) source).__getMvccVersions__() != null) {
-			return SEUtilities.getPropertyValue(source, field.getName());
+			try {
+				return SEUtilities.getPropertyValue(source, field.getName());
+			} catch (Exception e) {
+				// possibly dev rpc
+				if (EntityLayerUtils.isTestOrTestServer()) {
+					e.printStackTrace();
+					return null;
+				} else {
+					throw e;
+				}
+			}
 		} else {
 			return field.get(source);
 		}
@@ -995,7 +1007,19 @@ public class GraphProjection {
 						"java.util.Collections$UnmodifiableRandomAccessList")) {
 					return (T) new ArrayList();
 				}
-				Constructor ctor = sourceClass.getConstructor(new Class[] {});
+				Constructor ctor = null;
+				Class cursor = sourceClass;
+				while (cursor != Object.class) {
+					Optional<Constructor> zeroArgs = Arrays
+							.stream(cursor.getDeclaredConstructors())
+							.filter(c -> c.getParameterCount() == 0)
+							.findFirst();
+					if (zeroArgs.isPresent()) {
+						ctor = zeroArgs.get();
+						break;
+					}
+					cursor = cursor.getSuperclass();
+				}
 				ctor.setAccessible(true);
 				constructorLookup.put(sourceClass, ctor);
 				if (dumpProjectionStats) {
@@ -1102,6 +1126,14 @@ public class GraphProjection {
 			return false;
 		}
 
+		public <T> T get() {
+			try {
+				return (T) field.get(sourceOwner);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+
 		@Override
 		public int hashCode() {
 			return clazz.hashCode() ^ fieldName.hashCode();
@@ -1115,6 +1147,14 @@ public class GraphProjection {
 				return parent.parent(predicate);
 			}
 			return Optional.empty();
+		}
+
+		public void set(Object object) {
+			try {
+				field.set(sourceOwner, object);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 
 		public String toPath(boolean withToString) {
@@ -1170,6 +1210,10 @@ public class GraphProjection {
 
 		<T> boolean projectIntoCollection(T value, T projected,
 				GraphProjectionContext context);
+
+		default <T> boolean retainOriginal(T original) {
+			return false;
+		}
 	}
 
 	public static interface GraphProjectionDualFilter
@@ -1221,6 +1265,12 @@ public class GraphProjection {
 		JPAImplementation jpaImplementation = Registry
 				.implOrNull(JPAImplementation.class);
 
+		private int maxSize;
+
+		public ProjectionIdentityMap(int maxSize) {
+			this.maxSize = maxSize;
+		}
+
 		@Override
 		public Set entrySet() {
 			throw new UnsupportedOperationException();
@@ -1244,6 +1294,7 @@ public class GraphProjection {
 
 		@Override
 		public Object put(Object key, Object value) {
+			Preconditions.checkState(size() < maxSize, "Oversized projection");
 			if (key instanceof Entity) {
 				Entity entityKey = (Entity) key;
 				if (useNonEntityMap(entityKey)) {
@@ -1257,6 +1308,11 @@ public class GraphProjection {
 				nonEntities.put(key, value);
 				return null;
 			}
+		}
+
+		@Override
+		public int size() {
+			return entities.size() + nonEntities.size();
 		}
 
 		boolean useNonEntityMap(Entity entity) {

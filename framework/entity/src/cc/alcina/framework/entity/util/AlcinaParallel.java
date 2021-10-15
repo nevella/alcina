@@ -111,9 +111,12 @@ public class AlcinaParallel {
 			Runnable runnable) {
 		PermissionsManagerState permissionsManagerState = PermissionsManager
 				.get().snapshotState();
+		ClassLoader callingThreadContextClassLoader = Thread.currentThread().getContextClassLoader();
 		return () -> {
 			boolean inTransaction = Transaction.isInTransaction();
+			ClassLoader originalThreadClassLoader = Thread.currentThread().getContextClassLoader();
 			try {
+				Thread.currentThread().setContextClassLoader(callingThreadContextClassLoader);
 				if (parameters.transaction != null && !inTransaction) {
 					Transaction.join(parameters.transaction);
 				}
@@ -147,6 +150,7 @@ public class AlcinaParallel {
 						Transaction.end();
 					}
 				}
+				Thread.currentThread().setContextClassLoader(originalThreadClassLoader);
 			}
 			return null;
 		};

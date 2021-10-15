@@ -162,12 +162,23 @@ public class SqlUtils {
 		return values;
 	}
 
-	public static Set<Long> toIdList(Statement statement, String sql,
-			String fieldName) throws SQLException {
-		return toIdList(statement, sql, fieldName, true);
+	public static Map<Long, Long> toIdMap(Statement statement, String sql,
+			String fn1, String fn2) throws SQLException {
+		MetricLogging.get().start("query");
+		maybeLogQuery(sql);
+		ResultSet rs = statement.executeQuery(sql);
+		Map<Long, Long> result = toIdMap(rs, fn1, fn2);
+		rs.close();
+		MetricLogging.get().end("query");
+		return result;
 	}
 
-	public static Set<Long> toIdList(Statement statement, String sql,
+	public static Set<Long> toIdSet(Statement statement, String sql,
+			String fieldName) throws SQLException {
+		return toIdSet(statement, sql, fieldName, true);
+	}
+
+	public static Set<Long> toIdSet(Statement statement, String sql,
 			String fieldName, boolean dumpQuerySql) throws SQLException {
 		MetricLogging.get().start("query");
 		if (dumpQuerySql) {
@@ -175,17 +186,6 @@ public class SqlUtils {
 		}
 		ResultSet rs = statement.executeQuery(sql);
 		Set<Long> result = toIdList(rs, fieldName);
-		rs.close();
-		MetricLogging.get().end("query");
-		return result;
-	}
-
-	public static Map<Long, Long> toIdMap(Statement statement, String sql,
-			String fn1, String fn2) throws SQLException {
-		MetricLogging.get().start("query");
-		maybeLogQuery(sql);
-		ResultSet rs = statement.executeQuery(sql);
-		Map<Long, Long> result = toIdMap(rs, fn1, fn2);
 		rs.close();
 		MetricLogging.get().end("query");
 		return result;

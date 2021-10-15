@@ -26,10 +26,12 @@ import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
 import javax.mail.internet.MimeMultipart;
 import javax.mail.util.ByteArrayDataSource;
 
-import com.sun.mail.smtp.SMTPMessage;
+import org.apache.commons.io.output.CountingOutputStream;
+import org.apache.commons.io.output.NullOutputStream;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -81,14 +83,14 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			boolean requestorPass) throws Exception {
 		byte[] msgBytes = ResourceUtilities
 				.readStreamToByteArray(convertedContent);
-		send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
+		String result = send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
 				requestorPass, deliveryModel.getEmailAddress());
 		if (LooseContext.has(CONTEXT_ALSO_SEND_TO_ADDRESS)) {
 			send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
 					requestorPass,
 					LooseContext.get(CONTEXT_ALSO_SEND_TO_ADDRESS));
 		}
-		return "OK";
+		return result;
 	}
 
 	@Override
@@ -98,9 +100,18 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			throws Exception {
 		byte[] msgBytes = ResourceUtilities
 				.readStreamToByteArray(convertedContent);
-		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
+		String result = deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
 		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
-		return "OK";
+		return result;
+	}
+
+	// From https://stackoverflow.com/a/48305769
+	private long getMessageSize(Message message)
+			throws IOException, MessagingException {
+		try (CountingOutputStream out = new CountingOutputStream(NullOutputStream.NULL_OUTPUT_STREAM)) {
+			message.writeTo(out);
+			return out.getByteCount();
+		}
 	}
 
 	protected boolean isUseVerp() {
@@ -116,20 +127,22 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			FileNotFoundException, NoSuchProviderException {
 		boolean debug = false;
 		Properties props = new Properties();
-		Class c = ContentDeliveryEmail.class;
-		String host = ResourceUtilities.getBundledString(c, "smtp.host.name");
+		String host = ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.host.name");
 		Integer port = Integer.valueOf(
-				ResourceUtilities.getBundledString(c, "smtp.host.port"));
+				ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.host.port"));
 		Boolean authenticate = Boolean.valueOf(
-				ResourceUtilities.getBundledString(c, "smtp.authenticate"));
-		String userName = ResourceUtilities.getBundledString(c,
+				ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.authenticate"));
+		String userName = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
 				"smtp.username");
-		String password = ResourceUtilities.getBundledString(c,
+		String password = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
 				"smtp.password");
-		String fromAddress = ResourceUtilities.getBundledString(c,
+		String fromAddress = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
 				"smtp.from.address");
-		String fromName = ResourceUtilities.getBundledString(c,
+		String fromName = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
 				"smtp.from.name");
+		Integer maxMessageSize = Integer.valueOf(
+				ResourceUtilities.getBundledString(ContentDeliveryEmail.class,"smtp.maxMessageSize"));
+		String replyTo = null;
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
 		}
@@ -138,12 +151,28 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		props.put("mail.smtp.host", host);
 		props.put("mail.smtp.auth", authenticate.toString());
-		if (ResourceUtilities.is(c, "smtp.ttls")) {
+		if (ResourceUtilities.is(ContentDeliveryEmail.class, "smtp.ttls")) {
 			props.setProperty("mail.smtp.starttls.enable", "true");
+			String protocols = ResourceUtilities.get(ContentDeliveryEmail.class, "smtp.ttls");
+			if(Ax.notBlank(protocols)){
+				props.setProperty("mail.smtp.ssl.protocols", protocols);	
+			}
+		}
+		if (isUseVerp() && PublicationContext.get() != null) {
+			String publicationUid = PublicationContext
+					.get().publicationResult.getPublicationUid();
+			// will be null if non-persistent
+			if (publicationUid != null) {
+				replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
+						String.format("$1+.r.%s@$2", publicationUid));
+				String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
+						String.format("$1+.b.%s@$2", publicationUid));
+				props.put("mail.smtp.from", bounceTo);
+			}
 		}
 		Session session = Session.getInstance(props, null);
 		session.setDebug(debug);
-		SMTPMessage msg = new SMTPMessage(session);
+		MimeMessage msg = new MimeMessage(session); 
 		msg.setSentDate(new Date());
 		msg.setFrom(new InternetAddress(fromAddress, fromName));
 		List<InternetAddress> addresses = new ArrayList<InternetAddress>();
@@ -278,17 +307,19 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			multipart.addBodyPart(messageBodyPart);
 			msg.setContent(multipart);
 		}
-		if (isUseVerp() && PublicationContext.get() != null) {
-			String publicationUid = PublicationContext
-					.get().publicationResult.publicationUid;
-			// will be null if non-persistent
-			if (publicationUid != null) {
-				String replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
-						String.format("$1+.r.%s@$2", publicationUid));
-				String bounceTo = fromAddress.replaceFirst("(.+?)@(.+)",
-						String.format("$1+.b.%s@$2", publicationUid));
-				msg.setEnvelopeFrom(bounceTo);
-				msg.setHeader("Reply-to", replyTo);
+		if (replyTo != null) {
+			msg.setHeader("Reply-to", replyTo);
+		}
+		// Check message size if we have a max size set
+		if (maxMessageSize != -1) {
+			try {
+				long messageSize = getMessageSize(msg);
+				Ax.out("Message size: %s", messageSize);
+				if (messageSize > maxMessageSize) {
+					throw new MessageTooLargeException(messageSize);
+				}
+			} catch (IOException | MessagingException e) {
+				throw new MessageSizeUndeterminedException(e);
 			}
 		}
 		Transport transport = session.getTransport("smtp");
@@ -302,5 +333,19 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			deliveryModel.removeAttachment(pdfAttachment);
 		}
 		return "OK";
+	}
+
+	public static class MessageTooLargeException extends Exception {
+		long size;
+
+		MessageTooLargeException(long size) {
+			this.size = size;
+		}
+	}
+
+	public static class MessageSizeUndeterminedException extends Exception {
+		public MessageSizeUndeterminedException(Throwable cause) {
+			super(cause);
+		}
 	}
 }

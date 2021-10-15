@@ -13,7 +13,6 @@
  */
 package cc.alcina.framework.servlet.grid;
 
-import java.beans.BeanInfo;
 import java.beans.PropertyDescriptor;
 import java.io.InputStream;
 import java.io.Serializable;
@@ -22,12 +21,12 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -35,14 +34,12 @@ import org.w3c.dom.Text;
 
 import com.totsp.gwittir.client.ui.Renderer;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.CollectionFilters.ConverterFilter;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.grid.GridFormatAnnotation;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 
 /**
@@ -143,18 +140,18 @@ public class ExcelExporter {
 		}
 		Object o = coll.iterator().next();
 		Class clazz = o.getClass();
-		BeanInfo beanInfo = ResourceUtilities.getBeanInfo(clazz);
-		PropertyDescriptor[] pds = beanInfo.getPropertyDescriptors();
-		List<PdMultiplexer> pdMultis = CollectionFilters.convertAndFilter(
-				Arrays.asList(pds), new ToPdMultiConverterFilter());
-		Collections.sort(pdMultis);
+		List<PropertyDescriptor> pds = SEUtilities
+				.getPropertyDescriptorsSortedByName(clazz);
+		List<PdMultiplexer> pdMultis = pds.stream().filter(pd -> !ignorePd(pd))
+				.map(PdMultiplexer::new).sorted().collect(Collectors.toList());
 		addCollectionToBook(coll, book, sheetName, pdMultis);
 	}
 
 	public void addCollectionToBook(Collection coll, Document book,
 			String sheetName, PropertyDescriptor[] pds) throws Exception {
-		List<PdMultiplexer> pdMultis = CollectionFilters.convertAndFilter(
-				Arrays.asList(pds), new ToPdMultiConverterFilter());
+		List<PdMultiplexer> pdMultis = Arrays.stream(pds)
+				.filter(pd -> !ignorePd(pd)).map(PdMultiplexer::new).sorted()
+				.collect(Collectors.toList());
 		addCollectionToBook(coll, book, sheetName, pds);
 	}
 
@@ -183,7 +180,6 @@ public class ExcelExporter {
 		Element table = (Element) sn.getElementsByTagName("Table").item(0);
 		Object o = coll.iterator().next();
 		Class clazz = o.getClass();
-		BeanInfo beanInfo = ResourceUtilities.getBeanInfo(clazz);
 		table.setAttributeNS(SS_NS, "ss:ExpandedColumnCount",
 				String.valueOf(pds.size()));
 		table.setAttributeNS(SS_NS, "ss:ExpandedRowCount",
@@ -309,24 +305,6 @@ public class ExcelExporter {
 
 		public void setName(String name) {
 			this.name = name;
-		}
-	}
-
-	private final class ToPdMultiConverterFilter implements
-			ConverterFilter<PropertyDescriptor, ExcelExporter.PdMultiplexer> {
-		@Override
-		public boolean allowPostConvert(PdMultiplexer c) {
-			return true;
-		}
-
-		@Override
-		public boolean allowPreConvert(PropertyDescriptor t) {
-			return !ignorePd(t);
-		}
-
-		@Override
-		public PdMultiplexer convert(PropertyDescriptor original) {
-			return new PdMultiplexer(original);
 		}
 	}
 

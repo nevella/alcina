@@ -37,6 +37,10 @@ public class CollectionCreators {
 	@RegistryLocation(registryPoint = CollectionCreators.HashMapCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class HashMapCreator {
+		public <K, V> Map<K, V> copy(Map<K, V> from) {
+			return new HashMap<>(from);
+		}
+
 		public <K, V> Map<K, V> create() {
 			return new HashMap<>();
 		}
@@ -61,6 +65,24 @@ public class CollectionCreators {
 		}
 	}
 
+	@RegistryLocation(registryPoint = TreeMapCreator.class, implementationType = ImplementationType.INSTANCE)
+	public static class TreeMapCreator implements MapCreator {
+		public List<Class> types;
+
+		public TreeMapCreator() {
+		}
+
+		@Override
+		public Map get() {
+			return new TreeMap();
+		}
+
+		public TreeMapCreator withTypes(List<Class> types) {
+			this.types = types;
+			return this;
+		}
+	}
+
 	@RegistryLocation(registryPoint = TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE)
 	public static class TreeMapRevCreator implements MapCreator {
 		public List<Class> types;
@@ -81,5 +103,13 @@ public class CollectionCreators {
 
 	public static interface TypedMapCreator<K, V> {
 		public Map<K, V> create(Class<K> keyClass, Class<V> valueClass);
+	}
+
+	@RegistryLocation(registryPoint = UnsortedMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	public static class UnsortedMapCreator implements DelegateMapCreator {
+		@Override
+		public Map createDelegateMap(int depthFromRoot, int depth) {
+			return new LinkedHashMap<>();
+		}
 	}
 }

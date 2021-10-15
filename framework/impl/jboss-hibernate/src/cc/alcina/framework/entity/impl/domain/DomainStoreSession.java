@@ -33,7 +33,11 @@ import org.hibernate.stat.SessionStatistics;
 public class DomainStoreSession implements Session {
 	Session delegate;
 
-	public DomainStoreSession(Session delegate) {
+	private DomainStoreEntityManager domainStoreEntityManager;
+
+	public DomainStoreSession(DomainStoreEntityManager domainStoreEntityManager,
+			Session delegate) {
+		this.domainStoreEntityManager = domainStoreEntityManager;
 		this.delegate = delegate;
 	}
 
@@ -258,6 +262,10 @@ public class DomainStoreSession implements Session {
 	@Override
 	public LockMode getCurrentLockMode(Object arg0) throws HibernateException {
 		return this.delegate.getCurrentLockMode(arg0);
+	}
+
+	public DomainStoreEntityManager getDomainStoreEntityManager() {
+		return this.domainStoreEntityManager;
 	}
 
 	@Override

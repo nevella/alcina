@@ -17,6 +17,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
 import java.util.List;
+import java.util.function.Predicate;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptException;
@@ -57,12 +58,12 @@ import com.google.gwt.user.client.ui.TabPanel;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.collections.CollectionFilter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Rect;
+import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.widget.HasComplexPanel;
@@ -287,9 +288,9 @@ public class WidgetUtils {
 	}
 
 	public static Widget getAncestorWidgetSatisfyingCallback(Widget w,
-			CollectionFilter<Object> callback) {
+			Predicate<Object> callback) {
 		while (w != null) {
-			if (callback.allow(w)) {
+			if (callback.test(w)) {
 				return w;
 			}
 			w = w.getParent();
@@ -298,9 +299,9 @@ public class WidgetUtils {
 	}
 
 	public static <T extends Widget> T getAncestorWidgetSatisfyingTypedCallback(
-			Widget w, CollectionFilter<Widget> callback) {
+			Widget w, Predicate<Widget> callback) {
 		while (w != null) {
-			if (callback.allow(w)) {
+			if (callback.test(w)) {
 				return (T) w;
 			}
 			w = w.getParent();
@@ -679,9 +680,9 @@ public class WidgetUtils {
 
 	public static void maybeClosePopupParent(ClickEvent clickEvent) {
 		Widget w = (Widget) clickEvent.getSource();
-		CollectionFilter<Object> callback = new CollectionFilter<Object>() {
+		Predicate<Object> callback = new Predicate<Object>() {
 			@Override
-			public boolean allow(Object o) {
+			public boolean test(Object o) {
 				return o instanceof RelativePopupPanel;
 			}
 		};

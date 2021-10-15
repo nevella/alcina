@@ -7,7 +7,6 @@ import java.util.List;
 
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
 
-import cc.alcina.framework.common.client.logic.MuteablePropertyChangeSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 
@@ -20,13 +19,13 @@ public class DteReplayWorker implements RepeatingCommand {
 
 	@Override
 	public boolean execute() {
-		MuteablePropertyChangeSupport.setMuteAll(true);
+		TransformManager.get().setIgnorePropertyChanges(true);
 		List<DomainTransformEvent> slice = new ArrayList<DomainTransformEvent>();
 		for (int count = 0; count < 50 && iterator.hasNext(); count++) {
 			slice.add(iterator.next());
 		}
 		TransformManager.get().replayRemoteEvents(slice, false);
-		MuteablePropertyChangeSupport.setMuteAll(false);
+		TransformManager.get().setIgnorePropertyChanges(false);
 		return iterator.hasNext();
 	}
 }

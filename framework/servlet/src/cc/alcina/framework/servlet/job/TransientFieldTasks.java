@@ -2,9 +2,9 @@ package cc.alcina.framework.servlet.job;
 
 import java.util.concurrent.ConcurrentHashMap;
 
-import cc.alcina.framework.common.client.actions.JobResource;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.lock.JobResource;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;

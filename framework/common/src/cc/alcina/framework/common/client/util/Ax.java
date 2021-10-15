@@ -5,13 +5,10 @@ import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
-import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.gwt.client.util.TextUtils;
 
 public class Ax {
 	private static boolean test;
@@ -92,6 +89,14 @@ public class Ax {
 		return CommonUtils.last(list);
 	}
 
+	public static int length(double[] array) {
+		return array.length;
+	}
+
+	public static int length(Object[] array) {
+		return array.length;
+	}
+
 	public static boolean matches(String test, String regex) {
 		if (test == null || regex == null) {
 			return false;
@@ -160,28 +165,15 @@ public class Ax {
 		System.out.println(CommonUtils.highlightForLog(template, args));
 	}
 
+	public static String timestamp(Date date) {
+		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME_MS);
+	}
+
 	public static String trim(String s, int maxChars) {
 		return CommonUtils.trimToWsChars(s, maxChars, true);
 	}
 
 	public static double twoPlaces(double d) {
 		return CommonUtils.roundNumeric(d, 2);
-	}
-
-	public static class AxStreams {
-		public <T> Function<T, T> visit(Consumer<T> consumer) {
-			return t -> {
-				consumer.accept(t);
-				return t;
-			};
-		}
-	}
-
-	public static int length(Object[] array) {
-		return array.length;
-	}
-
-	public static int length(double[] array) {
-		return array.length;
 	}
 }

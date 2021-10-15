@@ -1,9 +1,9 @@
 package cc.alcina.framework.gwt.client.entity.place;
 
 import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
-import cc.alcina.framework.gwt.client.entity.search.EntitySearchDefinition;
 import cc.alcina.framework.gwt.client.place.BindablePlaceTokenizer;
 
 public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySearchDefinition, P extends EntityPlace<SD>>

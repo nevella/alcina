@@ -14,18 +14,18 @@ import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableRowBuilder;
-import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
+import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityComparator;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob;
-import cc.alcina.framework.entity.persistence.cache.descriptor.DomainDescriptorJob.AllocationQueue;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
+import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.AllocationQueue;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.job.JobRegistry;
@@ -112,7 +112,9 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			ProcessState processState = active.getProcessState();
 			ProcessState messageState = active.getStateMessages().stream()
 					.sorted(EntityComparator.REVERSED_INSTANCE).findFirst()
-					.map(m -> Domain.find(m).getProcessState()).orElse(null);
+					.map(m -> ((JobStateMessage) m.domain().ensurePopulated())
+							.getProcessState())
+					.orElse(null);
 			DomNode threadDiv = body.builder().tag("div")
 					.className("thread-data").append();
 			DomNodeHtmlTableBuilder builder = body.html().tableBuilder();
@@ -163,17 +165,19 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 			List<Job> threadData = JobRegistry.get().getThreadData(job);
 			job.domain().ensurePopulated();
 			DomDoc doc = DomDoc.basicHtmlDoc();
-			String css = ResourceUtilities.readClazzp("res/TaskListJobs.css");
+			String css = ResourceUtilities
+					.readRelativeResource("res/TaskListJobs.css");
 			doc.xpath("//head").node().builder().tag("style").text(css)
 					.append();
-			css = ResourceUtilities.readClazzp("res/TaskLogJobDetails.css");
+			css = ResourceUtilities
+					.readRelativeResource("res/TaskLogJobDetails.css");
 			doc.xpath("//head").node().builder().tag("style").text(css)
 					.append();
 			DomNode body = doc.html().body();
 			body.builder().tag("h2").text("Allocator").append();
 			DomNodeBuilder queueDiv = body.builder().tag("div")
 					.className("allocation-queue");
-			AllocationQueue allocationQueue = DomainDescriptorJob.get()
+			AllocationQueue allocationQueue = JobDomain.get()
 					.getAllocationQueue(job);
 			if (allocationQueue == null) {
 				queueDiv.text("(No allocation queue)");

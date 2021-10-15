@@ -4,22 +4,17 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gwt.user.client.rpc.AsyncCallback;
-
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CommitToLocalDomainTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.RecordTransformListener;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -31,10 +26,8 @@ import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
-import cc.alcina.framework.common.client.logic.reflection.Wrapper;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.Client;
 
 public abstract class ClientTransformManager extends TransformManager {
 	public static ClientTransformManager cast() {
@@ -59,6 +52,10 @@ public abstract class ClientTransformManager extends TransformManager {
 	public void clearUserObjects() {
 		requiresEditPrep.clear();
 		super.clearUserObjects();
+	}
+	public void setupClientListeners() {
+		addDomainTransformListener(new RecordTransformListener());
+		addDomainTransformListener(new CommitToLocalDomainTransformListener());
 	}
 
 	public Entity ensureEditable(Entity entity) {
@@ -98,69 +95,6 @@ public abstract class ClientTransformManager extends TransformManager {
 
 	public boolean isProvisionalEditing() {
 		return this.provisionalEditing;
-	}
-
-	/**
-	 * Useful series of actions when persisting a Entity with references to a
-	 * WrappedObject
-	 *
-	 * @see TransformManager#promoteToDomainObject(Object) wrt what to do with
-	 *      promoted objects
-	 * @param referrer
-	 */
-	public <T extends Entity> T persistWrappedObjectReferrer(final T referrer,
-			boolean onlyLocalGraph) {
-		Reflections.classLookup().iterateForPropertyWithAnnotation(
-				referrer.getClass(), Wrapper.class,
-				(annotation, propertyReflector) -> {
-					WrapperPersistable obj = (WrapperPersistable) propertyReflector
-							.getPropertyValue(referrer);
-					Reflections.propertyAccessor().setPropertyValue(referrer,
-							annotation.toStringPropertyName(), obj.toString());
-				});
-		T target = referrer;
-		if (isProvisionalObject(referrer)) {
-			try {
-				CollectionModificationSupport.queue(true);
-				final T promoted = promoteToDomainObject(referrer);
-				target = promoted;
-				// copy, because at the moment wrapped refs don't get handled by
-				// the TM
-				Reflections.classLookup().iterateForPropertyWithAnnotation(
-						referrer.getClass(), Wrapper.class,
-						(annotation, propertyReflector) -> {
-							propertyReflector.setPropertyValue(promoted,
-									propertyReflector
-											.getPropertyValue(referrer));
-						});
-			} finally {
-				CollectionModificationSupport.queue(false);
-			}
-		}
-		final Entity finalTarget = target;
-		if (!onlyLocalGraph) {
-			Reflections.classLookup().iterateForPropertyWithAnnotation(
-					referrer.getClass(), Wrapper.class,
-					(annotation, propertyReflector) -> {
-						WrapperPersistable persistableObject = (WrapperPersistable) propertyReflector
-								.getPropertyValue(finalTarget);
-						AsyncCallback<Long> savedCallback = new AsyncCallback<Long>() {
-							@Override
-							public void onFailure(Throwable caught) {
-								throw new WrappedRuntimeException(caught);
-							}
-
-							@Override
-							public void onSuccess(Long result) {
-								Reflections.propertyAccessor().setPropertyValue(
-										finalTarget,
-										annotation.idPropertyName(), result);
-							}
-						};
-						callRemotePersistence(persistableObject, savedCallback);
-					});
-		}
-		return target;
 	}
 
 	public Collection prepareObject(Entity domainObject, boolean autoSave,
@@ -279,24 +213,6 @@ public abstract class ClientTransformManager extends TransformManager {
 		}
 	}
 
-	public void serializeDomainObjects(ClientInstance clientInstance)
-			throws Exception {
-		Map<Class<? extends Entity>, Collection<Entity>> collectionMap = getDomainObjects()
-				.getCollectionMap();
-		Map<Class, List> objCopy = new LinkedHashMap<Class, List>();
-		for (Class<? extends Entity> clazz : collectionMap.keySet()) {
-			List values = CollectionFilters.filter(collectionMap.get(clazz),
-					new CollectionFilter<Entity>() {
-						@Override
-						public boolean allow(Entity o) {
-							return o.getId() != 0;
-						}
-					});
-			objCopy.put(clazz, values);
-		}
-		new ClientDteWorker(objCopy, clientInstance).start();
-	}
-
 	public void setDomainTransformExceptionFilter(
 			DomainTransformExceptionFilter domainTransformExceptionFilter) {
 		this.domainTransformExceptionFilter = domainTransformExceptionFilter;
@@ -335,10 +251,6 @@ public abstract class ClientTransformManager extends TransformManager {
 					Collections.singleton(value), collectionModificationType);
 		}
 	}
-
-	protected abstract void callRemotePersistence(
-			WrapperPersistable persistableObject,
-			AsyncCallback<Long> savedCallback);
 
 	protected boolean checkRemoveAssociation(Entity entity, Entity target,
 			ClientPropertyReflector propertyReflector) {
@@ -385,13 +297,6 @@ public abstract class ClientTransformManager extends TransformManager {
 
 	public static class ClientTransformManagerCommon
 			extends ClientTransformManager {
-		@Override
-		protected void callRemotePersistence(
-				WrapperPersistable persistableObject,
-				AsyncCallback<Long> savedCallback) {
-			Client.commonRemoteService().persist(persistableObject,
-					savedCallback);
-		}
 	}
 
 	public interface PersistableTransformListener {

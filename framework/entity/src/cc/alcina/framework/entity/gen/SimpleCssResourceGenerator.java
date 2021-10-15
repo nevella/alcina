@@ -41,6 +41,7 @@ import com.google.gwt.user.rebind.SourceWriter;
 import com.google.gwt.user.rebind.StringSourceWriter;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource;
 import cc.alcina.framework.gwt.client.gen.SimpleCssResource.ResolveParent;
@@ -49,7 +50,7 @@ import cc.alcina.framework.gwt.client.gen.SimpleCssResource.ResolveParent;
  * Provides implementations of SimpleCssResource.
  */
 public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
-// FIXME - add caching back
+// FIXME - dirndl1.1
 // implements SupportsGeneratorResultCaching {
 {
 	public static final String IGNORE_DATA_URLS = "alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls";

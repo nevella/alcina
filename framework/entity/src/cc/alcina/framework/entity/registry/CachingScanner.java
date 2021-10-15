@@ -14,21 +14,32 @@
 package cc.alcina.framework.entity.registry;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.net.ConnectException;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.util.ClasspathScanner;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
+import cc.alcina.framework.entity.util.JacksonUtils;
+import cc.alcina.framework.entity.util.MethodContext;
 
 /**
  *
  * @author Nick Reddel
  */
 public abstract class CachingScanner<T extends ClassMetadata> {
+	public static boolean useKryo() {
+		return Boolean.getBoolean(
+				"cc.alcina.framework.entity.registry.CachingScanner.useKryo");
+	}
+
 	int cc = 0;
 
 	long loadClassNanos = 0;
@@ -41,6 +52,8 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 
 	protected ClassMetadataCache<T> outgoingCache;
 
+	String debugClassloaderExceptionRegex = null;
+
 	public InputStream getStreamForMd5(ClassMetadata classMetadata)
 			throws Exception {
 		try {
@@ -50,8 +63,6 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 			return new JarHelper().openStream(classMetadata.url());
 		}
 	}
-
-	String debugClassloaderExceptionRegex = null;
 
 	public void scan(ClassMetadataCache<ClassMetadata> foundCache,
 			String cachePath) throws Exception {
@@ -102,13 +113,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 					loadClassNanos / 1000 / 1000,
 					loadClassErrNanos / 1000 / 1000, ignoreCount, time);
 		}
-		try {
-			LooseContext.pushWithTrue(
-					KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
-			KryoUtils.serializeToFile(outgoingCache, cacheFile);
-		} finally {
-			LooseContext.pop();
-		}
+		serialize(cacheFile);
 	}
 
 	private void maybeLog(Throwable throwable, String className) {
@@ -120,20 +125,57 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 		}
 	}
 
+	private void serialize(File cacheFile) {
+		new Thread(Ax.format("caching-scanner-write-%s", cacheFile.getName())) {
+			@Override
+			public void run() {
+				if (useKryo()) {
+					KryoUtils.serializeToFile(outgoingCache, cacheFile);
+				} else {
+					try {
+						LooseContext.pushWithTrue(
+								JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL);
+						JacksonUtils.serializeToFile(outgoingCache, cacheFile);
+					} catch (Throwable t) {
+						t.printStackTrace();
+					} finally {
+						LooseContext.pop();
+					}
+				}
+			};
+		}.start();
+	}
+
 	protected abstract T createMetadata(String className, ClassMetadata found);
 
 	protected ClassMetadataCache getCached(File cacheFile) {
-		try {
-			LooseContext.pushWithTrue(
-					KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
-			ClassMetadataCache value = KryoUtils.deserializeFromFile(cacheFile,
-					ClassMetadataCache.class);
-			return value;
-		} catch (Exception e) {
-			return new ClassMetadataCache();
-		} finally {
-			LooseContext.pop();
-		}
+		return MethodContext.instance()
+				.withContextTrue(
+						JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL)
+				.withContextClassloader(getClass().getClassLoader())
+				.call(() -> {
+					try {
+						if (useKryo()) {
+							return KryoUtils.deserializeFromFile(cacheFile,
+									ClassMetadataCache.class);
+						} else {
+							return JacksonUtils.deserializeFromFile(cacheFile,
+									ClassMetadataCache.class);
+						}
+					} catch (Exception e) {
+						if (cacheFile.exists()) {
+							cacheFile.delete();
+						}
+						if (CommonUtils.extractCauseOfClass(e,
+								ConnectException.class) != null) {
+							Ax.err("ClassMetaServer not reachable");
+						} else if (CommonUtils.extractCauseOfClass(e,
+								FileNotFoundException.class) != null) {
+							Ax.err("No cache found, creating");
+						}
+						return new ClassMetadataCache();
+					}
+				});
 	}
 
 	protected File getHomeDir() {

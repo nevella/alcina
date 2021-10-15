@@ -16,8 +16,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -31,9 +33,6 @@ import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.extras.dev.console.DevConsoleDebugCommands.CmdDrillClientException.DevConsoleDebugPaths;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.CollectionFilter;
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.CollectionFilters.ConverterFilter;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.entity.ReplayInstruction;
@@ -138,25 +137,27 @@ public class DevConsoleDebugCommands {
 			if (componentKey != null) {
 				logRecords = filterByComponent(logRecords, componentKey);
 			}
-			CollectionFilter<ILogRecord> customFilter = new CollectionFilter<ILogRecord>() {
+			Predicate<ILogRecord> customFilter = new Predicate<ILogRecord>() {
 				Pattern p = Pattern.compile(
 						"(Citables initialization failed|CitablesSingletonHolder|Citable\\.root)",
 						Pattern.CASE_INSENSITIVE | Pattern.DOTALL);
 
 				@Override
-				public boolean allow(ILogRecord o) {
+				public boolean test(ILogRecord o) {
 					boolean matches = p.matcher(o.getText()).find();
 					return !matches;
 				}
 			};
-			logRecords = CollectionFilters.filter(logRecords, customFilter);
+			logRecords = logRecords.stream().filter(customFilter)
+					.collect(Collectors.toList());
 			filterArgvResult = new FilterArgvParam(argv, "-u");
 			argv = filterArgvResult.argv;
 			if (filterArgvResult.value != null) {
 				long userId = Long.parseLong(filterArgvResult.value);
 				if (userId != 0) {
-					logRecords = CollectionFilters.filterByProperty(logRecords,
-							ILogRecord.USER_ID, userId);
+					logRecords = logRecords.stream()
+							.filter(l -> Objects.equals(l.getUserId(), userId))
+							.collect(Collectors.toList());
 				}
 			}
 			filterArgvResult = new FilterArgvParam(argv, "-r");
@@ -164,28 +165,28 @@ public class DevConsoleDebugCommands {
 			if (filterArgvResult.value != null) {
 				final Pattern rp = Pattern.compile(filterArgvResult.value,
 						Pattern.CASE_INSENSITIVE);
-				CollectionFilter<ILogRecord> containsTextFilter = new CollectionFilter<ILogRecord>() {
+				Predicate<ILogRecord> containsTextFilter = new Predicate<ILogRecord>() {
 					@Override
-					public boolean allow(ILogRecord o) {
+					public boolean test(ILogRecord o) {
 						return rp.matcher(o.getText()).find();
 					}
 				};
-				logRecords = CollectionFilters.filter(logRecords,
-						containsTextFilter);
+				logRecords = logRecords.stream().filter(containsTextFilter)
+						.collect(Collectors.toList());
 			}
 			filterArgvResult = new FilterArgvParam(argv, "-rn");
 			argv = filterArgvResult.argv;
 			if (filterArgvResult.value != null) {
 				final Pattern rp = Pattern.compile(filterArgvResult.value,
 						Pattern.CASE_INSENSITIVE);
-				CollectionFilter<ILogRecord> containsTextFilter = new CollectionFilter<ILogRecord>() {
+				Predicate<ILogRecord> containsTextFilter = new Predicate<ILogRecord>() {
 					@Override
-					public boolean allow(ILogRecord o) {
+					public boolean test(ILogRecord o) {
 						return !rp.matcher(o.getText()).find();
 					}
 				};
-				logRecords = CollectionFilters.filter(logRecords,
-						containsTextFilter);
+				logRecords = logRecords.stream().filter(containsTextFilter)
+						.collect(Collectors.toList());
 			}
 			CountingMap<String> byType = new CountingMap<String>();
 			filterArgvResult = new FilterArgvParam(argv, "-d");
@@ -196,27 +197,28 @@ public class DevConsoleDebugCommands {
 					final Calendar c = Calendar.getInstance();
 					c.setTime(new Date());
 					c.add(Calendar.DATE, -days);
-					CollectionFilter<ILogRecord> dayRecencyFilter = new CollectionFilter<ILogRecord>() {
+					Predicate<ILogRecord> dayRecencyFilter = new Predicate<ILogRecord>() {
 						@Override
-						public boolean allow(ILogRecord o) {
+						public boolean test(ILogRecord o) {
 							return c.getTime().compareTo(o.getCreatedOn()) <= 0;
 						}
 					};
-					logRecords = CollectionFilters.filter(logRecords,
-							dayRecencyFilter);
+					logRecords = logRecords.stream().filter(dayRecencyFilter)
+							.collect(Collectors.toList());
 				}
 			}
 			filterArgvResult = new FilterArgvParam(argv, "-i");
 			argv = filterArgvResult.argv;
 			if (filterArgvResult.value != null) {
 				final int minId = Integer.parseInt(filterArgvResult.value);
-				CollectionFilter<ILogRecord> minIdFilter = new CollectionFilter<ILogRecord>() {
+				Predicate<ILogRecord> minIdFilter = new Predicate<ILogRecord>() {
 					@Override
-					public boolean allow(ILogRecord o) {
+					public boolean test(ILogRecord o) {
 						return o.getId() > minId;
 					}
 				};
-				logRecords = CollectionFilters.filter(logRecords, minIdFilter);
+				logRecords = logRecords.stream().filter(minIdFilter)
+						.collect(Collectors.toList());
 			}
 			filterArgvResult = new FilterArgvParam(argv, "-fu");
 			argv = filterArgvResult.argv;
@@ -439,10 +441,8 @@ public class DevConsoleDebugCommands {
 			};
 			List<String> lines = Arrays
 					.asList(serializedLogRecords.split("\n"));
-			List<ClientLogRecords> records = CollectionFilters.convert(lines,
-					converter);
-			while (records.remove(null)) {
-			}
+			List<ClientLogRecords> records = lines.stream().map(converter)
+					.filter(Objects::nonNull).collect(Collectors.toList());
 			List<ClientLogRecord> clrs = new ArrayList<ClientLogRecord>();
 			for (ClientLogRecords clientLogRecords : records) {
 				clrs.addAll(clientLogRecords.getLogRecords());
@@ -457,12 +457,8 @@ public class DevConsoleDebugCommands {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			try {
-				console.clear();
-				return run0(argv);
-			} finally {
-				console.scrollToTopAtEnd();
-			}
+			console.clear();
+			return run0(argv);
 		}
 
 		private void deObfStacktrace(String text, String mn, Browser browser)
@@ -656,8 +652,8 @@ public class DevConsoleDebugCommands {
 					break;// just get the first
 				}
 			}
-			System.out.println(CommonUtils.join(
-					CollectionFilters.convert(clrs, recordsConverter), "\n"));
+			Ax.out(clrs.stream().map(recordsConverter)
+					.collect(Collectors.joining("\n")));
 		}
 
 		private boolean ensureModuleAndSymbolMap(String mn) throws Exception {
@@ -695,24 +691,9 @@ public class DevConsoleDebugCommands {
 		private String extractReplay(String serializedLogRecords) {
 			List<ClientLogRecord> clrs = parseSerializedLogRecords(
 					serializedLogRecords);
-			ConverterFilter<ClientLogRecord, ReplayInstruction> converterFilter = new ConverterFilter<ClientLogRecord, ReplayInstruction>() {
-				@Override
-				public boolean allowPostConvert(ReplayInstruction c) {
-					return c != null;
-				}
-
-				@Override
-				public boolean allowPreConvert(ClientLogRecord t) {
-					return true;
-				}
-
-				@Override
-				public ReplayInstruction convert(ClientLogRecord original) {
-					return ReplayInstruction.fromClientLogRecord(original);
-				}
-			};
-			List<ReplayInstruction> ris = CollectionFilters
-					.convertAndFilter(clrs, converterFilter);
+			List<ReplayInstruction> ris = clrs.stream()
+					.map(o -> ReplayInstruction.fromClientLogRecord(o))
+					.filter(Objects::nonNull).collect(Collectors.toList());
 			return CommonUtils.join(ris, "\n");
 		}
 

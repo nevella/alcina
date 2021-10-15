@@ -10,6 +10,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -22,7 +23,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.cache.LazyPropertyLoadTask;
+import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -46,9 +47,20 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public static <KVP extends KeyValuePersistent> Optional<KVP>
 			byKey(String key) {
-		return (Optional<KVP>) Domain.query(implementation()).contextTrue(
-				LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
-				.filter("key", keyMapper.apply(key)).optional();
+		return byKey(key, true);
+	}
+
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+	public static <KVP extends KeyValuePersistent> Optional<KVP>
+			byKey(String key, boolean populate) {
+		DomainQuery<? extends KeyValuePersistent> query = Domain
+				.query(implementation());
+		if (populate) {
+			query.contextTrue(
+					LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES);
+		}
+		return (Optional<KVP>) query.filter("key", keyMapper.apply(key))
+				.optional();
 	}
 
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)

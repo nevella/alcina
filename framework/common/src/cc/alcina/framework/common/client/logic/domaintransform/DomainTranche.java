@@ -6,6 +6,9 @@ import java.util.Collection;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+
+@Bean
 public class DomainTranche<T extends DomainModelObject>
 		implements DomainModelDelta, Serializable {
 	private DomainModelHolder domainModelHolder;
@@ -22,14 +25,17 @@ public class DomainTranche<T extends DomainModelObject>
 
 	private T domainModelObject;
 
+	@Override
 	public String getAppInstruction() {
 		return this.appInstruction;
 	}
 
+	@Override
 	public DomainModelHolder getDomainModelHolder() {
 		return this.domainModelHolder;
 	}
 
+	@Override
 	public T getDomainModelObject() {
 		return this.domainModelObject;
 	}
@@ -39,6 +45,7 @@ public class DomainTranche<T extends DomainModelObject>
 		return metadata;
 	}
 
+	@Override
 	public Collection<DomainTransformEvent> getReplayEvents() {
 		return this.replayEvents;
 	}
@@ -48,6 +55,7 @@ public class DomainTranche<T extends DomainModelObject>
 		return signature;
 	}
 
+	@Override
 	public Collection<DomainModelDeltaEntity> getUnlinkedObjects() {
 		return this.unlinkedObjects;
 	}

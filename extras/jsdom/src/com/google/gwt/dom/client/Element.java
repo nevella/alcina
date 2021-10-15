@@ -39,7 +39,7 @@ import com.google.gwt.user.client.ui.UIObject;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.gwt.client.util.TextUtils;
+import cc.alcina.framework.common.client.util.TextUtils;
 
 /**
  * All HTML element interfaces derive from this class.
@@ -519,6 +519,10 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		return new ElementImplAccess();
 	}
 
+	public List<String> localBitlessEventsSunk() {
+		return local().bitlessEvents;
+	}
+
 	public int localEventBitsSunk() {
 		return local().eventBits;
 	}
@@ -625,6 +629,14 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		ensureRemoteCheck();
 		local().setClassName(className);
 		remote().setClassName(className);
+	}
+
+	public void setClassName(String className, boolean present) {
+		if (present) {
+			addClassName(className);
+		} else {
+			removeClassName(className);
+		}
 	}
 
 	@Override
@@ -752,7 +764,6 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	@Override
 	public void setPropertyJSO(String name, JavaScriptObject value) {
 		ensureRemoteCheck();
-		local().setPropertyJSO(name, value);
 		remote().setPropertyJSO(name, value);
 	}
 
@@ -792,6 +803,12 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		ensureRemoteCheck();
 		local().setTitle(title);
 		remote().setTitle(title);
+	}
+
+	@Override
+	public void sinkBitlessEvent(String eventTypeName) {
+		local().sinkBitlessEvent(eventTypeName);
+		remote().sinkBitlessEvent(eventTypeName);
 	}
 
 	@Override
@@ -1091,14 +1108,6 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 		public boolean wasResolved() {
 			return Element.this.wasResolved();
-		}
-	}
-
-	public void setClassName(String className, boolean present) {
-		if (present) {
-			addClassName(className);
-		} else {
-			removeClassName(className);
 		}
 	}
 }

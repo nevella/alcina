@@ -7,22 +7,35 @@ import javax.xml.bind.annotation.XmlAccessorType;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
  */
 @XmlAccessorType(XmlAccessType.PROPERTY)
-public class EntityLocator implements Serializable {
+@Bean
+public class EntityLocator implements Serializable, TreeSerializable {
 	static final transient long serialVersionUID = 1L;
 
 	public static EntityLocator instanceLocator(Entity entity) {
-		return new EntityLocator(entity);
+		return entity == null ? null : new EntityLocator(entity);
+	}
+
+	public static EntityLocator nonClassDependent(String entityClassName,
+			long id) {
+		EntityLocator entityLocator = new EntityLocator();
+		entityLocator.entityClassName = entityClassName;
+		entityLocator.id = id;
+		return entityLocator;
 	}
 
 	public static EntityLocator objectLocalLocator(DomainTransformEvent dte) {
@@ -40,8 +53,7 @@ public class EntityLocator implements Serializable {
 			return new EntityLocator();
 		}
 		String[] parts = v.split("/");
-		return new EntityLocator(
-				Reflections.forName(parts[2]),
+		return new EntityLocator(Reflections.forName(parts[2]),
 				Long.parseLong(parts[0]), Long.parseLong(parts[1]));
 	}
 
@@ -75,7 +87,11 @@ public class EntityLocator implements Serializable {
 	@JsonIgnore
 	public long localId;
 
+	@JsonIgnore
 	public long clientInstanceId;
+
+	@JsonIgnore
+	private String entityClassName;
 
 	private transient int hash;
 
@@ -87,7 +103,7 @@ public class EntityLocator implements Serializable {
 				? (Class<? extends Entity>) Domain.resolveEntityClass(clazz)
 				: null;
 		this.id = id;
-		this.localId = localId;
+		setLocalId(localId);
 		if (id == 0) {
 			this.clientInstanceId = PermissionsManager.get()
 					.getClientInstanceId();
@@ -95,9 +111,7 @@ public class EntityLocator implements Serializable {
 	}
 
 	private EntityLocator(Entity obj) {
-		this.clazz = obj.entityClass();
-		this.id = obj.getId();
-		this.localId = obj.getLocalId();
+		this(obj.entityClass(), obj.getId(), obj.getLocalId());
 	}
 
 	@Override
@@ -116,12 +130,24 @@ public class EntityLocator implements Serializable {
 		return Domain.find(this);
 	}
 
+	@AlcinaTransient
+	@JsonIgnore
 	public Class<? extends Entity> getClazz() {
+		if (!GWT.isClient() && clazz == null && entityClassName != null) {
+			clazz = Reflections.forName(entityClassName);
+		}
 		return this.clazz;
 	}
 
 	public long getClientInstanceId() {
 		return this.clientInstanceId;
+	}
+
+	public String getEntityClassName() {
+		if (this.entityClassName == null && clazz != null) {
+			entityClassName = clazz.getCanonicalName();
+		}
+		return this.entityClassName;
 	}
 
 	public long getId() {
@@ -132,6 +158,8 @@ public class EntityLocator implements Serializable {
 		return this.localId;
 	}
 
+	@AlcinaTransient
+	@JsonIgnore
 	public <E extends Entity> E getObject() {
 		return Domain.find(this);
 	}
@@ -163,6 +191,10 @@ public class EntityLocator implements Serializable {
 
 	public void setClientInstanceId(long clientInstanceId) {
 		this.clientInstanceId = clientInstanceId;
+	}
+
+	public void setEntityClassName(String entityClassName) {
+		this.entityClassName = entityClassName;
 	}
 
 	public void setId(long id) {
@@ -209,6 +241,15 @@ public class EntityLocator implements Serializable {
 			return toRecoverableString(clientInstanceId);
 		}
 		return Ax.format("%s - %s",
-				clazz == null ? "??" : CommonUtils.simpleClassName(clazz), id);
+				clazz == null
+						? entityClassName == null ? "??"
+								: entityClassName.replaceFirst(".+\\.(.+)",
+										"$1")
+						: CommonUtils.simpleClassName(clazz),
+				id);
+	}
+
+	public boolean wasRemoved() {
+		return find() == null;
 	}
 }

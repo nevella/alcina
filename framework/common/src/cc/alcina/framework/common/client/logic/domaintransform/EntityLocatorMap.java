@@ -14,24 +14,23 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
-import java.util.HashMap;
+import java.util.Map;
 
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /**
- * The key is the (client's) localid of the Entity Most methods are "local to
- * persistent" - except where marked
  * 
  * @author nick@alcina.cc
  * 
  */
 public class EntityLocatorMap implements Serializable {
-	static final transient long serialVersionUID = 1;
-
-	private HashMap<Long, EntityLocator> localToPersistent = new HashMap<>();
+	private Map<Long, EntityLocator> localToPersistent = Registry
+			.impl(CollectionCreators.HashMapCreator.class).create();
 
 	private UnsortedMultikeyMap<EntityLocator> persistentToLocal = new UnsortedMultikeyMap<>(
 			2);
@@ -39,19 +38,18 @@ public class EntityLocatorMap implements Serializable {
 	public EntityLocatorMap() {
 	}
 
-	public synchronized void clear() {
-		localToPersistent.clear();
-		persistentToLocal.clear();
-	}
-
 	public synchronized boolean containsKey(Long localId) {
 		return localToPersistent.containsKey(localId);
 	}
 
+	/*
+	 * Only called by test servers
+	 */
 	public synchronized EntityLocatorMap copy() {
 		EntityLocatorMap clone = new EntityLocatorMap();
-		clone.localToPersistent = (HashMap<Long, EntityLocator>) localToPersistent
-				.clone();
+		clone.localToPersistent = Registry
+				.impl(CollectionCreators.HashMapCreator.class)
+				.copy(localToPersistent);
 		clone.persistentToLocal = persistentToLocal.clone();
 		return clone;
 	}
@@ -71,6 +69,14 @@ public class EntityLocatorMap implements Serializable {
 
 	public synchronized EntityLocator getForLocalId(Long localId) {
 		return localToPersistent.get(localId);
+	}
+
+	public long getLocalId(Class<? extends Entity> clazz, long id) {
+		EntityLocator entityLocator = persistentToLocal.get(clazz, id);
+		if (entityLocator != null) {
+			return entityLocator.localId;
+		}
+		return 0;
 	}
 
 	public synchronized <H extends Entity> long
@@ -94,23 +100,25 @@ public class EntityLocatorMap implements Serializable {
 		}
 	}
 
-	public synchronized boolean isEmpty() {
-		return localToPersistent.isEmpty();
-	}
-
-	public synchronized void merge(EntityLocatorMap locatorMap) {
-		putAll(locatorMap);
-	}
-
-	public synchronized void putAll(EntityLocatorMap other) {
+	public synchronized void merge(EntityLocatorMap other) {
 		localToPersistent.putAll(other.localToPersistent);
 		persistentToLocal.putMulti(other.persistentToLocal);
 	}
 
 	public synchronized void putToLookups(EntityLocator entityLocator) {
 		localToPersistent.put(entityLocator.localId, entityLocator);
-		persistentToLocal.put(entityLocator.clazz, entityLocator.id,
-				entityLocator);
+		if (entityLocator.id != 0) {
+			persistentToLocal.put(entityLocator.clazz, entityLocator.id,
+					entityLocator);
+		}
+	}
+
+	public void remove(EntityLocator locator) {
+		EntityLocator toPersistent = localToPersistent
+				.remove(locator.getLocalId());
+		if (toPersistent != null) {
+			localToPersistent.remove(toPersistent.getId());
+		}
 	}
 
 	public static class ToCreatedIdConverter<H extends Entity>

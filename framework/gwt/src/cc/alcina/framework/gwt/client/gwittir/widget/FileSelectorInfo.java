@@ -2,16 +2,23 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 
 import java.io.Serializable;
 
-import cc.alcina.framework.common.client.csobjects.BaseSourcesPropertyChangeEvents;
+import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
-public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
-		implements Serializable {
+public class FileSelectorInfo extends Bindable
+		implements Serializable, TreeSerializable {
 	private String fileName;
 
 	private byte[] bytes;
 
 	private transient Topic<FileSelectorInfo> clearTopic = Topic.local();
+
+	public void clear() {
+		setBytes(null);
+		setFileName(null);
+		topicClear().publish(this);
+	}
 
 	public byte[] getBytes() {
 		return this.bytes;
@@ -32,12 +39,6 @@ public class FileSelectorInfo extends BaseSourcesPropertyChangeEvents
 		this.fileName = fileName;
 		propertyChangeSupport().firePropertyChange("fileName", old_fileName,
 				fileName);
-	}
-
-	public void clear() {
-		setBytes(null);
-		setFileName(null);
-		topicClear().publish(this);
 	}
 
 	public Topic<FileSelectorInfo> topicClear() {

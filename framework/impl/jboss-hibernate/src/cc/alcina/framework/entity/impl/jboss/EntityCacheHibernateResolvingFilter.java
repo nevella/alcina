@@ -22,10 +22,9 @@ import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.entity.WrapperPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.entity.persistence.cache.DomainStore;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
@@ -68,7 +67,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 	@Override
 	public <T> T filterData(T value, T cloned, GraphProjectionContext context,
 			GraphProjection graphProjection) throws Exception {
-		if (value instanceof Entity && !(value instanceof WrapperPersistable)) {
+		if (value instanceof Entity) {
 			Entity entity = (Entity) value;
 			if (ensureInjected != null && ensureInjected.containsKey(entity)) {
 				entity = ensureInjected.get(entity);
@@ -78,7 +77,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 				// key in the reached map, so .project() wouldn't work)
 				if (entity != value) {
 					entity = (Entity) graphProjection.project(entity, value,
-							context, false);
+							context);
 					getCache().put((Entity) entity);
 					return (T) entity;
 				}
@@ -103,8 +102,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 						impl = ((HibernateProxy) value)
 								.getHibernateLazyInitializer()
 								.getImplementation();
-						impl = graphProjection.project(impl, value, context,
-								false);
+						impl = graphProjection.project(impl, value, context);
 						getCache().put((Entity) impl);
 					} else if (shellInstantiator != null) {
 						impl = shellInstantiator.instantiateShellObject(lazy,
@@ -199,8 +197,7 @@ public class EntityCacheHibernateResolvingFilter extends Hibernate4CloneFilter {
 							.getHibernateLazyInitializer();
 					Object impl = ((HibernateProxy) value)
 							.getHibernateLazyInitializer().getImplementation();
-					projected = graphProjection.project(impl, value, context,
-							false);
+					projected = graphProjection.project(impl, value, context);
 					getCache().put((Entity) projected);
 				} else {
 					projected = graphProjection.project(value, context);

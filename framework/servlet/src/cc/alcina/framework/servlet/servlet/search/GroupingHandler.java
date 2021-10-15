@@ -5,11 +5,11 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 
+import cc.alcina.framework.common.client.domain.search.GroupingParameters;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.Row;
-import cc.alcina.framework.gwt.client.entity.search.GroupingParameters;
 
 public interface GroupingHandler<DS extends VersionableEntity, GP extends GroupingParameters> {
 	GroupedResult process(List<DS> queried, GP groupingParameters,

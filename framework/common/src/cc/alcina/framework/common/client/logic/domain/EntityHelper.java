@@ -7,8 +7,6 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
-import java.util.SortedSet;
-import java.util.TreeSet;
 import java.util.function.BiConsumer;
 import java.util.function.BinaryOperator;
 import java.util.function.Function;
@@ -16,9 +14,8 @@ import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collector;
 
-import cc.alcina.framework.common.client.collections.CollectionFilters;
-import cc.alcina.framework.common.client.collections.FromObjectKeyValueMapper;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -35,15 +32,6 @@ public class EntityHelper {
 		}
 		return Ax.format("%s : %s ", CommonUtils.simpleClassName(hi.getClass()),
 				hi.getId());
-	}
-
-	public static <T extends Entity> SortedSet<T>
-			combineAndOrderById(boolean reverse, Collection<T>... collections) {
-		TreeSet<T> join = new TreeSet<T>();
-		for (Collection<T> collection : collections) {
-			join.addAll(collection);
-		}
-		return reverse ? join.descendingSet() : join;
 	}
 
 	public static int compare(Entity o1, Entity o2) {
@@ -134,6 +122,10 @@ public class EntityHelper {
 		return entity -> entity != null && longs.contains(entity.getId());
 	}
 
+	public static boolean notRemoved(Entity e) {
+		return e != null && !e.domain().wasRemoved();
+	}
+
 	public static String strGetIdOrZero(HasId hasId) {
 		return String.valueOf(getIdOrZero(hasId));
 	}
@@ -153,8 +145,8 @@ public class EntityHelper {
 
 	public static <T extends Entity> Map<Long, T>
 			toIdMap(Collection<T> entities) {
-		return (Map<Long, T>) CollectionFilters
-				.map((Collection<Entity>) entities, new EntityToIdMapper());
+		return entities.stream()
+				.collect(AlcinaCollectors.toKeyMap(Entity::getId));
 	}
 
 	public static <E extends Entity> Collector<E, ?, Set<Long>> toIdSet() {
@@ -194,14 +186,6 @@ public class EntityHelper {
 		@Override
 		public boolean test(Entity t) {
 			return id == 0 || t.getId() == id;
-		}
-	}
-
-	public static class EntityToIdMapper
-			extends FromObjectKeyValueMapper<Long, Entity> {
-		@Override
-		public Long getKey(Entity o) {
-			return o.getId();
 		}
 	}
 

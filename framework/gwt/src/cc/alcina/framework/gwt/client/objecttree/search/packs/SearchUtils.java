@@ -31,7 +31,7 @@ public class SearchUtils {
 
 	static SearchUtilsRegExpHelper regexpHelper;
 
-	public static final String IDS_REGEX = "(?:ids?: ?)?[0-9][0-9, ]*";
+	public static final String IDS_REGEX = "(?:ids?: ?)?(-?[0-9][0-9]*,? *)+";
 
 	public static final String REGEX_REGEX = "(?:regex:)(.+)";
 	static {
@@ -127,14 +127,15 @@ public class SearchUtils {
 		if (date != null) {
 			for (SearchCriterion criterion : def.allCriteria()) {
 				if (criterion instanceof DateCriterion) {
-					if (criterion.getDirection() == Direction.ASCENDING) {
+					DateCriterion dateCriterion = (DateCriterion) criterion;
+					if (dateCriterion.getDirection() == Direction.ASCENDING) {
 						Date d2 = new Date(date.getTime());
 						CalendarUtil.addDaysToDate(d2, -2);
-						((DateCriterion) criterion).setDate(d2);
+						dateCriterion.setDate(d2);
 					} else {
 						Date d2 = new Date(date.getTime());
 						CalendarUtil.addDaysToDate(d2, +2);
-						((DateCriterion) criterion).setDate(d2);
+						dateCriterion.setDate(d2);
 					}
 				}
 			}
@@ -212,6 +213,12 @@ public class SearchUtils {
 	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class)
 	@ClientInstantiable
 	public static abstract class SearchUtilsIdsHelper {
+		public static SearchUtils.SearchUtilsIdsHelper get() {
+			return Registry.impl(SearchUtils.SearchUtilsIdsHelper.class);
+		}
+
+		public abstract Set<Long> getIds(String query);
+
 		public boolean matches(String query, Entity entity) {
 			return false;
 		}
@@ -226,11 +233,17 @@ public class SearchUtils {
 				getMap());
 
 		@Override
-		public boolean matches(String query, Entity entity) {
+		public Set<Long> getIds(String query) {
 			Set<Long> ids = null;
 			synchronized (stringIdLookup) {
 				ids = stringIdLookup.get(query);
 			}
+			return ids;
+		}
+
+		@Override
+		public boolean matches(String query, Entity entity) {
+			Set<Long> ids = getIds(query);
 			return entity != null && ids.contains(entity.getId());
 		}
 
