@@ -1,19 +1,40 @@
 package com.totsp.gwittir.rebind.beans;
 
 import java.lang.annotation.Annotation;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.typeinfo.JAnnotationType;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.util.CountingMap;
 
 public interface IntrospectorFilter {
+	public static final Set<String> COLLECTION_CLASS_NAMES = Arrays
+			.asList(ArrayList.class, LinkedList.class, HashSet.class,
+					LinkedHashSet.class, TreeSet.class, HashMap.class,
+					LinkedHashMap.class, TreeMap.class, LightSet.class,
+					LiSet.class, LightMap.class, CountingMap.class)
+			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
+
 	public static final String ALCINA_INTROSPECTOR_FILTER_CLASSNAME = "alcina.introspectorFilter.classname";
 
 	public static final String ALCINA_INTROSPECTOR_FILTER_DATA_FILE = "alcina.introspectorFilter.dataFile";
