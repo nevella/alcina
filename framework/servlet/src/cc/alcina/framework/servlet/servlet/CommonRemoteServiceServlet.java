@@ -795,6 +795,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			Response response = new Response();
 			List<T> responses = getResponses(request.getQuery(), request.model,
 					hint);
+			responses = projectResponses(responses, clazz);
 			response.setSuggestions(responses.stream()
 					.map(BoundSuggestOracleSuggestion::new)
 					.limit(getSuggestionLimit()).collect(Collectors.toList()));
@@ -803,6 +804,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						BoundSuggestOracleSuggestion.nullSuggestion());
 			}
 			return GraphProjections.defaultProjections().project(response);
+		}
+
+		protected List<T> projectResponses(List<T> list, Class<T> clazz) {
+			if (Entity.class.isAssignableFrom(clazz)) {
+				list = GraphProjections.defaultProjections().maxDepth(1)
+						.project(list);
+			}
+			return list;
 		}
 
 		protected abstract List<T> getResponses(String query,

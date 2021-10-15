@@ -33,9 +33,6 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 
 	private SearchOrders searchOrders = new SearchOrders<>();
 
-	// zero based
-	private int pageNumber;
-
 	public BindableSearchDefinition() {
 		super();
 	}
@@ -53,10 +50,6 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	@XmlTransient
 	public GroupingParameters getGroupingParameters() {
 		return groupingParameters;
-	}
-
-	public int getPageNumber() {
-		return this.pageNumber;
 	}
 
 	@PropertySerialization(path = "o")
@@ -114,10 +107,6 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	@Override
 	public void setOrderGroups(Set<OrderGroup> orderGroups) {
 		Preconditions.checkArgument(orderGroups.size() == 0);
-	}
-
-	public void setPageNumber(int pageNumber) {
-		this.pageNumber = pageNumber;
 	}
 
 	public void setSearchOrders(SearchOrders searchOrders) {
