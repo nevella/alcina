@@ -88,7 +88,8 @@ import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
  * @author nick@alcina.cc
  * 
  */
-@RegistryLocation(registryPoint = TransformCommit.class, implementationType = ImplementationType.SINGLETON)
+@RegistryLocation(registryPoint = TransformCommit.class,
+	implementationType = ImplementationType.SINGLETON)
 public class TransformCommit {
 	private static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = TransformCommit.class
 			.getName() + ".TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION";
@@ -669,7 +670,16 @@ public class TransformCommit {
 						.getCommonPersistence()
 						.removeProcessedRequests(persistenceToken);
 				if (hasUnprocessedRequests) {
-					return submitAndHandleTransforms(persistenceToken);
+					DomainTransformLayerWrapper result = submitAndHandleTransforms(
+							persistenceToken);
+					if (result.response == null) {
+						Preconditions.checkState(request.getEvents().isEmpty());
+						result.response = new DomainTransformResponse();
+						// empty request, empty response
+						result.response
+								.setResult(DomainTransformResponseResult.OK);
+					}
+					return result;
 				} else {
 					throw new IllegalArgumentException(
 							Ax.format("Request %s - %s already processed",
@@ -683,7 +693,8 @@ public class TransformCommit {
 		}
 	}
 
-	@RegistryLocation(registryPoint = ExternalTransformLocks.class, implementationType = ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = ExternalTransformLocks.class,
+		implementationType = ImplementationType.SINGLETON)
 	public static class ExternalTransformLocks {
 		public static TransformCommit.ExternalTransformLocks get() {
 			TransformCommit.ExternalTransformLocks singleton = Registry
