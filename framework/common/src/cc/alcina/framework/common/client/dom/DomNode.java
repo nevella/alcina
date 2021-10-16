@@ -92,6 +92,10 @@ public class DomNode {
 		return this;
 	}
 
+	public void addClassName(String className) {
+		setAttr("class", attr("class") + " " + className);
+	}
+
 	public DomNodeAncestors ancestors() {
 		if (ancestors == null) {
 			ancestors = new DomNodeAncestors();
@@ -704,10 +708,6 @@ public class DomNode {
 					.findFirst().orElse(null);
 		}
 
-		public Stream<DomNode> stream() {
-			return flatten();
-		}
-
 		public Stream<DomNode> flatten(String... tags) {
 			List<String> tagArray = Arrays.asList(tags);
 			Iterable<DomNode> iterable = () -> new DomTokenStream(DomNode.this);
@@ -838,6 +838,10 @@ public class DomNode {
 			return nodes.size() == 1 && nodes.get(0).isElement()
 					? Optional.of(nodes.get(0))
 					: Optional.empty();
+		}
+
+		public Stream<DomNode> stream() {
+			return flatten();
 		}
 
 		public String textContent() {
@@ -1242,9 +1246,8 @@ public class DomNode {
 		 * Warning - uses 'find', not 'matches'
 		 */
 		public Stream<DomNode> matching(String pattern, boolean ignoreCase) {
-			RegExp regex = ignoreCase 
-				? RegExp.compile(pattern, "i") 
-				: RegExp.compile(pattern);
+			RegExp regex = ignoreCase ? RegExp.compile(pattern, "i")
+					: RegExp.compile(pattern);
 			return stream().filter(n -> regex.exec(n.ntc()) != null);
 		}
 

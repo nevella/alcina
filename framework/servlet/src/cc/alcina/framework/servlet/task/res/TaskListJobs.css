@@ -46,3 +46,6 @@ td.trim-medium {
 	overflow: hidden;
 	text-overflow: ellipsis;
 }
+td.imperfect-state{
+	color:#777;
+}

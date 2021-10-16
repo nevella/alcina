@@ -656,11 +656,9 @@ public class JobScheduler {
 			LocalDateTime end = SEUtilities.toLocalDateTime(date);
 			long days = ChronoUnit.DAYS.between(end, LocalDateTime.now());
 			long minutes = ChronoUnit.MINUTES.between(end, LocalDateTime.now());
-			if (job.resolveState() == JobState.ABORTED) {
-				return minutes < 5;
-			}
-			if (job.resolveState() == JobState.CANCELLED) {
-				return days == 0;
+			if (job.resolveState() == JobState.CANCELLED
+					|| job.resolveState() == JobState.ABORTED) {
+				return days <= 3;
 			}
 			return days < 7;
 		}
