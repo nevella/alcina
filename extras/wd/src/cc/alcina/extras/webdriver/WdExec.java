@@ -185,7 +185,7 @@ public class WdExec {
 			WebElement elem = getElement();
 			Actions actions = new Actions(driver);
 			actions.moveToElement(elem);
-			if (WDUtils.forceTimeout) {
+			if (WDUtils.isForceTimeout()) {
 				throw new TimedOutException("forced timeout");
 			}
 			try {

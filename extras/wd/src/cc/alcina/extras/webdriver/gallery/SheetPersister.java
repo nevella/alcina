@@ -185,9 +185,9 @@ public class SheetPersister {
 					.append();
 			DomNode links = left.builder().tag("div").className("links")
 					.append();
-			buttons.builder().tag("button").text("<").title("Shortcut: ,")
+			buttons.builder().tag("button").text("<").title("Shortcut: <-")
 					.attr("onclick", "previous()").append();
-			buttons.builder().tag("button").text(">").title("Shortcut: .")
+			buttons.builder().tag("button").text(">").title("Shortcut: ->")
 					.attr("onclick", "next()").append();
 			// buttons.builder().tag("div").className("hint")
 			// .text("Shortcuts : , and .").append();

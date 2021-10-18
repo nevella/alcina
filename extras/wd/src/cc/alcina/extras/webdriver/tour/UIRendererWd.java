@@ -1,10 +1,16 @@
 package cc.alcina.extras.webdriver.tour;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang.StringEscapeUtils;
+import org.commonmark.Extension;
+import org.commonmark.ext.gfm.tables.TablesExtension;
+import org.commonmark.node.Node;
+import org.commonmark.parser.Parser;
+import org.commonmark.renderer.html.HtmlRenderer;
 import org.openqa.selenium.WebElement;
 
 import cc.alcina.extras.webdriver.WDUtils;
@@ -14,6 +20,7 @@ import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
+import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -161,6 +168,9 @@ public class UIRendererWd extends UIRenderer {
 		popups.forEach(popup -> {
 			popup.waitForSelector();
 			popup.render();
+			if (popup.textMatches(ResourceUtilities.get("debugPopupRegex"))) {
+				int debug = 4;
+			}
 		});
 		tourManager.stepRendered.publish(tourManager.getStep());
 		return true;
@@ -216,6 +226,10 @@ public class UIRendererWd extends UIRenderer {
 			id = Ax.format("__tmwd_rendered_popup_%s", ++idCounter);
 		}
 
+		public boolean textMatches(String string) {
+			return popupInfo.getCaption().matches(string);
+		}
+
 		@Override
 		public String toString() {
 			return Ax.format("%s :: %s", popupInfo.getCaption(),
@@ -244,8 +258,30 @@ public class UIRendererWd extends UIRenderer {
 			root.style().addClassName(direction);
 			root.builder().tag("caption-area").text(popupInfo.getCaption())
 					.append();
-			root.builder().tag("description").text(popupInfo.getDescription())
-					.append();
+			String description = popupInfo.getDescription();
+			String mdRegex = "(?s)[^\n]+\\.md\n(.+)";
+			String descriptionTag = "description";
+			boolean markdown = description.matches(mdRegex);
+			if (markdown) {
+				descriptionTag = "description-md";
+				description = description.replaceFirst(mdRegex, "$1");
+				List<Extension> extensions = Arrays
+						.asList(TablesExtension.create());
+				Parser parser = Parser.builder().extensions(extensions).build();
+				Node document = parser.parse(description);
+				HtmlRenderer renderer = HtmlRenderer.builder()
+						.extensions(extensions).build();
+				String html = renderer.render(document);
+				description = html;
+			}
+			DomNodeBuilder builder = root.builder().tag(descriptionTag);
+			if (markdown) {
+				DomNode node = builder.build();
+				node.setInnerXml(Ax.format("<div>%s</div>", description));
+				root.children.append(node);
+			} else {
+				builder.text(description).append();
+			}
 			root.setAttr("style", Ax.blankToEmpty(popupInfo.getStyle()));
 			root.setAttr("id", id);
 			wdJsInvoke("renderRelative('%s','%s')",

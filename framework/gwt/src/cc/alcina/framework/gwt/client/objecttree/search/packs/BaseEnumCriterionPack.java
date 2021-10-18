@@ -33,9 +33,9 @@ public class BaseEnumCriterionPack {
 
 	public static abstract class BaseEnumCriterionSearchable<E extends Enum, C extends EnumCriterion<E>>
 			extends FlatSearchable<C> {
-		private Class<E> enumClass;
+		protected Class<E> enumClass;
 
-		private int maxSelectedItems = 1;
+		protected int maxSelectedItems = 1;
 
 		public BaseEnumCriterionSearchable(Class<C> clazz, Class<E> enumClass,
 				String objectName, String criteriaName) {
