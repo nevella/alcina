@@ -88,7 +88,12 @@
 	<classpathentry kind="lib" path="lib/framework/google/protobuf-java-2.4.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/google/google-api-services-drive-v3-rev161-1.25.0.jar"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/cluster/kafka-clients-2.7.1.jar" sourcepath="/g/minor/kafka"/>
+<<<<<<< HEAD
 	<classpathentry kind="lib" path="lib/framework/entity/xercesImpl-2.12.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
+=======
+	<classpathentry kind="lib" path="lib/extras/webdriver/commonmark-0.18.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/extras/webdriver/commonmark-ext-gfm-tables-0.18.1-SNAPSHOT.jar"/>
+>>>>>>> main
 	<classpathentry kind="output" path="bin"/>
 </classpath>

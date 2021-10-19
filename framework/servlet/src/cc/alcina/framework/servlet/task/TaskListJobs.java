@@ -10,6 +10,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
@@ -41,6 +42,19 @@ public class TaskListJobs extends AbstractTaskPerformer
 
 	public void setFilter(String filter) {
 		this.filter = filter;
+	}
+
+	private DomNodeHtmlTableCellBuilder applyCompletedResultStyle(
+			DomNodeHtmlTableCellBuilder builder, Job job) {
+		if (job.getResultType() != JobResultType.OK
+				|| !job.getState().isCompletedNormally()) {
+			DomNode lastNode = builder.previousElement();
+			lastNode.addClassName("imperfect-state");
+			lastNode.setAttr("title",
+					Ax.format("%s - %s - %s", lastNode.textContent(),
+							job.getState(), job.getResultType()));
+		}
+		return builder;
 	}
 
 	protected void addActive(DomDoc doc, String sectionFilterName,
@@ -122,6 +136,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(String.valueOf(job.getId()))
 						.cell(job.provideName()).accept(Utils::large)
+						.accept(b -> this.applyCompletedResultStyle(b, job))
 						.cell(timestamp(job.getStartTime()))
 						.cell(timestamp(job.getEndTime()))
 						.cell(job.getPerformer()).accept(Utils::instance);

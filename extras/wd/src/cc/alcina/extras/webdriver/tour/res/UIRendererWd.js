@@ -22,6 +22,7 @@ class UIRendererWd {
 	}
 
 	position(elem, relativeToElem, relativeTo) {
+		relativeToElem.scrollIntoView();
 		let rect = relativeToElem.getBoundingClientRect();
 		let absRect = this.absRect(rect);
 		let clientWidth = document.documentElement.clientWidth;
@@ -30,6 +31,7 @@ class UIRendererWd {
 		let distOffset = 14;
 		switch (directions[0]) {
 			case "TOP":
+
 				elem.style.bottom = (clientHeight - absRect.top + distOffset) + "px";
 				break;
 			case "BOTTOM":
@@ -42,14 +44,17 @@ class UIRendererWd {
 				throw `not handled direction (axis 1): ${directions}`;
 		}
 		let bubbleOffset = 30 + 7 + 2;//offset + 1/2 triangle width + border width (although....it's transfomed??')
+		let inABit = 20; // otherwise would point right at the edge of the element, often empty
 		switch (directions[1]) {
 			case "LEFT": {
-				let fudge = 5;
-				elem.style.left = Math.max(0, absRect.left + (absRect.right - absRect.left) / 2 - bubbleOffset + fudge) + "px";
+				elem.style.left = Math.max(0, absRect.left - bubbleOffset + inABit) + "px";
 			}
 				break;
+			case "CENTER": {
+				elem.style.right = (clientWidth - absRect.right + (absRect.right - absRect.left) / 2) + "px";
+			}
 			case "RIGHT": {
-				elem.style.right = (clientWidth - absRect.right + (absRect.right - absRect.left) / 2 - bubbleOffset) + "px";
+				elem.style.right = Math.max(0, clientWidth - absRect.right  + bubbleOffset - inABit) + "px";
 			}
 				break;
 			case "TOP": {
@@ -66,18 +71,6 @@ class UIRendererWd {
 			bubbleElem.className = `ol-tour-bubble axis-1-${directions[0].toLowerCase()} axis-2-${directions[1].toLowerCase()}`;
 			bubbleElem.id = elem.id + "_bubble";
 			elem.appendChild(bubbleElem);
-			//			switch (directions[0]) {
-			//				case "TOP":
-			//					bubbleElem.style.bottom = (clientHeight - absRect.top) + "px";
-			//					bubbleElem.style.left = (absRect.left + (rect.width / 2) - 5) + "px";
-			//					break;
-			//				case "BOTTOM":
-			//					bubbleElem.style.top = (absRect.bottom + 0) + "px";
-			//					bubbleElem.style.left = (absRect.left + (rect.width / 2) - 5) + "px";
-			//					break;
-			//				default:
-			//					throw `not handled direction (bubble): ${directions}`;
-			//			}
 		}
 	}
 
@@ -97,7 +90,7 @@ class UIRendererWd {
 			return document.querySelector(selector);
 		}
 	}
-	
+
 	remove(id) {
 		let elt = document.getElementById(id);
 		if (elt) {

@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.task;
 
+import java.util.Date;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 
@@ -11,6 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobContext;
@@ -32,7 +34,18 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 		jobs.forEach(job -> {
 			boolean delete = false;
 			if (!job.provideCanDeserializeTask()) {
-				delete = true;
+				if (job.provideIsNotComplete()) {
+				} else {
+					Date date = job.resolveCompletionDate();
+					if (date == null) {
+						// invalid job, clear
+						delete = true;
+					} else {
+						// allow for tmp classes loaded into other vms
+						delete = System.currentTimeMillis()
+								- date.getTime() > TimeConstants.ONE_DAY_MS;
+					}
+				}
 			} else {
 				try {
 					RetentionPolicy policy = Registry.impl(

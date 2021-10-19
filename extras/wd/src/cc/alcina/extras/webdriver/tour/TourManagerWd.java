@@ -148,7 +148,11 @@ public class TourManagerWd extends TourManager {
 			if (string.startsWith("file://")) {
 				String path = string.substring("file:/".length());
 				try {
-					return ResourceUtilities.read(path);
+					String contents = ResourceUtilities.read(path);
+					if (path.endsWith(".md")) {
+						contents = Ax.format("%s\n%s", path, contents);
+					}
+					return contents;
 				} catch (Exception e) {
 					return "No file at path: " + path;
 				}

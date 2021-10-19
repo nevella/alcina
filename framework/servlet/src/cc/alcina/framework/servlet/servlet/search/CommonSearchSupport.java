@@ -167,8 +167,9 @@ public class CommonSearchSupport {
 					def);
 			// FIXME - 2022 - there may be places where we can get result set
 			// size without collecting (i.e. index-only)
-			List<Entity> rows = DomainStore.queryPool()
-					.call(() -> search.collect(Collectors.toList()), search);
+			List<Entity> rows = DomainStore.queryPool().call(
+					() -> search.parallel().collect(Collectors.toList()),
+					search);
 			IntPair range = new IntPair(
 					def.getResultsPerPage() * (def.getPageNumber()),
 					def.getResultsPerPage() * (def.getPageNumber() + 1));

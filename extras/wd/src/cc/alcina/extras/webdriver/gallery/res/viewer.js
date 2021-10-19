@@ -33,12 +33,12 @@ function show(linkIdx) {
 	document.getElementById('img__').src = __viewer_data[idx].url;
 	window.event.preventDefault();
 }
-window.onkeypress = function(e) {
-	switch (e.code) {
-		case "Comma":
+window.onkeydown = function(e) {
+	switch (e.keyCode) {
+		case 37:
 			previous();
 			break;
-		case "Period":
+		case 39:
 			next();
 			break;
 	}

@@ -78,7 +78,7 @@ public interface Tour {
 	@ClientInstantiable
 	enum PositioningDirection {
 		CENTER_TOP, LEFT_BOTTOM, RIGHT_BOTTOM, RIGHT_TOP, TOP_LEFT, LEFT_TOP,
-		BOTTOM_RIGHT, BOTTOM_LEFT, TOP_RIGHT
+		BOTTOM_RIGHT, BOTTOM_LEFT, TOP_RIGHT, BOTTOM_CENTER
 	}
 
 	interface RelativeTo {

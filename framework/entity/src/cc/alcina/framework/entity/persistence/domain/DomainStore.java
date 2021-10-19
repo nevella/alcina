@@ -1377,6 +1377,11 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 
+		/*
+		 * Note - the stream must be explicitly called parallel() prior to
+		 * method entry to be evaluated in parallel (even if runInPool evaluates
+		 * to true) parallel here.
+		 */
 		public <T> T call(Callable<T> callable,
 				Stream<? extends Entity> stream) {
 			boolean runInPool = false;
@@ -1394,7 +1399,7 @@ public class DomainStore implements IDomainStore {
 			}
 			if (runInPool) {
 				try {
-					stream.parallel();
+					// stream.parallel();
 					return pool.submit(callable).get();
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);

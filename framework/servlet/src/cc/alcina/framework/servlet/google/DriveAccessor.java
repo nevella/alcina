@@ -6,6 +6,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 
 import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInstalledApp;
@@ -43,8 +44,10 @@ public class DriveAccessor {
 					parentId)).setSpaces("drive")
 					.setFields("nextPageToken, files(id, name)")
 					.setPageToken(pageToken).setPageSize(1).execute();
-			if (result.getFiles().size() == 1) {
-				file = result.getFiles().get(0);
+			Optional<File> existing = result.getFiles().stream()
+					.filter(f -> f.getName().equals(part)).findFirst();
+			if (existing.isPresent()) {
+				file = existing.get();
 			} else {
 				File fileMetadata = new File();
 				fileMetadata.setName(part);

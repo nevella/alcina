@@ -524,17 +524,17 @@ public class JobRegistry {
 			 * key - handle tx timeouts/aborts
 			 */
 			Transaction.ensureBegun();
+			LooseContext.remove(
+					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
+			performer.onBeforeEnd();
+			context.end();
+			performer.onAfterEnd();
 			try {
 				releaseResources(job, false);
 			} catch (Exception e) {
 				logger.warn("DEVEX::0 - JobRegistry.releaseResources", e);
 				e.printStackTrace();
 			}
-			LooseContext.remove(
-					ThreadlocalTransformManager.CONTEXT_THROW_ON_RESET_TLTM);
-			performer.onBeforeEnd();
-			context.end();
-			performer.onAfterEnd();
 			context.persistMetadata();
 			LooseContext.pop();
 			activeJobs.remove(job);

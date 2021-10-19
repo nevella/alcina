@@ -4,12 +4,23 @@ div.tmwd-popup {
 	border: solid 2px #eee;
 	padding: 12px;
 	border-radius: 6px;
-	color: #eee;
-	font-size: 15px;
-	font-family: sans-serif;
 	max-width: 300px;
 	min-width: 300px;
 	cursor: pointer;
+}
+
+div.tmwd-popup, div.tmwd-popup td {
+	color: #eee;
+	font-size: 15px;
+	font-family: sans-serif;
+}
+
+div.tmwd-popup th {
+	text-align: left;
+}
+
+div.tmwd-popup td {
+	padding-right: 1em;
 }
 
 div.ol-tour-bubble {
@@ -27,15 +38,18 @@ div.ol-tour-bubble.axis-1-left {
 	right: -4px;
 	transform: rotate(315deg) translate(50%);
 }
+
 div.ol-tour-bubble.axis-1-bottom {
 	top: -4px;
 	transform: rotate(225deg) translate(50%);
 }
+
 div.ol-tour-bubble.axis-1-right {
 	left: -4px;
 	transform: rotate(135deg) translate(50%);
 }
-div.ol-tour-bubble.axis-1-top{
+
+div.ol-tour-bubble.axis-1-top {
 	bottom: -4px;
 	transform: rotate(45deg) translate(50%);
 }
@@ -43,12 +57,19 @@ div.ol-tour-bubble.axis-1-top{
 div.ol-tour-bubble.axis-2-top {
 	top: 30px;
 }
+
 div.ol-tour-bubble.axis-2-right {
 	right: 30px;
 }
+
 div.ol-tour-bubble.axis-2-left {
 	left: 30px;
 }
+
+div.ol-tour-bubble.axis-2-center {
+	left: calc(50% - 7px);
+}
+
 div.ol-tour-bubble.axis-2-bottom {
 	bottom: 30px;
 }
@@ -57,11 +78,21 @@ div.tmwd-popup caption-area {
 	font-weight: bold;
 }
 
-div.tmwd-popup caption-area, div.tmwd-popup description {
+div.tmwd-popup caption-area, div.tmwd-popup description, div.tmwd-popup description-md
+	{
 	display: block;
 	padding-bottom: 1em;
 }
 
 div.tmwd-popup description {
 	white-space: pre-wrap;
+}
+
+div.tmwd-popup  h2, div.tmwd-popup  h3, div.tmwd-popup  h4 {
+	font-size: 15px;
+}
+
+div.tmwd-popup  h3, div.tmwd-popup  h4 {
+	font-weight: normal;
+	color: #bbb;
 }

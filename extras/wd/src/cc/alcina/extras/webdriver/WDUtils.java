@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.ShellWrapper;
 
@@ -60,7 +61,9 @@ public class WDUtils {
 
 	public static Callback exceptionCallback;
 
-	public static boolean forceTimeout;
+	private static boolean forceTimeout;
+
+	public static Topic<Boolean> timeoutForced = Topic.local();
 
 	public static void activateOsxChrome() {
 		try {
@@ -290,6 +293,10 @@ public class WDUtils {
 		return elt != null && elt.getSize().height > 0 && elt.isDisplayed();
 	}
 
+	public static boolean isForceTimeout() {
+		return forceTimeout;
+	}
+
 	public static void maximize(WebDriver driver) {
 	}
 
@@ -370,6 +377,11 @@ public class WDUtils {
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
+	}
+
+	public static void setForceTimeout(boolean forceTimeout) {
+		WDUtils.forceTimeout = forceTimeout;
+		timeoutForced.publish(true);
 	}
 
 	public static void setProperty(WebDriver driver, WebElement elt, String key,
@@ -663,12 +675,12 @@ public class WDUtils {
 	public static class TimedOutException extends RuntimeException {
 		public TimedOutException() {
 			super();
-			forceTimeout = false;
+			setForceTimeout(false);
 		}
 
 		public TimedOutException(String message) {
 			super(message);
-			forceTimeout = false;
+			setForceTimeout(false);
 		}
 	}
 }
