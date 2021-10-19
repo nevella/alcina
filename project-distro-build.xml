@@ -259,6 +259,7 @@
 			<jvmarg value="-Xss2M" />
 			<jvmarg value="-Dgwt.usearchives=false" />
 
+			
 			<jvmarg value="${project.gwt.compile.jvmarg1}" />
 			<jvmarg value="${project.gwt.compile.jvmarg2}" />
 			<jvmarg value="${project.gwt.compile.jvmarg3}" />
