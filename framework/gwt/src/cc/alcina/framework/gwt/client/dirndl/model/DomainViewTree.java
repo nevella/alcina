@@ -15,6 +15,7 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
 
 /*
@@ -103,24 +104,26 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 				openToPath(null);
 			}
 		}
-		if (request.getWaitPolicy() == WaitPolicy.RETURN_NODES) {
+		if (isDepthFirst()
+				&& request.getWaitPolicy() == WaitPolicy.RETURN_NODES) {
 			selfAndDescendantCount = response.getSelfAndDescendantCount();
-		}
-		// FIXME - dirndl 1.3 - not sure about the logic for which
-		// selfAndDescendantCount
-		if (isDepthFirst() && selfAndDescendantCount > root.getTreePath()
-				.getSelfAndDescendantCount()
-		// doesn't work with proxy/keep-alive empty responses
-				&& response.getTransforms().size() > 0
-				&& (response.getRequest()
-						.getWaitPolicy() == WaitPolicy.WAIT_FOR_DELTAS
-						|| response.getRequest()
-								.getWaitPolicy() == WaitPolicy.RETURN_NODES)) {
-			Paginator paginator = new Paginator();
-			paginator.setText("Loading ...");
-			setPaginator(paginator);
-		} else {
-			setPaginator(null);
+			// FIXME - dirndl 1.3 - not sure about the logic for which
+			// selfAndDescendantCount...in fact, this may all be overly complex
+			// & getTransforms().size() is fine?
+			ClientNotifications.get().log(
+					"Det. paginator :: depth-first: %s - selfAndDescendantCount: %s - transforms: %s",
+					isDepthFirst(), selfAndDescendantCount,
+					root.getTreePath().getSelfAndDescendantCount(),
+					response.getTransforms().size(), response.getRequest());
+			// if (selfAndDescendantCount > root.getTreePath()
+			// .getSelfAndDescendantCount()) {
+			if (response.getTransforms().size() > 0) {
+				Paginator paginator = new Paginator();
+				paginator.setText("Loading ...");
+				setPaginator(paginator);
+			} else {
+				setPaginator(null);
+			}
 		}
 		setLastResponse(response);
 	}
