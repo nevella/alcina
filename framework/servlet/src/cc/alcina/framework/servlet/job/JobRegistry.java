@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.OptionalInt;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -20,6 +21,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -908,13 +910,41 @@ public class JobRegistry {
 
 		public void await(long maxTime) {
 			try {
-				if (job.provideIsComplete()) {
-					latch.countDown();
+				long start = System.currentTimeMillis();
+				// do as a loop (rather than a simple wait) to avoid
+				// synchronisation (no guarantee job.provideIsComplete is
+				// doesn't change before latch.await)
+				while (maxTime == 0
+						|| System.currentTimeMillis() - start < maxTime) {
+					if (job.provideIsComplete()) {
+						break;
+					}
+					long waitMillis = 1 * TimeConstants.ONE_SECOND_MS;
+					if (maxTime != 0 && maxTime < waitMillis) {
+						waitMillis = maxTime;
+					}
+					if (maxTime == 0) {
+						latch.await();
+					} else {
+						latch.await(waitMillis, TimeUnit.MILLISECONDS);
+					}
+					if (job.provideIsComplete()) {
+						break;
+					}
+					long seconds = (System.currentTimeMillis() - start) / 1000;
+					// log on power-of-2 seconds
+					OptionalInt log = IntStream.range(0, 16)
+							.map(exp -> 1 << exp).filter(i -> i == seconds)
+							.findFirst();
+					if (log.isPresent()) {
+						JobRegistry.get().logger.warn(
+								"Waiting for job ({} secs) {}", log.getAsInt(),
+								job);
+					}
 				}
-				if (maxTime == 0) {
-					latch.await();
-				} else {
-					latch.await(maxTime, TimeUnit.MILLISECONDS);
+				if (latch.getCount() > 0) {
+					JobRegistry.get().logger
+							.warn("Timed out waiting for job {}", job);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
