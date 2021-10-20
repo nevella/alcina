@@ -919,18 +919,18 @@ public class JobRegistry {
 					if (job.provideIsComplete()) {
 						break;
 					}
+					Transaction.ensureEnded();
 					long waitMillis = 1 * TimeConstants.ONE_SECOND_MS;
 					if (maxTime != 0 && maxTime < waitMillis) {
 						waitMillis = maxTime;
 					}
-					if (maxTime == 0) {
-						latch.await();
-					} else {
-						latch.await(waitMillis, TimeUnit.MILLISECONDS);
-					}
-					if (job.provideIsComplete()) {
+					latch.await(waitMillis, TimeUnit.MILLISECONDS);
+					Transaction.begin();
+					if (job.provideIsComplete() || latch.getCount() <= 0) {
 						break;
 					}
+					// if awaiting during job performance
+					JobContext.checkCancelled();
 					long seconds = (System.currentTimeMillis() - start) / 1000;
 					// log on power-of-2 seconds
 					OptionalInt log = IntStream.range(0, 16)
