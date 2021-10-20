@@ -427,13 +427,12 @@ public class JPAHibernateImpl implements JPAImplementation {
 		}
 
 		@Override
-		public void injectValue(Object[] row, Entity source) {
+		public void injectValue(String stringValue, Entity source) {
 			try {
-				String string = (String) row[1];
 				Set enums = (Set) this.pd.getReadMethod().invoke(source,
 						new Object[0]);
 				enums.add(Enum.valueOf(this.elementCollection.targetClass(),
-						string));
+						stringValue));
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

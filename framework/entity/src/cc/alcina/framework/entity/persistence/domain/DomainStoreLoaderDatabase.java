@@ -634,7 +634,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					entityRefs.add(tgt, pdFwd, src);
 					entityRefs.add(src, pdRev, tgt);
 				} else {
-					joinHandler.injectValue(row, src);
+					joinHandler.injectValue((String)row[1].o, src);
 				}
 			}
 			stmt.close();
@@ -979,7 +979,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	public static interface DomainStoreJoinHandler {
 		public String getTargetSql();
 
-		public void injectValue(Object[] row, Entity source);
+		public void injectValue(String stringValue, Entity source);
 	}
 
 	private class IVersionableLoaderTask implements Callable<Void> {
@@ -2157,7 +2157,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						hasId = store.ensureEntity(clazz, id, 0L);
 					}
 				} else {
-					hasId = (HasId) clazz.newInstance();
+					hasId = (HasId) clazz.getDeclaredConstructor().newInstance();
 				}
 				if (returnResults) {
 					loaded.add(hasId);
