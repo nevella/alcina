@@ -19,6 +19,7 @@ import java.util.function.Predicate;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
 import cc.alcina.framework.common.client.domain.DomainDescriptor;
 import cc.alcina.framework.common.client.domain.DomainStoreLazyLoader;
 import cc.alcina.framework.common.client.domain.MemoryStat;
@@ -78,6 +79,10 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 	public Class<? extends DomainTransformEvent>
 			getShadowDomainTransformEventPersistentClass() {
 		throw new UnsupportedOperationException();
+	}
+
+	public Collection<DomainClassDescriptor<?>> getWarmupClasses() {
+		return perClass.values();
 	}
 
 	public boolean handlesAssociationsFor(Class clazz) {
