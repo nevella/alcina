@@ -105,6 +105,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * <h2>For: 2021.04.16</h2>
  * <ul>
  * <li>Check groupingparameters annotation
+ * <li>Doc - collection fields must be non-null (on deser)
  * </ul>
  * 
  * 
