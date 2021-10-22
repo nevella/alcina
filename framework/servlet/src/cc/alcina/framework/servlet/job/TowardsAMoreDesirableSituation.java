@@ -38,7 +38,7 @@ public class TowardsAMoreDesirableSituation {
 		boolean delta = false;
 		while (activeJobs.size() < JobRegistry.get().jobExecutors
 				.getMaxConsistencyJobCount()
-				&& JobRegistry.get().getActiveJobCount() <= ResourceUtilities
+				&& JobRegistry.get().getActiveJobCount() < ResourceUtilities
 						.getInteger(TowardsAMoreDesirableSituation.class,
 								"maxVmActiveJobCount")) {
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
