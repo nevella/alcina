@@ -200,9 +200,12 @@ public abstract class UserProperty<T extends UserProperty>
 					&& userPropertySupport.getPersistable() != null) {
 				if (userPropertySupport != null
 						&& userPropertySupport.getPersistable() != null) {
+					TransformManager.ignoreChanges(() ->
+					// copy properties (rather than create a new persistable) to
+					// preserve object identity
 					new CloneHelper().copyBeanProperties(deserialize(),
 							userPropertySupport.getPersistable(),
-							DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING);
+							DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING));
 				}
 			}
 		}

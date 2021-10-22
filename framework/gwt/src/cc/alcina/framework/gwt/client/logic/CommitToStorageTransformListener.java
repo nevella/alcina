@@ -692,7 +692,7 @@ public class CommitToStorageTransformListener
 				break;
 			}
 			topicStateChanged().remove(this);
-			if (!reloadRequired) {
+			if (reloadRequired) {
 				callback.onFailure(new Exception("flush failed on server"));
 			}
 		}

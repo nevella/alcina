@@ -1640,8 +1640,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		this.undoManager = undoManager;
 	}
 
-	
-
 	public void setUseCreatedLocals(boolean useCreatedLocals) {
 		this.useCreatedLocals = useCreatedLocals;
 	}
@@ -2354,5 +2352,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	
+	public static void ignoreChanges(Runnable runnable) {
+		boolean ignorePropertyChanges = get().isIgnorePropertyChanges();
+		try {
+			TransformManager.get().setIgnorePropertyChanges(true);
+			runnable.run();
+		} finally {
+			TransformManager.get()
+					.setIgnorePropertyChanges(ignorePropertyChanges);
+		}
+	}
 }
