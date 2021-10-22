@@ -290,12 +290,18 @@ public class Publisher {
 		}
 
 		public long persist(Publication publication) {
+			if(TransformCommit.isCommitting()){
+				return 0L;
+			}
 			return TransformCommit.commitTransformsAndReturnId(true,
 					publication);
 		}
 
 		public void persistContentRendererResults(
 				ContentRendererResults results, Publication publication) {
+			if(TransformCommit.isCommitting()){
+				return;
+			}
 			publication.setSerializedPublication(
 					KryoUtils.serializeToBase64(results));
 			Transaction.commit();

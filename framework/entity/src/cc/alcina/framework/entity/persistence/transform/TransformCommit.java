@@ -1007,4 +1007,8 @@ public class TransformCommit {
 			this.committerIpAddress = committerIpAddress;
 		}
 	}
+
+	public static boolean isCommitting() {
+		return LooseContext.is(CONTEXT_COMMITTING);
+	}
 }
