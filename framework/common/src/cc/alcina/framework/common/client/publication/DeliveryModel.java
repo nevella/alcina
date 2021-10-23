@@ -13,11 +13,16 @@
  */
 package cc.alcina.framework.common.client.publication;
 
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiFunction;
 
+import cc.alcina.framework.common.client.logic.ExtensibleEnum;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.util.StringMap;
 
 /**
  *
@@ -38,6 +43,8 @@ public interface DeliveryModel extends TreeSerializable {
 	 * The mime type of the content
 	 */
 	public String getMimeType();
+
+	public List<MultipleDeliveryEntry> getMultipleDeliveryEntries();
 
 	/**
 	 * comma separated fields which indicate the queryString to be put at the
@@ -114,5 +121,95 @@ public interface DeliveryModel extends TreeSerializable {
 		public byte[] requestBytes;
 
 		public String dataSourceMimeType;
+	}
+
+	// Parameters for ContentDeliveryType_MULTIPLE
+	@RegistryLocation(registryPoint = TreeSerializable.class)
+	public static class MultipleDeliveryEntry implements TreeSerializable {
+		private String emailSubject;
+
+		private String emailAddresses;
+
+		private String fileName;
+
+		private String transformerClassName;
+
+		private String deliveryMode = ContentDeliveryType.DOWNLOAD
+				.serializedForm();
+
+		private String transformerPropertiesSerialized;
+
+		public void addTransformerProperty(String key, String value) {
+			StringMap map = provideTransformerProperties();
+			map.put(key, value);
+			setTransformerPropertiesSerialized(map.toPropertyString());
+		}
+
+		public String getDeliveryMode() {
+			return this.deliveryMode;
+		}
+
+		public String getEmailAddresses() {
+			return this.emailAddresses;
+		}
+
+		public String getEmailSubject() {
+			return this.emailSubject;
+		}
+
+		public String getFileName() {
+			return this.fileName;
+		}
+
+		public String getTransformerClassName() {
+			return this.transformerClassName;
+		}
+
+		public String getTransformerPropertiesSerialized() {
+			return this.transformerPropertiesSerialized;
+		}
+
+		public ContentDeliveryType provideContentDeliveryType() {
+			return ExtensibleEnum.valueOf(ContentDeliveryType.class,
+					deliveryMode);
+		}
+
+		public StringMap provideTransformerProperties() {
+			return StringMap
+					.fromPropertyString(getTransformerPropertiesSerialized());
+		}
+
+		public void putContentDeliveryType(ContentDeliveryType type) {
+			setDeliveryMode(type == null ? null : type.name());
+		}
+
+		public void setDeliveryMode(String deliveryMode) {
+			this.deliveryMode = deliveryMode;
+		}
+
+		public void setEmailAddresses(String emailAddresses) {
+			this.emailAddresses = emailAddresses;
+		}
+
+		public void setEmailSubject(String emailSubkect) {
+			this.emailSubject = emailSubkect;
+		}
+
+		public void setFileName(String fileName) {
+			this.fileName = fileName;
+		}
+
+		public void setTransformerClassName(String transformerClassName) {
+			this.transformerClassName = transformerClassName;
+		}
+
+		public void setTransformerPropertiesSerialized(
+				String transformerPropertiesSerialized) {
+			this.transformerPropertiesSerialized = transformerPropertiesSerialized;
+		}
+
+		public interface Transformer
+				extends BiFunction<InputStream, StringMap, InputStream> {
+		}
 	}
 }

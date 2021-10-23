@@ -34,6 +34,8 @@ public abstract class ContentDeliveryType extends ExtensibleEnum {
 
 	public static final ContentDeliveryType LOCAL_FILESYSTEM = new ContentDeliveryType_LOCAL_FILESYSTEM();
 
+	public static final ContentDeliveryType MULTIPLE = new ContentDeliveryType_MULTIPLE();
+
 	public boolean isRepublishable() {
 		return true;
 	}
@@ -62,6 +64,14 @@ public abstract class ContentDeliveryType extends ExtensibleEnum {
 		@Override
 		public boolean isRepublishable() {
 			return true;
+		}
+	}
+
+	public static class ContentDeliveryType_MULTIPLE
+			extends ContentDeliveryType {
+		@Override
+		public boolean isRepublishable() {
+			return false;
 		}
 	}
 

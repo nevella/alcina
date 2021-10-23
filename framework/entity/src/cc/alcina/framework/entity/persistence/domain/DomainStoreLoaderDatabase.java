@@ -263,8 +263,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			MetricLogging.get().end("initialise-domain-segment");
 		}
 		MetricLogging.get().start("tables");
-		for (DomainClassDescriptor descriptor : domainDescriptor.perClass
-				.values()) {
+		for (DomainClassDescriptor descriptor : domainDescriptor
+				.getWarmupClasses()) {
 			Class clazz = descriptor.clazz;
 			prepareTable(descriptor);
 			// warmup threadsafe

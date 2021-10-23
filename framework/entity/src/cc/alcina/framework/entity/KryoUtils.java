@@ -18,7 +18,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
 import org.apache.commons.pool2.BasePooledObjectFactory;
@@ -26,8 +25,6 @@ import org.apache.commons.pool2.PooledObject;
 import org.apache.commons.pool2.impl.DefaultPooledObject;
 import org.apache.commons.pool2.impl.GenericObjectPool;
 import org.objenesis.strategy.SerializingInstantiatorStrategy;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.Kryo.DefaultInstantiatorStrategy;
@@ -64,9 +61,6 @@ public class KryoUtils {
 	public static final String CONTEXT_USE_UNSAFE_FIELD_SERIALIZER = KryoUtils.class
 			.getName() + ".CONTEXT_USE_UNSAFE_FIELD_SERIALIZER";
 
-	private static final String CONTEXT_V20210124 = KryoUtils.class.getName()
-			+ ".CONTEXT_V20210124";
-
 	public static final String CONTEXT_BYPASS_POOL = KryoUtils.class.getName()
 			+ ".CONTEXT_BYPASS_POOL";
 
@@ -89,8 +83,6 @@ public class KryoUtils {
 	static {
 		resetPool();
 	}
-
-	private static Logger logger = LoggerFactory.getLogger(KryoUtils.class);
 
 	public static <T> T clone(T t) {
 		Kryo kryo = borrowKryo();
@@ -202,24 +194,6 @@ public class KryoUtils {
 			someObject = resolve(clazz, someObject);
 			return someObject;
 		} catch (Exception e) {
-			/*
-			 * backwards compatibility
-			 */
-			if (retry != null) {
-				try {
-					LooseContext.pushWithTrue(CONTEXT_V20210124);
-					LooseContext.setTrue(CONTEXT_BYPASS_POOL);
-					EntitySerializer.checkVersionCheck.incrementAndGet();
-					logger.warn("retry deserialize with old serializer");
-					InputStream retryStream = retry.get();
-					return deserializeFromStream(retryStream, clazz, null);
-				} catch (Exception e1) {
-					throw new KryoDeserializationException(e1);
-				} finally {
-					EntitySerializer.checkVersionCheck.decrementAndGet();
-					LooseContext.pop();
-				}
-			}
 			throw new KryoDeserializationException(e);
 		} finally {
 			returnKryo(kryo);
@@ -333,18 +307,12 @@ public class KryoUtils {
 	public static class EntitySerializer extends FieldSerializer {
 		private static transient long VERSION_1 = 980250682;
 
-		private static AtomicInteger checkVersionCheck = new AtomicInteger();
-
 		public EntitySerializer(Kryo kryo, Class<?> type) {
 			super(kryo, type);
 		}
 
 		@Override
 		public int compare(CachedField o1, CachedField o2) {
-			if (checkVersionCheck.get() > 0
-					&& LooseContext.is(CONTEXT_V20210124)) {
-				return super.compare(o1, o2);
-			}
 			boolean entityType = false;
 			try {
 				Field fieldAccessor = SEUtilities.getFieldByName(o1.getClass(),
@@ -378,12 +346,9 @@ public class KryoUtils {
 
 		@Override
 		public Object read(Kryo kryo, Input input, Class type) {
-			if (checkVersionCheck.get() == 0
-					|| !LooseContext.is(CONTEXT_V20210124)) {
-				long version = input.readLong();
-				if (version != VERSION_1) {
-					throw new InvalidVersionException();
-				}
+			long version = input.readLong();
+			if (version != VERSION_1) {
+				throw new InvalidVersionException();
 			}
 			return super.read(kryo, input, type);
 		}
