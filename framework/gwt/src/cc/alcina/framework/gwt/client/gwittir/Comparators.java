@@ -45,7 +45,7 @@ public class Comparators {
 			if (o2 == null) {
 				return 1;
 			}
-			return new Long(o1.getId()).compareTo(o2.getId());
+			return Long.valueOf(o1.getId()).compareTo(o2.getId());
 		}
 	}
 }

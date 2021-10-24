@@ -319,7 +319,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		if (getEntityManager() != null) {
 			String eql = String.format(
 					value == null ? "from %s where %s is null"
-							: "from %s where %s = ?",
+							: "from %s where %s = ?1",
 					clazz.getSimpleName(), key);
 			Query q = getEntityManager().createQuery(eql);
 			if (value != null) {

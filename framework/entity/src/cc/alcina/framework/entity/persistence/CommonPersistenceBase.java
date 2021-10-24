@@ -627,7 +627,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			String mimeMessageId) {
 		getEntityManager()
 				.createQuery(
-						Ax.format("update %s set mimeMessageId=? where id=?",
+						Ax.format("update %s set mimeMessageId=?1 where id=?2",
 								getImplementationSimpleClassName(
 										Publication.class)))
 				.setParameter(1, mimeMessageId).setParameter(2, publicationId)

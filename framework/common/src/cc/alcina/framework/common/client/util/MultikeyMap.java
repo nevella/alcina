@@ -77,7 +77,7 @@ public interface MultikeyMap<V> {
 	public abstract Map writeableDelegate();
 
 	default void addInteger(int delta, Object... objects) {
-		Integer value = (Integer) ensure(() -> (V) (Object) new Integer(0),
+		Integer value = (Integer) ensure(() -> (V) (Object) Integer.valueOf(0),
 				objects);
 		value += delta;
 		List<Object> list = new ArrayList<>(Arrays.asList(objects));

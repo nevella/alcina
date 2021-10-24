@@ -27,6 +27,6 @@ public class CollectionSizeComparator implements Comparator<Collection> {
 		if (o1 == null) {
 			return o2 == null ? 0 : -1;
 		}
-		return o2 == null ? 1 : new Integer(o1.size()).compareTo(o2.size());
+		return o2 == null ? 1 : Integer.valueOf(o1.size()).compareTo(o2.size());
 	}
 }

@@ -268,7 +268,7 @@ public class FastROBoundTable extends BoundTableExt {
 				EndRowButtonClickedEvent.fire(FastROBoundTable.this, f_row, o);
 			});
 		}
-		boolean odd = (this.calculateRowToObjectOffset(new Integer(row))
+		boolean odd = (this.calculateRowToObjectOffset(Integer.valueOf(row))
 				.intValue() % 2) != 0;
 		this.table.getRowFormatter().setStyleName(row, odd ? "odd" : "even");
 	}
