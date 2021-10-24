@@ -258,8 +258,7 @@
 			<jvmarg value="-Xmx${framework.gwt.jvm.maxHeapSizeMb}M" />
 			<jvmarg value="-Xss2M" />
 			<jvmarg value="-Dgwt.usearchives=false" />
-
-			
+			<jvmarg value="-Dcom.sun.xml.bind.v2.bytecode.ClassTailor.noOptimize=true" />
 			<jvmarg value="${project.gwt.compile.jvmarg1}" />
 			<jvmarg value="${project.gwt.compile.jvmarg2}" />
 			<jvmarg value="${project.gwt.compile.jvmarg3}" />
