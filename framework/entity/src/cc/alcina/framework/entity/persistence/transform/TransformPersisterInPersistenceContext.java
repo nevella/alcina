@@ -32,7 +32,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -42,6 +44,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -377,8 +380,7 @@ public class TransformPersisterInPersistenceContext {
 								.getImplementation(
 										DomainTransformEventPersistent.class);
 						DomainTransformRequestPersistent persistentRequest = persistentRequestClass
-								.getDeclaredConstructor()
-								.newInstance();
+								.getDeclaredConstructor().newInstance();
 						tlTransformManager.persist(persistentRequest);
 						persistentRequest.setStartPersistTime(startPersistTime);
 						if (!LooseContext.is(
@@ -410,14 +412,25 @@ public class TransformPersisterInPersistenceContext {
 										.getId());
 							}
 						});
-						new PersistentEventPopulator().populate(
-								persistentEvents, tlTransformManager,
-								eventsPersisted, propagationPolicy,
-								persistentEventClass, persistentRequest,
-								missingClassRefWarned,
-								LooseContext.is(
-										TransformPersisterInPersistenceContext.CONTEXT_DO_NOT_PERSIST_TRANSFORMS),
-								false);
+						try {
+							Long originatingUserId = token
+									.getOriginatingUserId();
+							IUser user = getEntityManager().find(PersistentImpl
+									.getImplementation(IUser.class),
+									originatingUserId);
+							PermissionsManager.get().pushUser(user,
+									PermissionsManager.get().getLoginState());
+							new PersistentEventPopulator().populate(
+									persistentEvents, tlTransformManager,
+									eventsPersisted, propagationPolicy,
+									persistentEventClass, persistentRequest,
+									missingClassRefWarned,
+									LooseContext.is(
+											TransformPersisterInPersistenceContext.CONTEXT_DO_NOT_PERSIST_TRANSFORMS),
+									false);
+						} finally {
+							PermissionsManager.get().popUser();
+						}
 						if (++requestCount % 100 == 0) {
 							System.out.format(
 									"Large rq count transform - %s/%s\n",
