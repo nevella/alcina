@@ -412,25 +412,20 @@ public class TransformPersisterInPersistenceContext {
 										.getId());
 							}
 						});
-						try {
-							Long originatingUserId = token
-									.getOriginatingUserId();
-							IUser user = getEntityManager().find(PersistentImpl
-									.getImplementation(IUser.class),
-									originatingUserId);
-							PermissionsManager.get().pushUser(user,
-									PermissionsManager.get().getLoginState());
-							new PersistentEventPopulator().populate(
-									persistentEvents, tlTransformManager,
-									eventsPersisted, propagationPolicy,
-									persistentEventClass, persistentRequest,
-									missingClassRefWarned,
-									LooseContext.is(
-											TransformPersisterInPersistenceContext.CONTEXT_DO_NOT_PERSIST_TRANSFORMS),
-									false);
-						} finally {
-							PermissionsManager.get().popUser();
-						}
+						Long originatingUserId = token.getOriginatingUserId();
+						IUser originatingUser = originatingUserId == null ? null
+								: getEntityManager().find(
+										PersistentImpl
+												.getImplementation(IUser.class),
+										originatingUserId);
+						new PersistentEventPopulator().populate(originatingUser,
+								persistentEvents, tlTransformManager,
+								eventsPersisted, propagationPolicy,
+								persistentEventClass, persistentRequest,
+								missingClassRefWarned,
+								LooseContext.is(
+										TransformPersisterInPersistenceContext.CONTEXT_DO_NOT_PERSIST_TRANSFORMS),
+								false);
 						if (++requestCount % 100 == 0) {
 							System.out.format(
 									"Large rq count transform - %s/%s\n",
