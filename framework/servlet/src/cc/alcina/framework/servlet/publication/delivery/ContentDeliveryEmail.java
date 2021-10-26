@@ -131,23 +131,23 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		boolean debug = false;
 		Properties props = new Properties();
 		String host = ResourceUtilities
-				.getBundledString(ContentDeliveryEmail.class, "smtp.host.name");
-		Integer port = Integer.valueOf(ResourceUtilities.getBundledString(
+				.get(ContentDeliveryEmail.class, "smtp.host.name");
+		Integer port = Integer.valueOf(ResourceUtilities.get(
 				ContentDeliveryEmail.class, "smtp.host.port"));
 		Boolean authenticate = Boolean.valueOf(
-				ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
+				ResourceUtilities.get(ContentDeliveryEmail.class,
 						"smtp.authenticate"));
 		String userName = ResourceUtilities
-				.getBundledString(ContentDeliveryEmail.class, "smtp.username");
+				.get(ContentDeliveryEmail.class, "smtp.username");
 		String password = ResourceUtilities
-				.getBundledString(ContentDeliveryEmail.class, "smtp.password");
-		String fromAddress = ResourceUtilities.getBundledString(
+				.get(ContentDeliveryEmail.class, "smtp.password");
+		String fromAddress = ResourceUtilities.get(
 				ContentDeliveryEmail.class, "smtp.from.address");
 		String fromName = ResourceUtilities
-				.getBundledString(ContentDeliveryEmail.class, "smtp.from.name");
-		Integer maxMessageSize = Integer.valueOf(
-				ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
-						"smtp.maxMessageSize"));
+				.get(ContentDeliveryEmail.class, "smtp.from.name");
+		int maxMessageSize = 
+				ResourceUtilities.getInteger(ContentDeliveryEmail.class,
+						"smtp.maxMessageSize");
 		String replyTo = null;
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
@@ -188,7 +188,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		String[] bccEmailAddressStrings = ResourceUtilities.get("smtp.bcc")
 				.split("(;|,| )+");
 		String filterClassName = ResourceUtilities
-				.getBundledString(AddressFilter.class, "smtp.filter.className");
+				.get(ContentDeliveryEmail.class, "smtp.filter.className");
 		String systemEmailAddressOfRequestor = deliveryModel
 				.getSystemEmailAddressOfRequestor();
 		if (LooseContext.has(CONTEXT_OVERRIDE_TO_ADDRESS)) {
