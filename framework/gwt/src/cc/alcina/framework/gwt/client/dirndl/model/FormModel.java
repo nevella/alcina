@@ -14,12 +14,11 @@ import java.util.function.Consumer;
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.place.shared.Place;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
-import cc.alcina.framework.common.client.logic.domain.UserProperty;
-import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
@@ -29,6 +28,7 @@ import cc.alcina.framework.common.client.actions.RemoteActionWithParameters;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -60,6 +60,7 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
+import cc.alcina.framework.gwt.client.util.Async;
 
 //FIXME - dirndl 1.3 - FormModel -> Form
 public class FormModel extends Model implements DomEvents.Submit.Handler {
@@ -91,13 +92,16 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 			if (getState().model instanceof Entity) {
 				ClientTransformManager.cast()
 						.promoteToDomainObject(getState().model);
-				CommitToStorageTransformListener.get().flush();
+				AsyncCallback callback = Async.callbackBuilder().success(o2 -> {
+					EntityPlace entityPlace = ((EntityPlace) Client
+							.currentPlace()).copy();
+					entityPlace.action = EntityAction.VIEW;
+					Client.goTo(entityPlace);
+				}).build();
+				CommitToStorageTransformListener.get()
+						.flushWithOneoffCallback(callback);
 			}
 			if (Client.currentPlace() instanceof EntityPlace) {
-				EntityPlace entityPlace = ((EntityPlace) Client.currentPlace())
-						.copy();
-				entityPlace.action = EntityAction.VIEW;
-				Client.goTo(entityPlace);
 			} else if (Client.currentPlace() instanceof CategoryNamePlace) {
 				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
 						.currentPlace();
