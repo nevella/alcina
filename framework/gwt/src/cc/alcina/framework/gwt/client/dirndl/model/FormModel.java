@@ -457,13 +457,19 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 				state.model = (Bindable) ((RemoteActionWithParameters) action)
 						.getParameters();
 			} else if (action instanceof LocalActionWithParameters) {
+				if(((LocalActionWithParameters) action).getParameters() instanceof FormEditableParameters){
+					state.model = (Bindable) ((LocalActionWithParameters) action)
+							.getParameters();
+				}else{
 				state.model = null;
 				state.expectsModel = false;
+				}
 			}
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
 		}
 	}
+	
 
 	/*
 	 * FIXME - dirndl 1.2 - move to OlForm
