@@ -1137,6 +1137,12 @@ public class ResourceUtilities {
 							auth.getBytes(StandardCharsets.UTF_8))));
 			return this;
 		}
+		
+		public SimpleQuery withBearerAuthentication(String token) {
+			headers.put("Authorization",
+					Ax.format("Bearer %s",token));
+			return this;
+		}
 
 		public SimpleQuery withDecodeGz(boolean decodeGz) {
 			this.decodeGz = decodeGz;
@@ -1199,6 +1205,11 @@ public class ResourceUtilities {
 			} else {
 				return input;
 			}
+		}
+
+		public SimpleQuery withContentType(String string) {
+			 headers.put("content-type", "application/json");
+			return this;
 		}
 	}
 }
