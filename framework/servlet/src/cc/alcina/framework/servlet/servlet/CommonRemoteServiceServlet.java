@@ -539,7 +539,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public PublicationResult
 			publish(ContentRequestBase<? extends ContentDefinition> cr)
 					throws WebException {
-		return Registry.impl(PublicationRequestHandler.class).publish(cr);
+		return PublicationRequestHandler.get().publish(cr);
 	}
 
 	@Override

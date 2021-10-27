@@ -389,12 +389,12 @@ public class ArrayBackedLongMap<V> implements Map<Long, V> {
 				maybePopNext();
 				poppedNext = false;
 				poppedNextObject = null;
-				return new ArrayBackedEntry(new Long(idx));
+				return new ArrayBackedEntry(Long.valueOf(idx));
 			}
 
 			@Override
 			public void remove() {
-				ArrayBackedLongMap.this.remove(new Long(idx));
+				ArrayBackedLongMap.this.remove(Long.valueOf(idx));
 				poppedNextObject = null;
 				poppedNext = false;
 				itrModCount++;

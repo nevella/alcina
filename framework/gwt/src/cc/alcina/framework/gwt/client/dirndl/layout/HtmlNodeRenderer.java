@@ -11,15 +11,15 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class HtmlNodeRenderer extends LeafNodeRenderer {
 	@Override
-	protected String getTag(Node node) {
-		return Ax.blankTo(super.getTag(node), "div");
-	}
-
-	@Override
 	public Widget render(Node node) {
 		Widget rendered = super.render(node);
 		rendered.getElement().setInnerHTML(getText(node));
 		return rendered;
+	}
+
+	@Override
+	protected String getTag(Node node) {
+		return Ax.blankTo(super.getTag(node), "div");
 	}
 
 	protected String getText(Node node) {
@@ -35,6 +35,10 @@ public class HtmlNodeRenderer extends LeafNodeRenderer {
 
 		public HtmlString(String html) {
 			setHtml(html);
+		}
+
+		public HtmlString(String template, Object... args) {
+			this(Ax.format(template, args));
 		}
 
 		public String getHtml() {

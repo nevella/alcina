@@ -729,11 +729,11 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			}
 		} else if (this.selectedRowLastIndex != -1) {
 			realIndexes.add(calculateRowToObjectOffset(
-					new Integer(this.selectedRowLastIndex)));
+					Integer.valueOf(this.selectedRowLastIndex)));
 		}
 		int i = 0;
 		for (Iterator it = this.value.iterator(); it.hasNext(); i++) {
-			if (realIndexes.contains(new Integer(i))) {
+			if (realIndexes.contains(Integer.valueOf(i))) {
 				selected.add(it.next());
 			} else {
 				it.next();
@@ -1201,7 +1201,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			if (this.selectedRowStyles != null) {
 				removeRows.addAll(this.selectedRowStyles.keySet());
 			} else {
-				removeRows.add(new Integer(this.selectedRowLastIndex));
+				removeRows.add(Integer.valueOf(this.selectedRowLastIndex));
 			}
 			for (int i = removeRows.size() - 1; i >= 0; i--) {
 				// GWT.log("Removing nested: " + removeRows.get(i), null);
@@ -1344,7 +1344,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 					&& (this.selectedRowLastIndex == (row - 1)))
 					|| ((this.selectedRowStyles != null)
 							&& this.selectedRowStyles
-									.containsKey(new Integer(row - 1)))) {
+									.containsKey(Integer.valueOf(row - 1)))) {
 				return;
 			}
 			calcRow = row - this.selectedRowsBeforeRow(row);
@@ -1519,7 +1519,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private void insertNestedWidget(int row) {
 		// GWT.log( "Inserting nested for row "+row, null);
-		Integer realIndex = this.calculateRowToObjectOffset(new Integer(row));
+		Integer realIndex = this.calculateRowToObjectOffset(Integer.valueOf(row));
 		// GWT.log( "RealIndex: "+ realIndex, null );
 		int i = 0;
 		SourcesPropertyChangeEvents o = null;
@@ -1561,7 +1561,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			Integer entryRow = (Integer) entry.getKey();
 			if (entryRow.intValue() > fromRow) {
 				newSelectedRowStyles.put(
-						new Integer(entryRow.intValue() + modifier),
+						Integer.valueOf(entryRow.intValue() + modifier),
 						entry.getValue());
 			} else {
 				newSelectedRowStyles.put(entryRow, entry.getValue());
@@ -1641,11 +1641,11 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			if ((((masks
 					& BoundTableExt.MULTI_REQUIRES_SHIFT) > 0) == shiftDown)) {
 				// TOGGLE ROW.
-				if (this.selectedRowStyles.containsKey(new Integer(row))) {
+				if (this.selectedRowStyles.containsKey(Integer.valueOf(row))) {
 					// Handle Widget remove on Multirow
 					this.getRowFormatter().setStyleName(row,
 							(String) this.selectedRowStyles
-									.remove(new Integer(row)));
+									.remove(Integer.valueOf(row)));
 					if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
 						this.removeNestedWidget(row);
 					}
@@ -1656,7 +1656,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 							|| (lastStyle.length() == 0))
 									? BoundTableExt.DEFAULT_STYLE
 									: lastStyle;
-					this.selectedRowStyles.put(new Integer(row), lastStyle);
+					this.selectedRowStyles.put(Integer.valueOf(row), lastStyle);
 					this.getRowFormatter().addStyleName(row, "selected");
 					if ((this.masks & BoundTableExt.INSERT_WIDGET_MASK) > 0) {
 						this.insertNestedWidget(row);
@@ -1875,7 +1875,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			o.addPropertyChangeListener(collectionPropertyChangeListener);
 			listenedToByCollectionChangeListener.add(o);
 		}
-		boolean odd = (this.calculateRowToObjectOffset(new Integer(row))
+		boolean odd = (this.calculateRowToObjectOffset(Integer.valueOf(row))
 				.intValue() % 2) != 0;
 		this.table.getRowFormatter().setStyleName(row, odd ? "odd" : "even");
 		bindingRow.setLeft();
@@ -1917,7 +1917,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			row -= this.selectedRowsBeforeRow(row);
 		}
 		// GWT.log( "Returning object instance index: "+row, null);
-		return new Integer(row);
+		return Integer.valueOf(row);
 	}
 
 	protected BoundWidget createCellWidget(Binding rowBinding, int colIndex,

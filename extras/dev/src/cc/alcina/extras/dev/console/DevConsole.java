@@ -225,7 +225,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		new StatCategory_Console().emit();
 		new DevStats().parse(logProvider).dump(true);
 		logProvider.startRemote();
-		JobRegistry.get();
+		JobRegistry.get().init();
 		AlcinaTopics.applicationRestart.add((k, v) -> getInstance().restart());
 	}
 

@@ -117,6 +117,8 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	private String opaqueRequestClassname;
 
+	private List<MultipleDeliveryEntry> multipleDeliveryEntries = new ArrayList<>();
+
 	@Override
 	public String getAttachmentMessage() {
 		return attachmentMessage;
@@ -171,6 +173,12 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	@Override
 	public String getMimeType() {
 		return this.mimeType;
+	}
+
+	@Override
+	@PropertySerialization(types = MultipleDeliveryEntry.class)
+	public List<MultipleDeliveryEntry> getMultipleDeliveryEntries() {
+		return this.multipleDeliveryEntries;
 	}
 
 	public String getNote() {
@@ -428,6 +436,11 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		propertyChangeSupport().firePropertyChange("MimeType", old_MimeType,
 				MimeType);
 		this.mimeType = MimeType;
+	}
+
+	public void setMultipleDeliveryEntries(
+			List<MultipleDeliveryEntry> multipleDeliveryEntries) {
+		this.multipleDeliveryEntries = multipleDeliveryEntries;
 	}
 
 	public void setNoPersistence(boolean noPersistence) {

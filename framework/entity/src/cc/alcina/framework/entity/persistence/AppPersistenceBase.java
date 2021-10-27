@@ -153,6 +153,7 @@ public abstract class AppPersistenceBase {
 		}
 	}
 
+
 	public static class ServletClassMetadataCacheProvider {
 		public ClassMetadataCache getClassInfo(Logger mainLogger,
 				boolean entityLayer) throws Exception {

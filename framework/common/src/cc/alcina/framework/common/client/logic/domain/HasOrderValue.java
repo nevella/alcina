@@ -23,7 +23,7 @@ public interface HasOrderValue {
 				return r;
 			}
 			if (o1 instanceof HasId && o2 instanceof HasId) {
-				return new Long(((HasId) o1).getId())
+				return Long.valueOf(((HasId) o1).getId())
 						.compareTo(((HasId) o2).getId());
 			}
 			return 0;
