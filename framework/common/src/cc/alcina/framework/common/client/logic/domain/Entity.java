@@ -225,8 +225,8 @@ public abstract class Entity<T extends Entity> extends Bindable
 	}
 
 	@Override
-	public Entity provideEntity() {
-		return  domainIdentity();
+	public <E extends Entity> E provideEntity() {
+		return (E) domainIdentity();
 	}
 
 	@Override
