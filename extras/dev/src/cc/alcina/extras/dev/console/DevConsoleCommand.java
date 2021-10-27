@@ -1206,7 +1206,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					.filter(field -> getKey.apply(field) != null)
 					.collect(AlcinaCollectors.toKeyMap(getKey));
 			Map<String, Field> fieldsByAnnName = new TreeMap<>(map);
-			String key = argv[0];
+			String key = argv.length==0?"":argv[0];
 			String fieldName = null;
 			Object value = null;
 			if (fieldsByAnnName.containsKey(key)) {
