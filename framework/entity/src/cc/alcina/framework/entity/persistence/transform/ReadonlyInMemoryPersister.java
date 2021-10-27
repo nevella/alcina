@@ -65,8 +65,7 @@ public class ReadonlyInMemoryPersister {
 			DomainTransformLayerWrapper wrapper) {
 		Registry.impl(InMemoryPersistableProvider.class).permittedClasses()
 				.map(c -> {
-					Class impl = PersistentImpl
-							.getImplementationNonGeneric(c);
+					Class impl = PersistentImpl.getImplementationNonGeneric(c);
 					return impl != null && impl != Void.class ? impl : c;
 				}).forEach(inMemoryPersistable::add);
 		this.persisterToken = persisterToken;
@@ -122,10 +121,10 @@ public class ReadonlyInMemoryPersister {
 					.setOriginatingUserId(token.getOriginatingUserId());
 			wrapper.persistentRequests.add(persistentRequest);
 			tltm = ThreadlocalTransformManager.cast();
-			new PersistentEventPopulator().populate(wrapper.persistentEvents,
-					tltm, events, token.getTransformPropagationPolicy(),
-					persistentEventClass, persistentRequest,
-					missingClassRefWarned, true, true);
+			new PersistentEventPopulator().populate(null,
+					wrapper.persistentEvents, tltm, events,
+					token.getTransformPropagationPolicy(), persistentEventClass,
+					persistentRequest, missingClassRefWarned, true, true);
 		}
 	}
 

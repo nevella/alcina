@@ -8,6 +8,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Properties;
@@ -33,6 +34,7 @@ import javax.mail.util.ByteArrayDataSource;
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.io.output.NullOutputStream;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
@@ -44,7 +46,6 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget.Form
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.publication.EntityCleaner;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
@@ -83,8 +84,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			boolean requestorPass) throws Exception {
 		byte[] msgBytes = ResourceUtilities
 				.readStreamToByteArray(convertedContent);
-		String result = send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
-				requestorPass, deliveryModel.getEmailAddress());
+		String result = send(new ByteArrayInputStream(msgBytes), deliveryModel,
+				hfc, requestorPass, deliveryModel.getEmailAddress());
 		if (LooseContext.has(CONTEXT_ALSO_SEND_TO_ADDRESS)) {
 			send(new ByteArrayInputStream(msgBytes), deliveryModel, hfc,
 					requestorPass,
@@ -100,7 +101,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			throws Exception {
 		byte[] msgBytes = ResourceUtilities
 				.readStreamToByteArray(convertedContent);
-		String result = deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, false);
+		String result = deliver(new ByteArrayInputStream(msgBytes),
+				deliveryModel, hfc, false);
 		deliver(new ByteArrayInputStream(msgBytes), deliveryModel, hfc, true);
 		return result;
 	}
@@ -108,7 +110,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 	// From https://stackoverflow.com/a/48305769
 	private long getMessageSize(Message message)
 			throws IOException, MessagingException {
-		try (CountingOutputStream out = new CountingOutputStream(NullOutputStream.NULL_OUTPUT_STREAM)) {
+		try (CountingOutputStream out = new CountingOutputStream(
+				NullOutputStream.NULL_OUTPUT_STREAM)) {
 			message.writeTo(out);
 			return out.getByteCount();
 		}
@@ -127,21 +130,24 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			FileNotFoundException, NoSuchProviderException {
 		boolean debug = false;
 		Properties props = new Properties();
-		String host = ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.host.name");
-		Integer port = Integer.valueOf(
-				ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.host.port"));
+		String host = ResourceUtilities
+				.get(ContentDeliveryEmail.class, "smtp.host.name");
+		Integer port = Integer.valueOf(ResourceUtilities.get(
+				ContentDeliveryEmail.class, "smtp.host.port"));
 		Boolean authenticate = Boolean.valueOf(
-				ResourceUtilities.getBundledString(ContentDeliveryEmail.class, "smtp.authenticate"));
-		String userName = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
-				"smtp.username");
-		String password = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
-				"smtp.password");
-		String fromAddress = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
-				"smtp.from.address");
-		String fromName = ResourceUtilities.getBundledString(ContentDeliveryEmail.class,
-				"smtp.from.name");
-		Integer maxMessageSize = Integer.valueOf(
-				ResourceUtilities.getBundledString(ContentDeliveryEmail.class,"smtp.maxMessageSize"));
+				ResourceUtilities.get(ContentDeliveryEmail.class,
+						"smtp.authenticate"));
+		String userName = ResourceUtilities
+				.get(ContentDeliveryEmail.class, "smtp.username");
+		String password = ResourceUtilities
+				.get(ContentDeliveryEmail.class, "smtp.password");
+		String fromAddress = ResourceUtilities.get(
+				ContentDeliveryEmail.class, "smtp.from.address");
+		String fromName = ResourceUtilities
+				.get(ContentDeliveryEmail.class, "smtp.from.name");
+		int maxMessageSize = 
+				ResourceUtilities.getInteger(ContentDeliveryEmail.class,
+						"smtp.maxMessageSize");
 		String replyTo = null;
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
@@ -153,14 +159,15 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		props.put("mail.smtp.auth", authenticate.toString());
 		if (ResourceUtilities.is(ContentDeliveryEmail.class, "smtp.ttls")) {
 			props.setProperty("mail.smtp.starttls.enable", "true");
-			String protocols = ResourceUtilities.get(ContentDeliveryEmail.class, "smtp.ssl.protocols");
-			if(Ax.notBlank(protocols)){
-				props.setProperty("mail.smtp.ssl.protocols", protocols);	
+			String protocols = ResourceUtilities.get(ContentDeliveryEmail.class,
+					"smtp.ssl.protocols");
+			if (Ax.notBlank(protocols)) {
+				props.setProperty("mail.smtp.ssl.protocols", protocols);
 			}
 		}
 		if (isUseVerp() && PublicationContext.get() != null) {
-			String publicationUid = PublicationContext
-					.get().publicationResult.getPublicationUid();
+			String publicationUid = PublicationContext.get().publicationResult
+					.getPublicationUid();
 			// will be null if non-persistent
 			if (publicationUid != null) {
 				replyTo = fromAddress.replaceFirst("(.+?)@(.+)",
@@ -172,13 +179,16 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		Session session = Session.getInstance(props, null);
 		session.setDebug(debug);
-		MimeMessage msg = new MimeMessage(session); 
+		MimeMessage msg = new MimeMessage(session);
 		msg.setSentDate(new Date());
 		msg.setFrom(new InternetAddress(fromAddress, fromName));
 		List<InternetAddress> addresses = new ArrayList<InternetAddress>();
+		List<InternetAddress> bccAddresses = new ArrayList<InternetAddress>();
 		String[] emailAddresses = emailAddress.split("(;|,| )+");
+		String[] bccEmailAddressStrings = ResourceUtilities.get("smtp.bcc")
+				.split("(;|,| )+");
 		String filterClassName = ResourceUtilities
-				.getBundledString(AddressFilter.class, "smtp.filter.className");
+				.get(ContentDeliveryEmail.class, "smtp.filter.className");
 		String systemEmailAddressOfRequestor = deliveryModel
 				.getSystemEmailAddressOfRequestor();
 		if (LooseContext.has(CONTEXT_OVERRIDE_TO_ADDRESS)) {
@@ -188,8 +198,11 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		if (Ax.notBlank(filterClassName)) {
 			AddressFilter filter = (AddressFilter) Class
-					.forName(filterClassName).newInstance();
+					.forName(filterClassName).getDeclaredConstructor()
+					.newInstance();
 			emailAddresses = filter.filterAddresses(emailAddresses);
+			bccEmailAddressStrings = filter
+					.filterAddresses(bccEmailAddressStrings);
 			if (systemEmailAddressOfRequestor != null) {
 				String[] tmpSystemEmailBuffer = filter.filterAddresses(
 						new String[] { systemEmailAddressOfRequestor });
@@ -213,12 +226,19 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			}
 			addresses.add(new InternetAddress(emTrim));
 		}
+		Arrays.stream(bccEmailAddressStrings).map(Ax::ntrim).filter(Ax::notBlank)
+				.map(this::toInternetAddress).forEach(bccAddresses::add);
 		if (addresses.size() == 0) {
 			return null;
 		}
 		InternetAddress[] addressTo = (InternetAddress[]) addresses
 				.toArray(new InternetAddress[addresses.size()]);
 		msg.setRecipients(Message.RecipientType.TO, addressTo);
+		if (bccAddresses.size() > 0) {
+			InternetAddress[] bccAddressArray = (InternetAddress[]) bccAddresses
+					.toArray(new InternetAddress[bccAddresses.size()]);
+			msg.setRecipients(Message.RecipientType.BCC, bccAddressArray);
+		}
 		msg.setSubject(
 				requestorPass ? deliveryModel.getEmailSubjectForRequestor()
 						: deliveryModel.getEmailSubject());
@@ -346,6 +366,14 @@ public class ContentDeliveryEmail implements ContentDelivery {
 	public static class MessageSizeUndeterminedException extends Exception {
 		public MessageSizeUndeterminedException(Throwable cause) {
 			super(cause);
+		}
+	}
+
+	private InternetAddress toInternetAddress(String email) {
+		try {
+			return new InternetAddress(email);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 }

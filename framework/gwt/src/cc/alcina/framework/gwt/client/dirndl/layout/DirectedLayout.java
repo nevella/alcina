@@ -278,7 +278,7 @@ public class DirectedLayout {
 				// FIXME - dirndl.1 - don't add this to form/table cells
 				ChildReplacer listener = new ChildReplacer((Bindable) model,
 						child.changeSource.getPropertyName(), child);
-				logger.info("added listener :: {} :: {} :: {} :: {}",
+				logger.trace("added listener :: {} :: {} :: {} :: {}",
 						child.pathSegment(), child.hashCode(),
 						child.changeSource.getPropertyName(),
 						listener.hashCode());
@@ -287,7 +287,7 @@ public class DirectedLayout {
 			if (childModel instanceof Model) {
 				ChildReplacer listener = new ChildReplacer(
 						(Bindable) childModel, null, child);
-				logger.info("added listener :: {} :: {} :: {} :: {}",
+				logger.trace("added listener :: {} :: {} :: {} :: {}",
 						child.pathSegment(), child.hashCode(), "(fireUpdate)",
 						listener.hashCode());
 				child.listeners.add(listener);

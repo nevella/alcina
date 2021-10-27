@@ -11,6 +11,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
@@ -18,7 +21,37 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 
 class PersistentEventPopulator {
-	void populate(List<DomainTransformEventPersistent> persistentEvents,
+	void populate(IUser originatingUser,
+			List<DomainTransformEventPersistent> persistentEvents,
+			ThreadlocalTransformManager tltm,
+			List<DomainTransformEvent> eventsPersisted,
+			TransformPropagationPolicy propagationPolicy,
+			Class<? extends DomainTransformEventPersistent> persistentEventClass,
+			DomainTransformRequestPersistent persistentRequest,
+			AtomicBoolean missingClassRefWarned,
+			boolean persistTransformsDisabled, boolean forcePropagation) {
+		boolean pushed = false;
+		try {
+			if (originatingUser != null) {
+				PermissionsManager.get().pushUser(originatingUser,
+						PermissionsManager.get().getLoginState());
+				pushed = true;
+			}
+			populate0(persistentEvents, tltm, eventsPersisted,
+					propagationPolicy, persistentEventClass, persistentRequest,
+					missingClassRefWarned,
+					LooseContext.is(
+							TransformPersisterInPersistenceContext.CONTEXT_DO_NOT_PERSIST_TRANSFORMS),
+					false);
+		} finally {
+			if (pushed) {
+				PermissionsManager.get().popUser();
+			}
+		}
+	}
+
+	private void populate0(
+			List<DomainTransformEventPersistent> persistentEvents,
 			ThreadlocalTransformManager tltm,
 			List<DomainTransformEvent> eventsPersisted,
 			TransformPropagationPolicy propagationPolicy,

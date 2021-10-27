@@ -72,7 +72,8 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
  *         ditto localRequestId ditto committingRequest
  *         </ul>
  * 
- * 
+ *         FIXME - mvcc.5 - flush() and friends shouldn't return (call
+ *         callbacks) until all inflight dtrs are committed
  */
 public class CommitToStorageTransformListener
 		implements DomainTransformListener {
@@ -221,6 +222,7 @@ public class CommitToStorageTransformListener
 		flushWithOneoffCallback(callback, true);
 	}
 
+	//FIXME - mvcc.5 - remove (coalesce with 1-arg call) 
 	public void flushWithOneoffCallback(AsyncCallback callback,
 			boolean commitIfEmptyTransformQueue) {
 		boolean doNotFlush = false;
@@ -358,7 +360,7 @@ public class CommitToStorageTransformListener
 			updateTransformQueueVersions();
 			transformQueue.clear();
 		}
-		if(request.getEvents().isEmpty()){
+		if (request.getEvents().isEmpty()) {
 			topicStateChanged().publish(State.COMMITTED);
 			return;
 		}
@@ -692,7 +694,7 @@ public class CommitToStorageTransformListener
 				break;
 			}
 			topicStateChanged().remove(this);
-			if (!reloadRequired) {
+			if (reloadRequired) {
 				callback.onFailure(new Exception("flush failed on server"));
 			}
 		}
