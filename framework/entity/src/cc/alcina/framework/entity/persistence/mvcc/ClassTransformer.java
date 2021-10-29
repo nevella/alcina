@@ -494,7 +494,9 @@ class ClassTransformer {
 									lastRun.transformedClassBytes));
 					transformedClass = (Class<? extends H>) ctClass.toClass();
 				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
+					e.printStackTrace();
+					//handle flakiness
+					new ClassWriter().generateMvccClassTask();
 				}
 			} else {
 				new ClassWriter().generateMvccClassTask();
