@@ -208,6 +208,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	public void init(ServletConfig servletConfig) throws ServletException {
 		MetricLogging.get().start("Web app startup");
 		startupTime = new Date();
+		Thread.currentThread().setName("Init-"+getClass().getSimpleName());
 		try {
 			initServletConfig = servletConfig;
 			// push to registry

@@ -43,6 +43,9 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 		if (matches) {
 			boolean notMatches = SEUtilities.normalizeWhitespace(joined)
 					.matches("(?is).*(cc.alcina).*");
+			if(notMatches){
+				return false;	
+			}
 			matches &= !notMatches;
 			if (matches) {
 				return true;
@@ -75,12 +78,19 @@ public class CmdAnalyseStackTrace extends DevConsoleCommand {
 				if (joined.contains("com.arjuna.ats.arjuna")) {
 					return true;
 				}
+				
 				if (joined.contains("com.arjuna.ats.internal.arjuna")) {
 					return true;
 				}
 			}
 			if (lines[0].matches(".*at sun.nio.fs.LinuxWatchService.poll.*")) {
 				return true;
+			}
+			if (lines[0].matches(".*at sun.nio.ch.EPoll.wait.*")) {
+				return true;
+			}
+			if(joined.contains("org.jboss.as.controller.ParallelBootOperationStepHandler")){
+				return true;	
 			}
 		}
 		return matches;
