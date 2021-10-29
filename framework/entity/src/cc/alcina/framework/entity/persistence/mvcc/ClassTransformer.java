@@ -152,7 +152,8 @@ class ClassTransformer {
 		try {
 			ClassTransform classTransform = classTransforms.get(clazz);
 			return classTransform == null ? null
-					: (T) classTransform.transformedClass.newInstance();
+					: (T) classTransform.transformedClass.getConstructor()
+							.newInstance();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -186,7 +187,8 @@ class ClassTransformer {
 						!ResourceUtilities.is("checkClassCorrectnessParallel"))
 				.withCancelOnException(true)
 				.withRunnables(classTransforms.values().stream().map(mapper)
-						.collect(Collectors.toList())).run();
+						.collect(Collectors.toList()))
+				.run();
 		if (ResourceUtilities.is(ClassTransformer.class,
 				"cancelStartupIfInvalid")) {
 			if (classTransforms.values().stream().anyMatch(ct -> ct.invalid)) {
@@ -485,21 +487,22 @@ class ClassTransformer {
 			}
 		}
 
-		synchronized void generateMvccClass() {
-			if (isSameSourceAsLastRun()
-					&& lastRun.transformedClassBytes != null) {
-				try {
-					CtClass ctClass = transformer.classPool
-							.makeClass(new ByteArrayInputStream(
-									lastRun.transformedClassBytes));
-					transformedClass = (Class<? extends H>) ctClass.toClass();
-				} catch (Exception e) {
-					e.printStackTrace();
-					//handle flakiness
+		void generateMvccClass() {
+			synchronized (ClassTransformer.class) {
+				if (isSameSourceAsLastRun()
+						&& lastRun.transformedClassBytes != null) {
+					try {
+						CtClass ctClass = transformer.classPool
+								.makeClass(new ByteArrayInputStream(
+										lastRun.transformedClassBytes));
+						transformedClass = (Class<? extends H>) ctClass
+								.toClass();
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				} else {
 					new ClassWriter().generateMvccClassTask();
 				}
-			} else {
-				new ClassWriter().generateMvccClassTask();
 			}
 		}
 
