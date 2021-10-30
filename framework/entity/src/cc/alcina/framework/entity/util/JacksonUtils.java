@@ -27,14 +27,14 @@ public class JacksonUtils {
 
 	public static JacksonJsonObjectSerializer defaultSerializer() {
 		return new JacksonJsonObjectSerializer().withIdRefs().withTypeInfo()
-				.withDefaults(true).withAllowUnknownProperties()
+				.withAllowUnknownProperties()
 				.withPrettyPrint();
 	}
 
 	// Special defaults for web services
 	// Should be closer to a plain JSON
 	public static JacksonJsonObjectSerializer wsSerializer() {
-		return new JacksonJsonObjectSerializer().withDefaults(true);
+		return new JacksonJsonObjectSerializer();
 	}
 
 	public static <T> T deserialize(InputStream stream, Class<T> clazz) {
@@ -72,6 +72,8 @@ public class JacksonUtils {
 		return defaultSerializer().serialize(object);
 	}
 
+	@SuppressWarnings("deprecation")
+	//just informative, not intended for deserialization
 	public static String serializeForLogging(Object object) {
 		try {
 			return defaultSerializer().withDefaults(false).serialize(object);

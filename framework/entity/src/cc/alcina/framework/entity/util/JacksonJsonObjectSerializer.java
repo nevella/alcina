@@ -197,6 +197,10 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 		return this;
 	}
 
+	@Deprecated
+	/*
+	 * Ambiguity of empty string/null means false can cause deserialization havoc (if used as a true serialization format)
+	 */
 	public JacksonJsonObjectSerializer withDefaults(boolean withDefaults) {
 		this.withDefaults = withDefaults;
 		return this;
