@@ -135,7 +135,7 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 				DomNode threadTd = builder.row().cell("Thread").append();
 				if (logHref.isPresent()) {
 					threadTd.html().addLink(messageState.getThreadName(),
-							logHref.get(), "_blank");
+							logHref.get(), "_top");
 				} else {
 					threadTd.setText(messageState.getThreadName());
 				}
