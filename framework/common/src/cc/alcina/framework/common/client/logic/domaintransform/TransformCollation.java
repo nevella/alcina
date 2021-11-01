@@ -135,7 +135,7 @@ public class TransformCollation {
 		perLocator = null;
 	}
 
-	protected void removeTransformFromRequest(DomainTransformEvent event) {
+	public void removeTransformFromRequest(DomainTransformEvent event) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -365,5 +365,6 @@ public class TransformCollation {
 		public void removeTransformsFromRequest() {
 			TransformCollation.this.removeTransformsFromRequest(this);
 		}
+
 	}
 }

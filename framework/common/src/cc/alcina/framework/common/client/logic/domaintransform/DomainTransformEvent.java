@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.Objects;
 
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
@@ -527,5 +528,9 @@ public class DomainTransformEvent
 
 	public EntityLocator toValueLocator() {
 		return EntityLocator.valueLocator(this);
+	}
+
+	public boolean provideIsPropertyName(Entity.PropertyEnum property) {
+		return Objects.equals(propertyName, property.toString());
 	}
 }
