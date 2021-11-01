@@ -3,12 +3,14 @@ package cc.alcina.framework.servlet.knowns;
 import java.lang.reflect.Field;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.text.DateFormatSymbols;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 
@@ -38,10 +40,16 @@ public class Knowns {
 
 	public static KnownRoot root;
 
+	public static final Locale EN_NZ = new Locale("en", "NZ", "");
+
+	public static final DateFormatSymbols SYMBOLS_EN = DateFormatSymbols
+			.getInstance(EN_NZ);
+
+	
 	private static String dateFormatStr = "dd-MMM-yyyy,hh:mm:ss";
 
 	private static SimpleDateFormat dateFormat = new SynchronizedDateFormat(
-			dateFormatStr);
+			dateFormatStr,SYMBOLS_EN);
 
 	public static long lastModified = System.currentTimeMillis();
 
