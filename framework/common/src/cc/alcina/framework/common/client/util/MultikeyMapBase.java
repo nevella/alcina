@@ -8,6 +8,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.SortedMap;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -255,6 +256,10 @@ public abstract class MultikeyMapBase<V>
 		Map copyHolder = new HashMap<>();
 		copyHolder.putAll(delegate);
 		delegate.clear();
+		Object nullKeyValue = null;
+		if (!(delegate instanceof SortedMap)&&copyHolder.containsKey(null)) {
+			delegate.put(null, copyHolder.remove(null));
+		}
 		copyHolder.keySet().stream().sorted()
 				.forEach(key -> delegate.put(key, copyHolder.get(key)));
 	}
