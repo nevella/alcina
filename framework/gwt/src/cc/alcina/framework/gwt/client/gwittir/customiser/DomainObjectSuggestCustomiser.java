@@ -147,8 +147,9 @@ public class DomainObjectSuggestCustomiser
 		this.classValue = classValue;
 		return this;
 	}
+
 	public DomainObjectSuggestCustomiser withHint(String hint) {
-		this.hintValue= hint;
+		this.hintValue = hint;
 		return this;
 	}
 
@@ -165,6 +166,12 @@ public class DomainObjectSuggestCustomiser
 	public DomainObjectSuggestCustomiser
 			withSuggestBoxCssClassName(String suggestBoxCssClassName) {
 		this.suggestBoxCssClassName = suggestBoxCssClassName;
+		return this;
+	}
+
+	public DomainObjectSuggestCustomiser
+			withRendererClassName(Class rendererClassValue) {
+		this.rendererClassValue = rendererClassValue;
 		return this;
 	}
 
