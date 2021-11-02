@@ -54,6 +54,7 @@ public class CommonSearchSupport {
 
 	public void copySearchMetadata(SearchDefinition from, SearchDefinition to) {
 		to.setResultsPerPage(from.getResultsPerPage());
+		to.setPageNumber(from.getPageNumber());
 	}
 
 	public <T extends Entity> ModelSearchResults getForClass(String className,
