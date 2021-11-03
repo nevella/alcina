@@ -1845,4 +1845,9 @@ public class XmlUtils {
 			}
 		}
 	}
+
+	public static String balanceForXhtml(String htmlContent) {
+		htmlContent=htmlContent.replaceAll("(?i)<META(.*?)>", "<META$1/>");
+		return htmlContent;
+	}
 }
