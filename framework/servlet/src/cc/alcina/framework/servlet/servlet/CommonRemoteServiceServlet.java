@@ -817,6 +817,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				((List) response.getSuggestions()).add(0,
 						BoundSuggestOracleSuggestion.nullSuggestion());
 			}
+			return projectResponse(response);
+		}
+
+		protected Response projectResponse(Response response) {
 			return GraphProjections.defaultProjections().project(response);
 		}
 

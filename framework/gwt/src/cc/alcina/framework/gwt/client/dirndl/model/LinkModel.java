@@ -243,6 +243,9 @@ public class LinkModel extends Model {
 			} else {
 				rendered.getElement().setAttribute("href",
 						place.toHrefString());
+				if (model.isNewTab()) {
+					rendered.getElement().setAttribute("target", "_blank");
+				}
 				if (place instanceof ActionRefPlace) {
 					ActionRefPlace actionRefPlace = (ActionRefPlace) place;
 					Optional<ActionHandler> actionHandler = actionRefPlace
