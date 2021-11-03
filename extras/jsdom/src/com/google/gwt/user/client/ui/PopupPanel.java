@@ -1288,6 +1288,11 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 		CENTER, ONE_WAY_CORNER, ROLL_DOWN
 	}
 
+	 static int showingCount=0;
+	public static int getShowingCount() {
+		return showingCount;
+	}
+
 	/**
 	 * An {@link Animation} used to enlarge the popup into view.
 	 */
@@ -1358,6 +1363,7 @@ public class PopupPanel extends SimplePanel implements SourcesPopupEvents,
 			}
 			// Update the logical state.
 			curPanel.showing = showing;
+			showingCount+=(showing?1:-1);
 			curPanel.updateHandlers();
 			// Determine if we need to animate
 			boolean animate = !isUnloading && curPanel.isAnimationEnabled;
