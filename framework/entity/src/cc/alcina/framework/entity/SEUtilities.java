@@ -186,8 +186,7 @@ public class SEUtilities {
 	public static void clearAllFields(Object object) {
 		try {
 			List<Field> fields = allFields(object.getClass());
-			Object template = 
-					Reflections.newInstance(object.getClass());
+			Object template = Reflections.newInstance(object.getClass());
 			for (Field field : fields) {
 				int modifiers = field.getModifiers();
 				if (Modifier.isFinal(modifiers)
@@ -215,6 +214,9 @@ public class SEUtilities {
 	public static String combinePaths(String absPath, String relPath) {
 		if (relPath.contains("://")) {
 			return relPath;
+		}
+		if (relPath.startsWith("//")) {
+			return absPath.replaceFirst("(.+?:)//.+", "$1") + relPath;
 		}
 		if (relPath.startsWith("?")) {
 			return absPath + relPath;
