@@ -98,6 +98,7 @@ public class AdjunctTransformCollation extends TransformCollation {
 	public void ensureCurrent() {
 		if (token.addCascadedEvents()) {
 			refreshFromRequest();
+			removeCreateDeleteTransforms();
 		}
 	}
 
@@ -107,8 +108,11 @@ public class AdjunctTransformCollation extends TransformCollation {
 
 	public void removeCreateDeleteTransforms() {
 		ensureLookups();
-		allEvents.stream().filter(this::isCreatedAndDeleted)
-				.forEach(this::removeTransformFromRequest);
+		if (allEvents.stream().anyMatch(this::isCreatedAndDeleted)) {
+			allEvents.stream().filter(this::isCreatedAndDeleted)
+					.forEach(this::removeTransformFromRequest);
+			refreshFromRequest();
+		}
 	}
 
 	@Override
