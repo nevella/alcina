@@ -16,8 +16,10 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -73,8 +75,10 @@ public class TaskListJobs extends AbstractTaskPerformer
 					job.getTaskSerialized());
 			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
 					.filter(textFilter).filter(sectionFilter).parallel();
-			List<Job> jobs = DomainStore.queryPool()
-					.call(() -> stream.collect(Collectors.toList()), stream);
+			ObjectWrapper<Stream<? extends Entity>> mutableStream = ObjectWrapper
+					.of(stream);
+			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
+					() -> mutableStream.get().collect(Collectors.toList()), mutableStream);
 			jobs.forEach(job -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(String.valueOf(job.getId()))
@@ -129,9 +133,10 @@ public class TaskListJobs extends AbstractTaskPerformer
 				stream = stream.sorted(
 						Comparator.comparing(Job::getEndTime).reversed());
 			}
-			Stream<? extends Job> f_stream = stream;
-			List<Job> jobs = DomainStore.queryPool().call(
-					() -> f_stream.collect(Collectors.toList()), f_stream);
+			ObjectWrapper<Stream<? extends Entity>> mutableStream = ObjectWrapper
+					.of(stream);
+			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
+					() -> mutableStream.get().collect(Collectors.toList()), mutableStream);
 			jobs.forEach(job -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(String.valueOf(job.getId()))

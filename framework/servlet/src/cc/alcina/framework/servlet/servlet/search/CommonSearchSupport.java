@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.projection.CollectionProjectionFilterWithCache;
@@ -161,15 +162,17 @@ public class CommonSearchSupport {
 					return searchModel;
 				}
 			}
-			Stream<Entity> search = new DomainSearcher().search(def, clazz,
-					searchContext.orders);
+			Stream<? extends Entity> search = new DomainSearcher().search(def,
+					clazz, searchContext.orders);
 			Registry.impl(SearcherCollectionSource.class).beforeQuery(clazz,
 					def);
 			// FIXME - 2022 - there may be places where we can get result set
 			// size without collecting (i.e. index-only)
+			ObjectWrapper<Stream<? extends Entity>> mutableStream = ObjectWrapper
+					.of(search);
 			List<Entity> rows = DomainStore.queryPool().call(
-					() -> search.parallel().collect(Collectors.toList()),
-					search);
+					() -> mutableStream.get().collect(Collectors.toList()),
+					mutableStream);
 			IntPair range = new IntPair(
 					def.getResultsPerPage() * (def.getPageNumber()),
 					def.getResultsPerPage() * (def.getPageNumber() + 1));

@@ -103,6 +103,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
@@ -143,6 +144,8 @@ import cc.alcina.framework.entity.util.RunnableCallable;
  * </p>
  *
  * @author nick@alcina.cc
+ * 
+ * FIXME - mvcc.5 - don't add listeners during postprocess (optimisation)
  *
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
@@ -1383,7 +1386,7 @@ public class DomainStore implements IDomainStore {
 		 * to true) parallel here.
 		 */
 		public <T> T call(Callable<T> callable,
-				Stream<? extends Entity> stream) {
+				ObjectWrapper<Stream<? extends Entity>> mutableStream) {
 			boolean runInPool = false;
 			if (!LooseContext.is(CONTEXT_SERIAL_QUERY)) {
 				synchronized (this) {
@@ -1399,7 +1402,7 @@ public class DomainStore implements IDomainStore {
 			}
 			if (runInPool) {
 				try {
-					// stream.parallel();
+					mutableStream.set(mutableStream.get().parallel());
 					return pool.submit(callable).get();
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
@@ -1411,7 +1414,7 @@ public class DomainStore implements IDomainStore {
 					}
 				}
 			} else {
-				stream.sequential();
+				mutableStream.set(mutableStream.get().sequential());
 				try {
 					return callable.call();
 				} catch (Exception e) {
@@ -1420,8 +1423,8 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 
-		public void run(Runnable runnable, Stream<? extends Entity> stream) {
-			call(new RunnableCallable(runnable), stream);
+		public void run(Runnable runnable, ObjectWrapper<Stream<? extends Entity>> streamWrapper) {
+			call(new RunnableCallable(runnable), streamWrapper);
 		}
 
 		class WorkerThread extends ForkJoinWorkerThread {
