@@ -305,7 +305,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		GWT.setBridge(new GWTBridgeHeadless());
 	}
 
-	protected abstract void initCustom();
+	protected abstract void initCustom() throws Exception;
 
 	protected abstract void initCustomServices();
 
