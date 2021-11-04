@@ -125,8 +125,6 @@ public class FlatTreeSerializer {
 	private static Map<Class, Map<String, Property>> deSerializationClassAliasProperty = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
 
-	private static Map<Class, Boolean> assignableFromTreeSerializable = Registry
-			.impl(ConcurrentMapCreator.class).createMap();
 
 	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
@@ -282,7 +280,7 @@ public class FlatTreeSerializer {
 	}
 
 	private static boolean isIntermediateType(Class clazz) {
-		return isCollection(clazz) || isTreeSerializable(clazz);
+		return isCollection(clazz) || Reflections.isAssignableFrom(TreeSerializable.class, clazz);
 	}
 
 	private static boolean isLeafValue(Object value) {
@@ -292,20 +290,6 @@ public class FlatTreeSerializer {
 		return isValueType(value.getClass());
 	}
 
-	// FIXME - support Class.isAssignableFrom in GWT
-	private static boolean isTreeSerializable(Class clazz) {
-		if (clazz == TreeSerializable.class) {
-			return true;
-		}
-		return assignableFromTreeSerializable.computeIfAbsent(clazz, c -> {
-			try {
-				Object instance = Reflections.newInstance(clazz);
-				return instance instanceof TreeSerializable;
-			} catch (Exception e) {
-				return false;
-			}
-		});
-	}
 
 	private static boolean
 			isTreeSerializableWithInstantiationChecks(Class clazz) {
@@ -318,7 +302,7 @@ public class FlatTreeSerializer {
 		if (isCollection(clazz)) {
 			return false;
 		}
-		return isTreeSerializable(clazz);
+		return Reflections.isAssignableFrom(TreeSerializable.class, clazz);
 	}
 
 	private static boolean isValueType(Class clazz) {
