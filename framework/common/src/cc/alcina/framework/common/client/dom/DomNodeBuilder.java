@@ -40,7 +40,9 @@ public class DomNodeBuilder {
 	}
 
 	public DomNodeBuilder attr(String key, String value) {
-		attrs(key, value);
+		if (Ax.notBlank(value)) {
+			attrs(key, value);
+		}
 		return this;
 	}
 
