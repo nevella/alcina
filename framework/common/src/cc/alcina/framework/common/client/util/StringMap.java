@@ -282,4 +282,8 @@ public class StringMap extends LinkedHashMap<String, String> {
 			return sb.toString();
 		}
 	}
+
+	public void setTrue(String key) {
+		setBoolean(key, true);
+	}
 }
