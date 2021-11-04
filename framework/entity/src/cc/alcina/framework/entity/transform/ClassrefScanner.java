@@ -222,7 +222,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			long idCtr = 0;
 			for (Class clazz : persistableClasses) {
 				ClassRef ref = ClassRef.forClass(clazz);
-				ref = crimpl.newInstance();
+				ref = crimpl.getDeclaredConstructor().newInstance();
 				ref.setRefClass(clazz);
 				ref.setId(++idCtr);
 				ClassRef.add(CommonUtils.wrapInCollection(ref));
@@ -242,7 +242,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 				ClassRef ref = ClassRef.forClass(clazz);
 				if (ref == null) {
 					delta = true;
-					ref = classRefImplClass.newInstance();
+					ref = classRefImplClass.getDeclaredConstructor().newInstance();
 					ref.setRefClass(clazz);
 					long id = 0;
 					if (AppPersistenceBase.isInstanceReadOnly()) {

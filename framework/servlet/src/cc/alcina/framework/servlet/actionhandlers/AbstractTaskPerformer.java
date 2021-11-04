@@ -99,7 +99,7 @@ public abstract class AbstractTaskPerformer
 						"Typed value invalid - class {}. \nValid sample:\n{}",
 						clazz.getName(),
 						JacksonUtils.serializeWithDefaultsAndTypes(
-								clazz.newInstance()));
+								clazz.getDeclaredConstructor().newInstance()));
 				return null;
 			} catch (Exception e2) {
 				throw new WrappedRuntimeException(e2);

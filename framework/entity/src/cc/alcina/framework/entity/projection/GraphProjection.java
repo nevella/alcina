@@ -140,6 +140,9 @@ public class GraphProjection {
 
 	private static final String CONTEXT_LAST_CONTEXT_LOOKUPS = GraphProjection.class
 			.getName() + ".CONTEXT_LAST_CONTEXT_LOOKUPS";
+	
+	public static final String CONTEXT_MAX_REACHED = GraphProjection.class
+			.getName() + ".CONTEXT_MAX_REACHED";
 
 	public static final String TOPIC_PROJECTION_COUNT_DELTA = GraphProjection.class
 			.getName() + ".TOPIC_PROJECTION_COUNT_DELTA";
@@ -500,8 +503,12 @@ public class GraphProjection {
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
 		this.disablePerObjectPermissions = LooseContext
 				.is(CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS);
-		reached = new ProjectionIdentityMap(ResourceUtilities.getInteger(
-				GraphProjection.class, "maxReached", Integer.MAX_VALUE));
+		int maxReached = ResourceUtilities.getInteger(
+				GraphProjection.class, "maxReached", Integer.MAX_VALUE);
+		if(LooseContext.has(CONTEXT_MAX_REACHED)){
+			maxReached=Integer.parseInt(LooseContext.getString(CONTEXT_MAX_REACHED));
+		}
+		reached = new ProjectionIdentityMap(maxReached);
 	}
 
 	public GraphProjection(GraphProjectionFieldFilter fieldFilter,
@@ -1042,7 +1049,7 @@ public class GraphProjection {
 		}
 		Class<? extends Object> sourceClass = source.getClass();
 		if (!perObjectPermissionClasses.containsKey(sourceClass)) {
-			Boolean result = fieldFilter == null ? new Boolean(true)
+			Boolean result = fieldFilter == null ? Boolean.TRUE
 					: fieldFilter.permitClass(sourceClass);
 			perObjectPermissionClasses.put(sourceClass, result);
 		}

@@ -38,7 +38,7 @@ public class CollectionProjectionFilter implements GraphProjectionDataFilter {
 
 	private Object projectMap(Map map, GraphProjectionContext context,
 			GraphProjection graphProjection) throws Exception {
-		Map m = map.getClass().newInstance();
+		Map m = map.getClass().getDeclaredConstructor().newInstance();
 		Iterator itr = map.keySet().iterator();
 		Object value, key;
 		for (; itr.hasNext();) {

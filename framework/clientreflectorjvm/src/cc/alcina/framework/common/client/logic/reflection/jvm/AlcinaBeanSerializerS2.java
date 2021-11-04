@@ -370,7 +370,7 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 				.collect(Collectors.toList());
 		JSONObject props = new JSONObject();
 		jo.put(propertyFieldName, props);
-		Object template = clazz.newInstance();
+		Object template = clazz.getDeclaredConstructor().newInstance();
 		for (PropertyDescriptor propertyDescriptor : propertyDescriptors) {
 			if (propertyDescriptor.getWriteMethod() == null
 					|| propertyDescriptor.getReadMethod() == null) {

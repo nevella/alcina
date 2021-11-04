@@ -225,7 +225,7 @@ public class ClientReflectorJvm extends ClientReflector {
 			 */
 			if (filterClassName != null) {
 				test = (Predicate<String>) Class.forName(filterClassName)
-						.newInstance();
+						.getDeclaredConstructor().newInstance();
 				classes.classData.keySet().removeIf(test.negate());
 			}
 			Predicate<String> defaultExcludes = new Predicate<String>() {
@@ -408,7 +408,7 @@ public class ClientReflectorJvm extends ClientReflector {
 						clazz.getName()));
 			}
 			checkClassAnnotationsForInstantiation(clazz);
-			T newInstance = clazz.newInstance();
+			T newInstance = clazz.getDeclaredConstructor().newInstance();
 			if (localId != 0) {
 				Entity entity = (Entity) newInstance;
 				entity.setLocalId(localId);
