@@ -258,18 +258,25 @@ public class StringMap extends LinkedHashMap<String, String> {
 				char c = string.charAt(idx++);
 				if (c == '\\') {
 					char next = string.charAt(idx++);
-					boolean replaced = false;
-					for (int idx1 = 0; idx1 < from.length; idx1++) {
-						char check = from[idx1];
-						if (next == check) {
-							sb.append(to[idx1]);
-							replaced = true;
-							break;
+					if (next == 'u') {
+						String code = string.substring(idx , idx + 4);
+						int chr = Integer.parseInt(code, 16);
+						sb.append((char) chr);
+						idx += 4;
+					} else {
+						boolean replaced = false;
+						for (int idx1 = 0; idx1 < from.length; idx1++) {
+							char check = from[idx1];
+							if (next == check) {
+								sb.append(to[idx1]);
+								replaced = true;
+								break;
+							}
 						}
-					}
-					if (!replaced) {
-						sb.append(c);
-						sb.append(next);
+						if (!replaced) {
+							sb.append(c);
+							sb.append(next);
+						}
 					}
 				} else {
 					sb.append(c);
