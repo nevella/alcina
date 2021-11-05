@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestTagProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -413,6 +414,12 @@ public class CommitToStorageTransformListener
 		} else {
 			commitRemote(request, commitRemoteCallback);
 		}
+	}
+	
+	public static TransformCollation committingCollation(){
+		DomainTransformRequest request=LooseContext.get(
+				CommitToStorageTransformListener.CONTEXT_COMMITTING_REQUEST);
+		return new TransformCollation(request.getEvents());
 	}
 
 	protected void commitRemote(DomainTransformRequest request,
