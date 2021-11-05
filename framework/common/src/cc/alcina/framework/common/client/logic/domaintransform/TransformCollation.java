@@ -313,6 +313,11 @@ public class TransformCollation {
 			return events.stream().anyMatch(
 					e -> e.getTransformType() == TransformType.DELETE_OBJECT);
 		}
+		
+		public boolean hasPropertyTransform() {
+			return events.stream().anyMatch(
+					e -> Ax.notBlank(e.getPropertyName()));
+		}
 
 		public boolean hasNoCreateTransform() {
 			return !hasCreateTransform();
