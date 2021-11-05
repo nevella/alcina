@@ -57,7 +57,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  */
 public class GwittirUtils {
 	public static void commitAllTextBoxes(Binding binding) {
-		refreshTextBoxes(binding, null, true, false, true);
+		refreshTextBoxes(binding, null, false, false, true);
 	}
 
 	public static Collection convertCollection(Collection source,
