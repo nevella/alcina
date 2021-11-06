@@ -705,10 +705,11 @@ public class TransformCommit {
 					}
 					return result;
 				} else {
-					throw new IllegalArgumentException(
-							Ax.format("Request %s - %s already processed",
-									request.toStringForError(),
-									request.getChunkUuidString()));
+					DomainTransformLayerWrapper result = new DomainTransformLayerWrapper();
+					result.response = new DomainTransformResponse();
+					// empty request, empty response
+					result.response.setResult(DomainTransformResponseResult.OK);
+					return result;
 				}
 			}
 		} finally {
