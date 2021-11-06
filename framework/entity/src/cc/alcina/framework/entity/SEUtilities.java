@@ -1556,6 +1556,10 @@ public class SEUtilities {
 			case '\r':
 			case '\u00A0':
 			case '\u0085':
+			case '\u2000':
+			case '\u2001':
+			case '\u2002':
+			case '\u2003':
 				nsct++;
 				break;
 			case ' ':

@@ -6,6 +6,7 @@ import java.util.regex.Pattern;
 import org.w3c.dom.Text;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.parser.token.ParserContext.TextRange;
 
