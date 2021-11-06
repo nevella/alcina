@@ -14,5 +14,5 @@
     <stringAttribute key="org.eclipse.jdt.launching.MAIN_TYPE" value="cc.alcina.framework.classmeta.ClassMetaServer"/>
     <stringAttribute key="org.eclipse.jdt.launching.MODULE_NAME" value="alcina"/>
     <stringAttribute key="org.eclipse.jdt.launching.PROJECT_ATTR" value="alcina"/>
-    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms200m -Xmx3000m  -Xss4M -ea -Dcom.sun.org.apache.xml.internal.dtm.DTMManager=com.sun.org.apache.xml.internal.dtm.ref.DTMManagerDefault -Dorg.apache.xml.dtm.DTMManager=org.apache.xml.dtm.ref.DTMManagerDefault -XX:ParallelGCThreads=6"/>
+    <stringAttribute key="org.eclipse.jdt.launching.VM_ARGUMENTS" value="-Xms200m -Xmx3000m  -Xss4M -ea &#10;--add-opens java.logging/java.util.logging=ALL-UNNAMED &#10;--add-opens java.base/sun.net.www.protocol.jar=ALL-UNNAMED  &#10;--add-opens java.base/java.nio=ALL-UNNAMED &#10;--add-opens java.base/java.util.concurrent=ALL-UNNAMED  &#10;--add-opens java.base/java.lang.reflect=ALL-UNNAMED&#10;--add-opens java.base/java.lang=ALL-UNNAMED"/>
 </launchConfiguration>
