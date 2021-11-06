@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.domain.view;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
@@ -114,7 +115,8 @@ public abstract class DomainViews {
 	}
 
 	public void clearTree(EntityLocator viewLocator) {
-		trees.remove(new Key(viewLocator.getId()));
+		trees.keySet()
+				.removeIf(k -> Objects.equals(k.viewLocator, viewLocator));
 	}
 
 	public void clearTrees() {
@@ -386,12 +388,11 @@ public abstract class DomainViews {
 
 		private String stringKey;
 
-		public Key(long viewId) {
-			this.stringKey = String.valueOf(viewId);
-		}
+		EntityLocator viewLocator;
 
 		public Key(Request<?> request) {
 			this.request = request;
+			this.viewLocator = request.getRoot();
 			this.stringKey = request.getRoot().toString();
 		}
 
