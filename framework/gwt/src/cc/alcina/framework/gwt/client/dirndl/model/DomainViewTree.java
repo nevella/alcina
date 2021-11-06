@@ -5,6 +5,8 @@ import java.util.List;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Request;
@@ -110,11 +112,13 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			// FIXME - dirndl 1.3 - not sure about the logic for which
 			// selfAndDescendantCount...in fact, this may all be overly complex
 			// & getTransforms().size() is fine?
-			ClientNotifications.get().log(
-					"Det. paginator :: depth-first: %s - selfAndDescendantCount: %s - transforms: %s",
-					isDepthFirst(), selfAndDescendantCount,
-					root.getTreePath().getSelfAndDescendantCount(),
-					response.getTransforms().size(), response.getRequest());
+			if (GWT.isClient()) {
+				ClientNotifications.get().log(
+						"Det. paginator :: depth-first: %s - selfAndDescendantCount: %s - transforms: %s",
+						isDepthFirst(), selfAndDescendantCount,
+						root.getTreePath().getSelfAndDescendantCount(),
+						response.getTransforms().size(), response.getRequest());
+			}
 			// if (selfAndDescendantCount > root.getTreePath()
 			// .getSelfAndDescendantCount()) {
 			if (response.getTransforms().size() > 0) {

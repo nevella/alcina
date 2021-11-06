@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.collections;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -37,7 +38,7 @@ public class IdentityArrayList<T> extends ArrayList<T> {
 	}
 
 	public IdentityArrayList(Collection<? extends T> c) {
-		super(c);
+		super(c==null?Collections.emptyList():c);
 	}
 
 	@Override
