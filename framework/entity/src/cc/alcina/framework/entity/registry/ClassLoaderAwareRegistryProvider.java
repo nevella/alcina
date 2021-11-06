@@ -174,8 +174,9 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	public Registry getRegistry() {
 		ClassLoader classLoader = Thread.currentThread()
 				.getContextClassLoader();
-		if(classLoader.getName().equals("jdk.internal.loader.ClassLoaders$AppClassLoader")){
-			if(getClass().getClassLoader()!=classLoader){
+		if (classLoader.getClass().getName()
+				.equals("jdk.internal.loader.ClassLoaders$AppClassLoader")) {
+			if (getClass().getClassLoader() != classLoader) {
 				throw new RuntimeException("Context classloader not set");
 			}
 		}
@@ -197,13 +198,11 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 						perClassLoader.put(classLoader, registry);
 						System.out.format(
 								"Created registry for classloader %s - %s\n",
-								classLoader,
-								classLoader.hashCode());
+								classLoader, classLoader.hashCode());
 					} else {
 						throw new RuntimeException(String.format(
 								"Too many registries: \n%s\n%s\n%s\n",
-								classLoader,
-								classLoader.hashCode(),
+								classLoader, classLoader.hashCode(),
 								perClassLoader.keySet()));
 					}
 				}
