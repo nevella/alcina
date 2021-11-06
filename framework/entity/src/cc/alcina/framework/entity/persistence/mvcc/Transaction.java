@@ -80,6 +80,24 @@ public class Transaction implements Comparable<Transaction> {
 		return t;
 	}
 
+	public static <T> T callInWriteableTransaction(Callable<T> callable)
+			throws Exception {
+		Transaction preWriteable = current();
+		Preconditions.checkNotNull(preWriteable);
+		if (preWriteable.isWriteable()) {
+			return callable.call();
+		} else {
+			Preconditions.checkState(
+					TransformManager.get().getTransforms().size() == 0);
+			threadLocalInstance.set(null);
+			begin();
+			T t = callable.call();
+			end();
+			threadLocalInstance.set(preWriteable);
+			return t;
+		}
+	}
+
 	public static int commit() {
 		Transaction transaction = provideCurrentThreadTransaction();
 		if (transaction == null) {
@@ -136,7 +154,8 @@ public class Transaction implements Comparable<Transaction> {
 			return;
 		}
 		if (threadLocalInstance.get() == null) {
-			logger.error("Attempting to end transaction when one is not present");
+			logger.error(
+					"Attempting to end transaction when one is not present");
 		}
 		threadLocalInstance.get().endTransaction();
 		logger.debug("Removing tx - {} {} {}", threadLocalInstance.get(),

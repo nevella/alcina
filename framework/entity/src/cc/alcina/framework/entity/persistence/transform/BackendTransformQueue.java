@@ -15,6 +15,7 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
@@ -69,6 +70,17 @@ public class BackendTransformQueue {
 	}
 
 	public void enqueue(Runnable runnable, String queueName) {
+		try {
+			Transaction.callInWriteableTransaction(() -> {
+				enqueue0(runnable, queueName);
+				return null;
+			});
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	private void enqueue0(Runnable runnable, String queueName) {
 		CollectingListener collectingListener = new CollectingListener();
 		try {
 			TransformManager.get()
