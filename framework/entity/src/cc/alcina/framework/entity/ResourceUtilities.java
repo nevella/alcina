@@ -63,7 +63,8 @@ import javax.net.ssl.HostnameVerifier;
 import javax.net.ssl.HttpsURLConnection;
 import javax.swing.ImageIcon;
 
-import org.cyberneko.html.parsers.DOMParser;
+import org.apache.xerces.parsers.DOMParser;
+import org.cyberneko.html.HTMLConfiguration;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -95,7 +96,6 @@ public class ResourceUtilities {
 	private static boolean clientWithJvmProperties;
 
 	private static ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
-
 
 	public static void appShutdown() {
 	}
@@ -160,8 +160,8 @@ public class ResourceUtilities {
 		return tgtBean;
 	}
 
-	public static DOMParser createDOMParser(boolean elementNamesToLowerCase) {
-		DOMParser parser = new DOMParser();
+	private static DOMParser createDOMParser(boolean elementNamesToUpperCase) {
+		DOMParser parser = new DOMParser(new HTMLConfiguration());
 		try {
 			parser.setFeature(
 					"http://cyberneko.org/html/features/scanner/fix-mswindows-refs",
@@ -169,7 +169,7 @@ public class ResourceUtilities {
 			parser.setFeature(
 					"http://cyberneko.org/html/features/scanner/ignore-specified-charset",
 					true);
-			if (elementNamesToLowerCase) {
+			if (!elementNamesToUpperCase) {
 				parser.setProperty(
 						"http://cyberneko.org/html/properties/names/elems",
 						"lower");
@@ -416,11 +416,11 @@ public class ResourceUtilities {
 
 	public static Document loadDocumentFromInputStream(InputStream is)
 			throws Exception {
-		return loadHtmlDocumentFromInputStream(is, null);
+		return loadHtmlDocumentFromInputStream(is, null, true);
 	}
 
 	public static Document loadHtmlDocumentFromInputStream(InputStream is,
-			String charset) throws Exception {
+			String charset, boolean upperCaseTags) throws Exception {
 		byte[] bs = ResourceUtilities.readStreamToByteArray(is);
 		is.close();
 		InputSource isrc = null;
@@ -430,19 +430,20 @@ public class ResourceUtilities {
 			isrc = new InputSource(new InputStreamReader(
 					new ByteArrayInputStream(bs), charset));
 		}
-		DOMParser parser = createDOMParser(false);
+		DOMParser parser = createDOMParser(upperCaseTags);
 		parser.parse(isrc);
 		return (Document) parser.getDocument();
 	}
 
-	public static Document loadHtmlDocumentFromString(String s)
-			throws Exception {
+	public static Document loadHtmlDocumentFromString(String s,
+			boolean upperCaseTags) throws Exception {
 		ByteArrayOutputStream baos = new ByteArrayOutputStream();
 		OutputStreamWriter osw = new OutputStreamWriter(baos, "UTF-8");
 		osw.write(s);
 		osw.close();
 		return loadHtmlDocumentFromInputStream(
-				new ByteArrayInputStream(baos.toByteArray()), "UTF-8");
+				new ByteArrayInputStream(baos.toByteArray()), "UTF-8",
+				upperCaseTags);
 	}
 
 	public static Document loadHtmlDocumentFromUrl(String url) {
@@ -463,9 +464,10 @@ public class ResourceUtilities {
 		});
 	}
 
-	public static DomDoc loadXmlDocFromHtmlString(String html) {
+	public static DomDoc loadXmlDocFromHtmlString(String html,
+			boolean upperCaseTags) {
 		try {
-			return new DomDoc(loadHtmlDocumentFromString(html));
+			return new DomDoc(loadHtmlDocumentFromString(html, upperCaseTags));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -579,11 +581,11 @@ public class ResourceUtilities {
 
 	public static String readFileToStringGz(File f) {
 		try {
-		InputStream fis = new FileInputStream(f);
-		if (f.getName().endsWith(".gz")) {
-			fis = new GZIPInputStream(new BufferedInputStream(fis));
-		}
-		return readStreamToString(fis);
+			InputStream fis = new FileInputStream(f);
+			if (f.getName().endsWith(".gz")) {
+				fis = new GZIPInputStream(new BufferedInputStream(fis));
+			}
+			return readStreamToString(fis);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -995,8 +997,6 @@ public class ResourceUtilities {
 		return instance;
 	}
 
-	
-
 	public static class SimpleQuery {
 		private String strUrl;
 
@@ -1137,10 +1137,9 @@ public class ResourceUtilities {
 							auth.getBytes(StandardCharsets.UTF_8))));
 			return this;
 		}
-		
+
 		public SimpleQuery withBearerAuthentication(String token) {
-			headers.put("Authorization",
-					Ax.format("Bearer %s",token));
+			headers.put("Authorization", Ax.format("Bearer %s", token));
 			return this;
 		}
 
@@ -1208,7 +1207,7 @@ public class ResourceUtilities {
 		}
 
 		public SimpleQuery withContentType(String string) {
-			 headers.put("content-type", "application/json");
+			headers.put("content-type", "application/json");
 			return this;
 		}
 	}
