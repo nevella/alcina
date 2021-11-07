@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.XmlUtils;
 
 public interface ParserToken<C extends ParserContext, S extends AbstractParserSlice> {
-	public static final String IGNORE_STATUTE_MATCH_PREFIXED_BY = "in the matter of the ";
+	
 
 	public static final String TOPIC_RESET_TOKEN_PATTERNS = ParserToken.class
 			.getName() + ".TOPIC_RESET_TOKEN_PATTERNS";
