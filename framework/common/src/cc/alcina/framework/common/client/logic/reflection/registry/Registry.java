@@ -725,6 +725,7 @@ public class Registry {
 		}
 	}
 
+
 	protected <V> List<V> impls0(Class<V> registryPoint, Class targetClass) {
 		List<Class> impls = lookup(false, registryPoint, targetClass, false);
 		List<V> result = new ArrayList<V>();
