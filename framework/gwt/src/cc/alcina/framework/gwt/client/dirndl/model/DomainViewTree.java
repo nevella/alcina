@@ -106,19 +106,17 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 				openToPath(null);
 			}
 		}
-		if (isDepthFirst()
+		if (GWT.isClient() && isDepthFirst()
 				&& request.getWaitPolicy() == WaitPolicy.RETURN_NODES) {
 			selfAndDescendantCount = response.getSelfAndDescendantCount();
 			// FIXME - dirndl 1.3 - not sure about the logic for which
 			// selfAndDescendantCount...in fact, this may all be overly complex
 			// & getTransforms().size() is fine?
-			if (GWT.isClient()) {
-				ClientNotifications.get().log(
-						"Det. paginator :: depth-first: %s - selfAndDescendantCount: %s - transforms: %s",
-						isDepthFirst(), selfAndDescendantCount,
-						root.getTreePath().getSelfAndDescendantCount(),
-						response.getTransforms().size(), response.getRequest());
-			}
+			ClientNotifications.get().log(
+					"Det. paginator :: depth-first: %s - selfAndDescendantCount: %s - transforms: %s",
+					isDepthFirst(), selfAndDescendantCount,
+					root.getTreePath().getSelfAndDescendantCount(),
+					response.getTransforms().size(), response.getRequest());
 			// if (selfAndDescendantCount > root.getTreePath()
 			// .getSelfAndDescendantCount()) {
 			if (response.getTransforms().size() > 0) {
