@@ -661,6 +661,7 @@ public class TransformCommit {
 			ExternalTransformLocks.get().lock(true,
 					request.getClientInstance());
 			synchronized (locatorMap) {
+				Transaction.endAndBeginNew();
 				TransformPersistenceToken persistenceToken = new TransformPersistenceToken(
 						request, locatorMap,
 						request.getClientInstance() != ClientInstance.self(),
