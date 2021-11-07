@@ -626,4 +626,8 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 			}
 		}
 	}
+
+	public String provideJobName() {
+		return getClass().getSimpleName();
+	}
 }
