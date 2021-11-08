@@ -50,7 +50,7 @@ public class LocalDom {
 
 	private static boolean useRemoteDom = GWT.isClient();
 
-	private static boolean disableRemoteWrite;
+	private static boolean disableRemoteWrite = !GWT.isClient();
 
 	static boolean ie9;
 

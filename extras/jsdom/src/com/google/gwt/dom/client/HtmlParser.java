@@ -87,6 +87,17 @@ public class HtmlParser {
 
 	public Element parse(String html, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
+		boolean preSet = LocalDom.isDisableRemoteWrite();
+		try {
+			LocalDom.setDisableRemoteWrite(true);
+			return parse0(html, replaceContents, emitHtmlHeadBodyTags);
+		} finally {
+			LocalDom.setDisableRemoteWrite(preSet);
+		}
+	}
+
+	private Element parse0(String html, Element replaceContents,
+			boolean emitHtmlHeadBodyTags) {
 		if (html.contains("\uFEFF")) {
 			html = html.replace("\uFEFF", "");
 		}
@@ -99,7 +110,6 @@ public class HtmlParser {
 		this.emitHtmlHeadBodyTags = emitHtmlHeadBodyTags;
 		resetBuilder();
 		tokenState = TokenState.EXPECTING_NODE;
-		LocalDom.setDisableRemoteWrite(true);
 		if (replaceContents != null) {
 			replaceContents.clearResolved();
 		}
@@ -278,7 +288,6 @@ public class HtmlParser {
 		}
 		if (hasSyntheticContainer) {
 		}
-		LocalDom.setDisableRemoteWrite(false);
 		return rootResult;
 	}
 
