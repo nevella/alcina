@@ -778,7 +778,7 @@ public class ClientReflectionGenerator extends Generator {
 			int count, boolean assignment, StringBuffer sb,
 			boolean qualifiedClassNames) throws Exception {
 		List<Method> declaredMethods = new ArrayList<Method>(
-				Arrays.asList(a.getClass().getDeclaredMethods()));
+				Arrays.asList(a.annotationType().getDeclaredMethods()));
 		Collections.sort(declaredMethods, ToStringComparator.INSTANCE);
 		String implCN = ann2impl.get(a.annotationType());
 		String implSimpleName = implCN.substring(implCN.lastIndexOf(".") + 1);
