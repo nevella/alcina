@@ -61,7 +61,8 @@ public class KnownJob extends KnownNode {
 	}
 
 	private long getTime() {
-		return end.getTime() - start.getTime();
+		return end == null || start == null ? 0L
+				: end.getTime() - start.getTime();
 	}
 
 	private void logProcessTime() {
