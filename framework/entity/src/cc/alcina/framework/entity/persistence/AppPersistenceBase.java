@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase.InitRegistrySupport;
 import cc.alcina.framework.entity.persistence.updater.DbUpdateRunner;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
@@ -98,7 +99,7 @@ public abstract class AppPersistenceBase {
 		Logger mainLogger = Logger
 				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		try {
-			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class).muteClassloaderLogging(true);
 			ClassMetadataCache classInfo = new ServletClassMetadataCacheProvider()
 					.getClassInfo(mainLogger, true);
 			new RegistryScanner().scan(classInfo, new ArrayList<String>(),
@@ -108,7 +109,7 @@ public abstract class AppPersistenceBase {
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {
-			Registry.impl(JPAImplementation.class)
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
 					.muteClassloaderLogging(false);
 		}
 	}
@@ -137,7 +138,7 @@ public abstract class AppPersistenceBase {
 		Logger mainLogger = Logger
 				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		try {
-			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class).muteClassloaderLogging(true);
 			ClassrefScanner classrefScanner = new ClassrefScanner();
 			if (AppPersistenceBase.isInstanceReadOnly()) {
 				classrefScanner.noPersistence();
@@ -148,7 +149,7 @@ public abstract class AppPersistenceBase {
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {
-			Registry.impl(JPAImplementation.class)
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
 					.muteClassloaderLogging(false);
 		}
 	}
@@ -162,6 +163,13 @@ public abstract class AppPersistenceBase {
 					entityLayer ? Arrays.asList(new String[] {})
 							: Arrays.asList(new String[] { "WEB-INF/classes",
 									"WEB-INF/lib" })).getClasses();
+		}
+	}
+
+
+	public static class InitRegistrySupport{
+		public void muteClassloaderLogging(boolean mute){
+			
 		}
 	}
 }

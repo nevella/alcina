@@ -17,6 +17,7 @@ import java.net.URI;
 import java.net.URL;
 import java.security.CodeSource;
 import java.util.List;
+import java.util.logging.Level;
 
 import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
@@ -25,8 +26,11 @@ import org.jboss.vfs.VirtualFileFilter;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.classmeta.ClasspathUrlTranslator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase.InitRegistrySupport;
 import cc.alcina.framework.entity.persistence.mvcc.SourceFinder;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
@@ -48,8 +52,24 @@ public class JBoss7Support {
 				.installUrlTranslator(new VFSClasspathUrlTranslator());
 		SourceFinder.sourceFinders.add(new SourceFinderVfs());
 		// ServerCodeCompiler.install(new VFSFileManager());
+		Registry.registerSingleton(AppPersistenceBase.InitRegistrySupport.class, new InitRegistrySupportImpl(),true);
 	}
 
+	public static class InitRegistrySupportImpl extends AppPersistenceBase.InitRegistrySupport{
+		private Level level;
+
+		@Override
+		public void muteClassloaderLogging(boolean mute) {
+			java.util.logging.Logger logger = java.util.logging.Logger
+					.getLogger("org.jboss.modules");
+			if (mute) {
+				level = logger.getLevel();
+				logger.setLevel(java.util.logging.Level.SEVERE);
+			} else {
+				logger.setLevel(level);
+			}
+		}	
+	}
 	public static class VFSClasspathUrlTranslator
 			implements ClasspathUrlTranslator {
 		@Override

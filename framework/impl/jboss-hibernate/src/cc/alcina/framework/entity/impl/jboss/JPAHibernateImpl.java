@@ -312,17 +312,7 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return entity instanceof HibernateProxy;
 	}
 
-	@Override
-	public void muteClassloaderLogging(boolean mute) {
-		java.util.logging.Logger logger = java.util.logging.Logger
-				.getLogger("org.jboss.modules");
-		if (mute) {
-			level = logger.getLevel();
-			logger.setLevel(java.util.logging.Level.SEVERE);
-		} else {
-			logger.setLevel(level);
-		}
-	}
+	
 
 	@Override
 	public void setCacheDisabled(boolean cacheDisabled) {

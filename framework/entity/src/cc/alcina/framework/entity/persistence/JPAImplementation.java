@@ -81,5 +81,4 @@ public interface JPAImplementation {
 
 	boolean isProxy(Entity e);
 
-	void muteClassloaderLogging(boolean mute);
 }

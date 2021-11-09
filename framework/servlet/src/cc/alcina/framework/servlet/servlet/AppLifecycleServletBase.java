@@ -208,7 +208,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	public void init(ServletConfig servletConfig) throws ServletException {
 		MetricLogging.get().start("Web app startup");
 		startupTime = new Date();
-		Thread.currentThread().setName("Init-"+getClass().getSimpleName());
+		Thread.currentThread().setName("Init-" + getClass().getSimpleName());
 		try {
 			initServletConfig = servletConfig;
 			// push to registry
@@ -220,7 +220,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initNames();
 			loadCustomProperties();
 			initDevConsoleAndWebApp();
-			initJPA();
+			initContainerBridge();
 			initServices();
 			initCluster();
 			getStatusNotifier().deploying();
@@ -282,6 +282,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		config.setStartDate(new Date());
 		Registry.registerSingleton(AlcinaWebappConfig.class, config);
 		Registry.registerSingleton(AppLifecycleServletBase.class, this);
+		Registry.registerSingleton(AppPersistenceBase.InitRegistrySupport.class, new AppPersistenceBase.InitRegistrySupport());
+		
 	}
 
 	protected void initCluster() {
@@ -328,8 +330,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected abstract void initEntityLayer() throws Exception;
 
-	protected abstract void initEntityLayerRegistry() ;
-	protected abstract void initJPA();
+	protected abstract void initEntityLayerRegistry();
+
+	protected abstract void initContainerBridge();
 
 	protected void initLoggers() {
 		Logger logger = Logger.getRootLogger();
@@ -423,7 +426,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Logger logger = Logger
 				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		try {
-			Registry.impl(JPAImplementation.class).muteClassloaderLogging(true);
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class).muteClassloaderLogging(true);
 			ClassMetadataCache classes = classMetadataCacheProvider
 					.getClassInfo(logger, false);
 			Registry servletLayerRegistry = Registry.get();
@@ -436,7 +439,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		} catch (Exception e) {
 			logger.warn("", e);
 		} finally {
-			Registry.impl(JPAImplementation.class)
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
 					.muteClassloaderLogging(false);
 		}
 	}
