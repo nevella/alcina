@@ -145,7 +145,8 @@ import cc.alcina.framework.entity.util.RunnableCallable;
  *
  * @author nick@alcina.cc
  * 
- * FIXME - mvcc.5 - don't add listeners during postprocess (optimisation)
+ *         FIXME - mvcc.5 - don't add listeners during postprocess
+ *         (optimisation)
  *
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
@@ -291,6 +292,8 @@ public class DomainStore implements IDomainStore {
 	Map<EntityLocator, TransactionId> lazyLoadAttempted = new ConcurrentHashMap<>();
 
 	private DomainTransformEventPersistent postProcessTransform;
+
+	public DomainStore reuseTransformerStore;
 
 	public DomainStore(DomainStoreDescriptor descriptor) {
 		this();
@@ -468,7 +471,9 @@ public class DomainStore implements IDomainStore {
 				.forEach(this::prepareClassDescriptor);
 		new StatCategory_DomainStore.Warmup.InitialiseDescriptor()
 				.emit(isWritable());
-		mvcc = new Mvcc(this, domainDescriptor, cache);
+		mvcc = new Mvcc(this, domainDescriptor, cache,
+				reuseTransformerStore == null ? null
+						: reuseTransformerStore.mvcc);
 		MetricLogging.get().start("mvcc");
 		mvcc.init();
 		MetricLogging.get().end("mvcc");
@@ -1041,11 +1046,18 @@ public class DomainStore implements IDomainStore {
 
 		private String name = "store.default";
 
+		private DomainStore reuseStore;
+
 		public DomainStore register() {
+			return register(true);
+		}
+
+		public DomainStore register(boolean registerDescriptorClasses) {
 			DomainStore domainStore = new DomainStore();
 			domainStore.domainDescriptor = descriptor;
 			domainStore.writable = !readOnly;
 			domainStore.name = name;
+			domainStore.reuseTransformerStore = reuseStore;
 			Preconditions.checkNotNull(loaderType);
 			switch (loaderType) {
 			case Database:
@@ -1055,7 +1067,7 @@ public class DomainStore implements IDomainStore {
 			default:
 				throw new UnsupportedOperationException();
 			}
-			stores().register(domainStore);
+			stores().register(domainStore, registerDescriptorClasses);
 			return domainStore;
 		}
 
@@ -1084,6 +1096,11 @@ public class DomainStore implements IDomainStore {
 
 		enum DomainLoaderType {
 			Database, Remote;
+		}
+
+		public Builder withReuseTransformer(DomainStore reuseStore) {
+			this.reuseStore = reuseStore;
+			return this;
 		}
 	}
 
@@ -1211,12 +1228,15 @@ public class DomainStore implements IDomainStore {
 			return new DomainStoreQuery(clazz, storeFor(clazz));
 		}
 
-		public synchronized void register(DomainStore store) {
+		public synchronized void register(DomainStore store,
+				boolean registerDescriptorClasses) {
 			descriptorMap.put(store.domainDescriptor, store);
-			store.domainDescriptor.getHandledClasses().forEach(clazz -> {
-				Preconditions.checkState(!classMap.containsKey(clazz));
-				classMap.put(clazz, store);
-			});
+			if (registerDescriptorClasses) {
+				store.domainDescriptor.getHandledClasses().forEach(clazz -> {
+					Preconditions.checkState(!classMap.containsKey(clazz));
+					classMap.put(clazz, store);
+				});
+			}
 		}
 
 		public DomainStore storeFor(Class clazz) {
@@ -1423,7 +1443,8 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 
-		public void run(Runnable runnable, ObjectWrapper<Stream<? extends Entity>> streamWrapper) {
+		public void run(Runnable runnable,
+				ObjectWrapper<Stream<? extends Entity>> streamWrapper) {
 			call(new RunnableCallable(runnable), streamWrapper);
 		}
 

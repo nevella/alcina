@@ -159,7 +159,13 @@ class ClassTransformer {
 		}
 	}
 
+	private boolean generated = false;
+
 	public void generateTransformedClasses() {
+		if (generated) {
+			return;
+		}
+		generated = true;
 		File cacheFolder = DataFolderProvider.get()
 				.getChildFile(getClass().getName());
 		cacheFolder.mkdirs();

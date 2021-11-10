@@ -72,12 +72,14 @@ public class Mvcc {
 	private ClassTransformer classTransformer;
 
 	public Mvcc(DomainStore domainStore, DomainStoreDescriptor domainDescriptor,
-			DetachedEntityCache cache) {
+			DetachedEntityCache cache, Mvcc reuseMvcc) {
 		Transactions.ensureInitialised();
 		this.domainStore = domainStore;
 		this.domainDescriptor = domainDescriptor;
 		this.cache = cache;
-		this.classTransformer = new ClassTransformer(this);
+		this.classTransformer = reuseMvcc!=null ? reuseMvcc.classTransformer
+				: new ClassTransformer(this);
+		
 	}
 
 	public <T extends Entity> T create(Class<T> clazz) {
