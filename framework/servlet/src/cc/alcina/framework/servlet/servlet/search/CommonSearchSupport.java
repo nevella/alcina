@@ -44,13 +44,7 @@ public class CommonSearchSupport {
 			.getName() + ".CONTEXT_DO_NOT_PROJECT_SEARCH";
 
 	public static CommonSearchSupport get() {
-		CommonSearchSupport singleton = Registry
-				.checkSingleton(CommonSearchSupport.class);
-		if (singleton == null) {
-			singleton = new CommonSearchSupport();
-			Registry.registerSingleton(CommonSearchSupport.class, singleton);
-		}
-		return singleton;
+		return Registry.impl(CommonSearchSupport.class);
 	}
 
 	public void copySearchMetadata(SearchDefinition from, SearchDefinition to) {

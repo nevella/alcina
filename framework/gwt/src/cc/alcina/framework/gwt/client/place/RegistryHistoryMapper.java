@@ -120,8 +120,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			return;
 		}
 		initialised = true;
-		List<BasePlaceTokenizer> impls = Registry
-				.impls(BasePlaceTokenizer.class);
+		List<BasePlaceTokenizer> impls = listTokenizers();
 		for (BasePlaceTokenizer tokenizer : impls) {
 			tokenizersByPrefix.add(tokenizer.getPrefix(), tokenizer);
 			tokenizersByPlace.put(tokenizer.getTokenizedClass(), tokenizer);
@@ -139,12 +138,21 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 			}
 			tokenizer.register(tokenizersByModelClass);
 		}
-		List<BasePlace> places = Registry.impls(BasePlace.class);
+		List<BasePlace> places = listPlaces();
 		for (BasePlace place : places) {
 			if (place instanceof SubPlace) {
 				placesBySubPlace.put(((SubPlace) place).getSub(), place);
 			}
 		}
+	}
+
+	protected List<BasePlace> listPlaces() {
+		return Registry.impls(BasePlace.class);
+	}
+
+	protected List<BasePlaceTokenizer> listTokenizers() {
+		return Registry
+				.impls(BasePlaceTokenizer.class);
 	}
 
 	protected String getAppPrefix() {

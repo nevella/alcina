@@ -54,6 +54,9 @@ public class TableModel extends Model {
 		return this.actions;
 	}
 
+	public TableModel() {
+	}
+
 	public TableHeader getHeader() {
 		return this.header;
 	}

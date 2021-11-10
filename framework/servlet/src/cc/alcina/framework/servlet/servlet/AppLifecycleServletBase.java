@@ -282,8 +282,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		config.setStartDate(new Date());
 		Registry.registerSingleton(AlcinaWebappConfig.class, config);
 		Registry.registerSingleton(AppLifecycleServletBase.class, this);
-		Registry.registerSingleton(AppPersistenceBase.InitRegistrySupport.class, new AppPersistenceBase.InitRegistrySupport());
-		
+		Registry.registerSingleton(AppPersistenceBase.InitRegistrySupport.class,
+				new AppPersistenceBase.InitRegistrySupport());
 	}
 
 	protected void initCluster() {
@@ -426,7 +426,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Logger logger = Logger
 				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		try {
-			Registry.impl(AppPersistenceBase.InitRegistrySupport.class).muteClassloaderLogging(true);
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
+					.muteClassloaderLogging(true);
 			ClassMetadataCache classes = classMetadataCacheProvider
 					.getClassInfo(logger, false);
 			Registry servletLayerRegistry = Registry.get();
