@@ -24,6 +24,10 @@ public class TaskPublish extends ServerTask<TaskPublish> {
 		return this.publicationRequest;
 	}
 
+	public TaskPublish withRequest( ContentRequestBase publicationRequest){
+		setPublicationRequest(publicationRequest);
+		return this;
+	}
 	@Override
 	public String getName() {
 		return getPublicationRequest().provideJobName();
