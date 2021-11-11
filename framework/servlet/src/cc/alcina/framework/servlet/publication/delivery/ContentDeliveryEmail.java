@@ -130,24 +130,22 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			FileNotFoundException, NoSuchProviderException {
 		boolean debug = false;
 		Properties props = new Properties();
-		String host = ResourceUtilities
-				.get(ContentDeliveryEmail.class, "smtp.host.name");
-		Integer port = Integer.valueOf(ResourceUtilities.get(
-				ContentDeliveryEmail.class, "smtp.host.port"));
-		Boolean authenticate = Boolean.valueOf(
-				ResourceUtilities.get(ContentDeliveryEmail.class,
-						"smtp.authenticate"));
-		String userName = ResourceUtilities
-				.get(ContentDeliveryEmail.class, "smtp.username");
-		String password = ResourceUtilities
-				.get(ContentDeliveryEmail.class, "smtp.password");
-		String fromAddress = ResourceUtilities.get(
-				ContentDeliveryEmail.class, "smtp.from.address");
-		String fromName = ResourceUtilities
-				.get(ContentDeliveryEmail.class, "smtp.from.name");
-		int maxMessageSize = 
-				ResourceUtilities.getInteger(ContentDeliveryEmail.class,
-						"smtp.maxMessageSize");
+		String host = ResourceUtilities.get(ContentDeliveryEmail.class,
+				"smtp.host.name");
+		Integer port = Integer.valueOf(ResourceUtilities
+				.get(ContentDeliveryEmail.class, "smtp.host.port"));
+		Boolean authenticate = Boolean.valueOf(ResourceUtilities
+				.get(ContentDeliveryEmail.class, "smtp.authenticate"));
+		String userName = ResourceUtilities.get(ContentDeliveryEmail.class,
+				"smtp.username");
+		String password = ResourceUtilities.get(ContentDeliveryEmail.class,
+				"smtp.password");
+		String fromAddress = ResourceUtilities.get(ContentDeliveryEmail.class,
+				"smtp.from.address");
+		String fromName = ResourceUtilities.get(ContentDeliveryEmail.class,
+				"smtp.from.name");
+		int maxMessageSize = ResourceUtilities
+				.getInteger(ContentDeliveryEmail.class, "smtp.maxMessageSize");
 		String replyTo = null;
 		if (LooseContext.has(CONTEXT_SMTP_FROM_EMAIL)) {
 			fromAddress = LooseContext.get(CONTEXT_SMTP_FROM_EMAIL);
@@ -184,9 +182,11 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		msg.setFrom(new InternetAddress(fromAddress, fromName));
 		List<InternetAddress> addresses = new ArrayList<InternetAddress>();
 		List<InternetAddress> bccAddresses = new ArrayList<InternetAddress>();
-		String[] emailAddresses = emailAddress.split("(;|,| )+");
-		String[] bccEmailAddressStrings = ResourceUtilities.get("smtp.bcc")
-				.split("(;|,| )+");
+		String[] emailAddresses = Ax.isBlank(emailAddress) ? new String[0]
+				: emailAddress.split("(;|,| )+");
+		String[] bccEmailAddressStrings = Ax
+				.isBlank(ResourceUtilities.get("smtp.bcc")) ? new String[0]
+						: ResourceUtilities.get("smtp.bcc").split("(;|,| )+");
 		String filterClassName = ResourceUtilities
 				.get(ContentDeliveryEmail.class, "smtp.filter.className");
 		String systemEmailAddressOfRequestor = deliveryModel
@@ -226,8 +226,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			}
 			addresses.add(new InternetAddress(emTrim));
 		}
-		Arrays.stream(bccEmailAddressStrings).map(Ax::ntrim).filter(Ax::notBlank)
-				.map(this::toInternetAddress).forEach(bccAddresses::add);
+		Arrays.stream(bccEmailAddressStrings).map(Ax::ntrim)
+				.filter(Ax::notBlank).map(this::toInternetAddress)
+				.forEach(bccAddresses::add);
 		if (addresses.size() == 0) {
 			return null;
 		}

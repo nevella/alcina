@@ -44,6 +44,7 @@ import java.text.StringCharacterIterator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Calendar;
@@ -133,6 +134,11 @@ public class SEUtilities {
 
 	private static Pattern sq_5 = Pattern.compile("[`'´]+");
 
+	
+	public static String timestamp(){
+		return LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+		.replace(':', '_');	
+	}
 	private static Pattern sq_6 = Pattern.compile("[`'´]{2,}");
 
 	/**
