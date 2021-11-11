@@ -79,10 +79,11 @@ public class AnnotationLocation {
 
 	public AnnotationLocation parent() {
 		if (propertyReflector != null) {
-			return new AnnotationLocation(classLocation, null);
+			return new AnnotationLocation(classLocation, null, resolver);
 		}
 		if (classLocation.getSuperclass() != null) {
-			return new AnnotationLocation(classLocation.getSuperclass(), null);
+			return new AnnotationLocation(classLocation.getSuperclass(), null,
+					resolver);
 		}
 		return null;
 	}
@@ -143,11 +144,16 @@ public class AnnotationLocation {
 
 		public synchronized <A extends Annotation> A resolveAnnotation(
 				Class<A> annotationClass, AnnotationLocation location) {
-			Annotation ensure = resolvedCache.ensure(() -> {
-				A ensured = location.getAnnotation0(annotationClass);
-				return ensured;
-			}, location, annotationClass);
+			Annotation ensure = resolvedCache.ensure(
+					() -> resolveAnnotation0(annotationClass, location),
+					location, annotationClass);
 			return (A) ensure;
+		}
+
+		protected <A extends Annotation> Annotation resolveAnnotation0(
+				Class<A> annotationClass, AnnotationLocation location) {
+			A ensured = location.getAnnotation0(annotationClass);
+			return ensured;
 		}
 	}
 }

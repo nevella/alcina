@@ -29,7 +29,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
-import cc.alcina.framework.gwt.client.dirndl.model.LinkModel.LinkModelRendererPrimaryClassName;
+import cc.alcina.framework.gwt.client.dirndl.model.Link.LinkModelRendererPrimaryClassName;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -38,7 +38,7 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 // and various subtypes should be subclasses...
 @Bean
 @LinkModelRendererPrimaryClassName("-ol-primary")
-public class LinkModel extends Model {
+public class Link extends Model {
 	private BasePlace place;
 
 	private boolean withoutLink;
@@ -59,15 +59,15 @@ public class LinkModel extends Model {
 
 	private String title;
 
-	public LinkModel() {
+	public Link() {
 	}
 
-	public LinkModel(Entity entity) {
+	public Link(Entity entity) {
 		withPlace(EntityPlace.forEntity(entity));
 		withText(TextProvider.get().getObjectName(entity));
 	}
 
-	public void addTo(List<LinkModel> actions) {
+	public void addTo(List<Link> actions) {
 		actions.add(this);
 	}
 
@@ -147,66 +147,66 @@ public class LinkModel extends Model {
 		this.withoutLink = withoutLink;
 	}
 
-	public LinkModel withActionRef(Class<? extends ActionRef> clazz) {
+	public Link withActionRef(Class<? extends ActionRef> clazz) {
 		return withPlace(new ActionRefPlace(clazz));
 	}
 
-	public LinkModel withClassName(String className) {
+	public Link withClassName(String className) {
 		this.className = className;
 		return this;
 	}
 
-	public LinkModel withHref(String href) {
+	public Link withHref(String href) {
 		this.href = href;
 		return this;
 	}
 
-	public LinkModel withNewTab(boolean newTab) {
+	public Link withNewTab(boolean newTab) {
 		this.newTab = newTab;
 		return this;
 	}
 
-	public LinkModel
+	public Link
 			withNonstandardObjectAction(NonstandardObjectAction objectAction) {
 		this.objectAction = objectAction;
 		return this;
 	}
 
-	public LinkModel withPlace(BasePlace place) {
+	public Link withPlace(BasePlace place) {
 		this.place = place;
 		return this;
 	}
 
-	public LinkModel withPrimaryAction(boolean primaryAction) {
+	public Link withPrimaryAction(boolean primaryAction) {
 		this.primaryAction = primaryAction;
 		return this;
 	}
 
-	public LinkModel withText(String text) {
+	public Link withText(String text) {
 		this.text = text;
 		return this;
 	}
 
-	public LinkModel withTitle(String title) {
+	public Link withTitle(String title) {
 		this.title = title;
 		return this;
 	}
 
-	public LinkModel withTopic(Class<? extends TopicEvent> topicClass) {
+	public Link withTopic(Class<? extends TopicEvent> topicClass) {
 		this.topicClass = topicClass;
 		return this;
 	}
 
-	public LinkModel withWithoutLink(boolean withoutLink) {
+	public Link withWithoutLink(boolean withoutLink) {
 		this.withoutLink = withoutLink;
 		return this;
 	}
 
-	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = LinkModel.class)
+	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Link.class)
 	public static class LinkModelRenderer extends LeafNodeRenderer {
 		@Override
 		public Widget render(Node node) {
-			LinkModel model = model(node);
+			Link model = model(node);
 			Widget rendered = super.render(node);
 			rendered.getElement().setInnerText(getText(node));
 			rendered.getElement().setTitle(model.getTitle());
@@ -285,8 +285,8 @@ public class LinkModel extends Model {
 			return model(node).getPlace();
 		}
 
-		private LinkModel model(Node node) {
-			return (LinkModel) node.getModel();
+		private Link model(Node node) {
+			return (Link) node.getModel();
 		}
 
 		@Override
@@ -295,7 +295,7 @@ public class LinkModel extends Model {
 		}
 
 		protected String getText(Node node) {
-			LinkModel model = model(node);
+			Link model = model(node);
 			if (model.getText() != null) {
 				return model.getText();
 			}

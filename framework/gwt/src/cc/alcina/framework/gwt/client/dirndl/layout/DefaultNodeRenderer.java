@@ -10,7 +10,7 @@ public class DefaultNodeRenderer extends ContainerNodeRenderer {
 	@Override
 	protected String getTag(Node node) {
 		return Ax.blankTo(super.getTag(node),
-				node.getModel() == null ? "div"
+				() -> node.getModel() == null ? "div"
 						: CommonUtils.deInfixCss(
 								node.getModel().getClass().getSimpleName()));
 	}

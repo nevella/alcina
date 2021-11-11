@@ -2,8 +2,6 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
-import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
