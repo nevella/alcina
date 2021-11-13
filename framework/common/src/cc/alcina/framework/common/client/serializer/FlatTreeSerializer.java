@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.serializer;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -946,6 +947,9 @@ public class FlatTreeSerializer {
 		if (valueClass == Date.class) {
 			return new Date();
 		}
+		if (valueClass == Timestamp.class) {
+			return new Timestamp(0L);
+		}
 		if (valueClass == Class.class) {
 			return String.class;
 		}
@@ -1361,6 +1365,9 @@ public class FlatTreeSerializer {
 			}
 			if (valueClass == Date.class) {
 				return new Date(Long.parseLong(stringValue));
+			}
+			if (valueClass == Timestamp.class) {
+				return new Timestamp(Long.parseLong(stringValue));
 			}
 			if (Reflections.isAssignableFrom(Enum.class, valueClass)) {
 				return CommonUtils.getEnumValueOrNull(valueClass, stringValue,
