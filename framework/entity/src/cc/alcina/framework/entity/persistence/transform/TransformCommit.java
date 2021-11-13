@@ -78,6 +78,7 @@ import cc.alcina.framework.entity.transform.TransformConflicts.TransformConflict
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -88,8 +89,7 @@ import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
  * @author nick@alcina.cc
  * 
  */
-@RegistryLocation(registryPoint = TransformCommit.class,
-	implementationType = ImplementationType.SINGLETON)
+@RegistryLocation(registryPoint = TransformCommit.class, implementationType = ImplementationType.SINGLETON)
 public class TransformCommit {
 	private static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = TransformCommit.class
 			.getName() + ".TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION";
@@ -694,8 +694,7 @@ public class TransformCommit {
 		}
 	}
 
-	@RegistryLocation(registryPoint = ExternalTransformLocks.class,
-		implementationType = ImplementationType.SINGLETON)
+	@RegistryLocation(registryPoint = ExternalTransformLocks.class, implementationType = ImplementationType.SINGLETON)
 	public static class ExternalTransformLocks {
 		public static TransformCommit.ExternalTransformLocks get() {
 			TransformCommit.ExternalTransformLocks singleton = Registry
@@ -875,6 +874,10 @@ public class TransformCommit {
 			throws DomainTransformRequestException {
 		Preconditions.checkState(!LooseContext.is(CONTEXT_COMMITTING),
 				"Already in commit section");
+		Preconditions.checkState(
+				!LooseContext.is(
+						DomainTransformPersistenceEvents.CONTEXT_FIRING_EVENT),
+				"Cannot commit during event publication");
 		try {
 			LooseContext.pushWithTrue(CONTEXT_COMMITTING);
 			List<TransformPersistenceToken> perStoreTokens = persistenceToken
