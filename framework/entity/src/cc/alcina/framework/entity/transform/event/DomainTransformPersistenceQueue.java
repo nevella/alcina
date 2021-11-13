@@ -379,18 +379,6 @@ public class DomainTransformPersistenceQueue {
 					}
 					logger.debug("Polled event from queue: {}", firingEvent);
 					try {
-						// LooseContext.pushWithKey(
-						// DetachedEntityCache.CONTEXT_CREATED_LOCAL_DEBUG,
-						// new DetachedEntityCache.CreatedLocalDebug() {
-						// @Override
-						// public void debugCreation(long localId,
-						// Entity entity) {
-						// logger.warn(
-						// "Adding created local - localId {} entity {} dtr {}",
-						// localId, entity,
-						// firingEvent.requestId);
-						// }
-						// });
 						Transaction.ensureBegun();
 						ThreadedPermissionsManager.cast().pushSystemUser();
 						publishTransformEvent(firingEvent);
