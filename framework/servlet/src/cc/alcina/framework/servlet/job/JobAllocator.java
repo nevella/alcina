@@ -385,13 +385,14 @@ class JobAllocator {
 					}
 				}
 			}
-			if (System.currentTimeMillis()
-					- lastAllocated > TimeConstants.ONE_HOUR_MS
+			long timeSinceAllocation = System.currentTimeMillis()
+					- lastAllocated;
+			if (timeSinceAllocation > TimeConstants.ONE_HOUR_MS
 					&& jobContext != null
 					&& jobContext.getJob().getPerformer() == ClientInstance
 							.self()
 					&& jobContext.getPerformer() != null
-					&& jobContext.getPerformer().canAbort(job.getTask())
+					&& jobContext.getPerformer().canAbort(job.getTask(),timeSinceAllocation)
 					&& ResourceUtilities.is(Transactions.class,
 							"cancelTimedoutTransactions")) {
 				List<Job> incompleteChildren = job.provideChildren()
