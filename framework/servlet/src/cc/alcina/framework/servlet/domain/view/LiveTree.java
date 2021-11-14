@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
@@ -857,11 +858,13 @@ public class LiveTree {
 
 			@Override
 			public String toString() {
-				return Ax.format("%s :: %s :: %s", path.toString(),
+				return Ax.format(
+						"%s :: %s\n" + "==================================\n",
+						path.toString(),
 						(data instanceof Entity
 								? ((Entity) data).toStringEntity()
 								: data.toString()),
-						CommonUtils.toSimpleExceptionMessage(e));
+						SEUtilities.getFullExceptionMessage(e));
 			}
 		}
 	}
