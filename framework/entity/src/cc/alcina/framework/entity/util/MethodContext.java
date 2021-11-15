@@ -38,9 +38,12 @@ public class MethodContext {
 
 	public <T> T call(Callable<T> callable) {
 		if (runInNewThread) {
+			String name = callable.getClass().getName();
+			if (name.contains("$Lambda")) {
+				name = "(lambda)";
+			}
 			AlcinaChildRunnable.runInTransactionNewThread(
-					Ax.format("child-thread-%s", callable.getClass().getName()),
-					() -> callable.call());
+					Ax.format("child-thread-%s", name), () -> callable.call());
 			return null;
 		}
 		entryClassLoader = Thread.currentThread().getContextClassLoader();
