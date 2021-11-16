@@ -62,6 +62,9 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		return domainSegmentLoader;
 	}
 
+	public boolean isUsesCommitSequencer(){
+		return true;
+	}
 	public abstract Class<? extends DomainTransformRequestPersistent>
 			getDomainTransformRequestPersistentClass();
 
