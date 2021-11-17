@@ -289,4 +289,8 @@ public class UIRendererWd extends UIRenderer {
 					root.fullToString());
 		}
 	}
+
+	public void onTourInit() {
+		exec.executeScript("document.body.className+=' webdriver'");
+	}
 }

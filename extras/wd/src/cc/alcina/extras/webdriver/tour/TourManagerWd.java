@@ -33,7 +33,7 @@ public class TourManagerWd extends TourManager {
 	public static final String PROP_FIRST_SUITE_STEP_PERFORMED = TourManagerWd.class
 			.getName() + ".PROP_FIRST_STEP_PERFORMED";
 
-	public static Tour deseralize(String json) {
+	public static Tour deserialize(String json) {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
 			mapper.addMixIn(Tour.RelativeTo.class, RelativeToMixin.class);
@@ -66,6 +66,8 @@ public class TourManagerWd extends TourManager {
 	public TourManagerWd(WdExec exec, WDToken token) {
 		this.exec = exec;
 		UIRendererWd.get().exec = exec;
+		UIRendererWd.get().onTourInit();
+		// assign 'webdriver' class to body
 		this.token = token;
 	}
 
