@@ -48,7 +48,7 @@ public class UIRendererWd extends UIRenderer {
 	}
 
 	public long timeout() {
-		return System.currentTimeMillis() + 2000;
+		return System.currentTimeMillis() + ResourceUtilities.getInteger(UIRendererWd.class, "timeout");
 	}
 
 	private WebElement getElement(String selector) {
