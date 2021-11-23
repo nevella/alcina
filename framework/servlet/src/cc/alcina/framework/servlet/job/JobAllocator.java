@@ -462,11 +462,13 @@ class JobAllocator {
 								ThreadPoolExecutor tpex = (ThreadPoolExecutor) executorService;
 								if (tpex.getActiveCount() == 0
 										&& incompleteCount > 0) {
-									logger.warn(
-											"Removing {} incomplete jobs as allocated/processing",
-											incompleteCount);
-									// queue.clearIncompleteAllocatedJobs();
-									queue.cancelIncompleteAllocatedJobs();
+									//commented out, prevents grandchild jobs
+									//
+//									logger.warn(
+//											"Removing {} incomplete jobs as allocated/processing",
+//											incompleteCount);
+//									// queue.clearIncompleteAllocatedJobs();
+//									queue.cancelIncompleteAllocatedJobs();
 								}
 							}
 							// missed event?

@@ -37,7 +37,6 @@ public class AlcinaServletContext {
 	}
 
 	public AlcinaServletContext() {
-		Preconditions.checkState(perThread.get()==null);
 		perThread.set(this);
 	}
 	public static void removePerThreadContexts() {
