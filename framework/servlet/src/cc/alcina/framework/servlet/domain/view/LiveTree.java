@@ -485,6 +485,9 @@ public class LiveTree {
 								"resultNodeMaxSize"));
 				while (deque.size() > 0 && result.size() < resultNodeMaxSize) {
 					LiveNode liveNode = deque.removeFirst();
+					if(liveNode==null){
+						continue;
+					}
 					Transform transform = new Transform();
 					transform.putPath(liveNode.path);
 					transform.setNode(liveNode.viewNode);
