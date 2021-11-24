@@ -289,10 +289,10 @@ public class WdExec {
 	}
 
 	public void setTextAndFire(String text) {
-		WebElement elem = getElement();
-		text = text.replace("\\", "\\\\");
-		WDUtils.setProperty(driver, elem, "value", text);
-		WDUtils.sendChanged(token, driver, elem);
+		String f_text = text.replace("\\", "\\\\");
+		performAction(false,
+				elem -> WDUtils.setProperty(driver, elem, "value", f_text));
+		performAction(false, elem -> WDUtils.sendChanged(token, driver, elem));
 	}
 
 	public void sleep(int ms) {

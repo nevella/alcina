@@ -48,7 +48,8 @@ public class UIRendererWd extends UIRenderer {
 	}
 
 	public long timeout() {
-		return System.currentTimeMillis() + ResourceUtilities.getInteger(UIRendererWd.class, "timeout");
+		return System.currentTimeMillis()
+				+ ResourceUtilities.getInteger(UIRendererWd.class, "timeout");
 	}
 
 	private WebElement getElement(String selector) {
@@ -101,6 +102,7 @@ public class UIRendererWd extends UIRenderer {
 				}
 			}
 		}
+		int debug = 4;
 		throw new TimedOutException(selectors.size() == 1 ? selectors.get(0)
 				: selectors.toString());
 	}
