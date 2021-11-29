@@ -46,4 +46,8 @@ public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {
 				suggestedFileName + "." + suffix, file.getPath());
 		return DownloadServlet.add(item);
 	}
+	@Override
+	public boolean returnsDownloadToken() {
+		return true;
+	}
 }
