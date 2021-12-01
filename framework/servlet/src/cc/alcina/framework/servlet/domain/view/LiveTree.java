@@ -70,7 +70,7 @@ public class LiveTree {
 
 	private List<ChangeListener> changeListeners = new ArrayList<>();
 
-	private DomainView rootEntity;
+	 DomainView rootEntity;
 
 	private NodeGenerator<? extends DomainView, ?> rootGenerator;
 
@@ -1002,5 +1002,9 @@ public class LiveTree {
 					root.ensurePath(o1.getTreePath()),
 					root.ensurePath(o2.getTreePath()));
 		}
+	}
+
+	 boolean containsEntity(Entity e) {
+		return entityNodes.containsKey(e);
 	}
 }
