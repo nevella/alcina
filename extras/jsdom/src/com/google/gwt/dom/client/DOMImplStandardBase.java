@@ -266,11 +266,11 @@ class DOMImplStandardBase extends DOMImplStandard {
 		protected ClientRect() {
 		}
 
-		private final native double getSubPixelLeft() /*-{
+		protected final native double getSubPixelLeft() /*-{
       return this.left;
 		}-*/;
 
-		private final native double getSubPixelTop() /*-{
+		protected final native double getSubPixelTop() /*-{
       return this.top;
 		}-*/;
 
