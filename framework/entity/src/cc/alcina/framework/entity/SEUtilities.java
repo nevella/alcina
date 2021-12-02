@@ -44,6 +44,7 @@ import java.text.StringCharacterIterator;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1463,6 +1464,12 @@ public class SEUtilities {
 			return null;
 		}
 		return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
+	}
+	public static Date toOldDate(ZonedDateTime ld) {
+		if (ld == null) {
+			return null;
+		}
+		return Date.from(ld.toInstant());
 	}
 
 	public static Date toOldDate(LocalDateTime ldt) {
