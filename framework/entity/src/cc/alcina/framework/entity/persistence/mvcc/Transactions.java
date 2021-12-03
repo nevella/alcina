@@ -156,7 +156,10 @@ public class Transactions {
 	}
 
 	public static void shutdown() {
-		get().vacuum.shutdown();
+		Transactions transactions = get();
+		if (transactions != null) {
+			transactions.vacuum.shutdown();
+		}
 	}
 
 	public static TransactionsStats stats() {
