@@ -1,6 +1,8 @@
 package cc.alcina.framework.entity.transform;
 
+import java.util.Objects;
 import java.util.concurrent.Callable;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
@@ -119,5 +121,10 @@ public class AdjunctTransformCollation extends TransformCollation {
 	public void removeTransformFromRequest(DomainTransformEvent event) {
 		Preconditions.checkState(token.getTransformResult() == null);
 		token.getRequest().removeTransform(event);
+	}
+
+	public <T extends Entity> Stream<T> modified(Class<T> clazz) {
+		return query(clazz).stream()
+				.<T> map(QueryResult::getEntity).filter(Objects::nonNull);
 	}
 }
