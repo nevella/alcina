@@ -265,7 +265,7 @@ public class ResourceUtilities {
 				if (project) {
 					if (value instanceof Map) {
 						Map map = (Map) value;
-						Map newMap = (Map) map.getClass().newInstance();
+						Map newMap = (Map) map.getClass().getDeclaredConstructor().newInstance();
 						newMap.putAll(map);
 						value = newMap;
 					} else {

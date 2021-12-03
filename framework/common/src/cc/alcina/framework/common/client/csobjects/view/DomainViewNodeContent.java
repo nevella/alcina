@@ -30,6 +30,17 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 	private transient E entity;
 
 	private transient String __comparatorString;
+	
+	private transient Exception exception;
+
+	@AlcinaTransient
+	public Exception getException() {
+		return this.exception;
+	}
+
+	public void setException(Exception exception) {
+		this.exception = exception;
+	}
 
 	@Override
 	public int compareTo(DomainViewNodeContent o) {

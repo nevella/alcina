@@ -22,6 +22,7 @@ import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 
@@ -93,9 +94,14 @@ public class WdExec {
 	}
 
 	public Object executeScript(String script) {
-		return getBy() == null ? WDUtils.executeScript(driver, null, script)
-				: performAction(false,
-						e -> WDUtils.executeScript(driver, e, script));
+		if (getBy() == null) {
+			return WDUtils.executeScript(driver, null, script);
+		} else {
+			ObjectWrapper<Object> scriptResult = new ObjectWrapper<>();
+			performAction(false, e -> scriptResult
+					.set(WDUtils.executeScript(driver, e, script)));
+			return scriptResult.get();
+		}
 	}
 
 	public WebDriver getDriver() {
@@ -283,10 +289,10 @@ public class WdExec {
 	}
 
 	public void setTextAndFire(String text) {
-		WebElement elem = getElement();
-		text = text.replace("\\", "\\\\");
-		WDUtils.setProperty(driver, elem, "value", text);
-		WDUtils.sendChanged(token, driver, elem);
+		String f_text = text.replace("\\", "\\\\");
+		performAction(false,
+				elem -> WDUtils.setProperty(driver, elem, "value", f_text));
+		performAction(false, elem -> WDUtils.sendChanged(token, driver, elem));
 	}
 
 	public void sleep(int ms) {

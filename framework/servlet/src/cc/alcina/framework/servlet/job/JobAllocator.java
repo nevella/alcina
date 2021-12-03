@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
@@ -34,6 +35,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.EventT
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain.SubqueuePhase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
+import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.job.JobRegistry.LauncherThreadState;
 import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ResubmitPolicy;
@@ -97,8 +99,12 @@ class JobAllocator {
 		Transaction.ensureBegun();
 		queue.job.setStatusMessage(enqueuedStatusMessage.message);
 		queue.job.setCompletion(enqueuedStatusMessage.percentComplete / 100.0);
-		Transaction.commit();
+		commit();
 		enqueuedStatusMessage = null;
+	}
+	
+	static void commit(){
+		TransformCommit.commitWithBackoff();
 	}
 
 	public void awaitSequenceCompletion() {
@@ -247,7 +253,7 @@ class JobAllocator {
 							&& job.provideRelatedSequential().size() > 1
 							&& !deleted) {
 						job.setState(JobState.SEQUENCE_COMPLETE);
-						Transaction.commit();
+						commit();
 					}
 				}
 				// don't remove directly - breaks deallocation - rely on
@@ -341,7 +347,7 @@ class JobAllocator {
 							 * If this fails, we *want* it to throw an exception
 							 * (for later retry)
 							 */
-							Transaction.commit();
+							commit();
 							allocating.forEach(j -> logger.debug(
 									"Sending to executor service - {} - {}",
 									j.getId(), j));
@@ -385,13 +391,14 @@ class JobAllocator {
 					}
 				}
 			}
-			if (System.currentTimeMillis()
-					- lastAllocated > TimeConstants.ONE_HOUR_MS
+			long timeSinceAllocation = System.currentTimeMillis()
+					- lastAllocated;
+			if (timeSinceAllocation > TimeConstants.ONE_HOUR_MS
 					&& jobContext != null
 					&& jobContext.getJob().getPerformer() == ClientInstance
 							.self()
 					&& jobContext.getPerformer() != null
-					&& jobContext.getPerformer().canAbort(job.getTask())
+					&& jobContext.getPerformer().canAbort(job.getTask(),timeSinceAllocation)
 					&& ResourceUtilities.is(Transactions.class,
 							"cancelTimedoutTransactions")) {
 				List<Job> incompleteChildren = job.provideChildren()
@@ -415,7 +422,7 @@ class JobAllocator {
 					j.setResultType(JobResultType.DID_NOT_COMPLETE);
 				});
 				toCancel.forEach(Job::cancel);
-				Transaction.commit();
+				commit();
 			}
 			Transaction.ensureEnded();
 		}
@@ -455,11 +462,13 @@ class JobAllocator {
 								ThreadPoolExecutor tpex = (ThreadPoolExecutor) executorService;
 								if (tpex.getActiveCount() == 0
 										&& incompleteCount > 0) {
-									logger.warn(
-											"Removing {} incomplete jobs as allocated/processing",
-											incompleteCount);
-									// queue.clearIncompleteAllocatedJobs();
-									queue.cancelIncompleteAllocatedJobs();
+									//commented out, prevents grandchild jobs
+									//
+//									logger.warn(
+//											"Removing {} incomplete jobs as allocated/processing",
+//											incompleteCount);
+//									// queue.clearIncompleteAllocatedJobs();
+//									queue.cancelIncompleteAllocatedJobs();
 								}
 							}
 							// missed event?
@@ -630,7 +639,7 @@ class JobAllocator {
 					&& queue.job.getPerformer() == ClientInstance.self()
 					&& jobContext == null) {
 				applyStatusMessage();
-				Transaction.commit();
+				commit();
 			}
 		}
 

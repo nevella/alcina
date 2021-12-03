@@ -16,6 +16,7 @@ package cc.alcina.framework.entity.gwt.reflection;
 import java.beans.PropertyDescriptor;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
+import java.lang.annotation.Inherited;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
@@ -253,6 +254,10 @@ public class ClientReflectionGenerator extends Generator {
 			try {
 				List<Annotation> visibleAnnotations = getVisibleAnnotations(jct,
 						annotationClasses);
+				if (jct != clazz) {
+					visibleAnnotations.removeIf(a -> !a.annotationType()
+							.isAnnotationPresent(Inherited.class));
+				}
 				values.addAll(visibleAnnotations);
 				for (Annotation a : visibleAnnotations) {
 					if (!uniqueMap.containsKey(a.annotationType())) {

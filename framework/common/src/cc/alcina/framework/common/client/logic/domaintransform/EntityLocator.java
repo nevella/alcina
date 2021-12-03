@@ -121,7 +121,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 			if (localId != 0 && o.localId != 0) {
 				return localId == o.localId && clazz == o.clazz;
 			}
-			return id == o.id && clazz == o.clazz;
+			return id == o.id && getClazz() == o.getClazz();
 		}
 		return super.equals(obj);
 	}

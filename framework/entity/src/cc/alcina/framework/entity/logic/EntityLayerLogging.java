@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 
@@ -52,26 +51,37 @@ public class EntityLayerLogging {
 	}
 
 	public static void persistentLog(Enum componentKey, String message) {
-		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
-				.log(message, componentKey.toString());
+		if (ResourceUtilities.is("useCommonPersistence")) {
+			CommonPersistenceProvider.get().getCommonPersistence().log(message,
+					componentKey.toString());
+		} else {
+			logger.warn("persistentlog: {}  - {}", componentKey, message);
+		}
 	}
 
 	public static long persistentLog(Enum componentKey, Throwable t) {
-		return Registry.impl(CommonPersistenceProvider.class)
-				.getCommonPersistence()
-				.log(SEUtilities.getFullExceptionMessage(t),
-						componentKey.toString());
+		if (ResourceUtilities.is("useCommonPersistence")) {
+			return CommonPersistenceProvider.get().getCommonPersistence().log(
+					SEUtilities.getFullExceptionMessage(t),
+					componentKey.toString());
+		} else {
+			logger.warn("persistentlog: {}", componentKey);
+			t.printStackTrace();
+			return 0L;
+		}
 	}
+
+	private static org.slf4j.Logger logger = LoggerFactory
+			.getLogger(EntityLayerLogging.class);
 
 	public static void persistentLog(Exception e, Object logMessageType) {
 		try {
-			CommonPersistenceLocal cpl = Registry
-					.impl(CommonPersistenceProvider.class)
-					.getCommonPersistence();
-			cpl.log(SEUtilities.getFullExceptionMessage(e),
-					logMessageType.toString());
-			LoggerFactory.getLogger(EntityLayerLogging.class)
-					.warn(logMessageType.toString(), e);
+			if (ResourceUtilities.is("useCommonPersistence")) {
+				CommonPersistenceProvider.get().getCommonPersistence().log(
+						SEUtilities.getFullExceptionMessage(e),
+						logMessageType.toString());
+			}
+			logger.warn(logMessageType.toString(), e);
 		} catch (Throwable e1) {
 			e1.printStackTrace();
 		}

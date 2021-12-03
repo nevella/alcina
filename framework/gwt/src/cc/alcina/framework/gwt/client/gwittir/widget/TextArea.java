@@ -21,6 +21,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.InputEvent;
 import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.dom.client.KeyUpHandler;
@@ -45,6 +46,7 @@ import com.totsp.gwittir.client.ui.SimpleComparator;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 @SuppressWarnings("deprecation")
 /**
@@ -118,6 +120,7 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 				changeListeners.fireChange(instance);
 			}
 		});
+		this.base.addDomHandler(e -> updateHeight(), InputEvent.getType());
 		super.initWidget(this.base);
 	}
 
@@ -396,17 +399,36 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		}
 		String old = this.getValue();
 		this.setText(value);
+		updateHeight();
+		if (this.getValue() != old && (this.getValue() == null
+				|| (this.getValue() != null && !this.getValue().equals(old)))) {
+			this.changes.firePropertyChange("value", old, this.getValue());
+		}
+	}
+
+	private void updateHeight() {
 		if (ensureAllLinesVisible) {
 			Scheduler.get().scheduleDeferred(() -> {
 				Element element = this.base.getElement();
 				element.getStyle().setProperty("height", "auto");
+				String paddingTop = WidgetUtils.getComputedStyle(element,
+						"paddingTop");
+				String paddingBottom = WidgetUtils.getComputedStyle(element,
+						"paddingBottom");
+				int paddingTopPx = paddingTop.endsWith("px")
+						? Integer.parseInt(paddingTop.replace("px", ""))
+						: 0;
+				int paddingBottomPx = paddingBottom.endsWith("px")
+						? Integer.parseInt(paddingBottom.replace("px", ""))
+						: 0;
 				int scrollHeight = element.getScrollHeight();
-				element.getStyle().setHeight(scrollHeight, Unit.PX);
+				if (scrollHeight != 0) {
+					element.getStyle().setHeight(
+							scrollHeight, 
+//							- paddingTopPx - paddingBottomPx,
+							Unit.PX);
+				}
 			});
-		}
-		if (this.getValue() != old && (this.getValue() == null
-				|| (this.getValue() != null && !this.getValue().equals(old)))) {
-			this.changes.firePropertyChange("value", old, this.getValue());
 		}
 	}
 

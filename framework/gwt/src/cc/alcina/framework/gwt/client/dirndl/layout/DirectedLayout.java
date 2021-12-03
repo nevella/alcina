@@ -564,12 +564,28 @@ public class DirectedLayout {
 					Optional<Widget> insertAfterChildWidget,
 					List<Widget> oldChildWidgets,
 					List<Widget> newChildWidgets) {
+				// FIXME - dirndl 1.4 - this isn't optimal, but swapping
+				// probably needs a larger structure to optimise anyway. A
+				// class...?
+				FlowPanel container = verifyContainer();
+				for (Widget oldChild : oldChildWidgets) {
+					if (insertAfterChildWidget.isPresent()
+							&& insertAfterChildWidget.get() == oldChild) {
+						int oldChildIndex = container.getWidgetIndex(oldChild);
+						if (oldChildIndex > 0) {
+							insertAfterChildWidget = Optional
+									.of(container.getWidget(oldChildIndex - 1));
+						} else {
+							insertAfterChildWidget = Optional.empty();
+						}
+					}
+					oldChild.removeFromParent();
+				}
 				for (int idx = newChildWidgets.size() - 1; idx >= 0; idx--) {
 					int index = insertAfterChildWidget.map(this::getChildIndex)
 							.orElse(-1) + 1;
-					verifyContainer().insert(newChildWidgets.get(idx), index);
+					container.insert(newChildWidgets.get(idx), index);
 				}
-				oldChildWidgets.forEach(Widget::removeFromParent);
 			}
 
 			public Widget verifySingleWidget() {

@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.domain.view;
 
 import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -11,6 +12,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -186,8 +188,11 @@ public abstract class DomainViews {
 		try {
 			Transaction.end();
 			Transaction.join(handlerData.transaction);
-			Key key = new Key(handlerData.request);
-			LiveTree view = trees.computeIfAbsent(key, LiveTree::new);
+			LiveTree view = null;
+			if (handlerData.request != null) {
+				Key key = new Key(handlerData.request);
+				view = trees.computeIfAbsent(key, LiveTree::new);
+			}
 			task.handlerData.lambdaResult = task.handlerData.lambda.apply(view);
 		} catch (RuntimeException e) {
 			handlerData.exception = e;
@@ -475,6 +480,29 @@ public abstract class DomainViews {
 
 		static enum Type {
 			MODEL_CHANGE, HANDLE_PATH_REQUEST, HANDLE_LAMBDA, EVICT_LISTENERS;
+		}
+	}
+
+	public <V extends DomainView> List<V> viewsContaining(Entity e) {
+		// Concurrency - only allowed from event queue thread
+		Preconditions.checkState(Thread.currentThread() == thread);
+		return (List) trees.values().stream().filter(t -> t.containsEntity(e))
+				.map(t -> t.rootEntity).collect(Collectors.toList());
+	}
+
+	public void submitLambda(Runnable withViewsModelLambda) {
+		ViewsTask task = new ViewsTask();
+		task.type = Type.HANDLE_LAMBDA;
+		task.handlerData.lambda = tree -> {
+			withViewsModelLambda.run();
+			return null;
+		};
+		queueTask(task);
+		task.await();
+		if (task.handlerData.exception == null) {
+			return;
+		} else {
+			throw task.handlerData.exception;
 		}
 	}
 }

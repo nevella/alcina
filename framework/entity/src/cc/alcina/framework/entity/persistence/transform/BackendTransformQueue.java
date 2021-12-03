@@ -100,7 +100,9 @@ public class BackendTransformQueue {
 
 	public void stop() {
 		finished = true;
-		eventThread.interrupt();
+		if (eventThread != null) {
+			eventThread.interrupt();
+		}
 	}
 
 	private void commit() {

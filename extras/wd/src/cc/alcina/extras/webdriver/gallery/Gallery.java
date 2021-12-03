@@ -138,7 +138,7 @@ public class Gallery {
 						String contents = ResourceUtilities
 								.readUrlAsString(resolved);
 						node.builder().tag("style").text(contents)
-								.insertAfter();
+								.insertAfterThis();
 					} catch (Exception e) {
 						Ax.simpleExceptionOut(e);
 					}
