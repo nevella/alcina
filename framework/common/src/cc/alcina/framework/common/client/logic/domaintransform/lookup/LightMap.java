@@ -138,10 +138,11 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 			return value;
 		} else {
 			if (size == DEGENERATE_THRESHOLD) {
-				Map<K, V> degenerate = DomainCollections.get().createUnsortedMap();
+				Map<K, V> degenerate = DomainCollections.get()
+						.createUnsortedMap();
 				degenerate.putAll(this);
 				elementData = null;
-				this.degenerate=degenerate;
+				this.degenerate = degenerate;
 				return degenerate.put(key, value);
 			}
 			size++;

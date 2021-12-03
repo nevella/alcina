@@ -682,10 +682,16 @@ public class TransformCommit {
 					}
 					return result;
 				} else {
-					throw new IllegalArgumentException(
-							Ax.format("Request %s - %s already processed",
+					/*
+					 * perfectly plausible, if request [5, prior=[4]] arrives before request [4] - which depends on the network
+					 */
+					DomainTransformLayerWrapper result = new DomainTransformLayerWrapper();
+					result.response = new DomainTransformResponse();
+					result.response.setResult(DomainTransformResponseResult.OK);
+					logger.info("Request {} - {} already processed",
 									request.toStringForError(),
-									request.getChunkUuidString()));
+									request.getChunkUuidString());
+					return result;
 				}
 			}
 		} finally {

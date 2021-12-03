@@ -105,7 +105,7 @@ public class DomNodeBuilder {
 		return this.relativeTo;
 	}
 
-	public DomNode insertAfter() {
+	public DomNode insertAfterThis() {
 		DomNode node = build();
 		relativeTo.relative().insertAfterThis(node);
 		return node;

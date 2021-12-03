@@ -389,7 +389,14 @@ public class TreePath<T> extends Model
 		@Override
 		public int compare(TreePath o1, TreePath o2) {
 			Preconditions.checkArgument(o1.parent == o2.parent);
-			return o1.segmentComparable.compareTo(o2.segmentComparable);
+			// FIXME - dirndl 1.2 - the segmentcomparable (either side) may be
+			// null if the path was populated pre-transform - e.g. via being the
+			// start location of a place
+			//
+			// fix is to populate with the segment comparable wherever possible
+			// - fancy fix is to reorder on that population
+			return CommonUtils.compareWithNullMinusOne(o1.segmentComparable,
+					o2.segmentComparable);
 		}
 	}
 

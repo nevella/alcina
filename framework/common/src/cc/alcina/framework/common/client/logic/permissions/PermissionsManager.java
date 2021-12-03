@@ -86,6 +86,16 @@ public class PermissionsManager implements DomainTransformListener {
 	private static PermissionsManager factoryInstance;
 
 	private static PermissionsExtension permissionsExtension;
+	
+	private static boolean enabled=true;
+
+	public static boolean isEnabled() {
+		return enabled;
+	}
+
+	public static void setEnabled(boolean enabled) {
+		PermissionsManager.enabled = enabled;
+	}
 
 	public static final Permissible ROOT_PERMISSIBLE = new Permissible() {
 		@Override

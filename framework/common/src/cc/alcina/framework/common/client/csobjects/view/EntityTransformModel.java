@@ -9,6 +9,4 @@ public interface EntityTransformModel extends TreeSerializable {
 	public static abstract class BaseModel extends Model
 			implements EntityTransformModel {
 	}
-	public static abstract class Rock extends Model implements EntityTransformModel{
-	}
 }

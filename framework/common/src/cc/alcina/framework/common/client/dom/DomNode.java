@@ -453,7 +453,7 @@ public class DomNode {
 	}
 
 	public boolean tagIsOneOf(String... tags) {
-		if (isElement()) {
+		if (isElement()||isProcessingInstruction()) {
 			for (int idx = 0; idx < tags.length; idx++) {
 				if (name().equalsIgnoreCase(tags[idx])) {
 					return true;
@@ -1486,5 +1486,9 @@ public class DomNode {
 
 			boolean valid = false;
 		}
+	}
+
+	public void appendTo(DomNode newParent) {
+		newParent.children.append(this);
 	}
 }

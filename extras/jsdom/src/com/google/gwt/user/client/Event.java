@@ -514,12 +514,12 @@ public class Event extends NativeEvent {
 		/**
 		 * Handler type.
 		 */
-		private static Type<NativePreviewHandler> TYPE;
+		protected static Type<NativePreviewHandler> TYPE;
 
 		/**
 		 * The singleton instance of {@link NativePreviewEvent}.
 		 */
-		private static NativePreviewEvent singleton;
+		protected static NativePreviewEvent singleton;
 
 		/**
 		 * Gets the type associated with this event.
@@ -542,7 +542,7 @@ public class Event extends NativeEvent {
 		 *            the native event
 		 * @return true to fire the event normally, false to cancel the event
 		 */
-		private static boolean fire(HandlerManager handlers,
+		protected static boolean fire(HandlerManager handlers,
 				NativeEvent nativeEvent) {
 			if (TYPE != null && handlers != null
 					&& handlers.isEventHandled(TYPE)) {

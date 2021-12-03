@@ -17,7 +17,10 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.StringMap;
 
 public class ElementRemote extends NodeRemote implements DomElement {
-	private static remoteCache cache = new remoteCache();
+	/*
+	 * Non-private for access from bytecode generated (ElementRemote$)
+	 */
+	 static RemoteCache cache = new RemoteCache();
 
 	/**
 	 * Assert that the given {@link Node} is an {@link Element} and
@@ -1083,11 +1086,13 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 * Determines whether the given {@link JavaScriptObject} can be cast to an
 	 * {@link Element}. A <code>null</code> object will cause this method to
 	 * return <code>false</code>.
+	 * 
+	 * 
 	 */
-	private static class remoteCache {
-		public boolean lastIsResult;
+	 static class RemoteCache {
+		 boolean lastIsResult;
 
-		public JavaScriptObject lastIs;
+		 JavaScriptObject lastIs;
 	}
 
 	static class ElementRemoteIndex extends JavaScriptObject {

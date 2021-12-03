@@ -246,7 +246,9 @@ public class Publisher {
 			}
 		}
 		result.setContent(null);
-		result.setContentToken(token);
+		if (deliverer.returnsDownloadToken()) {
+			result.setContentToken(token);
+		}
 		ctx.getVisitorOrNoop().publicationFinished(result);
 		return result;
 	}
@@ -290,7 +292,7 @@ public class Publisher {
 		}
 
 		public long persist(Publication publication) {
-			if(TransformCommit.isCommitting()){
+			if (TransformCommit.isCommitting()) {
 				return 0L;
 			}
 			return TransformCommit.commitTransformsAndReturnId(true,
@@ -299,7 +301,7 @@ public class Publisher {
 
 		public void persistContentRendererResults(
 				ContentRendererResults results, Publication publication) {
-			if(TransformCommit.isCommitting()){
+			if (TransformCommit.isCommitting()) {
 				return;
 			}
 			publication.setSerializedPublication(

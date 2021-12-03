@@ -17,6 +17,9 @@ import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.csobjects.view.DomainView;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Request;
@@ -31,10 +34,10 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
@@ -67,7 +70,7 @@ public class LiveTree {
 
 	private List<ChangeListener> changeListeners = new ArrayList<>();
 
-	private DomainView rootEntity;
+	 DomainView rootEntity;
 
 	private NodeGenerator<? extends DomainView, ?> rootGenerator;
 
@@ -86,7 +89,10 @@ public class LiveTree {
 	 */
 	private Multimap<Entity, List<LiveNode>> entityNodes = new Multimap<>();
 
+	Logger logger = LoggerFactory.getLogger(getClass());
+
 	public LiveTree(Key key) {
+		logger.warn("First time generate livetree - {}", key);
 		earliestPosition = DomainStore.writableStore()
 				.getTransformCommitPosition();
 		currentPosition = earliestPosition;
@@ -479,6 +485,9 @@ public class LiveTree {
 								"resultNodeMaxSize"));
 				while (deque.size() > 0 && result.size() < resultNodeMaxSize) {
 					LiveNode liveNode = deque.removeFirst();
+					if(liveNode==null){
+						continue;
+					}
 					Transform transform = new Transform();
 					transform.putPath(liveNode.path);
 					transform.setNode(liveNode.viewNode);
@@ -857,11 +866,13 @@ public class LiveTree {
 
 			@Override
 			public String toString() {
-				return Ax.format("%s :: %s :: %s", path.toString(),
+				return Ax.format(
+						"%s :: %s\n" + "==================================\n",
+						path.toString(),
 						(data instanceof Entity
 								? ((Entity) data).toStringEntity()
 								: data.toString()),
-						CommonUtils.toSimpleExceptionMessage(e));
+						SEUtilities.getFullExceptionMessage(e));
 			}
 		}
 	}
@@ -991,5 +1002,9 @@ public class LiveTree {
 					root.ensurePath(o1.getTreePath()),
 					root.ensurePath(o2.getTreePath()));
 		}
+	}
+
+	 boolean containsEntity(Entity e) {
+		return entityNodes.containsKey(e);
 	}
 }

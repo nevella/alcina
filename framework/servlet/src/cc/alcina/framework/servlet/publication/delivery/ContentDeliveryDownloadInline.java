@@ -36,4 +36,8 @@ public class ContentDeliveryDownloadInline implements ContentDelivery {
 				file.getPath());
 		return DownloadServlet.add(item);
 	}
+	@Override
+	public boolean returnsDownloadToken() {
+		return true;
+	}
 }

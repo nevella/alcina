@@ -35,6 +35,8 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 	private int selfAndDescendantCount = -1;
 
 	public Topic<BeforeNodeRemovalEvent> beforeNodeRemoval = Topic.local();
+	
+	public Topic<NodeChangeEvent> afterNodeChange = Topic.local();
 
 	public DomainViewNode.LabelGenerator getLabelGenerator() {
 		return this.labelGenerator;
@@ -91,6 +93,9 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 					.forEach(t -> this.apply(t, request.getWaitPolicy()));
 			// delta children at the end to generate visual nodes after node
 			// tree complete
+			/*
+			 * FIXME - dirndl1.3 - what happens if changes occur at multiple nodes?
+			 */
 			if (requestPath != null) {
 				IdentityArrayList<TreeNode<DomainViewNode>> forceEmitEvent = new IdentityArrayList<>(
 						target.getChildren());
@@ -224,6 +229,7 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		case INSERT:
 		case CHANGE:
 			node.setNode(transform.getNode());
+			afterNodeChange.publish(new NodeChangeEvent(node.getTreePath()));
 			break;
 		case REMOVE:
 			TreePath next = node.getTreePath().walker().next();
@@ -246,6 +252,14 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			super();
 			this.removed = removed;
 			this.next = next;
+		}
+	}
+	public class NodeChangeEvent {
+		public TreePath changed;
+
+		public NodeChangeEvent(TreePath changed) {
+			super();
+			this.changed = changed;
 		}
 	}
 
