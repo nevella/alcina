@@ -107,7 +107,7 @@ public abstract class Job extends VersionableEntity<Job>
 	private String processStateSerialized;
 
 	@GwtTransient
-	private ProcessState processState;
+	private volatile ProcessState processState;
 
 	private transient String cachedDisplayName;
 
@@ -270,8 +270,13 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	public ProcessState ensureProcessState() {
-		if (getProcessState() == null) {
-			setProcessState(new ProcessState());
+		// looks like at least JDK17 instruction reordering breaks this (second
+		// getter can return null), unless
+		// synchronized
+		synchronized (domainIdentity()) {
+			if (getProcessState() == null) {
+				setProcessState(new ProcessState());
+			}
 		}
 		return getProcessState();
 	}

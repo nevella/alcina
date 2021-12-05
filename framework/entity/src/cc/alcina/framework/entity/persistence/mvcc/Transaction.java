@@ -330,7 +330,7 @@ public class Transaction implements Comparable<Transaction> {
 		if (t == null) {
 			try {
 				// non-transactional entity
-				T newInstance = clazz.newInstance();
+				T newInstance = clazz.getDeclaredConstructor().newInstance();
 				newInstance.setId(objectId);
 				newInstance.setLocalId(localId);
 				return newInstance;
@@ -554,6 +554,10 @@ public class Transaction implements Comparable<Transaction> {
 		originatingThread = null;
 		ended = true;
 		TransactionPhase endPhase = getPhase();
+		TransformManager transformManager = TransformManager.get();
+		if (transformManager == null) {
+			return;
+		}
 		switch (endPhase) {
 		case TO_DB_PERSISTED:
 		case TO_DB_ABORTED:
@@ -571,20 +575,19 @@ public class Transaction implements Comparable<Transaction> {
 			if (AppPersistenceBase.isTestServer()) {
 				throw new MvccException(Ax.format(
 						"Ending on invalid phase: %s %s transforms", endPhase,
-						TransformManager.get().getTransforms().size()));
+						transformManager.getTransforms().size()));
 			} else {
 				logger.warn("Ending transaction on invalid phase: {}",
 						endPhase);
 			}
 		}
 		if (isWriteable()) {
-			if (TransformManager.get().getTransforms().size() == 0) {
+			if (transformManager.getTransforms().size() == 0) {
 			} else {
 				// FIXME - mvcc.5 - mvcc exception (after cleanup)
 				logger.warn(
 						"Ending transaction with uncommitted transforms: {} {}",
-						endPhase,
-						TransformManager.get().getTransforms().size());
+						endPhase, transformManager.getTransforms().size());
 			}
 			// need to do this even if transforms == 0 - to clear listeners
 			// setup

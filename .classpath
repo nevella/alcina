@@ -92,5 +92,6 @@
 	<classpathentry kind="lib" path="lib/framework/entity/commons-lang-2.5.jar"/>
 	<classpathentry kind="lib" path="lib/extras/webdriver/commonmark-0.18.1-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/extras/webdriver/commonmark-ext-gfm-tables-0.18.1-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/javax.ws.rs-api-2.1.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
