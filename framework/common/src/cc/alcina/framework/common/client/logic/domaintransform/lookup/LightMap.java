@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
+import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.domain.DomainCollections;
 
@@ -38,6 +39,25 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 	private transient Map<K, V> degenerate;
 
 	public LightMap() {
+	}
+
+	public String toString() {
+		Iterator<Entry<K, V>> i = entrySet().iterator();
+		if (!i.hasNext())
+			return "{}";
+		StringBuilder sb = new StringBuilder();
+		sb.append('{');
+		for (;;) {
+			Entry<K, V> e = i.next();
+			K key = e.getKey();
+			V value = e.getValue();
+			sb.append(key == this ? "(this Map)" : key);
+			sb.append('=');
+			sb.append(value == this ? "(this Map)" : value);
+			if (!i.hasNext())
+				return sb.append('}').toString();
+			sb.append(',').append(' ');
+		}
 	}
 
 	@Override
