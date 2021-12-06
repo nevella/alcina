@@ -2,6 +2,9 @@ package cc.alcina.framework.servlet.util.transform;
 
 import java.util.concurrent.CountDownLatch;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -126,12 +129,20 @@ public class SerializationSignatureListener
 				transformCollation.ensureApplied();
 				EntityCollation entityCollation = transformCollation
 						.forLocator(transform.toObjectLocator());
-				if (!entityCollation.isDeleted()) {
-					serializedSignatureReflector.setPropertyValue(
-							entityCollation.getEntity(), ensureSignature());
-					token.addCascadedEvents();
+				if (entityCollation == null) {
+					logger.warn("Null collation for serialized transform : {}",
+							transform.toObjectLocator());
+					//FIXME - devex
+				} else {
+					if (!entityCollation.isDeleted()) {
+						serializedSignatureReflector.setPropertyValue(
+								entityCollation.getEntity(), ensureSignature());
+						token.addCascadedEvents();
+					}
 				}
 			}
 		}
 	}
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 }
