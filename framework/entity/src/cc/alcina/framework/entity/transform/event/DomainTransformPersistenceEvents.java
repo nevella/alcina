@@ -9,6 +9,8 @@ import java.util.concurrent.atomic.AtomicLong;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -27,6 +29,9 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
 public class DomainTransformPersistenceEvents {
 	private static final String CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS = DomainTransformPersistenceEvents.class
 			.getName() + ".CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS";
+
+	public static final String CONTEXT_FIRING_EVENT = DomainTransformPersistenceEvents.class
+			.getName() + ".CONTEXT_FIRING_EVENT";
 
 	public static void setLocalCommitTimeout(long timeout) {
 		LooseContext.set(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS, timeout);
@@ -51,8 +56,17 @@ public class DomainTransformPersistenceEvents {
 			DomainTransformPersistenceListener listener) {
 		listenerList.add(listener);
 	}
-
 	public void fireDomainTransformPersistenceEvent(
+			DomainTransformPersistenceEvent event) {
+		Preconditions.checkState(!LooseContext.is(CONTEXT_FIRING_EVENT));
+		try {
+			LooseContext.pushWithTrue(CONTEXT_FIRING_EVENT);
+			fireDomainTransformPersistenceEvent0(event);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+	private void fireDomainTransformPersistenceEvent0(
 			DomainTransformPersistenceEvent event) {
 		if (event.isLocalToVm()) {
 			for (DomainTransformPersistenceListener listener : new ArrayList<DomainTransformPersistenceListener>(
@@ -75,12 +89,12 @@ public class DomainTransformPersistenceEvents {
 			if (event.getTransformPersistenceToken()
 					.isRequestorExternalToThisJvm()) {
 				transformLocalIdSupport.runWithOffsetLocalIdCounter(
-						() -> fireDomainTransformPersistenceEvent0(event));
+						() -> fireDomainTransformPersistenceEvent1(event));
 			} else {
 				event.getTransformPersistenceToken().getRequest().allRequests()
 						.forEach(
 								rq -> getQueue().onPreparingVmLocalRequest(rq));
-				fireDomainTransformPersistenceEvent0(event);
+				fireDomainTransformPersistenceEvent1(event);
 			}
 			break;
 		}
@@ -96,7 +110,7 @@ public class DomainTransformPersistenceEvents {
 				event.getPersistedRequestIds().forEach(
 						id -> queue.onTransformRequestCommitted(id, true));
 			}
-			fireDomainTransformPersistenceEvent0(event);
+			fireDomainTransformPersistenceEvent1(event);
 			break;
 		}
 		}
@@ -115,7 +129,7 @@ public class DomainTransformPersistenceEvents {
 		queue.startEventQueue();
 	}
 
-	private void fireDomainTransformPersistenceEvent0(
+	private void fireDomainTransformPersistenceEvent1(
 			DomainTransformPersistenceEvent event) {
 		boolean hasPersistentRequests = event.getPersistedRequestIds() != null
 				&& event.getPersistedRequestIds().size() > 0;

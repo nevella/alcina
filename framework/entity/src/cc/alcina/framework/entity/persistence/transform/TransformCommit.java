@@ -78,6 +78,7 @@ import cc.alcina.framework.entity.transform.TransformConflicts.TransformConflict
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -879,6 +880,10 @@ public class TransformCommit {
 			throws DomainTransformRequestException {
 		Preconditions.checkState(!LooseContext.is(CONTEXT_COMMITTING),
 				"Already in commit section");
+		Preconditions.checkState(
+				!LooseContext.is(
+						DomainTransformPersistenceEvents.CONTEXT_FIRING_EVENT),
+				"Cannot commit during event publication");
 		try {
 			LooseContext.pushWithTrue(CONTEXT_COMMITTING);
 			List<TransformPersistenceToken> perStoreTokens = persistenceToken
