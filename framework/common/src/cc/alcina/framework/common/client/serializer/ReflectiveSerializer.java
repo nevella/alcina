@@ -78,6 +78,7 @@ import elemental.json.JsonValue;
  * 
  *         check classloader usage in AlcinaBeanSerializer
  */
+@SuppressWarnings("deprecation")
 public class ReflectiveSerializer {
 	private static Map<Class, TypeSerializer> typeSerializers = Registry
 			.impl(ConcurrentMapCreator.class).createMap();
@@ -387,6 +388,7 @@ public class ReflectiveSerializer {
 	public static abstract class ValueSerializer<T> {
 		public abstract List<Class> serializesTypes();
 
+		
 		protected T fromJson(Class<? extends T> clazz, JsonValue value) {
 			switch (value.getType()) {
 			case NULL:

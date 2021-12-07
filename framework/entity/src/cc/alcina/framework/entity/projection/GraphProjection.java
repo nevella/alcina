@@ -54,6 +54,7 @@ import cc.alcina.framework.common.client.csobjects.GArrayList;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.GraphProjectionTransient;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domain.Entity.PropertyEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
@@ -140,7 +141,7 @@ public class GraphProjection {
 
 	private static final String CONTEXT_LAST_CONTEXT_LOOKUPS = GraphProjection.class
 			.getName() + ".CONTEXT_LAST_CONTEXT_LOOKUPS";
-	
+
 	public static final String CONTEXT_MAX_REACHED = GraphProjection.class
 			.getName() + ".CONTEXT_MAX_REACHED";
 
@@ -503,10 +504,11 @@ public class GraphProjection {
 		replaceMap = LooseContext.get(CONTEXT_REPLACE_MAP);
 		this.disablePerObjectPermissions = LooseContext
 				.is(CONTEXT_DISABLE_PER_OBJECT_PERMISSIONS);
-		int maxReached = ResourceUtilities.getInteger(
-				GraphProjection.class, "maxReached", Integer.MAX_VALUE);
-		if(LooseContext.has(CONTEXT_MAX_REACHED)){
-			maxReached=Integer.parseInt(LooseContext.getString(CONTEXT_MAX_REACHED));
+		int maxReached = ResourceUtilities.getInteger(GraphProjection.class,
+				"maxReached", Integer.MAX_VALUE);
+		if (LooseContext.has(CONTEXT_MAX_REACHED)) {
+			maxReached = Integer
+					.parseInt(LooseContext.getString(CONTEXT_MAX_REACHED));
 		}
 		reached = new ProjectionIdentityMap(maxReached);
 	}
@@ -939,7 +941,7 @@ public class GraphProjection {
 			List<Field> nonStatic = new ArrayList<Field>();
 			for (Field field : fields) {
 				if (Modifier.isStatic(field.getModifiers())
-						||!c.getModule().isOpen(c.getPackageName())) {
+						|| !c.getModule().isOpen(c.getPackageName())) {
 					continue;
 				} else {
 					field.setAccessible(true);
@@ -1203,6 +1205,11 @@ public class GraphProjection {
 		public String toString() {
 			return (parent == null ? "" : parent.toString() + "::")
 					+ clazz.getSimpleName() + "." + fieldName;
+		}
+
+		public boolean matches(Class<?> clazz, PropertyEnum property) {
+			return this.clazz == clazz
+					&& Objects.equals(property.toString(), fieldName);
 		}
 	}
 
