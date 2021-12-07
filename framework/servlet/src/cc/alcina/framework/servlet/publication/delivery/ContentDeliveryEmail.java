@@ -242,7 +242,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		msg.setSubject(
 				requestorPass ? deliveryModel.getEmailSubjectForRequestor()
-						: deliveryModel.getEmailSubject());
+						: deliveryModel.getEmailSubject(),
+				"utf-8");
 		MailAttachment pdfAttachment = null;
 		if (deliveryModel.isEmailInline()) {
 			if (deliveryModel.hasProperty(PROP_ATTACH_EMAIL_BODY_AS_PDF)) {
