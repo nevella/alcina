@@ -135,6 +135,12 @@ public class CommitToStorageTransformListener
 
 	private Topic<State> topicStateChanged = Topic.local();
 
+	private Topic<DomainTransformEvent> topicTransformAdded = Topic.local();
+
+	public Topic<DomainTransformEvent> getTopicTransformAdded() {
+		return this.topicTransformAdded;
+	}
+
 	protected Object collectionsMonitor = new Object();
 
 	private EntityLocator lastCreatedObjectLocator;
@@ -187,9 +193,9 @@ public class CommitToStorageTransformListener
 	}
 
 	@Override
-	public void domainTransform(DomainTransformEvent evt) {
-		if (evt.getCommitType() == CommitType.TO_STORAGE) {
-			if (Objects.equals(evt.getPropertyName(),
+	public void domainTransform(DomainTransformEvent event) {
+		if (event.getCommitType() == CommitType.TO_STORAGE) {
+			if (Objects.equals(event.getPropertyName(),
 					TransformManager.ID_FIELD_NAME)) {
 				return;
 			}
@@ -198,8 +204,9 @@ public class CommitToStorageTransformListener
 				return;
 			}
 			synchronized (collectionsMonitor) {
-				transformQueue.add(evt);
+				transformQueue.add(event);
 			}
+			topicTransformAdded.publish(event);
 			lastQueueAddMillis = System.currentTimeMillis();
 			if (queueingFinishedTimer == null
 					&& !isQueueCommitTimerDisabled()) {
@@ -223,7 +230,7 @@ public class CommitToStorageTransformListener
 		flushWithOneoffCallback(callback, true);
 	}
 
-	//FIXME - mvcc.5 - remove (coalesce with 1-arg call) 
+	// FIXME - mvcc.5 - remove (coalesce with 1-arg call)
 	public void flushWithOneoffCallback(AsyncCallback callback,
 			boolean commitIfEmptyTransformQueue) {
 		boolean doNotFlush = false;
@@ -352,6 +359,18 @@ public class CommitToStorageTransformListener
 						PermissionsManager.get().getClientInstanceId());
 		request.setRequestId(requestId);
 		request.setClientInstance(PermissionsManager.get().getClientInstance());
+		if (transformQueue.size() > 0) {
+			/*
+			 * Note that commit and queue modification are not causally related
+			 * - so transforms can be generated at this point
+			 */
+			try {
+				LooseContext.pushWithKey(CONTEXT_COMMITTING_REQUEST, request);
+				topicStateChanged().publish(State.PRE_COMMIT);
+			} finally {
+				LooseContext.pop();
+			}
+		}
 		synchronized (collectionsMonitor) {
 			customProcessTransformQueue(transformQueue);
 			request.getEvents().addAll(transformQueue);
@@ -415,11 +434,15 @@ public class CommitToStorageTransformListener
 			commitRemote(request, commitRemoteCallback);
 		}
 	}
-	
-	public static TransformCollation committingCollation(){
-		DomainTransformRequest request=LooseContext.get(
+
+	public static TransformCollation committingCollation() {
+		List<DomainTransformEvent> events = committingRequest().getEvents();
+		//during pre-commit, request will have zero transforms
+		return new TransformCollation(events.isEmpty()?get().transformQueue:events);
+	}
+	public static DomainTransformRequest committingRequest() {
+		return (DomainTransformRequest) LooseContext.get(
 				CommitToStorageTransformListener.CONTEXT_COMMITTING_REQUEST);
-		return new TransformCollation(request.getEvents());
 	}
 
 	protected void commitRemote(DomainTransformRequest request,
@@ -456,7 +479,7 @@ public class CommitToStorageTransformListener
 	}
 
 	public static enum State {
-		COMMITTING, COMMITTED, ERROR, OFFLINE, RELOAD
+		PRE_COMMIT, COMMITTING, COMMITTED, ERROR, OFFLINE, RELOAD
 	}
 
 	public static class UnknownTransformFailedException
