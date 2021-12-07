@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.servlet;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
@@ -87,6 +88,11 @@ public interface AuthenticationTokenStore {
 				setCookieValue(AuthenticationManager.COOKIE_NAME_SESSIONID,
 						clientInstance.getAuthenticationSession()
 								.getSessionId());
+				Ax.out("ClientInstance %s, %s validated", 
+						clientInstanceId, clientInstanceAuth);
+			} else {
+				Ax.err("ClientInstance %s, %s invalid", 
+						clientInstanceId, clientInstanceAuth);
 			}
 			AuthenticationManager.get().initialiseContext(this);
 		}
