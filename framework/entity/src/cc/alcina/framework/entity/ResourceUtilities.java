@@ -96,7 +96,6 @@ public class ResourceUtilities {
 
 	private static ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
 
-
 	public static void appShutdown() {
 	}
 
@@ -195,12 +194,17 @@ public class ResourceUtilities {
 	}
 
 	public static void ensureFromSystemProperties() {
-		String property = System.getProperty("ResourceUtilities.propertyPath");
-		if (property != null) {
+		String propertyFilePath = System.getProperty("ResourceUtilities.propertyPath");
+		if (propertyFilePath != null) {
 			try {
-				registerCustomProperties(new FileInputStream(property));
+				registerCustomProperties(new FileInputStream(propertyFilePath));
 			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
+				if (Boolean
+						.getBoolean("ResourceUtilities.propertyPathOptional")) {
+					Ax.err("No property file: %s", propertyFilePath);
+				} else {
+					throw new WrappedRuntimeException(e);
+				}
 			}
 		}
 	}
@@ -579,11 +583,11 @@ public class ResourceUtilities {
 
 	public static String readFileToStringGz(File f) {
 		try {
-		InputStream fis = new FileInputStream(f);
-		if (f.getName().endsWith(".gz")) {
-			fis = new GZIPInputStream(new BufferedInputStream(fis));
-		}
-		return readStreamToString(fis);
+			InputStream fis = new FileInputStream(f);
+			if (f.getName().endsWith(".gz")) {
+				fis = new GZIPInputStream(new BufferedInputStream(fis));
+			}
+			return readStreamToString(fis);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -994,8 +998,6 @@ public class ResourceUtilities {
 		T instance = constructor.newInstance();
 		return instance;
 	}
-
-	
 
 	public static class SimpleQuery {
 		private String strUrl;
