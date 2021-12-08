@@ -263,11 +263,10 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		}
 	}
 
-	public static class DomainViewNode extends Tree.TreeNode<DomainViewNode> {
+	public static class DomainViewNode extends Tree.AbstractPathNode<DomainViewNode> {
 		private DomainViewNodeContent<?> node;
 
-		private TreePath<DomainViewNode> treePath;
-
+		
 		private LabelGenerator labelGenerator;
 
 		public DomainViewNode() {
@@ -275,15 +274,9 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 
 		public DomainViewNode(LabelGenerator labelGenerator,
 				DomainViewNode parent, String path) {
+			super(parent,path);
 			this.labelGenerator = labelGenerator == null ? new TextGenerator()
 					: labelGenerator;
-			setParent(parent);
-			if (parent == null) {
-				treePath = TreePath.absolutePath(path);
-			} else {
-				treePath = parent.treePath.ensurePath(path);
-			}
-			treePath.setValue(this);
 		}
 
 		public void clearChildren() {
@@ -318,9 +311,7 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			return this.node;
 		}
 
-		public TreePath<DomainViewNode> getTreePath() {
-			return this.treePath;
-		}
+		
 
 		public DomainViewTree provideContainingTree() {
 			return getTreePath().provideContainingTree();

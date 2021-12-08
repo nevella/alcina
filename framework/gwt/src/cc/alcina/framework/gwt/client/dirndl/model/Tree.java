@@ -3,6 +3,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import java.util.List;
 
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
+import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -16,6 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererArgs;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
+import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeLabelClicked;
@@ -103,7 +105,6 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	protected void loadNextPage() {
 		throw new UnsupportedOperationException();
 	}
-
 
 	public static class LabelClicked
 			extends TopicEvent<Object, LabelClicked.Handler> {
@@ -309,6 +310,37 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			public void setText(String text) {
 				this.text = text;
 			}
+		}
+	}
+
+	public abstract static class AbstractPathNode<PN extends AbstractPathNode>
+			extends TreeNode<PN> {
+		public AbstractPathNode() {
+		}
+
+		public AbstractPathNode(PN parent, String path) {
+			setParent(parent);
+			if (parent == null) {
+				treePath = TreePath.absolutePath(path);
+			} else {
+				treePath = parent.treePath.ensurePath(path);
+			}
+			treePath.setValue((PN) this);
+		}
+
+		protected TreePath<PN> treePath;
+
+		public TreePath<PN> getTreePath() {
+			return this.treePath;
+		}
+	}
+
+	public static class PathNode extends AbstractPathNode<PathNode> {
+		public PathNode() {
+		}
+
+		public PathNode(PathNode parent, String path) {
+			super(parent, path);
 		}
 	}
 }

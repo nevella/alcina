@@ -403,6 +403,10 @@ public class TreePath<T> extends Model
 	public static class Walker<T> {
 		TreePath<T> current;
 
+		public T current() {
+			return this.current.getValue();
+		}
+
 		public Walker(TreePath<T> from) {
 			current = from;
 		}
