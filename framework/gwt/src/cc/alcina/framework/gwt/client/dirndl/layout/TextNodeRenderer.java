@@ -46,7 +46,10 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 	}
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Enum.class)
-	public static class EnumNodeRenderer extends TextNodeRenderer {
+	public static class EnumNodeRenderer extends HasDisplayNameRenderer {
+	}
+	
+	public static class HasDisplayNameRenderer extends TextNodeRenderer {
 		@Override
 		protected String getModelText(Object model) {
 			if (model instanceof HasDisplayName) {
