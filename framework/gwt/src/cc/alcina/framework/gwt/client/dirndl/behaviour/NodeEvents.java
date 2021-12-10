@@ -182,7 +182,23 @@ public class NodeEvents {
 			void onRemove(Remove event);
 		}
 	}
+	
+	public static class Insert extends TopicEvent<Object, Insert.Handler> {
+		@Override
+		public void dispatch(Insert.Handler handler) {
+			handler.onInsert(this);
+		}
 
+		@Override
+		public Class<Insert.Handler> getHandlerClass() {
+			return Insert.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onInsert(Insert event);
+		}
+	}
+//FIXME - to 'submit'
 	public static class Submitted
 			extends TopicEvent<Object, Submitted.Handler> {
 		@Override

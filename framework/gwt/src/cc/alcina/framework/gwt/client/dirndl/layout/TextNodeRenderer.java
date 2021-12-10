@@ -1,9 +1,18 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import com.google.gwt.user.client.ui.Widget;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
+import com.google.gwt.user.client.ui.Widget;
+import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+
+import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -11,6 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableTypeFactory;
 
 public class TextNodeRenderer extends LeafNodeRenderer {
 	@Override
@@ -48,7 +58,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Enum.class)
 	public static class EnumNodeRenderer extends HasDisplayNameRenderer {
 	}
-	
+
 	public static class HasDisplayNameRenderer extends TextNodeRenderer {
 		@Override
 		protected String getModelText(Object model) {
@@ -59,11 +69,11 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 			}
 		}
 	}
-	
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = String.class)
 	public static class StringNodeRenderer extends TextNodeRenderer {
 	}
+
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Number.class)
 	public static class NumberNodeRenderer extends TextNodeRenderer {
 	}
@@ -85,6 +95,71 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 		public void setText(String text) {
 			this.text = text;
+		}
+	}
+
+	public static class TableHeaders extends TextNodeRenderer.StringListModel {
+		public TableHeaders() {
+			super();
+		}
+
+		public TableHeaders(List<String> strings) {
+			super(strings);
+		}
+
+		public TableHeaders(Class<? extends Bindable> clazz,
+				DirectedLayout.Node node) {
+			BoundWidgetTypeFactory factory = Registry
+					.impl(TableTypeFactory.class);
+			List<String> strings = Reflections.classLookup()
+					.getPropertyReflectors(clazz).values().stream()
+					.map(pr -> Annotations.resolve(pr, Directed.Property.class,
+							node.getResolver()))
+					.filter(Objects::nonNull).map(Directed.Property::name)
+					.collect(Collectors.toList());
+			setList(strings);
+		}
+	}
+
+	@Directed(tag = "div")
+	public static class StringModel extends Model {
+		private String string;
+
+		public StringModel() {
+		}
+
+		public StringModel(String string) {
+			this.string = string;
+		}
+
+		@Directed
+		public String getString() {
+			return this.string;
+		}
+
+		public void setString(String string) {
+			this.string = string;
+		}
+	}
+
+	@Directed
+	public static class StringListModel extends Model {
+		private List<String> strings;
+
+		public StringListModel() {
+		}
+
+		public StringListModel(List<String> strings) {
+			this.strings = strings;
+		}
+
+		@Directed
+		public List<String> getString() {
+			return this.strings;
+		}
+
+		public void setList(List<String> strings) {
+			this.strings = strings;
 		}
 	}
 }

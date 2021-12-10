@@ -25,7 +25,12 @@ public class Annotations {
 
 	public static <A extends Annotation> A resolve(PropertyReflector reflector,
 			Class<A> annotationClass) {
-		return new AnnotationLocation(reflector.getDefiningType(), reflector)
-				.getAnnotation(annotationClass);
+		return resolve(reflector, annotationClass, null);
+	}
+
+	public static <A extends Annotation> A resolve(PropertyReflector reflector,
+			Class<A> annotationClass, AnnotationLocation.Resolver resolver) {
+		return new AnnotationLocation(reflector.getDefiningType(), reflector,
+				resolver).getAnnotation(annotationClass);
 	}
 }

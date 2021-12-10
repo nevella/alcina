@@ -5,6 +5,7 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.Validator;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 public class EditableStringModel extends Model {
@@ -28,7 +29,7 @@ public class EditableStringModel extends Model {
 	@Validator(validator = NotBlankValidator.class)
 	@Custom(customiserClass = TextAreaCustomiser.class, parameters = {
 			@NamedParameter(name = TextAreaCustomiser.ENSURE_ALL_LINES_VISIBLE, booleanValue = true),
-			@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 1)})
+			@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 1) })
 	public String getString() {
 		return this.string;
 	}
@@ -39,4 +40,14 @@ public class EditableStringModel extends Model {
 		propertyChangeSupport().firePropertyChange("string", old_string,
 				string);
 	}
+
+	public static class SingleLine extends EditableStringModel {
+		@Display(name = "String")
+		@Validator(validator = NotBlankValidator.class)
+		public String getString() {
+			return super.getString();
+		}
+	}
+	
+	
 }

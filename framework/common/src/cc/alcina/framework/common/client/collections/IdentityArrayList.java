@@ -41,6 +41,9 @@ public class IdentityArrayList<T> extends ArrayList<T> {
 		super(c==null?Collections.emptyList():c);
 	}
 
+	public static <T> IdentityArrayList<T> copyOf(Collection<? extends T> c){
+		return new IdentityArrayList<>(c);
+	}
 	@Override
 	public boolean equals(Object obj) {
 		return this == obj;

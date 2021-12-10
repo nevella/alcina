@@ -25,7 +25,7 @@ public class AnnotationLocation {
 
 	public AnnotationLocation(Class clazz,
 			PropertyReflector propertyReflector) {
-		this(clazz, propertyReflector, Resolver.get());
+		this(clazz, propertyReflector, null);
 	}
 
 	public AnnotationLocation(Class clazz, PropertyReflector propertyReflector,
@@ -33,6 +33,9 @@ public class AnnotationLocation {
 		Preconditions.checkArgument(clazz != null || propertyReflector != null);
 		this.classLocation = clazz;
 		this.propertyReflector = propertyReflector;
+		if (resolver == null) {
+			resolver = Resolver.get();
+		}
 		this.resolver = resolver;
 	}
 

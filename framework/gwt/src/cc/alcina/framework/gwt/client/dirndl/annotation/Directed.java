@@ -123,6 +123,14 @@ public @interface Directed {
 		}
 	}
 
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.METHOD)
+	@ClientVisible
+	public static @interface Property {
+		String name();
+	}
+
 	public static class DirectedResolver extends Directed.Default {
 		private TreeResolver<Directed> treeResolver;
 
