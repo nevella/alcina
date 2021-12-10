@@ -71,6 +71,9 @@ public class AuthenticationManager {
 		if (context.session != null) {
 			context.session.setEndTime(new Date());
 			context.session.setEndReason("Replaced by new session");
+			logger.warn("Expired session :: id: {} reason: {} old_user: {} current_user: {}",
+					context.session.getId(), context.session.getEndReason(),
+					context.session.getUser(), user);
 		}
 		String sessionId = SEUtilities.generateId();
 		AuthenticationSession session = persistence.createAuthenticationSession(
