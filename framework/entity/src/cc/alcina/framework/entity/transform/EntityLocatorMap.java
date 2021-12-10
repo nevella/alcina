@@ -32,6 +32,8 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  *         Synchronization: multi-threaded (read) access permitted, access to
  *         persistentToLocal synchronized on instance. Write access locked
  *         higher in the stack
+ *         
+ *         FIXME - 2022 - document why read-only access is OK (say in post-process) - 
  * 
  */
 public class EntityLocatorMap implements Serializable {
