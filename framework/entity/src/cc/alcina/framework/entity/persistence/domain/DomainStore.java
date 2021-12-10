@@ -78,7 +78,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -123,6 +122,7 @@ import cc.alcina.framework.entity.stat.StatCategory_DomainStore;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent.ExTransformDbMetadata;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.transform.EntityLocatorMap;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;

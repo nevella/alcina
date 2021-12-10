@@ -23,7 +23,6 @@ import org.slf4j.Logger;
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.log.ILogRecord;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
@@ -32,6 +31,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCache;
 import cc.alcina.framework.entity.persistence.transform.TransformPersister.TransformPersisterToken;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.transform.EntityLocatorMap;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 
 /**

@@ -124,11 +124,11 @@ public class FlatTreeSerializer {
 	private static String NULL_MARKER = "__fts_NULL__";
 
 	private static Map<Class, Map<String, Property>> deSerializationClassAliasProperty = Registry
-			.impl(ConcurrentMapCreator.class).createMap();
+			.impl(ConcurrentMapCreator.class).create();
 
 
 	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
-			.impl(ConcurrentMapCreator.class).createMap();
+			.impl(ConcurrentMapCreator.class).create();
 
 	public static Topic<StringPair> unequalSerialized = Topic.local();
 

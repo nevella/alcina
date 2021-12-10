@@ -80,7 +80,7 @@ import elemental.json.JsonValue;
  */
 public class ReflectiveSerializer {
 	private static Map<Class, TypeSerializer> typeSerializers = Registry
-			.impl(ConcurrentMapCreator.class).createMap();
+			.impl(ConcurrentMapCreator.class).create();
 
 	public static <T> T clone(T object) {
 		return (T) deserialize(serialize(object));
