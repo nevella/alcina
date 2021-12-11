@@ -1198,7 +1198,10 @@ public class DomainStore implements IDomainStore {
 		// not concurrent, handle in methods
 		private Map<DomainDescriptor, DomainStore> descriptorMap = new LinkedHashMap<>();
 
-		private Map<Class, DomainStore> classMap = new LinkedHashMap<>();
+		private Map<Class, DomainStore> classMap = Collections.unmodifiableMap(new LinkedHashMap<>());
+
+		// immutable, swap on change
+		private Collection<DomainStore> stores;
 
 		private DomainStore writableStore;
 
@@ -1232,13 +1235,17 @@ public class DomainStore implements IDomainStore {
 				boolean registerDescriptorClasses) {
 			descriptorMap.put(store.domainDescriptor, store);
 			if (registerDescriptorClasses) {
+				Map<Class, DomainStore> classMap = new LinkedHashMap<>(this.classMap);
 				store.domainDescriptor.getHandledClasses().forEach(clazz -> {
 					Preconditions.checkState(!classMap.containsKey(clazz));
 					classMap.put(clazz, store);
 				});
+				this.classMap=Collections.unmodifiableMap(classMap);
 			}
+			stores = Collections.unmodifiableCollection(descriptorMap.values());
 		}
 
+		// not synchronized - requires that classMap modification not conflict (in code) - which it doesn't, since classMap is swapped
 		public DomainStore storeFor(Class clazz) {
 			return classMap.get(clazz);
 		}
@@ -1257,8 +1264,10 @@ public class DomainStore implements IDomainStore {
 			return storeFor(domainDescriptor);
 		}
 
+		// not synchronized, since used for each transaction (but immutable
+		// source)
 		public Stream<DomainStore> stream() {
-			return descriptorMap.values().stream();
+			return stores.stream();
 		}
 
 		public DomainStore writableStore() {
