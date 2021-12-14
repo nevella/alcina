@@ -59,6 +59,9 @@ public class AuthenticationManager {
 		this.persistence = AuthenticationPersistence.get();
 	}
 
+	public static boolean hasContext(){
+		return LooseContext.has(CONTEXT_AUTHENTICATION_CONTEXT);
+	}
 	/**
 	 * 'createClientInstance' is used when the request needs a new
 	 * clientInstance immediately - basically any time except during the

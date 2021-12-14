@@ -163,9 +163,9 @@ public abstract class LooseContext {
 		if (factoryInstance == null) {
 			factoryInstance = new ClientLooseContextProvider();
 		}
-		LooseContext tm = factoryInstance.getT();
-		if (tm != null) {
-			return tm;
+		LooseContext perThreadInstance = factoryInstance.getT();
+		if (perThreadInstance != null) {
+			return perThreadInstance;
 		}
 		return factoryInstance;
 	}

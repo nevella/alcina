@@ -741,7 +741,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 				&& getObject(entity) == null) {
 			return null;
 		}
-		markedForDeletion.add(entity);
+		if (!markedForDeletion.add(entity)) {
+			return null;
+		}
 		registerDomainObject(entity);
 		DomainTransformEvent dte = createTransformEvent();
 		dte.setObjectId(entity.getId());
