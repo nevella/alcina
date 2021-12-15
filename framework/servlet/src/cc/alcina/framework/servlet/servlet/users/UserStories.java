@@ -142,17 +142,25 @@ public class UserStories {
 			ArrayNode details = storyNode.arrayNode();
 			storyNode.set("details", details);
 			List<ClientLogRecord> list = new ArrayList<>();
-			for (String line : story.split("\\n")) {
-				if (line.isEmpty()) {
-					continue;
+			try {
+				for (String line : story.split("\\n")) {
+					if (line.isEmpty()) {
+						continue;
+					}
+					Object deser = AlcinaBeanSerializer.deserializeHolder(line);
+					if (deser instanceof List) {
+						list.addAll((List) deser);
+					} else {
+						ClientLogRecords records = (ClientLogRecords) deser;
+						list.addAll(records.getLogRecords());
+					}
 				}
-				Object deser = AlcinaBeanSerializer.deserializeHolder(line);
-				if (deser instanceof List) {
-					list.addAll((List) deser);
-				} else {
-					ClientLogRecords records = (ClientLogRecords) deser;
-					list.addAll(records.getLogRecords());
-				}
+			} catch (Exception e1) {
+				e1.printStackTrace();
+				logger.warn(
+						"Deserialization exception - id: {}\n\t - story: {}\n\t - delta: {}",
+						id, story, delta);
+				throw new WrappedRuntimeException(e1);
 			}
 			int ctr = list.size();
 			for (ClientLogRecord record : list) {
