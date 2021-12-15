@@ -168,7 +168,8 @@ public class RadioButton extends CheckBox {
 	 * @param asHTML
 	 *            <code>true</code> to treat the specified label as HTML
 	 */
-	public RadioButton(String name, @IsSafeHtml String label, boolean asHTML) {
+	public RadioButton(String name, @IsSafeHtml
+	String label, boolean asHTML) {
 		this(name);
 		if (asHTML) {
 			setHTML(label);
@@ -276,8 +277,10 @@ public class RadioButton extends CheckBox {
 		if (isOrWasAttached()) {
 			Event.sinkEvents(inputElem,
 					eventBitsToAdd | Event.getEventsSunk(inputElem));
-			Event.sinkEvents(labelElem,
-					eventBitsToAdd | Event.getEventsSunk(labelElem));
+			if (labelElem != null) {
+				Event.sinkEvents(labelElem,
+						eventBitsToAdd | Event.getEventsSunk(labelElem));
+			}
 		} else {
 			super.sinkEvents(eventBitsToAdd);
 		}

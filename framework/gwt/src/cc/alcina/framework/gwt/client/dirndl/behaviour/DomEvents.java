@@ -1,5 +1,8 @@
 package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.dom.client.LocalDom;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -54,8 +57,22 @@ public class DomEvents {
 	}
 
 	public static class Input extends NodeEvent<Input.Handler> {
+		private boolean populated = false;
+		
+		private String value;
+
+		public String getValue() {
+			return this.value;
+		}
+
 		@Override
 		public void dispatch(Input.Handler handler) {
+			if (!populated) {
+				populated = true;
+				EventTarget eventTarget = ((InputEvent) getContext().gwtEvent)
+						.getNativeEvent().getEventTarget();
+				value=((InputElement) Element.as(eventTarget)).getValue();
+			}
 			handler.onInput(this);
 		}
 

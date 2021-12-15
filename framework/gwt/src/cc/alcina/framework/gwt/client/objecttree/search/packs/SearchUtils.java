@@ -44,12 +44,12 @@ public class SearchUtils {
 		return new SearchTextMatcher().targets(strings).contains(text);
 	}
 
-	public static boolean containsIgnoreCase(String s1, String s2) {
-		if (s1 == null || s2 == null) {
+	public static boolean containsIgnoreCase(String contains, String contained) {
+		if (contains == null || contained == null) {
 			return false;
 		}
-		String lc1 = s1.toLowerCase();
-		String lc2 = s2.toLowerCase();
+		String lc1 = contains.toLowerCase();
+		String lc2 = contained.toLowerCase();
 		return lc1.contains(lc2);
 	}
 
