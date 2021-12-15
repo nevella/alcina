@@ -6,6 +6,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ResourceInfo;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
@@ -20,12 +21,22 @@ public class AlcinaContextEntryFilter implements ContainerRequestFilter {
 	@Context
 	private HttpServletResponse httpResponse;
 
+	@Context
+	private ResourceInfo resourceInfo;
+
 	@Override
 	public void filter(ContainerRequestContext context) throws IOException {
-		String threadName = Ax.format("%s::%s",
-				Thread.currentThread().getName(), httpRequest.getRequestURI());
+		String threadName = Ax.format("rpc::%s", httpRequest.getRequestURI());
 		// Create a new context
 		AlcinaServletContext alcinaContext = new AlcinaServletContext();
+		if (shouldRunWithRootPermissions()) {
+			alcinaContext = alcinaContext.withRootPermissions(true);
+		}
 		alcinaContext.begin(httpRequest, httpResponse, threadName);
+	}
+
+	private boolean shouldRunWithRootPermissions() {
+		return resourceInfo.getResourceMethod()
+				.getAnnotation(RootPermissions.class) != null;
 	}
 }
