@@ -30,17 +30,11 @@ public class AlcinaContextEntryFilter implements ContainerRequestFilter {
 		// Create a new context
 		AlcinaServletContext alcinaContext = new AlcinaServletContext();
 		alcinaContext.withRootPermissions(shouldRunWithRootPermissions());
-		alcinaContext.withEnsureEmptyContext(shouldEnsureEmptyContext());
 		alcinaContext.begin(httpRequest, httpResponse, threadName);
 	}
 
 	private boolean shouldRunWithRootPermissions() {
 		return resourceInfo.getResourceMethod()
 				.getAnnotation(RootPermissions.class) != null;
-	}
-
-	private boolean shouldEnsureEmptyContext() {
-		return resourceInfo.getResourceMethod()
-				.getAnnotation(EnsureEmptyContext.class) != null;
 	}
 }
