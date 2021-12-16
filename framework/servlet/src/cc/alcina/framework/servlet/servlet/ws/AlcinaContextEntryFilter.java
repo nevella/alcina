@@ -29,9 +29,7 @@ public class AlcinaContextEntryFilter implements ContainerRequestFilter {
 		String threadName = Ax.format("rpc::%s", httpRequest.getRequestURI());
 		// Create a new context
 		AlcinaServletContext alcinaContext = new AlcinaServletContext();
-		if (shouldRunWithRootPermissions()) {
-			alcinaContext = alcinaContext.withRootPermissions(true);
-		}
+		alcinaContext.withRootPermissions(shouldRunWithRootPermissions());
 		alcinaContext.begin(httpRequest, httpResponse, threadName);
 	}
 
