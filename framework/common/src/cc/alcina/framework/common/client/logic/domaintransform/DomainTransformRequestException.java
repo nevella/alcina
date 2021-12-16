@@ -23,6 +23,10 @@ public class DomainTransformRequestException extends Exception {
 
 	@Override
 	public String toString() {
-		return domainTransformResponse.toExceptionString();
+		if (domainTransformResponse != null) {
+			return domainTransformResponse.toExceptionString();
+		} else {
+			return super.toString();
+		}
 	}
 }
