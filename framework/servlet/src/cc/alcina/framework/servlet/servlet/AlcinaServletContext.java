@@ -5,6 +5,9 @@ import javax.servlet.http.HttpServletResponse;
 
 import com.google.common.base.Preconditions;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -28,6 +31,8 @@ public class AlcinaServletContext {
 	private static ThreadLocal<Boolean> removePerThreadContextDisabled = new ThreadLocal<>();
 	
 	private static ThreadLocal<AlcinaServletContext> perThread = new ThreadLocal<>();
+
+	private static Logger LOGGER = LoggerFactory.getLogger(AlcinaServletContext.class);
 
 	private static final String CONTEXT_HTTP_CONTEXT = AlcinaServletContext.class
 			.getName() + ".CONTEXT_HTTP_CONTEXT";
@@ -65,6 +70,8 @@ public class AlcinaServletContext {
 
 	private boolean rootPermissions;
 
+	private boolean ensureEmptyContext;
+
 	public void begin(HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, String threadName) {
 		removePerThreadContexts();
@@ -73,6 +80,14 @@ public class AlcinaServletContext {
 		Thread.currentThread().setName(threadName);
 		if (TransformManager.hasInstance()) {
 			Transaction.begin();
+		}
+		if (ensureEmptyContext) {
+			if (LooseContext.getContext().properties.size() > 0) {
+				LOGGER.warn(
+						"Entering AlcinaServletContext.begin() with non-empty properties: {}",
+						LooseContext.getContext().properties);
+				LooseContext.removePerThreadContext();
+			}
 		}
 		LooseContext.push();
 		looseContextDepth.set(LooseContext.depth());
@@ -119,6 +134,12 @@ public class AlcinaServletContext {
 		this.rootPermissions = rootPermissions;
 		return this;
 	}
+
+	public AlcinaServletContext withEnsureEmptyContext(boolean ensureEmptyContext) {
+		this.ensureEmptyContext = ensureEmptyContext;
+		return this;
+	}
+
 	public static void endContext() {
 		AlcinaServletContext threadContext = perThread.get();
 		if(threadContext!=null){
