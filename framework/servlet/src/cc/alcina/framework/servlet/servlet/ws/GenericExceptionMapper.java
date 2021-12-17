@@ -14,6 +14,8 @@ import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 public class GenericExceptionMapper implements ExceptionMapper<Exception> {
 	@Override
 	public Response toResponse(Exception e) {
+		// End context in case it's there
+		// AlcinaContextExitFilter should deal with this though
 		AlcinaServletContext.endContext();
 		// TODO: Do something better than an if chain
 		if (e instanceof NotFoundException) {
