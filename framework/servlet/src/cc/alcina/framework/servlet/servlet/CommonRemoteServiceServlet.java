@@ -210,7 +210,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
 
-	private AlcinaServletContext alcinaServletContext = AlcinaServletContext.ensure(false);
+	private AlcinaServletContext alcinaServletContext = AlcinaServletContext
+			.ensure(false);
 
 	@Override
 	public String callRpc(String encodedRpcPayload) {
@@ -421,7 +422,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	public String processCall(String payload) throws SerializationException {
+	/*
+	 * Cannot be overridden - since it does some complex context arrangements.
+	 * To change behaviour, add subclass hooks (e.g.
+	 * afterAlcinaServletContextInitialisation)
+	 */
+	public final String processCall(String payload)
+			throws SerializationException {
 		RPCRequest rpcRequest = null;
 		boolean alcinaServletContextInitialised = false;
 		try {
@@ -433,6 +440,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			alcinaServletContext.begin(getThreadLocalRequest(),
 					getThreadLocalResponse(), threadName);
 			alcinaServletContextInitialised = true;
+			afterAlcinaServletContextInitialisation();
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
 					getThreadLocalRequest());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
@@ -533,6 +541,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				alcinaServletContext.end();
 			}
 		}
+	}
+
+	protected void afterAlcinaServletContextInitialisation() {
+		// for subclasses
 	}
 
 	public PublicationResult
