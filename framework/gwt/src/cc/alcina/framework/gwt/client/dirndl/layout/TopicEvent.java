@@ -11,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEventBinding;
 
+//FIXME - dirndl 1.2 - can TopicEvent be combined with ModelEvent? Why rendered.preRenderListeners?
 public abstract class TopicEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent.ModelEvent<T, H> {
 	public static void fire(Context context, Class<? extends TopicEvent> type,

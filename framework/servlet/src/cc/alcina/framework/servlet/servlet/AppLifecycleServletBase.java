@@ -300,7 +300,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
 		ObjectPersistenceHelper.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
+		ThreadlocalLooseContextProvider.setDebugStackEntry(ResourceUtilities.is(AppLifecycleServletBase.class,"debugLooseContextStackEntry"));
+		ThreadlocalLooseContextProvider ttmInstance = ThreadlocalLooseContextProvider.ttmInstance();
+		LooseContext.register(ttmInstance);
 		Registry.registerSingleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();

@@ -28,8 +28,8 @@ public class AlcinaContextEntryFilter implements ContainerRequestFilter {
 	public void filter(ContainerRequestContext context) throws IOException {
 		String threadName = Ax.format("rpc::%s", httpRequest.getRequestURI());
 		// Create a new context
-		AlcinaServletContext alcinaContext = AlcinaServletContext.ensure(
-				shouldRunWithRootPermissions());
+		AlcinaServletContext alcinaContext = new AlcinaServletContext()
+				.withRootPermissions(shouldRunWithRootPermissions());
 		alcinaContext.begin(httpRequest, httpResponse, threadName);
 	}
 

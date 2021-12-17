@@ -32,15 +32,11 @@ public abstract class AlcinaServlet extends HttpServlet {
 		return topicApplicationThrowables;
 	}
 
-	private AlcinaServletContext alcinaContext;
-
 	Logger logger = LoggerFactory.getLogger(getClass());
 
 	private AtomicInteger callCounter = new AtomicInteger(0);
 
 	public AlcinaServlet() {
-		this.alcinaContext = new AlcinaServletContext()
-				.withRootPermissions(isRunWithRootPermissions());
 	}
 
 	public void writeAndClose(String s, HttpServletResponse response)
@@ -101,9 +97,12 @@ public abstract class AlcinaServlet extends HttpServlet {
 
 	protected void wrapRequest(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException {
+		AlcinaServletContext alcinaContext = null;
 		try {
 			String threadName = Ax.format("task-%s:%s",
 					getClass().getSimpleName(), callCounter.incrementAndGet());
+			alcinaContext = new AlcinaServletContext()
+					.withRootPermissions(isRunWithRootPermissions());
 			alcinaContext.begin(request, response, threadName);
 			if (trackMetrics()) {
 				MetricLogging.get().start(getClass().getSimpleName());
@@ -121,9 +120,10 @@ public abstract class AlcinaServlet extends HttpServlet {
 					request.getRequestURI());
 			logger.warn("Exception detail:", t);
 			EntityLayerLogging.persistentLog(LogMessageType.RPC_EXCEPTION, t);
-			// If the connection has been reset, we can't print anything to the response
-			if (t instanceof IOException &&
-					t.getMessage().equals("Connection reset by peer")) {
+			// If the connection has been reset, we can't print anything to the
+			// response
+			if (t instanceof IOException
+					&& t.getMessage().equals("Connection reset by peer")) {
 				return;
 			}
 			try {
@@ -137,11 +137,16 @@ public abstract class AlcinaServlet extends HttpServlet {
 			}
 			return;
 		} finally {
-			if (trackMetrics()) {
-				InternalMetrics.get().endTracker(request);
-				MetricLogging.get().end(getClass().getSimpleName());
+			try {
+				if (trackMetrics()) {
+					InternalMetrics.get().endTracker(request);
+					MetricLogging.get().end(getClass().getSimpleName());
+				}
+			} finally {
+				if (alcinaContext != null) {
+					alcinaContext.end();
+				}
 			}
-			alcinaContext.end();
 		}
 	}
 

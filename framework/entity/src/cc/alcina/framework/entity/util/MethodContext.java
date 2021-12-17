@@ -49,6 +49,7 @@ public class MethodContext {
 		entryClassLoader = Thread.currentThread().getContextClassLoader();
 		boolean pushedRoot = false;
 		boolean inTransaction = Transaction.isInTransaction();
+		int looseContextDepth=0;
 		try {
 			if (wrappingTransaction && !inTransaction) {
 				Transaction.begin();
@@ -58,6 +59,7 @@ public class MethodContext {
 			}
 			if (!context.isEmpty()) {
 				LooseContext.push();
+				looseContextDepth=LooseContext.depth();
 				context.entrySet().forEach(e -> LooseContext.getContext()
 						.set(e.getKey(), e.getValue()));
 			}
@@ -88,6 +90,7 @@ public class MethodContext {
 					MetricLogging.get().end(metricKey);
 				}
 				if (!context.isEmpty()) {
+					LooseContext.confirmDepth(looseContextDepth);
 					LooseContext.pop();
 				}
 				if (wrappingTransaction && !inTransaction) {

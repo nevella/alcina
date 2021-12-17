@@ -12,6 +12,9 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 public class LooseContextInstance {
 	private static final String TOPIC_PROPERTY_NAME = LooseContextInstance.class
 			.getName() + ".Topics";
+	
+	protected static final String STACK_INFO = LooseContextInstance.class
+			.getName() + ".STACK_INFO";
 
 	public static StackDebug stackDebug = new StackDebug("LooseContext");
 
@@ -117,7 +120,7 @@ public class LooseContextInstance {
 	}
 
 	/* 
-	 * 
+	 * FIXME - 2022 - delete (only used by rendercontext)
 	 */
 	public void pushContext(LooseContextInstance renderContext) {
 		stack.push(properties);

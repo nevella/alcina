@@ -87,6 +87,7 @@ public class RadioButtonList<T> extends AbstractBoundCollectionWidget
 		initWidget(fp);
 		this.setValues(values);
 		setColumnCount(columnCount);
+		
 	}
 
 	public RadioButtonList(String groupName, Object[] values,

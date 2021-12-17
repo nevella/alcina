@@ -170,11 +170,11 @@ public abstract class LooseContext {
 		return factoryInstance;
 	}
 
-	private LooseContextInstance context;
+	protected LooseContextInstance context;
 
 	public abstract LooseContext getT();
 
-	private LooseContextInstance getContext0() {
+	protected LooseContextInstance getContext0() {
 		if (context == null) {
 			context = new LooseContextInstance();
 		}
