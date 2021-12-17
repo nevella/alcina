@@ -13,8 +13,6 @@ public class LooseContextInstance {
 	private static final String TOPIC_PROPERTY_NAME = LooseContextInstance.class
 			.getName() + ".Topics";
 	
-	protected static final String STACK_INFO = LooseContextInstance.class
-			.getName() + ".STACK_INFO";
 
 	public static StackDebug stackDebug = new StackDebug("LooseContext");
 
@@ -206,5 +204,14 @@ public class LooseContextInstance {
 		while (!stack.isEmpty()) {
 			pop();
 		}
+	}
+
+	public void clearProperties() {
+		properties.clear();
+	}
+
+	protected void allowUnbalancedFrameRemoval(Class clazz,
+			String pushMethodName) {
+		
 	}
 }

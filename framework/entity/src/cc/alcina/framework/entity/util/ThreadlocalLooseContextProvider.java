@@ -4,20 +4,23 @@ import java.lang.StackWalker.StackFrame;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.Stack;
 
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalLooseContextProvider extends LooseContext {
-	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
+	private static ThreadLocal<ThreadlocalLooseContextProvider> threadLocalInstance = new ThreadLocal<>() {
 		@Override
-		protected synchronized Object initialValue() {
+		protected synchronized ThreadlocalLooseContextProvider initialValue() {
 			ThreadlocalLooseContextProvider provider = new ThreadlocalLooseContextProvider();
 			return provider;
 		}
@@ -62,32 +65,66 @@ public class ThreadlocalLooseContextProvider extends LooseContext {
 	}
 
 	static class LooseContextInstanceJvm extends LooseContextInstance {
+		int pushCount;
+
 		@Override
 		public void push() {
 			super.push();
 			if (isDebugStackEntry()) {
-				StackInfo stackInfo = new StackInfo(true);
+				pushCount++;
+				if (stackInfoStack == null) {
+					stackInfoStack = new Stack<>();
+				}
+				StackInfo stackInfo = new StackInfo(true, pushCount);
 				changes.add(stackInfo);
-				set(STACK_INFO, stackInfo);
+				stackInfoStack.push(stackInfo);
 			}
 		}
+
+		private Stack<StackInfo> stackInfoStack;
+
 		public LooseContextInstanceJvm() {
 		}
+
+		protected void allowUnbalancedFrameRemoval(Class clazz,
+				String pushMethodName) {
+			if (isDebugStackEntry()) {
+				stackInfoStack.peek().allowUnbalancedFrameRemoval(clazz,
+						pushMethodName);
+			}
+		};
 
 		List<StackInfo> changes = new ArrayList<>();
 
 		public void pop() {
 			if (isDebugStackEntry()) {
-				StackInfo info = get(STACK_INFO);
-				StackInfo stackInfo = new StackInfo(false);
+				StackInfo info = stackInfoStack.size() > 0
+						? stackInfoStack.pop()
+						: null;
+				StackInfo stackInfo = new StackInfo(false, pushCount);
 				changes.add(stackInfo);
 				if (info == null) {
 					Ax.sysLogHigh("Unbalanced stack");
 					changes.forEach(Ax::out);
+					Preconditions.checkState(false);
 				}
-				Preconditions.checkState(info.equals(stackInfo));
+				if (!info.equals(stackInfo)
+						&& !info.allowUnbalancedFrameRemoval) {
+					Ax.sysLogHigh("Unbalanced stack");
+					Ax.out(info);
+					Ax.out(stackInfo);
+					Ax.out("==================");
+					changes.forEach(Ax::out);
+					Preconditions.checkState(info.equals(stackInfo));
+				}
 			}
 			super.pop();
+			if (isDebugStackEntry()) {
+				pushCount--;
+				if (pushCount == 0) {
+					changes.clear();
+				}
+			}
 		}
 
 		static class StackInfo {
@@ -99,10 +136,23 @@ public class ThreadlocalLooseContextProvider extends LooseContext {
 
 			private boolean push;
 
+			private int depth;
+
+			private int lineNumber;
+
+			boolean allowUnbalancedFrameRemoval;
+
 			@Override
 			public String toString() {
-				return Ax.format("%s - %s.%s - %s", push ? "Push" : "Pop ",
-						className, methodName, methodType);
+				return Ax.format("%s - %s - %s.%s::%s - %s",
+						push ? "Push" : "Pop ", CommonUtils.padThree(depth),
+						className, methodName, lineNumber, methodType);
+			}
+
+			void allowUnbalancedFrameRemoval(Class clazz,
+					String pushMethodName) {
+				allowUnbalancedFrameRemoval = className.equals(clazz.getName())
+						&& methodName.equals(pushMethodName);
 			}
 
 			@Override
@@ -117,8 +167,9 @@ public class ThreadlocalLooseContextProvider extends LooseContext {
 				}
 			}
 
-			public StackInfo(boolean push) {
+			public StackInfo(boolean push, int depth) {
 				this.push = push;
+				this.depth = depth;
 				StackWalker
 						.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 						.walk(s -> {
@@ -127,6 +178,7 @@ public class ThreadlocalLooseContextProvider extends LooseContext {
 										this.className = frame.getClassName();
 										this.methodName = frame.getMethodName();
 										this.methodType = frame.getMethodType();
+										this.lineNumber = frame.getLineNumber();
 									});
 							return null;
 						});
@@ -152,10 +204,25 @@ public class ThreadlocalLooseContextProvider extends LooseContext {
 				}
 			}
 		}
+
+		void beforeRemovePerContext() {
+			if (isDebugStackEntry() && pushCount != 0) {
+				Ax.sysLogHigh("Unbalanced stack");
+				changes.forEach(Ax::out);
+				throw new IllegalStateException(
+						"Clearing context with non-zero stack depth");
+			}
+		}
 	}
 
 	@Override
 	protected void removePerThreadContext0() {
+		ThreadlocalLooseContextProvider contextProvider = threadLocalInstance
+				.get();
+		if (contextProvider != null && contextProvider.context != null) {
+			((LooseContextInstanceJvm) contextProvider.context)
+					.beforeRemovePerContext();
+		}
 		threadLocalInstance.remove();
 	}
 }

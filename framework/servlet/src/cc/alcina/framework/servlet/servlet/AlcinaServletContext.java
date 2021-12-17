@@ -96,7 +96,11 @@ public class AlcinaServletContext {
 				// removePerThreadContexts
 				return;
 			}
+			if (httpContext != null) {
+				httpContext.endContext();
+			}
 			LooseContext.confirmDepth(looseContextDepth);
+			LooseContext.allowUnbalancedFrameRemoval(AlcinaServletContext.class,"begin");
 			if (TransformManager.hasInstance()) {
 				ThreadlocalTransformManager.cast().resetTltm(null);
 				PermissionsManager.confirmDepth(permissionsManagerDepth);

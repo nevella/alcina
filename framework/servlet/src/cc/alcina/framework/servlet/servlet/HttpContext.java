@@ -4,6 +4,9 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.CookieUtils;
 import cc.alcina.framework.servlet.ServletLayerUtils;
@@ -16,10 +19,30 @@ public class HttpContext implements AuthenticationTokenStore {
 	public HttpContext() {
 	}
 
+	@RegistryLocation(registryPoint = HttpContextLifecycle.class, implementationType = ImplementationType.SINGLETON)
+	public static class HttpContextLifecycle {
+		public static HttpContext.HttpContextLifecycle get() {
+			return Registry.impl(HttpContext.HttpContextLifecycle.class);
+		}
+
+		public void onContextCreation(HttpContext httpContext) {
+			
+		}
+
+		public void onContextDestruction(HttpContext httpContext) {
+			
+		}
+	}
+
 	public HttpContext(HttpServletRequest request,
 			HttpServletResponse response) {
 		this.request = request;
 		this.response = response;
+		HttpContextLifecycle.get().onContextCreation(this);
+	}
+	
+	void endContext(){
+		HttpContextLifecycle.get().onContextDestruction(this);	
 	}
 
 	@Override
@@ -29,8 +52,9 @@ public class HttpContext implements AuthenticationTokenStore {
 
 	@Override
 	public void addHeader(String name, String value) {
-		response.addHeader(name, value);		
+		response.addHeader(name, value);
 	}
+
 	@Override
 	public void setCookieValue(String name, String value) {
 		Cookie cookie = new Cookie(name, value);

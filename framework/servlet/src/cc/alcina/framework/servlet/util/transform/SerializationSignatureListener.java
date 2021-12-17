@@ -49,7 +49,7 @@ public class SerializationSignatureListener
 							 * in particular, lose
 							 * TransformCommit.CONTEXT_COMMITTING
 							 */
-							LooseContext.getContext().properties.clear();
+							LooseContext.getContext().clearProperties();
 							/*
 							 * NOT perform()
 							 */
