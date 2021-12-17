@@ -45,7 +45,7 @@ public abstract class AlcinaServlet extends HttpServlet {
 
 	public void writeAndClose(String s, HttpServletResponse response)
 			throws IOException {
-		response.setContentType("text/plain");
+		response.setContentType("text/html");
 		response.getWriter().write(s);
 		response.getWriter().close();
 	}
