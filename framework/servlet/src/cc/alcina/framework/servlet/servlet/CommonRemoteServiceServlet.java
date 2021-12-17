@@ -210,8 +210,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
 
-	private AlcinaServletContext alcinaServletContext = AlcinaServletContext
-			.ensure(false);
 
 	@Override
 	public String callRpc(String encodedRpcPayload) {
@@ -431,15 +429,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws SerializationException {
 		RPCRequest rpcRequest = null;
 		boolean alcinaServletContextInitialised = false;
+		AlcinaServletContext alcinaServletContext=null;
 		try {
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
 			String name = rpcRequest.getMethod().getName();
 			String threadName = Ax.format("gwt-rpc:%s:%s%s", name,
 					callCounter.incrementAndGet(), suffix);
+			alcinaServletContext=new AlcinaServletContext();
+			alcinaServletContextInitialised = true;
 			alcinaServletContext.begin(getThreadLocalRequest(),
 					getThreadLocalResponse(), threadName);
-			alcinaServletContextInitialised = true;
 			afterAlcinaServletContextInitialisation();
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
 					getThreadLocalRequest());
@@ -524,21 +524,24 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logRpcException(rex);
 			throw rex;
 		} finally {
-			HttpServletResponse threadLocalResponse = getThreadLocalResponse();
-			if (threadLocalResponse != null) {
-				OutOfBandMessages.get().addToResponse(threadLocalResponse);
-				/*
-				 * save the username for metric logging - the user will be
-				 * cleared before the metrics are output
-				 */
-				getThreadLocalRequest().setAttribute(THRD_LOCAL_USER_NAME,
-						PermissionsManager.get().getUserName());
-			}
-			if (rpcRequest != null) {
-				InternalMetrics.get().endTracker(rpcRequest);
-			}
-			if (alcinaServletContextInitialised) {
-				alcinaServletContext.end();
+			try {
+				HttpServletResponse threadLocalResponse = getThreadLocalResponse();
+				if (threadLocalResponse != null) {
+					OutOfBandMessages.get().addToResponse(threadLocalResponse);
+					/*
+					 * save the username for metric logging - the user will be
+					 * cleared before the metrics are output
+					 */
+					getThreadLocalRequest().setAttribute(THRD_LOCAL_USER_NAME,
+							PermissionsManager.get().getUserName());
+				}
+				if (rpcRequest != null) {
+					InternalMetrics.get().endTracker(rpcRequest);
+				}
+			} finally {
+				if (alcinaServletContextInitialised) {
+					alcinaServletContext.end();
+				}
 			}
 		}
 	}
