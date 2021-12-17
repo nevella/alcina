@@ -210,8 +210,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
 
-	private AlcinaServletContext alcinaServletContext = new AlcinaServletContext()
-			.withRootPermissions(false);
+	private AlcinaServletContext alcinaServletContext = AlcinaServletContext.ensure(false);
 
 	@Override
 	public String callRpc(String encodedRpcPayload) {

@@ -36,6 +36,15 @@ public class AlcinaServletContext {
 		return LooseContext.get(CONTEXT_HTTP_CONTEXT);
 	}
 
+	public static AlcinaServletContext ensure(boolean rootPermissions) {
+		AlcinaServletContext threadContext = perThread.get();
+		if (threadContext == null) {
+			threadContext = new AlcinaServletContext()
+				.withRootPermissions(rootPermissions);
+		}
+		return threadContext;
+	}
+
 	public AlcinaServletContext() {
 		perThread.set(this);
 	}
@@ -80,8 +89,8 @@ public class AlcinaServletContext {
 				httpServletResponse);
 		LooseContext.set(CONTEXT_HTTP_CONTEXT, httpContext);
 		if (TransformManager.hasInstance()) {
-			permissionsManagerDepth.set(PermissionsManager.depth());
 			AuthenticationManager.get().initialiseContext(httpContext);
+			permissionsManagerDepth.set(PermissionsManager.depth());
 			if (rootPermissions) {
 				ThreadedPermissionsManager.cast().pushSystemUser();
 			}
