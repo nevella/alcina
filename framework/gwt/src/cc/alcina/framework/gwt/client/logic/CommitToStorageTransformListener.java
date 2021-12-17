@@ -437,9 +437,11 @@ public class CommitToStorageTransformListener
 
 	public static TransformCollation committingCollation() {
 		List<DomainTransformEvent> events = committingRequest().getEvents();
-		//during pre-commit, request will have zero transforms
-		return new TransformCollation(events.isEmpty()?get().transformQueue:events);
+		// during pre-commit, request will have zero transforms
+		return new TransformCollation(
+				events.isEmpty() ? get().transformQueue : events);
 	}
+
 	public static DomainTransformRequest committingRequest() {
 		return (DomainTransformRequest) LooseContext.get(
 				CommitToStorageTransformListener.CONTEXT_COMMITTING_REQUEST);
@@ -713,6 +715,7 @@ public class CommitToStorageTransformListener
 		@Override
 		public void topicPublished(String key, State state) {
 			switch (state) {
+			case PRE_COMMIT:
 			case COMMITTING:
 				return;
 			case COMMITTED:
@@ -722,6 +725,8 @@ public class CommitToStorageTransformListener
 					callback.onSuccess(null);
 				}
 				break;
+			default:
+				throw new UnsupportedOperationException();
 			}
 			topicStateChanged().remove(this);
 			if (reloadRequired) {
