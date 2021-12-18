@@ -9,6 +9,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.ApplyToken;
+import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 
@@ -39,6 +40,22 @@ public class AssociationPropagationTransformListener
 		if (Objects.equals("id", event.getPropertyName())) {
 			return;
 		}
+		{
+			//early exit
+			switch (event.getTransformType()) {
+			case CREATE_OBJECT:
+				return;
+			case NULL_PROPERTY_REF:
+			case CHANGE_PROPERTY_REF: {
+				Association association = Annotations.resolve(
+						event.getObjectClass(), event.getPropertyName(),
+						Association.class);
+				if (association == null) {
+					return;
+				}
+			}
+			}
+		}
 		ApplyToken token = tm.createApplyToken(event);
 		Entity entity = token.object;
 		switch (token.transformType) {
@@ -47,7 +64,7 @@ public class AssociationPropagationTransformListener
 			Association association = Reflections.propertyAccessor()
 					.getAnnotationForProperty(entity.entityClass(),
 							Association.class, event.getPropertyName());
-			if (association != null && !Reflections.classLookup()
+			if (!Reflections.classLookup()
 					.handlesClass(association.implementationClass())) {
 				return;
 			}

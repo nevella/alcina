@@ -1817,20 +1817,12 @@ public class DomainStore implements IDomainStore {
 			}
 			DomainStore store = DomainStore.stores()
 					.storeFor(event.getObjectClass());
-			Entity entity = tm.getObject(event);
 			switch (event.getTransformType()) {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
 				/*
-				 * These normally shouldn't
+				 * These don't cause a reindex
 				 */
-				DomainProperty domainProperty = Reflections.propertyAccessor()
-						.getAnnotationForProperty(entity.entityClass(),
-								DomainProperty.class, event.getPropertyName());
-				if (domainProperty == null
-						|| !domainProperty.reindexOnChange()) {
-					return;
-				}
 				return;
 			}
 			if (event.getTransformType() != TransformType.CREATE_OBJECT) {
@@ -1839,13 +1831,23 @@ public class DomainStore implements IDomainStore {
 				case CHANGE_PROPERTY_SIMPLE_VALUE:
 				case NULL_PROPERTY_REF: {
 					DomainProperty domainProperty = Reflections
-							.propertyAccessor().getAnnotationForProperty(
-									entity.entityClass(), DomainProperty.class,
+							.propertyAccessor()
+							.getAnnotationForProperty(event.getObjectClass(),
+									DomainProperty.class,
 									event.getPropertyName());
 					if (domainProperty != null
 							&& !domainProperty.reindexOnChange()) {
 						return;
 					}
+				}
+				}
+			}
+			Entity entity = tm.getObject(event);
+			if (event.getTransformType() != TransformType.CREATE_OBJECT) {
+				switch (event.getTransformType()) {
+				case CHANGE_PROPERTY_REF:
+				case CHANGE_PROPERTY_SIMPLE_VALUE:
+				case NULL_PROPERTY_REF: {
 					try {
 						tm.setIgnorePropertyChanges(true);
 						/*
