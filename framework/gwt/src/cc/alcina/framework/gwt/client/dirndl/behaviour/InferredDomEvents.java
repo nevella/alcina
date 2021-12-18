@@ -5,13 +5,58 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.InputElement;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyEvent;
+import com.google.gwt.event.dom.client.KeyPressEvent;
+import com.google.gwt.event.dom.client.KeyPressHandler;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.util.LooseContext;
+
 public class InferredDomEvents {
+	public static class EnterPressed extends NodeEvent<EnterPressed.Handler>
+			implements KeyPressHandler {
+		@Override
+		public void dispatch(EnterPressed.Handler handler) {
+			handler.onEnterPressed(this);
+		}
+
+		@Override
+		public Class<EnterPressed.Handler> getHandlerClass() {
+			return EnterPressed.Handler.class;
+		}
+
+		public void onKeyPress(KeyPressEvent event) {
+			handleEvent(event);
+		}
+
+		private void handleEvent(KeyEvent event) {
+			char charCode = event instanceof KeyPressEvent
+					? ((KeyPressEvent) event).getCharCode()
+					: '0';
+			int keyCode = event.getNativeEvent().getKeyCode();
+			if (charCode == KeyCodes.KEY_ENTER
+					|| keyCode == KeyCodes.KEY_ENTER) {
+				fireEvent(event);
+			}
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::handleEvent,
+					KeyPressEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onEnterPressed(EnterPressed event);
+		}
+	}
+
 	public static class ClickOutside extends NodeEvent<ClickOutside.Handler>
 			implements NativePreviewHandler {
 		private Widget widget;
