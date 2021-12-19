@@ -325,9 +325,6 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			return cursor.getTreePath().toString();
 		}
 
-		public void putTree(DomainViewTree tree) {
-			getTreePath().putTree(tree);
-		}
 
 		public void removeFromParent() {
 			if (getParent() != null) {
