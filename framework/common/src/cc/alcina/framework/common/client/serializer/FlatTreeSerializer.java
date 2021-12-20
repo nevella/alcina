@@ -1113,7 +1113,6 @@ public class FlatTreeSerializer {
 							.is(CONTEXT_THROW_ON_SERIALIZATION_FAILURE)) {
 						throw new WrappedRuntimeException(e);
 					}
-					e.printStackTrace();
 					String jsonSerialized = super.serialize(object,
 							hasClassNameProperty);
 					logger.warn("SerializerFlat exception: {}", jsonSerialized);
