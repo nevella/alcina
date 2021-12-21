@@ -239,7 +239,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			synchronized (TransformManager.class) {
 				if (createdLocalAndPromoted == null) {
 					createdLocalAndPromoted = Registry
-							.impl(ConcurrentMapCreator.class).createMap();
+							.impl(ConcurrentMapCreator.class).create();
 				}
 			}
 		}

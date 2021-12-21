@@ -21,13 +21,13 @@ import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCr
 
 class SerializationSupport {
 	private static Map<Class, List<Property>> serializationProperties = Registry
-			.impl(ConcurrentMapCreator.class).createMap();
+			.impl(ConcurrentMapCreator.class).create();
 
 	private static Map<Class, Map<String, PropertyReflector>> serializationReflectors = Registry
-			.impl(ConcurrentMapCreator.class).createMap();
+			.impl(ConcurrentMapCreator.class).create();
 
 	private static Map<Class, Class> solePossibleImplementation = Registry
-			.impl(ConcurrentMapCreator.class).createMap();
+			.impl(ConcurrentMapCreator.class).create();
 
 	public static final Comparator<Property> PROPERTY_COMPARATOR = new Comparator<Property>() {
 		@Override

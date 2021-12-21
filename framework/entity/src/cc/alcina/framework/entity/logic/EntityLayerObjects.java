@@ -19,8 +19,8 @@ import java.util.Objects;
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocatorMap;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.transform.EntityLocatorMap;
 
 /**
  * Also available to the server layer - although some methods should not be

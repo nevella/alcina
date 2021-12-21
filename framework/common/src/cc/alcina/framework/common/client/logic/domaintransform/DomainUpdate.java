@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import java.awt.datatransfer.FlavorTable;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
@@ -8,6 +9,7 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -17,8 +19,9 @@ public class DomainUpdate implements Serializable {
 	public DomainTransformCommitPosition commitPosition;
 
 	@Bean
+	@RegistryLocation(registryPoint = TreeSerializable.class)
 	public static class DomainTransformCommitPosition
-			implements Serializable, Comparable<DomainTransformCommitPosition> {
+			implements TreeSerializable, Comparable<DomainTransformCommitPosition> {
 		private Timestamp commitTimestamp;
 
 		private Long commitRequestId;

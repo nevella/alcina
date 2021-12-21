@@ -7,14 +7,21 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.place.shared.Place;
+import com.google.gwt.place.shared.PlaceChangeRequestEvent;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Focusable;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
@@ -30,6 +37,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
@@ -37,6 +45,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
@@ -47,7 +58,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Submit;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents.Attach;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvents;
@@ -58,20 +72,92 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 import cc.alcina.framework.gwt.client.util.Async;
 
-//FIXME - dirndl 1.3 - FormModel -> Form
-public class FormModel extends Model implements DomEvents.Submit.Handler {
+@RegistryLocation(registryPoint = FormModel.class, implementationType = ImplementationType.INSTANCE)
+@Directed(receives = { GwtEvents.Attach.class, DomEvents.KeyDown.class })
+public class FormModel extends Model implements DomEvents.Submit.Handler,GwtEvents.Attach.Handler, DomEvents.KeyDown.Handler {
 	protected List<FormElement> elements = new ArrayList<>();
 
-	protected List<LinkModel> actions = new ArrayList<>();
+	protected List<Link> actions = new ArrayList<>();
 
 	private FormModelState state;
 
-	public List<LinkModel> getActions() {
+	public List<Link> getActions() {
 		return this.actions;
+	}
+
+	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
+
+    private boolean unAttachConfirmsTransformClear = false;
+
+    private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
+        CommitToStorageTransformListener.get().flush();
+        // FIXME - mvcc.adjunct - need to ask adjuncts
+        if (TransformManager.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size() > 0) {
+            e.setWarning("Form has unsaved changes. Please confirm to close");
+            unAttachConfirmsTransformClear = true;
+        }
+    };
+    @Override
+    public void onAttach(Attach event) {
+        bind(event);
+        focus(event);
+        checkDirty(event);
+    }
+
+    @Override
+    public void onKeyDown(KeyDown event) {
+        KeyDownEvent domEvent = (KeyDownEvent) event.getContext().gwtEvent;
+        if (domEvent.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
+            domEvent.preventDefault();
+            domEvent.stopPropagation();
+            // this is before KEY_ENTER is applied, so current form field
+            // may not have fired 'onchange'
+            GwittirUtils.commitAllTextBoxes(getState().formBinding);
+            ActionRefPlace place = new ActionRefPlace(SubmitRef.class);
+            new SubmitHandler().handleAction(event.getContext().node, domEvent, place);
+        }
+    }
+
+    private void bind(Attach event) {
+        if (event.isAttached()) {
+            getState().formBinding.bind();
+        } else {
+            getState().formBinding.unbind();
+        }
+    }
+
+    private void checkDirty(Attach event) {
+        if (event.isAttached()) {
+            registrations.put(this,
+                    Client.get().getEventBus().addHandler(PlaceChangeRequestEvent.TYPE, dirtyChecker));
+        } else {
+            // if we're navigating away, and dirty
+            if (unAttachConfirmsTransformClear) {
+                TransformManager.get().clearTransforms();
+            }
+            HandlerRegistration registration = registrations.remove(this);
+            if (registration != null) {
+                registration.removeHandler();
+            }
+        }
+    }
+
+    private void focus(Attach event) {
+        Optional<FormElement> focus = getElements().stream().filter(FormElement::isFocusOnAttach).findFirst();
+        if (focus.isPresent()) {
+            Node childWithModel = event.getContext().node
+                    .childWithModel(m -> m != null && m instanceof ValueModel && m == focus.get().getValue());
+            ((Focusable) childWithModel.getWidget()).setFocus(true);
+        }
+        // FIXME - dirndl 1.3 - this should be an annotation on the field,
+        //
+    }
+	public FormModel() {
 	}
 
 	public List<FormElement> getElements() {
@@ -211,7 +297,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 		public FormElement(Field field, Bindable bindable) {
 			this.field = field;
 			this.bindable = bindable;
-			this.label = new LabelModel(this);
+			this.label = Registry.impl(LabelModel.class).withFormElement(this);
 			this.value = new FormValueModel(this);
 		}
 
@@ -266,7 +352,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
 		@Override
 		public FormModel apply(FormModelState state) {
-			FormModel model = new FormModel();
+			FormModel model = Registry.impl(FormModel.class);
 			model.state = state;
 			if (state.model == null && state.expectsModel) {
 				return model;
@@ -279,8 +365,9 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 					? Reflections.newInstance(args.fieldModulator())
 					: new FieldModulator();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			node.pushResolver(
-					ModalResolver.single(node.getResolver(), !state.editable));
+			ModalResolver childResolver = ModalResolver
+					.single(node.getResolver(), !state.editable);
+			node.pushChildResolver(childResolver);
 			if (state.model != null) {
 				if (state.model instanceof UserProperty) {
 					state.presentationModel = (Bindable) ((UserProperty) state.model)
@@ -294,8 +381,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 				List<Field> fields = GwittirBridge.get()
 						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 								state.presentationModel, factory,
-								state.editable, state.adjunct,
-								node.getResolver());
+								state.editable, state.adjunct, childResolver);
 				fields.stream()
 						.filter(field -> fieldModulator
 								.accept(state.presentationModel, field))
@@ -310,10 +396,10 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 						}).forEach(model.elements::add);
 			}
 			if (state.adjunct) {
-				model.actions.add(new LinkModel()
+				model.actions.add(new Link()
 						.withPlace(new ActionRefPlace(SubmitRef.class))
 						.withPrimaryAction(true));
-				model.actions.add(new LinkModel()
+				model.actions.add(new Link()
 						.withPlace(new ActionRefPlace(CancelRef.class)));
 			} else {
 				if (state.presentationModel != null) {
@@ -326,7 +412,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 								.filter(a -> a instanceof NonstandardObjectAction)
 								.map(a -> (NonstandardObjectAction) a)
 								.forEach(action -> {
-									model.actions.add(new LinkModel()
+									model.actions.add(new Link()
 											.withNonstandardObjectAction(
 													action));
 								});
@@ -334,7 +420,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 				}
 			}
 			model.actions.removeIf(actionsModulator::isRemoveAction);
-			for (LinkModel link : model.actions) {
+			for (Link link : model.actions) {
 				String overrideLinkText = actionsModulator
 						.getOverrideLinkText(link);
 				if (overrideLinkText != null) {
@@ -346,11 +432,11 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 
 		@ClientInstantiable
 		public static class ActionsModulator {
-			public String getOverrideLinkText(LinkModel linkModel) {
+			public String getOverrideLinkText(Link linkModel) {
 				return null;
 			}
 
-			public boolean isRemoveAction(LinkModel linkModel) {
+			public boolean isRemoveAction(Link linkModel) {
 				return false;
 			}
 		}
@@ -405,14 +491,13 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 		}
 	}
 
+	@RegistryLocation(registryPoint = LabelModel.class, implementationType = ImplementationType.INSTANCE)
 	public static class LabelModel extends Model {
 		protected FormElement formElement;
 
-		public LabelModel() {
-		}
-
-		public LabelModel(FormElement formElement) {
+		public LabelModel withFormElement(FormElement formElement) {
 			this.formElement = formElement;
+			return this;
 		}
 
 		public Field getField() {
@@ -457,19 +542,19 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 				state.model = (Bindable) ((RemoteActionWithParameters) action)
 						.getParameters();
 			} else if (action instanceof LocalActionWithParameters) {
-				if(((LocalActionWithParameters) action).getParameters() instanceof FormEditableParameters){
+				if (((LocalActionWithParameters) action)
+						.getParameters() instanceof FormEditableParameters) {
 					state.model = (Bindable) ((LocalActionWithParameters) action)
 							.getParameters();
-				}else{
-				state.model = null;
-				state.expectsModel = false;
+				} else {
+					state.model = null;
+					state.expectsModel = false;
 				}
 			}
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
 		}
 	}
-	
 
 	/*
 	 * FIXME - dirndl 1.2 - move to OlForm

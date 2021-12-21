@@ -46,6 +46,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
 /**
  * FIXME - dirndl.perf
@@ -103,7 +104,7 @@ public class DirectedLayout {
 	 * </p>
 	 */
 	public static class Node {
-		private ContextResolver<?> resolver;
+		private ContextResolver resolver;
 
 		final Object model;
 
@@ -129,6 +130,8 @@ public class DirectedLayout {
 
 		private boolean intermediate;
 
+		private ContextResolver childResolver;
+
 		protected Node(ContextResolver resolver, Object model) {
 			this.resolver = resolver;
 			this.model = resolver.resolveModel(model);
@@ -152,8 +155,9 @@ public class DirectedLayout {
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			AnnotationLocation location = new AnnotationLocation(
-					model == null ? null : model.getClass(), propertyReflector);
-			A annotation = resolver.resolveAnnotation(clazz, location);
+					model == null ? null : model.getClass(), propertyReflector,
+					resolver);
+			A annotation = location.getAnnotation(clazz);
 			if (annotation != null) {
 				return annotation;
 			}
@@ -202,8 +206,8 @@ public class DirectedLayout {
 			return rendered.verifySingleWidget();
 		}
 
-		public void pushResolver(ContextResolver resolver) {
-			this.resolver = resolver;
+		public void pushChildResolver(ContextResolver resolver) {
+			this.childResolver = resolver;
 		}
 
 		public Node resolveNode(String path) {
@@ -384,10 +388,12 @@ public class DirectedLayout {
 						.values();
 				if (propertyReflectors != null) {
 					for (PropertyReflector propertyReflector : propertyReflectors) {
-						if (resolver.hasDirectedAnnotation(propertyReflector)) {
+						PropertyReflector directedReflector = resolver
+								.resolveDirectedReflector(propertyReflector);
+						if (directedReflector != null) {
 							Object childModel = propertyReflector
 									.getPropertyValue(model);
-							addChild(childModel, propertyReflector,
+							addChild(childModel, directedReflector,
 									propertyReflector);
 						}
 					}
@@ -424,7 +430,7 @@ public class DirectedLayout {
 			if (directedContextResolver != null) {
 				resolver = Reflections
 						.newInstance(directedContextResolver.value());
-				((ContextResolver) resolver).setModel(model);
+				resolver.setModel(model);
 			}
 			populateWidgets(intermediateChild);
 			bindBehaviours();
@@ -468,7 +474,9 @@ public class DirectedLayout {
 
 		Node addChild(Object childModel, PropertyReflector definingReflector,
 				PropertyReflector changeSource) {
-			Node child = new Node(resolver, childModel);
+			Node child = new Node(
+					childResolver != null ? childResolver : resolver,
+					childModel);
 			child.propertyReflector = definingReflector;
 			child.changeSource = changeSource;
 			child.resolver = resolver;

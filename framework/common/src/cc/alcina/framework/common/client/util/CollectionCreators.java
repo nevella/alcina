@@ -31,7 +31,7 @@ public class CollectionCreators {
 	@RegistryLocation(registryPoint = ConcurrentMapCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class ConcurrentMapCreator {
-		public <K, V> Map<K, V> createMap() {
+		public <K, V> Map<K, V> create() {
 			return new LinkedHashMap<>();
 		}
 	}
