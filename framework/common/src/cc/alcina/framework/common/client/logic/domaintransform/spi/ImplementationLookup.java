@@ -16,6 +16,8 @@ package cc.alcina.framework.common.client.logic.domaintransform.spi;
 /**
  *
  * @author Nick Reddel
+ * 
+ * FIXME - reflection - remove
  */
 public interface ImplementationLookup {
 	public Class getImplementation(Class interfaceClass);

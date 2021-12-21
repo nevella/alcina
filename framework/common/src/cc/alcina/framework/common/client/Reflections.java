@@ -1,16 +1,36 @@
 package cc.alcina.framework.common.client;
 
+import java.util.Map;
+import java.util.function.Function;
+
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class Reflections {
 	private static Reflections theInstance;
+
+	private Map<Class, ClassReflector> reflectors = CollectionCreators
+			.createConcurrentClassMap();
+
+	private static Function<Class, ClassReflector> classReflectorCreator = ClassReflector::new;
+
+	public static void registerClassReflectorCreator(
+			Function<Class, ClassReflector> classReflectorCreator) {
+		Reflections.classReflectorCreator = classReflectorCreator;
+	}
+
+	public static ClassReflector at(Class clazz) {
+		return get().reflectors.computeIfAbsent(clazz,
+				c -> classReflectorCreator.apply(c));
+	}
 
 	public static BeanDescriptorProvider beanDescriptorProvider() {
 		return get().beanDescriptorProvider;

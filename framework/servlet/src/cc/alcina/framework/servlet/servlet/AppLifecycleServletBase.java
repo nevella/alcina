@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -63,7 +64,6 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase.ServletClassMetadataCacheProvider;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.DbAppender;
-import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.CollectionCreatorsMvcc.DegenerateCreatorMvcc;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -73,6 +73,7 @@ import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.ConcurrentMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.OffThreadLogger;
@@ -204,6 +205,13 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		return this.startupTime;
 	}
 
+	public static void setupBootstrapJvmServices() {
+		Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+		Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
+		CollectionCreators
+				.setConcurrentClassMapCreator(new ConcurrentMapCreatorJvm());
+	}
+
 	@Override
 	public void init(ServletConfig servletConfig) throws ServletException {
 		MetricLogging.get().start("Web app startup");
@@ -212,9 +220,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		try {
 			initServletConfig = servletConfig;
 			// push to registry
-			Registry.setProvider(new ClassLoaderAwareRegistryProvider());
-			Registry.setDelegateCreator(
-					new DelegateMapCreatorConcurrentNoNulls());
 			AppPersistenceBase.setInstanceReadOnly(false);
 			initBootstrapRegistry();
 			initNames();
@@ -300,8 +305,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
 		ObjectPersistenceHelper.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-		ThreadlocalLooseContextProvider.setDebugStackEntry(ResourceUtilities.is(AppLifecycleServletBase.class,"debugLooseContextStackEntry"));
-		ThreadlocalLooseContextProvider ttmInstance = ThreadlocalLooseContextProvider.ttmInstance();
+		ThreadlocalLooseContextProvider.setDebugStackEntry(ResourceUtilities.is(
+				AppLifecycleServletBase.class, "debugLooseContextStackEntry"));
+		ThreadlocalLooseContextProvider ttmInstance = ThreadlocalLooseContextProvider
+				.ttmInstance();
 		LooseContext.register(ttmInstance);
 		Registry.registerSingleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());

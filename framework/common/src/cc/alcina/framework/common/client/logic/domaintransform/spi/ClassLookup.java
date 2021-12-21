@@ -25,12 +25,15 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
  * 
  * @author Nick Reddel
+ * 
+ * FIXME - reflection - prune implementations (should only need a few - possibly just jvm, gwt)
  */
 public interface ClassLookup {
 	public String displayNameForObject(Object o);
@@ -204,5 +207,9 @@ public interface ClassLookup {
 			return Ax.format("Property: %s.%s :: %s", beanType.getSimpleName(),
 					propertyName, propertyType.getSimpleName());
 		}
+	}
+
+	default ClassReflector at(Class clazz){
+		throw new UnsupportedOperationException();
 	}
 }
