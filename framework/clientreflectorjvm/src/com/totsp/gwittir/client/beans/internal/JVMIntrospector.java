@@ -44,7 +44,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 		if (filterClassName != null) {
 			try {
 				filter = (Predicate<String>) Class.forName(filterClassName)
-						.newInstance();
+						.getConstructor().newInstance();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

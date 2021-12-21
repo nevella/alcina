@@ -14,6 +14,16 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	protected TreeResolver<Directed> directedResolver;
 
 	protected ContextResolver parent;
+	
+	private Object model;
+
+	public <T> T getModel() {
+		return (T) this.model;
+	}
+
+	public void setModel(Object model) {
+		this.model = model;
+	}
 
 	public ContextResolver() {
 		this(null);

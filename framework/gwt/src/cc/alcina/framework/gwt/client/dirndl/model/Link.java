@@ -29,7 +29,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
-import cc.alcina.framework.gwt.client.dirndl.model.Link.LinkModelRendererPrimaryClassName;
+import cc.alcina.framework.gwt.client.dirndl.model.Link.LinkRendererPrimaryClassName;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -37,7 +37,7 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 //FIXME - dirndl.2 - baseplace should implement a  'link provider' interface
 // and various subtypes should be subclasses...
 @Bean
-@LinkModelRendererPrimaryClassName("-ol-primary")
+@LinkRendererPrimaryClassName("-ol-primary")
 public class Link extends Model {
 	private BasePlace place;
 
@@ -203,7 +203,7 @@ public class Link extends Model {
 	}
 
 	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Link.class)
-	public static class LinkModelRenderer extends LeafNodeRenderer {
+	public static class LinkRenderer extends LeafNodeRenderer {
 		@Override
 		public Widget render(Node node) {
 			Link model = model(node);
@@ -272,8 +272,8 @@ public class Link extends Model {
 				}
 			}
 			if (model.isPrimaryAction()) {
-				LinkModelRendererPrimaryClassName primaryClassName = node
-						.annotation(LinkModelRendererPrimaryClassName.class);
+				LinkRendererPrimaryClassName primaryClassName = node
+						.annotation(LinkRendererPrimaryClassName.class);
 				if (primaryClassName != null) {
 					rendered.addStyleName(primaryClassName.value());
 				}
@@ -313,7 +313,7 @@ public class Link extends Model {
 	@Documented
 	@Inherited
 	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface LinkModelRendererPrimaryClassName {
+	public @interface LinkRendererPrimaryClassName {
 		String value();
 	}
 }

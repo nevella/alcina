@@ -32,8 +32,6 @@ public class DomainTransformPersistenceEvents {
 	public static final String CONTEXT_FIRING_EVENT = DomainTransformPersistenceEvents.class
 			.getName() + ".CONTEXT_FIRING_EVENT";
 
-	public static final String CONTEXT_FIRING_EVENT = DomainTransformPersistenceEvents.class
-			.getName() + ".CONTEXT_FIRING_EVENT";
 
 	public static void setLocalCommitTimeout(long timeout) {
 		LooseContext.set(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS, timeout);

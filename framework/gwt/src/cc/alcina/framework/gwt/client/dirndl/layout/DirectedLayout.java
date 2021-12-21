@@ -430,6 +430,7 @@ public class DirectedLayout {
 			if (directedContextResolver != null) {
 				resolver = Reflections
 						.newInstance(directedContextResolver.value());
+				resolver.setModel(model);
 			}
 			populateWidgets(intermediateChild);
 			bindBehaviours();
