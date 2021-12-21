@@ -7,14 +7,21 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
 
 import com.google.gwt.event.dom.client.DomEvent;
+import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.place.shared.Place;
+import com.google.gwt.place.shared.PlaceChangeRequestEvent;
 import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.ui.Focusable;
+import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
@@ -30,6 +37,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
@@ -50,7 +58,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Submit;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents.Attach;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvents;
@@ -61,12 +72,14 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 import cc.alcina.framework.gwt.client.util.Async;
 
 @RegistryLocation(registryPoint = FormModel.class, implementationType = ImplementationType.INSTANCE)
-public class FormModel extends Model implements DomEvents.Submit.Handler {
+@Directed(receives = { GwtEvents.Attach.class, DomEvents.KeyDown.class })
+public class FormModel extends Model implements DomEvents.Submit.Handler,GwtEvents.Attach.Handler, DomEvents.KeyDown.Handler {
 	protected List<FormElement> elements = new ArrayList<>();
 
 	protected List<Link> actions = new ArrayList<>();
@@ -77,6 +90,73 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 		return this.actions;
 	}
 
+	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
+
+    private boolean unAttachConfirmsTransformClear = false;
+
+    private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
+        CommitToStorageTransformListener.get().flush();
+        // FIXME - mvcc.adjunct - need to ask adjuncts
+        if (TransformManager.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size() > 0) {
+            e.setWarning("Form has unsaved changes. Please confirm to close");
+            unAttachConfirmsTransformClear = true;
+        }
+    };
+    @Override
+    public void onAttach(Attach event) {
+        bind(event);
+        focus(event);
+        checkDirty(event);
+    }
+
+    @Override
+    public void onKeyDown(KeyDown event) {
+        KeyDownEvent domEvent = (KeyDownEvent) event.getContext().gwtEvent;
+        if (domEvent.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
+            domEvent.preventDefault();
+            domEvent.stopPropagation();
+            // this is before KEY_ENTER is applied, so current form field
+            // may not have fired 'onchange'
+            GwittirUtils.commitAllTextBoxes(getState().formBinding);
+            ActionRefPlace place = new ActionRefPlace(SubmitRef.class);
+            new SubmitHandler().handleAction(event.getContext().node, domEvent, place);
+        }
+    }
+
+    private void bind(Attach event) {
+        if (event.isAttached()) {
+            getState().formBinding.bind();
+        } else {
+            getState().formBinding.unbind();
+        }
+    }
+
+    private void checkDirty(Attach event) {
+        if (event.isAttached()) {
+            registrations.put(this,
+                    Client.get().getEventBus().addHandler(PlaceChangeRequestEvent.TYPE, dirtyChecker));
+        } else {
+            // if we're navigating away, and dirty
+            if (unAttachConfirmsTransformClear) {
+                TransformManager.get().clearTransforms();
+            }
+            HandlerRegistration registration = registrations.remove(this);
+            if (registration != null) {
+                registration.removeHandler();
+            }
+        }
+    }
+
+    private void focus(Attach event) {
+        Optional<FormElement> focus = getElements().stream().filter(FormElement::isFocusOnAttach).findFirst();
+        if (focus.isPresent()) {
+            Node childWithModel = event.getContext().node
+                    .childWithModel(m -> m != null && m instanceof ValueModel && m == focus.get().getValue());
+            ((Focusable) childWithModel.getWidget()).setFocus(true);
+        }
+        // FIXME - dirndl 1.3 - this should be an annotation on the field,
+        //
+    }
 	public FormModel() {
 	}
 
