@@ -37,6 +37,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SearchTableColumnClickHandler;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceCustomiser;
@@ -48,9 +49,9 @@ public class TableModel extends Model {
 
 	protected List<TableRow> rows = new ArrayList<>();
 
-	protected List<LinkModel> actions = new ArrayList<>();
+	protected List<Link> actions = new ArrayList<>();
 
-	public List<LinkModel> getActions() {
+	public List<Link> getActions() {
 		return this.actions;
 	}
 
@@ -72,7 +73,7 @@ public class TableModel extends Model {
 			TableModel model = new TableModel();
 			BoundWidgetTypeFactory factory = Registry
 					.impl(TableTypeFactory.class);
-			node.pushResolver(ModalResolver.multiple(node.getResolver(), true));
+			node.pushChildResolver(ModalResolver.multiple(node.getResolver(), true));
 			List<CategoryNamePlace> places = activity.getPlace()
 					.getNamedPlaces();
 			places.removeIf(p -> !isPermitted(p));
@@ -137,7 +138,8 @@ public class TableModel extends Model {
 			if (activity.getSearchResults() == null) {
 				return model;
 			}
-			node.pushResolver(ModalResolver.multiple(node.getResolver(), true));
+			ModalResolver childResolver = ModalResolver.multiple(node.getResolver(), true);
+			node.pushChildResolver(childResolver);
 			BindableSearchDefinition def = activity.getSearchResults().getDef();
 			String sortFieldName = def.getSearchOrders()
 					.provideSearchOrderFieldName();
@@ -150,7 +152,7 @@ public class TableModel extends Model {
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 							Reflections.classLookup()
 									.getTemplateInstance(resultClass),
-							factory, false, true, node.getResolver())
+							factory, false, true, childResolver)
 					.stream().map(field -> {
 						SortDirection fieldDirection = field.getPropertyName()
 								.equals(sortFieldName) ? sortDirection : null;
@@ -219,7 +221,7 @@ public class TableModel extends Model {
 		}
 	}
 
-	public static class TableColumn extends Model {
+	public static class TableColumn extends Model implements DomEvents.Click.Handler{
 		private Field field;
 
 		private SortDirection sortDirection;
@@ -258,6 +260,10 @@ public class TableModel extends Model {
 		public void setSortDirection(SortDirection sortDirection) {
 			this.sortDirection = sortDirection;
 		}
+		 @Override
+	        public void onClick(Click event) {
+	            new SearchTableColumnClickHandler(this).onClick(event);
+	        }
 	}
 
 	public static class TableColumnClicked

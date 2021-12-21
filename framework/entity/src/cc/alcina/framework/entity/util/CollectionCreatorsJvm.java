@@ -18,7 +18,7 @@ public class CollectionCreatorsJvm {
 	@ClientInstantiable
 	public static class ConcurrentMapCreatorJvm extends ConcurrentMapCreator {
 		@Override
-		public <K, V> Map<K, V> createMap() {
+		public <K, V> Map<K, V> create() {
 			return new ConcurrentHashMap<>();
 		}
 	}

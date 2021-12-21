@@ -37,6 +37,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedEntityActivity;
@@ -62,16 +65,19 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 import cc.alcina.framework.gwt.client.util.Async;
 
-//FIXME - dirndl 1.3 - FormModel -> Form
+@RegistryLocation(registryPoint = FormModel.class, implementationType = ImplementationType.INSTANCE)
 public class FormModel extends Model implements DomEvents.Submit.Handler {
 	protected List<FormElement> elements = new ArrayList<>();
 
-	protected List<LinkModel> actions = new ArrayList<>();
+	protected List<Link> actions = new ArrayList<>();
 
 	private FormModelState state;
 
-	public List<LinkModel> getActions() {
+	public List<Link> getActions() {
 		return this.actions;
+	}
+
+	public FormModel() {
 	}
 
 	public List<FormElement> getElements() {
@@ -211,7 +217,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 		public FormElement(Field field, Bindable bindable) {
 			this.field = field;
 			this.bindable = bindable;
-			this.label = new LabelModel(this);
+			this.label = Registry.impl(LabelModel.class).withFormElement(this);
 			this.value = new FormValueModel(this);
 		}
 
@@ -266,7 +272,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
 		@Override
 		public FormModel apply(FormModelState state) {
-			FormModel model = new FormModel();
+			FormModel model = Registry.impl(FormModel.class);
 			model.state = state;
 			if (state.model == null && state.expectsModel) {
 				return model;
@@ -279,8 +285,9 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 					? Reflections.newInstance(args.fieldModulator())
 					: new FieldModulator();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			node.pushResolver(
-					ModalResolver.single(node.getResolver(), !state.editable));
+			ModalResolver childResolver = ModalResolver
+					.single(node.getResolver(), !state.editable);
+			node.pushChildResolver(childResolver);
 			if (state.model != null) {
 				if (state.model instanceof UserProperty) {
 					state.presentationModel = (Bindable) ((UserProperty) state.model)
@@ -294,8 +301,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 				List<Field> fields = GwittirBridge.get()
 						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 								state.presentationModel, factory,
-								state.editable, state.adjunct,
-								node.getResolver());
+								state.editable, state.adjunct, childResolver);
 				fields.stream()
 						.filter(field -> fieldModulator
 								.accept(state.presentationModel, field))
@@ -310,10 +316,10 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 						}).forEach(model.elements::add);
 			}
 			if (state.adjunct) {
-				model.actions.add(new LinkModel()
+				model.actions.add(new Link()
 						.withPlace(new ActionRefPlace(SubmitRef.class))
 						.withPrimaryAction(true));
-				model.actions.add(new LinkModel()
+				model.actions.add(new Link()
 						.withPlace(new ActionRefPlace(CancelRef.class)));
 			} else {
 				if (state.presentationModel != null) {
@@ -326,7 +332,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 								.filter(a -> a instanceof NonstandardObjectAction)
 								.map(a -> (NonstandardObjectAction) a)
 								.forEach(action -> {
-									model.actions.add(new LinkModel()
+									model.actions.add(new Link()
 											.withNonstandardObjectAction(
 													action));
 								});
@@ -334,7 +340,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 				}
 			}
 			model.actions.removeIf(actionsModulator::isRemoveAction);
-			for (LinkModel link : model.actions) {
+			for (Link link : model.actions) {
 				String overrideLinkText = actionsModulator
 						.getOverrideLinkText(link);
 				if (overrideLinkText != null) {
@@ -346,11 +352,11 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 
 		@ClientInstantiable
 		public static class ActionsModulator {
-			public String getOverrideLinkText(LinkModel linkModel) {
+			public String getOverrideLinkText(Link linkModel) {
 				return null;
 			}
 
-			public boolean isRemoveAction(LinkModel linkModel) {
+			public boolean isRemoveAction(Link linkModel) {
 				return false;
 			}
 		}
@@ -405,14 +411,13 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 		}
 	}
 
+	@RegistryLocation(registryPoint = LabelModel.class, implementationType = ImplementationType.INSTANCE)
 	public static class LabelModel extends Model {
 		protected FormElement formElement;
 
-		public LabelModel() {
-		}
-
-		public LabelModel(FormElement formElement) {
+		public LabelModel withFormElement(FormElement formElement) {
 			this.formElement = formElement;
+			return this;
 		}
 
 		public Field getField() {
@@ -457,19 +462,19 @@ public class FormModel extends Model implements DomEvents.Submit.Handler {
 				state.model = (Bindable) ((RemoteActionWithParameters) action)
 						.getParameters();
 			} else if (action instanceof LocalActionWithParameters) {
-				if(((LocalActionWithParameters) action).getParameters() instanceof FormEditableParameters){
+				if (((LocalActionWithParameters) action)
+						.getParameters() instanceof FormEditableParameters) {
 					state.model = (Bindable) ((LocalActionWithParameters) action)
 							.getParameters();
-				}else{
-				state.model = null;
-				state.expectsModel = false;
+				} else {
+					state.model = null;
+					state.expectsModel = false;
 				}
 			}
 			return new FormModelTransformer().withContextNode(node)
 					.apply(state);
 		}
 	}
-	
 
 	/*
 	 * FIXME - dirndl 1.2 - move to OlForm

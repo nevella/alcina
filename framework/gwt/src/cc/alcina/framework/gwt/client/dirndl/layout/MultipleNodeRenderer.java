@@ -15,9 +15,12 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
 /**
- * FIXME - dirndl 1.1 - this: @MultipleNodeRendererLeaf(@Directed) - shouldn't be needed 
+ * FIXME - dirndl 1.1 - this: @MultipleNodeRendererLeaf(@Directed) - shouldn't
+ * be needed
+ * 
  * @author nick@alcina.cc
  *
  */
@@ -44,9 +47,19 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 		 * rendered. It resolves normally
 		 */
 		if (leaf != null) {
+			/*
+			 * if the leaf is from a class annotation (more accurately, *NOT*
+			 * from a property annotation) , ascend from the model superclass
+			 * rather than the class - otherwise will loop indefinitely
+			 */
+			Class ascendFrom = node.propertyReflector != null
+					&& node.propertyReflector
+							.hasAnnotation(MultipleNodeRendererLeaf.class)
+									? node.model.getClass()
+									: node.model.getClass().getSuperclass();
 			Directed leafValue = leaf.value();
 			Directed directed = CustomReflectorResolver.forParentAndValue(
-					MultipleNodeRendererArgs.class, node, node.model.getClass(),
+					MultipleNodeRendererArgs.class, node, ascendFrom,
 					leafValue);
 			result.add(directed);
 		}
@@ -91,7 +104,8 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 
 		@Override
 		public String cssClass() {
-			return this.args.cssClasses().length==0?"":this.args.cssClasses()[this.idx];
+			return this.args.cssClasses().length == 0 ? ""
+					: this.args.cssClasses()[this.idx];
 		}
 
 		@Override

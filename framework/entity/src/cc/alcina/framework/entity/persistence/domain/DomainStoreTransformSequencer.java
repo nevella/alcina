@@ -94,8 +94,10 @@ public class DomainStoreTransformSequencer
 	private ClusteredSequencing clusteredSequencing = Registry
 			.impl(ClusteredSequencing.class);
 
+
 	DomainStoreTransformSequencer(DomainStoreLoaderDatabase loaderDatabase) {
 		this.loaderDatabase = loaderDatabase;
+		
 	}
 
 	@Override
@@ -135,6 +137,9 @@ public class DomainStoreTransformSequencer
 	}
 
 	private int ensureTimestamps() throws SQLException {
+		if (!isEnabled()) {
+			return 0;
+		}
 		return runWithConnection("ensureTimestamps", this::ensureTimestamps0);
 	}
 
@@ -414,10 +419,19 @@ public class DomainStoreTransformSequencer
 	}
 
 	void markHighestVisibleTransformList(Connection conn) throws SQLException {
+		if (!isEnabled()) {
+			highestVisiblePosition = new DomainTransformCommitPosition(0L,
+					new Timestamp(0L));
+			return;
+		}
 		refreshPositions0(conn, true, -1);
 		logger.info("Marked highest visible position - {}",
 				highestVisiblePosition);
 		unpublishedPositions.clear();
+	}
+
+	private boolean isEnabled() {
+		return  loaderDatabase.domainDescriptor.isUsesCommitSequencer();
 	}
 
 	@RegistryLocation(registryPoint = ClusteredSequencing.class, implementationType = ImplementationType.INSTANCE)

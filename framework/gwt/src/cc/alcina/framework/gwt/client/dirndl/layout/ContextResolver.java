@@ -9,8 +9,7 @@ import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 @ClientInstantiable
-public class ContextResolver<M> extends AnnotationLocation.Resolver {
-	private M model;
+public class ContextResolver extends AnnotationLocation.Resolver {
 
 	protected TreeResolver<Directed> directedResolver;
 
@@ -30,9 +29,7 @@ public class ContextResolver<M> extends AnnotationLocation.Resolver {
 		// TODO Auto-generated method stub
 	}
 
-	public M getModel() {
-		return this.model;
-	}
+	
 
 	public <A extends Annotation> TreeResolver<A>
 			getTreeResolver(Class<A> clazz) {
@@ -42,8 +39,8 @@ public class ContextResolver<M> extends AnnotationLocation.Resolver {
 		throw new UnsupportedOperationException();
 	}
 
-	public boolean hasDirectedAnnotation(PropertyReflector propertyReflector) {
-		return propertyReflector.hasAnnotation(Directed.class);
+	public PropertyReflector resolveDirectedReflector(PropertyReflector propertyReflector) {
+		return propertyReflector.hasAnnotation(Directed.class)?propertyReflector:null;
 	}
 
 	public Object resolveModel(Object model) {
@@ -54,9 +51,6 @@ public class ContextResolver<M> extends AnnotationLocation.Resolver {
 		return null;
 	}
 
-	public void setModel(M model) {
-		this.model = model;
-	}
 
 	protected void init() {
 		directedResolver = parent != null ? parent.directedResolver
