@@ -2,8 +2,8 @@ package cc.alcina.framework.common.client.collections;
 
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 //FIXME - mvcc.cascade - generally use an enum for propertynames
 public class PropertyValueMapper<T, R> implements Function<T, R> {

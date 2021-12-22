@@ -2,9 +2,9 @@ package cc.alcina.framework.gwt.client.logic;
 
 import static cc.alcina.framework.gwt.client.logic.AlcinaHistory.*;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 /**
  * <p>

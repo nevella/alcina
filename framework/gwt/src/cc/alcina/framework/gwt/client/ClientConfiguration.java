@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client;
 
 import com.google.gwt.dom.client.StyleInjector;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainHandlerClient;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
@@ -11,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
@@ -66,7 +66,6 @@ public class ClientConfiguration {
 				Registry.impl(CommitToStorageTransformListener.class));
 		registerExtraTransformListenersPostStorage();
 		Reflections.registerPropertyAccessor(GwittirBridge.get());
-		Reflections.registerBeanDescriptorProvider(GwittirBridge.get());
 		Reflections.registerClassLookup(ClientReflector.get());
 		Reflections.registerObjectLookup(TransformManager.get());
 	}

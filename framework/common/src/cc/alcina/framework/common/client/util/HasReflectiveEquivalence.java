@@ -9,10 +9,10 @@ import java.lang.annotation.Target;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 	default boolean debugInequivalence(PropertyInfo pd, Object o1, Object o2) {

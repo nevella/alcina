@@ -67,10 +67,6 @@ public class InstantiateOnlyClassLookup implements ClassLookup {
 		throw new UnsupportedOperationException();
 	}
 
-	@Override
-	public boolean isAssignableFrom(Class from, Class to) {
-		throw new UnsupportedOperationException();
-	}
 
 	@Override
 	public <T> T newInstance(Class<T> clazz) {

@@ -16,8 +16,8 @@ import org.slf4j.LoggerFactory;
 
 import com.google.api.client.util.Objects;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.projection.GraphProjection;

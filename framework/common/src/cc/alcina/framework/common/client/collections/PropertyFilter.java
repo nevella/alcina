@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.collections;
 import java.util.Collection;
 import java.util.function.Predicate;
 
-import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class PropertyFilter<T> implements Predicate<T> {

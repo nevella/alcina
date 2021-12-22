@@ -18,6 +18,8 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 /**
  *
  * @author Nick Reddel
+ * 
+ * FIXME - reflection - have fewer implementations (e.g. not transformmanager) - instead, have getObjectLookup 
  */
 public interface ObjectLookup {
 	public <T extends Entity> T getObject(Class<? extends T> c, long id,

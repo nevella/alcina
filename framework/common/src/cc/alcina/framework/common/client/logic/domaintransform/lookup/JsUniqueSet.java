@@ -10,7 +10,7 @@ public class JsUniqueSet<E> extends AbstractSet<E> {
 	private Map<E, Object> map;
 
 	public JsUniqueSet(Class keyClass) {
-		this.map = (Map<E, Object>) JsUniqueMap.create(keyClass, false);
+		this.map = (Map<E, Object>) JsUniqueMap.create();
 	}
 
 	public boolean add(E e) {

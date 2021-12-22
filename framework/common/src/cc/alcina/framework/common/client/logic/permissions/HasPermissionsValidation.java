@@ -5,7 +5,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer.SerializerOptions;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;

@@ -4,9 +4,9 @@ import java.util.Collection;
 import java.util.Objects;
 import java.util.function.BiFunction;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManyMultipleSummary;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
 public class DisplaySearchOrder extends SearchOrder {

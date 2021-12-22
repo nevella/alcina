@@ -3,7 +3,7 @@ package cc.alcina.framework.entity.stat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 

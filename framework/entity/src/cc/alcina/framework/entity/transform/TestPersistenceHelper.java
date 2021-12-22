@@ -25,7 +25,6 @@ import java.util.Set;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.SelfDescribed;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -36,6 +35,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.HasDisplayName;
@@ -234,10 +234,6 @@ public class TestPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
-	@Override
-	public boolean isAssignableFrom(Class from, Class to) {
-		return from.isAssignableFrom(to);
-	}
 
 	@Override
 	public boolean isReadOnly(Class objectClass, String propertyName) {

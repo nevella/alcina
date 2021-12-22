@@ -6,9 +6,9 @@ import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PropertyMapper.PropertyMapping;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class ConverterMapper<A, B> implements Converter<A, B> {
 	protected Class<A> leftClass;

@@ -2,9 +2,7 @@ package cc.alcina.framework.common.client.util;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
-import java.util.Comparator;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,7 +13,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 import com.google.gwt.json.client.JSONArray;
 import com.google.gwt.json.client.JSONBoolean;
@@ -25,15 +22,15 @@ import com.google.gwt.json.client.JSONObject;
 import com.google.gwt.json.client.JSONParser;
 import com.google.gwt.json.client.JSONString;
 import com.google.gwt.json.client.JSONValue;
-import com.totsp.gwittir.client.beans.BeanDescriptor;
-import com.totsp.gwittir.client.beans.Property;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -300,22 +297,16 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			seenOut.put(object, seenOut.size());
 		}
 		GwittirBridge gb = GwittirBridge.get();
-		Object template = Reflections.classLookup().getTemplateInstance(clazz);
-		BeanDescriptor descriptor = Reflections.beanDescriptorProvider()
-				.getDescriptor(object);
-		Property[] propertyArray = descriptor.getProperties();
-		List<Property> properties = Arrays.asList(propertyArray).stream()
-				.sorted(Comparator.comparing(Property::getName))
-				.collect(Collectors.toList());
+		ClassReflector<?> reflector = Reflections.at(clazz);
+		Object template = reflector.templateInstance();
 		JSONObject props = new JSONObject();
 		jo.put(propertyFieldName, props);
-		for (Property property : properties) {
-			if (property.getMutatorMethod() == null) {
+		for (Property property : reflector.properties()) {
+			if (property.isReadOnly()) {
 				continue;
 			}
 			String name = property.getName();
-			if (gb.getAnnotationForProperty(clazz, AlcinaTransient.class,
-					name) != null) {
+			if (property.hasAnnotation(AlcinaTransient.class)) {
 				continue;
 			}
 			Object value = gb.getPropertyValue(object, name);

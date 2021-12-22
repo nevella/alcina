@@ -4,8 +4,8 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class CachingPropertyLookup<K, V> {
 	private Map<K, V> propertyLookup = new LinkedHashMap<K, V>();

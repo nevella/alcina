@@ -247,7 +247,7 @@ public class LocalDom {
 	private boolean useBuiltHtmlValidation;
 
 	public LocalDom() {
-		if (GWT.isScript() && JsUniqueMap.supportsJsWeakMap()) {
+		if (GWT.isScript()) {
 			remoteLookup = JsUniqueMap.createWeakMap();
 		} else {
 			remoteLookup = new LinkedHashMap<>();
@@ -872,13 +872,7 @@ public class LocalDom {
 	public static class LocalDomCollections_Script extends LocalDomCollections {
 		@Override
 		public <K, V> Map<K, V> createIdentityEqualsMap(Class<K> keyClass) {
-			if (JsUniqueMap.supportsJsMap()) {
-				// element.attributes will need entryset, not yet supported in
-				// nativemap
-				return JsUniqueMap.create(keyClass, keyClass != String.class);
-			} else {
-				return super.createIdentityEqualsMap(keyClass);
-			}
+			return JsUniqueMap.create();
 		}
 	}
 }

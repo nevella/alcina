@@ -18,16 +18,30 @@ import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
 import cc.alcina.framework.common.client.util.trie.MultiTrie;
 
 public class CollectionCreators {
-	private static ConcurrentMapCreator concurrentClassMapCreator=new ConcurrentMapCreator();
-	
-	public static void setConcurrentClassMapCreator(
-			ConcurrentMapCreator concurrentClassMapCreator) {
-		CollectionCreators.concurrentClassMapCreator = concurrentClassMapCreator;
+	public static class Bootstrap {
+		private static ConcurrentMapCreator concurrentClassMapCreator = new ConcurrentMapCreator();
+
+		public static void setConcurrentClassMapCreator(
+				ConcurrentMapCreator concurrentClassMapCreator) {
+			CollectionCreators.Bootstrap.concurrentClassMapCreator = concurrentClassMapCreator;
+		}
+
+		private static ConcurrentMapCreator concurrentStringMapCreator = new ConcurrentMapCreator();
+
+		public static void setConcurrentStringMapCreator(
+				ConcurrentMapCreator concurrentStringMapCreator) {
+			CollectionCreators.Bootstrap.concurrentStringMapCreator = concurrentStringMapCreator;
+		}
+
+		public static <T> Map<Class, T> createConcurrentClassMap() {
+			return concurrentClassMapCreator.create();
+		}
+
+		public static <T> Map<String, T> createConcurrentStringMap() {
+			return concurrentStringMapCreator.create();
+		}
 	}
 
-	public static <T> Map<Class,T> createConcurrentClassMap(){
-		return concurrentClassMapCreator.createMap();
-	}
 	@RegistryLocation(registryPoint = ConcurrentMapCreator.class, implementationType = ImplementationType.SINGLETON)
 	@ClientInstantiable
 	public static class ConcurrentMapCreator {

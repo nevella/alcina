@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.widget.typedbinding;
 
-import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 public interface EnumeratedBinding {
 	default <T> T get(HasEnumeratedBindings source) {

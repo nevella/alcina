@@ -15,8 +15,8 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 /**
  *

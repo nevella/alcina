@@ -22,15 +22,14 @@ import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
 
-import com.totsp.gwittir.client.beans.Property;
-
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 /**
@@ -71,31 +70,23 @@ public class CloneHelper {
 	 */
 	public void copyBeanProperties(Object source, Object target,
 			Set<String> excludeProperties) {
-		try {
-			Property[] prs = Reflections.beanDescriptorProvider()
-					.getDescriptor(target).getProperties();
-			for (Property pr : prs) {
-				if (pr.getMutatorMethod() == null
-						|| pr.getAccessorMethod() == null) {
+		for (Property property : Reflections.at(source.getClass())
+				.properties()) {
+			if (property.isReadOnly() || property.isWriteOnly()) {
+				continue;
+			}
+			Object val = property.get(source);
+			if (val != null) {
+				if (excludeProperties != null
+						&& excludeProperties.contains(property.getName())) {
 					continue;
 				}
-				Object val = pr.getAccessorMethod().invoke(source,
-						CommonUtils.EMPTY_OBJECT_ARRAY);
-				if (val != null) {
-					if (excludeProperties != null
-							&& excludeProperties.contains(pr.getName())) {
-						continue;
-					}
-					if (val instanceof Collection) {
-						val = CommonUtils
-								.shallowCollectionClone((Collection) val);
-					}
-					args[0] = val;
-					pr.getMutatorMethod().invoke(target, args);
+				if (val instanceof Collection) {
+					val = CommonUtils.shallowCollectionClone((Collection) val);
 				}
+				args[0] = val;
+				property.set(target, args);
 			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
 		}
 	}
 
@@ -106,30 +97,22 @@ public class CloneHelper {
 		}
 		T ret = newInstance(o);
 		createdMap.put(o, ret);
-		Property[] prs = Reflections.beanDescriptorProvider().getDescriptor(ret)
-				.getProperties();
-		for (Property pr : prs) {
-			if (pr.getMutatorMethod() == null) {
-				continue;
-			}
-			AlcinaTransient alcinaTransient = Reflections.propertyAccessor()
-					.getAnnotationForProperty(ret.getClass(),
-							AlcinaTransient.class, pr.getName());
-			if (alcinaTransient != null) {
+		for (Property property : Reflections.at(ret.getClass()).properties()) {
+			if (property.isReadOnly()
+					|| property.hasAnnotation(AlcinaTransient.class)) {
 				continue;
 			}
 			Object[] args = new Object[1];
-			Object val = pr.getAccessorMethod().invoke(o,
-					CommonUtils.EMPTY_OBJECT_ARRAY);
+			Object val = property.get(o);
 			if (createdMap.containsKey(val)) {
 				val = createdMap.get(val);
 			}
 			if (val != null) {
-				if (!ignore(o.getClass(), pr.getName(), o)) {
-					args[0] = deepProperty(o, pr.getName())
+				if (!ignore(o.getClass(), property.getName(), o)) {
+					args[0] = deepProperty(o, property.getName())
 							? deepObjectClone(val)
 							: shallowishObjectClone(val);
-					pr.getMutatorMethod().invoke(ret, args);
+					property.set(ret, args);
 				}
 			}
 		}

@@ -1,9 +1,9 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 /**
  * maaarrrkkkerrrr

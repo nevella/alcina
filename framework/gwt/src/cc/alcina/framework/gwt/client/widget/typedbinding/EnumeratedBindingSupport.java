@@ -10,7 +10,7 @@ import java.util.Optional;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
-import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Multimap;
 
 public class EnumeratedBindingSupport {

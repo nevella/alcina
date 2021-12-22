@@ -18,9 +18,9 @@ import java.util.Collection;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 /**
  * 

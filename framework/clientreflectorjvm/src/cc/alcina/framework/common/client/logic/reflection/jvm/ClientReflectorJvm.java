@@ -390,14 +390,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		return infos;
 	}
 
-	@Override
-	public boolean isAssignableFrom(Class from, Class to) {
-		// tricky - because we might want to check superclasses. Real test is
-		// reusing clientreflectiongen in these checks
-		// FIXME - dirndl 1.3
-		// checkClassAnnotationsForForName(from);
-		return from.isAssignableFrom(to);
-	}
+	
 
 	@Override
 	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {

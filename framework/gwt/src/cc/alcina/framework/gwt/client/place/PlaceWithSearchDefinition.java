@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.place;
 
-import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 

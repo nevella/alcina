@@ -17,8 +17,7 @@ public class BplMapCreatorClient extends BplDelegateMapCreatorStd {
 	@Override
 	public Map createDelegateMap(int depthFromRoot, int depth) {
 		if (getBuilder().getProjection().getTypes() != null && GWT.isScript()) {
-			return JsUniqueMap.create((Class) getBuilder().getProjection()
-					.getTypes().get(depthFromRoot), false);
+			return JsUniqueMap.create();
 		}
 		return super.createDelegateMap(depthFromRoot, depth);
 	}

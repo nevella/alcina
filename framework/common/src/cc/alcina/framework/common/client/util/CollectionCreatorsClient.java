@@ -36,12 +36,13 @@ public class CollectionCreatorsClient {
 			extends SortedMultiset<K, Set<V>> {
 		public SortedMultisetClient(Class<K> keyClass, Class<V> valueClass) {
 			map = useJsMaps() && keyClass != null
-					? JsUniqueMap.create(keyClass, false)
+					? JsUniqueMap.create()
 					: new LinkedHashMap<>();
 		}
 
 		@Override
 		protected Set createSet() {
+			//FIXME - 2022 - that ain't sorted...
 			return useJsMaps() ? new JsUniqueSet(Long.class)
 					: new TreeSet<Long>();
 		}
@@ -58,7 +59,7 @@ public class CollectionCreatorsClient {
 		@Override
 		public Map<K, V> create(Class<K> keyClass, Class<V> valueClass) {
 			return useJsMaps() && keyClass != null
-					? JsUniqueMap.create(keyClass, false)
+					? JsUniqueMap.create()
 					: new LinkedHashMap<>();
 		}
 	}

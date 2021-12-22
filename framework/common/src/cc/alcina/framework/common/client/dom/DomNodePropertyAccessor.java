@@ -9,9 +9,9 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class DomNodePropertyAccessor implements PropertyAccessor {
 	private List<String> singleChildElementNames = new ArrayList<>();

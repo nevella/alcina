@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
 
-import cc.alcina.framework.common.client.Reflections;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class Annotations {
 	public static <A extends Annotation> boolean has(Class clazz,

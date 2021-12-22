@@ -3,9 +3,9 @@ package cc.alcina.framework.gwt.client.place;
 import java.util.Arrays;
 import java.util.List;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.ReflectiveSearchDefinitionSerializer;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 

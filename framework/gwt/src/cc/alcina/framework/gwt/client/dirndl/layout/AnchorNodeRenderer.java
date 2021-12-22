@@ -9,9 +9,9 @@ import java.util.function.Function;
 
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public class AnchorNodeRenderer extends ContainerNodeRenderer {

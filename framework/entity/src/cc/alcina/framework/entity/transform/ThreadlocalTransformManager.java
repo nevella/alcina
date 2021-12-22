@@ -43,7 +43,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.collections.PropertyFilter;
@@ -79,6 +78,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -543,10 +543,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		return this.applyingExternalTransforms;
 	}
 
-	@Override
-	public boolean isAssignableFrom(Class from, Class to) {
-		return ObjectPersistenceHelper.get().isAssignableFrom(from, to);
-	}
+	
 
 	public boolean isExternalCreate() {
 		return useTlIdGenerator;

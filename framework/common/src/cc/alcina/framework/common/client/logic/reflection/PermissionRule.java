@@ -2,12 +2,12 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.util.Objects;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 public abstract class PermissionRule<E extends Entity> {
 	public abstract E checkPermission(E e) throws PermissionsException;

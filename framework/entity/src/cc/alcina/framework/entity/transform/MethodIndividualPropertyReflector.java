@@ -20,6 +20,9 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
 
+/*
+ * FIXME - reflection - won't this be concurrently accessed by queries? I think remove prop reflector impl and have it delegate to various properties
+ */
 public class MethodIndividualPropertyReflector implements PropertyReflector {
 	private static MultikeyMap<MethodIndividualPropertyReflector> cache = new UnsortedMultikeyMap<>(
 			2);

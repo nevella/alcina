@@ -23,9 +23,7 @@ import java.util.Map;
 import java.util.Set;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
-import com.totsp.gwittir.client.beans.SelfDescribed;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -39,13 +37,13 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 import cc.alcina.framework.entity.util.JvmPropertyReflector;
 import cc.alcina.framework.entity.util.MethodWrapper;
-import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 /**
  * a fair bit of overlap with tltm - should clean up
@@ -55,7 +53,7 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
-		PropertyAccessor, BeanDescriptorProvider {
+		PropertyAccessor {
 	static volatile ObjectPersistenceHelper singleton;
 
 	public static ObjectPersistenceHelper get() {
@@ -143,23 +141,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		return classNameLookup.get(fqn);
 	}
 
-	@Override
-	public BeanDescriptor getDescriptor(Object object) {
-		if (cache.containsKey(object.getClass())) {
-			return cache.get(object.getClass());
-		}
-		BeanDescriptor result = null;
-		if (object instanceof SelfDescribed) {
-			// System.out.println("SelfDescribed\t"+
-			// object.getClass().getName());
-			result = ((SelfDescribed) object).__descriptor();
-		} else {
-			// System.out.println("Reflection\t"+ object.getClass().getName());
-			result = new ReflectionBeanDescriptor(object.getClass());
-			cache.put(object.getClass(), result);
-		}
-		return result;
-	}
+	
 
 	@Override
 	public List<Class> getInterfaces(Class clazz) {
@@ -266,10 +248,7 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		}
 	}
 
-	@Override
-	public boolean isAssignableFrom(Class from, Class to) {
-		return from.isAssignableFrom(to);
-	}
+	
 
 	@Override
 	public boolean isReadOnly(Class objectClass, String propertyName) {
@@ -323,6 +302,5 @@ public class ObjectPersistenceHelper implements ClassLookup, ObjectLookup,
 		Reflections.registerClassLookup(this);
 		Reflections.registerObjectLookup(this);
 		Reflections.registerPropertyAccessor(this);
-		Reflections.registerBeanDescriptorProvider(this);
 	}
 }

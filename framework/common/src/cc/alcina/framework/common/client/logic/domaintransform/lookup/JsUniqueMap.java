@@ -9,30 +9,13 @@ import java.util.Set;
 import java.util.function.Function;
 
 public class JsUniqueMap<K, V> implements Map<K, V> {
-	public static <K, V> Map<K, V> create(Class keyClass,
-			boolean allowNativePartialSupportMap) {
-		if (supportsJsMap() && allowNativePartialSupportMap) {
-			return new JsNativeMapWrapper(false);
-		} else {
-			return new JsUniqueMap<>(keyClass);
-		}
+	public static <K, V> Map<K, V> create() {
+		return new JsNativeMapWrapper(false);
 	}
 
 	public static <K, V> Map<K, V> createWeakMap() {
-		if (supportsJsWeakMap()) {
-			return new JsNativeMapWrapper(true);
-		} else {
-			throw new UnsupportedOperationException();
-		}
+		return new JsNativeMapWrapper(true);
 	}
-
-	public static native boolean supportsJsMap()/*-{
-    return !!(window.Map && window.Map.prototype.clear);
-	}-*/;
-
-	public static native boolean supportsJsWeakMap()/*-{
-    return !!(window.WeakMap && window.WeakMap.prototype.get);
-	}-*/;
 
 	private Function keyUniquenessMapper = Function.identity();
 

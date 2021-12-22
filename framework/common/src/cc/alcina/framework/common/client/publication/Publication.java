@@ -10,7 +10,6 @@ import javax.xml.bind.annotation.XmlTransient;
 import com.google.gwt.user.client.rpc.GwtTransient;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
@@ -32,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.customiser.FriendlyEnumCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ObjectActionLinkCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.StandardLabelCustomiser;

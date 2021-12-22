@@ -6,7 +6,6 @@ import java.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
@@ -14,6 +13,7 @@ import cc.alcina.framework.common.client.publication.ContentDeliveryType.Content
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.DeliveryModel.MultipleDeliveryEntry;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;

@@ -28,13 +28,14 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringFunction;
@@ -112,7 +113,6 @@ public class DirectedLayout {
 
 		DirectedNodeRenderer renderer;
 
-		BeanDescriptor descriptor;
 
 		Directed directed;
 
@@ -332,8 +332,6 @@ public class DirectedLayout {
 			if (model == null) {
 				return;
 			}
-			this.descriptor = Reflections.beanDescriptorProvider()
-					.getDescriptorOrNull(model);
 			renderer = resolveRenderer();
 			/*
 			 * allow insertion of multiple nodes for one model object - loop

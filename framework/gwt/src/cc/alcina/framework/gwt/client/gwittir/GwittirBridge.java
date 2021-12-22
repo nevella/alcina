@@ -31,7 +31,6 @@ import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.Introspector;
-import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -44,7 +43,6 @@ import com.totsp.gwittir.client.validator.IntegerValidator;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.gwittir.validator.BooleanEnsureNonNullCoverter;
@@ -78,8 +76,10 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -96,14 +96,13 @@ import cc.alcina.framework.gwt.client.gwittir.renderer.DisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.DateBox.DateBoxProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.gwittir.widget.TextBox;
-import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 /**
  *
  * @author Nick Reddel
  */
-public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
+public class GwittirBridge implements PropertyAccessor {
 	private static GwittirBridge INSTANCE = new GwittirBridge();
 
 	public static final String HINT_DATE_WITH_TIME_TITLE = "HINT_DATE_WITH_TIME_TITLE";
@@ -207,9 +206,10 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		if (field.getCellProvider() != null) {
 			widget = field.getCellProvider().get();
 		} else {
-			final Property p = Introspector.INSTANCE.getDescriptor(target)
-					.getProperty(field.getPropertyName());
-			widget = SIMPLE_FACTORY.getWidgetProvider(p.getType()).get();
+			widget = SIMPLE_FACTORY
+					.getWidgetProvider(Reflections.at(target.getClass())
+							.property(field.getPropertyName()).getType())
+					.get();
 		}
 		binding = new Binding(widget, "value", field.getValidator(),
 				field.getFeedback(), target, field.getPropertyName(), null,
@@ -370,17 +370,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		return this.dateRendererProvider;
 	}
 
-	@Override
-	public BeanDescriptor getDescriptor(Object o) {
-		Class c = o.getClass();
-		BeanDescriptor bd = descriptorClassLookup.get(c);
-		if (bd == null) {
-			bd = Introspector.INSTANCE.getDescriptor(o);
-			descriptorClassLookup.put(c, bd);
-		}
-		return bd;
-	}
-
 	public BeanDescriptor getDescriptorForClass(Class c) {
 		return getDescriptorForClass(c, true);
 	}
@@ -404,17 +393,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 	}
 
-	@Override
-	public BeanDescriptor getDescriptorOrNull(Object o) {
-		Class c = o.getClass();
-		BeanDescriptor bd = descriptorClassLookup.get(c);
-		if (bd == null) {
-			bd = Introspector.INSTANCE.getDescriptorOrNull(o);
-			descriptorClassLookup.put(c, bd);
-		}
-		return bd;
-	}
-
 	public Field getField(Class c, String propertyName, boolean editableWidgets,
 			boolean multiple) {
 		return getField(c, propertyName, editableWidgets, multiple,
@@ -430,7 +408,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	// FIXME - dirndl.1 - clean this up - probably one code path and a bunch of
 	// reflection/registry
-	public Field getField(Class clazz, String propertyName,
+	public Field getField(Class<?> clazz, String propertyName,
 			boolean editableWidgets, boolean multiple,
 			BoundWidgetTypeFactory factory, Object obj,
 			AnnotationLocation.Resolver resolver) {
@@ -439,16 +417,17 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		AnnotationLocation clazzLocation = new AnnotationLocation(clazz, null,
 				resolver);
 		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
+		ClassReflector<?> reflector = Reflections.at(clazz);
 		ObjectPermissions op = clazzLocation
 				.getAnnotation(ObjectPermissions.class);
 		obj = obj != null ? obj
-				: ClientReflector.get().getTemplateInstance(clazz);
+				: reflector.templateInstance();
 		PropertyReflector propertyReflector = Reflections.classLookup()
 				.getPropertyReflector(clazz, propertyName);
 		AnnotationLocation propertyLocation = new AnnotationLocation(clazz,
 				propertyReflector, resolver);
-		Property p = getProperty(obj, propertyName);
-		BoundWidgetProvider bwp = factory.getWidgetProvider(p.getType());
+		Class type = reflector.property(propertyName).getType();
+		BoundWidgetProvider bwp = factory.getWidgetProvider(type);
 		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
 				: RelativePopupValidationFeedback.RIGHT;
 		Display display = propertyLocation.getAnnotation(Display.class);
@@ -468,7 +447,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 				return null;
 			}
 			boolean focus = display.focus();
-			boolean propertyIsCollection = (p.getType() == Set.class);
+			boolean propertyIsCollection = type == Set.class;
 			boolean fieldEditable = editableWidgets
 					&& (PermissionsManager.get()
 							.checkEffectivePropertyPermission(op, pp, obj,
@@ -476,7 +455,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 							|| ((display.displayMask()
 									& Display.DISPLAY_EDITABLE) != 0))
 					&& ((display.displayMask() & Display.DISPLAY_RO) == 0);
-			Class domainType = p.getType();
+			Class domainType = type;
 			domainType = (association == null || !propertyIsCollection
 					|| association.implementationClass() == void.class)
 							? domainType
@@ -560,7 +539,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 						TextProvider.get().getLabelText(clazz,
 								propertyLocation),
 						bwp, validator, validationFeedback,
-						getDefaultConverter(bwp, p.getType()));
+						getDefaultConverter(bwp, type));
 				if (!display.styleName().isEmpty()) {
 					field.setStyleName(display.styleName());
 				}
@@ -583,7 +562,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					position);
 			vf.setCss(multiple ? null : "gwittir-ValidationPopup-right");
 			if (bwp != null && !editableWidgets) {
-				Class domainType = p.getType();
+				Class domainType = type;
 				boolean isEnum = domainType.isEnum();
 				if (domainType == Date.class) {
 					bwp = AU_DATE_PROVIDER;
@@ -596,7 +575,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 					bwp = NOWRAP_LABEL_PROVIDER;
 				}
 			} else if (bwp == null) {
-				Class domainType = p.getType();
+				Class domainType = type;
 				boolean isEnum = domainType.isEnum();
 				if (domainType == Date.class) {
 					bwp = AU_DATE_PROVIDER;
@@ -614,9 +593,9 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 			return new Field(propertyReflector.getPropertyName(),
 					TextProvider.get().getLabelText(clazz, propertyLocation),
 					bwp,
-					getValidator(p.getType(), obj,
+					getValidator(type, obj,
 							propertyReflector.getPropertyName(), vf),
-					vf, getDefaultConverter(bwp, p.getType()));
+					vf, getDefaultConverter(bwp, type));
 		}
 		return null;
 	}
@@ -637,14 +616,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 
 	public List<String> getIgnoreProperties() {
 		return ignoreProperties;
-	}
-
-	public Property getProperty(Object o, String propertyName) {
-		return getDescriptor(o).getProperty(propertyName);
-	}
-
-	public Property getPropertyForClass(Class c, String propertyName) {
-		return getDescriptorForClass(c).getProperty(propertyName);
 	}
 
 	@Override
@@ -871,16 +842,6 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 	}
 
-	@RegistryLocation(registryPoint = BeanDescriptorProvider.class, implementationType = ImplementationType.FACTORY)
-	@ClientInstantiable
-	public static class GwittirBridgeBdpFactory
-			implements RegistryFactory<BeanDescriptorProvider> {
-		@Override
-		public BeanDescriptorProvider impl() {
-			return GwittirBridge.get();
-		}
-	}
-
 	public static class GwittirDateRendererProvider {
 		public BoundWidgetProvider getRenderer(Display display) {
 			if (display.rendererHint().equals(HINT_DATE_WITH_TIME_TITLE)) {
@@ -891,71 +852,7 @@ public class GwittirBridge implements PropertyAccessor, BeanDescriptorProvider {
 		}
 	}
 
-	private static class PropertyReflectorImpl implements PropertyReflector {
-		private final Property property;
-
-		private final Class clazz;
-
-		private final String propertyName;
-
-		private PropertyReflectorImpl(Property property, Class clazz,
-				String propertyName) {
-			this.property = property;
-			this.clazz = clazz;
-			this.propertyName = propertyName;
-		}
-
-		@Override
-		public <A extends Annotation> A
-				getAnnotation(Class<A> annotationClass) {
-			return Reflections.propertyAccessor().getAnnotationForProperty(
-					this.clazz, annotationClass, this.propertyName);
-		}
-
-		@Override
-		public Class getDefiningType() {
-			return this.clazz;
-		}
-
-		@Override
-		public String getPropertyName() {
-			return this.property.getName();
-		}
-
-		@Override
-		public Class getPropertyType() {
-			try {
-				return this.property.getType();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		@Override
-		public Object getPropertyValue(Object value) {
-			try {
-				return this.property.getAccessorMethod().invoke(value,
-						new Object[0]);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		@Override
-		public boolean isReadOnly() {
-			return this.property.getMutatorMethod() == null;
-		}
-
-		@Override
-		public void setPropertyValue(Object bean, Object value) {
-			try {
-				this.property.getMutatorMethod().invoke(bean,
-						new Object[] { value });
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
+	
 
 	class FieldDisplayNameComparator implements Comparator<Field> {
 		private final ClientBeanReflector bi;

@@ -2,8 +2,8 @@ package cc.alcina.framework.gwt.client.entity.search.quick;
 
 import java.io.Serializable;
 
-import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class QuickSearchRequest implements Serializable {
 	public String text;

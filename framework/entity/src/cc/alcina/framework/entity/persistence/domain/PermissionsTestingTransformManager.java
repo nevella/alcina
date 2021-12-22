@@ -115,10 +115,7 @@ public class PermissionsTestingTransformManager
 			return this.delegate.getWritableProperties(clazz);
 		}
 
-		@Override
-		public boolean isAssignableFrom(Class from, Class to) {
-			return this.delegate.isAssignableFrom(from, to);
-		}
+		
 
 		@Override
 		public <T> T newInstance(Class<T> clazz) {
