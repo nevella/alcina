@@ -276,13 +276,13 @@ public class ClientReflectionGenerator extends Generator {
 		if (!allowMultiple) {
 			values = uniqueMap.values().stream().collect(Collectors.toSet());
 		}
-		superAnnotationMap.put(clazz, annotationClasses, values);
 		Comparator<Annotation> comparing = Comparator
 				.<Annotation, String> comparing(
 						a -> a.annotationType().getSimpleName())
 				.thenComparing(a -> a.annotationType().getName());
 		values = values.stream().sorted(comparing)
 				.collect(AlcinaCollectors.toLinkedHashSet());
+		superAnnotationMap.put(clazz, annotationClasses, values);
 		return values;
 	}
 
@@ -414,8 +414,9 @@ public class ClientReflectionGenerator extends Generator {
 			}
 			int aCount = 0;
 			String annArray = "";
-			for (Annotation a : getClassAnnotations(jct,
-					visibleAnnotationClasses, false)) {
+			Set<Annotation> classAnnotations = getClassAnnotations(jct,
+					visibleAnnotationClasses, false);
+			for (Annotation a : classAnnotations) {
 				if (aCount++ != 0) {
 					annArray += ", ";
 				}
@@ -549,7 +550,8 @@ public class ClientReflectionGenerator extends Generator {
 		for (JClassType clazz : gwtRegisteringClasses.keySet().stream()
 				.sorted(CLASS_NAME_COMPARATOR).collect(Collectors.toList())) {
 			for (RegistryLocation l : gwtRegisteringClasses.get(clazz).stream()
-					.sorted(REGISTRY_LOCATION_COMPARATOR).collect(Collectors.toList())) {
+					.sorted(REGISTRY_LOCATION_COMPARATOR)
+					.collect(Collectors.toList())) {
 				StringBuffer sb = new StringBuffer();
 				writeAnnImpl(l, ann2impl, 0, false, sb, false);
 				sw.println(
@@ -575,6 +577,7 @@ public class ClientReflectionGenerator extends Generator {
 					.compareTo(o2.getQualifiedSourceName());
 		}
 	};
+
 	private static Comparator<RegistryLocation> REGISTRY_LOCATION_COMPARATOR = new Comparator<RegistryLocation>() {
 		@Override
 		public int compare(RegistryLocation o1, RegistryLocation o2) {
@@ -588,8 +591,7 @@ public class ClientReflectionGenerator extends Generator {
 			if (i != 0) {
 				return i;
 			}
-			return CommonUtils.compareInts(o1.priority(),
-					o2.priority());
+			return CommonUtils.compareInts(o1.priority(), o2.priority());
 		}
 	};
 
