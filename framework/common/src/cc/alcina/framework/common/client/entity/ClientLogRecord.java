@@ -12,9 +12,8 @@ import javax.persistence.Transient;
 
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -167,8 +166,7 @@ public class ClientLogRecord implements Serializable {
 
 		public void addLogRecord(ClientLogRecord logRecord) {
 			logRecords.add(logRecord);
-			buf += Registry.impl(AlcinaBeanSerializer.class)
-					.serialize(logRecord);
+			buf += TransformManager.serialize(logRecord);
 			incrementSize(logRecord);
 		}
 

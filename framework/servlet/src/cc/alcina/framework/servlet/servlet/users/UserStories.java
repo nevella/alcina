@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -148,8 +147,7 @@ public class UserStories {
 					if (line.isEmpty()) {
 						continue;
 					}
-					Object deser = TransformManager.Serializer.get()
-							.deserialize(line);
+					Object deser = TransformManager.deserialize(line);
 					if (deser instanceof List) {
 						list.addAll((List) deser);
 					} else {

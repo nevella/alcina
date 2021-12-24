@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords
 import cc.alcina.framework.common.client.entity.ReplayInstruction.ReplayLocator;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -44,8 +43,7 @@ public interface IUserStory<U extends IUserStory> extends HasId {
 	default void obfuscateClientEvents() {
 		List<String> buffer = new ArrayList<>();
 		for (String line : getStory().split("\n")) {
-			ClientLogRecords records = AlcinaBeanSerializer
-					.deserializeHolder(line);
+			ClientLogRecords records = TransformManager.deserialize(line);
 			List<ClientLogRecord> list = records.getLogRecords();
 			for (ClientLogRecord record : list) {
 				switch (record.getTopic()) {
@@ -80,7 +78,7 @@ public interface IUserStory<U extends IUserStory> extends HasId {
 					break;
 				}
 			}
-			buffer.add(AlcinaBeanSerializer.serializeHolder(records));
+			buffer.add(TransformManager.serialize(records));
 		}
 		setStory(buffer.stream().collect(Collectors.joining("\n")));
 	}
