@@ -80,7 +80,7 @@ public interface IUserStory<U extends IUserStory> extends HasId {
 					break;
 				}
 			}
-			buffer.add(TransformManager.serialize(records));
+			buffer.add(AlcinaBeanSerializer.serializeHolder(records));
 		}
 		setStory(buffer.stream().collect(Collectors.joining("\n")));
 	}

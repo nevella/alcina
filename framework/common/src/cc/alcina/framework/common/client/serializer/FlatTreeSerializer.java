@@ -29,6 +29,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.Serializer;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -125,7 +126,6 @@ public class FlatTreeSerializer {
 
 	private static Map<Class, Map<String, Property>> deSerializationClassAliasProperty = Registry
 			.impl(ConcurrentMapCreator.class).create();
-
 
 	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
 			.impl(ConcurrentMapCreator.class).create();
@@ -281,7 +281,8 @@ public class FlatTreeSerializer {
 	}
 
 	private static boolean isIntermediateType(Class clazz) {
-		return isCollection(clazz) || Reflections.isAssignableFrom(TreeSerializable.class, clazz);
+		return isCollection(clazz)
+				|| Reflections.isAssignableFrom(TreeSerializable.class, clazz);
 	}
 
 	private static boolean isLeafValue(Object value) {
@@ -290,7 +291,6 @@ public class FlatTreeSerializer {
 		}
 		return isValueType(value.getClass());
 	}
-
 
 	private static boolean
 			isTreeSerializableWithInstantiationChecks(Class clazz) {
@@ -1378,6 +1378,9 @@ public class FlatTreeSerializer {
 			}
 			if (Reflections.isAssignableFrom(VersionableEntity.class,
 					valueClass)) {
+				if (stringValue.contains("/")) {
+					return EntityLocator.parseRecoverable(stringValue,valueClass).find();
+				}
 				long id = Long.parseLong(stringValue);
 				if (id < 0) {
 					// testing, synthesised entity
@@ -1456,8 +1459,13 @@ public class FlatTreeSerializer {
 				return escapeValue(value.toString());
 			} else if (value instanceof Entity) {
 				Entity entity = (Entity) value;
-				Preconditions.checkArgument(entity.domain().wasPersisted());
-				return String.valueOf(entity.getId());
+				if (entity.domain().wasPersisted()) {
+					return String.valueOf(entity.getId());
+				} else {
+					Preconditions.checkArgument(entity.domain().isLocal());
+					return EntityLocator.instanceLocator(entity)
+							.toRecoverableNumericString();
+				}
 			} else if (CommonUtils.isEnumish(value)) {
 				return value.toString().replace("_", "-").toLowerCase();
 			} else if (value.getClass().isArray()

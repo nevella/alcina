@@ -67,11 +67,14 @@ import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
+import cc.alcina.framework.entity.EncryptionUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.MethodContext;
 
@@ -124,7 +127,7 @@ public class ClientReflectionGenerator extends Generator {
 			.substring(0,
 					ClientReflector.class.getCanonicalName().lastIndexOf("."));
 
-	private boolean debug = false;
+	private boolean debug = true;
 
 	SourceWriter sw;
 
@@ -142,6 +145,8 @@ public class ClientReflectionGenerator extends Generator {
 			2);
 
 	private IntrospectorFilter filter;
+
+	private String moduleName;
 
 	@Override
 	public String generate(TreeLogger logger, GeneratorContext context,
@@ -162,7 +167,7 @@ public class ClientReflectionGenerator extends Generator {
 			}
 			ReflectionModule module = intrType
 					.getAnnotation(ReflectionModule.class);
-			String moduleName = module.value();
+			moduleName = module.value();
 			filter.setModuleName(moduleName);
 			String implementationName = String.format("ClientReflector_%s_Impl",
 					moduleName);
@@ -209,7 +214,7 @@ public class ClientReflectionGenerator extends Generator {
 			SourceWriter srcW = createWriter(crf, printWriter);
 			writeIt(beanInfoTypes, instantiableTypes, srcW,
 					gwtRegisteringClasses, implementationName);
-			commit(context, logger, printWriter);
+			commit(context, logger, printWriter, true);
 			System.out.format(
 					"Client reflection generation  [%s] - "
 							+ "%s annotations, %s beans, "
@@ -248,8 +253,9 @@ public class ClientReflectionGenerator extends Generator {
 		// return cl;
 		// }
 		// }).collect(Collectors.toList());
-		Set values = new LinkedHashSet();// order important - lowest ordinal,
-											// highest priority
+		Set<Annotation> values = new LinkedHashSet();// order important - lowest
+														// ordinal,
+		// highest priority
 		for (JClassType jct : flattenedSupertypeHierarchy) {
 			try {
 				List<Annotation> visibleAnnotations = getVisibleAnnotations(jct,
@@ -270,6 +276,12 @@ public class ClientReflectionGenerator extends Generator {
 		if (!allowMultiple) {
 			values = uniqueMap.values().stream().collect(Collectors.toSet());
 		}
+		Comparator<Annotation> comparing = Comparator
+				.<Annotation, String> comparing(
+						a -> a.annotationType().getSimpleName())
+				.thenComparing(a -> a.annotationType().getName());
+		values = values.stream().sorted(comparing)
+				.collect(AlcinaCollectors.toLinkedHashSet());
 		superAnnotationMap.put(clazz, annotationClasses, values);
 		return values;
 	}
@@ -294,7 +306,12 @@ public class ClientReflectionGenerator extends Generator {
 			} catch (Exception e) {
 			}
 		}
-		HashSet values = new HashSet(uniqueMap.values());
+		Comparator<Annotation> comparing = Comparator
+				.<Annotation, String> comparing(
+						a -> a.annotationType().getSimpleName())
+				.thenComparing(a -> a.annotationType().getName());
+		Set<Annotation> values = uniqueMap.values().stream().sorted(comparing)
+				.collect(AlcinaCollectors.toLinkedHashSet());
 		superMethodAnnotationMap.put(m, values);
 		return values;
 	}
@@ -397,8 +414,9 @@ public class ClientReflectionGenerator extends Generator {
 			}
 			int aCount = 0;
 			String annArray = "";
-			for (Annotation a : getClassAnnotations(jct,
-					visibleAnnotationClasses, false)) {
+			Set<Annotation> classAnnotations = getClassAnnotations(jct,
+					visibleAnnotationClasses, false);
+			for (Annotation a : classAnnotations) {
 				if (aCount++ != 0) {
 					annArray += ", ";
 				}
@@ -529,8 +547,11 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println("");
 		sw.println("//init registry");
 		sw.println("");
-		for (JClassType clazz : gwtRegisteringClasses.keySet()) {
-			for (RegistryLocation l : gwtRegisteringClasses.get(clazz)) {
+		for (JClassType clazz : gwtRegisteringClasses.keySet().stream()
+				.sorted(CLASS_NAME_COMPARATOR).collect(Collectors.toList())) {
+			for (RegistryLocation l : gwtRegisteringClasses.get(clazz).stream()
+					.sorted(REGISTRY_LOCATION_COMPARATOR)
+					.collect(Collectors.toList())) {
 				StringBuffer sb = new StringBuffer();
 				writeAnnImpl(l, ann2impl, 0, false, sb, false);
 				sw.println(
@@ -544,6 +565,36 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println("}");
 	}
 
+	private static Comparator<JClassType> CLASS_NAME_COMPARATOR = new Comparator<JClassType>() {
+		@Override
+		public int compare(JClassType o1, JClassType o2) {
+			int i = o1.getSimpleSourceName()
+					.compareTo(o2.getSimpleSourceName());
+			if (i != 0) {
+				return i;
+			}
+			return o1.getQualifiedSourceName()
+					.compareTo(o2.getQualifiedSourceName());
+		}
+	};
+
+	private static Comparator<RegistryLocation> REGISTRY_LOCATION_COMPARATOR = new Comparator<RegistryLocation>() {
+		@Override
+		public int compare(RegistryLocation o1, RegistryLocation o2) {
+			int i = o1.registryPoint().getName()
+					.compareTo(o2.registryPoint().getName());
+			if (i != 0) {
+				return i;
+			}
+			i = o1.targetClass().getName()
+					.compareTo(o2.targetClass().getName());
+			if (i != 0) {
+				return i;
+			}
+			return CommonUtils.compareInts(o1.priority(), o2.priority());
+		}
+	};
+
 	private void addImport(ClassSourceFileComposerFactory factory,
 			Class<?> type) {
 		if (!type.isPrimitive()) {
@@ -556,11 +607,19 @@ public class ClientReflectionGenerator extends Generator {
 	}
 
 	private void commit(GeneratorContext context, TreeLogger logger,
-			PrintWriter printWriter) {
+			PrintWriter printWriter, boolean end) {
+		if (end) {
+			int debug = 3;
+		}
 		context.commit(logger, printWriter);
 		if (wrappedWriters.containsKey(printWriter)) {
-			System.out.println(wrappedWriters.get(printWriter).getStringWriter()
-					.toString());
+			String text = wrappedWriters.get(printWriter).getStringWriter()
+					.toString();
+			if (end) {
+				Ax.out("ClientReflectionGeneration - context: %s - hash: %s",
+						moduleName, text.hashCode());
+			}
+			// System.out.println(text);
 		}
 	}
 
@@ -730,6 +789,9 @@ public class ClientReflectionGenerator extends Generator {
 	 * Since overridden parent annotations are potentially useful, we don't use
 	 * standard overriding behaviour
 	 *
+	 * FIXME - reflection - make sure that anns are in declaration order (i.e.
+	 * that X > Y, Y.registryLocation overrides X.registryLocationS)
+	 *
 	 * @throws ClassNotFoundException
 	 */
 	private Map<JClassType, Set<RegistryLocation>> getRegistryAnnotations(
@@ -883,7 +945,7 @@ public class ClientReflectionGenerator extends Generator {
 				sw.println(String.format("public %s (){}", implementationName));
 				sw.outdent();
 				sw.println("}");
-				commit(context, logger, printWriter);
+				commit(context, logger, printWriter, false);
 			}
 		}
 	}

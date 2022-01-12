@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.entity.IUserStory;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -147,7 +148,8 @@ public class UserStories {
 					if (line.isEmpty()) {
 						continue;
 					}
-					Object deser = AlcinaBeanSerializer.deserializeHolder(line);
+					Object deser = TransformManager.Serializer.get()
+							.deserialize(line);
 					if (deser instanceof List) {
 						list.addAll((List) deser);
 					} else {
