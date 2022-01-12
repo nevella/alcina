@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.PropertyPathAccessor;
+import cc.alcina.framework.common.client.util.PropertyPath;
 import cc.alcina.framework.entity.projection.GraphProjection;
 
 public abstract class TableGrouping<T> {
@@ -91,7 +91,7 @@ public abstract class TableGrouping<T> {
 				Field field = clazz.getDeclaredField(fieldName);
 				type = field.getType();
 			} catch (NoSuchFieldException e) {
-				type = Reflections.propertyAccessor().getPropertyType(clazz,
+				type = Reflections.property().getPropertyType(clazz,
 						fieldName);
 			}
 			for (Field child : new GraphProjection().getFieldsForClass(type)) {
@@ -155,7 +155,7 @@ public abstract class TableGrouping<T> {
 
 		String alias;
 
-		PropertyPathAccessor accessor;
+		PropertyPath accessor;
 
 		private FieldAccessor fieldAccessor;
 
@@ -166,7 +166,7 @@ public abstract class TableGrouping<T> {
 			this.propertyPath = propertyPath;
 			this.alias = alias;
 			this.function = function;
-			accessor = new PropertyPathAccessor(propertyPath);
+			accessor = new PropertyPath(propertyPath);
 		}
 
 		public Mapping auDate() {

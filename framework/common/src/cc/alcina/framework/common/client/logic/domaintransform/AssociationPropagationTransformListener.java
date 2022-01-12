@@ -10,7 +10,8 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.ApplyToken;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 /*
@@ -41,7 +42,7 @@ public class AssociationPropagationTransformListener
 			return;
 		}
 		{
-			//early exit
+			// early exit
 			switch (event.getTransformType()) {
 			case CREATE_OBJECT:
 				return;
@@ -61,11 +62,11 @@ public class AssociationPropagationTransformListener
 		switch (token.transformType) {
 		case ADD_REF_TO_COLLECTION:
 		case REMOVE_REF_FROM_COLLECTION: {
-			Association association = Reflections.propertyAccessor()
-					.getAnnotationForProperty(entity.entityClass(),
-							Association.class, event.getPropertyName());
-			if (!Reflections.classLookup()
-					.handlesClass(association.implementationClass())) {
+			Association association = Reflections.at(entity.entityClass())
+					.property(event.getPropertyName())
+					.annotation(Association.class);
+			if (!Reflections.at(association.implementationClass())
+					.isReflective()) {
 				return;
 			}
 		}
@@ -90,11 +91,13 @@ public class AssociationPropagationTransformListener
 			break;
 		}
 		case DELETE_OBJECT: {
-			Reflections.classLookup().iterateForPropertyWithAnnotation(
-					entity.entityClass(), Association.class,
-					(association, propertyReflector) -> {
-						Object associated = propertyReflector
-								.getPropertyValue(entity);
+			Reflections.<ClassReflector<?>> at(entity.entityClass())
+					.properties().stream()
+					.filter(p -> p.has(Association.class))
+					.forEach(property -> {
+						Association association = property
+								.annotation(Association.class);
+						Object associated = property.get(entity);
 						if (tm.markedForDeletion.contains(associated)) {
 							return;
 						}
@@ -113,20 +116,20 @@ public class AssociationPropagationTransformListener
 								Preconditions.checkArgument(associated == null);
 							}
 						} else if (association.dereferenceOnDelete()) {
-							if (!Reflections.classLookup().handlesClass(
-									association.implementationClass())) {
+							if (!Reflections
+									.at(association.implementationClass())
+									.isReflective()) {
 								return;
 							}
-							PropertyReflector associatedObjectAccessor = Reflections
-									.propertyAccessor().getPropertyReflector(
-											association.implementationClass(),
-											association.propertyName());
+							Property associatedProperty = Reflections
+									.at(association.implementationClass())
+									.property(association.propertyName());
 							if (associated instanceof Set) {
 								Set<? extends Entity> associatedSet = (Set<? extends Entity>) associated;
 								for (Entity associatedEntity : associatedSet) {
 									associatedEntity.domain().register();
-									Object associatedAssociationValue = associatedObjectAccessor
-											.getPropertyValue(associatedEntity);
+									Object associatedAssociationValue = associatedProperty
+											.get(associatedEntity);
 									// many-to-many
 									if (associatedAssociationValue instanceof Set) {
 										associatedEntity.domain()
@@ -136,28 +139,28 @@ public class AssociationPropagationTransformListener
 														entity);
 									} else {
 										// parent.children
-										associatedObjectAccessor
-												.setPropertyValue(
+										associatedProperty
+												.set(
 														associatedEntity, null);
 									}
 								}
 							} else if (associated instanceof Entity) {
 								((Entity) associated).domain().register();
-								Object associatedAssociationValue = associatedObjectAccessor
-										.getPropertyValue(associated);
+								Object associatedAssociationValue = associatedProperty
+										.get(associated);
 								if (associatedAssociationValue instanceof Set) {
 									// child.parent - optimised
 									tm.updateAssociation(
-											propertyReflector.getPropertyName(),
-											entity, (Entity) associated, true);
+											property.getName(), entity,
+											(Entity) associated, true);
 									// ((Entity) associated).domain()
 									// .removeFromProperty(
 									// association.propertyName(),
 									// entity);
 								} else if (associated instanceof Entity) {
 									// one-one(!!)
-									associatedObjectAccessor
-											.setPropertyValue(associated, null);
+									associatedProperty
+											.set(associated, null);
 								} else {
 									throw new UnsupportedOperationException();
 								}
@@ -174,7 +177,7 @@ public class AssociationPropagationTransformListener
 							// %s.%s",
 							// entity.entityClass()
 							// .getSimpleName(),
-							// propertyReflector.getPropertyName());
+							// property.getPropertyName());
 						}
 					});
 			break;

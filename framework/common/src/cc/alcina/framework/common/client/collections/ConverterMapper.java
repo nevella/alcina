@@ -7,7 +7,7 @@ import java.util.stream.Collectors;
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.PropertyMapper.PropertyMapping;
+import cc.alcina.framework.common.client.collections.PathMapper.PathMapping;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class ConverterMapper<A, B> implements Converter<A, B> {
@@ -15,7 +15,7 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 
 	protected Class<B> rightClass;
 
-	protected PropertyMapper mapper;
+	protected PathMapper mapper;
 
 	protected AuxiliaryMapper<A, B> leftAuxiliary;
 
@@ -78,20 +78,20 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 		return result;
 	}
 
-	protected PropertyMapping define(PropertyMapping mapping) {
+	protected PathMapping define(PathMapping mapping) {
 		return mapper.addMapping(mapping);
 	}
 
-	protected PropertyMapping define(String both) {
+	protected PathMapping define(String both) {
 		return define(both, both);
 	}
 
-	protected PropertyMapping define(String leftPropertyName,
+	protected PathMapping define(String leftPropertyName,
 			String rightPropertyName) {
 		return mapper.define(leftPropertyName, rightPropertyName);
 	}
 
-	protected PropertyMapping defineLeftCamel(String propertyName) {
+	protected PathMapping defineLeftCamel(String propertyName) {
 		return mapper.define(propertyName,
 				propertyName.substring(0, 1).toLowerCase()
 						+ propertyName.substring(1).replace("ID", "Id"));

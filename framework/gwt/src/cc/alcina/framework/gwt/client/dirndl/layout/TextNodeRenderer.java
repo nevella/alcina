@@ -111,7 +111,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 				DirectedLayout.Node node) {
 			BoundWidgetTypeFactory factory = Registry
 					.impl(TableTypeFactory.class);
-			List<String> strings = Reflections.classLookup()
+			List<String> strings = Reflections
 					.getPropertyReflectors(clazz).values().stream()
 					.map(pr -> Annotations.resolve(pr, Directed.Property.class,
 							node.getResolver()))

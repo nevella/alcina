@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.GraphNode;
 import cc.alcina.framework.common.client.util.Ax;
@@ -658,7 +658,7 @@ public class ReflectiveSerializers {
 				if (idx < keys.length - 1) {
 					idx++;
 					String key = keys[idx];
-					PropertyReflector reflector = SerializationSupport
+					Property reflector = SerializationSupport
 							.getPropertyReflector(source.value.getClass(), key);
 					current = new GraphNode(source, key, reflector);
 					current.serialNode = source.serialNode.getChild(key);

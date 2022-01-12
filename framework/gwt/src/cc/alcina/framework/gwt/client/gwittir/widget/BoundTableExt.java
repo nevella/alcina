@@ -82,6 +82,7 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import com.totsp.gwittir.client.util.ListSorter;
 
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
@@ -1519,7 +1520,8 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	private void insertNestedWidget(int row) {
 		// GWT.log( "Inserting nested for row "+row, null);
-		Integer realIndex = this.calculateRowToObjectOffset(Integer.valueOf(row));
+		Integer realIndex = this
+				.calculateRowToObjectOffset(Integer.valueOf(row));
 		// GWT.log( "RealIndex: "+ realIndex, null );
 		int i = 0;
 		SourcesPropertyChangeEvents o = null;
@@ -1938,10 +1940,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			if (col.getCellProvider() != null) {
 				widget = col.getCellProvider().get();
 			} else {
-				final Property p = GwittirBridge.get().getProperty(target,
-						col.getPropertyName());
 				widget = (BoundWidget) this.factory
-						.getWidgetProvider(p.getType()).get();
+						.getWidgetProvider(Reflections.at(target.getClass())
+								.property(col.getPropertyName()).getType())
+						.get();
 				// TODO Figure out some way to make this read only.
 			}
 			rowWidgets[colIndex] = widget;

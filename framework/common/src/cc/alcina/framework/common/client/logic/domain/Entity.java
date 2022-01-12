@@ -34,9 +34,9 @@ import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPoint
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PermissionRule;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -252,9 +252,6 @@ public abstract class Entity<T extends Entity> extends Bindable
 	@Override
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 	public String toString() {
-		if (Reflections.classLookup() == null) {
-			return toLocator().toString();
-		}
 		if (this instanceof HasDisplayName) {
 			try {
 				return ((HasDisplayName) this).displayName();
@@ -471,14 +468,11 @@ public abstract class Entity<T extends Entity> extends Bindable
 	}
 
 	public static interface Ownership {
-		public static Stream<PropertyReflector>
-				getOwnerReflectors(Class<?> beanClass) {
-			return Reflections.classLookup().getPropertyReflectors(beanClass)
-					.values().stream()
-					.filter(pr -> pr
-							.getAnnotation(DomainProperty.class) != null)
-					.filter(Objects::nonNull).filter(pr -> pr
-							.getAnnotation(DomainProperty.class).owner());
+		public static Stream<Property> getOwnerReflectors(Class<?> beanClass) {
+			return Reflections.at(beanClass).properties().stream()
+					.filter(pr -> pr.has(DomainProperty.class))
+					.filter(pr -> pr.annotation(DomainProperty.class)
+							.owner());
 		}
 
 		public static List<Entity> getOwningEntities(Entity entity) {
@@ -487,8 +481,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 			while (true) {
 				Entity f_cursor = cursor;
 				List<Entity> values = (List) getOwnerReflectors(
-						cursor.entityClass())
-								.map(pr -> pr.getPropertyValue(f_cursor))
+						cursor.entityClass()).map(pr -> pr.get(f_cursor))
 								.collect(Collectors.toList());
 				if (values.size() > 1) {
 					if (entity instanceof HasLogicalParent) {

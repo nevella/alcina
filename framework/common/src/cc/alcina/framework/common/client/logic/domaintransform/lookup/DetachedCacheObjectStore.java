@@ -4,6 +4,7 @@ import java.util.Collection;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 
 public class DetachedCacheObjectStore implements ObjectStore {
@@ -73,7 +74,7 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	@Override
 	public <T extends Entity> T getObject(T entity) {
 		return (T) (entity == null ? null
-				: getObject(entity.entityClass(), entity.getId(), 0));
+				: getObject(entity.entityClass(), entity.getId(), entity.getLocalId()));
 	}
 
 	@Override
@@ -99,4 +100,6 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	public void setLazyObjectLoader(LazyObjectLoader lazyObjectLoader) {
 		this.lazyObjectLoader = lazyObjectLoader;
 	}
+
+	
 }

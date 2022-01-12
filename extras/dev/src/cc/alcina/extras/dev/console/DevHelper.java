@@ -51,10 +51,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
@@ -71,7 +69,6 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
-import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.transform.TestPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.JacksonUtils;
@@ -333,10 +330,8 @@ public abstract class DevHelper {
 		Registry.registerSingleton(AlcinaWebappConfig.class, config);
 		registerNames(config);
 		initDataFolder();
-		Registry.get().registerBootstrapServices(ObjectPersistenceHelper.get());
 		ClassMetadata.USE_MD5_CHANGE_CHECK = true;
 		scanRegistry();
-		initClientReflector();
 		initDummyServices();
 		if (Thread.currentThread().getContextClassLoader() != null) {
 			TestPersistenceHelper.get().setReflectiveClassLoader(
@@ -527,19 +522,7 @@ public abstract class DevHelper {
 
 	protected abstract String getJbossConfigPrompt(String path);
 
-	protected void initClientReflector() {
-		try {
-			LooseContext.pushWithKey(
-					"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm.CONTEXT_MODULE_NAME",
-					getClass().getSimpleName());
-			Object clientReflectorJvm = Class.forName(
-					"cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm")
-					.newInstance();
-			ClientReflector.register((ClientReflector) clientReflectorJvm);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+	
 
 	protected abstract void initCustomServicesFirstHalf();
 

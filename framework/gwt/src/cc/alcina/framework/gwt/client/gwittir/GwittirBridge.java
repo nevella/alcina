@@ -71,7 +71,7 @@ import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
@@ -281,7 +281,7 @@ public class GwittirBridge implements PropertyAccessor {
 	private GwittirDateRendererProvider dateRendererProvider = new GwittirDateRendererProvider();
 
 	// FIXME - dirndl.meta
-	private MultikeyMap<PropertyReflector> reflectors = new UnsortedMultikeyMap<>(
+	private MultikeyMap<Property> reflectors = new UnsortedMultikeyMap<>(
 			2);
 
 	private GwittirBridge() {
@@ -306,7 +306,7 @@ public class GwittirBridge implements PropertyAccessor {
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		Class<? extends Object> c = obj.getClass();
-		Bean beanInfo = bi.getAnnotation(Bean.class);
+		Bean beanInfo = bi.annotation(Bean.class);
 		for (ClientPropertyReflector pr : prs) {
 			String pn = pr.getPropertyName();
 			if (propertyName != null && !(propertyName.equals(pn))) {
@@ -360,10 +360,10 @@ public class GwittirBridge implements PropertyAccessor {
 		if (beanInfo == null) {
 			return null;
 		}
-		ClientPropertyReflector propertyReflector = beanInfo
+		ClientPropertyReflector property = beanInfo
 				.getPropertyReflectors().get(propertyName);
-		return propertyReflector == null ? null
-				: propertyReflector.getAnnotation(annotationClass);
+		return property == null ? null
+				: property.annotation(annotationClass);
 	}
 
 	public GwittirDateRendererProvider getDateRendererProvider() {
@@ -412,8 +412,8 @@ public class GwittirBridge implements PropertyAccessor {
 			boolean editableWidgets, boolean multiple,
 			BoundWidgetTypeFactory factory, Object obj,
 			AnnotationLocation.Resolver resolver) {
-		Collection<PropertyReflector> propertyReflectors = Reflections
-				.classLookup().getPropertyReflectors(clazz).values();
+		Collection<Property> propertyReflectors = Reflections
+				.getPropertyReflectors(clazz).values();
 		AnnotationLocation clazzLocation = new AnnotationLocation(clazz, null,
 				resolver);
 		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
@@ -422,10 +422,10 @@ public class GwittirBridge implements PropertyAccessor {
 				.getAnnotation(ObjectPermissions.class);
 		obj = obj != null ? obj
 				: reflector.templateInstance();
-		PropertyReflector propertyReflector = Reflections.classLookup()
+		Property property = Reflections
 				.getPropertyReflector(clazz, propertyName);
 		AnnotationLocation propertyLocation = new AnnotationLocation(clazz,
-				propertyReflector, resolver);
+				property, resolver);
 		Class type = reflector.property(propertyName).getType();
 		BoundWidgetProvider bwp = factory.getWidgetProvider(type);
 		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
@@ -528,13 +528,13 @@ public class GwittirBridge implements PropertyAccessor {
 										: "gwittir-ValidationPopup-right");
 					} else {
 						validationFeedback = validationFeedbackSupplier
-								.apply(propertyReflector.getPropertyName());
+								.apply(property.getPropertyName());
 					}
 					validator = getValidator(domainType, obj,
-							propertyReflector.getPropertyName(),
+							property.getPropertyName(),
 							validationFeedback);
 				}
-				Field field = new Field(propertyReflector.getPropertyName(),
+				Field field = new Field(property.getPropertyName(),
 						// FIXME - dirndl.2
 						TextProvider.get().getLabelText(clazz,
 								propertyLocation),
@@ -590,11 +590,11 @@ public class GwittirBridge implements PropertyAccessor {
 					bwp = NOWRAP_LABEL_PROVIDER;
 				}
 			}
-			return new Field(propertyReflector.getPropertyName(),
+			return new Field(property.getPropertyName(),
 					TextProvider.get().getLabelText(clazz, propertyLocation),
 					bwp,
 					getValidator(type, obj,
-							propertyReflector.getPropertyName(), vf),
+							property.getPropertyName(), vf),
 					vf, getDefaultConverter(bwp, type));
 		}
 		return null;
@@ -619,7 +619,7 @@ public class GwittirBridge implements PropertyAccessor {
 	}
 
 	@Override
-	public PropertyReflector getPropertyReflector(Class clazz,
+	public Property getPropertyReflector(Class clazz,
 			String propertyName) {
 		Property property = getPropertyForClass(clazz, propertyName);
 		return reflectors.ensure(
@@ -655,14 +655,14 @@ public class GwittirBridge implements PropertyAccessor {
 		List<cc.alcina.framework.common.client.logic.reflection.Validator> validators = new ArrayList<>();
 		cc.alcina.framework.common.client.logic.reflection.Validators validatorsAnn = pr == null
 				? null
-				: pr.getAnnotation(Validators.class);
+				: pr.annotation(Validators.class);
 		cc.alcina.framework.common.client.logic.reflection.Validator info = pr == null
 				? null
-				: pr.getAnnotation(
+				: pr.annotation(
 						cc.alcina.framework.common.client.logic.reflection.Validator.class);
 		if (propertyName == null) {
-			validatorsAnn = bi.getAnnotation(Validators.class);
-			info = bi.getAnnotation(
+			validatorsAnn = bi.annotation(Validators.class);
+			info = bi.annotation(
 					cc.alcina.framework.common.client.logic.reflection.Validator.class);
 		}
 		if (validatorsAnn != null) {
@@ -674,7 +674,7 @@ public class GwittirBridge implements PropertyAccessor {
 		if (!validators.isEmpty()) {
 			CompositeValidator cv = new CompositeValidator();
 			for (cc.alcina.framework.common.client.logic.reflection.Validator validatorAnnotation : validators) {
-				Validator v = Reflections.classLookup()
+				Validator v = Reflections
 						.newInstance(validatorAnnotation.validator());
 				if (v instanceof ParameterisedValidator) {
 					ParameterisedValidator pv = (ParameterisedValidator) v;
@@ -727,14 +727,14 @@ public class GwittirBridge implements PropertyAccessor {
 		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
-		Bean beanInfo = bi.getAnnotation(Bean.class);
-		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
+		Bean beanInfo = bi.annotation(Bean.class);
+		ObjectPermissions op = bi.annotation(ObjectPermissions.class);
 		ClientPropertyReflector pr = bi.getPropertyReflectors()
 				.get(propertyName);
 		Property p = getProperty(obj, pr.getPropertyName());
 		if (pr != null && pr.getDisplayInfo() != null) {
 			PropertyPermissions pp = pr
-					.getAnnotation(PropertyPermissions.class);
+					.annotation(PropertyPermissions.class);
 			Display displayInfo = pr.getDisplayInfo();
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, obj, true)
@@ -862,9 +862,9 @@ public class GwittirBridge implements PropertyAccessor {
 		FieldDisplayNameComparator(ClientBeanReflector bi) {
 			this.bi = bi;
 			PropertyOrder classAnnotation = bi
-					.getAnnotation(PropertyOrder.class);
+					.annotation(PropertyOrder.class);
 			this.propertyOrder = classAnnotation != null ? classAnnotation
-					: bi.getAnnotation(Bean.class).propertyOrder();
+					: bi.annotation(Bean.class).propertyOrder();
 		}
 
 		@Override

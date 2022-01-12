@@ -85,7 +85,7 @@ public @interface NamedParameter {
 				String name) {
 			NamedParameter p = Support.getParameter(parameters, name);
 			if (p != null && p.classValue() != null) {
-				return (T) Reflections.classLookup().newInstance(p.classValue(),
+				return (T) Reflections.newInstance(p.classValue(),
 						0, 0);
 			}
 			return null;

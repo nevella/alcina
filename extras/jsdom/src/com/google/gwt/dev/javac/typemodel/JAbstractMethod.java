@@ -74,7 +74,7 @@ public abstract class JAbstractMethod
 
 	@Override
 	public <T extends Annotation> T getAnnotation(Class<T> annotationClass) {
-		return annotations.getAnnotation(annotationClass);
+		return annotations.annotation(annotationClass);
 	}
 
 	@Override

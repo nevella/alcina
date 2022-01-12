@@ -51,8 +51,8 @@ public class BaseTruncatedObjectCriterionPack {
 		public BaseTruncatedObjectCriterionSearchable(String category,
 				Class<TC> clazz) {
 			super(clazz, category, "", StandardSearchOperator.EQUAL_OR_NOT);
-			this.name = Ax.friendly(Reflections.classLookup()
-					.getTemplateInstance(getCriterionClass()).getObjectClass()
+			this.name = Ax.friendly(Reflections
+					.at(getCriterionClass()).templateInstance().getObjectClass()
 					.getSimpleName());
 		}
 

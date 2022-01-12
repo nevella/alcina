@@ -53,7 +53,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.common.client.util.PropertyPathAccessor;
+import cc.alcina.framework.common.client.util.PropertyPath;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -364,7 +364,7 @@ public class DomainStoreQueryTranslator {
 	public static class DomainComparator implements Comparator {
 		private Order order;
 
-		private PropertyPathAccessor accessor;
+		private PropertyPath accessor;
 
 		private NullPrecedence nullPrecedence;
 
@@ -374,7 +374,7 @@ public class DomainStoreQueryTranslator {
 			String propertyName = order.getPropertyName();
 			String translatedPropertyName = translator
 					.translatePropertyPath(null, context, propertyName);
-			accessor = new PropertyPathAccessor(translatedPropertyName);
+			accessor = new PropertyPath(translatedPropertyName);
 			Field field = Order.class.getDeclaredField("nullPrecedence");
 			field.setAccessible(true);
 			nullPrecedence = (NullPrecedence) field.get(order);
@@ -818,7 +818,7 @@ public class DomainStoreQueryTranslator {
 
 		FieldHelper fieldHelper = new FieldHelper();
 
-		List<PropertyPathAccessor> accessors = new ArrayList<>();
+		List<PropertyPath> accessors = new ArrayList<>();
 
 		Projection rootProjection;
 
@@ -877,7 +877,7 @@ public class DomainStoreQueryTranslator {
 			String propertyPath = fieldHelper.getValue(projection,
 					"propertyName");
 			propertyPath = translatePropertyPath(null, null, propertyPath);
-			accessors.add(new PropertyPathAccessor(propertyPath));
+			accessors.add(new PropertyPath(propertyPath));
 		}
 
 		private void setupAccessors() throws Exception {

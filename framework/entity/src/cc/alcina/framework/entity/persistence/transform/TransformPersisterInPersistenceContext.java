@@ -584,10 +584,10 @@ public class TransformPersisterInPersistenceContext {
 						return true;
 					case ADD_REF_TO_COLLECTION:
 					case REMOVE_REF_FROM_COLLECTION:
-						OneToMany oneToMany = Reflections.classLookup()
+						OneToMany oneToMany = Reflections
 								.getPropertyReflector(e.getObjectClass(),
 										e.getPropertyName())
-								.getAnnotation(OneToMany.class);
+								.annotation(OneToMany.class);
 						// if null, manytomany and it *is* an update
 						return oneToMany != null;
 					case DELETE_OBJECT:

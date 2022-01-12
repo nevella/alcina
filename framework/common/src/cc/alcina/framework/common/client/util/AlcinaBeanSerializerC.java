@@ -306,7 +306,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 				continue;
 			}
 			String name = property.getName();
-			if (property.hasAnnotation(AlcinaTransient.class)) {
+			if (property.has(AlcinaTransient.class)) {
 				continue;
 			}
 			Object value = gb.getPropertyValue(object, name);

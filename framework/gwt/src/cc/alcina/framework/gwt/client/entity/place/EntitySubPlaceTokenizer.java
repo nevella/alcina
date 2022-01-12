@@ -8,7 +8,7 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
 public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity, SD extends EntitySearchDefinition, P extends EntitySubPlace<E, SD>>
 		extends EntityPlaceTokenizer<ENT, SD, P> {
 	public E getSub() {
-		return Reflections.classLookup()
+		return Reflections
 				.getTemplateInstance(getTokenizedClass()).getSub();
 	}
 

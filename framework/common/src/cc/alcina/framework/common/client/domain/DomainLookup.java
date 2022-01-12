@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.MultisetCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.common.client.util.PropertyPathAccessor;
+import cc.alcina.framework.common.client.util.PropertyPath;
 
 public class DomainLookup<T, E extends Entity>
 		implements DomainListener<E>, IndexedValueProvider<E> {
@@ -25,7 +25,7 @@ public class DomainLookup<T, E extends Entity>
 
 	protected DomainStoreLookupDescriptor descriptor;
 
-	private PropertyPathAccessor propertyPathAccesor;
+	private PropertyPath propertyPath;
 
 	private boolean enabled = true;
 
@@ -36,11 +36,11 @@ public class DomainLookup<T, E extends Entity>
 	public DomainLookup(DomainStoreLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
 		if (descriptor.propertyPath != null) {
-			this.propertyPathAccesor = new PropertyPathAccessor(
+			this.propertyPath = new PropertyPath(
 					descriptor.propertyPath);
 		}
 		Class indexClass = CommonUtils.getWrapperType(
-				descriptor.getLookupIndexClass(this.propertyPathAccesor));
+				descriptor.getLookupIndexClass(this.propertyPath));
 		this.store = Registry.impl(MultisetCreator.class).create(indexClass,
 				getListenedClass());
 		this.relevanceFilter = descriptor.getRelevanceFilter();
@@ -91,8 +91,8 @@ public class DomainLookup<T, E extends Entity>
 		return set == null ? Collections.emptySet() : set;
 	}
 
-	public PropertyPathAccessor getPropertyPathAccesor() {
-		return this.propertyPathAccesor;
+	public PropertyPath getPropertyPathAccesor() {
+		return this.propertyPath;
 	}
 
 	@Override
@@ -201,6 +201,6 @@ public class DomainLookup<T, E extends Entity>
 		if (descriptor.valueFunction != null) {
 			return descriptor.valueFunction.apply(entity);
 		}
-		return propertyPathAccesor.getChainedProperty(entity);
+		return propertyPath.getChainedProperty(entity);
 	}
 }

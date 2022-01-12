@@ -48,8 +48,8 @@ import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.SynchronousAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.HasParameters;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -408,7 +408,7 @@ public abstract class ActionViewProviderBase
 		public void onClick(ClickEvent event) {
 			PermissibleActionEvent action = new PermissibleActionEvent(
 					this.action,
-					ClientReflector.get().newInstance(ViewAction.class));
+					Reflections.newInstance(ViewAction.class));
 			fireVetoableActionEvent(action);
 		}
 

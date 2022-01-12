@@ -26,7 +26,7 @@ public class AlcinaPrehistory {
 			List<Class> lookup = Registry.get().lookup(PreHistoryHandler.class);
 			for (Class clazz : lookup) {
 				PreHistoryHandler handler = (PreHistoryHandler) Reflections
-						.classLookup().newInstance(clazz);
+						.newInstance(clazz);
 				handler.register(preHistoryHandlerMap);
 			}
 		}

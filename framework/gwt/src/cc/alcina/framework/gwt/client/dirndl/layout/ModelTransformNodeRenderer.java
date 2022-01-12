@@ -64,7 +64,7 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 			directedModel = new DelegatingNodeRenderer.SimpleDelegate(
 					directedModel);
 		}
-		Node child = node.addChild(directedModel, null, node.propertyReflector);
+		Node child = node.addChild(directedModel, null, node.property);
 		/*
 		 * add node css
 		 */

@@ -212,8 +212,8 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 		for (ClassrefScannerMetadata metadata : outgoingCache.classData
 				.values()) {
 			if (metadata.isClassRef) {
-				persistableClasses.add(Reflections.classLookup()
-						.getClassForName(metadata.className));
+				persistableClasses.add(Reflections
+						.forName(metadata.className));
 			}
 		}
 		if (!persistent) {

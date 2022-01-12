@@ -22,7 +22,7 @@ public abstract class Reference {
 	}
 
 	public static String id(Class<? extends Reference> refClass) {
-		return Reflections.classLookup()
+		return Reflections
 				.getAnnotationForClass(refClass, Ref.class).value();
 	}
 
@@ -46,7 +46,7 @@ public abstract class Reference {
 				Map<String, Class<? extends Reference>> byId = new LinkedHashMap<>();
 				List<Class> classes = Registry.get().lookup(clazz);
 				for (Class refClass : classes) {
-					String refId = Reflections.classLookup()
+					String refId = Reflections
 							.getAnnotationForClass(refClass, Ref.class).value();
 					Class existing = byId.put(refId, refClass);
 					if (existing != null) {

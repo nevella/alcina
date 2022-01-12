@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.PropertyPathAccessor;
+import cc.alcina.framework.common.client.util.PropertyPath;
 
 public class DomainStoreLookupDescriptor<T extends Entity>
 		implements MemoryStatProvider {
@@ -84,11 +84,11 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		return lookup;
 	}
 
-	public Class getLookupIndexClass(PropertyPathAccessor propertyPathAccesor) {
+	public Class getLookupIndexClass(PropertyPath propertyPath) {
 		if (lookupIndexClass != null) {
 			return lookupIndexClass;
 		}
-		Class chainedPropertyType = propertyPathAccesor
+		Class chainedPropertyType = propertyPath
 				.getChainedPropertyType(Reflections.newInstance(clazz));
 		if (chainedPropertyType != null) {
 			return chainedPropertyType;
@@ -98,7 +98,7 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		}
 		return Registry.impl(ReflectiveChainedPropertyTypeProvider.class)
 				.getLookupIndexClass(clazz,
-						propertyPathAccesor.getPropertyPath());
+						propertyPath.getPropertyPath());
 	}
 
 	public String getPropertyPath() {

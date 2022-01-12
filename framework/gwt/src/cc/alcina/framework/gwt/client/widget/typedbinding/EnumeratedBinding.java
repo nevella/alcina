@@ -14,7 +14,7 @@ public interface EnumeratedBinding {
 	}
 
 	default Class getBoundPropertyType() {
-		return Reflections.propertyAccessor().getPropertyType(getBoundClass(),
+		return Reflections.property().getPropertyType(getBoundClass(),
 				getPath());
 	}
 

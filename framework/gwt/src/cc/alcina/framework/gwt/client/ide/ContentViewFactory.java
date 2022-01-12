@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
+import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Element;
@@ -66,22 +67,29 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.CancelAction;
+import cc.alcina.framework.common.client.actions.instances.CreateAction;
+import cc.alcina.framework.common.client.actions.instances.DeleteAction;
+import cc.alcina.framework.common.client.actions.instances.EditAction;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Action;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -253,7 +261,7 @@ public class ContentViewFactory {
 		if (converter != null) {
 			beans = GwittirUtils.convertCollection(beans, converter);
 		}
-		Object bean = ClientReflector.get().getTemplateInstance(beanClass);
+		Object bean = Reflections.at(beanClass).templateInstance();
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		Field[] fields = GwittirBridge.get()
 				.fieldsForReflectedObjectAndSetupWidgetFactory(bean, factory,
@@ -296,8 +304,6 @@ public class ContentViewFactory {
 	}
 
 	public PaneWrapperWithObjects createBeanView(Object bean) {
-		ClientBeanReflector bi = ClientReflector.get()
-				.beanInfoForClass(bean.getClass());
 		Boolean overrideAutoSave = LooseContext.get(CONTEXT_OVERRIDE_AUTOSAVE);
 		if (LooseContext.has(CONTEXT_FIELD_CUSTOMISER)) {
 			ContentViewFactoryFieldCustomiser customiser = LooseContext
@@ -311,13 +317,12 @@ public class ContentViewFactory {
 		}
 		boolean cloned = false;
 		Collection supportingObjects = new ArrayList();
-		if (!doNotClone && !autoSave
-				&& (!(bean instanceof Entity) || Reflections.objectLookup()
-						.getObject((Entity) bean) != null)) {
+		if (!doNotClone && !autoSave && (!(bean instanceof Entity)
+				|| Domain.find((Entity) bean) != null)) {
 			bean = new CloneHelper().shallowishBeanClone(bean);
 			cloned = true;
 		}
-		if (bi == null) {
+		if (!Reflections.at(bean.getClass()).isReflective()) {
 			throw new WrappedRuntimeException(
 					"Unviewable bean type: " + bean.getClass(),
 					SuggestedAction.NOTIFY_WARNING);
@@ -431,16 +436,15 @@ public class ContentViewFactory {
 	}
 
 	public Widget createExtraActionsWidget(final Object bean) {
-		ClientBeanReflector bi = ClientReflector.get()
-				.beanInfoForClass(bean.getClass());
-		if (bi == null) {
+		ClassReflector<? extends Object> reflector = Reflections
+				.at(bean.getClass());
+		if (!reflector.isReflective()) {
 			return null;
 		}
 		FlowPanel fp = null;
 		ExpandableListPanel elp = null;
-		for (Class<? extends PermissibleAction> c : bi.getActions(bean)) {
-			final PermissibleAction v = Reflections.classLookup()
-					.getTemplateInstance(c);
+		for (Class<? extends PermissibleAction> c : getBeanActions(bean)) {
+			final PermissibleAction v = Reflections.at(c).templateInstance();
 			if (v instanceof NonstandardObjectAction) {
 				if (fp == null) {
 					fp = new FlowPanel();
@@ -470,9 +474,29 @@ public class ContentViewFactory {
 		return fp;
 	}
 
+	private List<Class<? extends PermissibleAction>>
+			getBeanActions(Object bean) {
+		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
+		ObjectActions actions = Reflections.at(bean.getClass())
+				.annotation(Bean.class).actions();
+		if (actions != null) {
+			for (Action action : actions.value()) {
+				Class<? extends PermissibleAction> actionClass = action
+						.actionClass();
+				boolean noPermissionsCheck = actionClass == CreateAction.class
+						|| actionClass == EditAction.class
+						|| actionClass == ViewAction.class
+						|| actionClass == DeleteAction.class;
+				if (noPermissionsCheck || PermissionsManager.get().isPermitted(
+						bean, new AnnotatedPermissible(action.permission()))) {
+					result.add(actionClass);
+				}
+			}
+		}
+		return result;
+	}
+
 	public PaneWrapperWithObjects createMultipleBeanView(Collection beans) {
-		ClientBeanReflector bi = ClientReflector.get()
-				.beanInfoForClass(beanClass);
 		boolean cloned = false;
 		if (!doNotClone && !autoSave && editable) {
 			ArrayList beansCopy = new ArrayList();
@@ -482,13 +506,13 @@ public class ContentViewFactory {
 			beans = beansCopy;
 			cloned = true;
 		}
-		if (bi == null) {
+		if (!Reflections.at(beanClass).isReflective()) {
 			throw new WrappedRuntimeException(
 					"Unviewable bean type: " + beanClass,
 					SuggestedAction.NOTIFY_WARNING);
 		}
 		Object bean = beans.iterator().hasNext() ? beans.iterator().next()
-				: Reflections.classLookup().getTemplateInstance(beanClass);
+				: Reflections.at(beanClass).templateInstance();
 		PaneWrapperWithObjects cp = createPaneWrapper(actionListener);
 		cp.autoSave = autoSave;
 		if (!noCaption) {
@@ -741,27 +765,37 @@ public class ContentViewFactory {
 	}
 
 	private Widget createCaption(Object bean, PaneWrapperWithObjects cp) {
-		ClientBeanReflector bi = ClientReflector.get()
-				.beanInfoForClass(bean.getClass());
 		TextProvider.get().setTrimmed(true);
 		List<SimpleHistoryEventInfo> history = Arrays
 				.asList(new SimpleHistoryEventInfo[] {
 						new SimpleHistoryEventInfo(objName()),
-						new SimpleHistoryEventInfo(bi.getTypeDisplayName()),
-						new SimpleHistoryEventInfo(bi.getObjectName(bean)) });
+						new SimpleHistoryEventInfo(
+								getTypeDisplayName(beanClass)),
+						new SimpleHistoryEventInfo(
+								TextProvider.get().getObjectName(bean)) });
 		TextProvider.get().setTrimmed(false);
 		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
 	}
 
 	private Widget createMultiCaption(Class beanClass,
 			PaneWrapperWithObjects cp) {
-		ClientBeanReflector bi = ClientReflector.get()
-				.beanInfoForClass(beanClass);
 		List<SimpleHistoryEventInfo> history = Arrays
 				.asList(new SimpleHistoryEventInfo[] {
 						new SimpleHistoryEventInfo(objName()),
-						new SimpleHistoryEventInfo(bi.getTypeDisplayName()) });
+						new SimpleHistoryEventInfo(
+								getTypeDisplayName(beanClass)) });
 		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
+	}
+
+	public String getTypeDisplayName(Class<?> beanClass) {
+		String tn = Reflections.at(beanClass).annotation(Bean.class)
+				.displayInfo().name();
+		if (CommonUtils.isNullOrEmpty(tn)) {
+			tn = CommonUtils
+					.capitaliseFirst(CommonUtils.classSimpleName(beanClass));
+		}
+		return TextProvider.get().getUiObjectText(beanClass,
+				TextProvider.DISPLAY_NAME, tn);
 	}
 
 	private PaneWrapperWithObjects
@@ -1230,7 +1264,8 @@ public class ContentViewFactory {
 					} else {
 					}
 					return false;
-				} // not valid
+				} // not
+					// valid
 				if (serverValidationCallback != null) {
 					for (Validator v : validators) {
 						if (v instanceof ServerValidator) {
@@ -1274,7 +1309,7 @@ public class ContentViewFactory {
 			}
 			PermissibleAction actionInstance = isFireOkButtonClickAsOkActionEvent()
 					? OkAction.INSTANCE
-					: ClientReflector.get().newInstance(ViewAction.class);
+					: Reflections.newInstance(ViewAction.class);
 			final PermissibleActionEvent action = new PermissibleActionEvent(
 					initialObjects, actionInstance);
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
@@ -1373,23 +1408,21 @@ public class ContentViewFactory {
 		public void onAttachOrDetach(AttachEvent event) {
 			if (event.isAttached()) {
 				try {
-					PropertyAccessor pa = Reflections.propertyAccessor();
 					int r = 0;
 					for (Binding b : grid.getBinding().getChildren()) {
 						BindingInstance right = b.getRight();
-						Display displayInfo = pa.getAnnotationForProperty(
-								right.object.getClass(), Display.class,
-								right.property.getName());
+						Property rightProperty = Reflections
+								.at(right.object.getClass())
+								.property(right.property.getName());
+						Display displayInfo = rightProperty
+								.annotation(Display.class);
 						if (displayInfo != null) {
 							if (!PermissionsManager.get().isPermitted(
 									right.object, displayInfo.visible())) {
 								grid.setRowVisibility(r, false);
 							}
 						}
-						PropertyPermissions pp = pa.getAnnotationForProperty(
-								right.object.getClass(),
-								PropertyPermissions.class,
-								right.property.getName());
+						PropertyPermissions pp = rightProperty.annotation(PropertyPermissions.class);
 						if (pp != null) {
 							if (!PermissionsManager.get()
 									.isPermitted(right.object, pp.write())) {

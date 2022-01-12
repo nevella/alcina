@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -105,24 +105,24 @@ public class SerializationSignatureListener
 			DomainTransformEvent transform) {
 		Class entityClass = transform.getObjectClass();
 		String propertyName = transform.getPropertyName();
-		PropertyReflector propertyReflector = Reflections.classLookup()
+		Property property = Reflections
 				.getPropertyReflector(transform.getObjectClass(),
 						transform.getPropertyName());
 		String sourcePropertyname = propertyName.replaceFirst("(.+)Serialized",
 				"$1");
-		PropertyReflector toSerializeReflector = Reflections.classLookup()
+		Property toSerializeReflector = Reflections
 				.getPropertyReflector(entityClass, sourcePropertyname);
 		boolean serializedPropertyChange = toSerializeReflector != null
 				&& toSerializeReflector
-						.getAnnotation(DomainProperty.class) != null
-				&& toSerializeReflector.getAnnotation(DomainProperty.class)
+						.annotation(DomainProperty.class) != null
+				&& toSerializeReflector.annotation(DomainProperty.class)
 						.serialize();
 		if (serializedPropertyChange) {
 			String signaturePropertyName = sourcePropertyname + "Signature";
-			if (Reflections.classLookup().hasProperty(entityClass,
+			if (Reflections.hasProperty(entityClass,
 					signaturePropertyName)) {
-				PropertyReflector serializedSignatureReflector = Reflections
-						.classLookup().getPropertyReflector(entityClass,
+				Property serializedSignatureReflector = Reflections
+						.getPropertyReflector(entityClass,
 								signaturePropertyName);
 				AdjunctTransformCollation transformCollation = token
 						.getTransformCollation();

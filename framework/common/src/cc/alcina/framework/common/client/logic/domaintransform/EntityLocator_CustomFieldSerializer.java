@@ -31,8 +31,8 @@ public final class EntityLocator_CustomFieldSerializer
 			EntityLocator instance) throws SerializationException {
 		instance.id = streamReader.readLong();
 		instance.localId = streamReader.readLong();
-		instance.clazz = Reflections.classLookup()
-				.getClassForName(streamReader.readString());
+		instance.clazz = Reflections
+				.forName(streamReader.readString());
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,

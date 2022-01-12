@@ -32,8 +32,7 @@ public class ActionRefPlace extends BasePlace {
 	}
 
 	public Optional<EmitsTopic> emitsTopic() {
-		return Optional.ofNullable(Reflections.classLookup()
-				.getAnnotationForClass(ref, EmitsTopic.class));
+		return Optional.ofNullable(Reflections.at(ref).annotation(EmitsTopic.class));
 	}
 
 	public Optional<ActionHandler> getActionHandler() {
@@ -45,9 +44,7 @@ public class ActionRefPlace extends BasePlace {
 		/*
 		 * FIXME - dirndl1.1 - should annotation resolution be via context?
 		 */
-		return Optional
-				.ofNullable(Reflections.classLookup().getAnnotationForClass(ref,
-						ActionRefHandler.class))
+		return Optional.ofNullable(Reflections.at(ref).annotation(ActionRefHandler.class))
 				.map(ann -> Reflections.newInstance(ann.value()));
 	}
 
@@ -69,8 +66,7 @@ public class ActionRefPlace extends BasePlace {
 
 	@Override
 	public String toString() {
-		Ref refRef = Reflections.classLookup().getAnnotationForClass(ref,
-				Ref.class);
+		Ref refRef = Reflections.at(ref).annotation(Ref.class);
 		if (refRef.displayName().length() > 0) {
 			return refRef.displayName();
 		}

@@ -132,7 +132,7 @@ public class ReflectiveSearchDefinitionSerializer
 			SearchDefinition def = Registry.impl(AlcinaBeanSerializer.class)
 					.registerLookups(abbrevLookup, reverseAbbrevLookup)
 					.deserialize(serializedDef);
-			SearchDefinition defaultInstance = Reflections.classLookup()
+			SearchDefinition defaultInstance = Reflections
 					.newInstance(def.getClass());
 			defaultInstance.getCriteriaGroups().forEach(cg -> {
 				CriteriaGroup ocg = def.criteriaGroup(cg.getClass());
@@ -182,7 +182,7 @@ public class ReflectiveSearchDefinitionSerializer
 					.lookup(SearchDefinitionSerializationInfo.class);
 			for (Class clazz : classes) {
 				SearchDefinitionSerializationInfo info = Reflections
-						.classLookup().getAnnotationForClass(clazz,
+						.getAnnotationForClass(clazz,
 								SearchDefinitionSerializationInfo.class);
 				if (info == null) {
 					continue;
@@ -219,7 +219,7 @@ public class ReflectiveSearchDefinitionSerializer
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-		SearchDefinition defaultInstance = Reflections.classLookup()
+		SearchDefinition defaultInstance = Reflections
 				.newInstance(def.getClass());
 		def.getCriteriaGroups().removeIf(cg -> {
 			CriteriaGroup ocg = defaultInstance.criteriaGroup(cg.getClass());
@@ -251,7 +251,7 @@ public class ReflectiveSearchDefinitionSerializer
 
 	protected boolean
 			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
-		return Reflections.classLookup().getAnnotationForClass(defClass,
+		return Reflections.getAnnotationForClass(defClass,
 				TypeSerialization.class) != null;
 	}
 }

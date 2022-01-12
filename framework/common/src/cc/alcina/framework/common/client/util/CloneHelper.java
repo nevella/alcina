@@ -99,7 +99,7 @@ public class CloneHelper {
 		createdMap.put(o, ret);
 		for (Property property : Reflections.at(ret.getClass()).properties()) {
 			if (property.isReadOnly()
-					|| property.hasAnnotation(AlcinaTransient.class)) {
+					|| property.has(AlcinaTransient.class)) {
 				continue;
 			}
 			Object[] args = new Object[1];

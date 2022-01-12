@@ -96,7 +96,7 @@ public class SelectorProvider implements BoundWidgetProvider {
 				}
 			};
 			if (providerClass != null) {
-				provider = (Supplier<Collection>) Reflections.classLookup()
+				provider = (Supplier<Collection>) Reflections
 						.newInstance(providerClass);
 			}
 			return new FlatSearchSelector(selectionObjectClass,

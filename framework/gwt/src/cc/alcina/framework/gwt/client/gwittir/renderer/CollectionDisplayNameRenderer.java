@@ -17,7 +17,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
  *
@@ -37,7 +37,7 @@ public class CollectionDisplayNameRenderer extends FlexibleToStringRenderer {
 			if (result.length() != 0) {
 				result += ", ";
 			}
-			result += ClientReflector.get().displayNameForObject(object);
+			result += HasDisplayName.displayName(object);
 		}
 		return result;
 	}

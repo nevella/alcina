@@ -20,10 +20,9 @@ import com.google.gwt.user.client.ui.Label;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.LooseContext;
 
@@ -72,43 +71,32 @@ public class TextProvider {
 		return new InlineLabel(text);
 	}
 
-	public String getLabelText(Class c, AnnotationLocation location) {
+	// FIXME - 2022 - remove once all usages removed
+	public static final String CONTEXT_NAME_TRANSLATOR = TextProvider.class
+			.getName() + ".CONTEXT_NAME_TRANSLATOR";
+
+	public String getLabelText(AnnotationLocation location) {
 		Display display = location.getAnnotation(Display.class);
-		String rawName = display == null
-				? location.propertyReflector.getPropertyName()
+		String rawName = display == null ? location.property.getName()
 				: display.name();
-		if (LooseContext.has(ClientPropertyReflector.CONTEXT_NAME_TRANSLATOR)) {
+		if (LooseContext.has(CONTEXT_NAME_TRANSLATOR)) {
 			rawName = ((Function<String, String>) LooseContext
-					.get(ClientPropertyReflector.CONTEXT_NAME_TRANSLATOR))
-							.apply(location.propertyReflector
-									.getPropertyName());
+					.get(CONTEXT_NAME_TRANSLATOR))
+							.apply(location.property.getName());
 		}
 		return rawName;
 	}
 
-	public String getLabelText(Class c, ClientPropertyReflector pr) {
-		return pr.getDisplayName();
+	public String getLabelText(Class clazz, Property property) {
+		return getLabelText(new AnnotationLocation(clazz, property));
 	}
 
-	public Object getLabelText(Class c, String propertyName) {
-		ClientBeanReflector beanReflector = ClientReflector.get()
-				.beanInfoForClass(c);
-		ClientPropertyReflector propertyReflector = beanReflector
-				.getPropertyReflectors().get(propertyName);
-		return propertyReflector == null ? propertyName
-				: getLabelText(c, propertyReflector);
+	public Object getLabelText(Class clazz, String propertyName) {
+		Property property = Reflections.at(clazz).property(propertyName);
+		return property == null ? propertyName : getLabelText(clazz, property);
 	}
 
 	public String getObjectName(Object o) {
-		if (o == null) {
-			return "null";
-		}
-		ClientBeanReflector beanReflector = ClientReflector.get()
-				.beanInfoForClass(o.getClass());
-		return getObjectName(o, beanReflector);
-	}
-
-	public String getObjectName(Object o, ClientBeanReflector beanReflector) {
 		if (o == null) {
 			return "(null)";
 		}

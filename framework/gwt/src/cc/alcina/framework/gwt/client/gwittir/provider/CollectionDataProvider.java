@@ -21,13 +21,11 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.ui.table.HasChunks;
 import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
@@ -67,22 +65,15 @@ public class CollectionDataProvider implements SortableDataProvider {
 		if (first == null) {
 			return new String[0];
 		}
-		ClientBeanReflector bi = ClientReflector.get()
-				.beanInfoForClass(first.getClass());
-		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
-				.values();
 		List<String> fieldNames = new ArrayList<String>();
-		for (ClientPropertyReflector pr : prs) {
-			Property p = GwittirBridge.get().getProperty(first,
-					pr.getPropertyName());
+		for (Property property : Reflections.at(first.getClass()).properties()) {
 			try {
-				Object o = p.getAccessorMethod().invoke(first,
-						CommonUtils.EMPTY_OBJECT_ARRAY);
+				Object o = property.get(first);
 				if (o instanceof Collection) {
 					// continue; //in fact, catch this in sortOnProperty
 					// (easier, just ignore)
 				}
-				fieldNames.add(pr.getPropertyName());
+				fieldNames.add(property.getName());
 			} catch (Exception e) {
 			}
 		}
@@ -114,11 +105,10 @@ public class CollectionDataProvider implements SortableDataProvider {
 		try {
 			if (!sort.isEmpty()) {
 				Object o = sort.get(0);
-				Property p = GwittirBridge.get().getProperty(o, propertyName);
+				Property property = Reflections.at(o.getClass()).property(propertyName);
 				Map<Object, List<Object>> cMap = new HashMap<Object, List<Object>>();
 				for (Object o2 : sort) {
-					Object pVal = p.getAccessorMethod().invoke(o2,
-							CommonUtils.EMPTY_OBJECT_ARRAY);
+					Object pVal = property.get(o2);
 					if (!cMap.containsKey(pVal)) {
 						cMap.put(pVal, new ArrayList<Object>());
 					}

@@ -51,6 +51,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 /**
@@ -74,34 +75,6 @@ public class CommonUtils {
 
 	public static final String[] DAY_NAMES = { "Sunday", "Monday", "Tuesday",
 			"Wednesday", "Thursday", "Friday", "Saturday" };
-
-	private static final Map<String, Class> stdClassMap = new HashMap<String, Class>();
-	static {
-		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
-				Byte.class, Integer.class, Boolean.class, Character.class,
-				Date.class, String.class, Timestamp.class };
-		for (Class std : stds) {
-			stdClassMap.put(std.getName(), std);
-		}
-	}
-
-	private static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
-	static {
-		Class[] prims = { long.class, int.class, short.class, char.class,
-				byte.class, boolean.class, double.class, float.class };
-		for (Class prim : prims) {
-			primitiveClassMap.put(prim.getName(), prim);
-		}
-	}
-
-	public static final Map<String, Class> stdAndPrimitivesMap = new HashMap<String, Class>();
-	static {
-		stdAndPrimitivesMap.putAll(stdClassMap);
-		stdAndPrimitivesMap.putAll(primitiveClassMap);
-	}
-
-	public static final Set<Class> stdAndPrimitives = new HashSet<Class>(
-			stdAndPrimitivesMap.values());
 
 	public static Supplier<Set> setSupplier = () -> new LinkedHashSet();
 
@@ -1075,7 +1048,7 @@ public class CommonUtils {
 	}
 
 	public static boolean isStandardJavaClass(Class clazz) {
-		return stdAndPrimitivesMap.containsValue(clazz);
+		return ClassReflector.stdAndPrimitivesMap.containsValue(clazz);
 	}
 
 	public static boolean isStandardJavaClassOrEnum(Class clazz) {
@@ -1544,8 +1517,7 @@ public class CommonUtils {
 				} else {
 					logger.warn("Cloning unexpected shallow collection: {}",
 							collection.getClass());
-					clone = (T) Reflections.classLookup()
-							.newInstance(collection.getClass());
+					clone = (T) Reflections.newInstance(collection.getClass());
 				}
 			}
 			return clone;
@@ -1994,15 +1966,15 @@ public class CommonUtils {
 	}
 
 	public static final Set<String> COLLECTION_CLASS_NAMES = Arrays
-	.asList(ArrayList.class, LinkedList.class, HashSet.class,
-			LinkedHashSet.class, TreeSet.class, HashMap.class,
-			LinkedHashMap.class, TreeMap.class, LightSet.class,
-			LiSet.class, LightMap.class, CountingMap.class)
-	.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
+			.asList(ArrayList.class, LinkedList.class, HashSet.class,
+					LinkedHashSet.class, TreeSet.class, HashMap.class,
+					LinkedHashMap.class, TreeMap.class, LightSet.class,
+					LiSet.class, LightMap.class, CountingMap.class)
+			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 
 	public static final Set<String> CORE_CLASS_NAMES = Arrays
-	.asList(Class.class, Timestamp.class, Date.class).stream()
-	.map(Class::getCanonicalName).collect(Collectors.toSet());
+			.asList(Class.class, Timestamp.class, Date.class).stream()
+			.map(Class::getCanonicalName).collect(Collectors.toSet());
 
 	public enum ComparatorResult {
 		BOTH_NON_NULL, BOTH_NULL, FIRST_NULL, SECOND_NULL;

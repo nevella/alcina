@@ -5,7 +5,7 @@ import java.util.Objects;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -19,7 +19,7 @@ public class ServerUniquenessValidationHandler
 		String value = Ax.blankToEmpty(uniquenessValidator.getValue());
 		uniquenessValidator.setSuggestedValue(value);
 		while (true) {
-			PropertyReflector reflector = Reflections.classLookup()
+			Property reflector = Reflections
 					.getPropertyReflector(uniquenessValidator.getObjectClass(),
 							uniquenessValidator.getPropertyName());
 			String test = value;

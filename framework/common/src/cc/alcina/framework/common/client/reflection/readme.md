@@ -11,6 +11,7 @@
 
 ## Steps
 ### Implement JVM
+#### Gwittir ->alcina (drop most incl introspector generator)
 ### Reroute access (via source modifiers)
 ### Working clients
 ### Cleanup 
@@ -23,3 +24,6 @@ should route to the correct property
 
 ## plan
 ...crush it all. Delete propertyreflector, classlookup etc
+
+##  	TODOS
+### 	reflection/script - split between serialization accessors (field) vs other (method)?

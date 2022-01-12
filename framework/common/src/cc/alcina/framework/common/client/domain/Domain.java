@@ -15,11 +15,10 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
@@ -72,30 +71,26 @@ public class Domain {
 		V writeable = entity.domain().wasPersisted()
 				? (V) detachedVersion(entity.domain().domainVersion())
 				: Domain.create(clazz);
-		List<PropertyInfo> writableProperties = Reflections.classLookup()
-				.getWritableProperties(clazz);
-		for (PropertyInfo propertyInfo : writableProperties) {
-			String propertyName = propertyInfo.getPropertyName();
-			if (TransformManager.get().isIgnoreProperty(propertyName)) {
-				continue;
-			}
-			if (ignoreProperties != null
-					&& ignoreProperties.contains(propertyName)) {
-				continue;
-			}
-			AlcinaTransient alcinaTransient = Reflections.propertyAccessor()
-					.getAnnotationForProperty(entity.getClass(),
-							AlcinaTransient.class, propertyName);
-			if (alcinaTransient != null) {
-				continue;
-			}
-			logger.info(
-					"detachedToDomain:: {}.{} - ignoreProperties: {} :: [{}]->[{}]",
-					entity.getClass().getSimpleName(),
-					propertyInfo.getPropertyName(), ignoreProperties,
-					propertyInfo.get(entity), propertyInfo.get(writeable));
-			propertyInfo.copy(entity, writeable);
-		}
+		Reflections.at(clazz).properties().stream().filter(p -> !p.isReadOnly())
+				.forEach(property -> {
+					if (TransformManager.get()
+							.isIgnoreProperty(property.getName())) {
+						return;
+					}
+					if (ignoreProperties != null
+							&& ignoreProperties.contains(property.getName())) {
+						return;
+					}
+					if (property.has(AlcinaTransient.class)) {
+						return;
+					}
+					logger.info(
+							"detachedToDomain:: {}.{} - ignoreProperties: {} :: [{}]->[{}]",
+							entity.getClass().getSimpleName(),
+							property.getName(), ignoreProperties,
+							property.get(entity), property.get(writeable));
+					property.copy(entity, writeable);
+				});
 		return writeable;
 	}
 
@@ -114,8 +109,7 @@ public class Domain {
 		V first = by(clazz, propertyName, value);
 		if (first == null) {
 			first = create(clazz);
-			Reflections.propertyAccessor().setPropertyValue(first, propertyName,
-					value);
+			Reflections.at(clazz).property(propertyName).set(first, value);
 		}
 		return first;
 	}
@@ -197,10 +191,9 @@ public class Domain {
 
 		default <V extends Entity> V byProperty(Class<V> clazz,
 				String propertyName, Object value) {
-			PropertyReflector reflector = Reflections.classLookup()
-					.getPropertyReflector(clazz, propertyName);
-			return stream(clazz).filter(
-					e -> Objects.equals(reflector.getPropertyValue(e), value))
+			Property property = Reflections.at(clazz).property(propertyName);
+			return stream(clazz)
+					.filter(e -> Objects.equals(property.get(e), value))
 					.findFirst().orElse(null);
 		}
 
@@ -218,10 +211,9 @@ public class Domain {
 
 		default <V extends Entity> List<V> listByProperty(Class<V> clazz,
 				String propertyName, Object value) {
-			PropertyReflector reflector = Reflections.classLookup()
-					.getPropertyReflector(clazz, propertyName);
-			return stream(clazz).filter(
-					e -> Objects.equals(reflector.getPropertyValue(e), value))
+			Property property = Reflections.at(clazz).property(propertyName);
+			return stream(clazz)
+					.filter(e -> Objects.equals(property.get(e), value))
 					.collect(Collectors.toList());
 		}
 

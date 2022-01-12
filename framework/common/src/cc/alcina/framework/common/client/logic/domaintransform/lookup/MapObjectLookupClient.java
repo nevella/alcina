@@ -162,7 +162,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 			List<ClientPropertyReflector> target = new ArrayList<ClientPropertyReflector>();
 			registerChildren.put(clazz, target);
 			for (ClientPropertyReflector pr : prs) {
-				DomainProperty dpi = pr.getAnnotation(DomainProperty.class);
+				DomainProperty dpi = pr.annotation(DomainProperty.class);
 				if (dpi != null && dpi.registerChildren()) {
 					target.add(pr);
 				}
@@ -172,7 +172,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 				.get(clazz);
 		if (!childRegisterReflectors.isEmpty()) {
 			for (ClientPropertyReflector pr : childRegisterReflectors) {
-				Object value = Reflections.propertyAccessor()
+				Object value = Reflections.property()
 						.getPropertyValue(entity, pr.getPropertyName());
 				addObjectOrCollectionToEndOfQueue(value);
 			}

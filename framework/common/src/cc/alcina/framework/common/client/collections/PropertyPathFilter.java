@@ -4,10 +4,10 @@ import java.util.Collection;
 import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.PropertyPathAccessor;
+import cc.alcina.framework.common.client.util.PropertyPath;
 
 public class PropertyPathFilter<T> implements Predicate<T> {
-	private PropertyPathAccessor accessor;
+	private PropertyPath accessor;
 
 	private Object targetValue;
 
@@ -27,14 +27,14 @@ public class PropertyPathFilter<T> implements Predicate<T> {
 	public PropertyPathFilter(String propertyPath, Object propertyValue,
 			FilterOperator filterOperator) {
 		this.filterOperator = filterOperator;
-		accessor = new PropertyPathAccessor(propertyPath);
+		accessor = new PropertyPath(propertyPath);
 		this.targetValue = propertyValue;
 		targetIsCollection = targetValue instanceof Collection;
 		this.propertyFilter = new PropertyFilter(propertyPath, propertyValue,
 				filterOperator);
 	}
 
-	public PropertyPathAccessor getAccessor() {
+	public PropertyPath getAccessor() {
 		return this.accessor;
 	}
 

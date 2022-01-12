@@ -27,7 +27,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -36,6 +35,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
@@ -124,8 +124,8 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		}
 		BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 		Field[] fields = GwittirBridge.get()
-				.fieldsForReflectedObjectAndSetupWidgetFactory(ClientReflector
-						.get().getTemplateInstance(DTEView.class), factory,
+				.fieldsForReflectedObjectAndSetupWidgetFactory(Reflections.at(DTEView.class)
+						.templateInstance(), factory,
 						false, true);
 		int mask = BoundTableExt.HEADER_MASK | BoundTableExt.NO_NAV_ROW_MASK;
 		CollectionDataProvider cp = new CollectionDataProvider(adapters);

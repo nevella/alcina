@@ -39,6 +39,7 @@ import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -72,7 +73,7 @@ import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
-import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
+import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.ConcurrentMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -178,7 +179,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			BackendTransformQueue.get().stop();
 			Transactions.shutdown();
 			// entity layer services
-			ObjectPersistenceHelper.get().appShutdown();
 			OffThreadLogger.get().appShutdown();
 			DomainStore.stores().appShutdown();
 			// servlet layer (LifecycleService) services
@@ -208,7 +208,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	public static void setupBootstrapJvmServices() {
 		Registry.setProvider(new ClassLoaderAwareRegistryProvider());
 		Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
-		CollectionCreators
+		CollectionCreators.Bootstrap
 				.setConcurrentClassMapCreator(new ConcurrentMapCreatorJvm());
 	}
 
@@ -303,8 +303,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void initCommonServices() {
 		PermissionsManager permissionsManager = PermissionsManager.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-		ObjectPersistenceHelper.get();
-		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
+		TransformManager.register(ThreadlocalTransformManager.ttmInstance());
 		ThreadlocalLooseContextProvider.setDebugStackEntry(ResourceUtilities.is(
 				AppLifecycleServletBase.class, "debugLooseContextStackEntry"));
 		ThreadlocalLooseContextProvider ttmInstance = ThreadlocalLooseContextProvider
@@ -442,8 +441,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			Registry servletLayerRegistry = Registry.get();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					servletLayerRegistry, "servlet-layer");
-			servletLayerRegistry
-					.registerBootstrapServices(ObjectPersistenceHelper.get());
 			EntityLayerObjects.get()
 					.setServletLayerRegistry(servletLayerRegistry);
 		} catch (Exception e) {

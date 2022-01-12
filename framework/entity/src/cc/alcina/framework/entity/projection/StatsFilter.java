@@ -35,6 +35,7 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -265,7 +266,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 							item.size++;
 						} else {
 							Class<? extends Object> clazz2 = o1.getClass();
-							if (CommonUtils.stdAndPrimitives.contains(clazz2)) {
+							if (ClassReflector.stdAndPrimitives.contains(clazz2)) {
 								statsClassLookup.add(clazz2, null);
 								int length = o1.toString().length();
 								if (length > 10000) {

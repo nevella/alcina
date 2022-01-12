@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.reflection;
 
 import java.lang.annotation.Annotation;
 
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class Property {
@@ -30,7 +29,7 @@ public class Property {
 	}
 
 	public <A extends Annotation> boolean
-			hasAnnotation(Class<A> annotationClass) {
+			has(Class<A> annotationClass) {
 		return annotationResolver.hasAnnotation(annotationClass);
 	}
 
@@ -38,7 +37,7 @@ public class Property {
 		return this.name;
 	}
 
-	public <A extends Annotation> A getAnnotation(Class<A> annotationClass) {
+	public <A extends Annotation> A annotation(Class<A> annotationClass) {
 		return annotationResolver.getAnnotation(annotationClass);
 	}
 
@@ -59,11 +58,13 @@ public class Property {
 	}
 
 	protected Method resolveGetter(Object bean) {
-		return getter;
+		return bean.getClass() == definingType ? getter
+				: Reflections.at(bean.getClass()).property(name).getter;
 	}
 
 	protected Method resolveSetter(Object bean) {
-		return setter;
+		return bean.getClass() == definingType ? setter
+				: Reflections.at(bean.getClass()).property(name).setter;
 	}
 
 	public boolean isReadOnly() {
@@ -76,5 +77,12 @@ public class Property {
 
 	public boolean isWriteOnly() {
 		return getter == null;
+	}
+	public boolean isWriteable() {
+		return setter != null;
+	}
+
+	public void copy(Object from, Object to) {
+		set(to,get(from));
 	}
 }

@@ -52,9 +52,9 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 			 * from a property annotation) , ascend from the model superclass
 			 * rather than the class - otherwise will loop indefinitely
 			 */
-			Class ascendFrom = node.propertyReflector != null
-					&& node.propertyReflector
-							.hasAnnotation(MultipleNodeRendererLeaf.class)
+			Class ascendFrom = node.property != null
+					&& node.property
+							.has(MultipleNodeRendererLeaf.class)
 									? node.model.getClass()
 									: node.model.getClass().getSuperclass();
 			Directed leafValue = leaf.value();

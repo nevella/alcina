@@ -14,7 +14,7 @@
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
  * 
@@ -28,7 +28,7 @@ public class DisplayNameRenderer extends FlexibleToStringRenderer {
 		if (o == null) {
 			return "(Undefined)";
 		}
-		String dn = ClientReflector.get().displayNameForObject(o);
+		String dn = HasDisplayName.displayName(o);
 		return (dn == null) ? super.render(o) : dn;
 	}
 }

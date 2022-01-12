@@ -4,13 +4,13 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
-public class JvmPropertyReflector implements PropertyReflector {
+public class JvmPropertyReflector implements Property {
 	private static MultikeyMap<JvmPropertyReflector> cache = new UnsortedMultikeyMap<>(
 			2);
 
@@ -56,7 +56,7 @@ public class JvmPropertyReflector implements PropertyReflector {
 
 	@Override
 	public Object getPropertyValue(Object bean) {
-		return Reflections.propertyAccessor().getPropertyValue(bean,
+		return Reflections.property().getPropertyValue(bean,
 				getPropertyName());
 	}
 
@@ -67,7 +67,7 @@ public class JvmPropertyReflector implements PropertyReflector {
 
 	@Override
 	public void setPropertyValue(Object bean, Object newValue) {
-		Reflections.propertyAccessor().setPropertyValue(bean, getPropertyName(),
+		Reflections.property().setPropertyValue(bean, getPropertyName(),
 				newValue);
 	}
 

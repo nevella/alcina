@@ -29,11 +29,11 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 		if (other == null || getClass() != other.getClass()) {
 			return false;
 		}
-		List<PropertyInfo> properties = Reflections.classLookup()
+		List<PropertyInfo> properties = Reflections
 				.getWritableProperties(getClass());
 		try {
 			for (PropertyInfo pd : properties) {
-				Ignore ignore = Reflections.propertyAccessor()
+				Ignore ignore = Reflections.property()
 						.getAnnotationForProperty(getClass(),
 								HasReflectiveEquivalence.Ignore.class,
 								pd.getPropertyName());

@@ -16,17 +16,14 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.entity.view.EntityClientUtils;
 import cc.alcina.framework.gwt.client.entity.view.UiController;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
@@ -130,9 +127,8 @@ public abstract class Client {
 		}
 
 		public static void registry() {
-			Registry.get().registerBootstrapServices(ClientReflector.get());
-			Reflections.registerClassLookup(ClientReflector.get());
-			Reflections.registerPropertyAccessor(GwittirBridge.get());
+			//initialise clientreflector
+			throw new UnsupportedOperationException("TODO - registry");
 		}
 	}
 

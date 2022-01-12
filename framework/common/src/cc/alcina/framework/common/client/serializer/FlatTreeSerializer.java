@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.Serializer;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
@@ -159,8 +160,8 @@ public class FlatTreeSerializer {
 			}
 			state.keyValues = StringMap.fromPropertyString(value);
 			if (clazz == null) {
-				clazz = Reflections.classLookup()
-						.getClassForName(state.keyValues.get(CLASS));
+				clazz = Reflections
+						.forName(state.keyValues.get(CLASS));
 			}
 			state.keyValues.remove(CLASS);
 			T instance = Reflections.newInstance(clazz);
@@ -203,7 +204,7 @@ public class FlatTreeSerializer {
 			object.treeSerializationCustomiser().onBeforeTreeSerialize();
 			state = new State();
 			state.serializerOptions = options;
-			Node node = new Node(null, object, Reflections.classLookup()
+			Node node = new Node(null, object, Reflections
 					.getTemplateInstance(object.getClass()));
 			state.pending.add(node);
 			FlatTreeSerializer serializer = new FlatTreeSerializer(state);
@@ -297,7 +298,7 @@ public class FlatTreeSerializer {
 		if (clazz == TreeSerializable.class) {
 			return true;
 		}
-		if (CommonUtils.stdAndPrimitives.contains(clazz)) {
+		if (ClassReflector.stdAndPrimitives.contains(clazz)) {
 			return false;
 		}
 		if (isCollection(clazz)) {
@@ -310,7 +311,7 @@ public class FlatTreeSerializer {
 		if (clazz == Class.class) {
 			return true;
 		}
-		if (CommonUtils.stdAndPrimitives.contains(clazz)) {
+		if (ClassReflector.stdAndPrimitives.contains(clazz)) {
 			return true;
 		}
 		if (Reflections.isAssignableFrom(Enum.class, clazz)) {
@@ -555,7 +556,7 @@ public class FlatTreeSerializer {
 								.getPropertySerialization(
 										cursor.value.getClass(),
 										property.getName());
-						Object childValue = Reflections.propertyAccessor()
+						Object childValue = Reflections.property()
 								.getPropertyValue(cursor.value,
 										property.getName());
 						Node lookahead = new Node(cursor, childValue, null);
@@ -611,7 +612,7 @@ public class FlatTreeSerializer {
 								((TreeSerializable) childValue)
 										.treeSerializationCustomiser()
 										.onBeforeTreeDeserialize();
-								Reflections.propertyAccessor().setPropertyValue(
+								Reflections.property().setPropertyValue(
 										cursor.value, property.getName(),
 										childValue);
 							}
@@ -736,8 +737,8 @@ public class FlatTreeSerializer {
 	}
 
 	private Class getClassFromSegment(String segmentPath) {
-		return Reflections.classLookup()
-				.getClassForName(segmentPath.replace("_", "."));
+		return Reflections
+				.forName(segmentPath.replace("_", "."));
 	}
 
 	private Object getValue(Node node, Property property, Object value) {
@@ -803,7 +804,7 @@ public class FlatTreeSerializer {
 						// }
 						// }
 						if (defaultValue == null) {
-							defaultValue = Reflections.classLookup()
+							defaultValue = Reflections
 									.getTemplateInstance(childValue.getClass());
 						}
 					} else {
@@ -1422,7 +1423,7 @@ public class FlatTreeSerializer {
 				}
 			} else {
 				Object leafValue = parseStringValue(leafType, stringValue);
-				Reflections.propertyAccessor().setPropertyValue(parent.value,
+				Reflections.property().setPropertyValue(parent.value,
 						property.getName(), leafValue);
 			}
 		}

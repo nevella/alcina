@@ -8,13 +8,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
@@ -65,9 +62,6 @@ public class ClientConfiguration {
 		TransformManager.get().addDomainTransformListener(
 				Registry.impl(CommitToStorageTransformListener.class));
 		registerExtraTransformListenersPostStorage();
-		Reflections.registerPropertyAccessor(GwittirBridge.get());
-		Reflections.registerClassLookup(ClientReflector.get());
-		Reflections.registerObjectLookup(TransformManager.get());
 	}
 
 	protected void initContentProvider() {

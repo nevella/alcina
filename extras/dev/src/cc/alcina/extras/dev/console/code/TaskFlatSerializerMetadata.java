@@ -185,7 +185,7 @@ public class TaskFlatSerializerMetadata
 			Class<? extends SearchDefinition> defClass = dchs.get(0)
 					.handlesSearchDefinition();
 			if (defClass != null) {
-				SearchDefinition def = Reflections.classLookup()
+				SearchDefinition def = Reflections
 						.newInstance(defClass);
 				if (def instanceof BindableSearchDefinition) {
 					Class<? extends Bindable> bindableClass = ((BindableSearchDefinition) def)

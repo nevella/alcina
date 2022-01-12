@@ -13,7 +13,7 @@ class CustomReflectorResolver extends TreeResolver<Directed> {
 				.getTreeResolver(Directed.class);
 		DirectedResolver directedResolver = (DirectedResolver) node.directed;
 		CustomReflectorResolver resolver = parentResolver.finalChildResolver(
-				directedResolver.getLocation().propertyReflector,	discriminator,
+				directedResolver.getLocation().property,	discriminator,
 				() -> new CustomReflectorResolver(parentResolver));
 		resolver.reflectorValue = reflectorValue;
 		// the incoming property reflector is essentially a placeholder for
@@ -21,7 +21,7 @@ class CustomReflectorResolver extends TreeResolver<Directed> {
 		// locationResolutionClass chain
 		AnnotationLocation location = new AnnotationLocation(
 				locationResolutionClass,
-				directedResolver.getLocation().propertyReflector,
+				directedResolver.getLocation().property,
 				directedResolver.getLocation().resolver);
 		Directed childDirected = new Directed.DirectedResolver(resolver,
 				location);

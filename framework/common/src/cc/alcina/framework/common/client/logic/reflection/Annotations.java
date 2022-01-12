@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
 
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class Annotations {
@@ -19,16 +20,16 @@ public class Annotations {
 			String propertyName, Class<A> annotationClass) {
 		return new AnnotationLocation(clazz,
 				propertyName == null ? null
-						: Reflections.classLookup().getPropertyReflector(clazz,
-								propertyName)).getAnnotation(annotationClass);
+						: Reflections.at(clazz).property(propertyName))
+								.getAnnotation(annotationClass);
 	}
 
-	public static <A extends Annotation> A resolve(PropertyReflector reflector,
+	public static <A extends Annotation> A resolve(Property reflector,
 			Class<A> annotationClass) {
 		return resolve(reflector, annotationClass, null);
 	}
 
-	public static <A extends Annotation> A resolve(PropertyReflector reflector,
+	public static <A extends Annotation> A resolve(Property reflector,
 			Class<A> annotationClass, AnnotationLocation.Resolver resolver) {
 		return new AnnotationLocation(reflector.getDefiningType(), reflector,
 				resolver).getAnnotation(annotationClass);

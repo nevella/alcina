@@ -32,7 +32,6 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PropertyValueMapper;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -254,8 +253,6 @@ public class Registry {
 
 	private RegistryKeys keys;
 
-	ClassLookup classLookup;
-
 	// registrypoint/targetClass/impl/impl
 	protected UnsortedMultikeyMap<RegistryKey> registry;
 
@@ -296,7 +293,7 @@ public class Registry {
 			return Collections.emptyList();
 		}
 		return pointLookup.typedKeySet(RegistryKey.class).stream()
-				.map(key -> key.clazz(classLookup)).filter(Objects::nonNull)
+				.map(key -> key.clazz()).filter(Objects::nonNull)
 				.filter(clazz -> clazz != void.class)
 				.collect(Collectors.toList());
 	}
@@ -310,15 +307,9 @@ public class Registry {
 		exactMap.asMap(key).putMulti(sourceInstance.exactMap.asMap(key));
 		implementationTypeMap.asMap(key)
 				.putMulti(sourceInstance.implementationTypeMap.asMap(key));
-		sourceInstance.registry
-				.asMap(key).typedKeySet(
-						RegistryKey.class)
-				.forEach(
-						childKey -> sourceInstance
-								.impl0(registryPoint,
-										((RegistryKey) childKey).clazz(
-												sourceInstance.classLookup),
-										false));
+		sourceInstance.registry.asMap(key).typedKeySet(RegistryKey.class)
+				.forEach(childKey -> sourceInstance.impl0(registryPoint,
+						((RegistryKey) childKey).clazz(), false));
 		if (sourceInstance.singletons.containsKey(key)) {
 			singletons.asMap(key)
 					.putMulti(sourceInstance.singletons.asMap(key));
@@ -356,14 +347,14 @@ public class Registry {
 		return byKey;
 	}
 
-	public List<RegistryLocation> getLocations(Class registryPoint) {
-		RegistryLocation location = Reflections.classLookup()
-				.getAnnotationForClass(registryPoint, RegistryLocation.class);
+	public List<RegistryLocation> getLocations(Class<?> registryPoint) {
+		RegistryLocation location = Reflections.at(registryPoint)
+				.annotation(RegistryLocation.class);
 		if (location != null) {
 			return Collections.singletonList(location);
 		}
-		RegistryLocations locations = Reflections.classLookup()
-				.getAnnotationForClass(registryPoint, RegistryLocations.class);
+		RegistryLocations locations = Reflections.at(registryPoint)
+				.annotation(RegistryLocations.class);
 		if (locations != null) {
 			return Arrays.asList(locations.value());
 		}
@@ -376,7 +367,7 @@ public class Registry {
 
 	public Object instantiateSingle(Class registryPoint, Class targetClass) {
 		Class lookupSingle = lookupSingle(registryPoint, targetClass, true);
-		return classLookup.newInstance(lookupSingle);
+		return Reflections.newInstance(lookupSingle);
 	}
 
 	public Object instantiateSingleOrNull(Class registryPoint,
@@ -416,7 +407,7 @@ public class Registry {
 				}
 			}
 		}
-		return matched.stream().map(key -> key.clazz(classLookup))
+		return matched.stream().map(key -> key.clazz())
 				.filter(Objects::nonNull).collect(Collectors.toList());
 	}
 
@@ -435,7 +426,7 @@ public class Registry {
 		T t = byKey.get(value);
 		if (t != null && newInstance) {
 			try {
-				t = (T) classLookup.newInstance(t.getClass());
+				t = (T) Reflections.newInstance(t.getClass());
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -465,7 +456,7 @@ public class Registry {
 							CommonUtils.classSimpleName(registryPoint),
 							CommonUtils.classSimpleName(targetClass)));
 		}
-		return cachedKey.clazz(classLookup);
+		return cachedKey.clazz();
 	}
 
 	public void register(Class registeringClass, Class registryPoint) {
@@ -530,9 +521,6 @@ public class Registry {
 		targetPriority.put(registryPointKey, targetClassKey, infoPriority);
 	}
 
-	public void registerBootstrapServices(ClassLookup classLookup) {
-		this.classLookup = classLookup;
-	}
 
 	public void registerSingleton(Class<?> registryPoint, Class<?> targetClass,
 			Object object) {
@@ -725,13 +713,12 @@ public class Registry {
 		}
 	}
 
-
 	protected <V> List<V> impls0(Class<V> registryPoint, Class targetClass) {
 		List<Class> impls = lookup(false, registryPoint, targetClass, false);
 		List<V> result = new ArrayList<V>();
 		for (Class c : impls) {
 			V impl = (V) impl(c, void.class, true);
-			result.add(impl != null ? impl : (V) classLookup.newInstance(c));
+			result.add(impl != null ? impl : (V) Reflections.newInstance(c));
 		}
 		return result;
 	}
@@ -745,7 +732,7 @@ public class Registry {
 			return implementationType;
 		}
 		List<Class> superclassChain = getSuperclassChain(
-				targetClassKey.clazz(classLookup));
+				targetClassKey.clazz());
 		for (Class superclass : superclassChain) {
 			implementationType = implementationTypeMap.get(registryPointKey,
 					keys.get(superclass));
@@ -777,7 +764,7 @@ public class Registry {
 						"Possible double creation of singleton (at different registry points) - class %s",
 						clazz.getName());
 			}
-			impl = classLookup.newInstance(clazz);
+			impl = Reflections.newInstance(clazz);
 			registerSingleton(clazz, impl);
 		}
 		return impl;

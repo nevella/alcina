@@ -33,8 +33,9 @@ public class BreadcrumbBarLinkChangesButton extends BreadcrumbBarButton
 				Object source = evt.getSource();
 				for (SourcesPropertyChangeEvents spce : coll) {
 					if (spce != source) {
-						Reflections.propertyAccessor().setPropertyValue(spce,
-								evt.getPropertyName(), evt.getNewValue());
+						Reflections.at(spce.getClass())
+								.property(evt.getPropertyName())
+								.set(spce, evt.getNewValue());
 					}
 				}
 			} finally {

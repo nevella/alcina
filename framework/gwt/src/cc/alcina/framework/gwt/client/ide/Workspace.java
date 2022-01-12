@@ -155,11 +155,11 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
 					.getPropertyCollectionProvider();
 			if (pcp != null) {
-				ClientPropertyReflector propertyReflector = pcp
+				ClientPropertyReflector property = pcp
 						.getPropertyReflector();
-				String propertyName = propertyReflector
-						.getAnnotation(Association.class).propertyName();
-				Reflections.propertyAccessor().setPropertyValue(newObj,
+				String propertyName = property
+						.annotation(Association.class).propertyName();
+				Reflections.property().setPropertyValue(newObj,
 						propertyName, pcp.getDomainObject());
 			}
 		}
@@ -303,7 +303,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 			} else {
 				ClientPropertyReflector reflector = pcp.getPropertyReflector();
 				String propertyName = reflector.getPropertyName();
-				Object obj = Reflections.propertyAccessor()
+				Object obj = Reflections.property()
 						.getPropertyValue(pcp.getDomainObject(), propertyName);
 				if (obj instanceof Collection) {
 					siblings = (Collection) obj;

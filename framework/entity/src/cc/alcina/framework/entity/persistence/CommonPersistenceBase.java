@@ -63,6 +63,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DurationCounter;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
@@ -82,7 +83,6 @@ import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.EntityLocatorMap;
-import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -114,7 +114,6 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	Logger logger = LoggerFactory.getLogger(CommonPersistenceBase.class);
 
 	public CommonPersistenceBase() {
-		ObjectPersistenceHelper.get();
 	}
 
 	public CommonPersistenceBase(EntityManager em) {
@@ -232,8 +231,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			AppPersistenceBase.checkNotReadOnly();
 			T instance = Reflections.newInstance(clazz);
 			getEntityManager().persist(instance);
-			Reflections.propertyAccessor().setPropertyValue(instance, key,
-					value);
+			Reflections.at(instance.getClass()).property(key).set
+			(instance,value);
 			return instance;
 		} else {
 			Preconditions.checkState(list.size() == 1);
@@ -668,7 +667,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 					.getObject(transformException.getEvent(), true);
 			if (object != null) {
 				transformException.setSourceObjectName(
-						Reflections.classLookup().displayNameForObject(object));
+						HasDisplayName.displayName(object));
 			}
 		} catch (Exception e) {
 			System.out.println("Unable to add source object name - reason: "

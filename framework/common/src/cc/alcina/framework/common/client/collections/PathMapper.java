@@ -6,39 +6,38 @@ import java.util.function.Predicate;
 
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.util.Ax;
 
-public class PropertyMapper {
-	private PropertyAccessor leftAccessor;
+public class PathMapper {
+	private PathAccessor leftAccessor;
 
-	private PropertyAccessor rightAccessor;
+	private PathAccessor rightAccessor;
 
-	private List<PropertyMapping> mappings = new ArrayList<PropertyMapping>();
+	private List<PathMapping> mappings = new ArrayList<PathMapping>();
 
-	public PropertyMapper() {
+	public PathMapper() {
 	}
 
-	public PropertyMapping addMapping(PropertyMapping mapping) {
+	public PathMapping addMapping(PathMapping mapping) {
 		mapping.mapper = this;
 		mappings.add(mapping);
 		return mapping;
 	}
 
-	public PropertyMapping define(String both) {
+	public PathMapping define(String both) {
 		return define(both, both);
 	}
 
-	public PropertyMapping define(String left, String right) {
-		PropertyMapping mapping = new PropertyMapping(left, right);
+	public PathMapping define(String left, String right) {
+		PathMapping mapping = new PathMapping(left, right);
 		return addMapping(mapping);
 	}
 
-	public List<PropertyMapping> getMappings() {
+	public List<PathMapping> getMappings() {
 		return this.mappings;
 	}
 
-	public PropertyMapper leftAccessor(PropertyAccessor accessor) {
+	public PathMapper leftAccessor(PathAccessor accessor) {
 		leftAccessor = accessor;
 		return this;
 	}
@@ -48,24 +47,24 @@ public class PropertyMapper {
 	}
 
 	public void map(Object left, Object right, String leftKey) {
-		for (PropertyMapping mapping : mappings) {
+		for (PathMapping mapping : mappings) {
 			if (leftKey == null || leftKey.equals(mapping.leftName)) {
 				mapping.map(left, right);
 			}
 		}
 	}
 
-	public PropertyMapper reverseMapper() {
-		PropertyMapper mapper = new PropertyMapper();
+	public PathMapper reverseMapper() {
+		PathMapper mapper = new PathMapper();
 		mapper.leftAccessor = rightAccessor;
 		mapper.rightAccessor = leftAccessor;
-		for (PropertyMapping mapping : mappings) {
+		for (PathMapping mapping : mappings) {
 			mapper.mappings.add(mapping.reverseMapping(mapper));
 		}
 		return mapper;
 	}
 
-	public PropertyMapper rightAccessor(PropertyAccessor accessor) {
+	public PathMapper rightAccessor(PathAccessor accessor) {
 		rightAccessor = accessor;
 		return this;
 	}
@@ -77,7 +76,7 @@ public class PropertyMapper {
 		}
 	}
 
-	public static class PropertyMapping {
+	public static class PathMapping {
 		private String leftName;
 
 		private String rightName;
@@ -92,32 +91,32 @@ public class PropertyMapper {
 
 		private boolean required;
 
-		PropertyMapper mapper = null;
+		PathMapper mapper = null;
 
-		public PropertyMapping() {
+		public PathMapping() {
 		}
 
-		public PropertyMapping(String both) {
+		public PathMapping(String both) {
 			this.rightName = both;
 			this.leftName = both;
 		}
 
-		public PropertyMapping(String left, String right) {
+		public PathMapping(String left, String right) {
 			this.leftName = left;
 			this.rightName = right;
 		}
 
-		public PropertyMapping applyToLeftFilter(Predicate leftFilter) {
+		public PathMapping applyToLeftFilter(Predicate leftFilter) {
 			this.applyToLeftFilter = leftFilter;
 			return this;
 		}
 
-		public PropertyMapping applyToRightFilter(Predicate rightFilter) {
+		public PathMapping applyToRightFilter(Predicate rightFilter) {
 			this.applyToRightFilter = rightFilter;
 			return this;
 		}
 
-		public PropertyMapping bidiConverter(BidiConverter bidiConverter) {
+		public PathMapping bidiConverter(BidiConverter bidiConverter) {
 			this.leftToRightConverter = bidiConverter.leftToRightConverter();
 			this.rightToLeftConverter = bidiConverter.rightToLeftConverter();
 			return this;
@@ -131,7 +130,7 @@ public class PropertyMapper {
 			return this.rightName;
 		}
 
-		public PropertyMapping leftToRightConverter(Converter leftConverter) {
+		public PathMapping leftToRightConverter(Converter leftConverter) {
 			this.leftToRightConverter = leftConverter;
 			return this;
 		}
@@ -140,8 +139,8 @@ public class PropertyMapper {
 			required = true;
 		}
 
-		public PropertyMapping reverseMapping(PropertyMapper newMapper) {
-			PropertyMapping mapping = new PropertyMapping();
+		public PathMapping reverseMapping(PathMapper newMapper) {
+			PathMapping mapping = new PathMapping();
 			mapping.leftName = rightName;
 			mapping.rightName = leftName;
 			mapping.leftToRightConverter = rightToLeftConverter;
@@ -152,7 +151,7 @@ public class PropertyMapper {
 			return mapping;
 		}
 
-		public PropertyMapping rightToLeftConverter(Converter rightConverter) {
+		public PathMapping rightToLeftConverter(Converter rightConverter) {
 			this.rightToLeftConverter = rightConverter;
 			return this;
 		}

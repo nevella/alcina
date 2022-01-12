@@ -56,7 +56,7 @@ public class ExpandableStringLabelProvider
 		label.setShowAsPopup(showAsPopup);
 		label.setEscapeHtml(escapeHtml);
 		if (rendererClass != null) {
-			label.setRenderer((Renderer) Reflections.classLookup()
+			label.setRenderer((Renderer) Reflections
 					.newInstance(rendererClass));
 		}
 		return label;

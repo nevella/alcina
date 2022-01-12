@@ -403,7 +403,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,GwtEven
 						.withPlace(new ActionRefPlace(CancelRef.class)));
 			} else {
 				if (state.presentationModel != null) {
-					Bean bean = Reflections.classLookup().getAnnotationForClass(
+					Bean bean = Reflections.getAnnotationForClass(
 							state.presentationModel.getClass(), Bean.class);
 					if (bean != null) {
 						Arrays.stream(bean.actions().value())
@@ -523,7 +523,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,GwtEven
 			state.expectsModel = true;
 			if (action instanceof PermissibleEntityAction) {
 				Entity entity = ((PermissibleEntityAction) action).getEntity();
-				ObjectPermissions op = Reflections.classLookup()
+				ObjectPermissions op = Reflections
 						.getAnnotationForClass(entity.getClass(),
 								ObjectPermissions.class);
 				op = op == null

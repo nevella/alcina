@@ -24,7 +24,7 @@ public class PropertyFieldGetter<O> implements Function<O, Object> {
 	@Override
 	public Object apply(O object) {
 		Entity entity = (Entity) object;
-		Object value = Reflections.propertyAccessor().getPropertyValue(entity,
+		Object value = Reflections.property().getPropertyValue(entity,
 				propertyName);
 		if (field.getValidator() != null) {
 			try {

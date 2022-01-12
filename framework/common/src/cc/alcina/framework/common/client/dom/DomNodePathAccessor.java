@@ -9,40 +9,22 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.collections.PathAccessor;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
-public class DomNodePropertyAccessor implements PropertyAccessor {
+public class DomNodePathAccessor implements PathAccessor {
 	private List<String> singleChildElementNames = new ArrayList<>();
 
-	public DomNodePropertyAccessor() {
+	public DomNodePathAccessor() {
 	}
 
-	public DomNodePropertyAccessor(String... singleChildElementNames) {
+	public DomNodePathAccessor(String... singleChildElementNames) {
 		this.singleChildElementNames = Arrays.asList(singleChildElementNames);
 	}
 
 	public <T> T get(Object bean, String propertyName) {
 		return (T) getPropertyValue(bean, propertyName);
-	}
-
-	@Override
-	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
-			Class<A> annotationClass, String propertyName) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public PropertyReflector getPropertyReflector(Class clazz,
-			String propertyName) {
-		return Reflections.propertyAccessor().getPropertyReflector(clazz,
-				propertyName);
-	}
-
-	@Override
-	public Class getPropertyType(Class clazz, String propertyName) {
-		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -98,10 +80,5 @@ public class DomNodePropertyAccessor implements PropertyAccessor {
 				leaf.setText(value.toString());
 			}
 		}
-	}
-
-	@Override
-	public boolean isReadOnly(Class objectClass, String propertyName) {
-		return false;
 	}
 }

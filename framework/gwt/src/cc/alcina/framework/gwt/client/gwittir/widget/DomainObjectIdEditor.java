@@ -65,7 +65,7 @@ public class DomainObjectIdEditor extends AbstractBoundWidget
 			} else {
 				try {
 					id = Long.parseLong(text);
-					Entity entity = Reflections.classLookup()
+					Entity entity = Reflections
 							.newInstance(domainObjectClass);
 					entity.setId(id);
 					if (entity != null && !entity.equals(currentValue)

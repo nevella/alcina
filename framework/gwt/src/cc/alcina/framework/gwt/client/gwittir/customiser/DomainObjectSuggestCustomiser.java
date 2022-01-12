@@ -128,14 +128,14 @@ public class DomainObjectSuggestCustomiser
 		return editable ? this
 				: readonlyCustomiserClassValue == null
 						? new RenderedLabelProvider(rendererClassValue, null)
-						: ((Customiser) Reflections.classLookup()
+						: ((Customiser) Reflections
 								.newInstance(readonlyCustomiserClassValue))
 										.getProvider(editable, objectClass,
 												multiple, custom);
 	}
 
 	public Renderer getRenderer() {
-		return (Renderer) Reflections.classLookup()
+		return (Renderer) Reflections
 				.newInstance(rendererClassValue);
 	}
 

@@ -40,7 +40,7 @@ public class PropertyComparator implements Comparator {
 			return 1;
 		}
 		try {
-			PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
+			PropertyAccessor propertyAccessor = Reflections.property();
 			Object pv1 = propertyAccessor.getPropertyValue(o1, propertyName);
 			Object pv2 = propertyAccessor.getPropertyValue(o2, propertyName);
 			return CommonUtils.compareWithNullMinusOne((Comparable) pv1,

@@ -35,7 +35,7 @@ public class TreeRenderingInfoProvider {
 			TreeRenderer parent, RenderContext context) {
 		Class<? extends TreeRenderer> rendererClass = getClassForRenderable(
 				renderable, parent, context);
-		TreeRenderer renderer = Reflections.classLookup()
+		TreeRenderer renderer = Reflections
 				.newInstance(rendererClass);
 		renderer.setRenderable(renderable);
 		renderer.setContext(context);

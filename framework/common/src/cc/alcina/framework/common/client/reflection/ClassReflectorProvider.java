@@ -22,8 +22,6 @@ import cc.alcina.framework.entity.SEUtilities;
  */
 class ClassReflectorProvider {
 	public static ClassReflector getClassReflector(Class clazz) {
-		Preconditions.checkState(ReflectiveAccess.Support
-				.has(reckonAccess(clazz), Access.CLASS));
 		List<PropertyDescriptor> descriptors = SEUtilities
 				.getPropertyDescriptorsSortedByField(clazz);
 		List<Property> properties = descriptors.stream()
@@ -47,8 +45,10 @@ class ClassReflectorProvider {
 		Predicate<Class> assignableTo = c -> c.isAssignableFrom(clazz);
 		ClassAnnotationResolver annotationResolver = new ClassAnnotationResolver(
 				clazz);
+		ReflectiveAccess access=new ReflectiveAccess.DefaultValue();
+		boolean reflective=ReflectiveAccess.Support.has(access, Access.CLASS);
 		return new ClassReflector(clazz, properties, byName, annotationResolver,
-				supplier, assignableTo);
+				supplier, assignableTo,reflective);
 	}
 
 	static Property createProperty(Class clazz, PropertyDescriptor descriptor) {
@@ -121,7 +121,7 @@ class ClassReflectorProvider {
 		}
 	}
 
-	private static ReflectiveAccess reckonAccess(Class clazz) {
+	 static ReflectiveAccess reckonAccess(Class clazz) {
 		return new ReflectiveAccess.DefaultValue();
 	}
 }

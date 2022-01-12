@@ -7,16 +7,17 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 public class AnnotationLocation {
-	public PropertyReflector propertyReflector;
+	public Property property;
 
 	/*
-	 * Can be either the containing class of the propertyReflector, or the value
+	 * Can be either the containing class of the property, or the value
 	 * type of the property reflector
 	 */
 	public Class classLocation;
@@ -24,15 +25,15 @@ public class AnnotationLocation {
 	public Resolver resolver;
 
 	public AnnotationLocation(Class clazz,
-			PropertyReflector propertyReflector) {
-		this(clazz, propertyReflector, null);
+			Property property) {
+		this(clazz, property, null);
 	}
 
-	public AnnotationLocation(Class clazz, PropertyReflector propertyReflector,
+	public AnnotationLocation(Class clazz, Property property,
 			Resolver resolver) {
-		Preconditions.checkArgument(clazz != null || propertyReflector != null);
+		Preconditions.checkArgument(clazz != null || property != null);
 		this.classLocation = clazz;
-		this.propertyReflector = propertyReflector;
+		this.property = property;
 		if (resolver == null) {
 			resolver = Resolver.get();
 		}
@@ -43,7 +44,7 @@ public class AnnotationLocation {
 	public boolean equals(Object obj) {
 		if (obj instanceof AnnotationLocation) {
 			AnnotationLocation o = (AnnotationLocation) obj;
-			return propertyReflector == o.propertyReflector
+			return property == o.property
 					&& classLocation == o.classLocation
 					&& Objects.equals(resolver, o.resolver);
 		} else {
@@ -62,26 +63,26 @@ public class AnnotationLocation {
 
 	@Override
 	public int hashCode() {
-		return Objects.hash(propertyReflector, classLocation, resolver);
+		return Objects.hash(property, classLocation, resolver);
 	}
 
 	public boolean isDefiningType(Class<?> clazz) {
-		return propertyReflector != null
-				&& propertyReflector.getDefiningType() == clazz;
+		return property != null
+				&& property.getDefiningType() == clazz;
 	}
 
 	public boolean isPropertyName(String propertyName) {
-		return propertyReflector != null
-				&& propertyName.equals(propertyReflector.getPropertyName());
+		return property != null
+				&& propertyName.equals(property.getName());
 	}
 
 	public boolean isPropertyType(Class<?> clazz) {
-		return propertyReflector != null
-				&& clazz == propertyReflector.getPropertyType();
+		return property != null
+				&& clazz == property.getType();
 	}
 
 	public AnnotationLocation parent() {
-		if (propertyReflector != null) {
+		if (property != null) {
 			return new AnnotationLocation(classLocation, null, resolver);
 		}
 		if (classLocation.getSuperclass() != null) {
@@ -93,20 +94,20 @@ public class AnnotationLocation {
 
 	@Override
 	public String toString() {
-		if (propertyReflector != null) {
-			String declaringPrefix = propertyReflector
+		if (property != null) {
+			String declaringPrefix = property
 					.getDefiningType() == classLocation ? ""
 							: Ax.format("(%s)", classLocation.getSimpleName());
 			return Ax.format("%s%s", declaringPrefix,
-					propertyReflector.toString());
+					property.toString());
 		} else {
 			return classLocation.getSimpleName();
 		}
 	}
 
 	private <A extends Annotation> A getAnnotation0(Class<A> annotationClass) {
-		if (propertyReflector != null) {
-			A annotation = propertyReflector.getAnnotation(annotationClass);
+		if (property != null) {
+			A annotation = property.annotation(annotationClass);
 			if (annotation != null) {
 				return annotation;
 			}
@@ -114,8 +115,7 @@ public class AnnotationLocation {
 		if (classLocation == null) {
 			return null;
 		} else {
-			return Reflections.classLookup()
-					.getAnnotationForClass(classLocation, annotationClass);
+			return (A) Reflections.at(classLocation).annotation(annotationClass);
 		}
 	}
 

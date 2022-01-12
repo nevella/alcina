@@ -13,10 +13,10 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
+import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
  * 
@@ -35,11 +35,10 @@ public class DisplayNameIdRefRenderer extends FlexibleToStringRenderer {
 			return "";
 		}
 		Long id = (Long) o;
-		Entity object = Reflections.objectLookup().getObject(targetClass, id,
-				0);
+		Entity object = Domain.find(targetClass, id);
 		String dn = null;
 		if (object != null) {
-			return ClientReflector.get().displayNameForObject(object);
+			return HasDisplayName.displayName(object);
 		} else {
 			DisplayNameIdRefResolver resolver = Registry
 					.implOrNull(DisplayNameIdRefResolver.class);

@@ -61,7 +61,7 @@ public class RenderedLabelCustomiser implements Customiser {
 				String widgetCssClass) {
 			this.widgetCssClass = widgetCssClass;
 			renderer = rendererClass == null ? ToStringRenderer.INSTANCE
-					: (Renderer) Reflections.classLookup()
+					: (Renderer) Reflections
 							.newInstance(rendererClass);
 		}
 

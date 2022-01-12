@@ -38,17 +38,17 @@ public class PropertyCollectionProvider<E>
 
 	private final SourcesPropertyChangeEvents domainObject;
 
-	private final ClientPropertyReflector propertyReflector;
+	private final ClientPropertyReflector property;
 
 	private CollectionModificationSupport collectionModificationSupport = new CollectionModificationSupport();
 
 	public PropertyCollectionProvider(SourcesPropertyChangeEvents domainObject,
-			ClientPropertyReflector propertyReflector) {
+			ClientPropertyReflector property) {
 		this.domainObject = domainObject;
-		this.propertyReflector = propertyReflector;
+		this.property = property;
 		domainObject.addPropertyChangeListener(
-				propertyReflector.getPropertyName(), this);
-		Predicate predicate = propertyReflector.getCollectionFilter();
+				property.getPropertyName(), this);
+		Predicate predicate = property.getCollectionFilter();
 		if (predicate != null) {
 			filter = predicate;
 		}
@@ -79,7 +79,7 @@ public class PropertyCollectionProvider<E>
 
 	@Override
 	public Class<? extends E> getCollectionMemberClass() {
-		return getPropertyReflector().getAnnotation(Association.class)
+		return getPropertyReflector().annotation(Association.class)
 				.implementationClass();
 	}
 
@@ -97,7 +97,7 @@ public class PropertyCollectionProvider<E>
 	}
 
 	public ClientPropertyReflector getPropertyReflector() {
-		return propertyReflector;
+		return property;
 	}
 
 	@Override

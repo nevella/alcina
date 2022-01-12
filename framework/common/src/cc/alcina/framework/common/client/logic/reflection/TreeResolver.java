@@ -7,6 +7,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
@@ -53,9 +54,9 @@ public class TreeResolver<A extends Annotation> {
 	}
 
 	public <TR extends TreeResolver<A>> TR finalChildResolver(
-			PropertyReflector propertyReflector, Class discriminator,
+			Property property, Class discriminator,
 			Supplier<TR> supplier) {
-		return (TR) finalChildren.ensure((Supplier) supplier, propertyReflector,
+		return (TR) finalChildren.ensure((Supplier) supplier, property,
 				discriminator);
 	}
 

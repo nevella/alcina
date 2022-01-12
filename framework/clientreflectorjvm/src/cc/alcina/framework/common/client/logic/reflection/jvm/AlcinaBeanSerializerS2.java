@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
@@ -235,8 +236,8 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 				} else {
 					Object value2 = deserializeField(jsonValue,
 							pd.getPropertyType());
-					if (value2 == null && Reflections.classLookup()
-							.isPrimitive(pd.getPropertyType())) {
+					if (value2 == null && Reflections
+							.at(pd.getPropertyType()).isPrimitive()) {
 						// use default, probably a refactoring issue
 					} else {
 						try {
@@ -444,7 +445,7 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 			} else {
 				Class resolved = resolvedClassLookup.get(className);
 				if (resolved == null) {
-					clazz = CommonUtils.stdAndPrimitivesMap.get(className);
+					clazz = ClassReflector.stdAndPrimitivesMap.get(className);
 					if (clazz == null) {
 						if (GWT.isClient()) {
 							Reflections.forName(className);

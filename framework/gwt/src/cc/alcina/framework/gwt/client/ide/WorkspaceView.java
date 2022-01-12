@@ -395,7 +395,7 @@ public class WorkspaceView extends Composite implements HasName,
 			}
 			// hack - do better when we rework this for dirndl
 			if (item == null) {
-				item = new DomainNode(Reflections.classLookup()
+				item = new DomainNode(Reflections
 						.newInstance(getDefaultEntityClass()));
 			}
 			fireVetoableActionEvent(

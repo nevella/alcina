@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LazyObjectLoader;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 
 public class PermissionsTestingTransformManager
@@ -30,7 +30,7 @@ public class PermissionsTestingTransformManager
 	@Override
 	public <T extends Entity> T getObject(Class<? extends T> c, long id,
 			long localId) {
-		return getDomainObjects().getObject(c, id, localId);
+		return getObjectStore().getObject(c, id, localId);
 	}
 
 	@Override
@@ -48,7 +48,7 @@ public class PermissionsTestingTransformManager
 	@Override
 	protected ClassLookup classLookup() {
 		if (classLookupWrapper == null) {
-			classLookupWrapper = new ClassLookupWrapper(super.classLookup());
+			classLookupWrapper = new ClassLookupWrapper(super);
 		}
 		return classLookupWrapper;
 	}
@@ -57,7 +57,7 @@ public class PermissionsTestingTransformManager
 	protected void createObjectLookup() {
 		store = new DetachedCacheObjectStore(new DetachedEntityCache());
 		store.setLazyObjectLoader(this);
-		setDomainObjects(store);
+		setObjectStore(store);
 	}
 
 	@Override
@@ -85,8 +85,8 @@ public class PermissionsTestingTransformManager
 		}
 
 		@Override
-		public Class getClassForName(String fqn) {
-			return this.delegate.getClassForName(fqn);
+		public Class forName(String fqn) {
+			return this.delegate.forName(fqn);
 		}
 
 		@Override
@@ -95,7 +95,7 @@ public class PermissionsTestingTransformManager
 		}
 
 		@Override
-		public Map<String, PropertyReflector>
+		public Map<String, Property>
 				getPropertyReflectors(Class<?> beanClass) {
 			return this.delegate.getPropertyReflectors(beanClass);
 		}

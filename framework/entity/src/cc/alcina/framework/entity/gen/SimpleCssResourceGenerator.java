@@ -94,7 +94,7 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 		sw.println("public String getText() {");
 		sw.indent();
 		String toWrite = Util.readURLAsString(resource);
-		ResolveParent resolveParent = method.getAnnotation(ResolveParent.class);
+		ResolveParent resolveParent = method.annotation(ResolveParent.class);
 		if (context.supportsDataUrls()) {
 			try {
 				toWrite = replaceWithDataUrls(context, toWrite, resolveParent);

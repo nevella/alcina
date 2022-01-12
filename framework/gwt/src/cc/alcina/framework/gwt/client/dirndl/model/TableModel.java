@@ -80,7 +80,7 @@ public class TableModel extends Model {
 			Class<? extends Bindable> resultClass = CategoryNamePlaceTableAdapter.class;
 			GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							Reflections.classLookup()
+							Reflections
 									.getTemplateInstance(resultClass),
 							factory, false, true, node.getResolver())
 					.stream().map(TableColumn::new)
@@ -150,7 +150,7 @@ public class TableModel extends Model {
 					.resultClass();
 			GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
-							Reflections.classLookup()
+							Reflections
 									.getTemplateInstance(resultClass),
 							factory, false, true, childResolver)
 					.stream().map(field -> {

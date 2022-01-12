@@ -334,7 +334,7 @@ public class LogStore {
 		if (CommonUtils.equalsWithNullEquality(message, lastMessage) || muted) {
 			return;
 		}
-		if (Reflections.classLookup() == null) {
+		if (Reflections == null) {
 			Ax.out("Before reflection: \n%s\n%s\n", topic, message);
 			return;
 		}

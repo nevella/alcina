@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
@@ -23,7 +23,7 @@ class SerializationSupport {
 	private static Map<Class, List<Property>> serializationProperties = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
-	private static Map<Class, Map<String, PropertyReflector>> serializationReflectors = Registry
+	private static Map<Class, Map<String, Property>> serializationReflectors = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
 	private static Map<Class, Class> solePossibleImplementation = Registry
@@ -54,13 +54,13 @@ class SerializationSupport {
 		}
 	};
 
-	public static PropertyReflector getPropertyReflector(
+	public static Property getPropertyReflector(
 			Class<? extends Object> clazz, String propertyName) {
-		Map<String, PropertyReflector> map = serializationReflectors
+		Map<String, Property> map = serializationReflectors
 				.computeIfAbsent(clazz, c -> {
 					return getProperties0(c).stream()
 							.collect(Collectors.toMap(Property::getName,
-									p -> Reflections.propertyAccessor()
+									p -> Reflections.property()
 											.getPropertyReflector(c,
 													p.getName())));
 				});
@@ -75,7 +75,7 @@ class SerializationSupport {
 			// FXIME - meta - Modifiers.nonAbstract emul
 			// non-abstract entity classes have no serializable subclasses (but
 			// do have mvcc subclass...)
-			Reflections.classLookup().isNonAbstract(clazz))) {
+			Reflections.isNonAbstract(clazz))) {
 				return valueClass;
 			} else if (Registry.get().lookupSingle(PersistentImpl.class, clazz,
 					false) != Void.class) {
@@ -91,7 +91,7 @@ class SerializationSupport {
 		Class clazz = Domain.resolveEntityClass(forClass);
 		return serializationProperties.computeIfAbsent(clazz, valueClass -> {
 			BeanDescriptor descriptor = Reflections.beanDescriptorProvider()
-					.getDescriptor(Reflections.classLookup()
+					.getDescriptor(Reflections
 							.getTemplateInstance(clazz));
 			Property[] propertyArray = descriptor.getProperties();
 			return Arrays.stream(propertyArray).sorted(PROPERTY_COMPARATOR)

@@ -287,8 +287,8 @@ public class CompilationUnits {
 		}
 
 		public Class clazz() {
-			return Reflections.classLookup()
-					.getClassForName(qualifiedBinaryName);
+			return Reflections
+					.forName(qualifiedBinaryName);
 		}
 
 		public void dirty() {

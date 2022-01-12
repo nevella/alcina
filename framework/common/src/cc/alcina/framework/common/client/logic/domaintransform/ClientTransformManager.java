@@ -12,19 +12,16 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domain.NonDomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CommitToLocalDomainTransformListener;
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.RecordTransformListener;
 import cc.alcina.framework.common.client.logic.permissions.IGroup;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -53,14 +50,15 @@ public abstract class ClientTransformManager extends TransformManager {
 		requiresEditPrep.clear();
 		super.clearUserObjects();
 	}
+
 	public void setupClientListeners() {
 		addDomainTransformListener(new RecordTransformListener());
 		addDomainTransformListener(new CommitToLocalDomainTransformListener());
 	}
 
-	public Entity ensureEditable(Entity entity) {
-		if (Reflections.classLookup().getAnnotationForClass(entity.getClass(),
-				NonDomainTransformPersistable.class) != null) {
+	public Entity ensureEditable(Entity<?> entity) {
+		if (Reflections.at(entity.getClass())
+				.has(NonDomainTransformPersistable.class)) {
 			Entity editable = (Entity) Reflections
 					.newInstance(entity.entityClass());
 			new CloneHelper().copyBeanProperties(entity, editable, null);
@@ -100,13 +98,12 @@ public abstract class ClientTransformManager extends TransformManager {
 	public Collection prepareObject(Entity domainObject, boolean autoSave,
 			boolean afterCreation, boolean forEditing) {
 		List children = new ArrayList();
-		ClientBeanReflector bi = ClientReflector.get()
-				.beanInfoForClass(domainObject.getClass());
-		if (bi == null) {
+		ClassReflector<? extends Entity> classReflector = Reflections
+				.at(domainObject.getClass());
+		if (!classReflector.isReflective()) {
 			return children;
 		}
-		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
-				.values();
+		Collection<Property> properties = classReflector.properties();
 		Class<? extends Object> c = domainObject.getClass();
 		Boolean requiresPrep = requiresEditPrep.get(c);
 		if (requiresPrep != null) {
@@ -116,20 +113,20 @@ public abstract class ClientTransformManager extends TransformManager {
 		} else {
 			requiresEditPrep.put(c, false);
 		}
-		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-		Bean beanInfo = bi.getAnnotation(Bean.class);
-		for (ClientPropertyReflector pr : prs) {
-			PropertyPermissions pp = pr
-					.getAnnotation(PropertyPermissions.class);
-			DomainProperty instructions = pr
-					.getAnnotation(DomainProperty.class);
+		ObjectPermissions op = classReflector
+				.annotation(ObjectPermissions.class);
+		Bean beanInfo = classReflector.annotation(Bean.class);
+		for (Property property : properties) {
+			PropertyPermissions pp = property
+					.annotation(PropertyPermissions.class);
+			DomainProperty instructions = property
+					.annotation(DomainProperty.class);
 			if (!PermissionsManager.get().checkEffectivePropertyPermission(op,
 					pp, domainObject, false)) {
 				continue;
 			}
-			String propertyName = pr.getPropertyName();
-			Object currentValue = Reflections.propertyAccessor()
-					.getPropertyValue(domainObject, propertyName);
+			String propertyName = property.getName();
+			Object currentValue = property.get(domainObject);
 			boolean create = instructions != null
 					&& instructions.eagerCreation() && currentValue == null;
 			if (requiresPrep == null && instructions != null
@@ -140,11 +137,10 @@ public abstract class ClientTransformManager extends TransformManager {
 			if (create && afterCreation) {
 				Entity newObj = autoSave
 						? TransformManager.get()
-								.createDomainObject(pr.getPropertyType())
+								.createDomainObject(property.getType())
 						: TransformManager.get()
-								.createProvisionalObject(pr.getPropertyType());
-				Reflections.propertyAccessor().setPropertyValue(domainObject,
-						propertyName, newObj);
+								.createProvisionalObject(property.getType());
+				property.set(domainObject, newObj);
 				children.add(newObj);
 				children.addAll(prepareObject(newObj, autoSave, afterCreation,
 						forEditing));
@@ -169,8 +165,7 @@ public abstract class ClientTransformManager extends TransformManager {
 					} else {
 						Entity clonedValue = (Entity) new CloneHelper()
 								.shallowishBeanClone(currentValue);
-						Reflections.propertyAccessor().setPropertyValue(
-								domainObject, propertyName, clonedValue);
+						property.set(domainObject, clonedValue);
 						children.add(clonedValue);
 						children.addAll(prepareObject(clonedValue, autoSave,
 								afterCreation, forEditing));
@@ -253,9 +248,8 @@ public abstract class ClientTransformManager extends TransformManager {
 	}
 
 	protected boolean checkRemoveAssociation(Entity entity, Entity target,
-			ClientPropertyReflector propertyReflector) {
-		Association association = propertyReflector
-				.getAnnotation(Association.class);
+			Property property) {
+		Association association = property.annotation(Association.class);
 		if (association != null && association.dereferenceOnDelete()) {
 			return true;
 		}
@@ -291,7 +285,7 @@ public abstract class ClientTransformManager extends TransformManager {
 			boolean fromPropertyChange) {
 		fireCollectionModificationEvent(
 				new CollectionModificationEvent(this, collectionClass,
-						getDomainObjects().getCollection(collectionClass),
+						getObjectStore().getCollection(collectionClass),
 						fromPropertyChange));
 	}
 

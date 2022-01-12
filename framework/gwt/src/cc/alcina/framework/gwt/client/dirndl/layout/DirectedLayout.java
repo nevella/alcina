@@ -25,16 +25,14 @@ import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -47,7 +45,6 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
 /**
  * FIXME - dirndl.perf
@@ -113,20 +110,19 @@ public class DirectedLayout {
 
 		DirectedNodeRenderer renderer;
 
-
 		Directed directed;
 
 		LinkedList<Node> children = new LinkedList<>();
 
 		Node parent;
 
-		PropertyReflector propertyReflector;
+		Property property;
 
 		List<RemovablePropertyChangeListener> listeners = new ArrayList<>();
 
 		private int index;
 
-		public PropertyReflector changeSource;
+		public Property changeSource;
 
 		private boolean intermediate;
 
@@ -155,7 +151,7 @@ public class DirectedLayout {
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			AnnotationLocation location = new AnnotationLocation(
-					model == null ? null : model.getClass(), propertyReflector,
+					model == null ? null : model.getClass(), property,
 					resolver);
 			A annotation = location.getAnnotation(clazz);
 			if (annotation != null) {
@@ -238,7 +234,7 @@ public class DirectedLayout {
 			if (directed == null) {
 				Class clazz = model.getClass();
 				AnnotationLocation annotationLocation = new AnnotationLocation(
-						clazz, propertyReflector, resolver);
+						clazz, property, resolver);
 				directed = new DirectedResolver(
 						getResolver().getTreeResolver(Directed.class),
 						annotationLocation);
@@ -281,11 +277,10 @@ public class DirectedLayout {
 			if (!child.changeSource.isReadOnly() && model instanceof Bindable) {
 				// FIXME - dirndl.1 - don't add this to form/table cells
 				ChildReplacer listener = new ChildReplacer((Bindable) model,
-						child.changeSource.getPropertyName(), child);
+						child.changeSource.getName(), child);
 				logger.trace("added listener :: {} :: {} :: {} :: {}",
 						child.pathSegment(), child.hashCode(),
-						child.changeSource.getPropertyName(),
-						listener.hashCode());
+						child.changeSource.getName(), listener.hashCode());
 				child.listeners.add(listener);
 			}
 			if (childModel instanceof Model) {
@@ -348,8 +343,8 @@ public class DirectedLayout {
 				for (Directed directed : wrappers) {
 					// for the moment, wrapped nodes have no listeners
 					// (including the leaf).
-					Node wrapperChild = nodeCursor.addChild(model,
-							propertyReflector, null);
+					Node wrapperChild = nodeCursor.addChild(model, property,
+							null);
 					wrapperChild.directed = directed;
 					wrapperChild.intermediate = directed != Ax.last(wrappers);
 					wrapperChild.render(wrapperChild.intermediate);
@@ -381,19 +376,14 @@ public class DirectedLayout {
 			}
 			if (model instanceof Bindable
 					&& !(renderer instanceof HandlesModelBinding)) {
-				Collection<PropertyReflector> propertyReflectors = Reflections
-						.classLookup().getPropertyReflectors((model.getClass()))
-						.values();
-				if (propertyReflectors != null) {
-					for (PropertyReflector propertyReflector : propertyReflectors) {
-						PropertyReflector directedReflector = resolver
-								.resolveDirectedReflector(propertyReflector);
-						if (directedReflector != null) {
-							Object childModel = propertyReflector
-									.getPropertyValue(model);
-							addChild(childModel, directedReflector,
-									propertyReflector);
-						}
+				Collection<Property> properties = Reflections
+						.at((model.getClass())).properties();
+				for (Property property : properties) {
+					Property directedProperty = resolver
+							.resolveDirectedProperty(property);
+					if (directedProperty != null) {
+						Object childModel = property.get(model);
+						addChild(childModel, directedProperty, property);
 					}
 				}
 			}
@@ -443,12 +433,11 @@ public class DirectedLayout {
 			case "..":
 				return parent;
 			default:
-				Collection<PropertyReflector> propertyReflectors = Reflections
-						.classLookup().getPropertyReflectors((model.getClass()))
-						.values();
+				List<Property> properties = Reflections.at((model.getClass()))
+						.properties();
 				int idx = 0;
-				for (PropertyReflector propertyReflector : propertyReflectors) {
-					if (propertyReflector.getPropertyName().equals(segment)) {
+				for (Property property : properties) {
+					if (property.getName().equals(segment)) {
 						return children.get(idx);
 					}
 					idx++;
@@ -470,12 +459,12 @@ public class DirectedLayout {
 			}
 		}
 
-		Node addChild(Object childModel, PropertyReflector definingReflector,
-				PropertyReflector changeSource) {
+		Node addChild(Object childModel, Property definingReflector,
+				Property changeSource) {
 			Node child = new Node(
 					childResolver != null ? childResolver : resolver,
 					childModel);
-			child.propertyReflector = definingReflector;
+			child.property = definingReflector;
 			child.changeSource = changeSource;
 			child.resolver = resolver;
 			child.parent = this;
@@ -497,8 +486,8 @@ public class DirectedLayout {
 		String pathSegment() {
 			String thisLoc = Ax.format("{%s}", model == null ? "null model"
 					: model.getClass().getSimpleName());
-			if (propertyReflector != null) {
-				thisLoc = propertyReflector.getPropertyName() + "." + thisLoc;
+			if (property != null) {
+				thisLoc = property.getName() + "." + thisLoc;
 			} else {
 				if (parent != null && renderer != null) {
 					thisLoc = Ax.format("(%s).%s",
@@ -642,8 +631,7 @@ public class DirectedLayout {
 						return;
 					}
 				}
-				if (child.propertyReflector == null
-						&& evt.getPropertyName() != null) {
+				if (child.property == null && evt.getPropertyName() != null) {
 					// the 'null name' listener and 'non-null' are listening at
 					// different layers of the model
 					//
@@ -658,10 +646,9 @@ public class DirectedLayout {
 				logger.info("removed listener :: {} :: {}  :: {}",
 						child.pathSegment(), child.hashCode(), this.hashCode());
 				Node newChild = addChild(
-						child.propertyReflector == null ? evt.getNewValue()
-								: child.propertyReflector
-										.getPropertyValue(getModel()),
-						child.propertyReflector, child.changeSource);
+						child.property == null ? evt.getNewValue()
+								: child.property.get(getModel()),
+						child.property, child.changeSource);
 				newChild.render();
 				List<Widget> oldChildWidgets = this.child.rendered.widgets;
 				Optional<Widget> insertBeforeChildWidget = this.child.rendered
@@ -844,8 +831,8 @@ public class DirectedLayout {
 
 			void set() {
 				Object value = binding.from().length() > 0
-						? Reflections.propertyAccessor().getPropertyValue(model,
-								binding.from())
+						? Reflections.at(model.getClass())
+								.property(binding.from()).get(model)
 						: binding.literal();
 				boolean hasTransform = (Class) binding
 						.transform() != ToStringFunction.Identity.class;

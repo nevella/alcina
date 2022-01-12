@@ -97,7 +97,7 @@ public class IntrospectorGenerator extends Generator {
 						.getType(TreeIntrospector.class.getName());
 			}
 			ReflectionModule module = intrType
-					.getAnnotation(ReflectionModule.class);
+					.annotation(ReflectionModule.class);
 			if (module == null) {
 				logger.log(TreeLogger.INFO,
 						"introspectorGen debug - no module name - intrType: "
@@ -306,10 +306,10 @@ public class IntrospectorGenerator extends Generator {
 			return false;
 		JClassType ct = type.isClassOrInterface();
 		if (ct != null) {
-			if (ct.getAnnotation(Introspectable.class) != null) {
+			if (ct.annotation(Introspectable.class) != null) {
 				return true;
 			}
-			if (ct.getAnnotation(Bean.class) != null) {
+			if (ct.annotation(Bean.class) != null) {
 				return true;
 			}
 			for (JClassType iface : ct.getImplementedInterfaces()) {

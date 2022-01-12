@@ -82,14 +82,14 @@ public class NodeFactory {
 		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
 				.values();
 		Class<? extends Object> c = domainObject.getClass();
-		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-		Bean beanInfo = bi.getAnnotation(Bean.class);
+		ObjectPermissions op = bi.annotation(ObjectPermissions.class);
+		Bean beanInfo = bi.annotation(Bean.class);
 		SortedMultimap<Integer, List<TreeItem>> createdNodes = new SortedMultimap<Integer, List<TreeItem>>();
 		if (!subCollectionFolders.containsKey(c)) {
 			subCollectionFolders.getAndEnsure(c);
 			for (ClientPropertyReflector pr : prs) {
 				PropertyPermissions pp = pr
-						.getAnnotation(PropertyPermissions.class);
+						.annotation(PropertyPermissions.class);
 				Display displayInfo = pr.getDisplayInfo();
 				boolean fieldVisible = displayInfo != null
 						&& ((displayInfo.displayMask()

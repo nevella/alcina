@@ -12,12 +12,10 @@ import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.logic.AlcinaWebappConfig;
-import cc.alcina.framework.entity.persistence.AppPersistenceBase.InitRegistrySupport;
 import cc.alcina.framework.entity.persistence.updater.DbUpdateRunner;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ClassrefScanner;
-import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 
 public abstract class AppPersistenceBase {
@@ -104,8 +102,6 @@ public abstract class AppPersistenceBase {
 					.getClassInfo(mainLogger, true);
 			new RegistryScanner().scan(classInfo, new ArrayList<String>(),
 					Registry.get(), "entity-layer");
-			Registry.get()
-					.registerBootstrapServices(ObjectPersistenceHelper.get());
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {

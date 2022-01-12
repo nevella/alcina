@@ -21,7 +21,7 @@ public class DTRProtocolSerializer {
 						.lookup(DTRProtocolHandler.class);
 				for (Class clazz : lookup) {
 					DTRProtocolHandler handler = (DTRProtocolHandler) Reflections
-							.classLookup().newInstance(clazz);
+							.newInstance(clazz);
 					if (handler.handlesVersion().equals(protocolVersion)) {
 						return clazz;
 					}
@@ -36,7 +36,7 @@ public class DTRProtocolSerializer {
 	}
 
 	public DTRProtocolHandler getHandler(String protocolVersion) {
-		return (DTRProtocolHandler) Reflections.classLookup()
+		return (DTRProtocolHandler) Reflections
 				.newInstance(protocolHandlerLookup.get(protocolVersion));
 	}
 

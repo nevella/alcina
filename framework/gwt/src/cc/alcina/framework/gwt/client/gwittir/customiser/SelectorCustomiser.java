@@ -84,7 +84,7 @@ public class SelectorCustomiser implements Customiser {
 				if (impl != null) {
 					filter = (Predicate) impl;
 				} else {
-					filter = (Predicate) Reflections.classLookup()
+					filter = (Predicate) Reflections
 							.newInstance(parameter.classValue(), 0, 0);
 				}
 			}

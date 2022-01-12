@@ -43,7 +43,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
@@ -52,11 +51,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupClient;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfo;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoManager;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -65,10 +60,11 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.Transi
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -78,12 +74,13 @@ import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCr
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
 
 /**
- * FIXME - mvcc.adjunct - abstract parts out to ClientTransformManager
+ * FIXME - mvcc.adjunct - abstract parts out to ClientTransformManager. Also
+ * check all methods referenced (there are some helper methods probably no
+ * longer used)
  * 
  * <h2>Thread safety notes</h2>
  * <ul>
@@ -92,13 +89,16 @@ import cc.alcina.framework.common.client.util.SortedMultikeyMap;
  * <li>transformsByType access synchronized
  * </ul>
  *
+ * FIXME - reflection - clean up all threadlocal instance access (correctly name
+ * the singleton/provider, cleanup on alcinaparallel exit(
+ * 
  * @author nick@alcina.cc
  *
  */
 // unchecked because reflection is always going to involve a lot of
 // casting...alas
-public abstract class TransformManager implements PropertyChangeListener,
-		ObjectLookup, CollectionModificationSource {
+public abstract class TransformManager
+		implements PropertyChangeListener, CollectionModificationSource {
 	protected static final String UNSPECIFIC_PROPERTY_CHANGE = "---";
 
 	public static final String ID_FIELD_NAME = "id";
@@ -342,7 +342,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	private boolean useCreatedLocals = true;
 
-	private ObjectStore domainObjects;
+	private ObjectStore objectStore;
 
 	private Set<DomainTransformEvent> transforms = createTransformSet();
 
@@ -467,12 +467,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 				// TODO: notify server
 				return;
 			}
-			propertyAccessor().setPropertyValue(token.object,
-					event.getPropertyName(), token.newTargetObject);
+			token.property().set(token.object, token.newTargetObject);
 			if (event.getPropertyName()
 					.equals(TransformManager.ID_FIELD_NAME)) {
 				// FIXME - mvcc.adjunct (clienttransformmanager rework) - remove
-				getDomainObjects().changeMapping(token.object,
+				getObjectStore().changeMapping(token.object,
 						event.getObjectId(), event.getObjectLocalId());
 				registerLocalObjectPromotion(token.object);
 			}
@@ -481,34 +480,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 				removeTransform(event);
 			}
 			objectModified(token.object, event, false);
-			switch (token.transformType) {
-			case NULL_PROPERTY_REF:
-			case CHANGE_PROPERTY_REF:
-				if (token.existingTargetObject != token.newTargetObject) {
-					if (token.existingTargetObject instanceof Collection) {
-						throw new RuntimeException(
-								"Should not null a collection property:\n "
-										+ event.toString());
-					}
+			if (token.existingTargetObject != token.newTargetObject) {
+				if (token.existingTargetObject instanceof Collection) {
+					throw new RuntimeException(
+							"Should not null a collection property:\n "
+									+ event.toString());
 				}
-				break;
 			}
-			switch (token.transformType) {
-			case NULL_PROPERTY_REF:
-			case CHANGE_PROPERTY_SIMPLE_VALUE:
-				if (token.domainSerializablePropertyName != null
-						&& isIgnorePropertyChanges()) {
-					propertyAccessor().setPropertyValue(token.object,
-							token.domainSerializablePropertyName, null);
-				}
-				if (token.existingTargetObject != token.newTargetObject) {
-					if (token.existingTargetObject instanceof Collection) {
-						throw new RuntimeException(
-								"Should not null a collection property:\n "
-										+ event.toString());
-					}
-				}
-				break;
+			if (token.domainSerializablePropertyName != null
+					&& isIgnorePropertyChanges()) {
+				// wipe deserialized object (will force reconstitution)
+				token.domainSerializableProperty().set(token.object, null);
 			}
 			break;
 		// add and removeref will not cause a property change, so no transform
@@ -524,8 +506,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					event.getPropertyName(), token.newTargetObject,
 					CollectionModificationType.ADD);
 			if (shouldApplyCollectionModification(event)) {
-				Set set = (Set) propertyAccessor().getPropertyValue(
-						token.object, event.getPropertyName());
+				Set set = (Set) token.property().get(token.object);
 				if (!set.contains(token.newTargetObject)) {
 					doubleCheckAddition(set, token.newTargetObject);
 				}
@@ -538,8 +519,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					event.getPropertyName(), token.newTargetObject,
 					CollectionModificationType.REMOVE);
 			if (shouldApplyCollectionModification(event)) {
-				Set set = (Set) propertyAccessor().getPropertyValue(
-						token.object, event.getPropertyName());
+				Set set = (Set) token.property().get(token.object);
 				boolean wasContained = set.remove(token.newTargetObject);
 				if (!wasContained) {
 					doubleCheckRemoval(set, token.newTargetObject);
@@ -576,9 +556,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 						false);
 				break;
 			} else {
-				Entity entity = (Entity) classLookup().newInstance(
-						event.getObjectClass(), event.getObjectId(),
-						event.getObjectLocalId());
+				Entity entity = newInstance(event.getObjectClass(),
+						event.getObjectId(), event.getObjectLocalId());
 				if (isZeroCreatedObjectLocalId(event.getObjectClass())) {
 					entity.setLocalId(0);
 				}
@@ -595,8 +574,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 				objectModified(entity, event, false);
 				maybeFireCollectionModificationEvent(event.getObjectClass(),
 						false);
-				if (getDomainObjects() != null && isAddToDomainObjects()) {
-					getDomainObjects().mapObject(entity);
+				if (getObjectStore() != null && isAddToDomainObjects()) {
+					getObjectStore().mapObject(entity);
 				}
 			}
 			break;
@@ -605,6 +584,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 					+ token.transformType;
 		}
 		currentEvent = null;
+	}
+
+	protected <E extends Entity> E newInstance(Class<E> entityClass, long id,
+			long localId) {
+		E entity = Reflections.newInstance(entityClass);
+		entity.setId(id);
+		entity.setLocalId(localId);
+		return entity;
 	}
 
 	public void appShutdown() {
@@ -628,15 +615,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public void clearUserObjects() {
-		setDomainObjects(null);
+		setObjectStore(null);
 	}
 
 	public void commitProvisionalObjects(Collection c) {
 		promoteToDomain(c, false);
 	}
 
+	// FIXME - remove, direct call to getDomainObjects
 	public boolean containsObject(DomainTransformEvent dte) {
-		Entity obj = getObjectLookup().getObject(dte.getObjectClass(),
+		Entity obj = getObjectStore().getObject(dte.getObjectClass(),
 				dte.getObjectId(), dte.getObjectLocalId());
 		return obj != null;
 	}
@@ -669,8 +657,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			// make sure the enum is reflect-instantiable (although not strictly
 			// necessary here, it's a common dev problem to miss this
 			// annotation, and here is the best place to catch it
-			Class clazz = classLookup()
-					.getClassForName(event.getValueClassName());
+			Class clazz = Reflections.forName(event.getValueClassName());
 			event.setNewStringValue(((Enum) value).name());
 			return;
 		}
@@ -690,7 +677,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public <T extends Entity> T createDomainObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
-		T newInstance = classLookup().newInstance(objectClass, 0, localId);
+		T newInstance = newInstance(objectClass, 0, localId);
 		Preconditions.checkState(newInstance.getLocalId() != 0);
 		registerDomainObject(newInstance);
 		fireCreateObjectEvent(objectClass, 0, localId);
@@ -700,7 +687,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public <T extends Entity> T createProvisionalObject(Class<T> objectClass) {
 		long localId = nextLocalIdCounter();
-		T newInstance = classLookup().newInstance(objectClass, 0, localId);
+		T newInstance = newInstance(objectClass, 0, localId);
 		newInstance.setLocalId(localId);
 		registerProvisionalObject(newInstance);
 		return newInstance;
@@ -770,8 +757,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public void deregisterDomainObject(Entity entity) {
-		if (getDomainObjects() != null) {
-			getDomainObjects().deregister(entity);
+		if (getObjectStore() != null) {
+			getObjectStore().deregister(entity);
 		}
 	}
 
@@ -805,36 +792,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return false;
 	}
 
-	public <V extends Entity> V ensure(Collection<V> instances, Class<V> clazz,
-			String key, Object value, Entity parent,
-			String parentPropertyName) {
-		Optional<V> optional = instances.stream()
-				.filter(new PropertyFilter<V>(key, value)).findFirst();
-		if (optional.isPresent()) {
-			return optional.get();
-		}
-		V instance = createDomainObject(clazz);
-		propertyAccessor().setPropertyValue(instance, key, value);
-		if (parent != null) {
-			propertyAccessor().setPropertyValue(instance, parentPropertyName,
-					parent);
-		}
-		return instance;
-	}
-
+	// FIXME - 2022 - remove (move to domain/domain.query)
 	public <V extends Entity> List<V> filter(Class<V> clazz,
 			Predicate<V> filter) {
-		List<V> result = getDomainObjects().getCollection(clazz).stream()
+		List<V> result = getObjectStore().getCollection(clazz).stream()
 				.filter(filter).collect(Collectors.toList());
 		if (!result.isEmpty() && result.get(0) instanceof Comparable) {
 			Collections.sort((List) result);
 		}
 		return result;
-	}
-
-	public <V extends Entity> V find(Class<V> clazz, String key, Object value) {
-		return CommonUtils
-				.first(filter(clazz, new PropertyFilter<V>(key, value)));
 	}
 
 	public void
@@ -852,24 +818,12 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	public <V extends Entity> List<V> fromIdList(Class<V> clazz, String idStr) {
-		List<Long> ids = idListToLongs(idStr);
-		List<V> result = new ArrayList<V>();
-		for (Long id : ids) {
-			result.add(getObject(clazz, id, 0));
-		}
-		return result;
-	}
-
 	public <T> Collection<T> getCollection(Class<T> clazz) {
-		return getDomainObjects().getCollection(clazz);
+		return getObjectStore().getCollection(clazz);
 	}
 
-	// FIXME - mvcc.adjunct - get rid of objectstore vs objectlookup?
-	// Objectlookup
-	// should probably always go via tm
-	public ObjectStore getDomainObjects() {
-		return this.domainObjects;
+	public ObjectStore getObjectStore() {
+		return this.objectStore;
 	}
 
 	/**
@@ -879,22 +833,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return entity.getLocalId();
 	}
 
-	@Override
-	public <T extends Entity> T getObject(Class<? extends T> c, long id,
-			long localId) {
-		if (this.getDomainObjects() != null) {
-			return getDomainObjects().getObject(c, id, localId);
-		}
-		return null;
-	}
-
 	public Entity getObject(DomainTransformEvent dte) {
 		return getObject(dte, false);
 	}
 
 	public Entity getObject(DomainTransformEvent dte, boolean ignoreSource) {
-		Entity obj = getObject(dte.getObjectClass(), dte.getObjectId(),
-				dte.getObjectLocalId());
+		Entity obj = getObjectStore().getObject(dte.getObjectClass(),
+				dte.getObjectId(), dte.getObjectLocalId());
 		if (obj == null && (ignoreSource
 				|| LooseContext.is(CONTEXT_DO_NOT_POPULATE_SOURCE))) {
 			return null;
@@ -917,14 +862,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public <T extends Entity> T getObject(EntityLocator entityLocator) {
-		return (T) getObject(entityLocator.getClazz(), entityLocator.getId(),
-				entityLocator.localId);
+		return getObjectStore().getObject(entityLocator);
 	}
 
-	@Override
 	public <T extends Entity> T getObject(T entity) {
-		return (T) getObjectLookup().getObject(entity.entityClass(),
-				entity.getId(), entity.getLocalId());
+		return getObjectStore().getObject(entity);
 	}
 
 	public TransformManager getT() {
@@ -948,17 +890,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public Object getTargetObject(DomainTransformEvent evt, boolean oldValue)
 			throws DomainTransformException {
-		return getTargetObjectWithLookup(evt, getObjectLookup(), oldValue);
-	}
-
-	public Object getTargetObjectWithLookup(DomainTransformEvent evt,
-			ObjectLookup objectLookup, boolean oldValue)
-			throws DomainTransformException {
 		Class valueClass = evt.getValueClass();
 		if (evt.getNewValue() != null || valueClass == null) {
 			if (evt.getNewValue() instanceof Entity) {
-				Entity entity = objectLookup
-						.getObject((Entity) evt.getNewValue());
+				Entity entity = getObject((Entity) evt.getNewValue());
 				if (entity != null) {
 					return entity;
 				} else {
@@ -997,8 +932,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return e;
 		}
 		if (evt.getValueId() != 0 || evt.getValueLocalId() != 0) {
-			Entity object = objectLookup.getObject(valueClass, evt.getValueId(),
-					evt.getValueLocalId());
+			Entity object = getObjectStore().getObject(valueClass,
+					evt.getValueId(), evt.getValueLocalId());
 			if (object != null) {
 				return object;
 			}
@@ -1090,8 +1025,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 	public void modifyCollectionProperty(Object objectWithCollection,
 			String collectionPropertyName, Object delta,
 			CollectionModificationType modificationType) {
-		Collection old = (Collection) propertyAccessor()
-				.getPropertyValue(objectWithCollection, collectionPropertyName);
+		Property property = Reflections.at(objectWithCollection.getClass())
+				.property(collectionPropertyName);
+		Collection old = (Collection) property.get(objectWithCollection);
 		if (!(delta instanceof Collection)) {
 			switch (modificationType) {
 			case ADD:
@@ -1118,8 +1054,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		} else {
 			c.removeAll(deltaC);
 		}
-		propertyAccessor().setPropertyValue(objectWithCollection,
-				collectionPropertyName, c);
+		property.set(objectWithCollection, c);
 	}
 
 	public synchronized long nextLocalIdCounter() {
@@ -1133,23 +1068,26 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public List<DomainTransformEvent> objectsToDtes(Collection objects,
-			Class clazz, boolean asObjectSpec) {
-		ClassLookup classLookup = classLookup();
-		List<PropertyInfo> pds = classLookup.getWritableProperties(clazz);
-		Object templateInstance = classLookup.getTemplateInstance(clazz);
-		PropertyAccessor accessor = propertyAccessor();
+			Class<?> clazz, boolean asObjectSpec) {
+		ClassReflector<?> classReflector = Reflections.at(clazz);
+		List<Property> properties = classReflector.properties().stream()
+				.filter(Property::isWriteable).collect(Collectors.toList());
+		Object templateInstance = classReflector.templateInstance();
 		Map<String, Object> defaultValues = new HashMap();
 		Map<Class<? extends Entity>, Class<? extends Entity>> entityImplementations = new LinkedHashMap<>();
-		for (Iterator<PropertyInfo> itr = pds.iterator(); itr.hasNext();) {
-			PropertyInfo info = itr.next();
-			String propertyName = info.getPropertyName();
-			Class propertyType = info.getPropertyType();
+		for (Iterator<Property> itr = properties.iterator(); itr.hasNext();) {
+			Property property = itr.next();
+			String propertyName = property.getName();
+			Class propertyType = property.getType();
+			if (property.has(DomainProperty.class)
+					&& property.annotation(DomainProperty.class).serialize()) {
+				throw new UnsupportedOperationException();
+			}
 			if (ignorePropertyForObjectsToDtes(clazz, propertyType,
 					propertyName)) {
 				itr.remove();
 			} else {
-				Object defaultValue = accessor
-						.getPropertyValue(templateInstance, propertyName);
+				Object defaultValue = property.get(templateInstance);
 				defaultValues.put(propertyName, defaultValue);
 				if (CommonUtils.isOrHasSuperClass(propertyType, Entity.class)) {
 					Class implementation = PersistentImpl
@@ -1178,12 +1116,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 			dte.setTransformType(TransformType.CREATE_OBJECT);
 			dtes.add(dte);
 			int i = 1;
-			for (PropertyInfo pd : pds) {
-				String propertyName = pd.getPropertyName();
-				Class propertyType = pd.getPropertyType();
+			for (Property property : properties) {
+				String propertyName = property.getName();
+				Class propertyType = property.getType();
 				Object defaultValue = defaultValues.get(propertyName);
-				Object value = asObjectSpec ? arr[i++]
-						: propertyAccessor().getPropertyValue(o, propertyName);
+				Object value = asObjectSpec ? arr[i++] : property.get(o);
 				if (value == null && defaultValue == null) {
 					continue;
 				}
@@ -1191,9 +1128,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 					if (value.equals(defaultValue)) {
 						continue;
 					}
-				}
-				if (pd.isSerialize()) {
-					throw new UnsupportedOperationException();
 				}
 				if (value instanceof Set) {
 					Iterator itr = ((Set) value).iterator();
@@ -1255,17 +1189,15 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return dtes;
 	}
 
-	public void persistSerializables(Entity entity) {
-		Reflections.classLookup().getPropertyReflectors(entity.entityClass())
-				.values().stream()
-				.filter(reflector -> reflector != null
-						&& reflector.getAnnotation(DomainProperty.class) != null
-						&& reflector.getAnnotation(DomainProperty.class)
+	public void persistSerializables(Entity<?> entity) {
+		Reflections.at(entity.entityClass()).properties().stream()
+				.filter(property -> property.has(DomainProperty.class)
+						&& property.annotation(DomainProperty.class)
 								.serialize())
-				.forEach(reflector -> {
-					Object propertyValue = reflector.getPropertyValue(entity);
+				.forEach(property -> {
+					Object propertyValue = property.get(entity);
 					Object copy = Serializer.get().copy(propertyValue);
-					reflector.setPropertyValue(entity, copy);
+					property.set(entity, copy);
 				});
 		;
 	}
@@ -1417,7 +1349,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 		addTransformsFromPropertyChange(transforms);
 		Entity entity = (Entity) event.getSource();
-		if (this.getDomainObjects() != null) {
+		if (this.getObjectStore() != null) {
 			if (!provisionalObjects.containsKey(entity)) {
 				maybeFireCollectionModificationEvent(entity.entityClass(),
 						true);
@@ -1446,14 +1378,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 	// FIXME - mvcc.adjunct - most app-level calls to this are legacy and can be
 	// removed (there should only be a few framework calls)
 	public <T extends Entity> T registerDomainObject(T entity) {
-		if (getDomainObjects() != null && entity != null) {
+		if (getObjectStore() != null && entity != null) {
 			if (entity.getId() == 0) {
-				Entity createdObject = getDomainObjects().getObject(entity);
+				Entity createdObject = getObjectStore().getObject(entity);
 				if (createdObject != null) {
-					getDomainObjects().deregister(createdObject);
+					getObjectStore().deregister(createdObject);
 				}
 			}
-			getDomainObjects().mapObject(entity);
+			getObjectStore().mapObject(entity);
 		}
 		return entity;
 	}
@@ -1472,7 +1404,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	public void registerDomainObjectsAsync(Collection<Entity> entities,
 			final AsyncCallback<Void> postRegisterCallback) {
-		((MapObjectLookupClient) getDomainObjects()).registerAsync(entities,
+		((MapObjectLookupClient) getObjectStore()).registerAsync(entities,
 				new ScheduledCommand() {
 					@Override
 					public void execute() {
@@ -1485,21 +1417,21 @@ public abstract class TransformManager implements PropertyChangeListener,
 	 * Useful for unit tests, hence here rather than clientTM
 	 */
 	public void registerDomainObjectsInHolder(DomainModelHolder h) {
-		if (this.getDomainObjects() != null) {
-			getDomainObjects().removeListeners();
+		if (this.getObjectStore() != null) {
+			getObjectStore().removeListeners();
 		}
 		createObjectLookup();
-		getDomainObjects().registerObjects(h.registerableDomainObjects());
+		getObjectStore().registerObjects(h.registerableDomainObjects());
 		ClassRef.add(h.getClassRefs());
 	}
 
 	public void registerDomainObjectsInHolderAsync(final DomainModelHolder h,
 			final AsyncCallback<Void> postRegisterCallback) {
-		if (this.getDomainObjects() != null) {
-			getDomainObjects().removeListeners();
+		if (this.getObjectStore() != null) {
+			getObjectStore().removeListeners();
 		}
 		createObjectLookup();
-		((MapObjectLookupClient) getDomainObjects()).registerAsync(
+		((MapObjectLookupClient) getObjectStore()).registerAsync(
 				h.registerableDomainObjects(), new ScheduledCommand() {
 					@Override
 					public void execute() {
@@ -1510,23 +1442,23 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	public <V extends Entity> Set<V> registeredObjectsAsSet(Class<V> clazz) {
-		return new LinkedHashSet<V>(getDomainObjects().getCollection(clazz));
+		return new LinkedHashSet<V>(getObjectStore().getCollection(clazz));
 	}
 
 	public <V extends Entity> V registeredSingleton(Class<V> clazz) {
-		Collection<V> c = getDomainObjects().getCollection(clazz);
+		Collection<V> c = getObjectStore().getCollection(clazz);
 		return c.isEmpty() ? null : c.iterator().next();
 	}
 
 	public void registerModelObject(final DomainModelObject h,
 			final AsyncCallback<Void> postRegisterCallback) {
-		getDomainObjects().registerObjects(h.registrableObjects());
+		getObjectStore().registerObjects(h.registrableObjects());
 		postRegisterCallback.onSuccess(null);
 	}
 
 	public void registerModelObjectAsync(final DomainModelObject h,
 			final AsyncCallback<Void> postRegisterCallback) {
-		((MapObjectLookupClient) getDomainObjects())
+		((MapObjectLookupClient) getObjectStore())
 				.registerAsync(h.registrableObjects(), new ScheduledCommand() {
 					@Override
 					public void execute() {
@@ -1703,12 +1635,9 @@ public abstract class TransformManager implements PropertyChangeListener,
 			throws DomainTransformException {
 	}
 
-	protected ClassLookup classLookup() {
-		return Reflections.classLookup();
-	}
-
 	protected void createObjectLookup() {
-		setDomainObjects(new MapObjectLookupClient(this));
+		// FIXME - 2022 - to client tm
+		setObjectStore(new MapObjectLookupClient(this));
 	}
 
 	// underlying set must be ordered
@@ -1758,10 +1687,6 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return getObject(event);
 	}
 
-	protected ObjectLookup getObjectLookup() {
-		return Reflections.objectLookup();
-	}
-
 	protected Collection getProvisionalObjects() {
 		return provisionalObjects.keySet();
 	}
@@ -1771,34 +1696,29 @@ public abstract class TransformManager implements PropertyChangeListener,
 		Entity entity = (Entity) event.getSource();
 		boolean serializedPropertyChange = false;
 		boolean toSerializePropertyChange = false;
-		PropertyReflector toSerializeReflector = null;
-		PropertyReflector serializedReflector = null;
-		Class entityClass = entity.entityClass();
+		Property toSerializeProperty = null;
+		Property serializedProperty = null;
+		Class<?> entityClass = entity.entityClass();
+		ClassReflector classReflector = Reflections.at(entityClass);
 		String propertyName = event.getPropertyName();
 		if (propertyName.matches("(.+)Serialized")) {
 			String sourcePropertyname = propertyName
 					.replaceFirst("(.+)Serialized", "$1");
-			toSerializeReflector = Reflections.classLookup()
-					.getPropertyReflector(entityClass, sourcePropertyname);
-			serializedReflector = Reflections.classLookup()
-					.getPropertyReflector(entityClass, propertyName);
-			serializedPropertyChange = toSerializeReflector != null
-					&& toSerializeReflector
-							.getAnnotation(DomainProperty.class) != null
-					&& toSerializeReflector.getAnnotation(DomainProperty.class)
+			toSerializeProperty = classReflector.property(sourcePropertyname);
+			serializedProperty = classReflector.property(propertyName);
+			serializedPropertyChange = toSerializeProperty != null
+					&& toSerializeProperty.has(DomainProperty.class)
+					&& toSerializeProperty.annotation(DomainProperty.class)
 							.serialize();
 		} else {
-			toSerializeReflector = Reflections.classLookup()
-					.getPropertyReflector(entityClass, propertyName);
-			toSerializePropertyChange = toSerializeReflector != null
-					&& toSerializeReflector
-							.getAnnotation(DomainProperty.class) != null
-					&& toSerializeReflector.getAnnotation(DomainProperty.class)
+			toSerializeProperty = classReflector.property(propertyName);
+			toSerializePropertyChange = toSerializeProperty != null
+					&& toSerializeProperty.has(DomainProperty.class)
+					&& toSerializeProperty.annotation(DomainProperty.class)
 							.serialize();
 			if (toSerializePropertyChange) {
-				serializedReflector = Reflections.classLookup()
-						.getPropertyReflector(entityClass,
-								propertyName + "Serialized");
+				serializedProperty = classReflector
+						.property(propertyName + "Serialized");
 			}
 		}
 		/*
@@ -1815,7 +1735,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				try {
 					LooseContext.pushWithTrue(
 							CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
-					toSerializeReflector.setPropertyValue(entity, null);
+					toSerializeProperty.set(entity, null);
 				} finally {
 					LooseContext.pop();
 				}
@@ -1831,15 +1751,14 @@ public abstract class TransformManager implements PropertyChangeListener,
 				LooseContext.pushWithTrue(
 						CONTEXT_IN_SERIALIZE_PROPERTY_CHANGE_CYCLE);
 				String classNamePropertyName = propertyName + "ClassName";
-				boolean hasClassNameProperty = Reflections.classLookup()
-						.hasProperty(entityClass, classNamePropertyName);
-				serializedReflector.setPropertyValue(entity,
+				boolean hasClassNameProperty = classReflector
+						.hasProperty(classNamePropertyName);
+				serializedProperty.set(entity,
 						serialize(event.getNewValue(), hasClassNameProperty));
 				if (hasClassNameProperty) {
-					PropertyReflector serializedClassNameReflector = Reflections
-							.classLookup().getPropertyReflector(entityClass,
-									classNamePropertyName);
-					serializedClassNameReflector.setPropertyValue(entity,
+					Property serializedClassNameReflector = classReflector
+							.property(classNamePropertyName);
+					serializedClassNameReflector.set(entity,
 							event.getNewValue() == null ? null
 									: event.getNewValue().getClass().getName());
 				}
@@ -1852,17 +1771,16 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return false;
 	}
 
-	protected boolean ignorePropertyForObjectsToDtes(Class objectType,
-			Class propertyType, String propertyName) {
+	protected boolean ignorePropertyForObjectsToDtes(Class<?> objectType,
+			Class<?> propertyType, String propertyName) {
 		return ignorePropertiesForCaching.contains(propertyName)
 				|| propertyType == Class.class
 				|| !PermissionsManager.get().checkReadable(objectType,
 						propertyName, null)
-				|| (Reflections.propertyAccessor().getAnnotationForProperty(
-						objectType, AlcinaTransient.class, propertyName) != null
-						&& Reflections.propertyAccessor()
-								.getAnnotationForProperty(objectType,
-										AlcinaTransient.class, propertyName)
+				|| (Reflections.at(objectType).property(propertyName)
+						.has(AlcinaTransient.class)
+						&& Reflections.at(objectType).property(propertyName)
+								.annotation(AlcinaTransient.class)
 								.value() == TransientType.ALL);
 	}
 
@@ -1910,8 +1828,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	}
 
 	protected void performDeleteObject(Entity entity) {
-		if (getDomainObjects() != null) {
-			getDomainObjects().deregister(entity);
+		if (getObjectStore() != null) {
+			getObjectStore().deregister(entity);
 			maybeFireCollectionModificationEvent(entity.entityClass(), false);
 		}
 	}
@@ -1949,7 +1867,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 			CollectionModificationSupport.queue(true);
 			for (Object o : objects) {
 				if (o instanceof Entity
-						&& getObjectLookup().getObject((Entity) o) == null) {
+						&& getObjectStore().getObject((Entity) o) == null) {
 					Entity entity = (Entity) o;
 					// if this is a new object, we want to register a blank
 					// object,
@@ -1967,7 +1885,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 					// way
 					// is better. so ignore all this. it works, it's fine
 					// (come adjunct TM this all ggoes away)
-					Entity newInstance = (Entity) Reflections.classLookup()
+					Entity newInstance = (Entity) Reflections
 							.newInstance(o.getClass());
 					newInstance.setLocalId(entity.getLocalId());
 					TransformManager.get().registerDomainObject(newInstance);
@@ -2013,8 +1931,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	protected PropertyAccessor propertyAccessor() {
-		return Reflections.propertyAccessor();
+	protected Property property(Class clazz, String propertyName) {
+		return Reflections.at(clazz).property(propertyName);
 	}
 
 	/*
@@ -2023,8 +1941,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 	protected void removePerThreadContext0() {
 	}
 
-	protected void setDomainObjects(ObjectStore domainObjects) {
-		this.domainObjects = domainObjects;
+	protected void setObjectStore(ObjectStore domainObjects) {
+		this.objectStore = domainObjects;
 	}
 
 	protected boolean
@@ -2032,11 +1950,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return true;
 	}
 
-	protected void updateAssociation(String propertyName, Entity delta,
+	protected void updateAssociation(String propertyName, Entity<?> delta,
 			Entity associated, boolean remove) {
 		Association association = delta == null ? null
-				: propertyAccessor().getAnnotationForProperty(
-						delta.entityClass(), Association.class, propertyName);
+				: Reflections.at(delta.entityClass()).property(propertyName)
+						.annotation(Association.class);
 		if (associated == null || association == null
 				|| association.propertyName().length() == 0) {
 			return;
@@ -2052,11 +1970,13 @@ public abstract class TransformManager implements PropertyChangeListener,
 			return;
 		}
 		associated = (Entity) ensureEndpointWriteable(associated);
-		Object associatedObject = propertyAccessor()
-				.getPropertyValue(associated, association.propertyName());
-		associatedObject = ensureEndpointInTransformGraph(associatedObject);
-		boolean assocObjIsCollection = associatedObject instanceof Collection;
-		TransformType tt = assocObjIsCollection
+		Property associatedProperty = Reflections.at(associated.getClass())
+				.property(association.propertyName());
+		Object associatedExistingValue = associatedProperty.get(associated);
+		associatedExistingValue = ensureEndpointInTransformGraph(
+				associatedExistingValue);
+		boolean associatedExistingValueCollection = associatedExistingValue instanceof Collection;
+		TransformType tt = associatedExistingValueCollection
 				? (remove ? TransformType.REMOVE_REF_FROM_COLLECTION
 						: TransformType.ADD_REF_TO_COLLECTION)
 				: remove ? TransformType.NULL_PROPERTY_REF
@@ -2066,8 +1986,8 @@ public abstract class TransformManager implements PropertyChangeListener,
 		maybeAddVersionNumbers(event, delta, associated);
 		// No! Only should check one end of the relation for permissions
 		// checkPermissions(hTgt, evt, assoc.propertyName());
-		if (assocObjIsCollection) {
-			Collection collection = (Collection) associatedObject;
+		if (associatedExistingValueCollection) {
+			Collection collection = (Collection) associatedExistingValue;
 			if (isPerformDirectAssociationUpdates(associated)) {
 				performDirectAssociationUpdate(associated,
 						association.propertyName(), collection, delta, remove);
@@ -2082,8 +2002,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				} else {
 					collection.add(delta);
 				}
-				propertyAccessor().setPropertyValue(associated,
-						association.propertyName(), collection);
+				associatedProperty.set(associated, collection);
 			}
 		} else {
 			/*
@@ -2093,15 +2012,11 @@ public abstract class TransformManager implements PropertyChangeListener,
 			 * null if the assoc prop is the old value
 			 */
 			if (remove) {
-				Object current = propertyAccessor().getPropertyValue(associated,
-						association.propertyName());
-				if (current == delta) {
-					propertyAccessor().setPropertyValue(associated,
-							association.propertyName(), null);
+				if (associatedExistingValue == delta) {
+					associatedProperty.set(associated, null);
 				}
 			} else {
-				propertyAccessor().setPropertyValue(associated,
-						association.propertyName(), delta);
+				associatedProperty.set(associated, delta);
 			}
 			// shouldn't fire for collection props, probly. also, collection
 			// mods are very unlikely to collide in a nasty way (since
@@ -2149,94 +2064,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 		}
 	}
 
-	public static class DomainObjectReverseLookup<K extends Entity, V extends Entity>
-			implements DomainTransformListener {
-		private final Class<K> childClass;
-
-		private final Class<V> parentClass;
-
-		private Set<PropertyInfo> pils = new LinkedHashSet<PropertyInfo>();
-
-		private Multimap<K, List<V>> lookup;
-
-		public DomainObjectReverseLookup(Class<K> childClass,
-				Class<V> parentClass) {
-			this.childClass = childClass;
-			this.parentClass = parentClass;
-			TransformManager.get().addDomainTransformListener(this);
-		}
-
-		public void detach() {
-			TransformManager.get().removeDomainTransformListener(this);
-		}
-
-		@Override
-		public void domainTransform(DomainTransformEvent evt)
-				throws DomainTransformException {
-			if (lookup != null) {
-				if (evt.getTransformType() == TransformType.NULL_PROPERTY_REF
-						|| evt.getTransformType() == TransformType.CHANGE_PROPERTY_REF) {
-					if (pils.contains(new PropertyInfo(evt.getObjectClass(),
-							evt.getPropertyName()))) {
-						lookup = null;
-					}
-				}
-				if (evt.provideIsIdEvent(childClass)) {
-					lookup = null;
-				}
-			}
-		}
-
-		public List<V> get(K k) {
-			ensureLookup();
-			return lookup.get(k);
-		}
-
-		private void ensureLookup() {
-			if (lookup == null) {
-				lookup = new Multimap<K, List<V>>();
-				pils.clear();
-				Map<Class<? extends Entity>, Collection<Entity>> m = TransformManager
-						.get().getDomainObjects().getCollectionMap();
-				for (Class clazz : m.keySet()) {
-					if (parentClass != null && parentClass != clazz) {
-						continue;
-					}
-					Collection<Entity> objs = m.get(clazz);
-					if (objs.isEmpty()) {
-						continue;
-					}
-					ClassLookup classLookup = Reflections.classLookup();
-					List<PropertyInfo> pds = classLookup
-							.getWritableProperties(clazz);
-					Object templateInstance = classLookup
-							.getTemplateInstance(clazz);
-					PropertyAccessor accessor = Reflections.propertyAccessor();
-					for (Iterator<PropertyInfo> itr = pds.iterator(); itr
-							.hasNext();) {
-						PropertyInfo info = itr.next();
-						if (info.getPropertyType() != childClass) {
-							itr.remove();
-						}
-					}
-					pils.addAll(pds);
-					Object[] args = new Object[0];
-					try {
-						for (V o : (Collection<V>) m.get(clazz)) {
-							for (PropertyInfo info : pds) {
-								K k = (K) info.getReadMethod().invoke(o, args);
-								if (k != null) {
-									lookup.add(k, o);
-								}
-							}
-						}
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				}
-			}
-		}
-	}
+	
 
 	public static class RecordTransformListener
 			implements DomainTransformListener {
@@ -2301,7 +2129,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 		Entity newTargetEntity;
 
+		private DomainTransformEvent event;
+
 		ApplyToken(DomainTransformEvent event) throws DomainTransformException {
+			this.event = event;
 			transformType = event.getTransformType();
 			if (transformType != TransformType.CREATE_OBJECT
 					|| checkForExistingLocallyCreatedObjects()) {
@@ -2323,8 +2154,7 @@ public abstract class TransformManager implements PropertyChangeListener,
 				existingTargetObject = event.getOldValue();
 			} else if (event.getSource() == null || propertyName == null) {
 			} else {
-				existingTargetObject = propertyAccessor()
-						.getPropertyValue(event.getSource(), propertyName);
+				existingTargetObject = property().get(event.getSource());
 			}
 			existingTargetObject = ensureEndpointInTransformGraph(
 					existingTargetObject);
@@ -2343,14 +2173,24 @@ public abstract class TransformManager implements PropertyChangeListener,
 					&& propertyName.endsWith(SERIALIZED_SUFFIX)) {
 				String serializationSourceName = propertyName.substring(0,
 						propertyName.length() - SERIALIZED_SUFFIX.length());
-				PropertyReflector reflector = Reflections.propertyAccessor()
-						.getPropertyReflector(event.getObjectClass(),
-								serializationSourceName);
-				domainSerializablePropertyName = reflector != null
-						&& reflector.hasAnnotation(DomainProperty.class)
-						&& reflector.getAnnotation(DomainProperty.class)
-								.serialize() ? serializationSourceName : null;
+				Property property = Reflections.at(object.entityClass())
+						.property(serializationSourceName);
+				domainSerializablePropertyName = property != null
+						&& property.has(DomainProperty.class)
+						&& property.annotation(DomainProperty.class).serialize()
+								? serializationSourceName
+								: null;
 			}
+		}
+
+		Property property() {
+			return Reflections.at(object.entityClass())
+					.property(event.getPropertyName());
+		}
+
+		Property domainSerializableProperty() {
+			return Reflections.at(object.entityClass())
+					.property(domainSerializablePropertyName);
 		}
 	}
 

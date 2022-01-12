@@ -4,8 +4,8 @@ import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 @ClientInstantiable
@@ -49,8 +49,8 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		throw new UnsupportedOperationException();
 	}
 
-	public PropertyReflector resolveDirectedReflector(PropertyReflector propertyReflector) {
-		return propertyReflector.hasAnnotation(Directed.class)?propertyReflector:null;
+	public Property resolveDirectedProperty(Property property) {
+		return property.has(Directed.class)?property:null;
 	}
 
 	public Object resolveModel(Object model) {

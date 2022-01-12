@@ -10,9 +10,9 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
@@ -71,14 +71,14 @@ public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>
 			EntityPlace fromPlace = (EntityPlace) RegistryHistoryMapper.get()
 					.getPlace(place.fromClass);
 			Class implementationClass = fromPlace.provideEntityClass();
-			Optional<PropertyReflector> ownerReflector = Entity.Ownership
+			Optional<Property> ownerReflector = Entity.Ownership
 					.getOwnerReflectors(e.entityClass())
-					.filter(r -> r.getAnnotation(Association.class)
+					.filter(r -> r.annotation(Association.class)
 							.implementationClass() == implementationClass)
 					.filter(Objects::nonNull).findFirst();
 			Domain.async(implementationClass, place.fromId, false, parent -> {
 				if (ownerReflector.isPresent()) {
-					ownerReflector.get().setPropertyValue(e, parent);
+					ownerReflector.get().set(e, parent);
 				}
 				postCreate.run();
 			});

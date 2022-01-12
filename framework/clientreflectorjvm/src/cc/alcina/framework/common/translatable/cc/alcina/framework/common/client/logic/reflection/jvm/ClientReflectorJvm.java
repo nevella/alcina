@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 
@@ -39,7 +39,7 @@ public class ClientReflectorJvm extends ClientReflector {
 		return null;
 	}
 
-	public Class getClassForName(String fqn) {
+	public Class forName(String fqn) {
 		return null;
 	}
 
@@ -63,7 +63,7 @@ public class ClientReflectorJvm extends ClientReflector {
 	}
 
 	@Override
-	public Map<String, PropertyReflector>
+	public Map<String, Property>
 			getPropertyReflectors(Class<?> beanClass) {
 		return null;
 	}

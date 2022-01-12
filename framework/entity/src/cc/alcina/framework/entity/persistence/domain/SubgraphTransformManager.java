@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedCa
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 
@@ -42,7 +42,7 @@ public class SubgraphTransformManager extends TransformManager {
 	@Override
 	protected void createObjectLookup() {
 		store = new DetachedCacheObjectStore(new DomainStoreEntityCache());
-		setDomainObjects(store);
+		setObjectStore(store);
 	}
 
 	@Override
@@ -77,8 +77,8 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 
 		@Override
-		public Class getClassForName(String fqn) {
-			return ObjectPersistenceHelper.get().getClassForName(fqn);
+		public Class forName(String fqn) {
+			return ObjectPersistenceHelper.get().forName(fqn);
 		}
 
 		@Override
@@ -87,7 +87,7 @@ public class SubgraphTransformManager extends TransformManager {
 		}
 
 		@Override
-		public Map<String, PropertyReflector>
+		public Map<String, Property>
 				getPropertyReflectors(Class<?> beanClass) {
 			return ObjectPersistenceHelper.get()
 					.getPropertyReflectors(beanClass);

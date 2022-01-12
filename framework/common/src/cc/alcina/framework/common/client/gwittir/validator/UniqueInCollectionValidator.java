@@ -46,7 +46,7 @@ public class UniqueInCollectionValidator implements Validator {
 			return value;
 		}
 		for (Object o : c) {
-			if (o != sourceObject && value.equals(Reflections.propertyAccessor()
+			if (o != sourceObject && value.equals(Reflections.property()
 					.getPropertyValue(o, propertyName))) {
 				if (o instanceof Entity && sourceObject instanceof Entity) {
 					if (EntityHelper.equals((Entity) o,

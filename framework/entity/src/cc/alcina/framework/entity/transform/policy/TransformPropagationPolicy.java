@@ -89,7 +89,7 @@ public class TransformPropagationPolicy {
 		AnnotationLocation location = new AnnotationLocation(
 				event.getObjectClass(),
 				event.getPropertyName() == null ? null
-						: Reflections.classLookup().getPropertyReflector(
+						: Reflections.getPropertyReflector(
 								event.getObjectClass(),
 								event.getPropertyName()));
 		DomainTransformPropagation annotation = location

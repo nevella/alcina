@@ -167,7 +167,7 @@ public class PermissionsManager implements DomainTransformListener {
 	}
 
 	public static ObjectPermissions getObjectPermissions(Class domainClass) {
-		ObjectPermissions objectPermissions = Reflections.classLookup()
+		ObjectPermissions objectPermissions = Reflections
 				.getAnnotationForClass(domainClass, ObjectPermissions.class);
 		return objectPermissions == null ? get().getDefaultObjectPermissions()
 				: objectPermissions;
@@ -365,9 +365,9 @@ public class PermissionsManager implements DomainTransformListener {
 	public boolean checkEffectivePropertyPermission(Object bean,
 			String propertyName, boolean read) {
 		Class<? extends Object> clazz = bean.getClass();
-		ObjectPermissions op = Reflections.classLookup()
+		ObjectPermissions op = Reflections
 				.getAnnotationForClass(clazz, ObjectPermissions.class);
-		PropertyPermissions pp = Reflections.propertyAccessor()
+		PropertyPermissions pp = Reflections.property()
 				.getAnnotationForProperty(clazz, PropertyPermissions.class,
 						propertyName);
 		return checkEffectivePropertyPermission(op, pp, bean, read);
@@ -392,8 +392,8 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public boolean checkReadable(Class clazz, String propertyName,
 			Object bean) {
-		ClassLookup classLookup = Reflections.classLookup();
-		PropertyAccessor propertyAccessor = Reflections.propertyAccessor();
+		ClassLookup classLookup = Reflections;
+		PropertyAccessor propertyAccessor = Reflections.property();
 		ObjectPermissions op = classLookup.getAnnotationForClass(clazz,
 				ObjectPermissions.class);
 		PropertyPermissions pp = propertyAccessor.getAnnotationForProperty(
@@ -664,7 +664,7 @@ public class PermissionsManager implements DomainTransformListener {
 		if (object instanceof Permissible) {
 			return isPermitted((Permissible) object);
 		}
-		Permission permission = Reflections.classLookup()
+		Permission permission = Reflections
 				.getAnnotationForClass(object.getClass(), Permission.class);
 		return isPermitted(permission != null ? permission : defaultPermission);
 	}
@@ -930,14 +930,14 @@ public class PermissionsManager implements DomainTransformListener {
 						PermissionsExtensionForClass.class, void.class, false);
 				for (Class clazz : lookup) {
 					PermissionsExtensionForClass ext = (PermissionsExtensionForClass) Reflections
-							.classLookup().newInstance(clazz);
+							.newInstance(clazz);
 					extensionMapForClass.put(ext.getGenericClass(), ext);
 				}
 				lookup = registry.lookup(false,
 						PermissionsExtensionForRule.class, void.class, false);
 				for (Class clazz : lookup) {
 					PermissionsExtensionForRule ext = (PermissionsExtensionForRule) Reflections
-							.classLookup().newInstance(clazz);
+							.newInstance(clazz);
 					register(ext);
 				}
 			} catch (Exception e) {

@@ -92,7 +92,7 @@ import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -577,7 +577,7 @@ public class DomainStore implements IDomainStore {
 			return new CacheIdProvider(clazz);
 		} else if (Ax.matches(propertyPath, "[^.]+\\.id")) {
 			String propertyName = propertyPath.replaceFirst("(.+)\\.id", "$1");
-			Association association = Reflections.propertyAccessor()
+			Association association = Reflections.property()
 					.getAnnotationForProperty(clazz, Association.class,
 							propertyName);
 			if (association != null) {
@@ -597,7 +597,7 @@ public class DomainStore implements IDomainStore {
 					continue;
 				}
 				Method rm = pd.getReadMethod();
-				PropertyReflector property = Reflections.propertyAccessor()
+				Property property = Reflections.property()
 						.getPropertyReflector(rm.getDeclaringClass(),
 								pd.getName());
 				DomainStoreProperty domainStorePropertyAnnotation = classDescriptor
@@ -1503,13 +1503,13 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public StreamOrSet getKeyMayBeCollection(Object value) {
-			PropertyReflector propertyReflector = Reflections.classLookup()
+			Property property = Reflections
 					.getPropertyReflector(clazz, propertyName);
-			Association association = propertyReflector
-					.getAnnotation(Association.class);
+			Association association = property
+					.annotation(Association.class);
 			Class<? extends Entity> associationClass = association
 					.implementationClass();
-			PropertyReflector associationReflector = Reflections.classLookup()
+			Property associationReflector = Reflections
 					.getPropertyReflector(associationClass,
 							association.propertyName());
 			Collection<Long> ids = CommonUtils.wrapInCollection(value);
@@ -1840,7 +1840,7 @@ public class DomainStore implements IDomainStore {
 				case CHANGE_PROPERTY_SIMPLE_VALUE:
 				case NULL_PROPERTY_REF: {
 					DomainProperty domainProperty = Reflections
-							.propertyAccessor()
+							.property()
 							.getAnnotationForProperty(event.getObjectClass(),
 									DomainProperty.class,
 									event.getPropertyName());
@@ -1862,13 +1862,13 @@ public class DomainStore implements IDomainStore {
 						/*
 						 * undo last property change
 						 */
-						Reflections.propertyAccessor().setPropertyValue(entity,
+						Reflections.property().setPropertyValue(entity,
 								event.getPropertyName(), event.getOldValue());
 						store.index(entity, false, null, false);
 						/*
 						 * redo
 						 */
-						Reflections.propertyAccessor().setPropertyValue(entity,
+						Reflections.property().setPropertyValue(entity,
 								event.getPropertyName(), event.getNewValue());
 					} finally {
 						tm.setIgnorePropertyChanges(false);
@@ -2047,7 +2047,7 @@ public class DomainStore implements IDomainStore {
 		@Override
 		protected void createObjectLookup() {
 			store = (DetachedCacheObjectStore) getTmDomainObjects();
-			setDomainObjects(store);
+			setObjectStore(store);
 		}
 
 		@Override

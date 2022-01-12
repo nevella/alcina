@@ -73,7 +73,7 @@ public class EnumCustomiser implements Customiser {
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				RENDERER_CLASS);
 		final Renderer renderer = parameter != null
-				? (Renderer) Reflections.classLookup()
+				? (Renderer) Reflections
 						.newInstance(parameter.classValue())
 				: null;
 		if (renderer != null) {
@@ -99,15 +99,15 @@ public class EnumCustomiser implements Customiser {
 		if (parameter != null) {
 			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
 			hiddenValues
-					.removeAll(((HasValue<Collection>) Reflections.classLookup()
+					.removeAll(((HasValue<Collection>) Reflections
 							.newInstance(parameter.classValue())).getValue());
 			provider.setProvider((HasValue<Collection>) Reflections
-					.classLookup().newInstance(parameter.classValue()));
+					.newInstance(parameter.classValue()));
 		}
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				FILTER_CLASS);
 		if (parameter != null) {
-			Predicate filter = (Predicate) Reflections.classLookup()
+			Predicate filter = (Predicate) Reflections
 					.newInstance(parameter.classValue());
 			List hiddenValues = (List) EnumSet.allOf(clazz).stream()
 					.filter(filter.negate()).collect(Collectors.toList());

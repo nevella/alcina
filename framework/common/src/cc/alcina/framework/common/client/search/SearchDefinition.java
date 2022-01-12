@@ -319,7 +319,7 @@ public abstract class SearchDefinition extends Bindable
 	}
 
 	public void mapCriteriaToPropertyNames() {
-		CriterionPropertyNameMappings crMappings = Reflections.classLookup()
+		CriterionPropertyNameMappings crMappings = Reflections
 				.getAnnotationForClass(getClass(),
 						CriterionPropertyNameMappings.class);
 		if (crMappings != null) {

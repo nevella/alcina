@@ -44,7 +44,7 @@ public class PropertyFieldUpdater implements FieldUpdater {
 						CommonUtils.nullSafeToString(value));
 			}
 		}
-		Reflections.propertyAccessor().setPropertyValue(entity, propertyName,
+		Reflections.property().setPropertyValue(entity, propertyName,
 				value);
 	}
 }

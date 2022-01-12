@@ -34,9 +34,9 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
@@ -97,8 +97,7 @@ public class ChildBeanCustomiser implements Customiser {
 				String excludesStr) {
 			this.objectClass = objectClass;
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			Object bean = ClientReflector.get()
-					.getTemplateInstance(objectClass);
+			Object bean = Reflections.at(objectClass).templateInstance();
 			List<String> excludeList = excludesStr == null ? new ArrayList<>()
 					: Arrays.asList(excludesStr.split(","));
 			Predicate<Field> filter = f -> !excludeList
@@ -125,8 +124,7 @@ public class ChildBeanCustomiser implements Customiser {
 				@Override
 				public void onClick(ClickEvent event) {
 					Class clazz = ChildBeanWidget.this.objectClass;
-					boolean autoSave = GeneralProperties.get()
-							.isAutoSave();
+					boolean autoSave = GeneralProperties.get().isAutoSave();
 					Entity obj = autoSave
 							? TransformManager.get().createDomainObject(clazz)
 							: TransformManager.get()

@@ -95,8 +95,8 @@ public abstract class ClassRef extends Entity implements TreeSerializable {
 	public Class getRefClass() {
 		if (this.refClass == null && this.refClassName != null) {
 			try {
-				this.refClass = Reflections.classLookup()
-						.getClassForName(this.refClassName);
+				this.refClass = Reflections
+						.forName(this.refClassName);
 			} catch (Exception e) {
 				// Ax.simpleExceptionOut(e);
 			}
@@ -116,8 +116,8 @@ public abstract class ClassRef extends Entity implements TreeSerializable {
 	public boolean notInVm() {
 		if (this.refClass == null && this.refClassName != null) {
 			try {
-				this.refClass = Reflections.classLookup()
-						.getClassForName(this.refClassName);
+				this.refClass = Reflections
+						.forName(this.refClassName);
 			} catch (Exception e) {
 				return true;
 			}

@@ -25,7 +25,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -57,10 +56,7 @@ import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionAction;
@@ -73,8 +69,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.entity.EncryptionUtils;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.MethodContext;
 
@@ -123,9 +117,11 @@ public class ClientReflectionGenerator extends Generator {
 		return classNameAnnotationMap.get(clazz, annClazzName) != null;
 	}
 
-	private String packageName = ClientReflector.class.getCanonicalName()
-			.substring(0,
-					ClientReflector.class.getCanonicalName().lastIndexOf("."));
+	private String packageName = 
+			"FIXME";
+//			ClientReflector.class.getCanonicalName()
+//			.substring(0,
+//					ClientReflector.class.getCanonicalName().lastIndexOf("."));
 
 	private boolean debug = true;
 
@@ -162,8 +158,9 @@ public class ClientReflectionGenerator extends Generator {
 			String superClassName = null;
 			JClassType intrType = context.getTypeOracle().getType(typeName);
 			if (intrType.isInterface() != null) {
-				intrType = context.getTypeOracle()
-						.getType(ClientReflector.class.getName());
+				throw new UnsupportedOperationException("TODO - registry");
+//				intrType = context.getTypeOracle()
+//						.getType(ClientReflector.class.getName());
 			}
 			ReflectionModule module = intrType
 					.getAnnotation(ReflectionModule.class);
@@ -187,9 +184,10 @@ public class ClientReflectionGenerator extends Generator {
 			crf.addImport(Annotation.class.getName());
 			crf.addImport(UnsafeNativeLong.class.getName());
 			crf.setSuperclass(superClassName);
-			crf.addImport(ClientBeanReflector.class.getName());
-			crf.addImport(ClientPropertyReflector.class.getName());
-			crf.addImport(ClientReflector.class.getName());
+			//FIXME - reflection
+//			crf.addImport(ClientBeanReflector.class.getName());
+//			crf.addImport(ClientPropertyReflector.class.getName());
+//			crf.addImport(ClientReflector.class.getName());
 			crf.addImport(RegistryLocation.class.getName());
 			ctLookup.clear();
 			visibleAnnotationClasses = new ArrayList<Class<? extends Annotation>>();

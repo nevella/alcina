@@ -8,7 +8,7 @@ public interface PlaceWithSearchDefinition<SD extends SearchDefinition> {
 	public SD getSearchDefinition();
 
 	default boolean provideIsDefaultDefs() {
-		PlaceWithSearchDefinition<SD> defaultPlace = Reflections.classLookup()
+		PlaceWithSearchDefinition<SD> defaultPlace = Reflections
 				.newInstance(getClass());
 		return HasEquivalenceHelper.argwiseEquivalent(getSearchDefinition(),
 				defaultPlace.getSearchDefinition());

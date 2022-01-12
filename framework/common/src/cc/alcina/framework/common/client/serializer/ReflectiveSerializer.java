@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringI
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -181,7 +181,7 @@ public class ReflectiveSerializer {
 					if (c2.getSuperclass() != null) {
 						next.add(c2.getSuperclass());
 					}
-					Reflections.classLookup().getInterfaces(c2)
+					Reflections.getInterfaces(c2)
 							.forEach(next::add);
 				});
 				toResolve = next;
@@ -276,7 +276,7 @@ public class ReflectiveSerializer {
 		@Override
 		public void childDeserializationComplete(GraphNode graphNode,
 				GraphNode child) {
-			child.propertyReflector.setPropertyValue(graphNode.value,
+			child.property.setPropertyValue(graphNode.value,
 					child.value);
 		}
 
@@ -309,16 +309,16 @@ public class ReflectiveSerializer {
 		public Iterator<GraphNode> writeIterator(GraphNode node) {
 			Iterator<Property> iterator = SerializationSupport
 					.getProperties(node.value).iterator();
-			Object templateInstance = Reflections.classLookup()
+			Object templateInstance = Reflections
 					.getTemplateInstance(node.type);
 			FilteringIterator<Property> filteringIterator = new FilteringIterator<>(
 					iterator, p -> {
 						if (!node.state.serializerOptions.elideDefaults) {
 							return true;
 						}
-						Object childValue = Reflections.propertyAccessor()
+						Object childValue = Reflections.property()
 								.getPropertyValue(node.value, p.getName());
-						Object templateValue = Reflections.propertyAccessor()
+						Object templateValue = Reflections.property()
 								.getPropertyValue(templateInstance,
 										p.getName());
 						return !Objects.equals(childValue, templateValue);
@@ -434,7 +434,7 @@ public class ReflectiveSerializer {
 
 		String name;
 
-		PropertyReflector propertyReflector;
+		Property property;
 
 		Class type;
 
@@ -443,12 +443,12 @@ public class ReflectiveSerializer {
 		PropertySerialization propertySerialization;
 
 		GraphNode(GraphNode parent, String name,
-				PropertyReflector propertyReflector) {
+				Property property) {
 			this.parent = parent;
 			this.name = name;
-			this.propertyReflector = propertyReflector;
-			if (propertyReflector != null) {
-				propertySerialization = Annotations.resolve(propertyReflector,
+			this.property = property;
+			if (property != null) {
+				propertySerialization = Annotations.resolve(property,
 						PropertySerialization.class);
 			}
 			if (parent != null) {
@@ -472,7 +472,7 @@ public class ReflectiveSerializer {
 
 		public Class knownType() {
 			Class type = null;
-			if (propertyReflector == null) {
+			if (property == null) {
 				type = parentSerialization() != null
 						&& parentSerialization().types().length == 1
 								? parentSerialization().types()[0]
@@ -480,7 +480,7 @@ public class ReflectiveSerializer {
 			} else {
 				// FIXME - dirndl 1.3 - use annotationlocation to resolve sole
 				// type of property if possible
-				type = propertyReflector.getPropertyType();
+				type = property.getPropertyType();
 			}
 			if (type == null) {
 				return null;
@@ -563,8 +563,8 @@ public class ReflectiveSerializer {
 			this.value = value;
 			serializer = resolveSerializer(
 					value == null ? void.class : value.getClass(),
-					propertyReflector == null ? null
-							: propertyReflector.getPropertyType());
+					property == null ? null
+							: property.getPropertyType());
 		}
 
 		void writeValue() {
@@ -603,11 +603,11 @@ public class ReflectiveSerializer {
 
 		@Override
 		public GraphNode apply(Property t) {
-			PropertyReflector propertyReflector = Reflections.propertyAccessor()
+			Property property = Reflections.property()
 					.getPropertyReflector(node.value.getClass(), t.getName());
 			GraphNode graphNode = new GraphNode(node, t.getName(),
-					propertyReflector);
-			graphNode.setValue(propertyReflector.getPropertyValue(node.value));
+					property);
+			graphNode.setValue(property.getPropertyValue(node.value));
 			return graphNode;
 		}
 	}

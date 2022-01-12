@@ -53,7 +53,7 @@ public interface TreeSerializable extends Serializable {
 			if (serializable == null) {
 				return serialized;
 			}
-			TypeSerialization typeSerialization = Reflections.classLookup()
+			TypeSerialization typeSerialization = Reflections
 					.getAnnotationForClass(serializable.getClass(),
 							TypeSerialization.class);
 			if (typeSerialization != null

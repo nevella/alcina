@@ -8,6 +8,9 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+/*
+ * FIXME - reflection.js - clear existing cache entries if forName map contains incoming. 
+ */
 public class Reflections {
 	private static Reflections theInstance;
 
@@ -27,6 +30,7 @@ public class Reflections {
 		if (fqn == null) {
 			return null;
 		}
+		//FIXME - reflection - populate the forName map on init
 		switch (fqn) {
 		case "boolean":
 			return (Class<T>) boolean.class;
@@ -59,7 +63,7 @@ public class Reflections {
 	}
 
 	public static boolean isEffectivelyFinal(Class clazz) {
-		return CommonUtils.stdAndPrimitivesMap.containsKey(clazz.getName())
+		return ClassReflector.stdAndPrimitivesMap.containsKey(clazz.getName())
 				|| CommonUtils.isEnumOrEnumSubclass(clazz);
 	}
 

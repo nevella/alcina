@@ -177,7 +177,7 @@ public class GwittirUtils {
 		if (GWT.isScript()) {
 			return ClientReflector.get().beanInfoForClass(clazz) != null;
 		}
-		ClassLookup cl = Reflections.classLookup();
+		ClassLookup cl = Reflections;
 		while (clazz != null && clazz != Object.class) {
 			if (cl.getAnnotationForClass(clazz, Introspectable.class) != null
 					|| cl.getAnnotationForClass(clazz, Bean.class) != null) {

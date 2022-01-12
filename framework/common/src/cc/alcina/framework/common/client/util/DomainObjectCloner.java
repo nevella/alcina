@@ -67,7 +67,7 @@ public class DomainObjectCloner extends CloneHelper {
 		if (pr == null) {
 			return false;
 		}
-		DomainProperty dpi = pr.getAnnotation(DomainProperty.class);
+		DomainProperty dpi = pr.annotation(DomainProperty.class);
 		return dpi == null ? false : dpi.cloneForDuplication();
 	}
 
@@ -85,8 +85,8 @@ public class DomainObjectCloner extends CloneHelper {
 		if (pr == null) {
 			return true;
 		}
-		ObjectPermissions op = bi.getAnnotation(ObjectPermissions.class);
-		PropertyPermissions pp = pr.getAnnotation(PropertyPermissions.class);
+		ObjectPermissions op = bi.annotation(ObjectPermissions.class);
+		PropertyPermissions pp = pr.annotation(PropertyPermissions.class);
 		return !PermissionsManager.get().checkEffectivePropertyPermission(op,
 				pp, obj, false);
 	}

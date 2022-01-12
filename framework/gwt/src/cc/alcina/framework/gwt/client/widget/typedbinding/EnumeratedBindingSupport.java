@@ -50,7 +50,7 @@ public class EnumeratedBindingSupport {
 		if (related == null) {
 			return null;
 		}
-		return (T) Reflections.propertyAccessor().getPropertyValue(related,
+		return (T) Reflections.property().getPropertyValue(related,
 				enumeratedBinding.getBoundPath());
 	}
 
@@ -80,7 +80,7 @@ public class EnumeratedBindingSupport {
 			throw new IllegalStateException(
 					"binding should not be exposed for null object");
 		}
-		Reflections.propertyAccessor().setPropertyValue(related,
+		Reflections.property().setPropertyValue(related,
 				enumeratedBinding.getBoundPath(), value);
 	}
 

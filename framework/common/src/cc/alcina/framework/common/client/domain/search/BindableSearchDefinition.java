@@ -140,8 +140,8 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	}
 
 	protected void init() {
-		TypeSerialization typeSerialization = Reflections.classLookup()
-				.getAnnotationForClass(getClass(), TypeSerialization.class);
+		TypeSerialization typeSerialization = Reflections.at(getClass())
+				.annotation(TypeSerialization.class);
 		Class<? extends EntityCriteriaGroup> ecgClass = Arrays
 				.stream(typeSerialization.properties())
 				.filter(ps -> ps.name().equals("criteriaGroups")).findFirst()

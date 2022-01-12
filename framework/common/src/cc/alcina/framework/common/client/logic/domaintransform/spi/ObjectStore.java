@@ -4,26 +4,41 @@ import java.util.Collection;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 
-public interface ObjectStore extends ObjectLookup {
-	public abstract void changeMapping(Entity obj, long id, long localId);
+public interface ObjectStore {
+	public <T extends Entity> T getObject(Class<? extends T> c, long id,
+			long localId);
 
-	public abstract boolean contains(Entity obj);
+	default <T extends Entity> T getObject(EntityLocator locator) {
+		return (T) getObject(locator.getClazz(), locator.getId(),
+				locator.getLocalId());
+	}
 
-	public abstract void deregister(Entity entity);
+	public <T extends Entity> T getObject(T bean);
 
-	public abstract <T> Collection<T> getCollection(Class<T> clazz);
+	 void changeMapping(Entity obj, long id, long localId);
 
-	public abstract Map<Class<? extends Entity>, Collection<Entity>>
+	 boolean contains(Entity obj);
+
+	default boolean contains(EntityLocator locator){
+		return getObject(locator)!=null;
+	}
+
+	 void deregister(Entity entity);
+
+	 <T> Collection<T> getCollection(Class<T> clazz);
+
+	 Map<Class<? extends Entity>, Collection<Entity>>
 			getCollectionMap();
 
-	public abstract void invalidate(Class<? extends Entity> clazz);
+	 void invalidate(Class<? extends Entity> clazz);
 
-	public abstract void mapObject(Entity obj);
+	 void mapObject(Entity obj);
 
-	public abstract void registerObjects(Collection objects);
+	 void registerObjects(Collection objects);
 
-	public abstract void removeListeners();
+	 void removeListeners();
 
 	boolean contains(Class<? extends Entity> clazz, long id);
 }

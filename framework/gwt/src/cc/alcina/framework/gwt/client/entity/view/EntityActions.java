@@ -85,7 +85,7 @@ public class EntityActions {
 							ownerReflector -> currentPlace.def
 									.provideTruncatedObjectCriterion(
 											ownerReflector
-													.getAnnotation(
+													.annotation(
 															Association.class)
 													.implementationClass())
 									.orElse(null))

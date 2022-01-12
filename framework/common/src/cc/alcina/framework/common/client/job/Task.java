@@ -25,7 +25,7 @@ public interface Task extends TreeSerializable, HasEquivalenceHash {
 	}
 
 	default String getName() {
-		return Reflections.classLookup().getSimpleClassName(getClass());
+		return Reflections.getSimpleClassName(getClass());
 	}
 
 	default void onJobCreate(Job job) {

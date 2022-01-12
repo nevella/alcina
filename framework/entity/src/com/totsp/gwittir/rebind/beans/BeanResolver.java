@@ -181,13 +181,16 @@ public class BeanResolver {
 				}
 			}
 			MethodWrapper w = new MethodWrapper(type, methods[i]);
-			if (methods[i].getAnnotation(Omit.class) != null) {
-				methodSet.remove(w);
-			} else {
-				logger.log(TreeLogger.DEBUG,
-						w.getBaseMethod().getReadableDeclaration(), null);
-				methodSet.add(w);
+			if ("".isEmpty()) {
+				throw new UnsupportedOperationException("TODO - Reflection");
 			}
+			// if (methods[i].annotation(Omit.class) != null) {
+			// methodSet.remove(w);
+			// } else {
+			// logger.log(TreeLogger.DEBUG,
+			// w.getBaseMethod().getReadableDeclaration(), null);
+			// methodSet.add(w);
+			// }
 		}
 		// nope - not wanted for getter/setter
 		// JClassType[] interfaces = type.getImplementedInterfaces();

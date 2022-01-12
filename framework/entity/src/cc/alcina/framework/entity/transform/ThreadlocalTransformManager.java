@@ -75,7 +75,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
-import cc.alcina.framework.common.client.logic.reflection.PropertyReflector;
+import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -110,8 +110,7 @@ import cc.alcina.framework.entity.util.MethodContext;
  *         TODO - mvcc.5 - remove dependence on DomainStore
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
-public class ThreadlocalTransformManager extends TransformManager
-		implements PropertyAccessor, ObjectLookup, ClassLookup {
+public class ThreadlocalTransformManager extends TransformManager {
 	public static final String CONTEXT_TEST_PERMISSIONS = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_TEST_PERMISSIONS";
 
@@ -312,35 +311,7 @@ public class ThreadlocalTransformManager extends TransformManager
 		return ObjectPersistenceHelper.get().displayNameForObject(o);
 	}
 
-	@Override
-	public <V extends Entity> V find(Class<V> clazz, String key, Object value) {
-		V first = null;
-		if (getEntityManager() != null) {
-			String eql = String.format(
-					value == null ? "from %s where %s is null"
-							: "from %s where %s = ?1",
-					clazz.getSimpleName(), key);
-			Query q = getEntityManager().createQuery(eql);
-			if (value != null) {
-				q.setParameter(1, value);
-			}
-			List<V> l = q.getResultList();
-			first = CommonUtils.first(l);
-			if (first != null) {
-				return first;
-			}
-		}
-		if (detachedEntityCache != null) {
-			first = detachedEntityCache.values(clazz).stream()
-					.filter(new PropertyFilter<V>(key, value)).findFirst()
-					.orElse(null);
-			if (first != null) {
-				return first;
-			}
-		}
-		// maybe created in this 'transaction'
-		return super.find(clazz, key, value);
-	}
+	
 
 	public void flush() {
 		flush(new ArrayList<>());
@@ -373,7 +344,7 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public Class getClassForName(String fqn) {
+	public Class forName(String fqn) {
 		// Should never be called - but anyway...
 		try {
 			return Class.forName(fqn);
@@ -471,16 +442,14 @@ public class ThreadlocalTransformManager extends TransformManager
 	}
 
 	@Override
-	public PropertyReflector getPropertyReflector(Class clazz,
-			String propertyName) {
+	public Property getPropertyReflector(Class clazz, String propertyName) {
 		MethodIndividualPropertyReflector accessor = MethodIndividualPropertyReflector
 				.get(clazz, propertyName);
 		return accessor.isInvalid() ? null : accessor;
 	}
 
 	@Override
-	public Map<String, PropertyReflector>
-			getPropertyReflectors(Class<?> beanClass) {
+	public Map<String, Property> getPropertyReflectors(Class<?> beanClass) {
 		return ObjectPersistenceHelper.get().getPropertyReflectors(beanClass);
 	}
 
@@ -543,8 +512,6 @@ public class ThreadlocalTransformManager extends TransformManager
 		return this.applyingExternalTransforms;
 	}
 
-	
-
 	public boolean isExternalCreate() {
 		return useTlIdGenerator;
 	}
@@ -601,7 +568,7 @@ public class ThreadlocalTransformManager extends TransformManager
 					&& deltaC.stream().allMatch(o -> o instanceof MvccObject));
 			if (mismatchedEndpoints) {
 				DomainStoreProperty domainStoreProperty = Reflections
-						.propertyAccessor().getAnnotationForProperty(
+						.property().getAnnotationForProperty(
 								((Entity) objectWithCollection).entityClass(),
 								DomainStoreProperty.class,
 								collectionPropertyName);
@@ -618,20 +585,16 @@ public class ThreadlocalTransformManager extends TransformManager
 				collectionPropertyName, delta, modificationType);
 	}
 
-	@Override
-	public <T> T newInstance(Class<T> clazz) {
-		return ObjectPersistenceHelper.get().newInstance(clazz);
-	}
 
 	/**
 	 * Can be called from the server layer(entityManager==null)
 	 */
 	@Override
-	public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-		return newInstance(clazz, objectId, localId, false);
+	protected  <E extends Entity> E newInstance(Class<E> clazz, long id, long localId) {
+		return newInstance(clazz, id, localId, false);
 	}
 
-	public <T> T newInstance(Class<T> clazz, long objectId, long localId,
+	protected  <E extends Entity> E newInstance(Class<E> clazz, long id, long localId,
 			boolean externalLocal) {
 		try {
 			if (Entity.class.isAssignableFrom(clazz)) {
@@ -640,8 +603,8 @@ public class ThreadlocalTransformManager extends TransformManager
 				if (entityManager == null) {
 					DomainStore store = DomainStore.stores().storeFor(clazz);
 					newInstance = Transaction.current().create((Class) clazz,
-							store, objectId, localId);
-					if (objectId == 0L) {
+							store, id, localId);
+					if (id == 0L) {
 						// created ex-store
 						if (externalLocal) {
 						} else {
@@ -653,8 +616,8 @@ public class ThreadlocalTransformManager extends TransformManager
 					newInstance.setLocalId(localId);
 				}
 				if (entityManager != null) {
-					if (isUseObjectCreationId() && objectId != 0) {
-						newInstance.setId(objectId);
+					if (isUseObjectCreationId() && id != 0) {
+						newInstance.setId(id);
 						Object fromBefore = Registry
 								.impl(JPAImplementation.class)
 								.beforeSpecificSetId(entityManager,
@@ -696,7 +659,7 @@ public class ThreadlocalTransformManager extends TransformManager
 						clientInstanceEntityMap.putToLookups(entityLocator);
 					}
 				}
-				return (T) newInstance;
+				return (E) newInstance;
 			}
 			throw new Exception("only construct entities here");
 		} catch (Exception e) {
@@ -934,7 +897,7 @@ public class ThreadlocalTransformManager extends TransformManager
 					? change
 					: null);
 			ObjectPermissions oph = null;
-			AssignmentPermission aph = Reflections.propertyAccessor()
+			AssignmentPermission aph = Reflections.property()
 					.getAnnotationForProperty(objectClass,
 							AssignmentPermission.class, propertyName);
 			if (entityChange != null) {
@@ -1313,13 +1276,12 @@ public class ThreadlocalTransformManager extends TransformManager
 		// Cannot be used if object permissions depend on child collection
 		// removal
 		if (entityManager != null) {
-			PropertyReflector reflector = Reflections.classLookup()
-					.getPropertyReflector(event.getObjectClass(),
-							event.getPropertyName());
-			if (reflector.hasAnnotation(OneToMany.class)
-					&& reflector.hasAnnotation(Association.class)) {
+			Property reflector = Reflections.getPropertyReflector(
+					event.getObjectClass(), event.getPropertyName());
+			if (reflector.has(OneToMany.class)
+					&& reflector.has(Association.class)) {
 				DomainStoreProperty domainStoreProperty = reflector
-						.getAnnotation(DomainStoreProperty.class);
+						.annotation(DomainStoreProperty.class);
 				if (domainStoreProperty == null || domainStoreProperty
 						.optimiseOneToManyCollectionModifications()) {
 					return false;

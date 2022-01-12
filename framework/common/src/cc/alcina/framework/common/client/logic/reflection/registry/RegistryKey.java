@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.logic.reflection.registry;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class RegistryKey {
 	private transient Class clazz;
@@ -57,10 +57,11 @@ public class RegistryKey {
 		return name + " (rk)";
 	}
 
-	Class clazz(ClassLookup classLookup) {
+	Class clazz() {
+		//FIXME - reflection - cleanup
 		if (clazz == null) {
 			try {
-				clazz = classLookup.getClassForName(name);
+				clazz = Reflections.forName(name);
 			} catch (Exception e) {
 				// null will be filtered down-stream - FIXME mvcc.jobs.2 -
 				// caching issue

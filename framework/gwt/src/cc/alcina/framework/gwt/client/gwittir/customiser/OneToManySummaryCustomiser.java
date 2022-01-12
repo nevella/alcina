@@ -63,8 +63,8 @@ public class OneToManySummaryCustomiser
 			Entity source = (Entity) html.getModel();
 			Entity mostRecent = o.getLastModified();
 			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
-					.get().getPlaceByModelClass(Reflections.classLookup()
-							.getClassForName(o.getEntityClassName()));
+					.get().getPlaceByModelClass(Reflections
+							.forName(o.getEntityClassName()));
 			EntityPlace searchPlace = instancePlace.copy();
 			TruncatedObjectCriterion objectCriterion = Registry
 					.impl(TruncatedObjectCriterion.class, source.entityClass());
