@@ -1,6 +1,7 @@
 package cc.alcina.framework.servlet.servlet.ws;
 
 import java.io.IOException;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -24,9 +25,16 @@ public class AlcinaContextEntryFilter implements ContainerRequestFilter {
 	@Context
 	private ResourceInfo resourceInfo;
 
+	private AtomicInteger requestCounter = new AtomicInteger(0);
+
 	@Override
 	public void filter(ContainerRequestContext context) throws IOException {
-		String threadName = Ax.format("rpc::%s", httpRequest.getRequestURI());
+		String resourceName = resourceInfo.getResourceClass().getSimpleName();
+		String methodName = resourceInfo.getResourceMethod().getName();
+		// Format the thread using the calling method's class and name
+		//  value and a unique(ish) integer
+		String threadName = Ax.format("rpc::%s/%s-%s", 
+			resourceName, methodName, requestCounter.incrementAndGet());
 		// Create a new context
 		AlcinaServletContext alcinaContext = new AlcinaServletContext()
 				.withRootPermissions(shouldRunWithRootPermissions());
