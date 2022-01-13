@@ -5,12 +5,11 @@ import java.util.Map;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecordIsNonCriticalFilter;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecordKeepNonCriticalPrecedingContextFilter;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.state.LoopingPlayer;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.persistence.client.LogStoreCompactor.Phase;
@@ -205,9 +204,8 @@ public class LogStoreCompactor extends Consort<Phase> {
 				}
 			}
 			try {
-				ClientLogRecords records = Registry
-						.impl(AlcinaBeanSerializer.class)
-						.deserialize(result.values().iterator().next());
+				ClientLogRecords records = 
+						TransformManager.deserialize(result.values().iterator().next());
 				if (isCompacted(records) && continueIfCompacted()) {
 					recordId++;
 					replay(this);
@@ -277,8 +275,7 @@ public class LogStoreCompactor extends Consort<Phase> {
 					&& !isCompacted(mergeTo)) {
 				mergeTo.addLogRecord(mergeFrom.getLogRecords().remove(0));
 			}
-			String serialized = Registry.impl(AlcinaBeanSerializer.class)
-					.serialize(mergeTo);
+			String serialized = TransformManager.serialize(mergeTo);
 			LogStore.get().objectStore.put(minNonCompactedLogRecordId,
 					serialized, this);
 		}
@@ -296,8 +293,7 @@ public class LogStoreCompactor extends Consort<Phase> {
 				LogStore.get().objectStore
 						.removeIdRange(IntPair.point(mergeFromId), this);
 			} else {
-				String serialized = Registry.impl(AlcinaBeanSerializer.class)
-						.serialize(mergeFrom);
+				String serialized = TransformManager.serialize(mergeFrom);
 				LogStore.get().objectStore.put(mergeFromId, serialized, this);
 			}
 		}

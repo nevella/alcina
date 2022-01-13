@@ -106,7 +106,6 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMet
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjections;
-import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSuggestOracleRequest;
@@ -297,7 +296,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			@Override
 			public ClientLogRecords convert(String original) {
 				try {
-					return new AlcinaBeanSerializerS().deserialize(original);
+					return TransformManager.deserialize(original);
 				} catch (Exception e) {
 					System.out.format(
 							"problem deserializing clientlogrecord:\n%s\n",

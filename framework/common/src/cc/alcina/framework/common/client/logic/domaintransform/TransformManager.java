@@ -141,6 +141,10 @@ public abstract class TransformManager implements PropertyChangeListener,
 		return event;
 	}
 
+	public static <V> V deserialize(String serialized) {
+		return Serializer.get().deserialize(serialized);
+	}
+
 	public static String fromEnumValueCollection(Collection objects) {
 		return CommonUtils.join(objects, ",");
 	}

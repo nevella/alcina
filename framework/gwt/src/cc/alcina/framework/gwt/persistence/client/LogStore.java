@@ -15,11 +15,11 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords
 import cc.alcina.framework.common.client.logic.domain.EntityHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -202,8 +202,7 @@ public class LogStore {
 	public void flushToLocalPersistence() {
 		if (logs.size > 0 && this.objectStore != null
 				&& !isLocalPersistencePaused()) {
-			String serialized = Registry.impl(AlcinaBeanSerializer.class)
-					.serialize(logs);
+			String serialized = TransformManager.serialize(logs);
 			if (isUsesLzw()) {
 				setMuted(true);
 				try {
