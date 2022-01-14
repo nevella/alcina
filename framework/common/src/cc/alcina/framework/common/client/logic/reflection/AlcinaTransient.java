@@ -11,6 +11,7 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -34,6 +35,13 @@ public @interface AlcinaTransient {
 		public static void setContextTypes(TransienceContext... contexts) {
 			LooseContext.set(CONTEXT_TRANSIENCE_CONTEXTS, contexts);
 		}
+		public static TransienceContext[] getContextTypes() {
+			TransienceContext[] types = LooseContext.get(CONTEXT_TRANSIENCE_CONTEXTS);
+			if (types == null) {
+				types = new TransienceContext[0];
+			}
+			return types;
+		}
 
 		public static boolean isTransient(AlcinaTransient annotation,
 				TransienceContext... types) {
@@ -48,14 +56,7 @@ public @interface AlcinaTransient {
 		}
 
 		public static boolean isContextTransient(AlcinaTransient annotation) {
-			if (annotation == null) {
-				return false;
-			}
-			TransienceContext[] types = LooseContext.get(CONTEXT_TRANSIENCE_CONTEXTS);
-			if (types == null) {
-				types = new TransienceContext[0];
-			}
-			return isTransient(annotation, types);
+			return isTransient(annotation,getContextTypes());
 		}
 
 		public static void checkNoContextTrasience() {
