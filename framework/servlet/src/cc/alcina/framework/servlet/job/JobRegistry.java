@@ -56,6 +56,8 @@ import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -233,8 +235,10 @@ public class JobRegistry {
 	private AtomicInteger extJobSystemIdCounter = new AtomicInteger();
 
 	Map<Job, ContextAwaiter> contextAwaiters = new ConcurrentHashMap<>();
+
 	public JobRegistry() {
 	}
+
 	public void init() {
 		TransformCommit.get()
 				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
@@ -744,7 +748,13 @@ public class JobRegistry {
 			Job job = PersistentImpl.create(Job.class);
 			job.setUser(PermissionsManager.get().getUser());
 			job.setState(initialState);
-			job.setTask(task);
+			try {
+				LooseContext.push();
+				AlcinaTransient.Support.setContextTypes(TransienceContext.JOB);
+				job.setTask(task);
+			} finally {
+				LooseContext.pop();
+			}
 			job.setCreator(
 					EntityLayerObjects.get().getServerAsClientInstance());
 			if (runAt != null) {

@@ -62,7 +62,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoMana
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransientType;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
@@ -1858,16 +1858,17 @@ public abstract class TransformManager implements PropertyChangeListener,
 
 	protected boolean ignorePropertyForObjectsToDtes(Class objectType,
 			Class propertyType, String propertyName) {
+		// FIXME - 2022 - fix AlcinaTransient usage; check 'propertyType ==
+		// Class.class'
 		return ignorePropertiesForCaching.contains(propertyName)
 				|| propertyType == Class.class
 				|| !PermissionsManager.get().checkReadable(objectType,
 						propertyName, null)
-				|| (Reflections.propertyAccessor().getAnnotationForProperty(
-						objectType, AlcinaTransient.class, propertyName) != null
-						&& Reflections.propertyAccessor()
-								.getAnnotationForProperty(objectType,
-										AlcinaTransient.class, propertyName)
-								.value() == TransientType.ALL);
+				|| AlcinaTransient.Support.isTransient(
+						Reflections.propertyAccessor().getAnnotationForProperty(
+								objectType, AlcinaTransient.class,
+								propertyName),
+						AlcinaTransient.TransienceContext.SERVER);
 	}
 
 	protected void initCollections() {

@@ -20,10 +20,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 
 class SerializationSupport {
-	private static Map<Class, List<Property>> serializationProperties = Registry
+	private  Map<Class, List<Property>> serializationProperties = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
-	private static Map<Class, Map<String, PropertyReflector>> serializationReflectors = Registry
+	private  Map<Class, Map<String, PropertyReflector>> serializationReflectors = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
 	private static Map<Class, Class> solePossibleImplementation = Registry
@@ -54,7 +54,7 @@ class SerializationSupport {
 		}
 	};
 
-	public static PropertyReflector getPropertyReflector(
+	public  PropertyReflector getPropertyReflector(
 			Class<? extends Object> clazz, String propertyName) {
 		Map<String, PropertyReflector> map = serializationReflectors
 				.computeIfAbsent(clazz, c -> {
@@ -86,8 +86,12 @@ class SerializationSupport {
 			}
 		});
 	}
+	
+	// Optimisation: share support for all deserializers - they don't use context transience. 
+	 static SerializationSupport deserializationInstance = new SerializationSupport();
 
-	private static List<Property> getProperties0(Class forClass) {
+
+	private  List<Property> getProperties0(Class forClass) {
 		Class clazz = Domain.resolveEntityClass(forClass);
 		return serializationProperties.computeIfAbsent(clazz, valueClass -> {
 			BeanDescriptor descriptor = Reflections.beanDescriptorProvider()
@@ -103,9 +107,12 @@ class SerializationSupport {
 							return false;
 						}
 						String name = property.getName();
-						if (Annotations.has(valueClass, name,
-								AlcinaTransient.class)) {
-							return false;
+						AlcinaTransient alcinaTransient = Annotations.resolve(valueClass, name,
+								AlcinaTransient.class);
+						if (alcinaTransient!=null) {
+							if(AlcinaTransient.Support.isContextTransient(alcinaTransient)){
+								return false;
+							}
 						}
 						PropertySerialization propertySerialization = getPropertySerialization(
 								valueClass, name);
@@ -118,7 +125,7 @@ class SerializationSupport {
 		});
 	}
 
-	static List<Property> getProperties(Object value) {
+	 List<Property> getProperties(Object value) {
 		return getProperties0(value.getClass());
 	}
 

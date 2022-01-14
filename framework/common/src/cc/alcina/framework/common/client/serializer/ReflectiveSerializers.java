@@ -658,7 +658,7 @@ public class ReflectiveSerializers {
 				if (idx < keys.length - 1) {
 					idx++;
 					String key = keys[idx];
-					PropertyReflector reflector = SerializationSupport
+					PropertyReflector reflector = source.state.serializationSupport
 							.getPropertyReflector(source.value.getClass(), key);
 					current = new GraphNode(source, key, reflector);
 					current.serialNode = source.serialNode.getChild(key);
