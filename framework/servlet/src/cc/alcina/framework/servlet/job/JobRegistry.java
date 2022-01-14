@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.Job.ResourceRecord;
+import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobResult;
 import cc.alcina.framework.common.client.job.JobState;
@@ -226,7 +227,7 @@ public class JobRegistry {
 
 	JobScheduler scheduler;
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	static Logger logger = LoggerFactory.getLogger(JobRegistry.class);
 
 	JobExecutors jobExecutors;
 
@@ -750,7 +751,7 @@ public class JobRegistry {
 			job.setState(initialState);
 			try {
 				LooseContext.push();
-				AlcinaTransient.Support.setContextTypes(TransienceContext.JOB);
+				AlcinaTransient.Support.setTransienceContexts(TransienceContext.JOB);
 				job.setTask(task);
 			} finally {
 				LooseContext.pop();
@@ -768,7 +769,8 @@ public class JobRegistry {
 			 * To elaborate - but essentially a top-level job *must* have its
 			 * performer defined early if it's not a FUTURE
 			 */
-			if (initialState == JobState.PENDING && related == null) {
+			if (initialState == JobState.PENDING && (related == null
+					|| relationType == JobRelationType.RESUBMIT)) {
 				job.setPerformer(
 						EntityLayerObjects.get().getServerAsClientInstance());
 			}
@@ -842,6 +844,41 @@ public class JobRegistry {
 		public Builder withTask(Task task) {
 			this.task = task;
 			return this;
+		}
+
+		public void pruneCompletedResubmittedChildren() {
+			Preconditions.checkNotNull(lastCreated);
+			Job cursor = lastCreated.root();
+			List<Job> completed = new ArrayList<>();
+			while (cursor != null) {
+				cursor = cursor.getToRelations().stream().filter(
+						rel -> rel.getType() == JobRelationType.RESUBMIT)
+						.findFirst().map(JobRelation::getFrom).orElse(null);
+				if (cursor != null) {
+					cursor.provideChildren()
+							.filter(Job::provideIsCompletedNormally)
+							.forEach(completed::add);
+				}
+			}
+			while (true) {
+				Job hasEquivalentCompleted = lastCreated.root()
+						.provideChildren().sorted(EntityComparator.INSTANCE)
+						.filter(job -> completed.stream()
+								.anyMatch(job::provideEquivalentTask))
+						.findFirst().orElse(null);
+				if (hasEquivalentCompleted != null) {
+					Job equivalentCompleted = completed.stream().filter(
+							hasEquivalentCompleted::provideEquivalentTask)
+							.findFirst().get();
+					logger.info("pruneCompletedResubmittedChildren - "
+							+ "root {} - job {} - equivalent completed child: {}",
+							lastCreated.root(), hasEquivalentCompleted,
+							equivalentCompleted);
+					hasEquivalentCompleted.deleteEnsuringSequence();
+				}else{
+					break;
+				}
+			}
 		}
 	}
 

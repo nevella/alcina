@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -396,7 +397,7 @@ public class JobScheduler {
 		String visibleInstanceRegex = ResourceUtilities
 				.get("visibleInstanceRegex");
 		Date cutoff = SEUtilities
-				.toOldDate(LocalDateTime.now().minusMinutes(1));
+				.toOldDate(LocalDateTime.now().minusMinutes(0));
 		Date abortTime = new Date();
 		long toOrphanCount = getToAbortOrReassign(activeInstances,
 				visibleInstanceRegex, cutoff).count();
@@ -576,9 +577,11 @@ public class JobScheduler {
 
 		@Override
 		public boolean shouldResubmit(Job orphanedJob) {
-			if (orphanedJob.getUser() != UserlandProvider.get()
-					.getSystemUser()) {
-				return false;
+			if (!Ax.isTest()) {
+				if (orphanedJob.getUser() != UserlandProvider.get()
+						.getSystemUser()) {
+					return false;
+				}
 			}
 			int counter = 0;
 			Job cursor = orphanedJob;
@@ -624,7 +627,6 @@ public class JobScheduler {
 		protected Job resubmit(Job job) {
 			Job resubmit = JobRegistry.createBuilder().withTask(job.getTask())
 					.withRelated(job).withRelationType(JobRelationType.RESUBMIT)
-					.withRunAt(SEUtilities.toLocalDateTime(job.getRunAt()))
 					.create();
 			logger().warn("Resubmit job :: {} -> {})", job, resubmit);
 			return resubmit;
