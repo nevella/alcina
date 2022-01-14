@@ -32,14 +32,27 @@ public @interface AlcinaTransient {
 		private static final String CONTEXT_TRANSIENCE_CONTEXTS = AlcinaTransient.Support.class
 				.getName() + ".CONTEXT_TRANSIENCE_CONTEXTS";
 
-		public static void setContextTypes(TransienceContext... contexts) {
-			LooseContext.set(CONTEXT_TRANSIENCE_CONTEXTS, contexts);
+		public static void
+				setTransienceContexts(TransienceContext... contexts) {
+			if (contexts == null) {
+				LooseContext.remove(CONTEXT_TRANSIENCE_CONTEXTS);
+			} else {
+				LooseContext.set(CONTEXT_TRANSIENCE_CONTEXTS, contexts);
+			}
 		}
-		public static TransienceContext[] getContextTypes() {
-			TransienceContext[] types = LooseContext.get(CONTEXT_TRANSIENCE_CONTEXTS);
+
+		public static TransienceContext[] getTransienceContexts() {
+			TransienceContext[] types = LooseContext
+					.get(CONTEXT_TRANSIENCE_CONTEXTS);
 			if (types == null) {
 				types = new TransienceContext[0];
 			}
+			return types;
+		}
+
+		public static TransienceContext[] getTransienceContextsNoDefault() {
+			TransienceContext[] types = LooseContext
+					.get(CONTEXT_TRANSIENCE_CONTEXTS);
 			return types;
 		}
 
@@ -52,15 +65,21 @@ public @interface AlcinaTransient {
 			if (list.isEmpty()) {
 				return true;
 			}
-			return Arrays.stream(types).anyMatch(list::contains);
+			return types != null
+					&& Arrays.stream(types).anyMatch(list::contains);
 		}
 
 		public static boolean isContextTransient(AlcinaTransient annotation) {
-			return isTransient(annotation,getContextTypes());
+			return isTransient(annotation, getTransienceContexts());
 		}
 
-		public static void checkNoContextTrasience() {
-			Preconditions.checkState(!LooseContext.has(CONTEXT_TRANSIENCE_CONTEXTS));
+		public static void checkNoTrasienceContexts() {
+			Preconditions
+					.checkState(!LooseContext.has(CONTEXT_TRANSIENCE_CONTEXTS));
+		}
+
+		public static void clearTransienceContext() {
+			setTransienceContexts((TransienceContext[]) null);
 		}
 	}
 }

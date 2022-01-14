@@ -102,7 +102,7 @@ public class ReflectiveSerializer {
 			JsonSerialNode.ensureValueSerializers();
 			State state = new State();
 			state.serializationSupport = SerializationSupport.deserializationInstance;
-			AlcinaTransient.Support.checkNoContextTrasience();
+			AlcinaTransient.Support.checkNoTrasienceContexts();
 			state.deserializerOptions = options;
 			// create json doc
 			GraphNode node = new GraphNode(null, null, null);
@@ -110,7 +110,6 @@ public class ReflectiveSerializer {
 			SerialNode root = JsonSerialNode.fromJson(value);
 			node.serialNode = root;
 			state.pending.add(node);
-			
 			new ReflectiveSerializer(state).deserialize(node);
 			return (T) node.value;
 		} finally {
@@ -130,7 +129,8 @@ public class ReflectiveSerializer {
 		JsonSerialNode.ensureValueSerializers();
 		State state = new State();
 		state.serializerOptions = options;
-		state.serializationSupport=new SerializationSupport();
+		state.serializationSupport = SerializationSupport
+				.serializationInstance();
 		GraphNode node = new GraphNode(null, null, null);
 		node.state = state;
 		node.setValue(object);
@@ -276,7 +276,7 @@ public class ReflectiveSerializer {
 
 	public interface ReflectiveSerializable {
 	}
-	
+
 	public static class ReflectiveTypeSerializer extends TypeSerializer {
 		@Override
 		public void childDeserializationComplete(GraphNode graphNode,
@@ -309,7 +309,7 @@ public class ReflectiveSerializer {
 		public Class serializeAs(Class incoming) {
 			return incoming;
 		}
-		
+
 		@Override
 		public Iterator<GraphNode> writeIterator(GraphNode node) {
 			Iterator<Property> iterator = node.state.serializationSupport
@@ -393,7 +393,6 @@ public class ReflectiveSerializer {
 	public static abstract class ValueSerializer<T> {
 		public abstract List<Class> serializesTypes();
 
-		
 		protected T fromJson(Class<? extends T> clazz, JsonValue value) {
 			switch (value.getType()) {
 			case NULL:
@@ -862,6 +861,7 @@ public class ReflectiveSerializer {
 		public DeserializerOptions deserializerOptions;
 
 		Deque<GraphNode> pending = new LinkedList<>();
-		 SerializationSupport serializationSupport=new SerializationSupport();
+
+		SerializationSupport serializationSupport;
 	}
 }

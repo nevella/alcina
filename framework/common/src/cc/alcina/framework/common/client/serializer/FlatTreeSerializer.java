@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.Serializer;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -166,7 +167,7 @@ public class FlatTreeSerializer {
 			}
 			state.keyValues.remove(CLASS);
 			state.serializationSupport = SerializationSupport.deserializationInstance;
-			AlcinaTransient.Support.checkNoContextTrasience();
+			AlcinaTransient.Support.checkNoTrasienceContexts();
 			T instance = Reflections.newInstance(clazz);
 			String mappedKeysValue = instance.treeSerializationCustomiser()
 					.mapKeys(value, false);
@@ -207,7 +208,7 @@ public class FlatTreeSerializer {
 			object.treeSerializationCustomiser().onBeforeTreeSerialize();
 			state = new State();
 			state.serializerOptions = options;
-			state.serializationSupport=new SerializationSupport();
+			state.serializationSupport=SerializationSupport.serializationInstance();
 			Node node = new Node(null, object, Reflections.classLookup()
 					.getTemplateInstance(object.getClass()));
 			state.pending.add(node);
@@ -226,8 +227,11 @@ public class FlatTreeSerializer {
 		if (options.testSerialized) {
 			DeserializerOptions deserializerOptions = new DeserializerOptions()
 					.withShortPaths(options.shortPaths);
+			TransienceContext[] transienceContext = AlcinaTransient.Support.getTransienceContextsNoDefault();
+			AlcinaTransient.Support.clearTransienceContext();
 			TreeSerializable checkObject = deserialize(object.getClass(),
 					serialized, deserializerOptions);
+			AlcinaTransient.Support.setTransienceContexts(transienceContext);
 			SerializerOptions checkOptions = new SerializerOptions()
 					.withElideDefaults(options.elideDefaults)
 					.withShortPaths(options.shortPaths)

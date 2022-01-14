@@ -31,8 +31,14 @@ class SerializationSupport {
 	private static Map<Class, Class> solePossibleImplementation = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
-	SerializationSupport() {
-		types = AlcinaTransient.Support.getContextTypes();
+	private SerializationSupport() {
+	}
+
+
+	static SerializationSupport serializationInstance() {
+		SerializationSupport support = new SerializationSupport();
+		support.types = AlcinaTransient.Support.getTransienceContexts();
+		return support;
 	}
 
 	public static final Comparator<Property> PROPERTY_COMPARATOR = new Comparator<Property>() {
@@ -119,7 +125,7 @@ class SerializationSupport {
 								valueClass, name, AlcinaTransient.class);
 						if (alcinaTransient != null) {
 							if (AlcinaTransient.Support
-									.isTransient(alcinaTransient,types)) {
+									.isTransient(alcinaTransient, types)) {
 								return false;
 							}
 						}
