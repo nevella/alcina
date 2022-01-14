@@ -107,10 +107,9 @@ public class BoundSelectorMinimal extends BoundSelector {
 		cfp.addClickHandler(maybeFocusResultsHandler);
 		container.add(cfp);
 	}
-
 	@Override
-	protected void addItem(Object item) {
-		super.addItem(item);
+	protected void addItems(Collection<?> items) {
+		super.addItems(items);
 		if (search.getFilter().isHintWasCleared()) {
 			search.getFilter().getTextBox().setText("");
 		}
