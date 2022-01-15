@@ -7,6 +7,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 
 public interface ObjectStore {
+	//FIXME 2022 -  in application code, tend to replace with Domain.find
 	public <T extends Entity> T getObject(Class<? extends T> c, long id,
 			long localId);
 

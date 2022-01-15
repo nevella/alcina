@@ -7,15 +7,15 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.BeanDescriptor;
-import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
-import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 
@@ -32,10 +32,9 @@ class SerializationSupport {
 	public static final Comparator<Property> PROPERTY_COMPARATOR = new Comparator<Property>() {
 		@Override
 		public int compare(Property f1, Property f2) {
-			if (f1.getAccessorMethod() != null) {
-				Class checkType = f1.getAccessorMethod().getDeclaringClass();
+			if (f1.isReadable()) {
 				boolean entityType = Reflections.isAssignableFrom(Entity.class,
-						checkType);
+						f1.getDefiningType());
 				if (entityType) {
 					/*
 					 * serialize id, localid, other - to ensure population
@@ -54,28 +53,27 @@ class SerializationSupport {
 		}
 	};
 
-	public static Property getPropertyReflector(
-			Class<? extends Object> clazz, String propertyName) {
+	public static Property getPropertyReflector(Class<?> clazz,
+			String propertyName) {
 		Map<String, Property> map = serializationReflectors
 				.computeIfAbsent(clazz, c -> {
 					return getProperties0(c).stream()
 							.collect(Collectors.toMap(Property::getName,
-									p -> Reflections.property()
-											.getPropertyReflector(c,
-													p.getName())));
+									p -> (Property) Reflections.at(c)
+											.property(p.getName())));
 				});
 		return map.get(propertyName);
 	}
 
 	public static Class solePossibleImplementation(Class type) {
-		Class clazz = Domain.resolveEntityClass(type);
+		Class<?> clazz = Domain.resolveEntityClass(type);
 		return solePossibleImplementation.computeIfAbsent(clazz, valueClass -> {
 			if (Reflections.isEffectivelyFinal(clazz)
 					|| (Reflections.isAssignableFrom(Entity.class, clazz) &&
 			// FXIME - meta - Modifiers.nonAbstract emul
 			// non-abstract entity classes have no serializable subclasses (but
 			// do have mvcc subclass...)
-			Reflections.isNonAbstract(clazz))) {
+			!Reflections.at(clazz).isAbstract())) {
 				return valueClass;
 			} else if (Registry.get().lookupSingle(PersistentImpl.class, clazz,
 					false) != Void.class) {
@@ -87,19 +85,16 @@ class SerializationSupport {
 		});
 	}
 
-	private static List<Property> getProperties0(Class forClass) {
+	private static List<Property> getProperties0(Class<?> forClass) {
 		Class clazz = Domain.resolveEntityClass(forClass);
 		return serializationProperties.computeIfAbsent(clazz, valueClass -> {
-			BeanDescriptor descriptor = Reflections.beanDescriptorProvider()
-					.getDescriptor(Reflections
-							.getTemplateInstance(clazz));
-			Property[] propertyArray = descriptor.getProperties();
-			return Arrays.stream(propertyArray).sorted(PROPERTY_COMPARATOR)
-					.filter(property -> {
-						if (property.getMutatorMethod() == null) {
+			ClassReflector<?> classReflector = Reflections.at(valueClass);
+			return classReflector.properties().stream()
+					.sorted(PROPERTY_COMPARATOR).filter(property -> {
+						if (property.isReadOnly()) {
 							return false;
 						}
-						if (property.getAccessorMethod() == null) {
+						if (property.isWriteOnly()) {
 							return false;
 						}
 						String name = property.getName();

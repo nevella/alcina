@@ -69,7 +69,6 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
-import cc.alcina.framework.entity.transform.TestPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
@@ -333,10 +332,6 @@ public abstract class DevHelper {
 		ClassMetadata.USE_MD5_CHANGE_CHECK = true;
 		scanRegistry();
 		initDummyServices();
-		if (Thread.currentThread().getContextClassLoader() != null) {
-			TestPersistenceHelper.get().setReflectiveClassLoader(
-					Thread.currentThread().getContextClassLoader());
-		}
 		TransformManager.register(createTransformManager());
 		initCustomServicesFirstHalf();
 		setupJobsToSysout();

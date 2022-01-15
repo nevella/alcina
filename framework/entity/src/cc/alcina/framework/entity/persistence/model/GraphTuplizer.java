@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.model.GraphTuples.TClassRef;
@@ -74,8 +74,7 @@ public class GraphTuplizer {
 		if (id == -1) {
 			return;
 		}
-		Entity t = (Entity) Reflections.newInstance(clazz, id,
-				0L);
+		Entity t = (Entity) Reflections.newInstance(clazz);
 		t.setId(id);
 		DomainTransformEvent dte = new DomainTransformEvent();
 		dte.setObjectClass(clazz);
@@ -182,7 +181,7 @@ public class GraphTuplizer {
 					|| token.fieldTranslated)) {
 				Object newValue = getNewValue(inField, token.value);
 				try {
-					outField.accessor().setPropertyValue(t, newValue);
+					outField.property().set(t, newValue);
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
@@ -246,7 +245,7 @@ public class GraphTuplizer {
 
 		private transient String classSimplePart;
 
-		Property accessor = null;
+		Property property = null;
 
 		public DetupelizeInstruction() {
 		}
@@ -288,11 +287,10 @@ public class GraphTuplizer {
 		}
 
 		public Property outAccessor(Class<? extends Entity> clazz) {
-			if (accessor == null) {
-				accessor = Reflections.property()
-						.getPropertyReflector(clazz, outFieldName);
+			if (property == null) {
+				property = Reflections.at(clazz).property(outFieldName);
 			}
-			return accessor;
+			return property;
 		}
 	}
 

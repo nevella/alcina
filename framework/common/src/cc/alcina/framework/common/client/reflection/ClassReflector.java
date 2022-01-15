@@ -36,6 +36,8 @@ public class ClassReflector<T> {
 	private final boolean primitive;
 	private final boolean reflective;
 
+	private boolean isAbstract;
+
 	@Override
 	public String toString() {
 		return clazz.toString();
@@ -64,7 +66,7 @@ public class ClassReflector<T> {
 	public ClassReflector(Class<T> clazz, List<Property> properties,
 			Map<String, Property> byName,
 			ClassAnnotationResolver annotationResolver, Supplier<T> constructor,
-			Predicate<Class> assignableTo, boolean reflective) {
+			Predicate<Class> assignableTo, boolean reflective, boolean isAbstract) {
 		this.clazz = clazz;
 		this.properties = properties;
 		this.byName = byName;
@@ -72,6 +74,7 @@ public class ClassReflector<T> {
 		this.constructor = constructor;
 		this.assignableTo = assignableTo;
 		this.reflective = reflective;
+		this.isAbstract = isAbstract;
 		this.primitive = ClassReflector.primitives.contains(clazz);
 	}
 
@@ -128,5 +131,9 @@ public class ClassReflector<T> {
 
 	public boolean hasProperty(String propertyName) {
 		return byName.containsKey(propertyName);
+	}
+
+	public boolean isAbstract() {
+		return isAbstract;
 	}
 }

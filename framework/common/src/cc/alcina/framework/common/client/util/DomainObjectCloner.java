@@ -22,12 +22,11 @@ import java.util.Set;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 /**
  *
@@ -57,17 +56,16 @@ public class DomainObjectCloner extends CloneHelper {
 
 	@Override
 	protected boolean deepProperty(Object o, String propertyName) {
-		Class c = o.getClass();
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(c);
-		if (bi == null) {
+		Class clazz = o.getClass();
+		ClassReflector<?> classReflector = Reflections.at(clazz);
+		if (!classReflector.isReflective()) {
 			return false;
 		}
-		ClientPropertyReflector pr = bi.getPropertyReflectors()
-				.get(propertyName);
-		if (pr == null) {
+		if (!classReflector.hasProperty(propertyName)) {
 			return false;
 		}
-		DomainProperty dpi = pr.annotation(DomainProperty.class);
+		DomainProperty dpi = classReflector.property(propertyName)
+				.annotation(DomainProperty.class);
 		return dpi == null ? false : dpi.cloneForDuplication();
 	}
 
@@ -76,17 +74,17 @@ public class DomainObjectCloner extends CloneHelper {
 		if (IGNORE_FOR_DOMAIN_OBJECT_CLONING.contains(propertyName)) {
 			return true;
 		}
-		ClientBeanReflector bi = ClientReflector.get().beanInfoForClass(clazz);
-		if (bi == null) {
+		ClassReflector<?> classReflector = Reflections.at(clazz);
+		if (!classReflector.isReflective()) {
 			return true;
 		}
-		ClientPropertyReflector pr = bi.getPropertyReflectors()
-				.get(propertyName);
-		if (pr == null) {
+		if (!classReflector.hasProperty(propertyName)) {
 			return true;
 		}
-		ObjectPermissions op = bi.annotation(ObjectPermissions.class);
-		PropertyPermissions pp = pr.annotation(PropertyPermissions.class);
+		ObjectPermissions op = classReflector
+				.annotation(ObjectPermissions.class);
+		PropertyPermissions pp = classReflector.property(propertyName)
+				.annotation(PropertyPermissions.class);
 		return !PermissionsManager.get().checkEffectivePropertyPermission(op,
 				pp, obj, false);
 	}

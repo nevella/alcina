@@ -10,12 +10,13 @@ import java.util.Collection;
 import java.util.List;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup.PropertyInfo;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
-	default boolean debugInequivalence(PropertyInfo pd, Object o1, Object o2) {
+	default boolean debugInequivalence(Property property, Object o1,
+			Object o2) {
 		if (LooseContext.is(
 				HasEquivalence.HasEquivalenceHelper.CONTEXT_IGNORE_FOR_DEBUGGING)) {
 			return false;
@@ -29,35 +30,31 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 		if (other == null || getClass() != other.getClass()) {
 			return false;
 		}
-		List<PropertyInfo> properties = Reflections
-				.getWritableProperties(getClass());
+		List<Property> properties = Reflections.at(getClass()).properties();
 		try {
-			for (PropertyInfo pd : properties) {
-				Ignore ignore = Reflections.property()
-						.getAnnotationForProperty(getClass(),
-								HasReflectiveEquivalence.Ignore.class,
-								pd.getPropertyName());
-				if (ignore != null) {
+			for (Property property : properties) {
+				if (property.isReadOnly() || property.isWriteOnly() || property
+						.has(HasReflectiveEquivalence.Ignore.class)) {
 					continue;
 				}
-				Object o1 = pd.getReadMethod().invoke(this, new Object[] {});
-				Object o2 = pd.getReadMethod().invoke(other, new Object[] {});
+				Object o1 = property.get(this);
+				Object o2 = property.get(other);
 				if (CommonUtils.equalsWithNullEquality(o1, o2)) {
 					continue;
 				} else {
 					if (o1 == null || o2 == null) {
-						return debugInequivalence(pd, o1, o2);
+						return debugInequivalence(property, o1, o2);
 					}
 					boolean bothCollections = o1 instanceof Collection
 							&& o2 instanceof Collection;
 					if (o1.getClass() != o2.getClass() && !bothCollections) {
-						return debugInequivalence(pd, o1, o2);
+						return debugInequivalence(property, o1, o2);
 					} else if (o1 instanceof HasEquivalence) {
 						if (((HasEquivalence) o1)
 								.equivalentTo((HasEquivalence) o2)) {
 							continue;
 						} else {
-							return debugInequivalence(pd, o1, o2);
+							return debugInequivalence(property, o1, o2);
 						}
 					} else if (bothCollections) {
 						Collection c1 = (Collection) o1;
@@ -68,10 +65,10 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 								&& HasEquivalenceHelper.equivalent(c1, c2)) {
 							continue;
 						} else {
-							return debugInequivalence(pd, o1, o2);
+							return debugInequivalence(property, o1, o2);
 						}
 					} else {
-						return debugInequivalence(pd, o1, o2);
+						return debugInequivalence(property, o1, o2);
 					}
 				}
 			}

@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.gwittir.renderer;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
  * 
@@ -43,7 +43,7 @@ public class IdToStringRenderer extends FlexibleToStringRenderer<HasId> {
 		if (hasId == null) {
 			return nullsAsBlanks ? "" : "(Undefined)";
 		}
-		String dn = ClientReflector.get().displayNameForObject(hasId);
+		String dn = HasDisplayName.displayName(hasId);
 		String strId = String.valueOf(hasId.getId());
 		String toString = hasId.toString();
 		if (toString.equals(strId)) {

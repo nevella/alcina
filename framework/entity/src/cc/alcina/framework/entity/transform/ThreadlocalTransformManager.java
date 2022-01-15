@@ -590,7 +590,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 	 * Can be called from the server layer(entityManager==null)
 	 */
 	@Override
-	protected  <E extends Entity> E newInstance(Class<E> clazz, long id, long localId) {
+	public  <E extends Entity> E newInstance(Class<E> clazz, long id, long localId) {
 		return newInstance(clazz, id, localId, false);
 	}
 
@@ -612,7 +612,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 						}
 					}
 				} else {
-					newInstance = (Entity) clazz.newInstance();
+					newInstance = Reflections.newInstance(clazz);
 					newInstance.setLocalId(localId);
 				}
 				if (entityManager != null) {

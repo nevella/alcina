@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.util;
 
-import java.lang.annotation.Annotation;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -9,14 +8,12 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.PathAccessor;
 import cc.alcina.framework.common.client.collections.PathMapper.NoSuchVariantPropertyException;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
-import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.entity.transform.MethodIndividualPropertyReflector;
 
-public class JsonPropertyAccessor implements PropertyAccessor {
+public class JsonPropertyAccessor implements PathAccessor {
 	public static final String TOPIC_NOTIFICATION_MULTIPLE_JSON_SINGLE_JAVA = JsonPropertyAccessor.class
 			.getName() + ".TOPIC_NOTIFICATION_MULTIPLE_JSON_SINGLE_JAVA";
 
@@ -50,23 +47,6 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 	}
 
 	@Override
-	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
-			Class<A> annotationClass, String propertyName) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public Property getPropertyReflector(Class clazz,
-			String propertyName) {
-		return MethodIndividualPropertyReflector.get(clazz, propertyName);
-	}
-
-	@Override
-	public Class getPropertyType(Class clazz, String propertyName) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
 	public Object getPropertyValue(Object bean, String propertyName) {
 		return getPropertyValue0(bean, propertyName, false);
 	}
@@ -74,11 +54,6 @@ public class JsonPropertyAccessor implements PropertyAccessor {
 	@Override
 	public boolean hasPropertyKey(Object bean, String propertyName) {
 		return getPropertyValue0(bean, propertyName, true) != nullKeyMarker;
-	}
-
-	@Override
-	public boolean isReadOnly(Class objectClass, String propertyName) {
-		return false;
 	}
 
 	public JsonPropertyAccessor returnJsonArray() {

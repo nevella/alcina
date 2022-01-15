@@ -22,13 +22,13 @@ import com.google.gwt.user.client.ui.TreeItem;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.DataTree;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
@@ -49,8 +49,6 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 	public DomainNode(T object, NodeFactory nodeFactory) {
 		super();
 		setUserObject(object);
-		ClientBeanReflector info = ClientReflector.get()
-				.beanInfoForClass(getUserObject().getClass());
 		object.addPropertyChangeListener(this);
 		refreshFromObject();
 	}
@@ -78,9 +76,7 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 	}
 
 	public void refreshFromObject() {
-		ClientBeanReflector info = ClientReflector.get()
-				.beanInfoForClass(getUserObject().getClass());
-		displayName = info.getObjectName(getUserObject());
+		displayName = TextProvider.get().getObjectName(getUserObject());
 		if (displayName != null) {
 			displayName = SafeHtmlUtils.htmlEscape(displayName);
 		} else {
@@ -118,10 +114,8 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 
 	@Override
 	protected void renderHtml() {
-		ClientBeanReflector info = ClientReflector.get()
-				.beanInfoForClass(getUserObject().getClass());
 		AbstractImagePrototype img = StandardDataImageProvider.get()
-				.getByName(info.getGwBeanInfo().displayInfo().iconName());
+				.getByName("");
 		setHTML(imageItemHTML(img, displayName));
 	}
 

@@ -1,12 +1,12 @@
 package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
 import java.beans.PropertyChangeListener;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.RepeatingCommand;
@@ -14,11 +14,9 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
@@ -37,7 +35,7 @@ import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
  * @param obj
  */
 public class MapObjectLookupClient extends MapObjectLookup {
-	private Multimap<Class, List<ClientPropertyReflector>> registerChildren = new Multimap<Class, List<ClientPropertyReflector>>();
+	private Multimap<Class, List<Property>> registerChildren = new Multimap<Class, List<Property>>();
 
 	private int registerCounter;
 
@@ -152,31 +150,15 @@ public class MapObjectLookupClient extends MapObjectLookup {
 		lookup.put(entity, entity.getId() == 0);
 		entity.removePropertyChangeListener(listener);
 		entity.addPropertyChangeListener(listener);
-		boolean lookupCreated = registerChildren.containsKey(clazz);
-		if (!registerChildren.containsKey(clazz)) {
-			ClientBeanReflector bi = ClientReflector.get()
-					.beanInfoForClass(clazz);
-			Collection<ClientPropertyReflector> prs = bi == null
-					? new ArrayList<ClientPropertyReflector>()
-					: bi.getPropertyReflectors().values();
-			List<ClientPropertyReflector> target = new ArrayList<ClientPropertyReflector>();
-			registerChildren.put(clazz, target);
-			for (ClientPropertyReflector pr : prs) {
-				DomainProperty dpi = pr.annotation(DomainProperty.class);
-				if (dpi != null && dpi.registerChildren()) {
-					target.add(pr);
-				}
-			}
-		}
-		List<ClientPropertyReflector> childRegisterReflectors = registerChildren
-				.get(clazz);
-		if (!childRegisterReflectors.isEmpty()) {
-			for (ClientPropertyReflector pr : childRegisterReflectors) {
-				Object value = Reflections.property()
-						.getPropertyValue(entity, pr.getPropertyName());
-				addObjectOrCollectionToEndOfQueue(value);
-			}
-		}
+		List<Property> childRegisterReflectors = registerChildren
+				.computeIfAbsent(clazz,
+						c0 -> Reflections.at(clazz).properties().stream()
+								.filter(p -> p.has(DomainProperty.class)
+										&& p.annotation(DomainProperty.class)
+												.registerChildren())
+								.collect(Collectors.toList()));
+		childRegisterReflectors.stream().map(p -> p.get(entity))
+				.forEach(this::addObjectOrCollectionToEndOfQueue);
 		mappedObjects.put(entity);
 	}
 

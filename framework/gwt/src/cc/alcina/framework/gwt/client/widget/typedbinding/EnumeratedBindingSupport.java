@@ -50,8 +50,8 @@ public class EnumeratedBindingSupport {
 		if (related == null) {
 			return null;
 		}
-		return (T) Reflections.property().getPropertyValue(related,
-				enumeratedBinding.getBoundPath());
+		return (T) Reflections.at(related.getClass())
+				.property(enumeratedBinding.getBoundPath()).get(related);
 	}
 
 	public void removePropertyChangeListener(String propertyName,
@@ -80,8 +80,8 @@ public class EnumeratedBindingSupport {
 			throw new IllegalStateException(
 					"binding should not be exposed for null object");
 		}
-		Reflections.property().setPropertyValue(related,
-				enumeratedBinding.getBoundPath(), value);
+		Reflections.at(related.getClass())
+				.property(enumeratedBinding.getBoundPath()).set(related, value);
 	}
 
 	private Optional<EnumeratedBinding> bindingForPath(String propertyName) {

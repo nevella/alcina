@@ -177,13 +177,14 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		}
 		Object obj = Reflections.newInstance(clazz);
 		seenIn.put(seenIn.size(), obj);
-		GwittirBridge gb = GwittirBridge.get();
+		ClassReflector classReflector = Reflections.at(clazz);
 		for (String propertyName : props.keySet()) {
 			try {
-				Class type = gb.getPropertyType(clazz, propertyName);
+				Property property = classReflector.property(propertyName);
+				Class type = property.getType();
 				JSONValue jsonValue = props.get(propertyName);
 				Object value = deserializeField(jsonValue, type);
-				gb.setPropertyValue(obj, propertyName, value);
+				property.set(obj, value);
 			} catch (NoSuchPropertyException e) {
 				if (isThrowOnUnrecognisedProperty()) {
 					throw new RuntimeException(
@@ -309,9 +310,9 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			if (property.has(AlcinaTransient.class)) {
 				continue;
 			}
-			Object value = gb.getPropertyValue(object, name);
+			Object value = property.get(object);
 			if (!CommonUtils.equalsWithNullEquality(value,
-					gb.getPropertyValue(template, name))) {
+					property.get(template))) {
 				props.put(name, serializeField(value, property.getType()));
 			}
 		}

@@ -29,8 +29,8 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.widget.Link;
 
@@ -167,8 +167,7 @@ public class ExpandableLabel extends AbstractBoundWidget {
 					fp.add(comma);
 					strlen += 2;
 				}
-				String name = ClientReflector.get()
-						.displayNameForObject(object);
+				String name = HasDisplayName.displayName(object);
 				InlineLabel label = new InlineLabel(name);
 				if (strlen > getMaxLength()) {
 					comma.setVisible(false);

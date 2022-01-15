@@ -36,7 +36,7 @@ public class DomainHandlerClient implements DomainHandler {
 
 	@Override
 	public <V extends Entity> V find(Class clazz, long id) {
-		return (V) TransformManager.get().getObject(clazz, id, 0);
+		return (V) TransformManager.get().getObjectStore().getObject(clazz, id, 0);
 	}
 
 	@Override

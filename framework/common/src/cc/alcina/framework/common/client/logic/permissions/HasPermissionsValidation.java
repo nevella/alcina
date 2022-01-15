@@ -29,9 +29,8 @@ public interface HasPermissionsValidation {
 							+ CommonUtils.simpleClassName(hpv.getClass());
 				}
 			}
-			TypeSerialization typeSerialization = Reflections
-					.getAnnotationForClass(hpv.getClass(),
-							TypeSerialization.class);
+			TypeSerialization typeSerialization = Reflections.at(hpv.getClass())
+					.annotation(TypeSerialization.class);
 			if (typeSerialization != null && validateWithFlatTreeSerializer
 					&& typeSerialization.flatSerializable()) {
 				// serialization-with-test checks valid type membership
@@ -48,9 +47,8 @@ public interface HasPermissionsValidation {
 				return null;
 			}
 			List<Class> permissibleChildClasses = new ArrayList<Class>();
-			PermissibleChildClasses pcc = Reflections
-					.getAnnotationForClass(hpv.getClass(),
-							PermissibleChildClasses.class);
+			PermissibleChildClasses pcc = Reflections.at(hpv.getClass())
+					.annotation(PermissibleChildClasses.class);
 			if (pcc != null) {
 				permissibleChildClasses = Arrays.asList(pcc.value());
 			}

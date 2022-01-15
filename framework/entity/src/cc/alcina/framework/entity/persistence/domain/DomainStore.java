@@ -92,10 +92,10 @@ import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
-import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -577,9 +577,8 @@ public class DomainStore implements IDomainStore {
 			return new CacheIdProvider(clazz);
 		} else if (Ax.matches(propertyPath, "[^.]+\\.id")) {
 			String propertyName = propertyPath.replaceFirst("(.+)\\.id", "$1");
-			Association association = Reflections.property()
-					.getAnnotationForProperty(clazz, Association.class,
-							propertyName);
+			Association association = Reflections.at(clazz)
+					.property(propertyName).annotation(Association.class);
 			if (association != null) {
 				return new AssociationIdProvider(clazz, propertyName);
 			}
@@ -597,9 +596,8 @@ public class DomainStore implements IDomainStore {
 					continue;
 				}
 				Method rm = pd.getReadMethod();
-				Property property = Reflections.property()
-						.getPropertyReflector(rm.getDeclaringClass(),
-								pd.getName());
+				Property property = Reflections.at(rm.getDeclaringClass())
+						.property(pd.getName());
 				DomainStoreProperty domainStorePropertyAnnotation = classDescriptor
 						.resolveDomainStoreProperty(
 								new AnnotationLocation(clazz, property));
@@ -1198,7 +1196,8 @@ public class DomainStore implements IDomainStore {
 		// not concurrent, handle in methods
 		private Map<DomainDescriptor, DomainStore> descriptorMap = new LinkedHashMap<>();
 
-		private Map<Class, DomainStore> classMap = Collections.unmodifiableMap(new LinkedHashMap<>());
+		private Map<Class, DomainStore> classMap = Collections
+				.unmodifiableMap(new LinkedHashMap<>());
 
 		// immutable, swap on change
 		private Collection<DomainStore> stores;
@@ -1235,17 +1234,19 @@ public class DomainStore implements IDomainStore {
 				boolean registerDescriptorClasses) {
 			descriptorMap.put(store.domainDescriptor, store);
 			if (registerDescriptorClasses) {
-				Map<Class, DomainStore> classMap = new LinkedHashMap<>(this.classMap);
+				Map<Class, DomainStore> classMap = new LinkedHashMap<>(
+						this.classMap);
 				store.domainDescriptor.getHandledClasses().forEach(clazz -> {
 					Preconditions.checkState(!classMap.containsKey(clazz));
 					classMap.put(clazz, store);
 				});
-				this.classMap=Collections.unmodifiableMap(classMap);
+				this.classMap = Collections.unmodifiableMap(classMap);
 			}
 			stores = Collections.unmodifiableCollection(descriptorMap.values());
 		}
 
-		// not synchronized - requires that classMap modification not conflict (in code) - which it doesn't, since classMap is swapped
+		// not synchronized - requires that classMap modification not conflict
+		// (in code) - which it doesn't, since classMap is swapped
 		public DomainStore storeFor(Class clazz) {
 			return classMap.get(clazz);
 		}
@@ -1503,29 +1504,24 @@ public class DomainStore implements IDomainStore {
 
 		@Override
 		public StreamOrSet getKeyMayBeCollection(Object value) {
-			Property property = Reflections
-					.getPropertyReflector(clazz, propertyName);
-			Association association = property
-					.annotation(Association.class);
+			Property property = Reflections.at(clazz).property(propertyName);
+			Association association = property.annotation(Association.class);
 			Class<? extends Entity> associationClass = association
 					.implementationClass();
-			Property associationReflector = Reflections
-					.getPropertyReflector(associationClass,
-							association.propertyName());
+			Property associationProperty = Reflections.at(associationClass)
+					.property(association.propertyName());
 			Collection<Long> ids = CommonUtils.wrapInCollection(value);
 			Stream<Entity> stream = ids.stream()
 					.map(id -> (Entity) cache.get(associationClass, id))
 					.filter(Objects::nonNull);
 			boolean propertyIsSet = Set.class
-					.isAssignableFrom(associationReflector.getPropertyType());
+					.isAssignableFrom(associationProperty.getType());
 			if (propertyIsSet) {
 				stream = stream
-						.map(e -> ((Set<Entity>) associationReflector
-								.getPropertyValue(e)))
+						.map(e -> ((Set<Entity>) associationProperty.get(e)))
 						.flatMap(Collection::stream);
 			} else {
-				stream = stream.map(
-						e -> (Entity) associationReflector.getPropertyValue(e))
+				stream = stream.map(e -> (Entity) associationProperty.get(e))
 						.filter(Objects::nonNull);
 			}
 			return new StreamOrSet<>(stream);
@@ -1826,6 +1822,9 @@ public class DomainStore implements IDomainStore {
 			}
 			DomainStore store = DomainStore.stores()
 					.storeFor(event.getObjectClass());
+			Property property = event.getPropertyName() == null ? null
+					: Reflections.at(event.getObjectClass())
+							.property(event.getPropertyName());
 			switch (event.getTransformType()) {
 			case ADD_REF_TO_COLLECTION:
 			case REMOVE_REF_FROM_COLLECTION:
@@ -1839,11 +1838,8 @@ public class DomainStore implements IDomainStore {
 				case CHANGE_PROPERTY_REF:
 				case CHANGE_PROPERTY_SIMPLE_VALUE:
 				case NULL_PROPERTY_REF: {
-					DomainProperty domainProperty = Reflections
-							.property()
-							.getAnnotationForProperty(event.getObjectClass(),
-									DomainProperty.class,
-									event.getPropertyName());
+					DomainProperty domainProperty = property
+							.annotation(DomainProperty.class);
 					if (domainProperty != null
 							&& !domainProperty.reindexOnChange()) {
 						return;
@@ -1862,14 +1858,12 @@ public class DomainStore implements IDomainStore {
 						/*
 						 * undo last property change
 						 */
-						Reflections.property().setPropertyValue(entity,
-								event.getPropertyName(), event.getOldValue());
+						property.set(entity,event.getOldValue());
 						store.index(entity, false, null, false);
 						/*
 						 * redo
 						 */
-						Reflections.property().setPropertyValue(entity,
-								event.getPropertyName(), event.getNewValue());
+						property.set(entity,event.getNewValue());
 					} finally {
 						tm.setIgnorePropertyChanges(false);
 					}

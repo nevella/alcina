@@ -20,7 +20,7 @@ import org.hibernate.sql.JoinType;
 import org.hibernate.transform.ResultTransformer;
 
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -178,9 +178,9 @@ public class DomainStoreCriteria implements Criteria {
 				: this.entityManagerCriteria.createCriteria(associationPath,
 						alias);
 		Property property = Reflections
-				.getPropertyReflector(clazz,
+				.at(clazz).property(
 						cleanAssociationPath(associationPath));
-		Class subClazz = property.getPropertyType();
+		Class subClazz = property.getType();
 		if (Set.class.isAssignableFrom(subClazz)) {
 			subClazz = property.annotation(Association.class)
 					.implementationClass();

@@ -254,8 +254,7 @@ public class DomainTransformEvent
 			if (this.valueClass == null && this.valueClassName != null
 					&& !this.valueClassName.equals("null")) {
 				try {
-					this.valueClass = Reflections
-							.forName(this.valueClassName);
+					this.valueClass = Reflections.forName(this.valueClassName);
 				} catch (RuntimeException cnfe) {
 					// not from this vm's set of classes - return null
 				}
@@ -348,8 +347,7 @@ public class DomainTransformEvent
 	public Entity provideSourceOrMarker() {
 		Entity source = getSource();
 		if (source == null && getObjectLocalId() != 0) {
-			Entity entity = (Entity) Reflections
-					.newInstance(getObjectClass());
+			Entity entity = (Entity) Reflections.newInstance(getObjectClass());
 			source = entity;
 			entity.setId(getObjectId());
 			entity.setLocalId(getObjectLocalId());
@@ -362,8 +360,7 @@ public class DomainTransformEvent
 	 */
 	public Entity provideTargetMarkerForRemoval() {
 		if (valueId != 0 || valueLocalId != 0) {
-			Entity entity = (Entity) Reflections
-					.newInstance(getValueClass());
+			Entity entity = (Entity) Reflections.newInstance(getValueClass());
 			entity.setId(valueId);
 			entity.setLocalId(valueLocalId);
 			return entity;
@@ -385,8 +382,8 @@ public class DomainTransformEvent
 					&& itrEvent.getObjectClass() == getObjectClass()
 					&& itrEvent.getObjectId() == getObjectId()
 					&& itrEvent.getObjectLocalId() == getObjectLocalId()) {
-				Class type = Reflections.property()
-						.getPropertyType(getObjectClass(), getPropertyName());
+				Class type = Reflections.at(getObjectClass())
+						.property(getPropertyName()).getType();
 				return !CommonUtils.isStandardJavaClass(type);
 			}
 		}

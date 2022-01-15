@@ -79,7 +79,8 @@ import cc.alcina.framework.gwt.client.util.Async;
 
 @RegistryLocation(registryPoint = FormModel.class, implementationType = ImplementationType.INSTANCE)
 @Directed(receives = { GwtEvents.Attach.class, DomEvents.KeyDown.class })
-public class FormModel extends Model implements DomEvents.Submit.Handler,GwtEvents.Attach.Handler, DomEvents.KeyDown.Handler {
+public class FormModel extends Model implements DomEvents.Submit.Handler,
+		GwtEvents.Attach.Handler, DomEvents.KeyDown.Handler {
 	protected List<FormElement> elements = new ArrayList<>();
 
 	protected List<Link> actions = new ArrayList<>();
@@ -92,71 +93,78 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,GwtEven
 
 	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
 
-    private boolean unAttachConfirmsTransformClear = false;
+	private boolean unAttachConfirmsTransformClear = false;
 
-    private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
-        CommitToStorageTransformListener.get().flush();
-        // FIXME - mvcc.adjunct - need to ask adjuncts
-        if (TransformManager.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size() > 0) {
-            e.setWarning("Form has unsaved changes. Please confirm to close");
-            unAttachConfirmsTransformClear = true;
-        }
-    };
-    @Override
-    public void onAttach(Attach event) {
-        bind(event);
-        focus(event);
-        checkDirty(event);
-    }
+	private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
+		CommitToStorageTransformListener.get().flush();
+		// FIXME - mvcc.adjunct - need to ask adjuncts
+		if (TransformManager.get()
+				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
+				.size() > 0) {
+			e.setWarning("Form has unsaved changes. Please confirm to close");
+			unAttachConfirmsTransformClear = true;
+		}
+	};
 
-    @Override
-    public void onKeyDown(KeyDown event) {
-        KeyDownEvent domEvent = (KeyDownEvent) event.getContext().gwtEvent;
-        if (domEvent.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
-            domEvent.preventDefault();
-            domEvent.stopPropagation();
-            // this is before KEY_ENTER is applied, so current form field
-            // may not have fired 'onchange'
-            GwittirUtils.commitAllTextBoxes(getState().formBinding);
-            ActionRefPlace place = new ActionRefPlace(SubmitRef.class);
-            new SubmitHandler().handleAction(event.getContext().node, domEvent, place);
-        }
-    }
+	@Override
+	public void onAttach(Attach event) {
+		bind(event);
+		focus(event);
+		checkDirty(event);
+	}
 
-    private void bind(Attach event) {
-        if (event.isAttached()) {
-            getState().formBinding.bind();
-        } else {
-            getState().formBinding.unbind();
-        }
-    }
+	@Override
+	public void onKeyDown(KeyDown event) {
+		KeyDownEvent domEvent = (KeyDownEvent) event.getContext().gwtEvent;
+		if (domEvent.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
+			domEvent.preventDefault();
+			domEvent.stopPropagation();
+			// this is before KEY_ENTER is applied, so current form field
+			// may not have fired 'onchange'
+			GwittirUtils.commitAllTextBoxes(getState().formBinding);
+			ActionRefPlace place = new ActionRefPlace(SubmitRef.class);
+			new SubmitHandler().handleAction(event.getContext().node, domEvent,
+					place);
+		}
+	}
 
-    private void checkDirty(Attach event) {
-        if (event.isAttached()) {
-            registrations.put(this,
-                    Client.get().getEventBus().addHandler(PlaceChangeRequestEvent.TYPE, dirtyChecker));
-        } else {
-            // if we're navigating away, and dirty
-            if (unAttachConfirmsTransformClear) {
-                TransformManager.get().clearTransforms();
-            }
-            HandlerRegistration registration = registrations.remove(this);
-            if (registration != null) {
-                registration.removeHandler();
-            }
-        }
-    }
+	private void bind(Attach event) {
+		if (event.isAttached()) {
+			getState().formBinding.bind();
+		} else {
+			getState().formBinding.unbind();
+		}
+	}
 
-    private void focus(Attach event) {
-        Optional<FormElement> focus = getElements().stream().filter(FormElement::isFocusOnAttach).findFirst();
-        if (focus.isPresent()) {
-            Node childWithModel = event.getContext().node
-                    .childWithModel(m -> m != null && m instanceof ValueModel && m == focus.get().getValue());
-            ((Focusable) childWithModel.getWidget()).setFocus(true);
-        }
-        // FIXME - dirndl 1.3 - this should be an annotation on the field,
-        //
-    }
+	private void checkDirty(Attach event) {
+		if (event.isAttached()) {
+			registrations.put(this, Client.get().getEventBus()
+					.addHandler(PlaceChangeRequestEvent.TYPE, dirtyChecker));
+		} else {
+			// if we're navigating away, and dirty
+			if (unAttachConfirmsTransformClear) {
+				TransformManager.get().clearTransforms();
+			}
+			HandlerRegistration registration = registrations.remove(this);
+			if (registration != null) {
+				registration.removeHandler();
+			}
+		}
+	}
+
+	private void focus(Attach event) {
+		Optional<FormElement> focus = getElements().stream()
+				.filter(FormElement::isFocusOnAttach).findFirst();
+		if (focus.isPresent()) {
+			Node childWithModel = event.getContext().node
+					.childWithModel(m -> m != null && m instanceof ValueModel
+							&& m == focus.get().getValue());
+			((Focusable) childWithModel.getWidget()).setFocus(true);
+		}
+		// FIXME - dirndl 1.3 - this should be an annotation on the field,
+		//
+	}
+
 	public FormModel() {
 	}
 
@@ -403,8 +411,9 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,GwtEven
 						.withPlace(new ActionRefPlace(CancelRef.class)));
 			} else {
 				if (state.presentationModel != null) {
-					Bean bean = Reflections.getAnnotationForClass(
-							state.presentationModel.getClass(), Bean.class);
+					Bean bean = Reflections
+							.at(state.presentationModel.getClass())
+							.annotation(Bean.class);
 					if (bean != null) {
 						Arrays.stream(bean.actions().value())
 								.map(a -> Reflections
@@ -523,9 +532,8 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,GwtEven
 			state.expectsModel = true;
 			if (action instanceof PermissibleEntityAction) {
 				Entity entity = ((PermissibleEntityAction) action).getEntity();
-				ObjectPermissions op = Reflections
-						.getAnnotationForClass(entity.getClass(),
-								ObjectPermissions.class);
+				ObjectPermissions op = Reflections.at(entity.getClass())
+						.annotation(ObjectPermissions.class);
 				op = op == null
 						? PermissionsManager.get().getDefaultObjectPermissions()
 						: op;

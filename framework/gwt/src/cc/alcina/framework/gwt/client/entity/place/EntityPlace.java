@@ -110,7 +110,7 @@ public abstract class EntityPlace<SD extends EntitySearchDefinition>
 		if (id != 0) {
 			EntityPlaceTokenizer tokenizer = (EntityPlaceTokenizer) RegistryHistoryMapper
 					.get().getTokenizer(this);
-			Entity modelObject = TransformManager.get()
+			Entity modelObject = TransformManager.get().getObjectStore()
 					.getObject(tokenizer.getModelClass(), id, 0);
 			if (modelObject == null
 					|| !(modelObject instanceof HasDisplayName)) {

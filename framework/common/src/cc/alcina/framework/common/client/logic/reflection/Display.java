@@ -65,7 +65,6 @@ public @interface Display {
 
 	String helpText() default "";
 
-	String iconName() default "";// indicates no icon
 	// FIXME - dirndl.1 - default to "", de-infixd property name
 
 	String name();

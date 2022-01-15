@@ -115,6 +115,12 @@ public abstract class Client {
 	public static class Init {
 		public static long startTime;
 
+		private static boolean complete;
+
+		public static boolean isComplete() {
+			return Init.complete;
+		}
+
 		public static void preRegistry() {
 			startTime = System.currentTimeMillis();
 			LiSet liSet = new LiSet();
@@ -127,8 +133,9 @@ public abstract class Client {
 		}
 
 		public static void registry() {
-			//initialise clientreflector
+			// initialise clientreflector
 			throw new UnsupportedOperationException("TODO - registry");
+			// complete=true;
 		}
 	}
 

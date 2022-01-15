@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.reflection;
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Modifier;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
@@ -45,10 +46,11 @@ class ClassReflectorProvider {
 		Predicate<Class> assignableTo = c -> c.isAssignableFrom(clazz);
 		ClassAnnotationResolver annotationResolver = new ClassAnnotationResolver(
 				clazz);
-		ReflectiveAccess access=new ReflectiveAccess.DefaultValue();
-		boolean reflective=ReflectiveAccess.Support.has(access, Access.CLASS);
+		ReflectiveAccess access = new ReflectiveAccess.DefaultValue();
+		boolean reflective = ReflectiveAccess.Support.has(access, Access.CLASS);
+		boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
 		return new ClassReflector(clazz, properties, byName, annotationResolver,
-				supplier, assignableTo,reflective);
+				supplier, assignableTo, reflective, isAbstract);
 	}
 
 	static Property createProperty(Class clazz, PropertyDescriptor descriptor) {
@@ -121,7 +123,7 @@ class ClassReflectorProvider {
 		}
 	}
 
-	 static ReflectiveAccess reckonAccess(Class clazz) {
+	static ReflectiveAccess reckonAccess(Class clazz) {
 		return new ReflectiveAccess.DefaultValue();
 	}
 }

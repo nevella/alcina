@@ -20,11 +20,8 @@ import com.totsp.gwittir.client.beans.SelfDescribed;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
-import cc.alcina.framework.common.client.logic.reflection.jvm.ClientReflectorJvm;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
 
 /**
  *
@@ -32,15 +29,15 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  *         bypass this for testing
  */
 @ClientInstantiable
-public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
+public class JVMIntrospector implements Introspector {
 	private HashMap<Class, BeanDescriptor> cache = new HashMap<Class, BeanDescriptor>();
 
 	private Predicate<String> filter;
 
 	public JVMIntrospector() {
-		Reflections.registerBeanDescriptorProvider(this);
-		String filterClassName = System
-				.getProperty(ClientReflectorJvm.PROP_FILTER_CLASSNAME);
+		String filterClassName = null;
+		// System
+		// .getProperty(ClientReflectorJvm.PROP_FILTER_CLASSNAME);
 		if (filterClassName != null) {
 			try {
 				filter = (Predicate<String>) Class.forName(filterClassName)
@@ -69,9 +66,9 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 						"Warn: accessing filtered (reflection) class:\n%s",
 						clazz.getName()));
 			}
-			if (ClientReflectorJvm.canIntrospect(clazz)) {
-				result = new ReflectionBeanDescriptor(clazz);
-			}
+			// if (ClientReflectorJvm.canIntrospect(clazz)) {
+			// result = new ReflectionBeanDescriptor(clazz);
+			// }
 			cache.put(clazz, result);
 		}
 		return result;
@@ -128,7 +125,7 @@ public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
 		public ReflectionBeanDescriptor(Class clazz) {
 			try {
 				className = clazz.getName();
-				ClientReflectorJvm.checkClassAnnotations(clazz);
+				// ClientReflectorJvm.checkClassAnnotations(clazz);
 				List<Property> properties = new ArrayList<>();
 				for (PropertyDescriptor d : SEUtilities
 						.getPropertyDescriptorsSortedByField(clazz)) {

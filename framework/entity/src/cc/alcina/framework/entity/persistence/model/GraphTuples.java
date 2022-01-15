@@ -10,7 +10,7 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
@@ -139,7 +139,7 @@ public class GraphTuples {
 
 		private transient String path;
 
-		private transient Property accessor;
+		private transient Property property;
 
 		public TFieldRef() {
 		}
@@ -151,12 +151,11 @@ public class GraphTuples {
 			this.field = field;
 		}
 
-		public Property accessor() {
-			if (accessor == null) {
-				accessor = Reflections.property()
-						.getPropertyReflector(classRef.clazz, name);
+		public Property property() {
+			if (property == null) {
+				property = Reflections.at(classRef.clazz).property(name);
 			}
-			return accessor;
+			return property;
 		}
 
 		@Override
@@ -166,7 +165,7 @@ public class GraphTuples {
 
 		// when to-class is different to from-class
 		public void moveTo(TClassRef to) {
-			accessor = null;
+			property = null;
 			classRef = to;
 			field = null;
 			to.fieldRefs.add(this);

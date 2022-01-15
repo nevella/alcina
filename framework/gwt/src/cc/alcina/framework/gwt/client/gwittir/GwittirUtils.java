@@ -21,7 +21,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.Focusable;
 import com.google.gwt.user.client.ui.HasWidgets;
 import com.google.gwt.user.client.ui.Widget;
@@ -41,9 +40,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.PasswordTextBox;
@@ -54,6 +52,8 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 /**
  *
  * @author Nick Reddel
+ * 
+ * FIXME - reflection - prune
  */
 public class GwittirUtils {
 	public static void commitAllTextBoxes(Binding binding) {
@@ -169,18 +169,11 @@ public class GwittirUtils {
 		return listBox;
 	}
 
-	/**
-	 * Note: no support for (deprecated) Instantiable and Bindable interfaces if
-	 * on server
-	 */
 	public static boolean isIntrospectable(Class clazz) {
-		if (GWT.isScript()) {
-			return ClientReflector.get().beanInfoForClass(clazz) != null;
-		}
-		ClassLookup cl = Reflections;
 		while (clazz != null && clazz != Object.class) {
-			if (cl.getAnnotationForClass(clazz, Introspectable.class) != null
-					|| cl.getAnnotationForClass(clazz, Bean.class) != null) {
+			ClassReflector reflector = Reflections.at(clazz);
+			if (reflector.has(Introspectable.class)
+					|| reflector.has(Bean.class)) {
 				return true;
 			}
 			clazz = clazz.getSuperclass();

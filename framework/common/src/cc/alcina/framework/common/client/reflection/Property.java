@@ -70,6 +70,10 @@ public class Property {
 	public boolean isReadOnly() {
 		return setter == null;
 	}
+	
+	public boolean isReadable() {
+		return getter != null;
+	}
 
 	public void set(Object bean, Object newValue) {
 		resolveSetter(bean).invoke(bean, new Object[] { newValue });

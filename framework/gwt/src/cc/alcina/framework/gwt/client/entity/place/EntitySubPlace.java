@@ -27,7 +27,7 @@ public abstract class EntitySubPlace<E extends Enum, SD extends EntitySearchDefi
 		if (id != 0) {
 			EntitySubPlaceTokenizer tokenizer = (EntitySubPlaceTokenizer) RegistryHistoryMapper
 					.get().getTokenizer(this);
-			Entity modelObject = TransformManager.get()
+			Entity modelObject = TransformManager.get().getObjectStore()
 					.getObject(tokenizer.getModelClass(), id, 0);
 			if (modelObject == null
 					|| !(modelObject instanceof HasDisplayName)) {

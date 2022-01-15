@@ -23,7 +23,6 @@ import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
-import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -34,6 +33,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
@@ -160,8 +160,7 @@ public class FlatTreeSerializer {
 			}
 			state.keyValues = StringMap.fromPropertyString(value);
 			if (clazz == null) {
-				clazz = Reflections
-						.forName(state.keyValues.get(CLASS));
+				clazz = Reflections.forName(state.keyValues.get(CLASS));
 			}
 			state.keyValues.remove(CLASS);
 			T instance = Reflections.newInstance(clazz);
@@ -204,8 +203,8 @@ public class FlatTreeSerializer {
 			object.treeSerializationCustomiser().onBeforeTreeSerialize();
 			state = new State();
 			state.serializerOptions = options;
-			Node node = new Node(null, object, Reflections
-					.getTemplateInstance(object.getClass()));
+			Node node = new Node(null, object,
+					Reflections.at(object.getClass()).templateInstance());
 			state.pending.add(node);
 			FlatTreeSerializer serializer = new FlatTreeSerializer(state);
 			serializer.serialize();
@@ -552,13 +551,12 @@ public class FlatTreeSerializer {
 							}
 							break;
 						}
+						Class<? extends Object> cursorValueClass = cursor.value
+								.getClass();
 						PropertySerialization propertySerialization = SerializationSupport
-								.getPropertySerialization(
-										cursor.value.getClass(),
+								.getPropertySerialization(cursorValueClass,
 										property.getName());
-						Object childValue = Reflections.property()
-								.getPropertyValue(cursor.value,
-										property.getName());
+						Object childValue = property.get(cursor.value);
 						Node lookahead = new Node(cursor, childValue, null);
 						lookahead.path.property = property;
 						lookahead.path.setPropertySerialization(
@@ -612,9 +610,7 @@ public class FlatTreeSerializer {
 								((TreeSerializable) childValue)
 										.treeSerializationCustomiser()
 										.onBeforeTreeDeserialize();
-								Reflections.property().setPropertyValue(
-										cursor.value, property.getName(),
-										childValue);
+								property.set(cursor.value, childValue);
 							}
 						}
 						/*
@@ -737,8 +733,7 @@ public class FlatTreeSerializer {
 	}
 
 	private Class getClassFromSegment(String segmentPath) {
-		return Reflections
-				.forName(segmentPath.replace("_", "."));
+		return Reflections.forName(segmentPath.replace("_", "."));
 	}
 
 	private Object getValue(Node node, Property property, Object value) {
@@ -746,7 +741,7 @@ public class FlatTreeSerializer {
 			return synthesisePopulatedPropertyValue(node, property);
 		}
 		try {
-			return property.getAccessorMethod().invoke(value, new Object[0]);
+			return property.get(value);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -786,7 +781,7 @@ public class FlatTreeSerializer {
 				 * default' to the whole collection - and thus ignore for elided
 				 * 
 				 * Note that said collections must be guaranteed non-empty in
-				 * the application
+				 * the application - or maybe have an __fts__EMPTY__ marker
 				 */
 				// Collection defaultCollection = cursor.defaultValue == null ?
 				// /* parent object is default null */
@@ -804,8 +799,8 @@ public class FlatTreeSerializer {
 						// }
 						// }
 						if (defaultValue == null) {
-							defaultValue = Reflections
-									.getTemplateInstance(childValue.getClass());
+							defaultValue = Reflections.at(childValue.getClass())
+									.templateInstance();
 						}
 					} else {
 						throw new IllegalStateException(Ax.format(
@@ -862,8 +857,7 @@ public class FlatTreeSerializer {
 		if (propertySerialization != null
 				&& propertySerialization.notTestable()) {
 			try {
-				return property.getAccessorMethod().invoke(node.value,
-						new Object[0]);
+				return property.get(node.value);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -900,8 +894,7 @@ public class FlatTreeSerializer {
 			type = propertySerialization.types()[0];
 		} else {
 			try {
-				Object value = property.getAccessorMethod().invoke(node.value,
-						new Object[0]);
+				Object value = property.get(node.value);
 				if (value != null) {
 					return value;
 				}
@@ -1380,7 +1373,8 @@ public class FlatTreeSerializer {
 			if (Reflections.isAssignableFrom(VersionableEntity.class,
 					valueClass)) {
 				if (stringValue.contains("/")) {
-					return EntityLocator.parseRecoverable(stringValue,valueClass).find();
+					return EntityLocator
+							.parseRecoverable(stringValue, valueClass).find();
 				}
 				long id = Long.parseLong(stringValue);
 				if (id < 0) {
@@ -1423,8 +1417,7 @@ public class FlatTreeSerializer {
 				}
 			} else {
 				Object leafValue = parseStringValue(leafType, stringValue);
-				Reflections.property().setPropertyValue(parent.value,
-						property.getName(), leafValue);
+				property.set(parent.value, leafValue);
 			}
 		}
 

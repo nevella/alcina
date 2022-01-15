@@ -46,7 +46,6 @@ import com.google.gwt.user.client.ui.CheckBox;
 import com.google.gwt.user.client.ui.FlexTable;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.table.DataProvider;
@@ -54,6 +53,8 @@ import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -284,8 +285,8 @@ public class FastROBoundTable extends BoundTableExt {
 		final BoundWidget widget;
 		Field col = this.columns[colIndex];
 		if (!wpMap.containsKey(col.getPropertyName())) {
-			Property p = GwittirBridge.get().getProperty(target,
-					col.getPropertyName());
+			Property p = Reflections.at(target.getClass())
+					.property(col.getPropertyName());
 			BoundWidgetProvider wp = this.factory
 					.getWidgetProvider(p.getType());
 			pMap.put(col.getPropertyName(), p);
@@ -301,8 +302,7 @@ public class FastROBoundTable extends BoundTableExt {
 		widget = wp.get();
 		try {
 			widget.setModel(target);
-			widget.setValue(p.getAccessorMethod().invoke(target,
-					CommonUtils.EMPTY_OBJECT_ARRAY));
+			widget.setValue(p.get(target));
 		} catch (Exception e) {
 			GWT.log("Exception creating cell widget", e);
 		}
@@ -462,8 +462,8 @@ public class FastROBoundTable extends BoundTableExt {
 				((RequiresContextBindable) wp).setBindable(target);
 			}
 			final BoundWidget editableWidget = wp.get();
-			Property p = GwittirBridge.get().getProperty(target,
-					field.getPropertyName());
+			Property p = Reflections.at(target.getClass())
+					.property(field.getPropertyName());
 			try {
 				editableWidget.setModel(target);
 				action = new BasicBindingAction() {

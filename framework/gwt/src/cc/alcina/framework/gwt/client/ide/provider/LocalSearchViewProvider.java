@@ -26,7 +26,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.LocalSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -63,6 +63,7 @@ public class LocalSearchViewProvider implements ViewProvider {
 		return vp;
 	}
 
+	@Override
 	public Widget getViewForObject(Object obj) {
 		LocalSearchDefinition def = (LocalSearchDefinition) obj;
 		return getViewForObject(def, def.getDisplayName(), "Filter");
@@ -132,14 +133,15 @@ public class LocalSearchViewProvider implements ViewProvider {
 			search();
 		}
 
+		@Override
 		public void onClick(ClickEvent event) {
 			search();
 		}
 
 		protected void search() {
 			resultsHolder.clear();
-			Object bean = ClientReflector.get()
-					.getTemplateInstance(def.getResultClass());
+			Object bean = Reflections.at(def.getResultClass())
+					.templateInstance();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
 			Field[] fields = GwittirBridge.get()
