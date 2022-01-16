@@ -173,7 +173,7 @@ public class Domain {
 		return handler.resolveEntityClass(clazz);
 	}
 
-	public static <V extends Entity> long size(Class<V> clazz) {
+	public static <V extends Entity> int size(Class<V> clazz) {
 		return handler.size(clazz);
 	}
 
@@ -236,8 +236,8 @@ public class Domain {
 			return clazz;
 		}
 
-		default <V extends Entity> long size(Class<V> clazz) {
-			return stream(clazz).count();
+		default <V extends Entity> int size(Class<V> clazz) {
+			return (int) stream(clazz).count();
 		}
 
 		default boolean wasRemoved(Entity entity) {

@@ -1346,7 +1346,7 @@ public class DomainStore implements IDomainStore {
 			}
 
 			@Override
-			public <V extends Entity> long size(Class<V> clazz) {
+			public <V extends Entity> int size(Class<V> clazz) {
 				return storeHandler(clazz).size(clazz);
 			}
 
@@ -1767,7 +1767,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		public <V extends Entity> long size(Class<V> clazz) {
+		public <V extends Entity> int size(Class<V> clazz) {
 			return cache.size(clazz);
 		}
 
