@@ -4,14 +4,13 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
-
-import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.ReflectiveAccess.Access;
@@ -49,8 +48,9 @@ class ClassReflectorProvider {
 		ReflectiveAccess access = new ReflectiveAccess.DefaultValue();
 		boolean reflective = ReflectiveAccess.Support.has(access, Access.CLASS);
 		boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
+		List<Class> interfaces = Arrays.asList(clazz.getInterfaces());
 		return new ClassReflector(clazz, properties, byName, annotationResolver,
-				supplier, assignableTo, reflective, isAbstract);
+				supplier, assignableTo, interfaces, reflective, isAbstract);
 	}
 
 	static Property createProperty(Class clazz, PropertyDescriptor descriptor) {

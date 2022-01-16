@@ -412,7 +412,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 	public static class CmdExecRunnable extends DevConsoleCommand {
 		static void listRunnables(List<Class> classes, String runnableNamePart)
-				throws InstantiationException, IllegalAccessException {
+				throws Exception {
 			SortedMap<String, Class> map = new TreeMap<>(classes.stream()
 					.collect(AlcinaCollectors.toKeyMap(Class::getSimpleName)));
 			if (CommonUtils.isNotNullOrEmpty(runnableNamePart)) {
@@ -422,7 +422,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			System.out.format("%-45s%-20s\n", "Available runnables:", "Tags");
 			for (Entry<String, Class> entry : map.entrySet()) {
 				String[] tags = ((DevConsoleRunnable) entry.getValue()
-						.newInstance()).tagStrings();
+						.getDeclaredConstructor().newInstance()).tagStrings();
 				System.out.format("%-45s%-20s\n", entry.getKey(),
 						CommonUtils.join(tags, ", ").toLowerCase());
 			}
@@ -468,7 +468,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String runnableName = argv.length == 0 ? "" : argv[0];
 			for (Class clazz : classes) {
 				if (clazz.getSimpleName().equals(runnableName)) {
-					runnable = (DevConsoleRunnable) clazz.newInstance();
+					runnable = (DevConsoleRunnable) clazz
+							.getDeclaredConstructor().newInstance();
 					runnable.command = this;
 					runnable.value = argv.length == 1 ? null : argv[1];
 					runnable.argv = argv;
@@ -835,8 +836,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				@Override
 				public boolean test(Class o) {
 					try {
-						String[] tags = ((DevConsoleRunnable) o.newInstance())
-								.tagStrings();
+						String[] tags = ((DevConsoleRunnable) o
+								.getDeclaredConstructor().newInstance())
+										.tagStrings();
 						for (String tag : tags) {
 							for (String arg : argv) {
 								if (tag.toLowerCase()
@@ -1206,7 +1208,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					.filter(field -> getKey.apply(field) != null)
 					.collect(AlcinaCollectors.toKeyMap(getKey));
 			Map<String, Field> fieldsByAnnName = new TreeMap<>(map);
-			String key = argv.length==0?"":argv[0];
+			String key = argv.length == 0 ? "" : argv[0];
 			String fieldName = null;
 			Object value = null;
 			if (fieldsByAnnName.containsKey(key)) {

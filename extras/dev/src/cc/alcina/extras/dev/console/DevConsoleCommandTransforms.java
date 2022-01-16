@@ -65,7 +65,8 @@ public class DevConsoleCommandTransforms {
 			String cn = rs.getString("refclassname");
 			Class clazz = Registry.get().lookupSingle(PersistentImpl.class,
 					ClassRef.class);
-			ClassRef cr = (ClassRef) clazz.newInstance();
+			ClassRef cr = (ClassRef) clazz.getDeclaredConstructor()
+					.newInstance();
 			cr.setId(id);
 			cr.setRefClassName(cn);
 			try {

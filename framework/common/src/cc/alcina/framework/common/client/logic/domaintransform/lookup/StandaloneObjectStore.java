@@ -14,14 +14,14 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 
-public abstract class MapObjectLookup implements ObjectStore {
+public abstract class StandaloneObjectStore implements ObjectStore {
 	protected PropertyChangeListener listener;
 
 	protected PerClassLookup perClassLookups;
 
 	protected PerClassLookup mappedObjects;
 
-	public MapObjectLookup() {
+	public StandaloneObjectStore() {
 		super();
 		this.perClassLookups = new PerClassLookup();
 	}

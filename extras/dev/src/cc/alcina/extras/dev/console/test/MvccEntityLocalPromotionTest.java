@@ -31,7 +31,7 @@ public class MvccEntityLocalPromotionTest<IU extends Entity & IUser, IG extends 
 		Transaction.commit();
 		Preconditions.checkState(
 				createdUser.domain().domainVersion() == createdUser);
-		IU testInstance = userClass.newInstance();
+		IU testInstance = userClass.getDeclaredConstructor().newInstance();
 		testInstance.setId(createdUser.getId());
 		testInstance.hashCode();
 		Preconditions

@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformCollatio
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -43,7 +42,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -52,7 +50,6 @@ import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.EntityLocatorMap;
-import cc.alcina.framework.entity.transform.ObjectPersistenceHelper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken.Pass;
@@ -134,7 +131,6 @@ public class TransformPersisterInPersistenceContext {
 		List<DomainTransformEventPersistent> persistentEvents = wrapper.persistentEvents;
 		List<DomainTransformRequestPersistent> dtrps = wrapper.persistentRequests;
 		wrapper.locatorMap = locatorMap;
-		ObjectPersistenceHelper.get();
 		ThreadlocalTransformManager tlTransformManager = ThreadlocalTransformManager
 				.cast();
 		DelayedEntityPersister delayedEntityPersister = new DelayedEntityPersister();
@@ -584,9 +580,8 @@ public class TransformPersisterInPersistenceContext {
 						return true;
 					case ADD_REF_TO_COLLECTION:
 					case REMOVE_REF_FROM_COLLECTION:
-						OneToMany oneToMany = Reflections
-								.getPropertyReflector(e.getObjectClass(),
-										e.getPropertyName())
+						OneToMany oneToMany = Reflections.at(e.getObjectClass())
+								.property(e.getPropertyName())
 								.annotation(OneToMany.class);
 						// if null, manytomany and it *is* an update
 						return oneToMany != null;

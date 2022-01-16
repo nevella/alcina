@@ -13,10 +13,10 @@
  */
 package cc.alcina.framework.gwt.client.ide.node;
 
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.ui.TreeItem;
@@ -24,16 +24,16 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.SortedMultimap;
 import cc.alcina.framework.gwt.client.ide.provider.LazyCollectionProvider;
@@ -64,7 +64,7 @@ public class NodeFactory {
 
 	private NodeCreator nodeCreator;
 
-	private Multimap<Class, List<ClientPropertyReflector>> subCollectionFolders = new Multimap<Class, List<ClientPropertyReflector>>();
+	private Multimap<Class, List<Property>> subCollectionFolders = new Multimap<Class, List<Property>>();
 
 	protected NodeFactory() {
 		super();
@@ -73,43 +73,38 @@ public class NodeFactory {
 	public DomainNode
 			getNodeForDomainObject(SourcesPropertyChangeEvents domainObject) {
 		DomainNode dn = createDomainNode(domainObject);
-		if (childlessBindables.contains(domainObject.getClass())) {
+		Class<? extends SourcesPropertyChangeEvents> bindableClass = domainObject
+				.getClass();
+		if (childlessBindables.contains(bindableClass)) {
 			return dn;
 		}
-		boolean isChildlessPoorThing = true;
-		ClientBeanReflector bi = ClientReflector.get()
-				.beanInfoForClass(domainObject.getClass());
-		Collection<ClientPropertyReflector> prs = bi.getPropertyReflectors()
-				.values();
-		Class<? extends Object> c = domainObject.getClass();
-		ObjectPermissions op = bi.annotation(ObjectPermissions.class);
-		Bean beanInfo = bi.annotation(Bean.class);
+		ClassReflector<? extends SourcesPropertyChangeEvents> classReflector = Reflections
+				.at(bindableClass);
+		ObjectPermissions op = classReflector
+				.annotation(ObjectPermissions.class);
+		Bean beanInfo = classReflector.annotation(Bean.class);
 		SortedMultimap<Integer, List<TreeItem>> createdNodes = new SortedMultimap<Integer, List<TreeItem>>();
-		if (!subCollectionFolders.containsKey(c)) {
-			subCollectionFolders.getAndEnsure(c);
-			for (ClientPropertyReflector pr : prs) {
-				PropertyPermissions pp = pr
-						.annotation(PropertyPermissions.class);
-				Display displayInfo = pr.getDisplayInfo();
-				boolean fieldVisible = displayInfo != null
-						&& ((displayInfo.displayMask()
-								& Display.DISPLAY_AS_TREE_NODE) != 0)
-						&& PermissionsManager.get()
-								.checkEffectivePropertyPermission(op, pp,
-										domainObject, true)
-						&& PermissionsManager.get().isPermitted(domainObject,
-								displayInfo.visible());
-				if (fieldVisible) {
-					subCollectionFolders.add(c, pr);
-				}
-			}
-		}
-		for (ClientPropertyReflector pr : subCollectionFolders.get(c)) {
-			Display displayInfo = pr.getDisplayInfo();
-			isChildlessPoorThing = false;
-			boolean withoutContainer = (displayInfo.displayMask()
+		List<Property> visibleProperties = subCollectionFolders.computeIfAbsent(
+				bindableClass,
+				c -> classReflector.properties().stream().filter(property -> {
+					PropertyPermissions pp = property
+							.annotation(PropertyPermissions.class);
+					Display display = property.annotation(Display.class);
+					boolean fieldVisible = display != null
+							&& ((display.displayMask()
+									& Display.DISPLAY_AS_TREE_NODE) != 0)
+							&& PermissionsManager.get()
+									.checkEffectivePropertyPermission(op, pp,
+											domainObject, true)
+							&& PermissionsManager.get().isPermitted(
+									domainObject, display.visible());
+					return fieldVisible;
+				}).collect(Collectors.toList()));
+		visibleProperties.forEach(property -> {
+			Display display = property.annotation(Display.class);
+			boolean withoutContainer = (display.displayMask()
 					& Display.DISPLAY_AS_TREE_NODE_WITHOUT_CONTAINER) != 0;
-			boolean lazyCollectionNode = (displayInfo.displayMask()
+			boolean lazyCollectionNode = (display.displayMask()
 					& Display.DISPLAY_LAZY_COLLECTION_NODE) != 0;
 			// this (lazyCollectionNode) is not implemented - it'd be sort of
 			// hard (but possible)
@@ -117,30 +112,24 @@ public class NodeFactory {
 			// collections...note not sure about this doc, if ya care, check
 			// it...
 			PropertyCollectionProvider provider = new PropertyCollectionProvider(
-					domainObject, pr);
+					domainObject, property);
 			if (withoutContainer) {
 				// note - should only happen for one property
 				((DomainCollectionProviderNode) dn)
 						.setCollectionProvider(provider);
 			} else {
-				// ContainerNode node = lazyCollectionNode ? new
-				// UmbrellaProviderNode(
-				// provider, TextProvider.get().getLabelText(c, pr),
-				// images.folder(), false, this)
-				// : new CollectionProviderNode(provider, TextProvider
-				// .get().getLabelText(c, pr), images.folder(),
-				// false, this);
 				ContainerNode node = new CollectionProviderNode(provider,
-						TextProvider.get().getLabelText(c, pr), images.folder(),
-						false, this);
-				createdNodes.add(displayInfo.orderingHint(), node);
+						TextProvider.get().getLabelText(bindableClass,
+								property),
+						images.folder(), false, this);
+				createdNodes.add(display.orderingHint(), node);
 			}
-		}
+		});
 		for (TreeItem item : createdNodes.allItems()) {
 			dn.addItem(item);
 		}
-		if (isChildlessPoorThing && dn.getChildCount() == 0) {
-			childlessBindables.add(domainObject.getClass());
+		if (visibleProperties.isEmpty() && dn.getChildCount() == 0) {
+			childlessBindables.add(bindableClass);
 		}
 		return dn;
 	}

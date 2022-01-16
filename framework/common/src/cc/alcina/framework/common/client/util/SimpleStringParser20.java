@@ -57,13 +57,13 @@ public class SimpleStringParser20 {
 	@UnsafeNativeLong
 	// Keep synchronized with LongLib
 	private static native double[] makeLongComponents0(long value) /*-{
-																	return value;
-																	}-*/;
+    return value;
+	}-*/;
 
 	@UnsafeNativeLong
 	private static native long readLong0(double low, double high) /*-{
-																	return [low, high];
-																	}-*/;
+    return [ low, high ];
+	}-*/;
 
 	protected static double[] makeLongComponents(int highBits, int lowBits) {
 		double high = highBits * TWO_PWR_32_DBL;

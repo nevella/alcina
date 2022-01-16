@@ -17,13 +17,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
+import cc.alcina.framework.gwt.client.gwittir.RenderedClass;
 import cc.alcina.framework.gwt.client.ide.ContentViewFactory.PaneWrapperWithObjects;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CloneActionHandler;
 import cc.alcina.framework.gwt.client.ide.WorkspaceActionHandler.CreateActionHandler;
@@ -127,8 +127,7 @@ public class WorkspaceDefaultActionHandlers {
 				ClientTransformManager.cast().prepareObject(newObj,
 						isAutoSave(), true, false);
 				TextProvider.get().setDecorated(false);
-				String tdn = ClientReflector.get()
-						.beanInfoForClass(nodeObjectClass).getTypeDisplayName();
+				String tdn = RenderedClass.getTypeDisplayName(nodeObjectClass);
 				TextProvider.get().setDecorated(true);
 				TextProvider.get().putDisplayName(newObj, "New " + tdn);
 				if (newObj instanceof IVersionableOwnable) {

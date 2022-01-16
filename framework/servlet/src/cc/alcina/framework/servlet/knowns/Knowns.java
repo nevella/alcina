@@ -45,11 +45,10 @@ public class Knowns {
 	public static final DateFormatSymbols SYMBOLS_EN = DateFormatSymbols
 			.getInstance(EN_NZ);
 
-	
 	private static String dateFormatStr = "dd-MMM-yyyy,hh:mm:ss";
 
 	private static SimpleDateFormat dateFormat = new SynchronizedDateFormat(
-			dateFormatStr,SYMBOLS_EN);
+			dateFormatStr, SYMBOLS_EN);
 
 	public static long lastModified = System.currentTimeMillis();
 
@@ -73,7 +72,7 @@ public class Knowns {
 			} catch (Exception e) {
 				Ax.err("Unable to deserialize %s:%s", path, fieldName);
 				try {
-					return type.newInstance();
+					return type.getDeclaredConstructor().newInstance();
 				} catch (Exception e1) {
 					throw new WrappedRuntimeException(e1);
 				}
@@ -181,16 +180,16 @@ public class Knowns {
 			propertyNode.setField(field);
 			propertyNode.setPropertyMetadata(propertyMetadata);
 			if (propertyMetadata != null) {
-				Class typeClass = Class
-						.forName(propertyNode.getPropertyMetadata().getTypeName());
+				Class typeClass = Class.forName(
+						propertyNode.getPropertyMetadata().getTypeName());
 				if (typeClass == Date.class) {
-					propertyNode.setDateValue((Date) fromStringValue(
-							parent.path(), value, name, typeClass,
-							ValueType.DATA_TYPE));
+					propertyNode.setDateValue(
+							(Date) fromStringValue(parent.path(), value, name,
+									typeClass, ValueType.DATA_TYPE));
 				} else if (typeClass == OpStatus.class) {
-					propertyNode.setOpStatusValue((OpStatus) fromStringValue(
-							parent.path(), value, name, typeClass,
-							ValueType.DATA_TYPE));
+					propertyNode.setOpStatusValue(
+							(OpStatus) fromStringValue(parent.path(), value,
+									name, typeClass, ValueType.DATA_TYPE));
 				}
 			}
 		} catch (Exception e) {

@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.misc.PerUserProperties
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
-@Bean(displayInfo = @Display(name = "Developer"))
+@Bean(display = @Display(name = "Developer"))
 @XmlRootElement
 @RegistryLocations(value = {
 		@RegistryLocation(registryPoint = JaxbContextRegistration.class),

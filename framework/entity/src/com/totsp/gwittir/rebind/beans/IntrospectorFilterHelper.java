@@ -15,7 +15,8 @@ public class IntrospectorFilterHelper {
 				if (CommonUtils.isNotNullOrEmpty(filterClassName)) {
 					try {
 						IntrospectorFilter filter = (IntrospectorFilter) Class
-								.forName(filterClassName).newInstance();
+								.forName(filterClassName)
+								.getDeclaredConstructor().newInstance();
 						filter.setContext(context);
 						return filter;
 					} catch (Exception e) {

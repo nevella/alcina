@@ -4,7 +4,7 @@ import java.util.Collection;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 
-public class MapObjectLookupJvm extends MapObjectLookup {
+public class MapObjectLookupJvm extends StandaloneObjectStore {
 	@Override
 	public void mapObject(Entity entity) {
 		if ((entity.getId() == 0 && entity.getLocalId() == 0)) {

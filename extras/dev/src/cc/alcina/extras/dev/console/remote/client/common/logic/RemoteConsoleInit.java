@@ -17,10 +17,7 @@ import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -29,17 +26,11 @@ public class RemoteConsoleInit {
 	public void init() {
 		loadCss();
 		addDevCssListener();
-		if (GWT.isScript()) {
-			ClientPropertyReflector
-					.setDelegateCreator(new JsRegistryDelegateCreator());
-		}
 		CommonUtils.setSupplier = () -> new LightSet();
 		if (GWT.isScript()) {
 			Registry.setDelegateCreator(new JsRegistryDelegateCreator());
 		}
 		JavascriptKeyableLookup.initJs();
-		Registry.get().registerBootstrapServices(ClientReflector.get());
-		Reflections.registerClassLookup(ClientReflector.get());
 		RemoteConsoleModule.get();
 		RemoteConsoleRequest request = RemoteConsoleRequest.create();
 		request.setType(RemoteConsoleRequestType.STARTUP);
@@ -96,7 +87,8 @@ public class RemoteConsoleInit {
 	}
 
 	void handleStartupResponse(RemoteConsoleResponse response) {
-		RemoteConsoleClientImpl.models().setStartupModel(response.getStartupModel());
+		RemoteConsoleClientImpl.models()
+				.setStartupModel(response.getStartupModel());
 		Window.setTitle(Ax.format("DevConsole - %s",
 				response.getStartupModel().getAppName()));
 	}

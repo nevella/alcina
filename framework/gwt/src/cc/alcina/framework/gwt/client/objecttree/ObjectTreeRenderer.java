@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.HasWithNull;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
@@ -306,8 +307,8 @@ public class ObjectTreeRenderer {
 				int depth, boolean soleChild, TreeRenderer node,
 				Binding parentBinding) {
 			String propertyName = node.renderablePropertyName();
-			Class type = GwittirBridge.get()
-					.getProperty(renderable, propertyName).getType();
+			Class type = Reflections.at(renderable.getClass())
+					.property(propertyName).getType();
 			Field f = GwittirBridge.get().getField(renderable.getClass(),
 					propertyName, true, false);
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(

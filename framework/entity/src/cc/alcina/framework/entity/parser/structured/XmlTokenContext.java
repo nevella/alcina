@@ -32,7 +32,8 @@ public class XmlTokenContext implements Cloneable {
 	@Override
 	public XmlTokenContext clone() {
 		try {
-			XmlTokenContext newInstance = getClass().newInstance();
+			XmlTokenContext newInstance = getClass().getDeclaredConstructor()
+					.newInstance();
 			copyProperties(newInstance);
 			return newInstance;
 		} catch (Exception e) {

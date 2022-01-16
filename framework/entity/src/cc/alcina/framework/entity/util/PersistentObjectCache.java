@@ -28,7 +28,8 @@ public interface PersistentObjectCache<T> {
 
 	T get(String path);
 
-	default Map<String, Optional<Long>> lastModifiedMultiple(List<String> paths) {
+	default Map<String, Optional<Long>>
+			lastModifiedMultiple(List<String> paths) {
 		return paths.stream()
 				.collect(AlcinaCollectors.toValueMap(this::lastModified));
 	}
@@ -72,7 +73,8 @@ public interface PersistentObjectCache<T> {
 
 		public void clear() {
 			try {
-				set(delegate.getPersistedClass().newInstance());
+				set(delegate.getPersistedClass().getDeclaredConstructor()
+						.newInstance());
 				persist();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);

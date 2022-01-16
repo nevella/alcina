@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 
-import com.fasterxml.jackson.annotation.PropertyAccessor;
 import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 import com.google.gwt.dom.client.Element;
@@ -102,6 +101,7 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
+import cc.alcina.framework.gwt.client.gwittir.RenderedClass;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTableExt;
 import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent.EndRowButtonClickedHandler;
@@ -770,7 +770,7 @@ public class ContentViewFactory {
 				.asList(new SimpleHistoryEventInfo[] {
 						new SimpleHistoryEventInfo(objName()),
 						new SimpleHistoryEventInfo(
-								getTypeDisplayName(beanClass)),
+								RenderedClass.getTypeDisplayName(beanClass)),
 						new SimpleHistoryEventInfo(
 								TextProvider.get().getObjectName(bean)) });
 		TextProvider.get().setTrimmed(false);
@@ -783,19 +783,8 @@ public class ContentViewFactory {
 				.asList(new SimpleHistoryEventInfo[] {
 						new SimpleHistoryEventInfo(objName()),
 						new SimpleHistoryEventInfo(
-								getTypeDisplayName(beanClass)) });
+								RenderedClass.getTypeDisplayName(beanClass)) });
 		return new BreadcrumbBar(null, history, BreadcrumbBar.maxButton(cp));
-	}
-
-	public String getTypeDisplayName(Class<?> beanClass) {
-		String tn = Reflections.at(beanClass).annotation(Bean.class)
-				.displayInfo().name();
-		if (CommonUtils.isNullOrEmpty(tn)) {
-			tn = CommonUtils
-					.capitaliseFirst(CommonUtils.classSimpleName(beanClass));
-		}
-		return TextProvider.get().getUiObjectText(beanClass,
-				TextProvider.DISPLAY_NAME, tn);
 	}
 
 	private PaneWrapperWithObjects
@@ -1414,15 +1403,16 @@ public class ContentViewFactory {
 						Property rightProperty = Reflections
 								.at(right.object.getClass())
 								.property(right.property.getName());
-						Display displayInfo = rightProperty
+						Display display = rightProperty
 								.annotation(Display.class);
-						if (displayInfo != null) {
+						if (display != null) {
 							if (!PermissionsManager.get().isPermitted(
-									right.object, displayInfo.visible())) {
+									right.object, display.visible())) {
 								grid.setRowVisibility(r, false);
 							}
 						}
-						PropertyPermissions pp = rightProperty.annotation(PropertyPermissions.class);
+						PropertyPermissions pp = rightProperty
+								.annotation(PropertyPermissions.class);
 						if (pp != null) {
 							if (!PermissionsManager.get()
 									.isPermitted(right.object, pp.write())) {

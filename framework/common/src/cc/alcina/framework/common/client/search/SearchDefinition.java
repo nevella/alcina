@@ -319,9 +319,8 @@ public abstract class SearchDefinition extends Bindable
 	}
 
 	public void mapCriteriaToPropertyNames() {
-		CriterionPropertyNameMappings crMappings = Reflections
-				.getAnnotationForClass(getClass(),
-						CriterionPropertyNameMappings.class);
+		CriterionPropertyNameMappings crMappings = Reflections.at(getClass())
+				.annotation(CriterionPropertyNameMappings.class);
 		if (crMappings != null) {
 			for (CriterionPropertyNameMapping mapping : crMappings.value()) {
 				CriteriaGroup criteriaGroup = criteriaGroup(

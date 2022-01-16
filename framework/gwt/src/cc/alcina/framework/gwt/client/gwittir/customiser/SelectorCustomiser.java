@@ -85,7 +85,7 @@ public class SelectorCustomiser implements Customiser {
 					filter = (Predicate) impl;
 				} else {
 					filter = (Predicate) Reflections
-							.newInstance(parameter.classValue(), 0, 0);
+							.newInstance(parameter.classValue());
 				}
 			}
 			Renderer renderer = NamedParameter.Support

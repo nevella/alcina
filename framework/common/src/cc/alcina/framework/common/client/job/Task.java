@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.job;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
@@ -18,14 +17,15 @@ public interface Task extends TreeSerializable, HasEquivalenceHash {
 	default boolean equivalentTo(Object other) {
 		if (getClass() == other.getClass()) {
 			return Objects.equals(FlatTreeSerializer.serialize(this),
-					FlatTreeSerializer.serialize((Task)other));
+					FlatTreeSerializer.serialize((Task) other));
 		} else {
 			return false;
 		}
 	}
 
 	default String getName() {
-		return Reflections.getSimpleClassName(getClass());
+		//
+		return getClass().getSimpleName();
 	}
 
 	default void onJobCreate(Job job) {

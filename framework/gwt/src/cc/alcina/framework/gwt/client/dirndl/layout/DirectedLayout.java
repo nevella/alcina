@@ -50,11 +50,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * FIXME - dirndl.perf
  * 
  * Minimise annotation resolution by caching an intermediate renderer object
- * which itself caches property/reflector annotation tuples. Also apply to
+ * which itself caches property/class annotation tuples. Also apply to
  * reflective serializer
  * 
  * Gotchas - don't use abstract class hierarchies, since (for instance) methods
- * are repeated on concrete children without annotations
+ * are repeated on concrete children without annotations.
+ * 
+ * FIXME - reflection - allow abstract classes in hierarchy, resolve annotations
+ * up superclass method chain if annotation is appropriately annotated
  * 
  * @author nick@alcina.cc
  *

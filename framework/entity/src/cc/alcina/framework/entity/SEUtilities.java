@@ -135,11 +135,11 @@ public class SEUtilities {
 
 	private static Pattern sq_5 = Pattern.compile("[`'´]+");
 
-	
-	public static String timestamp(){
+	public static String timestamp() {
 		return LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-		.replace(':', '_');	
+				.replace(':', '_');
 	}
+
 	private static Pattern sq_6 = Pattern.compile("[`'´]{2,}");
 
 	/**
@@ -853,7 +853,7 @@ public class SEUtilities {
 				return item;
 			}
 		}
-		Object item = itemClass.newInstance();
+		Object item = itemClass.getDeclaredConstructor().newInstance();
 		setPropertyValue(item, propertyName, propertyValue);
 		return (T) item;
 	}
@@ -1465,6 +1465,7 @@ public class SEUtilities {
 		}
 		return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
+
 	public static Date toOldDate(ZonedDateTime ld) {
 		if (ld == null) {
 			return null;

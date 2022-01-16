@@ -91,8 +91,7 @@ public abstract class TableGrouping<T> {
 				Field field = clazz.getDeclaredField(fieldName);
 				type = field.getType();
 			} catch (NoSuchFieldException e) {
-				type = Reflections.property().getPropertyType(clazz,
-						fieldName);
+				type = Reflections.at(clazz).property(fieldName).getType();
 			}
 			for (Field child : new GraphProjection().getFieldsForClass(type)) {
 				if (Modifier.isTransient(child.getModifiers())) {

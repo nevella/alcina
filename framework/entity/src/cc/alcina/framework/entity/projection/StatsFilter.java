@@ -266,7 +266,8 @@ public class StatsFilter extends CollectionProjectionFilter {
 							item.size++;
 						} else {
 							Class<? extends Object> clazz2 = o1.getClass();
-							if (ClassReflector.stdAndPrimitives.contains(clazz2)) {
+							if (ClassReflector.stdAndPrimitives
+									.contains(clazz2)) {
 								statsClassLookup.add(clazz2, null);
 								int length = o1.toString().length();
 								if (length > 10000) {
@@ -486,7 +487,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 				GraphProjectionContext context) throws Exception {
 			Collection c = null;
 			if (coll instanceof ArrayList || coll instanceof LinkedList) {
-				c = coll.getClass().newInstance();
+				c = coll.getClass().getDeclaredConstructor().newInstance();
 				// no "persistentLists", at least
 				// um...persistentBag??
 			} else if (coll instanceof Vector) {

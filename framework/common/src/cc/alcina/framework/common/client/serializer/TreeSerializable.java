@@ -54,8 +54,8 @@ public interface TreeSerializable extends Serializable {
 				return serialized;
 			}
 			TypeSerialization typeSerialization = Reflections
-					.getAnnotationForClass(serializable.getClass(),
-							TypeSerialization.class);
+					.at(serializable.getClass())
+					.annotation(TypeSerialization.class);
 			if (typeSerialization != null
 					&& typeSerialization.keyPrefixMappings().length > 0) {
 				serialized = mapKeys(serialized, typeSerialization, to);

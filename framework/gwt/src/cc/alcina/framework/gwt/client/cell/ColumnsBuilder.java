@@ -423,7 +423,8 @@ public class ColumnsBuilder<T> {
 				}
 			}
 			editInfo.fieldUpdater = fieldUpdater != null ? fieldUpdater
-					: new PropertyFieldUpdater(editablePropertyName, field);
+					: new PropertyFieldUpdater(editablePropertyName, field,
+							clazz);
 			function = new PropertyFieldGetter(editablePropertyName, clazz);
 		}
 	}

@@ -53,6 +53,7 @@ import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 
 // BOZO - Make primitive serialization with ReflectASM configurable?
+@SuppressWarnings({ "deprecation", "removal" })
 /**
  * Serializes objects using direct field assignment. FieldSerializer is generic
  * and can serialize most classes without any configuration. It is efficient and

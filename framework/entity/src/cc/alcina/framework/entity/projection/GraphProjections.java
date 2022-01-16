@@ -8,7 +8,7 @@ import java.util.Set;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookup;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.StandaloneObjectStore;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CountingMap;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -30,7 +30,7 @@ public class GraphProjections {
 		return instance;
 	}
 
-	public static MapObjectLookup reachableForClasses(Object target,
+	public static StandaloneObjectStore reachableForClasses(Object target,
 			Class... classes) {
 		CollectionProjectionFilterWithCache dataFilter = (CollectionProjectionFilterWithCache) Registry
 				.impl(CollectionProjectionFilter.class);

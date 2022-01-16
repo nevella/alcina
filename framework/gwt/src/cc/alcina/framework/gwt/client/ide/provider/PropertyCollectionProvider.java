@@ -25,8 +25,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationListener;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
+import cc.alcina.framework.common.client.logic.reflection.Display;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 /**
  * 
@@ -38,19 +39,21 @@ public class PropertyCollectionProvider<E>
 
 	private final SourcesPropertyChangeEvents domainObject;
 
-	private final ClientPropertyReflector property;
+	private final Property property;
 
 	private CollectionModificationSupport collectionModificationSupport = new CollectionModificationSupport();
 
 	public PropertyCollectionProvider(SourcesPropertyChangeEvents domainObject,
-			ClientPropertyReflector property) {
+			Property property) {
 		this.domainObject = domainObject;
 		this.property = property;
-		domainObject.addPropertyChangeListener(
-				property.getPropertyName(), this);
-		Predicate predicate = property.getCollectionFilter();
-		if (predicate != null) {
-			filter = predicate;
+		domainObject.addPropertyChangeListener(property.getName(), this);
+		Display display = property.annotation(Display.class);
+		if (display != null) {
+			Class filterClass = display.filterClass();
+			if (filterClass != null && filterClass != Void.class) {
+				filter = (Predicate<E>) Reflections.newInstance(filterClass);
+			}
 		}
 	}
 
@@ -63,8 +66,7 @@ public class PropertyCollectionProvider<E>
 
 	@Override
 	public Collection<E> getCollection() {
-		Collection<E> colln = (Collection) GwittirBridge.get().getPropertyValue(
-				getDomainObject(), getPropertyReflector().getPropertyName());
+		Collection<E> colln = (Collection<E>) property.get(domainObject);
 		if (filter == null) {
 			return colln;
 		}
@@ -79,7 +81,7 @@ public class PropertyCollectionProvider<E>
 
 	@Override
 	public Class<? extends E> getCollectionMemberClass() {
-		return getPropertyReflector().annotation(Association.class)
+		return getProperty().annotation(Association.class)
 				.implementationClass();
 	}
 
@@ -96,14 +98,14 @@ public class PropertyCollectionProvider<E>
 		return this.filter;
 	}
 
-	public ClientPropertyReflector getPropertyReflector() {
+	public Property getProperty() {
 		return property;
 	}
 
 	@Override
 	public void onDetach() {
 		getDomainObject().removePropertyChangeListener(
-				getPropertyReflector().getPropertyName(), this);
+				getProperty().getName(), this);
 	}
 
 	@Override

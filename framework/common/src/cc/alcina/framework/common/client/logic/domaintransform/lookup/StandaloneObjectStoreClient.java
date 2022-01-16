@@ -31,10 +31,12 @@ import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
  * synchroized on 'this'
  * </ul>
  * 
+ * FIXME - reflection - check usage. Also FIXME - adjunct - check usage
+ * 
  * @param hasIdAndLocalId
  * @param obj
  */
-public class MapObjectLookupClient extends MapObjectLookup {
+public class StandaloneObjectStoreClient extends StandaloneObjectStore {
 	private Multimap<Class, List<Property>> registerChildren = new Multimap<Class, List<Property>>();
 
 	private int registerCounter;
@@ -43,7 +45,7 @@ public class MapObjectLookupClient extends MapObjectLookup {
 
 	private ScheduledCommand postRegisterCommand;
 
-	public MapObjectLookupClient(PropertyChangeListener listener) {
+	public StandaloneObjectStoreClient(PropertyChangeListener listener) {
 		this.listener = listener;
 	}
 

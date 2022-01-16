@@ -135,6 +135,7 @@ import com.google.gwt.user.client.Event;
  * &lt;/g:PushButton>
  * </pre>
  */
+@SuppressWarnings("deprecation")
 public abstract class CustomButton extends ButtonBase {
 	private static final String STYLENAME_DEFAULT = "gwt-CustomButton";
 
@@ -1038,6 +1039,7 @@ public abstract class CustomButton extends ButtonBase {
 		 * @return face's contents as html
 		 * 
 		 */
+		@Override
 		public String getHTML() {
 			return DOM.getInnerHTML(getFace());
 		}
@@ -1048,6 +1050,7 @@ public abstract class CustomButton extends ButtonBase {
 		 * @return face's contents as text
 		 * 
 		 */
+		@Override
 		public String getText() {
 			return DOM.getInnerText(getFace());
 		}
@@ -1058,6 +1061,7 @@ public abstract class CustomButton extends ButtonBase {
 		 * @param html
 		 *            html to set as face's contents html
 		 */
+		@Override
 		public void setHTML(SafeHtml html) {
 			setHTML(html.asString());
 		}
@@ -1069,6 +1073,7 @@ public abstract class CustomButton extends ButtonBase {
 		 *            html to set as face's contents html
 		 * 
 		 */
+		@Override
 		public void setHTML(String html) {
 			face = DOM.createDiv();
 			UIObject.setStyleName(face, STYLENAME_HTML_FACE, true);
@@ -1093,6 +1098,7 @@ public abstract class CustomButton extends ButtonBase {
 		 * @param text
 		 *            text to set as face's contents
 		 */
+		@Override
 		public final void setText(String text) {
 			face = DOM.createDiv();
 			UIObject.setStyleName(face, STYLENAME_HTML_FACE, true);

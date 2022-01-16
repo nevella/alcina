@@ -298,11 +298,11 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			seenOut.put(object, seenOut.size());
 		}
 		GwittirBridge gb = GwittirBridge.get();
-		ClassReflector<?> reflector = Reflections.at(clazz);
-		Object template = reflector.templateInstance();
+		ClassReflector<?> classReflector = Reflections.at(clazz);
+		Object template = classReflector.templateInstance();
 		JSONObject props = new JSONObject();
 		jo.put(propertyFieldName, props);
-		for (Property property : reflector.properties()) {
+		for (Property property : classReflector.properties()) {
 			if (property.isReadOnly()) {
 				continue;
 			}

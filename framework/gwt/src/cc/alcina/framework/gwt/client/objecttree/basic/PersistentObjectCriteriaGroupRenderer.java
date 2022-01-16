@@ -28,8 +28,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef.ClassRefSimpleNameRenderer;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.PersistentObjectCriteriaGroup;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
@@ -75,8 +75,8 @@ public class PersistentObjectCriteriaGroupRenderer
 						@Override
 						public boolean test(ClassRef o) {
 							try {
-								Object templateInstance = ClientReflector.get()
-										.getTemplateInstance(o.getRefClass());
+								Object templateInstance = Reflections
+										.at(o.getRefClass()).templateInstance();
 								return templateInstance instanceof Entity;
 							} catch (Exception e) {
 								return false;

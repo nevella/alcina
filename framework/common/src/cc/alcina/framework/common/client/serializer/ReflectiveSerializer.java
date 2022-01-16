@@ -16,16 +16,15 @@ import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
-import com.totsp.gwittir.client.beans.Property;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
 import cc.alcina.framework.common.client.util.Ax;
@@ -153,9 +152,9 @@ public class ReflectiveSerializer {
 		}
 		Class lookupClass = serializationClass(clazz);
 		return typeSerializers.computeIfAbsent(lookupClass, k -> {
-			List<Class> toResolve = Arrays.asList(lookupClass);
+			List<Class<?>> toResolve = Arrays.asList(lookupClass);
 			while (toResolve.size() > 0) {
-				Optional<Class> match = toResolve.stream()
+				Optional<Class<?>> match = toResolve.stream()
 						.filter(typeSerializers::containsKey).findFirst();
 				if (match.isPresent()) {
 					Class serializerType = match.get();
@@ -174,21 +173,20 @@ public class ReflectiveSerializer {
 					}
 					return typeSerializer;
 				}
-				List<Class> next = new ArrayList<>();
+				List<Class<?>> next = new ArrayList<>();
 				toResolve.forEach(c2 -> {
 					// implemented interfaces and superclass are at the same
 					// level, so to speak
 					if (c2.getSuperclass() != null) {
 						next.add(c2.getSuperclass());
 					}
-					Reflections.getInterfaces(c2)
-							.forEach(next::add);
+					Reflections.at(c2).getInterfaces().forEach(next::add);
 				});
 				toResolve = next;
 			}
 			Bean bean = Annotations.resolve(lookupClass, Bean.class);
 			boolean resolveWithReflectiveTypeSerializer = bean != null;
-			// FIXME - reflection - move to Reflector
+			// FIXME - reflection - move isAssignable
 			if (!GWT.isClient()) {
 				resolveWithReflectiveTypeSerializer |= Reflections
 						.isAssignableFrom(TreeSerializable.class, lookupClass)
@@ -276,8 +274,7 @@ public class ReflectiveSerializer {
 		@Override
 		public void childDeserializationComplete(GraphNode graphNode,
 				GraphNode child) {
-			child.property.setPropertyValue(graphNode.value,
-					child.value);
+			child.property.set(graphNode.value, child.value);
 		}
 
 		@Override
@@ -309,18 +306,15 @@ public class ReflectiveSerializer {
 		public Iterator<GraphNode> writeIterator(GraphNode node) {
 			Iterator<Property> iterator = SerializationSupport
 					.getProperties(node.value).iterator();
-			Object templateInstance = Reflections
-					.getTemplateInstance(node.type);
+			Object templateInstance = Reflections.at(node.type)
+					.templateInstance();
 			FilteringIterator<Property> filteringIterator = new FilteringIterator<>(
 					iterator, p -> {
 						if (!node.state.serializerOptions.elideDefaults) {
 							return true;
 						}
-						Object childValue = Reflections.property()
-								.getPropertyValue(node.value, p.getName());
-						Object templateValue = Reflections.property()
-								.getPropertyValue(templateInstance,
-										p.getName());
+						Object childValue = p.get(node.value);
+						Object templateValue = p.get(templateInstance);
 						return !Objects.equals(childValue, templateValue);
 					});
 			return new MappingIterator<Property, GraphNode>(filteringIterator,
@@ -388,7 +382,6 @@ public class ReflectiveSerializer {
 	public static abstract class ValueSerializer<T> {
 		public abstract List<Class> serializesTypes();
 
-		
 		protected T fromJson(Class<? extends T> clazz, JsonValue value) {
 			switch (value.getType()) {
 			case NULL:
@@ -442,8 +435,7 @@ public class ReflectiveSerializer {
 
 		PropertySerialization propertySerialization;
 
-		GraphNode(GraphNode parent, String name,
-				Property property) {
+		GraphNode(GraphNode parent, String name, Property property) {
 			this.parent = parent;
 			this.name = name;
 			this.property = property;
@@ -480,7 +472,7 @@ public class ReflectiveSerializer {
 			} else {
 				// FIXME - dirndl 1.3 - use annotationlocation to resolve sole
 				// type of property if possible
-				type = property.getPropertyType();
+				type = property.getType();
 			}
 			if (type == null) {
 				return null;
@@ -563,8 +555,7 @@ public class ReflectiveSerializer {
 			this.value = value;
 			serializer = resolveSerializer(
 					value == null ? void.class : value.getClass(),
-					property == null ? null
-							: property.getPropertyType());
+					property == null ? null : property.getType());
 		}
 
 		void writeValue() {
@@ -603,11 +594,10 @@ public class ReflectiveSerializer {
 
 		@Override
 		public GraphNode apply(Property t) {
-			Property property = Reflections.property()
-					.getPropertyReflector(node.value.getClass(), t.getName());
-			GraphNode graphNode = new GraphNode(node, t.getName(),
-					property);
-			graphNode.setValue(property.getPropertyValue(node.value));
+			Property property = Reflections.at(node.value.getClass())
+					.property(t.getName());
+			GraphNode graphNode = new GraphNode(node, t.getName(), property);
+			graphNode.setValue(property.get(node.value));
 			return graphNode;
 		}
 	}

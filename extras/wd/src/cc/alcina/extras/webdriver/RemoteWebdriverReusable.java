@@ -68,15 +68,15 @@ public class RemoteWebdriverReusable extends RemoteWebDriver {
 						Field field2 = HttpCommandExecutor.class
 								.getDeclaredField("commandCodec");
 						field2.setAccessible(true);
-						field2.set(executor,
-								node.commandCodecClass.newInstance());
+						field2.set(executor, node.commandCodecClass
+								.getDeclaredConstructor().newInstance());
 					}
 					{
 						Field field2 = HttpCommandExecutor.class
 								.getDeclaredField("responseCodec");
 						field2.setAccessible(true);
-						field2.set(executor,
-								node.responseCodecClass.newInstance());
+						field2.set(executor, node.responseCodecClass
+								.getDeclaredConstructor().newInstance());
 					}
 				}
 				String currentUrl = getCurrentUrl();

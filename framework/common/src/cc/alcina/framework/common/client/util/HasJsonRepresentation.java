@@ -89,7 +89,8 @@ public interface HasJsonRepresentation {
 			List<Field> fields = new GraphProjection()
 					.getFieldsForClass(this.getClass());
 			JSONObject jso = new JSONObject();
-			Object templateInstance = getClass().newInstance();
+			Object templateInstance = getClass().getDeclaredConstructor()
+					.newInstance();
 			for (Field field : fields) {
 				if (Modifier.isTransient(field.getModifiers())) {
 					continue;

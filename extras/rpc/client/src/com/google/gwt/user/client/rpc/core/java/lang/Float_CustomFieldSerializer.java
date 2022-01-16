@@ -33,7 +33,7 @@ public final class Float_CustomFieldSerializer
 
 	public static Float instantiate(SerializationStreamReader streamReader)
 			throws SerializationException {
-		return new Float(streamReader.readFloat());
+		return Float.valueOf(streamReader.readFloat());
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,

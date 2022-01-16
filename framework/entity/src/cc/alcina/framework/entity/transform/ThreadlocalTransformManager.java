@@ -16,7 +16,6 @@ package cc.alcina.framework.entity.transform;
 import java.beans.IntrospectionException;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyDescriptor;
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
@@ -35,7 +34,6 @@ import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 import javax.persistence.OneToMany;
-import javax.persistence.Query;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,7 +43,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-import cc.alcina.framework.common.client.collections.PropertyFilter;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
@@ -58,14 +55,13 @@ import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEntityCache;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectLookup;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -75,9 +71,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
-import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -88,7 +84,6 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -107,7 +102,7 @@ import cc.alcina.framework.entity.util.MethodContext;
  *
  * @author Nick Reddel
  * 
- *         TODO - mvcc.5 - remove dependence on DomainStore
+ *         TODO - mvcc.5 - remove/encapsulate dependence on DomainStore
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalTransformManager extends TransformManager {
@@ -306,51 +301,12 @@ public class ThreadlocalTransformManager extends TransformManager {
 		super.deregisterDomainObject(entity);
 	}
 
-	@Override
-	public String displayNameForObject(Object o) {
-		return ObjectPersistenceHelper.get().displayNameForObject(o);
-	}
-
-	
-
 	public void flush() {
 		flush(new ArrayList<>());
 	}
 
 	public void flush(List<DomainTransformEventPersistent> dtreps) {
 		entityManager.flush();
-	}
-
-	@Override
-	public <A extends Annotation> A getAnnotationForClass(Class targetClass,
-			Class<A> annotationClass) {
-		return (A) targetClass.getAnnotation(annotationClass);
-	}
-
-	@Override
-	public <A extends Annotation> A getAnnotationForProperty(Class targetClass,
-			Class<A> annotationClass, String propertyName) {
-		try {
-			PropertyDescriptor descriptor = SEUtilities
-					.getPropertyDescriptorByName(targetClass, propertyName);
-			if (descriptor != null && descriptor.getReadMethod() != null) {
-				return descriptor.getReadMethod()
-						.getAnnotation(annotationClass);
-			}
-			return null;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	@Override
-	public Class forName(String fqn) {
-		// Should never be called - but anyway...
-		try {
-			return Class.forName(fqn);
-		} catch (ClassNotFoundException e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	public ClientInstance getClientInstance() {
@@ -369,11 +325,6 @@ public class ThreadlocalTransformManager extends TransformManager {
 		return entityManager;
 	}
 
-	@Override
-	public List<Class> getInterfaces(Class clazz) {
-		return ObjectPersistenceHelper.get().getInterfaces(clazz);
-	}
-
 	public Map<Long, Entity> getLocalIdToEntityMap() {
 		return this.localIdToEntityMap;
 	}
@@ -383,53 +334,117 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	@Override
-	public <T extends Entity> T getObject(Class<? extends T> clazz, long id,
-			long localId) {
-		if (!Entity.class.isAssignableFrom(clazz)) {
-			throw new WrappedRuntimeException(
-					"Attempting to obtain incompatible bean: " + clazz,
-					SuggestedAction.NOTIFY_WARNING);
-		}
-		if (id == 0) {
-			if (localIdToEntityMap.containsKey(localId)) {
-				return (T) localIdToEntityMap.get(localId);
+	protected void createObjectStore() {
+		setObjectStore(new ObjectStoreImpl());
+	}
+
+	private class ObjectStoreImpl implements ObjectStore {
+		@Override
+		public <T extends Entity> T getObject(Class<? extends T> clazz, long id,
+				long localId) {
+			if (!Entity.class.isAssignableFrom(clazz)) {
+				throw new WrappedRuntimeException(
+						"Attempting to obtain incompatible bean: " + clazz,
+						SuggestedAction.NOTIFY_WARNING);
 			}
-			if (getEntityManager() == null) {
-				T entity = DomainStore.stores().storeFor(clazz).getCache()
-						.get(new EntityLocator(clazz, id, localId));
-				if (entity != null) {
-					return entity;
+			if (id == 0) {
+				if (localIdToEntityMap.containsKey(localId)) {
+					return (T) localIdToEntityMap.get(localId);
+				}
+				if (getEntityManager() == null) {
+					T entity = DomainStore.stores().storeFor(clazz).getCache()
+							.get(new EntityLocator(clazz, id, localId));
+					if (entity != null) {
+						return entity;
+					}
+				}
+				if (clientInstanceEntityMap != null && localId != 0) {
+					id = clientInstanceEntityMap.containsKey(localId)
+							? clientInstanceEntityMap.getForLocalId(localId).id
+							: 0;
 				}
 			}
-			if (clientInstanceEntityMap != null && localId != 0) {
-				id = clientInstanceEntityMap.containsKey(localId)
-						? clientInstanceEntityMap.getForLocalId(localId).id
-						: 0;
-			}
-		}
-		if (id != 0) {
-			if (getEntityManager() != null) {
-				T t = getEntityManager().find(clazz, id);
-				// this may be a performance hit - but worth it - otherwise all
-				// sorts of potential problems
-				// basically, transform events should (must) always have refs to
-				// "real" objects, not wrappers
-				t = ensureNonProxy(t);
-				if (localId != 0 && t != null) {
-					localIdToEntityMap.put(localId, t);
+			if (id != 0) {
+				if (getEntityManager() != null) {
+					T t = getEntityManager().find(clazz, id);
+					// this may be a performance hit - but worth it - otherwise
+					// all
+					// sorts of potential problems
+					// basically, transform events should (must) always have
+					// refs to
+					// "real" objects, not wrappers
+					t = ensureNonProxy(t);
+					if (localId != 0 && t != null) {
+						localIdToEntityMap.put(localId, t);
+					}
+					return t;
+				} else {
+					long f_id = id;
+					return MethodContext.instance().withContextTrue(
+							LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
+							.withContextTrue(
+									ThreadlocalTransformManager.CONTEXT_LOADING_FOR_TRANSFORM)
+							.call(() -> Domain.find(clazz, f_id));
 				}
-				return t;
-			} else {
-				long f_id = id;
-				return MethodContext.instance()
-						.withContextTrue(
-								LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
-						.withContextTrue(
-								ThreadlocalTransformManager.CONTEXT_LOADING_FOR_TRANSFORM)
-						.call(() -> Domain.find(clazz, f_id));
 			}
+			return null;
 		}
-		return null;
+
+		@Override
+		public <T extends Entity> T getObject(T bean) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void changeMapping(Entity obj, long id, long localId) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean contains(Entity obj) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void deregister(Entity entity) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <T> Collection<T> getCollection(Class<T> clazz) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Map<Class<? extends Entity>, Collection<Entity>>
+				getCollectionMap() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void invalidate(Class<? extends Entity> clazz) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void mapObject(Entity obj) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void registerObjects(Collection objects) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void removeListeners() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean contains(Class<? extends Entity> clazz, long id) {
+			throw new UnsupportedOperationException();
+		}
 	}
 
 	@Override
@@ -442,61 +457,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	@Override
-	public Property getPropertyReflector(Class clazz, String propertyName) {
-		MethodIndividualPropertyReflector accessor = MethodIndividualPropertyReflector
-				.get(clazz, propertyName);
-		return accessor.isInvalid() ? null : accessor;
-	}
-
-	@Override
-	public Map<String, Property> getPropertyReflectors(Class<?> beanClass) {
-		return ObjectPersistenceHelper.get().getPropertyReflectors(beanClass);
-	}
-
-	@Override
-	public Class getPropertyType(Class clazz, String propertyName) {
-		return ObjectPersistenceHelper.get().getPropertyType(clazz,
-				propertyName);
-	}
-
-	@Override
-	public Object getPropertyValue(Object bean, String propertyName) {
-		try {
-			PropertyDescriptor descriptor = SEUtilities
-					.getPropertyDescriptorByName(bean.getClass(), propertyName);
-			if (descriptor == null) {
-				throw new Exception(String.format("No property %s for class %s",
-						propertyName, bean.getClass().getName()));
-			}
-			return descriptor.getReadMethod().invoke(bean);
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
-	@Override
-	public String getSimpleClassName(Class<?> clazz) {
-		return ObjectPersistenceHelper.get().getSimpleClassName(clazz);
-	}
-
-	@Override
 	public TransformManager getT() {
 		return (TransformManager) threadLocalInstance.get();
-	}
-
-	@Override
-	public Enum getTargetEnumValue(DomainTransformEvent evt) {
-		return ObjectPersistenceHelper.get().getTargetEnumValue(evt);
-	}
-
-	@Override
-	public <T> T getTemplateInstance(Class<T> clazz) {
-		return ObjectPersistenceHelper.get().getTemplateInstance(clazz);
-	}
-
-	@Override
-	public List<PropertyInfo> getWritableProperties(Class clazz) {
-		return ObjectPersistenceHelper.get().getWritableProperties(clazz);
 	}
 
 	@Override
@@ -532,13 +494,6 @@ public class ThreadlocalTransformManager extends TransformManager {
 		return listeningTo.containsKey(spce);
 	}
 
-	@Override
-	public boolean isReadOnly(Class objectClass, String propertyName) {
-		return SEUtilities
-				.getPropertyDescriptorByName(objectClass, propertyName)
-				.getWriteMethod() == null;
-	}
-
 	public boolean isTransformsExplicitlyPermitted() {
 		return this.transformsExplicitlyPermitted;
 	}
@@ -567,11 +522,10 @@ public class ThreadlocalTransformManager extends TransformManager {
 			boolean mismatchedEndpoints = !(objectWithCollection instanceof MvccObject
 					&& deltaC.stream().allMatch(o -> o instanceof MvccObject));
 			if (mismatchedEndpoints) {
-				DomainStoreProperty domainStoreProperty = Reflections
-						.property().getAnnotationForProperty(
-								((Entity) objectWithCollection).entityClass(),
-								DomainStoreProperty.class,
-								collectionPropertyName);
+				Class<?> clazz = ((Entity) objectWithCollection).entityClass();
+				DomainStoreProperty domainStoreProperty = Reflections.at(clazz)
+						.property(collectionPropertyName)
+						.annotation(DomainStoreProperty.class);
 				if (domainStoreProperty != null && domainStoreProperty
 						.ignoreMismatchedCollectionModifications()) {
 					return;
@@ -585,17 +539,17 @@ public class ThreadlocalTransformManager extends TransformManager {
 				collectionPropertyName, delta, modificationType);
 	}
 
-
 	/**
 	 * Can be called from the server layer(entityManager==null)
 	 */
 	@Override
-	public  <E extends Entity> E newInstance(Class<E> clazz, long id, long localId) {
+	public <E extends Entity> E newInstance(Class<E> clazz, long id,
+			long localId) {
 		return newInstance(clazz, id, localId, false);
 	}
 
-	protected  <E extends Entity> E newInstance(Class<E> clazz, long id, long localId,
-			boolean externalLocal) {
+	protected <E extends Entity> E newInstance(Class<E> clazz, long id,
+			long localId, boolean externalLocal) {
 		try {
 			if (Entity.class.isAssignableFrom(clazz)) {
 				Preconditions.checkState(Transaction.current().isWriteable());
@@ -815,25 +769,14 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	@Override
-	public void setPropertyValue(Object bean, String propertyName,
-			Object value) {
-		if (!(bean instanceof Entity)) {
-			throw new WrappedRuntimeException(
-					"Attempting to serialize incompatible bean: " + bean,
-					SuggestedAction.NOTIFY_WARNING);
-		}
-		Entity entity = (Entity) bean;
+	protected void set(Property property, Entity entity, Object value) {
 		if (checkHasSufficientInfoForPropertyPersist(entity)) {
-			try {
-				SEUtilities.setPropertyValue(bean, propertyName, value);
-				return;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
+			property.set(entity, value);
+		} else {
+			throw new DomainTransformRuntimeException(
+					"Attempting to alter property of non-persistent entity: "
+							+ entity);
 		}
-		throw new WrappedRuntimeException(
-				"Attempting to alter property of non-persistent bean: " + bean,
-				SuggestedAction.NOTIFY_WARNING);
 	}
 
 	public void setTransformsExplicitlyPermitted(
@@ -848,7 +791,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public boolean testPermissions(Entity entity, DomainTransformEvent evt,
 			String propertyName, Object change, boolean read) {
 		if (!LooseContext.is(CONTEXT_TEST_PERMISSIONS)) {
-			throw new RuntimeException("test property not set");
+			throw new DomainTransformRuntimeException("test property not set");
 		}
 		if (read) {
 			try {
@@ -882,7 +825,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 		}
 		try {
 			if (entity == null) {
-				entity = (Entity) evt.getObjectClass().newInstance();
+				entity = (Entity) Reflections.at(evt.getObjectClass())
+						.templateInstance();
 			} else {
 				entity = ensureNonProxy(entity);
 				entity = resolveForPermissionsChecks(entity);
@@ -897,9 +841,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 					? change
 					: null);
 			ObjectPermissions oph = null;
-			AssignmentPermission aph = Reflections.property()
-					.getAnnotationForProperty(objectClass,
-							AssignmentPermission.class, propertyName);
+			AssignmentPermission aph = Reflections.at(objectClass)
+					.property(propertyName)
+					.annotation(AssignmentPermission.class);
 			if (entityChange != null) {
 				oph = entityChange.entityClass()
 						.getAnnotation(ObjectPermissions.class);
@@ -970,8 +914,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 			String propertyName, DomainTransformEvent evt)
 			throws DomainTransformException, IntrospectionException {
 		if (!checkPropertyAccess(entity, propertyName, false)) {
-			DomainProperty ann = getAnnotationForProperty(entity.entityClass(),
-					DomainProperty.class, propertyName);
+			DomainProperty ann = Reflections.at(entity.entityClass())
+					.property(propertyName).annotation(DomainProperty.class);
 			throw new DomainTransformException(new PermissionsException(
 					"Permission denied : write - object/property " + evt));
 		}
@@ -1276,11 +1220,11 @@ public class ThreadlocalTransformManager extends TransformManager {
 		// Cannot be used if object permissions depend on child collection
 		// removal
 		if (entityManager != null) {
-			Property reflector = Reflections.getPropertyReflector(
-					event.getObjectClass(), event.getPropertyName());
-			if (reflector.has(OneToMany.class)
-					&& reflector.has(Association.class)) {
-				DomainStoreProperty domainStoreProperty = reflector
+			Property property = Reflections.at(event.getObjectClass())
+					.property(event.getPropertyName());
+			if (property.has(OneToMany.class)
+					&& property.has(Association.class)) {
+				DomainStoreProperty domainStoreProperty = property
 						.annotation(DomainStoreProperty.class);
 				if (domainStoreProperty == null || domainStoreProperty
 						.optimiseOneToManyCollectionModifications()) {

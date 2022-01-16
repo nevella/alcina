@@ -2039,7 +2039,7 @@ public class DomainStore implements IDomainStore {
 		}
 
 		@Override
-		protected void createObjectLookup() {
+		protected void createObjectStore() {
 			store = (DetachedCacheObjectStore) getTmDomainObjects();
 			setObjectStore(store);
 		}

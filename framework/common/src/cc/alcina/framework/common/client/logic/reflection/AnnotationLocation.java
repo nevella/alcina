@@ -17,15 +17,14 @@ public class AnnotationLocation {
 	public Property property;
 
 	/*
-	 * Can be either the containing class of the property, or the value
-	 * type of the property reflector
+	 * Can be either the containing class of the property, or the value type of
+	 * the property Í
 	 */
-	public Class classLocation;
+	public Class<?> classLocation;
 
 	public Resolver resolver;
 
-	public AnnotationLocation(Class clazz,
-			Property property) {
+	public AnnotationLocation(Class clazz, Property property) {
 		this(clazz, property, null);
 	}
 
@@ -44,8 +43,7 @@ public class AnnotationLocation {
 	public boolean equals(Object obj) {
 		if (obj instanceof AnnotationLocation) {
 			AnnotationLocation o = (AnnotationLocation) obj;
-			return property == o.property
-					&& classLocation == o.classLocation
+			return property == o.property && classLocation == o.classLocation
 					&& Objects.equals(resolver, o.resolver);
 		} else {
 			return false;
@@ -67,18 +65,15 @@ public class AnnotationLocation {
 	}
 
 	public boolean isDefiningType(Class<?> clazz) {
-		return property != null
-				&& property.getDefiningType() == clazz;
+		return property != null && property.getDefiningType() == clazz;
 	}
 
 	public boolean isPropertyName(String propertyName) {
-		return property != null
-				&& propertyName.equals(property.getName());
+		return property != null && propertyName.equals(property.getName());
 	}
 
 	public boolean isPropertyType(Class<?> clazz) {
-		return property != null
-				&& clazz == property.getType();
+		return property != null && clazz == property.getType();
 	}
 
 	public AnnotationLocation parent() {
@@ -95,11 +90,10 @@ public class AnnotationLocation {
 	@Override
 	public String toString() {
 		if (property != null) {
-			String declaringPrefix = property
-					.getDefiningType() == classLocation ? ""
-							: Ax.format("(%s)", classLocation.getSimpleName());
-			return Ax.format("%s%s", declaringPrefix,
-					property.toString());
+			String declaringPrefix = property.getDefiningType() == classLocation
+					? ""
+					: Ax.format("(%s)", classLocation.getSimpleName());
+			return Ax.format("%s%s", declaringPrefix, property.toString());
 		} else {
 			return classLocation.getSimpleName();
 		}
@@ -115,7 +109,8 @@ public class AnnotationLocation {
 		if (classLocation == null) {
 			return null;
 		} else {
-			return (A) Reflections.at(classLocation).annotation(annotationClass);
+			return (A) Reflections.at(classLocation)
+					.annotation(annotationClass);
 		}
 	}
 

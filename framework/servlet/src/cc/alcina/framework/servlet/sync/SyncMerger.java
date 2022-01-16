@@ -18,16 +18,16 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.sync.property.PropertyModificationLog;
 import cc.alcina.framework.common.client.sync.property.PropertyModificationLogItem;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.PropertyPathAccessor;
 import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.transform.PropertyPathAccessor;
 import cc.alcina.framework.servlet.sync.SyncItemMatch.SyncItemLogStatus;
 import cc.alcina.framework.servlet.sync.SyncPair.SyncPairAction;
 
@@ -89,7 +89,7 @@ public class SyncMerger<T> {
 
 	private Class<T> mergedClass;
 
-	private PropertyAccessor propertyAccessor;
+	private PropertyPathAccessor accessor;
 
 	private List<SyncMapping> syncMappings = new ArrayList<SyncMapping>();
 
@@ -104,7 +104,7 @@ public class SyncMerger<T> {
 	public SyncMerger(Class<T> mergedClass, StringKeyProvider<T> keyProvider) {
 		this.mergedClass = mergedClass;
 		this.keyProvider = keyProvider;
-		propertyAccessor = new PropertyPathAccessor();
+		accessor = new PropertyPathAccessor();
 	}
 
 	public SyncMapping define(String propertyName) {
@@ -299,18 +299,16 @@ public class SyncMerger<T> {
 			try {
 				newKo.setKeyProvider(keyProvider);
 				if (action == SyncPairAction.CREATE_LEFT) {
-					T newInstance = (T) Domain
-							.resolveEntityClass(
-									pair.getRight().getObject().getClass())
-							.newInstance();
+					T newInstance = (T) Reflections
+							.newInstance(Domain.resolveEntityClass(
+									pair.getRight().getObject().getClass()));
 					newInstance = postCreateInstance(newInstance, true);
 					newKo.setObject(newInstance);
 					pair.setLeft(newKo);
 				} else {
-					T newInstance = (T) Domain
-							.resolveEntityClass(
-									pair.getLeft().getObject().getClass())
-							.newInstance();
+					T newInstance = (T) Reflections
+							.newInstance(Domain.resolveEntityClass(
+									pair.getLeft().getObject().getClass()));
 					newInstance = postCreateInstance(newInstance, false);
 					newKo.setObject(newInstance);
 					pair.setRight(newKo);
@@ -379,22 +377,17 @@ public class SyncMerger<T> {
 		}
 
 		public void merge(Object left, Object right) {
-			Object leftProp = propertyAccessor.getPropertyValue(left,
-					propertyName);
-			Object rightProp = propertyAccessor.getPropertyValue(right,
-					propertyName);
+			Object leftProp = accessor.getPropertyValue(left, propertyName);
+			Object rightProp = accessor.getPropertyValue(right, propertyName);
 			if (filter.isCustom()) {
 				filter.mapCustom(left, right);
 			} else {
 				if (filter.allowLeftToRight(left, right, leftProp, rightProp)) {
-					propertyAccessor.setPropertyValue(right, propertyName,
-							leftProp);
-					rightProp = propertyAccessor.getPropertyValue(right,
-							propertyName);
+					accessor.setPropertyValue(right, propertyName, leftProp);
+					rightProp = accessor.getPropertyValue(right, propertyName);
 				}
 				if (filter.allowRightToLeft(left, right, leftProp, rightProp)) {
-					propertyAccessor.setPropertyValue(left, propertyName,
-							rightProp);
+					accessor.setPropertyValue(left, propertyName, rightProp);
 				}
 			}
 		}
@@ -438,9 +431,9 @@ public class SyncMerger<T> {
 				mergeWithoutLog(left, right);
 			} else {
 				// assume String prop at the moment
-				Object leftValue = propertyAccessor.getPropertyValue(left,
+				Object leftValue = accessor.getPropertyValue(left,
 						propertyName);
-				Object rightValue = propertyAccessor.getPropertyValue(right,
+				Object rightValue = accessor.getPropertyValue(right,
 						propertyName);
 				if (!Objects.equals(leftValue, rightValue)) {
 					String newStringValue = CommonUtils.last(items).getValue();
@@ -450,8 +443,11 @@ public class SyncMerger<T> {
 						// hijack TM
 						DomainTransformEvent event = new DomainTransformEvent();
 						event.setNewStringValue(newStringValue);
-						event.setValueClass(propertyAccessor.getPropertyType(
-								getMergedClass(), propertyName));
+						event.setValueClass(
+								accessor.getPropertyType(
+										Reflections.at(getMergedClass())
+												.templateInstance(),
+										propertyName));
 						try {
 							value = TransformManager.get()
 									.getTargetObject(event, false);
@@ -466,29 +462,22 @@ public class SyncMerger<T> {
 						mergeHistory.log();
 						history.add(mergeHistory);
 						maybeRegister(left, right);
-						propertyAccessor.setPropertyValue(left, propertyName,
-								value);
-						propertyAccessor.setPropertyValue(right, propertyName,
-								value);
+						accessor.setPropertyValue(left, propertyName, value);
+						accessor.setPropertyValue(right, propertyName, value);
 					}
 				}
 			}
 		}
 
 		public void mergeWithoutLog(Object left, Object right) {
-			Object leftProp = propertyAccessor.getPropertyValue(left,
-					propertyName);
-			Object rightProp = propertyAccessor.getPropertyValue(right,
-					propertyName);
+			Object leftProp = accessor.getPropertyValue(left, propertyName);
+			Object rightProp = accessor.getPropertyValue(right, propertyName);
 			if (filter.allowLeftToRight(left, right, leftProp, rightProp)) {
-				propertyAccessor.setPropertyValue(right, propertyName,
-						leftProp);
-				rightProp = propertyAccessor.getPropertyValue(right,
-						propertyName);
+				accessor.setPropertyValue(right, propertyName, leftProp);
+				rightProp = accessor.getPropertyValue(right, propertyName);
 			}
 			if (filter.allowRightToLeft(left, right, leftProp, rightProp)) {
-				propertyAccessor.setPropertyValue(left, propertyName,
-						rightProp);
+				accessor.setPropertyValue(left, propertyName, rightProp);
 			}
 		}
 

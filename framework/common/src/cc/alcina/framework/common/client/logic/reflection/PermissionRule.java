@@ -22,9 +22,8 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			ObjectPermissions objectPermissions = Reflections
-					.getAnnotationForClass(e.getClass(),
-							ObjectPermissions.class);
+			ObjectPermissions objectPermissions = Reflections.at(e.getClass())
+					.annotation(ObjectPermissions.class);
 			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.create()));
 			return e;
@@ -35,9 +34,8 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			ObjectPermissions objectPermissions = Reflections
-					.getAnnotationForClass(e.getClass(),
-							ObjectPermissions.class);
+			ObjectPermissions objectPermissions = Reflections.at(e.getClass())
+					.annotation(ObjectPermissions.class);
 			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.delete()));
 			return e;
@@ -67,9 +65,8 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			ObjectPermissions objectPermissions = Reflections
-					.getAnnotationForClass(e.getClass(),
-							ObjectPermissions.class);
+			ObjectPermissions objectPermissions = Reflections.at(e.getClass())
+					.annotation(ObjectPermissions.class);
 			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.read()));
 			return e;
@@ -80,9 +77,8 @@ public abstract class PermissionRule<E extends Entity> {
 			extends PermissionRule<E> {
 		@Override
 		public E checkPermission(E e) throws PermissionsException {
-			ObjectPermissions objectPermissions = Reflections
-					.getAnnotationForClass(e.getClass(),
-							ObjectPermissions.class);
+			ObjectPermissions objectPermissions = Reflections.at(e.getClass())
+					.annotation(ObjectPermissions.class);
 			throwIfFalse(PermissionsManager.get().isPermitted(e,
 					objectPermissions.write()));
 			return e;

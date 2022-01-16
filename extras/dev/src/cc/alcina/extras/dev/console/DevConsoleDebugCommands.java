@@ -64,6 +64,7 @@ import nl.bitwalker.useragentutils.Browser;
 import nl.bitwalker.useragentutils.RenderingEngine;
 import nl.bitwalker.useragentutils.UserAgent;
 
+@SuppressWarnings("deprecation")
 public class DevConsoleDebugCommands {
 	public static final String USER_AGENT = "User agent: ";
 

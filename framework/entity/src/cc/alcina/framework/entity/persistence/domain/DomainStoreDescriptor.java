@@ -62,9 +62,10 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		return domainSegmentLoader;
 	}
 
-	public boolean isUsesCommitSequencer(){
+	public boolean isUsesCommitSequencer() {
 		return true;
 	}
+
 	public abstract Class<? extends DomainTransformRequestPersistent>
 			getDomainTransformRequestPersistentClass();
 
@@ -275,6 +276,8 @@ root
 			}
 		}
 
+		@SuppressWarnings("unused")
+		// FIXME - 2023 - reimplement for jdk11 or remove
 		private static class ShallowObjectSizeCalculator {
 			private static long getPrimitiveFieldSize(final Class<?> type) {
 				if (type == boolean.class || type == byte.class) {
@@ -294,7 +297,6 @@ root
 								+ type.getName());
 			}
 			// private ObjectSizeCalculator objectSizeCalculator;
-
 
 			private Map<Class, Long> instanceSize = new LinkedHashMap<>();
 

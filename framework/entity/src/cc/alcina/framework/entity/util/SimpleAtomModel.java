@@ -106,7 +106,8 @@ public class SimpleAtomModel {
 				return;
 			}
 			try {
-				C cell = (C) cells.get(0).getClass().newInstance();
+				C cell = (C) cells.get(0).getClass().getDeclaredConstructor()
+						.newInstance();
 				cells.forEach(cell::accumulate);
 				rowTotal = cell;
 			} catch (Exception e) {
@@ -146,7 +147,8 @@ public class SimpleAtomModel {
 					return;
 				}
 				L first = lines.get(0);
-				this.totalLine = (L) first.getClass().newInstance();
+				this.totalLine = (L) first.getClass().getDeclaredConstructor()
+						.newInstance();
 				for (AtomCell cell : (List<AtomCell>) totalLine.cells) {
 					for (L line : lines) {
 						for (AtomCell cell2 : (List<AtomCell>) line.cells) {

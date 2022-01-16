@@ -17,7 +17,6 @@ import com.totsp.gwittir.client.beans.Method;
 import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.beans.SelfDescribed;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -38,14 +37,14 @@ public class JVMIntrospector implements Introspector {
 		String filterClassName = null;
 		// System
 		// .getProperty(ClientReflectorJvm.PROP_FILTER_CLASSNAME);
-		if (filterClassName != null) {
-			try {
-				filter = (Predicate<String>) Class.forName(filterClassName)
-						.getConstructor().newInstance();
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
+		// if (filterClassName != null) {
+		// try {
+		// filter = (Predicate<String>) Class.forName(filterClassName)
+		// .getConstructor().newInstance();
+		// } catch (Exception e) {
+		// throw new WrappedRuntimeException(e);
+		// }
+		// }
 	}
 
 	@Override

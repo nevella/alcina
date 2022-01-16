@@ -24,14 +24,14 @@ public class Annotations {
 								.getAnnotation(annotationClass);
 	}
 
-	public static <A extends Annotation> A resolve(Property reflector,
+	public static <A extends Annotation> A resolve(Property property,
 			Class<A> annotationClass) {
-		return resolve(reflector, annotationClass, null);
+		return resolve(property, annotationClass, null);
 	}
 
-	public static <A extends Annotation> A resolve(Property reflector,
+	public static <A extends Annotation> A resolve(Property property,
 			Class<A> annotationClass, AnnotationLocation.Resolver resolver) {
-		return new AnnotationLocation(reflector.getDefiningType(), reflector,
+		return new AnnotationLocation(property.getDefiningType(), property,
 				resolver).getAnnotation(annotationClass);
 	}
 }

@@ -179,7 +179,7 @@ public class PlaintextProtocolHandlerDtep1pt1 {
 	private DomainTransformEventPersistent fromString(String s) {
 		DomainTransformEventPersistent dte = null;
 		try {
-			dte = dtrEvtImpl.newInstance();
+			dte = dtrEvtImpl.getDeclaredConstructor().newInstance();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}

@@ -53,7 +53,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
  *
  * @author Nick Reddel
  * 
- * FIXME - reflection - prune
+ *         FIXME - reflection - prune
  */
 public class GwittirUtils {
 	public static void commitAllTextBoxes(Binding binding) {
@@ -171,9 +171,9 @@ public class GwittirUtils {
 
 	public static boolean isIntrospectable(Class clazz) {
 		while (clazz != null && clazz != Object.class) {
-			ClassReflector reflector = Reflections.at(clazz);
-			if (reflector.has(Introspectable.class)
-					|| reflector.has(Bean.class)) {
+			ClassReflector classReflector = Reflections.at(clazz);
+			if (classReflector.has(Introspectable.class)
+					|| classReflector.has(Bean.class)) {
 				return true;
 			}
 			clazz = clazz.getSuperclass();

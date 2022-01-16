@@ -13,6 +13,8 @@ import cc.alcina.framework.common.client.util.Ax;
 
 /*
  * Implementations (essentially extensible enums) require an @Ref annotation if serializable
+ * 
+ * FIXME - dirndl 1.3 - revisit
  */
 @Bean
 public abstract class Reference {
@@ -22,8 +24,7 @@ public abstract class Reference {
 	}
 
 	public static String id(Class<? extends Reference> refClass) {
-		return Reflections
-				.getAnnotationForClass(refClass, Ref.class).value();
+		return Reflections.at(refClass).annotation(Ref.class).value();
 	}
 
 	@RegistryLocation(registryPoint = Resolver.class, implementationType = ImplementationType.SINGLETON)
@@ -45,9 +46,9 @@ public abstract class Reference {
 			return (Class<? extends A>) cache.computeIfAbsent(clazz, c -> {
 				Map<String, Class<? extends Reference>> byId = new LinkedHashMap<>();
 				List<Class> classes = Registry.get().lookup(clazz);
-				for (Class refClass : classes) {
-					String refId = Reflections
-							.getAnnotationForClass(refClass, Ref.class).value();
+				for (Class<? extends Reference> refClass : classes) {
+					String refId = Reflections.at(refClass)
+							.annotation(Ref.class).value();
 					Class existing = byId.put(refId, refClass);
 					if (existing != null) {
 						throw Ax.runtimeException(

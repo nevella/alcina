@@ -1,0 +1,51 @@
+package cc.alcina.framework.gwt.client.gwittir;
+
+import java.util.ArrayList;
+import java.util.List;
+
+import cc.alcina.framework.common.client.actions.PermissibleAction;
+import cc.alcina.framework.common.client.actions.instances.CreateAction;
+import cc.alcina.framework.common.client.actions.instances.DeleteAction;
+import cc.alcina.framework.common.client.actions.instances.EditAction;
+import cc.alcina.framework.common.client.actions.instances.ViewAction;
+import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Action;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
+import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.CommonUtils;
+
+public class RenderedClass {
+	public static String getTypeDisplayName(Class<?> beanClass) {
+		String tn = Reflections.at(beanClass).annotation(Bean.class).display()
+				.name();
+		if (CommonUtils.isNullOrEmpty(tn)) {
+			tn = CommonUtils
+					.capitaliseFirst(CommonUtils.classSimpleName(beanClass));
+		}
+		return TextProvider.get().getUiObjectText(beanClass,
+				TextProvider.DISPLAY_NAME, tn);
+	}
+
+	public static List<Class<? extends PermissibleAction>>
+			getActions(Class<?> clazz, Object object) {
+		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
+		ObjectActions actions = Reflections.at(clazz).annotation(Bean.class)
+				.actions();
+		for (Action action : actions.value()) {
+			Class<? extends PermissibleAction> actionClass = action
+					.actionClass();
+			boolean noPermissionsCheck = actionClass == CreateAction.class
+					|| actionClass == EditAction.class
+					|| actionClass == ViewAction.class
+					|| actionClass == DeleteAction.class;
+			if (noPermissionsCheck || PermissionsManager.get().isPermitted(
+					object, new AnnotatedPermissible(action.permission()))) {
+				result.add(actionClass);
+			}
+		}
+		return result;
+	}
+}

@@ -89,8 +89,6 @@ public class JPAHibernateImpl implements JPAImplementation {
 
 	private boolean cacheDisabled;
 
-	private java.util.logging.Level level;
-
 	private PersistenSetProjectionCreator persistenSetProjectionCreator;
 
 	public JPAHibernateImpl() {
@@ -311,8 +309,6 @@ public class JPAHibernateImpl implements JPAImplementation {
 	public boolean isProxy(Entity entity) {
 		return entity instanceof HibernateProxy;
 	}
-
-	
 
 	@Override
 	public void setCacheDisabled(boolean cacheDisabled) {

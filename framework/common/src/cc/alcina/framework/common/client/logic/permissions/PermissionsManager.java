@@ -35,8 +35,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEx
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformListener;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.ClassLookup;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -46,6 +44,7 @@ import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermi
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StackDebug;
@@ -86,8 +85,8 @@ public class PermissionsManager implements DomainTransformListener {
 	private static PermissionsManager factoryInstance;
 
 	private static PermissionsExtension permissionsExtension;
-	
-	private static boolean enabled=true;
+
+	private static boolean enabled = true;
 
 	public static boolean isEnabled() {
 		return enabled;
@@ -166,9 +165,9 @@ public class PermissionsManager implements DomainTransformListener {
 		return developerGroupName;
 	}
 
-	public static ObjectPermissions getObjectPermissions(Class domainClass) {
-		ObjectPermissions objectPermissions = Reflections
-				.getAnnotationForClass(domainClass, ObjectPermissions.class);
+	public static ObjectPermissions getObjectPermissions(Class<?> domainClass) {
+		ObjectPermissions objectPermissions = Reflections.at(domainClass)
+				.annotation(ObjectPermissions.class);
 		return objectPermissions == null ? get().getDefaultObjectPermissions()
 				: objectPermissions;
 	}
@@ -365,11 +364,10 @@ public class PermissionsManager implements DomainTransformListener {
 	public boolean checkEffectivePropertyPermission(Object bean,
 			String propertyName, boolean read) {
 		Class<? extends Object> clazz = bean.getClass();
-		ObjectPermissions op = Reflections
-				.getAnnotationForClass(clazz, ObjectPermissions.class);
-		PropertyPermissions pp = Reflections.property()
-				.getAnnotationForProperty(clazz, PropertyPermissions.class,
-						propertyName);
+		ObjectPermissions op = Reflections.at(clazz)
+				.annotation(ObjectPermissions.class);
+		PropertyPermissions pp = Reflections.at(clazz).property(propertyName)
+				.annotation(PropertyPermissions.class);
 		return checkEffectivePropertyPermission(op, pp, bean, read);
 	}
 
@@ -390,17 +388,14 @@ public class PermissionsManager implements DomainTransformListener {
 		return isPermitted(bean, read ? pp.read() : pp.write());
 	}
 
-	public boolean checkReadable(Class clazz, String propertyName,
+	public boolean checkReadable(Class<?> clazz, String propertyName,
 			Object bean) {
-		ClassLookup classLookup = Reflections;
-		PropertyAccessor propertyAccessor = Reflections.property();
-		ObjectPermissions op = classLookup.getAnnotationForClass(clazz,
-				ObjectPermissions.class);
-		PropertyPermissions pp = propertyAccessor.getAnnotationForProperty(
-				clazz, PropertyPermissions.class, propertyName);
+		ClassReflector<?> reflector = Reflections.at(clazz);
+		ObjectPermissions op = reflector.annotation(ObjectPermissions.class);
+		PropertyPermissions pp = reflector.property(propertyName)
+				.annotation(PropertyPermissions.class);
 		return PermissionsManager.get().checkEffectivePropertyPermission(op, pp,
-				bean == null ? classLookup.getTemplateInstance(clazz) : bean,
-				true);
+				bean == null ? reflector.templateInstance() : bean, true);
 	}
 
 	@Override
@@ -625,8 +620,7 @@ public class PermissionsManager implements DomainTransformListener {
 			Permissible p, boolean permitted) {
 		Boolean b = null;
 		if (assigningTo != null) {
-			b = getPermissionsExtension().isPermitted(o, assigningTo,
-					p);
+			b = getPermissionsExtension().isPermitted(o, assigningTo, p);
 		} else {
 			b = getPermissionsExtension().isPermitted(o, p);
 		}
@@ -664,8 +658,8 @@ public class PermissionsManager implements DomainTransformListener {
 		if (object instanceof Permissible) {
 			return isPermitted((Permissible) object);
 		}
-		Permission permission = Reflections
-				.getAnnotationForClass(object.getClass(), Permission.class);
+		Permission permission = Reflections.at(object.getClass())
+				.annotation(Permission.class);
 		return isPermitted(permission != null ? permission : defaultPermission);
 	}
 

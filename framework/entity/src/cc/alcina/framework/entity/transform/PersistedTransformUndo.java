@@ -110,7 +110,8 @@ public class PersistedTransformUndo {
 					PropertyDescriptor pd = SEUtilities
 							.getPropertyDescriptorByName(evt.getObjectClass(),
 									evt.getPropertyName());
-					Object instance = evt.getObjectClass().newInstance();
+					Object instance = evt.getObjectClass()
+							.getDeclaredConstructor().newInstance();
 					Object value = pd.getReadMethod().invoke(instance,
 							new Object[0]);
 					dte.setNewValue(value);

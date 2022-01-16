@@ -36,7 +36,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -103,6 +103,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 		return this.searchPanel;
 	}
 
+	@Override
 	public Widget getViewForObject(Object obj) {
 		return getViewForObject(obj, "Search");
 	}
@@ -283,6 +284,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			return SearchViewProviderBase.this;
 		}
 
+		@Override
 		public void onClick(ClickEvent event) {
 			search();
 		}
@@ -291,11 +293,13 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			beanView.addStyleName("no-bottom");
 			resultsHolder.clear();
 			AsyncCallback completionCallback = new AsyncCallback() {
+				@Override
 				public void onFailure(Throwable caught) {
 					cleanup();
 					throw new WrappedRuntimeException(caught);
 				}
 
+				@Override
 				public void onSuccess(Object result) {
 					cleanup();
 				}
@@ -311,8 +315,8 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 			runningLabel.setVisible(true);
 			button.setEnabled(false);
 			SingleTableSearchDefinition def = action.getParameters();
-			Object bean = ClientReflector.get()
-					.getTemplateInstance(def.getResultClass());
+			Object bean = Reflections.at(def.getResultClass())
+					.templateInstance();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
 			GwittirBridge.get().setIgnoreProperties(ignoreProperties);
 			Field[] fields = null;
@@ -345,6 +349,7 @@ public abstract class SearchViewProviderBase implements ViewProvider {
 	}
 
 	public static class SearchViewProvider extends SearchViewProviderBase {
+		@Override
 		protected SearchDataProvider createSearchDataProvider(
 				AsyncCallback completionCallback,
 				SingleTableSearchDefinition def) {

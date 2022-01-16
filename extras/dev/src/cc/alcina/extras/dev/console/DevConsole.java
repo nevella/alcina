@@ -2,8 +2,6 @@ package cc.alcina.extras.dev.console;
 
 import java.awt.Color;
 import java.awt.HeadlessException;
-import java.awt.Insets;
-import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.ClipboardOwner;
@@ -16,7 +14,6 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.io.StreamTokenizer;
 import java.io.StringReader;
-import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashMap;
@@ -26,23 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
-import java.util.Timer;
-import java.util.TimerTask;
 import java.util.stream.Collectors;
-
-import javax.swing.JOptionPane;
-import javax.swing.JTextPane;
-import javax.swing.JViewport;
-import javax.swing.SwingUtilities;
-import javax.swing.text.AttributeSet;
-import javax.swing.text.BadLocationException;
-import javax.swing.text.Element;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
-import javax.swing.text.StyleContext;
-import javax.swing.text.StyledDocument;
-import javax.swing.text.TabSet;
-import javax.swing.text.TabStop;
 
 import org.apache.log4j.Logger;
 
@@ -50,7 +31,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
-import cc.alcina.extras.dev.console.DevHelper.StringPrompter;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -84,7 +64,6 @@ import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole;
 import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole.InitJaxbServices;
 import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole.InitLightweightServices;
 import cc.alcina.framework.entity.stat.StatCategory_Console.InitPostObjectServices;
-import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable.AlcinaChildContextRunner;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
@@ -513,7 +492,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				cmdHelp.run(new String[0]);
 				return;
 			}
-			final DevConsoleCommand c = template.getClass().newInstance();
+			final DevConsoleCommand c = template.getClass()
+					.getDeclaredConstructor().newInstance();
 			prepareCommand(c);
 			for (DevConsoleCommand c2 : runningJobs) {
 				if (c2.getClass() == c.getClass()) {
@@ -754,7 +734,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				filterLookup(lookup);
 				for (Class clazz : lookup) {
 					DevConsoleCommand cmd = (DevConsoleCommand) clazz
-							.newInstance();
+							.getDeclaredConstructor().newInstance();
 					if (cmd.getShellClass() != shells.peek()) {
 						continue;
 					}
@@ -886,7 +866,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			LooseContext.push();
 			PermissionsManager.get().pushUser(DevHelper.getDefaultUser(),
 					LoginState.LOGGED_IN);
-			
 			runningJobs.add(c);
 			history.addCommand(lastCommand);
 			if (!c.silent()) {
@@ -946,298 +925,11 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		NORMAL, OK, ERR, COMMAND
 	}
 
-	public static class JConsole extends JTextPane {
-		public static final int maxChars = 250000;
-
-		public boolean scrollToTopAtEnd;
-
-		private SimpleAttributeSet current = null;
-
-		private SimpleAttributeSet[] attrs;
-
-		private SimpleAttributeSet highlightRange;
-
-		private SimpleAttributeSet normalRange;
-
-		// @Override
-		// public boolean getScrollableTracksViewportWidth() {
-		// return false;
-		// }
-		//
-		// public Dimension getPreferredSize() {
-		// Dimension dim = super.getPreferredSize();
-		// return new Dimension(Integer.MAX_VALUE, dim.height);
-		// };
-		//
-		// public Dimension getMinimumSize() {
-		// Dimension dim = super.getMinimumSize();
-		// return new Dimension(Integer.MAX_VALUE, dim.height);
-		// };
-		Runnable appendRunnable = null;
-
-		List<Runnable> runnableBuffer = new ArrayList();
-
-		private Timer commitThread = new Timer();
-		{
-			commitThread.scheduleAtFixedRate(new TimerTask() {
-				@Override
-				public void run() {
-					commit();
-				}
-			}, 0, 20);
-		}
-
-		String lastText = null;
-
-		private int docIndex;
-
-		private Element lastHighlight;
-
-		private DevConsoleStyle currentStyle;
-
-		public JConsole() {
-			setCaretPosition(0);
-			setMargin(new Insets(5, 5, 5, 5));
-			initAttrs("Courier New");
-			setStyle(DevConsoleStyle.NORMAL);
-			setEditable(false);
-			TabStop[] tabs = new TabStop[8];
-			for (int i = 0; i < 8; i++) {
-				tabs[i] = new TabStop((i + 1) * 40, TabStop.ALIGN_LEFT,
-						TabStop.LEAD_NONE);
-			}
-			TabSet tabset = new TabSet(tabs);
-			StyleContext sc = StyleContext.getDefaultStyleContext();
-			AttributeSet aset = sc.addAttribute(SimpleAttributeSet.EMPTY,
-					StyleConstants.TabSet, tabset);
-			setParagraphAttributes(aset, false);
-		}
-
-		public void append(final String str) {
-			StyledDocument doc = getStyledDocument();
-			try {
-				if (doc.getLength() > maxChars) {
-					doc.remove(0, doc.getLength());
-					doc.insertString(doc.getLength(), "...truncated...\n",
-							current);
-				}
-				doc.insertString(doc.getLength(), str, current);
-				docIndex = 0;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-
-		public synchronized void commit() {
-			if (runnableBuffer.isEmpty()) {
-				return;
-			}
-			SwingUtilities.invokeLater(new RunnableGroup());
-		}
-
-		public void err(final String msg) {
-			err.append(msg);
-		}
-
-		public void find(final String text) {
-			SwingUtilities.invokeLater(new Runnable() {
-				@Override
-				public void run() {
-					find0(text);
-				}
-			});
-		}
-
-		public void initAttrs(String fontName) {
-			attrs = new SimpleAttributeSet[4];
-			for (int i = 0; i < 4; i++) {
-				attrs[i] = new SimpleAttributeSet();
-				StyleConstants.setFontFamily(attrs[i], fontName);
-				StyleConstants.setFontSize(attrs[i], 15);
-				if (i != 0) {
-					StyleConstants.setBold(attrs[i], true);
-				}
-			}
-			StyleConstants.setForeground(attrs[1], GREEN);
-			StyleConstants.setForeground(attrs[2], RED);
-			StyleConstants.setForeground(attrs[3], BLUE);
-			highlightRange = new SimpleAttributeSet();
-			normalRange = new SimpleAttributeSet();
-			StyleConstants.setBackground(highlightRange,
-					new Color(190, 210, 250));
-			// StyleConstants.setForeground(highlightRange, Color.PINK);
-			StyleConstants.setBackground(normalRange, Color.WHITE);
-		}
-
-		public void ok(final String msg) {
-			synchronized (this) {
-				invoke(() -> setStyle(DevConsoleStyle.OK));
-				invoke(() -> out.append(msg));
-				invoke(() -> setStyle(DevConsoleStyle.NORMAL));
-				invokeScrollRunnable();
-			}
-		}
-
-		public void setStyle(DevConsoleStyle style) {
-			this.currentStyle = style;
-			switch (style) {
-			case OK:
-				current = attrs[1];
-				break;
-			case ERR:
-				current = attrs[2];
-				break;
-			case COMMAND:
-				current = attrs[3];
-				break;
-			case NORMAL:
-				current = attrs[0];
-			}
-		}
-
-		private void invokeScrollRunnable() {
-			Runnable scrollRunnable = new Runnable() {
-				@Override
-				public void run() {
-					maybeScroll(this, true);
-				}
-			};
-			invoke(scrollRunnable);
-		}
-
-		protected void find0(String text) {
-			if (text == null) {
-				text = CommonUtils.nullToEmpty(lastText);
-			}
-			if (!text.equals(lastText)) {
-				docIndex = 0;
-			}
-			StyledDocument doc = getStyledDocument();
-			try {
-				int idx = doc.getText(0, doc.getLength()).indexOf(text,
-						docIndex);
-				if (idx == -1) {
-					System.out.println("not found");
-				} else {
-					if (lastHighlight != null) {
-						doc.setCharacterAttributes(idx, text.length(),
-								normalRange, false);
-					}
-					Rectangle rect = modelToView(idx);
-					lastHighlight = doc.getCharacterElement(idx);
-					doc.setCharacterAttributes(idx, text.length(),
-							highlightRange, false);
-					scrollRectToVisible(rect);
-					docIndex = idx + 1;
-				}
-				lastText = text;
-			} catch (BadLocationException e) {
-				e.printStackTrace();
-			}
-		}
-
-		protected synchronized void invoke(Runnable runnable) {
-			runnableBuffer.add(
-					AlcinaChildRunnable.wrapWithCurrentThreadContext(runnable));
-		}
-
-		protected synchronized void maybeScroll(Runnable runnable,
-				boolean atEnd) {
-			ScrollRunnable scrollRunnable = new ScrollRunnable();
-			if (atEnd) {
-				if (scrollToTopAtEnd) {
-					scrollRunnable.toTop = true;
-					scrollToTopAtEnd = false;
-				}
-			}
-			runnableBuffer.add(scrollRunnable);
-			for (Runnable bufferedRunnable : runnableBuffer) {
-				if (bufferedRunnable instanceof ScrollRunnable
-						&& scrollRunnable != bufferedRunnable) {
-					((ScrollRunnable) bufferedRunnable).cancelled = true;
-				}
-			}
-		}
-
-		private final class ScrollRunnable implements Runnable {
-			boolean cancelled = false;
-
-			boolean toTop = false;
-
-			@Override
-			public void run() {
-				if (cancelled) {
-					return;
-				}
-				JViewport pane = (JViewport) getParent().getParent();
-				pane.scrollRectToVisible(new Rectangle(0,
-						toTop ? -getHeight() + 12 : getHeight() - 12, 12, 12));
-			}
-		}
-
-		class RunnableGroup implements Runnable {
-			List<Runnable> buffer;
-
-			public RunnableGroup() {
-				buffer = new ArrayList<Runnable>(runnableBuffer);
-				runnableBuffer.clear();
-			}
-
-			@Override
-			public void run() {
-				for (Runnable r : buffer) {
-					r.run();
-				}
-			}
-		}
-	}
-
 	@RegistryLocation(registryPoint = LogMuter.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 	public static class LogMuter_DevConsole extends LogMuter {
 		@Override
 		public void muteAllLogging(boolean muteAll) {
 			instance.setConsoleOuputMuted(muteAll);
-		}
-	}
-
-	class ColouredWriter extends StringWriter {
-		private final JConsole console;
-
-		private final DevConsoleStyle style;
-
-		public ColouredWriter(DevConsoleStyle style, JConsole console) {
-			this.style = style;
-			this.console = console;
-		}
-
-		@Override
-		public void write(char[] cbuf, int off, int len) {
-			write(new String(cbuf, off, len));
-		}
-
-		@Override
-		public void write(String str) {
-			write(str, 0, str.length());
-		}
-
-		@Override
-		public void write(final String buf, int off, int len) {
-			DevConsoleStyle entryStyle = console.currentStyle;
-			if (style != DevConsoleStyle.NORMAL) {
-				console.invoke(() -> console.setStyle(style));
-			}
-			console.invoke(() -> console.append(buf));
-			if (style != DevConsoleStyle.NORMAL) {
-				console.invoke(() -> console.setStyle(entryStyle));
-			}
-			console.invokeScrollRunnable();
-		}
-	}
-
-	class SwingPrompter implements StringPrompter {
-		@Override
-		public String getValue(String prompt) {
-			return JOptionPane.showInputDialog(prompt);
 		}
 	}
 }

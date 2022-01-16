@@ -8,17 +8,19 @@ import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 
 public class PropertyFieldUpdater implements FieldUpdater {
-	private String propertyName;
-
 	private Field field;
 
-	public PropertyFieldUpdater(String editablePropertyName, Field field) {
-		this.propertyName = editablePropertyName;
+	private Property property;
+
+	public PropertyFieldUpdater(String propertyName, Field field, Class clazz) {
+		// FIXME - reflection.post-gwittir - use field.property
+		this.property = Reflections.at(clazz).property(propertyName);
 		this.field = field;
 	}
 
@@ -44,7 +46,6 @@ public class PropertyFieldUpdater implements FieldUpdater {
 						CommonUtils.nullSafeToString(value));
 			}
 		}
-		Reflections.property().setPropertyValue(entity, propertyName,
-				value);
+		property.set(entity, value);
 	}
 }

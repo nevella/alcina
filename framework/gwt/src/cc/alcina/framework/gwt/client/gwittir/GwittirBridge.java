@@ -42,8 +42,6 @@ import com.totsp.gwittir.client.validator.IntegerValidator;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.gwittir.validator.BooleanEnsureNonNullCoverter;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
@@ -74,12 +72,8 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.MultikeyMap;
-import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceValueCustomiser;
@@ -388,14 +382,14 @@ public class GwittirBridge {
 		AnnotationLocation clazzLocation = new AnnotationLocation(clazz, null,
 				resolver);
 		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
-		ClassReflector<?> reflector = Reflections.at(clazz);
+		ClassReflector<?> classReflector = Reflections.at(clazz);
 		ObjectPermissions op = clazzLocation
 				.getAnnotation(ObjectPermissions.class);
-		obj = obj != null ? obj : reflector.templateInstance();
+		obj = obj != null ? obj : classReflector.templateInstance();
 		Property property = Reflections.at(clazz).property(propertyName);
 		AnnotationLocation propertyLocation = new AnnotationLocation(clazz,
 				property, resolver);
-		Class type = reflector.property(propertyName).getType();
+		Class type = classReflector.property(propertyName).getType();
 		BoundWidgetProvider bwp = factory.getWidgetProvider(type);
 		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
 				: RelativePopupValidationFeedback.RIGHT;
@@ -666,14 +660,14 @@ public class GwittirBridge {
 		if (property != null && property.has(Display.class)) {
 			PropertyPermissions pp = property
 					.annotation(PropertyPermissions.class);
-			Display displayInfo = property.annotation(Display.class);
+			Display display = property.annotation(Display.class);
 			boolean fieldVisible = PermissionsManager.get()
 					.checkEffectivePropertyPermission(op, pp, templateInstance,
 							true)
-					&& displayInfo != null
+					&& display != null
 					&& PermissionsManager.get().isPermitted(templateInstance,
-							displayInfo.visible())
-					&& ((displayInfo.displayMask()
+							display.visible())
+					&& ((display.displayMask()
 							& Display.DISPLAY_AS_PROPERTY) != 0);
 			if (!fieldVisible) {
 				return false;
@@ -681,7 +675,7 @@ public class GwittirBridge {
 			boolean propertyIsCollection = (property.getType() == Set.class);
 			return PermissionsManager.get().checkEffectivePropertyPermission(op,
 					pp, templateInstance, false)
-					&& ((displayInfo.displayMask() & Display.DISPLAY_RO) == 0);
+					&& ((display.displayMask() & Display.DISPLAY_RO) == 0);
 		}
 		return false;
 	}
@@ -756,7 +750,7 @@ public class GwittirBridge {
 		}
 	}
 
-	static class FieldOrdering implements Comparator<Field> {
+	public static class FieldOrdering implements Comparator<Field> {
 		private final ClassReflector<?> classReflector;
 
 		private PropertyOrder propertyOrder;
@@ -800,26 +794,6 @@ public class GwittirBridge {
 			}
 			return RenderedProperty.displayName(p1)
 					.compareToIgnoreCase(RenderedProperty.displayName(p2));
-		}
-	}
-
-	static class RenderedProperty {
-		static int orderingHint(Property p) {
-			return p.has(Display.class)
-					? p.annotation(Display.class).orderingHint()
-					: 0;
-		}
-
-		static String displayName(Property p) {
-			String name = p.has(Display.class)
-					? p.annotation(Display.class).name()
-					: p.getName();
-			if (LooseContext.has(TextProvider.CONTEXT_NAME_TRANSLATOR)) {
-				name = ((Function<String, String>) LooseContext
-						.get(TextProvider.CONTEXT_NAME_TRANSLATOR))
-								.apply(p.getName());
-			}
-			return name;
 		}
 	}
 }

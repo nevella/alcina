@@ -50,7 +50,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSource;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationSupport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformException.DomainTransformExceptionType;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.MapObjectLookupClient;
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.StandaloneObjectStoreClient;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoManager;
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
@@ -467,7 +467,7 @@ public abstract class TransformManager
 				// TODO: notify server
 				return;
 			}
-			token.property().set(token.object, token.newTargetObject);
+			set(token.property(), token.object, token.newTargetObject);
 			if (event.getPropertyName()
 					.equals(TransformManager.ID_FIELD_NAME)) {
 				// FIXME - mvcc.adjunct (clienttransformmanager rework) - remove
@@ -490,7 +490,7 @@ public abstract class TransformManager
 			if (token.domainSerializablePropertyName != null
 					&& isIgnorePropertyChanges()) {
 				// wipe deserialized object (will force reconstitution)
-				token.domainSerializableProperty().set(token.object, null);
+				set(token.domainSerializableProperty(), token.object, null);
 			}
 			break;
 		// add and removeref will not cause a property change, so no transform
@@ -584,6 +584,10 @@ public abstract class TransformManager
 					+ token.transformType;
 		}
 		currentEvent = null;
+	}
+
+	protected void set(Property property, Entity object, Object value) {
+		property.set(object, value);
 	}
 
 	protected <E extends Entity> E newInstance(Class<E> entityClass, long id,
@@ -1404,7 +1408,7 @@ public abstract class TransformManager
 
 	public void registerDomainObjectsAsync(Collection<Entity> entities,
 			final AsyncCallback<Void> postRegisterCallback) {
-		((MapObjectLookupClient) getObjectStore()).registerAsync(entities,
+		((StandaloneObjectStoreClient) getObjectStore()).registerAsync(entities,
 				new ScheduledCommand() {
 					@Override
 					public void execute() {
@@ -1420,7 +1424,7 @@ public abstract class TransformManager
 		if (this.getObjectStore() != null) {
 			getObjectStore().removeListeners();
 		}
-		createObjectLookup();
+		createObjectStore();
 		getObjectStore().registerObjects(h.registerableDomainObjects());
 		ClassRef.add(h.getClassRefs());
 	}
@@ -1430,8 +1434,8 @@ public abstract class TransformManager
 		if (this.getObjectStore() != null) {
 			getObjectStore().removeListeners();
 		}
-		createObjectLookup();
-		((MapObjectLookupClient) getObjectStore()).registerAsync(
+		createObjectStore();
+		((StandaloneObjectStoreClient) getObjectStore()).registerAsync(
 				h.registerableDomainObjects(), new ScheduledCommand() {
 					@Override
 					public void execute() {
@@ -1458,7 +1462,7 @@ public abstract class TransformManager
 
 	public void registerModelObjectAsync(final DomainModelObject h,
 			final AsyncCallback<Void> postRegisterCallback) {
-		((MapObjectLookupClient) getObjectStore())
+		((StandaloneObjectStoreClient) getObjectStore())
 				.registerAsync(h.registrableObjects(), new ScheduledCommand() {
 					@Override
 					public void execute() {
@@ -1635,9 +1639,9 @@ public abstract class TransformManager
 			throws DomainTransformException {
 	}
 
-	protected void createObjectLookup() {
+	protected void createObjectStore() {
 		// FIXME - 2022 - to client tm
-		setObjectStore(new MapObjectLookupClient(this));
+		setObjectStore(new StandaloneObjectStoreClient(this));
 	}
 
 	// underlying set must be ordered
@@ -2063,8 +2067,6 @@ public abstract class TransformManager
 			}
 		}
 	}
-
-	
 
 	public static class RecordTransformListener
 			implements DomainTransformListener {

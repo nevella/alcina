@@ -26,7 +26,8 @@ public class DbUpdateRunner {
 						LocalDbPropertyBase.DB_UPDATE_VERSION);
 		List<DbUpdater> updaters = new ArrayList<DbUpdater>();
 		for (Class upd : updaterClasses) {
-			updaters.add((DbUpdater) upd.newInstance());
+			updaters.add(
+					(DbUpdater) upd.getDeclaredConstructor().newInstance());
 		}
 		Collections.sort(updaters);
 		Integer currentUpdateNumber = dbProperty.getPropertyValue() == null ? 0

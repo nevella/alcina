@@ -44,6 +44,7 @@ public class UniqueInLocalDomainValidator
 	public UniqueInLocalDomainValidator() {
 	}
 
+	@Override
 	public void setParameters(NamedParameter[] params) {
 		NamedParameter p = NamedParameter.Support.getParameter(params,
 				OBJECT_CLASS);
@@ -52,10 +53,12 @@ public class UniqueInLocalDomainValidator
 		this.propertyName = p.stringValue();
 	}
 
+	@Override
 	public void setSourceObject(Entity sourceObject) {
 		this.sourceObject = sourceObject;
 	}
 
+	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null) {
 			return value;
@@ -67,8 +70,8 @@ public class UniqueInLocalDomainValidator
 				continue;
 			}
 			if (!(value.equals(entity))
-					&& value.equals(Reflections.property()
-							.getPropertyValue(entity, propertyName))) {
+					&& value.equals(Reflections.at(entity.getClass())
+							.property(propertyName).get(entity))) {
 				throw new ValidationException("Value must be unique",
 						UniqueInLocalDomainValidator.class);
 			}

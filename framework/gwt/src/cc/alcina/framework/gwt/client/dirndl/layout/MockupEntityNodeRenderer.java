@@ -10,7 +10,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 public class MockupEntityNodeRenderer extends LeafNodeRenderer {
 	@Override
 	public Widget render(Node node) {
-		// TODO bind to the reflector;
 		Widget rendered = super.render(node);
 		rendered.getElement().setInnerText(Ax.format("[%s] :: %s",
 				node.model.getClass().getSimpleName(), node.model.toString()));

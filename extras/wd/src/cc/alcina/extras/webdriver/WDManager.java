@@ -67,7 +67,7 @@ public class WDManager {
 				writer.write(Ax.format("Pass <%s>", i + 1), 0);
 			}
 			WebdriverTest test = (WebdriverTest) Class.forName(cn)
-					.newInstance();
+					.getDeclaredConstructor().newInstance();
 			try {
 				LooseContext.push();
 				LooseContext.set(CONTEXT_TOKEN, token);

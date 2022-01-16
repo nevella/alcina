@@ -79,8 +79,8 @@ public @interface ModalDisplay {
 					location);
 			if (customResolution) {
 				RequireSpecified requireSpecified = Reflections
-						.getAnnotationForClass(location.classLocation,
-								RequireSpecified.class);
+						.at(location.classLocation)
+						.annotation(RequireSpecified.class);
 				ModalDisplay modalDisplay = super.resolveAnnotation(
 						ModalDisplay.class, location);
 				A modalResolution = null;

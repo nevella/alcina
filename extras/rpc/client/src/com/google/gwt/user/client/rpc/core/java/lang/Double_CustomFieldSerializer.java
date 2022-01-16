@@ -33,7 +33,7 @@ public final class Double_CustomFieldSerializer
 
 	public static Double instantiate(SerializationStreamReader streamReader)
 			throws SerializationException {
-		return new Double(streamReader.readDouble());
+		return Double.valueOf(streamReader.readDouble());
 	}
 
 	public static void serialize(SerializationStreamWriter streamWriter,

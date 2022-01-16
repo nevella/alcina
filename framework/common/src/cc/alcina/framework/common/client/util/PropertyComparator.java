@@ -15,7 +15,6 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
 
-import cc.alcina.framework.common.client.logic.domaintransform.spi.PropertyAccessor;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 /**
@@ -29,6 +28,7 @@ public class PropertyComparator implements Comparator {
 		this.propertyName = propertyName;
 	}
 
+	@Override
 	public int compare(Object o1, Object o2) {
 		if (o1 == null && o2 == null) {
 			return 0;
@@ -40,9 +40,10 @@ public class PropertyComparator implements Comparator {
 			return 1;
 		}
 		try {
-			PropertyAccessor propertyAccessor = Reflections.property();
-			Object pv1 = propertyAccessor.getPropertyValue(o1, propertyName);
-			Object pv2 = propertyAccessor.getPropertyValue(o2, propertyName);
+			Object pv1 = Reflections.at(o1.getClass()).property(propertyName)
+					.get(o1);
+			Object pv2 = Reflections.at(o2.getClass()).property(propertyName)
+					.get(o2);
 			return CommonUtils.compareWithNullMinusOne((Comparable) pv1,
 					(Comparable) pv2);
 		} catch (Exception e) {

@@ -32,7 +32,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		return new FsObjectCache<>(
 				DataFolderProvider.get().getChildFile(forClass.getName()), type,
 				p -> {
-					return type.newInstance();
+					return type.getDeclaredConstructor().newInstance();
 				});
 	}
 
@@ -233,7 +233,8 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 			try {
 				logger.debug("refreshing cache object - {} - {}",
 						clazz.getSimpleName(), path);
-				T value = pathToValue == null ? clazz.newInstance()
+				T value = pathToValue == null
+						? clazz.getDeclaredConstructor().newInstance()
 						: pathToValue.apply(path);
 				if (value != null) {
 					serializationStrategy.serializeToFile(value, cacheFile);

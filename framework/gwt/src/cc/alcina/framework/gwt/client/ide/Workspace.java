@@ -39,7 +39,6 @@ import cc.alcina.framework.common.client.logic.domain.HasOrderValue;
 import cc.alcina.framework.common.client.logic.domain.HasOrderValue.HasOrderValueHelper;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
@@ -155,12 +154,11 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 			PropertyCollectionProvider pcp = ((ProvidesParenting) node)
 					.getPropertyCollectionProvider();
 			if (pcp != null) {
-				ClientPropertyReflector property = pcp
-						.getPropertyReflector();
-				String propertyName = property
+				String associationPropertyName = pcp.getProperty()
 						.annotation(Association.class).propertyName();
-				Reflections.property().setPropertyValue(newObj,
-						propertyName, pcp.getDomainObject());
+				Reflections.at(newObj.getClass())
+						.property(associationPropertyName)
+						.set(newObj, pcp.getDomainObject());
 			}
 		}
 		handleHasOrderValue(node, newObj);
@@ -301,10 +299,7 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 							.getVisibleCollection();
 				}
 			} else {
-				ClientPropertyReflector reflector = pcp.getPropertyReflector();
-				String propertyName = reflector.getPropertyName();
-				Object obj = Reflections.property()
-						.getPropertyValue(pcp.getDomainObject(), propertyName);
+				Object obj = pcp.getProperty().get(pcp.getDomainObject());
 				if (obj instanceof Collection) {
 					siblings = (Collection) obj;
 				}

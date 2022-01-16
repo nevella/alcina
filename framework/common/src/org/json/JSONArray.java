@@ -153,7 +153,7 @@ public class JSONArray {
 			case ')':
 				if (q != c) {
 					throw x.syntaxError(
-							"Expected a '" + new Character(q) + "'");
+							"Expected a '" + Character.valueOf(q) + "'");
 				}
 				return;
 			default:
@@ -611,7 +611,7 @@ public class JSONArray {
 	 * @return this.
 	 */
 	public JSONArray put(double value) throws JSONException {
-		Double d = new Double(value);
+		Double d = Double.valueOf(value);
 		JSONObject.testValidity(d);
 		put(d);
 		return this;
@@ -678,7 +678,7 @@ public class JSONArray {
 	 *             If the index is negative or if the value is not finite.
 	 */
 	public JSONArray put(int index, double value) throws JSONException {
-		put(index, new Double(value));
+		put(index, Double.valueOf(value));
 		return this;
 	}
 
@@ -855,6 +855,7 @@ public class JSONArray {
 	 * @return a printable, displayable, transmittable representation of the
 	 *         array.
 	 */
+	@Override
 	public String toString() {
 		try {
 			return '[' + join(",") + ']';

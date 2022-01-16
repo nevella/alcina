@@ -34,6 +34,7 @@ public class ClassReflector<T> {
 	private Predicate<Class> assignableTo;
 
 	private final boolean primitive;
+
 	private final boolean reflective;
 
 	private boolean isAbstract;
@@ -50,7 +51,7 @@ public class ClassReflector<T> {
 	public <A extends Annotation> A annotation(Class<A> annotationClass) {
 		return annotationResolver.getAnnotation(annotationClass);
 	}
-	
+
 	public <A extends Annotation> boolean has(Class<A> annotationClass) {
 		return annotationResolver.hasAnnotation(annotationClass);
 	}
@@ -66,7 +67,8 @@ public class ClassReflector<T> {
 	public ClassReflector(Class<T> clazz, List<Property> properties,
 			Map<String, Property> byName,
 			ClassAnnotationResolver annotationResolver, Supplier<T> constructor,
-			Predicate<Class> assignableTo, boolean reflective, boolean isAbstract) {
+			Predicate<Class> assignableTo, List<Class> interfaces,
+			boolean reflective, boolean isAbstract) {
 		this.clazz = clazz;
 		this.properties = properties;
 		this.byName = byName;
@@ -75,13 +77,16 @@ public class ClassReflector<T> {
 		this.assignableTo = assignableTo;
 		this.reflective = reflective;
 		this.isAbstract = isAbstract;
+		this.interfaces = interfaces;
 		this.primitive = ClassReflector.primitives.contains(clazz);
 	}
 
 	private T templateInstance;
 
+	private final List<Class> interfaces;
+
 	// FIXME - reflection 1.1 - use optimised collections, probably remove the
-	// string/class maps (use 'isPrimitiveWrapper; isJdkValueClass' 
+	// string/class maps (use 'isPrimitiveWrapper; isJdkValueClass'
 	public static final Map<String, Class> stdClassMap = new HashMap<String, Class>();
 
 	public static final Map<String, Class> primitiveClassMap = new HashMap<String, Class>();
@@ -135,5 +140,9 @@ public class ClassReflector<T> {
 
 	public boolean isAbstract() {
 		return isAbstract;
+	}
+
+	public List<Class> getInterfaces() {
+		return interfaces;
 	}
 }

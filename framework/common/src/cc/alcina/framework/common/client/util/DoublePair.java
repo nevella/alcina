@@ -63,7 +63,7 @@ public class DoublePair implements Comparable<DoublePair> {
 
 	@Override
 	public int hashCode() {
-		return new Double(d1).hashCode() ^ new Double(d2).hashCode();
+		return Double.valueOf(d1).hashCode() ^ Double.valueOf(d2).hashCode();
 	}
 
 	public DoublePair intersection(DoublePair other) {

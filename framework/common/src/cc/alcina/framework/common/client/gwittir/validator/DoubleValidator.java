@@ -48,7 +48,7 @@ public class DoubleValidator implements Validator {
 		}
 		Double i;
 		try {
-			i = new Double(value.toString());
+			i = Double.valueOf(value.toString());
 		} catch (NumberFormatException nfe) {
 			DoubleValidator.LOG.log(Level.SPAM, null, nfe);
 			throw new ValidationException("Must be an decimal value.",

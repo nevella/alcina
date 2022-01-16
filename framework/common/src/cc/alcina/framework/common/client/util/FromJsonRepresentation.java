@@ -110,7 +110,8 @@ public interface FromJsonRepresentation {
 		public Object apply(Object value) {
 			try {
 				if (value != null) {
-					FromJsonRepresentation rep = clazz.newInstance();
+					FromJsonRepresentation rep = clazz.getDeclaredConstructor()
+							.newInstance();
 					rep.fromJson((JSONObject) value);
 					return rep;
 				} else {

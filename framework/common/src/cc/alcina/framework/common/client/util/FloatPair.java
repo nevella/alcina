@@ -55,7 +55,7 @@ public class FloatPair implements Comparable<FloatPair> {
 
 	@Override
 	public int hashCode() {
-		return new Float(f1).hashCode() ^ new Float(f2).hashCode();
+		return Float.valueOf(f1).hashCode() ^ Float.valueOf(f2).hashCode();
 	}
 
 	public FloatPair intersection(FloatPair other) {

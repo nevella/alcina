@@ -36,7 +36,8 @@ public class WriterAccessWriterAppender extends WriterAppender {
 	}
 
 	public void resetWriter() throws Exception {
-		Writer newWriter = writerAccess.getClass().newInstance();
+		Writer newWriter = writerAccess.getClass().getDeclaredConstructor()
+				.newInstance();
 		setWriter(newWriter);
 	}
 

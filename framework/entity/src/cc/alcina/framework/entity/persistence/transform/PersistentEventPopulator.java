@@ -91,7 +91,7 @@ class PersistentEventPopulator {
 			}
 			if (propagationEvent.getObjectId() == 0) {
 				propagationEvent
-						.setObjectId(tltm
+						.setObjectId(tltm.getObjectStore()
 								.getObject(propagationEvent.getObjectClass(), 0,
 										propagationEvent.getObjectLocalId())
 								.getId());
@@ -99,7 +99,7 @@ class PersistentEventPopulator {
 			if (propagationEvent.getValueId() == 0
 					&& propagationEvent.getValueLocalId() != 0) {
 				propagationEvent
-						.setValueId(tltm
+						.setValueId(tltm.getObjectStore()
 								.getObject(propagationEvent.getValueClass(), 0,
 										propagationEvent.getValueLocalId())
 								.getId());

@@ -180,10 +180,9 @@ public class ReflectiveSearchDefinitionSerializer
 		if (abbrevLookup.isEmpty()) {
 			List<Class> classes = Registry.get()
 					.lookup(SearchDefinitionSerializationInfo.class);
-			for (Class clazz : classes) {
-				SearchDefinitionSerializationInfo info = Reflections
-						.getAnnotationForClass(clazz,
-								SearchDefinitionSerializationInfo.class);
+			for (Class<?> clazz : classes) {
+				SearchDefinitionSerializationInfo info = Reflections.at(clazz)
+						.annotation(SearchDefinitionSerializationInfo.class);
 				if (info == null) {
 					continue;
 				}
@@ -251,7 +250,6 @@ public class ReflectiveSearchDefinitionSerializer
 
 	protected boolean
 			canFlatTreeSerialize(Class<? extends SearchDefinition> defClass) {
-		return Reflections.getAnnotationForClass(defClass,
-				TypeSerialization.class) != null;
+		return Reflections.at(defClass).has(TypeSerialization.class);
 	}
 }

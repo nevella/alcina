@@ -54,13 +54,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
+import cc.alcina.framework.gwt.client.gwittir.RenderedClass;
 import cc.alcina.framework.gwt.client.ide.node.ActionDisplayNode;
 import cc.alcina.framework.gwt.client.ide.node.CollectionProviderNode;
 import cc.alcina.framework.gwt.client.ide.node.ContainerNode;
@@ -294,7 +293,7 @@ public class WorkspaceView extends Composite implements HasName,
 										? EditAction.class
 										: ViewAction.class;
 				vetoableAction(new PermissibleActionEvent(evt.getSource(),
-						ClientReflector.get().newInstance(actionClass)));
+						Reflections.newInstance(actionClass)));
 			}
 		}
 
@@ -395,8 +394,8 @@ public class WorkspaceView extends Composite implements HasName,
 			}
 			// hack - do better when we rework this for dirndl
 			if (item == null) {
-				item = new DomainNode(Reflections
-						.newInstance(getDefaultEntityClass()));
+				item = new DomainNode(
+						Reflections.newInstance(getDefaultEntityClass()));
 			}
 			fireVetoableActionEvent(
 					new PermissibleActionEvent(item, evt.getAction()));
@@ -421,9 +420,7 @@ public class WorkspaceView extends Composite implements HasName,
 				SourcesPropertyChangeEvents userObject = dn.getUserObject();
 				obj = userObject;
 				domainClass = userObject.getClass();
-				ClientBeanReflector info = ClientReflector.get()
-						.beanInfoForClass(domainClass);
-				actions.addAll(info.getActions(userObject));
+				actions.addAll(RenderedClass.getActions(domainClass, null));
 			}
 			if (item == null) {
 				actions.addAll(getUnselectedActions());
@@ -436,10 +433,8 @@ public class WorkspaceView extends Composite implements HasName,
 				HasVisibleCollection hvc = (HasVisibleCollection) item;
 				domainClass = hvc.getCollectionMemberClass();
 				int size = hvc.getVisibleCollection().size();
-				ClientBeanReflector info = ClientReflector.get()
-						.beanInfoForClass(domainClass);
-				List<Class<? extends PermissibleAction>> availableActions = info
-						.getActions(null);
+				List<Class<? extends PermissibleAction>> availableActions = RenderedClass
+						.getActions(domainClass, null);
 				if (availableActions.contains(CreateAction.class)) {
 					actions.add(CreateAction.class);
 				}
@@ -612,7 +607,7 @@ public class WorkspaceView extends Composite implements HasName,
 						RenderContext.CONTEXT_IGNORE_AUTOFOCUS,
 						!(item.getUserObject() instanceof ForceAutofocus));
 				fireVetoableActionEvent(new PermissibleActionEvent(item,
-						ClientReflector.get().newInstance(ViewAction.class)));
+						Reflections.newInstance(ViewAction.class)));
 				RenderContext.get().pop();
 			}
 		}

@@ -48,7 +48,8 @@ public abstract class WebdriverTest {
 						try {
 							if (added.contains(c)) {
 							} else {
-								results.add(0, c.newInstance());
+								results.add(0, c.getDeclaredConstructor()
+										.newInstance());
 								added.add(c);
 							}
 						} catch (Exception e2) {
@@ -136,7 +137,8 @@ public abstract class WebdriverTest {
 			level++;
 			token.getWriter().write("Processing child tests - \n", level);
 			for (Class<? extends WebdriverTest> tc : childTests) {
-				WebdriverTest childTest = tc.newInstance();
+				WebdriverTest childTest = tc.getDeclaredConstructor()
+						.newInstance();
 				childTest.process(token, level, testResult);
 			}
 			level--;
@@ -250,7 +252,8 @@ public abstract class WebdriverTest {
 			List<Class> tests = Registry.get().lookup(WebdriverTest.class);
 			try {
 				for (Class<? extends WebdriverTest> c : tests) {
-					testTemplates.put(c, (WebdriverTest) c.newInstance());
+					testTemplates.put(c, (WebdriverTest) c
+							.getDeclaredConstructor().newInstance());
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e,

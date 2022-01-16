@@ -92,8 +92,8 @@ public class PropertyFilter<T> implements Predicate<T> {
 
 	@Override
 	public boolean test(T o) {
-		Object propertyValue = Reflections.property()
-				.getPropertyValue(o, tuple.propertyName);
+		Object propertyValue = Reflections.at(o.getClass())
+				.property(tuple.propertyName).get(o);
 		boolean match = matchesValue(propertyValue);
 		return match;
 	}

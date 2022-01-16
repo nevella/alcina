@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
-import cc.alcina.framework.common.client.logic.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.GraphNode;
 import cc.alcina.framework.common.client.util.Ax;
@@ -40,6 +40,7 @@ import elemental.json.JsonNumber;
 import elemental.json.JsonString;
 import elemental.json.JsonValue;
 
+@SuppressWarnings("deprecation")
 public class ReflectiveSerializers {
 	public static class ReflectiveTypeSerializer_Entity
 			extends ReflectiveSerializer.ReflectiveTypeSerializer {

@@ -6,13 +6,12 @@ import java.util.Map;
 import cc.alcina.framework.common.client.collections.PathAccessor;
 
 public class PropertyPathAccessor implements PathAccessor {
-	
-	private Map<String,PropertyPath> paths = new LinkedHashMap<>();
-	
-	private PropertyPath ensurePath(String path){
+	private Map<String, PropertyPath> paths = new LinkedHashMap<>();
+
+	private PropertyPath ensurePath(String path) {
 		return paths.computeIfAbsent(path, PropertyPath::new);
 	}
-	
+
 	@Override
 	public boolean hasPropertyKey(Object bean, String path) {
 		return ensurePath(path).hasPath(bean);
@@ -26,5 +25,9 @@ public class PropertyPathAccessor implements PathAccessor {
 	@Override
 	public void setPropertyValue(Object bean, String path, Object value) {
 		ensurePath(path).setChainedProperty(bean, value);
+	}
+
+	public Class getPropertyType(Object bean, String path) {
+		return ensurePath(path).getChainedPropertyType(bean);
 	}
 }

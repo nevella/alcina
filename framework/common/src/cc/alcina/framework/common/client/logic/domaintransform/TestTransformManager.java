@@ -12,7 +12,7 @@ public class TestTransformManager extends ClientTransformManager {
 	public List<DomainTransformEvent> transformInterceptList = null;
 
 	public TestTransformManager() {
-		createObjectLookup();
+		createObjectStore();
 	}
 
 	@Override
