@@ -30,24 +30,26 @@ class ClassReflectorProvider {
 		Map<String, Property> byName = properties.stream()
 				.collect(AlcinaCollectors.toKeyMap(Property::getName));
 		Supplier supplier = null;
-		try {
-			Constructor constructor = clazz.getConstructor();
-			supplier = () -> {
-				try {
-					return constructor.newInstance();
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			};
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+		boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
+		if (!isAbstract) {
+			try {
+				Constructor constructor = clazz.getConstructor();
+				supplier = () -> {
+					try {
+						return constructor.newInstance();
+					} catch (Exception e) {
+						throw new WrappedRuntimeException(e);
+					}
+				};
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 		}
 		Predicate<Class> assignableTo = c -> c.isAssignableFrom(clazz);
 		ClassAnnotationResolver annotationResolver = new ClassAnnotationResolver(
 				clazz);
 		ReflectiveAccess access = new ReflectiveAccess.DefaultValue();
 		boolean reflective = ReflectiveAccess.Support.has(access, Access.CLASS);
-		boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
 		List<Class> interfaces = Arrays.asList(clazz.getInterfaces());
 		return new ClassReflector(clazz, properties, byName, annotationResolver,
 				supplier, assignableTo, interfaces, reflective, isAbstract);
@@ -101,8 +103,10 @@ class ClassReflectorProvider {
 	}
 
 	private static Method createMethod(java.lang.reflect.Method reflectMethod) {
-		return new Method(reflectMethod, new MethodInvokerImpl(reflectMethod),
-				reflectMethod.getReturnType());
+		return reflectMethod == null ? null
+				: new Method(reflectMethod,
+						new MethodInvokerImpl(reflectMethod),
+						reflectMethod.getReturnType());
 	}
 
 	static class MethodInvokerImpl<T>

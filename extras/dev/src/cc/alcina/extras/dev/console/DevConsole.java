@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
@@ -73,6 +74,7 @@ import cc.alcina.framework.entity.util.ShellWrapper;
 import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
 /*
@@ -779,6 +781,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
 		Registry.registerSingleton(DevConsole.class, this);
 		long statStartInit = System.currentTimeMillis();
+		AppLifecycleServletBase.setupBootstrapJvmServices();
+		Reflections.init();
 		createDevHelper();
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());
 		devHelper.doParallelEarlyClassInit();

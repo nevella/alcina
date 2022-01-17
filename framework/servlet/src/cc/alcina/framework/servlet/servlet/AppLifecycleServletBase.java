@@ -211,6 +211,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
 		CollectionCreators.Bootstrap
 				.setConcurrentClassMapCreator(new ConcurrentMapCreatorJvm());
+		CollectionCreators.Bootstrap
+				.setConcurrentStringMapCreator(new ConcurrentMapCreatorJvm());
 	}
 
 	@Override
@@ -284,6 +286,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void initBootstrapRegistry() {
+		setupBootstrapJvmServices();
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());
 		Reflections.init();
