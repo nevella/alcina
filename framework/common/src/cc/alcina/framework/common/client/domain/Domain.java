@@ -114,7 +114,7 @@ public class Domain {
 		return first;
 	}
 
-	public static <V extends Entity> V find(Class clazz, long id) {
+	public static <V extends Entity> V find(Class<V> clazz, long id) {
 		return handler.find(clazz, id);
 	}
 

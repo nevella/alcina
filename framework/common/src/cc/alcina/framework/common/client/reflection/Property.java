@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.reflection;
 
 import java.lang.annotation.Annotation;
+import java.util.Objects;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -28,8 +29,11 @@ public class Property {
 		this.annotationResolver = annotationResolver;
 	}
 
-	public <A extends Annotation> boolean
-			has(Class<A> annotationClass) {
+	public boolean provideWriteableNonTransient() {
+		return !isReadOnly() && !name.equals("propertyChangeListeners");
+	}
+
+	public <A extends Annotation> boolean has(Class<A> annotationClass) {
 		return annotationResolver.hasAnnotation(annotationClass);
 	}
 
@@ -70,7 +74,7 @@ public class Property {
 	public boolean isReadOnly() {
 		return setter == null;
 	}
-	
+
 	public boolean isReadable() {
 		return getter != null;
 	}
@@ -82,11 +86,20 @@ public class Property {
 	public boolean isWriteOnly() {
 		return getter == null;
 	}
+
 	public boolean isWriteable() {
 		return setter != null;
 	}
 
 	public void copy(Object from, Object to) {
-		set(to,get(from));
+		set(to, get(from));
+	}
+
+	public boolean isDefiningType(Class type) {
+		return type == definingType;
+	}
+
+	public boolean isPropertyName(String name) {
+		return Objects.equals(name, this.name);
 	}
 }

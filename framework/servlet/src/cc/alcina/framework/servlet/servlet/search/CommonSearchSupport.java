@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -56,7 +57,7 @@ public class CommonSearchSupport {
 			long objectId) {
 		try {
 			T t = null;
-			Class<?> clazz = Class.forName(className);
+			Class<T> clazz = Reflections.forName(className);
 			t = Domain.find(clazz, objectId);
 			List<T> list = new ArrayList<>();
 			list.add(t);

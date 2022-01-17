@@ -45,6 +45,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -285,6 +286,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	protected void initBootstrapRegistry() {
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());
+		Reflections.init();
 		Registry.registerSingleton(AlcinaWebappConfig.class, config);
 		Registry.registerSingleton(AppLifecycleServletBase.class, this);
 		Registry.registerSingleton(AppPersistenceBase.InitRegistrySupport.class,

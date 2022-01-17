@@ -9,11 +9,11 @@ public class ClientReflectorFactory {
 	private ClientReflectorFactory() {
 	}
 
-	public static ClientReflector create() {
+	public static ClientReflector2 create() {
 		if(!ReflectionConstants.useJvmIntrospector()){
 			GWT.log("Using generated reflector", null);
             System.out.println("Using generated reflector");
-			return GWT.create(ClientReflector.class);
+			return GWT.create(ClientReflector2.class);
 		} else {
 			GWT.log("Using jvm reflector", null);
 			System.out.println("Using jvm reflector");

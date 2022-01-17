@@ -7,7 +7,7 @@ package cc.alcina.framework.common.client.logic.reflection.jvm;
  * cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.DefaultResolver)
  */
 public class ClientReflectorJvm {
-//	extends ClientReflector {
+//	extends ClientReflector2 {
 //	public static final String CONTEXT_MODULE_NAME = ClientReflectorJvm.class
 //			+ ".CONTEXT_MODULE_NAME";
 //

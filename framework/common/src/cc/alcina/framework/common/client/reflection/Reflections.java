@@ -9,7 +9,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 /*
- * FIXME - reflection.js - clear existing cache entries if forName map contains incoming. 
+ * FIXME - reflection.js - clear existing cache entries if forName map contains
+ * incoming.
  */
 public class Reflections {
 	private static Reflections theInstance;
@@ -25,12 +26,11 @@ public class Reflections {
 				c -> ClassReflectorProvider.getClassReflector(clazz));
 	}
 
-
 	public static <T> Class<T> forName(String fqn) {
 		if (fqn == null) {
 			return null;
 		}
-		//FIXME - reflection - populate the forName map on init
+		// FIXME - reflection - populate the forName map on init
 		switch (fqn) {
 		case "boolean":
 			return (Class<T>) boolean.class;
@@ -71,15 +71,21 @@ public class Reflections {
 		return at(clazz).newInstance();
 	}
 
+	public static <T> T newInstance(String className) {
+		return (T) at(forName(className)).newInstance();
+	}
+
 	public static void setApplicationName(String applicationName) {
 		get().applicationName = applicationName;
 	}
 
 	private static Reflections get() {
-		if (theInstance == null) {
-			theInstance = new Reflections();
-		}
 		return theInstance;
+	}
+
+	public static void init() {
+		ForName.init();
+		theInstance = new Reflections();
 	}
 
 	private String applicationName = "app";

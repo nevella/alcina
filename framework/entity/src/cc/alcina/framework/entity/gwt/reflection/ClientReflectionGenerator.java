@@ -119,9 +119,9 @@ public class ClientReflectionGenerator extends Generator {
 
 	private String packageName = 
 			"FIXME";
-//			ClientReflector.class.getCanonicalName()
+//			ClientReflector2.class.getCanonicalName()
 //			.substring(0,
-//					ClientReflector.class.getCanonicalName().lastIndexOf("."));
+//					ClientReflector2.class.getCanonicalName().lastIndexOf("."));
 
 	private boolean debug = true;
 
@@ -148,7 +148,7 @@ public class ClientReflectionGenerator extends Generator {
 	public String generate(TreeLogger logger, GeneratorContext context,
 			String typeName) throws UnableToCompleteException {
 		filter = IntrospectorFilterHelper.getFilter(context);
-		// System.out.println("ClientReflector generation...");
+		// System.out.println("ClientReflector2 generation...");
 		long start = System.currentTimeMillis();
 		Map<Class, String> ann2impl = new HashMap<Class, String>();
 		Map<String, String> simpleNameCheck = new HashMap<String, String>();
@@ -160,7 +160,7 @@ public class ClientReflectionGenerator extends Generator {
 			if (intrType.isInterface() != null) {
 				throw new UnsupportedOperationException("TODO - registry");
 //				intrType = context.getTypeOracle()
-//						.getType(ClientReflector.class.getName());
+//						.getType(ClientReflector2.class.getName());
 			}
 			ReflectionModule module = intrType
 					.getAnnotation(ReflectionModule.class);
@@ -187,7 +187,7 @@ public class ClientReflectionGenerator extends Generator {
 			//FIXME - reflection
 //			crf.addImport(ClientBeanReflector.class.getName());
 //			crf.addImport(ClientPropertyReflector.class.getName());
-//			crf.addImport(ClientReflector.class.getName());
+//			crf.addImport(ClientReflector2.class.getName());
 			crf.addImport(RegistryLocation.class.getName());
 			ctLookup.clear();
 			visibleAnnotationClasses = new ArrayList<Class<? extends Annotation>>();

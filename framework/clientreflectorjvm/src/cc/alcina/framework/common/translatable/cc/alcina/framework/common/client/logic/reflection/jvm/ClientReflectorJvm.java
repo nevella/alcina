@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientBeanReflector;
 import cc.alcina.framework.common.client.logic.reflection.ClientPropertyReflector;
-import cc.alcina.framework.common.client.logic.reflection.ClientReflector;
+import cc.alcina.framework.common.client.logic.reflection.ClientReflector2;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.Property;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -29,7 +29,7 @@ import com.totsp.gwittir.client.beans.annotations.Omit;
  * hosted-mode version
  */
 @GwtScriptOnly
-public class ClientReflectorJvm extends ClientReflector {
+public class ClientReflectorJvm extends ClientReflector2 {
 	Map<Class, ClientBeanReflector> reflectors = new HashMap<Class, ClientBeanReflector>();
 
 	public ClientReflectorJvm() {

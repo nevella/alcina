@@ -41,7 +41,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 			.identity();
 
 	public static <KVP extends KeyValuePersistent> KVP byId(long id) {
-		return Domain.find(implementation(), id);
+		return (KVP) Domain.find((Class) implementation(), id);
 	}
 
 	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
