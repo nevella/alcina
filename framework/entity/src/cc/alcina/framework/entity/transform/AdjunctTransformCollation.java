@@ -123,8 +123,5 @@ public class AdjunctTransformCollation extends TransformCollation {
 		token.getRequest().removeTransform(event);
 	}
 
-	public <T extends Entity> Stream<T> modified(Class<T> clazz) {
-		return query(clazz).stream()
-				.<T> map(QueryResult::getEntity).filter(Objects::nonNull);
-	}
+	
 }
