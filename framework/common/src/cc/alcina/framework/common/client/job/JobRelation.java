@@ -48,6 +48,10 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 		propertyChangeSupport().firePropertyChange("type", old_type, type);
 	}
 
+	public boolean provideIsSequential() {
+		return type.isSequential();
+	}
+
 	@Override
 	public String toString() {
 		if (getFrom() == null || getTo() == null) {
@@ -71,6 +75,19 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 
 	@ClientInstantiable
 	public static enum JobRelationType {
-		PARENT_CHILD, SEQUENCE, RESUBMIT
+		PARENT_CHILD, SEQUENCE, RESUBMIT;
+
+		// sequential from POV of sequence resolution. Is there a better term?
+		boolean isSequential() {
+			switch (this) {
+			case PARENT_CHILD:
+			case SEQUENCE:
+				return true;
+			case RESUBMIT:
+				return false;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 }

@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.Job.ResourceRecord;
+import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
 import cc.alcina.framework.common.client.job.JobResult;
 import cc.alcina.framework.common.client.job.JobState;
@@ -56,6 +57,8 @@ import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -224,7 +227,7 @@ public class JobRegistry {
 
 	JobScheduler scheduler;
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+	static Logger logger = LoggerFactory.getLogger(JobRegistry.class);
 
 	JobExecutors jobExecutors;
 
@@ -233,8 +236,10 @@ public class JobRegistry {
 	private AtomicInteger extJobSystemIdCounter = new AtomicInteger();
 
 	Map<Job, ContextAwaiter> contextAwaiters = new ConcurrentHashMap<>();
+
 	public JobRegistry() {
 	}
+
 	public void init() {
 		TransformCommit.get()
 				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
@@ -744,7 +749,14 @@ public class JobRegistry {
 			Job job = PersistentImpl.create(Job.class);
 			job.setUser(PermissionsManager.get().getUser());
 			job.setState(initialState);
-			job.setTask(task);
+			try {
+				LooseContext.push();
+				AlcinaTransient.Support
+						.setTransienceContexts(TransienceContext.JOB);
+				job.setTask(task);
+			} finally {
+				LooseContext.pop();
+			}
 			job.setCreator(
 					EntityLayerObjects.get().getServerAsClientInstance());
 			if (runAt != null) {
@@ -758,7 +770,8 @@ public class JobRegistry {
 			 * To elaborate - but essentially a top-level job *must* have its
 			 * performer defined early if it's not a FUTURE
 			 */
-			if (initialState == JobState.PENDING && related == null) {
+			if (initialState == JobState.PENDING && (related == null
+					|| relationType == JobRelationType.RESUBMIT)) {
 				job.setPerformer(
 						EntityLayerObjects.get().getServerAsClientInstance());
 			}
@@ -832,6 +845,41 @@ public class JobRegistry {
 		public Builder withTask(Task task) {
 			this.task = task;
 			return this;
+		}
+
+		public void pruneCompletedResubmittedChildren() {
+			Preconditions.checkNotNull(lastCreated);
+			Job cursor = lastCreated.root();
+			List<Job> completed = new ArrayList<>();
+			while (cursor != null) {
+				cursor = cursor.getToRelations().stream().filter(
+						rel -> rel.getType() == JobRelationType.RESUBMIT)
+						.findFirst().map(JobRelation::getFrom).orElse(null);
+				if (cursor != null) {
+					cursor.provideChildren()
+							.filter(Job::provideIsCompletedNormally)
+							.forEach(completed::add);
+				}
+			}
+			while (true) {
+				Job hasEquivalentCompleted = lastCreated.root()
+						.provideChildren().sorted(EntityComparator.INSTANCE)
+						.filter(job -> completed.stream()
+								.anyMatch(job::provideEquivalentTask))
+						.findFirst().orElse(null);
+				if (hasEquivalentCompleted != null) {
+					Job equivalentCompleted = completed.stream().filter(
+							hasEquivalentCompleted::provideEquivalentTask)
+							.findFirst().get();
+					logger.info("pruneCompletedResubmittedChildren - "
+							+ "root {} - job {} - equivalent completed child: {}",
+							lastCreated.root(), hasEquivalentCompleted,
+							equivalentCompleted);
+					hasEquivalentCompleted.deleteEnsuringSequence();
+				} else {
+					break;
+				}
+			}
 		}
 	}
 
@@ -938,14 +986,13 @@ public class JobRegistry {
 							.map(exp -> 1 << exp).filter(i -> i == seconds)
 							.findFirst();
 					if (log.isPresent()) {
-						JobRegistry.get().logger.warn(
-								"Waiting for job ({} secs) {}", log.getAsInt(),
-								job);
+						JobRegistry.logger.warn("Waiting for job ({} secs) {}",
+								log.getAsInt(), job);
 					}
 				}
 				if (latch.getCount() > 0) {
-					JobRegistry.get().logger
-							.warn("Timed out waiting for job {}", job);
+					JobRegistry.logger.warn("Timed out waiting for job {}",
+							job);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();

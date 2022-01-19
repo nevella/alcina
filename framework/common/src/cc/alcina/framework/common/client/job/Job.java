@@ -235,38 +235,22 @@ public abstract class Job extends VersionableEntity<Job>
 	// Delete while ensuring job sequencing is still correct after deletion
 	public void deleteEnsuringSequence() {
 		Optional<? extends JobRelation> previousRelation = getToRelations()
-				.stream().filter(r -> r.getType() == JobRelationType.SEQUENCE)
-				.findFirst();
+				.stream().filter(JobRelation::provideIsSequential).findFirst();
 		Optional<? extends JobRelation> nextRelation = getFromRelations()
-				.stream().filter(r -> r.getType() == JobRelationType.SEQUENCE)
-				.findFirst();
+				.stream().filter(JobRelation::provideIsSequential).findFirst();
 		if (previousRelation.isPresent() && nextRelation.isPresent()) {
 			// If this job is in the middle of the chain,
 			// re-link it so ensure the sequence stays connected
 			Job previous = previousRelation.get().getFrom();
 			Job next = nextRelation.get().getTo();
-			// Remove old relations
-			Ax.out("Deleting previous relation: %s", previousRelation.get());
-			// FIXME - this relation _really_ should be taken out of this set on
-			// delete
-			previous.getFromRelations().remove(previousRelation.get());
-			previousRelation.get().delete();
-			Ax.out("Deleting next relation: %s", nextRelation.get());
-			// FIXME - see above
-			next.getToRelations().remove(nextRelation.get());
-			nextRelation.get().delete();
+			// delete before creating new relation (required for validation)
+			JobRelationType type = previousRelation.get().getType();
+			delete();
 			// Create new relation
-			previous.createRelation(next, JobRelationType.SEQUENCE);
-		} else if (previousRelation.isPresent()) {
-			// If only a previous relation exists,
-			// made sure that is deleted at least
-			Job previous = previousRelation.get().getFrom();
-			// FIXME - see above
-			previous.getFromRelations().remove(previousRelation.get());
-			previousRelation.get().delete();
+			previous.createRelation(next, type);
+		} else {
+			delete();
 		}
-		// Delete this job
-		delete();
 	}
 
 	public ProcessState ensureProcessState() {
@@ -397,6 +381,11 @@ public abstract class Job extends VersionableEntity<Job>
 
 	public String getTaskClassName() {
 		return this.taskClassName;
+	}
+
+	public boolean provideEquivalentTask(Job other) {
+		return CommonUtils.equals(getTaskClassName(), other.getTaskClassName(),
+				getTaskSerialized(), other.getTaskSerialized());
 	}
 
 	@Lob

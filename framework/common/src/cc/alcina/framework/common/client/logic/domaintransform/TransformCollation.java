@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.QueryResult;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -371,5 +372,9 @@ public class TransformCollation {
 			TransformCollation.this.removeTransformsFromRequest(this);
 		}
 
+	}
+	public <T extends Entity> Stream<T> modified(Class<T> clazz) {
+		return query(clazz).stream()
+				.<T> map(QueryResult::getEntity).filter(Objects::nonNull);
 	}
 }

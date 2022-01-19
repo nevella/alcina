@@ -148,8 +148,7 @@ public class UserStories {
 					if (line.isEmpty()) {
 						continue;
 					}
-					Object deser = TransformManager.Serializer.get()
-							.deserialize(line);
+					Object deser = TransformManager.deserialize(line);
 					if (deser instanceof List) {
 						list.addAll((List) deser);
 					} else {

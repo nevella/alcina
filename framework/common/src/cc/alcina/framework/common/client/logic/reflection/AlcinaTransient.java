@@ -6,6 +6,13 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
+import java.util.List;
+
+import com.google.common.base.Preconditions;
+
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
+import cc.alcina.framework.common.client.util.LooseContext;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
@@ -13,9 +20,66 @@ import java.lang.annotation.Target;
 @Target({ ElementType.METHOD })
 @ClientVisible
 public @interface AlcinaTransient {
-	TransientType value() default TransientType.ALL;
+	// empty implies 'transient in all contexts' - non empty restricts
+	// transience to the selected contexts
+	TransienceContext[] value() default {};
 
-	public enum TransientType {
-		ALL, CLIENT
+	public enum TransienceContext {
+		ALL, CLIENT, RPC, JOB, SERVER
+	}
+
+	public static class Support {
+		private static final String CONTEXT_TRANSIENCE_CONTEXTS = AlcinaTransient.Support.class
+				.getName() + ".CONTEXT_TRANSIENCE_CONTEXTS";
+
+		public static void
+				setTransienceContexts(TransienceContext... contexts) {
+			if (contexts == null) {
+				LooseContext.remove(CONTEXT_TRANSIENCE_CONTEXTS);
+			} else {
+				LooseContext.set(CONTEXT_TRANSIENCE_CONTEXTS, contexts);
+			}
+		}
+
+		public static TransienceContext[] getTransienceContexts() {
+			TransienceContext[] types = LooseContext
+					.get(CONTEXT_TRANSIENCE_CONTEXTS);
+			if (types == null) {
+				types = new TransienceContext[0];
+			}
+			return types;
+		}
+
+		public static TransienceContext[] getTransienceContextsNoDefault() {
+			TransienceContext[] types = LooseContext
+					.get(CONTEXT_TRANSIENCE_CONTEXTS);
+			return types;
+		}
+
+		public static boolean isTransient(AlcinaTransient annotation,
+				TransienceContext... types) {
+			if (annotation == null) {
+				return false;
+			}
+			List<TransienceContext> list = Arrays.asList(annotation.value());
+			if (list.isEmpty()) {
+				return true;
+			}
+			return types != null
+					&& Arrays.stream(types).anyMatch(list::contains);
+		}
+
+		public static boolean isContextTransient(AlcinaTransient annotation) {
+			return isTransient(annotation, getTransienceContexts());
+		}
+
+		public static void checkNoTrasienceContexts() {
+			Preconditions
+					.checkState(!LooseContext.has(CONTEXT_TRANSIENCE_CONTEXTS));
+		}
+
+		public static void clearTransienceContext() {
+			setTransienceContexts((TransienceContext[]) null);
+		}
 	}
 }

@@ -9,10 +9,12 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
@@ -233,13 +235,9 @@ public class BoundSelector extends AbstractBoundWidget
 			} else {
 				Collections.sort(c, comparator);
 			}
-			for (Object o : c) {
-				addItem(o);
-			}
+			addItems(c);
 		} else {
-			if (value != null) {
-				addItem(value);
-			}
+			addItems(Collections.singleton(value));
 		}
 		if (!((Collection) search.getItemMap().values()).isEmpty()
 				&& ((List) search.getItemMap().values().iterator().next())
@@ -268,12 +266,16 @@ public class BoundSelector extends AbstractBoundWidget
 		initWidget(container);
 	}
 
-	protected void addItem(Object item) {
-		if (item == null) {
+	protected void addItems(Collection<?> items) {
+		items = items.stream().filter(Objects::nonNull)
+				.collect(Collectors.toList());
+		if (items.isEmpty()) {
 			return;
 		}
-		if (search.getSelectedItems().add(item)) {
-			((List) results.getItemMap().get("")).add(item);
+		boolean delta = search.getSelectedItems().addAll(items);
+		if (delta) {
+			((List) results.getItemMap().get(""))
+					.addAll(search.getSelectedItems());
 			results.setItemMap(results.getItemMap());
 			search.getFilter().saveLastText();
 			search.getFilter().clear();
@@ -335,7 +337,7 @@ public class BoundSelector extends AbstractBoundWidget
 			removeItem(search.getSelectedItems().iterator().next());
 		}
 		Set old = new HashSet(search.getSelectedItems());
-		addItem(item);
+		addItems(Collections.singleton(item));
 		update(old);
 	}
 

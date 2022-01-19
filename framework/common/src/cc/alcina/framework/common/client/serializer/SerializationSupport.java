@@ -1,17 +1,15 @@
 package cc.alcina.framework.common.client.serializer;
 
-import java.util.Arrays;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.totsp.gwittir.client.beans.BeanDescriptor;
-
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
@@ -20,14 +18,23 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 
 class SerializationSupport {
-	private static Map<Class, List<Property>> serializationProperties = Registry
+	private Map<Class, List<Property>> serializationProperties = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
-	private static Map<Class, Map<String, Property>> serializationReflectors = Registry
+	private Map<Class, Map<String, Property>> serializationPropertiesByName = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
 	private static Map<Class, Class> solePossibleImplementation = Registry
 			.impl(ConcurrentMapCreator.class).create();
+
+	private SerializationSupport() {
+	}
+
+	static SerializationSupport serializationInstance() {
+		SerializationSupport support = new SerializationSupport();
+		support.types = AlcinaTransient.Support.getTransienceContexts();
+		return support;
+	}
 
 	public static final Comparator<Property> PROPERTY_COMPARATOR = new Comparator<Property>() {
 		@Override
@@ -53,9 +60,8 @@ class SerializationSupport {
 		}
 	};
 
-	public static Property getPropertyReflector(Class<?> clazz,
-			String propertyName) {
-		Map<String, Property> map = serializationReflectors
+	public Property getPropertyReflector(Class<?> clazz, String propertyName) {
+		Map<String, Property> map = serializationPropertiesByName
 				.computeIfAbsent(clazz, c -> {
 					return getProperties0(c).stream()
 							.collect(Collectors.toMap(Property::getName,
@@ -85,7 +91,13 @@ class SerializationSupport {
 		});
 	}
 
-	private static List<Property> getProperties0(Class<?> forClass) {
+	// Optimisation: share support for all deserializers - they don't use
+	// context transience.
+	static SerializationSupport deserializationInstance = new SerializationSupport();
+
+	private TransienceContext[] types;
+
+	private List<Property> getProperties0(Class forClass) {
 		Class clazz = Domain.resolveEntityClass(forClass);
 		return serializationProperties.computeIfAbsent(clazz, valueClass -> {
 			ClassReflector<?> classReflector = Reflections.at(valueClass);
@@ -98,9 +110,13 @@ class SerializationSupport {
 							return false;
 						}
 						String name = property.getName();
-						if (Annotations.has(valueClass, name,
-								AlcinaTransient.class)) {
-							return false;
+						AlcinaTransient alcinaTransient = Annotations.resolve(
+								valueClass, name, AlcinaTransient.class);
+						if (alcinaTransient != null) {
+							if (AlcinaTransient.Support
+									.isTransient(alcinaTransient, types)) {
+								return false;
+							}
 						}
 						PropertySerialization propertySerialization = getPropertySerialization(
 								valueClass, name);
@@ -113,7 +129,7 @@ class SerializationSupport {
 		});
 	}
 
-	static List<Property> getProperties(Object value) {
+	List<Property> getProperties(Object value) {
 		return getProperties0(value.getClass());
 	}
 

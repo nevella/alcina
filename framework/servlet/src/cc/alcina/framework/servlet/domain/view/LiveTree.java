@@ -31,7 +31,10 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Walker;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -70,7 +73,7 @@ public class LiveTree {
 
 	private List<ChangeListener> changeListeners = new ArrayList<>();
 
-	 DomainView rootEntity;
+	DomainView rootEntity;
 
 	private NodeGenerator<? extends DomainView, ?> rootGenerator;
 
@@ -167,7 +170,8 @@ public class LiveTree {
 			// first phase of two (remove, then add)
 			newGeneratorContext();
 		}
-		indexers.forEach(g -> g.indexTransformPersistenceEvent(event,
+		indexers.forEach(g -> g.indexChanges(
+				event.getTransformPersistenceToken().getTransformCollation(),
 				generatorContext, add));
 		if (add) {
 			processEntityChanges(event);
@@ -485,7 +489,7 @@ public class LiveTree {
 								"resultNodeMaxSize"));
 				while (deque.size() > 0 && result.size() < resultNodeMaxSize) {
 					LiveNode liveNode = deque.removeFirst();
-					if(liveNode==null){
+					if (liveNode == null) {
 						continue;
 					}
 					Transform transform = new Transform();
@@ -898,13 +902,16 @@ public class LiveTree {
 			return new NodeAnnotator();
 		}
 
-		default void indexTransformPersistenceEvent(
-				DomainTransformPersistenceEvent event,
+		default void indexChanges(TransformCollation transformCollation,
 				GeneratorContext generatorContext, boolean add) {
 		}
 
 		default TransformFilter
 				transformFilter(DomainViewSearchDefinition def) {
+			throw new UnsupportedOperationException();
+		}
+
+		default void invalidate(GeneratorContext generatorContext, Entity e) {
 			throw new UnsupportedOperationException();
 		}
 	}
@@ -1004,7 +1011,29 @@ public class LiveTree {
 		}
 	}
 
-	 boolean containsEntity(Entity e) {
+	boolean containsEntity(Entity e) {
 		return entityNodes.containsKey(e);
+	}
+
+	public void invalidatePath(TreePath path) {
+		LiveNode liveNode = root.ensurePath(path.toString()).getValue();
+		newGeneratorContext();
+		generatorContext.collateChildren=liveNode;
+		liveNode.generateNode();
+//		Entity entity = liveNode.getViewNode().getEntity();
+//		
+//		DomainTransformEvent event = new DomainTransformEvent();
+//		event.setObjectId(entity.getId());
+//		event.setObjectClass(entity.entityClass());
+//		event.setTransformType(TransformType.CHANGE_PROPERTY_SIMPLE_VALUE);
+//		event.setPropertyName("id");
+//		event.setNewStringValue(String.valueOf(entity.getId()));
+//		// faux event, forcing a reindex
+//		TransformCollation collation = new TransformCollation(
+//				Collections.singletonList(event));
+//		indexers.forEach(
+//				g -> g.indexChanges(collation, generatorContext, false));
+//		indexers.forEach(
+//				g -> g.indexChanges(collation, generatorContext, true));
 	}
 }

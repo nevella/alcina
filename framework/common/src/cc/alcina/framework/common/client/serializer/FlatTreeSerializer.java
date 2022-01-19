@@ -30,6 +30,8 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.Serializer;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
@@ -163,6 +165,8 @@ public class FlatTreeSerializer {
 				clazz = Reflections.forName(state.keyValues.get(CLASS));
 			}
 			state.keyValues.remove(CLASS);
+			state.serializationSupport = SerializationSupport.deserializationInstance;
+			AlcinaTransient.Support.checkNoTrasienceContexts();
 			T instance = Reflections.newInstance(clazz);
 			String mappedKeysValue = instance.treeSerializationCustomiser()
 					.mapKeys(value, false);
@@ -205,6 +209,8 @@ public class FlatTreeSerializer {
 			state.serializerOptions = options;
 			Node node = new Node(null, object,
 					Reflections.at(object.getClass()).templateInstance());
+			state.serializationSupport = SerializationSupport
+					.serializationInstance();
 			state.pending.add(node);
 			FlatTreeSerializer serializer = new FlatTreeSerializer(state);
 			serializer.serialize();
@@ -221,8 +227,12 @@ public class FlatTreeSerializer {
 		if (options.testSerialized) {
 			DeserializerOptions deserializerOptions = new DeserializerOptions()
 					.withShortPaths(options.shortPaths);
+			TransienceContext[] transienceContext = AlcinaTransient.Support
+					.getTransienceContextsNoDefault();
+			AlcinaTransient.Support.clearTransienceContext();
 			TreeSerializable checkObject = deserialize(object.getClass(),
 					serialized, deserializerOptions);
+			AlcinaTransient.Support.setTransienceContexts(transienceContext);
 			SerializerOptions checkOptions = new SerializerOptions()
 					.withElideDefaults(options.elideDefaults)
 					.withShortPaths(options.shortPaths)
@@ -535,7 +545,7 @@ public class FlatTreeSerializer {
 								property = segmentMap.get("");
 							}
 						} else {
-							property = SerializationSupport
+							property = state.serializationSupport
 									.getProperties(cursor.value).stream()
 									.filter(p -> p.getName()
 											.equals(segmentPath))
@@ -725,7 +735,7 @@ public class FlatTreeSerializer {
 		Map<String, Property> map = new LinkedHashMap<>();
 		return deSerializationClassAliasProperty
 				.computeIfAbsent(cursor.value.getClass(), clazz -> {
-					SerializationSupport.getProperties(cursor.value)
+					state.serializationSupport.getProperties(cursor.value)
 							.forEach(p -> addWithUniquenessCheck(map,
 									keyMapper.apply(p), p, cursor));
 					return map;
@@ -812,34 +822,42 @@ public class FlatTreeSerializer {
 					state.pending.add(childNode);
 				});
 			} else if (value instanceof TreeSerializable) {
-				SerializationSupport.getProperties(value).forEach(property -> {
-					Object childValue = getValue(cursor, property, value);
-					Object defaultValue = cursor.defaultValue == null ? null
-							: getValue(cursor, property, cursor.defaultValue);
-					if (defaultValue == null && childValue != null
-							&& childValue instanceof TreeSerializable) {
-						defaultValue = Reflections
-								.newInstance(childValue.getClass());
-					}
-					Node childNode = new Node(cursor, childValue, defaultValue);
-					childNode.path.property = property;
-					childNode.path.setPropertySerialization(SerializationSupport
-							.getPropertySerialization(cursor.value.getClass(),
-									property.getName()));
-					if (childNode.path.ignoreForSerialization()) {
-						return;
-					}
-					checkReachableTestingTypes(childNode);
-					if (childNode.isMultipleTypes()
-							&& !childNode.isCollection()) {
-						/*
-						 * So as to write (required) typeinfo to the path
-						 */
-						childNode.path.index = counter
-								.getAndIncrement(childValue);
-					}
-					state.pending.add(childNode);
-				});
+				state.serializationSupport.getProperties(value)
+						.forEach(property -> {
+							Object childValue = getValue(cursor, property,
+									value);
+							Object defaultValue = cursor.defaultValue == null
+									? null
+									: getValue(cursor, property,
+											cursor.defaultValue);
+							if (defaultValue == null && childValue != null
+									&& childValue instanceof TreeSerializable) {
+								defaultValue = Reflections
+										.newInstance(childValue.getClass());
+							}
+							Node childNode = new Node(cursor, childValue,
+									defaultValue);
+							childNode.path.property = property;
+							childNode.path.setPropertySerialization(
+									SerializationSupport
+											.getPropertySerialization(
+													cursor.value.getClass(),
+													property.getName()));
+							if (childNode.path.ignoreForSerialization()) {
+								return;
+							}
+							checkReachableTestingTypes(childNode);
+							if (childNode.isMultipleTypes()
+									&& !childNode.isCollection()) {
+								/*
+								 * So as to write (required) typeinfo to the
+								 * path
+								 */
+								childNode.path.index = counter
+										.getAndIncrement(childValue);
+							}
+							state.pending.add(childNode);
+						});
 			} else {
 				// FIXME - remove check
 				isLeafValue(value);
@@ -1696,6 +1714,8 @@ public class FlatTreeSerializer {
 	}
 
 	static class State {
+		SerializationSupport serializationSupport;
+
 		public Class<? extends Object> rootClass;
 
 		public SerializerOptions serializerOptions;

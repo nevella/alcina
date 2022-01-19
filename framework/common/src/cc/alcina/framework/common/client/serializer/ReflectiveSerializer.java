@@ -20,6 +20,7 @@ import com.google.gwt.core.client.GWT;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -46,7 +47,7 @@ import elemental.json.JsonValue;
  * This class serializes possibly cyclic graphs to a javascript object. It
  * borrows extensively from Jackson, but also differs markedly: it supports
  * async (incremental) serialization/deserialization - by using a stack-based
- * serializtion structure instead of recursion, it is gwt-compatible, and it
+ * serialization structure instead of recursion, it is gwt-compatible, and it
  * uses different controlling annotations. Notional serialization algorithm is:
  * </p>
  * <ul>
@@ -99,6 +100,8 @@ public class ReflectiveSerializer {
 			}
 			JsonSerialNode.ensureValueSerializers();
 			State state = new State();
+			state.serializationSupport = SerializationSupport.deserializationInstance;
+			AlcinaTransient.Support.checkNoTrasienceContexts();
 			state.deserializerOptions = options;
 			// create json doc
 			GraphNode node = new GraphNode(null, null, null);
@@ -125,6 +128,8 @@ public class ReflectiveSerializer {
 		JsonSerialNode.ensureValueSerializers();
 		State state = new State();
 		state.serializerOptions = options;
+		state.serializationSupport = SerializationSupport
+				.serializationInstance();
 		GraphNode node = new GraphNode(null, null, null);
 		node.state = state;
 		node.setValue(object);
@@ -304,7 +309,7 @@ public class ReflectiveSerializer {
 
 		@Override
 		public Iterator<GraphNode> writeIterator(GraphNode node) {
-			Iterator<Property> iterator = SerializationSupport
+			Iterator<Property> iterator = node.state.serializationSupport
 					.getProperties(node.value).iterator();
 			Object templateInstance = Reflections.at(node.type)
 					.templateInstance();
@@ -847,5 +852,7 @@ public class ReflectiveSerializer {
 		public DeserializerOptions deserializerOptions;
 
 		Deque<GraphNode> pending = new LinkedList<>();
+
+		SerializationSupport serializationSupport;
 	}
 }

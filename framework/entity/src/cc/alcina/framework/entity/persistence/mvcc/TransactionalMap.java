@@ -8,6 +8,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
@@ -724,13 +725,25 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		V getAnyTransaction() {
-			ObjectWrapper baseObject = visibleAllTransactions;
-			if (isNotRemovedValueMarker(baseObject)) {
-				return (V) baseObject.get();
+			/*
+			 * synchronized: must block vacuum() calls
+			 */
+			synchronized (domainIdentity) {
+				ObjectWrapper baseObject = visibleAllTransactions;
+				if (isNotRemovedValueMarker(baseObject)) {
+					return (V) baseObject.get();
+				}
+				Optional<ObjectVersion<ObjectWrapper>> version = versions
+						.values().stream()
+						.filter(ov -> isNotRemovedValueMarker(ov.object))
+						.findFirst();
+				if (version.isEmpty()) {
+					throw new IllegalStateException(Ax.format(
+							"getAnyTransaction - no non-removed value (vacuum race?): %s",
+							key));
+				}
+				return (V) version.get().object.get();
 			}
-			return (V) versions.values().stream()
-					.filter(ov -> isNotRemovedValueMarker(ov.object))
-					.findFirst().get().object.get();
 		}
 
 		boolean isNotRemovedValueMarker(ObjectWrapper o) {

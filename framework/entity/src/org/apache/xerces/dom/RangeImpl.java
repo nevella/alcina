@@ -17,6 +17,7 @@
 package org.apache.xerces.dom;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.WeakHashMap;
@@ -54,7 +55,8 @@ public class RangeImpl implements Range {
 		};
 	};
 
-	private static Map<Node, IndexLookup> indexLookup = new WeakHashMap<>();
+	private static Map<Node, IndexLookup> indexLookup = Collections
+			.synchronizedMap(new WeakHashMap<>());
 
 	//
 	// Constants

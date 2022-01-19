@@ -56,7 +56,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.undo.NullUndoMana
 import cc.alcina.framework.common.client.logic.domaintransform.undo.TransformHistoryManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransientType;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
@@ -139,6 +138,10 @@ public abstract class TransformManager
 		event.setUtcDate(new Date());
 		event.setEventId(nextEventIdCounter());
 		return event;
+	}
+
+	public static <V> V deserialize(String serialized) {
+		return Serializer.get().deserialize(serialized);
 	}
 
 	public static String fromEnumValueCollection(Collection objects) {
@@ -1775,17 +1778,21 @@ public abstract class TransformManager
 		return false;
 	}
 
-	protected boolean ignorePropertyForObjectsToDtes(Class<?> objectType,
-			Class<?> propertyType, String propertyName) {
+	protected boolean ignorePropertyForObjectsToDtes(Class objectType,
+			Class propertyType, String propertyName) {
+		// FIXME - 2022 - fix AlcinaTransient usage; check 'propertyType ==
+		// Class.class'
 		return ignorePropertiesForCaching.contains(propertyName)
 				|| propertyType == Class.class
 				|| !PermissionsManager.get().checkReadable(objectType,
 						propertyName, null)
 				|| (Reflections.at(objectType).property(propertyName)
 						.has(AlcinaTransient.class)
-						&& Reflections.at(objectType).property(propertyName)
-								.annotation(AlcinaTransient.class)
-								.value() == TransientType.ALL);
+						&& AlcinaTransient.Support.isTransient(
+								Reflections.at(objectType)
+										.property(propertyName)
+										.annotation(AlcinaTransient.class),
+								AlcinaTransient.TransienceContext.SERVER));
 	}
 
 	protected void initCollections() {

@@ -89,7 +89,8 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	@Override
 	public void performAction(RemoteAction action,
 			AsyncCallback<String> callback) {
-		throw new UnsupportedOperationException();
+		call("performAction", new Class[] { RemoteAction.class }, callback,
+				action);
 	}
 
 	@Override
