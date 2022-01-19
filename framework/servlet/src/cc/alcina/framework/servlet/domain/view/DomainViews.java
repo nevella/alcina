@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.domain.view;
 
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
@@ -277,13 +278,15 @@ public abstract class DomainViews {
 	void processEvent(ViewsTask task) {
 		switch (task.type) {
 		case MODEL_CHANGE:
+			pausedLatch.countDown();
+			Collection<LiveTree> liveTrees = trees.values();
 			Transaction.end();
 			Transaction.join(task.modelChange.preCommit);
-			trees.values()
+			liveTrees
 					.forEach(tree -> tree.index(task.modelChange.event, false));
 			Transaction.end();
 			Transaction.join(task.modelChange.postCommit);
-			trees.values()
+			liveTrees
 					.forEach(tree -> tree.index(task.modelChange.event, true));
 			task.modelChange.event.getTransformPersistenceToken()
 					.getTransformCollation()
@@ -503,6 +506,16 @@ public abstract class DomainViews {
 			return;
 		} else {
 			throw task.handlerData.exception;
+		}
+	}
+
+	private CountDownLatch pausedLatch = new CountDownLatch(1);
+	public void pauseDomainViewTransforms(boolean pause) {
+		if(pause){
+			pausedLatch.countDown();
+			pausedLatch=new CountDownLatch(1);
+		}else{
+			pausedLatch.countDown();
 		}
 	}
 }
