@@ -15,7 +15,7 @@ import cc.alcina.framework.gwt.client.service.BeanDescriptorProvider;
  * hosted-mode version
  */
 @GwtScriptOnly
-public class JVMIntrospector implements Introspector, BeanDescriptorProvider {
+public class JVMIntrospector implements Introspector {
     @Override
     public BeanDescriptor getDescriptor(Object object) {
         

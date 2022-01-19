@@ -81,15 +81,17 @@ public class TransformHistory {
 	public <U extends IUser> U getCreationUser() {
 		DomainTransformEventView transformEvent = creationEvent();
 		return transformEvent == null ? null
-				: (U) Domain.find(PersistentImpl.getImplementation(
-						IUser.class), transformEvent.getUserId());
+				: (U) Domain.find(
+						(Class) PersistentImpl.getImplementation(IUser.class),
+						transformEvent.getUserId());
 	}
 
 	public <U extends IUser> U
 			getUser(DomainTransformEventView transformEvent) {
 		return transformEvent == null ? null
-				: (U) Domain.find(PersistentImpl.getImplementation(
-						IUser.class), transformEvent.getUserId());
+				: (U) Domain.find(
+						(Class) PersistentImpl.getImplementation(IUser.class),
+						transformEvent.getUserId());
 	}
 
 	private TransformHistory filter(Entity entity) {

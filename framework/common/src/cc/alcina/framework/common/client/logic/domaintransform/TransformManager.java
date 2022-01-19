@@ -1427,7 +1427,7 @@ public abstract class TransformManager
 		if (this.getObjectStore() != null) {
 			getObjectStore().removeListeners();
 		}
-		createObjectStore();
+		initObjectStore();
 		getObjectStore().registerObjects(h.registerableDomainObjects());
 		ClassRef.add(h.getClassRefs());
 	}
@@ -1437,7 +1437,7 @@ public abstract class TransformManager
 		if (this.getObjectStore() != null) {
 			getObjectStore().removeListeners();
 		}
-		createObjectStore();
+		initObjectStore();
 		((StandaloneObjectStoreClient) getObjectStore()).registerAsync(
 				h.registerableDomainObjects(), new ScheduledCommand() {
 					@Override
@@ -1642,7 +1642,7 @@ public abstract class TransformManager
 			throws DomainTransformException {
 	}
 
-	protected void createObjectStore() {
+	protected void initObjectStore() {
 		// FIXME - 2022 - to client tm
 		setObjectStore(new StandaloneObjectStoreClient(this));
 	}

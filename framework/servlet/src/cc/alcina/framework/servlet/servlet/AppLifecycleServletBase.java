@@ -77,6 +77,7 @@ import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.ConcurrentMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.HashMapCreatorJvm;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
@@ -206,13 +207,17 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		return this.startupTime;
 	}
 
-	public static void setupBootstrapJvmServices() {
+	public static void setupAppServerBootstrapJvmServices() {
 		Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+	}
+
+	public static void setupBootstrapJvmServices() {
 		Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
 		CollectionCreators.Bootstrap
 				.setConcurrentClassMapCreator(new ConcurrentMapCreatorJvm());
 		CollectionCreators.Bootstrap
 				.setConcurrentStringMapCreator(new ConcurrentMapCreatorJvm());
+		CollectionCreators.Bootstrap.setHashMapCreator(new HashMapCreatorJvm());
 	}
 
 	@Override
@@ -286,6 +291,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void initBootstrapRegistry() {
+		setupAppServerBootstrapJvmServices();
 		setupBootstrapJvmServices();
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());

@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.ApplyToken;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Association;
-import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -58,7 +57,7 @@ public class AssociationPropagationTransformListener
 			}
 		}
 		ApplyToken token = tm.createApplyToken(event);
-		Entity entity = token.object;
+		Entity<?> entity = token.object;
 		switch (token.transformType) {
 		case ADD_REF_TO_COLLECTION:
 		case REMOVE_REF_FROM_COLLECTION: {
@@ -91,10 +90,8 @@ public class AssociationPropagationTransformListener
 			break;
 		}
 		case DELETE_OBJECT: {
-			Reflections.<ClassReflector<?>> at(entity.entityClass())
-					.properties().stream()
-					.filter(p -> p.has(Association.class))
-					.forEach(property -> {
+			Reflections.at(entity.entityClass()).properties().stream()
+					.filter(p -> p.has(Association.class)).forEach(property -> {
 						Association association = property
 								.annotation(Association.class);
 						Object associated = property.get(entity);
@@ -139,9 +136,8 @@ public class AssociationPropagationTransformListener
 														entity);
 									} else {
 										// parent.children
-										associatedProperty
-												.set(
-														associatedEntity, null);
+										associatedProperty.set(associatedEntity,
+												null);
 									}
 								}
 							} else if (associated instanceof Entity) {
@@ -150,17 +146,15 @@ public class AssociationPropagationTransformListener
 										.get(associated);
 								if (associatedAssociationValue instanceof Set) {
 									// child.parent - optimised
-									tm.updateAssociation(
-											property.getName(), entity,
-											(Entity) associated, true);
+									tm.updateAssociation(property.getName(),
+											entity, (Entity) associated, true);
 									// ((Entity) associated).domain()
 									// .removeFromProperty(
 									// association.propertyName(),
 									// entity);
 								} else if (associated instanceof Entity) {
 									// one-one(!!)
-									associatedProperty
-											.set(associated, null);
+									associatedProperty.set(associated, null);
 								} else {
 									throw new UnsupportedOperationException();
 								}

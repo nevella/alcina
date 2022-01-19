@@ -21,6 +21,16 @@ public class CollectionCreators {
 	public static class Bootstrap {
 		private static ConcurrentMapCreator concurrentClassMapCreator = new ConcurrentMapCreator();
 
+		private static HashMapCreator hashMapCreator = new HashMapCreator();
+
+		public static HashMapCreator getHashMapCreator() {
+			return hashMapCreator;
+		}
+
+		public static void setHashMapCreator(HashMapCreator hashMapCreator) {
+			Bootstrap.hashMapCreator = hashMapCreator;
+		}
+
 		public static void setConcurrentClassMapCreator(
 				ConcurrentMapCreator concurrentClassMapCreator) {
 			CollectionCreators.Bootstrap.concurrentClassMapCreator = concurrentClassMapCreator;

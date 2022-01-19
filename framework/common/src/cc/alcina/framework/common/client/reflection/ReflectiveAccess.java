@@ -4,7 +4,8 @@ import java.lang.annotation.Annotation;
 import java.util.Arrays;
 
 public @interface ReflectiveAccess {
-	Access[] value() default Access.ALL;
+	Access[] value() default { Access.CLASS, Access.PROPERTIES,
+			Access.ANNOTATIONS };
 
 	public static class Support {
 		public static boolean has(ReflectiveAccess access, Access test) {
@@ -25,7 +26,7 @@ public @interface ReflectiveAccess {
 	}
 
 	public enum Access {
-		 CLASS, PROPERTIES, ANNOTATIONS;
+		CLASS, PROPERTIES, ANNOTATIONS;
 
 		public static final Access[] ALL = { CLASS, PROPERTIES, ANNOTATIONS };
 	}

@@ -12,11 +12,11 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 public class LooseContextInstance {
 	private static final String TOPIC_PROPERTY_NAME = LooseContextInstance.class
 			.getName() + ".Topics";
-	
 
 	public static StackDebug stackDebug = new StackDebug("LooseContext");
 
-	public Map<String, Object> properties = new HashMap<String, Object>();
+	public Map<String, Object> properties = CollectionCreators.Bootstrap
+			.getHashMapCreator().create();
 
 	private Multimap<TopicListener, List<String>> addedListeners = new Multimap<TopicPublisher.TopicListener, List<String>>();
 
@@ -114,10 +114,11 @@ public class LooseContextInstance {
 		stack.push(properties);
 		listenerStack.push(addedListeners);
 		addedListeners = new Multimap<TopicListener, List<String>>();
-		properties = new HashMap<String, Object>(properties);
+		properties = CollectionCreators.Bootstrap.getHashMapCreator()
+				.copy(properties);
 	}
 
-	/* 
+	/*
 	 * FIXME - 2022 - delete (only used by rendercontext)
 	 */
 	public void pushContext(LooseContextInstance renderContext) {
@@ -212,6 +213,5 @@ public class LooseContextInstance {
 
 	protected void allowUnbalancedFrameRemoval(Class clazz,
 			String pushMethodName) {
-		
 	}
 }

@@ -26,7 +26,7 @@ public class SubgraphTransformManager extends TransformManager {
 
 	public SubgraphTransformManager() {
 		super();
-		createObjectStore();
+		initObjectStore();
 	}
 
 	public DetachedEntityCache getDetachedEntityCache() {
@@ -38,7 +38,7 @@ public class SubgraphTransformManager extends TransformManager {
 	}
 
 	@Override
-	protected void createObjectStore() {
+	protected void initObjectStore() {
 		store = new DetachedCacheObjectStore(new DomainStoreEntityCache());
 		setObjectStore(store);
 	}

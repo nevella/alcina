@@ -31,7 +31,7 @@ class ClassReflectorProvider {
 				.collect(AlcinaCollectors.toKeyMap(Property::getName));
 		Supplier supplier = null;
 		boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
-		if (!isAbstract) {
+		if (!isAbstract && !clazz.isEnum()) {
 			try {
 				Constructor constructor = clazz.getConstructor();
 				supplier = () -> {

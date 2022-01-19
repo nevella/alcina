@@ -31,7 +31,10 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
  */
 public interface IGroup extends IVersionable, HasDisplayName.Settable {
 	public static IGroup byId(long id) {
-		return Domain.find(PersistentImpl.getImplementation(IGroup.class), id);
+		Class<? extends IGroup> implementation = PersistentImpl
+				.getImplementation(IGroup.class);
+		return (IGroup) Domain.find((Class<? extends Entity>) implementation,
+				id);
 	}
 
 	@Override

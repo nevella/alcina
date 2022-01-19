@@ -243,8 +243,8 @@ public class TransformCommit {
 						if (wrapperUser != null && wrapperUser
 								.getId() == deltaRecord.getUserId()) {
 						} else {
-							wrapperUser = Domain.find(
-									PersistentImpl
+							wrapperUser = (IUser) Domain.find(
+									(Class) PersistentImpl
 											.getImplementation(IUser.class),
 									deltaRecord.getUserId());
 							if (reuseIUserHolder != null) {
@@ -683,14 +683,15 @@ public class TransformCommit {
 					return result;
 				} else {
 					/*
-					 * perfectly plausible, if request [5, prior=[4]] arrives before request [4] - which depends on the network
+					 * perfectly plausible, if request [5, prior=[4]] arrives
+					 * before request [4] - which depends on the network
 					 */
 					DomainTransformLayerWrapper result = new DomainTransformLayerWrapper();
 					result.response = new DomainTransformResponse();
 					result.response.setResult(DomainTransformResponseResult.OK);
 					logger.info("Request {} - {} already processed",
-									request.toStringForError(),
-									request.getChunkUuidString());
+							request.toStringForError(),
+							request.getChunkUuidString());
 					return result;
 				}
 			}

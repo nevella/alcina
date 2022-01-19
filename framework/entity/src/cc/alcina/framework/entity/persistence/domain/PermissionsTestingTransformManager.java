@@ -14,7 +14,7 @@ public class PermissionsTestingTransformManager
 
 	public PermissionsTestingTransformManager() {
 		super();
-		createObjectStore();
+		initObjectStore();
 	}
 
 	@Override
@@ -30,7 +30,7 @@ public class PermissionsTestingTransformManager
 	}
 
 	@Override
-	protected void createObjectStore() {
+	protected void initObjectStore() {
 		store = new DetachedCacheObjectStore(new DetachedEntityCache());
 		store.setLazyObjectLoader(this);
 		setObjectStore(store);

@@ -237,6 +237,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 	private boolean applyingExternalTransforms;
 
 	public ThreadlocalTransformManager() {
+		initObjectStore();
 	}
 
 	@Override
@@ -334,7 +335,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	@Override
-	protected void createObjectStore() {
+	protected void initObjectStore() {
 		setObjectStore(new ObjectStoreImpl());
 	}
 
@@ -392,7 +393,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 		@Override
 		public <T extends Entity> T getObject(T bean) {
-			throw new UnsupportedOperationException();
+			return (T) getObject(bean.entityClass(), bean.getId(),
+					bean.getLocalId());
 		}
 
 		@Override
@@ -841,9 +843,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 					? change
 					: null);
 			ObjectPermissions oph = null;
-			AssignmentPermission aph = Reflections.at(objectClass)
-					.property(propertyName)
-					.annotation(AssignmentPermission.class);
+			AssignmentPermission aph = propertyName == null ? null
+					: Reflections.at(objectClass).property(propertyName)
+							.annotation(AssignmentPermission.class);
 			if (entityChange != null) {
 				oph = entityChange.entityClass()
 						.getAnnotation(ObjectPermissions.class);

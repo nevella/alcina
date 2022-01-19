@@ -918,7 +918,7 @@ public class SEUtilities {
 							propertyDescriptorLookup.get(clazz).values());
 					Multimap<Class, List<Field>> declaredFieldsByClass = new Multimap<>();
 					Class cursor = clazz;
-					while (cursor != Object.class) {
+					while (cursor != Object.class && cursor != null) {
 						declaredFieldsByClass.put(cursor,
 								Arrays.stream(cursor.getDeclaredFields())
 										.collect(Collectors.toList()));
