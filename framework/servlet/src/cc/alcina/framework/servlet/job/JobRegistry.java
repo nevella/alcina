@@ -69,6 +69,7 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -236,7 +237,7 @@ public class JobRegistry {
 	private AtomicInteger extJobSystemIdCounter = new AtomicInteger();
 
 	Map<Job, ContextAwaiter> contextAwaiters = new ConcurrentHashMap<>();
-
+	
 	public JobRegistry() {
 	}
 
@@ -959,8 +960,6 @@ public class JobRegistry {
 
 		public void await(long maxTime) {
 			try {
-				//FIXME - 2022 
-				maxTime = maxTime == 0 ? TimeConstants.ONE_MINUTE_MS : maxTime;
 				long start = System.currentTimeMillis();
 				// do as a loop (rather than a simple wait) to avoid
 				// synchronisation (no guarantee job.provideIsComplete is

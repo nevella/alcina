@@ -40,6 +40,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -81,6 +82,8 @@ public class JobScheduler {
 
 	private BlockingQueue<ScheduleEvent> events = new LinkedBlockingQueue<>();
 
+	public Topic<Void> eventOcurred = Topic.local();
+
 	private TopicListener<Event> queueEventListener = (k,
 			v) -> enqueueEvent(new ScheduleEvent(v));
 
@@ -107,6 +110,8 @@ public class JobScheduler {
 				fireWakeup();
 			}
 		}, untilNext5MinutesMillis, 5 * TimeConstants.ONE_MINUTE_MS);
+		TowardsAMoreDesirableSituation aMoreDesirableSituation = new TowardsAMoreDesirableSituation(this);
+		aMoreDesirableSituation.start();
 		MethodContext.instance().withWrappingTransaction()
 				.run(() -> enqueueEvent(
 						new ScheduleEvent(Type.APPLICATION_STARTUP)));
@@ -253,12 +258,16 @@ public class JobScheduler {
 			timer.cancel();
 			allocatorService.shutdown();
 			finished = true;
-		} else {
-			// A reasonable place to hook this up
-			TowardsAMoreDesirableSituation.get().tend();
+			return;
 		}
 		if (event.type == Type.ALLOCATION_EVENT) {
 			AllocationQueue queue = event.queueEvent.queue;
+			// FIXME - jobs - review exceptions. Were possibly due to (possibly
+			// blocking) TowardsAMoreDesirableSituation call
+			if (!Transaction.isInActiveTransaction()) {
+				Transaction.debugCurrentThreadTransaction();
+				Transaction.ensureBegun();
+			}
 			boolean canAllocate = SchedulingPermissions.canAllocate(queue);
 			if (canAllocate) {
 				switch (event.queueEvent.type) {
@@ -286,6 +295,7 @@ public class JobScheduler {
 				}
 			}
 		}
+		eventOcurred.publish(null);
 	}
 
 	private void refreshFutures(ScheduleEvent event) {

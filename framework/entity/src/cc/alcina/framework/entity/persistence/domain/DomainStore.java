@@ -1473,6 +1473,7 @@ public class DomainStore implements IDomainStore {
 					super.run();
 				} finally {
 					LooseContext.pop();
+					Transaction.setSupplier(null);
 				}
 			};
 		}

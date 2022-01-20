@@ -188,6 +188,12 @@ public class Transaction implements Comparable<Transaction> {
 		return provideCurrentThreadTransaction() != null;
 	}
 
+	public static boolean isInActiveTransaction() {
+		Transaction currentThreadTransaction = provideCurrentThreadTransaction();
+		return currentThreadTransaction != null
+				&& !currentThreadTransaction.getPhase().isComplete();
+	}
+
 	/*
 	 * Note that this means the same transaction graph is visible to multiple
 	 * threads. Either make the tx read-only or do all writes on the originating
@@ -657,5 +663,17 @@ public class Transaction implements Comparable<Transaction> {
 			NavigableSet<Transaction> otherCommittedTransactionsSet) {
 		return TransactionVersions.commonVisible(committedTransactions,
 				otherCommittedTransactionsSet);
+	}
+
+	/*
+	 * Called in locations a transaction *should* be active, but isn't
+	 */
+	public static void debugCurrentThreadTransaction() {
+		Transaction currentThreadTransaction = provideCurrentThreadTransaction();
+		if (currentThreadTransaction == null) {
+			logger.warn("DEVEX - 0 - no current thread transaction");
+		}else{
+			logger.warn("DEVEX - 0 - current thread transaction:\n{}",currentThreadTransaction.toDebugString());
+		}
 	}
 }
