@@ -260,6 +260,10 @@ public class LiveTree {
 					if (previous == null) {
 						break;
 					}
+					if(previous.getValue()==null){
+						//not in tree (but in paths)
+						continue;
+					}
 					Transform test = new Transform();
 					test.setNode(previous.getValue().getViewNode());
 					test.setTreePath(previous.toString());
