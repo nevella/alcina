@@ -751,7 +751,8 @@ public class JobRegistry {
 			job.setState(initialState);
 			try {
 				LooseContext.push();
-				AlcinaTransient.Support.setTransienceContexts(TransienceContext.JOB);
+				AlcinaTransient.Support
+						.setTransienceContexts(TransienceContext.JOB);
 				job.setTask(task);
 			} finally {
 				LooseContext.pop();
@@ -875,7 +876,7 @@ public class JobRegistry {
 							lastCreated.root(), hasEquivalentCompleted,
 							equivalentCompleted);
 					hasEquivalentCompleted.deleteEnsuringSequence();
-				}else{
+				} else {
 					break;
 				}
 			}
@@ -958,6 +959,8 @@ public class JobRegistry {
 
 		public void await(long maxTime) {
 			try {
+				//FIXME - 2022 
+				maxTime = maxTime == 0 ? TimeConstants.ONE_MINUTE_MS : maxTime;
 				long start = System.currentTimeMillis();
 				// do as a loop (rather than a simple wait) to avoid
 				// synchronisation (no guarantee job.provideIsComplete is
@@ -992,7 +995,7 @@ public class JobRegistry {
 				}
 				if (latch.getCount() > 0) {
 					JobRegistry.get().logger
-							.warn("Timed out waiting for job {}", job);
+							.warn("DEVEX - 0 - Timed out waiting for job {}", job);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
