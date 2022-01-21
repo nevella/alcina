@@ -960,6 +960,7 @@ public class JobRegistry {
 
 		public void await(long maxTime) {
 			try {
+				maxTime = maxTime == 0 ? TimeConstants.ONE_HOUR_MS : maxTime;
 				long start = System.currentTimeMillis();
 				// do as a loop (rather than a simple wait) to avoid
 				// synchronisation (no guarantee job.provideIsComplete is
