@@ -6,8 +6,11 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class ReflectiveRemoteServiceAsync {
@@ -17,7 +20,15 @@ public class ReflectiveRemoteServiceAsync {
 			ReflectiveRemoteServicePayload payload = new ReflectiveRemoteServicePayload(
 					getClass(), methodName, methodArgumentTypes,
 					methodArguments);
-			String serializedPayload = ReflectiveSerializer.serialize(payload);
+			String serializedPayload = null;
+			try {
+				LooseContext.push();
+				AlcinaTransient.Support
+						.setTransienceContexts(TransienceContext.RPC);
+				serializedPayload = ReflectiveSerializer.serialize(payload);
+			} finally {
+				LooseContext.pop();
+			}
 			// FIXME - 2021.refactor; FIXME - dirndl 1.1 shift to a different
 			// serializationstream
 			// (but using gwt-rpc infrastructure)

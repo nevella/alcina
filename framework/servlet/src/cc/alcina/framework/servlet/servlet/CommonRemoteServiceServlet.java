@@ -74,8 +74,10 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
 import cc.alcina.framework.common.client.logic.permissions.WebMethod;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -209,7 +211,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
 
-
 	@Override
 	public String callRpc(String encodedRpcPayload) {
 		try {
@@ -231,7 +232,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			try {
 				MetricLogging.get().start(key);
 				Object result = method.invoke(handler, methodArguments);
-				return ReflectiveSerializer.serialize(result);
+				try {
+					LooseContext.pushWithTrue(key);
+					AlcinaTransient.Support
+							.setTransienceContexts(TransienceContext.CLIENT,TransienceContext.RPC);
+					return ReflectiveSerializer.serialize(result);
+				} finally {
+					LooseContext.pop();
+				}
 			} finally {
 				MetricLogging.get().end(key);
 			}
@@ -428,14 +436,14 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			throws SerializationException {
 		RPCRequest rpcRequest = null;
 		boolean alcinaServletContextInitialised = false;
-		AlcinaServletContext alcinaServletContext=null;
+		AlcinaServletContext alcinaServletContext = null;
 		try {
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
 			String name = rpcRequest.getMethod().getName();
 			String threadName = Ax.format("gwt-rpc:%s:%s%s", name,
 					callCounter.incrementAndGet(), suffix);
-			alcinaServletContext=new AlcinaServletContext();
+			alcinaServletContext = new AlcinaServletContext();
 			alcinaServletContextInitialised = true;
 			alcinaServletContext.begin(getThreadLocalRequest(),
 					getThreadLocalResponse(), threadName);
