@@ -102,7 +102,6 @@ public class ReflectiveSerializer {
 			JsonSerialNode.ensureValueSerializers();
 			State state = new State();
 			state.serializationSupport = SerializationSupport.deserializationInstance;
-			AlcinaTransient.Support.checkNoTrasienceContexts();
 			state.deserializerOptions = options;
 			// create json doc
 			GraphNode node = new GraphNode(null, null, null);
