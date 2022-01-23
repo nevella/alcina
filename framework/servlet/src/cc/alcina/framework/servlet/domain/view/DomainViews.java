@@ -278,7 +278,15 @@ public abstract class DomainViews {
 	void processEvent(ViewsTask task) {
 		switch (task.type) {
 		case MODEL_CHANGE:
-			pausedLatch.countDown();
+			try {
+				pausedLatch.await();
+			} catch (InterruptedException e) {
+				//
+			}
+			logger.info(
+					"Processing domainviews request - {} - queue length: {}",
+					task.modelChange.event.getMaxPersistedRequestId(),
+					tasks.size());
 			Collection<LiveTree> liveTrees = trees.values();
 			Transaction.end();
 			Transaction.join(task.modelChange.preCommit);
@@ -286,8 +294,7 @@ public abstract class DomainViews {
 					.forEach(tree -> tree.index(task.modelChange.event, false));
 			Transaction.end();
 			Transaction.join(task.modelChange.postCommit);
-			liveTrees
-					.forEach(tree -> tree.index(task.modelChange.event, true));
+			liveTrees.forEach(tree -> tree.index(task.modelChange.event, true));
 			task.modelChange.event.getTransformPersistenceToken()
 					.getTransformCollation()
 					.query(PersistentImpl.getImplementation(DomainView.class))
@@ -510,11 +517,12 @@ public abstract class DomainViews {
 	}
 
 	private CountDownLatch pausedLatch = new CountDownLatch(1);
+
 	public void pauseDomainViewTransforms(boolean pause) {
-		if(pause){
+		if (pause) {
 			pausedLatch.countDown();
-			pausedLatch=new CountDownLatch(1);
-		}else{
+			pausedLatch = new CountDownLatch(1);
+		} else {
 			pausedLatch.countDown();
 		}
 	}
