@@ -278,11 +278,6 @@ public abstract class DomainViews {
 	void processEvent(ViewsTask task) {
 		switch (task.type) {
 		case MODEL_CHANGE:
-			try {
-				pausedLatch.await();
-			} catch (InterruptedException e) {
-				//
-			}
 			logger.info(
 					"Processing domainviews request - {} - queue length: {}",
 					task.modelChange.event.getMaxPersistedRequestId(),
@@ -516,14 +511,4 @@ public abstract class DomainViews {
 		}
 	}
 
-	private CountDownLatch pausedLatch = new CountDownLatch(1);
-
-	public void pauseDomainViewTransforms(boolean pause) {
-		if (pause) {
-			pausedLatch.countDown();
-			pausedLatch = new CountDownLatch(1);
-		} else {
-			pausedLatch.countDown();
-		}
-	}
 }
