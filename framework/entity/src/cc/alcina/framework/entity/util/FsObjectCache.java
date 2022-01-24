@@ -101,7 +101,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	@Override
 	public Optional<Long> lastModified(String path) {
-		return Optional.of(new File(path)).filter(File::exists)
+		return Optional.of(getCacheFile(path)).filter(File::exists)
 				.map(File::lastModified);
 	}
 
