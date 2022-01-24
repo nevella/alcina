@@ -13,8 +13,10 @@ import javax.ws.rs.ext.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.entity.persistence.transform.TransformCommit.ReuseIUserHolder;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
+import cc.alcina.framework.servlet.servlet.HttpContext;
 
 // Generic exception handler
 // Avoids sending exceptions to the client
@@ -26,25 +28,30 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
 	@Override
 	public Response toResponse(Exception e) {
 		try {
-			HttpServletRequest request = AlcinaServletContext
-					.httpContext().request;
-			String requestorIp = ServletLayerUtils
-					.robustGetRemoteAddress(request);
+			//will be null if failure occurs before entry filter (e.g. no path)
+			HttpContext httpContext = AlcinaServletContext
+					.httpContext();
+			String requestorIp = httpContext==null?"unknown":ServletLayerUtils
+					.robustGetRemoteAddress(httpContext.request);
 			// TODO: Do something better than an if chain
+			String requestURI = httpContext==null?"unknown":httpContext.request.getRequestURI();
 			if (e instanceof NotFoundException) {
 				LOGGER.warn("Unknown route {uri={}, ip={}}",
-						request.getRequestURI(), requestorIp);
+						requestURI, requestorIp);
+				if(httpContext==null){
+					e.printStackTrace();
+				}
 				// Invalid request URI
 				return Response.status(Status.NOT_FOUND).build();
 			} else if (e instanceof NotAllowedException
 					|| e instanceof NotSupportedException) {
 				LOGGER.warn("Bad request type/body {uri={}, ip={}}",
-						request.getRequestURI(), requestorIp);
+						requestURI, requestorIp);
 				// Invalid request type/body
 				return Response.status(Status.BAD_REQUEST).build();
 			} else {
 				LOGGER.warn("Exception handling route {uri={}, ip={}}",
-						request.getRequestURI(), requestorIp);
+						requestURI, requestorIp);
 				// Otherwise...
 				e.printStackTrace();
 				return Response.serverError().build();
