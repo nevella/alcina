@@ -73,10 +73,6 @@ public @interface AlcinaTransient {
 			return isTransient(annotation, getTransienceContexts());
 		}
 
-		public static void checkNoTrasienceContexts() {
-			Preconditions
-					.checkState(!LooseContext.has(CONTEXT_TRANSIENCE_CONTEXTS));
-		}
 
 		public static void clearTransienceContext() {
 			setTransienceContexts((TransienceContext[]) null);

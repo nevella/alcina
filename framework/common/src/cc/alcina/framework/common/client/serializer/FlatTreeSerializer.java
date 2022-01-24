@@ -166,7 +166,6 @@ public class FlatTreeSerializer {
 			}
 			state.keyValues.remove(CLASS);
 			state.serializationSupport = SerializationSupport.deserializationInstance;
-			AlcinaTransient.Support.checkNoTrasienceContexts();
 			T instance = Reflections.newInstance(clazz);
 			String mappedKeysValue = instance.treeSerializationCustomiser()
 					.mapKeys(value, false);

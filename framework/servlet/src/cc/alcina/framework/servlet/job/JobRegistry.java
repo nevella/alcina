@@ -959,6 +959,7 @@ public class JobRegistry {
 
 		public void await(long maxTime) {
 			try {
+				maxTime = maxTime == 0 ? TimeConstants.ONE_HOUR_MS : maxTime;
 				long start = System.currentTimeMillis();
 				// do as a loop (rather than a simple wait) to avoid
 				// synchronisation (no guarantee job.provideIsComplete is
@@ -991,8 +992,8 @@ public class JobRegistry {
 					}
 				}
 				if (latch.getCount() > 0) {
-					JobRegistry.logger.warn("Timed out waiting for job {}",
-							job);
+					JobRegistry.logger.warn(
+							"DEVEX - 0 - Timed out waiting for job {}", job);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();

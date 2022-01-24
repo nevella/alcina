@@ -3,6 +3,8 @@ package cc.alcina.framework.servlet.job;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,27 +12,30 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
-@RegistryLocation(registryPoint = TowardsAMoreDesirableSituation.class, implementationType = ImplementationType.SINGLETON)
 /*
  * FIXME - mvcc.cascade - add to listjobs report
  */
-public class TowardsAMoreDesirableSituation {
-	public static TowardsAMoreDesirableSituation get() {
-		return Registry.impl(TowardsAMoreDesirableSituation.class);
-	}
-
+class TowardsAMoreDesirableSituation {
 	private List<Job> activeJobs = new ArrayList<>();
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
-	public synchronized void tend() {
+	private JobScheduler scheduler;
+
+	public TowardsAMoreDesirableSituation(JobScheduler scheduler) {
+		this.scheduler = scheduler;
+	}
+
+	void tend() {
 		if (!ResourceUtilities.is("enabled")) {
 			return;
 		}
@@ -78,5 +83,70 @@ public class TowardsAMoreDesirableSituation {
 				break;
 			}
 		}
+	}
+
+	static class Event {
+		public Event(Type type) {
+			this.type = type;
+		}
+
+		Type type;
+	}
+
+	ProcessorThread thread;
+
+	boolean finished;
+
+	public class ProcessorThread extends Thread {
+		@Override
+		public void run() {
+			setName("Towards-a-more-queue-"
+					+ EntityLayerUtils.getLocalHostName());
+			while (!finished) {
+				try {
+					Event event = events.take();
+					if (event.type == Type.SHUTDOWN) {
+						finished = true;
+					} else {
+						Transaction.ensureBegun();
+						tend();
+					}
+				} catch (Throwable e) {
+					e.printStackTrace();
+				} finally {
+					try {
+						Transaction.ensureEnded();
+					} catch (Exception e) {
+						if (TransformManager.get() == null) {
+							// shutting down
+						} else {
+							// FIXME :: DEVEX.0
+							e.printStackTrace();
+						}
+					}
+				}
+			}
+		}
+	}
+
+	enum Type {
+		SCHEDULER_EVENT, SHUTDOWN;
+	}
+
+	private BlockingQueue<Event> events = new LinkedBlockingQueue<>();
+
+	void start() {
+		thread = new ProcessorThread();
+		thread.start();
+		scheduler.eventOcurred
+				.add((k, v) -> addSchedulerEvent());
+	}
+
+	private void addSchedulerEvent() {
+		events.add(new Event(Type.SCHEDULER_EVENT));
+	}
+
+	void stopService() {
+		events.add(new Event(Type.SHUTDOWN));
 	}
 }

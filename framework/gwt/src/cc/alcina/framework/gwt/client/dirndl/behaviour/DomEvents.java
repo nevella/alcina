@@ -4,6 +4,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.InputElement;
 import com.google.gwt.dom.client.LocalDom;
+import com.google.gwt.dom.client.TextAreaElement;
 import com.google.gwt.event.dom.client.ChangeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.InputEvent;
@@ -58,7 +59,7 @@ public class DomEvents {
 
 	public static class Input extends NodeEvent<Input.Handler> {
 		private boolean populated = false;
-		
+
 		private String value;
 
 		public String getValue() {
@@ -71,7 +72,12 @@ public class DomEvents {
 				populated = true;
 				EventTarget eventTarget = ((InputEvent) getContext().gwtEvent)
 						.getNativeEvent().getEventTarget();
-				value=((InputElement) Element.as(eventTarget)).getValue();
+				Element element = Element.as(eventTarget);
+				if (element.getTagName().equals("input")) {
+					value = ((InputElement) element).getValue();
+				} else {
+					value = ((TextAreaElement) element).getValue();
+				}
 			}
 			handler.onInput(this);
 		}
