@@ -21,13 +21,12 @@ package com.totsp.gwittir.client.ui.table;
 
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.beans.Introspector;
-import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 /**
@@ -49,11 +48,8 @@ public abstract class AbstractTableWidget<T> extends AbstractBoundWidget<T> {
 		if (field.getCellProvider() != null) {
 			widget = field.getCellProvider().get();
 		} else {
-			final Property p = Introspector.INSTANCE.getDescriptor(target)
-					.getProperty(field.getPropertyName());
-			widget = this.factory
-					.getWidgetProvider( p.getType())
-					.get();
+			final Property p = field.getProperty();
+			widget = this.factory.getWidgetProvider(p.getType()).get();
 			// TODO Figure out some way to make this read only.
 		}
 		binding = new Binding(widget, "value", field.getValidator(),

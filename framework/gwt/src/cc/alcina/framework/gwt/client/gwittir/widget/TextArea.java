@@ -33,6 +33,7 @@ import com.google.gwt.user.client.ui.ChangeListenerCollection;
 import com.google.gwt.user.client.ui.ClickListener;
 import com.google.gwt.user.client.ui.FocusListener;
 import com.google.gwt.user.client.ui.Focusable;
+import com.google.gwt.user.client.ui.HasEnabled;
 import com.google.gwt.user.client.ui.HasFocus;
 import com.google.gwt.user.client.ui.KeyboardListener;
 import com.google.gwt.user.client.ui.SourcesClickEvents;
@@ -41,7 +42,6 @@ import com.google.gwt.user.client.ui.TextBoxBase;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
-import com.totsp.gwittir.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.SimpleComparator;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -423,9 +423,8 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 						: 0;
 				int scrollHeight = element.getScrollHeight();
 				if (scrollHeight != 0) {
-					element.getStyle().setHeight(
-							scrollHeight, 
-//							- paddingTopPx - paddingBottomPx,
+					element.getStyle().setHeight(scrollHeight,
+							// - paddingTopPx - paddingBottomPx,
 							Unit.PX);
 				}
 			});

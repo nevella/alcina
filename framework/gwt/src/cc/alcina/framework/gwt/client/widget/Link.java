@@ -20,11 +20,11 @@ import com.google.gwt.event.dom.client.HasClickHandlers;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
+import com.google.gwt.user.client.ui.HasEnabled;
 import com.google.gwt.user.client.ui.HasHTML;
 import com.google.gwt.user.client.ui.HasText;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.ui.HasEnabled;
 
 import cc.alcina.framework.gwt.client.logic.AlcinaHistoryItem;
 import cc.alcina.framework.gwt.client.place.BasePlace;

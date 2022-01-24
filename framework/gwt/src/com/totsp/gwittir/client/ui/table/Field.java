@@ -26,6 +26,8 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 import com.totsp.gwittir.client.validator.Validator;
 
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
@@ -56,117 +58,26 @@ public class Field {
 
 	private String autocompleteName;
 
-	/** Creates a new instance of Column */
-	public Field(String propertyName) {
-		this.propertyName = propertyName;
-	}
-
-	public Field(String propertyName, String label) {
-		this.propertyName = propertyName;
-		this.label = label;
-	}
+	Class<?> declaringType;
 
 	public Field(String propertyName, String label,
 			BoundWidgetProvider cellProvider, Validator validator,
-			ValidationFeedback feedback) {
-		this.propertyName = propertyName;
-		this.label = label;
-		this.cellProvider = cellProvider;
-		this.validator = validator;
-		this.feedback = feedback;
-	}
-
-	public Field(String propertyName, String label,
-			BoundWidgetProvider cellProvider, Validator validator,
-			ValidationFeedback feedback, Converter converter) {
+			ValidationFeedback feedback, Converter converter,
+			Class<?> declaringType) {
 		this.propertyName = propertyName;
 		this.label = label;
 		this.cellProvider = cellProvider;
 		this.validator = validator;
 		this.feedback = feedback;
 		this.converter = converter;
+		this.declaringType = declaringType;
+		this.property = Reflections.at(declaringType).property(propertyName);
 	}
 
-	public Field(String propertyName, String label, String styleName) {
-		this.propertyName = propertyName;
-		this.label = label;
-		this.styleName = styleName;
-	}
+	private Property property;
 
-	public Field(String propertyName, String label, String styleName,
-			BoundWidgetProvider cellProvider) {
-		this.propertyName = propertyName;
-		this.label = label;
-		this.styleName = styleName;
-		this.cellProvider = cellProvider;
-	}
-
-	public Field(String propertyName, String label, String styleName,
-			Converter converter) {
-		this.propertyName = propertyName;
-		this.label = label;
-		this.styleName = styleName;
-		this.converter = converter;
-	}
-
-	public Field(String propertyName, String label, String styleName,
-			Converter converter, Validator validator,
-			ValidationFeedback feedback) {
-		this.propertyName = propertyName;
-		this.label = label;
-		this.styleName = styleName;
-		this.validator = validator;
-		this.feedback = feedback;
-		this.converter = converter;
-	}
-
-	public Field(String propertyName, String label, String styleName,
-			String helpText) {
-		this.propertyName = propertyName;
-		this.label = label;
-		this.styleName = styleName;
-		this.helpText = helpText;
-	}
-
-	public Field(String propertyName, String label, String styleName,
-			String helpText, BoundWidgetProvider cellProvider) {
-		this.propertyName = propertyName;
-		this.label = label;
-		this.styleName = styleName;
-		this.cellProvider = cellProvider;
-	}
-
-	public Field(String propertyName, String label, String styleName,
-			String helpText, Converter converter) {
-		this.propertyName = propertyName;
-		this.label = label;
-		this.styleName = styleName;
-		this.converter = converter;
-		this.helpText = helpText;
-	}
-
-	public Field(String propertyName, String label, String styleName,
-			String helpText, Converter converter, Validator validator,
-			ValidationFeedback feedback) {
-		this.propertyName = propertyName;
-		this.label = label;
-		this.styleName = styleName;
-		this.validator = validator;
-		this.feedback = feedback;
-		this.converter = converter;
-		this.helpText = helpText;
-	}
-
-	public Field(String propertyName, String label, String styleName,
-			String helpText, Converter converter, Validator validator,
-			ValidationFeedback feedback, Comparator comparator) {
-		this.propertyName = propertyName;
-		this.label = label;
-		this.styleName = styleName;
-		this.validator = validator;
-		this.feedback = feedback;
-		this.converter = converter;
-		this.helpText = helpText;
+	public Property getProperty() {
+		return property;
 	}
 
 	public String getAutocompleteName() {

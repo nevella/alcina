@@ -32,8 +32,8 @@ import com.google.gwt.user.client.ui.SourcesKeyboardEvents;
  *         Cooper</a>
  */
 @SuppressWarnings("deprecation")
-public class Checkbox extends AbstractBoundWidget<Boolean> implements
-		HasEnabled, SourcesClickEvents, HasFocus, SourcesKeyboardEvents {
+public class Checkbox extends AbstractBoundWidget<Boolean>
+		implements SourcesClickEvents, HasFocus, SourcesKeyboardEvents {
 	private com.google.gwt.user.client.ui.CheckBox base;
 
 	/** Creates a new instance of Checkbox */
@@ -119,7 +119,6 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		return this.base.isChecked();
 	}
 
-	@Override
 	public boolean isEnabled() {
 		return this.base.isEnabled();
 	}
@@ -153,7 +152,6 @@ public class Checkbox extends AbstractBoundWidget<Boolean> implements
 		this.base.setChecked(checked);
 	}
 
-	@Override
 	public void setEnabled(boolean enabled) {
 		this.base.setEnabled(enabled);
 	}

@@ -22,11 +22,7 @@ package com.totsp.gwittir.client.beans;
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Map.Entry;
 
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.log.Level;
@@ -36,6 +32,8 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 import com.totsp.gwittir.client.validator.Validator;
 
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.util.GwtDomUtils;
 
 /**
@@ -51,8 +49,6 @@ import cc.alcina.framework.gwt.client.util.GwtDomUtils;
 public class Binding {
 	private static final Logger LOGGER = Logger
 			.getLogger("com.totsp.gwittir.client.beans");
-
-	private static final Introspector INTROSPECTOR = Introspector.INSTANCE;
 
 	BindingInstance left;
 
@@ -303,12 +299,10 @@ public class Binding {
 					return true;
 				}
 				if (left.validator != null) {
-					left.validator.validate(left.property.getAccessorMethod()
-							.invoke(left.object, null));
+					left.validator.validate(left.property.get(left.object));
 				}
 				if (right.validator != null) {
-					right.validator.validate(right.property.getAccessorMethod()
-							.invoke(right.object, null));
+					right.validator.validate(right.property.get(right.object));
 				}
 			}
 			boolean valid = true;
@@ -368,8 +362,7 @@ public class Binding {
 			try {
 				right.listener.propertyChange(new PropertyChangeEvent(
 						right.object, right.property.getName(), null,
-						right.property.getAccessorMethod().invoke(right.object,
-								null)));
+						right.property.get(right.object)));
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -389,8 +382,7 @@ public class Binding {
 			try {
 				left.listener.propertyChange(new PropertyChangeEvent(
 						left.object, left.property.getName(), null,
-						left.property.getAccessorMethod().invoke(left.object,
-								null)));
+						left.property.get(left.object)));
 			} catch (Exception e) {
 				throw new RuntimeException(e);
 			}
@@ -467,8 +459,7 @@ public class Binding {
 					return true;
 				}
 				try {
-					left.validator.validate(left.property.getAccessorMethod()
-							.invoke(left.object, null));
+					left.validator.validate(left.property.get(left.object));
 				} catch (ValidationException ve) {
 					valid = false;
 					if (left.feedback != null) {
@@ -484,8 +475,7 @@ public class Binding {
 			}
 			if (right.validator != null) {
 				try {
-					right.validator.validate(right.property.getAccessorMethod()
-							.invoke(right.object, null));
+					right.validator.validate(right.property.get(right.object));
 				} catch (ValidationException ve) {
 					valid = false;
 					if (right.feedback != null) {
@@ -505,103 +495,6 @@ public class Binding {
 			valid = valid & child.validate();
 		}
 		return valid;
-	}
-
-	private SourcesPropertyChangeEvents
-			getBindableAtCollectionIndex(Collection collection, int index) {
-		int i = 0;
-		SourcesPropertyChangeEvents result = null;
-		for (Iterator it = collection.iterator(); it.hasNext()
-				&& (i <= index); i++) {
-			result = (SourcesPropertyChangeEvents) it.next();
-		}
-		if (i != index) {
-			throw new IndexOutOfBoundsException(
-					"Binding descriminator too high: " + index);
-		}
-		return result;
-	}
-
-	private SourcesPropertyChangeEvents getBindableAtMapKey(Map map,
-			String key) {
-		SourcesPropertyChangeEvents result = null;
-		for (Iterator it = map.entrySet().iterator(); it.hasNext();) {
-			Entry e = (Entry) it.next();
-			if (e.getKey().toString().equals(key)) {
-				result = (SourcesPropertyChangeEvents) e.getValue();
-				break;
-			}
-		}
-		return result;
-	}
-
-	private SourcesPropertyChangeEvents getBindableFromArrayWithProperty(
-			SourcesPropertyChangeEvents[] array, String propertyName,
-			String stringValue) {
-		Method access = null;
-		for (int i = 0; i < array.length; i++) {
-			if (access == null) {
-				access = Introspector.INSTANCE.getDescriptor(array[i])
-						.getProperty(propertyName).getAccessorMethod();
-			}
-			try {
-				if ((access.invoke(array[i], null) + "").equals(stringValue)) {
-					return array[i];
-				}
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		throw new RuntimeException(
-				"No Object matching " + propertyName + "=" + stringValue);
-	}
-
-	private SourcesPropertyChangeEvents getBindableFromCollectionWithProperty(
-			Collection collection, String propertyName, String stringValue) {
-		Method access = null;
-		for (Iterator it = collection.iterator(); it.hasNext();) {
-			SourcesPropertyChangeEvents object = (SourcesPropertyChangeEvents) it
-					.next();
-			if (access == null) {
-				access = Introspector.INSTANCE.getDescriptor(object)
-						.getProperty(propertyName).getAccessorMethod();
-			}
-			try {
-				if ((access.invoke(object, null) + "").equals(stringValue)) {
-					return object;
-				}
-			} catch (Exception e) {
-				throw new RuntimeException(e);
-			}
-		}
-		throw new RuntimeException(
-				"No Object matching " + propertyName + "=" + stringValue);
-	}
-
-	private SourcesPropertyChangeEvents getDiscriminatedObject(
-			Object collectionOrArray, String descriminator) {
-		int equalsIndex = descriminator.indexOf("=");
-		if (collectionOrArray instanceof Collection && (equalsIndex == -1)) {
-			return this.getBindableAtCollectionIndex(
-					(Collection) collectionOrArray,
-					Integer.parseInt(descriminator));
-		} else if (collectionOrArray instanceof Collection) {
-			return this.getBindableFromCollectionWithProperty(
-					(Collection) collectionOrArray,
-					descriminator.substring(0, equalsIndex),
-					descriminator.substring(equalsIndex + 1));
-		} else if (collectionOrArray instanceof Map) {
-			return this.getBindableAtMapKey((Map) collectionOrArray,
-					descriminator);
-		} else if (equalsIndex == -1) {
-			return ((SourcesPropertyChangeEvents[]) collectionOrArray)[Integer
-					.parseInt(descriminator)];
-		} else {
-			return getBindableFromArrayWithProperty(
-					(SourcesPropertyChangeEvents[]) collectionOrArray,
-					descriminator.substring(0, equalsIndex),
-					descriminator.substring(equalsIndex + 1));
-		}
 	}
 
 	protected boolean leftObjectIsHiddenWidget() {
@@ -628,27 +521,9 @@ public class Binding {
 			propertyName = propertyName.substring(dotIndex + 1);
 			parents.add(object);
 			try {
-				String descriminator = null;
-				int descIndex = pname.indexOf("[");
-				if (descIndex != -1) {
-					descriminator = pname.substring(descIndex + 1,
-							pname.indexOf("]", descIndex));
-					pname = pname.substring(0, descIndex);
-				}
 				propertyNames.add(pname);
-				if (descriminator != null) {
-					// TODO Need a loop here to handle
-					// multi-dimensional/collections of collections
-					Object collectionOrArray = INTROSPECTOR
-							.getDescriptor(object).getProperty(pname)
-							.getAccessorMethod().invoke(object, null);
-					object = this.getDiscriminatedObject(collectionOrArray,
-							descriminator);
-				} else {
-					object = (SourcesPropertyChangeEvents) INTROSPECTOR
-							.getDescriptor(object).getProperty(pname)
-							.getAccessorMethod().invoke(object, null);
-				}
+				object = (SourcesPropertyChangeEvents) Reflections
+						.at(object.getClass()).property(pname).get(object);
 			} catch (ClassCastException cce) {
 				throw new RuntimeException(
 						"Nonbindable sub property: " + object + " . " + pname,
@@ -666,8 +541,8 @@ public class Binding {
 		}
 		instance.object = object;
 		try {
-			instance.property = INTROSPECTOR.getDescriptor(object)
-					.getProperty(propertyName);
+			instance.property = Reflections.at(object.getClass())
+					.property(propertyName);
 			if (instance.property == null) {
 				throw new NullPointerException("Property Not Found.");
 			}
@@ -824,10 +699,8 @@ public class Binding {
 			if (instance.converter != null && instance.validator == null) {
 				value = instance.converter.convert(value);
 			}
-			Object[] args = new Object[1];
-			args[0] = value;
 			try {
-				target.property.getMutatorMethod().invoke(target.object, args);
+				target.property.set(target.object, value);
 			} catch (Exception e) {
 				e.printStackTrace();
 				throw new RuntimeException("Exception setting property: "

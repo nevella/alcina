@@ -26,10 +26,8 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.function.Predicate;
 
-import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.beans.Introspector;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -37,13 +35,13 @@ import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import com.totsp.gwittir.client.validator.AbstractValidationFeedback;
-import com.totsp.gwittir.client.validator.DoubleValidator;
 import com.totsp.gwittir.client.validator.IntegerValidator;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.gwittir.validator.BooleanEnsureNonNullCoverter;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
+import cc.alcina.framework.common.client.gwittir.validator.DoubleValidator;
 import cc.alcina.framework.common.client.gwittir.validator.LongValidator;
 import cc.alcina.framework.common.client.gwittir.validator.ParameterisedValidator;
 import cc.alcina.framework.common.client.gwittir.validator.RequiresSourceValidator;
@@ -263,8 +261,6 @@ public class GwittirBridge {
 		validatorMap.put(Date.class, ShortDateValidator.INSTANCE);
 	}
 
-	private Map<Class, BeanDescriptor> descriptorClassLookup = new HashMap<Class, BeanDescriptor>();
-
 	private List<String> ignoreProperties;
 
 	private GwittirDateRendererProvider dateRendererProvider = new GwittirDateRendererProvider();
@@ -335,29 +331,6 @@ public class GwittirBridge {
 
 	public GwittirDateRendererProvider getDateRendererProvider() {
 		return this.dateRendererProvider;
-	}
-
-	public BeanDescriptor getDescriptorForClass(Class c) {
-		return getDescriptorForClass(c, true);
-	}
-
-	public BeanDescriptor getDescriptorForClass(Class c,
-			boolean exceptionIfNotFound) {
-		try {
-			BeanDescriptor bd = descriptorClassLookup.get(c);
-			if (bd == null) {
-				Object o = Reflections.at(c).templateInstance();
-				bd = Introspector.INSTANCE.getDescriptor(o);
-				descriptorClassLookup.put(c, bd);
-			}
-			return bd;
-		} catch (RuntimeException re) {
-			if (exceptionIfNotFound) {
-				throw re;
-			} else {
-				return null;
-			}
-		}
 	}
 
 	public Field getField(Class c, String propertyName, boolean editableWidgets,
@@ -500,7 +473,7 @@ public class GwittirBridge {
 						// FIXME - dirndl.2
 						TextProvider.get().getLabelText(propertyLocation), bwp,
 						validator, validationFeedback,
-						getDefaultConverter(bwp, type));
+						getDefaultConverter(bwp, type), type);
 				if (!display.styleName().isEmpty()) {
 					field.setStyleName(display.styleName());
 				}
@@ -554,7 +527,7 @@ public class GwittirBridge {
 			return new Field(propertyName,
 					TextProvider.get().getLabelText(propertyLocation), bwp,
 					getValidator(type, obj, propertyName, vf), vf,
-					getDefaultConverter(bwp, type));
+					getDefaultConverter(bwp, type), type);
 		}
 		return null;
 	}

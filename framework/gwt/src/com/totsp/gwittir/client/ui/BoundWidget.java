@@ -23,14 +23,12 @@ import java.util.Comparator;
 
 import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 /**
  *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
-@Introspectable
 public interface BoundWidget<T> extends SourcesPropertyChangeEvents {
 	public Action<BoundWidget<T>> getAction();
 

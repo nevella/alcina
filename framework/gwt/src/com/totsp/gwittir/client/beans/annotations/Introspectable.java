@@ -4,7 +4,6 @@
  */
 package com.totsp.gwittir.client.beans.annotations;
 
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
@@ -13,6 +12,5 @@ import java.lang.annotation.RetentionPolicy;
  * @author kebernet
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited
 public @interface Introspectable {
 }

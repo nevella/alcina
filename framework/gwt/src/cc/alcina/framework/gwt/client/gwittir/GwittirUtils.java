@@ -22,16 +22,16 @@ import java.util.List;
 import java.util.Map;
 
 import com.google.gwt.user.client.ui.Focusable;
+import com.google.gwt.user.client.ui.HasEnabled;
 import com.google.gwt.user.client.ui.HasWidgets;
+import com.google.gwt.user.client.ui.ListBox;
+import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Checkbox;
-import com.totsp.gwittir.client.ui.HasEnabled;
-import com.totsp.gwittir.client.ui.ListBox;
-import com.totsp.gwittir.client.ui.RadioButton;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.validator.Validator;
@@ -245,9 +245,8 @@ public class GwittirUtils {
 					}
 				}
 				if (satisfiesType) {
-					Object value = b.getRight().property.getAccessorMethod()
-							.invoke(b.getRight().object,
-									CommonUtils.EMPTY_OBJECT_ARRAY);
+					Object value = b.getRight().property
+							.get(b.getRight().object);
 					Object tbValue = tb.getValue();
 					if (onlyEmpties && tbValue != null) {
 						continue;
@@ -262,8 +261,7 @@ public class GwittirUtils {
 								? !(CommonUtils.bv((Boolean) tb.getValue()))
 								: other;
 						tb.setValue(other);
-						b.getRight().property.getMutatorMethod().invoke(
-								b.getRight().object, new Object[] { value });
+						b.getRight().property.set(b.getRight().object, value);
 						tb.setValue(tbValue);
 					}
 				}

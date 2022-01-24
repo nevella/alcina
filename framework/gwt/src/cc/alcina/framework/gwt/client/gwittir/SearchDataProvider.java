@@ -18,13 +18,13 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.totsp.gwittir.client.beans.BeanDescriptor;
 import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.ui.table.HasChunks;
 import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
@@ -60,10 +60,9 @@ public abstract class SearchDataProvider implements SortableDataProvider {
 
 	@Override
 	public String[] getSortableProperties() {
-		BeanDescriptor descriptor = GwittirBridge.get()
-				.getDescriptorForClass(def.getResultClass());
 		List<String> pNames = new ArrayList<String>();
-		for (Property p : descriptor.getProperties()) {
+		for (Property p : Reflections.at((Class<?>) def.getResultClass())
+				.properties()) {
 			if (p.getType().isPrimitive() || p.getType().isEnum()
 					|| CommonUtils.isStandardJavaClass(p.getType())) {
 				pNames.add(p.getName());

@@ -42,8 +42,8 @@ import com.totsp.gwittir.client.action.Action;
  *         Cooper</a> Modified by Nick to help testing
  */
 @SuppressWarnings("deprecation")
-public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
-		HasEnabled, com.google.gwt.user.client.ui.HasEnabled,
+public class TextBox extends AbstractBoundWidget<String>
+		implements HasFocus, com.google.gwt.user.client.ui.HasEnabled,
 		SourcesKeyboardEvents, SourcesClickEvents {
 	private com.google.gwt.user.client.ui.TextBox base = new com.google.gwt.user.client.ui.TextBox();
 

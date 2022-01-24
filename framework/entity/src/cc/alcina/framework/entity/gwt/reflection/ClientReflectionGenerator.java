@@ -49,7 +49,6 @@ import com.google.gwt.core.ext.typeinfo.JType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
-import com.totsp.gwittir.client.beans.annotations.Omit;
 import com.totsp.gwittir.rebind.beans.BeanResolver;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
@@ -117,11 +116,10 @@ public class ClientReflectionGenerator extends Generator {
 		return classNameAnnotationMap.get(clazz, annClazzName) != null;
 	}
 
-	private String packageName = 
-			"FIXME";
-//			ClientReflector2.class.getCanonicalName()
-//			.substring(0,
-//					ClientReflector2.class.getCanonicalName().lastIndexOf("."));
+	private String packageName = "FIXME";
+	// ClientReflector2.class.getCanonicalName()
+	// .substring(0,
+	// ClientReflector2.class.getCanonicalName().lastIndexOf("."));
 
 	private boolean debug = true;
 
@@ -159,8 +157,8 @@ public class ClientReflectionGenerator extends Generator {
 			JClassType intrType = context.getTypeOracle().getType(typeName);
 			if (intrType.isInterface() != null) {
 				throw new UnsupportedOperationException("TODO - registry");
-//				intrType = context.getTypeOracle()
-//						.getType(ClientReflector2.class.getName());
+				// intrType = context.getTypeOracle()
+				// .getType(ClientReflector2.class.getName());
 			}
 			ReflectionModule module = intrType
 					.getAnnotation(ReflectionModule.class);
@@ -184,10 +182,10 @@ public class ClientReflectionGenerator extends Generator {
 			crf.addImport(Annotation.class.getName());
 			crf.addImport(UnsafeNativeLong.class.getName());
 			crf.setSuperclass(superClassName);
-			//FIXME - reflection
-//			crf.addImport(ClientBeanReflector.class.getName());
-//			crf.addImport(ClientPropertyReflector.class.getName());
-//			crf.addImport(ClientReflector2.class.getName());
+			// FIXME - reflection
+			// crf.addImport(ClientBeanReflector.class.getName());
+			// crf.addImport(ClientPropertyReflector.class.getName());
+			// crf.addImport(ClientReflector2.class.getName());
 			crf.addImport(RegistryLocation.class.getName());
 			ctLookup.clear();
 			visibleAnnotationClasses = new ArrayList<Class<? extends Annotation>>();
@@ -197,7 +195,7 @@ public class ClientReflectionGenerator extends Generator {
 				visibleAnnotationClasses.add((Class<? extends Annotation>) Class
 						.forName(jAnnotationType.getQualifiedBinaryName()));
 			}
-			visibleAnnotationClasses.add(Omit.class);
+			// visibleAnnotationClasses.add(Omit.class);
 			filter.filterAnnotations(jAnns, visibleAnnotationClasses);
 			writeAnnotations(logger, context, jAnns, crf,
 					moduleName.equals(ReflectionModule.INITIAL));
@@ -376,9 +374,9 @@ public class ClientReflectionGenerator extends Generator {
 				String annArray = "";
 				boolean ignore = false;
 				for (Annotation a : annotations) {
-					if (a.annotationType() == Omit.class) {
-						ignore = true;
-					}
+					// if (a.annotationType() == Omit.class) {
+					// ignore = true;
+					// }
 				}
 				if (ignore) {
 					continue;

@@ -26,11 +26,6 @@ import java.util.Comparator;
 import com.google.gwt.user.client.ui.Composite;
 import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.action.BindingAction;
-import com.totsp.gwittir.client.keyboard.KeyBinding;
-import com.totsp.gwittir.client.keyboard.KeyBindingException;
-import com.totsp.gwittir.client.keyboard.KeyBoundWidget;
-import com.totsp.gwittir.client.keyboard.KeyboardController;
-import com.totsp.gwittir.client.log.Level;
 import com.totsp.gwittir.client.log.Logger;
 
 /**
@@ -39,7 +34,7 @@ import com.totsp.gwittir.client.log.Logger;
  *         Cooper</a>
  */
 public abstract class AbstractBoundWidget<T> extends Composite
-		implements BoundWidget<T>, KeyBoundWidget {
+		implements BoundWidget<T> {
 	protected static final Logger LOG = Logger
 			.getLogger("" + AbstractBoundWidget.class);
 
@@ -50,10 +45,6 @@ public abstract class AbstractBoundWidget<T> extends Composite
 	private Object model;
 
 	protected PropertyChangeSupport changes = new PropertyChangeSupport(this);
-
-	private KeyBinding binding;
-
-	private boolean bindingRegistered = false;
 
 	private boolean wasDetached;
 
@@ -80,11 +71,6 @@ public abstract class AbstractBoundWidget<T> extends Composite
 	@Override
 	public Comparator getComparator() {
 		return comparator;
-	}
-
-	@Override
-	public KeyBinding getKeyBinding() {
-		return this.binding;
 	}
 
 	@Override
@@ -134,21 +120,6 @@ public abstract class AbstractBoundWidget<T> extends Composite
 	}
 
 	@Override
-	public void setKeyBinding(final KeyBinding binding) {
-		this.binding = binding;
-		if (this.binding != null && this.isAttached()) {
-			try {
-				KeyboardController.INSTANCE.register(this.binding, this);
-				this.bindingRegistered = true;
-			} catch (KeyBindingException kbe) {
-				this.bindingRegistered = false;
-				AbstractBoundWidget.LOG.log(Level.SPAM,
-						"Exception adding default binding", kbe);
-			}
-		}
-	}
-
-	@Override
 	public void setModel(Object model) {
 		Object old = this.getModel();
 		cleanupAction();
@@ -164,16 +135,6 @@ public abstract class AbstractBoundWidget<T> extends Composite
 		if (this.getAction() instanceof BindingAction) {
 			((BindingAction<BoundWidget<T>>) getAction()).bind(this);
 		}
-		if (this.binding != null) {
-			try {
-				KeyboardController.INSTANCE.register(this.binding, this);
-				this.bindingRegistered = true;
-			} catch (KeyBindingException kbe) {
-				this.bindingRegistered = false;
-				AbstractBoundWidget.LOG.log(Level.SPAM,
-						"Exception adding default binding", kbe);
-			}
-		}
 	}
 
 	/*
@@ -183,9 +144,6 @@ public abstract class AbstractBoundWidget<T> extends Composite
 		if (this.getAction() instanceof BindingAction
 				&& (this.getModel() != null)) {
 			((BindingAction<BoundWidget<T>>) getAction()).unbind(this);
-		}
-		if (this.binding != null && this.bindingRegistered) {
-			KeyboardController.INSTANCE.unregister(this.binding);
 		}
 	}
 

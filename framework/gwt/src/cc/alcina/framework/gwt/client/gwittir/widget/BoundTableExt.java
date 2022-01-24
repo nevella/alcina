@@ -59,16 +59,8 @@ import com.google.gwt.user.client.ui.SourcesClickEvents;
 import com.google.gwt.user.client.ui.SourcesTableEvents;
 import com.google.gwt.user.client.ui.TableListener;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.beans.Binding;
-import com.totsp.gwittir.client.beans.Introspector;
-import com.totsp.gwittir.client.beans.Property;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.keyboard.KeyBinding;
-import com.totsp.gwittir.client.keyboard.KeyBindingException;
-import com.totsp.gwittir.client.keyboard.KeyboardController;
-import com.totsp.gwittir.client.keyboard.SuggestedKeyBinding;
-import com.totsp.gwittir.client.keyboard.Task;
 import com.totsp.gwittir.client.log.Level;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Button;
@@ -87,7 +79,6 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.HasBinding;
 import cc.alcina.framework.gwt.client.gwittir.provider.CollectionDataProvider;
 import cc.alcina.framework.gwt.client.gwittir.widget.EndRowButtonClickedEvent.EndRowButtonClickedHandler;
@@ -236,8 +227,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	private Map bindingCache = new HashMap();
 
 	private Map externalKeyBindings = new HashMap();
-
-	private Map keyBindings = new HashMap();
 
 	protected Map widgetCache = new HashMap();
 
@@ -515,37 +504,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		return addHandler(handler, EndRowButtonClickedEvent.getType());
 	}
 
-	public void addKeyBinding(KeyBinding binding) throws KeyBindingException {
-		if (this.getActive()) {
-			KeyboardController.INSTANCE.register(binding, this);
-		}
-		this.addKeyBinding(binding, (Object) this);
-	}
-
-	public void addKeyBinding(KeyBinding binding, Action action)
-			throws KeyBindingException {
-		if (this.getActive()) {
-			KeyboardController.INSTANCE.register(binding, action);
-		}
-		this.addKeyBinding(binding, (Object) action);
-	}
-
-	public void addKeyBinding(KeyBinding binding, BoundWidget widget)
-			throws KeyBindingException {
-		if (this.getActive()) {
-			KeyboardController.INSTANCE.register(binding, widget);
-		}
-		this.addKeyBinding(binding, (Object) widget);
-	}
-
-	public void addKeyBinding(KeyBinding binding, Task task)
-			throws KeyBindingException {
-		if (this.getActive()) {
-			KeyboardController.INSTANCE.register(binding, task);
-		}
-		this.addKeyBinding(binding, (Object) task);
-	}
-
 	@Override
 	public void addStyleName(String style) {
 		this.base.addStyleName(style);
@@ -567,9 +525,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		this.topBinding.getChildren().clear();
 		if (this.rowHandles != null) {
 			this.rowHandles.clear();
-		}
-		if (this.keyBindings != null) {
-			this.keyBindings.clear();
 		}
 		for (Iterator it = this.focusListeners.entrySet().iterator(); it
 				.hasNext();) {
@@ -1136,10 +1091,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		}
 	}
 
-	private void addKeyBinding(KeyBinding binding, Object object) {
-		this.externalKeyBindings.put(binding, object);
-	}
-
 	private void addSelectedClickListener(final SourcesClickEvents widget,
 			final int objectNumber, final int col) {
 		ClickListener l = new ClickListener() {
@@ -1476,44 +1427,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 										: " ");
 					}
 				}
-				for (Iterator it = keyBindings.entrySet().iterator(); it
-						.hasNext();) {
-					Entry entry = (Entry) it.next();
-					handleBinding(newActive, entry);
-				}
-				for (Iterator it = externalKeyBindings.entrySet().iterator(); it
-						.hasNext();) {
-					Entry entry = (Entry) it.next();
-					handleBinding(newActive, entry);
-				}
-			}
-
-			private void handleBinding(boolean newActive, Entry entry) {
-				KeyBinding kb = (KeyBinding) entry.getKey();
-				Object execute = entry.getValue();
-				if (newActive) {
-					BoundTableExt.LOG.log(Level.SPAM, "Registering " + kb,
-							null);
-					try {
-						if (execute instanceof Task) {
-							KeyboardController.INSTANCE.register(kb,
-									(Task) execute);
-						} else if (execute instanceof Action) {
-							KeyboardController.INSTANCE.register(kb,
-									(Action) execute);
-						} else if (execute instanceof BoundWidget) {
-							KeyboardController.INSTANCE.register(kb,
-									(BoundWidget) execute);
-						}
-					} catch (KeyBindingException kbe) {
-						BoundTableExt.LOG.log(Level.DEBUG,
-								"Unable to register" + kb, kbe);
-					}
-				} else {
-					boolean result = KeyboardController.INSTANCE.unregister(kb);
-					BoundTableExt.LOG.log(Level.SPAM,
-							"Unregistering " + kb + " " + result, null);
-				}
 			}
 		});
 	}
@@ -1536,7 +1449,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			}
 		}
 		BoundWidget widget = (BoundWidget) this.factory
-				.getWidgetProvider(Introspector.INSTANCE.resolveClass(o)).get();
+				.getWidgetProvider(o.getClass()).get();
 		widget.setModel(o);
 		this.table.insertRow(row + 1);
 		this.table.setWidget(row + 1, 0, (Widget) widget);
@@ -1809,34 +1722,6 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 			this.table.setWidget(row, 0, handle);
 		} else {
 			handle = null;
-		}
-		if (count < 10) {
-			SuggestedKeyBinding kb = new SuggestedKeyBinding(
-					Integer.toString(count).charAt(0), false, true, false);
-			Task task = new Task() {
-				@Override
-				public void run() {
-					List newSelected = new ArrayList(getSelected());
-					if (newSelected.contains(o)) {
-						newSelected.remove(o);
-					} else {
-						newSelected.add(o);
-					}
-					setSelected(newSelected);
-					if (handle != null) {
-						((HasFocus) handle).setFocus(true);
-					}
-				}
-			};
-			this.keyBindings.put(kb, task);
-			if (this.getActive()) {
-				try {
-					KeyboardController.INSTANCE.register(kb, task);
-				} catch (KeyBindingException kbe) {
-					BoundTableExt.LOG.log(Level.DEBUG,
-							"Unable to register" + kb, kbe);
-				}
-			}
 		}
 		for (int col = 0; col < this.columns.length; col++) {
 			Widget widget = (Widget) createCellWidget(bindingRow, col, o);
