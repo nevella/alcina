@@ -141,8 +141,10 @@ public class RegExp_Jvm implements IRegExp {
 	private static Pattern getPattern(String pattern, int javaPatternFlags) {
 		StringPair key = new StringPair(pattern,
 				String.valueOf(javaPatternFlags));
-		return cachedPatterns.computeIfAbsent(key,
-				k -> Pattern.compile(pattern, javaPatternFlags));
+		synchronized (cachedPatterns) {
+			return cachedPatterns.computeIfAbsent(key,
+					k -> Pattern.compile(pattern, javaPatternFlags));
+		}
 	}
 
 	/**
