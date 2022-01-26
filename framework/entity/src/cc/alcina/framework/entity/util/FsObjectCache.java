@@ -5,6 +5,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
@@ -56,11 +57,18 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		}
 	};
 
+	private Set<String> existsCache;
+
 	private Timer invalidationTimer;
 
 	private boolean retainInMemory;
 
 	private boolean createIfNonExistent;
+
+	public FsObjectCache<T> withNoExistsCache() {
+		existsCache = null;
+		return this;
+	}
 
 	public FsObjectCache(File root, Class<T> clazz,
 			ThrowingFunction<String, T> pathToValue) {
@@ -68,6 +76,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		root.mkdirs();
 		this.clazz = clazz;
 		this.pathToValue = pathToValue;
+		existsCache = Arrays.stream(root.list()).collect(Collectors.toSet());
 	}
 
 	@Override
@@ -101,8 +110,16 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	@Override
 	public Optional<Long> lastModified(String path) {
-		return Optional.of(getCacheFile(path)).filter(File::exists)
-				.map(File::lastModified);
+		return checkExists(path) ? Optional.of(getCacheFile(path))
+				.map(File::lastModified)
+				: Optional.empty();
+	}
+
+	private boolean checkExists(String path) {
+		if(existsCache!=null&&!existsCache.contains(path)){
+			return false;
+		}
+		return getCacheFile(path).exists();
 	}
 
 	@Override
@@ -120,6 +137,9 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 			lock.lock();
 			File cacheFile = getCacheFile(path);
 			serializationStrategy.serializeToFile(t, cacheFile);
+			if(existsCache!=null){
+				existsCache.add(path);
+			}
 		} finally {
 			lock.unlock();
 		}
@@ -153,6 +173,9 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	@Override
 	public void remove(String path) {
 		getCacheFile(path).delete();
+		if(existsCache!=null){
+			existsCache.remove(path);
+		}
 	}
 
 	public void setObjectInvalidationTime(long objectInvalidationTime) {
