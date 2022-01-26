@@ -30,6 +30,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
@@ -50,7 +53,6 @@ import com.google.gwt.user.client.ui.TableListener;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.log.Level;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Button;
 import com.totsp.gwittir.client.ui.Label;
@@ -69,6 +71,8 @@ import cc.alcina.framework.common.client.reflection.Property;
  */
 @SuppressWarnings("deprecation")
 public class BoundTable extends AbstractTableWidget implements HasChunks {
+	static Logger logger = LoggerFactory.getLogger(Binding.class);
+
 	private static BoundTable activeTable = null;
 
 	/**
@@ -504,7 +508,7 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 							this.columns[col].getStyleName());
 				}
 			} catch (RuntimeException e) {
-				BoundTable.LOG.log(Level.ERROR, widget + "", e);
+				logger.warn("Widget insertion", e);
 			}
 		}
 		boolean odd = (this.calculateRowToObjectOffset(Integer.valueOf(row))
@@ -704,8 +708,6 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 		}
 		if (rowWidgets[colIndex] != null) {
 			widget = rowWidgets[colIndex];
-			BoundTable.LOG.log(Level.SPAM, "Using cache widget for " + target
-					+ "." + col.getPropertyName(), null);
 		} else {
 			if (col.getCellProvider() != null) {
 				widget = col.getCellProvider().get();
@@ -715,8 +717,6 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 				// TODO Figure out some way to make this read only.
 			}
 			rowWidgets[colIndex] = widget;
-			BoundTable.LOG.log(Level.SPAM, "Creating widget for " + target + "."
-					+ col.getPropertyName(), null);
 		}
 		Binding[] bindings = (Binding[]) this.bindingCache.get(target);
 		if (bindings == null) {
@@ -727,8 +727,6 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 			bindings[colIndex] = new Binding(widget, "value",
 					col.getValidator(), col.getFeedback(), target,
 					col.getPropertyName(), null, null);
-			BoundTable.LOG.log(Level.SPAM,
-					"Created binding " + bindings[colIndex], null);
 		}
 		widget.setModel(target);
 		rowBinding.getChildren().add(bindings[colIndex]);
@@ -1554,7 +1552,7 @@ public class BoundTable extends AbstractTableWidget implements HasChunks {
 				ListSorter.sortOnProperty(sort,
 						columns[index].getPropertyName(), ascending[index]);
 			} catch (Exception e) {
-				LOG.log(Level.INFO, "Exception during sort", e);
+				logger.warn("Sort exception", e);
 			}
 			value.clear();
 			for (Iterator it = sort.iterator(); it.hasNext();) {

@@ -90,7 +90,8 @@ public final class CompilingClassLoader extends ClassLoader
 	 * Only loads bootstrap classes, specifically excluding classes from the
 	 * classpath.
 	 */
-	private static final ClassLoader bootstrapClassLoader = ClassLoader.getPlatformClassLoader();
+	private static final ClassLoader bootstrapClassLoader = ClassLoader
+			.getPlatformClassLoader();
 
 	/**
 	 * The names of the bridge classes.
@@ -720,9 +721,10 @@ public final class CompilingClassLoader extends ClassLoader
 			return ClassLoader.getSystemClassLoader().loadClass(className);
 		}
 		loadLock.lock();
-		if(className.equals("com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader")){
-			int debug=3;
-		}	
+		if (className.equals(
+				"com.google.gwt.user.client.rpc.impl.ClientSerializationStreamReader")) {
+			int debug = 3;
+		}
 		try {
 			if (scriptOnlyClasses.contains(className)) {
 				/*

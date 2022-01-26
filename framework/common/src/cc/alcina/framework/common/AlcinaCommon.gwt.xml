@@ -5,21 +5,12 @@
 	<inherits name='com.googlecode.gwtx.Java' />
 	<inherits name='com.google.gwt.activity.Activity' />
 	<inherits name='com.totsp.gwittir.GwittirNoDeps' />
-	<inherits name='com.totsp.gwittir.LoggingWarn' />
 	<inherits name='org.w3c.Xml' />
 	
 	<inherits name='cc.alcina.framework.emul.AlcinaEmul' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeRegex' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeImpl' />
 	<inherits name='de.benediktmeurer.gwt.slf4j.jul.JUL'/>
-	<replace-with class="cc.alcina.framework.common.client.util.StackFrameHelperIE">
-		<when-type-is class="cc.alcina.framework.common.client.util.StackFrameHelper" />
-		<when-property-is name="user.agent" value="ie6" />
-	</replace-with>
-	<replace-with class="cc.alcina.framework.common.client.util.StackFrameHelperIE">
-		<when-type-is class="cc.alcina.framework.common.client.util.StackFrameHelper" />
-		<when-property-is name="user.agent" value="ie8" />
-	</replace-with>
 	<define-configuration-property name="alcina.introspectorFilter.classname" is-multi-valued="false"/>
 	<define-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls" is-multi-valued="false"/>
 	<set-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls" value="false"/>

@@ -19,18 +19,12 @@
  */
 package com.totsp.gwittir.client.validator;
 
-import com.totsp.gwittir.client.log.Level;
-import com.totsp.gwittir.client.log.Logger;
-
 /**
  *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
 public class DoubleValidator implements Validator {
-	private static final Logger LOG = Logger
-			.getLogger("com.totsp.gwittir.client.validator");
-
 	public static final DoubleValidator INSTANCE = new DoubleValidator();
 
 	/** Creates a new instance of DoubleValidator */
@@ -46,7 +40,6 @@ public class DoubleValidator implements Validator {
 		try {
 			i = Double.valueOf(value.toString());
 		} catch (NumberFormatException nfe) {
-			DoubleValidator.LOG.log(Level.SPAM, null, nfe);
 			throw new ValidationException("Must be an decimal value.",
 					DoubleValidator.class);
 		}

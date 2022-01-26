@@ -4,6 +4,8 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
+import cc.alcina.framework.common.client.reflection.impl.ForName;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 

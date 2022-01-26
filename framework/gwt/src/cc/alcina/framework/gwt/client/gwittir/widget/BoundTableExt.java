@@ -31,6 +31,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.dom.client.ClickEvent;
@@ -61,7 +64,6 @@ import com.google.gwt.user.client.ui.TableListener;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.log.Level;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Button;
 import com.totsp.gwittir.client.ui.Checkbox;
@@ -121,6 +123,8 @@ import cc.alcina.framework.gwt.client.widget.SpanPanel;
 @SuppressWarnings({ "unchecked", "deprecation" })
 public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 		HasBinding, HasRenderContext, HasEndRowClickedHandlers {
+	static Logger logger = LoggerFactory.getLogger(Binding.class);
+
 	private static BoundTableExt activeTable = null;
 
 	/**
@@ -1055,7 +1059,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				ListSorter.sortOnProperty(sort,
 						columns[index].getPropertyName(), ascending[index]);
 			} catch (Exception e) {
-				LOG.log(Level.INFO, "Exception during sort", e);
+				logger.warn("Sort exception", e);
 			}
 			value.clear();
 			for (Iterator it = sort.iterator(); it.hasNext();) {
@@ -1746,7 +1750,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 							this.columns[col].getStyleName());
 				}
 			} catch (RuntimeException e) {
-				BoundTableExt.LOG.log(Level.ERROR, widget + "", e);
+				logger.warn("Insertion exception", e);
 			}
 		}
 		if ((this.masks & BoundTableExt.END_ROW_BUTTON) > 0) {

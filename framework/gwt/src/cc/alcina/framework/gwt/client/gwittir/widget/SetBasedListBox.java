@@ -61,8 +61,6 @@ import com.google.gwt.user.client.ui.SourcesChangeEvents;
 import com.google.gwt.user.client.ui.SourcesFocusEvents;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.log.Level;
-import com.totsp.gwittir.client.log.Logger;
 import com.totsp.gwittir.client.ui.AbstractBoundCollectionWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.SimpleComparator;
@@ -91,9 +89,6 @@ import cc.alcina.framework.gwt.client.widget.dialog.Prompter;
 public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 		HasFocus, SourcesFocusEvents, SourcesChangeEvents, HasEnabled {
 	public static final String VALUE_PROPERTY_NAME = "value";
-
-	private static final Logger LOGGER = Logger
-			.getLogger(SetBasedListBox.class.toString());
 
 	private ArrayList selected = new ArrayList();
 
@@ -256,14 +251,10 @@ public class SetBasedListBox extends AbstractBoundCollectionWidget implements
 	public Object getValue() {
 		final Object returnValue;
 		if (this.base.isMultipleSelect()) {
-			SetBasedListBox.LOGGER.log(Level.SPAM,
-					"IsMultipleSelect. Returning collection", null);
 			returnValue = this.selected;
 		} else if (this.selected.size() == 0) {
 			returnValue = null;
 		} else {
-			SetBasedListBox.LOGGER.log(Level.SPAM,
-					"NotMultipleSelect. Returning first item", null);
 			returnValue = this.selected.get(0);
 		}
 		return returnValue;

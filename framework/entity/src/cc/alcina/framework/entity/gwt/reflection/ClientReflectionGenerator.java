@@ -145,6 +145,11 @@ public class ClientReflectionGenerator extends Generator {
 	@Override
 	public String generate(TreeLogger logger, GeneratorContext context,
 			String typeName) throws UnableToCompleteException {
+		return null;
+	}
+
+	public String generate_(TreeLogger logger, GeneratorContext context,
+			String typeName) throws UnableToCompleteException {
 		filter = IntrospectorFilterHelper.getFilter(context);
 		// System.out.println("ClientReflector2 generation...");
 		long start = System.currentTimeMillis();

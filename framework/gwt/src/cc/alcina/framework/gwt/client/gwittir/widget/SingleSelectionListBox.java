@@ -32,8 +32,6 @@ import com.google.gwt.user.client.ui.KeyboardListener;
 import com.google.gwt.user.client.ui.SourcesChangeEvents;
 import com.google.gwt.user.client.ui.SourcesFocusEvents;
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.log.Level;
-import com.totsp.gwittir.client.log.Logger;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.ui.SimpleComparator;
@@ -50,9 +48,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		implements HasFocus, SourcesFocusEvents, SourcesChangeEvents {
 	public static final String VALUE_PROPERTY_NAME = "value";
-
-	private static final Logger LOGGER = Logger
-			.getLogger(SingleSelectionListBox.class.toString());
 
 	private com.google.gwt.user.client.ui.ListBox base;
 
@@ -71,11 +66,13 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.setRenderer((Renderer<T, String>) ToStringRenderer.INSTANCE);
 		this.setComparator(SimpleComparator.INSTANCE);
 		this.base.addClickListener(new ClickListener() {
+			@Override
 			public void onClick(Widget sender) {
 				update();
 			}
 		});
 		this.base.addChangeListener(new ChangeListener() {
+			@Override
 			public void onChange(Widget sender) {
 				update();
 			}
@@ -84,6 +81,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		super.initWidget(base);
 	}
 
+	@Override
 	public void addChangeListener(final ChangeListener listener) {
 		this.changeListeners.add(listener);
 	}
@@ -92,6 +90,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.base.addClickListener(listener);
 	}
 
+	@Override
 	public void addFocusListener(final FocusListener listener) {
 		this.base.addFocusListener(listener);
 	}
@@ -101,14 +100,17 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.base.addItem(this.getRenderer().render(o));
 	}
 
+	@Override
 	public void addKeyboardListener(KeyboardListener listener) {
 		this.base.addKeyboardListener(listener);
 	}
 
+	@Override
 	public void addStyleName(final String style) {
 		this.base.addStyleName(style);
 	}
 
+	@Override
 	public boolean equals(final Object obj) {
 		if (obj == null) {
 			return false;
@@ -125,12 +127,14 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		}
 	}
 
+	@Override
 	public int getAbsoluteLeft() {
 		int retValue;
 		retValue = this.base.getAbsoluteLeft();
 		return retValue;
 	}
 
+	@Override
 	public int getAbsoluteTop() {
 		int retValue;
 		retValue = this.base.getAbsoluteTop();
@@ -158,6 +162,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		return this.base.getOffsetHeight();
 	}
 
+	@Override
 	public int getOffsetWidth() {
 		return this.base.getOffsetWidth();
 	}
@@ -186,6 +191,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		return retValue;
 	}
 
+	@Override
 	public int getTabIndex() {
 		int retValue;
 		retValue = this.base.getTabIndex();
@@ -197,9 +203,8 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		return this.base.getTitle();
 	}
 
+	@Override
 	public T getValue() {
-		SingleSelectionListBox.LOGGER.log(Level.SPAM,
-				"IsMultipleSelect. Returning collection", null);
 		return this.selected;
 	}
 
@@ -209,6 +214,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		return retValue;
 	}
 
+	@Override
 	public int hashCode() {
 		return this.base.hashCode();
 	}
@@ -229,6 +235,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		return this.base.isMultipleSelect();
 	}
 
+	@Override
 	public void removeChangeListener(final ChangeListener listener) {
 		this.changeListeners.remove(listener);
 	}
@@ -237,6 +244,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.base.removeClickListener(listener);
 	}
 
+	@Override
 	public void removeFocusListener(final FocusListener listener) {
 		this.base.removeFocusListener(listener);
 	}
@@ -257,6 +265,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		}
 	}
 
+	@Override
 	public void removeKeyboardListener(final KeyboardListener listener) {
 		this.base.removeKeyboardListener(listener);
 	}
@@ -266,6 +275,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.base.removeStyleName(style);
 	}
 
+	@Override
 	public void setAccessKey(char key) {
 		this.base.setAccessKey(key);
 	}
@@ -274,10 +284,12 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.base.setEnabled(enabled);
 	}
 
+	@Override
 	public void setFocus(boolean focused) {
 		this.base.setFocus(focused);
 	}
 
+	@Override
 	public void setHeight(String height) {
 		this.base.setHeight(height);
 	}
@@ -332,6 +344,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.base.setStyleName(style);
 	}
 
+	@Override
 	public void setTabIndex(int index) {
 		this.base.setTabIndex(index);
 	}
@@ -341,6 +354,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.base.setTitle(title);
 	}
 
+	@Override
 	public void setValue(T value) {
 		int i = 0;
 		T old = this.selected;
@@ -362,6 +376,7 @@ public class SingleSelectionListBox<T> extends AbstractBoundWidget<T>
 		this.base.setVisibleItemCount(visibleItems);
 	}
 
+	@Override
 	public void setWidth(final String width) {
 		this.base.setWidth(width);
 	}

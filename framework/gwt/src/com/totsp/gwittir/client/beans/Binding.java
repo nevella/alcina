@@ -24,9 +24,10 @@ import java.beans.PropertyChangeListener;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.log.Level;
-import com.totsp.gwittir.client.log.Logger;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
@@ -47,8 +48,7 @@ import cc.alcina.framework.gwt.client.util.GwtDomUtils;
  *         Cooper</a>
  */
 public class Binding {
-	private static final Logger LOGGER = Logger
-			.getLogger("com.totsp.gwittir.client.beans");
+	static Logger logger = LoggerFactory.getLogger(Binding.class);
 
 	BindingInstance left;
 
@@ -312,7 +312,6 @@ public class Binding {
 			}
 			return valid;
 		} catch (ValidationException ve) {
-			Binding.LOGGER.log(Level.INFO, "Invalid", ve);
 			return false;
 		} catch (Exception e) {
 			throw new RuntimeException(e);
@@ -420,8 +419,7 @@ public class Binding {
 				try {
 					left.feedback.resolve(left.object);
 				} catch (Exception e) {
-					LOGGER.log(Level.INFO, "Exception cleaning up feedback ",
-							e);
+					logger.warn("Exception cleaning up feedback ", e);
 				}
 			}
 			if (left.nestedListener != null) {
@@ -433,8 +431,7 @@ public class Binding {
 				try {
 					right.feedback.resolve(right.object);
 				} catch (Exception e) {
-					LOGGER.log(Level.INFO, "Exception cleaning up feedback ",
-							e);
+					logger.warn("Exception cleaning up feedback ", e);
 				}
 			}
 			if (right.nestedListener != null) {
@@ -470,7 +467,7 @@ public class Binding {
 					}
 				} catch (Exception e) {
 					valid = false;
-					Binding.LOGGER.log(Level.WARN, null, e);
+					logger.warn("Non-validation exception in validator ", e);
 				}
 			}
 			if (right.validator != null) {
@@ -486,7 +483,7 @@ public class Binding {
 					}
 				} catch (Exception e) {
 					valid = false;
-					Binding.LOGGER.log(Level.WARN, null, e);
+					logger.warn("Non-validation exception in validator ", e);
 				}
 			}
 		}

@@ -19,8 +19,6 @@
  */
 package cc.alcina.framework.common.client.gwittir.validator;
 
-import com.totsp.gwittir.client.log.Level;
-import com.totsp.gwittir.client.log.Logger;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
@@ -33,15 +31,13 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  */
 @ClientInstantiable
 public class DoubleValidator implements Validator {
-	private static final Logger LOG = Logger
-			.getLogger("com.totsp.gwittir.client.validator");
-
 	public static final DoubleValidator INSTANCE = new DoubleValidator();
 
 	/** Creates a new instance of DoubleValidator */
 	public DoubleValidator() {
 	}
 
+	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null) {
 			return value;
@@ -50,7 +46,6 @@ public class DoubleValidator implements Validator {
 		try {
 			i = Double.valueOf(value.toString());
 		} catch (NumberFormatException nfe) {
-			DoubleValidator.LOG.log(Level.SPAM, null, nfe);
 			throw new ValidationException("Must be an decimal value.",
 					DoubleValidator.class);
 		}

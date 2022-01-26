@@ -1,16 +1,22 @@
-package cc.alcina.framework.common.client.reflection;
+package cc.alcina.framework.common.client.reflection.impl;
+
+import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
-class ForName {
+public class ForName {
 	private static ClassLoader preferredClassloader;
 
-	static void init() {
-		ForName.preferredClassloader = Thread.currentThread()
-				.getContextClassLoader();
+	public static void init() {
+		if (GWT.isClient()) {
+			preferredClassloader = ForName.class.getClassLoader();
+		} else {
+			ForName.preferredClassloader = Thread.currentThread()
+					.getContextClassLoader();
+		}
 	}
 
-	static Class<?> forName(String fqn) {
+	public static Class<?> forName(String fqn) {
 		try {
 			if (preferredClassloader != null) {
 				try {

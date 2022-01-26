@@ -2,7 +2,7 @@
 
 <module>
 	<generate-with class="cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator">
-		<when-type-assignable class="cc.alcina.framework.common.client.logic.reflection.ClientReflector" />
+		<when-type-assignable class="cc.alcina.framework.common.client.reflection.ClientReflector" />
 	</generate-with>
 	<super-source path="translatable" />
 	<source path="client" />

@@ -22,8 +22,6 @@ package com.totsp.gwittir.client.validator;
 import java.util.HashMap;
 
 import com.google.gwt.user.client.ui.UIObject;
-import com.totsp.gwittir.client.log.Level;
-import com.totsp.gwittir.client.log.Logger;
 
 /**
  *
@@ -40,6 +38,7 @@ public class StyleValidationFeedback extends AbstractValidationFeedback {
 		this.styleName = styleName;
 	}
 
+	@Override
 	public void handleException(Object source, ValidationException exception) {
 		UIObject object = (UIObject) source;
 		if (this.styleName.equals(object.getStyleName())) {
@@ -50,13 +49,10 @@ public class StyleValidationFeedback extends AbstractValidationFeedback {
 						: object.getStyleName();
 		if (!this.previousStyles.containsKey(source))
 			this.previousStyles.put(source, previousStyle);
-		Logger.getAnonymousLogger().log(Level.SPAM,
-				"Previous style: " + previousStyle, null);
 		object.addStyleName(this.styleName);
-		Logger.getAnonymousLogger().log(Level.SPAM,
-				"Current style: " + object.getStyleName(), null);
 	}
 
+	@Override
 	public void resolve(Object source) {
 		UIObject object = (UIObject) source;
 		String previousStyle = (String) this.previousStyles.get(source);

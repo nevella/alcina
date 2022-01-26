@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.reflection;
+package cc.alcina.framework.common.client.reflection.impl;
 
 import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
@@ -13,14 +13,20 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.reflection.AnnotationResolver;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Method;
+import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.ReflectiveAccess;
 import cc.alcina.framework.common.client.reflection.ReflectiveAccess.Access;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 
 /*
  * Overridden by super-source for GWT
  */
-class ClassReflectorProvider {
+public class ClassReflectorProvider {
 	public static ClassReflector getClassReflector(Class clazz) {
 		List<PropertyDescriptor> descriptors = SEUtilities
 				.getPropertyDescriptorsSortedByField(clazz);
@@ -31,7 +37,8 @@ class ClassReflectorProvider {
 				.collect(AlcinaCollectors.toKeyMap(Property::getName));
 		Supplier supplier = null;
 		boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
-		if (!isAbstract && !clazz.isEnum()) {
+		if (!isAbstract && !CommonUtils.isStandardJavaClassOrEnum(clazz)
+				&& clazz != Class.class) {
 			try {
 				Constructor constructor = clazz.getConstructor();
 				supplier = () -> {
@@ -88,7 +95,7 @@ class ClassReflectorProvider {
 		}
 	}
 
-	static class ClassAnnotationResolver implements AnnotationResolver {
+	public static class ClassAnnotationResolver implements AnnotationResolver {
 		private Class clazz;
 
 		public ClassAnnotationResolver(Class clazz) {

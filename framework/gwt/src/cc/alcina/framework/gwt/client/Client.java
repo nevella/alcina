@@ -19,6 +19,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.ClientReflector;
+import cc.alcina.framework.common.client.reflection.ClientReflectorFactory;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.remote.SearchRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -134,7 +137,12 @@ public abstract class Client {
 
 		public static void registry() {
 			// initialise clientreflector
-			throw new UnsupportedOperationException("TODO - registry");
+			ClientReflector clientReflector = ClientReflectorFactory.create();
+			clientReflector.init();
+			Reflections.init();
+			if (GWT.isScript()) {
+				throw new UnsupportedOperationException("TODO - registry");
+			}
 			// complete=true;
 		}
 	}

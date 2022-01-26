@@ -26,7 +26,6 @@ import java.util.Comparator;
 import com.google.gwt.user.client.ui.Composite;
 import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.action.BindingAction;
-import com.totsp.gwittir.client.log.Logger;
 
 /**
  * 
@@ -35,9 +34,6 @@ import com.totsp.gwittir.client.log.Logger;
  */
 public abstract class AbstractBoundWidget<T> extends Composite
 		implements BoundWidget<T> {
-	protected static final Logger LOG = Logger
-			.getLogger("" + AbstractBoundWidget.class);
-
 	private Action<BoundWidget<T>> action;
 
 	private Comparator comparator;
