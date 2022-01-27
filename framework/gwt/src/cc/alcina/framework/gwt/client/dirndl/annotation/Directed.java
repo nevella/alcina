@@ -22,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 // Not inherited - annottion resolution uses merging algorithm which would
 // conflict
 // @Inherited
+// TODO - dirndl - add @Directed.FieldNamesAsTags (for data fields i.e. string, int)
 @ClientVisible
 public @interface Directed {
 	/**
@@ -132,6 +133,8 @@ public @interface Directed {
 	public static @interface Property {
 		String name();
 	}
+	
+	
 
 	public static class DirectedResolver extends Directed.Default {
 		private TreeResolver<Directed> treeResolver;
