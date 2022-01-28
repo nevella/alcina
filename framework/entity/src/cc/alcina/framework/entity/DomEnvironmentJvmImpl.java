@@ -107,4 +107,11 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	public String toXml(Node node) {
 		return XmlUtils.streamXML(node);
 	}
+
+	@Override
+	public String toHtml(DomDoc doc) {
+		String xml = doc.prettyToString();
+		xml = XmlUtils.expandEmptyElements(xml);
+		return XmlUtils.fixStyleNodeContents(xml);
+	}
 }

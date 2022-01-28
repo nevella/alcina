@@ -62,4 +62,9 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	public String toXml(Node node) {
 		throw new UnsupportedOperationException();
 	}
+
+	@Override
+	public String toHtml(DomDoc doc) {
+		throw new UnsupportedOperationException();
+	}
 }

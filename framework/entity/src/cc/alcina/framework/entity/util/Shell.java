@@ -7,16 +7,22 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 
 public class Shell {
 	public static String exec(String script, Object... args) {
@@ -36,6 +42,20 @@ public class Shell {
 		}
 	}
 
+	@RegistryLocation(registryPoint = Pool.class, implementationType = ImplementationType.SINGLETON)
+	public static class Pool {
+		private ExecutorService threadPool;
+
+		public Pool() {
+			this.threadPool = Executors
+					.newCachedThreadPool(new NamedThreadFactory("shell-io"));
+		}
+
+		static Shell.Pool get() {
+			return Registry.impl(Shell.Pool.class);
+		}
+	}
+
 	public String ERROR_MARKER = "**>";
 
 	public String OUTPUT_MARKER = "";
@@ -52,9 +72,9 @@ public class Shell {
 
 	public String logToFile = null;
 
-	private StreamBuffer errorGobbler;
+	private StreamBuffer errorBuffer;
 
-	private StreamBuffer outputGobbler;
+	private StreamBuffer outputBuffer;
 
 	private boolean terminated;
 
@@ -90,8 +110,7 @@ public class Shell {
 		return output;
 	}
 
-	public Output runBashScriptAndThrow(String script)
-			throws Exception {
+	public Output runBashScriptAndThrow(String script) throws Exception {
 		Output tuple = runBashScript(script, true);
 		if (tuple.failed()) {
 			throw new Exception(tuple.error);
@@ -140,8 +159,7 @@ public class Shell {
 		return runShell(argString, "/bin/sh");
 	}
 
-	public Output runShell(String argString, String shellCmd)
-			throws Exception {
+	public Output runShell(String argString, String shellCmd) throws Exception {
 		List<String> args = new ArrayList<String>();
 		args.add(shellCmd);
 		args.addAll(Arrays.asList(argString.split(" ")));
@@ -176,13 +194,13 @@ public class Shell {
 			timer.schedule(killProcessTask, timeoutMs);
 		}
 		process.waitFor();
-		outputGobbler.waitFor();
-		errorGobbler.waitFor();
+		outputBuffer.waitFor();
+		errorBuffer.waitFor();
 		if (timer != null) {
 			timer.cancel();
 		}
-		return new Output(outputGobbler.getStreamResult(),
-				errorGobbler.getStreamResult(), timedOut, process.exitValue());
+		return new Output(outputBuffer.getStreamResult(),
+				errorBuffer.getStreamResult(), timedOut, process.exitValue());
 	}
 
 	private String getScriptExtension() {
@@ -209,12 +227,16 @@ public class Shell {
 		}
 		ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
 		process = pb.start();
-		errorGobbler = new StreamBuffer(process.getErrorStream(),
+		errorBuffer = new StreamBuffer(process.getErrorStream(),
 				errorCallback);
-		outputGobbler = new StreamBuffer(process.getInputStream(),
+		outputBuffer = new StreamBuffer(process.getInputStream(),
 				outputCallback);
-		errorGobbler.start();
-		outputGobbler.start();
+		receiveStream(errorBuffer);
+		receiveStream(outputBuffer);
+	}
+
+	public static void receiveStream(StreamBuffer streamBuffer) {
+		Pool.get().threadPool.execute(streamBuffer);
 	}
 
 	public static class Output {

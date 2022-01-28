@@ -923,6 +923,10 @@ public class DomNode {
 			}
 			return trs;
 		}
+
+		public String toHtml() {
+			return DomEnvironment.get().toHtml(doc);
+		}
 	}
 
 	public class DomNodeRelative {

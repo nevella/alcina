@@ -4,6 +4,7 @@ import java.lang.management.ThreadInfo;
 import java.util.Date;
 import java.util.function.Supplier;
 
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.KryoUtils;
@@ -78,6 +79,8 @@ public class InternalMetricData {
 		persistent.setSliceCount(threadHistory.getElementCount());
 		persistent.setThreadHistory(threadHistory);
 		persistent.setUpdateTime(new Date(lastSliceTime));
+		persistent.setBlackboxData(InternalMetrics.get().getBlackboxData());
+		persistent.setClientInstanceId(ClientInstance.self().getId());
 		return persistent;
 	}
 

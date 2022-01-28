@@ -108,4 +108,6 @@ public interface DomEnvironment {
 							|| n.name().equalsIgnoreCase("EMPH"));
 		}
 	}
+
+	public String toHtml(DomDoc doc);
 }
