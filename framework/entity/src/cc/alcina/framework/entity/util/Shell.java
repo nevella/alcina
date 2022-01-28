@@ -18,19 +18,19 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 
-public class ShellWrapper {
+public class Shell {
 	public static String exec(String script, Object... args) {
 		try {
 			String command = Ax.format(script, args);
-			LoggerFactory.getLogger(ShellWrapper.class).info(command);
-			ShellWrapper shellWrapper = new ShellWrapper();
-			shellWrapper.logToStdOut = false;
-			ShellOutputTuple tuple = shellWrapper.runBashScript(command, false)
+			LoggerFactory.getLogger(Shell.class).info(command);
+			Shell shell = new Shell();
+			shell.logToStdOut = false;
+			Output output = shell.runBashScript(command, false)
 					.throwOnException();
-			if (Ax.notBlank(tuple.error)) {
-				Ax.err(tuple.error);
+			if (Ax.notBlank(output.error)) {
+				Ax.err(output.error);
 			}
-			return tuple.output;
+			return output.output;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -71,28 +71,28 @@ public class ShellWrapper {
 		return tmp;
 	}
 
-	public ShellWrapper noLogging() {
+	public Shell noLogging() {
 		logToStdOut = false;
 		return this;
 	}
 
-	public ShellOutputTuple runBashScript(String script) throws Exception {
+	public Output runBashScript(String script) throws Exception {
 		return runBashScript(script, false);
 	}
 
-	public ShellOutputTuple runBashScript(String script, boolean logCmd)
+	public Output runBashScript(String script, boolean logCmd)
 			throws Exception {
 		File tmp = File.createTempFile("shell", getScriptExtension());
 		tmp.deleteOnExit();
 		ResourceUtilities.writeStringToFile(script, tmp);
-		ShellOutputTuple outputTuple = runShell(tmp.getPath(), "/bin/bash");
+		Output output = runShell(tmp.getPath(), "/bin/bash");
 		tmp.delete();
-		return outputTuple;
+		return output;
 	}
 
-	public ShellOutputTuple runBashScriptAndThrow(String script)
+	public Output runBashScriptAndThrow(String script)
 			throws Exception {
-		ShellOutputTuple tuple = runBashScript(script, true);
+		Output tuple = runBashScript(script, true);
 		if (tuple.failed()) {
 			throw new Exception(tuple.error);
 		} else {
@@ -108,19 +108,19 @@ public class ShellWrapper {
 		}
 	}
 
-	public ShellOutputTuple runProcessCatchOutputAndWait(String... cmdAndArgs)
+	public Output runProcessCatchOutputAndWait(String... cmdAndArgs)
 			throws Exception {
 		return runProcessCatchOutputAndWaitPrompt("", cmdAndArgs);
 	}
 
-	public ShellOutputTuple runProcessCatchOutputAndWait(String[] cmdAndArgs,
+	public Output runProcessCatchOutputAndWait(String[] cmdAndArgs,
 			Callback<String> outputCallback, Callback<String> errorCallback)
 			throws Exception {
 		launchProcess(cmdAndArgs, outputCallback, errorCallback);
 		return waitFor();
 	}
 
-	public ShellOutputTuple runProcessCatchOutputAndWaitPrompt(String prompt,
+	public Output runProcessCatchOutputAndWaitPrompt(String prompt,
 			String... cmdAndArgs) throws Exception {
 		if (logToStdOut) {
 			return runProcessCatchOutputAndWait(cmdAndArgs,
@@ -136,11 +136,11 @@ public class ShellWrapper {
 		}
 	}
 
-	public ShellOutputTuple runShell(String argString) throws Exception {
+	public Output runShell(String argString) throws Exception {
 		return runShell(argString, "/bin/sh");
 	}
 
-	public ShellOutputTuple runShell(String argString, String shellCmd)
+	public Output runShell(String argString, String shellCmd)
 			throws Exception {
 		List<String> args = new ArrayList<String>();
 		args.add(shellCmd);
@@ -161,7 +161,7 @@ public class ShellWrapper {
 		}
 	}
 
-	public ShellOutputTuple waitFor() throws InterruptedException {
+	public Output waitFor() throws InterruptedException {
 		if (timeoutMs != 0) {
 			timer = new Timer();
 			TimerTask killProcessTask = new TimerTask() {
@@ -181,7 +181,7 @@ public class ShellWrapper {
 		if (timer != null) {
 			timer.cancel();
 		}
-		return new ShellOutputTuple(outputGobbler.getStreamResult(),
+		return new Output(outputGobbler.getStreamResult(),
 				errorGobbler.getStreamResult(), timedOut, process.exitValue());
 	}
 
@@ -217,7 +217,7 @@ public class ShellWrapper {
 		outputGobbler.start();
 	}
 
-	public static class ShellOutputTuple {
+	public static class Output {
 		public String output;
 
 		public String error;
@@ -226,7 +226,7 @@ public class ShellWrapper {
 
 		public int exitValue;
 
-		public ShellOutputTuple(String output, String error, boolean timedOut,
+		public Output(String output, String error, boolean timedOut,
 				int exitValue) {
 			this.output = output;
 			this.error = error;
@@ -238,7 +238,7 @@ public class ShellWrapper {
 			return exitValue != 0;
 		}
 
-		public ShellOutputTuple throwOnException() {
+		public Output throwOnException() {
 			if (failed()) {
 				throw Ax.runtimeException("ShellOutputTuple exit code %s\n%s",
 						exitValue, error);

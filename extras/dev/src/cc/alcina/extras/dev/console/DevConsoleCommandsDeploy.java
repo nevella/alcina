@@ -3,8 +3,8 @@ package cc.alcina.extras.dev.console;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.util.ShellWrapper;
-import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
+import cc.alcina.framework.entity.util.Shell;
+import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.servlet.servlet.control.ControlServlet;
 
 public class DevConsoleCommandsDeploy {
@@ -71,7 +71,7 @@ public class DevConsoleCommandsDeploy {
 					targetDockerHostSshPrivateKey, fromPath,
 					targetDockerHostSshUser, targetDockerHostName, toPath);
 			Ax.out(rsync);
-			new ShellWrapper().runBashScript(rsync);
+			new Shell().runBashScript(rsync);
 			String deployPackagePath = Ax.format(
 					"/opt/jboss/wildfly/standalone/deployments/%s/WEB-INF/classes/%s",
 					targetContainerExplodedDeployment,
@@ -101,9 +101,9 @@ public class DevConsoleCommandsDeploy {
 					targetDockerHostSshPrivateKey, targetDockerHostSshUser,
 					targetDockerHostName, cmd);
 			Ax.out(script);
-			ShellOutputTuple outputTuple = new ShellWrapper()
+			Output output = new Shell()
 					.runBashScript(script);
-			outputTuple.throwOnException();
+			output.throwOnException();
 		}
 	}
 }

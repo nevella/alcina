@@ -44,8 +44,8 @@ import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 import cc.alcina.framework.entity.util.DataFolderProvider;
-import cc.alcina.framework.entity.util.ShellWrapper;
-import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
+import cc.alcina.framework.entity.util.Shell;
+import cc.alcina.framework.entity.util.Shell.Output;
 
 @RegistryLocation(registryPoint = InternalMetrics.class, implementationType = ImplementationType.SINGLETON)
 public class InternalMetrics {
@@ -461,7 +461,7 @@ public class InternalMetrics {
 					}
 					String cmd = Ax.format("%s %s -i %sus %s", profilerPath,
 							params, frequency, pid);
-					ShellOutputTuple wrapper = new ShellWrapper().noLogging()
+					Output wrapper = new Shell().noLogging()
 							.runBashScript(cmd);
 					File out = telemetryFile(type);
 					ResourceUtilities.writeStringToFileGz(wrapper.output, out);

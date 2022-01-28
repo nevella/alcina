@@ -25,8 +25,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JaxbUtils;
-import cc.alcina.framework.entity.util.ShellWrapper;
-import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
+import cc.alcina.framework.entity.util.Shell;
+import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 
 /*
@@ -113,7 +113,7 @@ public class AntHandler extends AbstractHandler {
 						throw new UnsupportedOperationException();
 					}
 					try {
-						ShellOutputTuple result = new ShellWrapper()
+						Output result = new Shell()
 								.runBashScript(script);
 						result.throwOnException();
 					} catch (Exception e) {

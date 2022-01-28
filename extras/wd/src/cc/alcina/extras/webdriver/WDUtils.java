@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.util.ShellWrapper;
+import cc.alcina.framework.entity.util.Shell;
 
 public class WDUtils {
 	public static final Locale EN_AU = new Locale("en", "AU", "");
@@ -67,7 +67,7 @@ public class WDUtils {
 
 	public static void activateOsxChrome() {
 		try {
-			new ShellWrapper().noLogging().runBashScript(
+			new Shell().noLogging().runBashScript(
 					"osascript -e 'activate application \"Google Chrome\"'");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -76,7 +76,7 @@ public class WDUtils {
 
 	public static void activateOsxChromium() {
 		try {
-			new ShellWrapper().noLogging().runBashScript(
+			new Shell().noLogging().runBashScript(
 					"osascript -e 'activate application \"Chromium\"'");
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -85,7 +85,7 @@ public class WDUtils {
 
 	public static void activateOsxFirefox() {
 		try {
-			new ShellWrapper().noLogging().runBashScript(
+			new Shell().noLogging().runBashScript(
 					"osascript -e 'activate application \"Firefox\"'");
 		} catch (Exception e) {
 			e.printStackTrace();
