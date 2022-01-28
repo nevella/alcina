@@ -11,7 +11,9 @@ import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
+import cc.alcina.framework.entity.persistence.metric.InternalMetrics.BlackboxData;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.util.JacksonUtils;
 
 @MappedSuperclass
 @DomainTransformPersistable
@@ -37,6 +39,28 @@ public abstract class InternalMetric<U extends InternalMetric>
 	private String hostName;
 
 	private String lockType;
+
+	private String blackboxData;
+	
+	private long clientInstanceId;
+
+	public long getClientInstanceId() {
+		return this.clientInstanceId;
+	}
+
+	public void setClientInstanceId(long clientInstanceId) {
+		this.clientInstanceId = clientInstanceId;
+	}
+
+	@Lob
+	@Transient
+	public String getBlackboxData() {
+		return this.blackboxData;
+	}
+
+	public void setBlackboxData(String blackboxData) {
+		this.blackboxData = blackboxData;
+	}
 
 	private transient ThreadHistory threadHistory;
 
@@ -159,5 +183,9 @@ public abstract class InternalMetric<U extends InternalMetric>
 	@Override
 	public String toString() {
 		return GraphProjection.fieldwiseToStringOneLine(this);
+	}
+
+	public BlackboxData provideBlackboxData() {
+		return JacksonUtils.deserialize(blackboxData, BlackboxData.class);
 	}
 }

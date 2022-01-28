@@ -28,6 +28,7 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -35,15 +36,14 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
-import cc.alcina.framework.entity.util.DataFolderProvider;
+import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
 
@@ -244,6 +244,10 @@ public class InternalMetrics {
 		if (!trackMetricsEnabled.get()) {
 			return;
 		}
+		if (ResourceUtilities.is("healthMetricsOnly")
+				&& type != InternalMetricTypeAlcina.health) {
+			return;
+		}
 		if (trackers.size() > MAX_TRACKERS) {
 			if (DISABLE_OVER_MAX_TRACKERS) {
 				Ax.sysLogHigh(
@@ -316,71 +320,59 @@ public class InternalMetrics {
 				.collect(AlcinaCollectors.toKeyMap(ti -> ti.getThreadId()));
 		trackers.values().stream().filter(imd -> !imd.isFinished())
 				.filter(imd -> shouldSlice(imd)).forEach(imd -> {
-					synchronized (imd) {
-						imd.lastSliceTime = System.currentTimeMillis();
-						if (imd.type == InternalMetricTypeAlcina.health) {
-							if (healthNotificationCounter.incrementAndGet()
-									% 20 == 0) {
-							} else {
-								// this is an expansive op (get all threads) -
-								// so only do 1/sec
-								return;
-							}
-							logger.info(
-									"Internal health metrics monitoring:\n\t{}",
-									getMemoryStats());
-							long[] allIds = threadMxBean.getAllThreadIds();
-							ThreadInfo[] threadInfos2 = threadMxBean
-									.getThreadInfo(allIds, debugMonitors,
-											debugMonitors);
-							imd.threadHistory.clearElements();
-							Map<Thread, StackTraceElement[]> allStackTraces = Thread
-									.getAllStackTraces();
-							for (ThreadInfo threadInfo : threadInfos2) {
-								if (threadInfo == null) {
-									continue;
-								}
-								StackTraceElement[] stackTrace = allStackTraces
-										.entrySet().stream()
-										.filter(e -> e.getKey()
-												.getId() == threadInfo
-														.getThreadId())
-										.findFirst().map(e -> e.getValue())
-										.orElse(new StackTraceElement[0]);
-								imd.addSlice(threadInfo, stackTrace, 0, 0,
-										DomainStoreLockState.NO_LOCK,
-										new DomainStoreWaitStats());
-							}
-							return;
-						}
-						try {
-							Thread thread = imd.thread;
-							ThreadInfo threadInfo = threadInfoById
-									.get(thread.getId());
-							if (threadInfo != null) {
-								StackTraceElement[] stackTrace = thread
-										.getStackTrace();
-								imd.addSlice(threadInfo, stackTrace, 0L, 0L,
-										DomainStoreLockState.NO_LOCK,
-										new DomainStoreWaitStats());
-							}
-						} catch (Exception e) {
-							throw new WrappedRuntimeException(e);
-						}
-					}
+					addSlice(debugMonitors, threadInfoById, imd);
 					// }
 				});
 	}
 
-	private File telemetryFile(MetricType type) {
-		Date date = new Date();
-		File out = DataFolderProvider.get().getSubFolderFile(
-				profilerFolder(date),
-				Ax.format("%s.%s.txt.gz",
-						CommonUtils.formatDate(date, DateStyle.TIMESTAMP_NO_DAY)
-								.replace(":", "_"),
-						type));
-		return out;
+	private void addSlice(boolean debugMonitors,
+			Map<Long, ThreadInfo> threadInfoById, InternalMetricData imd) {
+		synchronized (imd) {
+			imd.lastSliceTime = System.currentTimeMillis();
+			if (imd.type == InternalMetricTypeAlcina.health) {
+				if (healthNotificationCounter.incrementAndGet() % 20 == 0) {
+				} else {
+					// this is an expansive op (get all threads) -
+					// so only do 1/sec
+					return;
+				}
+				logger.info("Internal health metrics monitoring:\n\t{}",
+						getMemoryStats());
+				long[] allIds = threadMxBean.getAllThreadIds();
+				ThreadInfo[] threadInfos2 = threadMxBean.getThreadInfo(allIds,
+						debugMonitors, debugMonitors);
+				imd.threadHistory.clearElements();
+				Map<Thread, StackTraceElement[]> allStackTraces = Thread
+						.getAllStackTraces();
+				for (ThreadInfo threadInfo : threadInfos2) {
+					if (threadInfo == null) {
+						continue;
+					}
+					StackTraceElement[] stackTrace = allStackTraces.entrySet()
+							.stream()
+							.filter(e -> e.getKey().getId() == threadInfo
+									.getThreadId())
+							.findFirst().map(e -> e.getValue())
+							.orElse(new StackTraceElement[0]);
+					imd.addSlice(threadInfo, stackTrace, 0, 0,
+							DomainStoreLockState.NO_LOCK,
+							new DomainStoreWaitStats());
+				}
+				return;
+			}
+			try {
+				Thread thread = imd.thread;
+				ThreadInfo threadInfo = threadInfoById.get(thread.getId());
+				if (threadInfo != null) {
+					StackTraceElement[] stackTrace = thread.getStackTrace();
+					imd.addSlice(threadInfo, stackTrace, 0L, 0L,
+							DomainStoreLockState.NO_LOCK,
+							new DomainStoreWaitStats());
+				}
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 	}
 
 	protected void persist() {
@@ -461,43 +453,42 @@ public class InternalMetrics {
 					}
 					String cmd = Ax.format("%s %s -i %sus %s", profilerPath,
 							params, frequency, pid);
-					Output wrapper = new Shell().noLogging()
-							.runBashScript(cmd);
-					File out = telemetryFile(type);
-					ResourceUtilities.writeStringToFileGz(wrapper.output, out);
+					Output wrapper = new Shell().noLogging().runBashScript(cmd);
+					addMetric(type, wrapper.output);
 					String runningMetrics = trackers.values().stream()
 							.filter(imd -> !imd.isFinished())
 							.map(InternalMetricData::logForBlackBox)
 							.collect(Collectors.joining("\n"));
-					String metrics = Ax.format("%s\nTrackers:\n%s\n\nJobs:\n%s",
+					String state = Ax.format("%s\nTrackers:\n%s\n\nJobs:\n%s",
 							ContainerProvider.get().getContainerState(),
 							ContainerProvider.get().getJobsState(),
 							runningMetrics);
-					out = telemetryFile(MetricType.metrics);
-					ResourceUtilities.writeStringToFileGz(runningMetrics, out);
+					addMetric(MetricType.metrics, state);
 					String gcLogFile = "/opt/jboss/gc.log";
 					if (new File(gcLogFile).exists()) {
 						GCLogParser.Events events = new GCLogParser().parse(
 								gcLogFile, parseGcLogFrom,
 								ResourceUtilities.getInteger(getClass(),
 										"gcEventThresholdMillis"));
-						out = telemetryFile(MetricType.gc);
-						ResourceUtilities.writeStringToFileGz(events.toString(),
-								out);
+						addMetric(MetricType.gc, events.toString());
 						parseGcLogFrom = events.end;
 					}
-					Arrays.stream(DataFolderProvider.get()
-							.getSubFolder("profiler").listFiles())
-							.filter(f -> System.currentTimeMillis()
-									- f.lastModified() > 2
-											* TimeConstants.ONE_DAY_MS)
-							.forEach(SEUtilities::deleteDirectory);
 					nextIsAlloc = !nextIsAlloc;
 				} else {
 					Thread.sleep(1000);
 				}
 			} catch (Exception e) {
 				e.printStackTrace();
+			}
+		}
+	}
+
+	private void addMetric(MetricType type, String string) {
+		synchronized (blackboxData) {
+			blackboxData.metrics.add(type, string);
+			List<String> list = blackboxData.metrics.get(type);
+			if (list.size() > 5) {
+				list.remove(0);
 			}
 		}
 	}
@@ -552,5 +543,23 @@ public class InternalMetrics {
 
 	public enum MetricType {
 		alloc, cpu, gc, metrics
+	}
+
+	private BlackboxData blackboxData = new BlackboxData();
+
+	public static class BlackboxData {
+		public Multimap<MetricType, List<String>> metrics = new Multimap<>();
+	}
+
+	String getBlackboxData() {
+		return JacksonUtils.serialize(blackboxData);
+	}
+
+	public InternalMetric getMetric(long clientInstanceId, String callName) {
+		return CommonPersistenceProvider.get().getCommonPersistence()
+				.getItemByKeyValueKeyValue(
+						PersistentImpl.getImplementation(InternalMetric.class),
+						"clientInstanceId", clientInstanceId, "callName",
+						callName);
 	}
 }

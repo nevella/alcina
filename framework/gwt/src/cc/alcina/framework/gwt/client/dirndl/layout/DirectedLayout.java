@@ -918,7 +918,11 @@ public class DirectedLayout {
 		}
 
 		public <A extends Annotation> boolean has(Class<A> clazz) {
-			return annotation(clazz)!=null;
+			return annotation(clazz) != null;
+		}
+
+		public <A extends Annotation> Optional<A> optional(Class<A> clazz) {
+			return Optional.ofNullable(annotation(clazz));
 		}
 	}
 

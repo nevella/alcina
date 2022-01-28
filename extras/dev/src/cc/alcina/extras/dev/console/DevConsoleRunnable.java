@@ -10,6 +10,7 @@ import cc.alcina.extras.dev.console.DevConsoleCommand.CmdExecRunnable;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
@@ -102,5 +103,9 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		ResourceUtilities.writeStreamToStream(new FileInputStream(content),
 				new FileOutputStream(outPath));
 		return outPath;
+	}
+
+	protected void logJobResultFiles() {
+		Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");		
 	}
 }
