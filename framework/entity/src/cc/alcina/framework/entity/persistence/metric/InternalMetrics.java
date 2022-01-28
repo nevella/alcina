@@ -94,6 +94,8 @@ public class InternalMetrics {
 
 	int parseGcLogFrom = 0;
 
+	private boolean persistBlackboxTelemetry;
+
 	public void changeTrackerContext(Object marker, String context) {
 		InternalMetricData metricData = trackers.get(marker);
 		if (metricData != null) {
