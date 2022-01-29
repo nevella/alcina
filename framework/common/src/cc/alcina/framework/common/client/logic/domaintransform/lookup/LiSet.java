@@ -15,9 +15,6 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.DegenerateCreator;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.LiSetIterator;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.NonDomainNotifier;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 /**

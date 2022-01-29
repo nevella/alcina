@@ -17,7 +17,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererArgs;
 import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
-import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeLabelClicked;

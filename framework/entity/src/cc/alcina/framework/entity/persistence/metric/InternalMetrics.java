@@ -11,11 +11,10 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -95,8 +94,6 @@ public class InternalMetrics {
 	private boolean highFrequencyProfiling;
 
 	int parseGcLogFrom = 0;
-
-	private boolean persistBlackboxTelemetry;
 
 	public void changeTrackerContext(Object marker, String context) {
 		InternalMetricData metricData = trackers.get(marker);

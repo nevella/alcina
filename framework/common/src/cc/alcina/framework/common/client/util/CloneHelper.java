@@ -23,7 +23,6 @@ import java.util.Map;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -154,8 +153,7 @@ public class CloneHelper {
 			return ret;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(
-					"Unable to clone: " + o.getClass(), e,
-					SuggestedAction.NOTIFY_WARNING);
+					"Unable to clone: " + o.getClass(), e);
 		}
 	}
 

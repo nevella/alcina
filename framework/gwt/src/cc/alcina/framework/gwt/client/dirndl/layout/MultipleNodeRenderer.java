@@ -14,8 +14,6 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
 /**
  * FIXME - dirndl 1.1 - this: @MultipleNodeRendererLeaf(@Directed) - shouldn't

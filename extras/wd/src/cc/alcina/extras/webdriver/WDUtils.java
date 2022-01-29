@@ -26,7 +26,6 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 
 import cc.alcina.extras.webdriver.WDConfigurationItem.WebDriverType;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -450,8 +449,7 @@ public class WDUtils {
 		try {
 			Thread.sleep(ms);
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e,
-					SuggestedAction.NOTIFY_WARNING);
+			throw new WrappedRuntimeException(e);
 		}
 	}
 

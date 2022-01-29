@@ -14,15 +14,11 @@
 package cc.alcina.framework.common.client;
 
 /**
- * Design pattern: wrap non-runtime exceptions in this class, with a suggested
- * upper-level handling action
  * 
  * @author nick@alcina.cc
  * 
  */
 public class WrappedRuntimeException extends RuntimeException {
-	private static final transient long serialVersionUID = 89976002L;
-
 	public static RuntimeException wrapIfNotRuntime(Exception e) {
 		if (e instanceof RuntimeException) {
 			throw (RuntimeException) e;
@@ -31,61 +27,14 @@ public class WrappedRuntimeException extends RuntimeException {
 		}
 	}
 
-	/**
-	 */
-	private SuggestedAction suggestedAction;
-
 	public WrappedRuntimeException() {
 	}
 
-	public WrappedRuntimeException(String cause, SuggestedAction sa) {
-		super(cause);
-		setSuggestedAction(sa);
-	}
-
 	public WrappedRuntimeException(String message, Throwable cause) {
-		this(message, cause, SuggestedAction.NOTIFY_WARNING);
-	}
-
-	public WrappedRuntimeException(String message, Throwable cause,
-			SuggestedAction sa) {
 		super(message, cause);
-		setSuggestedAction(sa);
 	}
 
 	public WrappedRuntimeException(Throwable cause) {
-		this(cause, SuggestedAction.NOTIFY_WARNING);
-	}
-
-	public WrappedRuntimeException(Throwable cause, SuggestedAction sa) {
 		super(cause);
-		setSuggestedAction(sa);
-	}
-
-	/**
-	 * Getter of the property <tt>suggestedAction</tt>
-	 * 
-	 * @return Returns the suggestedAction.
-	 */
-	public SuggestedAction getSuggestedAction() {
-		return suggestedAction;
-	}
-
-	/**
-	 * Setter of the property <tt>suggestedAction</tt>
-	 * 
-	 * @param suggestedAction
-	 *            The suggestedAction to set.
-	 */
-	public void setSuggestedAction(SuggestedAction suggestedAction) {
-		this.suggestedAction = suggestedAction;
-	}
-
-	// FIXME - mvcc.jobs - remove
-	public enum SuggestedAction {
-		CANCEL_STARTUP, NOTIFY_WARNING, NOTIFY_ERROR, EXPECTED_EXCEPTION,
-		NOTIFY_AND_SHUTDOWN, HANDLE_INTERRUPTED_ACTION_SILENT,
-		HTTP_RETRY_WAIT_LONG, HTTP_RETRY_WAIT_SHORT,
-		NO_NOTIFICATION_AND_CONTINUE, RELOAD
 	}
 }

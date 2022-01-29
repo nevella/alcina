@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import java.awt.datatransfer.FlavorTable;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;

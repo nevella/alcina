@@ -15,6 +15,17 @@
  */
 package com.google.gwt.dev.javac;
 
+import java.io.File;
+import java.io.IOException;
+import java.net.URL;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
+import java.util.Set;
+
+import org.eclipse.jdt.core.compiler.CategorizedProblem;
+
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.TreeLogger.HelpInfo;
 import com.google.gwt.core.ext.TreeLogger.Type;
@@ -27,17 +38,6 @@ import com.google.gwt.dev.jjs.SourceInfo;
 import com.google.gwt.dev.util.Messages;
 import com.google.gwt.dev.util.Util;
 import com.google.gwt.thirdparty.guava.common.collect.Lists;
-
-import org.eclipse.jdt.core.compiler.CategorizedProblem;
-
-import java.io.File;
-import java.io.IOException;
-import java.net.URL;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Queue;
-import java.util.Set;
 
 /**
  * Handles some details of reporting errors in {@link CompilationUnit}s to the

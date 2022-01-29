@@ -1,10 +1,8 @@
 package cc.alcina.framework.servlet.servlet.ws;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.NotAllowedException;
 import javax.ws.rs.NotFoundException;
 import javax.ws.rs.NotSupportedException;
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.Status;
 import javax.ws.rs.ext.ExceptionMapper;
@@ -13,7 +11,6 @@ import javax.ws.rs.ext.Provider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.entity.persistence.transform.TransformCommit.ReuseIUserHolder;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.servlet.AlcinaServletContext;
 import cc.alcina.framework.servlet.servlet.HttpContext;

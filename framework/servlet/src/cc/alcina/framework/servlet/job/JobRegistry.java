@@ -30,7 +30,6 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
@@ -211,9 +210,8 @@ public class JobRegistry {
 		if (annotation != null) {
 			if (!PermissionsManager.get().isPermitted(o,
 					new AnnotatedPermissible(annotation.customPermission()))) {
-				WrappedRuntimeException e = new WrappedRuntimeException(
-						"Permission denied for action " + o,
-						SuggestedAction.NOTIFY_WARNING);
+				RuntimeException e = new RuntimeException(
+						"Permission denied for action " + o);
 				EntityLayerLogging.log(LogMessageType.TRANSFORM_EXCEPTION,
 						"Domain transform permissions exception", e);
 				throw e;

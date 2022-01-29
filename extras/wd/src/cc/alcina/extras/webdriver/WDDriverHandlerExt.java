@@ -16,7 +16,6 @@ import org.openqa.selenium.remote.HttpCommandExecutor;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
@@ -69,8 +68,7 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 			driver.close();
 			driver.quit();
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e,
-					SuggestedAction.NOTIFY_WARNING);
+			throw new WrappedRuntimeException(e);
 		}
 	}
 
@@ -103,8 +101,7 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 				createNewDriver();
 				putlastDriver(driver);
 			} catch (Exception e) {
-				throw new WrappedRuntimeException(e,
-						SuggestedAction.NOTIFY_WARNING);
+				throw new WrappedRuntimeException(e);
 			}
 		}
 		return driver;
@@ -117,8 +114,7 @@ public abstract class WDDriverHandlerExt implements WDDriverHandler {
 				lastDriver.close();
 				lastDriver.quit();
 			} catch (Exception e) {
-				throw new WrappedRuntimeException(e,
-						SuggestedAction.NOTIFY_WARNING);
+				throw new WrappedRuntimeException(e);
 			}
 		}
 	}

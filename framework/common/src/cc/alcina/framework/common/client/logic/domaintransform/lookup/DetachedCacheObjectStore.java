@@ -4,7 +4,6 @@ import java.util.Collection;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
 
 public class DetachedCacheObjectStore implements ObjectStore {

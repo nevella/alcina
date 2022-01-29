@@ -59,8 +59,6 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
@@ -323,9 +321,8 @@ public class ContentViewFactory {
 			cloned = true;
 		}
 		if (!Reflections.at(bean.getClass()).isReflective()) {
-			throw new WrappedRuntimeException(
-					"Unviewable bean type: " + bean.getClass(),
-					SuggestedAction.NOTIFY_WARNING);
+			throw new RuntimeException(
+					"Unviewable bean type: " + bean.getClass());
 		}
 		if (autoSave && bean instanceof Entity) {
 			TransformManager.get().registerDomainObject((Entity) bean);
@@ -507,9 +504,7 @@ public class ContentViewFactory {
 			cloned = true;
 		}
 		if (!Reflections.at(beanClass).isReflective()) {
-			throw new WrappedRuntimeException(
-					"Unviewable bean type: " + beanClass,
-					SuggestedAction.NOTIFY_WARNING);
+			throw new RuntimeException("Unviewable bean type: " + beanClass);
 		}
 		Object bean = beans.iterator().hasNext() ? beans.iterator().next()
 				: Reflections.at(beanClass).templateInstance();

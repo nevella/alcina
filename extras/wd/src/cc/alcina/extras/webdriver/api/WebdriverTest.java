@@ -12,7 +12,6 @@ import org.openqa.selenium.WebDriver;
 
 import cc.alcina.extras.webdriver.WDToken;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -53,8 +52,7 @@ public abstract class WebdriverTest {
 								added.add(c);
 							}
 						} catch (Exception e2) {
-							throw new WrappedRuntimeException(e2,
-									SuggestedAction.NOTIFY_WARNING);
+							throw new WrappedRuntimeException(e2);
 						}
 					}
 				}
@@ -256,8 +254,7 @@ public abstract class WebdriverTest {
 							.getDeclaredConstructor().newInstance());
 				}
 			} catch (Exception e) {
-				throw new WrappedRuntimeException(e,
-						SuggestedAction.NOTIFY_WARNING);
+				throw new WrappedRuntimeException(e);
 			}
 		}
 		return testTemplates;

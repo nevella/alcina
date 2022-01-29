@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.ReflectiveAccess;
 import cc.alcina.framework.common.client.reflection.ReflectiveAccess.Access;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 
@@ -40,14 +41,24 @@ public class ClassReflectorProvider {
 		if (!isAbstract && !CommonUtils.isStandardJavaClassOrEnum(clazz)
 				&& clazz != Class.class) {
 			try {
-				Constructor constructor = clazz.getConstructor();
-				supplier = () -> {
-					try {
-						return constructor.newInstance();
-					} catch (Exception e) {
-						throw new WrappedRuntimeException(e);
-					}
-				};
+				Constructor constructor = Arrays.stream(clazz.getConstructors())
+						.filter(c -> c.getParameterCount() == 0).findFirst()
+						.orElse(null);
+				if (constructor == null) {
+					supplier = () -> {
+						throw new IllegalArgumentException(Ax.format(
+								"Class '%s' has no no-args constructor",
+								clazz.getName()));
+					};
+				} else {
+					supplier = () -> {
+						try {
+							return constructor.newInstance();
+						} catch (Exception e) {
+							throw new WrappedRuntimeException(e);
+						}
+					};
+				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

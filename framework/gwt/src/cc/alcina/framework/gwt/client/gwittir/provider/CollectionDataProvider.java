@@ -27,7 +27,6 @@ import com.totsp.gwittir.client.ui.table.SortableDataProvider;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 
 /**
  *

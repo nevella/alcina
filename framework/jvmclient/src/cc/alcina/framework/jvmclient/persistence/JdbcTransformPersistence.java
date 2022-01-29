@@ -33,7 +33,6 @@ import java.util.NoSuchElementException;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -568,7 +567,7 @@ public abstract class JdbcTransformPersistence
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException("Problem accessing local db",
-						e, SuggestedAction.NOTIFY_WARNING);
+						e);
 			}
 		}
 

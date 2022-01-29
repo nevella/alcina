@@ -9,9 +9,6 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 
-import com.google.common.base.Preconditions;
-
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 @Retention(RetentionPolicy.RUNTIME)

@@ -5,7 +5,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.FocusOnAttach;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents.Attach;
 
 public class Editable {
 	@Directed(tag = "input", bindings = {

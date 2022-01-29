@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Set;
-import java.util.Map.Entry;
 
 import cc.alcina.framework.common.client.domain.DomainCollections;
 

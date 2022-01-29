@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.dom;
 
-import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -10,8 +9,6 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.collections.PathAccessor;
-import cc.alcina.framework.common.client.reflection.Property;
-import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class DomNodePathAccessor implements PathAccessor {
 	private List<String> singleChildElementNames = new ArrayList<>();

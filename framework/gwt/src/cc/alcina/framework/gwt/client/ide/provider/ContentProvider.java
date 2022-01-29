@@ -15,9 +15,6 @@ package cc.alcina.framework.gwt.client.ide.provider;
 
 import com.google.gwt.user.client.ui.HTML;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
-
 /**
  * 
  * @author Nick Reddel
@@ -29,16 +26,14 @@ public class ContentProvider {
 		if (provider != null) {
 			return provider.getContent(key);
 		}
-		throw new WrappedRuntimeException("No content provider registered",
-				SuggestedAction.NOTIFY_ERROR);
+		throw new RuntimeException("No content provider registered");
 	}
 
 	public static ContentProviderSource getProvider() {
 		if (provider != null) {
 			return provider;
 		}
-		throw new WrappedRuntimeException("No content provider registered",
-				SuggestedAction.NOTIFY_ERROR);
+		throw new RuntimeException("No content provider registered");
 	}
 
 	public static HTML getWidget(String key) {
@@ -60,8 +55,7 @@ public class ContentProvider {
 				return html;
 			}
 		}
-		throw new WrappedRuntimeException("No content provider registered",
-				SuggestedAction.NOTIFY_ERROR);
+		throw new RuntimeException("No content provider registered");
 	}
 
 	public static boolean hasContent(String key) {
@@ -69,8 +63,7 @@ public class ContentProvider {
 			String trim = getContent(key).trim();
 			return !trim.isEmpty() && !trim.startsWith("No content for key");
 		}
-		throw new WrappedRuntimeException("No content provider registered",
-				SuggestedAction.NOTIFY_ERROR);
+		throw new RuntimeException("No content provider registered");
 	}
 
 	public static void registerProvider(ContentProviderSource p) {

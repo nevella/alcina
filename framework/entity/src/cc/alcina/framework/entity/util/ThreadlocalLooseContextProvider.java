@@ -4,7 +4,6 @@ import java.lang.StackWalker.StackFrame;
 import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Stack;
 
 import com.google.common.base.Preconditions;

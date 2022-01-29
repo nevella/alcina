@@ -15,10 +15,6 @@
  */
 package com.google.gwt.dev.shell;
 
-import com.google.gwt.dev.util.StringInterner;
-
-import cc.alcina.framework.common.client.util.Ax;
-
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -29,6 +25,10 @@ import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map.Entry;
+
+import com.google.gwt.dev.util.StringInterner;
+
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * Helper class for dispatching methods to Java objects. It takes methods on

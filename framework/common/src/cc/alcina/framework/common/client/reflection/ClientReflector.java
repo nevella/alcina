@@ -6,11 +6,9 @@ public class ClientReflector {
 	}
 
 	public ClientReflector() {
+		int debug = 3;
 	}
 
 	public void init() {
-	}
-
-	void scanRegistry() {
 	}
 }

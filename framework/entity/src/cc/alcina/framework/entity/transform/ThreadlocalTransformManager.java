@@ -42,7 +42,6 @@ import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
@@ -344,9 +343,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 		public <T extends Entity> T getObject(Class<? extends T> clazz, long id,
 				long localId) {
 			if (!Entity.class.isAssignableFrom(clazz)) {
-				throw new WrappedRuntimeException(
-						"Attempting to obtain incompatible bean: " + clazz,
-						SuggestedAction.NOTIFY_WARNING);
+				throw new RuntimeException(
+						"Attempting to obtain incompatible bean: " + clazz);
 			}
 			if (id == 0) {
 				if (localIdToEntityMap.containsKey(localId)) {

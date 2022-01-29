@@ -42,7 +42,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasVersionNumber;
 import cc.alcina.framework.common.client.logic.domaintransform.CollectionModification.CollectionModificationEvent;
@@ -908,9 +907,8 @@ public abstract class TransformManager
 					// allow it there, to save lots of unhelpful
 					// register/deregister boilerplate
 					if (!allowUnregisteredEntityTargetObject()) {
-						throw new WrappedRuntimeException(
-								"Unable to get target object " + evt,
-								SuggestedAction.NOTIFY_ERROR);
+						throw new RuntimeException(
+								"Unable to get target object " + evt);
 					}
 				}
 			}
