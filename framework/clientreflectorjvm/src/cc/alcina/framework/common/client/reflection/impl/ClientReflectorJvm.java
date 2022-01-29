@@ -10,6 +10,7 @@ import com.google.gwt.core.client.GWT;
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.ClientReflector;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -18,7 +19,7 @@ import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 
 //poulates ForName, Reflections
-public class ClientReflectorJvm {
+public class ClientReflectorJvm extends ClientReflector {
 	public static final String CONTEXT_MODULE_NAME = ClientReflectorJvm.class
 			.getName() + ".CONTEXT_MODULE_NAME";
 
@@ -114,6 +115,7 @@ public class ClientReflectorJvm {
 		}
 	}
 
+	@Override
 	public void init() {
 		scanRegistry();
 	}

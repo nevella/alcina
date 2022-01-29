@@ -54,7 +54,6 @@ import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
 import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.WrappedRuntimeException.SuggestedAction;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
@@ -998,9 +997,8 @@ public class ClientReflectionGenerator extends Generator {
 			pbm.put("int", Integer.class);
 			pbm.put("boolean", Boolean.class);
 			if (!pbm.containsKey(c.getName())) {
-				throw new WrappedRuntimeException(
-						"Unimplemented primitive:" + c.getName(),
-						SuggestedAction.NOTIFY_AND_SHUTDOWN);
+				throw new RuntimeException(
+						"Unimplemented primitive:" + c.getName());
 			}
 			return pbm.get(c.getName());
 		}
