@@ -21,3 +21,6 @@ gwt serialization issues? clean & rebuild that jar
 # debugging serialization incompatibility
 Look in /tmp/rpclog == compare first the xx fromBrowser & xx fromServer files (to see how hosted & production mode differ)
 Then compare xxx.short (a little more involved)
+
+# debug a large string (by writing to fs)
+java.nio.file.Files.write(java.nio.file.Path.of("/tmp/tmp.txt"), result.getBytes());
