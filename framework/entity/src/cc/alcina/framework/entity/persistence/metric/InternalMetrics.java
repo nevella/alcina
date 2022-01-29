@@ -12,8 +12,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -354,8 +356,7 @@ public class InternalMetrics {
 				ThreadInfo[] threadInfos2 = threadMxBean.getThreadInfo(allIds,
 						debugMonitors, debugMonitors);
 				imd.threadHistory.clearElements();
-				Map<Thread, StackTraceElement[]> allStackTraces = Thread
-						.getAllStackTraces();
+				allStackTraces = Thread.getAllStackTraces();
 				for (ThreadInfo threadInfo : threadInfos2) {
 					if (threadInfo == null) {
 						continue;
@@ -471,10 +472,26 @@ public class InternalMetrics {
 							.filter(imd -> !imd.isFinished())
 							.map(InternalMetricData::logForBlackBox)
 							.collect(Collectors.joining("\n"));
-					String state = Ax.format("%s\nTrackers:\n%s\n\nJobs:\n%s",
+					StringBuilder sb = new StringBuilder();
+					if (allStackTraces != null) {
+						for (Entry<Thread, StackTraceElement[]> entry : allStackTraces
+								.entrySet()) {
+							sb.append(entry.getKey());
+							sb.append("\n");
+							StackTraceElement[] value = entry.getValue();
+							for (StackTraceElement stackTraceElement : value) {
+								sb.append("\t");
+								sb.append(stackTraceElement);
+								sb.append("\n");
+							}
+						}
+					}
+					String threadDump = sb.toString();
+					String state = Ax.format(
+							"%s\nTrackers:\n%s\n\nJobs:\n%s\n\nThreads:\n%s",
 							ContainerProvider.get().getContainerState(),
-							ContainerProvider.get().getJobsState(),
-							runningMetrics);
+							runningMetrics,
+							ContainerProvider.get().getJobsState(), threadDump);
 					addMetric(MetricType.metrics, state);
 					String gcLogFile = "/opt/jboss/gc.log";
 					if (new File(gcLogFile).exists()) {
@@ -558,6 +575,8 @@ public class InternalMetrics {
 	}
 
 	private BlackboxData blackboxData = new BlackboxData();
+
+	private Map<Thread, StackTraceElement[]> allStackTraces;
 
 	public static class BlackboxData {
 		public Multimap<MetricType, List<String>> metrics = new Multimap<>();
