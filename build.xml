@@ -38,6 +38,7 @@
 				<path refid="framework.common.lib.path" />
 			</classpath>
 			<exclude name="org/w3c/**" />
+			<exclude name="cc/alcina/framework/common/translatable/**" />
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>
 

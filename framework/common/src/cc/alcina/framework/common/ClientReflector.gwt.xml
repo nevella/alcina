@@ -6,5 +6,6 @@
 		<when-type-assignable class="cc.alcina.framework.common.client.logic.reflection.ClientReflector" />
 	</generate-with>
 	 -->
+	 <super-source path="translatable" />
 	<source path="client" />
 </module>

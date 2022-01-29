@@ -1,7 +1,9 @@
 package cc.alcina.framework.common.client.reflection;
 
+import com.google.gwt.core.client.GwtScriptOnly;
 //poulates ForName, Reflections
-public class ClientReflector {
+@GwtScriptOnly
+public class ClientReflectorJvm {
 	public static void registerChild(ClientReflector childReflector) {
 	}
 
