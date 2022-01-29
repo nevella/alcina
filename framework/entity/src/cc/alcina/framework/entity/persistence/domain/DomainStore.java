@@ -1242,7 +1242,8 @@ public class DomainStore implements IDomainStore {
 				});
 				this.classMap = Collections.unmodifiableMap(classMap);
 			}
-			stores = Collections.unmodifiableCollection(descriptorMap.values());
+			stores = Collections.unmodifiableCollection(descriptorMap.values()
+					.stream().collect(Collectors.toList()));
 		}
 
 		// not synchronized - requires that classMap modification not conflict
