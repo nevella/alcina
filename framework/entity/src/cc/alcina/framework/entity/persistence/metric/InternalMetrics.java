@@ -265,11 +265,21 @@ public class InternalMetrics {
 				return;
 			}
 		}
-		trackers.put(markerObject,
-				new InternalMetricData(markerObject, callContextProvider,
-						System.currentTimeMillis(), Thread.currentThread(),
-						type, metricName));
+		InternalMetricData metric = new InternalMetricData(markerObject,
+				callContextProvider, System.currentTimeMillis(),
+				Thread.currentThread(), type, metricName);
+		if (type == InternalMetricTypeAlcina.health) {
+			// reuse persistent record (1 per vm) for health metric
+			if (lastHealthMetric != null
+					&& lastHealthMetric.persistentId != 0) {
+				metric.setPersistentId(lastHealthMetric.persistentId);
+			}
+			lastHealthMetric = metric;
+		}
+		trackers.put(markerObject, metric);
 	}
+
+	private InternalMetricData lastHealthMetric;
 
 	public void stopService() {
 		if (started) {
