@@ -262,7 +262,7 @@ public class Shell {
 
 		public Output throwOnException() {
 			if (failed()) {
-				throw Ax.runtimeException("ShellOutputTuple exit code %s\n%s",
+				throw Ax.runtimeException("Output exit code %s\n%s",
 						exitValue, error);
 			}
 			return this;
