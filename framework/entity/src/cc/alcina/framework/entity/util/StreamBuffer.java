@@ -8,7 +8,7 @@ import java.io.InputStreamReader;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 
-public class StreamBuffer extends Thread {
+public class StreamBuffer implements Runnable {
 	private static final int TIMEOUT = 1 * 1000;
 
 	InputStream is;

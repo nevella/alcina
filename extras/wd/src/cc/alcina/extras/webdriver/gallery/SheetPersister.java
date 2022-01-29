@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.JacksonUtils;
-import cc.alcina.framework.entity.util.ShellWrapper;
+import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.servlet.google.DriveAccessor;
 import cc.alcina.framework.servlet.google.SheetAccessor;
 
@@ -71,7 +71,7 @@ public class SheetPersister {
 		if (ResourceUtilities.is("uploadImages")) {
 			uploadImages();
 		}
-		hashes = new ShellWrapper()
+		hashes = new Shell()
 				.runBashScript(configuration.repoHashesCommand).output;
 		build = BuildNumberProvider.get().getBuildNumber(configuration.name);
 		AlcinaChildRunnable.launchWithCurrentThreadContext("update-sheet",

@@ -1,5 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
+import java.util.Date;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
@@ -10,6 +16,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
+import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -23,6 +30,17 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableTypeFactory;
 
 public class TextNodeRenderer extends LeafNodeRenderer {
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.TYPE)
+	@ClientVisible
+	/*
+	 * render data fields (string, primitives etc) using field names as tags
+	 * (not span)
+	 */
+	public static @interface FieldNamesAsTags {
+	}
+
 	@Override
 	public Widget render(Node node) {
 		Widget rendered = super.render(node);
@@ -36,6 +54,10 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 	@Override
 	protected String getTag(Node node) {
+		if (node.parent != null && node.parent.has(FieldNamesAsTags.class)
+				&& node.propertyReflector.getPropertyName() != null) {
+			return node.propertyReflector.getPropertyName();
+		}
 		return Ax.blankTo(super.getTag(node), "span");
 	}
 
@@ -52,6 +74,14 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		@Override
 		protected String getModelText(Object model) {
 			return "";
+		}
+	}
+
+	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Date.class)
+	public static class DateNodeRenderer extends TextNodeRenderer {
+		@Override
+		protected String getModelText(Object model) {
+			return Ax.dateTimeSlash((Date) model);
 		}
 	}
 

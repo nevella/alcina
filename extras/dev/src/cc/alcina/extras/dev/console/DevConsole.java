@@ -70,8 +70,8 @@ import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.JaxbUtils;
-import cc.alcina.framework.entity.util.ShellWrapper;
-import cc.alcina.framework.entity.util.ShellWrapper.ShellOutputTuple;
+import cc.alcina.framework.entity.util.Shell;
+import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
@@ -344,9 +344,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		} catch (HeadlessException e) {
 			if (isOsX()) {
 				try {
-					ShellOutputTuple outputTuple = new ShellWrapper()
+					Output output = new Shell()
 							.noLogging().runShell("", "pbpaste");
-					return outputTuple.output;
+					return output.output;
 				} catch (Exception e2) {
 					throw new WrappedRuntimeException(e2);
 				}
@@ -624,7 +624,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			Ax.err("Property 'restartCommand' not set");
 		} else {
 			try {
-				new ShellWrapper().runBashScript(command).throwOnException();
+				new Shell().runBashScript(command).throwOnException();
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -656,7 +656,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			try {
 				String path = "/tmp/pbcopy.txt";
 				ResourceUtilities.write(aString, path);
-				new ShellWrapper()
+				new Shell()
 						.runBashScript(Ax.format("pbcopy < %s", path));
 			} catch (Exception e2) {
 				throw new WrappedRuntimeException(e2);

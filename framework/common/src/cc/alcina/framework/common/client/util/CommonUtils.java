@@ -587,15 +587,21 @@ public class CommonUtils {
 		if (args.length == 0) {
 			return source;
 		}
-		boolean modSource = source.endsWith("%s");
-		String s2 = modSource ? source + "." : source;
-		String[] strs = s2.split("%s");
-		String s;
-		for (int i = 1; i < strs.length; i++) {
-			strs[i] = args[i - 1]
-					+ ((modSource && i == strs.length - 1) ? "" : strs[i]);
+		StringBuilder sb = new StringBuilder();
+		int from = 0;
+		int len = source.length();
+		int argsIndex = 0;
+		while (from < len) {
+			int to = source.indexOf("%s", from);
+			to = to == -1 ? len : to;
+			sb.append(source, from, to == -1 ? len : to);
+			if (to != len) {
+				sb.append(args[argsIndex++]);
+				to += 2;
+			}
+			from = to;
 		}
-		return join(strs, "");
+		return sb.toString();
 	}
 
 	public static String formatDate(Date date, DateStyle style) {

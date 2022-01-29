@@ -118,10 +118,10 @@
 		<mkdir dir="${framework.servlet.build.dir}" />
 		<javac target="11" source="11" includeantruntime="false" debug="on" srcdir="${framework.servlet.src.dirs}" destdir="${framework.servlet.build.dir}">
 			<classpath>
-				<path refid="framework.common.lib.path" />
-				<path refid="framework.servlet.lib.path" />
 				<pathelement path="${framework.entity.build.dir}" />
 				<pathelement path="${framework.classmeta.build.dir}" />
+				<path refid="framework.common.lib.path" />
+				<path refid="framework.servlet.lib.path" />
 			</classpath>
 			<compilerarg value="${alcina.compiler.args}" />
 		</javac>

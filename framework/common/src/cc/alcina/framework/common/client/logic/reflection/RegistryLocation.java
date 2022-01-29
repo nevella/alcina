@@ -32,6 +32,15 @@ import java.lang.annotation.Target;
 // FIXME - dirndl.1 - refactor to Registration/impl -
 // implementation=producedClass;
 // registryFactory->ImplProvider,registryFactory.create(x,y)->implProvider.impl()
+//
+// also omit 'implementationType=instance' requirement (if no
+// identical-priority) - priority is only required for instantiation. For
+// lookup, return all at point
+//
+// registryPoint/targetClass -> value
+//
+// priority -> enum
+//
 public @interface RegistryLocation {
 	public static final int DEFAULT_PRIORITY = 10;
 

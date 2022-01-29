@@ -522,4 +522,12 @@ public class KryoUtils {
 					^ classLoader.hashCode();
 		}
 	}
+
+	public static boolean serialEquals(Object o1, Object o2) {
+		if (o1 == null || o2 == null) {
+			return o1 == o2;
+		}
+		return Arrays.equals(serializeToByteArray(o1),
+				serializeToByteArray(o2));
+	}
 }

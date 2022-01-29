@@ -58,6 +58,7 @@ public class Link extends Model {
 	private boolean newTab;
 
 	private String title;
+	
 
 	public Link() {
 	}

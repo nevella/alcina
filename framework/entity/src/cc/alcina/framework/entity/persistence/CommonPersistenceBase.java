@@ -311,7 +311,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	@Override
 	public <T> T getItemByKeyValueKeyValue(Class<T> clazz, String key1,
 			Object value1, String key2, Object value2) {
-		String eql = String.format("from %s where %s=?1 and %s=?2",
+		String eql = String.format("from %s where %s=?1 and %s=?2 order by id desc",
 				clazz.getSimpleName(), key1, key2);
 		Query q = getEntityManager().createQuery(eql).setParameter(1, value1)
 				.setParameter(2, value2);

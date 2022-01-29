@@ -19,8 +19,16 @@ public class AnchorNodeRenderer extends ContainerNodeRenderer {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface AnchorNodeRendererHref {
-		String value();
+	public @interface Href {
+		String value() default "";
+	}
+
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface Id {
+		String value() default "";
 	}
 
 	@ClientVisible
@@ -43,15 +51,21 @@ public class AnchorNodeRenderer extends ContainerNodeRenderer {
 
 	@Override
 	public Widget render(Node node) {
-		AnchorNodeRendererHref hrefConstant = node
-				.annotation(AnchorNodeRendererHref.class);
-		AnchorNodeRendererHrefProvider hrefProvider = node
-				.annotation(AnchorNodeRendererHrefProvider.class);
 		Widget rendered = super.render(node);
-		String href = hrefConstant != null ? hrefConstant.value()
-				: (String) Reflections.newInstance(hrefProvider.value())
-						.apply(node.model);
-		rendered.getElement().setAttribute("href", href);
+		String href = node.optional(Href.class).map(Href::value).orElse(null);
+		href = href != null ? href
+				: node.optional(AnchorNodeRendererHrefProvider.class)
+						.map(p -> (String) Reflections.newInstance(p.value())
+								.apply(node.model))
+						.orElse(null);
+		if (href != null) {
+			rendered.getElement().setAttribute("href", href);
+		}
+		if (node.has(Id.class)) {
+			String id = node.annotation(Id.class).value();
+			rendered.getElement().setAttribute("id",
+					id.isEmpty() ? node.model.toString() : id);
+		}
 		return rendered;
 	}
 }

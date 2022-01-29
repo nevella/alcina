@@ -60,7 +60,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.stat.StatCategory_Console;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
-import cc.alcina.framework.entity.util.ShellWrapper;
+import cc.alcina.framework.entity.util.Shell;
 
 @RegistryLocation(registryPoint = DevConsoleCommand.class)
 public abstract class DevConsoleCommand<C extends DevConsole> {
@@ -145,7 +145,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			} catch (Exception e) {
 				if (remote && !console.props.connectionProductionTunnelCmd
 						.isEmpty()) {
-					new ShellWrapper().launchBashScript(
+					new Shell().launchBashScript(
 							console.props.connectionProductionTunnelCmd);
 					for (int i = 1; i < 15; i++) {
 						try {
@@ -1055,7 +1055,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 				String to) throws Exception {
 			String[] cmdAndArgs = new String[] { "/usr/bin/rsync", "-avz",
 					"--progress", "--partial", arg1, remotePort, from, to };
-			new ShellWrapper().runProcessCatchOutputAndWait(cmdAndArgs);
+			new Shell().runProcessCatchOutputAndWait(cmdAndArgs);
 		}
 	}
 

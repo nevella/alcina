@@ -1847,7 +1847,12 @@ public class XmlUtils {
 	}
 
 	public static String balanceForXhtml(String htmlContent) {
-		htmlContent=htmlContent.replaceAll("(?i)<META(.*?)>", "<META$1/>");
+		htmlContent = htmlContent.replaceAll("(?i)<META(.*?)>", "<META$1/>");
 		return htmlContent;
+	}
+
+	public static String fixStyleNodeContents(String result) {
+		return Pattern.compile("(?is)<style>.+?</style>").matcher(result)
+				.replaceAll(mr -> mr.group().replace("&gt;", ">"));
 	}
 }

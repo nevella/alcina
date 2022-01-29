@@ -55,6 +55,7 @@ import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
+import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.StreamBuffer;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
@@ -732,12 +733,12 @@ public class DevConsoleDebugCommands {
 			ProcessBuilder pb = new ProcessBuilder("/usr/bin/rsync", "-avz",
 					"--progress", from, to.getPath());
 			Process proc = pb.start();
-			StreamBuffer errorGobbler = new StreamBuffer(proc.getErrorStream(),
+			StreamBuffer errorBuffer = new StreamBuffer(proc.getErrorStream(),
 					"ERROR");
-			StreamBuffer outputGobbler = new StreamBuffer(proc.getInputStream(),
+			StreamBuffer outputBuffer = new StreamBuffer(proc.getInputStream(),
 					"OUTPUT");
-			errorGobbler.start();
-			outputGobbler.start();
+			Shell.receiveStream(errorBuffer);
+			Shell.receiveStream(outputBuffer);
 			proc.waitFor();
 		}
 

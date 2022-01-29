@@ -40,6 +40,8 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -1147,5 +1149,16 @@ public abstract class Job extends VersionableEntity<Job>
 			}
 			return EntityComparator.INSTANCE.compare(o1, o2);
 		}
+	}
+
+	@RegistryLocation(registryPoint = DebugLogWriter.class, implementationType = ImplementationType.INSTANCE)
+	public static class DebugLogWriter {
+		public void write(Job job) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	public void writeLargeObject() {
+		Registry.impl(DebugLogWriter.class).write(domainIdentity());
 	}
 }
