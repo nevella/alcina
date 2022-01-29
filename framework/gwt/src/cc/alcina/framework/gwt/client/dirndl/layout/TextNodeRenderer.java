@@ -55,8 +55,8 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 	@Override
 	protected String getTag(Node node) {
 		if (node.parent != null && node.parent.has(FieldNamesAsTags.class)
-				&& node.propertyReflector.getPropertyName() != null) {
-			return node.propertyReflector.getPropertyName();
+				&& node.property.getName() != null) {
+			return node.property.getName();
 		}
 		return Ax.blankTo(super.getTag(node), "span");
 	}
