@@ -68,6 +68,8 @@ class TowardsAMoreDesirableSituation {
 								// consistency aborts (unless task has other
 								// logical consistency
 								// ensurance mechanism - e.g. jade parsers)
+								//
+								
 								job.setState(JobState.PENDING);
 								activeJobs.add(job);
 								Transaction.commit();
