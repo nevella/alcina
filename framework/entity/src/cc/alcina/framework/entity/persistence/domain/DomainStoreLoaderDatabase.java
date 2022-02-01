@@ -634,7 +634,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					entityRefs.add(tgt, pdFwd, src);
 					entityRefs.add(src, pdRev, tgt);
 				} else {
-					joinHandler.injectValue((String)row[1].o, src);
+					joinHandler.injectValue((String) row[1].o, src);
 				}
 			}
 			stmt.close();
@@ -929,6 +929,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					@Override
 					public Void call() throws Exception {
 						MetricLogging.get().start(clazz.getSimpleName());
+						Thread.currentThread().setName(
+								"loader-database-" + clazz.getSimpleName());
 						loader().withClazz(clazz)
 								.withSqlFilter(
 										descriptor.getInitialLoadFilter())
@@ -2157,7 +2159,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						hasId = store.ensureEntity(clazz, id, 0L);
 					}
 				} else {
-					hasId = (HasId) clazz.getDeclaredConstructor().newInstance();
+					hasId = (HasId) clazz.getDeclaredConstructor()
+							.newInstance();
 				}
 				if (returnResults) {
 					loaded.add(hasId);
