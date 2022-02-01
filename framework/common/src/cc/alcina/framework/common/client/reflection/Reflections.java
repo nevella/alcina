@@ -13,6 +13,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 /*
  * FIXME - reflection.js - clear existing cache entries if forName map contains
  * incoming.
+ * 
+ * FIXME - reflection.js - optimise maps
  */
 public class Reflections {
 	private static Reflections theInstance;

@@ -6,7 +6,7 @@ public class ClientReflectorFactory {
 	private ClientReflectorFactory() {
 	}
 
-	public static ClientReflector create() {
-		return GWT.create(ClientReflector.class);
+	public static ModuleReflector create() {
+		return GWT.create(ModuleReflector.class);
 	}
 }

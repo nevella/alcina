@@ -21,6 +21,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
+import com.totsp.gwittir.client.beans.annotations.Omit;
 
 import cc.alcina.framework.common.client.logic.LazyPropertyChangeSupport;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
@@ -107,6 +108,7 @@ public class BaseSourcesPropertyChangeEvents
 	@Transient
 	@XmlTransient
 	@JsonIgnore
+	@Omit
 	public PropertyChangeListener[] getPropertyChangeListeners() {
 		return this.propertyChangeSupport().getPropertyChangeListeners();
 	}

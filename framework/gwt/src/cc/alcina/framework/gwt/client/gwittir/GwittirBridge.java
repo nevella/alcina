@@ -302,7 +302,8 @@ public class GwittirBridge {
 			}
 			return getField(clazz, pn, editableField, multiple, factory, obj,
 					resolver);
-		}).filter(Objects::nonNull).sorted(new FieldOrdering(classReflector));
+		}).filter(Objects::nonNull).sorted(new FieldOrdering(classReflector))
+				.forEach(fields::add);
 		return (Field[]) fields.toArray(new Field[fields.size()]);
 	}
 

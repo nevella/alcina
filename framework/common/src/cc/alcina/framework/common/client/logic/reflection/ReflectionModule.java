@@ -33,5 +33,7 @@ public @interface ReflectionModule {
 
 	public static final String LEFTOVER = "Leftover";
 
-	public String value();
+	String value();
+
+	boolean initial() default false;
 }

@@ -3,14 +3,17 @@ package cc.alcina.framework.common.client.reflection.impl;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Map;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.ClientReflector;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.ModuleReflector;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -19,21 +22,35 @@ import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 
 //poulates ForName, Reflections
-public class ClientReflectorJvm extends ClientReflector {
-	public static final String CONTEXT_MODULE_NAME = ClientReflectorJvm.class
+public class ModuleReflectorJvm extends ModuleReflector {
+	public static final String CONTEXT_MODULE_NAME = ModuleReflectorJvm.class
 			.getName() + ".CONTEXT_MODULE_NAME";
 
 	public static final String PROP_FILTER_CLASSNAME = "ClientReflectorJvm.filterClassName";
 
-	public static void registerChild(ClientReflectorJvm childReflector) {
-	}
-
-	public ClientReflectorJvm() {
-	}
-
 	private Predicate<String> test;
 
-	void scanRegistry() {
+	public ModuleReflectorJvm() {
+	}
+
+	@Override
+	public void register() {
+		registerRegistrations();
+	}
+
+	@Override
+	protected void registerForNames(Map<String, Class> map) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected void registerReflectorSuppliers(
+			Map<Class, Supplier<ClassReflector>> map) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	protected void registerRegistrations() {
 		try {
 			LooseContext.pushWithKey(KryoUtils.CONTEXT_OVERRIDE_CLASSLOADER,
 					ClassMetadata.class.getClassLoader());
@@ -46,7 +63,7 @@ public class ClientReflectorJvm extends ClientReflector {
 			 * The reason for this is that gwt needs the compiled annotation
 			 * classes (in say, /bin) - so we may be getting classes here that
 			 * shouldn't be visible via the registry
-			 * 
+			 *
 			 * It's a bit sad (duplicating the exclusion code of the gwt
 			 * module), but the performance gains the jvm reflector gives us
 			 * outweigh the (possible) crud IMO
@@ -113,10 +130,5 @@ public class ClientReflectorJvm extends ClientReflector {
 		} finally {
 			LooseContext.pop();
 		}
-	}
-
-	@Override
-	public void init() {
-		scanRegistry();
 	}
 }

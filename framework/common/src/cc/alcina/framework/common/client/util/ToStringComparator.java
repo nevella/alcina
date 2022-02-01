@@ -22,6 +22,7 @@ import java.util.Comparator;
 public class ToStringComparator implements Comparator {
 	public static final ToStringComparator INSTANCE = new ToStringComparator();
 
+	@Override
 	public int compare(Object o1, Object o2) {
 		if (o1 == null || o1.toString() == null) {
 			return o2 == null ? -1 : 0;

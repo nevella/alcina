@@ -17,6 +17,7 @@ import com.google.gwt.core.client.GwtScriptOnly;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.AnnotationResolver;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.Method;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.ReflectiveAccess;
@@ -31,8 +32,7 @@ import cc.alcina.framework.entity.SEUtilities;
 @GwtScriptOnly
 public class ClassReflectorProvider {
 	public static ClassReflector getClassReflector(Class clazz) {
-		//sketch - have a <Class,createReflectorFunction> map - populate on module init - get it 
-		throw new UnsupportedOperationException();
+		return ClientReflections.getClassReflector(clazz);
 	}
 	@GwtScriptOnly
 	public static class ClassAnnotationResolver implements AnnotationResolver {
