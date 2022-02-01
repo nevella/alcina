@@ -7,6 +7,6 @@ import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 public class TaskDumpProperties extends AbstractTaskPerformer {
 	@Override
 	protected void run0() throws Exception {
-		AppLifecycleServletBase.get().dumpCustomProperties();
+		logger.info(AppLifecycleServletBase.get().dumpCustomProperties());
 	}
 }
