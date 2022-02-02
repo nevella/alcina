@@ -932,6 +932,12 @@ public class DomainStore implements IDomainStore {
 						causes.add(dtex);
 					}
 				}
+				if (transform
+						.getTransformType() == TransformType.CREATE_OBJECT) {
+					transformManager.registerClusterLocalObjectPromotion(
+							transform, persistenceEvent.getPersistedRequests()
+									.iterator().next().getClientInstance());
+				}
 				if (transform.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == transform) {
 					if (entity == null && transform
@@ -1680,6 +1686,8 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
+	private ConcurrentHashMap<EntityLocator, Entity> promotedEntitiesByPrePromotion = new ConcurrentHashMap<>();
+
 	class DomainStoreDomainHandler implements DomainHandler {
 		@Override
 		public <V extends Entity> void async(Class<V> clazz, long objectId,
@@ -1711,6 +1719,14 @@ public class DomainStore implements IDomainStore {
 			}
 			V entity = cache.get(locator);
 			if (entity == null) {
+				entity = (V) promotedEntitiesByPrePromotion.get(locator);
+				if (entity != null) {
+					logger.info(
+							"Found entity {} for locator {} from promoted map",
+							entity.toLocator(), locator);
+				}
+			}
+			if (entity == null) {
 				ClientInstance clientInstance = AuthenticationPersistence.get()
 						.getClientInstance(locator.getClientInstanceId());
 				if (clientInstance == null) {
@@ -1723,13 +1739,15 @@ public class DomainStore implements IDomainStore {
 							PermissionsManager.get().getClientInstance(),
 							EntityLayerObjects.get()
 									.getServerAsClientInstance());
-				}
-				EntityLocatorMap locatorMap = TransformCommit.get()
-						.getLocatorMapForClient(clientInstance, Ax.isTest());
-				EntityLocator persistentLocator = locatorMap
-						.getForLocalId(locator.getLocalId());
-				if (persistentLocator != null) {
-					return find(persistentLocator);
+				} else {
+					EntityLocatorMap locatorMap = TransformCommit.get()
+							.getLocatorMapForClient(clientInstance,
+									Ax.isTest());
+					EntityLocator persistentLocator = locatorMap
+							.getForLocalId(locator.getLocalId());
+					if (persistentLocator != null) {
+						return find(persistentLocator);
+					}
 				}
 			}
 			return entity;
@@ -2030,6 +2048,17 @@ public class DomainStore implements IDomainStore {
 				return null;
 			}
 			return super.getObject(dte, ignoreSource);
+		}
+
+		public void registerClusterLocalObjectPromotion(
+				DomainTransformEventPersistent transform,
+				ClientInstance clientInstance) {
+			Entity promoted = getObjectForCreationTransform(transform, true);
+			EntityLocator locator = new EntityLocator();
+			locator.setLocalId(transform.getObjectLocalId());
+			locator.setClientInstanceId(clientInstance.getId());
+			locator.setClazz(promoted.entityClass());
+			promotedEntitiesByPrePromotion.put(locator, promoted);
 		}
 
 		public Entity getObjectForCreationTransform(DomainTransformEvent dte,
