@@ -12,10 +12,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.util.Map.Entry;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -39,12 +37,14 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.ResettingCounter;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
+import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
@@ -356,7 +356,8 @@ public class InternalMetrics {
 				ThreadInfo[] threadInfos2 = threadMxBean.getThreadInfo(allIds,
 						debugMonitors, debugMonitors);
 				imd.threadHistory.clearElements();
-				allStackTraces = Thread.getAllStackTraces();
+				Map<Thread, StackTraceElement[]> allStackTraces = Thread
+						.getAllStackTraces();
 				for (ThreadInfo threadInfo : threadInfos2) {
 					if (threadInfo == null) {
 						continue;
@@ -444,6 +445,8 @@ public class InternalMetrics {
 		trackers.entrySet().removeIf(e -> toRemove.contains(e.getValue()));
 	}
 
+	ResettingCounter allThreadsRefresher = new ResettingCounter(1000);
+
 	void doProfilerLoop() {
 		boolean nextIsAlloc = false;
 		String profilerPath = ResourceUtilities.get("profilerPath");
@@ -473,25 +476,34 @@ public class InternalMetrics {
 							.map(InternalMetricData::logForBlackBox)
 							.collect(Collectors.joining("\n"));
 					StringBuilder sb = new StringBuilder();
-					if (allStackTraces != null) {
-						for (Entry<Thread, StackTraceElement[]> entry : allStackTraces
-								.entrySet()) {
-							sb.append(entry.getKey());
-							sb.append("\n");
-							StackTraceElement[] value = entry.getValue();
-							for (StackTraceElement stackTraceElement : value) {
-								sb.append("\t");
-								sb.append(stackTraceElement);
+					String transactionDump="";
+					if (highFrequencyProfiling) {
+						if (allThreadsRefresher.check()) {
+							allStackTraces = Thread.getAllStackTraces();
+						}
+						if (allStackTraces != null) {
+							for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces
+									.entrySet()) {
+								sb.append(entry.getKey());
 								sb.append("\n");
+								StackTraceElement[] value = entry.getValue();
+								for (StackTraceElement stackTraceElement : value) {
+									sb.append("\t");
+									sb.append(stackTraceElement);
+									sb.append("\n");
+								}
 							}
 						}
+						transactionDump=Transactions.stats().describeTransactions();
 					}
 					String threadDump = sb.toString();
 					String state = Ax.format(
-							"%s\nTrackers:\n%s\n\nJobs:\n%s\n\nThreads:\n%s",
+							"%s\nTrackers:\n%s\n\nJobs:\n%s\n\nThreads:\n%s\n\nTransactions:\n%s\n",
 							ContainerProvider.get().getContainerState(),
 							runningMetrics,
-							ContainerProvider.get().getJobsState(), threadDump);
+							ContainerProvider.get().getJobsState(), threadDump
+							,transactionDump
+							);
 					addMetric(MetricType.metrics, state);
 					String gcLogFile = "/opt/jboss/gc.log";
 					if (new File(gcLogFile).exists()) {
