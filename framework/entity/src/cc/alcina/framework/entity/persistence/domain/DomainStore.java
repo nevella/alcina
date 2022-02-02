@@ -998,7 +998,8 @@ public class DomainStore implements IDomainStore {
 						logger.warn("Domain store update warning [non-fatal]",
 								updateException);
 					} else {
-						health.domainStoreExceptionCount.incrementAndGet();
+						
+						health.onException(updateException);
 						logger.warn("Update exception persistence event :: {}",
 								persistenceEvent);
 						try {
@@ -1144,9 +1145,16 @@ public class DomainStore implements IDomainStore {
 		public long domainStorePostProcessStartTime;
 
 		AtomicInteger domainStoreExceptionCount = new AtomicInteger();
+		
+		public Exception lastException;
 
 		public AtomicInteger getDomainStoreExceptionCount() {
 			return this.domainStoreExceptionCount;
+		}
+
+		 void onException(DomainStoreUpdateException updateException) {
+			 domainStoreExceptionCount.incrementAndGet();
+			 lastException=updateException;
 		}
 
 		public long getMvccOldestTx() {

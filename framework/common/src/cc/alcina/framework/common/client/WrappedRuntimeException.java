@@ -23,7 +23,7 @@ package cc.alcina.framework.common.client;
 public class WrappedRuntimeException extends RuntimeException {
 	private static final transient long serialVersionUID = 89976002L;
 
-	public static RuntimeException wrapIfNotRuntime(Exception e) {
+	public static RuntimeException wrapIfNotRuntime(Throwable e) {
 		if (e instanceof RuntimeException) {
 			throw (RuntimeException) e;
 		} else {

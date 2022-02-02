@@ -389,7 +389,7 @@ public class InternalMetrics {
 		}
 	}
 
-	protected void persist() {
+	protected synchronized void persist() {
 		if (!isEnabled() || !ResourceUtilities.is("persistEnabled")) {
 			return;
 		}
@@ -447,80 +447,97 @@ public class InternalMetrics {
 
 	ResettingCounter allThreadsRefresher = new ResettingCounter(1000);
 
+	boolean nextIsAlloc = false;
+
 	void doProfilerLoop() {
-		boolean nextIsAlloc = false;
+		while (isEnabled() && started) {
+			profile();
+		}
+	}
+
+	public void forceBlackboxPersist(String fatalExceptionString) {
+		this.fatalExceptionString = fatalExceptionString;
+		try {
+			profile();
+			persist();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
+
+	private String fatalExceptionString = "";
+
+	private void profile() {
 		String profilerPath = ResourceUtilities.get("profilerPath");
 		String alloc = "--alloc 100k -t -d 5 -e alloc ";
 		String cpu = "-d 5 --cstack no -t -e cpu ";
-		while (isEnabled() && started) {
-			try {
-				if (ResourceUtilities.is("profilerEnabled")) {
-					int frequency = highFrequencyProfiling ? 50 : 200;
-					MetricType type = nextIsAlloc
-							|| !ResourceUtilities.is("cpuProfilingEnabled")
-									? MetricType.alloc
-									: MetricType.cpu;
-					String params = type == MetricType.alloc ? alloc : cpu;
-					String pid = "jps";
-					if (Ax.isTest()) {
-						String name = ManagementFactory.getRuntimeMXBean()
-								.getName();
-						pid = name.replaceFirst("(.+)@.+", "$1");
+		try {
+			if (ResourceUtilities.is("profilerEnabled")) {
+				int frequency = highFrequencyProfiling ? 50 : 200;
+				MetricType type = nextIsAlloc
+						|| !ResourceUtilities.is("cpuProfilingEnabled")
+								? MetricType.alloc
+								: MetricType.cpu;
+				String params = type == MetricType.alloc ? alloc : cpu;
+				String pid = "jps";
+				if (Ax.isTest()) {
+					String name = ManagementFactory.getRuntimeMXBean()
+							.getName();
+					pid = name.replaceFirst("(.+)@.+", "$1");
+				}
+				String cmd = Ax.format("%s %s -i %sus %s", profilerPath, params,
+						frequency, pid);
+				Output wrapper = new Shell().noLogging().runBashScript(cmd);
+				addMetric(type, wrapper.output);
+				String runningMetrics = trackers.values().stream()
+						.filter(imd -> !imd.isFinished())
+						.map(InternalMetricData::logForBlackBox)
+						.collect(Collectors.joining("\n"));
+				StringBuilder sb = new StringBuilder();
+				String transactionDump = "";
+				if (highFrequencyProfiling) {
+					if (allThreadsRefresher.check()) {
+						allStackTraces = Thread.getAllStackTraces();
 					}
-					String cmd = Ax.format("%s %s -i %sus %s", profilerPath,
-							params, frequency, pid);
-					Output wrapper = new Shell().noLogging().runBashScript(cmd);
-					addMetric(type, wrapper.output);
-					String runningMetrics = trackers.values().stream()
-							.filter(imd -> !imd.isFinished())
-							.map(InternalMetricData::logForBlackBox)
-							.collect(Collectors.joining("\n"));
-					StringBuilder sb = new StringBuilder();
-					String transactionDump="";
-					if (highFrequencyProfiling) {
-						if (allThreadsRefresher.check()) {
-							allStackTraces = Thread.getAllStackTraces();
-						}
-						if (allStackTraces != null) {
-							for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces
-									.entrySet()) {
-								sb.append(entry.getKey());
+					if (allStackTraces != null) {
+						for (Map.Entry<Thread, StackTraceElement[]> entry : allStackTraces
+								.entrySet()) {
+							sb.append(entry.getKey());
+							sb.append("\n");
+							StackTraceElement[] value = entry.getValue();
+							for (StackTraceElement stackTraceElement : value) {
+								sb.append("\t");
+								sb.append(stackTraceElement);
 								sb.append("\n");
-								StackTraceElement[] value = entry.getValue();
-								for (StackTraceElement stackTraceElement : value) {
-									sb.append("\t");
-									sb.append(stackTraceElement);
-									sb.append("\n");
-								}
 							}
 						}
-						transactionDump=Transactions.stats().describeTransactions();
 					}
-					String threadDump = sb.toString();
-					String state = Ax.format(
-							"%s\nTrackers:\n%s\n\nJobs:\n%s\n\nThreads:\n%s\n\nTransactions:\n%s\n",
-							ContainerProvider.get().getContainerState(),
-							runningMetrics,
-							ContainerProvider.get().getJobsState(), threadDump
-							,transactionDump
-							);
-					addMetric(MetricType.metrics, state);
-					String gcLogFile = "/opt/jboss/gc.log";
-					if (new File(gcLogFile).exists()) {
-						GCLogParser.Events events = new GCLogParser().parse(
-								gcLogFile, parseGcLogFrom,
-								ResourceUtilities.getInteger(getClass(),
-										"gcEventThresholdMillis"));
-						addMetric(MetricType.gc, events.toString());
-						parseGcLogFrom = events.end;
-					}
-					nextIsAlloc = !nextIsAlloc;
-				} else {
-					Thread.sleep(1000);
+					transactionDump = Transactions.stats()
+							.describeTransactions();
 				}
-			} catch (Exception e) {
-				e.printStackTrace();
+				String threadDump = sb.toString();
+				String state = Ax.format(
+						"%s\nTrackers:\n%s\n\nJobs:\n%s\n\nThreads:\n%s\n\nTransactions:\n%s"
+								+ "\n\nFatal:\n%s\n",
+						ContainerProvider.get().getContainerState(),
+						runningMetrics, ContainerProvider.get().getJobsState(),
+						threadDump, transactionDump, fatalExceptionString);
+				addMetric(MetricType.metrics, state);
+				String gcLogFile = "/opt/jboss/gc.log";
+				if (new File(gcLogFile).exists()) {
+					GCLogParser.Events events = new GCLogParser().parse(
+							gcLogFile, parseGcLogFrom,
+							ResourceUtilities.getInteger(getClass(),
+									"gcEventThresholdMillis"));
+					addMetric(MetricType.gc, events.toString());
+					parseGcLogFrom = events.end;
+				}
+				nextIsAlloc = !nextIsAlloc;
+			} else {
+				Thread.sleep(1000);
 			}
+		} catch (Exception e) {
+			e.printStackTrace();
 		}
 	}
 
