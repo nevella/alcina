@@ -31,11 +31,12 @@ import cc.alcina.framework.entity.XmlUtils;
 public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<T>> {
 	public static final String LONG_BLANK_STRING = "        ";
 
-	public static final String LONG_BLANK_STRING_REPLACE = " **^^$$ ";
+	// will never match. Note symmetry
+	public static final String LONG_BLANK_STRING_REPLACE = " **^^** ";
 
-	public static String replaceHyphens(String substring) {
-		substring = substring.replace("-", "\u2011");
-		return substring;
+	public static String replaceHyphens(String content) {
+		content = content.replace("-", "\u2011");
+		return content;
 	}
 
 	public String content = "";
@@ -343,12 +344,12 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 	 * blocks
 	 */
 	public String getVisibleSubstring(MatchesEmphasisTypes type, T token) {
-		String substring = null;
+		String result = null;
 		if (type == MatchesEmphasisTypes.BOTH) {
 			if (startOffset > content.length()) {
 				return "";
 			}
-			substring = content.substring(startOffset);
+			result = content.substring(startOffset);
 		} else {
 			TextRange tr = getCurrentTextRange();
 			if (tr == null) {
@@ -364,18 +365,10 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 			if (offset > tr.textContent.length()) {
 				return "";
 			}
-			substring = tr.textContent.substring(offset);
+			result = content.substring(startOffset,
+					tr.offset + tr.textContent.length());
 		}
-		if (checkLongBlankString()) {
-			int idx = substring.indexOf(ParserContext.LONG_BLANK_STRING);
-			// slightly hacky but works;
-			// (long spaces plays havoc with some regexes)
-			if (idx != -1 && substring.length() > 200) {
-				substring = substring.replace(ParserContext.LONG_BLANK_STRING,
-						ParserContext.LONG_BLANK_STRING_REPLACE);
-			}
-		}
-		return substring;
+		return result;
 	}
 
 	public boolean had(T token) {
@@ -724,6 +717,44 @@ public class ParserContext<T extends ParserToken, S extends AbstractParserSlice<
 				}
 			}
 			finished = true;
+		}
+	}
+
+	public void normaliseContent() {
+		content = TokenParserUtils.quickNormalisePunctuation(content);
+		if (checkLongBlankString()) {
+			int idx = content.indexOf(ParserContext.LONG_BLANK_STRING);
+			// slightly hacky but works;
+			// (long spaces plays havoc with some regexes)
+			if (idx != -1 && content.length() > 200) {
+				StringBuilder sb = new StringBuilder();
+				char[] val = content.toCharArray();
+				int wsCount = 0;
+				// because of WhitespaceNormalisationText windows, need to
+				// replace in reverse
+				// content =
+				// content.replace(ParserContext.LONG_BLANK_STRING,
+				// ParserContext.LONG_BLANK_STRING_REPLACE);
+				/*
+				 * reversed replace of same-length (8char) strings
+				 */
+				for (idx = content.length() - 1; idx >= 0; idx--) {
+					char c = val[idx];
+					if (c == ' ') {
+						wsCount++;
+					} else {
+						wsCount = 0;
+					}
+					if (wsCount == 8) {
+						for (int idx2 = 0; idx2 < 8; idx2++) {
+							val[idx + idx2] = ParserContext.LONG_BLANK_STRING_REPLACE
+									.charAt(idx2);
+						}
+						wsCount = 0;
+					}
+				}
+				content = new String(val);
+			}
 		}
 	}
 }
