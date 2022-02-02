@@ -1721,9 +1721,13 @@ public class DomainStore implements IDomainStore {
 			if (entity == null) {
 				entity = (V) promotedEntitiesByPrePromotion.get(locator);
 				if (entity != null) {
-					logger.info(
+					logger.warn(
 							"Found entity {} for locator {} from promoted map",
 							entity.toLocator(), locator);
+				} else {
+					logger.warn(
+							"Did not find entity  for locator {} from promoted map",
+							locator);
 				}
 			}
 			if (entity == null) {
