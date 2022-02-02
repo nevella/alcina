@@ -62,6 +62,7 @@ class Vacuum {
 		}
 		try {
 			Transaction.begin(TransactionPhase.VACUUM_BEGIN);
+			Transaction.reapUnreferencedTransactions();
 			vacuumThread = Thread.currentThread();
 			vacuumStarted = System.currentTimeMillis();
 			boolean debugLevelLogging = vacuumables.size() > 0;
