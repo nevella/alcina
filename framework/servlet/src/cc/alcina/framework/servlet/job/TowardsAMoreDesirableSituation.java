@@ -39,7 +39,8 @@ class TowardsAMoreDesirableSituation {
 		if (!ResourceUtilities.is("enabled")) {
 			return;
 		}
-		activeJobs.removeIf(Job::provideIsSequenceComplete);
+		activeJobs.removeIf(
+				j -> j.domain().wasRemoved() || j.provideIsSequenceComplete());
 		boolean delta = false;
 		while (activeJobs.size() < JobRegistry.get().jobExecutors
 				.getMaxConsistencyJobCount()
@@ -69,7 +70,6 @@ class TowardsAMoreDesirableSituation {
 								// logical consistency
 								// ensurance mechanism - e.g. jade parsers)
 								//
-								
 								job.setState(JobState.PENDING);
 								activeJobs.add(job);
 								Transaction.commit();
@@ -140,8 +140,7 @@ class TowardsAMoreDesirableSituation {
 	void start() {
 		thread = new ProcessorThread();
 		thread.start();
-		scheduler.eventOcurred
-				.add((k, v) -> addSchedulerEvent());
+		scheduler.eventOcurred.add((k, v) -> addSchedulerEvent());
 	}
 
 	private void addSchedulerEvent() {
