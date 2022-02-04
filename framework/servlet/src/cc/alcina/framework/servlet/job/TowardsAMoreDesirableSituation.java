@@ -18,8 +18,23 @@ import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
-/*
+/**
  * FIXME - mvcc.cascade - add to listjobs report
+ *
+ * <h2>Model consistency</h2>
+ * <p>
+ * The following may not be fully implemented
+ * </p>
+ * <ul>
+ * <li>Future consistency is a property of the domain - if a change in A makes B
+ * inconsistent, generate a job which will make B consistent in the same
+ * domain/db transaction as the change to A.
+ * <li>Consistencies can have different priorities (based on the job.consistency
+ * property order) (TODO)
+ * <li>Consistencies are generally better handled by resubmit processors (TODO:
+ * detail)
+ * <li>
+ * </ul>
  */
 class TowardsAMoreDesirableSituation {
 	private List<Job> activeJobs = new ArrayList<>();
@@ -28,15 +43,36 @@ class TowardsAMoreDesirableSituation {
 
 	private JobScheduler scheduler;
 
+	ProcessorThread thread;
+
+	boolean finished;
+
+	private BlockingQueue<Event> events = new LinkedBlockingQueue<>();
+
 	public TowardsAMoreDesirableSituation(JobScheduler scheduler) {
 		this.scheduler = scheduler;
+	}
+
+	private void addSchedulerEvent() {
+		events.add(new Event(Type.SCHEDULER_EVENT));
+	}
+
+	void start() {
+		thread = new ProcessorThread();
+		thread.start();
+		scheduler.eventOcurred.add((k, v) -> addSchedulerEvent());
+	}
+
+	void stopService() {
+		events.add(new Event(Type.SHUTDOWN));
 	}
 
 	void tend() {
 		if (!ResourceUtilities.is("enabled")) {
 			return;
 		}
-		activeJobs.removeIf(Job::provideIsSequenceComplete);
+		activeJobs.removeIf(
+				j -> j.domain().wasRemoved() || j.provideIsSequenceComplete());
 		boolean delta = false;
 		while (activeJobs.size() < JobRegistry.get().jobExecutors
 				.getMaxConsistencyJobCount()
@@ -52,25 +88,32 @@ class TowardsAMoreDesirableSituation {
 							if (next.isPresent()) {
 								Job job = next.get();
 								job.setPerformer(ClientInstance.self());
-								// FIXME - mvcc.cascade - this class is where
-								// futureconsistency
-								// deduplication should happen.
-								// on (transform-based) job switch to
-								// 'processing', for performer, snapshot
-								// all future consistency jobs with same
-								// signature
-								// (taskserialized/taskclass)
-								//
-								// note resubmit is required for future
-								// consistency aborts (unless task has other
-								// logical consistency
-								// ensurance mechanism - e.g. jade parsers)
 								job.setState(JobState.PENDING);
+								/*
+								 * De-duplicate future consistency jobs (one
+								 * concomitant constraint on future consistency
+								 * jobs is that their order, for a given
+								 * transaction, must not affect the outcome)
+								 */
+								/*
+								 * note resubmit is required for future
+								 * consistency aborts (unless task has other
+								 * logical consistency ensurance mechanism -
+								 * e.g. jade parsers)
+								 */
+								JobDomain.get()
+										.getFutureConsistencyJobsEquivalentTo(
+												job)
+										.forEach(Job::delete);
 								activeJobs.add(job);
 								Transaction.commit();
 								logger.info(
-										"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} remaining",
-										job,
+										"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} - {},{} remaining",
+										job, job.provideConsistencyPriority(),
+										JobDomain.get()
+												.getFutureConsistencyJobs(job
+														.provideConsistencyPriority())
+												.count(),
 										JobDomain.get()
 												.getFutureConsistencyJobs()
 												.count());
@@ -81,18 +124,6 @@ class TowardsAMoreDesirableSituation {
 			}
 		}
 	}
-
-	static class Event {
-		public Event(Type type) {
-			this.type = type;
-		}
-
-		Type type;
-	}
-
-	ProcessorThread thread;
-
-	boolean finished;
 
 	public class ProcessorThread extends Thread {
 		@Override
@@ -126,24 +157,15 @@ class TowardsAMoreDesirableSituation {
 		}
 	}
 
+	static class Event {
+		Type type;
+
+		public Event(Type type) {
+			this.type = type;
+		}
+	}
+
 	enum Type {
 		SCHEDULER_EVENT, SHUTDOWN;
-	}
-
-	private BlockingQueue<Event> events = new LinkedBlockingQueue<>();
-
-	void start() {
-		thread = new ProcessorThread();
-		thread.start();
-		scheduler.eventOcurred
-				.add((k, v) -> addSchedulerEvent());
-	}
-
-	private void addSchedulerEvent() {
-		events.add(new Event(Type.SCHEDULER_EVENT));
-	}
-
-	void stopService() {
-		events.add(new Event(Type.SHUTDOWN));
 	}
 }

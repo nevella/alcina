@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -62,6 +63,10 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 
+/**
+ * FIXME - 2022 - any non-transactional refs (particularly collections) to mvcc
+ * objects should filter by Domain.notRemoved
+ */
 @RegistryLocation(registryPoint = JobDomain.class, implementationType = ImplementationType.SINGLETON)
 public class JobDomain {
 	public static JobDomain get() {
@@ -139,10 +144,10 @@ public class JobDomain {
 
 	/*
 	 * *Not* a transactional map - we want the same queue for all tx phases.
-	 * 
+	 *
 	 * The queue subfields are essentially immutable or tx-safe - exception is
 	 * phase, but that's modified by the single-threaded allocator
-	 * 
+	 *
 	 * But this does mean that all access should check that the job exists
 	 */
 	private Map<Job, AllocationQueue> queues = new ConcurrentHashMap<>();
@@ -246,8 +251,16 @@ public class JobDomain {
 	}
 
 	public Stream<Job> getFutureConsistencyJobs() {
-		return jobDescriptor.futureConsistencyProjection.getLookup().delegate()
-				.values().stream();
+		return jobDescriptor.futurePriorityProjection.getJobs();
+	}
+
+	public Stream<Job> getFutureConsistencyJobs(String consistencyPriority) {
+		return jobDescriptor.futurePriorityProjection
+				.getJobs(consistencyPriority);
+	}
+
+	public Stream<Job> getFutureConsistencyJobsEquivalentTo(Job job) {
+		return jobDescriptor.futureTaskProjection.getEquivalentTo(job);
 	}
 
 	public Stream<Job> getIncompleteJobs() {
@@ -284,6 +297,10 @@ public class JobDomain {
 	public Stream<Job> getUndeserializableJobs() {
 		return jobDescriptor.allocationQueueProjection.undeserializableJobs
 				.stream();
+	}
+
+	public boolean hasFutureConsistencyJob(Task task) {
+		return jobDescriptor.futureTaskProjection.containsTask(task);
 	}
 
 	public void onAppShutdown() {
@@ -378,7 +395,7 @@ public class JobDomain {
 		public void cancelIncompleteAllocatedJobs() {
 			/*
 			 * Possible issue with backendtransformqueue
-			 * 
+			 *
 			 */
 			Stream.of(JobState.ALLOCATED, JobState.PROCESSING)
 					.forEach(state -> {
@@ -407,9 +424,9 @@ public class JobDomain {
 			/*
 			 * Deliberately throws an exception (because the sets have no
 			 * itr.remove) - this is a response to an upstream problem
-			 * 
+			 *
 			 * FIXME - mvcc.jobs.2 - review no calls; remove
-			 * 
+			 *
 			 */
 			Stream.of(JobState.ALLOCATED, JobState.PROCESSING)
 					.forEach(state -> {
@@ -701,7 +718,7 @@ public class JobDomain {
 
 		/*
 		 * not registered - insert/remove handled by AllocationQueueProjection
-		 * 
+		 *
 		 */
 		class SubqueueProjection extends BaseProjection<Job> {
 			public SubqueueProjection() {
@@ -742,6 +759,10 @@ public class JobDomain {
 				return true;
 			}
 		}
+	}
+
+	public enum DefaultConsistencyPriorities {
+		high, medium, _default, low
 	}
 
 	public enum EventType {
@@ -982,7 +1003,7 @@ public class JobDomain {
 			}
 			queue = queues.get(relatedQueueOwner);
 			/*
-			 * 
+			 *
 			 */
 			if (relatedQueueOwner.provideIsComplete() && queue == null) {
 				return;
@@ -1032,7 +1053,7 @@ public class JobDomain {
 			}
 			queue = queues.get(relatedQueueOwner);
 			/*
-			 * 
+			 *
 			 */
 			if (relatedQueueOwner.provideIsComplete() && queue == null) {
 				return;
@@ -1050,7 +1071,9 @@ public class JobDomain {
 
 		private CompletedReverseDateProjection reverseDateCompletedTopLevelProjection;
 
-		private FutureConsistencyProjection futureConsistencyProjection;
+		private FutureConsistencyPriorityProjection futurePriorityProjection;
+
+		private FutureConsistencyTaskProjection futureTaskProjection;
 
 		private CompletedReverseDateProjection reverseDateCompletedChildProjection;
 
@@ -1077,8 +1100,10 @@ public class JobDomain {
 			reverseDateCompletedChildProjection = new CompletedReverseDateProjection(
 					false);
 			projections.add(reverseDateCompletedChildProjection);
-			futureConsistencyProjection = new FutureConsistencyProjection();
-			projections.add(futureConsistencyProjection);
+			futurePriorityProjection = new FutureConsistencyPriorityProjection();
+			projections.add(futurePriorityProjection);
+			futureTaskProjection = new FutureConsistencyTaskProjection();
+			projections.add(futureTaskProjection);
 		}
 
 		private class CompletedReverseDateProjection
@@ -1119,9 +1144,23 @@ public class JobDomain {
 			}
 		}
 
-		private class FutureConsistencyProjection extends BaseProjection<Job> {
-			private FutureConsistencyProjection() {
-				super(Long.class, new Class[] { (Class<Job>) jobImplClass });
+		private class FutureConsistencyPriorityProjection
+				extends BaseProjection<Job> {
+			private FutureConsistencyPriorityProjection() {
+				super(String.class,
+						new Class[] { Long.class, (Class<Job>) jobImplClass });
+			}
+
+			public Stream<Job> getJobs() {
+				return getLookup().typedKeySet(String.class).stream()
+						.sorted(new QueuePriorityComparator())
+						.map(s -> getLookup().asMap(s).delegate().values())
+						.flatMap(Collection::stream);
+			}
+
+			public Stream<Job> getJobs(String consistencyPriority) {
+				return getLookup().asMapEnsure(true, consistencyPriority)
+						.delegate().values().stream();
 			}
 
 			@Override
@@ -1148,18 +1187,102 @@ public class JobDomain {
 						.withMapCreators(new CollectionCreators.MapCreator[] {
 								Registry.impl(
 										CollectionCreators.TreeMapCreator.class)
-										.withTypes(types) })
+										.withTypes(Arrays.asList(String.class,
+												Object.class)),
+								Registry.impl(
+										CollectionCreators.TreeMapCreator.class)
+										.withTypes(Arrays.asList(Long.class,
+												Object.class)) })
 						.createMultikeyMap();
 			}
 
 			@Override
 			protected int getDepth() {
-				return 1;
+				return 2;
 			}
 
 			@Override
 			protected Object[] project(Job job) {
-				return new Object[] { job.getId(), job };
+				return new Object[] { job.provideConsistencyPriority(),
+						job.getId(), job };
+			}
+
+			class QueuePriorityComparator implements Comparator<String> {
+				List<String> ordered = Arrays.asList(ResourceUtilities
+						.get(JobDomain.class, "consistencyPriorityOrder")
+						.split(","));
+
+				@Override
+				public int compare(String o1, String o2) {
+					int idx1 = ordered.indexOf(o1);
+					int idx2 = ordered.indexOf(o2);
+					if (idx1 == -1) {
+						if (idx2 == -1) {
+							return o1.compareTo(o2);
+						} else {
+							return 1;
+						}
+					} else {
+						if (idx2 == -1) {
+							return -1;
+						} else {
+							return CommonUtils.compareInts(idx1, idx2);
+						}
+					}
+				}
+			}
+		}
+
+		private class FutureConsistencyTaskProjection
+				extends BaseProjection<Job> {
+			private FutureConsistencyTaskProjection() {
+				super(String.class, new Class[] { String.class, Long.class,
+						(Class<Job>) jobImplClass });
+			}
+
+			public boolean containsTask(Task task) {
+				return getLookup().containsKey(task.getClass().getName(),
+						TransformManager.Serializer.get().serialize(task,
+								true));
+			}
+
+			public Stream<Job> getEquivalentTo(Job job) {
+				Task task = job.getTask();
+				MultikeyMap<Job> map = getLookup().asMapEnsure(false,
+						task.getClass().getName(), TransformManager.Serializer
+								.get().serialize(task, true));
+				return map == null ? Stream.empty()
+						: ((Map<Long, Job>) map.delegate()).values().stream()
+								.filter(j -> job != j);
+			}
+
+			@Override
+			public Class<? extends Job> getListenedClass() {
+				return jobImplClass;
+			}
+
+			@Override
+			public void insert(Job t) {
+				if (t.getState() != JobState.FUTURE_CONSISTENCY) {
+					return;
+				}
+				super.insert(t);
+			}
+
+			@Override
+			public boolean isCommitOnly() {
+				return true;
+			}
+
+			@Override
+			protected int getDepth() {
+				return 3;
+			}
+
+			@Override
+			protected Object[] project(Job job) {
+				return new Object[] { job.getTaskClassName(),
+						job.getTaskSerialized(), job.getId(), job };
 			}
 		}
 	}

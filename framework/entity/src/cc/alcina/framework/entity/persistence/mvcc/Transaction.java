@@ -47,9 +47,6 @@ public class Transaction implements Comparable<Transaction> {
 	public static final String CONTEXT_ALLOW_ABORTED_TX_ACCESS = Transaction.class
 			.getName() + ".CONTEXT_ALLOW_ABORTED_TX_ACCESS";
 
-	private static ThreadLocal<Transaction> threadLocalInstance = new ThreadLocal() {
-	};
-
 	private static ThreadLocal<Supplier<Transaction>> threadLocalSupplier = new ThreadLocal() {
 	};
 
@@ -71,12 +68,12 @@ public class Transaction implements Comparable<Transaction> {
 			throws Exception {
 		Transaction preSnapshot = current();
 		Preconditions.checkNotNull(preSnapshot);
-		threadLocalInstance.set(null);
+		removeThreadLocalTransaction();
 		begin();
 		current().toReadonly(true);
 		T t = callable.call();
 		end();
-		threadLocalInstance.set(preSnapshot);
+		setThreadLocalTransaction(preSnapshot);
 		return t;
 	}
 
@@ -111,12 +108,12 @@ public class Transaction implements Comparable<Transaction> {
 	public static Transaction createSnapshotTransaction() {
 		Transaction preSnapshot = current();
 		Preconditions.checkNotNull(preSnapshot);
-		threadLocalInstance.set(null);
+		removeThreadLocalTransaction();
 		begin();
 		Transaction snapshot = current();
 		snapshot.toReadonly(true);
 		split();
-		threadLocalInstance.set(preSnapshot);
+		setThreadLocalTransaction(preSnapshot);
 		return snapshot;
 	}
 
@@ -135,15 +132,15 @@ public class Transaction implements Comparable<Transaction> {
 		if (!Transactions.isInitialised()) {
 			return;
 		}
-		if (threadLocalInstance.get() == null) {
+		if (getPerThreadTransaction() == null) {
 			logger.error(
 					"Attempting to end transaction when one is not present");
 		}
-		threadLocalInstance.get().endTransaction();
-		logger.debug("Removing tx - {} {} {}", threadLocalInstance.get(),
+		getPerThreadTransaction().endTransaction();
+		logger.debug("Removing tx - {} {} {}", getPerThreadTransaction(),
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
-		threadLocalInstance.remove();
+		removeThreadLocalTransaction();
 	}
 
 	public static void endAndBeginNew() {
@@ -166,26 +163,26 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public static void ensureBegun() {
-		if (threadLocalInstance.get() == null
-				|| threadLocalInstance.get().isEnded()) {
+		if (getPerThreadTransaction() == null
+				|| getPerThreadTransaction().isEnded()) {
 			begin();
 		}
 	}
 
 	public static void ensureDomainPreparingActive() {
-		if (threadLocalInstance.get() == null) {
+		if (getPerThreadTransaction() == null) {
 			begin(TransactionPhase.TO_DOMAIN_PREPARING);
 		}
 	}
 
 	public static void ensureEnded() {
-		if (threadLocalInstance.get() != null) {
+		if (getPerThreadTransaction() != null) {
 			end();
 		}
 	}
 
 	public static boolean isInTransaction() {
-		return provideCurrentThreadTransaction() != null;
+		return perThreadTransaction.containsKey(Thread.currentThread());
 	}
 
 	public static boolean isInActiveTransaction() {
@@ -203,13 +200,13 @@ public class Transaction implements Comparable<Transaction> {
 		logger.debug("Joining tx - {} {} {}", transaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
-		Preconditions.checkState(provideCurrentThreadTransaction() == null);
+		Preconditions.checkState(!isInTransaction());
 		transaction.threadCount.incrementAndGet();
-		threadLocalInstance.set(transaction);
+		setThreadLocalTransaction(transaction);
 	}
 
 	public static void removePerThreadContext() {
-		threadLocalInstance.remove();
+		removeThreadLocalTransaction();
 	}
 
 	public static void setSupplier(Supplier<Transaction> transactionSupplier) {
@@ -218,16 +215,32 @@ public class Transaction implements Comparable<Transaction> {
 
 	// inverse of join
 	public static void split() {
-		Transaction transaction = threadLocalInstance.get();
+		Transaction transaction = getPerThreadTransaction();
 		logger.debug("Removing tx - {} {} {}", transaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
-		threadLocalInstance.remove();
+		removeThreadLocalTransaction();
 		transaction.threadCount.decrementAndGet();
 	}
 
+	private static void removeThreadLocalTransaction() {
+		perThreadTransaction.remove(Thread.currentThread());
+	}
+
+	// optimisation check - seems a lot of time spent in the threadlocal check
+	private static Map<Thread, Transaction> perThreadTransaction = new ConcurrentHashMap<>(
+			1000);
+
+	static void reapUnreferencedTransactions() {
+		perThreadTransaction.keySet().removeIf(t -> !t.isAlive());
+	}
+
 	private static Transaction provideCurrentThreadTransaction() {
-		Transaction transaction = threadLocalInstance.get();
+		Transaction transaction = perThreadTransaction
+				.get(Thread.currentThread());
+		if (transaction == null) {
+			transaction = getPerThreadTransaction();
+		}
 		if (transaction == null) {
 			Supplier<Transaction> supplier = threadLocalSupplier.get();
 			if (supplier != null) {
@@ -235,6 +248,10 @@ public class Transaction implements Comparable<Transaction> {
 			}
 		}
 		return transaction;
+	}
+
+	private static Transaction getPerThreadTransaction() {
+		return perThreadTransaction.get(Thread.currentThread());
 	}
 
 	private static boolean retainStartEndTraces() {
@@ -246,9 +263,9 @@ public class Transaction implements Comparable<Transaction> {
 		if (!Transactions.isInitialised()) {
 			return;
 		}
-		if (threadLocalInstance.get() != null) {
+		if (getPerThreadTransaction() != null) {
 			throw new MvccException(Ax.format("Begin without end: %s - %s",
-					initialPhase, threadLocalInstance.get()));
+					initialPhase, getPerThreadTransaction()));
 		}
 		switch (initialPhase) {
 		case TO_DB_PREPARING:
@@ -263,13 +280,17 @@ public class Transaction implements Comparable<Transaction> {
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
 		transaction.originatingThread = Thread.currentThread();
-		threadLocalInstance.set(transaction);
+		setThreadLocalTransaction(transaction);
 		transaction.originatingThreadName = Thread.currentThread().getName();
 		transaction.threadCount.incrementAndGet();
 		if (retainStartEndTraces()) {
 			transaction.transactionStartTrace = SEUtilities
 					.getCurrentThreadStacktraceSlice();
 		}
+	}
+
+	private static void setThreadLocalTransaction(Transaction transaction) {
+		perThreadTransaction.put(Thread.currentThread(), transaction);
 	}
 
 	private ConcurrentHashMap<MvccObjectVersions, Transaction> resolvedMostRecentVisibleTransactions = new ConcurrentHashMap<>(
@@ -672,8 +693,9 @@ public class Transaction implements Comparable<Transaction> {
 		Transaction currentThreadTransaction = provideCurrentThreadTransaction();
 		if (currentThreadTransaction == null) {
 			logger.warn("DEVEX - 0 - no current thread transaction");
-		}else{
-			logger.warn("DEVEX - 0 - current thread transaction:\n{}",currentThreadTransaction.toDebugString());
+		} else {
+			logger.warn("DEVEX - 0 - current thread transaction:\n{}",
+					currentThreadTransaction.toDebugString());
 		}
 	}
 }

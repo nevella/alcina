@@ -2,6 +2,7 @@ package cc.alcina.framework.entity.logic;
 
 import java.lang.reflect.Field;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
@@ -11,6 +12,8 @@ import org.apache.log4j.PatternLayout;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
+import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -19,6 +22,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 
+@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class EntityLayerLogging {
 	public static final transient String CONTEXT_MUTE_PERSISTENT_LOGGING = EntityLayerLogging.class
 			.getName() + ".CONTEXT_MUTE_PERSISTENT_LOGGING";
@@ -120,6 +124,14 @@ public class EntityLayerLogging {
 					julLevel = java.util.logging.Level.ALL;
 				}
 				jblmLogger.setLevel(julLevel);
+				Field loggerNodeField = SEUtilities
+						.getFieldByName(jblmLogger.getClass(), "loggerNode");
+				loggerNodeField.setAccessible(true);
+				// because wildfly tries to gc its internal LoggerNode structure
+				// (and thereby clear the level), maintain a
+				// reference here
+				Object loggerNode = loggerNodeField.get(jblmLogger);
+				loggerRefs.put(loggerNode, true);
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -128,6 +140,8 @@ public class EntityLayerLogging {
 			setLevel0(slf4jlogger.getName(), level);
 		}
 	}
+
+	private static ConcurrentHashMap<Object, Boolean> loggerRefs = new ConcurrentHashMap<>();
 
 	public static void setLevel(String key, Level level) {
 		setLevel(LoggerFactory.getLogger(key), level);

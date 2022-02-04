@@ -57,6 +57,8 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 public abstract class Job extends VersionableEntity<Job>
 		implements HasIUser, Comparable<Job> {
+	private static final transient String CONSISTENCY_PRIORITY_DEFAULT = "_default";
+
 	public static final transient String PROPERTY_STATE = "state";
 
 	public static Job byId(long id) {
@@ -117,6 +119,20 @@ public abstract class Job extends VersionableEntity<Job>
 	private String taskSignature;
 
 	private transient Job firstInSequence;
+
+	@GwtTransient
+	private String consistencyPriority;
+
+	public String getConsistencyPriority() {
+		return this.consistencyPriority;
+	}
+
+	public void setConsistencyPriority(String consistencyPriority) {
+		String old_consistencyPriority = this.consistencyPriority;
+		this.consistencyPriority = consistencyPriority;
+		propertyChangeSupport().firePropertyChange("consistencyPriority",
+				old_consistencyPriority, consistencyPriority);
+	}
 
 	public Job() {
 	}
@@ -1160,5 +1176,10 @@ public abstract class Job extends VersionableEntity<Job>
 
 	public void writeLargeObject() {
 		Registry.impl(DebugLogWriter.class).write(domainIdentity());
+	}
+
+	public String provideConsistencyPriority() {
+		return Optional.ofNullable(getConsistencyPriority())
+				.orElse(Job.CONSISTENCY_PRIORITY_DEFAULT);
 	}
 }

@@ -879,6 +879,15 @@ public class JobRegistry {
 				}
 			}
 		}
+
+		public void ensureConsistency(Object futureConsistencyPriority) {
+			if (JobDomain.get().hasFutureConsistencyJob(task)) {
+				return;
+			}
+			withInitialState(JobState.FUTURE_CONSISTENCY).create()
+					.setConsistencyPriority(
+							futureConsistencyPriority.toString());
+		}
 	}
 
 	public static class FutureStat {

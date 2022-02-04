@@ -930,6 +930,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					@Override
 					public Void call() throws Exception {
 						MetricLogging.get().start(clazz.getSimpleName());
+						Thread.currentThread().setName(
+								"loader-database-" + clazz.getSimpleName());
 						loader().withClazz(clazz)
 								.withSqlFilter(
 										descriptor.getInitialLoadFilter())
