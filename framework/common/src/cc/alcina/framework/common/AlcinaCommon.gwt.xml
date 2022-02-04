@@ -11,6 +11,7 @@
 	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeRegex' />
 	<inherits name='cc.alcina.framework.emul.AlcinaEmulDevModeImpl' />
 	<inherits name='de.benediktmeurer.gwt.slf4j.jul.JUL'/>
+	<!-- FIXME - 2022 - cleanup unused -->
 	<define-configuration-property name="alcina.introspectorFilter.classname" is-multi-valued="false"/>
 	<define-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls" is-multi-valued="false"/>
 	<set-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls" value="false"/>

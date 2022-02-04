@@ -1,9 +1,19 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <module>
+	<super-source path="translatable" />
+	<source path="client" />
+
 	<generate-with class="cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator">
 		<when-type-assignable class="cc.alcina.framework.common.client.reflection.ModuleReflector" />
 	</generate-with>
-	 <super-source path="translatable" />
-	<source path="client" />
+	<generate-with class="cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator">
+		<when-type-assignable class="cc.alcina.framework.common.client.reflection.ModuleReflector" />
+	</generate-with>
+	<define-configuration-property name="cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilter" is-multi-valued="false" />
+	<define-configuration-property name="cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilter.dataFolder" is-multi-valued="false" />
+	<set-configuration-property name="cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilter" value="cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilter" />
+
+	<define-linker name="reflectiveReachability" class="cc.alcina.framework.entity.gwt.reflection.ReflectionReachabilityLinker" />
+	<add-linker name="reflectiveReachability" />
 </module>

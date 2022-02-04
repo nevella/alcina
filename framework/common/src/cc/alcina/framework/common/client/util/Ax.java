@@ -133,7 +133,7 @@ public class Ax {
 
 	public static <T> Optional<T> optionalFirst(Collection<T> collection) {
 		return collection.size() == 0 ? Optional.empty()
-				: Optional.of(collection.iterator().next());
+				: Optional.ofNullable(collection.iterator().next());
 	}
 
 	public static void out(Object o) {

@@ -144,6 +144,8 @@ public class ClientReflectionGenerator extends Generator {
 
 	JClassType classReflectorType;
 
+	ClientReflectionFilter reflectionFilter;
+
 	@Override
 	public String generate(TreeLogger logger, GeneratorContext context,
 			String typeName) throws UnableToCompleteException {
@@ -152,6 +154,7 @@ public class ClientReflectionGenerator extends Generator {
 			this.context = context;
 			this.typeName = typeName;
 			setupEnvironment();
+			setupFilter();
 			moduleGenerator = new ModuleReflectionGenerator(implementationName,
 					generatingType);
 			if (moduleGenerator.isPending()) {
@@ -169,6 +172,17 @@ public class ClientReflectionGenerator extends Generator {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private void setupFilter() throws Exception {
+		String filterClassName = context.getPropertyOracle()
+				.getConfigurationProperty(
+						ClientReflectionFilter.class.getName())
+				.getValues().get(0);
+		reflectionFilter = (ClientReflectionFilter) Class
+				.forName(filterClassName).getDeclaredConstructor()
+				.newInstance();
+		reflectionFilter.init(context, moduleName);
 	}
 
 	void addImport(ClassSourceFileComposerFactory factory, Class<?> type) {
@@ -700,6 +714,14 @@ public class ClientReflectionGenerator extends Generator {
 					implementationName, superClassOrInterfaceType);
 		}
 
+		private void writeMethodDefinition(String methodName,
+				String methodArguments, String accessModifier,
+				String methodIndex) {
+			sourceWriter.println("%s void %s%s(%s){", accessModifier,
+					methodName, methodIndex, methodArguments);
+			sourceWriter.indent();
+		}
+
 		@Override
 		protected void prepare() {
 			prepareAnnotationImplementationGenerators();
@@ -736,6 +758,7 @@ public class ClientReflectionGenerator extends Generator {
 							|| has(t, Bean.class)
 							|| filter.isReflectableJavaCoreClass(t)
 							|| filter.isReflectableJavaCollectionClass(t)))
+					.filter(reflectionFilter::permit)
 					.map(JClassType::getFlattenedSupertypeHierarchy)
 					.flatMap(Collection::stream)
 					.map(ClientReflectionGenerator::erase).distinct()
@@ -763,6 +786,10 @@ public class ClientReflectionGenerator extends Generator {
 			String methodArguments = Ax.notBlank(mapSignature)
 					? Ax.format("%s map", mapSignature)
 					: "";
+			if (classReflectors.isEmpty()) {
+				writeMethodDefinition(methodName, methodArguments, "public",
+						"");
+			}
 			for (int idx = 0; idx < classReflectors.size(); idx++) {
 				boolean writePreamble = idx % 100 == 0;
 				boolean initial = idx == 0;
@@ -778,9 +805,8 @@ public class ClientReflectionGenerator extends Generator {
 						sourceWriter.println("}");
 						sourceWriter.println();
 					}
-					sourceWriter.println("%s void %s%s(%s){", accessModifier,
-							methodName, methodIndex, methodArguments);
-					sourceWriter.indent();
+					writeMethodDefinition(methodName, methodArguments,
+							accessModifier, methodIndex);
 				}
 				perReflector.accept(classReflectors.get(idx));
 			}
