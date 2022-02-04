@@ -88,6 +88,7 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 /**
  * @author nick@alcina.cc
  *
+ * FIXME - 2022 - migrate property treatment to Configuration static singleton
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 public class ResourceUtilities {
