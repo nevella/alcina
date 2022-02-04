@@ -88,7 +88,6 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
-import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -331,7 +330,7 @@ public class ThreadlocalTransformManager extends TransformManager
 			}
 		}
 		if (detachedEntityCache != null) {
-			first = detachedEntityCache.values(clazz).stream()
+			first = detachedEntityCache.stream(clazz)
 					.filter(new PropertyFilter<V>(key, value)).findFirst()
 					.orElse(null);
 			if (first != null) {

@@ -32,7 +32,6 @@ import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -254,11 +253,6 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		return "Cache: " + domain;
 	}
 
-	public <T> Set<T> values(Class<T> clazz) {
-		ensureMap(clazz);
-		return stream(clazz).collect(AlcinaCollectors.toLinkedHashSet());
-	}
-
 	private <T> T getUnboxed(Class<T> clazz, long id) {
 		Map<Long, Entity> map = domain.get(clazz);
 		if (map == null) {
@@ -300,9 +294,11 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 
 	protected void ensureMap(Class clazz) {
 		if (!domain.containsKey(clazz)) {
-			if (!domain.containsKey(clazz)) {
-				domain.put(clazz, createIdEntityMap(clazz));
-				local(clazz, true);
+			synchronized (domain) {
+				if (!domain.containsKey(clazz)) {
+					domain.put(clazz, createIdEntityMap(clazz));
+					local(clazz, true);
+				}
 			}
 		}
 	}
