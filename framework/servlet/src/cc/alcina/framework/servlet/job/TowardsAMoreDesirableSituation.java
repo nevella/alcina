@@ -13,16 +13,28 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
-/*
+/**
  * FIXME - mvcc.cascade - add to listjobs report
+ * 
+ * <h2>Model consistency</h2>
+ * <p>
+ * The following may not be fully implemented
+ * </p>
+ * <ul>
+ * <li>Future consistency is a property of the domain - if a change in A makes B
+ * inconsistent, generate a job which will make B consistent in the same
+ * domain/db transaction as the change to A.
+ * <li>Consistencies can have different priorities (based on the job.consistency
+ * property order) (TODO)
+ * <li>Consistencies are generally better handled by resubmit processors (TODO:
+ * detail)
+ * <li>
+ * </ul>
  */
 class TowardsAMoreDesirableSituation {
 	private List<Job> activeJobs = new ArrayList<>();
@@ -71,11 +83,19 @@ class TowardsAMoreDesirableSituation {
 								// ensurance mechanism - e.g. jade parsers)
 								//
 								job.setState(JobState.PENDING);
+								JobDomain.get()
+										.getFutureConsistencyJobsEquivalentTo(
+												job)
+										.forEach(Job::delete);
 								activeJobs.add(job);
 								Transaction.commit();
 								logger.info(
-										"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} remaining",
-										job,
+										"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} - {},{} remaining",
+										job, job.provideConsistencyPriority(),
+										JobDomain.get()
+												.getFutureConsistencyJobs(job
+														.provideConsistencyPriority())
+												.count(),
 										JobDomain.get()
 												.getFutureConsistencyJobs()
 												.count());

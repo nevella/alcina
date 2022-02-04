@@ -69,7 +69,6 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -237,7 +236,7 @@ public class JobRegistry {
 	private AtomicInteger extJobSystemIdCounter = new AtomicInteger();
 
 	Map<Job, ContextAwaiter> contextAwaiters = new ConcurrentHashMap<>();
-	
+
 	public JobRegistry() {
 	}
 
@@ -882,6 +881,15 @@ public class JobRegistry {
 				}
 			}
 		}
+
+		public void ensureConsistency(Object futureConsistencyPriority) {
+			if (JobDomain.get().hasFutureConsistencyJob(task)) {
+				return;
+			}
+			withInitialState(JobState.FUTURE_CONSISTENCY).create()
+					.setConsistencyPriority(
+							futureConsistencyPriority.toString());
+		}
 	}
 
 	public static class FutureStat {
@@ -988,14 +996,13 @@ public class JobRegistry {
 							.map(exp -> 1 << exp).filter(i -> i == seconds)
 							.findFirst();
 					if (log.isPresent()) {
-						JobRegistry.get().logger.warn(
-								"Waiting for job ({} secs) {}", log.getAsInt(),
-								job);
+						JobRegistry.logger.warn("Waiting for job ({} secs) {}",
+								log.getAsInt(), job);
 					}
 				}
 				if (latch.getCount() > 0) {
-					JobRegistry.get().logger
-							.warn("DEVEX - 0 - Timed out waiting for job {}", job);
+					JobRegistry.logger.warn(
+							"DEVEX - 0 - Timed out waiting for job {}", job);
 				}
 			} catch (InterruptedException e) {
 				e.printStackTrace();
