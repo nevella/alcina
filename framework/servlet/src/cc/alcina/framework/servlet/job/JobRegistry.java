@@ -315,6 +315,11 @@ public class JobRegistry {
 	 * PROCESSING or COMPLETE (not SEQUENCE_COMPLETE), this vm
 	 */
 	public int getActiveJobCount() {
+		// FIXME - mvcc.jobs - both (a) remove on transform, not here and (b)
+		// track why not removed in this-vm process (i.e. finally of performJob0
+		// not completing).
+		// How to track: put logging here (DEVEX)
+		activeJobs.keySet().removeIf(job -> job.getState() == JobState.ABORTED);
 		return activeJobs.size();
 	}
 

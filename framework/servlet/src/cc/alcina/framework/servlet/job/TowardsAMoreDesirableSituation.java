@@ -105,25 +105,34 @@ class TowardsAMoreDesirableSituation {
 		activeJobs.removeIf(
 				j -> j.domain().wasRemoved() || j.provideIsSequenceComplete());
 		boolean delta = false;
-		while (activeJobs.size() < JobRegistry.get().jobExecutors
-				.getMaxConsistencyJobCount()
-				&& JobRegistry.get().getActiveJobCount() < ResourceUtilities
-						.getInteger(TowardsAMoreDesirableSituation.class,
-								"maxVmActiveJobCount")) {
+		while (canAllocate()) {
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
 					.isPresent()) {
 				JobRegistry.get()
 						.withJobMetadataLock(getClass().getSimpleName(), () -> {
-							Optional<Job> next = JobDomain.get()
-									.getFutureConsistencyJobs().findFirst();
-							if (next.isPresent()) {
-								futureToPending(next);
+							// allocate in bulk while holding lock
+							while (canAllocate()) {
+								Optional<Job> next = JobDomain.get()
+										.getFutureConsistencyJobs().findFirst();
+								if (next.isPresent()) {
+									futureToPending(next);
+								} else {
+									break;
+								}
 							}
 						});
 			} else {
 				break;
 			}
 		}
+	}
+
+	private boolean canAllocate() {
+		return activeJobs.size() < JobRegistry.get().jobExecutors
+				.getMaxConsistencyJobCount()
+				&& JobRegistry.get().getActiveJobCount() < ResourceUtilities
+						.getInteger(TowardsAMoreDesirableSituation.class,
+								"maxVmActiveJobCount");
 	}
 
 	public class ProcessorThread extends Thread {
