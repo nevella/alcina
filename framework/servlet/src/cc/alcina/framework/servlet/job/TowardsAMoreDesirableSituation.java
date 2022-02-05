@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.job;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -15,6 +16,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
@@ -58,6 +60,9 @@ class TowardsAMoreDesirableSituation {
 	}
 
 	private void futureToPending(Optional<Job> next) {
+		Timestamp entryTimestamp = DomainStore.stores().writableStore()
+				.getPersistenceEvents().getQueue().getTransformCommitPosition()
+				.getCommitTimestamp();
 		Job job = next.get();
 		job.setPerformer(ClientInstance.self());
 		// FIXME - mvcc.cascade - this class is where
@@ -79,13 +84,17 @@ class TowardsAMoreDesirableSituation {
 				.forEach(Job::delete);
 		activeJobs.add(job);
 		Transaction.commit();
+		Timestamp exitTimestamp = DomainStore.stores().writableStore()
+				.getPersistenceEvents().getQueue().getTransformCommitPosition()
+				.getCommitTimestamp();
 		long currentPriorityCount = JobDomain.get()
 				.getFutureConsistencyJobsCount(
 						job.provideConsistencyPriority());
 		logger.info(
-				"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} - {},{} remaining",
+				"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} - {},{} remaining - entry: {} - exit: {}",
 				job, job.provideConsistencyPriority(), currentPriorityCount,
-				JobDomain.get().getFutureConsistencyJobsCount());
+				JobDomain.get().getFutureConsistencyJobsCount(), entryTimestamp,
+				exitTimestamp);
 	}
 
 	void start() {
