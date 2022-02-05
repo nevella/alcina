@@ -87,6 +87,10 @@ public class JobScheduler {
 	private TopicListener<Event> queueEventListener = (k,
 			v) -> enqueueEvent(new ScheduleEvent(v));
 
+	private TopicListener<Void> futureConsistencyEventListener = (k,
+			v) -> enqueueEvent(
+					new ScheduleEvent(Type.FUTURE_CONSISTENCY_EVENT));
+
 	Map<Job, JobAllocator> allocators = new ConcurrentHashMap<>();
 
 	private ExecutorService allocatorService = Executors.newCachedThreadPool();
@@ -94,6 +98,8 @@ public class JobScheduler {
 	JobScheduler(JobRegistry jobRegistry) {
 		this.jobRegistry = jobRegistry;
 		JobDomain.get().queueEvents.add(queueEventListener);
+		JobDomain.get().futureConsistencyEvents
+				.add(futureConsistencyEventListener);
 		JobDomain.get().fireInitialAllocatorQueueCreationEvents();
 		thread = new ScheduleJobsThread();
 		thread.start();
@@ -110,7 +116,8 @@ public class JobScheduler {
 				fireWakeup();
 			}
 		}, untilNext5MinutesMillis, 5 * TimeConstants.ONE_MINUTE_MS);
-		TowardsAMoreDesirableSituation aMoreDesirableSituation = new TowardsAMoreDesirableSituation(this);
+		TowardsAMoreDesirableSituation aMoreDesirableSituation = new TowardsAMoreDesirableSituation(
+				this);
 		aMoreDesirableSituation.start();
 		MethodContext.instance().withWrappingTransaction()
 				.run(() -> enqueueEvent(
@@ -803,8 +810,8 @@ public class JobScheduler {
 		}
 
 		enum Type {
-			APPLICATION_STARTUP, WAKEUP, ALLOCATION_EVENT, SHUTDOWN,
-			LEADER_CHANGED;
+			APPLICATION_STARTUP, WAKEUP, ALLOCATION_EVENT,
+			FUTURE_CONSISTENCY_EVENT, SHUTDOWN, LEADER_CHANGED;
 
 			public boolean isRefreshFuturesEvent() {
 				switch (this) {

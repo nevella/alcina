@@ -69,10 +69,6 @@ public class JobDomain {
 		return Registry.impl(JobDomain.class);
 	}
 
-	public enum DefaultConsistencyPriorities {
-		high, medium, _default, low
-	}
-
 	private Class<? extends Job> jobImplClass;
 
 	private Logger logger = LoggerFactory.getLogger(getClass());
@@ -153,6 +149,8 @@ public class JobDomain {
 	private Map<Job, AllocationQueue> queues = new ConcurrentHashMap<>();
 
 	public Topic<AllocationQueue.Event> queueEvents = Topic.local();
+
+	public Topic<Void> futureConsistencyEvents = Topic.local();
 
 	public Topic<List<JobStateMessage>> stateMessageEvents = Topic.local();
 
@@ -259,6 +257,19 @@ public class JobDomain {
 				.getJobs(consistencyPriority);
 	}
 
+	public long getFutureConsistencyJobsCount() {
+		return jobDescriptor.futurePriorityProjection.getJobsCount();
+	}
+
+	public long getFutureConsistencyJobsCount(String consistencyPriority) {
+		return jobDescriptor.futurePriorityProjection
+				.getJobsCount(consistencyPriority);
+	}
+
+	public Stream<Job> getFutureConsistencyJobsEquivalentTo(Job job) {
+		return jobDescriptor.futureTaskProjection.getEquivalentTo(job);
+	}
+
 	public Stream<Job> getIncompleteJobs() {
 		cleanupQueues();
 		return getVisibleQueues().flatMap(AllocationQueue::getIncompleteJobs);
@@ -293,6 +304,10 @@ public class JobDomain {
 	public Stream<Job> getUndeserializableJobs() {
 		return jobDescriptor.allocationQueueProjection.undeserializableJobs
 				.stream();
+	}
+
+	public boolean hasFutureConsistencyJob(Task task) {
+		return jobDescriptor.futureTaskProjection.containsTask(task);
 	}
 
 	public void onAppShutdown() {
@@ -753,6 +768,10 @@ public class JobDomain {
 		}
 	}
 
+	public enum DefaultConsistencyPriorities {
+		high, medium, _default, low
+	}
+
 	public enum EventType {
 		CREATED, DELETED, RELATED_MODIFICATION, WAKEUP, TO_AWAITING_CHILDREN,
 		TO_PROCESSING;
@@ -1134,51 +1153,42 @@ public class JobDomain {
 
 		private class FutureConsistencyPriorityProjection
 				extends BaseProjection<Job> {
-			class QueuePriorityComparator implements Comparator<String> {
-				List<String> ordered = Arrays.asList(ResourceUtilities
-						.get(JobDomain.class, "consistencyPriorityOrder")
-						.split(","));
-
-				@Override
-				public int compare(String o1, String o2) {
-					int idx1 = ordered.indexOf(o1);
-					int idx2 = ordered.indexOf(o2);
-					if (idx1 == -1) {
-						if (idx2 == -1) {
-							return o1.compareTo(o2);
-						} else {
-							return 1;
-						}
-					} else {
-						if (idx2 == -1) {
-							return -1;
-						} else {
-							return CommonUtils.compareInts(idx1, idx2);
-						}
-					}
-				}
-			}
-
 			private FutureConsistencyPriorityProjection() {
 				super(String.class,
 						new Class[] { Long.class, (Class<Job>) jobImplClass });
 			}
 
+			public long getJobsCount(String consistencyPriority) {
+				return valueCollection(consistencyPriority).size();
+			}
+
+			public long getJobsCount() {
+				return valueCollections()
+						.collect(Collectors.summingInt(Collection::size));
+			}
+
 			public Stream<Job> getJobs() {
+				return valueCollections().flatMap(Collection::stream);
+			}
+
+			private Stream<Collection> valueCollections() {
 				return getLookup().typedKeySet(String.class).stream()
 						.sorted(new QueuePriorityComparator())
-						.map(s -> getLookup().asMap(s).delegate().values())
-						.flatMap(Collection::stream);
+						.map(s -> getLookup().asMap(s).delegate().values());
+			}
+
+			public Stream<Job> getJobs(String consistencyPriority) {
+				return valueCollection(consistencyPriority).stream();
+			}
+
+			private Collection valueCollection(String consistencyPriority) {
+				return getLookup().asMapEnsure(true, consistencyPriority)
+						.delegate().values();
 			}
 
 			@Override
 			public Class<? extends Job> getListenedClass() {
 				return jobImplClass;
-			}
-
-			public Stream<Job> getJobs(String consistencyPriority) {
-				return getLookup().asMapEnsure(true, consistencyPriority)
-						.delegate().values().stream();
 			}
 
 			@Override
@@ -1187,6 +1197,7 @@ public class JobDomain {
 					return;
 				}
 				super.insert(t);
+				futureConsistencyEvents.publish(null);
 			}
 
 			@Override
@@ -1219,6 +1230,31 @@ public class JobDomain {
 				return new Object[] { job.provideConsistencyPriority(),
 						job.getId(), job };
 			}
+
+			class QueuePriorityComparator implements Comparator<String> {
+				List<String> ordered = Arrays.asList(ResourceUtilities
+						.get(JobDomain.class, "consistencyPriorityOrder")
+						.split(","));
+
+				@Override
+				public int compare(String o1, String o2) {
+					int idx1 = ordered.indexOf(o1);
+					int idx2 = ordered.indexOf(o2);
+					if (idx1 == -1) {
+						if (idx2 == -1) {
+							return o1.compareTo(o2);
+						} else {
+							return 1;
+						}
+					} else {
+						if (idx2 == -1) {
+							return -1;
+						} else {
+							return CommonUtils.compareInts(idx1, idx2);
+						}
+					}
+				}
+			}
 		}
 
 		private class FutureConsistencyTaskProjection
@@ -1226,6 +1262,22 @@ public class JobDomain {
 			private FutureConsistencyTaskProjection() {
 				super(String.class, new Class[] { String.class, Long.class,
 						(Class<Job>) jobImplClass });
+			}
+
+			public boolean containsTask(Task task) {
+				return getLookup().containsKey(task.getClass().getName(),
+						TransformManager.Serializer.get().serialize(task,
+								true));
+			}
+
+			public Stream<Job> getEquivalentTo(Job job) {
+				Task task = job.getTask();
+				MultikeyMap<Job> map = getLookup().asMapEnsure(false,
+						task.getClass().getName(), TransformManager.Serializer
+								.get().serialize(task, true));
+				return map == null ? Stream.empty()
+						: ((Map<Long, Job>) map.delegate()).values().stream()
+								.filter(j -> job != j);
 			}
 
 			@Override
@@ -1256,30 +1308,6 @@ public class JobDomain {
 				return new Object[] { job.getTaskClassName(),
 						job.getTaskSerialized(), job.getId(), job };
 			}
-
-			public boolean containsTask(Task task) {
-				return getLookup().containsKey(task.getClass().getName(),
-						TransformManager.Serializer.get().serialize(task,
-								true));
-			}
-
-			public Stream<Job> getEquivalentTo(Job job) {
-				Task task = job.getTask();
-				MultikeyMap<Job> map = getLookup().asMapEnsure(false,
-						task.getClass().getName(), TransformManager.Serializer
-								.get().serialize(task, true));
-				return map == null ? Stream.empty()
-						: ((Map<Long, Job>) map.delegate()).values().stream()
-								.filter(j -> job != j);
-			}
 		}
-	}
-
-	public boolean hasFutureConsistencyJob(Task task) {
-		return jobDescriptor.futureTaskProjection.containsTask(task);
-	}
-
-	public Stream<Job> getFutureConsistencyJobsEquivalentTo(Job job) {
-		return jobDescriptor.futureTaskProjection.getEquivalentTo(job);
 	}
 }

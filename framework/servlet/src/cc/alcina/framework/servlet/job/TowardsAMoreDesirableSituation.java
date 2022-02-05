@@ -43,8 +43,59 @@ class TowardsAMoreDesirableSituation {
 
 	private JobScheduler scheduler;
 
+	ProcessorThread thread;
+
+	boolean finished;
+
+	private BlockingQueue<Event> events = new LinkedBlockingQueue<>();
+
 	public TowardsAMoreDesirableSituation(JobScheduler scheduler) {
 		this.scheduler = scheduler;
+	}
+
+	private void addSchedulerEvent() {
+		events.add(new Event(Type.SCHEDULER_EVENT));
+	}
+
+	private void futureToPending(Optional<Job> next) {
+		Job job = next.get();
+		job.setPerformer(ClientInstance.self());
+		// FIXME - mvcc.cascade - this class is where
+		// futureconsistency
+		// deduplication should happen.
+		// on (transform-based) job switch to
+		// 'processing', for performer, snapshot
+		// all future consistency jobs with same
+		// signature
+		// (taskserialized/taskclass)
+		//
+		// note resubmit is required for future
+		// consistency aborts (unless task has other
+		// logical consistency
+		// ensurance mechanism - e.g. jade parsers)
+		//
+		job.setState(JobState.PENDING);
+		JobDomain.get().getFutureConsistencyJobsEquivalentTo(job)
+				.forEach(Job::delete);
+		activeJobs.add(job);
+		Transaction.commit();
+		long currentPriorityCount = JobDomain.get()
+				.getFutureConsistencyJobsCount(
+						job.provideConsistencyPriority());
+		logger.info(
+				"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} - {},{} remaining",
+				job, job.provideConsistencyPriority(), currentPriorityCount,
+				JobDomain.get().getFutureConsistencyJobsCount());
+	}
+
+	void start() {
+		thread = new ProcessorThread();
+		thread.start();
+		scheduler.eventOcurred.add((k, v) -> addSchedulerEvent());
+	}
+
+	void stopService() {
+		events.add(new Event(Type.SHUTDOWN));
 	}
 
 	void tend() {
@@ -66,39 +117,7 @@ class TowardsAMoreDesirableSituation {
 							Optional<Job> next = JobDomain.get()
 									.getFutureConsistencyJobs().findFirst();
 							if (next.isPresent()) {
-								Job job = next.get();
-								job.setPerformer(ClientInstance.self());
-								// FIXME - mvcc.cascade - this class is where
-								// futureconsistency
-								// deduplication should happen.
-								// on (transform-based) job switch to
-								// 'processing', for performer, snapshot
-								// all future consistency jobs with same
-								// signature
-								// (taskserialized/taskclass)
-								//
-								// note resubmit is required for future
-								// consistency aborts (unless task has other
-								// logical consistency
-								// ensurance mechanism - e.g. jade parsers)
-								//
-								job.setState(JobState.PENDING);
-								JobDomain.get()
-										.getFutureConsistencyJobsEquivalentTo(
-												job)
-										.forEach(Job::delete);
-								activeJobs.add(job);
-								Transaction.commit();
-								logger.info(
-										"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} - {},{} remaining",
-										job, job.provideConsistencyPriority(),
-										JobDomain.get()
-												.getFutureConsistencyJobs(job
-														.provideConsistencyPriority())
-												.count(),
-										JobDomain.get()
-												.getFutureConsistencyJobs()
-												.count());
+								futureToPending(next);
 							}
 						});
 			} else {
@@ -106,18 +125,6 @@ class TowardsAMoreDesirableSituation {
 			}
 		}
 	}
-
-	static class Event {
-		public Event(Type type) {
-			this.type = type;
-		}
-
-		Type type;
-	}
-
-	ProcessorThread thread;
-
-	boolean finished;
 
 	public class ProcessorThread extends Thread {
 		@Override
@@ -151,23 +158,15 @@ class TowardsAMoreDesirableSituation {
 		}
 	}
 
+	static class Event {
+		Type type;
+
+		public Event(Type type) {
+			this.type = type;
+		}
+	}
+
 	enum Type {
 		SCHEDULER_EVENT, SHUTDOWN;
-	}
-
-	private BlockingQueue<Event> events = new LinkedBlockingQueue<>();
-
-	void start() {
-		thread = new ProcessorThread();
-		thread.start();
-		scheduler.eventOcurred.add((k, v) -> addSchedulerEvent());
-	}
-
-	private void addSchedulerEvent() {
-		events.add(new Event(Type.SCHEDULER_EVENT));
-	}
-
-	void stopService() {
-		events.add(new Event(Type.SHUTDOWN));
 	}
 }
