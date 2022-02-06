@@ -19,8 +19,8 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
@@ -78,7 +78,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 			ObjectWrapper<Stream<? extends Entity>> mutableStream = ObjectWrapper
 					.of(stream);
 			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
-					() -> mutableStream.get().collect(Collectors.toList()), mutableStream);
+					() -> mutableStream.get().collect(Collectors.toList()),
+					mutableStream);
 			jobs.forEach(job -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(String.valueOf(job.getId()))
@@ -136,7 +137,8 @@ public class TaskListJobs extends AbstractTaskPerformer
 			ObjectWrapper<Stream<? extends Entity>> mutableStream = ObjectWrapper
 					.of(stream);
 			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
-					() -> mutableStream.get().collect(Collectors.toList()), mutableStream);
+					() -> mutableStream.get().collect(Collectors.toList()),
+					mutableStream);
 			jobs.forEach(job -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(String.valueOf(job.getId()))
@@ -215,8 +217,20 @@ public class TaskListJobs extends AbstractTaskPerformer
 		addActive(doc, "child - active", Job::provideIsNotTopLevel);
 		addCompleted(doc, "top-level", true, 20);
 		addCompleted(doc, "child", false, 20);
+		addConsistency(doc);
 		JobContext.get().getJob().setLargeResult(doc.prettyToString());
 		logger.info("Log output to job.largeResult");
+	}
+
+	private void addConsistency(DomDoc doc) {
+		{
+			doc.html().body().builder().tag("h2")
+					.text("Active consistency jobs").append();
+			JobRegistry.get().getActiveConsistencyJobs().forEach(j -> {
+				doc.html().body().builder().tag("div").text(j.toString())
+						.append();
+			});
+		}
 	}
 
 	boolean filter(String... tests) {

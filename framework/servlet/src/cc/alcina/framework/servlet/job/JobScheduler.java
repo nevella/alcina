@@ -95,6 +95,8 @@ public class JobScheduler {
 
 	private ExecutorService allocatorService = Executors.newCachedThreadPool();
 
+	TowardsAMoreDesirableSituation aMoreDesirableSituation;
+
 	JobScheduler(JobRegistry jobRegistry) {
 		this.jobRegistry = jobRegistry;
 		JobDomain.get().queueEvents.add(queueEventListener);
@@ -116,8 +118,7 @@ public class JobScheduler {
 				fireWakeup();
 			}
 		}, untilNext5MinutesMillis, 5 * TimeConstants.ONE_MINUTE_MS);
-		TowardsAMoreDesirableSituation aMoreDesirableSituation = new TowardsAMoreDesirableSituation(
-				this);
+		aMoreDesirableSituation = new TowardsAMoreDesirableSituation(this);
 		aMoreDesirableSituation.start();
 		MethodContext.instance().withWrappingTransaction()
 				.run(() -> enqueueEvent(

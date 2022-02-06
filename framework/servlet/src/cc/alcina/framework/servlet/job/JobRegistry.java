@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.job;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -1097,5 +1098,13 @@ public class JobRegistry {
 				JobDomain.get().stateMessageEvents.remove(listener);
 			}
 		}
+	}
+
+	public Timestamp getJobMetadataLockTimestamp(String path) {
+		return jobExecutors.getJobMetadataLockTimestamp(path);
+	}
+
+	public Stream<? extends Job> getActiveConsistencyJobs() {
+		return scheduler.aMoreDesirableSituation.getActiveJobs();
 	}
 }

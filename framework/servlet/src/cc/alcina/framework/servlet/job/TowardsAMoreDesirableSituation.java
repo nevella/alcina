@@ -2,10 +2,13 @@ package cc.alcina.framework.servlet.job;
 
 import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -13,6 +16,7 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -39,7 +43,8 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  * </ul>
  */
 class TowardsAMoreDesirableSituation {
-	private List<Job> activeJobs = new ArrayList<>();
+	private List<Job> activeJobs = Collections
+			.synchronizedList(new ArrayList<>());
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -60,41 +65,39 @@ class TowardsAMoreDesirableSituation {
 	}
 
 	private void futureToPending(Optional<Job> next) {
-		Timestamp entryTimestamp = DomainStore.stores().writableStore()
-				.getPersistenceEvents().getQueue().getTransformCommitPosition()
-				.getCommitTimestamp();
-		Job job = next.get();
-		job.setPerformer(ClientInstance.self());
-		// FIXME - mvcc.cascade - this class is where
-		// futureconsistency
-		// deduplication should happen.
-		// on (transform-based) job switch to
-		// 'processing', for performer, snapshot
-		// all future consistency jobs with same
-		// signature
-		// (taskserialized/taskclass)
-		//
+		Timestamp entryRequiredTimestamp = JobRegistry.get()
+				.getJobMetadataLockTimestamp(getClass().getSimpleName());
+		DomainTransformCommitPosition entryPosition = DomainStore.stores()
+				.writableStore().getPersistenceEvents().getQueue()
+				.getTransformCommitPosition();
 		// note resubmit is required for future
 		// consistency aborts (unless task has other
 		// logical consistency
 		// ensurance mechanism - e.g. jade parsers)
 		//
+		Job job = next.get();
+		if (job.getPerformer() != null) {
+			logger.info(
+					"TowardsAMoreDesirableSituation - fatal - non-null performer - {}",
+					job);
+		}
+		job.setPerformer(ClientInstance.self());
 		job.setState(JobState.PENDING);
 		JobDomain.get().getFutureConsistencyJobsEquivalentTo(job)
 				.forEach(Job::delete);
 		activeJobs.add(job);
 		Transaction.commit();
-		Timestamp exitTimestamp = DomainStore.stores().writableStore()
-				.getPersistenceEvents().getQueue().getTransformCommitPosition()
-				.getCommitTimestamp();
+		DomainTransformCommitPosition exitPosition = DomainStore.stores()
+				.writableStore().getPersistenceEvents().getQueue()
+				.getTransformCommitPosition();
 		long currentPriorityCount = JobDomain.get()
 				.getFutureConsistencyJobsCount(
 						job.provideConsistencyPriority());
 		logger.info(
-				"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} - {},{} remaining - entry: {} - exit: {}",
+				"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} - {},{} remaining - entry: {} required {} - exit: {} required {}",
 				job, job.provideConsistencyPriority(), currentPriorityCount,
-				JobDomain.get().getFutureConsistencyJobsCount(), entryTimestamp,
-				exitTimestamp);
+				JobDomain.get().getFutureConsistencyJobsCount(), entryPosition,
+				exitPosition);
 	}
 
 	void start() {
@@ -186,5 +189,12 @@ class TowardsAMoreDesirableSituation {
 
 	enum Type {
 		SCHEDULER_EVENT, SHUTDOWN;
+	}
+
+	public Stream<? extends Job> getActiveJobs() {
+		// thread-safe copy
+		synchronized (activeJobs) {
+			return activeJobs.stream().collect(Collectors.toList()).stream();
+		}
 	}
 }
