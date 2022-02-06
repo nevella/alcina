@@ -185,6 +185,10 @@ public class Domain {
 		return handler.wasRemoved(entity);
 	}
 
+	public static boolean notRemoved(Entity entity) {
+		return !wasRemoved(entity);
+	}
+
 	public interface DomainHandler {
 		public <V extends Entity> void async(Class<V> clazz, long objectId,
 				boolean create, Consumer<V> resultConsumer);
