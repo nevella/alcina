@@ -79,12 +79,17 @@ public abstract class DomainViews {
 
 	private ReentrantLock addTaskLock = new ReentrantLock();
 
+	boolean addTaskLockLockedByDomainCommit;
+
 	// runs on the DTR eventqueue thread
 	private TopicListener<DomainTransformPersistenceEvent> beforeDomainCommittedListener = (
 			k, e) -> {
 		if (isIndexableTransformRequest(e)) {
 			ViewsTask task = new ViewsTask();
 			addTaskLock.lock();
+			// to workaround not explicitly controlling the try/finally of
+			// addTaskLock.lock();
+			addTaskLockLockedByDomainCommit = true;
 			preCommitTransactions.put(e,
 					Transaction.createSnapshotTransaction());
 		}
@@ -103,7 +108,10 @@ public abstract class DomainViews {
 			task.modelChange.postCommit = Transaction
 					.createSnapshotTransaction();
 			tasks.add(task);
+		}
+		if (addTaskLockLockedByDomainCommit) {
 			addTaskLock.unlock();
+			addTaskLockLockedByDomainCommit = false;
 		}
 	};
 
@@ -313,10 +321,14 @@ public abstract class DomainViews {
 	}
 
 	void queueTask(ViewsTask task) {
-		addTaskLock.lock();
-		task.handlerData.transaction = Transaction.createSnapshotTransaction();
-		tasks.add(task);
-		addTaskLock.unlock();
+		try {
+			addTaskLock.lock();
+			task.handlerData.transaction = Transaction
+					.createSnapshotTransaction();
+			tasks.add(task);
+		} finally {
+			addTaskLock.unlock();
+		}
 	}
 
 	public class TaskProcessorThread extends Thread {
@@ -510,5 +522,4 @@ public abstract class DomainViews {
 			throw task.handlerData.exception;
 		}
 	}
-
 }

@@ -154,6 +154,8 @@ public class JobDomain {
 
 	public Topic<AllocationQueue.Event> queueEvents = Topic.local();
 
+	public Topic<Void> futureConsistencyEvents = Topic.local();
+
 	public Topic<List<JobStateMessage>> stateMessageEvents = Topic.local();
 
 	private Class<? extends JobRelation> jobRelationImplClass;
@@ -257,6 +259,15 @@ public class JobDomain {
 	public Stream<Job> getFutureConsistencyJobs(String consistencyPriority) {
 		return jobDescriptor.futurePriorityProjection
 				.getJobs(consistencyPriority);
+	}
+
+	public long getFutureConsistencyJobsCount() {
+		return jobDescriptor.futurePriorityProjection.getJobsCount();
+	}
+
+	public long getFutureConsistencyJobsCount(String consistencyPriority) {
+		return jobDescriptor.futurePriorityProjection
+				.getJobsCount(consistencyPriority);
 	}
 
 	public Stream<Job> getFutureConsistencyJobsEquivalentTo(Job job) {
@@ -1152,15 +1163,20 @@ public class JobDomain {
 			}
 
 			public Stream<Job> getJobs() {
-				return getLookup().typedKeySet(String.class).stream()
-						.sorted(new QueuePriorityComparator())
-						.map(s -> getLookup().asMap(s).delegate().values())
-						.flatMap(Collection::stream);
+				return valueCollections().flatMap(Collection::stream);
 			}
 
 			public Stream<Job> getJobs(String consistencyPriority) {
-				return getLookup().asMapEnsure(true, consistencyPriority)
-						.delegate().values().stream();
+				return valueCollection(consistencyPriority).stream();
+			}
+
+			public long getJobsCount() {
+				return valueCollections()
+						.collect(Collectors.summingInt(Collection::size));
+			}
+
+			public long getJobsCount(String consistencyPriority) {
+				return valueCollection(consistencyPriority).size();
 			}
 
 			@Override
@@ -1174,11 +1190,23 @@ public class JobDomain {
 					return;
 				}
 				super.insert(t);
+				futureConsistencyEvents.publish(null);
 			}
 
 			@Override
 			public boolean isCommitOnly() {
 				return true;
+			}
+
+			private Collection valueCollection(String consistencyPriority) {
+				return getLookup().asMapEnsure(true, consistencyPriority)
+						.delegate().values();
+			}
+
+			private Stream<Collection> valueCollections() {
+				return getLookup().typedKeySet(String.class).stream()
+						.sorted(new QueuePriorityComparator())
+						.map(s -> getLookup().asMap(s).delegate().values());
 			}
 
 			@Override

@@ -1,6 +1,5 @@
 package cc.alcina.framework.common.client.domain;
 
-import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -62,8 +61,8 @@ public class LocalDomain {
 		this.cache = cache;
 	}
 
-	public <T> Collection<T> values(Class<T> clazz) {
-		return cache.values(clazz);
+	public <T> Stream<T> stream(Class<T> clazz) {
+		return cache.stream(clazz);
 	}
 
 	private synchronized void index(Entity obj, boolean add) {

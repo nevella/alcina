@@ -43,6 +43,10 @@ import cc.alcina.framework.servlet.job.JobScheduler.ResubmitPolicy;
  * Start the wrapped thread either on creation - if a 'self-starter' (top-level, first in sequence), or once the job has reached stage 'processing'
  */
 class JobAllocator {
+	static void commit() {
+		TransformCommit.commitWithBackoff();
+	}
+
 	private AllocationQueue queue;
 
 	private AllocationTask allocationTask;
@@ -100,10 +104,6 @@ class JobAllocator {
 		queue.job.setCompletion(enqueuedStatusMessage.percentComplete / 100.0);
 		commit();
 		enqueuedStatusMessage = null;
-	}
-	
-	static void commit(){
-		TransformCommit.commitWithBackoff();
 	}
 
 	public void awaitSequenceCompletion() {
@@ -394,10 +394,11 @@ class JobAllocator {
 					- lastAllocated;
 			if (timeSinceAllocation > TimeConstants.ONE_HOUR_MS
 					&& jobContext != null
-					&& jobContext.getJob().getPerformer() == ClientInstance
-							.self()
+					&& jobContext.getJob()
+							.getPerformer() == ClientInstance.self()
 					&& jobContext.getPerformer() != null
-					&& jobContext.getPerformer().canAbort(job.getTask(),timeSinceAllocation)
+					&& jobContext.getPerformer().canAbort(job.getTask(),
+							timeSinceAllocation)
 					&& ResourceUtilities.is(Transactions.class,
 							"cancelTimedoutTransactions")) {
 				List<Job> incompleteChildren = job.provideChildren()
@@ -461,13 +462,14 @@ class JobAllocator {
 								ThreadPoolExecutor tpex = (ThreadPoolExecutor) executorService;
 								if (tpex.getActiveCount() == 0
 										&& incompleteCount > 0) {
-									//commented out, prevents grandchild jobs
+									// commented out, prevents grandchild jobs
 									//
-//									logger.warn(
-//											"Removing {} incomplete jobs as allocated/processing",
-//											incompleteCount);
-//									// queue.clearIncompleteAllocatedJobs();
-//									queue.cancelIncompleteAllocatedJobs();
+									// logger.warn(
+									// "Removing {} incomplete jobs as
+									// allocated/processing",
+									// incompleteCount);
+									// // queue.clearIncompleteAllocatedJobs();
+									// queue.cancelIncompleteAllocatedJobs();
 								}
 							}
 							// missed event?
@@ -565,7 +567,7 @@ class JobAllocator {
 				/*
 				 * Also, no jobs visible in this phase will have sequential
 				 * predecessors
-				 * 
+				 *
 				 */
 				return true;
 			case Sequence:

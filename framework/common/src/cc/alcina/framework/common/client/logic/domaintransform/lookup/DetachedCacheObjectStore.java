@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.logic.domaintransform.lookup;
 
 import java.util.Collection;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.ObjectStore;
@@ -44,8 +45,9 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	}
 
 	@Override
+	// FIXME - reflection - probably remove (cache.values discouraged)
 	public <T> Collection<T> getCollection(Class<T> clazz) {
-		return (Collection<T>) cache.values(clazz);
+		return (Collection<T>) cache.stream(clazz).collect(Collectors.toSet());
 	}
 
 	@Override

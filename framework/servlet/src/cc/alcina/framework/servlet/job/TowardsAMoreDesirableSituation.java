@@ -1,10 +1,14 @@
 package cc.alcina.framework.servlet.job;
 
+import java.sql.Timestamp;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,15 +16,17 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 /**
  * FIXME - mvcc.cascade - add to listjobs report
- *
+ * 
  * <h2>Model consistency</h2>
  * <p>
  * The following may not be fully implemented
@@ -37,7 +43,8 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  * </ul>
  */
 class TowardsAMoreDesirableSituation {
-	private List<Job> activeJobs = new ArrayList<>();
+	private List<Job> activeJobs = Collections
+			.synchronizedList(new ArrayList<>());
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -57,6 +64,42 @@ class TowardsAMoreDesirableSituation {
 		events.add(new Event(Type.SCHEDULER_EVENT));
 	}
 
+	private void futureToPending(Optional<Job> next) {
+		Timestamp entryRequiredTimestamp = JobRegistry.get()
+				.getJobMetadataLockTimestamp(getClass().getSimpleName());
+		DomainTransformCommitPosition entryPosition = DomainStore.stores()
+				.writableStore().getPersistenceEvents().getQueue()
+				.getTransformCommitPosition();
+		// note resubmit is required for future
+		// consistency aborts (unless task has other
+		// logical consistency
+		// ensurance mechanism - e.g. jade parsers)
+		//
+		Job job = next.get();
+		if (job.getPerformer() != null) {
+			logger.info(
+					"TowardsAMoreDesirableSituation - fatal - non-null performer - {}",
+					job);
+		}
+		job.setPerformer(ClientInstance.self());
+		job.setState(JobState.PENDING);
+		JobDomain.get().getFutureConsistencyJobsEquivalentTo(job)
+				.forEach(Job::delete);
+		activeJobs.add(job);
+		Transaction.commit();
+		DomainTransformCommitPosition exitPosition = DomainStore.stores()
+				.writableStore().getPersistenceEvents().getQueue()
+				.getTransformCommitPosition();
+		long currentPriorityCount = JobDomain.get()
+				.getFutureConsistencyJobsCount(
+						job.provideConsistencyPriority());
+		logger.info(
+				"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} - {},{} remaining - entry: {} required {} - exit: {} required {}",
+				job, job.provideConsistencyPriority(), currentPriorityCount,
+				JobDomain.get().getFutureConsistencyJobsCount(), entryPosition,
+				exitPosition);
+	}
+
 	void start() {
 		thread = new ProcessorThread();
 		thread.start();
@@ -74,55 +117,34 @@ class TowardsAMoreDesirableSituation {
 		activeJobs.removeIf(
 				j -> j.domain().wasRemoved() || j.provideIsSequenceComplete());
 		boolean delta = false;
-		while (activeJobs.size() < JobRegistry.get().jobExecutors
-				.getMaxConsistencyJobCount()
-				&& JobRegistry.get().getActiveJobCount() < ResourceUtilities
-						.getInteger(TowardsAMoreDesirableSituation.class,
-								"maxVmActiveJobCount")) {
+		while (canAllocate()) {
 			if (JobDomain.get().getFutureConsistencyJobs().findFirst()
 					.isPresent()) {
 				JobRegistry.get()
 						.withJobMetadataLock(getClass().getSimpleName(), () -> {
-							Optional<Job> next = JobDomain.get()
-									.getFutureConsistencyJobs().findFirst();
-							if (next.isPresent()) {
-								Job job = next.get();
-								job.setPerformer(ClientInstance.self());
-								job.setState(JobState.PENDING);
-								/*
-								 * De-duplicate future consistency jobs (one
-								 * concomitant constraint on future consistency
-								 * jobs is that their order, for a given
-								 * transaction, must not affect the outcome)
-								 */
-								/*
-								 * note resubmit is required for future
-								 * consistency aborts (unless task has other
-								 * logical consistency ensurance mechanism -
-								 * e.g. jade parsers)
-								 */
-								JobDomain.get()
-										.getFutureConsistencyJobsEquivalentTo(
-												job)
-										.forEach(Job::delete);
-								activeJobs.add(job);
-								Transaction.commit();
-								logger.info(
-										"TowardsAMoreDesirableSituation - consistency-to-pending - {} - {} - {},{} remaining",
-										job, job.provideConsistencyPriority(),
-										JobDomain.get()
-												.getFutureConsistencyJobs(job
-														.provideConsistencyPriority())
-												.count(),
-										JobDomain.get()
-												.getFutureConsistencyJobs()
-												.count());
+							// allocate in bulk while holding lock
+							while (canAllocate()) {
+								Optional<Job> next = JobDomain.get()
+										.getFutureConsistencyJobs().findFirst();
+								if (next.isPresent()) {
+									futureToPending(next);
+								} else {
+									break;
+								}
 							}
 						});
 			} else {
 				break;
 			}
 		}
+	}
+
+	private boolean canAllocate() {
+		return activeJobs.size() < JobRegistry.get().jobExecutors
+				.getMaxConsistencyJobCount()
+				&& JobRegistry.get().getActiveJobCount() < ResourceUtilities
+						.getInteger(TowardsAMoreDesirableSituation.class,
+								"maxVmActiveJobCount");
 	}
 
 	public class ProcessorThread extends Thread {
@@ -167,5 +189,12 @@ class TowardsAMoreDesirableSituation {
 
 	enum Type {
 		SCHEDULER_EVENT, SHUTDOWN;
+	}
+
+	public Stream<? extends Job> getActiveJobs() {
+		// thread-safe copy
+		synchronized (activeJobs) {
+			return activeJobs.stream().collect(Collectors.toList()).stream();
+		}
 	}
 }

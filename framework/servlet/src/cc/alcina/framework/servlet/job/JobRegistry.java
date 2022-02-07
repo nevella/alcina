@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.job;
 
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -313,6 +314,11 @@ public class JobRegistry {
 	 * PROCESSING or COMPLETE (not SEQUENCE_COMPLETE), this vm
 	 */
 	public int getActiveJobCount() {
+		// FIXME - mvcc.jobs - both (a) remove on transform, not here and (b)
+		// track why not removed in this-vm process (i.e. finally of performJob0
+		// not completing).
+		// How to track: put logging here (DEVEX)
+		activeJobs.keySet().removeIf(job -> job.getState() == JobState.ABORTED);
 		return activeJobs.size();
 	}
 
@@ -1090,5 +1096,13 @@ public class JobRegistry {
 				JobDomain.get().stateMessageEvents.remove(listener);
 			}
 		}
+	}
+
+	public Timestamp getJobMetadataLockTimestamp(String path) {
+		return jobExecutors.getJobMetadataLockTimestamp(path);
+	}
+
+	public Stream<? extends Job> getActiveConsistencyJobs() {
+		return scheduler.aMoreDesirableSituation.getActiveJobs();
 	}
 }

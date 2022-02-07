@@ -675,9 +675,7 @@ public class DomainStore implements IDomainStore {
 	}
 
 	void addValues(DomainListener listener) {
-		for (Object o : cache.values(listener.getListenedClass())) {
-			listener.insert((Entity) o);
-		}
+		cache.stream(listener.getListenedClass()).forEach(listener::insert);
 	}
 
 	Entity ensureEntity(Class<? extends Entity> clazz, long id, long localId) {
@@ -996,7 +994,6 @@ public class DomainStore implements IDomainStore {
 						logger.warn("Domain store update warning [non-fatal]",
 								updateException);
 					} else {
-						
 						health.onException(updateException);
 						logger.warn("Update exception persistence event :: {}",
 								persistenceEvent);
@@ -1143,16 +1140,16 @@ public class DomainStore implements IDomainStore {
 		public long domainStorePostProcessStartTime;
 
 		AtomicInteger domainStoreExceptionCount = new AtomicInteger();
-		
+
 		public Exception lastException;
 
 		public AtomicInteger getDomainStoreExceptionCount() {
 			return this.domainStoreExceptionCount;
 		}
 
-		 void onException(DomainStoreUpdateException updateException) {
-			 domainStoreExceptionCount.incrementAndGet();
-			 lastException=updateException;
+		void onException(DomainStoreUpdateException updateException) {
+			domainStoreExceptionCount.incrementAndGet();
+			lastException = updateException;
 		}
 
 		public long getMvccOldestTx() {

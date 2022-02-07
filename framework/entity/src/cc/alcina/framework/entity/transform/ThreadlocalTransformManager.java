@@ -100,7 +100,7 @@ import cc.alcina.framework.entity.util.MethodContext;
 /**
  *
  * @author Nick Reddel
- * 
+ *
  *         TODO - mvcc.5 - remove/encapsulate dependence on DomainStore
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
@@ -334,120 +334,6 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	@Override
-	protected void initObjectStore() {
-		setObjectStore(new ObjectStoreImpl());
-	}
-
-	private class ObjectStoreImpl implements ObjectStore {
-		@Override
-		public <T extends Entity> T getObject(Class<? extends T> clazz, long id,
-				long localId) {
-			if (!Entity.class.isAssignableFrom(clazz)) {
-				throw new RuntimeException(
-						"Attempting to obtain incompatible bean: " + clazz);
-			}
-			if (id == 0) {
-				if (localIdToEntityMap.containsKey(localId)) {
-					return (T) localIdToEntityMap.get(localId);
-				}
-				if (getEntityManager() == null) {
-					T entity = DomainStore.stores().storeFor(clazz).getCache()
-							.get(new EntityLocator(clazz, id, localId));
-					if (entity != null) {
-						return entity;
-					}
-				}
-				if (clientInstanceEntityMap != null && localId != 0) {
-					id = clientInstanceEntityMap.containsKey(localId)
-							? clientInstanceEntityMap.getForLocalId(localId).id
-							: 0;
-				}
-			}
-			if (id != 0) {
-				if (getEntityManager() != null) {
-					T t = getEntityManager().find(clazz, id);
-					// this may be a performance hit - but worth it - otherwise
-					// all
-					// sorts of potential problems
-					// basically, transform events should (must) always have
-					// refs to
-					// "real" objects, not wrappers
-					t = ensureNonProxy(t);
-					if (localId != 0 && t != null) {
-						localIdToEntityMap.put(localId, t);
-					}
-					return t;
-				} else {
-					long f_id = id;
-					return MethodContext.instance().withContextTrue(
-							LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
-							.withContextTrue(
-									ThreadlocalTransformManager.CONTEXT_LOADING_FOR_TRANSFORM)
-							.call(() -> Domain.find(clazz, f_id));
-				}
-			}
-			return null;
-		}
-
-		@Override
-		public <T extends Entity> T getObject(T bean) {
-			return (T) getObject(bean.entityClass(), bean.getId(),
-					bean.getLocalId());
-		}
-
-		@Override
-		public void changeMapping(Entity obj, long id, long localId) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean contains(Entity obj) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void deregister(Entity entity) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public <T> Collection<T> getCollection(Class<T> clazz) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public Map<Class<? extends Entity>, Collection<Entity>>
-				getCollectionMap() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void invalidate(Class<? extends Entity> clazz) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void mapObject(Entity obj) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void registerObjects(Collection objects) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public void removeListeners() {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		public boolean contains(Class<? extends Entity> clazz, long id) {
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	@Override
 	public <T extends Entity> T getObject(T entity) {
 		if (entity == null) {
 			return null;
@@ -548,79 +434,6 @@ public class ThreadlocalTransformManager extends TransformManager {
 		return newInstance(clazz, id, localId, false);
 	}
 
-	protected <E extends Entity> E newInstance(Class<E> clazz, long id,
-			long localId, boolean externalLocal) {
-		try {
-			if (Entity.class.isAssignableFrom(clazz)) {
-				Preconditions.checkState(Transaction.current().isWriteable());
-				Entity newInstance = null;
-				if (entityManager == null) {
-					DomainStore store = DomainStore.stores().storeFor(clazz);
-					newInstance = Transaction.current().create((Class) clazz,
-							store, id, localId);
-					if (id == 0L) {
-						// created ex-store
-						if (externalLocal) {
-						} else {
-							store.getCache().put(newInstance);
-						}
-					}
-				} else {
-					newInstance = Reflections.newInstance(clazz);
-					newInstance.setLocalId(localId);
-				}
-				if (entityManager != null) {
-					if (isUseObjectCreationId() && id != 0) {
-						newInstance.setId(id);
-						Object fromBefore = Registry
-								.impl(JPAImplementation.class)
-								.beforeSpecificSetId(entityManager,
-										newInstance);
-						entityManager.persist(newInstance);
-						Registry.impl(JPAImplementation.class)
-								.afterSpecificSetId(fromBefore);
-					} else {
-						/*
-						 * TransformInPersistenceContext does this at the end of
-						 * transform application (before transform event
-						 * persistence) so that inserts can be batched
-						 */
-						// entityManager.persist(newInstance);
-					}
-				}
-				//
-				// FIXME - alcina.doc -
-				//
-				// why maintain localIdToEntityMap (reason: cross-cutting
-				// concern to domainstore - it's from pov of the ClientInstance
-				// - which may have persisted local objects unknown to this VM's
-				// store)
-				//
-				// localIdToEntityMap needs to be distinct from
-				// clientInstanceEntityMap for applying transforms from other
-				// servers (don't want to store localids if we don't have to)
-				//
-				// createdObjectLocators *could* be replaced with a collation,
-				// but perf would be worse and layering too - so leave (and
-				// explain) - they're only used in (entityManager != null)
-				// contexts, but code is cleaner this way
-				//
-				EntityLocator entityLocator = newInstance.toLocator();
-				localIdToEntityMap.put(localId, newInstance);
-				createdObjectLocators.add(entityLocator);
-				if (!isApplyingExternalTransforms()) {
-					if (clientInstanceEntityMap != null) {
-						clientInstanceEntityMap.putToLookups(entityLocator);
-					}
-				}
-				return (E) newInstance;
-			}
-			throw new Exception("only construct entities here");
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
-
 	@Override
 	public synchronized long nextLocalIdCounter() {
 		return useTlIdGenerator ? tlIdGenerator.incrementAndGet()
@@ -674,13 +487,13 @@ public class ThreadlocalTransformManager extends TransformManager {
 	@Override
 	/**
 	 * NOTE - doesn't register children (unlike client)
-	 * 
+	 *
 	 * This can be used for either vm-local or ex-vm localid entities - as long
 	 * as the clientinstance is correctly set
-	 * 
+	 *
 	 * userSessionEntityMap/localIdToEntityMap are not modified (they're for
 	 * in-em access)
-	 * 
+	 *
 	 * FIXME - mvcc.jobs.2 - remove most calls to this (since framework
 	 * registers)
 	 *
@@ -697,14 +510,14 @@ public class ThreadlocalTransformManager extends TransformManager {
 				&& !DomainStore.writableStore().getCache().contains(entity)) {
 			/*
 			 * Usable for synthetic objects  with negative ids)
-			 * 
+			 *
 			 * Also key for allowing 'synthetic transform' creation against a dev db... e.g:
 			 * @formatter:off
-			 * 
+			 *
 			 * 	IUser user = new IUser(99999).domain().register();
 				user.setUsername("Honeybunny");
 				console.dumpTransforms();
-				
+
 				@formatter:on
 			 */
 			DomainStore.writableStore().getCache().put(entity);
@@ -766,17 +579,6 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public void
 			setIgnoreTransformPermissions(boolean ignoreTransformPermissions) {
 		this.ignoreTransformPermissions = ignoreTransformPermissions;
-	}
-
-	@Override
-	protected void set(Property property, Entity entity, Object value) {
-		if (checkHasSufficientInfoForPropertyPersist(entity)) {
-			property.set(entity, value);
-		} else {
-			throw new DomainTransformRuntimeException(
-					"Attempting to alter property of non-persistent entity: "
-							+ entity);
-		}
 	}
 
 	public void setTransformsExplicitlyPermitted(
@@ -1123,6 +925,11 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	@Override
+	protected void initObjectStore() {
+		setObjectStore(new ObjectStoreImpl());
+	}
+
+	@Override
 	protected boolean isAddToDomainObjects() {
 		return entityManager == null;
 	}
@@ -1135,6 +942,79 @@ public class ThreadlocalTransformManager extends TransformManager {
 		 * clone/modify
 		 */
 		return entity.getPropertyChangeListeners().length == 1;
+	}
+
+	protected <E extends Entity> E newInstance(Class<E> clazz, long id,
+			long localId, boolean externalLocal) {
+		try {
+			if (Entity.class.isAssignableFrom(clazz)) {
+				Preconditions.checkState(Transaction.current().isWriteable());
+				Entity newInstance = null;
+				if (entityManager == null) {
+					DomainStore store = DomainStore.stores().storeFor(clazz);
+					newInstance = Transaction.current().create((Class) clazz,
+							store, id, localId);
+					if (id == 0L) {
+						// created ex-store
+						if (externalLocal) {
+						} else {
+							store.getCache().put(newInstance);
+						}
+					}
+				} else {
+					newInstance = Reflections.newInstance(clazz);
+					newInstance.setLocalId(localId);
+				}
+				if (entityManager != null) {
+					if (isUseObjectCreationId() && id != 0) {
+						newInstance.setId(id);
+						Object fromBefore = Registry
+								.impl(JPAImplementation.class)
+								.beforeSpecificSetId(entityManager,
+										newInstance);
+						entityManager.persist(newInstance);
+						Registry.impl(JPAImplementation.class)
+								.afterSpecificSetId(fromBefore);
+					} else {
+						/*
+						 * TransformInPersistenceContext does this at the end of
+						 * transform application (before transform event
+						 * persistence) so that inserts can be batched
+						 */
+						// entityManager.persist(newInstance);
+					}
+				}
+				//
+				// FIXME - alcina.doc -
+				//
+				// why maintain localIdToEntityMap (reason: cross-cutting
+				// concern to domainstore - it's from pov of the ClientInstance
+				// - which may have persisted local objects unknown to this VM's
+				// store)
+				//
+				// localIdToEntityMap needs to be distinct from
+				// clientInstanceEntityMap for applying transforms from other
+				// servers (don't want to store localids if we don't have to)
+				//
+				// createdObjectLocators *could* be replaced with a collation,
+				// but perf would be worse and layering too - so leave (and
+				// explain) - they're only used in (entityManager != null)
+				// contexts, but code is cleaner this way
+				//
+				EntityLocator entityLocator = newInstance.toLocator();
+				localIdToEntityMap.put(localId, newInstance);
+				createdObjectLocators.add(entityLocator);
+				if (!isApplyingExternalTransforms()) {
+					if (clientInstanceEntityMap != null) {
+						clientInstanceEntityMap.putToLookups(entityLocator);
+					}
+				}
+				return (E) newInstance;
+			}
+			throw new Exception("only construct entities here");
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	@Override
@@ -1172,13 +1052,13 @@ public class ThreadlocalTransformManager extends TransformManager {
 	/*
 	 * if in 'entityManager' mode (i.e. in a db transaction), let the
 	 * entityManager handle it - otherwise
-	 * 
+	 *
 	 * FIXME - mvcc.adjunct - maybe non-em instances should have a
 	 * 'domainobjects' (i.e. domain store?)
-	 * 
+	 *
 	 * In fact...yes. THere's quite a bit of confusion between object lookup,
 	 * object store and TM (particularly TLTM).
-	 * 
+	 *
 	 * Write it down (presumably get rid of object lookup) - i feel that object
 	 * store should delegate to domainstore server-side, but need to make the
 	 * interface cleaner. Also, how does this play with
@@ -1213,6 +1093,17 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	@Override
+	protected void set(Property property, Entity entity, Object value) {
+		if (checkHasSufficientInfoForPropertyPersist(entity)) {
+			property.set(entity, value);
+		} else {
+			throw new DomainTransformRuntimeException(
+					"Attempting to alter property of non-persistent entity: "
+							+ entity);
+		}
+	}
+
+	@Override
 	protected boolean
 			shouldApplyCollectionModification(DomainTransformEvent event) {
 		// significant optimisation - avoids need to iterate/instantiate the
@@ -1242,5 +1133,114 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	public static class UncomittedTransformsException extends Exception {
+	}
+
+	private class ObjectStoreImpl implements ObjectStore {
+		@Override
+		public void changeMapping(Entity obj, long id, long localId) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean contains(Class<? extends Entity> clazz, long id) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public boolean contains(Entity obj) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void deregister(Entity entity) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <T> Collection<T> getCollection(Class<T> clazz) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public Map<Class<? extends Entity>, Collection<Entity>>
+				getCollectionMap() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public <T extends Entity> T getObject(Class<? extends T> clazz, long id,
+				long localId) {
+			if (!Entity.class.isAssignableFrom(clazz)) {
+				throw new RuntimeException(
+						"Attempting to obtain incompatible bean: " + clazz);
+			}
+			if (id == 0) {
+				if (localIdToEntityMap.containsKey(localId)) {
+					return (T) localIdToEntityMap.get(localId);
+				}
+				if (getEntityManager() == null) {
+					T entity = DomainStore.stores().storeFor(clazz).getCache()
+							.get(new EntityLocator(clazz, id, localId));
+					if (entity != null) {
+						return entity;
+					}
+				}
+				if (clientInstanceEntityMap != null && localId != 0) {
+					id = clientInstanceEntityMap.containsKey(localId)
+							? clientInstanceEntityMap.getForLocalId(localId).id
+							: 0;
+				}
+			}
+			if (id != 0) {
+				if (getEntityManager() != null) {
+					T t = getEntityManager().find(clazz, id);
+					// this may be a performance hit - but worth it - otherwise
+					// all
+					// sorts of potential problems
+					// basically, transform events should (must) always have
+					// refs to
+					// "real" objects, not wrappers
+					t = ensureNonProxy(t);
+					if (localId != 0 && t != null) {
+						localIdToEntityMap.put(localId, t);
+					}
+					return t;
+				} else {
+					long f_id = id;
+					return MethodContext.instance().withContextTrue(
+							LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
+							.withContextTrue(
+									ThreadlocalTransformManager.CONTEXT_LOADING_FOR_TRANSFORM)
+							.call(() -> Domain.find(clazz, f_id));
+				}
+			}
+			return null;
+		}
+
+		@Override
+		public <T extends Entity> T getObject(T bean) {
+			return (T) getObject(bean.entityClass(), bean.getId(),
+					bean.getLocalId());
+		}
+
+		@Override
+		public void invalidate(Class<? extends Entity> clazz) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void mapObject(Entity obj) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void registerObjects(Collection objects) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void removeListeners() {
+			throw new UnsupportedOperationException();
+		}
 	}
 }

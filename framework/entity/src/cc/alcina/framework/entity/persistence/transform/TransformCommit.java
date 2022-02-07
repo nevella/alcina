@@ -490,6 +490,18 @@ public class TransformCommit {
 			return commitTransforms(true);
 		}
 	}
+	/*
+	 * FIXME - mvcc.jobs - this behaviour (with backoff) is generally incorrect,
+	 * // since it essentially just squelches OptimisticLockExceptions - which
+	 * are // key to (say) preventing concurrent writes to job objects, which in
+	 * turn break the JobAllocator contracts.
+	 * 
+	 * So...selectively remove and look at rethrowing with some sort of wrapping
+	 * (checked) concurrency exception and handling higher in the calling stack
+	 * - i.e. move from commitWithBackoff (no checked) to
+	 * commitWithConcurrencyCheck (checked)
+	 * 
+	 */
 
 	public static int commitWithBackoff() {
 		return commitWithBackoff(0, 8, 40, 2.0);

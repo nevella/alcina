@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.job;
 
+import java.sql.Timestamp;
 import java.util.List;
 import java.util.function.Consumer;
 
@@ -28,4 +29,8 @@ public interface JobExecutors {
 	boolean isCurrentScheduledJobExecutor();
 
 	boolean isHighestBuildNumberInCluster();
+
+	default Timestamp getJobMetadataLockTimestamp(String path) {
+		return null;
+	}
 }

@@ -516,8 +516,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 								continue;
 							}
 							Collection<Long> ids = store.cache
-									.values(property.clazz1).stream()
-									.map(HasId::getId)
+									.stream(property.clazz1).map(HasId::getId)
 									.map(id -> segmentLoader.segmentRefs.get(
 											property.clazz1,
 											property.propertyName1, id))
