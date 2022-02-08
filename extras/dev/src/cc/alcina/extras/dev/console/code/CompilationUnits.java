@@ -19,6 +19,7 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.body.MethodDeclaration;
 import com.github.javaparser.ast.body.TypeDeclaration;
+import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.github.javaparser.ast.type.Type;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
@@ -136,8 +137,6 @@ public class CompilationUnits {
 							.forEach(d -> {
 								units.declarations.put(d.qualifiedSourceName,
 										d);
-								Ax.out("%s :: %s", d.typeFlags,
-										d.clazz().getSimpleName());
 							});
 					counter.tick();
 				}
@@ -152,7 +151,7 @@ public class CompilationUnits {
 		try {
 			return fqn0(unit, n);
 		} catch (Error e) {
-			Ax.err(unit.file.getName());
+			Ax.err(unit.getFile().getName());
 			Ax.simpleExceptionOut(e);
 			return null;
 		}
@@ -243,6 +242,8 @@ public class CompilationUnits {
 	}
 
 	public static class ClassOrInterfaceDeclarationWrapper {
+		public static transient boolean evaluateSuperclassFqn = true;
+
 		private transient ClassOrInterfaceDeclaration declaration;
 
 		public Set<TypeFlag> typeFlags = new LinkedHashSet<>();
@@ -272,23 +273,31 @@ public class CompilationUnits {
 				invalid = true;
 				return;
 			}
-			NodeList<ClassOrInterfaceType> extendedTypes = n.getExtendedTypes();
-			if (extendedTypes.size() > 1) {
-				throw new UnsupportedOperationException();
-			} else if (extendedTypes.size() == 1) {
-				ClassOrInterfaceType exType = extendedTypes.get(0);
-				try {
-					superclassFqn = fqn(unit, exType);
-				} catch (Exception e) {
-					invalidSuperclassFqns.add(exType.getNameAsString());
-					Ax.out("%s: %s", e.getMessage(), exType.getNameAsString());
+			if (evaluateSuperclassFqn) {
+				NodeList<ClassOrInterfaceType> extendedTypes = n
+						.getExtendedTypes();
+				if (extendedTypes.size() > 1) {
+					throw new UnsupportedOperationException();
+				} else if (extendedTypes.size() == 1) {
+					ClassOrInterfaceType exType = extendedTypes.get(0);
+					try {
+						superclassFqn = fqn(unit, exType);
+					} catch (Exception e) {
+						invalidSuperclassFqns.add(exType.getNameAsString());
+						Ax.out("%s: %s", e.getMessage(),
+								exType.getNameAsString());
+					}
 				}
 			}
 		}
 
+		public void addAnnotation(AnnotationExpr element) {
+			declaration.addAnnotation(element);
+			dirty();
+		}
+
 		public Class clazz() {
-			return Reflections
-					.forName(qualifiedBinaryName);
+			return Reflections.forName(qualifiedBinaryName);
 		}
 
 		public void dirty() {
@@ -411,7 +420,7 @@ public class CompilationUnits {
 	}
 
 	public static class CompilationUnitWrapper {
-		public File file;
+		private String path;
 
 		public List<ClassOrInterfaceDeclarationWrapper> declarations = new ArrayList<>();
 
@@ -423,7 +432,7 @@ public class CompilationUnits {
 		}
 
 		public CompilationUnitWrapper(File file) {
-			this.file = file;
+			this.setFile(file);
 		}
 
 		public ClassOrInterfaceDeclarationWrapper
@@ -446,6 +455,10 @@ public class CompilationUnits {
 			}
 		}
 
+		public File getFile() {
+			return new File(path);
+		}
+
 		public boolean hasFlag(TypeFlag flag) {
 			return declarations.stream().anyMatch(w -> w.hasFlag(flag));
 		}
@@ -461,10 +474,14 @@ public class CompilationUnits {
 					.forEach(ImportDeclaration::remove);
 		}
 
+		public void setFile(File file) {
+			this.path = file.getAbsolutePath();
+		}
+
 		public CompilationUnit unit() {
 			try {
 				if (unit == null) {
-					unit = StaticJavaParser.parse(file);
+					unit = StaticJavaParser.parse(getFile());
 				}
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -474,9 +491,10 @@ public class CompilationUnits {
 
 		public void writeTo(File outDir) {
 			if (outDir == null) {
-				outDir = file.getParentFile();
+				outDir = getFile().getParentFile();
 			}
-			File outFile = SEUtilities.getChildFile(outDir, file.getName());
+			File outFile = SEUtilities.getChildFile(outDir,
+					getFile().getName());
 			try {
 				ResourceUtilities.writeStringToFile(unit.toString(), outFile);
 			} catch (Exception e) {

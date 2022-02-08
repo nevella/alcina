@@ -1,6 +1,5 @@
 package cc.alcina.extras.dev.console.code;
 
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +29,6 @@ import com.github.javaparser.ast.expr.Name;
 import com.github.javaparser.ast.expr.NormalAnnotationExpr;
 import com.github.javaparser.ast.expr.SingleMemberAnnotationExpr;
 import com.github.javaparser.ast.expr.StringLiteralExpr;
-import com.github.javaparser.ast.nodeTypes.NodeWithAnnotations;
 import com.github.javaparser.ast.type.ClassOrInterfaceType;
 import com.google.common.base.Preconditions;
 
@@ -185,8 +183,7 @@ public class TaskFlatSerializerMetadata
 			Class<? extends SearchDefinition> defClass = dchs.get(0)
 					.handlesSearchDefinition();
 			if (defClass != null) {
-				SearchDefinition def = Reflections
-						.newInstance(defClass);
+				SearchDefinition def = Reflections.newInstance(defClass);
 				if (def instanceof BindableSearchDefinition) {
 					Class<? extends Bindable> bindableClass = ((BindableSearchDefinition) def)
 							.queriedBindableClass();
@@ -528,66 +525,6 @@ public class TaskFlatSerializerMetadata
 					.add(criteriaPropertySerialization);
 			populateReachableCriteria();
 		}
-	}
-
-	private abstract class SourceModifier {
-		protected ClassOrInterfaceDeclarationWrapper declarationWrapper;
-
-		protected ClassOrInterfaceDeclaration declaration;
-
-		private String initialSource;
-
-		public SourceModifier(
-				ClassOrInterfaceDeclarationWrapper declarationWrapper) {
-			this.declarationWrapper = declarationWrapper;
-			this.declaration = this.declarationWrapper.getDeclaration();
-		}
-
-		protected void clear(ArrayInitializerExpr expr) {
-			expr.getValues().stream().collect(Collectors.toList())
-					.forEach(Expression::remove);
-		}
-
-		protected abstract void ensureImports();
-
-		protected NormalAnnotationExpr ensureNormalAnnotation(
-				NodeWithAnnotations node,
-				Class<? extends Annotation> annotationClass) {
-			Optional<AnnotationExpr> annotationExpr = node
-					.getAnnotationByClass(annotationClass);
-			if (annotationExpr.isPresent() && annotationExpr
-					.get() instanceof SingleMemberAnnotationExpr) {
-				annotationExpr.get().remove();
-				annotationExpr = node.getAnnotationByClass(annotationClass);
-			}
-			if (!annotationExpr.isPresent()) {
-				annotationExpr = Optional
-						.of(node.addAndGetAnnotation(annotationClass));
-			}
-			return (NormalAnnotationExpr) annotationExpr.get();
-		}
-
-		protected <E extends Expression> E ensureValue(
-				NormalAnnotationExpr annotationExpr, String name, E valueExpr) {
-			Optional<MemberValuePair> match = annotationExpr.getPairs().stream()
-					.filter(pair -> pair.getName().toString().equals(name))
-					.findFirst();
-			if (match.isPresent()) {
-				return (E) match.get().getValue();
-			} else {
-				annotationExpr.addPair(name, valueExpr);
-				return valueExpr;
-			}
-		}
-
-		protected void modify() {
-			initialSource = declaration.toString();
-			ensureImports();
-			modify0();
-			declarationWrapper.dirty(initialSource, declaration.toString());
-		}
-
-		protected abstract void modify0();
 	}
 
 	static class DeclarationVisitor extends CompilationUnitWrapperVisitor {

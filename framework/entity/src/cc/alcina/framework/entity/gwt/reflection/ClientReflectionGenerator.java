@@ -43,8 +43,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.AnnotationResolver;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
@@ -413,7 +414,7 @@ public class ClientReflectionGenerator extends Generator {
 
 		Pattern setterPattern = Pattern.compile("(?:set)([A-Z].*)");
 
-		List<RegistryLocation> registryLocations = new ArrayList<>();
+		List<RegistryLocation> registrations = new ArrayList<>();
 
 		public ClassReflectorGenerator(JClassType type) {
 			super(type, classReflectorType);
@@ -435,15 +436,16 @@ public class ClientReflectionGenerator extends Generator {
 							.filter(c -> c.getParameters().length == 0)
 							.findFirst().isPresent();
 			Arrays.stream(type.getAnnotations())
-					.filter(a -> a.annotationType() != RegistryLocation.class
-							&& a.annotationType() != RegistryLocations.class
+					.filter(a -> a.annotationType() != Registration.class && a
+							.annotationType() != Registration.Singleton.class
+							&& a.annotationType() != Registrations.class
 							&& visibleAnnotationTypes
 									.contains(a.annotationType()))
 					.map(AnnotationExpressionWriter::new).sorted()
 					.forEach(annotationExpressionWriters::add);
 			if (!isAbstract) {
 				prepareProperties();
-				prepareRegistryLocations();
+				prepareRegistrations();
 			}
 		}
 
@@ -467,7 +469,7 @@ public class ClientReflectionGenerator extends Generator {
 			composerFactory.addImport(
 					cc.alcina.framework.common.client.reflection.Method.class
 							.getCanonicalName());
-			composerFactory.addImport(RegistryLocation.class.getName());
+			composerFactory.addImport(Registration.class.getName());
 			sourceWriter = createWriter(composerFactory, printWriter);
 			sourceWriter.println("protected void init0(){");
 			sourceWriter.indent();
@@ -520,7 +522,7 @@ public class ClientReflectionGenerator extends Generator {
 					.forEach(PropertyGenerator::prepare);
 		}
 
-		void prepareRegistryLocations() {
+		void prepareRegistrations() {
 			Multimap<JClassType, List<Annotation>> superclassAnnotations = new Multimap<>();
 			JClassType cursor = type;
 			while (cursor.getSuperclass() != null) {
@@ -530,7 +532,7 @@ public class ClientReflectionGenerator extends Generator {
 			}
 			Registry.filterForRegistryPointUniqueness(superclassAnnotations)
 					.stream().filter(CLIENT_VISIBLE_ANNOTATION_FILTER)
-					.forEach(registryLocations::add);
+					.forEach(registrations::add);
 		}
 
 		PropertyMethod toPropertyMethod(JMethod method) {
@@ -576,7 +578,7 @@ public class ClientReflectionGenerator extends Generator {
 		}
 
 		void writeRegisterRegistrations(SourceWriter sourceWriter) {
-			registryLocations.stream().sorted(REGISTRY_LOCATION_COMPARATOR)
+			registrations.stream().sorted(REGISTRY_LOCATION_COMPARATOR)
 					.forEach(l -> {
 						sourceWriter.print("Registry.get().register(%s.class,",
 								type.getQualifiedSourceName());

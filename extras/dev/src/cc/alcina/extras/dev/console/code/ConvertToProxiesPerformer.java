@@ -541,7 +541,7 @@ public class ConvertToProxiesPerformer
 				CompilationUnits.ClassOrInterfaceDeclarationWrapper declaration = new CompilationUnits.ClassOrInterfaceDeclarationWrapper(
 						unit, node);
 				if (declaration.invalid) {
-					Ax.err("Invalid decl: %s", unit.file.getName());
+					Ax.err("Invalid decl: %s", unit.getFile().getName());
 					return;
 				}
 				declaration.setDeclaration(node);

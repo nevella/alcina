@@ -88,7 +88,6 @@ import javax.swing.tree.TreePath;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
@@ -134,11 +133,6 @@ public class SEUtilities {
 	private static Pattern sq_4 = Pattern.compile("(?<=\\S|^)[`'´]");
 
 	private static Pattern sq_5 = Pattern.compile("[`'´]+");
-
-	public static String timestamp() {
-		return LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
-				.replace(':', '_');
-	}
 
 	private static Pattern sq_6 = Pattern.compile("[`'´]{2,}");
 
@@ -896,7 +890,7 @@ public class SEUtilities {
 	/**
 	 * <p>
 	 * This ordering respects PropertyOrder annotations on the subclass chain.
-	 * 
+	 *
 	 * Ordering rules are (in descending precedence) (note that the
 	 * PropertyOrder annotation is not inherited):
 	 * </p>
@@ -907,7 +901,7 @@ public class SEUtilities {
 	 * subclass unless the superclass has PropertyOrder beforeSubclass:=false -
 	 * in which case they are ordered after.
 	 * </ol>
-	 * 
+	 *
 	 */
 	public static List<PropertyDescriptor>
 			getPropertyDescriptorsSortedByField(Class<?> clazz0) {
@@ -1027,16 +1021,6 @@ public class SEUtilities {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
-	}
-
-	public static Class getRemoteActionClass(Class clazz) {
-		RegistryLocation registryLocation = (RegistryLocation) clazz
-				.getAnnotation(RegistryLocation.class);
-		if (registryLocation != null
-				&& registryLocation.registryPoint() == TaskPerformer.class) {
-			return registryLocation.targetClass();
-		}
-		return null;
 	}
 
 	public static Throwable getRootCause(Throwable t) {
@@ -1440,6 +1424,11 @@ public class SEUtilities {
 		}
 	}
 
+	public static String timestamp() {
+		return LocalDateTime.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+				.replace(':', '_');
+	}
+
 	public static Date toJavaDate(Date date) {
 		if (date instanceof java.sql.Timestamp) {
 			return Date.from(date.toInstant());
@@ -1466,18 +1455,18 @@ public class SEUtilities {
 		return Date.from(ld.atStartOfDay(ZoneId.systemDefault()).toInstant());
 	}
 
-	public static Date toOldDate(ZonedDateTime ld) {
-		if (ld == null) {
-			return null;
-		}
-		return Date.from(ld.toInstant());
-	}
-
 	public static Date toOldDate(LocalDateTime ldt) {
 		if (ldt == null) {
 			return null;
 		}
 		return Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant());
+	}
+
+	public static Date toOldDate(ZonedDateTime ld) {
+		if (ld == null) {
+			return null;
+		}
+		return Date.from(ld.toInstant());
 	}
 
 	public static void toStartOfDay(Calendar calendar) {
