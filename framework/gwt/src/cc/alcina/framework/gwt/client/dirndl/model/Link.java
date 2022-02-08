@@ -36,6 +36,10 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 
 //FIXME - dirndl.2 - baseplace should implement a  'link provider' interface
 // and various subtypes should be subclasses...
+/**
+ * Also, this class was a very early Dirndl member - can possibly be simplified
+ * to 'ideal dirndl' (no transformer, just bindings and resolvers)
+ */
 @Bean
 @LinkRendererPrimaryClassName("-ol-primary")
 public class Link extends Model {
@@ -58,7 +62,6 @@ public class Link extends Model {
 	private boolean newTab;
 
 	private String title;
-	
 
 	public Link() {
 	}

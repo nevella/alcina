@@ -63,19 +63,20 @@ import elemental.json.JsonValue;
  * and non-default)
  * <li>Write data-like value or back to 'for any unreached'
  * </ul>
+ * <p>
+ * TODO (optimisations)
+ * </P>
  * <ul>
+ * <li>Create a per-property serializer, to optimise bean
+ * deserialization/serialization
+ * <li>Look at cost of long serialization/deser (and box/unbox) in gwt -
+ * possibly optimise
  * </ul>
  * </ul>
- * 
- * WIP
- * 
+ *
+ *
  * @author nick@alcina.cc
- * 
- *         Note - will need to handle
- *         cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable.
- *         Support specially
- * 
- *         check classloader usage in AlcinaBeanSerializer
+ *
  */
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializer {
