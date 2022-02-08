@@ -39,13 +39,13 @@ public class ModuleReflectorJvm extends ModuleReflector {
 	}
 
 	@Override
-	protected void registerForNames(Map<String, Class> map) {
+	protected void registerForNames(Map<String, Supplier<Class>> map) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	protected void registerReflectorSuppliers(
-			Map<Class, Supplier<ClassReflector>> map) {
+			Map<String, Supplier<ClassReflector>> map) {
 		throw new UnsupportedOperationException();
 	}
 

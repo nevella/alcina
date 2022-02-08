@@ -560,12 +560,19 @@ public class ClientReflectionGenerator extends Generator {
 		}
 
 		void writeRegisterForName(SourceWriter sourceWriter) {
-			sourceWriter.println("map.put(\"%s\",%s.class);",
+			// sourceWriter.println("map.put(\"%s\",() -> %s.class);",
+			// type.getQualifiedBinaryName(), fqn());
+			/*
+			 * gwt compiler can't handle the class literal in the lambda - so
+			 * use an anonymous class
+			 */
+			sourceWriter.println(
+					"map.put(\"%s\",new Supplier(){public Object get(){return %s.class;}});",
 					type.getQualifiedBinaryName(), fqn());
 		}
 
 		void writeRegisterReflectorSupplier(SourceWriter sourceWriter) {
-			sourceWriter.println("map.put(%s.class,%s::new);", fqn(), fqn());
+			sourceWriter.println("map.put(\"%s\",%s::new);", fqn(), fqn());
 		}
 
 		void writeRegisterRegistrations(SourceWriter sourceWriter) {
@@ -816,13 +823,14 @@ public class ClientReflectionGenerator extends Generator {
 		}
 
 		void writeRegisterForNames() {
-			writeForClassReflectors("registerForNames", "Map<String, Class>",
+			writeForClassReflectors("registerForNames",
+					"Map<String, Supplier<Class>>",
 					crg -> crg.writeRegisterForName(sourceWriter));
 		}
 
 		void writeRegisterReflectorSuppliers() {
 			writeForClassReflectors("registerReflectorSuppliers",
-					"Map<Class, Supplier<ClassReflector>>",
+					"Map<String, Supplier<ClassReflector>>",
 					crg -> crg.writeRegisterReflectorSupplier(sourceWriter));
 		}
 
