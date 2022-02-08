@@ -24,6 +24,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlBuilder;
+import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.ResourceUtilities.SimpleQuery;
 import cc.alcina.framework.entity.SEUtilities;
@@ -130,9 +131,11 @@ public class ControlServlet extends AlcinaServlet {
 					.getClusterLeaderState(), req, response);
 			break;
 		case VM_HEALTH:
+			MetricLogging.get().start("vm-health");
 			writeAndClose(
 					Registry.impl(ClusterStateProvider.class).getVmHealth(),
 					response);
+			MetricLogging.get().end("vm-health");
 			break;
 		case TEST_SENDMAIL: {
 			String toAddress = testSendmail();
