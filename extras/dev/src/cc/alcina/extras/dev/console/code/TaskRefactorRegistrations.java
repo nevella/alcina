@@ -10,8 +10,10 @@ import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
 import com.github.javaparser.ast.expr.AnnotationExpr;
 import com.github.javaparser.ast.expr.ArrayInitializerExpr;
+import com.github.javaparser.ast.expr.ClassExpr;
 import com.github.javaparser.ast.expr.Expression;
 import com.github.javaparser.ast.expr.FieldAccessExpr;
+import com.github.javaparser.ast.expr.MarkerAnnotationExpr;
 import com.github.javaparser.ast.expr.MemberValuePair;
 import com.github.javaparser.ast.expr.Name;
 import com.github.javaparser.ast.expr.NameExpr;
@@ -267,7 +269,16 @@ public class TaskRefactorRegistrations
 			} else if (implementation == Implementation.SINGLETON
 					&& allowSingleton) {
 				if (outPriority.isEmpty()) {
-					return new SingleMemberAnnotationExpr(singleton, outValue);
+					ClassOrInterfaceDeclaration typeDeclaration = (ClassOrInterfaceDeclaration) location
+							.getParentNode().get();
+					if (outValue instanceof ClassExpr && ((ClassExpr) outValue)
+							.getType().toString()
+							.equals(typeDeclaration.getName().toString())) {
+						return new MarkerAnnotationExpr(singleton);
+					} else {
+						return new SingleMemberAnnotationExpr(singleton,
+								outValue);
+					}
 				} else {
 					NormalAnnotationExpr expr = new NormalAnnotationExpr();
 					expr.setName(registration);

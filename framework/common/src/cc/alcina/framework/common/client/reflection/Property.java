@@ -17,11 +17,11 @@ public class Property {
 
 	private Class definingType;
 
-	private AnnotationResolver annotationResolver;
+	private AnnotationProvider annotationResolver;
 
 	public Property(String name, Method getter, Method setter,
 			Class propertyType, Class definingType,
-			AnnotationResolver annotationResolver) {
+			AnnotationProvider annotationResolver) {
 		this.name = name;
 		this.getter = getter;
 		this.setter = setter;

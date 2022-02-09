@@ -18,10 +18,11 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Target({ ElementType.TYPE, ElementType.METHOD })
-// Not inherited - annottion resolution uses merging algorithm which would
+// Not inherited - annotation resolution uses merging algorithm which would
 // conflict
 // @Inherited
-// TODO - dirndl - add @Directed.FieldNamesAsTags (for data fields i.e. string, int)
+// TODO - dirndl - add @Directed.FieldNamesAsTags (for data fields i.e. string,
+// int)
 @ClientVisible
 public @interface Directed {
 	/**
@@ -122,18 +123,7 @@ public @interface Directed {
 		public String tag() {
 			return "";
 		}
-
 	}
-
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target(ElementType.METHOD)
-	@ClientVisible
-	public static @interface Property {
-		String name();
-	}
-	
-	
 
 	public static class DirectedResolver extends Directed.Default {
 		private TreeResolver<Directed> treeResolver;
@@ -207,5 +197,13 @@ public @interface Directed {
 			Function<Directed, String> function = Directed::tag;
 			return treeResolver.resolve(location, function, "tag", super.tag());
 		}
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.METHOD)
+	@ClientVisible
+	public static @interface Property {
+		String name();
 	}
 }

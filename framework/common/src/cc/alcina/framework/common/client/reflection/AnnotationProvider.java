@@ -5,7 +5,7 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.util.CollectionCreators;
 
-public interface AnnotationResolver {
+public interface AnnotationProvider {
 	<A extends Annotation> A getAnnotation(Class<A> annotationClass);
 
 	default <A extends Annotation> boolean
@@ -13,7 +13,7 @@ public interface AnnotationResolver {
 		return getAnnotation(annotationClass) != null;
 	}
 
-	public static class LookupResolver implements AnnotationResolver {
+	public static class LookupProvider implements AnnotationProvider {
 		public Map<Class, Annotation> annotations = CollectionCreators.Bootstrap
 				.createConcurrentClassMap();
 

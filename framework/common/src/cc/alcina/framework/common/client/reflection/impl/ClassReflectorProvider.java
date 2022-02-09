@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.reflection.AnnotationResolver;
+import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Method;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -64,7 +64,7 @@ public class ClassReflectorProvider {
 			}
 		}
 		Predicate<Class> assignableTo = c -> c.isAssignableFrom(clazz);
-		ClassAnnotationResolver annotationResolver = new ClassAnnotationResolver(
+		ClassAnnotationProvider annotationResolver = new ClassAnnotationProvider(
 				clazz);
 		ReflectiveAccess access = new ReflectiveAccess.DefaultValue();
 		boolean reflective = ReflectiveAccess.Support.has(access, Access.CLASS);
@@ -78,21 +78,21 @@ public class ClassReflectorProvider {
 				createMethod(descriptor.getReadMethod()),
 				createMethod(descriptor.getWriteMethod()),
 				descriptor.getPropertyType(), clazz,
-				createResolver(clazz, descriptor.getReadMethod()));
+				createProvider(clazz, descriptor.getReadMethod()));
 	}
 
-	private static AnnotationResolver createResolver(Class clazz,
+	private static AnnotationProvider createProvider(Class clazz,
 			java.lang.reflect.Method readMethod) {
-		return new MethodAnnotationResolver(clazz, readMethod);
+		return new MethodAnnotationProvider(clazz, readMethod);
 	}
 
-	static class MethodAnnotationResolver implements AnnotationResolver {
+	static class MethodAnnotationProvider implements AnnotationProvider {
 		@SuppressWarnings("unused")
 		private Class clazz;
 
 		private java.lang.reflect.Method readMethod;
 
-		public MethodAnnotationResolver(Class clazz,
+		public MethodAnnotationProvider(Class clazz,
 				java.lang.reflect.Method readMethod) {
 			this.clazz = clazz;
 			this.readMethod = readMethod;
@@ -106,10 +106,10 @@ public class ClassReflectorProvider {
 		}
 	}
 
-	public static class ClassAnnotationResolver implements AnnotationResolver {
+	public static class ClassAnnotationProvider implements AnnotationProvider {
 		private Class clazz;
 
-		public ClassAnnotationResolver(Class clazz) {
+		public ClassAnnotationProvider(Class clazz) {
 			this.clazz = clazz;
 		}
 

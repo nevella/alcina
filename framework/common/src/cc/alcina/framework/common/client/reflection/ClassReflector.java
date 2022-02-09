@@ -55,7 +55,7 @@ public class ClassReflector<T> {
 
 	private List<Property> properties;
 
-	private AnnotationResolver annotationResolver;
+	private AnnotationProvider annotationResolver;
 
 	private Supplier<T> constructor;
 
@@ -72,7 +72,7 @@ public class ClassReflector<T> {
 	private List<Class> interfaces;
 
 	public ClassReflector(Class<T> clazz, List<Property> properties,
-			Map<String, Property> byName, AnnotationResolver annotationResolver,
+			Map<String, Property> byName, AnnotationProvider annotationResolver,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
 			List<Class> interfaces, boolean reflective, boolean isAbstract) {
 		this();
@@ -145,7 +145,7 @@ public class ClassReflector<T> {
 	}
 
 	protected void init(Class<T> clazz, List<Property> properties,
-			Map<String, Property> byName, AnnotationResolver annotationResolver,
+			Map<String, Property> byName, AnnotationProvider annotationResolver,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
 			List<Class> interfaces, boolean reflective, boolean isAbstract) {
 		this.clazz = clazz;

@@ -47,7 +47,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.AnnotationResolver;
+import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -460,10 +460,10 @@ public class ClientReflectionGenerator extends Generator {
 			composerFactory.addImport(Predicate.class.getName());
 			composerFactory.addImport(List.class.getName());
 			composerFactory.addImport(ArrayList.class.getName());
-			composerFactory.addImport(AnnotationResolver.class.getName());
+			composerFactory.addImport(AnnotationProvider.class.getName());
 			composerFactory.addImport(Annotation.class.getCanonicalName());
 			composerFactory.addImport(
-					AnnotationResolver.LookupResolver.class.getCanonicalName());
+					AnnotationProvider.LookupProvider.class.getCanonicalName());
 			composerFactory.addImport(ClientReflections.class.getName());
 			composerFactory.addImport(Property.class.getName());
 			composerFactory.addImport(
