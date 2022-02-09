@@ -14,21 +14,22 @@
 package cc.alcina.framework.gwt.client.provider;
 
 import com.google.gwt.user.client.Random;
-
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.RandomProvider;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
- * 
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = RandomProvider.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
+@Registration.Singleton(RandomProvider.class)
 public class ClientRandomProvider implements RandomProvider {
-	@Override
-	public int nextInt() {
-		return Random.nextInt();
-	}
+
+    @Override
+    public int nextInt() {
+        return Random.nextInt();
+    }
 }

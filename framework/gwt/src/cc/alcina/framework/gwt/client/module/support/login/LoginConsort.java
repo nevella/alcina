@@ -1,12 +1,10 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
 import java.util.Collections;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
-
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.LoginResponseState;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -22,154 +20,156 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.module.support.login.LoginConsort.State;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = LoginConsort.class, implementationType = ImplementationType.INSTANCE)
 @ClientInstantiable
+@Registration(LoginConsort.class)
 public abstract class LoginConsort extends Consort<State> {
-	private SimplePanel container;
 
-	protected LoginRequest request = new LoginRequest();
+    private SimplePanel container;
 
-	@SuppressWarnings("unused")
-	private LoginViewModel viewModel;
+    protected LoginRequest request = new LoginRequest();
 
-	Topic<Boolean> topicCallingRemote = Topic.local();
+    @SuppressWarnings("unused")
+    private LoginViewModel viewModel;
 
-	Topic<String> topicMessage = Topic.local();
+    Topic<Boolean> topicCallingRemote = Topic.local();
 
-	protected LoginResponse lastResponse;
+    Topic<String> topicMessage = Topic.local();
 
-	public LoginConsort() {
-	}
+    protected LoginResponse lastResponse;
 
-	public void init(SimplePanel container, LoginViewModel model) {
-		this.container = container;
-		this.viewModel = model;
-		addPlayer(new Player_Got_username());
-		addPlayer(new Player_Got_password());
-		addPlayer(new Player_Got_2fa());
-		addEndpointPlayer();
-	}
+    public LoginConsort() {
+    }
 
-	public void onClickNext(ClickEvent event) {
-		/*
+    public void init(SimplePanel container, LoginViewModel model) {
+        this.container = container;
+        this.viewModel = model;
+        addPlayer(new Player_Got_username());
+        addPlayer(new Player_Got_password());
+        addPlayer(new Player_Got_2fa());
+        addEndpointPlayer();
+    }
+
+    public void onClickNext(ClickEvent event) {
+        /*
 		 * TODO - remote action builder - promises
 		 */
-		topicCallingRemote.publish(true);
-		getAsyncService().login(request, new AsyncCallback<LoginResponse>() {
-			@Override
-			public void onFailure(Throwable caught) {
-				topicCallingRemote.publish(false);
-				String message = Ax.blankTo(caught.getMessage(),
-						() -> CommonUtils.toSimpleExceptionMessage(caught));
-				topicMessage.publish(message);
-			}
+        topicCallingRemote.publish(true);
+        getAsyncService().login(request, new AsyncCallback<LoginResponse>() {
 
-			@Override
-			public void onSuccess(LoginResponse loginResponse) {
-				lastResponse = loginResponse;
-				topicCallingRemote.publish(false);
-				handleSuccess(loginResponse);
-			}
-		});
-	}
+            @Override
+            public void onFailure(Throwable caught) {
+                topicCallingRemote.publish(false);
+                String message = Ax.blankTo(caught.getMessage(), () -> CommonUtils.toSimpleExceptionMessage(caught));
+                topicMessage.publish(message);
+            }
 
-	public boolean shouldShowQrCode() {
-		return lastResponse.getStates()
-				.contains(LoginResponseState.Two_factor_qr_code_required);
-	}
+            @Override
+            public void onSuccess(LoginResponse loginResponse) {
+                lastResponse = loginResponse;
+                topicCallingRemote.publish(false);
+                handleSuccess(loginResponse);
+            }
+        });
+    }
 
-	protected Widget getLogo() {
-		return null;
-	}
+    public boolean shouldShowQrCode() {
+        return lastResponse.getStates().contains(LoginResponseState.Two_factor_qr_code_required);
+    }
 
-	protected abstract String getTitleText();
+    protected Widget getLogo() {
+        return null;
+    }
 
-	protected void handleSuccess(LoginResponse response) {
-		boolean hasRequestUsername = Ax.notBlank(request.getUserName());
-		if (!hasRequestUsername) {
-			clearReachedStates();
-			nudge();
-			return;//
-		}
-		if (Ax.notBlank(response.getErrorMsg())) {
-			topicMessage.publish(response.getErrorMsg());
-			return;
-		}
-		boolean hasRequestPassword = Ax.notBlank(request.getPassword());
-		if (response.getStates()
-				.contains(LoginResponseState.Username_not_found)) {
-			handleUsernameNotFound();
-			return;
-		}
-		addState(State.Got_username);
-		if (!hasRequestPassword) {
-			wasPlayed(playing.get(0));
-			return;
-		}
-		if (response.getStates().contains(LoginResponseState.Password_incorrect)
-				|| response.getStates()
-						.contains(LoginResponseState.Invalid_credentials)) {
-			return;
-		}
-		addState(State.Got_password);
-		if (response.getStates()
-				.contains(LoginResponseState.Two_factor_code_required)) {
-			wasPlayed(playing.get(0));
-			return;
-		}
-		if (response.getStates()
-				.contains(LoginResponseState.Account_cannot_login)) {
-			return;
-		}
-		wasPlayed(playing.get(0), Collections.singleton(State.Got_2fa_code));
-	}
+    protected abstract String getTitleText();
 
-	protected void handleUsernameNotFound() {
-		// for subclasses, e.g. show a 'sign up' dialog
-	}
+    protected void handleSuccess(LoginResponse response) {
+        boolean hasRequestUsername = Ax.notBlank(request.getUserName());
+        if (!hasRequestUsername) {
+            clearReachedStates();
+            nudge();
+            // 
+            return;
+        }
+        if (Ax.notBlank(response.getErrorMsg())) {
+            topicMessage.publish(response.getErrorMsg());
+            return;
+        }
+        boolean hasRequestPassword = Ax.notBlank(request.getPassword());
+        if (response.getStates().contains(LoginResponseState.Username_not_found)) {
+            handleUsernameNotFound();
+            return;
+        }
+        addState(State.Got_username);
+        if (!hasRequestPassword) {
+            wasPlayed(playing.get(0));
+            return;
+        }
+        if (response.getStates().contains(LoginResponseState.Password_incorrect) || response.getStates().contains(LoginResponseState.Invalid_credentials)) {
+            return;
+        }
+        addState(State.Got_password);
+        if (response.getStates().contains(LoginResponseState.Two_factor_code_required)) {
+            wasPlayed(playing.get(0));
+            return;
+        }
+        if (response.getStates().contains(LoginResponseState.Account_cannot_login)) {
+            return;
+        }
+        wasPlayed(playing.get(0), Collections.singleton(State.Got_2fa_code));
+    }
 
-	ReflectiveLoginRemoteServiceAsync getAsyncService() {
-		return Registry.impl(ReflectiveLoginRemoteServiceAsync.class);
-	}
+    protected void handleUsernameNotFound() {
+        // for subclasses, e.g. show a 'sign up' dialog
+    }
 
-	class Player_Got_2fa extends EnumPlayer<State> {
-		public Player_Got_2fa() {
-			super(State.Got_2fa_code);
-			setAsynchronous(true);
-		}
+    ReflectiveLoginRemoteServiceAsync getAsyncService() {
+        return Registry.impl(ReflectiveLoginRemoteServiceAsync.class);
+    }
 
-		@Override
-		public void run() {
-			container.setWidget(new LoginPage2FA(LoginConsort.this));
-		}
-	}
+    class Player_Got_2fa extends EnumPlayer<State> {
 
-	class Player_Got_password extends EnumPlayer<State> {
-		public Player_Got_password() {
-			super(State.Got_password);
-			setAsynchronous(true);
-		}
+        public Player_Got_2fa() {
+            super(State.Got_2fa_code);
+            setAsynchronous(true);
+        }
 
-		@Override
-		public void run() {
-			container.setWidget(new LoginPagePassword(LoginConsort.this));
-		}
-	}
+        @Override
+        public void run() {
+            container.setWidget(new LoginPage2FA(LoginConsort.this));
+        }
+    }
 
-	class Player_Got_username extends EnumPlayer<State> {
-		public Player_Got_username() {
-			super(State.Got_username);
-			setAsynchronous(true);
-		}
+    class Player_Got_password extends EnumPlayer<State> {
 
-		@Override
-		public void run() {
-			container.setWidget(new LoginPageUsername(LoginConsort.this));
-		}
-	}
+        public Player_Got_password() {
+            super(State.Got_password);
+            setAsynchronous(true);
+        }
 
-	enum State {
-		Got_username, Got_password, Got_2fa_code
-	}
+        @Override
+        public void run() {
+            container.setWidget(new LoginPagePassword(LoginConsort.this));
+        }
+    }
+
+    class Player_Got_username extends EnumPlayer<State> {
+
+        public Player_Got_username() {
+            super(State.Got_username);
+            setAsynchronous(true);
+        }
+
+        @Override
+        public void run() {
+            container.setWidget(new LoginPageUsername(LoginConsort.this));
+        }
+    }
+
+    enum State {
+
+        Got_username, Got_password, Got_2fa_code
+    }
 }

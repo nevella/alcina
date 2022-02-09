@@ -3,12 +3,12 @@ package cc.alcina.framework.entity.persistence;
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @MappedSuperclass
 /*
@@ -23,87 +23,78 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * (db_update_version) kvs
  */
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = LocalDbPropertyBase.class)
+@Registration({ PersistentImpl.class, LocalDbPropertyBase.class })
 public abstract class LocalDbPropertyBase extends Entity {
-	public static final transient String KEY_FIELD_NAME = "propertyKey";
 
-	public static final transient String VALUE_FIELD_NAME = "propertyValue";
+    public static final transient String KEY_FIELD_NAME = "propertyKey";
 
-	public static final transient String DB_UPDATE_VERSION = "DB_UPDATE_VERSION";
+    public static final transient String VALUE_FIELD_NAME = "propertyValue";
 
-	public static final transient String SERLVET_UPDATE_VERSION = "SERVLET_LAYER_UPDATE_VERSION";
+    public static final transient String DB_UPDATE_VERSION = "DB_UPDATE_VERSION";
 
-	public static String getLocalDbProperty(String key) {
-		return getOrSetLocalDbProperty(key, null, true);
-	}
+    public static final transient String SERLVET_UPDATE_VERSION = "SERVLET_LAYER_UPDATE_VERSION";
 
-	public static LocalDbPropertyBase getLocalDbPropertyObject(String key) {
-		CommonPersistenceLocal cpl = Registry
-				.impl(CommonPersistenceProvider.class).getCommonPersistence();
-		Class<? extends LocalDbPropertyBase> implClass = PersistentImpl
-				.getImplementation(LocalDbPropertyBase.class);
-		LocalDbPropertyBase dbProperty = cpl.ensure(implClass,
-				KEY_FIELD_NAME, key);
-		return dbProperty;
-	}
+    public static String getLocalDbProperty(String key) {
+        return getOrSetLocalDbProperty(key, null, true);
+    }
 
-	public static String getOrSetLocalDbProperty(String key, String value,
-			boolean get) {
-		return getOrSetLocalDbPropertyPreDomainStore(key, value, get);
-	}
+    public static LocalDbPropertyBase getLocalDbPropertyObject(String key) {
+        CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+        Class<? extends LocalDbPropertyBase> implClass = PersistentImpl.getImplementation(LocalDbPropertyBase.class);
+        LocalDbPropertyBase dbProperty = cpl.ensure(implClass, KEY_FIELD_NAME, key);
+        return dbProperty;
+    }
 
-	public static String setLocalDbProperty(String key, String value) {
-		return getOrSetLocalDbProperty(key, value, false);
-	}
+    public static String getOrSetLocalDbProperty(String key, String value, boolean get) {
+        return getOrSetLocalDbPropertyPreDomainStore(key, value, get);
+    }
 
-	private static String getOrSetLocalDbPropertyPreDomainStore(String key,
-			String value, boolean get) {
-		LocalDbPropertyBase dbPropertyObject = getLocalDbPropertyObject(key);
-		if (get) {
-			return dbPropertyObject.getPropertyValue();
-		} else {
-			try {
-				CommonPersistenceLocal cpl = Registry
-						.impl(CommonPersistenceProvider.class)
-						.getCommonPersistence();
-				Class<? extends LocalDbPropertyBase> implClass = PersistentImpl
-						.getImplementation(LocalDbPropertyBase.class);
-				cpl.setField(implClass, dbPropertyObject.getId(),
-						VALUE_FIELD_NAME, value);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-			return null;
-		}
-	}
+    public static String setLocalDbProperty(String key, String value) {
+        return getOrSetLocalDbProperty(key, value, false);
+    }
 
-	private String propertyKey;
+    private static String getOrSetLocalDbPropertyPreDomainStore(String key, String value, boolean get) {
+        LocalDbPropertyBase dbPropertyObject = getLocalDbPropertyObject(key);
+        if (get) {
+            return dbPropertyObject.getPropertyValue();
+        } else {
+            try {
+                CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
+                Class<? extends LocalDbPropertyBase> implClass = PersistentImpl.getImplementation(LocalDbPropertyBase.class);
+                cpl.setField(implClass, dbPropertyObject.getId(), VALUE_FIELD_NAME, value);
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            }
+            return null;
+        }
+    }
 
-	protected String propertyValue;
+    private String propertyKey;
 
-	public String getPropertyKey() {
-		return this.propertyKey;
-	}
+    protected String propertyValue;
 
-	@Lob
-	@Transient
-	public abstract String getPropertyValue();
+    public String getPropertyKey() {
+        return this.propertyKey;
+    }
 
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
+    @Lob
+    @Transient
+    public abstract String getPropertyValue();
 
-	public void setPropertyKey(String propertyKey) {
-		String old_propertyKey = this.propertyKey;
-		this.propertyKey = propertyKey;
-		propertyChangeSupport().firePropertyChange("propertyKey",
-				old_propertyKey, propertyKey);
-	}
+    @Override
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public void setPropertyValue(String propertyValue) {
-		String old_propertyValue = this.propertyValue;
-		this.propertyValue = propertyValue;
-		propertyChangeSupport().firePropertyChange("propertyValue",
-				old_propertyValue, propertyValue);
-	}
+    public void setPropertyKey(String propertyKey) {
+        String old_propertyKey = this.propertyKey;
+        this.propertyKey = propertyKey;
+        propertyChangeSupport().firePropertyChange("propertyKey", old_propertyKey, propertyKey);
+    }
+
+    public void setPropertyValue(String propertyValue) {
+        String old_propertyValue = this.propertyValue;
+        this.propertyValue = propertyValue;
+        propertyChangeSupport().firePropertyChange("propertyValue", old_propertyValue, propertyValue);
+    }
 }

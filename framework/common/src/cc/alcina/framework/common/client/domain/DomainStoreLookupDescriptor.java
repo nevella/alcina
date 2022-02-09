@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Function;
 import java.util.function.Predicate;
-
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -13,168 +12,161 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.PropertyPath;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-public class DomainStoreLookupDescriptor<T extends Entity>
-		implements MemoryStatProvider {
-	public Class<T> clazz;
+public class DomainStoreLookupDescriptor<T extends Entity> implements MemoryStatProvider {
 
-	public String propertyPath;
+    public Class<T> clazz;
 
-	public boolean idDescriptor;
+    public String propertyPath;
 
-	protected DomainLookup lookup;
+    public boolean idDescriptor;
 
-	private boolean enabled = true;
+    protected DomainLookup lookup;
 
-	private boolean derived;
+    private boolean enabled = true;
 
-	public List<String> propertyPathAlia = new ArrayList<String>();
+    private boolean derived;
 
-	private Predicate<T> relevanceFilter;
+    public List<String> propertyPathAlia = new ArrayList<String>();
 
-	Function<? super T, ?> valueFunction;
+    private Predicate<T> relevanceFilter;
 
-	private IDomainStore domainStore;
+    Function<? super T, ?> valueFunction;
 
-	private Class lookupIndexClass;
+    private IDomainStore domainStore;
 
-	public DomainStoreLookupDescriptor(Class clazz, String propertyPath) {
-		this(clazz, propertyPath, null, null);
-	}
+    private Class lookupIndexClass;
 
-	public DomainStoreLookupDescriptor(Class clazz, String propertyPath,
-			Function<? super T, ?> valueFunction, Class lookupIndexClass) {
-		this.clazz = clazz;
-		this.propertyPath = propertyPath;
-		this.valueFunction = valueFunction;
-		this.lookupIndexClass = lookupIndexClass;
-	}
+    public DomainStoreLookupDescriptor(Class clazz, String propertyPath) {
+        this(clazz, propertyPath, null, null);
+    }
 
-	public void addAlias(String propertyPath) {
-		propertyPathAlia.add(propertyPath);
-	}
+    public DomainStoreLookupDescriptor(Class clazz, String propertyPath, Function<? super T, ?> valueFunction, Class lookupIndexClass) {
+        this.clazz = clazz;
+        this.propertyPath = propertyPath;
+        this.valueFunction = valueFunction;
+        this.lookupIndexClass = lookupIndexClass;
+    }
 
-	@Override
-	public MemoryStat addMemoryStats(MemoryStat parent) {
-		MemoryStat self = new MemoryStat(this);
-		parent.addChild(self);
-		self.objectMemory.walkStats(this, self.counter, o -> o == this
-				|| !self.objectMemory.isMemoryStatProvider(o.getClass()));
-		return self;
-	}
+    public void addAlias(String propertyPath) {
+        propertyPathAlia.add(propertyPath);
+    }
 
-	public void createLookup() {
-		if (lookup == null) {
-			this.lookup = new DomainLookup(this);
-		}
-	}
+    @Override
+    public MemoryStat addMemoryStats(MemoryStat parent) {
+        MemoryStat self = new MemoryStat(this);
+        parent.addChild(self);
+        self.objectMemory.walkStats(this, self.counter, o -> o == this || !self.objectMemory.isMemoryStatProvider(o.getClass()));
+        return self;
+    }
 
-	public String getCanonicalPropertyPath(String propertyPath) {
-		if (propertyPathAlia.contains(propertyPath)) {
-			return this.propertyPath;
-		}
-		return null;
-	}
+    public void createLookup() {
+        if (lookup == null) {
+            this.lookup = new DomainLookup(this);
+        }
+    }
 
-	public IDomainStore getDomainStore() {
-		return this.domainStore;
-	}
+    public String getCanonicalPropertyPath(String propertyPath) {
+        if (propertyPathAlia.contains(propertyPath)) {
+            return this.propertyPath;
+        }
+        return null;
+    }
 
-	public DomainLookup getLookup() {
-		return lookup;
-	}
+    public IDomainStore getDomainStore() {
+        return this.domainStore;
+    }
 
-	public Class getLookupIndexClass(PropertyPath propertyPath) {
-		if (lookupIndexClass != null) {
-			return lookupIndexClass;
-		}
-		Class chainedPropertyType = propertyPath
-				.getChainedPropertyType(Reflections.newInstance(clazz));
-		if (chainedPropertyType != null) {
-			return chainedPropertyType;
-		}
-		if (valueFunction != null) {
-			return null;
-		}
-		return Registry.impl(ReflectiveChainedPropertyTypeProvider.class)
-				.getLookupIndexClass(clazz,
-						propertyPath.getPropertyPath());
-	}
+    public DomainLookup getLookup() {
+        return lookup;
+    }
 
-	public String getPropertyPath() {
-		return this.propertyPath;
-	}
+    public Class getLookupIndexClass(PropertyPath propertyPath) {
+        if (lookupIndexClass != null) {
+            return lookupIndexClass;
+        }
+        Class chainedPropertyType = propertyPath.getChainedPropertyType(Reflections.newInstance(clazz));
+        if (chainedPropertyType != null) {
+            return chainedPropertyType;
+        }
+        if (valueFunction != null) {
+            return null;
+        }
+        return Registry.impl(ReflectiveChainedPropertyTypeProvider.class).getLookupIndexClass(clazz, propertyPath.getPropertyPath());
+    }
 
-	public Predicate<T> getRelevanceFilter() {
-		return this.relevanceFilter;
-	}
+    public String getPropertyPath() {
+        return this.propertyPath;
+    }
 
-	public boolean handles(Class clazz2, String propertyPath) {
-		return clazz2 == clazz && propertyPath != null
-				&& (propertyPath.equals(this.propertyPath)
-						|| propertyPathAlia.contains(propertyPath));
-	}
+    public Predicate<T> getRelevanceFilter() {
+        return this.relevanceFilter;
+    }
 
-	public boolean isDerived() {
-		return this.derived;
-	}
+    public boolean handles(Class clazz2, String propertyPath) {
+        return clazz2 == clazz && propertyPath != null && (propertyPath.equals(this.propertyPath) || propertyPathAlia.contains(propertyPath));
+    }
 
-	public boolean isEnabled() {
-		return this.enabled;
-	}
+    public boolean isDerived() {
+        return this.derived;
+    }
 
-	public void setDerived(boolean derived) {
-		this.derived = derived;
-	}
+    public boolean isEnabled() {
+        return this.enabled;
+    }
 
-	public void setDomainStore(IDomainStore store) {
-		this.domainStore = store;
-	}
+    public void setDerived(boolean derived) {
+        this.derived = derived;
+    }
 
-	public void setEnabled(boolean enabled) {
-		this.enabled = enabled;
-	}
+    public void setDomainStore(IDomainStore store) {
+        this.domainStore = store;
+    }
 
-	public void setRelevanceFilter(Predicate<T> relevanceFilter) {
-		this.relevanceFilter = relevanceFilter;
-	}
+    public void setEnabled(boolean enabled) {
+        this.enabled = enabled;
+    }
 
-	@Override
-	public String toString() {
-		return Ax.format("Lookup descriptor - %s :: %s :: (id) %s", clazz,
-				propertyPath, idDescriptor);
-	}
+    public void setRelevanceFilter(Predicate<T> relevanceFilter) {
+        this.relevanceFilter = relevanceFilter;
+    }
 
-	public static class IdLookupDescriptor<T extends Entity>
-			extends DomainStoreLookupDescriptor<T> {
-		private IdLookup idLookup;
+    @Override
+    public String toString() {
+        return Ax.format("Lookup descriptor - %s :: %s :: (id) %s", clazz, propertyPath, idDescriptor);
+    }
 
-		public IdLookupDescriptor(Class clazz, String propertyPath) {
-			this(clazz, propertyPath, null, null);
-		}
+    public static class IdLookupDescriptor<T extends Entity> extends DomainStoreLookupDescriptor<T> {
 
-		public IdLookupDescriptor(Class clazz, String propertyPath,
-				Function<? super T, ?> valueFunction, Class lookupIndexClass) {
-			super(clazz, propertyPath, valueFunction, lookupIndexClass);
-		}
+        private IdLookup idLookup;
 
-		@Override
-		public void createLookup() {
-			if (lookup == null) {
-				idLookup = new IdLookup(this);
-				lookup = idLookup;
-			}
-		}
+        public IdLookupDescriptor(Class clazz, String propertyPath) {
+            this(clazz, propertyPath, null, null);
+        }
 
-		@Override
-		public IdLookup getLookup() {
-			return idLookup;
-		}
-	}
+        public IdLookupDescriptor(Class clazz, String propertyPath, Function<? super T, ?> valueFunction, Class lookupIndexClass) {
+            super(clazz, propertyPath, valueFunction, lookupIndexClass);
+        }
 
-	@RegistryLocation(registryPoint = ReflectiveChainedPropertyTypeProvider.class, implementationType = ImplementationType.SINGLETON)
-	public abstract static class ReflectiveChainedPropertyTypeProvider {
-		public abstract Class getLookupIndexClass(Class clazz,
-				String propertyPath);
-	}
+        @Override
+        public void createLookup() {
+            if (lookup == null) {
+                idLookup = new IdLookup(this);
+                lookup = idLookup;
+            }
+        }
+
+        @Override
+        public IdLookup getLookup() {
+            return idLookup;
+        }
+    }
+
+    @RegistryLocation(registryPoint = ReflectiveChainedPropertyTypeProvider.class, implementationType = ImplementationType.SINGLETON)
+    @Registration.Singleton
+    public abstract static class ReflectiveChainedPropertyTypeProvider {
+
+        public abstract Class getLookupIndexClass(Class clazz, String propertyPath);
+    }
 }

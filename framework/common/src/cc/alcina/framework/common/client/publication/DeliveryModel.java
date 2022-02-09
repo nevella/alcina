@@ -17,199 +17,198 @@ import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiFunction;
-
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
- *
  * @author Nick Reddel
  */
 public interface DeliveryModel extends TreeSerializable {
-	public String getAttachmentMessage();
 
-	public String getAttachmentMessageForRequestor();
+    public String getAttachmentMessage();
 
-	public String getEmailAddress();
+    public String getAttachmentMessageForRequestor();
 
-	public String getEmailSubject();
+    public String getEmailAddress();
 
-	public String getEmailSubjectForRequestor();
+    public String getEmailSubject();
 
-	/**
-	 * The mime type of the content
-	 */
-	public String getMimeType();
+    public String getEmailSubjectForRequestor();
 
-	public List<MultipleDeliveryEntry> getMultipleDeliveryEntries();
+    /**
+     * The mime type of the content
+     */
+    public String getMimeType();
 
-	/**
-	 * comma separated fields which indicate the queryString to be put at the
-	 * end of a URL. eg link.do?alert,97,a987db34. (link.do? is not included)
-	 * first field is always the type.
-	 */
-	public String getPermalinkQuery();
+    public List<MultipleDeliveryEntry> getMultipleDeliveryEntries();
 
-	public Map<String, String> getProperties();
+    /**
+     * comma separated fields which indicate the queryString to be put at the
+     * end of a URL. eg link.do?alert,97,a987db34. (link.do? is not included)
+     * first field is always the type.
+     */
+    public String getPermalinkQuery();
 
-	public String getSuggestedFileName();
+    public Map<String, String> getProperties();
 
-	public String getSystemEmailAddressOfRequestor();
+    public String getSuggestedFileName();
 
-	public boolean isCoverPage();
+    public String getSystemEmailAddressOfRequestor();
 
-	public boolean isEmailInline();
+    public boolean isCoverPage();
 
-	public boolean isFooter();
+    public boolean isEmailInline();
 
-	public boolean isNoPersistence();
+    public boolean isFooter();
 
-	public boolean isPageBreakAfterEachDocument();
+    public boolean isNoPersistence();
 
-	public boolean isTest();
+    public boolean isPageBreakAfterEachDocument();
 
-	public List<MailAttachment> provideAttachments();
+    public boolean isTest();
 
-	public ContentDeliveryType provideContentDeliveryType();
+    public List<MailAttachment> provideAttachments();
 
-	public Definition provideDefinition();
+    public ContentDeliveryType provideContentDeliveryType();
 
-	public List<MailInlineImage> provideImages();
+    public Definition provideDefinition();
 
-	public FormatConversionTarget provideTargetFormat();
+    public List<MailInlineImage> provideImages();
 
-	default void addAttachment(MailAttachment attachment) {
-		provideAttachments().add(attachment);
-	}
+    public FormatConversionTarget provideTargetFormat();
 
-	default String getPublicationUid() {
-		return null;
-	}
+    default void addAttachment(MailAttachment attachment) {
+        provideAttachments().add(attachment);
+    }
 
-	default boolean hasProperty(String keyS) {
-		throw new UnsupportedOperationException();
-	}
+    default String getPublicationUid() {
+        return null;
+    }
 
-	default String providePropertyValue(String key) {
-		throw new UnsupportedOperationException();
-	}
+    default boolean hasProperty(String keyS) {
+        throw new UnsupportedOperationException();
+    }
 
-	default void removeAttachment(MailAttachment attachment) {
-		provideAttachments().remove(attachment);
-	}
+    default String providePropertyValue(String key) {
+        throw new UnsupportedOperationException();
+    }
 
-	public static class MailAttachment {
-		public String uid;
+    default void removeAttachment(MailAttachment attachment) {
+        provideAttachments().remove(attachment);
+    }
 
-		public String contentType;
+    public static class MailAttachment {
 
-		public byte[] requestBytes;
+        public String uid;
 
-		public String dataSourceMimeType;
+        public String contentType;
 
-		public String suggestedFileName;
-	}
+        public byte[] requestBytes;
 
-	public static class MailInlineImage {
-		public String uid;
+        public String dataSourceMimeType;
 
-		public String contentType;
+        public String suggestedFileName;
+    }
 
-		public byte[] requestBytes;
+    public static class MailInlineImage {
 
-		public String dataSourceMimeType;
-	}
+        public String uid;
 
-	// Parameters for ContentDeliveryType_MULTIPLE
-	@RegistryLocation(registryPoint = TreeSerializable.class)
-	public static class MultipleDeliveryEntry implements TreeSerializable {
-		private String emailSubject;
+        public String contentType;
 
-		private String emailAddresses;
+        public byte[] requestBytes;
 
-		private String fileName;
+        public String dataSourceMimeType;
+    }
 
-		private String transformerClassName;
+    // Parameters for ContentDeliveryType_MULTIPLE
+    @RegistryLocation(registryPoint = TreeSerializable.class)
+    @Registration(TreeSerializable.class)
+    public static class MultipleDeliveryEntry implements TreeSerializable {
 
-		private String deliveryMode = ContentDeliveryType.DOWNLOAD
-				.serializedForm();
+        private String emailSubject;
 
-		private String transformerPropertiesSerialized;
+        private String emailAddresses;
 
-		public void addTransformerProperty(String key, String value) {
-			StringMap map = provideTransformerProperties();
-			map.put(key, value);
-			setTransformerPropertiesSerialized(map.toPropertyString());
-		}
+        private String fileName;
 
-		public String getDeliveryMode() {
-			return this.deliveryMode;
-		}
+        private String transformerClassName;
 
-		public String getEmailAddresses() {
-			return this.emailAddresses;
-		}
+        private String deliveryMode = ContentDeliveryType.DOWNLOAD.serializedForm();
 
-		public String getEmailSubject() {
-			return this.emailSubject;
-		}
+        private String transformerPropertiesSerialized;
 
-		public String getFileName() {
-			return this.fileName;
-		}
+        public void addTransformerProperty(String key, String value) {
+            StringMap map = provideTransformerProperties();
+            map.put(key, value);
+            setTransformerPropertiesSerialized(map.toPropertyString());
+        }
 
-		public String getTransformerClassName() {
-			return this.transformerClassName;
-		}
+        public String getDeliveryMode() {
+            return this.deliveryMode;
+        }
 
-		public String getTransformerPropertiesSerialized() {
-			return this.transformerPropertiesSerialized;
-		}
+        public String getEmailAddresses() {
+            return this.emailAddresses;
+        }
 
-		public ContentDeliveryType provideContentDeliveryType() {
-			return ExtensibleEnum.valueOf(ContentDeliveryType.class,
-					deliveryMode);
-		}
+        public String getEmailSubject() {
+            return this.emailSubject;
+        }
 
-		public StringMap provideTransformerProperties() {
-			return StringMap
-					.fromPropertyString(getTransformerPropertiesSerialized());
-		}
+        public String getFileName() {
+            return this.fileName;
+        }
 
-		public void putContentDeliveryType(ContentDeliveryType type) {
-			setDeliveryMode(type == null ? null : type.name());
-		}
+        public String getTransformerClassName() {
+            return this.transformerClassName;
+        }
 
-		public void setDeliveryMode(String deliveryMode) {
-			this.deliveryMode = deliveryMode;
-		}
+        public String getTransformerPropertiesSerialized() {
+            return this.transformerPropertiesSerialized;
+        }
 
-		public void setEmailAddresses(String emailAddresses) {
-			this.emailAddresses = emailAddresses;
-		}
+        public ContentDeliveryType provideContentDeliveryType() {
+            return ExtensibleEnum.valueOf(ContentDeliveryType.class, deliveryMode);
+        }
 
-		public void setEmailSubject(String emailSubkect) {
-			this.emailSubject = emailSubkect;
-		}
+        public StringMap provideTransformerProperties() {
+            return StringMap.fromPropertyString(getTransformerPropertiesSerialized());
+        }
 
-		public void setFileName(String fileName) {
-			this.fileName = fileName;
-		}
+        public void putContentDeliveryType(ContentDeliveryType type) {
+            setDeliveryMode(type == null ? null : type.name());
+        }
 
-		public void setTransformerClassName(String transformerClassName) {
-			this.transformerClassName = transformerClassName;
-		}
+        public void setDeliveryMode(String deliveryMode) {
+            this.deliveryMode = deliveryMode;
+        }
 
-		public void setTransformerPropertiesSerialized(
-				String transformerPropertiesSerialized) {
-			this.transformerPropertiesSerialized = transformerPropertiesSerialized;
-		}
+        public void setEmailAddresses(String emailAddresses) {
+            this.emailAddresses = emailAddresses;
+        }
 
-		public interface Transformer
-				extends BiFunction<InputStream, StringMap, InputStream> {
-		}
-	}
+        public void setEmailSubject(String emailSubkect) {
+            this.emailSubject = emailSubkect;
+        }
+
+        public void setFileName(String fileName) {
+            this.fileName = fileName;
+        }
+
+        public void setTransformerClassName(String transformerClassName) {
+            this.transformerClassName = transformerClassName;
+        }
+
+        public void setTransformerPropertiesSerialized(String transformerPropertiesSerialized) {
+            this.transformerPropertiesSerialized = transformerPropertiesSerialized;
+        }
+
+        public interface Transformer extends BiFunction<InputStream, StringMap, InputStream> {
+        }
+    }
 }

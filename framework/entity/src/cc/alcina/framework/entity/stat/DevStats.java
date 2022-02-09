@@ -10,7 +10,6 @@ import java.util.Objects;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -19,281 +18,274 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+@Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DevStats {
-	static Topic<String> topicEmitStat = Topic.local();
 
-	public static Topic<String> topicEmitStat() {
-		return topicEmitStat;
-	}
+    static Topic<String> topicEmitStat = Topic.local();
 
-	public StatResults parse(LogProvider logProvider) {
-		StatResults result = new StatResults();
-		result.stats = Registry.impls(StatProvider.class).stream()
-				.map(parser -> parser.generate(logProvider))
-				.filter(Objects::nonNull).collect(Collectors.toList());
-		return result;
-	}
+    public static Topic<String> topicEmitStat() {
+        return topicEmitStat;
+    }
 
-	public static abstract class KeyedStat extends StatProvider {
-		private Class<? extends StatCategory> start;
+    public StatResults parse(LogProvider logProvider) {
+        StatResults result = new StatResults();
+        result.stats = Registry.impls(StatProvider.class).stream().map(parser -> parser.generate(logProvider)).filter(Objects::nonNull).collect(Collectors.toList());
+        return result;
+    }
 
-		private Class<? extends StatCategory> end;
+    public static abstract class KeyedStat extends StatProvider {
 
-		private StatCategory category;
+        private Class<? extends StatCategory> start;
 
-		public KeyedStat(Class<? extends StatCategory> start,
-				Class<? extends StatCategory> end) {
-			this(start, end, Reflections.newInstance(end));
-		}
+        private Class<? extends StatCategory> end;
 
-		public KeyedStat(Class<? extends StatCategory> start,
-				Class<? extends StatCategory> end, StatCategory category) {
-			this.start = start;
-			this.end = end;
-			this.category = category;
-		}
+        private StatCategory category;
 
-		@Override
-		public StatCategory category() {
-			return category;
-		}
+        public KeyedStat(Class<? extends StatCategory> start, Class<? extends StatCategory> end) {
+            this(start, end, Reflections.newInstance(end));
+        }
 
-		@Override
-		public String findEndLine() {
-			Matcher matcher = getMatcher(endCategory());
-			if (matcher.find()) {
-				return matcher.group();
-			} else {
-				return null;
-			}
-		}
+        public KeyedStat(Class<? extends StatCategory> start, Class<? extends StatCategory> end, StatCategory category) {
+            this.start = start;
+            this.end = end;
+            this.category = category;
+        }
 
-		@Override
-		public String findStartLine() {
-			Matcher matcher = getMatcher(startCategory());
-			if (matcher.find()) {
-				return matcher.group();
-			} else {
-				return null;
-			}
-		}
+        @Override
+        public StatCategory category() {
+            return category;
+        }
 
-		public List<String> listStats() {
-			Matcher startMatcher = getMatcher(startCategory());
-			Matcher endMatcher = getMatcher(endCategory());
-			List<String> result = new ArrayList<>();
-			int lastEnd = -1;
-			int lastStart = -1;
-			while (startMatcher.find()) {
-				int start = startMatcher.start();
-				flush(lastStart, lastEnd, start, result);
-				lastStart = start;
-				while (endMatcher.find()) {
-					if (endMatcher.start() > lastStart) {
-						lastEnd = endMatcher.end();
-						break;
-					}
-				}
-			}
-			flush(lastStart, lastEnd, -1, result);
-			return result;
-		}
+        @Override
+        public String findEndLine() {
+            Matcher matcher = getMatcher(endCategory());
+            if (matcher.find()) {
+                return matcher.group();
+            } else {
+                return null;
+            }
+        }
 
-		private void flush(int lastStart, int lastEnd, int start,
-				List<String> result) {
-			if (lastStart == -1 || lastEnd == -1) {
-				return;
-			}
-			if (start == -1 || lastEnd < start) {
-				result.add(getLogProvider().getLog().substring(lastStart,
-						lastEnd));
-			}
-		}
+        @Override
+        public String findStartLine() {
+            Matcher matcher = getMatcher(startCategory());
+            if (matcher.find()) {
+                return matcher.group();
+            } else {
+                return null;
+            }
+        }
 
-		private Matcher getMatcher(Class<? extends StatCategory> category) {
-			String regex = Ax.format(
-					"[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3} .*\\[alc-%s\\].+",
-					category.getCanonicalName());
-			return Pattern.compile(regex).matcher(getLogProvider().getLog());
-		}
+        public List<String> listStats() {
+            Matcher startMatcher = getMatcher(startCategory());
+            Matcher endMatcher = getMatcher(endCategory());
+            List<String> result = new ArrayList<>();
+            int lastEnd = -1;
+            int lastStart = -1;
+            while (startMatcher.find()) {
+                int start = startMatcher.start();
+                flush(lastStart, lastEnd, start, result);
+                lastStart = start;
+                while (endMatcher.find()) {
+                    if (endMatcher.start() > lastStart) {
+                        lastEnd = endMatcher.end();
+                        break;
+                    }
+                }
+            }
+            flush(lastStart, lastEnd, -1, result);
+            return result;
+        }
 
-		protected Class<? extends StatCategory> endCategory() {
-			return end;
-		}
+        private void flush(int lastStart, int lastEnd, int start, List<String> result) {
+            if (lastStart == -1 || lastEnd == -1) {
+                return;
+            }
+            if (start == -1 || lastEnd < start) {
+                result.add(getLogProvider().getLog().substring(lastStart, lastEnd));
+            }
+        }
 
-		protected Class<? extends StatCategory> startCategory() {
-			return start;
-		}
-	}
+        private Matcher getMatcher(Class<? extends StatCategory> category) {
+            String regex = Ax.format("[0-9]{2}:[0-9]{2}:[0-9]{2},[0-9]{3} .*\\[alc-%s\\].+", category.getCanonicalName());
+            return Pattern.compile(regex).matcher(getLogProvider().getLog());
+        }
 
-	@FunctionalInterface
-	public interface LogProvider {
-		public String getLog();
+        protected Class<? extends StatCategory> endCategory() {
+            return end;
+        }
 
-		public static class StringLogProvider implements LogProvider {
-			private String log;
+        protected Class<? extends StatCategory> startCategory() {
+            return start;
+        }
+    }
 
-			public StringLogProvider(String log) {
-				this.log = log;
-			}
+    @FunctionalInterface
+    public interface LogProvider {
 
-			@Override
-			public String getLog() {
-				return this.log;
-			}
+        public String getLog();
 
-			public void setLog(String log) {
-				this.log = log;
-			}
-		}
-	}
+        public static class StringLogProvider implements LogProvider {
 
-	@RegistryLocation(registryPoint = StatProvider.class)
-	public static abstract class StatProvider {
-		private LogProvider logProvider;
+            private String log;
 
-		public abstract StatCategory category();
+            public StringLogProvider(String log) {
+                this.log = log;
+            }
 
-		public abstract String findEndLine();
+            @Override
+            public String getLog() {
+                return this.log;
+            }
 
-		public abstract String findStartLine();
+            public void setLog(String log) {
+                this.log = log;
+            }
+        }
+    }
 
-		public Stat generate(LogProvider logProvider) {
-			this.logProvider = logProvider;
-			String startLine = findStartLine();
-			String endLine = findEndLine();
-			if (startLine == null || endLine == null) {
-				return null;
-			}
-			Stat stat = new Stat();
-			stat.provider = this;
-			stat.start = parseTime(startLine).getTime();
-			stat.end = parseTime(endLine).getTime();
-			return stat;
-		}
+    @RegistryLocation(registryPoint = StatProvider.class)
+    @Registration(StatProvider.class)
+    public static abstract class StatProvider {
 
-		public LogProvider getLogProvider() {
-			return this.logProvider;
-		}
+        private LogProvider logProvider;
 
-		public void setLogProvider(LogProvider logProvider) {
-			this.logProvider = logProvider;
-		}
+        public abstract StatCategory category();
 
-		protected int depth() {
-			return category().depth();
-		}
+        public abstract String findEndLine();
 
-		protected boolean isParallel() {
-			return false;
-		}
+        public abstract String findStartLine();
 
-		protected Date parseTime(String line) {
-			String datePart = line.replaceFirst("^(\\S+)\\s+.*$", "$1");
-			try {
-				return new SimpleDateFormat("HH:mm:ss,SSS").parse(datePart);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
+        public Stat generate(LogProvider logProvider) {
+            this.logProvider = logProvider;
+            String startLine = findStartLine();
+            String endLine = findEndLine();
+            if (startLine == null || endLine == null) {
+                return null;
+            }
+            Stat stat = new Stat();
+            stat.provider = this;
+            stat.start = parseTime(startLine).getTime();
+            stat.end = parseTime(endLine).getTime();
+            return stat;
+        }
 
-	public static class StatResults {
-		List<Stat> stats;
+        public LogProvider getLogProvider() {
+            return this.logProvider;
+        }
 
-		private String template = "%-30s %20s\n";
+        public void setLogProvider(LogProvider logProvider) {
+            this.logProvider = logProvider;
+        }
 
-		public void dump() {
-			dump(false);
-		}
+        protected int depth() {
+            return category().depth();
+        }
 
-		public void dump(boolean withMissed) {
-			System.out.println(dumpString(withMissed));
-		}
+        protected boolean isParallel() {
+            return false;
+        }
 
-		public String dumpString(boolean withMissed) {
-			Collections.sort(stats);
-			StringBuilder sb = new StringBuilder();
-			sb.append(String.format(template, "Stat", "Duration"));
-			int maxDepth = stats.stream().map(Stat::depth)
-					.max(Comparator.naturalOrder()).get();
-			for (int depth = maxDepth; depth > 0; depth--) {
-				for (Stat stat : stats) {
-					if (stat.depth() == depth) {
-						for (Stat parent : stats) {
-							if (parent.depth() == depth - 1
-									&& parent.start <= stat.start
-									&& parent.end >= stat.end) {
-								parent.childDuration += stat.duration();
-							}
-						}
-					}
-				}
-			}
-			for (Stat stat : stats) {
-				String prefix = CommonUtils.padStringLeft("", stat.depth(),
-						' ');
-				sb.append(String.format(template, prefix + stat.name(),
-						stat.duration()));
-			}
-			if (withMissed) {
-				sb.append("\n");
-				sb.append(String.format(template, "Stat", "Missed"));
-				for (Stat stat : stats) {
-					if (stat.duration() == stat.childDuration
-							|| stat.childDuration == 0) {
-						continue;
-					}
-					String prefix = CommonUtils.padStringLeft("", stat.depth(),
-							' ');
-					long diff = stat.duration() - stat.childDuration;
-					sb.append(String.format(template, prefix + stat.name(),
-							diff + " : " + String.format("%.2f",
-									((double) diff) / stat.duration() * 100)));
-				}
-			}
-			return sb.toString();
-		}
+        protected Date parseTime(String line) {
+            String datePart = line.replaceFirst("^(\\S+)\\s+.*$", "$1");
+            try {
+                return new SimpleDateFormat("HH:mm:ss,SSS").parse(datePart);
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            }
+        }
+    }
 
-		public Date getStartTime() {
-			return new Date(stats.get(0).start);
-		}
+    public static class StatResults {
 
-		public void save() {
-		}
-	}
+        List<Stat> stats;
 
-	static class Stat implements Comparable<Stat> {
-		public StatProvider provider;
+        private String template = "%-30s %20s\n";
 
-		long start;
+        public void dump() {
+            dump(false);
+        }
 
-		long end;
+        public void dump(boolean withMissed) {
+            System.out.println(dumpString(withMissed));
+        }
 
-		long childDuration;
+        public String dumpString(boolean withMissed) {
+            Collections.sort(stats);
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format(template, "Stat", "Duration"));
+            int maxDepth = stats.stream().map(Stat::depth).max(Comparator.naturalOrder()).get();
+            for (int depth = maxDepth; depth > 0; depth--) {
+                for (Stat stat : stats) {
+                    if (stat.depth() == depth) {
+                        for (Stat parent : stats) {
+                            if (parent.depth() == depth - 1 && parent.start <= stat.start && parent.end >= stat.end) {
+                                parent.childDuration += stat.duration();
+                            }
+                        }
+                    }
+                }
+            }
+            for (Stat stat : stats) {
+                String prefix = CommonUtils.padStringLeft("", stat.depth(), ' ');
+                sb.append(String.format(template, prefix + stat.name(), stat.duration()));
+            }
+            if (withMissed) {
+                sb.append("\n");
+                sb.append(String.format(template, "Stat", "Missed"));
+                for (Stat stat : stats) {
+                    if (stat.duration() == stat.childDuration || stat.childDuration == 0) {
+                        continue;
+                    }
+                    String prefix = CommonUtils.padStringLeft("", stat.depth(), ' ');
+                    long diff = stat.duration() - stat.childDuration;
+                    sb.append(String.format(template, prefix + stat.name(), diff + " : " + String.format("%.2f", ((double) diff) / stat.duration() * 100)));
+                }
+            }
+            return sb.toString();
+        }
 
-		@Override
-		public int compareTo(Stat o) {
-			int compareStart = CommonUtils.compareLongs(start, o.start);
-			if (compareStart != 0) {
-				return compareStart;
-			}
-			int compareEnd = CommonUtils.compareLongs(end, o.end);
-			return -compareEnd;
-		}
+        public Date getStartTime() {
+            return new Date(stats.get(0).start);
+        }
 
-		public int depth() {
-			return provider.depth();
-		}
+        public void save() {
+        }
+    }
 
-		public long duration() {
-			return end - start;
-		}
+    static class Stat implements Comparable<Stat> {
 
-		public String name() {
-			return provider.category().name();
-		}
-	}
+        public StatProvider provider;
+
+        long start;
+
+        long end;
+
+        long childDuration;
+
+        @Override
+        public int compareTo(Stat o) {
+            int compareStart = CommonUtils.compareLongs(start, o.start);
+            if (compareStart != 0) {
+                return compareStart;
+            }
+            int compareEnd = CommonUtils.compareLongs(end, o.end);
+            return -compareEnd;
+        }
+
+        public int depth() {
+            return provider.depth();
+        }
+
+        public long duration() {
+            return end - start;
+        }
+
+        public String name() {
+            return provider.category().name();
+        }
+    }
 }

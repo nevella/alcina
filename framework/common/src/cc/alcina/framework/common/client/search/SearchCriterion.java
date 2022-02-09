@@ -14,9 +14,7 @@
 package cc.alcina.framework.common.client.search;
 
 import java.util.Collection;
-
 import javax.xml.bind.annotation.XmlTransient;
-
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -36,124 +34,121 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
+import cc.alcina.framework.common.client.logic.reflection.Registrations;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @Bean(allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
-@RegistryLocations({
-		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
-		@RegistryLocation(registryPoint = TreeSerializable.class) })
-public abstract class SearchCriterion extends Bindable
-		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion>,
-		TreeSerializable {
-	public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class
-			+ ".CONTEXT_ENSURE_DISPLAY_NAME";
+@RegistryLocations({ @RegistryLocation(registryPoint = JaxbContextRegistration.class), @RegistryLocation(registryPoint = TreeSerializable.class) })
+@Registrations({ @Registration(JaxbContextRegistration.class), @Registration(TreeSerializable.class) })
+public abstract class SearchCriterion extends Bindable implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion>, TreeSerializable {
 
-	// TODO: great big injection hole here - should be checked server-side
-	// FIXED: - transient, and set in the server validation phase
-	private transient String targetPropertyName;
+    public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class + ".CONTEXT_ENSURE_DISPLAY_NAME";
 
-	private String displayName;
+    // TODO: great big injection hole here - should be checked server-side
+    // FIXED: - transient, and set in the server validation phase
+    private transient String targetPropertyName;
 
-	private StandardSearchOperator operator;
+    private String displayName;
 
-	public SearchCriterion() {
-	}
+    private StandardSearchOperator operator;
 
-	public SearchCriterion(String displayName) {
-		this.displayName = displayName;
-	}
+    public SearchCriterion() {
+    }
 
-	public void addToSoleCriteriaGroup(SearchDefinition def) {
-		def.addCriterionToSoleCriteriaGroup(this);
-	}
+    public SearchCriterion(String displayName) {
+        this.displayName = displayName;
+    }
 
-	public CollectionProvider collectionProvider() {
-		return null;
-	}
+    public void addToSoleCriteriaGroup(SearchDefinition def) {
+        def.addCriterionToSoleCriteriaGroup(this);
+    }
 
-	public boolean emptyCriterion() {
-		if ((this instanceof HasValue)) {
-			Object value = ((HasValue) this).getValue();
-			if (value instanceof Collection) {
-				return ((Collection) value).isEmpty();
-			} else {
-				return value == null;
-			}
-		}
-		return false;
-	}
+    public CollectionProvider collectionProvider() {
+        return null;
+    }
 
-	public EqlWithParameters eql() {
-		return null;
-	}
+    public boolean emptyCriterion() {
+        if ((this instanceof HasValue)) {
+            Object value = ((HasValue) this).getValue();
+            if (value instanceof Collection) {
+                return ((Collection) value).isEmpty();
+            } else {
+                return value == null;
+            }
+        }
+        return false;
+    }
 
-	@Override
-	@AlcinaTransient
-	@HasReflectiveEquivalence.Ignore
-	public String getDisplayName() {
-		if (CommonUtils.isNullOrEmpty(displayName)
-				&& LooseContext.is(CONTEXT_ENSURE_DISPLAY_NAME)) {
-			return CommonUtils.simpleClassName(getClass());
-		}
-		return this.displayName;
-	}
+    public EqlWithParameters eql() {
+        return null;
+    }
 
-	@PropertySerialization(path = "op")
-	public StandardSearchOperator getOperator() {
-		return this.operator;
-	}
+    @Override
+    @AlcinaTransient
+    @HasReflectiveEquivalence.Ignore
+    public String getDisplayName() {
+        if (CommonUtils.isNullOrEmpty(displayName) && LooseContext.is(CONTEXT_ENSURE_DISPLAY_NAME)) {
+            return CommonUtils.simpleClassName(getClass());
+        }
+        return this.displayName;
+    }
 
-	@AlcinaTransient
-	@XmlTransient
-	public String getTargetPropertyName() {
-		return targetPropertyName;
-	}
+    @PropertySerialization(path = "op")
+    public StandardSearchOperator getOperator() {
+        return this.operator;
+    }
 
-	public String provideValueAsRenderableText() {
-		return toString();
-	}
+    @AlcinaTransient
+    @XmlTransient
+    public String getTargetPropertyName() {
+        return targetPropertyName;
+    }
 
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
-	}
+    public String provideValueAsRenderableText() {
+        return toString();
+    }
 
-	public void setOperator(StandardSearchOperator operator) {
-		StandardSearchOperator old_operator = this.operator;
-		this.operator = operator;
-		propertyChangeSupport().firePropertyChange("operator", old_operator,
-				operator);
-	}
+    public void setDisplayName(String displayName) {
+        this.displayName = displayName;
+    }
 
-	public void setTargetPropertyName(String propertyName) {
-		this.targetPropertyName = propertyName;
-	}
+    public void setOperator(StandardSearchOperator operator) {
+        StandardSearchOperator old_operator = this.operator;
+        this.operator = operator;
+        propertyChangeSupport().firePropertyChange("operator", old_operator, operator);
+    }
 
-	public String toHtml() {
-		return toString();
-	}
+    public void setTargetPropertyName(String propertyName) {
+        this.targetPropertyName = propertyName;
+    }
 
-	public SearchCriterion withOperator(StandardSearchOperator operator) {
-		setOperator(operator);
-		return this;
-	}
+    public String toHtml() {
+        return toString();
+    }
 
-	protected String targetPropertyNameWithTable() {
-		String targetPropertyName = getTargetPropertyName();
-		if (targetPropertyName == null || targetPropertyName.contains(".")) {
-			return targetPropertyName;
-		}
-		return "t." + targetPropertyName;
-	}
+    public SearchCriterion withOperator(StandardSearchOperator operator) {
+        setOperator(operator);
+        return this;
+    }
 
-	/**
-	 * Can also apply to things like date criteria, not just order - so leave
-	 * here rather than in OrderCriterion
-	 * 
-	 * @author nick@alcina.cc
-	 * 
-	 */
-	@ClientInstantiable
-	public enum Direction {
-		ASCENDING, DESCENDING
-	}
+    protected String targetPropertyNameWithTable() {
+        String targetPropertyName = getTargetPropertyName();
+        if (targetPropertyName == null || targetPropertyName.contains(".")) {
+            return targetPropertyName;
+        }
+        return "t." + targetPropertyName;
+    }
+
+    /**
+     * Can also apply to things like date criteria, not just order - so leave
+     * here rather than in OrderCriterion
+     *
+     * @author nick@alcina.cc
+     */
+    @ClientInstantiable
+    public enum Direction {
+
+        ASCENDING, DESCENDING
+    }
 }

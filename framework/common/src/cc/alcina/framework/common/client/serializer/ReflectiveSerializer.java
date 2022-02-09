@@ -13,10 +13,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Function;
-
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
@@ -40,6 +38,7 @@ import elemental.json.JsonObject;
 import elemental.json.JsonString;
 import elemental.json.JsonType;
 import elemental.json.JsonValue;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * <p>
@@ -74,784 +73,734 @@ import elemental.json.JsonValue;
  * </ul>
  * </ul>
  *
- *
  * @author nick@alcina.cc
- *
  */
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializer {
-	private static Map<Class, TypeSerializer> typeSerializers = Registry
-			.impl(ConcurrentMapCreator.class).create();
 
-	public static <T> T clone(T object) {
-		return (T) deserialize(serialize(object));
-	}
+    private static Map<Class, TypeSerializer> typeSerializers = Registry.impl(ConcurrentMapCreator.class).create();
 
-	public static <T> T deserialize(String value) {
-		DeserializerOptions options = new DeserializerOptions();
-		return deserialize(value, options);
-	}
+    public static <T> T clone(T object) {
+        return (T) deserialize(serialize(object));
+    }
 
-	public static <T> T deserialize(String value, DeserializerOptions options) {
-		try {
-			LooseContext.pushWithTrue(FlatTreeSerializer.CONTEXT_DESERIALIZING);
-			if (value == null) {
-				return null;
-			}
-			JsonSerialNode.ensureValueSerializers();
-			State state = new State();
-			state.serializationSupport = SerializationSupport.deserializationInstance;
-			state.deserializerOptions = options;
-			// create json doc
-			GraphNode node = new GraphNode(null, null, null);
-			node.state = state;
-			SerialNode root = JsonSerialNode.fromJson(value);
-			node.serialNode = root;
-			state.pending.add(node);
-			new ReflectiveSerializer(state).deserialize(node);
-			return (T) node.value;
-		} finally {
-			LooseContext.pop();
-		}
-	}
+    public static <T> T deserialize(String value) {
+        DeserializerOptions options = new DeserializerOptions();
+        return deserialize(value, options);
+    }
 
-	public static String serialize(Object object) {
-		return serialize(object,
-				new SerializerOptions().withElideDefaults(true));
-	}
+    public static <T> T deserialize(String value, DeserializerOptions options) {
+        try {
+            LooseContext.pushWithTrue(FlatTreeSerializer.CONTEXT_DESERIALIZING);
+            if (value == null) {
+                return null;
+            }
+            JsonSerialNode.ensureValueSerializers();
+            State state = new State();
+            state.serializationSupport = SerializationSupport.deserializationInstance;
+            state.deserializerOptions = options;
+            // create json doc
+            GraphNode node = new GraphNode(null, null, null);
+            node.state = state;
+            SerialNode root = JsonSerialNode.fromJson(value);
+            node.serialNode = root;
+            state.pending.add(node);
+            new ReflectiveSerializer(state).deserialize(node);
+            return (T) node.value;
+        } finally {
+            LooseContext.pop();
+        }
+    }
 
-	public static String serialize(Object object, SerializerOptions options) {
-		if (object == null) {
-			return null;
-		}
-		JsonSerialNode.ensureValueSerializers();
-		State state = new State();
-		state.serializerOptions = options;
-		state.serializationSupport = SerializationSupport
-				.serializationInstance();
-		GraphNode node = new GraphNode(null, null, null);
-		node.state = state;
-		node.setValue(object);
-		SerialNode root = JsonSerialNode.empty();
-		node.serialNode = root;
-		node.serialNode.writeTypeName(object.getClass());
-		node.writeValue();
-		state.pending.add(node);
-		ReflectiveSerializer serializer = new ReflectiveSerializer(state);
-		serializer.serialize0();
-		return root.toJson();
-	}
+    public static String serialize(Object object) {
+        return serialize(object, new SerializerOptions().withElideDefaults(true));
+    }
 
-	static TypeSerializer resolveSerializer(Class clazz, Class declaredType) {
-		if (typeSerializers.isEmpty()) {
-			synchronized (typeSerializers) {
-				if (typeSerializers.isEmpty()) {
-					Registry.impls(TypeSerializer.class)
-							.forEach(typeSerializer -> typeSerializer
-									.handlesTypes()
-									.forEach(handled -> typeSerializers
-											.put(handled, typeSerializer)));
-				}
-			}
-		}
-		Class lookupClass = serializationClass(clazz);
-		return typeSerializers.computeIfAbsent(lookupClass, k -> {
-			List<Class<?>> toResolve = Arrays.asList(lookupClass);
-			while (toResolve.size() > 0) {
-				Optional<Class<?>> match = toResolve.stream()
-						.filter(typeSerializers::containsKey).findFirst();
-				if (match.isPresent()) {
-					Class serializerType = match.get();
-					TypeSerializer typeSerializer = typeSerializers
-							.get(serializerType);
-					if (declaredType != null && !typeSerializer
-							.handlesDeclaredTypeSubclasses()) {
-						if (serializerType != Enum.class
-								&& serializerType != Entity.class
-								&& !Reflections.isAssignableFrom(declaredType,
-										serializerType)) {
-							throw new IllegalStateException(Ax.format(
-									"Declared type %s cannot be serialized by resolved serializer for type %s",
-									declaredType, serializerType));
-						}
-					}
-					return typeSerializer;
-				}
-				List<Class<?>> next = new ArrayList<>();
-				toResolve.forEach(c2 -> {
-					// implemented interfaces and superclass are at the same
-					// level, so to speak
-					if (c2.getSuperclass() != null) {
-						next.add(c2.getSuperclass());
-					}
-					Reflections.at(c2).getInterfaces().forEach(next::add);
-				});
-				toResolve = next;
-			}
-			Bean bean = Annotations.resolve(lookupClass, Bean.class);
-			boolean resolveWithReflectiveTypeSerializer = bean != null;
-			// FIXME - reflection - move isAssignable
-			if (!GWT.isClient()) {
-				resolveWithReflectiveTypeSerializer |= Reflections
-						.isAssignableFrom(TreeSerializable.class, lookupClass)
-						|| Reflections.isAssignableFrom(
-								ReflectiveSerializable.class, lookupClass);
-			}
-			if (resolveWithReflectiveTypeSerializer) {
-				return new ReflectiveTypeSerializer();
-			}
-			throw new IllegalArgumentException(
-					Ax.format("No serializer for type %s", lookupClass));
-		});
-	}
+    public static String serialize(Object object, SerializerOptions options) {
+        if (object == null) {
+            return null;
+        }
+        JsonSerialNode.ensureValueSerializers();
+        State state = new State();
+        state.serializerOptions = options;
+        state.serializationSupport = SerializationSupport.serializationInstance();
+        GraphNode node = new GraphNode(null, null, null);
+        node.state = state;
+        node.setValue(object);
+        SerialNode root = JsonSerialNode.empty();
+        node.serialNode = root;
+        node.serialNode.writeTypeName(object.getClass());
+        node.writeValue();
+        state.pending.add(node);
+        ReflectiveSerializer serializer = new ReflectiveSerializer(state);
+        serializer.serialize0();
+        return root.toJson();
+    }
 
-	static Class serializationClass(Class clazz) {
-		Class lookupClass = clazz.getSuperclass() != null
-				&& clazz.getSuperclass().isEnum()
-						? clazz = clazz.getSuperclass()
-						: clazz;
-		return lookupClass;
-	}
+    static TypeSerializer resolveSerializer(Class clazz, Class declaredType) {
+        if (typeSerializers.isEmpty()) {
+            synchronized (typeSerializers) {
+                if (typeSerializers.isEmpty()) {
+                    Registry.impls(TypeSerializer.class).forEach(typeSerializer -> typeSerializer.handlesTypes().forEach(handled -> typeSerializers.put(handled, typeSerializer)));
+                }
+            }
+        }
+        Class lookupClass = serializationClass(clazz);
+        return typeSerializers.computeIfAbsent(lookupClass, k -> {
+            List<Class<?>> toResolve = Arrays.asList(lookupClass);
+            while (toResolve.size() > 0) {
+                Optional<Class<?>> match = toResolve.stream().filter(typeSerializers::containsKey).findFirst();
+                if (match.isPresent()) {
+                    Class serializerType = match.get();
+                    TypeSerializer typeSerializer = typeSerializers.get(serializerType);
+                    if (declaredType != null && !typeSerializer.handlesDeclaredTypeSubclasses()) {
+                        if (serializerType != Enum.class && serializerType != Entity.class && !Reflections.isAssignableFrom(declaredType, serializerType)) {
+                            throw new IllegalStateException(Ax.format("Declared type %s cannot be serialized by resolved serializer for type %s", declaredType, serializerType));
+                        }
+                    }
+                    return typeSerializer;
+                }
+                List<Class<?>> next = new ArrayList<>();
+                toResolve.forEach(c2 -> {
+                    // implemented interfaces and superclass are at the same
+                    // level, so to speak
+                    if (c2.getSuperclass() != null) {
+                        next.add(c2.getSuperclass());
+                    }
+                    Reflections.at(c2).getInterfaces().forEach(next::add);
+                });
+                toResolve = next;
+            }
+            Bean bean = Annotations.resolve(lookupClass, Bean.class);
+            boolean resolveWithReflectiveTypeSerializer = bean != null;
+            // FIXME - reflection - move isAssignable
+            if (!GWT.isClient()) {
+                resolveWithReflectiveTypeSerializer |= Reflections.isAssignableFrom(TreeSerializable.class, lookupClass) || Reflections.isAssignableFrom(ReflectiveSerializable.class, lookupClass);
+            }
+            if (resolveWithReflectiveTypeSerializer) {
+                return new ReflectiveTypeSerializer();
+            }
+            throw new IllegalArgumentException(Ax.format("No serializer for type %s", lookupClass));
+        });
+    }
 
-	State state;
+    static Class serializationClass(Class clazz) {
+        Class lookupClass = clazz.getSuperclass() != null && clazz.getSuperclass().isEnum() ? clazz = clazz.getSuperclass() : clazz;
+        return lookupClass;
+    }
 
-	private ReflectiveSerializer(State state) {
-		this.state = state;
-	}
+    State state;
 
-	private void deserialize(GraphNode root) {
-		do {
-			GraphNode node = state.pending.peek();
-			node.readValue();
-			Iterator<GraphNode> itr = node.iterator;
-			if (itr != null && itr.hasNext()) {
-				GraphNode next = itr.next();
-				state.pending.push(next);
-			} else {
-				node.deserializationComplete();
-				state.pending.pop();
-			}
-		} while (state.pending.size() > 0);
-	}
+    private ReflectiveSerializer(State state) {
+        this.state = state;
+    }
 
-	private void serialize0() {
-		do {
-			GraphNode node = state.pending.peek();
-			node.ensureValueWritten();
-			Iterator<GraphNode> itr = node.iterator;
-			if (itr != null && itr.hasNext()) {
-				GraphNode next = itr.next();
-				state.pending.push(next);
-			} else {
-				state.pending.pop();
-			}
-		} while (state.pending.size() > 0);
-	}
+    private void deserialize(GraphNode root) {
+        do {
+            GraphNode node = state.pending.peek();
+            node.readValue();
+            Iterator<GraphNode> itr = node.iterator;
+            if (itr != null && itr.hasNext()) {
+                GraphNode next = itr.next();
+                state.pending.push(next);
+            } else {
+                node.deserializationComplete();
+                state.pending.pop();
+            }
+        } while (state.pending.size() > 0);
+    }
 
-	protected PropertySerialization getPropertySerialization(Class<?> clazz,
-			String propertyName) {
-		TypeSerialization typeSerialization = Annotations.resolve(clazz,
-				TypeSerialization.class);
-		PropertySerialization annotation = null;
-		if (typeSerialization != null) {
-			for (PropertySerialization p : typeSerialization.properties()) {
-				if (p.name().equals(propertyName)) {
-					annotation = p;
-					break;
-				}
-			}
-		}
-		if (annotation == null) {
-			annotation = Annotations.resolve(clazz, propertyName,
-					PropertySerialization.class);
-		}
-		return annotation;
-	}
+    private void serialize0() {
+        do {
+            GraphNode node = state.pending.peek();
+            node.ensureValueWritten();
+            Iterator<GraphNode> itr = node.iterator;
+            if (itr != null && itr.hasNext()) {
+                GraphNode next = itr.next();
+                state.pending.push(next);
+            } else {
+                state.pending.pop();
+            }
+        } while (state.pending.size() > 0);
+    }
 
-	public static class DeserializerOptions {
-	}
+    protected PropertySerialization getPropertySerialization(Class<?> clazz, String propertyName) {
+        TypeSerialization typeSerialization = Annotations.resolve(clazz, TypeSerialization.class);
+        PropertySerialization annotation = null;
+        if (typeSerialization != null) {
+            for (PropertySerialization p : typeSerialization.properties()) {
+                if (p.name().equals(propertyName)) {
+                    annotation = p;
+                    break;
+                }
+            }
+        }
+        if (annotation == null) {
+            annotation = Annotations.resolve(clazz, propertyName, PropertySerialization.class);
+        }
+        return annotation;
+    }
 
-	public interface ReflectiveSerializable {
-	}
+    public static class DeserializerOptions {
+    }
 
-	public static class ReflectiveTypeSerializer extends TypeSerializer {
-		@Override
-		public void childDeserializationComplete(GraphNode graphNode,
-				GraphNode child) {
-			child.property.set(graphNode.value, child.value);
-		}
+    public interface ReflectiveSerializable {
+    }
 
-		@Override
-		public boolean handlesDeclaredTypeSubclasses() {
-			return true;
-		}
+    public static class ReflectiveTypeSerializer extends TypeSerializer {
 
-		@Override
-		public List<Class> handlesTypes() {
-			return Collections.emptyList();
-		}
+        @Override
+        public void childDeserializationComplete(GraphNode graphNode, GraphNode child) {
+            child.property.set(graphNode.value, child.value);
+        }
 
-		@Override
-		public Iterator<GraphNode> readIterator(GraphNode node) {
-			return new PropertyIterator(node);
-		}
+        @Override
+        public boolean handlesDeclaredTypeSubclasses() {
+            return true;
+        }
 
-		@Override
-		public Object readValue(GraphNode graphNode) {
-			return Reflections.newInstance(graphNode.type);
-		}
+        @Override
+        public List<Class> handlesTypes() {
+            return Collections.emptyList();
+        }
 
-		@Override
-		public Class serializeAs(Class incoming) {
-			return incoming;
-		}
+        @Override
+        public Iterator<GraphNode> readIterator(GraphNode node) {
+            return new PropertyIterator(node);
+        }
 
-		@Override
-		public Iterator<GraphNode> writeIterator(GraphNode node) {
-			Iterator<Property> iterator = node.state.serializationSupport
-					.getProperties(node.value).iterator();
-			Object templateInstance = Reflections.at(node.type)
-					.templateInstance();
-			FilteringIterator<Property> filteringIterator = new FilteringIterator<>(
-					iterator, p -> {
-						if (!node.state.serializerOptions.elideDefaults) {
-							return true;
-						}
-						Object childValue = p.get(node.value);
-						Object templateValue = p.get(templateInstance);
-						return !Objects.equals(childValue, templateValue);
-					});
-			return new MappingIterator<Property, GraphNode>(filteringIterator,
-					new ReflectiveSerializer.GraphNodeMappingProperty(node));
-		}
+        @Override
+        public Object readValue(GraphNode graphNode) {
+            return Reflections.newInstance(graphNode.type);
+        }
 
-		@Override
-		public void writeValueOrContainer(GraphNode node,
-				SerialNode serialNode) {
-			node.type = serializeAs(node.value.getClass());
-			ReflectiveSerializer.SerialNode container = serialNode
-					.createPropertyContainer();
-			serialNode.write(node, container);
-			node.serialNode = container;
-		}
-	}
+        @Override
+        public Class serializeAs(Class incoming) {
+            return incoming;
+        }
 
-	public static class SerializerOptions {
-		boolean elideDefaults;
+        @Override
+        public Iterator<GraphNode> writeIterator(GraphNode node) {
+            Iterator<Property> iterator = node.state.serializationSupport.getProperties(node.value).iterator();
+            Object templateInstance = Reflections.at(node.type).templateInstance();
+            FilteringIterator<Property> filteringIterator = new FilteringIterator<>(iterator, p -> {
+                if (!node.state.serializerOptions.elideDefaults) {
+                    return true;
+                }
+                Object childValue = p.get(node.value);
+                Object templateValue = p.get(templateInstance);
+                return !Objects.equals(childValue, templateValue);
+            });
+            return new MappingIterator<Property, GraphNode>(filteringIterator, new ReflectiveSerializer.GraphNodeMappingProperty(node));
+        }
 
-		public SerializerOptions withElideDefaults(boolean elideDefaults) {
-			this.elideDefaults = elideDefaults;
-			return this;
-		}
-	}
+        @Override
+        public void writeValueOrContainer(GraphNode node, SerialNode serialNode) {
+            node.type = serializeAs(node.value.getClass());
+            ReflectiveSerializer.SerialNode container = serialNode.createPropertyContainer();
+            serialNode.write(node, container);
+            node.serialNode = container;
+        }
+    }
 
-	@RegistryLocation(registryPoint = TypeSerializer.class)
-	@Bean
-	public static abstract class TypeSerializer {
-		public void childDeserializationComplete(GraphNode graphNode,
-				GraphNode child) {
-		}
+    public static class SerializerOptions {
 
-		public void deserializationComplete(GraphNode graphNode) {
-			if (graphNode.parent != null) {
-				graphNode.parent.serializer.childDeserializationComplete(
-						graphNode.parent, graphNode);
-			}
-		}
+        boolean elideDefaults;
 
-		public boolean handlesDeclaredTypeSubclasses() {
-			return false;
-		}
+        public SerializerOptions withElideDefaults(boolean elideDefaults) {
+            this.elideDefaults = elideDefaults;
+            return this;
+        }
+    }
 
-		public abstract List<Class> handlesTypes();
+    @RegistryLocation(registryPoint = TypeSerializer.class)
+    @Bean
+    @Registration(TypeSerializer.class)
+    public static abstract class TypeSerializer {
 
-		public boolean isReferenceSerializer() {
-			return true;
-		}
+        public void childDeserializationComplete(GraphNode graphNode, GraphNode child) {
+        }
 
-		public abstract Iterator<GraphNode> readIterator(GraphNode node);
+        public void deserializationComplete(GraphNode graphNode) {
+            if (graphNode.parent != null) {
+                graphNode.parent.serializer.childDeserializationComplete(graphNode.parent, graphNode);
+            }
+        }
 
-		public abstract Object readValue(GraphNode graphNode);
+        public boolean handlesDeclaredTypeSubclasses() {
+            return false;
+        }
 
-		public abstract Class serializeAs(Class incoming);
+        public abstract List<Class> handlesTypes();
 
-		public abstract Iterator<GraphNode> writeIterator(GraphNode node);
+        public boolean isReferenceSerializer() {
+            return true;
+        }
 
-		public abstract void writeValueOrContainer(GraphNode node,
-				SerialNode serialNode);
-	}
+        public abstract Iterator<GraphNode> readIterator(GraphNode node);
 
-	@RegistryLocation(registryPoint = ValueSerializer.class)
-	@Bean
-	public static abstract class ValueSerializer<T> {
-		public abstract List<Class> serializesTypes();
+        public abstract Object readValue(GraphNode graphNode);
 
-		protected T fromJson(Class<? extends T> clazz, JsonValue value) {
-			switch (value.getType()) {
-			case NULL:
-				return null;
-			case BOOLEAN:
-				return fromJsonBoolean((JsonBoolean) value);
-			case NUMBER:
-				return fromJsonNumber((JsonNumber) value);
-			case STRING:
-				return fromJsonString(clazz, (JsonString) value);
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
+        public abstract Class serializeAs(Class incoming);
 
-		protected T fromJsonBoolean(JsonBoolean value) {
-			throw new UnsupportedOperationException();
-		}
+        public abstract Iterator<GraphNode> writeIterator(GraphNode node);
 
-		protected T fromJsonNumber(JsonNumber value) {
-			throw new UnsupportedOperationException();
-		}
+        public abstract void writeValueOrContainer(GraphNode node, SerialNode serialNode);
+    }
 
-		protected T fromJsonString(Class<? extends T> clazz, JsonString value) {
-			throw new UnsupportedOperationException();
-		}
+    @RegistryLocation(registryPoint = ValueSerializer.class)
+    @Bean
+    @Registration(ValueSerializer.class)
+    public static abstract class ValueSerializer<T> {
 
-		protected abstract JsonValue toJson(T object);
-	}
+        public abstract List<Class> serializesTypes();
 
-	static class GraphNode {
-		boolean consumedName;
+        protected T fromJson(Class<? extends T> clazz, JsonValue value) {
+            switch(value.getType()) {
+                case NULL:
+                    return null;
+                case BOOLEAN:
+                    return fromJsonBoolean((JsonBoolean) value);
+                case NUMBER:
+                    return fromJsonNumber((JsonNumber) value);
+                case STRING:
+                    return fromJsonString(clazz, (JsonString) value);
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
 
-		Object value;
+        protected T fromJsonBoolean(JsonBoolean value) {
+            throw new UnsupportedOperationException();
+        }
 
-		SerialNode serialNode;
+        protected T fromJsonNumber(JsonNumber value) {
+            throw new UnsupportedOperationException();
+        }
 
-		GraphNode parent;
+        protected T fromJsonString(Class<? extends T> clazz, JsonString value) {
+            throw new UnsupportedOperationException();
+        }
 
-		Iterator<GraphNode> iterator;
+        protected abstract JsonValue toJson(T object);
+    }
 
-		TypeSerializer serializer;
+    static class GraphNode {
 
-		String name;
+        boolean consumedName;
 
-		Property property;
+        Object value;
 
-		Class type;
+        SerialNode serialNode;
 
-		State state;
+        GraphNode parent;
 
-		PropertySerialization propertySerialization;
+        Iterator<GraphNode> iterator;
 
-		GraphNode(GraphNode parent, String name, Property property) {
-			this.parent = parent;
-			this.name = name;
-			this.property = property;
-			if (property != null) {
-				propertySerialization = Annotations.resolve(property,
-						PropertySerialization.class);
-			}
-			if (parent != null) {
-				state = parent.state;
-			}
-		}
+        TypeSerializer serializer;
 
-		public void deserializationComplete() {
-			if (serializer != null) {
-				serializer.deserializationComplete(this);
-			} else {
-				/*
+        String name;
+
+        Property property;
+
+        Class type;
+
+        State state;
+
+        PropertySerialization propertySerialization;
+
+        GraphNode(GraphNode parent, String name, Property property) {
+            this.parent = parent;
+            this.name = name;
+            this.property = property;
+            if (property != null) {
+                propertySerialization = Annotations.resolve(property, PropertySerialization.class);
+            }
+            if (parent != null) {
+                state = parent.state;
+            }
+        }
+
+        public void deserializationComplete() {
+            if (serializer != null) {
+                serializer.deserializationComplete(this);
+            } else {
+                /*
 				 * when deserializing an boject reference
 				 */
-				if (parent != null) {
-					parent.serializer.childDeserializationComplete(parent,
-							this);
-				}
-			}
-		}
+                if (parent != null) {
+                    parent.serializer.childDeserializationComplete(parent, this);
+                }
+            }
+        }
 
-		public Class knownType() {
-			Class type = null;
-			if (property == null) {
-				type = parentSerialization() != null
-						&& parentSerialization().types().length == 1
-								? parentSerialization().types()[0]
-								: null;
-			} else {
-				// FIXME - dirndl 1.3 - use annotationlocation to resolve sole
-				// type of property if possible
-				type = property.getType();
-			}
-			if (type == null) {
-				return null;
-			}
-			Class solePossibleImplementation = SerializationSupport
-					.solePossibleImplementation(type);
-			if (solePossibleImplementation != null) {
-				return solePossibleImplementation;
-			} else {
-				return null;
-			}
-		}
+        public Class knownType() {
+            Class type = null;
+            if (property == null) {
+                type = parentSerialization() != null && parentSerialization().types().length == 1 ? parentSerialization().types()[0] : null;
+            } else {
+                // FIXME - dirndl 1.3 - use annotationlocation to resolve sole
+                // type of property if possible
+                type = property.getType();
+            }
+            if (type == null) {
+                return null;
+            }
+            Class solePossibleImplementation = SerializationSupport.solePossibleImplementation(type);
+            if (solePossibleImplementation != null) {
+                return solePossibleImplementation;
+            } else {
+                return null;
+            }
+        }
 
-		public void readValue() {
-			if (value == null) {
-				type = knownType();
-				if (type == null || resolveSerializer(type, null)
-						.isReferenceSerializer()) {
-					int idx = serialNode.peekInt();
-					if (idx != -1) {
-						value = state.idxIdentity.get(idx);
-						return;
-					}
-				}
-				if (type == null) {
-					type = serialNode.readType(this);
-				}
-				serializer = resolveSerializer(type, null);
-				value = serializer.readValue(this);
-				if (serializer.isReferenceSerializer()) {
-					state.idxIdentity.put(state.idxIdentity.size(), value);
-				}
-				iterator = serializer.readIterator(this);
-			}
-		}
+        public void readValue() {
+            if (value == null) {
+                type = knownType();
+                if (type == null || resolveSerializer(type, null).isReferenceSerializer()) {
+                    int idx = serialNode.peekInt();
+                    if (idx != -1) {
+                        value = state.idxIdentity.get(idx);
+                        return;
+                    }
+                }
+                if (type == null) {
+                    type = serialNode.readType(this);
+                }
+                serializer = resolveSerializer(type, null);
+                value = serializer.readValue(this);
+                if (serializer.isReferenceSerializer()) {
+                    state.idxIdentity.put(state.idxIdentity.size(), value);
+                }
+                iterator = serializer.readIterator(this);
+            }
+        }
 
-		@Override
-		public String toString() {
-			String segment = Ax.format("[%s,%s]", name,
-					value == null ? null : value.getClass().getSimpleName());
-			return parent == null ? segment : parent.toString() + "." + segment;
-		}
+        @Override
+        public String toString() {
+            String segment = Ax.format("[%s,%s]", name, value == null ? null : value.getClass().getSimpleName());
+            return parent == null ? segment : parent.toString() + "." + segment;
+        }
 
-		private boolean hasFinalClass() {
-			if (value == null) {
-				return true;
-			}
-			return knownType() != null;
-		}
+        private boolean hasFinalClass() {
+            if (value == null) {
+                return true;
+            }
+            return knownType() != null;
+        }
 
-		int depth() {
-			return parent == null ? 0 : parent.depth() + 1;
-		}
+        int depth() {
+            return parent == null ? 0 : parent.depth() + 1;
+        }
 
-		void ensureValueWritten() {
-			if (serialNode == null) {
-				if (serializer.isReferenceSerializer()) {
-					Object idx = state.identityIdx.get(value);
-					if (idx != null) {
-						parent.serialNode.write(this, idx);
-						return;
-					}
-				}
-				if (!hasFinalClass()) {
-					serialNode = parent.serialNode
-							.writeClassValueContainer(name);
-					consumedName = true;
-					serialNode.writeTypeName(
-							serializer.serializeAs(value.getClass()));
-				}
-				writeValue();
-			}
-		}
+        void ensureValueWritten() {
+            if (serialNode == null) {
+                if (serializer.isReferenceSerializer()) {
+                    Object idx = state.identityIdx.get(value);
+                    if (idx != null) {
+                        parent.serialNode.write(this, idx);
+                        return;
+                    }
+                }
+                if (!hasFinalClass()) {
+                    serialNode = parent.serialNode.writeClassValueContainer(name);
+                    consumedName = true;
+                    serialNode.writeTypeName(serializer.serializeAs(value.getClass()));
+                }
+                writeValue();
+            }
+        }
 
-		PropertySerialization parentSerialization() {
-			return parent == null ? null : parent.propertySerialization;
-		}
+        PropertySerialization parentSerialization() {
+            return parent == null ? null : parent.propertySerialization;
+        }
 
-		void setValue(Object value) {
-			this.value = value;
-			serializer = resolveSerializer(
-					value == null ? void.class : value.getClass(),
-					property == null ? null : property.getType());
-		}
+        void setValue(Object value) {
+            this.value = value;
+            serializer = resolveSerializer(value == null ? void.class : value.getClass(), property == null ? null : property.getType());
+        }
 
-		void writeValue() {
-			serializer.writeValueOrContainer(this,
-					serialNode != null ? serialNode : parent.serialNode);
-			if (serializer.isReferenceSerializer()) {
-				state.identityIdx.put(value, state.identityIdx.size());
-			}
-			iterator = serializer.writeIterator(this);
-		}
-	}
+        void writeValue() {
+            serializer.writeValueOrContainer(this, serialNode != null ? serialNode : parent.serialNode);
+            if (serializer.isReferenceSerializer()) {
+                state.identityIdx.put(value, state.identityIdx.size());
+            }
+            iterator = serializer.writeIterator(this);
+        }
+    }
 
-	static class GraphNodeMappingCollection
-			implements Function<Object, GraphNode> {
-		private GraphNode node;
+    static class GraphNodeMappingCollection implements Function<Object, GraphNode> {
 
-		public GraphNodeMappingCollection(GraphNode node) {
-			this.node = node;
-		}
+        private GraphNode node;
 
-		@Override
-		public GraphNode apply(Object t) {
-			GraphNode graphNode = new GraphNode(node, null, null);
-			graphNode.setValue(t);
-			return graphNode;
-		}
-	}
+        public GraphNodeMappingCollection(GraphNode node) {
+            this.node = node;
+        }
 
-	static class GraphNodeMappingProperty
-			implements Function<Property, GraphNode> {
-		private GraphNode node;
+        @Override
+        public GraphNode apply(Object t) {
+            GraphNode graphNode = new GraphNode(node, null, null);
+            graphNode.setValue(t);
+            return graphNode;
+        }
+    }
 
-		public GraphNodeMappingProperty(GraphNode node) {
-			this.node = node;
-		}
+    static class GraphNodeMappingProperty implements Function<Property, GraphNode> {
 
-		@Override
-		public GraphNode apply(Property t) {
-			Property property = Reflections.at(node.value.getClass())
-					.property(t.getName());
-			GraphNode graphNode = new GraphNode(node, t.getName(), property);
-			graphNode.setValue(property.get(node.value));
-			return graphNode;
-		}
-	}
+        private GraphNode node;
 
-	static class JsonSerialNode implements SerialNode {
-		private static Map<Class, ValueSerializer> valueSerializers;
+        public GraphNodeMappingProperty(GraphNode node) {
+            this.node = node;
+        }
 
-		public static SerialNode empty() {
-			JsonSerialNode serialNode = new JsonSerialNode(Json.createArray());
-			return serialNode;
-		}
+        @Override
+        public GraphNode apply(Property t) {
+            Property property = Reflections.at(node.value.getClass()).property(t.getName());
+            GraphNode graphNode = new GraphNode(node, t.getName(), property);
+            graphNode.setValue(property.get(node.value));
+            return graphNode;
+        }
+    }
 
-		public static void ensureValueSerializers() {
-			if (valueSerializers == null) {
-				// don't bother with synchronization
-				Map<Class, ValueSerializer> valueSerializers = new LinkedHashMap<>();
-				Registry.impls(ValueSerializer.class).stream()
-						.forEach(vs -> vs.serializesTypes().forEach(
-								t -> valueSerializers.put((Class) t, vs)));
-				JsonSerialNode.valueSerializers = valueSerializers;
-			}
-		}
+    static class JsonSerialNode implements SerialNode {
 
-		public static SerialNode fromJson(String value) {
-			JsonSerialNode serialNode = new JsonSerialNode(
-					Json.instance().parse(value));
-			return serialNode;
-		}
+        private static Map<Class, ValueSerializer> valueSerializers;
 
-		public static SerialNode parse(String value) {
-			throw new UnsupportedOperationException();
-		}
+        public static SerialNode empty() {
+            JsonSerialNode serialNode = new JsonSerialNode(Json.createArray());
+            return serialNode;
+        }
 
-		JsonValue jsonValue;
+        public static void ensureValueSerializers() {
+            if (valueSerializers == null) {
+                // don't bother with synchronization
+                Map<Class, ValueSerializer> valueSerializers = new LinkedHashMap<>();
+                Registry.impls(ValueSerializer.class).stream().forEach(vs -> vs.serializesTypes().forEach(t -> valueSerializers.put((Class) t, vs)));
+                JsonSerialNode.valueSerializers = valueSerializers;
+            }
+        }
 
-		public JsonSerialNode(JsonValue jsonValue) {
-			this.jsonValue = jsonValue;
-		}
+        public static SerialNode fromJson(String value) {
+            JsonSerialNode serialNode = new JsonSerialNode(Json.instance().parse(value));
+            return serialNode;
+        }
 
-		@Override
-		public boolean canWriteTypeName() {
-			return false;
-		}
+        public static SerialNode parse(String value) {
+            throw new UnsupportedOperationException();
+        }
 
-		@Override
-		public SerialNode createArrayContainer() {
-			JsonSerialNode serialNode = new JsonSerialNode(Json.createArray());
-			return serialNode;
-		}
+        JsonValue jsonValue;
 
-		@Override
-		public SerialNode createPropertyContainer() {
-			JsonSerialNode serialNode = new JsonSerialNode(Json.createObject());
-			return serialNode;
-		}
+        public JsonSerialNode(JsonValue jsonValue) {
+            this.jsonValue = jsonValue;
+        }
 
-		@Override
-		public SerialNode getChild(int idx) {
-			switch (jsonValue.getType()) {
-			case ARRAY:
-				JsonValue value = ((JsonArray) jsonValue).get(idx);
-				return new JsonSerialNode(value);
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
+        @Override
+        public boolean canWriteTypeName() {
+            return false;
+        }
 
-		@Override
-		public SerialNode getChild(String key) {
-			switch (jsonValue.getType()) {
-			case OBJECT:
-				JsonValue value = ((JsonObject) jsonValue).get(key);
-				return new JsonSerialNode(value);
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
+        @Override
+        public SerialNode createArrayContainer() {
+            JsonSerialNode serialNode = new JsonSerialNode(Json.createArray());
+            return serialNode;
+        }
 
-		@Override
-		public String[] keys() {
-			switch (jsonValue.getType()) {
-			case OBJECT:
-				return ((JsonObject) jsonValue).keys();
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
+        @Override
+        public SerialNode createPropertyContainer() {
+            JsonSerialNode serialNode = new JsonSerialNode(Json.createObject());
+            return serialNode;
+        }
 
-		@Override
-		public int length() {
-			switch (jsonValue.getType()) {
-			case ARRAY:
-				return ((JsonArray) jsonValue).length();
-			case OBJECT:
-				return ((JsonObject) jsonValue).keys().length;
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
+        @Override
+        public SerialNode getChild(int idx) {
+            switch(jsonValue.getType()) {
+                case ARRAY:
+                    JsonValue value = ((JsonArray) jsonValue).get(idx);
+                    return new JsonSerialNode(value);
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
 
-		@Override
-		public int peekInt() {
-			return (int) (jsonValue.getType() == JsonType.NUMBER
-					? ((JsonNumber) jsonValue).asNumber()
-					: -1);
-		}
+        @Override
+        public SerialNode getChild(String key) {
+            switch(jsonValue.getType()) {
+                case OBJECT:
+                    JsonValue value = ((JsonObject) jsonValue).get(key);
+                    return new JsonSerialNode(value);
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
 
-		@Override
-		public Class readType(GraphNode node) {
-			if (jsonValue.getType() == JsonType.NULL) {
-				return void.class;
-			}
-			Preconditions.checkState(jsonValue.getType() == JsonType.ARRAY);
-			JsonArray array = (JsonArray) jsonValue;
-			String className = array.getString(0);
-			JsonSerialNode valueChild = new JsonSerialNode(array.get(1));
-			node.serialNode = valueChild;
-			return Reflections.forName(className);
-		}
+        @Override
+        public String[] keys() {
+            switch(jsonValue.getType()) {
+                case OBJECT:
+                    return ((JsonObject) jsonValue).keys();
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
 
-		@Override
-		public Object readValue(GraphNode node) {
-			if (jsonValue.getType() == JsonType.NULL) {
-				return null;
-			}
-			ValueSerializer valueSerializer = getValueSerializer(node.type);
-			if (valueSerializer == null) {
-				throw Ax.runtimeException("No value serializer for type %s",
-						node.type);
-			} else {
-				return valueSerializer.fromJson(node.type, jsonValue);
-			}
-		}
+        @Override
+        public int length() {
+            switch(jsonValue.getType()) {
+                case ARRAY:
+                    return ((JsonArray) jsonValue).length();
+                case OBJECT:
+                    return ((JsonObject) jsonValue).keys().length;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
 
-		@Override
-		public String toJson() {
-			return jsonValue.toJson();
-		}
+        @Override
+        public int peekInt() {
+            return (int) (jsonValue.getType() == JsonType.NUMBER ? ((JsonNumber) jsonValue).asNumber() : -1);
+        }
 
-		@Override
-		public String toString() {
-			return toJson();
-		}
+        @Override
+        public Class readType(GraphNode node) {
+            if (jsonValue.getType() == JsonType.NULL) {
+                return void.class;
+            }
+            Preconditions.checkState(jsonValue.getType() == JsonType.ARRAY);
+            JsonArray array = (JsonArray) jsonValue;
+            String className = array.getString(0);
+            JsonSerialNode valueChild = new JsonSerialNode(array.get(1));
+            node.serialNode = valueChild;
+            return Reflections.forName(className);
+        }
 
-		@Override
-		public void write(GraphNode node, Object value) {
-			write(node.consumedName ? null : node.name, value);
-		}
+        @Override
+        public Object readValue(GraphNode node) {
+            if (jsonValue.getType() == JsonType.NULL) {
+                return null;
+            }
+            ValueSerializer valueSerializer = getValueSerializer(node.type);
+            if (valueSerializer == null) {
+                throw Ax.runtimeException("No value serializer for type %s", node.type);
+            } else {
+                return valueSerializer.fromJson(node.type, jsonValue);
+            }
+        }
 
-		@Override
-		public SerialNode writeClassValueContainer(String name) {
-			SerialNode serialNode = createArrayContainer();
-			write(name, serialNode);
-			return serialNode;
-		}
+        @Override
+        public String toJson() {
+            return jsonValue.toJson();
+        }
 
-		@Override
-		public void writeTypeName(Class type) {
-			Preconditions.checkState(jsonValue instanceof JsonArray);
-			((JsonArray) jsonValue).set(0, serializationClass(type).getName());
-		}
+        @Override
+        public String toString() {
+            return toJson();
+        }
 
-		private JsonValue toJsonValue(Object value) {
-			if (value == null) {
-				return Json.createNull();
-			}
-			if (value instanceof JsonSerialNode) {
-				return ((JsonSerialNode) value).jsonValue;
-			}
-			Class<? extends Object> serializerType = value.getClass();
-			ValueSerializer valueSerializer = getValueSerializer(
-					serializerType);
-			if (valueSerializer == null) {
-				throw Ax.runtimeException("No value serializer for type %s",
-						value.getClass());
-			} else {
-				return valueSerializer.toJson(value);
-			}
-		}
+        @Override
+        public void write(GraphNode node, Object value) {
+            write(node.consumedName ? null : node.name, value);
+        }
 
-		private void write(String name, Object value) {
-			JsonValue writeValue = toJsonValue(value);
-			if (name == null) {
-				JsonArray array = (JsonArray) jsonValue;
-				array.set(array.length(), writeValue);
-			} else {
-				JsonObject object = (JsonObject) jsonValue;
-				object.put(name, writeValue);
-			}
-		}
+        @Override
+        public SerialNode writeClassValueContainer(String name) {
+            SerialNode serialNode = createArrayContainer();
+            write(name, serialNode);
+            return serialNode;
+        }
 
-		protected ValueSerializer
-				getValueSerializer(Class<? extends Object> serializerType) {
-			if (CommonUtils.isEnumOrEnumSubclass(serializerType)) {
-				serializerType = Enum.class;
-			}
-			if (Reflections.isAssignableFrom(BasePlace.class, serializerType)) {
-				serializerType = BasePlace.class;
-			}
-			ValueSerializer valueSerializer = valueSerializers
-					.get(serializerType);
-			return valueSerializer;
-		}
-	}
+        @Override
+        public void writeTypeName(Class type) {
+            Preconditions.checkState(jsonValue instanceof JsonArray);
+            ((JsonArray) jsonValue).set(0, serializationClass(type).getName());
+        }
 
-	interface SerialNode {
-		boolean canWriteTypeName();
+        private JsonValue toJsonValue(Object value) {
+            if (value == null) {
+                return Json.createNull();
+            }
+            if (value instanceof JsonSerialNode) {
+                return ((JsonSerialNode) value).jsonValue;
+            }
+            Class<? extends Object> serializerType = value.getClass();
+            ValueSerializer valueSerializer = getValueSerializer(serializerType);
+            if (valueSerializer == null) {
+                throw Ax.runtimeException("No value serializer for type %s", value.getClass());
+            } else {
+                return valueSerializer.toJson(value);
+            }
+        }
 
-		SerialNode createArrayContainer();
+        private void write(String name, Object value) {
+            JsonValue writeValue = toJsonValue(value);
+            if (name == null) {
+                JsonArray array = (JsonArray) jsonValue;
+                array.set(array.length(), writeValue);
+            } else {
+                JsonObject object = (JsonObject) jsonValue;
+                object.put(name, writeValue);
+            }
+        }
 
-		SerialNode createPropertyContainer();
+        protected ValueSerializer getValueSerializer(Class<? extends Object> serializerType) {
+            if (CommonUtils.isEnumOrEnumSubclass(serializerType)) {
+                serializerType = Enum.class;
+            }
+            if (Reflections.isAssignableFrom(BasePlace.class, serializerType)) {
+                serializerType = BasePlace.class;
+            }
+            ValueSerializer valueSerializer = valueSerializers.get(serializerType);
+            return valueSerializer;
+        }
+    }
 
-		SerialNode getChild(int idx);
+    interface SerialNode {
 
-		SerialNode getChild(String key);
+        boolean canWriteTypeName();
 
-		String[] keys();
+        SerialNode createArrayContainer();
 
-		int length();
+        SerialNode createPropertyContainer();
 
-		int peekInt();
+        SerialNode getChild(int idx);
 
-		Class readType(GraphNode graphNode);
+        SerialNode getChild(String key);
 
-		Object readValue(GraphNode node);
+        String[] keys();
 
-		String toJson();
+        int length();
 
-		void write(GraphNode node, Object value);
+        int peekInt();
 
-		SerialNode writeClassValueContainer(String name);
+        Class readType(GraphNode graphNode);
 
-		void writeTypeName(Class type);
-	}
+        Object readValue(GraphNode node);
 
-	static class State {
-		public Object value;
+        String toJson();
 
-		Map<Object, Integer> identityIdx = new IdentityHashMap<>();
+        void write(GraphNode node, Object value);
 
-		Map<Integer, Object> idxIdentity = new LinkedHashMap<>();
+        SerialNode writeClassValueContainer(String name);
 
-		public SerializerOptions serializerOptions;
+        void writeTypeName(Class type);
+    }
 
-		IdentityHashMap<Object, Integer> visitedObjects = new IdentityHashMap();
+    static class State {
 
-		public DeserializerOptions deserializerOptions;
+        public Object value;
 
-		Deque<GraphNode> pending = new LinkedList<>();
+        Map<Object, Integer> identityIdx = new IdentityHashMap<>();
 
-		SerializationSupport serializationSupport;
-	}
+        Map<Integer, Object> idxIdentity = new LinkedHashMap<>();
+
+        public SerializerOptions serializerOptions;
+
+        IdentityHashMap<Object, Integer> visitedObjects = new IdentityHashMap();
+
+        public DeserializerOptions deserializerOptions;
+
+        Deque<GraphNode> pending = new LinkedList<>();
+
+        SerializationSupport serializationSupport;
+    }
 }

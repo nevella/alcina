@@ -8,10 +8,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
 import java.util.Optional;
-
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.ui.Widget;
-
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -33,8 +31,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link.LinkRendererPrimaryClass
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-//FIXME - dirndl.2 - baseplace should implement a  'link provider' interface
+// FIXME - dirndl.2 - baseplace should implement a  'link provider' interface
 // and various subtypes should be subclasses...
 /**
  * Also, this class was a very early Dirndl member - can possibly be simplified
@@ -43,281 +42,267 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 @Bean
 @LinkRendererPrimaryClassName("-ol-primary")
 public class Link extends Model {
-	private BasePlace place;
 
-	private boolean withoutLink;
+    private BasePlace place;
 
-	private boolean primaryAction;
+    private boolean withoutLink;
 
-	private NonstandardObjectAction objectAction;
+    private boolean primaryAction;
 
-	private String text;
+    private NonstandardObjectAction objectAction;
 
-	private String className;
+    private String text;
 
-	private String href;
+    private String className;
 
-	private Class<? extends TopicEvent> topicClass;
+    private String href;
 
-	private boolean newTab;
+    private Class<? extends TopicEvent> topicClass;
 
-	private String title;
+    private boolean newTab;
 
-	public Link() {
-	}
+    private String title;
 
-	public Link(Entity entity) {
-		withPlace(EntityPlace.forEntity(entity));
-		withText(TextProvider.get().getObjectName(entity));
-	}
+    public Link() {
+    }
 
-	public void addTo(List<Link> actions) {
-		actions.add(this);
-	}
+    public Link(Entity entity) {
+        withPlace(EntityPlace.forEntity(entity));
+        withText(TextProvider.get().getObjectName(entity));
+    }
 
-	public String getClassName() {
-		return this.className;
-	}
+    public void addTo(List<Link> actions) {
+        actions.add(this);
+    }
 
-	public String getHref() {
-		return this.href;
-	}
+    public String getClassName() {
+        return this.className;
+    }
 
-	public NonstandardObjectAction getObjectAction() {
-		return this.objectAction;
-	}
+    public String getHref() {
+        return this.href;
+    }
 
-	public BasePlace getPlace() {
-		return this.place;
-	}
+    public NonstandardObjectAction getObjectAction() {
+        return this.objectAction;
+    }
 
-	public String getText() {
-		return text;
-	}
+    public BasePlace getPlace() {
+        return this.place;
+    }
 
-	public String getTitle() {
-		return this.title;
-	}
+    public String getText() {
+        return text;
+    }
 
-	public Class<? extends TopicEvent> getTopicClass() {
-		return topicClass;
-	}
+    public String getTitle() {
+        return this.title;
+    }
 
-	public boolean isNewTab() {
-		return this.newTab;
-	}
+    public Class<? extends TopicEvent> getTopicClass() {
+        return topicClass;
+    }
 
-	public boolean isPrimaryAction() {
-		return this.primaryAction;
-	}
+    public boolean isNewTab() {
+        return this.newTab;
+    }
 
-	public boolean isWithoutLink() {
-		return this.withoutLink;
-	}
+    public boolean isPrimaryAction() {
+        return this.primaryAction;
+    }
 
-	public void setClassName(String className) {
-		this.className = className;
-	}
+    public boolean isWithoutLink() {
+        return this.withoutLink;
+    }
 
-	public void setHref(String href) {
-		this.href = href;
-	}
+    public void setClassName(String className) {
+        this.className = className;
+    }
 
-	public void setNewTab(boolean newTab) {
-		this.newTab = newTab;
-	}
+    public void setHref(String href) {
+        this.href = href;
+    }
 
-	public void setObjectAction(NonstandardObjectAction objectAction) {
-		this.objectAction = objectAction;
-	}
+    public void setNewTab(boolean newTab) {
+        this.newTab = newTab;
+    }
 
-	public void setPlace(BasePlace place) {
-		this.place = place;
-	}
+    public void setObjectAction(NonstandardObjectAction objectAction) {
+        this.objectAction = objectAction;
+    }
 
-	public void setPrimaryAction(boolean primaryAction) {
-		this.primaryAction = primaryAction;
-	}
+    public void setPlace(BasePlace place) {
+        this.place = place;
+    }
 
-	public void setText(String text) {
-		this.text = text;
-	}
+    public void setPrimaryAction(boolean primaryAction) {
+        this.primaryAction = primaryAction;
+    }
 
-	public void setTitle(String title) {
-		this.title = title;
-	}
+    public void setText(String text) {
+        this.text = text;
+    }
 
-	public void setWithoutLink(boolean withoutLink) {
-		this.withoutLink = withoutLink;
-	}
+    public void setTitle(String title) {
+        this.title = title;
+    }
 
-	public Link withActionRef(Class<? extends ActionRef> clazz) {
-		return withPlace(new ActionRefPlace(clazz));
-	}
+    public void setWithoutLink(boolean withoutLink) {
+        this.withoutLink = withoutLink;
+    }
 
-	public Link withClassName(String className) {
-		this.className = className;
-		return this;
-	}
+    public Link withActionRef(Class<? extends ActionRef> clazz) {
+        return withPlace(new ActionRefPlace(clazz));
+    }
 
-	public Link withHref(String href) {
-		this.href = href;
-		return this;
-	}
+    public Link withClassName(String className) {
+        this.className = className;
+        return this;
+    }
 
-	public Link withNewTab(boolean newTab) {
-		this.newTab = newTab;
-		return this;
-	}
+    public Link withHref(String href) {
+        this.href = href;
+        return this;
+    }
 
-	public Link
-			withNonstandardObjectAction(NonstandardObjectAction objectAction) {
-		this.objectAction = objectAction;
-		return this;
-	}
+    public Link withNewTab(boolean newTab) {
+        this.newTab = newTab;
+        return this;
+    }
 
-	public Link withPlace(BasePlace place) {
-		this.place = place;
-		return this;
-	}
+    public Link withNonstandardObjectAction(NonstandardObjectAction objectAction) {
+        this.objectAction = objectAction;
+        return this;
+    }
 
-	public Link withPrimaryAction(boolean primaryAction) {
-		this.primaryAction = primaryAction;
-		return this;
-	}
+    public Link withPlace(BasePlace place) {
+        this.place = place;
+        return this;
+    }
 
-	public Link withText(String text) {
-		this.text = text;
-		return this;
-	}
+    public Link withPrimaryAction(boolean primaryAction) {
+        this.primaryAction = primaryAction;
+        return this;
+    }
 
-	public Link withTitle(String title) {
-		this.title = title;
-		return this;
-	}
+    public Link withText(String text) {
+        this.text = text;
+        return this;
+    }
 
-	public Link withTopic(Class<? extends TopicEvent> topicClass) {
-		this.topicClass = topicClass;
-		return this;
-	}
+    public Link withTitle(String title) {
+        this.title = title;
+        return this;
+    }
 
-	public Link withWithoutLink(boolean withoutLink) {
-		this.withoutLink = withoutLink;
-		return this;
-	}
+    public Link withTopic(Class<? extends TopicEvent> topicClass) {
+        this.topicClass = topicClass;
+        return this;
+    }
 
-	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Link.class)
-	public static class LinkRenderer extends LeafNodeRenderer {
-		@Override
-		public Widget render(Node node) {
-			Link model = model(node);
-			Widget rendered = super.render(node);
-			rendered.getElement().setInnerText(getText(node));
-			rendered.getElement().setTitle(model.getTitle());
-			if (model.isWithoutLink() && model.getText() != null) {
-				return rendered;
-			}
-			NonstandardObjectAction objectAction = model(node)
-					.getObjectAction();
-			if (objectAction != null) {
-				EntityPlace currentPlace = (EntityPlace) Client.currentPlace();
-				rendered.getElement().setAttribute("href", "#");
-				rendered.addDomHandler(
-						e -> DefaultPermissibleActionHandler.handleAction(
-								(Widget) e.getSource(), objectAction,
-								currentPlace.provideEntity()),
-						ClickEvent.getType());
-				return rendered;
-			}
-			BasePlace place = model.getPlace();
-			if (place == null) {
-				if (model.getHref() != null) {
-					rendered.getElement().setAttribute("href", model.getHref());
-				}
-				if (model.isNewTab()) {
-					rendered.getElement().setAttribute("target", "_blank");
-				}
-				if (model.getTopicClass() != null) {
-					rendered.addDomHandler(event -> {
-						Context context = NodeEvent.Context
-								.newTopicContext(event, node);
-						TopicEvent.fire(context, model.getTopicClass(), null);
-					}, ClickEvent.getType());
-				}
-			} else {
-				rendered.getElement().setAttribute("href",
-						place.toHrefString());
-				if (model.isNewTab()) {
-					rendered.getElement().setAttribute("target", "_blank");
-				}
-				if (place instanceof ActionRefPlace) {
-					ActionRefPlace actionRefPlace = (ActionRefPlace) place;
-					Optional<ActionHandler> actionHandler = actionRefPlace
-							.getActionHandler();
-					if (actionHandler.isPresent()) {
-						rendered.getElement().setAttribute("href", "#");
-						rendered.addDomHandler(
-								evt -> actionHandler.get().handleAction(node,
-										evt, actionRefPlace),
-								ClickEvent.getType());
-					}
-					Optional<EmitsTopic> emitsTopic = actionRefPlace
-							.emitsTopic();
-					if (emitsTopic.isPresent()
-							&& !emitsTopic.get().hasValidation()) {
-						rendered.addDomHandler(event -> {
-							Class<? extends TopicEvent> type = emitsTopic.get()
-									.value();
-							Context context = NodeEvent.Context
-									.newTopicContext(event, node);
-							TopicEvent.fire(context, type, null);
-						}, ClickEvent.getType());
-					}
-				}
-			}
-			if (model.isPrimaryAction()) {
-				LinkRendererPrimaryClassName primaryClassName = node
-						.annotation(LinkRendererPrimaryClassName.class);
-				if (primaryClassName != null) {
-					rendered.addStyleName(primaryClassName.value());
-				}
-			}
-			return rendered;
-		}
+    public Link withWithoutLink(boolean withoutLink) {
+        this.withoutLink = withoutLink;
+        return this;
+    }
 
-		private BasePlace getPlace(Node node) {
-			return model(node).getPlace();
-		}
+    @RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Link.class)
+    @Registration({ DirectedNodeRenderer.class, Link.class })
+    public static class LinkRenderer extends LeafNodeRenderer {
 
-		private Link model(Node node) {
-			return (Link) node.getModel();
-		}
+        @Override
+        public Widget render(Node node) {
+            Link model = model(node);
+            Widget rendered = super.render(node);
+            rendered.getElement().setInnerText(getText(node));
+            rendered.getElement().setTitle(model.getTitle());
+            if (model.isWithoutLink() && model.getText() != null) {
+                return rendered;
+            }
+            NonstandardObjectAction objectAction = model(node).getObjectAction();
+            if (objectAction != null) {
+                EntityPlace currentPlace = (EntityPlace) Client.currentPlace();
+                rendered.getElement().setAttribute("href", "#");
+                rendered.addDomHandler(e -> DefaultPermissibleActionHandler.handleAction((Widget) e.getSource(), objectAction, currentPlace.provideEntity()), ClickEvent.getType());
+                return rendered;
+            }
+            BasePlace place = model.getPlace();
+            if (place == null) {
+                if (model.getHref() != null) {
+                    rendered.getElement().setAttribute("href", model.getHref());
+                }
+                if (model.isNewTab()) {
+                    rendered.getElement().setAttribute("target", "_blank");
+                }
+                if (model.getTopicClass() != null) {
+                    rendered.addDomHandler(event -> {
+                        Context context = NodeEvent.Context.newTopicContext(event, node);
+                        TopicEvent.fire(context, model.getTopicClass(), null);
+                    }, ClickEvent.getType());
+                }
+            } else {
+                rendered.getElement().setAttribute("href", place.toHrefString());
+                if (model.isNewTab()) {
+                    rendered.getElement().setAttribute("target", "_blank");
+                }
+                if (place instanceof ActionRefPlace) {
+                    ActionRefPlace actionRefPlace = (ActionRefPlace) place;
+                    Optional<ActionHandler> actionHandler = actionRefPlace.getActionHandler();
+                    if (actionHandler.isPresent()) {
+                        rendered.getElement().setAttribute("href", "#");
+                        rendered.addDomHandler(evt -> actionHandler.get().handleAction(node, evt, actionRefPlace), ClickEvent.getType());
+                    }
+                    Optional<EmitsTopic> emitsTopic = actionRefPlace.emitsTopic();
+                    if (emitsTopic.isPresent() && !emitsTopic.get().hasValidation()) {
+                        rendered.addDomHandler(event -> {
+                            Class<? extends TopicEvent> type = emitsTopic.get().value();
+                            Context context = NodeEvent.Context.newTopicContext(event, node);
+                            TopicEvent.fire(context, type, null);
+                        }, ClickEvent.getType());
+                    }
+                }
+            }
+            if (model.isPrimaryAction()) {
+                LinkRendererPrimaryClassName primaryClassName = node.annotation(LinkRendererPrimaryClassName.class);
+                if (primaryClassName != null) {
+                    rendered.addStyleName(primaryClassName.value());
+                }
+            }
+            return rendered;
+        }
 
-		@Override
-		protected String getTag(Node node) {
-			return model(node).isWithoutLink() ? "span" : "a";
-		}
+        private BasePlace getPlace(Node node) {
+            return model(node).getPlace();
+        }
 
-		protected String getText(Node node) {
-			Link model = model(node);
-			if (model.getText() != null) {
-				return model.getText();
-			}
-			NonstandardObjectAction objectAction = model.getObjectAction();
-			if (objectAction != null) {
-				return objectAction.getDisplayName();
-			}
-			return getPlace(node) == null ? "<null text>"
-					: getPlace(node).toNameString();
-		}
-	}
+        private Link model(Node node) {
+            return (Link) node.getModel();
+        }
 
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Inherited
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface LinkRendererPrimaryClassName {
-		String value();
-	}
+        @Override
+        protected String getTag(Node node) {
+            return model(node).isWithoutLink() ? "span" : "a";
+        }
+
+        protected String getText(Node node) {
+            Link model = model(node);
+            if (model.getText() != null) {
+                return model.getText();
+            }
+            NonstandardObjectAction objectAction = model.getObjectAction();
+            if (objectAction != null) {
+                return objectAction.getDisplayName();
+            }
+            return getPlace(node) == null ? "<null text>" : getPlace(node).toNameString();
+        }
+    }
+
+    @ClientVisible
+    @Retention(RetentionPolicy.RUNTIME)
+    @Documented
+    @Inherited
+    @Target({ ElementType.TYPE, ElementType.METHOD })
+    public @interface LinkRendererPrimaryClassName {
+
+        String value();
+    }
 }

@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -16,132 +15,135 @@ import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.OnetimeWrappingAsyncCallback;
 import cc.alcina.framework.gwt.client.util.WrappingAsyncCallback;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.LocalPersistenceTuple;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = DatabaseStatsObserver.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
+@Registration.Singleton
 public class DatabaseStatsObserver {
-	public static final transient String SERIALIZED_MAX_KEY = CommonUtils
-			.simpleClassName(DatabaseStatsObserver.class)
-			+ ".SERIALIZED_MAX_KEY";
 
-	private static final int PERSISTENCE_VERSION = 2;
+    public static final transient String SERIALIZED_MAX_KEY = CommonUtils.simpleClassName(DatabaseStatsObserver.class) + ".SERIALIZED_MAX_KEY";
 
-	DatabaseStatsInfo max;
+    private static final int PERSISTENCE_VERSION = 2;
 
-	DatabaseStatsInfo current = new DatabaseStatsInfo();
+    DatabaseStatsInfo max;
 
-	protected TopicListener<LocalPersistenceTuple> transformDeltaListener = new TopicListener<LocalTransformPersistence.LocalPersistenceTuple>() {
-		@Override
-		public void topicPublished(String key, LocalPersistenceTuple message) {
-			if (current != null) {
-				current.getTransformCounts().add(message.type);
-				current.getTransformTexts().add(message.type, message.size);
-				checkMax();
-			}
-		}
-	};
+    DatabaseStatsInfo current = new DatabaseStatsInfo();
 
-	protected TopicListener<IntPair> logStorePersistedListener = new TopicListener<IntPair>() {
-		@Override
-		public void topicPublished(String key, IntPair idSize) {
-			if (current != null) {
-				current.getLogSizes().add(idSize.i1, idSize.i2);
-				checkMax();
-			}
-		}
-	};
+    protected TopicListener<LocalPersistenceTuple> transformDeltaListener = new TopicListener<LocalTransformPersistence.LocalPersistenceTuple>() {
 
-	protected TopicListener<Void> logStoreDeletedListener = new TopicListener<Void>() {
-		@Override
-		public void topicPublished(String key, Void message) {
-			refreshCurrent();
-		}
-	};
+        @Override
+        public void topicPublished(String key, LocalPersistenceTuple message) {
+            if (current != null) {
+                current.getTransformCounts().add(message.type);
+                current.getTransformTexts().add(message.type, message.size);
+                checkMax();
+            }
+        }
+    };
 
-	WrappingAsyncCallback<String> initCallback = new OnetimeWrappingAsyncCallback<String>() {
-		@Override
-		protected void onSuccess0(String result) {
-			try {
-				if (result != null) {
-					max = Registry.impl(AlcinaBeanSerializer.class)
-							.deserialize(result);
-				}
-			} catch (Exception e) {
-				GWT.log("Problem deserialising " + result, e);
-			}
-		}
-	};
+    protected TopicListener<IntPair> logStorePersistedListener = new TopicListener<IntPair>() {
 
-	private WrappingAsyncCallback<DatabaseStatsInfo> currentCallback = new OnetimeWrappingAsyncCallback<DatabaseStatsInfo>() {
-		public void onFailure(Throwable caught) {
-			refreshing = false;
-			super.onFailure(caught);
-		}
+        @Override
+        public void topicPublished(String key, IntPair idSize) {
+            if (current != null) {
+                current.getLogSizes().add(idSize.i1, idSize.i2);
+                checkMax();
+            }
+        }
+    };
 
-		@Override
-		protected void onSuccess0(DatabaseStatsInfo result) {
-			refreshing = false;
-			current = result;
-			checkMax();
-		};
-	};
+    protected TopicListener<Void> logStoreDeletedListener = new TopicListener<Void>() {
 
-	private AsyncCallback<Integer> persistedCallback = new AsyncCallbackStd<Integer>() {
-		@Override
-		public void onSuccess(Integer result) {
-			// nada
-		}
-	};
+        @Override
+        public void topicPublished(String key, Void message) {
+            refreshCurrent();
+        }
+    };
 
-	private boolean refreshing;
+    WrappingAsyncCallback<String> initCallback = new OnetimeWrappingAsyncCallback<String>() {
 
-	public DatabaseStatsObserver() {
-	}
+        @Override
+        protected void onSuccess0(String result) {
+            try {
+                if (result != null) {
+                    max = Registry.impl(AlcinaBeanSerializer.class).deserialize(result);
+                }
+            } catch (Exception e) {
+                GWT.log("Problem deserialising " + result, e);
+            }
+        }
+    };
 
-	public String getReport() {
-		if (max == null) {
-			max = current;
-		}
-		return Ax.format("Database usage report:\nCurrent:\n"
-				+ "********\n%s\n\nMax:\n*****\n%s\n", current, max);
-	}
+    private WrappingAsyncCallback<DatabaseStatsInfo> currentCallback = new OnetimeWrappingAsyncCallback<DatabaseStatsInfo>() {
 
-	public void init(AsyncCallback<String> notifyOnInitCallback) {
-		initCallback.wrapped = notifyOnInitCallback;
-		KeyValueStore.get().get(SERIALIZED_MAX_KEY, initCallback);
-	}
+        public void onFailure(Throwable caught) {
+            refreshing = false;
+            super.onFailure(caught);
+        }
 
-	public void installPersistenceListeners() {
-		LocalTransformPersistence
-				.notifyPersistingListenerDelta(transformDeltaListener, true);
-		LogStore.notifyPersistedListenerDelta(logStorePersistedListener, true);
-		LogStore.notifyDeletedListenerDelta(logStoreDeletedListener, true);
-	}
+        @Override
+        protected void onSuccess0(DatabaseStatsInfo result) {
+            refreshing = false;
+            current = result;
+            checkMax();
+        }
+    };
 
-	public void recalcWithListener(AsyncCallback postRecalcCallback) {
-		currentCallback.wrapped = postRecalcCallback;
-		refreshCurrent();
-	}
+    private AsyncCallback<Integer> persistedCallback = new AsyncCallbackStd<Integer>() {
 
-	public void refreshCurrent() {
-		if (!refreshing) {
-			current = null;
-			refreshing = true;
-			new DatabaseStatsCollector().run(currentCallback);
-		}
-	}
+        @Override
+        public void onSuccess(Integer result) {
+            // nada
+        }
+    };
 
-	protected void checkMax() {
-		if (current.greaterSizeThan(max)
-				|| max.getVersion() < PERSISTENCE_VERSION) {
-			max = current;
-			max.setVersion(PERSISTENCE_VERSION);
-			persistMax();
-		}
-	}
+    private boolean refreshing;
 
-	protected void persistMax() {
-		String ser = Registry.impl(AlcinaBeanSerializer.class).serialize(max);
-		KeyValueStore.get().put(SERIALIZED_MAX_KEY, ser, persistedCallback);
-	}
+    public DatabaseStatsObserver() {
+    }
+
+    public String getReport() {
+        if (max == null) {
+            max = current;
+        }
+        return Ax.format("Database usage report:\nCurrent:\n" + "********\n%s\n\nMax:\n*****\n%s\n", current, max);
+    }
+
+    public void init(AsyncCallback<String> notifyOnInitCallback) {
+        initCallback.wrapped = notifyOnInitCallback;
+        KeyValueStore.get().get(SERIALIZED_MAX_KEY, initCallback);
+    }
+
+    public void installPersistenceListeners() {
+        LocalTransformPersistence.notifyPersistingListenerDelta(transformDeltaListener, true);
+        LogStore.notifyPersistedListenerDelta(logStorePersistedListener, true);
+        LogStore.notifyDeletedListenerDelta(logStoreDeletedListener, true);
+    }
+
+    public void recalcWithListener(AsyncCallback postRecalcCallback) {
+        currentCallback.wrapped = postRecalcCallback;
+        refreshCurrent();
+    }
+
+    public void refreshCurrent() {
+        if (!refreshing) {
+            current = null;
+            refreshing = true;
+            new DatabaseStatsCollector().run(currentCallback);
+        }
+    }
+
+    protected void checkMax() {
+        if (current.greaterSizeThan(max) || max.getVersion() < PERSISTENCE_VERSION) {
+            max = current;
+            max.setVersion(PERSISTENCE_VERSION);
+            persistMax();
+        }
+    }
+
+    protected void persistMax() {
+        String ser = Registry.impl(AlcinaBeanSerializer.class).serialize(max);
+        KeyValueStore.get().put(SERIALIZED_MAX_KEY, ser, persistedCallback);
+    }
 }

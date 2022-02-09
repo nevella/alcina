@@ -5,7 +5,6 @@ import java.util.Collections;
 import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
-
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
@@ -24,120 +23,115 @@ import cc.alcina.framework.entity.stat.DevStats.LogProvider.StringLogProvider;
 import cc.alcina.framework.entity.stat.DevStats.StatResults;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 import cc.alcina.framework.servlet.job.JobContext;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class TaskReportDevMetrics extends AbstractTaskPerformer {
-	private Date from = new Date(
-			System.currentTimeMillis() - TimeConstants.ONE_DAY_MS);
 
-	private Date to = new Date(System.currentTimeMillis());
+    private Date from = new Date(System.currentTimeMillis() - TimeConstants.ONE_DAY_MS);
 
-	private boolean mostRecent = true;
+    private Date to = new Date(System.currentTimeMillis());
 
-	private String keyedStatClassName;
+    private boolean mostRecent = true;
 
-	private boolean withMissed;
+    private String keyedStatClassName;
 
-	public Date getFrom() {
-		return this.from;
-	}
+    private boolean withMissed;
 
-	public String getKeyedStatClassName() {
-		return this.keyedStatClassName;
-	}
+    public Date getFrom() {
+        return this.from;
+    }
 
-	public Date getTo() {
-		return this.to;
-	}
+    public String getKeyedStatClassName() {
+        return this.keyedStatClassName;
+    }
 
-	public boolean isMostRecent() {
-		return this.mostRecent;
-	}
+    public Date getTo() {
+        return this.to;
+    }
 
-	public boolean isWithMissed() {
-		return this.withMissed;
-	}
+    public boolean isMostRecent() {
+        return this.mostRecent;
+    }
 
-	public void setFrom(Date from) {
-		this.from = from;
-	}
+    public boolean isWithMissed() {
+        return this.withMissed;
+    }
 
-	public void setKeyedStatClassName(String keyedStatClassName) {
-		this.keyedStatClassName = keyedStatClassName;
-	}
+    public void setFrom(Date from) {
+        this.from = from;
+    }
 
-	public void setMostRecent(boolean mostRecent) {
-		this.mostRecent = mostRecent;
-	}
+    public void setKeyedStatClassName(String keyedStatClassName) {
+        this.keyedStatClassName = keyedStatClassName;
+    }
 
-	public void setTo(Date to) {
-		this.to = to;
-	}
+    public void setMostRecent(boolean mostRecent) {
+        this.mostRecent = mostRecent;
+    }
 
-	public void setWithMissed(boolean withMissed) {
-		this.withMissed = withMissed;
-	}
+    public void setTo(Date to) {
+        this.to = to;
+    }
 
-	@Override
-	protected void run0() throws Exception {
-		DomDoc doc = DomDoc.basicHtmlDoc();
-		String css = ResourceUtilities
-				.readRelativeResource("res/TaskReportDevMetrics.css");
-		doc.xpath("//head").node().builder().tag("style").text(css).append();
-		List<ILogRecord> records = Registry.impl(DevMetricLogSearcher.class)
-				.search(this);
-		int offset = 0;
-		LogProvider provider = new LogProvider() {
-			private String log;
+    public void setWithMissed(boolean withMissed) {
+        this.withMissed = withMissed;
+    }
 
-			@Override
-			public String getLog() {
-				if (log == null) {
-					log = records.stream().map(ILogRecord::getText)
-							.collect(Collectors.joining("\n"));
-				}
-				return log;
-			}
-		};
-		List<LogProvider> statSequences = new ArrayList<>();
-		Class<? extends KeyedStat> clazz = Reflections
-				.forName(keyedStatClassName);
-		KeyedStat keyedStat = Reflections.newInstance(clazz);
-		keyedStat.setLogProvider(provider);
-		String loglog = provider.getLog();
-		List<String> statSequenceStrings = keyedStat.listStats();
-		if (mostRecent) {
-			String last = CommonUtils.last(statSequenceStrings);
-			if (last != null) {
-				statSequences.add(new StringLogProvider(last));
-			}
-		} else {
-			statSequenceStrings.stream().map(StringLogProvider::new)
-					.forEach(statSequences::add);
-			Collections.reverse(statSequences);
-		}
-		DomNode docHead = doc.html().body().builder().tag("div")
-				.className("head").append();
-		docHead.builder().tag("h2").text("Dev metrics").append();
-		DomNodeHtmlTableBuilder table = docHead.html().tableBuilder();
-		table.row().text("Class").text(keyedStatClassName);
-		table.append();
-		statSequences.forEach(lp -> {
-			StatResults stats = new DevStats().parse(lp);
-			String string = stats.dumpString(withMissed);
-			Date first = stats.getStartTime();
-			DomNode metric = docHead.builder().tag("div").text("metric")
-					.append();
-			metric.builder().tag("div")
-					.text("Timestamp: %s", Ax.timestamp(first)).append();
-			metric.builder().tag("pre").text(string).append();
-		});
-		JobContext.get().getJob().setLargeResult(doc.prettyToString());
-		logger.info("Log output to job.largeResult");
-	}
+    @Override
+    protected void run0() throws Exception {
+        DomDoc doc = DomDoc.basicHtmlDoc();
+        String css = ResourceUtilities.readRelativeResource("res/TaskReportDevMetrics.css");
+        doc.xpath("//head").node().builder().tag("style").text(css).append();
+        List<ILogRecord> records = Registry.impl(DevMetricLogSearcher.class).search(this);
+        int offset = 0;
+        LogProvider provider = new LogProvider() {
 
-	@RegistryLocation(registryPoint = DevMetricLogSearcher.class)
-	public static abstract class DevMetricLogSearcher {
-		public abstract List<ILogRecord>
-				search(TaskReportDevMetrics taskReportDevMetrics);
-	}
+            private String log;
+
+            @Override
+            public String getLog() {
+                if (log == null) {
+                    log = records.stream().map(ILogRecord::getText).collect(Collectors.joining("\n"));
+                }
+                return log;
+            }
+        };
+        List<LogProvider> statSequences = new ArrayList<>();
+        Class<? extends KeyedStat> clazz = Reflections.forName(keyedStatClassName);
+        KeyedStat keyedStat = Reflections.newInstance(clazz);
+        keyedStat.setLogProvider(provider);
+        String loglog = provider.getLog();
+        List<String> statSequenceStrings = keyedStat.listStats();
+        if (mostRecent) {
+            String last = CommonUtils.last(statSequenceStrings);
+            if (last != null) {
+                statSequences.add(new StringLogProvider(last));
+            }
+        } else {
+            statSequenceStrings.stream().map(StringLogProvider::new).forEach(statSequences::add);
+            Collections.reverse(statSequences);
+        }
+        DomNode docHead = doc.html().body().builder().tag("div").className("head").append();
+        docHead.builder().tag("h2").text("Dev metrics").append();
+        DomNodeHtmlTableBuilder table = docHead.html().tableBuilder();
+        table.row().text("Class").text(keyedStatClassName);
+        table.append();
+        statSequences.forEach(lp -> {
+            StatResults stats = new DevStats().parse(lp);
+            String string = stats.dumpString(withMissed);
+            Date first = stats.getStartTime();
+            DomNode metric = docHead.builder().tag("div").text("metric").append();
+            metric.builder().tag("div").text("Timestamp: %s", Ax.timestamp(first)).append();
+            metric.builder().tag("pre").text(string).append();
+        });
+        JobContext.get().getJob().setLargeResult(doc.prettyToString());
+        logger.info("Log output to job.largeResult");
+    }
+
+    @RegistryLocation(registryPoint = DevMetricLogSearcher.class)
+    @Registration(DevMetricLogSearcher.class)
+    public static abstract class DevMetricLogSearcher {
+
+        public abstract List<ILogRecord> search(TaskReportDevMetrics taskReportDevMetrics);
+    }
 }

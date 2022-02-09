@@ -2,9 +2,7 @@ package cc.alcina.framework.servlet.authentication;
 
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
-
 import com.lambdaworks.crypto.SCrypt;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
@@ -29,227 +27,201 @@ import cc.alcina.framework.servlet.module.login.LoginAttempts;
 import cc.alcina.framework.servlet.module.login.LoginModel;
 import cc.alcina.framework.servlet.module.login.LoginRequestHandler.TwoFactorAuthResult;
 import cc.alcina.framework.servlet.module.login.TwoFactorAuthentication;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = Authenticator.class, implementationType = ImplementationType.INSTANCE)
+@Registration(Authenticator.class)
 public abstract class Authenticator<U extends Entity & IUser> {
-	public static final String CONTEXT_BYPASS_PASSWORD_CHECK = Authenticator.class
-			.getName() + ".CONTEXT_BYPASS_PASSWORD_CHECK";
 
-	public static Authenticator get() {
-		return Registry.impl(Authenticator.class);
-	}
+    public static final String CONTEXT_BYPASS_PASSWORD_CHECK = Authenticator.class.getName() + ".CONTEXT_BYPASS_PASSWORD_CHECK";
 
-	protected LoginModel loginModel;
+    public static Authenticator get() {
+        return Registry.impl(Authenticator.class);
+    }
 
-	public Authenticator() {
-		super();
-	}
+    protected LoginModel loginModel;
 
-	public LoginResponse authenticate(LoginBean loginBean)
-			throws AuthenticationException {
-		LoginResponse loginResponse = new LoginResponse();
-		loginResponse.setOk(false);
-		loginModel = new LoginModel();
-		loginModel.loginBean = loginBean;
-		loginModel.loginResponse = loginResponse;
-		authenticate(loginBean, loginModel);
-		return loginResponse;
-	}
+    public Authenticator() {
+        super();
+    }
 
-	public void authenticate(LoginBean loginBean, LoginModel loginModel)
-			throws AuthenticationException {
-		if (!validateUsername(loginModel)) {
-			return;
-		}
-		if (!validatePassword(loginModel)) {
-			return;
-		}
-		validateAccount(loginModel.loginResponse, loginBean.getUserName());
-	}
+    public LoginResponse authenticate(LoginBean loginBean) throws AuthenticationException {
+        LoginResponse loginResponse = new LoginResponse();
+        loginResponse.setOk(false);
+        loginModel = new LoginModel();
+        loginModel.loginBean = loginBean;
+        loginModel.loginResponse = loginResponse;
+        authenticate(loginBean, loginModel);
+        return loginResponse;
+    }
 
-	public U createUser(String userName, String password) {
-		U user = (U) Domain.create((Class) PersistentImpl
-				.getImplementation(IUser.class));
-		user.setUserName(userName);
-		setPassword(user, password);
-		return user;
-	}
+    public void authenticate(LoginBean loginBean, LoginModel loginModel) throws AuthenticationException {
+        if (!validateUsername(loginModel)) {
+            return;
+        }
+        if (!validatePassword(loginModel)) {
+            return;
+        }
+        validateAccount(loginModel.loginResponse, loginBean.getUserName());
+    }
 
-	public void logOut() {
-		AuthenticationManager.get().createAuthenticationSession(new Date(),
-				UserlandProvider.get().getAnonymousUser(), "logout", false);
-		Transaction.commit();
-	}
+    public U createUser(String userName, String password) {
+        U user = (U) Domain.create((Class) PersistentImpl.getImplementation(IUser.class));
+        user.setUserName(userName);
+        setPassword(user, password);
+        return user;
+    }
 
-	public void processValidLogin(LoginResponse loginResponse, String userName,
-			boolean rememberMe) throws AuthenticationException {
-		if (loginModel == null) {
-			LoginBean loginBean = new LoginBean();
-			loginBean.setUserName(userName);
-			loginModel = new LoginModel();
-			loginModel.loginBean = loginBean;
-			loginModel.loginResponse = loginResponse;
-		}
-		U user = validateAccount(loginResponse, userName);
-		if (loginResponse.isOk()) {
-			AuthenticationSession authenticationSession = AuthenticationManager
-					.get().createAuthenticationSession(new Date(), user,
-							"password", true);
-			if (!rememberMe) {
-				authenticationSession.setMaxInstances(1);
-			}
-			if (user instanceof UserWith2FA) {
-				((UserWith2FA) user).setHasSuccessfullyLoggedIn(true);
-			}
-			Transaction.commit();
-		}
-	}
+    public void logOut() {
+        AuthenticationManager.get().createAuthenticationSession(new Date(), UserlandProvider.get().getAnonymousUser(), "logout", false);
+        Transaction.commit();
+    }
 
-	public void setPassword(U user, String password) {
-		if (Ax.isBlank(user.getSalt())) {
-			user.setSalt(user.getUserName());
-		}
-		user.setPassword(PasswordEncryptionSupport.get()
-				.encryptPassword(password, user.getSalt()));
-	}
+    public void processValidLogin(LoginResponse loginResponse, String userName, boolean rememberMe) throws AuthenticationException {
+        if (loginModel == null) {
+            LoginBean loginBean = new LoginBean();
+            loginBean.setUserName(userName);
+            loginModel = new LoginModel();
+            loginModel.loginBean = loginBean;
+            loginModel.loginResponse = loginResponse;
+        }
+        U user = validateAccount(loginResponse, userName);
+        if (loginResponse.isOk()) {
+            AuthenticationSession authenticationSession = AuthenticationManager.get().createAuthenticationSession(new Date(), user, "password", true);
+            if (!rememberMe) {
+                authenticationSession.setMaxInstances(1);
+            }
+            if (user instanceof UserWith2FA) {
+                ((UserWith2FA) user).setHasSuccessfullyLoggedIn(true);
+            }
+            Transaction.commit();
+        }
+    }
 
-	public abstract U validateAccount(LoginResponse loginResponse,
-			String userName) throws AuthenticationException;
+    public void setPassword(U user, String password) {
+        if (Ax.isBlank(user.getSalt())) {
+            user.setSalt(user.getUserName());
+        }
+        user.setPassword(PasswordEncryptionSupport.get().encryptPassword(password, user.getSalt()));
+    }
 
-	public boolean validateLoginAttempt(LoginModel<U> loginModel) {
-		if (ResourceUtilities.is(Authenticator.class,
-				"validateLoginAttempts")) {
-			return new LoginAttempts().checkLockedOut(loginModel);
-		} else {
-			return true;
-		}
-	}
+    public abstract U validateAccount(LoginResponse loginResponse, String userName) throws AuthenticationException;
 
-	public boolean validatePassword(LoginModel<U> loginModel) {
-		U user = loginModel.user;
-		if (user.getSalt() == null) {
-			user.setSalt(user.getUserName());
-		}
-		if (user instanceof UserWith2FA
-				&& ((UserWith2FA) user).getAuthenticationSecret() == null) {
-			((UserWith2FA) user).setAuthenticationSecret(
-					new TwoFactorAuthentication().generateSecret());
-		}
-		Transaction.commit();
-		if (LooseContext.is(CONTEXT_BYPASS_PASSWORD_CHECK)) {
-			// Programmatic password bypass - allow
-			return true;
-		}
-		if (AppPersistenceBase.isTestServer() && 
-				ResourceUtilities.is(Authenticator.class, "bypassPasswordCheck")) {
-			// App server/dev instance bypass - allow
-			// Extra AppPersistenceBase.isTestServer() check to make sure we don't engage this
-			//  even by accident in prod
-			return true;
-		}
-		if (!PasswordEncryptionSupport.get().check(
-						loginModel.loginBean.getPassword(), user.getSalt(),
-						user.getPasswordHash())) {
-			// Failed password check - deny
-			loginModel.loginResponse.setErrorMsg("Password incorrect");
-			return false;
-		} else {
-			// Passwork check success - allow
-			return true;
-		}
-	}
+    public boolean validateLoginAttempt(LoginModel<U> loginModel) {
+        if (ResourceUtilities.is(Authenticator.class, "validateLoginAttempts")) {
+            return new LoginAttempts().checkLockedOut(loginModel);
+        } else {
+            return true;
+        }
+    }
 
-	public TwoFactorAuthResult validateTwoFactorAuth(LoginModel<U> loginModel)
-			throws Exception {
-		TwoFactorAuthResult result = new TwoFactorAuthResult();
-		result.requiresTwoFactorAuth = false;
-		if (appUsesTwoFactorAuthentication()) {
-			result.requiresTwoFactorAuth = true;
-			UserWith2FA user = (UserWith2FA) loginModel.user;
-			if (Ax.notBlank(
-					loginModel.loginRequest.getTwoFactorAuthenticationCode())) {
-				long t = new Date().getTime() / TimeUnit.SECONDS.toMillis(30);
-				if (new TwoFactorAuthentication()
-						.checkCode(user.getAuthenticationSecret(),
-								Long.parseLong(loginModel.loginRequest
-										.getTwoFactorAuthenticationCode()),
-								t)) {
-					result.requiresTwoFactorAuth = false;
-				} else {
-					loginModel.loginResponse
-							.setErrorMsg("Invalid authentication code");
-				}
-			}
-			if (result.requiresTwoFactorAuth) {
-				if (!((UserWith2FA) loginModel.user)
-						.isHasSuccessfullyLoggedIn()) {
-					result.requiresTwoFactorQrCode = true;
-				}
-				result.qrCode = new TwoFactorAuthentication().getQRBarcodeURL(
-						loginModel.user.getUserName(),
-						EntityLayerUtils.getApplicationHostName(),
-						user.getAuthenticationSecret());
-			}
-		}
-		return result;
-	}
+    public boolean validatePassword(LoginModel<U> loginModel) {
+        U user = loginModel.user;
+        if (user.getSalt() == null) {
+            user.setSalt(user.getUserName());
+        }
+        if (user instanceof UserWith2FA && ((UserWith2FA) user).getAuthenticationSecret() == null) {
+            ((UserWith2FA) user).setAuthenticationSecret(new TwoFactorAuthentication().generateSecret());
+        }
+        Transaction.commit();
+        if (LooseContext.is(CONTEXT_BYPASS_PASSWORD_CHECK)) {
+            // Programmatic password bypass - allow
+            return true;
+        }
+        if (AppPersistenceBase.isTestServer() && ResourceUtilities.is(Authenticator.class, "bypassPasswordCheck")) {
+            // App server/dev instance bypass - allow
+            // Extra AppPersistenceBase.isTestServer() check to make sure we don't engage this
+            // even by accident in prod
+            return true;
+        }
+        if (!PasswordEncryptionSupport.get().check(loginModel.loginBean.getPassword(), user.getSalt(), user.getPasswordHash())) {
+            // Failed password check - deny
+            loginModel.loginResponse.setErrorMsg("Password incorrect");
+            return false;
+        } else {
+            // Passwork check success - allow
+            return true;
+        }
+    }
 
-	public boolean validateUsername(LoginModel<U> loginModel) {
-		String userName = loginModel.loginBean.getUserName();
-		loginModel.user = UserlandProvider.get().getUserByName(userName);
-		if (loginModel.user == null) {
-			loginModel.loginResponse
-					.setErrorMsg("Email address not registered");
-		}
-		return loginModel.user != null;
-	}
+    public TwoFactorAuthResult validateTwoFactorAuth(LoginModel<U> loginModel) throws Exception {
+        TwoFactorAuthResult result = new TwoFactorAuthResult();
+        result.requiresTwoFactorAuth = false;
+        if (appUsesTwoFactorAuthentication()) {
+            result.requiresTwoFactorAuth = true;
+            UserWith2FA user = (UserWith2FA) loginModel.user;
+            if (Ax.notBlank(loginModel.loginRequest.getTwoFactorAuthenticationCode())) {
+                long t = new Date().getTime() / TimeUnit.SECONDS.toMillis(30);
+                if (new TwoFactorAuthentication().checkCode(user.getAuthenticationSecret(), Long.parseLong(loginModel.loginRequest.getTwoFactorAuthenticationCode()), t)) {
+                    result.requiresTwoFactorAuth = false;
+                } else {
+                    loginModel.loginResponse.setErrorMsg("Invalid authentication code");
+                }
+            }
+            if (result.requiresTwoFactorAuth) {
+                if (!((UserWith2FA) loginModel.user).isHasSuccessfullyLoggedIn()) {
+                    result.requiresTwoFactorQrCode = true;
+                }
+                result.qrCode = new TwoFactorAuthentication().getQRBarcodeURL(loginModel.user.getUserName(), EntityLayerUtils.getApplicationHostName(), user.getAuthenticationSecret());
+            }
+        }
+        return result;
+    }
 
-	protected boolean appUsesTwoFactorAuthentication() {
-		return false;
-	}
+    public boolean validateUsername(LoginModel<U> loginModel) {
+        String userName = loginModel.loginBean.getUserName();
+        loginModel.user = UserlandProvider.get().getUserByName(userName);
+        if (loginModel.user == null) {
+            loginModel.loginResponse.setErrorMsg("Email address not registered");
+        }
+        return loginModel.user != null;
+    }
 
-	protected boolean
-			validateLoginAttemptFromHistory(LoginModel<U> loginModel) {
-		return true;
-	}
+    protected boolean appUsesTwoFactorAuthentication() {
+        return false;
+    }
 
-	public interface PasswordEncryptionSupport {
-		public static PasswordEncryptionSupport get() {
-			return Registry.impl(PasswordEncryptionSupport.class);
-		}
+    protected boolean validateLoginAttemptFromHistory(LoginModel<U> loginModel) {
+        return true;
+    }
 
-		default boolean check(String password, String salt,
-				String hashedPassword) {
-			return encryptPassword(password, salt).equals(hashedPassword);
-		}
+    public interface PasswordEncryptionSupport {
 
-		String encryptPassword(String password, String salt);
+        public static PasswordEncryptionSupport get() {
+            return Registry.impl(PasswordEncryptionSupport.class);
+        }
 
-		default String maybeReencrypt(String salt, String hashedPassword)
-				throws Exception {
-			return hashedPassword;
-		}
-	}
+        default boolean check(String password, String salt, String hashedPassword) {
+            return encryptPassword(password, salt).equals(hashedPassword);
+        }
 
-	@RegistryLocation(registryPoint = PasswordEncryptionSupport.class, implementationType = ImplementationType.INSTANCE)
-	public static class ScryptSupport implements PasswordEncryptionSupport {
-		private static final int N = 16384;
+        String encryptPassword(String password, String salt);
 
-		private static final int r = 8;
+        default String maybeReencrypt(String salt, String hashedPassword) throws Exception {
+            return hashedPassword;
+        }
+    }
 
-		private static final int p = 1;
+    @RegistryLocation(registryPoint = PasswordEncryptionSupport.class, implementationType = ImplementationType.INSTANCE)
+    @Registration(PasswordEncryptionSupport.class)
+    public static class ScryptSupport implements PasswordEncryptionSupport {
 
-		private static final int dkLen = 64;
+        private static final int N = 16384;
 
-		@Override
-		public String encryptPassword(String password, String salt) {
-			try {
-				byte[] scrypt = SCrypt.scrypt(password.getBytes("UTF-8"),
-						salt.getBytes("UTF-8"), N, r, p, dkLen);
-				return Base64Utils.toBase64(scrypt);
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
+        private static final int r = 8;
+
+        private static final int p = 1;
+
+        private static final int dkLen = 64;
+
+        @Override
+        public String encryptPassword(String password, String salt) {
+            try {
+                byte[] scrypt = SCrypt.scrypt(password.getBytes("UTF-8"), salt.getBytes("UTF-8"), N, r, p, dkLen);
+                return Base64Utils.toBase64(scrypt);
+            } catch (Exception e) {
+                throw new WrappedRuntimeException(e);
+            }
+        }
+    }
 }

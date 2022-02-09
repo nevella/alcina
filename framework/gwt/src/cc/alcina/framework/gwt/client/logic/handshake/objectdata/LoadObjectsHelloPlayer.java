@@ -11,79 +11,79 @@ import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = LoadObjectsHelloPlayer.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
-public class LoadObjectsHelloPlayer extends
-		RunnableAsyncCallbackPlayer<LoginResponse, LoadObjectDataState> {
-	protected HandshakeConsortModel handshakeConsortModel = Registry
-			.impl(HandshakeConsortModel.class);
+@Registration.Singleton
+public class LoadObjectsHelloPlayer extends RunnableAsyncCallbackPlayer<LoginResponse, LoadObjectDataState> {
 
-	public LoadObjectsHelloPlayer() {
-		addProvides(helloOkState());
-		addProvides(LoadObjectDataState.HELLO_OFFLINE);
-		addProvides(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
-	}
+    protected HandshakeConsortModel handshakeConsortModel = Registry.impl(HandshakeConsortModel.class);
 
-	@Override
-	public void onFailure(Throwable caught) {
-		if (ClientUtils.maybeOffline(caught)) {
-			PermissionsManager.get().setOnlineState(OnlineState.OFFLINE);
-			signal(false);
-			return;
-		}
-		super.onFailure(caught);
-	}
+    public LoadObjectsHelloPlayer() {
+        addProvides(helloOkState());
+        addProvides(LoadObjectDataState.HELLO_OFFLINE);
+        addProvides(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
+    }
 
-	@Override
-	public void onSuccess(LoginResponse loginResponse) {
-		handshakeConsortModel.setLoginResponse(loginResponse);
-		handleLoginResponse(loginResponse);
-	}
+    @Override
+    public void onFailure(Throwable caught) {
+        if (ClientUtils.maybeOffline(caught)) {
+            PermissionsManager.get().setOnlineState(OnlineState.OFFLINE);
+            signal(false);
+            return;
+        }
+        super.onFailure(caught);
+    }
 
-	@Override
-	public void run() {
-		if (PermissionsManager.isOffline()) {
-			signal(false);
-			return;
-		}
-		LoginResponse existingLoginResponse = handshakeConsortModel
-				.getLoginResponse();
-		if (existingLoginResponse == null) {
-			hello();
-		} else {
-			handleLoginResponse(existingLoginResponse);
-		}
-	}
+    @Override
+    public void onSuccess(LoginResponse loginResponse) {
+        handshakeConsortModel.setLoginResponse(loginResponse);
+        handleLoginResponse(loginResponse);
+    }
 
-	protected boolean allowAnonymousObjectLoad() {
-		return true;
-	}
+    @Override
+    public void run() {
+        if (PermissionsManager.isOffline()) {
+            signal(false);
+            return;
+        }
+        LoginResponse existingLoginResponse = handshakeConsortModel.getLoginResponse();
+        if (existingLoginResponse == null) {
+            hello();
+        } else {
+            handleLoginResponse(existingLoginResponse);
+        }
+    }
 
-	protected void handleLoginResponse(LoginResponse loginResponse) {
-		signal(loginResponse.isOk() || allowAnonymousObjectLoad());
-	}
+    protected boolean allowAnonymousObjectLoad() {
+        return true;
+    }
 
-	protected void hello() {
-		Registry.impl(CommonRemoteServiceAsync.class).hello(this);
-	}
+    protected void handleLoginResponse(LoginResponse loginResponse) {
+        signal(loginResponse.isOk() || allowAnonymousObjectLoad());
+    }
 
-	protected LoadObjectDataState helloOkState() {
-		return LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE;
-	}
+    protected void hello() {
+        Registry.impl(CommonRemoteServiceAsync.class).hello(this);
+    }
 
-	/*
+    protected LoadObjectDataState helloOkState() {
+        return LoadObjectDataState.HELLO_OK_REQUIRES_OBJECT_DATA_UPDATE;
+    }
+
+    /*
 	 * call logic is a bit fraught here - it works, but ain't pretty
 	 */
-	protected void signal(boolean continueObjectLoad) {
-		if (PermissionsManager.isOffline()) {
-			wasPlayed(LoadObjectDataState.HELLO_OFFLINE);
-		} else {
-			if (continueObjectLoad) {
-				wasPlayed(helloOkState());
-			} else {
-				wasPlayed(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
-			}
-		}
-	}
+    protected void signal(boolean continueObjectLoad) {
+        if (PermissionsManager.isOffline()) {
+            wasPlayed(LoadObjectDataState.HELLO_OFFLINE);
+        } else {
+            if (continueObjectLoad) {
+                wasPlayed(helloOkState());
+            } else {
+                wasPlayed(LoadObjectDataState.OBJECT_DATA_LOAD_FAILED);
+            }
+        }
+    }
 }

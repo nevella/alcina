@@ -4,110 +4,109 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
-
 import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.HtmlConstants;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public interface DomEnvironment {
-	public static StyleResolver contextBlockResolver() {
-		return Registry.impl(StyleResolver.class);
-	}
 
-	public static DomEnvironment get() {
-		return Registry.impl(DomEnvironment.class);
-	}
+    public static StyleResolver contextBlockResolver() {
+        return Registry.impl(StyleResolver.class);
+    }
 
-	public static List<Node> nodeListToList(NodeList nl) {
-		List<Node> rVal = new ArrayList<Node>();
-		int length = nl.getLength();
-		for (int i = 0; i < length; i++) {
-			rVal.add(nl.item(i));
-		}
-		return rVal;
-	}
+    public static DomEnvironment get() {
+        return Registry.impl(DomEnvironment.class);
+    }
 
-	public XpathEvaluator createXpathEvaluator(DomNode xmlNode,
-			XpathEvaluator xpathEvaluator);
+    public static List<Node> nodeListToList(NodeList nl) {
+        List<Node> rVal = new ArrayList<Node>();
+        int length = nl.getLength();
+        for (int i = 0; i < length; i++) {
+            rVal.add(nl.item(i));
+        }
+        return rVal;
+    }
 
-	public Node loadFromXml(String xml) throws Exception;
+    public XpathEvaluator createXpathEvaluator(DomNode xmlNode, XpathEvaluator xpathEvaluator);
 
-	public String log(DomNode xmlNode, boolean pretty);
+    public Node loadFromXml(String xml) throws Exception;
 
-	public String prettyPrint(Document domDoc);
+    public String log(DomNode xmlNode, boolean pretty);
 
-	public String prettyToString(DomNode xmlNode);
+    public String prettyPrint(Document domDoc);
 
-	public NamespaceResult removeNamespaces(DomDoc xmlDoc);
+    public String prettyToString(DomNode xmlNode);
 
-	public NamespaceResult restoreNamespaces(DomDoc xmlDoc, String firstTag);
+    public NamespaceResult removeNamespaces(DomDoc xmlDoc);
 
-	public String streamNCleanForBrowserHtmlFragment(Node node);
+    public NamespaceResult restoreNamespaces(DomDoc xmlDoc, String firstTag);
 
-	public String toXml(Node node);
+    public String streamNCleanForBrowserHtmlFragment(Node node);
 
-	public static class NamespaceResult {
-		public String firstTag;
+    public String toXml(Node node);
 
-		public String xml;
-	}
+    public static class NamespaceResult {
 
-	public static interface StyleResolver extends Predicate<DomNode> {
-		default Optional<DomNode> getContainingBlock(DomNode cursor) {
-			return cursor.ancestors().orSelf().match(this);
-		}
+        public String firstTag;
 
-		boolean isBlock(DomNode node);
+        public String xml;
+    }
 
-		default boolean isBlock(Element e) {
-			return isBlock(DomNode.from(e));
-		}
+    public static interface StyleResolver extends Predicate<DomNode> {
 
-		boolean isBold(DomNode node);
+        default Optional<DomNode> getContainingBlock(DomNode cursor) {
+            return cursor.ancestors().orSelf().match(this);
+        }
 
-		boolean isItalic(DomNode node);
+        boolean isBlock(DomNode node);
 
-		@Override
-		default boolean test(DomNode node) {
-			return isBlock(node);
-		}
-	}
+        default boolean isBlock(Element e) {
+            return isBlock(DomNode.from(e));
+        }
 
-	@RegistryLocation(registryPoint = StyleResolver.class, implementationType = ImplementationType.INSTANCE)
-	@ClientInstantiable
-	public static class StyleResolverHtml implements StyleResolver {
-		@Override
-		public boolean isBlock(DomNode node) {
-			return HtmlConstants.isHtmlBlock(node.name());
-		}
+        boolean isBold(DomNode node);
 
-		@Override
-		public boolean isBlock(Element e) {
-			return isBlock(DomNode.from(e));
-		}
+        boolean isItalic(DomNode node);
 
-		@Override
-		public boolean isBold(DomNode node) {
-			return node.ancestors().orSelf()
-					.has(n -> n.name().equalsIgnoreCase("B")
-							|| n.name().equalsIgnoreCase("STRONG"));
-		}
+        @Override
+        default boolean test(DomNode node) {
+            return isBlock(node);
+        }
+    }
 
-		@Override
-		public boolean isItalic(DomNode node) {
-			return node.ancestors().orSelf()
-					.has(n -> n.name().equalsIgnoreCase("I")
-							|| n.name().equalsIgnoreCase("EMPH"));
-		}
-	}
+    @RegistryLocation(registryPoint = StyleResolver.class, implementationType = ImplementationType.INSTANCE)
+    @ClientInstantiable
+    @Registration(StyleResolver.class)
+    public static class StyleResolverHtml implements StyleResolver {
 
-	public String toHtml(DomDoc doc);
+        @Override
+        public boolean isBlock(DomNode node) {
+            return HtmlConstants.isHtmlBlock(node.name());
+        }
+
+        @Override
+        public boolean isBlock(Element e) {
+            return isBlock(DomNode.from(e));
+        }
+
+        @Override
+        public boolean isBold(DomNode node) {
+            return node.ancestors().orSelf().has(n -> n.name().equalsIgnoreCase("B") || n.name().equalsIgnoreCase("STRONG"));
+        }
+
+        @Override
+        public boolean isItalic(DomNode node) {
+            return node.ancestors().orSelf().has(n -> n.name().equalsIgnoreCase("I") || n.name().equalsIgnoreCase("EMPH"));
+        }
+    }
+
+    public String toHtml(DomDoc doc);
 }

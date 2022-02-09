@@ -6,12 +6,14 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-@RegistryLocation(registryPoint = DebugLogWriter.class, implementationType = ImplementationType.INSTANCE,priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+@RegistryLocation(registryPoint = DebugLogWriter.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+@Registration(value = DebugLogWriter.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 public class DebugLogWriterImpl extends Job.DebugLogWriter {
-	public void write(Job job) {
-		ResourceUtilities.logToFile(
-				job.domain().ensurePopulated().getLargeResult().toString());
-		Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");
-	}
+
+    public void write(Job job) {
+        ResourceUtilities.logToFile(job.domain().ensurePopulated().getLargeResult().toString());
+        Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");
+    }
 }

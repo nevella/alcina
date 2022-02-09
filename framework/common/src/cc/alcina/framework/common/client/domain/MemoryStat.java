@@ -5,120 +5,112 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
-
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class MemoryStat {
-	List<MemoryStat> children = new ArrayList<>();
 
-	private Object root;
+    List<MemoryStat> children = new ArrayList<>();
 
-	MemoryStat parent;
+    private Object root;
 
-	public ObjectMemory objectMemory;
+    MemoryStat parent;
 
-	public Counter counter = new Counter();
+    public ObjectMemory objectMemory;
 
-	public StatType type;
+    public Counter counter = new Counter();
 
-	public MemoryStat(Object root) {
-		this.root = root;
-	}
+    public StatType type;
 
-	public void addChild(MemoryStat child) {
-		children.add(child);
-		child.parent = this;
-		child.objectMemory = objectMemory;
-	}
+    public MemoryStat(Object root) {
+        this.root = root;
+    }
 
-	public void setObjectMemory(ObjectMemory objectMemory) {
-		this.objectMemory = objectMemory;
-	}
+    public void addChild(MemoryStat child) {
+        children.add(child);
+        child.parent = this;
+        child.objectMemory = objectMemory;
+    }
 
-	public String toString(Predicate<Class> classFilter) {
-		FormatBuilder builder = new FormatBuilder();
-		builder.indent(depth() * 4);
-		builder.line(root.toString());
-		// builder.indent(depth() * 4 + 2);
-		// builder.line(counter.toString());
-		Counter deep = new Counter();
-		deep.accumulate(this);
-		builder.line(deep.toString());
-		if (classFilter != null && deep.perClassCount.keySet().stream()
-				.anyMatch(classFilter::test)) {
-			builder.line("Per-class");
-			builder.line("========");
-			deep.perClassCount.entrySet().stream()
-					.filter(e -> classFilter.test(e.getKey()))
-					.forEach(e -> builder.line("%s   %s   %s",
-							CommonUtils.padStringRight(
-									String.valueOf(e.getValue()), 10, ' '),
-							CommonUtils.padStringRight(
-									String.valueOf(
-											deep.perClassSize.get(e.getKey())),
-									10, ' '),
-							e.getKey().getSimpleName()));
-		}
-		builder.indent(0);
-		for (MemoryStat stat : children) {
-			builder.appendIfNotBlank(stat.toString(classFilter));
-		}
-		return builder.toString();
-	}
+    public void setObjectMemory(ObjectMemory objectMemory) {
+        this.objectMemory = objectMemory;
+    }
 
-	int depth() {
-		return parent == null ? 0 : parent.depth() + 1;
-	}
+    public String toString(Predicate<Class> classFilter) {
+        FormatBuilder builder = new FormatBuilder();
+        builder.indent(depth() * 4);
+        builder.line(root.toString());
+        // builder.indent(depth() * 4 + 2);
+        // builder.line(counter.toString());
+        Counter deep = new Counter();
+        deep.accumulate(this);
+        builder.line(deep.toString());
+        if (classFilter != null && deep.perClassCount.keySet().stream().anyMatch(classFilter::test)) {
+            builder.line("Per-class");
+            builder.line("========");
+            deep.perClassCount.entrySet().stream().filter(e -> classFilter.test(e.getKey())).forEach(e -> builder.line("%s   %s   %s", CommonUtils.padStringRight(String.valueOf(e.getValue()), 10, ' '), CommonUtils.padStringRight(String.valueOf(deep.perClassSize.get(e.getKey())), 10, ' '), e.getKey().getSimpleName()));
+        }
+        builder.indent(0);
+        for (MemoryStat stat : children) {
+            builder.appendIfNotBlank(stat.toString(classFilter));
+        }
+        return builder.toString();
+    }
 
-	public static class Counter {
-		public long count = 0;
+    int depth() {
+        return parent == null ? 0 : parent.depth() + 1;
+    }
 
-		public long size = 0;
+    public static class Counter {
 
-		public Map<Class, Long> perClassSize = new LinkedHashMap<>();
+        public long count = 0;
 
-		public Map<Class, Long> perClassCount = new LinkedHashMap<>();
+        public long size = 0;
 
-		public Counter() {
-		}
+        public Map<Class, Long> perClassSize = new LinkedHashMap<>();
 
-		public void accumulate(MemoryStat stat) {
-			count += stat.counter.count;
-			size += stat.counter.size;
-			stat.counter.perClassSize.forEach(
-					(k, v) -> perClassSize.merge(k, v, (v1, v2) -> v1 + v2));
-			stat.counter.perClassCount.forEach(
-					(k, v) -> perClassCount.merge(k, v, (v1, v2) -> v1 + v2));
-			for (MemoryStat child : stat.children) {
-				accumulate(child);
-			}
-		}
+        public Map<Class, Long> perClassCount = new LinkedHashMap<>();
 
-		@Override
-		public String toString() {
-			return Ax.format("%s bytes; %s objects", size, count);
-		}
-	}
+        public Counter() {
+        }
 
-	public interface MemoryStatProvider {
-		MemoryStat addMemoryStats(MemoryStat parent);
-	}
+        public void accumulate(MemoryStat stat) {
+            count += stat.counter.count;
+            size += stat.counter.size;
+            stat.counter.perClassSize.forEach((k, v) -> perClassSize.merge(k, v, (v1, v2) -> v1 + v2));
+            stat.counter.perClassCount.forEach((k, v) -> perClassCount.merge(k, v, (v1, v2) -> v1 + v2));
+            for (MemoryStat child : stat.children) {
+                accumulate(child);
+            }
+        }
 
-	@RegistryLocation(registryPoint = ObjectMemory.class)
-	public static abstract class ObjectMemory {
-		public abstract void dumpStats();
+        @Override
+        public String toString() {
+            return Ax.format("%s bytes; %s objects", size, count);
+        }
+    }
 
-		public abstract boolean
-				isMemoryStatProvider(Class<? extends Object> clazz);
+    public interface MemoryStatProvider {
 
-		public abstract void walkStats(Object o, Counter counter,
-				Predicate<Object> filter);
-	}
+        MemoryStat addMemoryStats(MemoryStat parent);
+    }
 
-	public enum StatType {
-		MIN, SAMPLE, EXACT
-	}
+    @RegistryLocation(registryPoint = ObjectMemory.class)
+    @Registration(ObjectMemory.class)
+    public static abstract class ObjectMemory {
+
+        public abstract void dumpStats();
+
+        public abstract boolean isMemoryStatProvider(Class<? extends Object> clazz);
+
+        public abstract void walkStats(Object o, Counter counter, Predicate<Object> filter);
+    }
+
+    public enum StatType {
+
+        MIN, SAMPLE, EXACT
+    }
 }

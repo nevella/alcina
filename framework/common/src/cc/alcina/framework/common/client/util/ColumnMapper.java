@@ -2,74 +2,75 @@ package cc.alcina.framework.common.client.util;
 
 import java.io.Serializable;
 import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
-
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult.GroupKey;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public abstract class ColumnMapper<T> {
-	protected ColumnsBuilder<T> builder;
 
-	protected ColumnsBuilder<List<T>> totalBuilder;
+    protected ColumnsBuilder<T> builder;
 
-	public ColumnMapper() {
-		builder = new ColumnsBuilder<T>(null, mappedClass());
-		totalBuilder = new ColumnsBuilder<List<T>>(null, null);
-	}
+    protected ColumnsBuilder<List<T>> totalBuilder;
 
-	public List<ColumnsBuilder<T>.ColumnBuilder> getMappings() {
-		if (builder.getPending().isEmpty()) {
-			defineMappings();
-		}
-		return builder.getPending();
-	}
+    public ColumnMapper() {
+        builder = new ColumnsBuilder<T>(null, mappedClass());
+        totalBuilder = new ColumnsBuilder<List<T>>(null, null);
+    }
 
-	public List<ColumnsBuilder<List<T>>.ColumnBuilder> getTotalMappings() {
-		if (totalBuilder.getPending().isEmpty()) {
-			defineTotalMappings();
-		}
-		return totalBuilder.getPending();
-	}
+    public List<ColumnsBuilder<T>.ColumnBuilder> getMappings() {
+        if (builder.getPending().isEmpty()) {
+            defineMappings();
+        }
+        return builder.getPending();
+    }
 
-	protected abstract void defineMappings();
+    public List<ColumnsBuilder<List<T>>.ColumnBuilder> getTotalMappings() {
+        if (totalBuilder.getPending().isEmpty()) {
+            defineTotalMappings();
+        }
+        return totalBuilder.getPending();
+    }
 
-	protected void defineTotalMappings() {
-	}
+    protected abstract void defineMappings();
 
-	protected abstract Class<T> mappedClass();
+    protected void defineTotalMappings() {
+    }
 
-	@XmlAccessorType(XmlAccessType.FIELD)
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
-	public static class RowModel_SingleCell implements Serializable {
-		public String value;
+    protected abstract Class<T> mappedClass();
 
-		public RowModel_SingleCell() {
-		}
+    @XmlAccessorType(XmlAccessType.FIELD)
+    @RegistryLocation(registryPoint = JaxbContextRegistration.class)
+    @Registration(JaxbContextRegistration.class)
+    public static class RowModel_SingleCell implements Serializable {
 
-		public RowModel_SingleCell(String value) {
-			this.value = value;
-		}
+        public String value;
 
-		public GroupKey asRowKey() {
-			return new GroupKey();
-		}
-	}
+        public RowModel_SingleCell() {
+        }
 
-	public static class SingleCellColumnMapper
-			extends ColumnMapper<RowModel_SingleCell> {
-		@Override
-		protected void defineMappings() {
-			builder.col("Value").function(row -> row.value).asUnsafeHtml(true)
-					.add();
-		}
+        public RowModel_SingleCell(String value) {
+            this.value = value;
+        }
 
-		@Override
-		protected Class<RowModel_SingleCell> mappedClass() {
-			return RowModel_SingleCell.class;
-		}
-	}
+        public GroupKey asRowKey() {
+            return new GroupKey();
+        }
+    }
+
+    public static class SingleCellColumnMapper extends ColumnMapper<RowModel_SingleCell> {
+
+        @Override
+        protected void defineMappings() {
+            builder.col("Value").function(row -> row.value).asUnsafeHtml(true).add();
+        }
+
+        @Override
+        protected Class<RowModel_SingleCell> mappedClass() {
+            return RowModel_SingleCell.class;
+        }
+    }
 }

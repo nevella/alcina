@@ -14,7 +14,6 @@
 package cc.alcina.framework.entity.logic.permissions;
 
 import java.util.concurrent.Callable;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
@@ -22,152 +21,152 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
- *
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+@Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ThreadedPermissionsManager extends PermissionsManager {
-	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
-		@Override
-		protected synchronized Object initialValue() {
-			return new ThreadedPermissionsManager();
-		}
-	};
 
-	public static ThreadedPermissionsManager cast() {
-		return (ThreadedPermissionsManager) PermissionsManager.get();
-	}
+    private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 
-	public static boolean is() {
-		return get() instanceof ThreadedPermissionsManager;
-	}
+        @Override
+        protected synchronized Object initialValue() {
+            return new ThreadedPermissionsManager();
+        }
+    };
 
-	public static ThreadedPermissionsManager tpmInstance() {
-		return new ThreadedPermissionsManager();
-	}
+    public static ThreadedPermissionsManager cast() {
+        return (ThreadedPermissionsManager) PermissionsManager.get();
+    }
 
-	public <T> T callWithPushedSystemUserIfNeeded(Callable<T> callable)
-			throws Exception {
-		if (isRoot()) {
-			return callable.call();
-		} else {
-			try {
-				pushSystemUser();
-				return callable.call();
-			} finally {
-				popSystemUser();
-			}
-		}
-	}
+    public static boolean is() {
+        return get() instanceof ThreadedPermissionsManager;
+    }
 
-	public <T> T callWithPushedSystemUserIfNeededNoThrow(Callable<T> callable) {
-		try {
-			if (isRoot()) {
-				return callable.call();
-			} else {
-				try {
-					pushSystemUser();
-					return callable.call();
-				} finally {
-					popSystemUser();
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    public static ThreadedPermissionsManager tpmInstance() {
+        return new ThreadedPermissionsManager();
+    }
 
-	@Override
-	public ClientInstance getClientInstance() {
-		return ThreadedPmClientInstanceResolver.get().getClientInstance();
-	}
+    public <T> T callWithPushedSystemUserIfNeeded(Callable<T> callable) throws Exception {
+        if (isRoot()) {
+            return callable.call();
+        } else {
+            try {
+                pushSystemUser();
+                return callable.call();
+            } finally {
+                popSystemUser();
+            }
+        }
+    }
 
-	@Override
-	public Long getClientInstanceId() {
-		return ThreadedPmClientInstanceResolver.get().getClientInstanceId();
-	}
+    public <T> T callWithPushedSystemUserIfNeededNoThrow(Callable<T> callable) {
+        try {
+            if (isRoot()) {
+                return callable.call();
+            } else {
+                try {
+                    pushSystemUser();
+                    return callable.call();
+                } finally {
+                    popSystemUser();
+                }
+            }
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	@Override
-	public PermissionsManager getT() {
-		return (ThreadedPermissionsManager) threadLocalInstance.get();
-	}
+    @Override
+    public ClientInstance getClientInstance() {
+        return ThreadedPmClientInstanceResolver.get().getClientInstance();
+    }
 
-	public boolean isSystemUser() {
-		return getUserName().equals(PermissionsManager.SYSTEM_USER_NAME);
-	}
+    @Override
+    public Long getClientInstanceId() {
+        return ThreadedPmClientInstanceResolver.get().getClientInstanceId();
+    }
 
-	public void popSystemOrCurrentUser() {
-		popUser();
-	}
+    @Override
+    public PermissionsManager getT() {
+        return (ThreadedPermissionsManager) threadLocalInstance.get();
+    }
 
-	public <IU extends IUser> IU provideNonSystemUserInStackOrThrow() {
-		return provideNonSystemUserInStackOrThrow(false);
-	}
+    public boolean isSystemUser() {
+        return getUserName().equals(PermissionsManager.SYSTEM_USER_NAME);
+    }
 
-	public <IU extends IUser> IU
-			provideNonSystemUserInStackOrThrow(boolean throwIfNotFound) {
-		int idx = stateStack.size() - 1;
-		while (idx >= 0) {
-			Boolean isRoot = stateStack.get(idx).asRoot;
-			if (!isRoot) {
-				return (IU) stateStack.get(idx).user;
-			}
-			idx--;
-		}
-		if (throwIfNotFound) {
-			throw new IllegalStateException("No non-root user in stack");
-		} else {
-			return null;
-		}
-	}
+    public void popSystemOrCurrentUser() {
+        popUser();
+    }
 
-	public void pushSystemOrCurrentUserAsRoot() {
-		if (isLoggedIn()) {
-			pushUser(getUser(), getLoginState(), true);
-		} else {
-			pushSystemUser();
-		}
-	}
+    public <IU extends IUser> IU provideNonSystemUserInStackOrThrow() {
+        return provideNonSystemUserInStackOrThrow(false);
+    }
 
-	public void
-			runThrowingWithPushedSystemUserIfNeeded(ThrowingRunnable runnable) {
-		try {
-			if (isRoot()) {
-				runnable.run();
-			} else {
-				try {
-					pushSystemUser();
-					runnable.run();
-				} finally {
-					popSystemUser();
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    public <IU extends IUser> IU provideNonSystemUserInStackOrThrow(boolean throwIfNotFound) {
+        int idx = stateStack.size() - 1;
+        while (idx >= 0) {
+            Boolean isRoot = stateStack.get(idx).asRoot;
+            if (!isRoot) {
+                return (IU) stateStack.get(idx).user;
+            }
+            idx--;
+        }
+        if (throwIfNotFound) {
+            throw new IllegalStateException("No non-root user in stack");
+        } else {
+            return null;
+        }
+    }
 
-	public void runWithPushedSystemUserIfNeeded(Runnable runnable) {
-		try {
-			if (isRoot()) {
-				runnable.run();
-			} else {
-				try {
-					pushSystemUser();
-					runnable.run();
-				} finally {
-					popSystemUser();
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    public void pushSystemOrCurrentUserAsRoot() {
+        if (isLoggedIn()) {
+            pushUser(getUser(), getLoginState(), true);
+        } else {
+            pushSystemUser();
+        }
+    }
 
-	@Override
-	protected void removePerThreadContext0() {
-		threadLocalInstance.remove();
-	}
+    public void runThrowingWithPushedSystemUserIfNeeded(ThrowingRunnable runnable) {
+        try {
+            if (isRoot()) {
+                runnable.run();
+            } else {
+                try {
+                    pushSystemUser();
+                    runnable.run();
+                } finally {
+                    popSystemUser();
+                }
+            }
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    public void runWithPushedSystemUserIfNeeded(Runnable runnable) {
+        try {
+            if (isRoot()) {
+                runnable.run();
+            } else {
+                try {
+                    pushSystemUser();
+                    runnable.run();
+                } finally {
+                    popSystemUser();
+                }
+            }
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
+
+    @Override
+    protected void removePerThreadContext0() {
+        threadLocalInstance.remove();
+    }
 }

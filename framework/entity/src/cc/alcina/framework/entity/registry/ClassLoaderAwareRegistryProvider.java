@@ -7,12 +7,9 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -21,208 +18,180 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Regi
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryKey;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+@Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
-	public static void clearThreadLocals(Class... clear) {
-		try {
-			for (Class clazz : clear) {
-				while (clazz != null) {
-					for (Field f : clazz.getDeclaredFields()) {
-						if (ThreadLocal.class.isAssignableFrom(f.getType())
-								&& Modifier.isStatic(f.getModifiers())) {
-							f.setAccessible(true);
-							ThreadLocal tl = (ThreadLocal) f.get(null);
-							if (tl != null) {
-								tl.remove();
-							}
-						}
-					}
-					clazz = clazz.getSuperclass();
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
 
-	public static void clearThreadLocalsForAllThreads(Class clazz) {
-		Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
-		try {
-			Field _Thread_threadLocals = Thread.class
-					.getDeclaredField("threadLocals");
-			_Thread_threadLocals.setAccessible(true);
-			Method _ThreadLocalMap_remove = null;
-			while (clazz != null) {
-				for (Field f : clazz.getDeclaredFields()) {
-					if (ThreadLocal.class.isAssignableFrom(f.getType())
-							&& Modifier.isStatic(f.getModifiers())) {
-						f.setAccessible(true);
-						ThreadLocal tl = (ThreadLocal) f.get(null);
-						if (tl != null) {
-							for (Thread thread : threadSet) {
-								Object threadLocalMap = _Thread_threadLocals
-										.get(thread);
-								if (threadLocalMap != null) {
-									if (_ThreadLocalMap_remove == null) {
-										_ThreadLocalMap_remove = threadLocalMap
-												.getClass().getDeclaredMethod(
-														"remove", new Class[] {
-																ThreadLocal.class });
-										_ThreadLocalMap_remove
-												.setAccessible(true);
-									}
-									_ThreadLocalMap_remove.invoke(
-											threadLocalMap,
-											new Object[] { tl });
-								}
-							}
-						}
-					}
-				}
-				clazz = clazz.getSuperclass();
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    public static void clearThreadLocals(Class... clear) {
+        try {
+            for (Class clazz : clear) {
+                while (clazz != null) {
+                    for (Field f : clazz.getDeclaredFields()) {
+                        if (ThreadLocal.class.isAssignableFrom(f.getType()) && Modifier.isStatic(f.getModifiers())) {
+                            f.setAccessible(true);
+                            ThreadLocal tl = (ThreadLocal) f.get(null);
+                            if (tl != null) {
+                                tl.remove();
+                            }
+                        }
+                    }
+                    clazz = clazz.getSuperclass();
+                }
+            }
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	public static ClassLoaderAwareRegistryProvider get() {
-		return (ClassLoaderAwareRegistryProvider) Registry.getProvider();
-	}
+    public static void clearThreadLocalsForAllThreads(Class clazz) {
+        Set<Thread> threadSet = Thread.getAllStackTraces().keySet();
+        try {
+            Field _Thread_threadLocals = Thread.class.getDeclaredField("threadLocals");
+            _Thread_threadLocals.setAccessible(true);
+            Method _ThreadLocalMap_remove = null;
+            while (clazz != null) {
+                for (Field f : clazz.getDeclaredFields()) {
+                    if (ThreadLocal.class.isAssignableFrom(f.getType()) && Modifier.isStatic(f.getModifiers())) {
+                        f.setAccessible(true);
+                        ThreadLocal tl = (ThreadLocal) f.get(null);
+                        if (tl != null) {
+                            for (Thread thread : threadSet) {
+                                Object threadLocalMap = _Thread_threadLocals.get(thread);
+                                if (threadLocalMap != null) {
+                                    if (_ThreadLocalMap_remove == null) {
+                                        _ThreadLocalMap_remove = threadLocalMap.getClass().getDeclaredMethod("remove", new Class[] { ThreadLocal.class });
+                                        _ThreadLocalMap_remove.setAccessible(true);
+                                    }
+                                    _ThreadLocalMap_remove.invoke(threadLocalMap, new Object[] { tl });
+                                }
+                            }
+                        }
+                    }
+                }
+                clazz = clazz.getSuperclass();
+            }
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	Map<ClassLoader, Registry> perClassLoader = new LinkedHashMap<ClassLoader, Registry>();
+    public static ClassLoaderAwareRegistryProvider get() {
+        return (ClassLoaderAwareRegistryProvider) Registry.getProvider();
+    }
 
-	ClassLoader lastClassLoader;
+    Map<ClassLoader, Registry> perClassLoader = new LinkedHashMap<ClassLoader, Registry>();
 
-	Registry lastRegistry;
+    ClassLoader lastClassLoader;
 
-	private ClassLoader servletLayerClassloader;
+    Registry lastRegistry;
 
-	@Override
-	public void appShutdown() {
-		Logger logger = LoggerFactory.getLogger(Registry.class);
-		for (Registry registry : perClassLoader.values()) {
-			registry.shutdownSingletons();
-		}
-		List<Class> clear = Registry.get().lookup(false,
-				ClearStaticFieldsOnAppShutdown.class, void.class, false);
-		try {
-			for (Class clazz : clear) {
-				logger.debug("Clearing static fields for class\n\t{}", clazz);
-				try {
-					try {
-						clearThreadLocalsForAllThreads(clazz);
-					} catch (Exception e) {
-						logger.debug("Thread local clear issue", e);
-						// ignore
-					}
-					while (clazz != null) {
-						for (Field f : clazz.getDeclaredFields()) {
-							if (Modifier.isStatic(f.getModifiers())
-									&& !Modifier.isFinal(f.getModifiers())
-									&& !f.getType().isPrimitive()) {
-								f.setAccessible(true);
-								f.set(null, null);
-							}
-						}
-						clazz = clazz.getSuperclass();
-					}
-				} catch (Throwable e) {
-					if (e instanceof java.lang.NoClassDefFoundError) {
-						// classloader issues
-					} else {
-						e.printStackTrace();
-					}
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    private ClassLoader servletLayerClassloader;
 
-	public void dumpRegistries() {
-		perClassLoader.values().forEach(reg -> {
-			reg.getRegistry().keySet()
-					.forEach(k -> System.out.format("%-12s %s\n", k.hashCode(),
-							((RegistryKey) k).name()));
-		});
-	}
+    @Override
+    public void appShutdown() {
+        Logger logger = LoggerFactory.getLogger(Registry.class);
+        for (Registry registry : perClassLoader.values()) {
+            registry.shutdownSingletons();
+        }
+        List<Class> clear = Registry.get().lookup(false, ClearStaticFieldsOnAppShutdown.class, void.class, false);
+        try {
+            for (Class clazz : clear) {
+                logger.debug("Clearing static fields for class\n\t{}", clazz);
+                try {
+                    try {
+                        clearThreadLocalsForAllThreads(clazz);
+                    } catch (Exception e) {
+                        logger.debug("Thread local clear issue", e);
+                        // ignore
+                    }
+                    while (clazz != null) {
+                        for (Field f : clazz.getDeclaredFields()) {
+                            if (Modifier.isStatic(f.getModifiers()) && !Modifier.isFinal(f.getModifiers()) && !f.getType().isPrimitive()) {
+                                f.setAccessible(true);
+                                f.set(null, null);
+                            }
+                        }
+                        clazz = clazz.getSuperclass();
+                    }
+                } catch (Throwable e) {
+                    if (e instanceof java.lang.NoClassDefFoundError) {
+                        // classloader issues
+                    } else {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	public void forAllRegistries(Class<?> registryPoint) {
-		Registry sourceInstance = perClassLoader.get(servletLayerClassloader);
-		getPerClassLoader().entrySet().stream()
-				.filter(e -> e.getKey() != servletLayerClassloader)
-				.forEach(e -> {
-					e.getValue().copyFrom(sourceInstance, registryPoint);
-				});
-	}
+    public void dumpRegistries() {
+        perClassLoader.values().forEach(reg -> {
+            reg.getRegistry().keySet().forEach(k -> System.out.format("%-12s %s\n", k.hashCode(), ((RegistryKey) k).name()));
+        });
+    }
 
-	public ClassLoader getEntityLayerClassloader() {
-		Preconditions.checkArgument(
-				perClassLoader.size() == 2 && servletLayerClassloader != null);
-		return perClassLoader.entrySet().stream()
-				.filter(e -> e.getKey() != servletLayerClassloader).findFirst()
-				.get().getKey();
-	}
+    public void forAllRegistries(Class<?> registryPoint) {
+        Registry sourceInstance = perClassLoader.get(servletLayerClassloader);
+        getPerClassLoader().entrySet().stream().filter(e -> e.getKey() != servletLayerClassloader).forEach(e -> {
+            e.getValue().copyFrom(sourceInstance, registryPoint);
+        });
+    }
 
-	public Map<ClassLoader, Registry> getPerClassLoader() {
-		return this.perClassLoader;
-	}
+    public ClassLoader getEntityLayerClassloader() {
+        Preconditions.checkArgument(perClassLoader.size() == 2 && servletLayerClassloader != null);
+        return perClassLoader.entrySet().stream().filter(e -> e.getKey() != servletLayerClassloader).findFirst().get().getKey();
+    }
 
-	@Override
-	public Registry getRegistry() {
-		ClassLoader classLoader = Thread.currentThread()
-				.getContextClassLoader();
-		if (classLoader.getClass().getName()
-				.equals("jdk.internal.loader.ClassLoaders$AppClassLoader")) {
-			if (getClass().getClassLoader() != classLoader) {
-				throw new RuntimeException("Context classloader not set");
-			}
-		}
-		if (classLoader == lastClassLoader) {
-			return lastRegistry;
-		}
-		Registry registry = perClassLoader.get(classLoader);
-		if (registry == null) {
-			synchronized (this) {
-				if (perClassLoader.get(classLoader) == null) {
-					if (perClassLoader.size() < 2) {
-						Registry existing = CommonUtils
-								.first(perClassLoader.values());
-						registry = new Registry();
-						registry.setName(classLoader.toString());
-						if (existing != null) {
-							existing.shareSingletonMapTo(registry);
-						}
-						perClassLoader.put(classLoader, registry);
-						System.out.format(
-								"Created registry for classloader %s - %s\n",
-								classLoader, classLoader.hashCode());
-					} else {
-						throw new RuntimeException(String.format(
-								"Too many registries: \n%s\n%s\n%s\n",
-								classLoader, classLoader.hashCode(),
-								perClassLoader.keySet()));
-					}
-				}
-			}
-		}
-		lastClassLoader = classLoader;
-		lastRegistry = registry;
-		return registry;
-	}
+    public Map<ClassLoader, Registry> getPerClassLoader() {
+        return this.perClassLoader;
+    }
 
-	public ClassLoader getServletLayerClassloader() {
-		return this.servletLayerClassloader;
-	}
+    @Override
+    public Registry getRegistry() {
+        ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
+        if (classLoader.getClass().getName().equals("jdk.internal.loader.ClassLoaders$AppClassLoader")) {
+            if (getClass().getClassLoader() != classLoader) {
+                throw new RuntimeException("Context classloader not set");
+            }
+        }
+        if (classLoader == lastClassLoader) {
+            return lastRegistry;
+        }
+        Registry registry = perClassLoader.get(classLoader);
+        if (registry == null) {
+            synchronized (this) {
+                if (perClassLoader.get(classLoader) == null) {
+                    if (perClassLoader.size() < 2) {
+                        Registry existing = CommonUtils.first(perClassLoader.values());
+                        registry = new Registry();
+                        registry.setName(classLoader.toString());
+                        if (existing != null) {
+                            existing.shareSingletonMapTo(registry);
+                        }
+                        perClassLoader.put(classLoader, registry);
+                        System.out.format("Created registry for classloader %s - %s\n", classLoader, classLoader.hashCode());
+                    } else {
+                        throw new RuntimeException(String.format("Too many registries: \n%s\n%s\n%s\n", classLoader, classLoader.hashCode(), perClassLoader.keySet()));
+                    }
+                }
+            }
+        }
+        lastClassLoader = classLoader;
+        lastRegistry = registry;
+        return registry;
+    }
 
-	public void
-			setServletLayerClassloader(ClassLoader servletLayerClassloader) {
-		this.servletLayerClassloader = servletLayerClassloader;
-		EntityLayerObjects.get()
-				.setServletLayerClassLoader(getServletLayerClassloader());
-		EntityLayerObjects.get()
-				.setEntityLayerClassLoader(getEntityLayerClassloader());
-	}
+    public ClassLoader getServletLayerClassloader() {
+        return this.servletLayerClassloader;
+    }
+
+    public void setServletLayerClassloader(ClassLoader servletLayerClassloader) {
+        this.servletLayerClassloader = servletLayerClassloader;
+        EntityLayerObjects.get().setServletLayerClassLoader(getServletLayerClassloader());
+        EntityLayerObjects.get().setEntityLayerClassLoader(getEntityLayerClassloader());
+    }
 }

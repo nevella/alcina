@@ -18,13 +18,10 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
-
 import com.totsp.gwittir.client.ui.Renderer;
-
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -35,125 +32,122 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @MappedSuperclass
 /**
- *
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+@Registration(ClearStaticFieldsOnAppShutdown.class)
 public abstract class ClassRef extends Entity implements TreeSerializable {
-	private static Map<String, ClassRef> refMap = new HashMap<String, ClassRef>();
 
-	private static Map<Long, ClassRef> idMap = new HashMap<Long, ClassRef>();
+    private static Map<String, ClassRef> refMap = new HashMap<String, ClassRef>();
 
-	public static void add(Collection<? extends ClassRef> refs) {
-		for (ClassRef classRef : refs) {
-			refMap.put(classRef.getRefClassName(), classRef);
-			idMap.put(classRef.getId(), classRef);
-		}
-	}
+    private static Map<Long, ClassRef> idMap = new HashMap<Long, ClassRef>();
 
-	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	public static Set<ClassRef> all() {
-		return new LinkedHashSet<ClassRef>(refMap.values());
-	}
+    public static void add(Collection<? extends ClassRef> refs) {
+        for (ClassRef classRef : refs) {
+            refMap.put(classRef.getRefClassName(), classRef);
+            idMap.put(classRef.getId(), classRef);
+        }
+    }
 
-	public static ClassRef forClass(Class clazz) {
-		return forName(clazz.getName());
-	}
+    @MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+    public static Set<ClassRef> all() {
+        return new LinkedHashSet<ClassRef>(refMap.values());
+    }
 
-	public static ClassRef forId(long id) {
-		return idMap.get(id);
-	}
+    public static ClassRef forClass(Class clazz) {
+        return forName(clazz.getName());
+    }
 
-	public static ClassRef forName(String className) {
-		return refMap.get(className);
-	}
+    public static ClassRef forId(long id) {
+        return idMap.get(id);
+    }
 
-	public static void remove(ClassRef ref) {
-		refMap.remove(ref.getRefClassName());
-		idMap.remove(ref.getId());
-	}
+    public static ClassRef forName(String className) {
+        return refMap.get(className);
+    }
 
-	private String refClassName;
+    public static void remove(ClassRef ref) {
+        refMap.remove(ref.getRefClassName());
+        idMap.remove(ref.getId());
+    }
 
-	private transient Class refClass;
+    private String refClassName;
 
-	@Override
-	public boolean equals(Object obj) {
-		if (!(obj instanceof ClassRef)) {
-			return false;
-		}
-		return getRefClass() != null
-				&& getRefClass().equals(((ClassRef) obj).getRefClass());
-	}
+    private transient Class refClass;
 
-	@Transient
-	@XmlTransient
-	@AlcinaTransient
-	public Class getRefClass() {
-		if (this.refClass == null && this.refClassName != null) {
-			try {
-				this.refClass = Reflections
-						.forName(this.refClassName);
-			} catch (Exception e) {
-				// Ax.simpleExceptionOut(e);
-			}
-		}
-		return this.refClass;
-	}
+    @Override
+    public boolean equals(Object obj) {
+        if (!(obj instanceof ClassRef)) {
+            return false;
+        }
+        return getRefClass() != null && getRefClass().equals(((ClassRef) obj).getRefClass());
+    }
 
-	public String getRefClassName() {
-		return refClassName;
-	}
+    @Transient
+    @XmlTransient
+    @AlcinaTransient
+    public Class getRefClass() {
+        if (this.refClass == null && this.refClassName != null) {
+            try {
+                this.refClass = Reflections.forName(this.refClassName);
+            } catch (Exception e) {
+                // Ax.simpleExceptionOut(e);
+            }
+        }
+        return this.refClass;
+    }
 
-	@Override
-	public int hashCode() {
-		return refClassName == null ? 0 : refClassName.hashCode();
-	}
+    public String getRefClassName() {
+        return refClassName;
+    }
 
-	public boolean notInVm() {
-		if (this.refClass == null && this.refClassName != null) {
-			try {
-				this.refClass = Reflections
-						.forName(this.refClassName);
-			} catch (Exception e) {
-				return true;
-			}
-		}
-		return false;
-	}
+    @Override
+    public int hashCode() {
+        return refClassName == null ? 0 : refClassName.hashCode();
+    }
 
-	public boolean provideExists() {
-		return getRefClass() != null;
-	}
+    public boolean notInVm() {
+        if (this.refClass == null && this.refClassName != null) {
+            try {
+                this.refClass = Reflections.forName(this.refClassName);
+            } catch (Exception e) {
+                return true;
+            }
+        }
+        return false;
+    }
 
-	public void setRefClass(Class refClass) {
-		this.refClass = refClass;
-		this.refClassName = (refClass == null) ? null : this.refClass.getName();
-		// .replace('$',
-		// '.');
-	}
+    public boolean provideExists() {
+        return getRefClass() != null;
+    }
 
-	public void setRefClassName(String refClassName) {
-		this.refClassName = refClassName;
-	}
+    public void setRefClass(Class refClass) {
+        this.refClass = refClass;
+        this.refClassName = (refClass == null) ? null : this.refClass.getName();
+        // .replace('$',
+        // '.');
+    }
 
-	@Override
-	public String toString() {
-		return Ax.format("Classref - id: %s className: %s", getId(),
-				getRefClassName());
-	}
+    public void setRefClassName(String refClassName) {
+        this.refClassName = refClassName;
+    }
 
-	public static class ClassRefSimpleNameRenderer
-			implements Renderer<ClassRef, String> {
-		public static final ClassRefSimpleNameRenderer INSTANCE = new ClassRefSimpleNameRenderer();
+    @Override
+    public String toString() {
+        return Ax.format("Classref - id: %s className: %s", getId(), getRefClassName());
+    }
 
-		@Override
-		public String render(ClassRef o) {
-			return o == null ? "(undefined)"
-					: CommonUtils.simpleClassName(o.getRefClass());
-		}
-	}
+    public static class ClassRefSimpleNameRenderer implements Renderer<ClassRef, String> {
+
+        public static final ClassRefSimpleNameRenderer INSTANCE = new ClassRefSimpleNameRenderer();
+
+        @Override
+        public String render(ClassRef o) {
+            return o == null ? "(undefined)" : CommonUtils.simpleClassName(o.getRefClass());
+        }
+    }
 }

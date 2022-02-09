@@ -8,96 +8,97 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotifications.Level;
 import cc.alcina.framework.gwt.client.ClientState;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /*
  * Will be delivered in http header of RPC request
  */
 public interface OutOfBandMessage {
-	@Bean
-	public static class ClientInstanceMessage extends Bindable
-			implements OutOfBandMessage {
-		private String messageHtml;
 
-		public String getMessageHtml() {
-			return this.messageHtml;
-		}
+    @Bean
+    public static class ClientInstanceMessage extends Bindable implements OutOfBandMessage {
 
-		public void setMessageHtml(String messageHtml) {
-			this.messageHtml = messageHtml;
-		}
-	}
+        private String messageHtml;
 
-	@RegistryLocation(registryPoint = OutOfBandMessageHandler.class, targetClass = ClientInstanceMessage.class)
-	@ClientInstantiable
-	public static class ClientInstanceMessageHandler
-			implements OutOfBandMessageHandler<ClientInstanceMessage> {
-		private static boolean shownThisInstance;
+        public String getMessageHtml() {
+            return this.messageHtml;
+        }
 
-		@Override
-		public void handle(ClientInstanceMessage outOfBandMessage) {
-			if (shownThisInstance) {
-			} else {
-				shownThisInstance = true;
-				ClientNotifications.builder()
-						.withCaption(outOfBandMessage.getMessageHtml())
-						.withLevel(Level.INFO).withOncePerClientInstance(true)
-						.enqueue();
-			}
-		}
-	}
+        public void setMessageHtml(String messageHtml) {
+            this.messageHtml = messageHtml;
+        }
+    }
 
-	@Bean
-	public static class ExceptionMessage extends Bindable
-			implements OutOfBandMessage {
-		private String messageHtml;
+    @RegistryLocation(registryPoint = OutOfBandMessageHandler.class, targetClass = ClientInstanceMessage.class)
+    @ClientInstantiable
+    @Registration({ OutOfBandMessageHandler.class, ClientInstanceMessage.class })
+    public static class ClientInstanceMessageHandler implements OutOfBandMessageHandler<ClientInstanceMessage> {
 
-		public String getMessageHtml() {
-			return this.messageHtml;
-		}
+        private static boolean shownThisInstance;
 
-		public void setMessageHtml(String messageHtml) {
-			this.messageHtml = messageHtml;
-		}
-	}
+        @Override
+        public void handle(ClientInstanceMessage outOfBandMessage) {
+            if (shownThisInstance) {
+            } else {
+                shownThisInstance = true;
+                ClientNotifications.builder().withCaption(outOfBandMessage.getMessageHtml()).withLevel(Level.INFO).withOncePerClientInstance(true).enqueue();
+            }
+        }
+    }
 
-	@RegistryLocation(registryPoint = OutOfBandMessageHandler.class, targetClass = ExceptionMessage.class)
-	@ClientInstantiable
-	public static class ExceptionMessageHandler
-			implements OutOfBandMessageHandler<ExceptionMessage> {
-		@Override
-		public void handle(ExceptionMessage outOfBandMessage) {
-			ClientNotifications.get()
-					.showWarning(outOfBandMessage.getMessageHtml());
-		}
-	}
+    @Bean
+    public static class ExceptionMessage extends Bindable implements OutOfBandMessage {
 
-	public interface OutOfBandMessageHandler<T extends OutOfBandMessage> {
-		void handle(T outOfBandMessage);
-	}
+        private String messageHtml;
 
-	@Bean
-	public static class ReadonlyInstanceMessage extends Bindable
-			implements OutOfBandMessage {
-		private boolean readonly;
+        public String getMessageHtml() {
+            return this.messageHtml;
+        }
 
-		public boolean isReadonly() {
-			return this.readonly;
-		}
+        public void setMessageHtml(String messageHtml) {
+            this.messageHtml = messageHtml;
+        }
+    }
 
-		public void setReadonly(boolean readonly) {
-			this.readonly = readonly;
-		}
-	}
+    @RegistryLocation(registryPoint = OutOfBandMessageHandler.class, targetClass = ExceptionMessage.class)
+    @ClientInstantiable
+    @Registration({ OutOfBandMessageHandler.class, ExceptionMessage.class })
+    public static class ExceptionMessageHandler implements OutOfBandMessageHandler<ExceptionMessage> {
 
-	@RegistryLocation(registryPoint = OutOfBandMessageHandler.class, targetClass = ReadonlyInstanceMessage.class)
-	@ClientInstantiable
-	public static class ReadonlyInstanceMessageHandler
-			implements OutOfBandMessageHandler<ReadonlyInstanceMessage> {
-		@Override
-		public void handle(ReadonlyInstanceMessage outOfBandMessage) {
-			AlcinaTopics.TOPIC_APP_READONLY
-					.publish(outOfBandMessage.isReadonly());
-			ClientState.get().setAppReadOnly(outOfBandMessage.isReadonly());
-		}
-	}
+        @Override
+        public void handle(ExceptionMessage outOfBandMessage) {
+            ClientNotifications.get().showWarning(outOfBandMessage.getMessageHtml());
+        }
+    }
+
+    public interface OutOfBandMessageHandler<T extends OutOfBandMessage> {
+
+        void handle(T outOfBandMessage);
+    }
+
+    @Bean
+    public static class ReadonlyInstanceMessage extends Bindable implements OutOfBandMessage {
+
+        private boolean readonly;
+
+        public boolean isReadonly() {
+            return this.readonly;
+        }
+
+        public void setReadonly(boolean readonly) {
+            this.readonly = readonly;
+        }
+    }
+
+    @RegistryLocation(registryPoint = OutOfBandMessageHandler.class, targetClass = ReadonlyInstanceMessage.class)
+    @ClientInstantiable
+    @Registration({ OutOfBandMessageHandler.class, ReadonlyInstanceMessage.class })
+    public static class ReadonlyInstanceMessageHandler implements OutOfBandMessageHandler<ReadonlyInstanceMessage> {
+
+        @Override
+        public void handle(ReadonlyInstanceMessage outOfBandMessage) {
+            AlcinaTopics.TOPIC_APP_READONLY.publish(outOfBandMessage.isReadonly());
+            ClientState.get().setAppReadOnly(outOfBandMessage.isReadonly());
+        }
+    }
 }

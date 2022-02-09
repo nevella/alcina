@@ -16,16 +16,17 @@ package cc.alcina.framework.gwt.client.objecttree.basic;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.TxtCriterion;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
- * 
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = TreeRenderer.class, targetClass = TxtCriterion.class)
-public class TxtCriterionRenderer
-		extends SearchCriterionRenderer<TxtCriterion> {
-	@Override
-	public String renderablePropertyName() {
-		return "text";
-	}
+@Registration({ TreeRenderer.class, TxtCriterion.class })
+public class TxtCriterionRenderer extends SearchCriterionRenderer<TxtCriterion> {
+
+    @Override
+    public String renderablePropertyName() {
+        return "text";
+    }
 }

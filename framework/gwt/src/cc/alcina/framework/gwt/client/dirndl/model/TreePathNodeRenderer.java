@@ -4,10 +4,13 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.TextNodeRenderer;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = TreePath.class)
+@Registration({ DirectedNodeRenderer.class, TreePath.class })
 public class TreePathNodeRenderer extends TextNodeRenderer {
-	public TreePathNodeRenderer() {
-		int debug = 3;
-	}
+
+    public TreePathNodeRenderer() {
+        int debug = 3;
+    }
 }

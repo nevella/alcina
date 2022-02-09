@@ -14,39 +14,36 @@
 package cc.alcina.framework.gwt.client.objecttree.basic;
 
 import java.util.Collection;
-
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = TreeRenderer.class, targetClass = CriteriaGroup.class)
-/**
- *
- * @author Nick Reddel
- */
-public class CriteriaGroupRenderer<T extends CriteriaGroup>
-		extends AbstractRenderer<T> {
-	public Collection<? extends TreeRenderable> renderableChildren() {
-		return getRenderable().getCriteria();
-	}
+@Registration({ TreeRenderer.class, CriteriaGroup.class })
+public class CriteriaGroupRenderer<T extends CriteriaGroup> extends AbstractRenderer<T> {
 
-	@Override
-	public String renderableText() {
-		return getRenderable().asString(false, false);
-	}
+    public Collection<? extends TreeRenderable> renderableChildren() {
+        return getRenderable().getCriteria();
+    }
 
-	@Override
-	public boolean renderChildrenHorizontally() {
-		return true;
-	}
+    @Override
+    public String renderableText() {
+        return getRenderable().asString(false, false);
+    }
 
-	@Override
-	public String renderCss() {
-		return "sub-head";
-	}
+    @Override
+    public boolean renderChildrenHorizontally() {
+        return true;
+    }
 
-	public RenderInstruction renderInstruction() {
-		return RenderInstruction.AS_TITLE;
-	}
+    @Override
+    public String renderCss() {
+        return "sub-head";
+    }
+
+    public RenderInstruction renderInstruction() {
+        return RenderInstruction.AS_TITLE;
+    }
 }

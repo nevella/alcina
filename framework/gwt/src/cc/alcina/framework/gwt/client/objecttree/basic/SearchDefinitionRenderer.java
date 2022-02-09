@@ -16,35 +16,32 @@ package cc.alcina.framework.gwt.client.objecttree.basic;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = TreeRenderer.class, targetClass = SearchDefinition.class)
-/**
- *
- * @author Nick Reddel
- */
-public class SearchDefinitionRenderer<SD extends SearchDefinition>
-		extends AbstractRenderer<SD> {
-	public static final String RENDER_ORDER_GROUPS = "RENDER_ORDER_GROUPS";
+@Registration({ TreeRenderer.class, SearchDefinition.class })
+public class SearchDefinitionRenderer<SD extends SearchDefinition> extends AbstractRenderer<SD> {
 
-	public Collection<? extends TreeRenderable> renderableChildren() {
-		if (getContext().getBoolean(RENDER_ORDER_GROUPS)) {
-			List<CriteriaGroup> allCgs = new ArrayList<CriteriaGroup>();
-			allCgs.addAll(getRenderable().getCriteriaGroups());
-			allCgs.addAll(getRenderable().getOrderGroups());
-			return allCgs;
-		} else {
-			return getRenderable().getCriteriaGroups();
-		}
-	}
+    public static final String RENDER_ORDER_GROUPS = "RENDER_ORDER_GROUPS";
 
-	@Override
-	public String renderCss() {
-		return "search-def-panel";
-	}
+    public Collection<? extends TreeRenderable> renderableChildren() {
+        if (getContext().getBoolean(RENDER_ORDER_GROUPS)) {
+            List<CriteriaGroup> allCgs = new ArrayList<CriteriaGroup>();
+            allCgs.addAll(getRenderable().getCriteriaGroups());
+            allCgs.addAll(getRenderable().getOrderGroups());
+            return allCgs;
+        } else {
+            return getRenderable().getCriteriaGroups();
+        }
+    }
+
+    @Override
+    public String renderCss() {
+        return "search-def-panel";
+    }
 }

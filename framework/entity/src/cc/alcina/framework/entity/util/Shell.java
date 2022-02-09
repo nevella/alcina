@@ -11,9 +11,7 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
-
 import org.slf4j.LoggerFactory;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -23,249 +21,234 @@ import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class Shell {
-	public static String exec(String script, Object... args) {
-		try {
-			String command = Ax.format(script, args);
-			LoggerFactory.getLogger(Shell.class).info(command);
-			Shell shell = new Shell();
-			shell.logToStdOut = false;
-			Output output = shell.runBashScript(command, false)
-					.throwOnException();
-			if (Ax.notBlank(output.error)) {
-				Ax.err(output.error);
-			}
-			return output.output;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
 
-	@RegistryLocation(registryPoint = Pool.class, implementationType = ImplementationType.SINGLETON)
-	public static class Pool {
-		private ExecutorService threadPool;
+    public static String exec(String script, Object... args) {
+        try {
+            String command = Ax.format(script, args);
+            LoggerFactory.getLogger(Shell.class).info(command);
+            Shell shell = new Shell();
+            shell.logToStdOut = false;
+            Output output = shell.runBashScript(command, false).throwOnException();
+            if (Ax.notBlank(output.error)) {
+                Ax.err(output.error);
+            }
+            return output.output;
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-		public Pool() {
-			this.threadPool = Executors
-					.newCachedThreadPool(new NamedThreadFactory("shell-io"));
-		}
+    @RegistryLocation(registryPoint = Pool.class, implementationType = ImplementationType.SINGLETON)
+    @Registration.Singleton
+    public static class Pool {
 
-		static Shell.Pool get() {
-			return Registry.impl(Shell.Pool.class);
-		}
-	}
+        private ExecutorService threadPool;
 
-	public String ERROR_MARKER = "**>";
+        public Pool() {
+            this.threadPool = Executors.newCachedThreadPool(new NamedThreadFactory("shell-io"));
+        }
 
-	public String OUTPUT_MARKER = "";
+        static Shell.Pool get() {
+            return Registry.impl(Shell.Pool.class);
+        }
+    }
 
-	public int timeoutMs = 0;
+    public String ERROR_MARKER = "**>";
 
-	private Timer timer;
+    public String OUTPUT_MARKER = "";
 
-	private Process process;
+    public int timeoutMs = 0;
 
-	protected boolean timedOut;
+    private Timer timer;
 
-	public boolean logToStdOut = true;
+    private Process process;
 
-	public String logToFile = null;
+    protected boolean timedOut;
 
-	private StreamBuffer errorBuffer;
+    public boolean logToStdOut = true;
 
-	private StreamBuffer outputBuffer;
+    public String logToFile = null;
 
-	private boolean terminated;
+    private StreamBuffer errorBuffer;
 
-	public boolean isTerminated() {
-		return this.terminated;
-	}
+    private StreamBuffer outputBuffer;
 
-	public File launchBashScript(String script) throws Exception {
-		File tmp = File.createTempFile("shell", getScriptExtension());
-		tmp.deleteOnExit();
-		ResourceUtilities.writeStringToFile(script, tmp);
-		launchProcess(new String[] { "/bin/bash", tmp.getPath() },
-				s -> s.length(), s -> s.length());
-		return tmp;
-	}
+    private boolean terminated;
 
-	public Shell noLogging() {
-		logToStdOut = false;
-		return this;
-	}
+    public boolean isTerminated() {
+        return this.terminated;
+    }
 
-	public Output runBashScript(String script) throws Exception {
-		return runBashScript(script, false);
-	}
+    public File launchBashScript(String script) throws Exception {
+        File tmp = File.createTempFile("shell", getScriptExtension());
+        tmp.deleteOnExit();
+        ResourceUtilities.writeStringToFile(script, tmp);
+        launchProcess(new String[] { "/bin/bash", tmp.getPath() }, s -> s.length(), s -> s.length());
+        return tmp;
+    }
 
-	public Output runBashScript(String script, boolean logCmd)
-			throws Exception {
-		File tmp = File.createTempFile("shell", getScriptExtension());
-		tmp.deleteOnExit();
-		ResourceUtilities.writeStringToFile(script, tmp);
-		Output output = runShell(tmp.getPath(), "/bin/bash");
-		tmp.delete();
-		return output;
-	}
+    public Shell noLogging() {
+        logToStdOut = false;
+        return this;
+    }
 
-	public Output runBashScriptAndThrow(String script) throws Exception {
-		Output tuple = runBashScript(script, true);
-		if (tuple.failed()) {
-			throw new Exception(tuple.error);
-		} else {
-			return tuple;
-		}
-	}
+    public Output runBashScript(String script) throws Exception {
+        return runBashScript(script, false);
+    }
 
-	public void runBashScriptNoThrow(String cmd, Object... args) {
-		try {
-			runBashScript(Ax.format(cmd, args));
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    public Output runBashScript(String script, boolean logCmd) throws Exception {
+        File tmp = File.createTempFile("shell", getScriptExtension());
+        tmp.deleteOnExit();
+        ResourceUtilities.writeStringToFile(script, tmp);
+        Output output = runShell(tmp.getPath(), "/bin/bash");
+        tmp.delete();
+        return output;
+    }
 
-	public Output runProcessCatchOutputAndWait(String... cmdAndArgs)
-			throws Exception {
-		return runProcessCatchOutputAndWaitPrompt("", cmdAndArgs);
-	}
+    public Output runBashScriptAndThrow(String script) throws Exception {
+        Output tuple = runBashScript(script, true);
+        if (tuple.failed()) {
+            throw new Exception(tuple.error);
+        } else {
+            return tuple;
+        }
+    }
 
-	public Output runProcessCatchOutputAndWait(String[] cmdAndArgs,
-			Callback<String> outputCallback, Callback<String> errorCallback)
-			throws Exception {
-		launchProcess(cmdAndArgs, outputCallback, errorCallback);
-		return waitFor();
-	}
+    public void runBashScriptNoThrow(String cmd, Object... args) {
+        try {
+            runBashScript(Ax.format(cmd, args));
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	public Output runProcessCatchOutputAndWaitPrompt(String prompt,
-			String... cmdAndArgs) throws Exception {
-		if (logToStdOut) {
-			return runProcessCatchOutputAndWait(cmdAndArgs,
-					new TabbedSysoutCallback(prompt + OUTPUT_MARKER),
-					new TabbedSysoutCallback(prompt + ERROR_MARKER));
-		} else if (logToFile != null) {
-			return runProcessCatchOutputAndWait(cmdAndArgs,
-					new FileAppenderCallback(prompt + OUTPUT_MARKER, logToFile),
-					new FileAppenderCallback(prompt + ERROR_MARKER, logToFile));
-		} else {
-			return runProcessCatchOutputAndWait(cmdAndArgs, s -> s.length(),
-					s -> s.length());
-		}
-	}
+    public Output runProcessCatchOutputAndWait(String... cmdAndArgs) throws Exception {
+        return runProcessCatchOutputAndWaitPrompt("", cmdAndArgs);
+    }
 
-	public Output runShell(String argString) throws Exception {
-		return runShell(argString, "/bin/sh");
-	}
+    public Output runProcessCatchOutputAndWait(String[] cmdAndArgs, Callback<String> outputCallback, Callback<String> errorCallback) throws Exception {
+        launchProcess(cmdAndArgs, outputCallback, errorCallback);
+        return waitFor();
+    }
 
-	public Output runShell(String argString, String shellCmd) throws Exception {
-		List<String> args = new ArrayList<String>();
-		args.add(shellCmd);
-		args.addAll(Arrays.asList(argString.split(" ")));
-		String[] argv = (String[]) args.toArray(new String[args.size()]);
-		return runProcessCatchOutputAndWait(argv);
-	}
+    public Output runProcessCatchOutputAndWaitPrompt(String prompt, String... cmdAndArgs) throws Exception {
+        if (logToStdOut) {
+            return runProcessCatchOutputAndWait(cmdAndArgs, new TabbedSysoutCallback(prompt + OUTPUT_MARKER), new TabbedSysoutCallback(prompt + ERROR_MARKER));
+        } else if (logToFile != null) {
+            return runProcessCatchOutputAndWait(cmdAndArgs, new FileAppenderCallback(prompt + OUTPUT_MARKER, logToFile), new FileAppenderCallback(prompt + ERROR_MARKER, logToFile));
+        } else {
+            return runProcessCatchOutputAndWait(cmdAndArgs, s -> s.length(), s -> s.length());
+        }
+    }
 
-	public void terminateProcess() {
-		this.terminated = true;
-		process.destroy();
-		try {
-			if (!process.waitFor(500, TimeUnit.MILLISECONDS)) {
-				process.destroyForcibly();
-				process.waitFor(500, TimeUnit.MILLISECONDS);
-			}
-		} catch (InterruptedException e) {
-		}
-	}
+    public Output runShell(String argString) throws Exception {
+        return runShell(argString, "/bin/sh");
+    }
 
-	public Output waitFor() throws InterruptedException {
-		if (timeoutMs != 0) {
-			timer = new Timer();
-			TimerTask killProcessTask = new TimerTask() {
-				@Override
-				public void run() {
-					System.out.println("Killing process (timeout)");
-					timedOut = true;
-					process.destroy();
-					timer.cancel();
-				}
-			};
-			timer.schedule(killProcessTask, timeoutMs);
-		}
-		process.waitFor();
-		outputBuffer.waitFor();
-		errorBuffer.waitFor();
-		if (timer != null) {
-			timer.cancel();
-		}
-		return new Output(outputBuffer.getStreamResult(),
-				errorBuffer.getStreamResult(), timedOut, process.exitValue());
-	}
+    public Output runShell(String argString, String shellCmd) throws Exception {
+        List<String> args = new ArrayList<String>();
+        args.add(shellCmd);
+        args.addAll(Arrays.asList(argString.split(" ")));
+        String[] argv = (String[]) args.toArray(new String[args.size()]);
+        return runProcessCatchOutputAndWait(argv);
+    }
 
-	private String getScriptExtension() {
-		return isWindows() ? ".bat" : ".sh";
-	}
+    public void terminateProcess() {
+        this.terminated = true;
+        process.destroy();
+        try {
+            if (!process.waitFor(500, TimeUnit.MILLISECONDS)) {
+                process.destroyForcibly();
+                process.waitFor(500, TimeUnit.MILLISECONDS);
+            }
+        } catch (InterruptedException e) {
+        }
+    }
 
-	private boolean isWindows() {
-		String osName = System.getProperty("os.name").toLowerCase();
-		return osName.indexOf("win") >= 0;
-	}
+    public Output waitFor() throws InterruptedException {
+        if (timeoutMs != 0) {
+            timer = new Timer();
+            TimerTask killProcessTask = new TimerTask() {
 
-	protected void launchProcess(String[] cmdAndArgs,
-			Callback<String> outputCallback, Callback<String> errorCallback)
-			throws IOException {
-		if (cmdAndArgs[0].equals("/bin/bash") && isWindows()) {
-			List<String> rewrite = Arrays.asList(cmdAndArgs).stream()
-					.collect(Collectors.toList());
-			rewrite.remove(0);// just run as .bat
-			cmdAndArgs = (String[]) rewrite.toArray(new String[rewrite.size()]);
-		}
-		if (logToStdOut) {
-			System.out.format("launching process: %s\n",
-					CommonUtils.join(cmdAndArgs, " "));
-		}
-		ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
-		process = pb.start();
-		errorBuffer = new StreamBuffer(process.getErrorStream(),
-				errorCallback);
-		outputBuffer = new StreamBuffer(process.getInputStream(),
-				outputCallback);
-		receiveStream(errorBuffer);
-		receiveStream(outputBuffer);
-	}
+                @Override
+                public void run() {
+                    System.out.println("Killing process (timeout)");
+                    timedOut = true;
+                    process.destroy();
+                    timer.cancel();
+                }
+            };
+            timer.schedule(killProcessTask, timeoutMs);
+        }
+        process.waitFor();
+        outputBuffer.waitFor();
+        errorBuffer.waitFor();
+        if (timer != null) {
+            timer.cancel();
+        }
+        return new Output(outputBuffer.getStreamResult(), errorBuffer.getStreamResult(), timedOut, process.exitValue());
+    }
 
-	public static void receiveStream(StreamBuffer streamBuffer) {
-		Pool.get().threadPool.execute(streamBuffer);
-	}
+    private String getScriptExtension() {
+        return isWindows() ? ".bat" : ".sh";
+    }
 
-	public static class Output {
-		public String output;
+    private boolean isWindows() {
+        String osName = System.getProperty("os.name").toLowerCase();
+        return osName.indexOf("win") >= 0;
+    }
 
-		public String error;
+    protected void launchProcess(String[] cmdAndArgs, Callback<String> outputCallback, Callback<String> errorCallback) throws IOException {
+        if (cmdAndArgs[0].equals("/bin/bash") && isWindows()) {
+            List<String> rewrite = Arrays.asList(cmdAndArgs).stream().collect(Collectors.toList());
+            // just run as .bat
+            rewrite.remove(0);
+            cmdAndArgs = (String[]) rewrite.toArray(new String[rewrite.size()]);
+        }
+        if (logToStdOut) {
+            System.out.format("launching process: %s\n", CommonUtils.join(cmdAndArgs, " "));
+        }
+        ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
+        process = pb.start();
+        errorBuffer = new StreamBuffer(process.getErrorStream(), errorCallback);
+        outputBuffer = new StreamBuffer(process.getInputStream(), outputCallback);
+        receiveStream(errorBuffer);
+        receiveStream(outputBuffer);
+    }
 
-		public boolean timedOut;
+    public static void receiveStream(StreamBuffer streamBuffer) {
+        Pool.get().threadPool.execute(streamBuffer);
+    }
 
-		public int exitValue;
+    public static class Output {
 
-		public Output(String output, String error, boolean timedOut,
-				int exitValue) {
-			this.output = output;
-			this.error = error;
-			this.timedOut = timedOut;
-			this.exitValue = exitValue;
-		}
+        public String output;
 
-		public boolean failed() {
-			return exitValue != 0;
-		}
+        public String error;
 
-		public Output throwOnException() {
-			if (failed()) {
-				throw Ax.runtimeException("Output exit code %s\n%s",
-						exitValue, error);
-			}
-			return this;
-		}
-	}
+        public boolean timedOut;
+
+        public int exitValue;
+
+        public Output(String output, String error, boolean timedOut, int exitValue) {
+            this.output = output;
+            this.error = error;
+            this.timedOut = timedOut;
+            this.exitValue = exitValue;
+        }
+
+        public boolean failed() {
+            return exitValue != 0;
+        }
+
+        public Output throwOnException() {
+            if (failed()) {
+                throw Ax.runtimeException("Output exit code %s\n%s", exitValue, error);
+            }
+            return this;
+        }
+    }
 }

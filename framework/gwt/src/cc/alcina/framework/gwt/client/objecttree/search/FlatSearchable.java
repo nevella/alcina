@@ -7,7 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
-
 import com.google.gwt.event.logical.shared.HasValueChangeHandlers;
 import com.google.gwt.event.logical.shared.ValueChangeEvent;
 import com.google.gwt.event.logical.shared.ValueChangeHandler;
@@ -16,7 +15,6 @@ import com.google.gwt.event.shared.HandlerManager;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.Validator;
-
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -27,177 +25,168 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-public abstract class FlatSearchable<SC extends SearchCriterion>
-		implements Comparable<FlatSearchable>, HasValueChangeHandlers {
-	private static transient Comparator<FlatSearchable> comparator;
-	static {
-		comparator = Comparator.comparing(FlatSearchable::getCategory);
-		comparator = comparator.thenComparing(FlatSearchable::getName);
-	}
+public abstract class FlatSearchable<SC extends SearchCriterion> implements Comparable<FlatSearchable>, HasValueChangeHandlers {
 
-	private HandlerManager handlerManager;
+    private static transient Comparator<FlatSearchable> comparator;
 
-	public transient SearchDefinition def;
+    static {
+        comparator = Comparator.comparing(FlatSearchable::getCategory);
+        comparator = comparator.thenComparing(FlatSearchable::getName);
+    }
 
-	private Class<SC> clazz;
+    private HandlerManager handlerManager;
 
-	protected String category;
+    public transient SearchDefinition def;
 
-	protected String name;
+    private Class<SC> clazz;
 
-	private SC criterion;
+    protected String category;
 
-	private List<? extends SearchOperator> operators;
+    protected String name;
 
-	public FlatSearchable(Class<SC> clazz, String category, String name,
-			List<StandardSearchOperator> operators) {
-		this.clazz = clazz;
-		this.category = category;
-		this.name = name;
-		this.operators = operators;
-	}
+    private SC criterion;
 
-	@Override
-	public HandlerRegistration
-			addValueChangeHandler(ValueChangeHandler handler) {
-		return ensureHandlers().addHandler(ValueChangeEvent.getType(), handler);
-	}
+    private List<? extends SearchOperator> operators;
 
-	@Override
-	public int compareTo(FlatSearchable o) {
-		return comparator.compare(this, o);
-	}
+    public FlatSearchable(Class<SC> clazz, String category, String name, List<StandardSearchOperator> operators) {
+        this.clazz = clazz;
+        this.category = category;
+        this.name = name;
+        this.operators = operators;
+    }
 
-	public SC createCriterionInstance() {
-		return Reflections.newInstance(clazz);
-	}
+    @Override
+    public HandlerRegistration addValueChangeHandler(ValueChangeHandler handler) {
+        return ensureHandlers().addHandler(ValueChangeEvent.getType(), handler);
+    }
 
-	public abstract AbstractBoundWidget createEditor();
+    @Override
+    public int compareTo(FlatSearchable o) {
+        return comparator.compare(this, o);
+    }
 
-	public AbstractBoundWidget createEditor(SC criterion) {
-		return createEditor();
-	}
+    public SC createCriterionInstance() {
+        return Reflections.newInstance(clazz);
+    }
 
-	@Override
-	public void fireEvent(GwtEvent<?> event) {
-		if (handlerManager != null) {
-			handlerManager.fireEvent(event);
-		}
-	}
+    public abstract AbstractBoundWidget createEditor();
 
-	public String getCategory() {
-		return this.category;
-	}
+    public AbstractBoundWidget createEditor(SC criterion) {
+        return createEditor();
+    }
 
-	public SC getCriterion() {
-		return this.criterion;
-	}
+    @Override
+    public void fireEvent(GwtEvent<?> event) {
+        if (handlerManager != null) {
+            handlerManager.fireEvent(event);
+        }
+    }
 
-	public Class<SC> getCriterionClass() {
-		return this.clazz;
-	}
+    public String getCategory() {
+        return this.category;
+    }
 
-	public abstract String getCriterionPropertyName();
+    public SC getCriterion() {
+        return this.criterion;
+    }
 
-	public String getName() {
-		return this.name;
-	}
+    public Class<SC> getCriterionClass() {
+        return this.clazz;
+    }
 
-	public SearchOperator getOperator(SC value) {
-		return listOperators().get(0);
-	}
+    public abstract String getCriterionPropertyName();
 
-	public Optional<String> getOperatorPropertyName() {
-		return Optional.of("operator");
-	}
+    public String getName() {
+        return this.name;
+    }
 
-	public Validator getValidator() {
-		return null;
-	}
+    public SearchOperator getOperator(SC value) {
+        return listOperators().get(0);
+    }
 
-	public abstract boolean hasValue(SC sc);
+    public Optional<String> getOperatorPropertyName() {
+        return Optional.of("operator");
+    }
 
-	public boolean isNonDefaultValue(SC sc) {
-		Object value = Reflections.at(sc.getClass())
-				.property(getCriterionPropertyName()).get(sc);
-		if (value instanceof Collection) {
-			return ((Collection) value).size() > 0;
-		} else {
-			return value != null;
-		}
-	}
+    public Validator getValidator() {
+        return null;
+    }
 
-	public List<? extends SearchOperator> listOperators() {
-		return operators;
-	}
+    public abstract boolean hasValue(SC sc);
 
-	public void setCriterion(SC criterion) {
-		this.criterion = criterion;
-	}
+    public boolean isNonDefaultValue(SC sc) {
+        Object value = Reflections.at(sc.getClass()).property(getCriterionPropertyName()).get(sc);
+        if (value instanceof Collection) {
+            return ((Collection) value).size() > 0;
+        } else {
+            return value != null;
+        }
+    }
 
-	public void setDef(SearchDefinition def) {
-		this.def = def;
-	}
+    public List<? extends SearchOperator> listOperators() {
+        return operators;
+    }
 
-	@Override
-	public String toString() {
-		return Ax.isBlank(category) ? name
-				: Ax.format("%s : %s", category, name);
-	}
+    public void setCriterion(SC criterion) {
+        this.criterion = criterion;
+    }
 
-	public FlatSearchable withDef(SearchDefinition def) {
-		this.def = def;
-		return this;
-	}
+    public void setDef(SearchDefinition def) {
+        this.def = def;
+    }
 
-	HandlerManager ensureHandlers() {
-		return handlerManager == null
-				? handlerManager = new HandlerManager(this)
-				: handlerManager;
-	}
+    @Override
+    public String toString() {
+        return Ax.isBlank(category) ? name : Ax.format("%s : %s", category, name);
+    }
 
-	@RegistryLocation(registryPoint = HasSearchables.class, targetClass = Bindable.class, implementationType = ImplementationType.INSTANCE)
-	@ClientInstantiable
-	public static class HasSearchables {
-		private Map<Class<? extends SearchCriterion>, FlatSearchable> searchables;
+    public FlatSearchable withDef(SearchDefinition def) {
+        this.def = def;
+        return this;
+    }
 
-		public String criterionDisplayName(SearchCriterion criterion) {
-			if (criterion instanceof TruncatedObjectCriterion) {
-				return ((TruncatedObjectCriterion) criterion)
-						.provideTypeDisplayName();
-			}
-			return searchableForCriterion(criterion)
-					.map(FlatSearchable::toString)
-					.orElse(criterion.getClass().getSimpleName());
-		}
+    HandlerManager ensureHandlers() {
+        return handlerManager == null ? handlerManager = new HandlerManager(this) : handlerManager;
+    }
 
-		public String criterionValue(SearchCriterion criterion) {
-			return criterion.provideValueAsRenderableText();
-		}
+    @RegistryLocation(registryPoint = HasSearchables.class, targetClass = Bindable.class, implementationType = ImplementationType.INSTANCE)
+    @ClientInstantiable
+    @Registration({ HasSearchables.class, Bindable.class })
+    public static class HasSearchables {
 
-		public List<FlatSearchable> getSearchables() {
-			ensureSearchables();
-			return this.searchables.values().stream()
-					.collect(Collectors.toList());
-		}
+        private Map<Class<? extends SearchCriterion>, FlatSearchable> searchables;
 
-		private void ensureSearchables() {
-			if (searchables == null) {
-				searchables = createSearchables().stream()
-						.collect(AlcinaCollectors
-								.toKeyMap(FlatSearchable::getCriterionClass));
-			}
-		}
+        public String criterionDisplayName(SearchCriterion criterion) {
+            if (criterion instanceof TruncatedObjectCriterion) {
+                return ((TruncatedObjectCriterion) criterion).provideTypeDisplayName();
+            }
+            return searchableForCriterion(criterion).map(FlatSearchable::toString).orElse(criterion.getClass().getSimpleName());
+        }
 
-		private Optional<FlatSearchable>
-				searchableForCriterion(SearchCriterion criterion) {
-			ensureSearchables();
-			return Optional.ofNullable(searchables.get(criterion.getClass()));
-		}
+        public String criterionValue(SearchCriterion criterion) {
+            return criterion.provideValueAsRenderableText();
+        }
 
-		protected List<FlatSearchable> createSearchables() {
-			return new ArrayList<>();
-		}
-	}
+        public List<FlatSearchable> getSearchables() {
+            ensureSearchables();
+            return this.searchables.values().stream().collect(Collectors.toList());
+        }
+
+        private void ensureSearchables() {
+            if (searchables == null) {
+                searchables = createSearchables().stream().collect(AlcinaCollectors.toKeyMap(FlatSearchable::getCriterionClass));
+            }
+        }
+
+        private Optional<FlatSearchable> searchableForCriterion(SearchCriterion criterion) {
+            ensureSearchables();
+            return Optional.ofNullable(searchables.get(criterion.getClass()));
+        }
+
+        protected List<FlatSearchable> createSearchables() {
+            return new ArrayList<>();
+        }
+    }
 }

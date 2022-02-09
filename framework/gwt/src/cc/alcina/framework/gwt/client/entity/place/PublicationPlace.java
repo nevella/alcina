@@ -5,50 +5,53 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class PublicationPlace extends BasePlace {
-	public long id;
 
-	public PublicationPlace() {
-	}
+    public long id;
 
-	public PublicationPlace(long id) {
-		this.id = id;
-	}
+    public PublicationPlace() {
+    }
 
-	@Override
-	public String toHrefString() {
-		return Registry.impl(PublicationPlaceAbsoluteHrefSupplier.class)
-				.getHref(this);
-	}
+    public PublicationPlace(long id) {
+        this.id = id;
+    }
 
-	@RegistryLocation(registryPoint = PublicationPlaceAbsoluteHrefSupplier.class, implementationType = ImplementationType.SINGLETON)
-	public static class PublicationPlaceAbsoluteHrefSupplier {
-		public String getHref(PublicationPlace basePlace) {
-			return null;
-		}
-	}
+    @Override
+    public String toHrefString() {
+        return Registry.impl(PublicationPlaceAbsoluteHrefSupplier.class).getHref(this);
+    }
 
-	public static class PublicationPlaceTokenizer
-			extends BasePlaceTokenizer<PublicationPlace> {
-		@Override
-		public Class<PublicationPlace> getTokenizedClass() {
-			return PublicationPlace.class;
-		}
+    @RegistryLocation(registryPoint = PublicationPlaceAbsoluteHrefSupplier.class, implementationType = ImplementationType.SINGLETON)
+    @Registration.Singleton
+    public static class PublicationPlaceAbsoluteHrefSupplier {
 
-		@Override
-		protected PublicationPlace getPlace0(String token) {
-			PublicationPlace place = new PublicationPlace();
-			if (parts.length == 1) {
-				return place;
-			}
-			place.id = Long.parseLong(parts[1]);
-			return place;
-		}
+        public String getHref(PublicationPlace basePlace) {
+            return null;
+        }
+    }
 
-		@Override
-		protected void getToken0(PublicationPlace place) {
-			addTokenPart(place.id);
-		}
-	}
+    public static class PublicationPlaceTokenizer extends BasePlaceTokenizer<PublicationPlace> {
+
+        @Override
+        public Class<PublicationPlace> getTokenizedClass() {
+            return PublicationPlace.class;
+        }
+
+        @Override
+        protected PublicationPlace getPlace0(String token) {
+            PublicationPlace place = new PublicationPlace();
+            if (parts.length == 1) {
+                return place;
+            }
+            place.id = Long.parseLong(parts[1]);
+            return place;
+        }
+
+        @Override
+        protected void getToken0(PublicationPlace place) {
+            addTokenPart(place.id);
+        }
+    }
 }

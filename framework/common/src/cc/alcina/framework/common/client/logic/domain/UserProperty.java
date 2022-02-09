@@ -2,11 +2,9 @@ package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Objects;
 import java.util.Optional;
-
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
-
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
@@ -26,188 +24,157 @@ import cc.alcina.framework.common.client.util.CloneHelper;
 import cc.alcina.framework.common.client.util.DomainObjectCloner;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = UserProperty.class)
 @DomainTransformPropagation(PropagationType.PERSISTENT)
-/*
- * Similar to the (jvm-only) KeyValuePersistentBase. user/key is unique,
- * user/category not. If used as a java object persistence container,
- * 
- * *DO NOT* reference via foreign key constraints from large tables (since
- * intention is that table rows be removable, and that would require huge
- * indicies). In general (say for type serialization signatures) use the
- * UserProperty.key value rather than an id ref/foreign key. This means a
- * possible breach of "referential integrity", (quotes intended) - this is once
- * place where the tradeoff comes down on the side of avoiding the constraint.
- * 
- * Editing notes - the tm-registered object should be the userProperty -
- * UserPropertyPersistable.getUserPropertySupport().getProperty(). The
- * UserPropertyPersistable object will not be transaction-aware (it's
- * effectively a snapshot - writeable only within the snapshot-creation tx).
- * TODO - check this with a precondition server side
- */
-public abstract class UserProperty<T extends UserProperty>
-		extends VersionableEntity<T> implements HasIUser, HasOwner {
-	public static final transient String CONTEXT_NO_COMMIT = UserProperty.class
-			.getName() + ".CONTEXT_NO_COMMIT";
+@Registration({ PersistentImpl.class, UserProperty.class })
+public abstract class UserProperty<T extends UserProperty> extends VersionableEntity<T> implements HasIUser, HasOwner {
 
-	public static <P extends UserProperty<?>> P byId(long id) {
-		return Domain.find(implementation(), id);
-	}
+    public static final transient String CONTEXT_NO_COMMIT = UserProperty.class.getName() + ".CONTEXT_NO_COMMIT";
 
-	public static <P extends UserProperty<?>> Optional<P> byKey(String key) {
-		return byUserKey(PermissionsManager.get().getUser(), key);
-	}
+    public static <P extends UserProperty<?>> P byId(long id) {
+        return Domain.find(implementation(), id);
+    }
 
-	public static <P extends UserProperty<?>> Optional<P> byUserClass(
-			IUser user, Class<? extends UserPropertyPersistable> clazz) {
-		return byUserKey(user, clazz.getName());
-	}
+    public static <P extends UserProperty<?>> Optional<P> byKey(String key) {
+        return byUserKey(PermissionsManager.get().getUser(), key);
+    }
 
-	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	public static <P extends UserProperty<?>> Optional<P> byUserKey(IUser user,
-			String key) {
-		return (Optional<P>) Domain.query(implementation()).filter("user", user)
-				.filter("key", key).optional();
-	}
+    public static <P extends UserProperty<?>> Optional<P> byUserClass(IUser user, Class<? extends UserPropertyPersistable> clazz) {
+        return byUserKey(user, clazz.getName());
+    }
 
-	public static <T, P extends UserProperty<?>> P ensure(Class<T> clazz) {
-		UserProperty<?> property = ensure(clazz.getName());
-		if (property.getValue() == null) {
-			property.serializeObject(Reflections.newInstance(clazz));
-		}
-		return (P) property;
-	}
+    @MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+    public static <P extends UserProperty<?>> Optional<P> byUserKey(IUser user, String key) {
+        return (Optional<P>) Domain.query(implementation()).filter("user", user).filter("key", key).optional();
+    }
 
-	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	public static <P extends UserProperty<?>> P ensure(IUser user, String key) {
-		Optional<P> existing = byUserKey(user, key);
-		return existing.orElseGet(() -> {
-			P created = Domain.create(implementation());
-			created.setUser(user);
-			created.setKey(key);
-			return created;
-		});
-	}
+    public static <T, P extends UserProperty<?>> P ensure(Class<T> clazz) {
+        UserProperty<?> property = ensure(clazz.getName());
+        if (property.getValue() == null) {
+            property.serializeObject(Reflections.newInstance(clazz));
+        }
+        return (P) property;
+    }
 
-	public static <P extends UserProperty<?>> P ensure(String key) {
-		return ensure(PermissionsManager.get().getUser(), key);
-	}
+    @MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+    public static <P extends UserProperty<?>> P ensure(IUser user, String key) {
+        Optional<P> existing = byUserKey(user, key);
+        return existing.orElseGet(() -> {
+            P created = Domain.create(implementation());
+            created.setUser(user);
+            created.setKey(key);
+            return created;
+        });
+    }
 
-	private static <P extends UserProperty<?>> Class<P> implementation() {
-		return (Class<P>) PersistentImpl.getImplementation(UserProperty.class);
-	}
+    public static <P extends UserProperty<?>> P ensure(String key) {
+        return ensure(PermissionsManager.get().getUser(), key);
+    }
 
-	private String category;
+    private static <P extends UserProperty<?>> Class<P> implementation() {
+        return (Class<P>) PersistentImpl.getImplementation(UserProperty.class);
+    }
 
-	private String key;
+    private String category;
 
-	private String value;
+    private String key;
 
-	private UserPropertyPersistable.Support userPropertySupport;
+    private String value;
 
-	public UserProperty copy() {
-		UserProperty copy = new CloneHelper()
-				.shallowishBeanClone(domainIdentity());
-		copy.userPropertySupport = new UserPropertyPersistable.Support(copy);
-		// no need to set copy.userPropertySupport.persistable, since it'll be
-		// generated on demand
-		return copy;
-	}
+    private UserPropertyPersistable.Support userPropertySupport;
 
-	public <V> V deserialize() {
-		Class clazz = null;
-		if (category != null) {
-			try {
-				clazz = Reflections.forName(category);
-			} catch (Exception e) {
-			}
-		}
-		return (V) TransformManager.Serializer.get().deserialize(getValue(),
-				clazz);
-	}
+    public UserProperty copy() {
+        UserProperty copy = new CloneHelper().shallowishBeanClone(domainIdentity());
+        copy.userPropertySupport = new UserPropertyPersistable.Support(copy);
+        // no need to set copy.userPropertySupport.persistable, since it'll be
+        // generated on demand
+        return copy;
+    }
 
-	public synchronized UserPropertyPersistable.Support
-			ensureUserPropertySupport() {
-		if (userPropertySupport == null) {
-			userPropertySupport = new UserPropertyPersistable.Support(
-					domainIdentity());
-		}
-		return this.userPropertySupport;
-	}
+    public <V> V deserialize() {
+        Class clazz = null;
+        if (category != null) {
+            try {
+                clazz = Reflections.forName(category);
+            } catch (Exception e) {
+            }
+        }
+        return (V) TransformManager.Serializer.get().deserialize(getValue(), clazz);
+    }
 
-	@Lob
-	@Transient
-	public String getCategory() {
-		return this.category;
-	}
+    public synchronized UserPropertyPersistable.Support ensureUserPropertySupport() {
+        if (userPropertySupport == null) {
+            userPropertySupport = new UserPropertyPersistable.Support(domainIdentity());
+        }
+        return this.userPropertySupport;
+    }
 
-	@Lob
-	@Transient
-	public String getKey() {
-		return this.key;
-	}
+    @Lob
+    @Transient
+    public String getCategory() {
+        return this.category;
+    }
 
-	@Override
-	@Transient
-	public IUser getOwner() {
-		return getUser();
-	}
+    @Lob
+    @Transient
+    public String getKey() {
+        return this.key;
+    }
 
-	@Transient
-	public UserPropertyPersistable.Support getUserPropertySupport() {
-		return this.userPropertySupport;
-	}
+    @Override
+    @Transient
+    public IUser getOwner() {
+        return getUser();
+    }
 
-	@Lob
-	@Transient
-	public String getValue() {
-		return this.value;
-	}
+    @Transient
+    public UserPropertyPersistable.Support getUserPropertySupport() {
+        return this.userPropertySupport;
+    }
 
-	public void serializeObject(Object object) {
-		setCategory(object.getClass().getName());
-		setValue(TransformManager.serialize(object));
-	}
+    @Lob
+    @Transient
+    public String getValue() {
+        return this.value;
+    }
 
-	public void setCategory(String category) {
-		String old_category = this.category;
-		this.category = category;
-		propertyChangeSupport().firePropertyChange("category", old_category,
-				category);
-	}
+    public void serializeObject(Object object) {
+        setCategory(object.getClass().getName());
+        setValue(TransformManager.serialize(object));
+    }
 
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
+    public void setCategory(String category) {
+        String old_category = this.category;
+        this.category = category;
+        propertyChangeSupport().firePropertyChange("category", old_category, category);
+    }
 
-	public void setKey(String key) {
-		String old_key = this.key;
-		this.key = key;
-		propertyChangeSupport().firePropertyChange("key", old_key, key);
-	}
+    @Override
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public void setValue(String value) {
-		String old_value = this.value;
-		this.value = value;
-		propertyChangeSupport().firePropertyChange("value", old_value, value);
-		if (!Objects.equals(old_value, value) && Ax.notBlank(value)) {
-			if (userPropertySupport != null
-					&& userPropertySupport.getPersistable() != null) {
-				if (userPropertySupport != null
-						&& userPropertySupport.getPersistable() != null) {
-					TransformManager.ignoreChanges(() ->
-					// copy properties (rather than create a new persistable) to
-					// preserve object identity
-					new CloneHelper().copyBeanProperties(deserialize(),
-							userPropertySupport.getPersistable(),
-							DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING));
-				}
-			}
-		}
-	}
+    public void setKey(String key) {
+        String old_key = this.key;
+        this.key = key;
+        propertyChangeSupport().firePropertyChange("key", old_key, key);
+    }
+
+    public void setValue(String value) {
+        String old_value = this.value;
+        this.value = value;
+        propertyChangeSupport().firePropertyChange("value", old_value, value);
+        if (!Objects.equals(old_value, value) && Ax.notBlank(value)) {
+            if (userPropertySupport != null && userPropertySupport.getPersistable() != null) {
+                if (userPropertySupport != null && userPropertySupport.getPersistable() != null) {
+                    TransformManager.ignoreChanges(() -> new CloneHelper().copyBeanProperties(deserialize(), userPropertySupport.getPersistable(), DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING));
+                }
+            }
+        }
+    }
 }

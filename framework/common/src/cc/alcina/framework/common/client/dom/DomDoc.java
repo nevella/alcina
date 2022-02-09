@@ -4,13 +4,10 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
-
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
-
 import com.google.gwt.core.client.GWT;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -21,220 +18,221 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class DomDoc extends DomNode {
-	private static transient PerDocumentSupplier perDocumentSupplier = Registry
-			.impl(PerDocumentSupplier.class);
 
-	public static DomDoc basicHtmlDoc() {
-		return new DomDoc("<html><head></head><body></body></html>");
-	}
+    private static transient PerDocumentSupplier perDocumentSupplier = Registry.impl(PerDocumentSupplier.class);
 
-	public static DomNode createDocumentElement(String tag) {
-		return new DomDoc(Ax.format("<%s/>", tag)).getDocumentElementNode();
-	}
+    public static DomDoc basicHtmlDoc() {
+        return new DomDoc("<html><head></head><body></body></html>");
+    }
 
-	public static DomDoc documentFor(Document document) {
-		return perDocumentSupplier.get(document);
-	}
+    public static DomNode createDocumentElement(String tag) {
+        return new DomDoc(Ax.format("<%s/>", tag)).getDocumentElementNode();
+    }
 
-	public static DomDoc from(String xml) {
-		return new DomDoc(xml);
-	}
+    public static DomDoc documentFor(Document document) {
+        return perDocumentSupplier.get(document);
+    }
 
-	private CachingMap<Node, DomNode> nodes = new CachingMap<Node, DomNode>(
-			n -> n == null ? null : new DomNode(n, this));
+    public static DomDoc from(String xml) {
+        return new DomDoc(xml);
+    }
 
-	private String firstTag;
+    private CachingMap<Node, DomNode> nodes = new CachingMap<Node, DomNode>(n -> n == null ? null : new DomNode(n, this));
 
-	private boolean readonly;
+    private String firstTag;
 
-	private boolean useCachedElementIds;
+    private boolean readonly;
 
-	private Map<String, Element> cachedElementIdMap;
+    private boolean useCachedElementIds;
 
-	private Multimap<String, List<DomNode>> byTag;
+    private Map<String, Element> cachedElementIdMap;
 
-	public DomDoc(Document domDocument) {
-		super(null, null);
-		this.node = domDocument;
-		nodes.put(this.node, this);
-		this.doc = this;
-	}
+    private Multimap<String, List<DomNode>> byTag;
 
-	public DomDoc(String xml) {
-		super(null, null);
-		loadFromXml(xml);
-	}
+    public DomDoc(Document domDocument) {
+        super(null, null);
+        this.node = domDocument;
+        nodes.put(this.node, this);
+        this.doc = this;
+    }
 
-	public void clearElementReferences() {
-		if (cachedElementIdMap != null) {
-			cachedElementIdMap.clear();
-		}
-		nodes.clear();
-	}
+    public DomDoc(String xml) {
+        super(null, null);
+        loadFromXml(xml);
+    }
 
-	@Override
-	public Document domDoc() {
-		return super.domDoc();
-	}
+    public void clearElementReferences() {
+        if (cachedElementIdMap != null) {
+            cachedElementIdMap.clear();
+        }
+        nodes.clear();
+    }
 
-	public DomNode getDocumentElementNode() {
-		return nodeFor(domDoc().getDocumentElement());
-	}
+    @Override
+    public Document domDoc() {
+        return super.domDoc();
+    }
 
-	public Element getElementById(String elementId) {
-		if (useCachedElementIds) {
-			if (cachedElementIdMap == null) {
-				cachedElementIdMap = new LinkedHashMap<String, Element>();
-				Stack<Element> elts = new Stack<Element>();
-				elts.push(((Document) node).getDocumentElement());
-				while (!elts.isEmpty()) {
-					Element elt = elts.pop();
-					if (elt.hasAttribute("id")) {
-						cachedElementIdMap.put(elt.getAttribute("id"), elt);
-					}
-					int length = elt.getChildNodes().getLength();
-					for (int idx = 0; idx < length; idx++) {
-						Node node = elt.getChildNodes().item(idx);
-						if (node.getNodeType() == Node.ELEMENT_NODE) {
-							elts.push((Element) node);
-						}
-					}
-				}
-			}
-			return cachedElementIdMap.get(elementId);
-		} else {
-			/*
+    public DomNode getDocumentElementNode() {
+        return nodeFor(domDoc().getDocumentElement());
+    }
+
+    public Element getElementById(String elementId) {
+        if (useCachedElementIds) {
+            if (cachedElementIdMap == null) {
+                cachedElementIdMap = new LinkedHashMap<String, Element>();
+                Stack<Element> elts = new Stack<Element>();
+                elts.push(((Document) node).getDocumentElement());
+                while (!elts.isEmpty()) {
+                    Element elt = elts.pop();
+                    if (elt.hasAttribute("id")) {
+                        cachedElementIdMap.put(elt.getAttribute("id"), elt);
+                    }
+                    int length = elt.getChildNodes().getLength();
+                    for (int idx = 0; idx < length; idx++) {
+                        Node node = elt.getChildNodes().item(idx);
+                        if (node.getNodeType() == Node.ELEMENT_NODE) {
+                            elts.push((Element) node);
+                        }
+                    }
+                }
+            }
+            return cachedElementIdMap.get(elementId);
+        } else {
+            /*
 			 * Probably should throw an exception
 			 */
-			if (GWT.isClient()) {
-				return ((Document) node).getElementById(elementId);
-			} else {
-				throw new UnsupportedOperationException();
-			}
-		}
-	}
+            if (GWT.isClient()) {
+                return ((Document) node).getElementById(elementId);
+            } else {
+                throw new UnsupportedOperationException();
+            }
+        }
+    }
 
-	public boolean isReadonly() {
-		return this.readonly;
-	}
+    public boolean isReadonly() {
+        return this.readonly;
+    }
 
-	public DomNode nodeFor(Node domNode) {
-		return nodes.get(domNode);
-	}
+    public DomNode nodeFor(Node domNode) {
+        return nodes.get(domNode);
+    }
 
-	@Override
-	public String prettyToString() {
-		try {
-			return DomEnvironment.get().prettyPrint(domDoc());
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    @Override
+    public String prettyToString() {
+        try {
+            return DomEnvironment.get().prettyPrint(domDoc());
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	public void removeNamespaces() {
-		NamespaceResult namespaceResult = DomEnvironment.get()
-				.removeNamespaces(this);
-		firstTag = namespaceResult.firstTag;
-		loadFromXml(namespaceResult.xml);
-	}
+    public void removeNamespaces() {
+        NamespaceResult namespaceResult = DomEnvironment.get().removeNamespaces(this);
+        firstTag = namespaceResult.firstTag;
+        loadFromXml(namespaceResult.xml);
+    }
 
-	public void restoreNamespaces() {
-		NamespaceResult namespaceResult = DomEnvironment.get()
-				.restoreNamespaces(this, firstTag);
-		loadFromXml(namespaceResult.xml);
-	}
+    public void restoreNamespaces() {
+        NamespaceResult namespaceResult = DomEnvironment.get().restoreNamespaces(this, firstTag);
+        loadFromXml(namespaceResult.xml);
+    }
 
-	public DomNode root() {
-		return nodeFor(domDoc().getDocumentElement());
-	}
+    public DomNode root() {
+        return nodeFor(domDoc().getDocumentElement());
+    }
 
-	public void setReadonly(boolean readonly) {
-		this.readonly = readonly;
-	}
+    public void setReadonly(boolean readonly) {
+        this.readonly = readonly;
+    }
 
-	public DomDoc withUseCachedElementIds(boolean useCachedElementIds) {
-		this.useCachedElementIds = useCachedElementIds;
-		return this;
-	}
+    public DomDoc withUseCachedElementIds(boolean useCachedElementIds) {
+        this.useCachedElementIds = useCachedElementIds;
+        return this;
+    }
 
-	private void loadFromXml(String xml) {
-		try {
-			this.node = DomEnvironment.get().loadFromXml(xml);
-			nodes.put(this.node, this);
-			this.doc = this;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    private void loadFromXml(String xml) {
+        try {
+            this.node = DomEnvironment.get().loadFromXml(xml);
+            nodes.put(this.node, this);
+            this.doc = this;
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	Multimap<String, List<DomNode>> byTag() {
-		if (byTag == null) {
-			byTag = getDocumentElementNode().children.stream()
-					.collect(AlcinaCollectors.toKeyMultimap(DomNode::name));
-		}
-		return byTag;
-	}
+    Multimap<String, List<DomNode>> byTag() {
+        if (byTag == null) {
+            byTag = getDocumentElementNode().children.stream().collect(AlcinaCollectors.toKeyMultimap(DomNode::name));
+        }
+        return byTag;
+    }
 
-	void register(DomNode xmlNode) {
-	}
+    void register(DomNode xmlNode) {
+    }
 
-	@RegistryLocation(registryPoint = PerDocumentSupplier.class, implementationType = ImplementationType.SINGLETON)
-	@ClientInstantiable
-	public static class PerDocumentSupplier {
-		private Map<Document, DomDoc> perDocument;
+    @RegistryLocation(registryPoint = PerDocumentSupplier.class, implementationType = ImplementationType.SINGLETON)
+    @ClientInstantiable
+    @Registration.Singleton
+    public static class PerDocumentSupplier {
 
-		public PerDocumentSupplier() {
-			perDocument = new LinkedHashMap<>();
-		}
+        private Map<Document, DomDoc> perDocument;
 
-		public DomDoc get(Document document) {
-			synchronized (perDocument) {
-				return perDocument.computeIfAbsent(document, DomDoc::new);
-			}
-		}
-	}
+        public PerDocumentSupplier() {
+            perDocument = new LinkedHashMap<>();
+        }
 
-	@RegistryLocation(registryPoint = ReadonlyDocCache.class, implementationType = ImplementationType.SINGLETON)
-	public static class ReadonlyDocCache {
-		public static DomDoc.ReadonlyDocCache get() {
-			return Registry.impl(DomDoc.ReadonlyDocCache.class);
-		}
+        public DomDoc get(Document document) {
+            synchronized (perDocument) {
+                return perDocument.computeIfAbsent(document, DomDoc::new);
+            }
+        }
+    }
 
-		private int maxSize = 0;
+    @RegistryLocation(registryPoint = ReadonlyDocCache.class, implementationType = ImplementationType.SINGLETON)
+    @Registration.Singleton
+    public static class ReadonlyDocCache {
 
-		private Map<String, DomDoc> docs = new LinkedHashMap<String, DomDoc>() {
-			@Override
-			protected boolean
-					removeEldestEntry(Map.Entry<String, DomDoc> eldest) {
-				return size() > maxSize;
-			};
-		};
+        public static DomDoc.ReadonlyDocCache get() {
+            return Registry.impl(DomDoc.ReadonlyDocCache.class);
+        }
 
-		int missCount = 0;
+        private int maxSize = 0;
 
-		int hitCount = 0;
+        private Map<String, DomDoc> docs = new LinkedHashMap<String, DomDoc>() {
 
-		public synchronized DomDoc get(String xml) {
-			DomDoc doc = docs.get(xml);
-			if (doc == null) {
-				doc = new DomDoc(xml);
-				doc.setReadonly(true);
-				docs.put(xml, doc);
-				missCount++;
-			} else {
-				hitCount++;
-			}
-			return doc;
-		}
+            @Override
+            protected boolean removeEldestEntry(Map.Entry<String, DomDoc> eldest) {
+                return size() > maxSize;
+            }
+        };
 
-		public int getMaxSize() {
-			return this.maxSize;
-		}
+        int missCount = 0;
 
-		public void setMaxSize(int maxSize) {
-			this.maxSize = maxSize;
-		}
-	}
+        int hitCount = 0;
+
+        public synchronized DomDoc get(String xml) {
+            DomDoc doc = docs.get(xml);
+            if (doc == null) {
+                doc = new DomDoc(xml);
+                doc.setReadonly(true);
+                docs.put(xml, doc);
+                missCount++;
+            } else {
+                hitCount++;
+            }
+            return doc;
+        }
+
+        public int getMaxSize() {
+            return this.maxSize;
+        }
+
+        public void setMaxSize(int maxSize) {
+            this.maxSize = maxSize;
+        }
+    }
 }

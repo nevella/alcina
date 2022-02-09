@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.job;
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
-
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
 import cc.alcina.framework.common.client.job.Job.ProcessState;
@@ -18,68 +17,65 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = JobStateMessage.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
-// TODO - possibly add a 'cancel' message to further ensure only owner thread
-// modifies job
-public abstract class JobStateMessage<T extends JobStateMessage>
-		extends Entity<T> {
-	private String processStateSerialized;
+@Registration({ PersistentImpl.class, JobStateMessage.class })
+public abstract class JobStateMessage<T extends JobStateMessage> extends Entity<T> {
 
-	private ProcessState processState;
+    private String processStateSerialized;
 
-	public ProcessState ensureProcessState() {
-		if (getProcessState() == null) {
-			setProcessState(new ProcessState());
-		}
-		return getProcessState();
-	}
+    private ProcessState processState;
 
-	@Transient
-	public abstract Job getJob();
+    public ProcessState ensureProcessState() {
+        if (getProcessState() == null) {
+            setProcessState(new ProcessState());
+        }
+        return getProcessState();
+    }
 
-	@Transient
-	@DomainProperty(serialize = true)
-	public ProcessState getProcessState() {
-		processState = TransformManager.resolveMaybeDeserialize(processState,
-				this.processStateSerialized, null);
-		return this.processState;
-	}
+    @Transient
+    public abstract Job getJob();
 
-	@Lob
-	@Transient
-	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
-	public String getProcessStateSerialized() {
-		return this.processStateSerialized;
-	}
+    @Transient
+    @DomainProperty(serialize = true)
+    public ProcessState getProcessState() {
+        processState = TransformManager.resolveMaybeDeserialize(processState, this.processStateSerialized, null);
+        return this.processState;
+    }
 
-	public void persistProcessState() {
-		ProcessState state = ensureProcessState();
-		setProcessStateSerialized(TransformManager.serialize(state));
-	}
+    @Lob
+    @Transient
+    @DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
+    public String getProcessStateSerialized() {
+        return this.processStateSerialized;
+    }
 
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
+    public void persistProcessState() {
+        ProcessState state = ensureProcessState();
+        setProcessStateSerialized(TransformManager.serialize(state));
+    }
 
-	public abstract void setJob(Job job);
+    @Override
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public void setProcessState(ProcessState processState) {
-		ProcessState old_processState = this.processState;
-		this.processState = processState;
-		propertyChangeSupport().firePropertyChange("processState",
-				old_processState, processState);
-	}
+    public abstract void setJob(Job job);
 
-	public void setProcessStateSerialized(String processStateSerialized) {
-		String old_processStateSerialized = this.processStateSerialized;
-		this.processStateSerialized = processStateSerialized;
-		propertyChangeSupport().firePropertyChange("processStateSerialized",
-				old_processStateSerialized, processStateSerialized);
-	}
+    public void setProcessState(ProcessState processState) {
+        ProcessState old_processState = this.processState;
+        this.processState = processState;
+        propertyChangeSupport().firePropertyChange("processState", old_processState, processState);
+    }
+
+    public void setProcessStateSerialized(String processStateSerialized) {
+        String old_processStateSerialized = this.processStateSerialized;
+        this.processStateSerialized = processStateSerialized;
+        propertyChangeSupport().firePropertyChange("processStateSerialized", old_processStateSerialized, processStateSerialized);
+    }
 }

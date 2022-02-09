@@ -15,10 +15,8 @@ package cc.alcina.framework.servlet.servlet;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -27,69 +25,68 @@ import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
- *
  * @author Nick Reddel
  */
 public class UnsubscribeServlet extends AlcinaServlet {
-	private static final String DEFAULT_SERVLET_PATH = "unsubscribe.do";
 
-	public static String defaultHref(PublicationResult publicationResult, String action) {
-		UnsubscribeRequest request = new UnsubscribeRequest();
-		request.publicationId = publicationResult.getPublicationId();
-		request.publicationUid = publicationResult.getPublicationUid();
-		request.action = action;
-		return Ax.format("%s?%s", DEFAULT_SERVLET_PATH, request.serialize());
-	}
+    private static final String DEFAULT_SERVLET_PATH = "unsubscribe.do";
 
-	Logger logger = LoggerFactory.getLogger(getClass());
+    public static String defaultHref(PublicationResult publicationResult, String action) {
+        UnsubscribeRequest request = new UnsubscribeRequest();
+        request.publicationId = publicationResult.getPublicationId();
+        request.publicationUid = publicationResult.getPublicationUid();
+        request.action = action;
+        return Ax.format("%s?%s", DEFAULT_SERVLET_PATH, request.serialize());
+    }
 
-	@Override
-	protected void handleRequest(HttpServletRequest request,
-			HttpServletResponse response) throws Exception {
-		FormatBuilder outputBuilder = new FormatBuilder();
-		String queryString = request.getQueryString();
-		try {
-			String[] parts = queryString.split("/");
-			UnsubscribeRequest unsubscribe = new UnsubscribeRequest();
-			unsubscribe.publicationId = Long.parseLong(parts[0]);
-			unsubscribe.publicationUid = parts[1];
-			unsubscribe.action = parts[2];
-			logger.info(GraphProjection.fieldwiseToString(unsubscribe));
-			String message = Registry.impl(UnsubscribeHandler.class)
-					.handle(unsubscribe);
-			outputBuilder.line(message);
-		} catch (Exception e) {
-			e.printStackTrace();
-			outputBuilder.line("Unable to process unsubscribe request: %s",
-					queryString);
-		}
-		response.setContentType("text/plain");
-		try {
-			response.getWriter().write(outputBuilder.toString());
-			logger.info(outputBuilder.toString());
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-	}
+    Logger logger = LoggerFactory.getLogger(getClass());
 
-	@RegistryLocation(registryPoint = UnsubscribeHandler.class, implementationType = ImplementationType.INSTANCE)
-	public abstract static class UnsubscribeHandler {
-		protected abstract String handle(UnsubscribeRequest unsubscribe);
-	}
+    @Override
+    protected void handleRequest(HttpServletRequest request, HttpServletResponse response) throws Exception {
+        FormatBuilder outputBuilder = new FormatBuilder();
+        String queryString = request.getQueryString();
+        try {
+            String[] parts = queryString.split("/");
+            UnsubscribeRequest unsubscribe = new UnsubscribeRequest();
+            unsubscribe.publicationId = Long.parseLong(parts[0]);
+            unsubscribe.publicationUid = parts[1];
+            unsubscribe.action = parts[2];
+            logger.info(GraphProjection.fieldwiseToString(unsubscribe));
+            String message = Registry.impl(UnsubscribeHandler.class).handle(unsubscribe);
+            outputBuilder.line(message);
+        } catch (Exception e) {
+            e.printStackTrace();
+            outputBuilder.line("Unable to process unsubscribe request: %s", queryString);
+        }
+        response.setContentType("text/plain");
+        try {
+            response.getWriter().write(outputBuilder.toString());
+            logger.info(outputBuilder.toString());
+        } catch (Exception e) {
+            throw new WrappedRuntimeException(e);
+        }
+    }
 
-	public static class UnsubscribeRequest {
-		public long publicationId;
+    @RegistryLocation(registryPoint = UnsubscribeHandler.class, implementationType = ImplementationType.INSTANCE)
+    @Registration(UnsubscribeHandler.class)
+    public abstract static class UnsubscribeHandler {
 
-		public String publicationUid;
+        protected abstract String handle(UnsubscribeRequest unsubscribe);
+    }
 
-		public String action;
+    public static class UnsubscribeRequest {
 
-		public String serialize() {
-			return new FormatBuilder().separator("/").append(publicationId)
-					.append(publicationUid).append(action)
-					.toString();
-		}
-	}
+        public long publicationId;
+
+        public String publicationUid;
+
+        public String action;
+
+        public String serialize() {
+            return new FormatBuilder().separator("/").append(publicationId).append(publicationUid).append(action).toString();
+        }
+    }
 }

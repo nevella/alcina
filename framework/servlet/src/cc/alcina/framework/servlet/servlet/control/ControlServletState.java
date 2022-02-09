@@ -1,52 +1,54 @@
 package cc.alcina.framework.servlet.servlet.control;
 
 import java.util.Date;
-
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = ControlServletState.class, implementationType = ImplementationType.INSTANCE)
+@Registration(ControlServletState.class)
 public class ControlServletState {
-	private Date startupTime;
 
-	private String appName;
+    private Date startupTime;
 
-	private String writerHost;
+    private String appName;
 
-	private String apiKey;
+    private String writerHost;
 
-	public ControlServletState() {
-	}
+    private String apiKey;
 
-	public String getApiKey() {
-		return this.apiKey;
-	}
+    public ControlServletState() {
+    }
 
-	public String getAppName() {
-		return this.appName;
-	}
+    public String getApiKey() {
+        return this.apiKey;
+    }
 
-	public Date getStartupTime() {
-		return this.startupTime;
-	}
+    public String getAppName() {
+        return this.appName;
+    }
 
-	public String getWriterHost() {
-		return this.writerHost;
-	}
+    public Date getStartupTime() {
+        return this.startupTime;
+    }
 
-	public void setApiKey(String apiKey) {
-		this.apiKey = apiKey;
-	}
+    public String getWriterHost() {
+        return this.writerHost;
+    }
 
-	public void setAppName(String appName) {
-		this.appName = appName;
-	}
+    public void setApiKey(String apiKey) {
+        this.apiKey = apiKey;
+    }
 
-	public void setStartupTime(Date startupTime) {
-		this.startupTime = startupTime;
-	}
+    public void setAppName(String appName) {
+        this.appName = appName;
+    }
 
-	public void setWriterHost(String writerHost) {
-		this.writerHost = writerHost;
-	}
+    public void setStartupTime(Date startupTime) {
+        this.startupTime = startupTime;
+    }
+
+    public void setWriterHost(String writerHost) {
+        this.writerHost = writerHost;
+    }
 }

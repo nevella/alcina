@@ -14,30 +14,27 @@
 package cc.alcina.framework.gwt.client.objecttree.basic;
 
 import java.util.Collection;
-
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = TreeRenderer.class, targetClass = SearchCriterion.class)
-/**
- *
- * @author Nick Reddel
- */
-public class SearchCriterionRenderer<T extends SearchCriterion>
-		extends AbstractRenderer<T> {
-	public Collection<? extends TreeRenderable> renderableChildren() {
-		return null;
-	}
+@Registration({ TreeRenderer.class, SearchCriterion.class })
+public class SearchCriterionRenderer<T extends SearchCriterion> extends AbstractRenderer<T> {
 
-	@Override
-	public String renderCss() {
-		return null;
-	}
+    public Collection<? extends TreeRenderable> renderableChildren() {
+        return null;
+    }
 
-	@Override
-	public RenderInstruction renderInstruction() {
-		return RenderInstruction.AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD;
-	}
+    @Override
+    public String renderCss() {
+        return null;
+    }
+
+    @Override
+    public RenderInstruction renderInstruction() {
+        return RenderInstruction.AS_WIDGET_WITH_TITLE_IF_MORE_THAN_ONE_CHILD;
+    }
 }

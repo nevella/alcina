@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.job;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
-
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -14,80 +13,79 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = JobRelation.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+@Registration({ PersistentImpl.class, JobRelation.class })
 public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
-	private JobRelationType type;
 
-	@Transient
-	public abstract Job getFrom();
+    private JobRelationType type;
 
-	@Transient
-	public abstract Job getTo();
+    @Transient
+    public abstract Job getFrom();
 
-	public JobRelationType getType() {
-		return this.type;
-	}
+    @Transient
+    public abstract Job getTo();
 
-	public abstract void setFrom(Job from);
+    public JobRelationType getType() {
+        return this.type;
+    }
 
-	@Override
-	public void setId(long id) {
-		this.id = id;
-	}
+    public abstract void setFrom(Job from);
 
-	public abstract void setTo(Job to);
+    @Override
+    public void setId(long id) {
+        this.id = id;
+    }
 
-	public void setType(JobRelationType type) {
-		JobRelationType old_type = this.type;
-		this.type = type;
-		propertyChangeSupport().firePropertyChange("type", old_type, type);
-	}
+    public abstract void setTo(Job to);
 
-	public boolean provideIsSequential() {
-		return type.isSequential();
-	}
+    public void setType(JobRelationType type) {
+        JobRelationType old_type = this.type;
+        this.type = type;
+        propertyChangeSupport().firePropertyChange("type", old_type, type);
+    }
 
-	@Override
-	public String toString() {
-		if (getFrom() == null || getTo() == null) {
-			return Ax.format("%s - missing endpoints", getId());
-		}
-		return Ax.format(" %s::%s => %s => %s::%s",
-				getFrom().toLocator().toIdPairString(),
-				getFrom().provideShortName(), type,
-				getTo().toLocator().toIdPairString(),
-				getTo().provideShortName());
-	}
+    public boolean provideIsSequential() {
+        return type.isSequential();
+    }
 
-	public String toStringOther(Job job) {
-		Job other = job == getFrom() ? getTo() : getFrom();
-		if (other == null) {
-			return Ax.format("%s - missing endpoint", getId());
-		}
-		return Ax.format("%s : %s : %s", getType(),
-				other.toLocator().toIdPairString(), other.provideName());
-	}
+    @Override
+    public String toString() {
+        if (getFrom() == null || getTo() == null) {
+            return Ax.format("%s - missing endpoints", getId());
+        }
+        return Ax.format(" %s::%s => %s => %s::%s", getFrom().toLocator().toIdPairString(), getFrom().provideShortName(), type, getTo().toLocator().toIdPairString(), getTo().provideShortName());
+    }
 
-	@ClientInstantiable
-	public static enum JobRelationType {
-		PARENT_CHILD, SEQUENCE, RESUBMIT;
+    public String toStringOther(Job job) {
+        Job other = job == getFrom() ? getTo() : getFrom();
+        if (other == null) {
+            return Ax.format("%s - missing endpoint", getId());
+        }
+        return Ax.format("%s : %s : %s", getType(), other.toLocator().toIdPairString(), other.provideName());
+    }
 
-		// sequential from POV of sequence resolution. Is there a better term?
-		boolean isSequential() {
-			switch (this) {
-			case PARENT_CHILD:
-			case SEQUENCE:
-				return true;
-			case RESUBMIT:
-				return false;
-			default:
-				throw new UnsupportedOperationException();
-			}
-		}
-	}
+    @ClientInstantiable
+    public static enum JobRelationType {
+
+        PARENT_CHILD, SEQUENCE, RESUBMIT;
+
+        // sequential from POV of sequence resolution. Is there a better term?
+        boolean isSequential() {
+            switch(this) {
+                case PARENT_CHILD:
+                case SEQUENCE:
+                    return true;
+                case RESUBMIT:
+                    return false;
+                default:
+                    throw new UnsupportedOperationException();
+            }
+        }
+    }
 }

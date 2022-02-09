@@ -1,100 +1,92 @@
 package cc.alcina.framework.common.client.reflection;
 
 import java.util.Map;
-
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
 import cc.alcina.framework.common.client.reflection.impl.ForName;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
-/*
- * FIXME - reflection.js - clear existing cache entries if forName map contains
- * incoming.
- * 
- * FIXME - reflection.js - optimise maps
- */
+@Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Reflections {
-	private static Reflections theInstance;
 
-	private Map<Class, ClassReflector> reflectors = CollectionCreators.Bootstrap
-			.createConcurrentClassMap();
+    private static Reflections theInstance;
 
-	private Map<String, Class> forName = CollectionCreators.Bootstrap
-			.createConcurrentStringMap();
+    private Map<Class, ClassReflector> reflectors = CollectionCreators.Bootstrap.createConcurrentClassMap();
 
-	public static <T> ClassReflector<T> at(Class<T> clazz) {
-		return get().reflectors.computeIfAbsent(clazz,
-				c -> ClassReflectorProvider.getClassReflector(clazz));
-	}
+    private Map<String, Class> forName = CollectionCreators.Bootstrap.createConcurrentStringMap();
 
-	public static <T> Class<T> forName(String fqn) {
-		if (fqn == null) {
-			return null;
-		}
-		// FIXME - reflection - populate the forName map on init
-		switch (fqn) {
-		case "boolean":
-			return (Class<T>) boolean.class;
-		case "byte":
-			return (Class<T>) byte.class;
-		case "short":
-			return (Class<T>) short.class;
-		case "int":
-			return (Class<T>) int.class;
-		case "long":
-			return (Class<T>) long.class;
-		case "float":
-			return (Class<T>) float.class;
-		case "double":
-			return (Class<T>) double.class;
-		case "char":
-			return (Class<T>) char.class;
-		case "void":
-			return (Class<T>) void.class;
-		}
-		return get().forName.computeIfAbsent(fqn, ForName::forName);
-	}
+    public static <T> ClassReflector<T> at(Class<T> clazz) {
+        return get().reflectors.computeIfAbsent(clazz, c -> ClassReflectorProvider.getClassReflector(clazz));
+    }
 
-	public static String getApplicationName() {
-		return get().applicationName;
-	}
+    public static <T> Class<T> forName(String fqn) {
+        if (fqn == null) {
+            return null;
+        }
+        // FIXME - reflection - populate the forName map on init
+        switch(fqn) {
+            case "boolean":
+                return (Class<T>) boolean.class;
+            case "byte":
+                return (Class<T>) byte.class;
+            case "short":
+                return (Class<T>) short.class;
+            case "int":
+                return (Class<T>) int.class;
+            case "long":
+                return (Class<T>) long.class;
+            case "float":
+                return (Class<T>) float.class;
+            case "double":
+                return (Class<T>) double.class;
+            case "char":
+                return (Class<T>) char.class;
+            case "void":
+                return (Class<T>) void.class;
+        }
+        return get().forName.computeIfAbsent(fqn, ForName::forName);
+    }
 
-	public static boolean isAssignableFrom(Class from, Class to) {
-		return at(to).isAssignableTo(from);
-	}
+    public static String getApplicationName() {
+        return get().applicationName;
+    }
 
-	public static boolean isEffectivelyFinal(Class clazz) {
-		return ClassReflector.stdAndPrimitivesMap.containsKey(clazz.getName())
-				|| CommonUtils.isEnumOrEnumSubclass(clazz);
-	}
+    public static boolean isAssignableFrom(Class from, Class to) {
+        return at(to).isAssignableTo(from);
+    }
 
-	public static <T> T newInstance(Class<T> clazz) {
-		return at(clazz).newInstance();
-	}
+    public static boolean isEffectivelyFinal(Class clazz) {
+        return ClassReflector.stdAndPrimitivesMap.containsKey(clazz.getName()) || CommonUtils.isEnumOrEnumSubclass(clazz);
+    }
 
-	public static <T> T newInstance(String className) {
-		return (T) at(forName(className)).newInstance();
-	}
+    public static <T> T newInstance(Class<T> clazz) {
+        return at(clazz).newInstance();
+    }
 
-	public static void setApplicationName(String applicationName) {
-		get().applicationName = applicationName;
-	}
+    public static <T> T newInstance(String className) {
+        return (T) at(forName(className)).newInstance();
+    }
 
-	private static Reflections get() {
-		return theInstance;
-	}
+    public static void setApplicationName(String applicationName) {
+        get().applicationName = applicationName;
+    }
 
-	public static void init() {
-		ForName.init();
-		theInstance = new Reflections();
-	}
+    private static Reflections get() {
+        return theInstance;
+    }
 
-	private String applicationName = "app";
+    public static void init() {
+        ForName.init();
+        theInstance = new Reflections();
+    }
 
-	public void appShutdown() {
-		theInstance = null;
-	}
+    private String applicationName = "app";
+
+    public void appShutdown() {
+        theInstance = null;
+    }
 }

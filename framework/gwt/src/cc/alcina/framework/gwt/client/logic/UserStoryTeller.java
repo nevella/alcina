@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.logic;
 
 import com.google.gwt.user.client.Window;
-
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.IUserStory;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -14,118 +13,106 @@ import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.persistence.client.LogStore;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @ClientInstantiable
 @RegistryLocation(registryPoint = UserStoryTeller.class, implementationType = ImplementationType.SINGLETON)
-public abstract class UserStoryTeller
-		implements TopicListener<ClientLogRecord> {
-	public static UserStoryTeller get() {
-		return Registry.impl(UserStoryTeller.class);
-	}
+@Registration.Singleton
+public abstract class UserStoryTeller implements TopicListener<ClientLogRecord> {
 
-	public static native void tellJs(String trigger)
-	/*-{
-	var teller = @cc.alcina.framework.gwt.client.logic.UserStoryTeller::get()();
-	teller.@cc.alcina.framework.gwt.client.logic.UserStoryTeller::tell(Ljava/lang/String;)(trigger);
-	
-	}-*/;
+    public static UserStoryTeller get() {
+        return Registry.impl(UserStoryTeller.class);
+    }
 
-	/*
+    public static native void tellJs(String trigger);
+
+    /*
 	 * The 4000 ms timer is so that editors can see - vaguely live - what peeps
 	 * are doing
 	 */
-	private AtEndOfEventSeriesTimer<ClientLogRecord> seriesTimer = new AtEndOfEventSeriesTimer<>(
-			4000, new Runnable() {
-				@Override
-				public void run() {
-					publish();
-				}
-			}).maxDelayFromFirstAction(20000);
+    private AtEndOfEventSeriesTimer<ClientLogRecord> seriesTimer = new AtEndOfEventSeriesTimer<>(4000, new Runnable() {
 
-	protected boolean listening = false;
+        @Override
+        public void run() {
+            publish();
+        }
+    }).maxDelayFromFirstAction(20000);
 
-	protected IUserStory story;
+    protected boolean listening = false;
 
-	protected boolean publishDisabled = false;
+    protected IUserStory story;
 
-	private boolean publishing;
+    protected boolean publishDisabled = false;
 
-	private int cumulativeCharCount = 0;
+    private boolean publishing;
 
-	public UserStoryTeller() {
-		super();
-	}
+    private int cumulativeCharCount = 0;
 
-	public void ensureListening() {
-		if (!listening) {
-			listening = true;
-			LogStore.topicLogEvent().add(this);
-			this.story = createUserStory();
-			AlcinaTopics.logCategorisedMessage(
-					new StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE,
-							Ax.format("Started logging - url: %s",
-									Window.Location.getHref())));
-		}
-	}
+    public UserStoryTeller() {
+        super();
+    }
 
-	public IUserStory getStory() {
-		return this.story;
-	}
+    public void ensureListening() {
+        if (!listening) {
+            listening = true;
+            LogStore.topicLogEvent().add(this);
+            this.story = createUserStory();
+            AlcinaTopics.logCategorisedMessage(new StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE, Ax.format("Started logging - url: %s", Window.Location.getHref())));
+        }
+    }
 
-	public native void registerWithJs()
-	/*-{
-	$wnd._UserStoryTeller_tell=@cc.alcina.framework.gwt.client.logic.UserStoryTeller::tellJs(Ljava/lang/String;)
-	if($wnd["_UserStory_tellOnLoad"]){
-		$wnd._UserStoryTeller_tell($wnd["_UserStory_tellOnLoad"]);
-	}
-	}-*/;
+    public IUserStory getStory() {
+        return this.story;
+    }
 
-	public void tell(String trigger) {
-		ensureListening();
-		ensurePublishing(trigger);
-	}
+    public native void registerWithJs();
 
-	@Override
-	public void topicPublished(String key, ClientLogRecord message) {
-		persistLocal();
-		seriesTimer.triggerEventOccurred(message);
-	}
+    public void tell(String trigger) {
+        ensureListening();
+        ensurePublishing(trigger);
+    }
 
-	private void ensurePublishing(String trigger) {
-		if (!publishing) {
-			publishing = true;
-			story.setTrigger(trigger);
-			Window.addWindowClosingHandler(evt -> publish());
-			publish();
-		}
-	}
+    @Override
+    public void topicPublished(String key, ClientLogRecord message) {
+        persistLocal();
+        seriesTimer.triggerEventOccurred(message);
+    }
 
-	protected abstract IUserStory createUserStory();
+    private void ensurePublishing(String trigger) {
+        if (!publishing) {
+            publishing = true;
+            story.setTrigger(trigger);
+            Window.addWindowClosingHandler(evt -> publish());
+            publish();
+        }
+    }
 
-	protected int getMaxCumulativeCharCount() {
-		return 300000;
-	}
+    protected abstract IUserStory createUserStory();
 
-	protected void persistLocal() {
-	}
+    protected int getMaxCumulativeCharCount() {
+        return 300000;
+    }
 
-	protected abstract void persistRemote();
+    protected void persistLocal() {
+    }
 
-	protected void publish() {
-		if (publishDisabled || !publishing) {
-			return;
-		}
-		if (cumulativeCharCount > getMaxCumulativeCharCount()) {
-			return;
-		}
-		String contents = LogStore.get().dumpLogsAsString();
-		if (contents.length() > getMaxCumulativeCharCount()) {
-			return;
-		}
-		cumulativeCharCount += contents.length();
-		story.setStory(contents);
-		story.obfuscateClientEvents();
-		persistRemote();
-		Ax.out("persisted user story");
-	}
+    protected abstract void persistRemote();
+
+    protected void publish() {
+        if (publishDisabled || !publishing) {
+            return;
+        }
+        if (cumulativeCharCount > getMaxCumulativeCharCount()) {
+            return;
+        }
+        String contents = LogStore.get().dumpLogsAsString();
+        if (contents.length() > getMaxCumulativeCharCount()) {
+            return;
+        }
+        cumulativeCharCount += contents.length();
+        story.setStory(contents);
+        story.obfuscateClientEvents();
+        persistRemote();
+        Ax.out("persisted user story");
+    }
 }

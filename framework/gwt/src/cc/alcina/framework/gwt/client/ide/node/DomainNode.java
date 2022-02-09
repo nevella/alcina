@@ -15,12 +15,10 @@ package cc.alcina.framework.gwt.client.ide.node;
 
 import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
-
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.google.gwt.user.client.ui.AbstractImagePrototype;
 import com.google.gwt.user.client.ui.TreeItem;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -31,117 +29,113 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ide.DataTree;
 import cc.alcina.framework.gwt.client.ide.widget.DetachListener;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
- * 
  * @author Nick Reddel
  */
-public class DomainNode<T extends SourcesPropertyChangeEvents> extends
-		FilterableTreeItem implements PropertyChangeListener, DetachListener {
-	private String displayName;
+public class DomainNode<T extends SourcesPropertyChangeEvents> extends FilterableTreeItem implements PropertyChangeListener, DetachListener {
 
-	public DomainNode(T object) {
-		this(object, null);
-	}
+    private String displayName;
 
-	public DomainNode(T object, NodeFactory nodeFactory) {
-		super();
-		setUserObject(object);
-		object.addPropertyChangeListener(this);
-		refreshFromObject();
-	}
+    public DomainNode(T object) {
+        this(object, null);
+    }
 
-	public String getDisplayName() {
-		return this.displayName;
-	}
+    public DomainNode(T object, NodeFactory nodeFactory) {
+        super();
+        setUserObject(object);
+        object.addPropertyChangeListener(this);
+        refreshFromObject();
+    }
 
-	@Override
-	public T getUserObject() {
-		return (T) super.getUserObject();
-	}
+    public String getDisplayName() {
+        return this.displayName;
+    }
 
-	@Override
-	public void onDetach() {
-		removeListeners();
-	}
+    @Override
+    public T getUserObject() {
+        return (T) super.getUserObject();
+    }
 
-	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
-		if (getTree() == null) {
-			return;
-		}
-		refreshFromObject();
-	}
+    @Override
+    public void onDetach() {
+        removeListeners();
+    }
 
-	public void refreshFromObject() {
-		displayName = TextProvider.get().getObjectName(getUserObject());
-		if (displayName != null) {
-			displayName = SafeHtmlUtils.htmlEscape(displayName);
-		} else {
-			displayName = "[null]";
-		}
-		if (!isUnrendered()) {
-			renderHtml();
-		}
-	}
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        if (getTree() == null) {
+            return;
+        }
+        refreshFromObject();
+    }
 
-	@Override
-	public void removeItem(TreeItem item) {
-		super.removeItem(item);
-		removeListeners();
-	}
+    public void refreshFromObject() {
+        displayName = TextProvider.get().getObjectName(getUserObject());
+        if (displayName != null) {
+            displayName = SafeHtmlUtils.htmlEscape(displayName);
+        } else {
+            displayName = "[null]";
+        }
+        if (!isUnrendered()) {
+            renderHtml();
+        }
+    }
 
-	public void removeListeners() {
-		T object = getUserObject();
-		object.removePropertyChangeListener(this);
-	}
+    @Override
+    public void removeItem(TreeItem item) {
+        super.removeItem(item);
+        removeListeners();
+    }
 
-	@Override
-	protected String getText0() {
-		return displayName;
-	}
+    public void removeListeners() {
+        T object = getUserObject();
+        object.removePropertyChangeListener(this);
+    }
 
-	protected String imageItemHTML(AbstractImagePrototype imageProto,
-			String title) {
-		if (((DataTree) getTree()).isUseNodeImages()) {
-			return imageProto.getHTML() + " " + title;
-		} else {
-			return title;
-		}
-	}
+    @Override
+    protected String getText0() {
+        return displayName;
+    }
 
-	@Override
-	protected void renderHtml() {
-		AbstractImagePrototype img = StandardDataImageProvider.get()
-				.getByName("");
-		setHTML(imageItemHTML(img, displayName));
-	}
+    protected String imageItemHTML(AbstractImagePrototype imageProto, String title) {
+        if (((DataTree) getTree()).isUseNodeImages()) {
+            return imageProto.getHTML() + " " + title;
+        } else {
+            return title;
+        }
+    }
 
-	@Override
-	protected boolean satisfiesFilter(String filterText) {
-		T userObject = getUserObject();
-		return Registry.impl(HasSatisfiesFilter.class, userObject.getClass())
-				.satisfiesFilter(userObject, filterText);
-	}
+    @Override
+    protected void renderHtml() {
+        AbstractImagePrototype img = StandardDataImageProvider.get().getByName("");
+        setHTML(imageItemHTML(img, displayName));
+    }
 
-	@RegistryLocation(registryPoint = HasSatisfiesFilter.class, implementationType = ImplementationType.SINGLETON)
-	@ClientInstantiable
-	public static class DefaultHasSatisfiesFilter<T>
-			implements HasSatisfiesFilter<T> {
-		@Override
-		public boolean satisfiesFilter(T t, String filterText) {
-			if (CommonUtils.nullToEmpty(TextProvider.get().getObjectName(t))
-					.toLowerCase().contains(filterText)) {
-				return true;
-			}
-			if (t instanceof HasId) {
-				if (filterText.startsWith("id:")) {
-					return String.valueOf(((HasId) t).getId())
-							.equals(filterText.substring(3));
-				}
-				return String.valueOf(((HasId) t).getId()).equals(filterText);
-			}
-			return false;
-		}
-	}
+    @Override
+    protected boolean satisfiesFilter(String filterText) {
+        T userObject = getUserObject();
+        return Registry.impl(HasSatisfiesFilter.class, userObject.getClass()).satisfiesFilter(userObject, filterText);
+    }
+
+    @RegistryLocation(registryPoint = HasSatisfiesFilter.class, implementationType = ImplementationType.SINGLETON)
+    @ClientInstantiable
+    @Registration.Singleton(HasSatisfiesFilter.class)
+    public static class DefaultHasSatisfiesFilter<T> implements HasSatisfiesFilter<T> {
+
+        @Override
+        public boolean satisfiesFilter(T t, String filterText) {
+            if (CommonUtils.nullToEmpty(TextProvider.get().getObjectName(t)).toLowerCase().contains(filterText)) {
+                return true;
+            }
+            if (t instanceof HasId) {
+                if (filterText.startsWith("id:")) {
+                    return String.valueOf(((HasId) t).getId()).equals(filterText.substring(3));
+                }
+                return String.valueOf(((HasId) t).getId()).equals(filterText);
+            }
+            return false;
+        }
+    }
 }
