@@ -17,7 +17,7 @@ public class CollectionCreatorsJvm {
 
     @RegistryLocation(registryPoint = ConcurrentMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
     @ClientInstantiable
-    @Registration(value = ConcurrentMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+    @Registration.Singleton(value = ConcurrentMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
     public static class ConcurrentMapCreatorJvm extends ConcurrentMapCreator {
 
         @Override
@@ -36,7 +36,7 @@ public class CollectionCreatorsJvm {
 
     @RegistryLocation(registryPoint = CollectionCreators.HashMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
     @ClientInstantiable
-    @Registration(value = CollectionCreators.HashMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+    @Registration.Singleton(value = CollectionCreators.HashMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
     public static class HashMapCreatorJvm extends HashMapCreator {
 
         @Override
@@ -55,7 +55,7 @@ public class CollectionCreatorsJvm {
     }
 
     @RegistryLocation(registryPoint = UnsortedMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-    @Registration(value = UnsortedMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+    @Registration.Singleton(value = UnsortedMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
     public static class UnsortedMapCreatorJvm extends UnsortedMapCreator {
 
         @Override

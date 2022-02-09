@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
  */
 @RegistryLocation(registryPoint = RandomProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 @IgnoreIntrospectionChecks
-@Registration(value = RandomProvider.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+@Registration.Singleton(value = RandomProvider.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 public class ServerRandomProvider implements RandomProvider {
 
     Random random = new Random();

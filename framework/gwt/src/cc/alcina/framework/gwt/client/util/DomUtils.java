@@ -810,8 +810,9 @@ public class DomUtils implements NodeFromXpathProvider {
     }
 
     private Node resolveContainer(Node container) {
-        return GWT.isClient() ? container : // all server-side addressing should be relative to the document
-        container.getNodeType() == Node.DOCUMENT_NODE ? container : container.getOwnerDocument();
+        return // all server-side addressing should be relative to the document
+        GWT.isClient() ? // all server-side addressing should be relative to the document
+        container : container.getNodeType() == Node.DOCUMENT_NODE ? container : container.getOwnerDocument();
     }
 
     boolean requiresSplit(Element ancestor, Element wrapper) {

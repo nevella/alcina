@@ -52,7 +52,7 @@ public class CollectionCreatorsMvcc {
 
     @RegistryLocation(registryPoint = CollectionCreators.TypedMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
     @ClientInstantiable
-    @Registration(value = CollectionCreators.TypedMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+    @Registration.Singleton(value = CollectionCreators.TypedMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
     public static class TypedMapCreatorCreatorMvcc<K, V> implements CollectionCreators.TypedMapCreator<K, V> {
 
         @Override

@@ -439,8 +439,8 @@ public class Registry {
         if (implementationType == ImplementationType.MULTIPLE && targetClassKey == keys.undefinedTargetKey() && infoPriority != RegistryLocation.DEFAULT_PRIORITY) {
             throw new RegistryException(this, Ax.format("Non-default priority " + "with Multiple impl type -" + " probably should be instance - %s", registeringClassKey.name()));
         }
-        if (registered.size() == 1 && // && (targetClassKey != keys.undefinedTargetKey()
-        // || implementationType != ImplementationType.MULTIPLE)) {
+        if (// && (targetClassKey != keys.undefinedTargetKey()
+        registered.size() == 1 && // || implementationType != ImplementationType.MULTIPLE)) {
         implementationType != ImplementationType.MULTIPLE) {
             Integer currentPriority = targetPriority.get(registryPointKey, targetClassKey);
             if (currentPriority > infoPriority) {

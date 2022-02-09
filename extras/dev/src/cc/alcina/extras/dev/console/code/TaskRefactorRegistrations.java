@@ -228,6 +228,12 @@ public class TaskRefactorRegistrations
 
 		@Override
 		protected void modify0() {
+			declaration.getAnnotationByClass(Registration.class)
+					.ifPresent(AnnotationExpr::remove);
+			declaration.getAnnotationByClass(Registration.Singleton.class)
+					.ifPresent(AnnotationExpr::remove);
+			declaration.getAnnotationByClass(Registrations.class)
+					.ifPresent(AnnotationExpr::remove);
 			declaration.getAnnotationByClass(RegistryLocation.class)
 					.map(this::translateLocation)
 					.ifPresent(declarationWrapper::addAnnotation);
@@ -281,7 +287,7 @@ public class TaskRefactorRegistrations
 					}
 				} else {
 					NormalAnnotationExpr expr = new NormalAnnotationExpr();
-					expr.setName(registration);
+					expr.setName(singleton);
 					expr.addPair("value", outValue);
 					outPriority.ifPresent(p -> expr.addPair(p.getNameAsString(),
 							p.getValue()));

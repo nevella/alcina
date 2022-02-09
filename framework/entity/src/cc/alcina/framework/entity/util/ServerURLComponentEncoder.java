@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 @RegistryLocation(registryPoint = UrlComponentEncoder.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
 // only used in hosted mode
 @ClientInstantiable
-@Registration(value = UrlComponentEncoder.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+@Registration.Singleton(value = UrlComponentEncoder.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 public class ServerURLComponentEncoder implements UrlComponentEncoder {
 
     public String decode(String componentText) {

@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = PerDocumentSupplier.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.MANUAL_PRIORITY)
-@Registration(value = PerDocumentSupplier.class, priority = Registration.Priority.MANUAL)
+@Registration.Singleton(value = PerDocumentSupplier.class, priority = Registration.Priority.MANUAL)
 public class PerDocumentSupplierCoreDocument extends PerDocumentSupplier {
 
     public static final transient String CORE_DOCUMENT_DOM_DOC_KEY = PerDocumentSupplierCoreDocument.class.getName() + ".CORE_DOCUMENT_DOM_DOC_KEY";

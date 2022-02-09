@@ -405,8 +405,9 @@ public class GwittirBridge {
                     }
                     validator = getValidator(domainType, obj, propertyName, validationFeedback);
                 }
-                Field field = new Field(propertyName, // FIXME - dirndl.2
-                TextProvider.get().getLabelText(propertyLocation), bwp, validator, validationFeedback, getDefaultConverter(bwp, type), type);
+                Field field = new // FIXME - dirndl.2
+                Field(// FIXME - dirndl.2
+                propertyName, TextProvider.get().getLabelText(propertyLocation), bwp, validator, validationFeedback, getDefaultConverter(bwp, type), type);
                 if (!display.styleName().isEmpty()) {
                     field.setStyleName(display.styleName());
                 }

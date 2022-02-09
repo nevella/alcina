@@ -82,6 +82,6 @@ public @interface Registration {
 	public @interface Singleton {
 		Priority priority() default Priority._DEFAULT;
 
-		Class[] value();
+		Class[] value() default {};
 	}
 }
