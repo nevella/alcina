@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -33,5 +34,11 @@ public class Annotations {
 			Class<A> annotationClass, AnnotationLocation.Resolver resolver) {
 		return new AnnotationLocation(property.getDefiningType(), property,
 				resolver).getAnnotation(annotationClass);
+	}
+
+	public static <A extends Annotation> List<A> resolveMultiple(Class clazz,
+			Class<A> annotationClass) {
+		return new AnnotationLocation(clazz, null, null)
+				.getAnnotations(annotationClass);
 	}
 }

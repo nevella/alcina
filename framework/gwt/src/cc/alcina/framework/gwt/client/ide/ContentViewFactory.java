@@ -78,8 +78,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Action;
-import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
@@ -337,7 +337,7 @@ public class ContentViewFactory {
 		List<Field> fieldList = new ArrayList<>(Arrays.asList(GwittirBridge
 				.get().fieldsForReflectedObjectAndSetupWidgetFactory(bean,
 						factory, editable, false, null, editableFieldFilter,
-						new AnnotationLocation.DefaultResolver())));
+						new DefaultAnnotationResolver())));
 		if (fieldFilter != null) {
 			fieldList.removeIf(f -> !fieldFilter.test(f));
 		}

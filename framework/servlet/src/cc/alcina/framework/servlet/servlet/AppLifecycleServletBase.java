@@ -20,24 +20,29 @@ import java.util.jar.JarFile;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import javax.net.ssl.HttpsURLConnection;
 import javax.servlet.GenericServlet;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletException;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
+
 import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
 import org.apache.log4j.Appender;
 import org.apache.log4j.Layout;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+
 import com.google.gwt.core.shared.GWT;
+
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -88,492 +93,552 @@ import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = AppLifecycleServletBase.class, implementationType = ImplementationType.SINGLETON)
 @Registration.Singleton
 public abstract class AppLifecycleServletBase extends GenericServlet {
+	private static Topic<Void> topicConfigurationReloaded = Topic.local();
 
-    private static Topic<Void> topicConfigurationReloaded = Topic.local();
+	public static AppLifecycleServletBase get() {
+		return Registry.impl(AppLifecycleServletBase.class);
+	}
 
-    public static AppLifecycleServletBase get() {
-        return Registry.impl(AppLifecycleServletBase.class);
-    }
+	public static void setupAppServerBootstrapJvmServices() {
+		Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+	}
 
-    public static Topic<Void> topicConfigurationReloaded() {
-        return topicConfigurationReloaded;
-    }
+	public static void setupBootstrapJvmServices() {
+		Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
+		CollectionCreators.Bootstrap
+				.setConcurrentClassMapCreator(new ConcurrentMapCreatorJvm());
+		CollectionCreators.Bootstrap
+				.setConcurrentStringMapCreator(new ConcurrentMapCreatorJvm());
+		CollectionCreators.Bootstrap.setHashMapCreator(new HashMapCreatorJvm());
+	}
 
-    protected ServletConfig initServletConfig;
+	public static Topic<Void> topicConfigurationReloaded() {
+		return topicConfigurationReloaded;
+	}
 
-    private Date startupTime;
+	protected ServletConfig initServletConfig;
 
-    protected ServletClassMetadataCacheProvider classMetadataCacheProvider = new CachingServletClassMetadataCacheProvider();
+	private Date startupTime;
 
-    private SerializationSignatureListener serializationSignatureListener;
+	protected ServletClassMetadataCacheProvider classMetadataCacheProvider = new CachingServletClassMetadataCacheProvider();
 
-    public void clearJarCache() {
-        try {
-            String testJar = "jsr173_api.jar";
-            File testJarFile = new File("/tmp/" + testJar);
-            if (!testJarFile.exists()) {
-                byte[] bytes = ResourceUtilities.readClassPathResourceAsByteArray(AppLifecycleServletBase.class, "res/" + testJar);
-                ResourceUtilities.writeBytesToFile(bytes, testJarFile);
-            }
-            URL url = new URL(Ax.format("jar:file://%s!/javax/xml/XMLConstants.class", testJarFile.getPath()));
-            URLConnection conn = url.openConnection();
-            // Class clazz = Class
-            // .forName("sun.net.www.protocol.jar.JarURLConnection");
-            Class clazz = conn.getClass();
-            Field factoryField = clazz.getDeclaredField("factory");
-            factoryField.setAccessible(true);
-            Object factory = factoryField.get(null);
-            Field fileCacheField = factory.getClass().getDeclaredField("fileCache");
-            fileCacheField.setAccessible(true);
-            Field urlCacheField = factory.getClass().getDeclaredField("urlCache");
-            urlCacheField.setAccessible(true);
-            HashMap<String, JarFile> fileCache = (HashMap<String, JarFile>) fileCacheField.get(factory);
-            HashMap<JarFile, URL> urlCache = (HashMap<JarFile, URL>) urlCacheField.get(factory);
-            for (Entry<String, JarFile> entry : fileCache.entrySet().stream().collect(Collectors.toList())) {
-                // if (entry.getKey().matches(
-                // ".*(cc.alcina|com.barnet|com.victorian|com.nswlr|com.littlewill).*"))
-                // {
-                // Ax.out("Cleared jar cache - %s", entry.getKey());
-                entry.getValue().close();
-                urlCache.remove(entry.getValue());
-                fileCache.remove(entry.getKey());
-                // }
-            }
-        } catch (Throwable e) {
-            e.printStackTrace();
-        }
-    }
+	private SerializationSignatureListener serializationSignatureListener;
 
-    @Override
-    public void destroy() {
-        try {
-            if (usesJobs()) {
-                Transaction.begin();
-                JobRegistry.get().stopService();
-                Transaction.end();
-            }
-            Registry.impls(LifecycleService.class).forEach(service -> {
-                try {
-                    service.onApplicationShutdown();
-                } catch (Exception e) {
-                    Ax.sysLogHigh("Exception shutting down %s", service.getClass().getSimpleName());
-                    e.printStackTrace();
-                }
-            });
-            getStatusNotifier().destroyed();
-            BackendTransformQueue.get().stop();
-            Transactions.shutdown();
-            // entity layer services
-            OffThreadLogger.get().appShutdown();
-            DomainStore.stores().appShutdown();
-            // servlet layer (LifecycleService) services
-            Registry.appShutdown();
-            SEUtilities.appShutdown();
-            ResourceUtilities.appShutdown();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+	public void clearJarCache() {
+		try {
+			String testJar = "jsr173_api.jar";
+			File testJarFile = new File("/tmp/" + testJar);
+			if (!testJarFile.exists()) {
+				byte[] bytes = ResourceUtilities
+						.readClassPathResourceAsByteArray(
+								AppLifecycleServletBase.class,
+								"res/" + testJar);
+				ResourceUtilities.writeBytesToFile(bytes, testJarFile);
+			}
+			URL url = new URL(
+					Ax.format("jar:file://%s!/javax/xml/XMLConstants.class",
+							testJarFile.getPath()));
+			URLConnection conn = url.openConnection();
+			// Class clazz = Class
+			// .forName("sun.net.www.protocol.jar.JarURLConnection");
+			Class clazz = conn.getClass();
+			Field factoryField = clazz.getDeclaredField("factory");
+			factoryField.setAccessible(true);
+			Object factory = factoryField.get(null);
+			Field fileCacheField = factory.getClass()
+					.getDeclaredField("fileCache");
+			fileCacheField.setAccessible(true);
+			Field urlCacheField = factory.getClass()
+					.getDeclaredField("urlCache");
+			urlCacheField.setAccessible(true);
+			HashMap<String, JarFile> fileCache = (HashMap<String, JarFile>) fileCacheField
+					.get(factory);
+			HashMap<JarFile, URL> urlCache = (HashMap<JarFile, URL>) urlCacheField
+					.get(factory);
+			for (Entry<String, JarFile> entry : fileCache.entrySet().stream()
+					.collect(Collectors.toList())) {
+				// if (entry.getKey().matches(
+				// ".*(cc.alcina|com.barnet|com.victorian|com.nswlr|com.littlewill).*"))
+				// {
+				// Ax.out("Cleared jar cache - %s", entry.getKey());
+				entry.getValue().close();
+				urlCache.remove(entry.getValue());
+				fileCache.remove(entry.getKey());
+				// }
+			}
+		} catch (Throwable e) {
+			e.printStackTrace();
+		}
+	}
 
-    public String dumpCustomProperties() {
-        Map<String, String> map = new TreeMap<String, String>();
-        map.putAll(ResourceUtilities.getCustomProperties());
-        return CommonUtils.join(map.entrySet(), "\n");
-    }
+	@Override
+	public void destroy() {
+		try {
+			if (usesJobs()) {
+				Transaction.begin();
+				JobRegistry.get().stopService();
+				Transaction.end();
+			}
+			Registry.query(LifecycleService.class).implementations()
+					.forEach(service -> {
+						try {
+							service.onApplicationShutdown();
+						} catch (Exception e) {
+							Ax.sysLogHigh("Exception shutting down %s",
+									service.getClass().getSimpleName());
+							e.printStackTrace();
+						}
+					});
+			getStatusNotifier().destroyed();
+			BackendTransformQueue.get().stop();
+			Transactions.shutdown();
+			// entity layer services
+			OffThreadLogger.get().appShutdown();
+			DomainStore.stores().appShutdown();
+			// servlet layer (LifecycleService) services
+			Registry.appShutdown();
+			SEUtilities.appShutdown();
+			ResourceUtilities.appShutdown();
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+	}
 
-    public String getDefaultLoggerLevels() {
-        return ResourceUtilities.read(AppLifecycleServletBase.class, "loglevels.properties");
-    }
+	public String dumpCustomProperties() {
+		Map<String, String> map = new TreeMap<String, String>();
+		map.putAll(ResourceUtilities.getCustomProperties());
+		return CommonUtils.join(map.entrySet(), "\n");
+	}
 
-    public Date getStartupTime() {
-        return this.startupTime;
-    }
+	public String getDefaultLoggerLevels() {
+		return ResourceUtilities.read(AppLifecycleServletBase.class,
+				"loglevels.properties");
+	}
 
-    public static void setupAppServerBootstrapJvmServices() {
-        Registry.setProvider(new ClassLoaderAwareRegistryProvider());
-    }
+	public Date getStartupTime() {
+		return this.startupTime;
+	}
 
-    public static void setupBootstrapJvmServices() {
-        Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
-        CollectionCreators.Bootstrap.setConcurrentClassMapCreator(new ConcurrentMapCreatorJvm());
-        CollectionCreators.Bootstrap.setConcurrentStringMapCreator(new ConcurrentMapCreatorJvm());
-        CollectionCreators.Bootstrap.setHashMapCreator(new HashMapCreatorJvm());
-    }
+	@Override
+	public void init(ServletConfig servletConfig) throws ServletException {
+		MetricLogging.get().start("Web app startup");
+		startupTime = new Date();
+		Thread.currentThread().setName("Init-" + getClass().getSimpleName());
+		try {
+			initServletConfig = servletConfig;
+			// push to registry
+			AppPersistenceBase.setInstanceReadOnly(false);
+			initBootstrapRegistry();
+			initNames();
+			loadCustomProperties();
+			initDevConsoleAndWebApp();
+			initContainerBridge();
+			initServices();
+			initCluster();
+			getStatusNotifier().deploying();
+			initEntityLayer();
+			postInitEntityLayer();
+			initCustom();
+			runFinalPreInitTasks();
+			ServletLayerUtils.setAppServletInitialised(true);
+			onAppServletInitialised();
+			launchPostInitTasks();
+		} catch (Throwable e) {
+			Ax.out("Exception in lifecycle servlet init");
+			e.printStackTrace();
+			getStatusNotifier().failed();
+			throw new ServletException(e);
+		} finally {
+			initServletConfig = null;
+		}
+		MetricLogging.get().end("Web app startup");
+		getStatusNotifier().ready();
+	}
 
-    @Override
-    public void init(ServletConfig servletConfig) throws ServletException {
-        MetricLogging.get().start("Web app startup");
-        startupTime = new Date();
-        Thread.currentThread().setName("Init-" + getClass().getSimpleName());
-        try {
-            initServletConfig = servletConfig;
-            // push to registry
-            AppPersistenceBase.setInstanceReadOnly(false);
-            initBootstrapRegistry();
-            initNames();
-            loadCustomProperties();
-            initDevConsoleAndWebApp();
-            initContainerBridge();
-            initServices();
-            initCluster();
-            getStatusNotifier().deploying();
-            initEntityLayer();
-            postInitEntityLayer();
-            initCustom();
-            runFinalPreInitTasks();
-            ServletLayerUtils.setAppServletInitialised(true);
-            onAppServletInitialised();
-            launchPostInitTasks();
-        } catch (Throwable e) {
-            Ax.out("Exception in lifecycle servlet init");
-            e.printStackTrace();
-            getStatusNotifier().failed();
-            throw new ServletException(e);
-        } finally {
-            initServletConfig = null;
-        }
-        MetricLogging.get().end("Web app startup");
-        getStatusNotifier().ready();
-    }
+	public void refreshProperties() {
+		loadCustomProperties();
+		ResourceUtilities.loadSystemPropertiesFromCustomProperties();
+		topicConfigurationReloaded.publish(null);
+		EntityLayerLogging.setLogLevelsFromCustomProperties();
+	}
 
-    public void refreshProperties() {
-        loadCustomProperties();
-        ResourceUtilities.loadSystemPropertiesFromCustomProperties();
-        topicConfigurationReloaded.publish(null);
-        EntityLayerLogging.setLogLevelsFromCustomProperties();
-    }
+	@Override
+	public void service(ServletRequest arg0, ServletResponse arg1)
+			throws ServletException, IOException {
+	}
 
-    @Override
-    public void service(ServletRequest arg0, ServletResponse arg1) throws ServletException, IOException {
-    }
+	public void setStartupTime(Date startupTime) {
+		this.startupTime = startupTime;
+	}
 
-    public void setStartupTime(Date startupTime) {
-        this.startupTime = startupTime;
-    }
+	protected void createServletTransformClientInstance() {
+		if (EntityLayerObjects.get().getServerAsClientInstance() != null) {
+			throw new IllegalStateException();
+		}
+		try {
+			Transaction.begin();
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			AuthenticationPersistence.get().createBootstrapClientInstance();
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+			Transaction.end();
+		}
+	}
 
-    protected void createServletTransformClientInstance() {
-        if (EntityLayerObjects.get().getServerAsClientInstance() != null) {
-            throw new IllegalStateException();
-        }
-        try {
-            Transaction.begin();
-            ThreadedPermissionsManager.cast().pushSystemUser();
-            AuthenticationPersistence.get().createBootstrapClientInstance();
-        } finally {
-            ThreadedPermissionsManager.cast().popSystemUser();
-            Transaction.end();
-        }
-    }
+	protected AppServletStatusNotifier getStatusNotifier() {
+		return new AppServletStatusNotifier();
+	}
 
-    protected AppServletStatusNotifier getStatusNotifier() {
-        return new AppServletStatusNotifier();
-    }
+	protected void initBootstrapRegistry() {
+		setupAppServerBootstrapJvmServices();
+		setupBootstrapJvmServices();
+		AlcinaWebappConfig config = new AlcinaWebappConfig();
+		config.setStartDate(new Date());
+		Reflections.init();
+		Registry.registerSingleton(AlcinaWebappConfig.class, config);
+		Registry.registerSingleton(AppLifecycleServletBase.class, this);
+		Registry.registerSingleton(AppPersistenceBase.InitRegistrySupport.class,
+				new AppPersistenceBase.InitRegistrySupport());
+	}
 
-    protected void initBootstrapRegistry() {
-        setupAppServerBootstrapJvmServices();
-        setupBootstrapJvmServices();
-        AlcinaWebappConfig config = new AlcinaWebappConfig();
-        config.setStartDate(new Date());
-        Reflections.init();
-        Registry.registerSingleton(AlcinaWebappConfig.class, config);
-        Registry.registerSingleton(AppLifecycleServletBase.class, this);
-        Registry.registerSingleton(AppPersistenceBase.InitRegistrySupport.class, new AppPersistenceBase.InitRegistrySupport());
-    }
+	protected void initCluster() {
+	}
 
-    protected void initCluster() {
-    }
-
-    /*
+	/*
 	 * Commented services must/can all be initialised with appropriate app
 	 * equivalents
 	 */
-    protected abstract void initCommonImplServices();
+	protected abstract void initCommonImplServices();
 
-    protected void initCommonServices() {
-        PermissionsManager permissionsManager = PermissionsManager.get();
-        PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
-        TransformManager.register(ThreadlocalTransformManager.ttmInstance());
-        ThreadlocalLooseContextProvider.setDebugStackEntry(ResourceUtilities.is(AppLifecycleServletBase.class, "debugLooseContextStackEntry"));
-        ThreadlocalLooseContextProvider ttmInstance = ThreadlocalLooseContextProvider.ttmInstance();
-        LooseContext.register(ttmInstance);
-        Registry.registerSingleton(TimerWrapperProvider.class, new TimerWrapperProviderJvm());
-        LiSet.degenerateCreator = new DegenerateCreatorMvcc();
-        GWT.setBridge(new GWTBridgeHeadless());
-    }
+	protected void initCommonServices() {
+		PermissionsManager permissionsManager = PermissionsManager.get();
+		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
+		TransformManager.register(ThreadlocalTransformManager.ttmInstance());
+		ThreadlocalLooseContextProvider.setDebugStackEntry(ResourceUtilities.is(
+				AppLifecycleServletBase.class, "debugLooseContextStackEntry"));
+		ThreadlocalLooseContextProvider ttmInstance = ThreadlocalLooseContextProvider
+				.ttmInstance();
+		LooseContext.register(ttmInstance);
+		Registry.registerSingleton(TimerWrapperProvider.class,
+				new TimerWrapperProviderJvm());
+		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
+		GWT.setBridge(new GWTBridgeHeadless());
+	}
 
-    protected abstract void initCustom() throws Exception;
+	protected abstract void initContainerBridge();
 
-    protected abstract void initCustomServices();
+	protected abstract void initCustom() throws Exception;
 
-    protected abstract void initDataFolder();
+	protected abstract void initCustomServices();
 
-    @SuppressWarnings("deprecation")
-    protected void initDevConsoleAndWebApp() {
-        ResourceUtilities.loadSystemPropertiesFromCustomProperties();
-        if (ResourceUtilities.is("allowAllHostnameVerifier")) {
-            try {
-                HttpsURLConnection.setDefaultHostnameVerifier(SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-            } catch (Throwable e) {
-                Ax.out("No hostname verification bypass: %s", CommonUtils.toSimpleExceptionMessage(e));
-            }
-        }
-        initLoggers();
-    }
+	protected abstract void initDataFolder();
 
-    protected abstract void initEntityLayer() throws Exception;
+	@SuppressWarnings("deprecation")
+	protected void initDevConsoleAndWebApp() {
+		ResourceUtilities.loadSystemPropertiesFromCustomProperties();
+		if (ResourceUtilities.is("allowAllHostnameVerifier")) {
+			try {
+				HttpsURLConnection.setDefaultHostnameVerifier(
+						SSLConnectionSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
+			} catch (Throwable e) {
+				Ax.out("No hostname verification bypass: %s",
+						CommonUtils.toSimpleExceptionMessage(e));
+			}
+		}
+		initLoggers();
+	}
 
-    protected abstract void initEntityLayerRegistry();
+	protected abstract void initEntityLayer() throws Exception;
 
-    protected abstract void initContainerBridge();
+	protected abstract void initEntityLayerRegistry();
 
-    protected void initLoggers() {
-        Logger logger = Logger.getRootLogger();
-        System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
-        // JBoss will have deadlocks if we try and use console appender, leave
-        // its appender structure in place
-        // 
-        // Note the customised jboss-logmanager.jar (default to strong map)
-        if (Ax.isTest()) {
-            logger.removeAllAppenders();
-            Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
-            {
-                Appender appender = new SafeConsoleAppender(layout);
-                appender.setName(AlcinaWebappConfig.MAIN_LOGGER_APPENDER);
-                logger.addAppender(appender);
-            }
-            {
-                PerThreadAppender appender = new PerThreadAppender(layout);
-                Registry.registerSingleton(PerThreadLogging.class, appender);
-                appender.setName("per-thread-appender");
-                logger.addAppender(appender);
-            }
-        }
-        logger.setAdditivity(true);
-        logger.setLevel(Level.INFO);
-        if (!Ax.isTest()) {
-            // setup wildfly root logger appenders
-            try {
-                Field jblmLoggerField = SEUtilities.getFieldByName(logger.getClass(), "jblmLogger");
-                jblmLoggerField.setAccessible(true);
-                Object jblmLogger = jblmLoggerField.get(logger);
-                Field loggerNodeField = SEUtilities.getFieldByName(jblmLogger.getClass(), "loggerNode");
-                loggerNodeField.setAccessible(true);
-                Object loggerNode = loggerNodeField.get(jblmLogger);
-                Field handlersField = SEUtilities.getFieldByName(loggerNode.getClass(), "handlers");
-                handlersField.setAccessible(true);
-                Object[] handlers = (Object[]) handlersField.get(loggerNode);
-                for (Object handler : handlers) {
-                    if (handler.getClass().getName().equals("org.jboss.logmanager.handlers.ConsoleHandler")) {
-                        Field logLevelField = SEUtilities.getFieldByName(handler.getClass(), "logLevel");
-                        logLevelField.setAccessible(true);
-                        logLevelField.set(handler, java.util.logging.Level.ALL);
-                    } else if (handler.getClass().getName().equals("cc.alcina.framework.servlet.logging.PerThreadLoggingHandler")) {
-                        Registry.registerSingleton(PerThreadLogging.class, new PerThreadLoggingWrapper(handler));
-                    }
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
-            }
-        }
-        {
-            Logger metricLogger = Logger.getLogger(MetricLogging.class);
-            if (Ax.isTest()) {
-                metricLogger.removeAllAppenders();
-                Layout metricLayout = new PatternLayout(AppPersistenceBase.METRIC_LOGGER_PATTERN);
-                metricLogger.addAppender(new SafeConsoleAppender(metricLayout));
-                metricLogger.setAdditivity(false);
-            } else {
-                metricLogger.setAdditivity(true);
-            }
-            metricLogger.setLevel(Level.DEBUG);
-            ServletLayerObjects.get().setMetricLogger(metricLogger);
-            EntityLayerObjects.get().setMetricLogger(metricLogger);
-        }
-        String databaseEventLoggerName = AlcinaWebappConfig.get().getDatabaseEventLoggerName();
-        if (EntityLayerObjects.get().getPersistentLogger() == null) {
-            Logger dbLogger = Logger.getLogger(databaseEventLoggerName);
-            dbLogger.removeAllAppenders();
-            dbLogger.setLevel(Level.INFO);
-            Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
-            Appender appender = new DbAppender(layout);
-            appender.setName(databaseEventLoggerName);
-            dbLogger.addAppender(appender);
-            EntityLayerObjects.get().setPersistentLogger(dbLogger);
-        }
-        EntityLayerLogging.setLogLevelsFromCustomProperties();
-    }
+	protected void initLoggers() {
+		Logger logger = Logger.getRootLogger();
+		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
+		// JBoss will have deadlocks if we try and use console appender, leave
+		// its appender structure in place
+		//
+		// Note the customised jboss-logmanager.jar (default to strong map)
+		if (Ax.isTest()) {
+			logger.removeAllAppenders();
+			Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+			{
+				Appender appender = new SafeConsoleAppender(layout);
+				appender.setName(AlcinaWebappConfig.MAIN_LOGGER_APPENDER);
+				logger.addAppender(appender);
+			}
+			{
+				PerThreadAppender appender = new PerThreadAppender(layout);
+				Registry.registerSingleton(PerThreadLogging.class, appender);
+				appender.setName("per-thread-appender");
+				logger.addAppender(appender);
+			}
+		}
+		logger.setAdditivity(true);
+		logger.setLevel(Level.INFO);
+		if (!Ax.isTest()) {
+			// setup wildfly root logger appenders
+			try {
+				Field jblmLoggerField = SEUtilities
+						.getFieldByName(logger.getClass(), "jblmLogger");
+				jblmLoggerField.setAccessible(true);
+				Object jblmLogger = jblmLoggerField.get(logger);
+				Field loggerNodeField = SEUtilities
+						.getFieldByName(jblmLogger.getClass(), "loggerNode");
+				loggerNodeField.setAccessible(true);
+				Object loggerNode = loggerNodeField.get(jblmLogger);
+				Field handlersField = SEUtilities
+						.getFieldByName(loggerNode.getClass(), "handlers");
+				handlersField.setAccessible(true);
+				Object[] handlers = (Object[]) handlersField.get(loggerNode);
+				for (Object handler : handlers) {
+					if (handler.getClass().getName().equals(
+							"org.jboss.logmanager.handlers.ConsoleHandler")) {
+						Field logLevelField = SEUtilities
+								.getFieldByName(handler.getClass(), "logLevel");
+						logLevelField.setAccessible(true);
+						logLevelField.set(handler, java.util.logging.Level.ALL);
+					} else if (handler.getClass().getName().equals(
+							"cc.alcina.framework.servlet.logging.PerThreadLoggingHandler")) {
+						Registry.registerSingleton(PerThreadLogging.class,
+								new PerThreadLoggingWrapper(handler));
+					}
+				}
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		{
+			Logger metricLogger = Logger.getLogger(MetricLogging.class);
+			if (Ax.isTest()) {
+				metricLogger.removeAllAppenders();
+				Layout metricLayout = new PatternLayout(
+						AppPersistenceBase.METRIC_LOGGER_PATTERN);
+				metricLogger.addAppender(new SafeConsoleAppender(metricLayout));
+				metricLogger.setAdditivity(false);
+			} else {
+				metricLogger.setAdditivity(true);
+			}
+			metricLogger.setLevel(Level.DEBUG);
+			ServletLayerObjects.get().setMetricLogger(metricLogger);
+			EntityLayerObjects.get().setMetricLogger(metricLogger);
+		}
+		String databaseEventLoggerName = AlcinaWebappConfig.get()
+				.getDatabaseEventLoggerName();
+		if (EntityLayerObjects.get().getPersistentLogger() == null) {
+			Logger dbLogger = Logger.getLogger(databaseEventLoggerName);
+			dbLogger.removeAllAppenders();
+			dbLogger.setLevel(Level.INFO);
+			Layout layout = new PatternLayout("%-5p [%c{1}] %m%n");
+			Appender appender = new DbAppender(layout);
+			appender.setName(databaseEventLoggerName);
+			dbLogger.addAppender(appender);
+			EntityLayerObjects.get().setPersistentLogger(dbLogger);
+		}
+		EntityLayerLogging.setLogLevelsFromCustomProperties();
+	}
 
-    protected abstract void initNames();
+	protected abstract void initNames();
 
-    protected void initRegistry() {
-        Logger logger = Logger.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
-        try {
-            Registry.impl(AppPersistenceBase.InitRegistrySupport.class).muteClassloaderLogging(true);
-            ClassMetadataCache classes = classMetadataCacheProvider.getClassInfo(logger, false);
-            Registry servletLayerRegistry = Registry.get();
-            new RegistryScanner().scan(classes, new ArrayList<String>(), servletLayerRegistry, "servlet-layer");
-            EntityLayerObjects.get().setServletLayerRegistry(servletLayerRegistry);
-        } catch (Exception e) {
-            logger.warn("", e);
-        } finally {
-            Registry.impl(AppPersistenceBase.InitRegistrySupport.class).muteClassloaderLogging(false);
-        }
-    }
+	protected void initRegistry() {
+		Logger logger = Logger
+				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
+		try {
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
+					.muteClassloaderLogging(true);
+			ClassMetadataCache classes = classMetadataCacheProvider
+					.getClassInfo(logger, false);
+			Registry servletLayerRegistry = Registry.get();
+			new RegistryScanner().scan(classes, new ArrayList<String>(),
+					servletLayerRegistry, "servlet-layer");
+			EntityLayerObjects.get()
+					.setServletLayerRegistry(servletLayerRegistry);
+		} catch (Exception e) {
+			logger.warn("", e);
+		} finally {
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
+					.muteClassloaderLogging(false);
+		}
+	}
 
-    protected void initServices() {
-        Logger logger = Logger.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
-        String key = "server layer init";
-        MetricLogging.get().start(key);
-        initCommonServices();
-        initDataFolder();
-        clearJarCache();
-        initRegistry();
-        initEntityLayerRegistry();
-        initCommonImplServices();
-        initCustomServices();
-        MetricLogging.get().end(key);
-    }
+	protected void initServices() {
+		Logger logger = Logger
+				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
+		String key = "server layer init";
+		MetricLogging.get().start(key);
+		initCommonServices();
+		initDataFolder();
+		clearJarCache();
+		initRegistry();
+		initEntityLayerRegistry();
+		initCommonImplServices();
+		initCustomServices();
+		MetricLogging.get().end(key);
+	}
 
-    protected void launchPostInitTasks() {
-        Pattern pattern = Pattern.compile("post\\.init\\.(.+)");
-        StringMap stringMap = new StringMap(ResourceUtilities.getCustomProperties());
-        stringMap.forEach((k, v) -> {
-            Matcher matcher = pattern.matcher(k);
-            if (matcher.matches()) {
-                String key = matcher.group(1);
-                Ax.out("Enabled post-init startup property: %s => %s", key, v);
-                ResourceUtilities.set(key, v);
-            }
-        });
-        EntityLayerLogging.setLogLevelsFromCustomProperties();
-    }
+	protected void launchPostInitTasks() {
+		Pattern pattern = Pattern.compile("post\\.init\\.(.+)");
+		StringMap stringMap = new StringMap(
+				ResourceUtilities.getCustomProperties());
+		stringMap.forEach((k, v) -> {
+			Matcher matcher = pattern.matcher(k);
+			if (matcher.matches()) {
+				String key = matcher.group(1);
+				Ax.out("Enabled post-init startup property: %s => %s", key, v);
+				ResourceUtilities.set(key, v);
+			}
+		});
+		EntityLayerLogging.setLogLevelsFromCustomProperties();
+	}
 
-    protected void loadCustomProperties() {
-        try {
-            String loggerLevels = getDefaultLoggerLevels();
-            ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(loggerLevels.getBytes(StandardCharsets.UTF_8)));
-            File propertiesFile = new File(AlcinaWebappConfig.get().getCustomPropertiesFilePath());
-            if (propertiesFile.exists()) {
-                FileInputStream fis = new FileInputStream(propertiesFile);
-                ResourceUtilities.registerCustomProperties(fis);
-            } else {
-                File propertiesListFile = SEUtilities.getChildFile(propertiesFile.getParentFile(), "alcina-properties-files.txt");
-                if (propertiesListFile.exists()) {
-                    String[] paths = ResourceUtilities.readFileToString(propertiesListFile).split("\n");
-                    for (String path : paths) {
-                        FileInputStream fis = new FileInputStream(path);
-                        ResourceUtilities.registerCustomProperties(fis);
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	protected void loadCustomProperties() {
+		try {
+			String loggerLevels = getDefaultLoggerLevels();
+			ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(
+					loggerLevels.getBytes(StandardCharsets.UTF_8)));
+			File propertiesFile = new File(
+					AlcinaWebappConfig.get().getCustomPropertiesFilePath());
+			if (propertiesFile.exists()) {
+				FileInputStream fis = new FileInputStream(propertiesFile);
+				ResourceUtilities.registerCustomProperties(fis);
+			} else {
+				File propertiesListFile = SEUtilities.getChildFile(
+						propertiesFile.getParentFile(),
+						"alcina-properties-files.txt");
+				if (propertiesListFile.exists()) {
+					String[] paths = ResourceUtilities
+							.readFileToString(propertiesListFile).split("\n");
+					for (String path : paths) {
+						FileInputStream fis = new FileInputStream(path);
+						ResourceUtilities.registerCustomProperties(fis);
+					}
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    protected void onAppServletInitialised() {
-        ReadonlySupportServletLayer.get();
-        if (usesJobs()) {
-            Transaction.begin();
-            JobRegistry.get().init();
-            Transaction.end();
-        }
-    }
+	protected void onAppServletInitialised() {
+		ReadonlySupportServletLayer.get();
+		if (usesJobs()) {
+			Transaction.begin();
+			JobRegistry.get().init();
+			Transaction.end();
+		}
+	}
 
-    protected void postInitEntityLayer() {
-        if (DomainStore.stores().hasInitialisedDatabaseStore()) {
-            BackendTransformQueue.get().start();
-            serializationSignatureListener = new SerializationSignatureListener();
-            DomainStore.stores().writableStore().getPersistenceEvents().addDomainTransformPersistenceListener(serializationSignatureListener);
-        }
-    }
+	protected void postInitEntityLayer() {
+		if (DomainStore.stores().hasInitialisedDatabaseStore()) {
+			BackendTransformQueue.get().start();
+			serializationSignatureListener = new SerializationSignatureListener();
+			DomainStore.stores().writableStore().getPersistenceEvents()
+					.addDomainTransformPersistenceListener(
+							serializationSignatureListener);
+		}
+	}
 
-    protected void runFinalPreInitTasks() {
-        /*
+	protected void runFinalPreInitTasks() {
+		/*
 		 * If custom LifecycleService impl init is required, call it earlier
 		 * (initCustom) and don't override LifecycleService.onApplicationStartup
 		 */
-        try {
-            Transaction.begin();
-            ThreadedPermissionsManager.cast().pushSystemUser();
-            Registry.impls(LifecycleService.class).forEach(service -> {
-                try {
-                    service.onApplicationStartup();
-                } catch (Exception e) {
-                    Ax.sysLogHigh("Exception starting up %s", service.getClass().getSimpleName());
-                    e.printStackTrace();
-                }
-            });
-            if (serializationSignatureListener != null) {
-                boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities.is(AppLifecycleServletBase.class, "cancelStartupOnSignatureGenerationFailure") || !EntityLayerUtils.isTestServer();
-                MethodContext.instance().withRunInNewThread(!cancelStartupOnSignatureGenerationFailure).call(() -> serializationSignatureListener.ensureSignature());
-                if (serializationSignatureListener.isEnsureFailed() && cancelStartupOnSignatureGenerationFailure) {
-                    throw new RuntimeException("Task signature generation failed: cancelling startup");
-                }
-            }
-        } finally {
-            ThreadedPermissionsManager.cast().popSystemUser();
-            Transaction.end();
-        }
-    }
+		try {
+			Transaction.begin();
+			ThreadedPermissionsManager.cast().pushSystemUser();
+			Registry.impls(LifecycleService.class).forEach(service -> {
+				try {
+					service.onApplicationStartup();
+				} catch (Exception e) {
+					Ax.sysLogHigh("Exception starting up %s",
+							service.getClass().getSimpleName());
+					e.printStackTrace();
+				}
+			});
+			if (serializationSignatureListener != null) {
+				boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities
+						.is(AppLifecycleServletBase.class,
+								"cancelStartupOnSignatureGenerationFailure")
+						|| !EntityLayerUtils.isTestServer();
+				MethodContext.instance()
+						.withRunInNewThread(
+								!cancelStartupOnSignatureGenerationFailure)
+						.call(() -> serializationSignatureListener
+								.ensureSignature());
+				if (serializationSignatureListener.isEnsureFailed()
+						&& cancelStartupOnSignatureGenerationFailure) {
+					throw new RuntimeException(
+							"Task signature generation failed: cancelling startup");
+				}
+			}
+		} finally {
+			ThreadedPermissionsManager.cast().popSystemUser();
+			Transaction.end();
+		}
+	}
 
-    protected boolean usesJobs() {
-        return true;
-    }
+	protected boolean usesJobs() {
+		return true;
+	}
 
-    /*
+	/*
 	 * perthreadlogger - add loggername/pri (metadata in the log message) (also
 	 * filter crud in job logs) FIXME - mvcc.jobs.2
 	 */
-    private static class PerThreadLoggingWrapper implements PerThreadLogging {
+	private static class PerThreadLoggingWrapper implements PerThreadLogging {
+		private Object handler;
 
-        private Object handler;
+		public PerThreadLoggingWrapper(Object handler) {
+			// handler is an instance of
+			// cc.alcina.framework.servlet.logging.PerThreadLoggingHandler, but
+			// from a different classloader - so call begin/end buffer via
+			// reflection
+			this.handler = handler;
+		}
 
-        public PerThreadLoggingWrapper(Object handler) {
-            // handler is an instance of
-            // cc.alcina.framework.servlet.logging.PerThreadLoggingHandler, but
-            // from a different classloader - so call begin/end buffer via
-            // reflection
-            this.handler = handler;
-        }
+		@Override
+		public void beginBuffer() {
+			try {
+				Method method = handler.getClass().getMethod("beginBuffer",
+						new Class[0]);
+				method.setAccessible(true);
+				method.invoke(handler);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
 
-        @Override
-        public void beginBuffer() {
-            try {
-                Method method = handler.getClass().getMethod("beginBuffer", new Class[0]);
-                method.setAccessible(true);
-                method.invoke(handler);
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
-            }
-        }
+		@Override
+		public String endBuffer() {
+			try {
+				Method method = handler.getClass().getMethod("endBuffer",
+						new Class[0]);
+				method.setAccessible(true);
+				return (String) method.invoke(handler);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
 
-        @Override
-        public String endBuffer() {
-            try {
-                Method method = handler.getClass().getMethod("endBuffer", new Class[0]);
-                method.setAccessible(true);
-                return (String) method.invoke(handler);
-            } catch (Exception e) {
-                throw new WrappedRuntimeException(e);
-            }
-        }
-    }
+	static class CachingServletClassMetadataCacheProvider
+			extends ServletClassMetadataCacheProvider {
+		public CachingServletClassMetadataCacheProvider() {
+		}
 
-    static class CachingServletClassMetadataCacheProvider extends ServletClassMetadataCacheProvider {
-
-        public CachingServletClassMetadataCacheProvider() {
-        }
-
-        @Override
-        public ClassMetadataCache getClassInfo(Logger mainLogger, boolean entityLayer) throws Exception {
-            return new CachingClasspathScanner("*", true, false, mainLogger, Registry.MARKER_RESOURCE, entityLayer ? Arrays.asList(new String[] { "WEB-INF/classes", "WEB-INF/lib" }) : Arrays.asList(new String[] {})).getClasses();
-        }
-    }
+		@Override
+		public ClassMetadataCache getClassInfo(Logger mainLogger,
+				boolean entityLayer) throws Exception {
+			return new CachingClasspathScanner("*", true, false, mainLogger,
+					Registry.MARKER_RESOURCE,
+					entityLayer ? Arrays.asList(
+							new String[] { "WEB-INF/classes", "WEB-INF/lib" })
+							: Arrays.asList(new String[] {})).getClasses();
+		}
+	}
 }

@@ -49,12 +49,12 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.DefaultResolver;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -268,7 +268,7 @@ public class GwittirBridge {
     }
 
     public Field[] fieldsForReflectedObjectAndSetupWidgetFactory(Object obj, BoundWidgetTypeFactory factory, boolean editableWidgets, boolean multiple) {
-        return fieldsForReflectedObjectAndSetupWidgetFactory(obj, factory, editableWidgets, multiple, null, null, new DefaultResolver());
+        return fieldsForReflectedObjectAndSetupWidgetFactory(obj, factory, editableWidgets, multiple, null, null, new DefaultAnnotationResolver());
     }
 
     // FIXME - reflection - Field.property to alcina property, remove most of
@@ -322,7 +322,7 @@ public class GwittirBridge {
     }
 
     public Field getField(Class clazz, String propertyName, boolean editableWidgets, boolean multiple, BoundWidgetTypeFactory factory, Object obj) {
-        return getField(clazz, propertyName, editableWidgets, multiple, factory, obj, new AnnotationLocation.DefaultResolver());
+        return getField(clazz, propertyName, editableWidgets, multiple, factory, obj, new DefaultAnnotationResolver());
     }
 
     // FIXME - dirndl.1 - clean this up - probably one code path and a bunch of

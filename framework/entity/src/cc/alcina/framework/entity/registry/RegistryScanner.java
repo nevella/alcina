@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -20,13 +20,16 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.logic.reflection.Annotations;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.registry.RegistryOld;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -63,12 +66,13 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 		for (RegistryScannerMetadata metadata : outgoingCache.classData
 				.values()) {
 			if (!metadata.invalid) {
-				for (RegistryScannerLazyLocation location : metadata.locations) {
+				for (RegistryScannerLazyRegistration registration : metadata.registrations) {
 					toRegistry.register(
-							toRegistry.key(location.registeringClassClassName),
-							toRegistry.key(location.registryPointClassName),
-							toRegistry.key(location.targetClassClassName),
-							location.implementationType, location.priority);
+							toRegistry.key(
+									registration.registeringClassClassName),
+							registration.keys.stream().map(toRegistry::key)
+									.collect(Collectors.toList()),
+							registration.implementation, registration.priority);
 				}
 			}
 		}
@@ -95,48 +99,49 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 				|| Modifier.isAbstract(clazz.getModifiers())
 				|| clazz.isInterface()) {
 		} else {
+			List<Registration> registrations = Annotations
+					.resolveMultiple(clazz, Registration.class);
 			Multimap<Class, List<Annotation>> superclassAnnotations = AnnotationUtils
 					.getSuperclassAnnotations(clazz);
 			AnnotationUtils.filterAnnotations(superclassAnnotations,
 					RegistryLocation.class, RegistryLocations.class);
-			Set<RegistryLocation> uniques = Registry
+			Set<RegistryLocation> uniques = RegistryOld
 					.filterForRegistryPointUniqueness(superclassAnnotations);
 			if (uniques.isEmpty()) {
 			} else {
-				for (RegistryLocation rl : uniques) {
-					out.register(clazz, rl);
+				for (Registration registration : uniques) {
+					out.register(clazz, registration);
 				}
 			}
 		}
 		return out;
 	}
 
-	public static class RegistryScannerLazyLocation {
+	public static class RegistryScannerLazyRegistration {
 		String registeringClassClassName;
 
-		String registryPointClassName;
+		List<String> keys;
 
-		String targetClassClassName;
+		Registration.Implementation implementation;
 
-		ImplementationType implementationType;
+		Registration.Priority priority;
 
-		int priority;
-
-		public RegistryScannerLazyLocation() {
+		public RegistryScannerLazyRegistration() {
 		}
 
-		public RegistryScannerLazyLocation(Class clazz, RegistryLocation rl) {
+		public RegistryScannerLazyRegistration(Class clazz,
+				Registration registration) {
 			registeringClassClassName = clazz.getName();
-			registryPointClassName = rl.registryPoint().getName();
-			targetClassClassName = rl.targetClass().getName();
-			implementationType = rl.implementationType();
-			priority = rl.priority();
+			registryPointClassName = registration.registryPoint().getName();
+			targetClassClassName = registration.targetClass().getName();
+			implementationType = registration.implementationType();
+			priority = registration.priority();
 		}
 	}
 
 	public static class RegistryScannerMetadata
 			extends ClassMetadata<RegistryScannerMetadata> {
-		List<RegistryScannerLazyLocation> locations = new ArrayList<>();
+		List<RegistryScannerLazyRegistration> registrations = new ArrayList<>();
 
 		public RegistryScannerMetadata() {
 		}
@@ -145,8 +150,9 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 			super(className);
 		}
 
-		public void register(Class clazz, RegistryLocation rl) {
-			locations.add(new RegistryScannerLazyLocation(clazz, rl));
+		public void register(Class clazz, Registration registration) {
+			registrations.add(
+					new RegistryScannerLazyRegistration(clazz, registration));
 		}
 	}
 }
