@@ -306,8 +306,9 @@ public class JobDomain {
 				.stream();
 	}
 
-	public boolean hasFutureConsistencyJob(Task task) {
-		return jobDescriptor.futureTaskProjection.containsTask(task);
+	public Optional<Job> getFutureConsistencyJob(Task task) {
+		return jobDescriptor.futureTaskProjection
+				.getExistingConsistencyJobForTask(task);
 	}
 
 	public void onAppShutdown() {
@@ -1264,10 +1265,10 @@ public class JobDomain {
 						(Class<Job>) jobImplClass });
 			}
 
-			public boolean containsTask(Task task) {
-				return getLookup().containsKey(task.getClass().getName(),
-						TransformManager.Serializer.get().serialize(task,
-								true));
+			public Optional<Job> getExistingConsistencyJobForTask(Task task) {
+				return Optional.ofNullable(getLookup().get(
+						task.getClass().getName(), TransformManager.Serializer
+								.get().serialize(task, true)));
 			}
 
 			public Stream<Job> getEquivalentTo(Job job) {

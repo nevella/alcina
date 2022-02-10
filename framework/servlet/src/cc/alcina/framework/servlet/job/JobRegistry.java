@@ -889,12 +889,19 @@ public class JobRegistry {
 		}
 
 		public void ensureConsistency(Object futureConsistencyPriority) {
-			if (JobDomain.get().hasFutureConsistencyJob(task)) {
-				return;
-			}
-			withInitialState(JobState.FUTURE_CONSISTENCY).create()
-					.setConsistencyPriority(
+			Optional<Job> existing = JobDomain.get()
+					.getFutureConsistencyJob(task);
+			if (existing.isPresent()) {
+				if (futureConsistencyPriority != JobDomain.DefaultConsistencyPriorities._default) {
+					existing.get().setConsistencyPriority(
 							futureConsistencyPriority.toString());
+					return;
+				}
+			} else {
+				withInitialState(JobState.FUTURE_CONSISTENCY).create()
+						.setConsistencyPriority(
+								futureConsistencyPriority.toString());
+			}
 		}
 	}
 
