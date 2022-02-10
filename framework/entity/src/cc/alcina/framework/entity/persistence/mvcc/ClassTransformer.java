@@ -320,7 +320,7 @@ class ClassTransformer {
 	}
 
 	static class ClassTransform<H extends Entity> {
-		private static final transient int VERSION = 17;
+		private static final transient int VERSION = 18;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
 				.local();
@@ -972,12 +972,18 @@ class ClassTransformer {
 
 			private void logSolverException(Expression expr,
 					RuntimeException e) {
-				Ax.simpleExceptionOut(e);
-				Ax.sysLogHigh("%s:%s\nNot solved: %s", containingClassName,
-						(methodDeclaration == null ? null
-								: methodDeclaration.getName().toString()),
-						expr);
-				int debug = 3;
+				if (expr.toString().matches("[A-Z].+?\\.[A-Z].+?")) {
+					// javaparser issue with nested static refs --
+					// TransformManager.Serializer.get() --
+					// ignore since we don't care about statics (much)
+				} else {
+					Ax.simpleExceptionOut(e);
+					Ax.sysLogHigh("%s:%s\nNot solved: %s", containingClassName,
+							(methodDeclaration == null ? null
+									: methodDeclaration.getName().toString()),
+							expr);
+					int debug = 3;
+				}
 			}
 
 			protected void addProblematicAccess(MvccCorrectnessIssueType type) {
