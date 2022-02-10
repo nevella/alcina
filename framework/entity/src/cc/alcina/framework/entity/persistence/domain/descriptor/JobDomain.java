@@ -267,7 +267,8 @@ public class JobDomain {
 	}
 
 	public Stream<Job> getFutureConsistencyJobsEquivalentTo(Job job) {
-		return jobDescriptor.futureTaskProjection.getEquivalentTo(job);
+		return jobDescriptor.futureTaskProjection
+				.getEquivalentTo(job.getTask());
 	}
 
 	public Stream<Job> getIncompleteJobs() {
@@ -307,8 +308,8 @@ public class JobDomain {
 	}
 
 	public Optional<Job> getFutureConsistencyJob(Task task) {
-		return jobDescriptor.futureTaskProjection
-				.getExistingConsistencyJobForTask(task);
+		return jobDescriptor.futureTaskProjection.getEquivalentTo(task)
+				.findFirst();
 	}
 
 	public void onAppShutdown() {
@@ -1265,20 +1266,13 @@ public class JobDomain {
 						(Class<Job>) jobImplClass });
 			}
 
-			public Optional<Job> getExistingConsistencyJobForTask(Task task) {
-				return Optional.ofNullable(getLookup().get(
-						task.getClass().getName(), TransformManager.Serializer
-								.get().serialize(task, true)));
-			}
-
-			public Stream<Job> getEquivalentTo(Job job) {
-				Task task = job.getTask();
+			public Stream<Job> getEquivalentTo(Task task) {
 				MultikeyMap<Job> map = getLookup().asMapEnsure(false,
 						task.getClass().getName(), TransformManager.Serializer
 								.get().serialize(task, true));
 				return map == null ? Stream.empty()
 						: ((Map<Long, Job>) map.delegate()).values().stream()
-								.filter(j -> job != j);
+								.filter(j -> task != j);
 			}
 
 			@Override
