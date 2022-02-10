@@ -68,16 +68,15 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 @RegistryLocation(registryPoint = JobDomain.class, implementationType = ImplementationType.SINGLETON)
 @Registration.Singleton
 public class JobDomain {
+	public static JobDomain get() {
+		return Registry.impl(JobDomain.class);
+	}
 
-    public static JobDomain get() {
-        return Registry.impl(JobDomain.class);
-    }
+	private Class<? extends Job> jobImplClass;
 
-    private Class<? extends Job> jobImplClass;
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
-    private Logger logger = LoggerFactory.getLogger(getClass());
-
-    private DomainTransformPersistenceListener jobLogger = new DomainTransformPersistenceListener() {
+	private DomainTransformPersistenceListener jobLogger = new DomainTransformPersistenceListener() {
 
         @Override
         public boolean isAllVmEventsListener() {
@@ -313,6 +312,175 @@ public class JobDomain {
     }
 
     /*
+=======
+				stateMessageEventQueue.add(stateMessageEvents);
+			}
+		}
+	};
+
+	private StateMessageEventHandler stateMessageEventHandler = new StateMessageEventHandler();
+
+	BlockingQueue<List<JobStateMessage>> stateMessageEventQueue = new LinkedBlockingQueue<>();
+
+	private Set<AllocationQueue> queuesWithBufferedEvents = Collections
+			.synchronizedSet(new LinkedHashSet<>());
+
+	public void configureDescriptor(DomainStoreDescriptor descriptor) {
+		jobImplClass = PersistentImpl.getImplementation(Job.class);
+		jobDescriptor = new JobDescriptor();
+		descriptor.addClassDescriptor(jobDescriptor);
+		jobRelationImplClass = PersistentImpl
+				.getImplementation(JobRelation.class);
+		descriptor.addClassDescriptor(jobRelationImplClass);
+		jobStateMessageImplClass = PersistentImpl
+				.getImplementation(JobStateMessage.class);
+		descriptor.addClassDescriptor(jobStateMessageImplClass);
+	}
+
+	public void fireInitialAllocatorQueueCreationEvents() {
+		queues.values().forEach(AllocationQueue::fireInitialCreationEvents);
+	}
+
+	public Stream<? extends Job> getActiveJobs() {
+		// subjobs are reachable from two allocationqueues, hence 'distinct'
+		cleanupQueues();
+		return getVisibleQueues().flatMap(AllocationQueue::getActiveJobs)
+				.distinct()
+				.sorted(Comparator.comparing(Job::getStartTime).reversed());
+	}
+
+	public Stream<Job> getAllFutureJobs() {
+		return jobDescriptor.allocationQueueProjection.futuresByTask.allItems()
+				.stream();
+	}
+
+	public Stream<? extends Job> getAllJobs() {
+		return Domain.stream(jobImplClass);
+	}
+
+	public AllocationQueue getAllocationQueue(Job job) {
+		return queues.get(job);
+	}
+
+	public Stream<AllocationQueue> getAllocationQueues() {
+		cleanupQueues();
+		return getVisibleQueues();
+	}
+
+	public Optional<Job> getEarliestFuture(Class<? extends Task> key,
+			boolean createdBySelf) {
+		return jobDescriptor.allocationQueueProjection.earliestFuture(key,
+				createdBySelf);
+	}
+
+	public Optional<Job> getEarliestIncompleteScheduled(
+			Class<? extends Task> key, boolean createdBySelf) {
+		return jobDescriptor.allocationQueueProjection.earliestIncomplete(key,
+				createdBySelf);
+	}
+
+	public Stream<Job> getFutureConsistencyJobs() {
+		return jobDescriptor.futurePriorityProjection.getJobs();
+	}
+
+	public Stream<Job> getFutureConsistencyJobs(String consistencyPriority) {
+		return jobDescriptor.futurePriorityProjection
+				.getJobs(consistencyPriority);
+	}
+
+	public long getFutureConsistencyJobsCount() {
+		return jobDescriptor.futurePriorityProjection.getJobsCount();
+	}
+
+	public long getFutureConsistencyJobsCount(String consistencyPriority) {
+		return jobDescriptor.futurePriorityProjection
+				.getJobsCount(consistencyPriority);
+	}
+
+	public Stream<Job> getFutureConsistencyJobsEquivalentTo(Job job) {
+		return jobDescriptor.futureTaskProjection.getEquivalentTo(job);
+	}
+
+	public Stream<Job> getIncompleteJobs() {
+		cleanupQueues();
+		return getVisibleQueues().flatMap(AllocationQueue::getIncompleteJobs);
+	}
+
+	public Optional<AllocationQueue> getIncompleteQueueContaining(Job job) {
+		cleanupQueues();
+		return getVisibleQueues()
+				.filter(q -> q.getIncompleteJobs().anyMatch(j -> j == job))
+				.findFirst();
+	}
+
+	public Stream<? extends Job>
+			getJobsForTask(Class<? extends Task> taskClass) {
+		return getJobsForTask(taskClass, false);
+	}
+
+	public Stream<? extends Job> getJobsForTask(Class<? extends Task> taskClass,
+			boolean loadAllProperties) {
+		DomainQuery query = Domain.query(jobImplClass);
+		if (loadAllProperties) {
+			query.contextTrue(
+					LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES);
+		}
+		return query.filter("taskClassName", taskClass.getName()).stream();
+	}
+
+	public Stream<? extends Job> getRecentlyCompletedJobs(boolean topLevel) {
+		return jobDescriptor.getReverseCompletedJobs(topLevel);
+	}
+
+	public Stream<Job> getUndeserializableJobs() {
+		return jobDescriptor.allocationQueueProjection.undeserializableJobs
+				.stream();
+	}
+
+	public Optional<Job> getFutureConsistencyJob(Task task) {
+		return jobDescriptor.futureTaskProjection
+				.getExistingConsistencyJobForTask(task);
+	}
+
+	public void onAppShutdown() {
+		stateMessageEventHandler.finished = true;
+		stateMessageEventQueue.add(new ArrayList<>());
+	}
+
+	public void onWarmupComplete(DomainStore domainStore) {
+		if (ResourceUtilities.is("logTransforms")) {
+			domainStore.getPersistenceEvents()
+					.addDomainTransformPersistenceListener(jobLogger);
+		}
+		domainStore.getPersistenceEvents()
+				.addDomainTransformPersistenceListener(
+						stacktraceRequestListener);
+		domainStore.getPersistenceEvents()
+				.addDomainTransformPersistenceListener(
+						bufferedEventFiringListener);
+		warmupComplete = true;
+		Thread stateMessageEventThread = new Thread(stateMessageEventHandler,
+				"DomainDescriptorJob-stateMessageEventHandler");
+		stateMessageEventThread.start();
+	}
+
+	public void removeAllocationQueue(Job job) {
+		AllocationQueue queue = queues.remove(job);
+	}
+
+	private void cleanupQueues() {
+		queues.entrySet().removeIf(e -> e.getValue().job.domain().wasRemoved()
+				|| e.getValue().job.resolveState() == JobState.ABORTED
+				|| e.getValue().job.resolveState() == JobState.CANCELLED);
+	}
+
+	private Stream<AllocationQueue> getVisibleQueues() {
+		return queues.values().stream()
+				.filter(q -> !q.job.domain().wasRemoved());
+	}
+
+	/*
+>>>>>>> main
 	 * This class is essentially a view over the contained SubqueueProjection.
 	 * Because the projection is not transactional, access is locked via a
 	 * readwrite lock - write lock taken before first modification is processed
@@ -986,6 +1154,7 @@ public class JobDomain {
             /*
 			 *
 			 */
+<<<<<<< HEAD
             if (relatedQueueOwner.provideIsComplete() && queue == null) {
                 return;
             }
@@ -1204,4 +1373,253 @@ public class JobDomain {
             }
         }
     }
+=======
+			if (relatedQueueOwner.provideIsComplete() && queue == null) {
+				return;
+			}
+			if (!job.provideCanDeserializeTask()) {
+				return;
+			}
+			queue = ensureQueue(relatedQueueOwner, queue);
+			queue.remove(job);
+		}
+	}
+
+	class JobDescriptor extends DomainClassDescriptor<Job> {
+		private AllocationQueueProjection allocationQueueProjection;
+
+		private CompletedReverseDateProjection reverseDateCompletedTopLevelProjection;
+
+		private FutureConsistencyPriorityProjection futurePriorityProjection;
+
+		private FutureConsistencyTaskProjection futureTaskProjection;
+
+		private CompletedReverseDateProjection reverseDateCompletedChildProjection;
+
+		public JobDescriptor() {
+			super((Class<Job>) jobImplClass, "taskClassName");
+		}
+
+		public Stream<Job> getReverseCompletedJobs(boolean topLevel) {
+			CompletedReverseDateProjection projection = topLevel
+					? reverseDateCompletedTopLevelProjection
+					: reverseDateCompletedChildProjection;
+			return (Stream<Job>) projection.getLookup().delegate().values()
+					.stream();
+		}
+
+		@Override
+		public void initialise() {
+			super.initialise();
+			allocationQueueProjection = new AllocationQueueProjection();
+			projections.add(allocationQueueProjection);
+			reverseDateCompletedTopLevelProjection = new CompletedReverseDateProjection(
+					true);
+			projections.add(reverseDateCompletedTopLevelProjection);
+			reverseDateCompletedChildProjection = new CompletedReverseDateProjection(
+					false);
+			projections.add(reverseDateCompletedChildProjection);
+			futurePriorityProjection = new FutureConsistencyPriorityProjection();
+			projections.add(futurePriorityProjection);
+			futureTaskProjection = new FutureConsistencyTaskProjection();
+			projections.add(futureTaskProjection);
+		}
+
+		private class CompletedReverseDateProjection
+				extends ReverseDateProjection<Job> {
+			private boolean topLevel;
+
+			private CompletedReverseDateProjection(boolean topLevel) {
+				super(Date.class, new Class[] { (Class<Job>) jobImplClass });
+				this.topLevel = topLevel;
+			}
+
+			@Override
+			public Class<? extends Job> getListenedClass() {
+				return jobImplClass;
+			}
+
+			@Override
+			public void insert(Job t) {
+				if (!t.provideIsComplete()) {
+					return;
+				}
+				if (t.provideIsTopLevel() ^ topLevel) {
+					return;
+				}
+				if (t.getEndTime() == null) {
+					return;
+				}
+				if (new Date().getTime() - t.getEndTime().getTime() > 2
+						* TimeConstants.ONE_DAY_MS) {
+					return;
+				}
+				super.insert(t);
+			}
+
+			@Override
+			protected Date getDate(Job job) {
+				return job.getEndTime();
+			}
+		}
+
+		private class FutureConsistencyPriorityProjection
+				extends BaseProjection<Job> {
+			private FutureConsistencyPriorityProjection() {
+				super(String.class,
+						new Class[] { Long.class, (Class<Job>) jobImplClass });
+			}
+
+			public long getJobsCount(String consistencyPriority) {
+				return valueCollection(consistencyPriority).size();
+			}
+
+			public long getJobsCount() {
+				return valueCollections()
+						.collect(Collectors.summingInt(Collection::size));
+			}
+
+			public Stream<Job> getJobs() {
+				return valueCollections().flatMap(Collection::stream);
+			}
+
+			private Stream<Collection> valueCollections() {
+				return getLookup().typedKeySet(String.class).stream()
+						.sorted(new QueuePriorityComparator())
+						.map(s -> getLookup().asMap(s).delegate().values());
+			}
+
+			public Stream<Job> getJobs(String consistencyPriority) {
+				return valueCollection(consistencyPriority).stream();
+			}
+
+			private Collection valueCollection(String consistencyPriority) {
+				return getLookup().asMapEnsure(true, consistencyPriority)
+						.delegate().values();
+			}
+
+			@Override
+			public Class<? extends Job> getListenedClass() {
+				return jobImplClass;
+			}
+
+			@Override
+			public void insert(Job t) {
+				if (t.getState() != JobState.FUTURE_CONSISTENCY) {
+					return;
+				}
+				super.insert(t);
+				futureConsistencyEvents.publish(null);
+			}
+
+			@Override
+			public boolean isCommitOnly() {
+				return true;
+			}
+
+			@Override
+			protected MultikeyMap<Job> createLookup() {
+				return new BaseProjectionLookupBuilder(this)
+						.withMapCreators(new CollectionCreators.MapCreator[] {
+								Registry.impl(
+										CollectionCreators.TreeMapCreator.class)
+										.withTypes(Arrays.asList(String.class,
+												Object.class)),
+								Registry.impl(
+										CollectionCreators.TreeMapCreator.class)
+										.withTypes(Arrays.asList(Long.class,
+												Object.class)) })
+						.createMultikeyMap();
+			}
+
+			@Override
+			protected int getDepth() {
+				return 2;
+			}
+
+			@Override
+			protected Object[] project(Job job) {
+				return new Object[] { job.provideConsistencyPriority(),
+						job.getId(), job };
+			}
+
+			class QueuePriorityComparator implements Comparator<String> {
+				List<String> ordered = Arrays.asList(ResourceUtilities
+						.get(JobDomain.class, "consistencyPriorityOrder")
+						.split(","));
+
+				@Override
+				public int compare(String o1, String o2) {
+					int idx1 = ordered.indexOf(o1);
+					int idx2 = ordered.indexOf(o2);
+					if (idx1 == -1) {
+						if (idx2 == -1) {
+							return o1.compareTo(o2);
+						} else {
+							return 1;
+						}
+					} else {
+						if (idx2 == -1) {
+							return -1;
+						} else {
+							return CommonUtils.compareInts(idx1, idx2);
+						}
+					}
+				}
+			}
+		}
+
+		private class FutureConsistencyTaskProjection
+				extends BaseProjection<Job> {
+			private FutureConsistencyTaskProjection() {
+				super(String.class, new Class[] { String.class, Long.class,
+						(Class<Job>) jobImplClass });
+			}
+
+			public Optional<Job> getExistingConsistencyJobForTask(Task task) {
+				return Optional.ofNullable(getLookup().get(
+						task.getClass().getName(), TransformManager.Serializer
+								.get().serialize(task, true)));
+			}
+
+			public Stream<Job> getEquivalentTo(Job job) {
+				Task task = job.getTask();
+				MultikeyMap<Job> map = getLookup().asMapEnsure(false,
+						task.getClass().getName(), TransformManager.Serializer
+								.get().serialize(task, true));
+				return map == null ? Stream.empty()
+						: ((Map<Long, Job>) map.delegate()).values().stream()
+								.filter(j -> job != j);
+			}
+
+			@Override
+			public Class<? extends Job> getListenedClass() {
+				return jobImplClass;
+			}
+
+			@Override
+			public void insert(Job t) {
+				if (t.getState() != JobState.FUTURE_CONSISTENCY) {
+					return;
+				}
+				super.insert(t);
+			}
+
+			@Override
+			public boolean isCommitOnly() {
+				return true;
+			}
+
+			@Override
+			protected int getDepth() {
+				return 3;
+			}
+
+			@Override
+			protected Object[] project(Job job) {
+				return new Object[] { job.getTaskClassName(),
+						job.getTaskSerialized(), job.getId(), job };
+			}
+		}
+	}
 }
