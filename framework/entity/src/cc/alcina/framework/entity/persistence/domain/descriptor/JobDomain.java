@@ -267,8 +267,8 @@ public class JobDomain {
 	}
 
 	public Stream<Job> getFutureConsistencyJobsEquivalentTo(Job job) {
-		return jobDescriptor.futureTaskProjection
-				.getEquivalentTo(job.getTask());
+		return jobDescriptor.futureTaskProjection.getEquivalentTo(job.getTask())
+				.filter(j -> j != job);
 	}
 
 	public Stream<Job> getIncompleteJobs() {
