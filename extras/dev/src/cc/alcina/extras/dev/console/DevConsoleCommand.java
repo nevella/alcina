@@ -851,10 +851,9 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					}
 				}
 			};
-			CmdExecRunnable.listRunnables(
-					Registry.query(DevConsoleRunnable.class).untypedRegistrations()
-							.filter(filter).collect(Collectors.toList()),
-					null);
+			CmdExecRunnable.listRunnables(Registry
+					.query(DevConsoleRunnable.class).untypedRegistrations()
+					.filter(filter).collect(Collectors.toList()), null);
 			return "";
 		}
 	}

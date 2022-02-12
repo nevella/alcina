@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.RegistrySingl
 @Registration(LifecycleService.class)
 public abstract class LifecycleService implements RegistrySingleton {
 	public LifecycleService() {
-		
 	}
 
 	public void onApplicationShutdown() {
