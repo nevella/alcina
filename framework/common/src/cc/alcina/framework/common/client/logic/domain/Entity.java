@@ -161,33 +161,33 @@ public abstract class Entity<T extends Entity> extends Bindable
 	 * local-id to db-id is key for not needing to switch objects after
 	 * transaction commit - and transactional object identity in mvcc. Equality
 	 * is an extension of this treatment of the hash
-	 * 
+	 *
 	 * So:
-	 * 
+	 *
 	 * * If an object has its local id non-zero, the hash is derived *only from
 	 * the localid and class *.
-	 * 
+	 *
 	 * * If an object has non-zero id, the hash call falls through to the domain
 	 * and asks if any objects have had its id/class tuple applied to an object
 	 * whose local id *was set in this vm* - i.e. was created in this vm, not a
 	 * transform from another vm. If so, the hashcode of that originally local
 	 * object is returned
-	 * 
+	 *
 	 * * Equality: if id is non-zero for either object, equality uses class and
 	 * id (since the id of the originally local object will be updated by
 	 * mvcc/gwt transformmanager server response handling code). Otherwise use
 	 * reference equality ('==') - objects with only localids are in isolated
 	 * transactions and or cascades and the use cases for cloning and then using
 	 * equality are...limited
-	 * 
+	 *
 	 * * Note that all of the above avoids the use of clientinstanceid - which
 	 * would be a way to more simply define the inequality of objects with the
 	 * same localid (but different originating vms), but with the cost of more
 	 * complicated transforms and transform persistence
-	 * 
+	 *
 	 * This method will always return the same result irresepective of mvcc
 	 * version, so is not rerouted
-	 * 
+	 *
 	 */
 	@Override
 	public int hashCode() {
@@ -323,7 +323,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 		/*
 		 * A disconnected projection of an entity. Useful for things like
 		 * speculative writes and serialization
-		 * 
+		 *
 		 */
 		public T detachedVersion() {
 			return (T) Domain.detachedVersion(Entity.this);
@@ -335,7 +335,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 		/*
 		 * Basically server-side, connected version from a DomainStore
-		 * 
+		 *
 		 * //FIXME - apdm - remove...ahhh...but this populatees lazy fields.
 		 * Maybe not, eh? Also there's the possibility of needing to access the
 		 * domain version from a non-domain (say de-serialized) instance. Fixme
@@ -470,6 +470,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 	}
 
 	public static interface Ownership {
+		@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
 		public static Stream<Property> getOwnerReflectors(Class<?> beanClass) {
 			return Reflections.at(beanClass).properties().stream()
 					.filter(pr -> pr.has(DomainProperty.class))

@@ -8,7 +8,6 @@ import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.csobjects.SearchResult;
@@ -40,7 +39,6 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.StandardLabelCustomiser
 @ObjectPermissions(create = @Permission(access = AccessLevel.EVERYONE), delete = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 @MappedSuperclass
 @Bean
-@Introspectable
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = Publication.class)
 @DomainTransformPropagation(value = PropagationType.NON_PERSISTENT, persistNonRoot = false)
 @Registration({ PersistentImpl.class, Publication.class })

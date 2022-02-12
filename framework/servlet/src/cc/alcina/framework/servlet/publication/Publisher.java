@@ -149,8 +149,8 @@ public class Publisher {
 					"Publication %s cannot be published as root",
 					deliveryModel);
 		}
-		ContentModelHandler cmh = Registry.impl(ContentModelHandler.class,
-				contentDefinition.getClass());
+		ContentModelHandler cmh = Registry.query(ContentModelHandler.class)
+				.addKeys(contentDefinition.getClass()).impl();
 		cmh.prepareContent(contentDefinition, deliveryModel);
 		if (!cmh.hasResults) {
 			// throw exception??
@@ -184,8 +184,8 @@ public class Publisher {
 			}
 		}
 		long publicationId = CommonUtils.lv(result.getPublicationId());
-		ContentRenderer crh = Registry.impl(ContentRenderer.class,
-				publicationContent.getClass());
+		ContentRenderer crh = Registry.query(ContentRenderer.class)
+				.addKeys(publicationContent.getClass()).impl();
 		ctx.getVisitorOrNoop().beforeRenderContent();
 		publicationContent = ctx.publicationContent;
 		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
@@ -195,8 +195,8 @@ public class Publisher {
 			persister.persistContentRendererResults(crh.getResults(),
 					ctx.publication);
 		}
-		ContentWrapper cw = Registry.impl(ContentWrapper.class,
-				publicationContent.getClass());
+		ContentWrapper cw = Registry.query(ContentWrapper.class)
+				.addKeys(publicationContent.getClass()).impl();
 		ctx.getVisitorOrNoop().beforeWrapContent();
 		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
 				crh.getResults(), publicationId, publicationUserId);
@@ -213,8 +213,8 @@ public class Publisher {
 			}
 			return result;
 		}
-		FormatConverter fc = Registry.impl(FormatConverter.class,
-				deliveryModel.provideTargetFormat().getClass());
+		FormatConverter fc = Registry.query(FormatConverter.class)
+				.addKeys(deliveryModel.provideTargetFormat().getClass()).impl();
 		FormatConversionModel fcm = new FormatConversionModel();
 		fcm.html = cw.wrappedContent;
 		fcm.footer = cw.wrappedFooter;
@@ -228,8 +228,7 @@ public class Publisher {
 				.transformConvertedContent(convertedContent);
 		ctx.getVisitorOrNoop().beforeDelivery();
 		ContentDelivery deliverer = Registry.query(ContentDelivery.class)
-				.clearTypeKey()
-				.withKeys(ContentDeliveryType.class,
+				.setKeys(ContentDeliveryType.class,
 						deliveryModel.provideContentDeliveryType().getClass())
 				.impl();
 		String token = deliverer.deliver(ctx, convertedContent, deliveryModel,

@@ -28,7 +28,8 @@ public interface PermissibleActionHandler<A extends PermissibleAction> {
 		public static void handleAction(Widget sourceWidget,
 				PermissibleAction action, Object target) {
 			PermissibleActionHandler handler = Registry
-					.impl(PermissibleActionHandler.class, action.getClass());
+					.query(PermissibleActionHandler.class)
+					.addKeys(action.getClass()).impl();
 			handler.handleAction(sourceWidget, action, target);
 		}
 	}

@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -29,7 +29,6 @@ import com.google.gwt.user.client.ui.RadioButton;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.Converter;
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.Checkbox;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -52,7 +51,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 /**
  *
  * @author Nick Reddel
- * 
+ *
  *         FIXME - reflection - prune
  */
 public class GwittirUtils {
@@ -172,8 +171,7 @@ public class GwittirUtils {
 	public static boolean isIntrospectable(Class clazz) {
 		while (clazz != null && clazz != Object.class) {
 			ClassReflector classReflector = Reflections.at(clazz);
-			if (classReflector.has(Introspectable.class)
-					|| classReflector.has(Bean.class)) {
+			if (classReflector.has(Bean.class)) {
 				return true;
 			}
 			clazz = clazz.getSuperclass();

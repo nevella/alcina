@@ -46,7 +46,7 @@ public class UiController {
 		Class<? extends ViewModel> clazz = viewModel.getClass();
 		if (viewModelViews.get(clazz) == null) {
 			viewModelViews.put(clazz,
-					Registry.impl(ViewModelView.class, clazz));
+					Registry.query(ViewModelView.class).addKeys(clazz).impl());
 		}
 		ViewModelView view = viewModelViews.get(clazz);
 		view.setModel(viewModel);

@@ -8,6 +8,7 @@ import java.io.IOException;
 
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdExecRunnable;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -17,6 +18,7 @@ import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
 @RegistryLocation(registryPoint = DevConsoleRunnable.class)
 @TypeSerialization(flatSerializable = false)
+@Registration(DevConsoleRunnable.class)
 public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 	public static final String CONTEXT_ACTION_RESULT = CmdExecRunnable.class
 			.getName() + ".CONTEXT_ACTION_RESULT";
@@ -71,6 +73,10 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		return (DevConsoleRunnable) super.withValue(value);
 	}
 
+	protected void logJobResultFiles() {
+		Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");
+	}
+
 	protected String writeTempFile(Class clazz, String extension,
 			String content) throws IOException {
 		File dir = console.devHelper.getDevFolder();
@@ -103,9 +109,5 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 		ResourceUtilities.writeStreamToStream(new FileInputStream(content),
 				new FileOutputStream(outPath));
 		return outPath;
-	}
-
-	protected void logJobResultFiles() {
-		Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");
 	}
 }

@@ -45,16 +45,18 @@ public class DirectedActivity<P extends BasePlace> extends Model
 				EntityPlace entityPlace = (EntityPlace) place;
 				if (entityPlace.id != 0
 						|| entityPlace.action == EntityAction.CREATE) {
-					directedActivity = Registry.impl(
-							DirectedEntityActivity.class, place.getClass());
+					directedActivity = Registry
+							.query(DirectedEntityActivity.class)
+							.addKeys(place.getClass()).impl();
 				} else {
-					directedActivity = Registry.impl(
-							DirectedBindableSearchActivity.class,
-							place.getClass());
+					directedActivity = Registry
+							.query(DirectedBindableSearchActivity.class)
+							.addKeys(place.getClass()).impl();
 				}
 			} else if (place instanceof BindablePlace) {
-				directedActivity = Registry.impl(
-						DirectedBindableSearchActivity.class, place.getClass());
+				directedActivity = Registry
+						.query(DirectedBindableSearchActivity.class)
+						.addKeys(place.getClass()).impl();
 			} else if (place instanceof CategoryNamePlace) {
 				CategoryNamePlace categoryPlace = (CategoryNamePlace) place;
 				PermissibleAction action = categoryPlace.ensureAction();
@@ -64,15 +66,17 @@ public class DirectedActivity<P extends BasePlace> extends Model
 					return ActivityManager.NULL_ACTIVITY;
 				}
 				if (categoryPlace.nodeName == null) {
-					directedActivity = Registry.impl(
-							DirectedCategoriesActivity.class, place.getClass());
+					directedActivity = Registry
+							.query(DirectedCategoriesActivity.class)
+							.addKeys(place.getClass()).impl();
 				} else {
-					directedActivity = Registry.impl(
-							DirectedCategoryActivity.class, place.getClass());
+					directedActivity = Registry
+							.query(DirectedCategoryActivity.class)
+							.addKeys(place.getClass()).impl();
 				}
 			} else {
-				directedActivity = Registry.impl(DirectedActivity.class,
-						place.getClass());
+				directedActivity = Registry.query(DirectedActivity.class)
+						.addKeys(place.getClass()).impl();
 			}
 		}
 		directedActivity.setPlace((BasePlace) place);
@@ -90,11 +94,6 @@ public class DirectedActivity<P extends BasePlace> extends Model
 
 	public P getPlace() {
 		return this.place;
-	}
-
-	public <DA extends DirectedActivity> DA withPlace(P place) {
-		setPlace(place);
-		return (DA) this;
 	}
 
 	@Override
@@ -119,6 +118,11 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
 		// ask the framework to render this activity
 		topicActivityStarted().publish(this);
+	}
+
+	public <DA extends DirectedActivity> DA withPlace(P place) {
+		setPlace(place);
+		return (DA) this;
 	}
 
 	public static interface Provider<P extends Place> {

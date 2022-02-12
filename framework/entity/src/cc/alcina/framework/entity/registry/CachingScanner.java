@@ -18,6 +18,10 @@ import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.net.ConnectException;
 import java.util.List;
+import java.util.Set;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.RegistryException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -29,10 +33,13 @@ import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.MethodContext;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
 /**
  *
  * @author Nick Reddel
+ *
+ *         FIXME - reflection.2 - invalidate on superclass/interface change
  */
 public abstract class CachingScanner<T extends ClassMetadata> {
 	public static boolean useKryo() {
@@ -54,6 +61,8 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 
 	String debugClassloaderExceptionRegex = null;
 
+	Logger logger = LoggerFactory.getLogger(getClass());
+
 	public InputStream getStreamForMd5(ClassMetadata classMetadata)
 			throws Exception {
 		try {
@@ -64,7 +73,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 		}
 	}
 
-	public void scan(ClassMetadataCache<ClassMetadata> foundCache,
+	public void scan(ClassMetadataCache<ClassMetadata> classpathCache,
 			String cachePath) throws Exception {
 		debugClassloaderExceptionRegex = System.getProperty(
 				"cc.alcina.framework.entity.registry.CachingScanner.debugClassloaderExceptionRegex");
@@ -74,42 +83,77 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 		ClassMetadataCache<T> incomingCache = getCached(cacheFile);
 		outgoingCache = new ClassMetadataCache();
 		long start = System.currentTimeMillis();
-		for (ClassMetadata found : foundCache.classData.values()) {
-			String className = found.className;
-			T out = null;
-			T existing = incomingCache.classData.get(found.className);
-			if (existing != null && existing.isUnchangedFrom(found, this)) {
-				existing.copyMetaFrom(found);
-				out = existing;
-			} else {
-				try {
-					cc++;
-					Class clazz = loadClass(classLoaders, className);
-					out = process(clazz, className, found);
-					out.ensureMd5(this);
-				} catch (RegistryException rre) {
-					maybeLog(rre, className);
-					throw rre;
-				} catch (Error eiie) {
-					maybeLog(eiie, className);
-					out = createMetadata(className, found);
-					out.invalid = true;
-				} catch (ClassNotFoundException | TypeNotPresentException e) {
-					maybeLog(e, className);
-					out = createMetadata(className, found);
-					out.invalid = true;
-				} catch (Exception e) {
-					maybeLog(e, className);
-					throw e;
+		Set<String> invalidated = new ObjectOpenHashSet<>();
+		Set<String> invalidatedThisPass = new ObjectOpenHashSet<>();
+		Set<String> ensured = new ObjectOpenHashSet<>();
+		ClassMetadataCache<T> passIncomingCache = incomingCache;
+		int pass = 1;
+		int invalidatedParentCount = 0;
+		do {
+			invalidatedThisPass.clear();
+			for (ClassMetadata meta : classpathCache.classData.values()) {
+				String className = meta.className;
+				T out = null;
+				if (meta.className.equals(
+						"au.com.victorianreports.crm.dev.VrDevConsoleCommand")) {
+					int debug = 3;
 				}
+				T existing = passIncomingCache.classData.get(meta.className);
+				boolean unchanged = existing != null
+						&& existing.isUnchangedFrom(meta, this);
+				boolean invalidatedParent = unchanged
+						&& existing.hasInvalidatedParent(invalidated)
+						&& !ensured.contains(className);
+				if (unchanged && !invalidatedParent) {
+					existing.copyMetaFrom(meta);
+					out = existing;
+				} else {
+					if (invalidatedParent) {
+						invalidatedParentCount++;
+					}
+					try {
+						cc++;
+						Class clazz = loadClass(classLoaders, className);
+						out = process(clazz, className, meta);
+						out.ensureParents(clazz);
+						out.ensureMd5(this);
+						invalidatedThisPass.add(className);
+						if (passIncomingCache.classData.size() > 0) {
+							Ax.out("\t%s", clazz.getName());
+						}
+						ensured.add(className);
+					} catch (RegistryException rre) {
+						maybeLog(rre, className);
+						throw rre;
+					} catch (Error eiie) {
+						maybeLog(eiie, className);
+						out = createMetadata(className, meta);
+						out.invalid = true;
+					} catch (ClassNotFoundException
+							| TypeNotPresentException e) {
+						maybeLog(e, className);
+						out = createMetadata(className, meta);
+						out.invalid = true;
+					} catch (Exception e) {
+						maybeLog(e, className);
+						throw e;
+					}
+				}
+				outgoingCache.insert(out);
 			}
-			outgoingCache.add(out);
-		}
+			logger.info(
+					"Caching scanner - pass: {} - invalidated: {} - invalidated parents: {}",
+					pass, invalidatedThisPass.size(), invalidatedParentCount);
+			invalidated.addAll(invalidatedThisPass);
+			invalidatedParentCount = 0;
+			passIncomingCache = outgoingCache;
+			pass++;
+		} while (invalidatedThisPass.size() > 0);
 		long time = System.currentTimeMillis() - start;
 		if (debug) {
 			System.out.format(
 					"Classes: %s -- checked: %s, loadClass: %sms, loadClassErr: %sms, ignoreCount: %s, total: %sms\n",
-					foundCache.classData.size(), cc,
+					classpathCache.classData.size(), cc,
 					loadClassNanos / 1000 / 1000,
 					loadClassErrNanos / 1000 / 1000, ignoreCount, time);
 		}

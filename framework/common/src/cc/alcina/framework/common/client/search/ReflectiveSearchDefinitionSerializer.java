@@ -177,7 +177,7 @@ public class ReflectiveSearchDefinitionSerializer
 
 	private void ensureLookups() {
 		if (abbrevLookup.isEmpty()) {
-			Registry.query().withKeys(SearchDefinitionSerializationInfo.class)
+			Registry.query().addKeys(SearchDefinitionSerializationInfo.class)
 					.untypedRegistrations().forEach(clazz -> {
 						SearchDefinitionSerializationInfo info = Reflections
 								.at(clazz).annotation(

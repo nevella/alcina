@@ -308,8 +308,8 @@ public class JobScheduler {
 
 	private void refreshFutures(ScheduleEvent event) {
 		LocalDateTime wakeup = LocalDateTime.now().plusYears(1);
-		List<Class<? extends Task>> taskClasses = Registry.query(Task.class)
-				.clearTypeKey().withKeys(Schedule.class).registrations()
+		List<Class<? extends Task>> taskClasses = (List) Registry.query()
+				.setKeys(Schedule.class).childKeys()
 				.collect(Collectors.toList());
 		for (Class<? extends Task> key : taskClasses) {
 			Schedule schedule = Schedule.forTaskClass(key);
@@ -492,7 +492,6 @@ public class JobScheduler {
 	}
 
 	@RegistryLocation(registryPoint = Schedule.class, implementationType = ImplementationType.INSTANCE)
-	@Registration(Schedule.class)
 	public static class DefaultSchedule extends Schedule {
 	}
 
@@ -510,8 +509,9 @@ public class JobScheduler {
 		private static AdHocExecutorServiceProvider AD_HOC_INSTANCE = new AdHocExecutorServiceProvider();
 
 		public static ExecutionConstraints forQueue(AllocationQueue queue) {
-			return Registry.impl(ExecutionConstraints.class,
-					queue.job.provideTaskClass()).withQueue(queue);
+			return Registry.query(ExecutionConstraints.class)
+					.addKeys(queue.job.provideTaskClass()).impl()
+					.withQueue(queue);
 		}
 
 		protected AllocationQueue queue;
@@ -626,7 +626,8 @@ public class JobScheduler {
 
 	public abstract static class ResubmitPolicy<T extends Task> {
 		public static ResubmitPolicy forJob(Job job) {
-			return Registry.impl(ResubmitPolicy.class, job.provideTaskClass());
+			return Registry.query(ResubmitPolicy.class)
+					.addKeys(job.provideTaskClass()).impl();
 		}
 
 		public static ResubmitPolicy retryNTimes(int nTimes) {
@@ -700,7 +701,7 @@ public class JobScheduler {
 	 */
 	public static class Schedule {
 		public static Schedule forTaskClass(Class<? extends Task> clazz) {
-			return Registry.impl(Schedule.class, clazz);
+			return Registry.query(Schedule.class).addKeys(clazz).impl();
 		}
 
 		private LocalDateTime next;

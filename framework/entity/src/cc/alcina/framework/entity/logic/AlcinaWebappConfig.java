@@ -2,8 +2,10 @@ package cc.alcina.framework.entity.logic;
 
 import java.util.Date;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
+@Registration.Singleton
 public class AlcinaWebappConfig {
 	public static final String MAIN_LOGGER_APPENDER = "MAIN_LOGGER_APPENDER";
 

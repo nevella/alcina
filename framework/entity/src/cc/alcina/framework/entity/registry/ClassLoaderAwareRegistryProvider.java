@@ -104,7 +104,7 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	public void appShutdown() {
 		Logger logger = LoggerFactory.getLogger(Registry.class);
 		Stream<Class<?>> clear = Registry.query()
-				.withKeys(ClearStaticFieldsOnAppShutdown.class)
+				.addKeys(ClearStaticFieldsOnAppShutdown.class)
 				.untypedRegistrations();
 		try {
 			clear.forEach(clazz -> {
@@ -146,16 +146,6 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		});
 	}
 
-	public void forAllRegistries(Class<?> type) {
-		Registry sourceInstance = perClassLoader.get(servletLayerClassloader);
-		getPerClassLoader().entrySet().stream()
-				.filter(e -> e.getKey() != servletLayerClassloader)
-				.forEach(e -> {
-					e.getValue().instanceInternals().copyFrom(sourceInstance,
-							type);
-				});
-	}
-
 	public ClassLoader getEntityLayerClassloader() {
 		Preconditions.checkArgument(
 				perClassLoader.size() == 2 && servletLayerClassloader != null);
@@ -172,7 +162,7 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	public Registry getRegistry() {
 		ClassLoader classLoader = Thread.currentThread()
 				.getContextClassLoader();
-		if (classLoader.getClass().getName()
+		if (classLoader == null || classLoader.getClass().getName()
 				.equals("jdk.internal.loader.ClassLoaders$AppClassLoader")) {
 			if (getClass().getClassLoader() != classLoader) {
 				throw new RuntimeException("Context classloader not set");
@@ -185,6 +175,9 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		if (registry == null) {
 			synchronized (this) {
 				if (perClassLoader.get(classLoader) == null) {
+					if (perClassLoader.isEmpty()) {
+						servletLayerClassloader = classLoader;
+					}
 					if (perClassLoader.size() < 2) {
 						Registry existing = CommonUtils
 								.first(perClassLoader.values());
@@ -192,7 +185,8 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 						registry.instanceInternals()
 								.setName(classLoader.toString());
 						if (existing != null) {
-							existing.shareSingletonMapTo(registry);
+							existing.instanceInternals()
+									.shareImplementationsTo(registry);
 						}
 						perClassLoader.put(classLoader, registry);
 						System.out.format(
@@ -221,7 +215,5 @@ public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 		this.servletLayerClassloader = servletLayerClassloader;
 		EntityLayerObjects.get()
 				.setServletLayerClassLoader(getServletLayerClassloader());
-		EntityLayerObjects.get()
-				.setEntityLayerClassLoader(getEntityLayerClassloader());
 	}
 }

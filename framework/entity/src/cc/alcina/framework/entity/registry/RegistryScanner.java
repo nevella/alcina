@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -80,29 +81,20 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 			ClassMetadata found) {
 		RegistryScannerMetadata out = createMetadata(className, found);
 		clazz = maybeNormaliseClass(clazz);
-		// GWT, for instance, will replace a JavaScriptObject class with the
-		// synthetic interface
+		// No need for abstract classes/interfaces because, although
+		// @Registration annotations on those are definitely valid,
+		// they're supplied to client code via resolution of concrete
+		// classes. Non-public ... not so sure. But certainly client code can't
+		// currently instantiate objects without a public no-args constructor
 		if (!Modifier.isPublic(clazz.getModifiers())
 				|| Modifier.isAbstract(clazz.getModifiers())
 				|| clazz.isInterface()) {
 		} else {
-			// List<Registration> registrations = Annotations
-			// .resolveMultiple(clazz, Registration.class);
-			// Multimap<Class, List<Annotation>> superclassAnnotations =
-			// AnnotationUtils
-			// .getSuperclassAnnotations(clazz);
-			// AnnotationUtils.filterAnnotations(superclassAnnotations,
-			// RegistryLocation.class, RegistryLocations.class);
-			// Set<RegistryLocation> uniques = RegistryOld
-			// .filterForRegistryPointUniqueness(superclassAnnotations);
-			// if (uniques.isEmpty()) {
-			// } else {
-			// for (Registration registration : uniques) {
-			// out.register(clazz, registration);
-			// }
-			// }
-			// use annotationlocation.resolve
-			throw new UnsupportedOperationException();
+			List<Registration> registrations = Annotations
+					.resolveMultiple(clazz, Registration.class);
+			for (Registration registration : registrations) {
+				out.register(clazz, registration);
+			}
 		}
 		return out;
 	}

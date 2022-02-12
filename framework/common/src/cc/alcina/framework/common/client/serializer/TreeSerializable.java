@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.StringMap;
 
@@ -25,6 +26,7 @@ import cc.alcina.framework.common.client.util.StringMap;
  * @author nick@alcina.cc
  *
  */
+@Registration(TreeSerializable.class)
 public interface TreeSerializable extends Serializable {
 	public static final String CONTEXT_IGNORE_CUSTOM_CHECKS = TreeSerializable.class
 			.getName() + ".CONTEXT_IGNORE_CUSTOM_CHECKS";

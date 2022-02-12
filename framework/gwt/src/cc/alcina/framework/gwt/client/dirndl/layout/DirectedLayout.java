@@ -255,7 +255,7 @@ public class DirectedLayout {
 					.renderer();
 			if (rendererClass == ModelClassNodeRenderer.class) {
 				rendererClass = Registry.query(DirectedNodeRenderer.class)
-						.withKeys(model.getClass()).registration();
+						.addKeys(model.getClass()).registration();
 			}
 			renderer = Reflections.newInstance(rendererClass);
 			return renderer;

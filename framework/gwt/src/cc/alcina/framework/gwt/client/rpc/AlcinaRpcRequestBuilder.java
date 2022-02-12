@@ -229,8 +229,8 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 				List<OutOfBandMessage> messages = TransformManager.Serializer
 						.get().deserialize(outOfBandMessagesSerialized);
 				for (OutOfBandMessage outOfBandMessage : messages) {
-					Registry.impl(OutOfBandMessageHandler.class,
-							outOfBandMessage.getClass())
+					Registry.query(OutOfBandMessageHandler.class)
+							.addKeys(outOfBandMessage.getClass()).impl()
 							.handle(outOfBandMessage);
 				}
 			}

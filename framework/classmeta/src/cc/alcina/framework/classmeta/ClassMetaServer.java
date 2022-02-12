@@ -22,6 +22,7 @@ import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
+import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
@@ -89,6 +90,8 @@ public class ClassMetaServer {
 		Server server = new Server(port);
 		HandlerCollection handlers = new HandlerCollection(true);
 		JaxbUtils.withoutRegistry();
+		Registry.Internals
+				.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
 		initLoggers();
 		initRegistry();
 		ClassMetaHandler metaHandler = new ClassMetaHandler();
@@ -97,11 +100,11 @@ public class ClassMetaServer {
 			ctx.setHandler(metaHandler);
 			handlers.addHandler(ctx);
 		}
-		{
-			ContextHandler ctx = new ContextHandler(handlers, "/persistence");
-			ctx.setHandler(new ClassPersistenceScanHandler(metaHandler));
-			handlers.addHandler(ctx);
-		}
+		// {
+		// ContextHandler ctx = new ContextHandler(handlers, "/persistence");
+		// ctx.setHandler(new ClassPersistenceScanHandler(metaHandler));
+		// handlers.addHandler(ctx);
+		// }
 		// GzipHandler gzipHandler = new GzipHandler();
 		// {
 		// ContextHandler ctx = new ContextHandler(handlers, "/rdb");

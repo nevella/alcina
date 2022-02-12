@@ -730,6 +730,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		synchronized (commandsById) {
 			commandsById.clear();
 			try {
+				List<Class<?>> list = Registry.query(DevConsoleCommand.class)
+						.untypedRegistrations().collect(Collectors.toList());
 				Registry.query(DevConsoleCommand.class).implementations()
 						.filter(this::filterCommand).forEach(cmd -> {
 							if (cmd.getShellClass() != shells.peek()) {
@@ -776,9 +778,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		instance = this;
 		Registry.Internals
 				.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
+		AppLifecycleServletBase.setupBootstrapJvmServices();
 		Registry.register().singleton(DevConsole.class, this);
 		long statStartInit = System.currentTimeMillis();
-		AppLifecycleServletBase.setupBootstrapJvmServices();
 		Reflections.init();
 		createDevHelper();
 		LooseContext.register(ThreadlocalLooseContextProvider.ttmInstance());

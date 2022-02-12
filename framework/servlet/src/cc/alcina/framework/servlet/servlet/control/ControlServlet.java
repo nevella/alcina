@@ -221,7 +221,7 @@ public class ControlServlet extends AlcinaServlet {
 
 	private String testSendmail() throws Exception {
 		ContentDelivery deliverer = Registry.query(ContentDelivery.class)
-				.clearTypeKey().withKeys(ContentDeliveryType.class,
+				.setKeys(ContentDeliveryType.class,
 						ContentDeliveryType_EMAIL.class)
 				.impl();
 		TestContentRequest testContentRequest = new TestContentRequest();

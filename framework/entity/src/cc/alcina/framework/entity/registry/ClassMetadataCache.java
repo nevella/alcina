@@ -15,7 +15,12 @@ public class ClassMetadataCache<T extends ClassMetadata>
 
 	public List<String> ignorePackageSegments = new ArrayList<String>();
 
-	public void add(T item) {
+	public String dump() {
+		return toString() + "\n"
+				+ classData.keySet().stream().collect(Collectors.joining("\n"));
+	}
+
+	public void insert(T item) {
 		for (String segment : ignorePackageSegments) {
 			if (item.className.startsWith(segment)) {
 				return;
@@ -24,17 +29,12 @@ public class ClassMetadataCache<T extends ClassMetadata>
 		classData.put(item.className, item);
 	}
 
-	@Override
-	public String toString() {
-		return Ax.format("%s classes", classData.size());
-	}
-
 	public void merge(ClassMetadataCache other) {
 		classData.putAll(other.classData);
 	}
 
-	public String dump() {
-		return toString() + "\n"
-				+ classData.keySet().stream().collect(Collectors.joining("\n"));
+	@Override
+	public String toString() {
+		return Ax.format("%s classes", classData.size());
 	}
 }

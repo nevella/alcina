@@ -82,7 +82,7 @@ public class ClassLookupCustomiser implements Customiser {
 				label.setRenderer(renderer);
 				return label;
 			}
-			List<Class> lookup = Registry.query().withKeys(registryPoint)
+			List<Class> lookup = Registry.query().addKeys(registryPoint)
 					.untypedRegistrations().collect(Collectors.toList());
 			Collections.sort(lookup, new RendererComparator(renderer));
 			lookup.add(0, null);

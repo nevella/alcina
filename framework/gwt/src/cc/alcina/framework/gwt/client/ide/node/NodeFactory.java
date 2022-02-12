@@ -149,7 +149,8 @@ public class NodeFactory {
 			createDomainNode(SourcesPropertyChangeEvents domainObject) {
 		Class clazz = domainObject.getClass();
 		if (lastDomainObjectClass != clazz) {
-			nodeCreator = Registry.impl(NodeCreator.class, clazz);
+			nodeCreator = Registry.query(NodeCreator.class).addKeys(clazz)
+					.impl();
 		}
 		return nodeCreator.createDomainNode(domainObject, this);
 	}

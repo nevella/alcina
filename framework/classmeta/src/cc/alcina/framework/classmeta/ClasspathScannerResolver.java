@@ -34,7 +34,7 @@ public class ClasspathScannerResolver {
 		} else {
 			String folder = translationKey.replaceFirst("(.+?)\\..+", "$1");
 			String translationXml = ResourceUtilities.read(
-					ClassPersistenceScanHandler.class,
+					ClasspathScannerResolver.class,
 					Ax.format("schema/%s/meta.translation.%s.xml", folder,
 							translationKey));
 			translationData = JaxbUtils.xmlDeserialize(TranslationData.class,

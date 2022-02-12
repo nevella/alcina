@@ -117,6 +117,22 @@ public class ClasspathScanner {
 		return pkg;
 	}
 
+	public void invokeHandler(URL url) {
+		try {
+			for (Class<? extends ClasspathVisitor> visitorClass : visitors) {
+				ClasspathVisitor visitor = visitorClass
+						.getConstructor(ClasspathScanner.class)
+						.newInstance(this);
+				if (visitor.handles(url)) {
+					visitor.enumerateClasses(url);
+					break;
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public boolean isIgnoreJars() {
 		return ignoreJars;
 	}
@@ -137,22 +153,6 @@ public class ClasspathScanner {
 
 	protected String getPackage() {
 		return getPkg();
-	}
-
-	public void invokeHandler(URL url) {
-		try {
-			for (Class<? extends ClasspathVisitor> visitorClass : visitors) {
-				ClasspathVisitor visitor = visitorClass
-						.getConstructor(ClasspathScanner.class)
-						.newInstance(this);
-				if (visitor.handles(url)) {
-					visitor.enumerateClasses(url);
-					break;
-				}
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
 	}
 
 	protected URL invokeResolver(URL url) {
@@ -202,7 +202,7 @@ public class ClasspathScanner {
 					ClassMetadata item = ClassMetadata.fromRelativeSourcePath(
 							relativeClassPath, url, inputStream,
 							modificationDate);
-					scanner.classDataCache.add(item);
+					scanner.classDataCache.insert(item);
 				}
 			}
 		}

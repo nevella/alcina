@@ -45,7 +45,7 @@ public class TreeRenderingInfoProvider {
 	protected Class<? extends TreeRenderer> getClassForRenderable(
 			TreeRenderable renderable, TreeRenderer parent,
 			RenderContext context) {
-		return Registry.query(TreeRenderer.class)
-				.withKeys(renderable.getClass()).registration();
+		return Registry.query(TreeRenderer.class).addKeys(renderable.getClass())
+				.registration();
 	}
 }

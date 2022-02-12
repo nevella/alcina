@@ -16,6 +16,7 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 @Registration({ ContentDeliveryType.class,
 		ContentDeliveryType_SEND_TO_REPOSITORY.class })
 public class ContentDeliverySendToRepository implements ContentDelivery {
+	@Override
 	public synchronized String deliver(PublicationContext ctx,
 			InputStream convertedContent, DeliveryModel deliveryModel,
 			FormatConverter hfc) throws Exception {
@@ -24,7 +25,8 @@ public class ContentDeliverySendToRepository implements ContentDelivery {
 		Class<? extends RepositoryDelivery> deliveryClass = (Class<? extends RepositoryDelivery>) Class
 				.forName(repositoryMarkerClassName);
 		ContentDeliveryRepositoryHandler repositoryHandler = Registry
-				.impl(ContentDeliveryRepositoryHandler.class, deliveryClass);
+				.query(ContentDeliveryRepositoryHandler.class)
+				.addKeys(deliveryClass).impl();
 		return repositoryHandler.deliver(ctx, convertedContent, deliveryModel,
 				hfc);
 	}

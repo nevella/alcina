@@ -22,8 +22,8 @@ public class RegistryLookupCustomiser implements Customiser {
 			boolean multiple, Custom params) {
 		Class markerClass = NamedParameter.Support
 				.classValue(params.parameters(), MARKER_CLASS, null);
-		return Registry.query(Customiser.class).clearTypeKey()
-				.withKeys(RegistryLookupCustomiser.class, markerClass).impl()
+		return Registry.query(Customiser.class)
+				.setKeys(RegistryLookupCustomiser.class, markerClass).impl()
 				.getProvider(editable, objectClass, multiple, params);
 	}
 }

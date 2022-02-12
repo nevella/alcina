@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -44,12 +44,18 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 public class OneToManyCustomiser implements Customiser, BoundWidgetProvider {
 	private AnnotationLocation propertyLocation;
 
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface Args {
-		Class<? extends Entity> entityClass();
+	@Override
+	public BoundWidget get() {
+		RenderingHtml html = new RenderingHtml();
+		html.setRenderer(new RendererImpl(html, propertyLocation));
+		html.setStyleName("");
+		return html;
+	}
+
+	@Override
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
+			boolean multiple, Custom info) {
+		throw new UnsupportedOperationException();
 	}
 
 	@Override
@@ -60,18 +66,12 @@ public class OneToManyCustomiser implements Customiser, BoundWidgetProvider {
 		return this;
 	}
 
-	@Override
-	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, Custom info) {
-		throw new UnsupportedOperationException();
-	}
-
-	@Override
-	public BoundWidget get() {
-		RenderingHtml html = new RenderingHtml();
-		html.setRenderer(new RendererImpl(html, propertyLocation));
-		html.setStyleName("");
-		return html;
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface Args {
+		Class<? extends Entity> entityClass();
 	}
 
 	private static class RendererImpl
@@ -93,7 +93,8 @@ public class OneToManyCustomiser implements Customiser, BoundWidgetProvider {
 			EntityPlace searchPlace = (EntityPlace) RegistryHistoryMapper.get()
 					.getPlaceByModelClass(args.entityClass());
 			TruncatedObjectCriterion objectCriterion = Registry
-					.impl(TruncatedObjectCriterion.class, source.entityClass());
+					.query(TruncatedObjectCriterion.class)
+					.addKeys(source.entityClass()).impl();
 			objectCriterion.withObject(source);
 			searchPlace.def.addCriterionToSoleCriteriaGroup(objectCriterion);
 			String template = "<a href='#%s'>%s</a>";

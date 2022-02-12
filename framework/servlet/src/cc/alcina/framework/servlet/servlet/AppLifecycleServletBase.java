@@ -11,6 +11,7 @@ import java.net.URLConnection;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -42,11 +43,14 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -76,6 +80,7 @@ import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.ConcurrentMapCreatorJvm;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.HashMapCreatorJvm;
@@ -305,6 +310,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		Registry.register().singleton(
 				AppPersistenceBase.InitRegistrySupport.class,
 				new AppPersistenceBase.InitRegistrySupport());
+		Registry.register().singleton(AnnotationLocation.Resolver.class,
+				new DefaultAnnotationResolver());
 	}
 
 	protected void initCluster() {
@@ -351,6 +358,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 						CommonUtils.toSimpleExceptionMessage(e));
 			}
 		}
+		// FIXME - reflection - remove (alcinabeanserializer -> elemental)
+		Registry.register().add(AlcinaBeanSerializerS.class.getName(),
+				Collections.singletonList(AlcinaBeanSerializer.class.getName()),
+				Registration.Implementation.INSTANCE,
+				Registration.Priority._DEFAULT);
 		initLoggers();
 	}
 
@@ -457,6 +469,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			Registry servletLayerRegistry = Registry.internals().instance();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					"servlet-layer");
+			ClassLoaderAwareRegistryProvider.get()
+					.setServletLayerClassloader(getClass().getClassLoader());
 			EntityLayerObjects.get()
 					.setServletLayerRegistry(servletLayerRegistry);
 		} catch (Exception e) {
@@ -553,8 +567,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		try {
 			Transaction.begin();
 			ThreadedPermissionsManager.cast().pushSystemUser();
-			Registry.query(LifecycleService.class).implementations()
-					.forEach(service -> {
+			Registry.query(LifecycleService.class).registrations()
+					// each class implementing LifecycleService must also have a
+					// @Registration.Singleton
+					.map(Registry::impl).forEach(service -> {
 						try {
 							service.onApplicationStartup();
 						} catch (Exception e) {

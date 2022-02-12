@@ -37,8 +37,7 @@ public class ContentDeliveryMultiple implements ContentDelivery {
 		for (DeliveryModel.MultipleDeliveryEntry entry : deliveryModel
 				.getMultipleDeliveryEntries()) {
 			ContentDelivery deliverer = Registry.query(ContentDelivery.class)
-					.clearTypeKey()
-					.withKeys(ContentDeliveryType.class,
+					.setKeys(ContentDeliveryType.class,
 							entry.provideContentDeliveryType().getClass())
 					.impl();
 			ContentRequestBase mutableDeliveryModel = (ContentRequestBase) deliveryModel;

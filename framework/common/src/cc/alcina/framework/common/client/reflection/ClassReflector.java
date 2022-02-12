@@ -49,7 +49,7 @@ public class ClassReflector<T> {
 	public static final Set<Class> primitives = new HashSet<Class>(
 			primitiveClassMap.values());
 
-	private Class<T> clazz;
+	private Class<T> reflectedClass;
 
 	private Map<String, Property> byName;
 
@@ -71,21 +71,17 @@ public class ClassReflector<T> {
 
 	private List<Class> interfaces;
 
-	public ClassReflector(Class<T> clazz, List<Property> properties,
+	public ClassReflector(Class<T> reflectedClass, List<Property> properties,
 			Map<String, Property> byName, AnnotationProvider annotationResolver,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
 			List<Class> interfaces, boolean reflective, boolean isAbstract) {
 		this();
-		init(clazz, properties, byName, annotationResolver, constructor,
-				assignableTo, interfaces, reflective, isAbstract);
+		init(reflectedClass, properties, byName, annotationResolver,
+				constructor, assignableTo, interfaces, reflective, isAbstract);
 	}
 
 	protected ClassReflector() {
 		init0();
-	}
-
-	protected void init0() {
-		// Overriden by generated subclasses
 	}
 
 	public <A extends Annotation> A annotation(Class<A> annotationClass) {
@@ -94,6 +90,10 @@ public class ClassReflector<T> {
 
 	public List<Class> getInterfaces() {
 		return interfaces;
+	}
+
+	public Class<T> getReflectedClass() {
+		return this.reflectedClass;
 	}
 
 	public <A extends Annotation> boolean has(Class<A> annotationClass) {
@@ -141,14 +141,14 @@ public class ClassReflector<T> {
 
 	@Override
 	public String toString() {
-		return clazz.toString();
+		return reflectedClass.toString();
 	}
 
-	protected void init(Class<T> clazz, List<Property> properties,
+	protected void init(Class<T> reflectedClass, List<Property> properties,
 			Map<String, Property> byName, AnnotationProvider annotationResolver,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
 			List<Class> interfaces, boolean reflective, boolean isAbstract) {
-		this.clazz = clazz;
+		this.reflectedClass = reflectedClass;
 		this.properties = properties;
 		this.byName = byName;
 		this.annotationResolver = annotationResolver;
@@ -157,6 +157,10 @@ public class ClassReflector<T> {
 		this.reflective = reflective;
 		this.isAbstract = isAbstract;
 		this.interfaces = interfaces;
-		this.primitive = ClassReflector.primitives.contains(clazz);
+		this.primitive = ClassReflector.primitives.contains(reflectedClass);
+	}
+
+	protected void init0() {
+		// Overriden by generated subclasses
 	}
 }

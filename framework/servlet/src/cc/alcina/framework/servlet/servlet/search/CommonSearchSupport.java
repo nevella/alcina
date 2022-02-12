@@ -182,9 +182,10 @@ public class CommonSearchSupport {
 						searchContext.queried, (EntitySearchDefinition) def);
 			} else {
 				searchContext.modelSearchResults = new ModelSearchResults();
-				GroupingHandler groupingHandler = Registry.impl(
-						GroupingHandler.class,
-						searchContext.groupingParameters.getClass());
+				GroupingHandler groupingHandler = Registry
+						.query(GroupingHandler.class)
+						.addKeys(searchContext.groupingParameters.getClass())
+						.impl();
 				searchContext.modelSearchResults.setGroupedResult(
 						groupingHandler.process(searchContext.queried,
 								searchContext.groupingParameters, def));

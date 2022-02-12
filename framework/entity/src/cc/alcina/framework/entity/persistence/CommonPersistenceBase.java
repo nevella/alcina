@@ -602,7 +602,8 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			throw new WrappedRuntimeException(
 					new PermissionsException(message));
 		}
-		Searcher searcher = Registry.impl(Searcher.class, def.getClass());
+		Searcher searcher = Registry.query(Searcher.class)
+				.addKeys(def.getClass()).impl();
 		SearchResultsBase result = searcher.search(def, getEntityManager());
 		return projectSearchResults(result);
 	}

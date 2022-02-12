@@ -12,6 +12,8 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Implementation;
@@ -34,6 +36,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * <li>(Semi-declarative notes): provides implementations satisfying a contract,
  * overridden by context registry
  * <li>TODO - describe implementation resolution, with examples
+ * <li>TODO - describe per-classloader (war, entity jar) registry relationship
+ * rationale
  * </ul>
  *
  * @author nick@alcina.cc
@@ -43,8 +47,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Registry {
-	static Registry instance = new Registry();
-
 	public static final String MARKER_RESOURCE = "registry.properties";
 
 	static RegistryProvider provider = new BasicRegistryProvider();
@@ -60,8 +62,8 @@ public class Registry {
 		return provider;
 	}
 
-	public static <V> V impl(Class<V> type, Class... keys) {
-		return get().query0(type).withKeys(keys).impl();
+	public static <V> V impl(Class<V> type) {
+		return get().query0(type).impl();
 	}
 
 	public static Internals internals() {
@@ -69,7 +71,7 @@ public class Registry {
 	}
 
 	public static <V> Optional<V> optional(Class<V> type, Class... keys) {
-		return get().query0(type).withKeys(keys).optional();
+		return get().query0(type).addKeys(keys).optional();
 	}
 
 	public static Query<?> query() {
@@ -85,8 +87,7 @@ public class Registry {
 	}
 
 	protected static Registry get() {
-		return instance;
-		// provider.getRegistry();
+		return provider.getRegistry();
 	}
 
 	Singletons singletons = new Singletons();
@@ -99,12 +100,10 @@ public class Registry {
 
 	public String name;
 
+	Registry sharedImplementations;
+
 	public Internals instanceInternals() {
 		return new Internals(this);
-	}
-
-	public void shareSingletonMapTo(Registry otherRegistry) {
-		otherRegistry.singletons = singletons;
 	}
 
 	protected Query query0() {
@@ -156,19 +155,6 @@ public class Registry {
 			this.registry = registry;
 		}
 
-		public void copyFrom(Registry sourceRegistry, Class<?> type) {
-			// copy registrations
-			sourceRegistry.registrations
-					.registrations(sourceRegistry.query0(type))
-					.forEach(rd -> registry.register0().add(
-							rd.registeringClassKey,
-							Collections.singletonList(
-									registry.registryKeys.get(type)),
-							rd.implementation, rd.priority));
-			// copy singleton
-			registry.singletons.put(sourceRegistry.query0(type));
-		}
-
 		public void dump() {
 			Ax.out("Registry: %s", registry);
 			registry.registrations.dump();
@@ -180,6 +166,11 @@ public class Registry {
 
 		public void setName(String name) {
 			registry.name = name;
+		}
+
+		public void shareImplementationsTo(Registry otherRegistry) {
+			otherRegistry.sharedImplementations = registry;
+			otherRegistry.singletons = registry.singletons;
 		}
 	}
 
@@ -196,35 +187,21 @@ public class Registry {
 			classes.add(type);
 		}
 
+		public Query<V> addKeys(Class... keys) {
+			for (Class clazz : keys) {
+				classes.add(clazz);
+			}
+			return this;
+		}
+
 		public List<RegistryKey> asRegistrationKeys() {
 			return classes.stream().map(registryKeys::get)
 					.collect(Collectors.toList());
 		}
 
-		/*
-		 * For when the first registration key (class) is *not* registered type
-		 * (relatively unusual)
-		 *
-		 * e.g. @Registration({ PersistentImpl.class, ClientInstance.class })
-		 *
-		 * ...although
-		 *
-		 * FIXME - reflection.2
-		 *
-		 * ... that registration should/could be inverted
-		 *
-		 * also: Registry.query(ContentDelivery.class)
-		 * .clearTypeKey().withKeys(ContentDeliveryType.class,
-		 * ContentDeliveryType_EMAIL.class) .impl();
-		 *
-		 * ->
-		 *
-		 * two-key registration
-		 * (ContentDelivery.class,ContentDeliveryType_EMAIL.class)
-		 */
-		public Query<V> clearTypeKey() {
-			classes.clear();
-			return this;
+		public Stream<Class<?>> childKeys() {
+			return (Stream) registrations.keys(this).stream()
+					.map(RegistryKey::clazz);
 		}
 
 		public <E extends Enum> V forEnum(E enumValue) {
@@ -243,8 +220,8 @@ public class Registry {
 		}
 
 		public Stream<V> implementations() {
-			return registrations.stream(this).map(this::subQuery)
-					.map(Query::impl);
+			return (Stream) registrations.stream(this)
+					.map(this::checkNonSingleton);
 		}
 
 		public Optional<V> optional() {
@@ -253,12 +230,37 @@ public class Registry {
 
 		public Class<? extends V> registration() {
 			return implementations.implementation(this,
-					true).registrationData.registeringClassKey
-							.asSingleClassKey();
+					true).registrationData.registeringClassKey.clazz();
 		}
 
 		public Stream<Class<? extends V>> registrations() {
 			return (Stream) untypedRegistrations();
+		}
+
+		/*
+		 * For when the first registration key (class) is *not* the registered
+		 * type (relatively unusual)
+		 *
+		 * e.g. @Registration({ PersistentImpl.class, ClientInstance.class })
+		 *
+		 * ...although
+		 *
+		 * FIXME - reflection.2
+		 *
+		 * ... that registration should/could be inverted
+		 *
+		 * also: Registry.query(ContentDelivery.class)
+		 * .clearTypeKey().withKeys(ContentDeliveryType.class,
+		 * ContentDeliveryType_EMAIL.class) .impl();
+		 *
+		 * ->
+		 *
+		 * two-key registration
+		 * (ContentDelivery.class,ContentDeliveryType_EMAIL.class)
+		 */
+		public Query<V> setKeys(Class... keys) {
+			classes.clear();
+			return addKeys(keys);
 		}
 
 		@Override
@@ -270,11 +272,9 @@ public class Registry {
 			return (Stream) registrations.stream(this);
 		}
 
-		public Query<V> withKeys(Class... keys) {
-			for (Class clazz : keys) {
-				classes.add(clazz);
-			}
-			return this;
+		V checkNonSingleton(Class<? extends V> clazz) {
+			Preconditions.checkArgument(!singletons.contains(clazz));
+			return Reflections.newInstance(clazz);
 		}
 
 		Query<V> subQuery(Class<? extends V> subKey) {
@@ -311,19 +311,20 @@ public class Registry {
 					implementation, priority);
 		}
 
+		// FIXME - reflection.2 - trim usage
 		public void singleton(Class type, Object implementation) {
-			add(registryKeys.get(implementation.getClass()),
-					Collections.singletonList(registryKeys.get(type)),
-					Implementation.SINGLETON, Priority.APP);
-			singletons.put(implementation);
-		}
-
-		public void singleton(Class[] keys, Object implementation) {
-			add(registryKeys.get(implementation.getClass()),
-					Arrays.stream(keys).map(registryKeys::get)
-							.collect(Collectors.toList()),
-					Implementation.SINGLETON, Priority.APP);
-			singletons.put(implementation);
+			if (sharedImplementations != null) {
+				sharedImplementations.register0().singleton(type,
+						implementation);
+			} else {
+				RegistryKey typeKey = registryKeys.get(type);
+				Preconditions.checkState(!implementations.exists(typeKey));
+				registrations.clear(typeKey);
+				add(registryKeys.get(implementation.getClass()),
+						Collections.singletonList(typeKey),
+						Implementation.SINGLETON, Priority.APP);
+				singletons.put(implementation);
+			}
 		}
 	}
 
@@ -340,17 +341,6 @@ public class Registry {
 	class Implementations {
 		LookupTree<ImplementationData> lookup = new LookupTree<>();
 
-		private boolean ascendSuperclassOfLastKey(List<RegistryKey> keys) {
-			RegistryKey key = keys.get(keys.size() - 1);
-			Class superclass = key.asSingleClassKey().getSuperclass();
-			if (superclass == null) {
-				return false;
-			} else {
-				keys.set(keys.size() - 1, registryKeys.get(superclass));
-				return true;
-			}
-		}
-
 		<V> V ensure(Query<V> query, boolean throwIfNotNull) {
 			ImplementationData implementation = implementation(query,
 					throwIfNotNull);
@@ -358,23 +348,39 @@ public class Registry {
 					: (V) implementation.instance();
 		}
 
+		boolean exists(RegistryKey key) {
+			return lookup.root.map.containsKey(key);
+		}
+
 		<V> ImplementationData implementation(Query<V> query,
 				boolean throwIfNotNull) {
 			List<RegistryKey> keys = query.asRegistrationKeys();
+			ImplementationData data = lookup.get(keys);
+			if (data != null) {
+				// fast path
+				return data;
+			}
+			KeyAscent ascent = new KeyAscent(keys);
 			do {
-				ImplementationData data = lookup.get(keys);
+				data = lookup.get(keys);
 				if (data == null) {
+					if (sharedImplementations != null) {
+						data = sharedImplementations.implementations
+								.implementation(query, throwIfNotNull);
+						return data;
+					}
 					Iterator<RegistrationData> itr = registrations
-							.registrations(query).stream().sorted().iterator();
+							.registrations(ascent.keys).stream().sorted()
+							.iterator();
 					if (itr.hasNext()) {
 						RegistrationData first = itr.next();
 						if (itr.hasNext()) {
 							RegistrationData second = itr.next();
 							if (first.priority == second.priority) {
 								throw new IllegalStateException(Ax.format(
-										"Query: %s - equal top priorities: \n%s",
-										query,
-										registrations.registrations(query)
+										"Query: %s - resolved keys: %s - equal top priorities: \n%s",
+										query, ascent.keys,
+										registrations.registrations(ascent.keys)
 												.stream().sorted()
 												.map(Object::toString)
 												.collect(Collectors
@@ -382,13 +388,13 @@ public class Registry {
 							}
 						}
 						data = new ImplementationData(first);
-						lookup.put(keys, data);
+						lookup.put(ascent.initialKeys, data);
 					}
 				}
 				if (data != null) {
 					return data;
 				}
-			} while (ascendSuperclassOfLastKey(keys));
+			} while (ascent.ascend());
 			if (throwIfNotNull) {
 				throw new NoSuchElementException(query.toString());
 			} else {
@@ -405,7 +411,7 @@ public class Registry {
 
 			public Object instance() {
 				Class registeredClass = registrationData.registeringClassKey
-						.asSingleClassKey();
+						.clazz();
 				switch (registrationData.implementation) {
 				case INSTANCE:
 					return Reflections.newInstance(registeredClass);
@@ -419,10 +425,62 @@ public class Registry {
 				}
 			}
 		}
+
+		class KeyAscent {
+			List<RegistryKey> keys;
+
+			boolean ascendedFinalKey;
+
+			List<RegistryKey> initialKeys;
+
+			public KeyAscent(List<RegistryKey> keys) {
+				this.keys = keys;
+				this.initialKeys = keys.stream().collect(Collectors.toList());
+			}
+
+			/*
+			 * @formatter:off
+			 *
+			 * When resolving implementation for keys (A,B), resolution is:
+			 *
+			 * * match (A,B)
+			 * * match (A,X) (X super B)
+			 * * match (A)
+			 *
+			 * * *do not* match (Y) (Y super A)
+			 *
+			 * @formatter:on
+			 */
+			boolean ascend() {
+				if (keys.size() == 1) {
+					return false;
+				}
+				RegistryKey key = keys.get(keys.size() - 1);
+				Class superclass = key.clazz().getSuperclass();
+				if (superclass == null) {
+					if (ascendedFinalKey) {
+						return false;
+					}
+					keys = keys.subList(0, keys.size() - 1);
+					ascendedFinalKey = true;
+				} else {
+					if (ascendedFinalKey) {
+						return false;
+					} else {
+						keys.set(keys.size() - 1, registryKeys.get(superclass));
+					}
+				}
+				return true;
+			}
+		}
 	}
 
 	class LookupTree<T> {
 		Node root = new Node();
+
+		public void clear(RegistryKey key) {
+			root.map.remove(key);
+		}
 
 		void add(List<RegistryKey> keys, Object value) {
 			Iterator<RegistryKey> itr = keys.iterator();
@@ -456,7 +514,7 @@ public class Registry {
 			T value;
 
 			private void dump(String key, int depth) {
-				Ax.out("%s : %s", CommonUtils.padStringLeft(key, 30, ' '),
+				Ax.out("%s : %s", CommonUtils.padStringRight(key, 45, ' '),
 						value);
 				map.forEach((k, v) -> v.dump(k.simpleName(), depth + 1));
 			}
@@ -484,7 +542,7 @@ public class Registry {
 				if (itr.hasNext()) {
 					return child.get(itr);
 				} else {
-					return (T) map.get(key);
+					return map.get(key).value;
 				}
 			}
 
@@ -494,7 +552,8 @@ public class Registry {
 				if (itr.hasNext()) {
 					return child.keys(itr);
 				} else {
-					return map.keySet();
+					return child == null ? Collections.emptyList()
+							: child.map.keySet();
 				}
 			}
 
@@ -513,6 +572,14 @@ public class Registry {
 	class Registrations {
 		LookupTree<List<RegistrationData>> lookup = new LookupTree<>();
 
+		public void clear(RegistryKey typeKey) {
+			lookup.clear(typeKey);
+		}
+
+		public Collection<RegistryKey> keys(Query query) {
+			return lookup.keys(query.asRegistrationKeys());
+		}
+
 		void dump() {
 			Ax.out("Registrations:\n============");
 			lookup.dump();
@@ -521,26 +588,23 @@ public class Registry {
 		void register(RegistryKey registeringClassKey, List<RegistryKey> keys,
 				Registration.Implementation implementation,
 				Registration.Priority priority) {
-			if (implementation == Registration.Implementation.NONE) {
-				return;
-			}
+			Preconditions.checkArgument(priority != Priority.REMOVE);
 			lookup.add(keys, new RegistrationData(registeringClassKey,
 					implementation, priority));
 		}
 
-		List<RegistrationData> registrations(Query query) {
-			List<RegistrationData> value = lookup
-					.get(query.asRegistrationKeys());
+		List<RegistrationData> registrations(List<RegistryKey> keys) {
+			List<RegistrationData> value = lookup.get(keys);
 			return value == null ? new ArrayList<>() : value;
 		}
 
-		Stream<Class> stream(Query query) {
-			Collection<RegistryKey> keys = lookup
-					.keys(query.asRegistrationKeys());
-			return keys.stream().map(RegistryKey::asSingleClassKey);
+		Stream<Class> stream(Query<?> query) {
+			return registrations(query.asRegistrationKeys()).stream()
+					.map(RegistrationData::getRegisteringClassKey)
+					.map(RegistryKey::clazz);
 		}
 
-		class RegistrationData {
+		class RegistrationData implements Comparable<RegistrationData> {
 			RegistryKey registeringClassKey;
 
 			Registration.Implementation implementation;
@@ -555,10 +619,39 @@ public class Registry {
 			}
 
 			@Override
+			/*
+			 * Order: highest to lowest priority
+			 */
+			public int compareTo(RegistrationData o) {
+				return -(priority.compareTo(o.priority));
+			}
+
+			@Override
 			public String toString() {
 				return Ax.format("%s - %s - %s", registeringClassKey,
 						implementation, priority);
 			}
+
+			RegistryKey getRegisteringClassKey() {
+				return this.registeringClassKey;
+			}
+		}
+	}
+
+	class RegistryKeys {
+		Map<String, RegistryKey> keys = CollectionCreators.Bootstrap
+				.createConcurrentStringMap();
+
+		RegistryKeys() {
+		}
+
+		RegistryKey get(Class clazz) {
+			String name = clazz.getName();
+			return keys.computeIfAbsent(name, k -> new RegistryKey(clazz));
+		}
+
+		RegistryKey get(String name) {
+			return keys.computeIfAbsent(name, RegistryKey::new);
 		}
 	}
 
@@ -571,18 +664,36 @@ public class Registry {
 		}
 
 		Object ensure(Class singletonClass) {
-			return byClass.computeIfAbsent(singletonClass,
-					Reflections::newInstance);
+			// can return IllegalStateException due to recursive singleton
+			// creation
+			// return byClass.computeIfAbsent(singletonClass,
+			// Reflections::newInstance);
+			Object value = byClass.get(singletonClass);
+			if (value != null) {
+				return value;
+			}
+			// double-checked
+			synchronized (this) {
+				value = byClass.get(singletonClass);
+				if (value == null) {
+					value = Reflections.newInstance(singletonClass);
+					byClass.put(singletonClass, value);
+				}
+				return value;
+			}
 		}
 
 		void put(Object implementation) {
 			Class<? extends Object> clazz = implementation.getClass();
-			if (byClass.containsKey(clazz)) {
-				throw new IllegalStateException(
-						Ax.format("Existing registration of singleton - %s",
-								clazz.getName()));
+			synchronized (this) {
+				if (byClass.containsKey(clazz)) {
+					throw new IllegalStateException(Ax.format(
+							"Existing registration of singleton - %s\n\t:: %s",
+							clazz.getName(),
+							byClass.get(clazz).getClass().getName()));
+				}
+				byClass.put(clazz, implementation);
 			}
-			byClass.put(clazz, implementation);
 		}
 	}
 }

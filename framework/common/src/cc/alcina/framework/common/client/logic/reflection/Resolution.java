@@ -13,12 +13,16 @@
  */
 package cc.alcina.framework.common.client.logic.reflection;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.List;
+
+import cc.alcina.framework.common.client.reflection.Property;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
@@ -52,15 +56,22 @@ import java.lang.annotation.Target;
 public @interface Resolution {
 	public Inheritance[] inheritance() default { Inheritance.CLASS };
 
-	public Class<? extends MergeStrategy> mergeStrategy() default DefaultMergeStrategy.class;
-
-	public static class DefaultMergeStrategy implements MergeStrategy {
-	}
+	public Class<? extends MergeStrategy> mergeStrategy();
 
 	public enum Inheritance {
-		CLASS, METHOD, ERASED_METHOD, INTERFACE, NONE
+		CLASS, PROPERTY, ERASED_PROPERTY, INTERFACE
 	}
 
-	public interface MergeStrategy {
+	public interface MergeStrategy<A extends Annotation> {
+		default void finish(List<A> merged) {
+		}
+
+		List<A> merge(List<A> higher, List<A> lower);
+
+		List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
+				List<Inheritance> inheritance);
+
+		List<A> resolveProperty(Class<A> annotationClass, Property property,
+				List<Inheritance> inheritance);
 	}
 }

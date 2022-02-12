@@ -77,13 +77,13 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * members, to ensure alias uniqueness, or use any-type (unspecified - types()
  * annotation length==0) serialization - in the latter case the path compression
  * use the full classname as typeinfo.
- * 
+ *
  * </p>
  * <p>
  * Constraints: Collections cannot contain nulls. If a default property has no
  * type constraints, it must be populated by the constructor
  * </p>
- * 
+ *
  * <h2>Verification and safety:</h2>
  * <ul>
  * <li>Deserialization checks no property/name collisions.
@@ -104,7 +104,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * and has type list(searchcriterion). Note that it's ok for a collection of
  * value types
  * </ul>
- * 
+ *
  *
  *
  * <h2>For: 2021.04.16</h2>
@@ -112,8 +112,8 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * <li>Check groupingparameters annotation
  * <li>Doc - collection fields must be non-null (on deser)
  * </ul>
- * 
- * 
+ *
+ *
  * @author nick@alcina.cc
  */
 public class FlatTreeSerializer {
@@ -397,23 +397,23 @@ public class FlatTreeSerializer {
 		/*
 		 * (Document for 'short paths' case - non-short is simpler (does not use
 		 * elision) For each path:
-		 * 
+		 *
 		 * * Split to segments
-		 * 
+		 *
 		 * * For each segment, either map to a property of the cursor object or
 		 * descend the default property
-		 * 
+		 *
 		 * * Once 'in' a property, resolve property type. Property type can be
 		 * represented by:
-		 * 
+		 *
 		 * * Empty string (one type only) * Type marker (multipe types)
-		 * 
+		 *
 		 * * plus an index marker if property is a collection containing
 		 * multiple elements of the same type
-		 * 
+		 *
 		 * Once all segments are resolved, may still need to descend end-of-path
 		 * defaults
-		 * 
+		 *
 		 */
 		for (Entry<String, String> entry : state.keyValues.entrySet()) {
 			String path = entry.getKey();
@@ -427,18 +427,18 @@ public class FlatTreeSerializer {
 			int segmentUnusedIndex = -1;
 			/*
 			 * unused indicies
-			 * 
+			 *
 			 * citation-1.sectionrange-2
-			 * 
+			 *
 			 * corresponds to
-			 * 
+			 *
 			 * def.criteriaGroups.CitableAndSectionsCriteriaGroup.criteria[2].
 			 * sectionRanges[3]
-			 * 
+			 *
 			 * the logic is a little slippery as to where to apply an index - if
 			 * unused in previous segment step, apply to first collection in
 			 * this segment step, otherwise apply only on resolution
-			 * 
+			 *
 			 */
 			boolean unknownProperty = false;
 			for (int idx = 0; idx < segments.length; idx++) {
@@ -641,7 +641,7 @@ public class FlatTreeSerializer {
 						/*
 						 * check we don't need to descend further down the
 						 * default paths
-						 * 
+						 *
 						 */
 						resolvingLastSegment |= lastSegment;
 						if (lastSegment && !cursor.isLeaf()) {
@@ -788,7 +788,7 @@ public class FlatTreeSerializer {
 				 * 'Default collections' can't work in a general sense -....
 				 * FIXME - 2022 - add per-ts customisers that provide 'yes
 				 * default' to the whole collection - and thus ignore for elided
-				 * 
+				 *
 				 * Note that said collections must be guaranteed non-empty in
 				 * the application - or maybe have an __fts__EMPTY__ marker
 				 */
@@ -971,6 +971,9 @@ public class FlatTreeSerializer {
 				object = valueClass.getEnumConstants()[1];
 			}
 			return object;
+		}
+		if (Reflections.at(valueClass).isAbstract()) {
+			return null;
 		}
 		if (Reflections.isAssignableFrom(VersionableEntity.class, valueClass)) {
 			VersionableEntity entity = (VersionableEntity) Reflections

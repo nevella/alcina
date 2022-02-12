@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -37,17 +37,17 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 public class OneToManySummaryCustomiser
 		implements Customiser, BoundWidgetProvider {
 	@Override
-	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
-			boolean multiple, Custom info) {
-		return this;
-	}
-
-	@Override
 	public BoundWidget get() {
 		RenderingHtml html = new RenderingHtml();
 		html.setRenderer(new OneToManySummaryToHtmlRenderer(html));
 		html.setStyleName("");
 		return html;
+	}
+
+	@Override
+	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
+			boolean multiple, Custom info) {
+		return this;
 	}
 
 	private static class OneToManySummaryToHtmlRenderer
@@ -67,7 +67,8 @@ public class OneToManySummaryCustomiser
 							Reflections.forName(o.getEntityClassName()));
 			EntityPlace searchPlace = instancePlace.copy();
 			TruncatedObjectCriterion objectCriterion = Registry
-					.impl(TruncatedObjectCriterion.class, source.entityClass());
+					.query(TruncatedObjectCriterion.class)
+					.addKeys(source.entityClass()).impl();
 			objectCriterion.withObject(source);
 			searchPlace.def.addCriterionToSoleCriteriaGroup(objectCriterion);
 			if (mostRecent == null) {

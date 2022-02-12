@@ -904,10 +904,10 @@ public class TransformCommit {
 							perStoreToken));
 				} else {
 					DomainTransformLayerWrapper remoteWrapperResult = Registry
-							.impl(RemoteTransformPersister.class,
-									perStoreToken.getTargetStore()
-											.getDomainDescriptor().getClass())
-							.submitAndHandleTransformsRemoteStore(
+							.query(RemoteTransformPersister.class)
+							.addKeys(perStoreToken.getTargetStore()
+									.getDomainDescriptor().getClass())
+							.impl().submitAndHandleTransformsRemoteStore(
 									perStoreToken);
 					result.merge(remoteWrapperResult);
 				}

@@ -14,6 +14,7 @@
 package cc.alcina.framework.servlet;
 
 import java.io.File;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
@@ -26,8 +27,16 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  */
 @Registration.Singleton
 public class ServletLayerObjects {
+	// pre-registry
 	public static ServletLayerObjects get() {
-		return Registry.impl(ServletLayerObjects.class);
+		Optional<ServletLayerObjects> optional = Registry
+				.optional(ServletLayerObjects.class);
+		if (optional.isPresent()) {
+			return optional.get();
+		}
+		ServletLayerObjects objects = new ServletLayerObjects();
+		Registry.register().singleton(ServletLayerObjects.class, objects);
+		return objects;
 	}
 
 	private File dataFolder;

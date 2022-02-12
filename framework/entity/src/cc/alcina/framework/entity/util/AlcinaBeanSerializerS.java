@@ -46,9 +46,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-@RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
-@Registration(value = AlcinaBeanSerializer.class, priority = Registration.Priority.INTERMEDIATE_LIBRARY)
 public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	private static boolean useContextClassloader;
 

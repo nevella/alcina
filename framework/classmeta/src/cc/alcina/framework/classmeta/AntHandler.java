@@ -40,8 +40,8 @@ public class AntHandler extends AbstractHandler {
 	CachingAntModel model;
 
 	public AntHandler() {
-		String modelXml = ResourceUtilities
-				.read(ClassPersistenceScanHandler.class, "schema/antModel.xml");
+		String modelXml = ResourceUtilities.read(ClassMetaServer.class,
+				"schema/antModel.xml");
 		model = JaxbUtils.xmlDeserialize(CachingAntModel.class, modelXml);
 	}
 

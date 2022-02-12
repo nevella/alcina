@@ -66,7 +66,7 @@ public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
 
 	protected List<CNP> getNamedPlaces(Class targetClass) {
 		return (List) Registry.query(PermissibleAction.class)
-				.withKeys(targetClass).implementations()
+				.addKeys(targetClass).implementations()
 				.sorted(Comparator.comparing(a -> a.provideId()))
 				.map(action -> namedPlaceForAction(getClass(), action))
 				.collect(Collectors.toList());

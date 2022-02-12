@@ -205,8 +205,8 @@ public class DomainStoreQueryTranslator {
 						DomainStoreEntityManager.ORDER_HANDLER.length());
 				OrderCriterion criterion = FlatTreeSerializer
 						.deserialize(payload);
-				Registry.impl(OrderHandler.class, criterion.getClass())
-						.addOrder(criterion, query);
+				Registry.query(OrderHandler.class).addKeys(criterion.getClass())
+						.impl().addOrder(criterion, query);
 			} else if (hint
 					.startsWith(DomainStoreEntityManager.CRITERION_HANDLER)) {
 				String payload = hint.substring(
@@ -215,7 +215,8 @@ public class DomainStoreQueryTranslator {
 						.deserialize(payload);
 				String className = hint.substring(
 						DomainStoreEntityManager.CRITERION_HANDLER.length());
-				Registry.impl(CriterionHandler.class, criterion.getClass())
+				Registry.query(CriterionHandler.class)
+						.addKeys(criterion.getClass()).impl()
 						.addFilter(criterion, query);
 			} else {
 				throw new UnsupportedOperationException();

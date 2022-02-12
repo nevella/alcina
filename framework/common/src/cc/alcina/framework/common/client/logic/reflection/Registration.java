@@ -13,20 +13,36 @@
  */
 package cc.alcina.framework.common.client.logic.reflection;
 
+import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
-import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.AbstractMergeStrategy.AdditiveMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.Resolution.Inheritance;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.util.Ax;
 
 @Retention(RetentionPolicy.RUNTIME)
-@Inherited
 @Documented
 @Target({ ElementType.TYPE })
-@ClientVisible
+/*
+ * Directly added to registry on module entry
+ */
+// @ClientVisible
+/*
+ * Custom 'inheritance' (resolution)
+ */
+// @Inherited
+@Resolution(inheritance = { Inheritance.CLASS,
+		Inheritance.INTERFACE }, mergeStrategy = Registration.MergeStrategy.class)
 /**
  *
  * <p>
@@ -66,21 +82,125 @@ public @interface Registration {
 		// registree is a factory, instantiate as a singleton
 		FACTORY,
 		// registree is the impl, should be instantiated as a singleton
-		SINGLETON,
-		// none (override inherited) - do not register
-		NONE
+		SINGLETON, NONE
+	}
+
+	public static class MergeStrategy
+			extends AdditiveMergeStrategy<Registration> {
+		@Override
+		public void finish(List<Registration> merged) {
+			merged.removeIf(r -> r.priority() == Priority.REMOVE);
+		}
+
+		@Override
+		public List<Registration> merge(List<Registration> higher,
+				List<Registration> lower) {
+			List<Registration> merged = super.merge(higher, lower);
+			// Remove any registrations with identical keys. Note that this
+			// applies even if a class higher in the hierarchy has a higher
+			// Priority registration - it allows, for instance, subclasses to
+			// mark themselves as *not* registered at a particular point (via
+			// Implementation.NONE)
+			Set<List<Class>> seenKeys = new LinkedHashSet<>();
+			merged.removeIf(r -> !seenKeys.add(Arrays.asList(r.value())));
+			return merged;
+		}
+
+		@Override
+		protected List<Registration> atClass(
+				Class<Registration> annotationClass,
+				ClassReflector<?> reflector) {
+			List<Registration> result = new ArrayList<>();
+			Registration registration = reflector
+					.annotation(Registration.class);
+			Registrations registrations = reflector
+					.annotation(Registrations.class);
+			Registration.Singleton singleton = reflector
+					.annotation(Registration.Singleton.class);
+			if (registration != null) {
+				result.add(registration);
+			}
+			if (registrations != null) {
+				Arrays.stream(registrations.value()).forEach(result::add);
+			}
+			if (singleton != null) {
+				result.add(new SingletonWrapper(singleton,
+						reflector.getReflectedClass()));
+			}
+			return result;
+		}
+
+		static class SingletonWrapper implements Registration {
+			private Singleton singleton;
+
+			private Class<?> declaringClass;
+
+			public SingletonWrapper(Singleton singleton,
+					Class<?> declaringClass) {
+				this.singleton = singleton;
+				this.declaringClass = declaringClass;
+			}
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return Registration.class;
+			}
+
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof SingletonWrapper) {
+					return ((SingletonWrapper) obj).singleton.equals(singleton);
+				} else {
+					return super.equals(obj);
+				}
+			}
+
+			@Override
+			public int hashCode() {
+				return singleton.hashCode();
+			}
+
+			@Override
+			public Implementation implementation() {
+				return Implementation.SINGLETON;
+			}
+
+			@Override
+			public Priority priority() {
+				return this.singleton.priority();
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format(
+						"@%s(value=%s,implementation=SINGLETON,priority=%s)",
+						Registration.class.getName(), Arrays.toString(value()),
+						implementation(), priority());
+			}
+
+			@Override
+			public Class[] value() {
+				return this.singleton.value().length > 0
+						? this.singleton.value()
+						: new Class[] { declaringClass };
+			}
+		}
 	}
 
 	public enum Priority {
-		IGNORE, _DEFAULT, BASE_LIBRARY, INTERMEDIATE_LIBRARY, PREFERRED_LIBRARY,
-		APP
+		// Do not register this class
+		REMOVE,
+		// Do not instantiate this class
+		IGNORE,
+		// Default priority
+		_DEFAULT,
+		// Higher priorities
+		BASE_LIBRARY, INTERMEDIATE_LIBRARY, PREFERRED_LIBRARY, APP
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
-	@Inherited
 	@Documented
 	@Target({ ElementType.TYPE })
-	@ClientVisible
 	/**
 	 *
 	 * <p>

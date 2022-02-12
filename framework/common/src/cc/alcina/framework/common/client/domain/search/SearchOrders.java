@@ -11,8 +11,6 @@ import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
-
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -25,14 +23,13 @@ import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
 @Bean
-@Introspectable
 public class SearchOrders<T> implements Comparator<T>, Serializable,
 		HasEquivalence<SearchOrders<T>>, TreeSerializable {
 	/*
 	 * Don't access directly - even when altering (call refreshSerializable when
 	 * altering). The boolean value is true ascending; false descending
 	 */
-	private Map<SearchOrder<T, ?>, Boolean> cmps = new LinkedHashMap<>();
+	private transient Map<SearchOrder<T, ?>, Boolean> cmps = new LinkedHashMap<>();
 
 	private List<SerializableSearchOrder> serializableSearchOrders = new ArrayList<>();
 
@@ -215,7 +212,6 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	}
 
 	@Bean
-	@Introspectable
 	public static class SerializableSearchOrder implements Serializable,
 			HasReflectiveEquivalence<SerializableSearchOrder>,
 			TreeSerializable {

@@ -1,28 +1,11 @@
 package cc.alcina.framework.common.client.logic.reflection.registry;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.stream.Collectors;
-
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public class RegistryKey {
-	public static String nameFor(Class<?>[] classes) {
-		if (classes.length == 1) {
-			return classes[0].getName();
-		}
-		if (classes.length == 2) {
-			return classes[0].getName() + "," + classes[1].getName();
-		}
-		return Arrays.stream(classes).map(Class::getName)
-				.collect(Collectors.joining(","));
-	}
-
-	private transient Class<?>[] classes;
+	private transient Class clazz;
 
 	private String name;
 
@@ -31,18 +14,13 @@ public class RegistryKey {
 	public RegistryKey() {
 	}
 
-	public RegistryKey(Class<?>... classes) {
-		this.classes = classes;
-		this.name = nameFor(classes);
+	public RegistryKey(Class clazz) {
+		this.clazz = clazz;
+		this.name = clazz.getName();
 	}
 
 	public RegistryKey(String name) {
 		this.name = name;
-	}
-
-	public RegistryKey ensureClases(Class<?>... classes) {
-		this.classes = classes;
-		return this;
 	}
 
 	@Override
@@ -75,32 +53,10 @@ public class RegistryKey {
 		return name + " (rk)";
 	}
 
-	Class asSingleClassKey() {
-		Preconditions.checkState(classes.length == 1);
-		return classes[0];
-	}
-
-	Class<?>[] classes() {
-		// FIXME - reflection - cleanup
-		if (classes == null) {
-			try {
-				List<Class> classes = Arrays.stream(name.split(","))
-						.map(Reflections::forName).collect(Collectors.toList());
-				this.classes = (Class[]) classes
-						.toArray(new Class[classes.size()]);
-			} catch (Exception e) {
-				// null will be filtered down-stream - FIXME mvcc.jobs.2 -
-				// caching issue
-				//
-				// days/weeks later...throw if filtered, implies probable
-				// reachability issue
-				if (!GWT.isScript()) {
-					throw new WrappedRuntimeException(e);
-				} else {
-					e.printStackTrace();
-				}
-			}
+	Class clazz() {
+		if (clazz == null) {
+			clazz = Reflections.forName(name);
 		}
-		return classes;
+		return clazz;
 	}
 }

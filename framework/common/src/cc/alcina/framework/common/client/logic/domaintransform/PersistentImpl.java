@@ -26,8 +26,8 @@ public interface PersistentImpl {
 	}
 
 	static <A> Class<? extends A> getImplementation(Class<A> clazz) {
-		return Registry.query(clazz).clearTypeKey()
-				.withKeys(PersistentImpl.class, clazz).registration();
+		return Registry.query(clazz).setKeys(PersistentImpl.class, clazz)
+				.registration();
 	}
 
 	static Class getImplementationNonGeneric(Class clazz) {
@@ -43,7 +43,7 @@ public interface PersistentImpl {
 	}
 
 	static boolean hasImplementation(Class<?> clazz) {
-		return Registry.query().withKeys(PersistentImpl.class, clazz)
+		return Registry.query().addKeys(PersistentImpl.class, clazz)
 				.untypedRegistrations().count() > 0;
 	}
 }

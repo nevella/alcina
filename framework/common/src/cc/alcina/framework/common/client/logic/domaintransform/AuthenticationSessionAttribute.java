@@ -16,14 +16,11 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
-
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 @MappedSuperclass
 @ClientInstantiable
-@Introspectable
 public abstract class AuthenticationSessionAttribute
 		extends Entity<AuthenticationSessionAttribute> {
 	private String key;

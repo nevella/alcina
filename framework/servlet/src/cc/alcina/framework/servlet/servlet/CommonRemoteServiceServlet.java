@@ -215,9 +215,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			ReflectiveRemoteServicePayload payload = ReflectiveSerializer
 					.deserialize(encodedRpcPayload);
-			ReflectiveRemoteServiceHandler handler = Registry.impl(
-					ReflectiveRemoteServiceHandler.class,
-					payload.getAsyncInterfaceClass());
+			ReflectiveRemoteServiceHandler handler = Registry
+					.query(ReflectiveRemoteServiceHandler.class)
+					.addKeys(payload.getAsyncInterfaceClass()).impl();
 			Class[] methodArgumentTypes = (Class[]) payload
 					.getMethodArgumentTypes().toArray(
 							new Class[payload.getMethodArgumentTypes().size()]);
@@ -551,10 +551,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	protected void afterAlcinaServletContextInitialisation() {
-		// for subclasses
-	}
-
 	public PublicationResult
 			publish(ContentRequestBase<? extends ContentDefinition> cr)
 					throws WebException {
@@ -573,7 +569,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			LooseContext.set(DomainSearcher.CONTEXT_HINT, request.getHint());
 			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
 					.forName(request.getTargetClassName());
-			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
+			return Registry.query(BoundSuggestOracleRequestHandler.class)
+					.addKeys(clazz).impl()
 					.handleRequest(clazz, request, request.getHint());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -620,7 +617,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		List<ServerValidator> results = new ArrayList<ServerValidator>();
 		for (ServerValidator validator : validators) {
 			ServerValidatorHandler handler = Registry
-					.impl(ServerValidatorHandler.class, validator.getClass());
+					.query(ServerValidatorHandler.class)
+					.addKeys(validator.getClass()).impl();
 			handler.handle(validator);
 			results.add(validator);
 		}
@@ -647,6 +645,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	private void sanitiseClrString(ClientLogRecord clr) {
 		clr.setMessage(
 				CommonUtils.nullToEmpty(clr.getMessage()).replace('\0', ' '));
+	}
+
+	protected void afterAlcinaServletContextInitialisation() {
+		// for subclasses
 	}
 
 	protected <T> T defaultProjection(T t) {
@@ -839,10 +841,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return projectResponse(response);
 		}
 
-		protected Response projectResponse(Response response) {
-			return GraphProjections.defaultProjections().project(response);
-		}
-
 		protected abstract List<T> getResponses(String query,
 				BoundSuggestOracleModel model, String hint);
 
@@ -852,6 +850,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 		protected boolean offerNullSuggestion() {
 			return true;
+		}
+
+		protected Response projectResponse(Response response) {
+			return GraphProjections.defaultProjections().project(response);
 		}
 
 		protected List<T> projectResponses(List<T> list, Class<T> clazz) {

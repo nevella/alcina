@@ -121,11 +121,19 @@ public class TaskRefactorRegistrations
 
 	boolean hasRegistryLocationAnnotations(
 			ClassOrInterfaceDeclarationWrapper wrapper) {
-		return wrapper.getDeclaration()
+		boolean hasOld = wrapper.getDeclaration()
 				.getAnnotationByClass(RegistryLocation.class).isPresent()
 				|| wrapper.getDeclaration()
 						.getAnnotationByClass(RegistryLocations.class)
 						.isPresent();
+		boolean hasNew = wrapper.getDeclaration()
+				.getAnnotationByClass(Registration.class).isPresent()
+				|| wrapper.getDeclaration()
+						.getAnnotationByClass(Registrations.class).isPresent()
+				|| wrapper.getDeclaration()
+						.getAnnotationByClass(Registration.Singleton.class)
+						.isPresent();
+		return hasOld && !hasNew;
 	}
 
 	public enum Action {
@@ -175,6 +183,7 @@ public class TaskRefactorRegistrations
 				case "ImplementationType.SINGLETON":
 					return Implementation.SINGLETON;
 				case "ImplementationType.NONE":
+					// FIXME - reflection - remove
 					return Implementation.NONE;
 				default:
 					throw new UnsupportedOperationException();

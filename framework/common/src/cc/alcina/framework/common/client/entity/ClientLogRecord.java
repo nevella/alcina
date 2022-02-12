@@ -10,8 +10,6 @@ import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
-
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -20,7 +18,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
 
 @Bean
-@Introspectable
 @MappedSuperclass
 public class ClientLogRecord implements Serializable {
 	static final transient long serialVersionUID = -3L;
@@ -154,7 +151,6 @@ public class ClientLogRecord implements Serializable {
 	}
 
 	@Bean
-	@Introspectable
 	public static class ClientLogRecords implements Serializable {
 		static final transient long serialVersionUID = -3L;
 

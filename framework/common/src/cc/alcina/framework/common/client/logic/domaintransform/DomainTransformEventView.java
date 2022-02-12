@@ -6,7 +6,6 @@ import java.util.Date;
 import javax.persistence.Transient;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.csobjects.SearchResult;
@@ -22,7 +21,6 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.RenderedLabelCustomiser
 
 // has no pcls, read-only on client
 @Bean
-@Introspectable
 public class DomainTransformEventView extends DomainTransformEvent
 		implements SourcesPropertyChangeEvents, SearchResult {
 	private long id;

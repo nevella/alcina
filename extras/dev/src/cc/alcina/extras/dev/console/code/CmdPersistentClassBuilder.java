@@ -36,7 +36,7 @@ public class CmdPersistentClassBuilder extends DevConsoleCommand {
 
 	@Override
 	public String run(String[] argv) throws Exception {
-		Stream<Class<?>> entities = Registry.query().withKeys(Entity.class)
+		Stream<Class<?>> entities = Registry.query().addKeys(Entity.class)
 				.untypedRegistrations()
 				.filter(e -> e.getAnnotation(Table.class) != null);
 		Stream<Class> transformPersistent = Stream.of(

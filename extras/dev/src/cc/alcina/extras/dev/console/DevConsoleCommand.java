@@ -42,6 +42,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
@@ -61,8 +62,11 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.stat.StatCategory_Console;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.Shell;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 @RegistryLocation(registryPoint = DevConsoleCommand.class)
+@Registration(DevConsoleCommand.class)
+@Directed(tag = "asdeee")
 public abstract class DevConsoleCommand<C extends DevConsole> {
 	public C console;
 

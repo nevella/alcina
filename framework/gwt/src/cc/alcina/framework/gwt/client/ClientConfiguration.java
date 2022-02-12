@@ -1,5 +1,7 @@
 package cc.alcina.framework.gwt.client;
 
+import java.util.Collections;
+
 import com.google.gwt.dom.client.StyleInjector;
 
 import cc.alcina.framework.common.client.domain.Domain;
@@ -8,7 +10,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager.ClientTransformManagerCommon;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
@@ -62,6 +67,11 @@ public class ClientConfiguration {
 		TransformManager.get().addDomainTransformListener(
 				Registry.impl(CommitToStorageTransformListener.class));
 		registerExtraTransformListenersPostStorage();
+		// FIXME - reflection - remove (alcinabeanserializer -> elemental)
+		Registry.register().add(AlcinaBeanSerializerC.class.getName(),
+				Collections.singletonList(AlcinaBeanSerializer.class.getName()),
+				Registration.Implementation.INSTANCE,
+				Registration.Priority._DEFAULT);
 	}
 
 	protected void initContentProvider() {

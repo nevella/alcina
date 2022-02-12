@@ -30,8 +30,6 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -44,7 +42,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-@RegistryLocation(registryPoint = AlcinaBeanSerializer.class, implementationType = ImplementationType.INSTANCE, priority = 15)
 @ClientInstantiable
 /*
  * Essentially deprecated - see superclass
@@ -258,7 +255,7 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 
 	/**
 	 * Arrays, maps, primitive collections not supported for the mo'
-	 * 
+	 *
 	 * @param value
 	 * @param type
 	 * @return

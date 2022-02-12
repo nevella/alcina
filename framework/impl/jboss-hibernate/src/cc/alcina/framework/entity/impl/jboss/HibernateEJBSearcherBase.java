@@ -53,7 +53,8 @@ public abstract class HibernateEJBSearcherBase {
 				&& !detachedCriteriaMap.containsKey(tgtClass)) {
 			Criteria criteria = classCriteriaMap.get(srcClass);
 			if (VTCriterion.class.isAssignableFrom(tgtClass)) {
-				VTHandler vtHandler = Registry.impl(VTHandler.class, tgtClass);
+				VTHandler vtHandler = Registry.query(VTHandler.class)
+						.addKeys(tgtClass).impl();
 				DetachedCriteria detachedCriteria = vtHandler
 						.createDetachedCriteria(this);
 				detachedCriteriaMap.put(tgtClass, detachedCriteria);

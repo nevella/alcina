@@ -272,8 +272,8 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 				? clazz == null ? Object.class : clazz
 				: singleObj.getClass();
 		WorkspaceActionHandler handler = (WorkspaceActionHandler) Registry
-				.query(WorkspaceActionHandler.class).clearTypeKey()
-				.withKeys(handlerClass, objectTargetClass).impl();
+				.query(WorkspaceActionHandler.class)
+				.setKeys(handlerClass, objectTargetClass).impl();
 		handler.performAction(evt, obj, singleObj != null ? singleObj : colln,
 				this, clazz);
 	}

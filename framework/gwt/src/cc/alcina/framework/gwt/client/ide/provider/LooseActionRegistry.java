@@ -54,8 +54,8 @@ public class LooseActionRegistry {
 		// done with
 		// 3-key registry, roit?
 		LooseTargetedActionHandler handler = Registry
-				.query(LooseTargetedActionHandler.class).clearTypeKey()
-				.withKeys(action.getClass(), target.getClass()).impl();
+				.query(LooseTargetedActionHandler.class)
+				.setKeys(action.getClass(), target.getClass()).impl();
 		handler.performAction(target);
 	}
 

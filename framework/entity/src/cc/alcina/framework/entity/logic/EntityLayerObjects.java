@@ -15,6 +15,7 @@ package cc.alcina.framework.entity.logic;
 
 import java.io.File;
 import java.util.Objects;
+import java.util.Optional;
 
 import org.apache.log4j.Logger;
 
@@ -32,8 +33,16 @@ import cc.alcina.framework.entity.transform.EntityLocatorMap;
  */
 @Registration.Singleton
 public class EntityLayerObjects {
+	// pre-registry
 	public static EntityLayerObjects get() {
-		return Registry.impl(EntityLayerObjects.class);
+		Optional<EntityLayerObjects> optional = Registry
+				.optional(EntityLayerObjects.class);
+		if (optional.isPresent()) {
+			return optional.get();
+		}
+		EntityLayerObjects objects = new EntityLayerObjects();
+		Registry.register().singleton(EntityLayerObjects.class, objects);
+		return objects;
 	}
 
 	private Logger metricLogger;
@@ -45,8 +54,6 @@ public class EntityLayerObjects {
 	private Registry servletLayerRegistry;
 
 	private ClassLoader servletLayerClassLoader;
-
-	private ClassLoader entityLayerClassLoader;
 
 	/**
 	 * the instance used by the server layer when acting as a client to the ejb
@@ -62,10 +69,6 @@ public class EntityLayerObjects {
 
 	public File getDataFolder() {
 		return dataFolder;
-	}
-
-	public ClassLoader getEntityLayerClassLoader() {
-		return this.entityLayerClassLoader;
 	}
 
 	public Logger getMetricLogger() {
@@ -105,10 +108,6 @@ public class EntityLayerObjects {
 
 	public void setDataFolder(File dataFolder) {
 		this.dataFolder = dataFolder;
-	}
-
-	public void setEntityLayerClassLoader(ClassLoader entityLayerClassLoader) {
-		this.entityLayerClassLoader = entityLayerClassLoader;
 	}
 
 	public void setMetricLogger(Logger metricLogger) {

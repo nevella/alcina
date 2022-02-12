@@ -5,7 +5,6 @@ import java.io.Serializable;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
-import com.totsp.gwittir.client.beans.annotations.Introspectable;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -14,7 +13,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 
-@Introspectable
 @ClientInstantiable
 @RegistryLocation(registryPoint = BasePlace.class)
 @Registration(BasePlace.class)

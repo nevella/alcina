@@ -49,8 +49,9 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 				}
 			} else {
 				try {
-					RetentionPolicy policy = Registry.impl(
-							RetentionPolicy.class, job.getTask().getClass());
+					RetentionPolicy policy = Registry
+							.query(RetentionPolicy.class)
+							.addKeys(job.getTask().getClass()).impl();
 					delete = !policy.retain(job);
 				} catch (Exception e) {
 					if (exceptions.incrementAndGet() < 20) {

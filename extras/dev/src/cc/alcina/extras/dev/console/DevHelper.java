@@ -51,6 +51,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
@@ -327,6 +329,8 @@ public abstract class DevHelper {
 		config.setStartDate(new Date());
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
 		Registry.register().singleton(AlcinaWebappConfig.class, config);
+		Registry.register().singleton(AnnotationLocation.Resolver.class,
+				new DefaultAnnotationResolver());
 		registerNames(config);
 		initDataFolder();
 		ClassMetadata.USE_MD5_CHANGE_CHECK = true;
@@ -431,7 +435,6 @@ public abstract class DevHelper {
 			classes = new CachingClasspathScanner("*", true, true, null,
 					Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
 							.getClasses();
-			// FIXME - devconsort - no classmeta call?
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					"dev-helper");
 			long t2 = System.currentTimeMillis();
