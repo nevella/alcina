@@ -160,10 +160,8 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 			cmps = (Map) serializableSearchOrders.stream()
 					.collect(Collectors.toMap(sso -> {
 						if (sso.getKey().contains(".")) {
-							Class clazz = Reflections
-									.forName(sso.getKey());
-							return (SearchOrder) Reflections
-									.newInstance(clazz);
+							Class clazz = Reflections.forName(sso.getKey());
+							return (SearchOrder) Reflections.newInstance(clazz);
 						} else {
 							DisplaySearchOrder displaySearchOrder = new DisplaySearchOrder();
 							displaySearchOrder.setFieldName(sso.getKey());

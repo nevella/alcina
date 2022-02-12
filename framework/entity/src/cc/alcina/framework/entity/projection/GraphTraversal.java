@@ -80,7 +80,8 @@ public class GraphTraversal {
 			} else {
 				Class clazz = object.getClass();
 				if (clazz.getModule().isOpen(clazz.getPackageName())) {
-					List<Field> fields = projectionHelper.getFieldsForClass(clazz);
+					List<Field> fields = projectionHelper
+							.getFieldsForClass(clazz);
 					for (Field f : fields) {
 						if (GraphProjection.isPrimitiveOrDataClass(f.getType())
 								&& !Date.class.isAssignableFrom(f.getType())) {

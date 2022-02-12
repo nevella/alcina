@@ -560,8 +560,7 @@ public class ClientUtils {
 				"OK", "Cancel", null);
 	}
 
-	private static native void setElementStyle0(Element eltMulti,
-			String css) /*-{
+	private static native void setElementStyle0(Element eltMulti, String css) /*-{
 						var e = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
 						if (e.style && typeof (e.style.cssText) == "string") {
 						e.style.cssText = css;

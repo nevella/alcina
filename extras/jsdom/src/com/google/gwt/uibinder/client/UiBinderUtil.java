@@ -49,7 +49,8 @@ public class UiBinderUtil {
 		return new TempAttachment(origParent, origSibling, element);
 	}
 
-	public static Element fromHtml(@IsSafeHtml String html) {
+	public static Element fromHtml(@IsSafeHtml
+	String html) {
 		ensureHiddenDiv();
 		hiddenDiv.setInnerHTML(html);
 		Element newbie = hiddenDiv.getFirstChildElement();

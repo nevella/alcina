@@ -135,8 +135,7 @@ public class DomainObjectSuggestCustomiser
 	}
 
 	public Renderer getRenderer() {
-		return (Renderer) Reflections
-				.newInstance(rendererClassValue);
+		return (Renderer) Reflections.newInstance(rendererClassValue);
 	}
 
 	public boolean isShowOnFocus() {

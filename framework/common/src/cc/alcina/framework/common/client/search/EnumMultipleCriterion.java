@@ -42,8 +42,6 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  */
 public abstract class EnumMultipleCriterion<E extends Enum>
 		extends SearchCriterion implements HasValue<Set<E>> {
-	
-
 	private Set<E> value = new LinkedHashSet<>();
 
 	public EnumMultipleCriterion() {

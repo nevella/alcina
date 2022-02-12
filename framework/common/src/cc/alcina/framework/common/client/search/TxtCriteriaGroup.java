@@ -25,8 +25,6 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 @PermissibleChildClasses({ TxtCriterion.class })
 @TypeSerialization(flatSerializable = false)
 public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
-	
-
 	private String displayName = "Text";
 
 	public TxtCriteriaGroup() {

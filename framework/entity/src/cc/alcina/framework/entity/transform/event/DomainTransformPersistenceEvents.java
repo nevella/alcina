@@ -29,9 +29,9 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
 public class DomainTransformPersistenceEvents {
 	private static final String CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS = DomainTransformPersistenceEvents.class
 			.getName() + ".CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS";
+
 	public static final String CONTEXT_FIRING_EVENT = DomainTransformPersistenceEvents.class
 			.getName() + ".CONTEXT_FIRING_EVENT";
-
 
 	public static void setLocalCommitTimeout(long timeout) {
 		LooseContext.set(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS, timeout);
@@ -56,6 +56,7 @@ public class DomainTransformPersistenceEvents {
 			DomainTransformPersistenceListener listener) {
 		listenerList.add(listener);
 	}
+
 	public void fireDomainTransformPersistenceEvent(
 			DomainTransformPersistenceEvent event) {
 		Preconditions.checkState(!LooseContext.is(CONTEXT_FIRING_EVENT));
@@ -66,6 +67,7 @@ public class DomainTransformPersistenceEvents {
 			LooseContext.pop();
 		}
 	}
+
 	private void fireDomainTransformPersistenceEvent0(
 			DomainTransformPersistenceEvent event) {
 		if (event.isLocalToVm()) {

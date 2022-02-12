@@ -56,10 +56,12 @@ public class OneToManyMultipleSummaryCustomiser
 		@Override
 		public String render(OneToManyMultipleSummary o) {
 			String template = "<a href='#%s'>%s</a>";
-			String token = o.getPlace()!=null?o.getPlace().toTokenString():"";
-			String categoryString = o.getPlace()!=null?o.getPlace().provideCategoryString(o.getSize(),true):"";
-			return Ax.format(template, token,
-					categoryString);
+			String token = o.getPlace() != null ? o.getPlace().toTokenString()
+					: "";
+			String categoryString = o.getPlace() != null
+					? o.getPlace().provideCategoryString(o.getSize(), true)
+					: "";
+			return Ax.format(template, token, categoryString);
 		}
 	}
 }

@@ -120,6 +120,4 @@ public class AdjunctTransformCollation extends TransformCollation {
 		Preconditions.checkState(token.getTransformResult() == null);
 		token.getRequest().removeTransform(event);
 	}
-
-	
 }

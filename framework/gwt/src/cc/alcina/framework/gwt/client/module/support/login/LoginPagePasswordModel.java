@@ -48,6 +48,7 @@ public class LoginPagePasswordModel extends IntermediateBindable {
 
 	public enum LoginPagePasswordModelBinding implements EnumeratedBinding {
 		password;
+
 		@Override
 		public Class getBoundClass() {
 			return LoginRequest.class;

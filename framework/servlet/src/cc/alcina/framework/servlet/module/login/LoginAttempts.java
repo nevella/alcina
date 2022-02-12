@@ -18,8 +18,7 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 public class LoginAttempts {
 	public boolean checkLockedOut(LoginModel loginModel) {
 		List<LoginAttempt> attempts = (List) Domain.listByProperty(
-				PersistentImpl.getImplementation(
-						LoginAttempt.class),
+				PersistentImpl.getImplementation(LoginAttempt.class),
 				"userNameLowerCase",
 				loginModel.loginBean.getUserName().toLowerCase());
 		int maxAttempts = ResourceUtilities.getInteger(LoginAttempts.class,
@@ -44,14 +43,13 @@ public class LoginAttempts {
 				"maxAttempts");
 		Preconditions.checkArgument(maxAttempts != 0);
 		List<LoginAttempt> attempts = (List) Domain.listByProperty(
-				PersistentImpl.getImplementation(
-						LoginAttempt.class),
+				PersistentImpl.getImplementation(LoginAttempt.class),
 				"userNameLowerCase",
 				loginModel.loginBean.getUserName().toLowerCase());
 		attempts.stream().sorted(Entity.EntityComparator.REVERSED_INSTANCE)
 				.skip(maxAttempts).forEach(Entity::delete);
-		LoginAttempt loginAttempt = Domain.create(PersistentImpl
-				.getImplementation(LoginAttempt.class));
+		LoginAttempt loginAttempt = Domain
+				.create(PersistentImpl.getImplementation(LoginAttempt.class));
 		loginAttempt.setUserNameLowerCase(
 				loginModel.loginRequest.getUserName().toLowerCase());
 		loginAttempt.setDate(new Date());

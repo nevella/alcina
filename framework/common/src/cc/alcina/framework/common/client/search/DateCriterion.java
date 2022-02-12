@@ -25,8 +25,6 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  * @author Nick Reddel
  */
 public class DateCriterion extends AbstractDateCriterion {
-	
-
 	public DateCriterion() {
 		setOperator(StandardSearchOperator.EQUALS);
 	}

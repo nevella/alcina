@@ -71,7 +71,8 @@ public abstract class KnownNode {
 	}
 
 	public void setRenderableNode(KnownRenderableNode renderableNode) {
-		if (this.renderableNode != null && this.renderableNode.getField() != null) {
+		if (this.renderableNode != null
+				&& this.renderableNode.getField() != null) {
 			renderableNode.setField(this.renderableNode.getField());
 		}
 		this.renderableNode = renderableNode;

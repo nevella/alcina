@@ -48,17 +48,17 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
  * FIXME - dirndl.perf
- * 
+ *
  * Minimise annotation resolution by caching an intermediate renderer object
  * which itself caches property/class annotation tuples. Also apply to
  * reflective serializer
- * 
+ *
  * Gotchas - don't use abstract class hierarchies, since (for instance) methods
  * are repeated on concrete children without annotations.
- * 
+ *
  * FIXME - reflection - allow abstract classes in hierarchy, resolve annotations
  * up superclass method chain if annotation is appropriately annotated
- * 
+ *
  * @author nick@alcina.cc
  *
  */
@@ -99,7 +99,7 @@ public class DirectedLayout {
 	 * widgets
 	 * <li>DelegatingNodeRenderer - as per ModelTransformNodeRenderer
 	 * <p>
-	 * 
+	 *
 	 * <p>
 	 * ...shades of the DOM render tree...
 	 * </p>
@@ -205,6 +205,14 @@ public class DirectedLayout {
 			return rendered.verifySingleWidget();
 		}
 
+		public <A extends Annotation> boolean has(Class<A> clazz) {
+			return annotation(clazz) != null;
+		}
+
+		public <A extends Annotation> Optional<A> optional(Class<A> clazz) {
+			return Optional.ofNullable(annotation(clazz));
+		}
+
 		public void pushChildResolver(ContextResolver resolver) {
 			this.childResolver = resolver;
 		}
@@ -242,11 +250,12 @@ public class DirectedLayout {
 						getResolver().getTreeResolver(Directed.class),
 						annotationLocation);
 			}
+			// TODO - distinguish between stateful and non-stateful
 			Class<? extends DirectedNodeRenderer> rendererClass = directed
 					.renderer();
 			if (rendererClass == ModelClassNodeRenderer.class) {
-				rendererClass = Registry.get().lookupSingle(
-						DirectedNodeRenderer.class, model.getClass());
+				rendererClass = Registry.query(DirectedNodeRenderer.class)
+						.withKeys(model.getClass()).registration();
 			}
 			renderer = Reflections.newInstance(rendererClass);
 			return renderer;
@@ -315,7 +324,7 @@ public class DirectedLayout {
 			 * FIXME - index - actions.{ArrayList}. actions.{ArrayList}(div).
 			 * actions.{ArrayList}(ul). actions.{ArrayList} - child annotation
 			 * being applied to parent?
-			 * 
+			 *
 			 */
 			if (rendered.widgets.size() != 1) {
 				directed.bindings();
@@ -902,14 +911,6 @@ public class DirectedLayout {
 					listener.unbind();
 				}
 			}
-		}
-
-		public <A extends Annotation> boolean has(Class<A> clazz) {
-			return annotation(clazz) != null;
-		}
-
-		public <A extends Annotation> Optional<A> optional(Class<A> clazz) {
-			return Optional.ofNullable(annotation(clazz));
 		}
 	}
 

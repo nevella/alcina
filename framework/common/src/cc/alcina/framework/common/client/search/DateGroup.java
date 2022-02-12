@@ -25,8 +25,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @Bean
 @TypeSerialization(flatSerializable = false)
 public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
-	
-
 	public DateGroup() {
 		super();
 		setCombinator(FilterCombinator.AND);

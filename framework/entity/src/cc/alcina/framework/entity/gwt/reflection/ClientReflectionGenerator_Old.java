@@ -64,7 +64,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.SEUtilities;
@@ -77,7 +76,7 @@ import cc.alcina.framework.entity.util.MethodContext;
  *
  * -- update, pretty sure all usages of class changed to jclasstype where
  * appropriate...
- * 
+ *
  * @author Nick Reddel
  */
 public class ClientReflectionGenerator_Old extends Generator {
@@ -93,6 +92,36 @@ public class ClientReflectionGenerator_Old extends Generator {
 	// presence class, annotation simple name
 	private static UnsortedMultikeyMap<Annotation> classNameAnnotationMap = new UnsortedMultikeyMap<>(
 			2);
+
+	private static Comparator<JClassType> CLASS_NAME_COMPARATOR = new Comparator<JClassType>() {
+		@Override
+		public int compare(JClassType o1, JClassType o2) {
+			int i = o1.getSimpleSourceName()
+					.compareTo(o2.getSimpleSourceName());
+			if (i != 0) {
+				return i;
+			}
+			return o1.getQualifiedSourceName()
+					.compareTo(o2.getQualifiedSourceName());
+		}
+	};
+
+	private static Comparator<RegistryLocation> REGISTRY_LOCATION_COMPARATOR = new Comparator<RegistryLocation>() {
+		@Override
+		public int compare(RegistryLocation o1, RegistryLocation o2) {
+			int i = o1.registryPoint().getName()
+					.compareTo(o2.registryPoint().getName());
+			if (i != 0) {
+				return i;
+			}
+			i = o1.targetClass().getName()
+					.compareTo(o2.targetClass().getName());
+			if (i != 0) {
+				return i;
+			}
+			return CommonUtils.compareInts(o1.priority(), o2.priority());
+		}
+	};
 
 	public static boolean hasAnnotationNamed(JClassType clazz,
 			Class<? extends Annotation> ann) {
@@ -565,36 +594,6 @@ public class ClientReflectionGenerator_Old extends Generator {
 		sw.println("}");
 	}
 
-	private static Comparator<JClassType> CLASS_NAME_COMPARATOR = new Comparator<JClassType>() {
-		@Override
-		public int compare(JClassType o1, JClassType o2) {
-			int i = o1.getSimpleSourceName()
-					.compareTo(o2.getSimpleSourceName());
-			if (i != 0) {
-				return i;
-			}
-			return o1.getQualifiedSourceName()
-					.compareTo(o2.getQualifiedSourceName());
-		}
-	};
-
-	private static Comparator<RegistryLocation> REGISTRY_LOCATION_COMPARATOR = new Comparator<RegistryLocation>() {
-		@Override
-		public int compare(RegistryLocation o1, RegistryLocation o2) {
-			int i = o1.registryPoint().getName()
-					.compareTo(o2.registryPoint().getName());
-			if (i != 0) {
-				return i;
-			}
-			i = o1.targetClass().getName()
-					.compareTo(o2.targetClass().getName());
-			if (i != 0) {
-				return i;
-			}
-			return CommonUtils.compareInts(o1.priority(), o2.priority());
-		}
-	};
-
 	private void addImport(ClassSourceFileComposerFactory factory,
 			Class<?> type) {
 		if (!type.isPrimitive()) {
@@ -796,27 +795,31 @@ public class ClientReflectionGenerator_Old extends Generator {
 	 */
 	private Map<JClassType, Set<RegistryLocation>> getRegistryAnnotations(
 			TypeOracle typeOracle) throws ClassNotFoundException {
-		HashMap<JClassType, Set<RegistryLocation>> results = new HashMap<JClassType, Set<RegistryLocation>>();
-		JClassType[] types = typeOracle.getTypes();
-		for (JClassType jct : types) {
-			if (!jct.isAbstract() && !ignore(jct)) {
-				Multimap<JClassType, List<Annotation>> superclassAnnotations = new Multimap<>();
-				JClassType cursor = jct;
-				while (cursor.getSuperclass() != null) {
-					superclassAnnotations.addCollection(cursor,
-							Arrays.asList(cursor.getAnnotations()));
-					cursor = cursor.getSuperclass();
-				}
-				Set<RegistryLocation> locations = Registry
-						.filterForRegistryPointUniqueness(
-								superclassAnnotations);
-				locations.removeIf(CLIENT_VISIBLE_ANNOTATION_FILTER.negate());
-				if (locations.size() > 0) {
-					results.put(jct, locations);
-				}
-			}
-		}
-		return results;
+		// HashMap<JClassType, Set<RegistryLocation>> results = new
+		// HashMap<JClassType, Set<RegistryLocation>>();
+		// JClassType[] types = typeOracle.getTypes();
+		// for (JClassType jct : types) {
+		// if (!jct.isAbstract() && !ignore(jct)) {
+		// Multimap<JClassType, List<Annotation>> superclassAnnotations = new
+		// Multimap<>();
+		// JClassType cursor = jct;
+		// while (cursor.getSuperclass() != null) {
+		// superclassAnnotations.addCollection(cursor,
+		// Arrays.asList(cursor.getAnnotations()));
+		// cursor = cursor.getSuperclass();
+		// }
+		// Set<RegistryLocation> locations = Registry
+		// .filterForRegistryPointUniqueness(
+		// superclassAnnotations);
+		// locations.removeIf(CLIENT_VISIBLE_ANNOTATION_FILTER.negate());
+		// if (locations.size() > 0) {
+		// results.put(jct, locations);
+		// }
+		// }
+		// }
+		// return results;
+		// dated
+		throw new UnsupportedOperationException();
 	}
 
 	private List<Annotation> getVisibleAnnotations(HasAnnotations ha,
@@ -828,10 +831,6 @@ public class ClientReflectionGenerator_Old extends Generator {
 			}
 		}
 		return result;
-	}
-
-	private boolean ignore(JClassType jClassType) {
-		return ignore(jClassType, null);
 	}
 
 	private boolean ignore(JClassType jClassType,
@@ -988,5 +987,9 @@ public class ClientReflectionGenerator_Old extends Generator {
 		} else {
 			sb.append(object.toString());
 		}
+	}
+
+	boolean ignore(JClassType jClassType) {
+		return ignore(jClassType, null);
 	}
 }

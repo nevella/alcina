@@ -76,7 +76,8 @@ public class RichTextAreaImpl {
 													}
 													}-*/;
 
-	public void setHTML(@IsSafeHtml String html) {
+	public void setHTML(@IsSafeHtml
+	String html) {
 		elem.setPropertyString("value", html);
 	}
 

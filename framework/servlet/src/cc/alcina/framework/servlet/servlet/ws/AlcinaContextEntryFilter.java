@@ -32,9 +32,9 @@ public class AlcinaContextEntryFilter implements ContainerRequestFilter {
 		String resourceName = resourceInfo.getResourceClass().getSimpleName();
 		String methodName = resourceInfo.getResourceMethod().getName();
 		// Format the thread using the calling method's class and name
-		//  value and a unique(ish) integer
-		String threadName = Ax.format("rpc::%s/%s-%s", 
-			resourceName, methodName, requestCounter.incrementAndGet());
+		// value and a unique(ish) integer
+		String threadName = Ax.format("rpc::%s/%s-%s", resourceName, methodName,
+				requestCounter.incrementAndGet());
 		// Create a new context
 		AlcinaServletContext alcinaContext = new AlcinaServletContext()
 				.withRootPermissions(shouldRunWithRootPermissions());

@@ -90,7 +90,8 @@ public class MenuItem extends UIObject
 	 * @param subMenu
 	 *            the sub-menu to be displayed when it is selected
 	 */
-	public MenuItem(@IsSafeHtml String text, boolean asHTML, MenuBar subMenu) {
+	public MenuItem(@IsSafeHtml
+	String text, boolean asHTML, MenuBar subMenu) {
 		this(text, asHTML);
 		setSubMenu(subMenu);
 	}
@@ -105,8 +106,8 @@ public class MenuItem extends UIObject
 	 * @param cmd
 	 *            the command to be fired when it is selected
 	 */
-	public MenuItem(@IsSafeHtml String text, boolean asHTML,
-			ScheduledCommand cmd) {
+	public MenuItem(@IsSafeHtml
+	String text, boolean asHTML, ScheduledCommand cmd) {
 		this(text, asHTML);
 		setScheduledCommand(cmd);
 	}
@@ -140,7 +141,8 @@ public class MenuItem extends UIObject
 		setScheduledCommand(cmd);
 	}
 
-	protected MenuItem(@IsSafeHtml String text, boolean asHTML) {
+	protected MenuItem(@IsSafeHtml
+	String text, boolean asHTML) {
 		setElement(DOM.createTD());
 		setSelectionStyle(false);
 		if (asHTML) {
@@ -253,7 +255,8 @@ public class MenuItem extends UIObject
 	}
 
 	@Override
-	public void setHTML(@IsSafeHtml String html) {
+	public void setHTML(@IsSafeHtml
+	String html) {
 		getElement().setInnerHTML(html);
 	}
 

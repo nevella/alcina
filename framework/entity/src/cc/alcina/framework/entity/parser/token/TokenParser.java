@@ -27,7 +27,6 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 		ParserContext context = peer.getContext();
 		context.textsToRanges();
 		context.normaliseContent();
-		
 		String content = context.content;
 		if (content.contains(debugMarker)) {
 			int debug = 4;

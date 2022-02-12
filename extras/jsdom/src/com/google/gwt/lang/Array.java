@@ -266,8 +266,7 @@ public final class Array {
 																	}-*/;
 
 	@HasNoSideEffects
-	private static native JavaScriptObject
-			getElementTypeId(Object array) /*-{
+	private static native JavaScriptObject getElementTypeId(Object array) /*-{
 											return array.__elementTypeId$;
 											}-*/;
 
@@ -330,8 +329,7 @@ public final class Array {
 	/**
 	 * Sets a value in the array.
 	 */
-	private static native Object set(Object array, int index,
-			Object value) /*-{
+	private static native Object set(Object array, int index, Object value) /*-{
 							return array[index] = value;
 							}-*/;
 

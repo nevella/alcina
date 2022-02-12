@@ -73,8 +73,7 @@ public class EnumCustomiser implements Customiser {
 		parameter = NamedParameter.Support.getParameter(info.parameters(),
 				RENDERER_CLASS);
 		final Renderer renderer = parameter != null
-				? (Renderer) Reflections
-						.newInstance(parameter.classValue())
+				? (Renderer) Reflections.newInstance(parameter.classValue())
 				: null;
 		if (renderer != null) {
 			provider.setRenderer(renderer);
@@ -98,9 +97,8 @@ public class EnumCustomiser implements Customiser {
 				ENUM_PROVIDER_CLASS);
 		if (parameter != null) {
 			ArrayList hiddenValues = new ArrayList(EnumSet.allOf(clazz));
-			hiddenValues
-					.removeAll(((HasValue<Collection>) Reflections
-							.newInstance(parameter.classValue())).getValue());
+			hiddenValues.removeAll(((HasValue<Collection>) Reflections
+					.newInstance(parameter.classValue())).getValue());
 			provider.setProvider((HasValue<Collection>) Reflections
 					.newInstance(parameter.classValue()));
 		}

@@ -29,10 +29,9 @@ public abstract class TypedModelActivity<P extends Place, VM extends ViewModel>
 
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
-		model = Client.get().getUiController()
-				.getViewModel(getModelClass());
-		IsWidget view = Client.get().getUiController().getView(panel,
-				model, place);
+		model = Client.get().getUiController().getViewModel(getModelClass());
+		IsWidget view = Client.get().getUiController().getView(panel, model,
+				place);
 		updateModel();
 		panel.setWidget(view);
 	}

@@ -16,10 +16,9 @@ public class SafeHtmlNodeRenderer extends LeafNodeRenderer {
 	public Widget render(Node node) {
 		Widget rendered = super.render(node);
 		rendered.getElement().setInnerSafeHtml((SafeHtml) node.model);
-		if(getTag(node).equals("a")) {
-			rendered.getElement().setAttribute("href", "#");	
+		if (getTag(node).equals("a")) {
+			rendered.getElement().setAttribute("href", "#");
 		}
 		return rendered;
 	}
-
 }

@@ -127,7 +127,7 @@ public class TaskGenerateTreeSerializableSignatures
 	@Override
 	protected void run0() throws Exception {
 		List<TreeSerializable> serializables = Registry
-				.impls(TreeSerializable.class).stream()
+				.query(TreeSerializable.class).implementations()
 				.sorted(Comparator.comparing(c -> c.getClass().getName()))
 				.filter(this::filter).collect(Collectors.toList());
 		serializables.forEach(this::checkSerializationIssues);

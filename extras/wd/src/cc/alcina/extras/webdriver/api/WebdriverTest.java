@@ -247,15 +247,8 @@ public abstract class WebdriverTest {
 			getTestTemplates() {
 		if (testTemplates == null) {
 			testTemplates = new HashMap<Class<? extends WebdriverTest>, WebdriverTest>();
-			List<Class> tests = Registry.get().lookup(WebdriverTest.class);
-			try {
-				for (Class<? extends WebdriverTest> c : tests) {
-					testTemplates.put(c, (WebdriverTest) c
-							.getDeclaredConstructor().newInstance());
-				}
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
+			Registry.query(WebdriverTest.class).implementations()
+					.forEach(t -> testTemplates.put(t.getClass(), t));
 		}
 		return testTemplates;
 	}

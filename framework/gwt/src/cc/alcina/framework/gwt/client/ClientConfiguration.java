@@ -54,9 +54,9 @@ public class ClientConfiguration {
 		ClientTransformManager.cast().setupClientListeners();
 		TransformManager.get()
 				.addDomainTransformListener(PermissionsManager.get());
-		Registry.registerSingleton(CommitToStorageTransformListener.class,
+		Registry.register().singleton(CommitToStorageTransformListener.class,
 				createStorageTransformListener());
-		Registry.registerSingleton(TimerWrapperProvider.class,
+		Registry.register().singleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderGwt());
 		registerExtraTransformListenersPreStorage();
 		TransformManager.get().addDomainTransformListener(
@@ -72,7 +72,7 @@ public class ClientConfiguration {
 	}
 
 	protected void initExceptionHandling() {
-		Registry.registerSingleton(ClientExceptionHandler.class,
+		Registry.register().singleton(ClientExceptionHandler.class,
 				new ClientExceptionHandler());
 	}
 
@@ -80,7 +80,7 @@ public class ClientConfiguration {
 	}
 
 	protected void initNotifications() {
-		Registry.registerSingleton(ClientNotifications.class,
+		Registry.register().singleton(ClientNotifications.class,
 				new ClientNotificationsImpl());
 	}
 

@@ -1,15 +1,14 @@
 package cc.alcina.framework.servlet.authentication;
 
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = AuthenticationExpiration.class, implementationType = ImplementationType.INSTANCE)
 @Registration(AuthenticationExpiration.class)
 public class AuthenticationExpiration {
-
-    public void checkExpiration(AuthenticationSession session) {
-        // default to a no-op (no expiration)
-    }
+	public void checkExpiration(AuthenticationSession session) {
+		// default to a no-op (no expiration)
+	}
 }

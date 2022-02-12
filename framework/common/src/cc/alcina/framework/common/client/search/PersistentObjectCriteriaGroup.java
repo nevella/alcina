@@ -12,8 +12,6 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 @TypeSerialization(flatSerializable = false)
 public class PersistentObjectCriteriaGroup
 		extends CriteriaGroup<PersistentObjectCriterion> {
-	
-
 	public PersistentObjectCriteriaGroup() {
 		super();
 	}

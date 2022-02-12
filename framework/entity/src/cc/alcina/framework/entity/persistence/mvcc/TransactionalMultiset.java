@@ -5,8 +5,7 @@ import java.util.Set;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Multiset;
 
-public class TransactionalMultiset<K, V>
-		extends Multiset<K, Set<V>> {
+public class TransactionalMultiset<K, V> extends Multiset<K, Set<V>> {
 	@SuppressWarnings("unused")
 	private Class<K> keyClass;
 

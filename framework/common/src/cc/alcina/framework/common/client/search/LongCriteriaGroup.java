@@ -28,8 +28,6 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 // TODO - make flat-serializable when needed
 @TypeSerialization(flatSerializable = false)
 public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
-	
-
 	private String displayName = "Long";
 
 	public LongCriteriaGroup() {

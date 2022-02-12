@@ -13,16 +13,16 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
 @Directed(renderer = DelegatingNodeRenderer.class)
 @Bean
 public class TopModel extends Bindable {
-    private Object model;
+	private Object model;
 
-    @Directed
-    public Object getModel() {
-        return this.model;
-    }
+	@Directed
+	public Object getModel() {
+		return this.model;
+	}
 
-    public void setModel(Object model) {
-        Object old_model = this.model;
-        this.model = model;
-        propertyChangeSupport().firePropertyChange("model", old_model, model);
-    }
+	public void setModel(Object model) {
+		Object old_model = this.model;
+		this.model = model;
+		propertyChangeSupport().firePropertyChange("model", old_model, model);
+	}
 }

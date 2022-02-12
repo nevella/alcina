@@ -8,8 +8,6 @@ import cc.alcina.framework.common.client.logic.domain.HasValue;
 
 public abstract class AbstractUserCriterion extends SearchCriterion
 		implements HasValue<Long> {
-	
-
 	public AbstractUserCriterion() {
 	}
 

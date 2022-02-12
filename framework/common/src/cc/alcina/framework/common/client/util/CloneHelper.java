@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashSet;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -33,9 +34,9 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 
 /**
  * Not thread-safe - but then again, should only be used by one thread
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public class CloneHelper {
 	public static <T extends Collection> T newCollectionInstance(T coll) {
@@ -97,8 +98,7 @@ public class CloneHelper {
 		T ret = newInstance(o);
 		createdMap.put(o, ret);
 		for (Property property : Reflections.at(ret.getClass()).properties()) {
-			if (property.isReadOnly()
-					|| property.has(AlcinaTransient.class)) {
+			if (property.isReadOnly() || property.has(AlcinaTransient.class)) {
 				continue;
 			}
 			Object[] args = new Object[1];
@@ -115,10 +115,10 @@ public class CloneHelper {
 				}
 			}
 		}
-		DeepBeanClonePostHandler postHandler = Registry
-				.impl(DeepBeanClonePostHandler.class, o.getClass(), true);
-		if (postHandler != null) {
-			postHandler.postClone(ret);
+		Optional<DeepBeanClonePostHandler> postHandler = Registry
+				.optional(DeepBeanClonePostHandler.class, o.getClass());
+		if (postHandler.isPresent()) {
+			postHandler.get().postClone(ret);
 		}
 		return ret;
 	}

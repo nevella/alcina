@@ -75,6 +75,7 @@ public enum Application {
 			new String[] { "webmail", "webemail" }, ApplicationType.WEBMAIL),
 	UNKNOWN(Manufacturer.OTHER, 0, "Unknown", new String[0],
 			ApplicationType.UNKNOWN);
+
 	/*
 	 * Iterates over all Application to compare the signature with the referrer
 	 * string. If no match can be found Application.UNKNOWN will be returned.

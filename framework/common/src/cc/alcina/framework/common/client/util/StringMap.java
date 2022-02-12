@@ -259,7 +259,7 @@ public class StringMap extends LinkedHashMap<String, String> {
 				if (c == '\\') {
 					char next = string.charAt(idx++);
 					if (next == 'u') {
-						String code = string.substring(idx , idx + 4);
+						String code = string.substring(idx, idx + 4);
 						int chr = Integer.parseInt(code, 16);
 						sb.append((char) chr);
 						idx += 4;

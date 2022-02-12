@@ -24,13 +24,12 @@ public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
 
 	public String nodeName;
 
-	public String provideCategoryString() {
-		return CommonUtils.pluralise(super.toTitleString(), 0, false);
-	}
-
 	protected transient PermissibleAction action;
 
-	public abstract List<CNP> getNamedPlaces();
+	@Override
+	public String displayName() {
+		return ensureAction().getDisplayName();
+	}
 
 	public PermissibleAction ensureAction() {
 		if (action == null) {
@@ -41,18 +40,10 @@ public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
 		return action;
 	}
 
-	@Override
-	public String displayName() {
-		return ensureAction().getDisplayName();
-	}
+	public abstract List<CNP> getNamedPlaces();
 
-	@Override
-	public String toTitleString() {
-		if (nodeName == null) {
-			return provideCategoryString();
-		} else {
-			return Ax.format("%s - %s", provideCategoryString(), nodeName);
-		}
+	public String provideCategoryString() {
+		return CommonUtils.pluralise(super.toTitleString(), 0, false);
 	}
 
 	@Override
@@ -64,9 +55,19 @@ public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
 		}
 	}
 
+	@Override
+	public String toTitleString() {
+		if (nodeName == null) {
+			return provideCategoryString();
+		} else {
+			return Ax.format("%s - %s", provideCategoryString(), nodeName);
+		}
+	}
+
 	protected List<CNP> getNamedPlaces(Class targetClass) {
-		return (List) Registry.impls(PermissibleAction.class, targetClass)
-				.stream().sorted(Comparator.comparing(a -> a.provideId()))
+		return (List) Registry.query(PermissibleAction.class)
+				.withKeys(targetClass).implementations()
+				.sorted(Comparator.comparing(a -> a.provideId()))
 				.map(action -> namedPlaceForAction(getClass(), action))
 				.collect(Collectors.toList());
 	}

@@ -257,7 +257,7 @@ public abstract class MultikeyMapBase<V>
 		copyHolder.putAll(delegate);
 		delegate.clear();
 		Object nullKeyValue = null;
-		if (!(delegate instanceof SortedMap)&&copyHolder.containsKey(null)) {
+		if (!(delegate instanceof SortedMap) && copyHolder.containsKey(null)) {
 			delegate.put(null, copyHolder.remove(null));
 		}
 		copyHolder.keySet().stream().sorted()

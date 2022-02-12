@@ -177,9 +177,8 @@ public class DomainStoreCriteria implements Criteria {
 		Criteria subCriteria = this.entityManagerCriteria == null ? null
 				: this.entityManagerCriteria.createCriteria(associationPath,
 						alias);
-		Property property = Reflections
-				.at(clazz).property(
-						cleanAssociationPath(associationPath));
+		Property property = Reflections.at(clazz)
+				.property(cleanAssociationPath(associationPath));
 		Class subClazz = property.getType();
 		if (Set.class.isAssignableFrom(subClazz)) {
 			subClazz = property.annotation(Association.class)

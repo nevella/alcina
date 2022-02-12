@@ -14,11 +14,12 @@
 package cc.alcina.framework.gwt.client.provider;
 
 import com.google.gwt.http.client.URL;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * @author Nick Reddel
@@ -27,12 +28,11 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 @ClientInstantiable
 @Registration.Singleton(UrlComponentEncoder.class)
 public class ClientURLComponentEncoder implements UrlComponentEncoder {
+	public String decode(String componentText) {
+		return URL.decodeQueryString(componentText);
+	}
 
-    public String decode(String componentText) {
-        return URL.decodeQueryString(componentText);
-    }
-
-    public String encode(String text) {
-        return URL.encodeQueryString(text);
-    }
+	public String encode(String text) {
+		return URL.encodeQueryString(text);
+	}
 }

@@ -36,6 +36,7 @@ public interface PersistenceLayerTransformExceptionPolicy extends Serializable {
 				return true;
 			}
 		};
+
 		public boolean ignoreable() {
 			return false;
 		}

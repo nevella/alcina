@@ -24,6 +24,7 @@ import com.google.gwt.user.client.Window.ClosingEvent;
 import com.google.gwt.user.client.Window.ClosingHandler;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -48,18 +49,14 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *         </ul>
  *
  */
+@Registration.Singleton
 public class ClientSession implements ClosingHandler {
 	public static final int KEEP_ALIVE_TIMER = 1000;
 
 	public static final long EXPIRES_TIME = 2500;
 
 	public static ClientSession get() {
-		ClientSession singleton = Registry.checkSingleton(ClientSession.class);
-		if (singleton == null) {
-			singleton = new ClientSession();
-			Registry.registerSingleton(ClientSession.class, singleton);
-		}
-		return singleton;
+		return Registry.impl(ClientSession.class);
 	}
 
 	private String storageSessionCookieName;

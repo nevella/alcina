@@ -4,6 +4,7 @@ import cc.alcina.framework.gwt.client.dirndl.StyleType;
 
 public enum NavStyles implements StyleType {
 	NAV_MODULE, BAR, CENTER, LOGO, SIGN_IN;
+
 	public enum NavStylesCenter implements StyleType {
 		MENU, SEARCH, ACTION, MENU_BUTTON, ACTION_BUTTON
 	}

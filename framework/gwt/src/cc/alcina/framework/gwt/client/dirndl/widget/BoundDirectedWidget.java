@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 
 public class BoundDirectedWidget extends AbstractBoundWidget {
-
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented

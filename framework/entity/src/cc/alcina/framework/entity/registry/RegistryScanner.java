@@ -14,27 +14,20 @@
 package cc.alcina.framework.entity.registry;
 
 import java.io.File;
-import java.lang.annotation.Annotation;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.logic.reflection.registry.RegistryOld;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;
-import cc.alcina.framework.entity.util.AnnotationUtils;
 
 /*
  * Considered, as per seam etc, use javaassist to avoid loading every class in the app here...
@@ -45,14 +38,10 @@ import cc.alcina.framework.entity.util.AnnotationUtils;
  * @author Nick Reddel
  */
 public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
-	private Registry toRegistry;
-
 	public void scan(ClassMetadataCache<ClassMetadata> classDataCache,
-			Collection<String> ignore, Registry toRegistry, String registryName)
-			throws Exception {
+			Collection<String> ignore, String registryName) throws Exception {
 		String cachePath = Ax.format("%s/%s-registry-cache.ser",
 				getHomeDir().getPath(), registryName);
-		this.toRegistry = toRegistry;
 		if (!ResourceUtilities.is("useCache") && !Ax.isTest()
 				&& !Boolean.getBoolean("RegistryScanner.useCache")
 				&& !GWT.isClient()) {
@@ -67,12 +56,10 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 				.values()) {
 			if (!metadata.invalid) {
 				for (RegistryScannerLazyRegistration registration : metadata.registrations) {
-					toRegistry.register(
-							toRegistry.key(
-									registration.registeringClassClassName),
-							registration.keys.stream().map(toRegistry::key)
-									.collect(Collectors.toList()),
-							registration.implementation, registration.priority);
+					Registry.register().add(
+							registration.registeringClassClassName,
+							registration.keys, registration.implementation,
+							registration.priority);
 				}
 			}
 		}
@@ -99,20 +86,23 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 				|| Modifier.isAbstract(clazz.getModifiers())
 				|| clazz.isInterface()) {
 		} else {
-			List<Registration> registrations = Annotations
-					.resolveMultiple(clazz, Registration.class);
-			Multimap<Class, List<Annotation>> superclassAnnotations = AnnotationUtils
-					.getSuperclassAnnotations(clazz);
-			AnnotationUtils.filterAnnotations(superclassAnnotations,
-					RegistryLocation.class, RegistryLocations.class);
-			Set<RegistryLocation> uniques = RegistryOld
-					.filterForRegistryPointUniqueness(superclassAnnotations);
-			if (uniques.isEmpty()) {
-			} else {
-				for (Registration registration : uniques) {
-					out.register(clazz, registration);
-				}
-			}
+			// List<Registration> registrations = Annotations
+			// .resolveMultiple(clazz, Registration.class);
+			// Multimap<Class, List<Annotation>> superclassAnnotations =
+			// AnnotationUtils
+			// .getSuperclassAnnotations(clazz);
+			// AnnotationUtils.filterAnnotations(superclassAnnotations,
+			// RegistryLocation.class, RegistryLocations.class);
+			// Set<RegistryLocation> uniques = RegistryOld
+			// .filterForRegistryPointUniqueness(superclassAnnotations);
+			// if (uniques.isEmpty()) {
+			// } else {
+			// for (Registration registration : uniques) {
+			// out.register(clazz, registration);
+			// }
+			// }
+			// use annotationlocation.resolve
+			throw new UnsupportedOperationException();
 		}
 		return out;
 	}
@@ -132,9 +122,9 @@ public class RegistryScanner extends CachingScanner<RegistryScannerMetadata> {
 		public RegistryScannerLazyRegistration(Class clazz,
 				Registration registration) {
 			registeringClassClassName = clazz.getName();
-			registryPointClassName = registration.registryPoint().getName();
-			targetClassClassName = registration.targetClass().getName();
-			implementationType = registration.implementationType();
+			keys = Arrays.stream(registration.value()).map(Class::getName)
+					.collect(Collectors.toList());
+			implementation = registration.implementation();
 			priority = registration.priority();
 		}
 	}

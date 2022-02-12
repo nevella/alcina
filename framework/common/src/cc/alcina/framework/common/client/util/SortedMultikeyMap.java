@@ -33,8 +33,6 @@ import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCrea
  * 
  */
 public class SortedMultikeyMap<V> extends MultikeyMapBase<V> {
-	
-
 	/**
 	 * Ensures that RPC will consider type parameter V to be exposed. It will be
 	 * pruned by dead code elimination.

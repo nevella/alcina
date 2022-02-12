@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.search;
 
 import java.util.LinkedHashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.slf4j.Logger;
@@ -178,22 +177,22 @@ public class ReflectiveSearchDefinitionSerializer
 
 	private void ensureLookups() {
 		if (abbrevLookup.isEmpty()) {
-			List<Class> classes = Registry.get()
-					.lookup(SearchDefinitionSerializationInfo.class);
-			for (Class<?> clazz : classes) {
-				SearchDefinitionSerializationInfo info = Reflections.at(clazz)
-						.annotation(SearchDefinitionSerializationInfo.class);
-				if (info == null) {
-					continue;
-				}
-				if (abbrevLookup.containsKey(info.value())) {
-					throw new RuntimeException(
-							"Searchdef serialization abbreviation collision:"
-									+ info.value());
-				}
-				abbrevLookup.put(info.value(), clazz);
-				reverseAbbrevLookup.put(clazz, info.value());
-			}
+			Registry.query().withKeys(SearchDefinitionSerializationInfo.class)
+					.untypedRegistrations().forEach(clazz -> {
+						SearchDefinitionSerializationInfo info = Reflections
+								.at(clazz).annotation(
+										SearchDefinitionSerializationInfo.class);
+						if (info == null) {
+							return;
+						}
+						if (abbrevLookup.containsKey(info.value())) {
+							throw new RuntimeException(
+									"Searchdef serialization abbreviation collision:"
+											+ info.value());
+						}
+						abbrevLookup.put(info.value(), clazz);
+						reverseAbbrevLookup.put(clazz, info.value());
+					});
 		}
 	}
 

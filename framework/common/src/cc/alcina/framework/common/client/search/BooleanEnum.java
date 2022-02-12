@@ -6,6 +6,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @ClientInstantiable
 public enum BooleanEnum {
 	FALSE, TRUE;
+
 	public static BooleanEnum fromBoolean(Boolean b) {
 		return b == null ? null : b ? TRUE : FALSE;
 	}

@@ -521,7 +521,8 @@ public abstract class HTMLTable extends Panel implements SourcesTableEvents,
 	 *            the cell's HTML contents
 	 * @throws IndexOutOfBoundsException
 	 */
-	public void setHTML(int row, int column, @IsSafeHtml String html) {
+	public void setHTML(int row, int column, @IsSafeHtml
+	String html) {
 		prepareCell(row, column);
 		Element td = cleanCell(row, column, html == null);
 		if (html != null) {

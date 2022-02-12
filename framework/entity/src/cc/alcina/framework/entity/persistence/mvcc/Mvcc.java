@@ -77,9 +77,8 @@ public class Mvcc {
 		this.domainStore = domainStore;
 		this.domainDescriptor = domainDescriptor;
 		this.cache = cache;
-		this.classTransformer = reuseMvcc!=null ? reuseMvcc.classTransformer
+		this.classTransformer = reuseMvcc != null ? reuseMvcc.classTransformer
 				: new ClassTransformer(this);
-		
 	}
 
 	public <T extends Entity> T create(Class<T> clazz) {

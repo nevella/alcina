@@ -160,8 +160,7 @@ public class DomainObjectActionLinkCustomiser implements Customiser {
 			link.setDisplayName(displayName);
 			link.setAsHtml(asHtml);
 			if (rendererClass != null) {
-				link.setRenderer(
-						Reflections.newInstance(rendererClass));
+				link.setRenderer(Reflections.newInstance(rendererClass));
 			}
 			return link;
 		}

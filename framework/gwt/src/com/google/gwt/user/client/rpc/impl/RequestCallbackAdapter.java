@@ -34,220 +34,214 @@ import com.google.gwt.user.client.rpc.StatusCodeException;
  * 
  * For internal use only.
  * 
- * @param <T> the type parameter for the {@link AsyncCallback}
+ * @param <T>
+ *            the type parameter for the {@link AsyncCallback}
  */
 public class RequestCallbackAdapter<T> implements RequestCallback {
+	/**
+	 * Enumeration used to read specific return types out of a
+	 * {@link SerializationStreamReader}.
+	 */
+	public enum ResponseReader {
+		BOOLEAN {
+			@Override
+			public Object read(SerializationStreamReader streamReader)
+					throws SerializationException {
+				return streamReader.readBoolean();
+			}
+		},
+		BYTE {
+			@Override
+			public Object read(SerializationStreamReader streamReader)
+					throws SerializationException {
+				return streamReader.readByte();
+			}
+		},
+		CHAR {
+			@Override
+			public Object read(SerializationStreamReader streamReader)
+					throws SerializationException {
+				return streamReader.readChar();
+			}
+		},
+		DOUBLE {
+			@Override
+			public Object read(SerializationStreamReader streamReader)
+					throws SerializationException {
+				return streamReader.readDouble();
+			}
+		},
+		FLOAT {
+			@Override
+			public Object read(SerializationStreamReader streamReader)
+					throws SerializationException {
+				return streamReader.readFloat();
+			}
+		},
+		INT {
+			@Override
+			public Object read(SerializationStreamReader streamReader)
+					throws SerializationException {
+				return streamReader.readInt();
+			}
+		},
+		LONG {
+			@Override
+			public Object read(SerializationStreamReader streamReader)
+					throws SerializationException {
+				return streamReader.readLong();
+			}
+		},
+		OBJECT {
+			@Override
+			public Object read(SerializationStreamReader streamReader)
+					throws SerializationException {
+				return streamReader.readObject();
+			}
+		},
+		SHORT {
+			@Override
+			public Object read(SerializationStreamReader streamReader)
+					throws SerializationException {
+				return streamReader.readShort();
+			}
+		},
+		STRING {
+			@Override
+			public Object read(SerializationStreamReader streamReader)
+					throws SerializationException {
+				return streamReader.readString();
+			}
+		},
+		VOID {
+			@Override
+			public Object read(SerializationStreamReader streamReader) {
+				return null;
+			}
+		};
 
-  /**
-   * Enumeration used to read specific return types out of a
-   * {@link SerializationStreamReader}.
-   */
-  public enum ResponseReader {
-    BOOLEAN {
-      @Override
-      public Object read(SerializationStreamReader streamReader)
-          throws SerializationException {
-        return streamReader.readBoolean();
-      }
-    },
+		public abstract Object read(SerializationStreamReader streamReader)
+				throws SerializationException;
+	}
 
-    BYTE {
-      @Override
-      public Object read(SerializationStreamReader streamReader)
-          throws SerializationException {
-        return streamReader.readByte();
-      }
-    },
+	/**
+	 * {@link AsyncCallback} to notify or success or failure.
+	 */
+	private AsyncCallback<T> callback;
 
-    CHAR {
-      @Override
-      public Object read(SerializationStreamReader streamReader)
-          throws SerializationException {
-        return streamReader.readChar();
-      }
-    },
+	public AsyncCallback<T> getCallback() {
+		return this.callback;
+	}
 
-    DOUBLE {
-      @Override
-      public Object read(SerializationStreamReader streamReader)
-          throws SerializationException {
-        return streamReader.readDouble();
-      }
-    },
+	public void setCallback(AsyncCallback<T> callback) {
+		this.callback = callback;
+	}
 
-    FLOAT {
-      @Override
-      public Object read(SerializationStreamReader streamReader)
-          throws SerializationException {
-        return streamReader.readFloat();
-      }
-    },
+	/**
+	 * Used for stats recording.
+	 */
+	private final String methodName;
 
-    INT {
-      @Override
-      public Object read(SerializationStreamReader streamReader)
-          throws SerializationException {
-        return streamReader.readInt();
-      }
-    },
+	/**
+	 * Used for stats recording.
+	 */
+	private final RpcStatsContext statsContext;
 
-    LONG {
-      @Override
-      public Object read(SerializationStreamReader streamReader)
-          throws SerializationException {
-        return streamReader.readLong();
-      }
-    },
+	/**
+	 * Instance which will read the expected return type out of the
+	 * {@link SerializationStreamReader}.
+	 */
+	private final ResponseReader responseReader;
 
-    OBJECT {
-      @Override
-      public Object read(SerializationStreamReader streamReader)
-          throws SerializationException {
-        return streamReader.readObject();
-      }
-    },
+	/**
+	 * {@link RpcTokenExceptionHandler} to notify of token exceptions.
+	 */
+	private final RpcTokenExceptionHandler tokenExceptionHandler;
 
-    SHORT {
-      @Override
-      public Object read(SerializationStreamReader streamReader)
-          throws SerializationException {
-        return streamReader.readShort();
-      }
-    },
+	/**
+	 * {@link SerializationStreamFactory} for creating
+	 * {@link SerializationStreamReader}s.
+	 */
+	private final SerializationStreamFactory streamFactory;
 
-    STRING {
-      @Override
-      public Object read(SerializationStreamReader streamReader)
-          throws SerializationException {
-        return streamReader.readString();
-      }
-    },
+	public RequestCallbackAdapter(SerializationStreamFactory streamFactory,
+			String methodName, RpcStatsContext statsContext,
+			AsyncCallback<T> callback, ResponseReader responseReader) {
+		this(streamFactory, methodName, statsContext, callback, null,
+				responseReader);
+	}
 
-    VOID {
-      @Override
-      public Object read(SerializationStreamReader streamReader) {
-        return null;
-      }
-    };
+	public RequestCallbackAdapter(SerializationStreamFactory streamFactory,
+			String methodName, RpcStatsContext statsContext,
+			AsyncCallback<T> callback,
+			RpcTokenExceptionHandler tokenExceptionHandler,
+			ResponseReader responseReader) {
+		assert (streamFactory != null);
+		assert (callback != null);
+		assert (responseReader != null);
+		this.streamFactory = streamFactory;
+		this.callback = callback;
+		this.methodName = methodName;
+		this.statsContext = statsContext;
+		this.responseReader = responseReader;
+		this.tokenExceptionHandler = tokenExceptionHandler;
+	}
 
-    public abstract Object read(SerializationStreamReader streamReader)
-        throws SerializationException;
-  }
+	public void onError(Request request, Throwable exception) {
+		callback.onFailure(exception);
+	}
 
-  /**
-   * {@link AsyncCallback} to notify or success or failure.
-   */
-  private  AsyncCallback<T> callback;
-
-  public AsyncCallback<T> getCallback() {
-	return this.callback;
-}
-
-public void setCallback(AsyncCallback<T> callback) {
-	this.callback = callback;
-}
-
-/**
-   * Used for stats recording.
-   */
-  private final String methodName;
-
-  /**
-   * Used for stats recording.
-   */
-  private final RpcStatsContext statsContext;
-
-  /**
-   * Instance which will read the expected return type out of the
-   * {@link SerializationStreamReader}.
-   */
-  private final ResponseReader responseReader;
-  
-  /**
-   * {@link RpcTokenExceptionHandler} to notify of token exceptions.
-   */
-  private final RpcTokenExceptionHandler tokenExceptionHandler;
-
-  /**
-   * {@link SerializationStreamFactory} for creating
-   * {@link SerializationStreamReader}s.
-   */
-  private final SerializationStreamFactory streamFactory;
-
-  public RequestCallbackAdapter(SerializationStreamFactory streamFactory,
-      String methodName, RpcStatsContext statsContext,
-      AsyncCallback<T> callback, ResponseReader responseReader) {
-    this(streamFactory, methodName, statsContext, callback, null,
-        responseReader);
-  }
-
-  public RequestCallbackAdapter(SerializationStreamFactory streamFactory,
-      String methodName, RpcStatsContext statsContext,
-      AsyncCallback<T> callback,
-      RpcTokenExceptionHandler tokenExceptionHandler,
-      ResponseReader responseReader) {
-    assert (streamFactory != null);
-    assert (callback != null);
-    assert (responseReader != null);
-
-    this.streamFactory = streamFactory;
-    this.callback = callback;
-    this.methodName = methodName;
-    this.statsContext = statsContext;
-    this.responseReader = responseReader;
-    this.tokenExceptionHandler = tokenExceptionHandler;
-  }
-
-  public void onError(Request request, Throwable exception) {
-    callback.onFailure(exception);
-  }
-
-  @SuppressWarnings(value = {"unchecked", "unused"})
-  public void onResponseReceived(Request request, Response response) {
-    T result = null;
-    Throwable caught = null;
-    try {
-      String encodedResponse = response.getText();
-      int statusCode = response.getStatusCode();
-      boolean toss = statsContext.isStatsAvailable()
-          && statsContext.stats(
-              statsContext.bytesStat(methodName, encodedResponse.length(), "responseReceived"));
-
-      if (statusCode != Response.SC_OK) {
-        caught = new StatusCodeException(statusCode, response.getStatusText(), encodedResponse);
-      } else if (encodedResponse == null) {
-        // This can happen if the XHR is interrupted by the server dying
-        caught = new InvocationException("No response payload from " + methodName);
-      } else if (RemoteServiceProxy.isReturnValue(encodedResponse)) {
-        result = (T) responseReader.read(streamFactory.createStreamReader(encodedResponse));
-      } else if (RemoteServiceProxy.isThrownException(encodedResponse)) {
-        caught = (Throwable) streamFactory.createStreamReader(encodedResponse).readObject();
-      } else {
-        caught = new InvocationException(encodedResponse + " from " + methodName);
-      }
-    } catch (com.google.gwt.user.client.rpc.SerializationException e) {
-      caught = new IncompatibleRemoteServiceException(
-          "The response could not be deserialized", e);
-    } catch (Throwable e) {
-      caught = e;
-    } finally {
-      boolean toss = statsContext.isStatsAvailable()
-          && statsContext.stats(statsContext.timeStat(methodName, "responseDeserialized"));
-    }
-
-    try {
-      if (caught == null) {
-        callback.onSuccess(result);
-      } else if (tokenExceptionHandler != null &&
-          caught instanceof RpcTokenException) {
-        tokenExceptionHandler.onRpcTokenException((RpcTokenException) caught);
-      } else {
-        callback.onFailure(caught);
-      }
-    } finally {
-      Object returned = (caught == null) ? result : caught;
-      boolean toss = statsContext.isStatsAvailable()
-          && statsContext.stats(statsContext.timeStat(methodName, returned, "end"));
-    }
-  }
+	@SuppressWarnings(value = { "unchecked", "unused" })
+	public void onResponseReceived(Request request, Response response) {
+		T result = null;
+		Throwable caught = null;
+		try {
+			String encodedResponse = response.getText();
+			int statusCode = response.getStatusCode();
+			boolean toss = statsContext.isStatsAvailable()
+					&& statsContext.stats(statsContext.bytesStat(methodName,
+							encodedResponse.length(), "responseReceived"));
+			if (statusCode != Response.SC_OK) {
+				caught = new StatusCodeException(statusCode,
+						response.getStatusText(), encodedResponse);
+			} else if (encodedResponse == null) {
+				// This can happen if the XHR is interrupted by the server dying
+				caught = new InvocationException(
+						"No response payload from " + methodName);
+			} else if (RemoteServiceProxy.isReturnValue(encodedResponse)) {
+				result = (T) responseReader.read(
+						streamFactory.createStreamReader(encodedResponse));
+			} else if (RemoteServiceProxy.isThrownException(encodedResponse)) {
+				caught = (Throwable) streamFactory
+						.createStreamReader(encodedResponse).readObject();
+			} else {
+				caught = new InvocationException(
+						encodedResponse + " from " + methodName);
+			}
+		} catch (com.google.gwt.user.client.rpc.SerializationException e) {
+			caught = new IncompatibleRemoteServiceException(
+					"The response could not be deserialized", e);
+		} catch (Throwable e) {
+			caught = e;
+		} finally {
+			boolean toss = statsContext.isStatsAvailable()
+					&& statsContext.stats(statsContext.timeStat(methodName,
+							"responseDeserialized"));
+		}
+		try {
+			if (caught == null) {
+				callback.onSuccess(result);
+			} else if (tokenExceptionHandler != null
+					&& caught instanceof RpcTokenException) {
+				tokenExceptionHandler
+						.onRpcTokenException((RpcTokenException) caught);
+			} else {
+				callback.onFailure(caught);
+			}
+		} finally {
+			Object returned = (caught == null) ? result : caught;
+			boolean toss = statsContext.isStatsAvailable() && statsContext
+					.stats(statsContext.timeStat(methodName, returned, "end"));
+		}
+	}
 }

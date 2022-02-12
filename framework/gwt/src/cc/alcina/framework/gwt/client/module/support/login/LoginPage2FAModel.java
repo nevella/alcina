@@ -51,6 +51,7 @@ public class LoginPage2FAModel extends IntermediateBindable {
 
 	public enum Login2FAModelBinding implements EnumeratedBinding {
 		twoFactorAuthenticationCode;
+
 		@Override
 		public Class getBoundClass() {
 			return LoginRequest.class;

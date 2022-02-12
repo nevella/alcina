@@ -44,19 +44,17 @@ public class BoundSelectorMinimal extends BoundSelector {
 		super(selectionObjectClass);
 	}
 
-	public BoundSelectorMinimal(Class selectionObjectClass,
-			Predicate filter) {
+	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter) {
 		super(selectionObjectClass, filter);
 	}
 
-	public BoundSelectorMinimal(Class selectionObjectClass,
-			Predicate filter, int maxSelectedItems) {
+	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter,
+			int maxSelectedItems) {
 		super(selectionObjectClass, filter, maxSelectedItems);
 	}
 
-	public BoundSelectorMinimal(Class selectionObjectClass,
-			Predicate filter, int maxSelectedItems, Renderer renderer,
-			String hint) {
+	public BoundSelectorMinimal(Class selectionObjectClass, Predicate filter,
+			int maxSelectedItems, Renderer renderer, String hint) {
 		super(selectionObjectClass, filter, maxSelectedItems, renderer, false,
 				() -> TransformManager.get()
 						.getCollection(selectionObjectClass),
@@ -107,6 +105,7 @@ public class BoundSelectorMinimal extends BoundSelector {
 		cfp.addClickHandler(maybeFocusResultsHandler);
 		container.add(cfp);
 	}
+
 	@Override
 	protected void addItems(Collection<?> items) {
 		super.addItems(items);

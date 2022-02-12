@@ -15,13 +15,14 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
+
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 @MappedSuperclass
 /**
@@ -30,29 +31,30 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 @DomainTransformPersistable
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = PublicationCounter.class)
 @Registration({ PersistentImpl.class, PublicationCounter.class })
-public abstract class PublicationCounter extends VersionableEntity<PublicationCounter> implements HasIUser {
+public abstract class PublicationCounter
+		extends VersionableEntity<PublicationCounter> implements HasIUser {
+	private long counter;
 
-    private long counter;
+	@DomainTransformPropagation(PropagationType.NONE)
+	public long getCounter() {
+		return this.counter;
+	}
 
-    @DomainTransformPropagation(PropagationType.NONE)
-    public long getCounter() {
-        return this.counter;
-    }
+	@Override
+	@Transient
+	public long getId() {
+		return id;
+	}
 
-    @Override
-    @Transient
-    public long getId() {
-        return id;
-    }
+	public void setCounter(long counter) {
+		long old_counter = this.counter;
+		this.counter = counter;
+		propertyChangeSupport().firePropertyChange("counter", old_counter,
+				counter);
+	}
 
-    public void setCounter(long counter) {
-        long old_counter = this.counter;
-        this.counter = counter;
-        propertyChangeSupport().firePropertyChange("counter", old_counter, counter);
-    }
-
-    @Override
-    public void setId(long id) {
-        this.id = id;
-    }
+	@Override
+	public void setId(long id) {
+		this.id = id;
+	}
 }

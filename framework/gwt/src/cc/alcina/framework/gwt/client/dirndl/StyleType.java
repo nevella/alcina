@@ -5,7 +5,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.Widget;
 
-public interface  StyleType{
+public interface StyleType {
 	default void addTo(UIObject uiObject) {
 		uiObject.setStyleName(toName(), true);
 	}
@@ -43,9 +43,9 @@ public interface  StyleType{
 	}
 
 	default String toName() {
-		
-		return prefix()+toString().toLowerCase().replace("_", "-");
+		return prefix() + toString().toLowerCase().replace("_", "-");
 	}
+
 	default String prefix() {
 		return "";
 	}

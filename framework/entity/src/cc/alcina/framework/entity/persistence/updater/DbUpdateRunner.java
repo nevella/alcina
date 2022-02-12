@@ -1,8 +1,7 @@
 package cc.alcina.framework.entity.persistence.updater;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
 
@@ -14,9 +13,9 @@ import cc.alcina.framework.entity.persistence.LocalDbPropertyBase;
 
 public class DbUpdateRunner {
 	public void run(EntityManager em, boolean preCacheWarmup) throws Exception {
-		List<Class> updaterClasses = Registry.get().lookup(false,
-				DbUpdater.class, void.class, false);
-		if (updaterClasses.isEmpty()) {
+		List<DbUpdater> updaters = Registry.query(DbUpdater.class)
+				.implementations().sorted().collect(Collectors.toList());
+		if (updaters.isEmpty()) {
 			return;
 		}
 		CommonPersistenceLocal cp = CommonPersistenceProvider.get()
@@ -24,12 +23,6 @@ public class DbUpdateRunner {
 		LocalDbPropertyBase dbProperty = LocalDbPropertyBase
 				.getLocalDbPropertyObject(
 						LocalDbPropertyBase.DB_UPDATE_VERSION);
-		List<DbUpdater> updaters = new ArrayList<DbUpdater>();
-		for (Class upd : updaterClasses) {
-			updaters.add(
-					(DbUpdater) upd.getDeclaredConstructor().newInstance());
-		}
-		Collections.sort(updaters);
 		Integer currentUpdateNumber = dbProperty.getPropertyValue() == null ? 0
 				: Integer.parseInt(dbProperty.getPropertyValue());
 		for (DbUpdater dbUpdater : updaters) {

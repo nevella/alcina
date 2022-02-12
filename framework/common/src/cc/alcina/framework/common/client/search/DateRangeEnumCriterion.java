@@ -22,8 +22,6 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
  */
 @TypeSerialization("daterange")
 public class DateRangeEnumCriterion extends EnumCriterion<DateRange> {
-	
-
 	private DateRange dateRange;
 
 	public DateRangeEnumCriterion() {

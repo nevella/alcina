@@ -220,9 +220,10 @@ public class ControlServlet extends AlcinaServlet {
 	}
 
 	private String testSendmail() throws Exception {
-		ContentDelivery deliverer = (ContentDelivery) Registry.get()
-				.instantiateSingle(ContentDeliveryType.class,
-						ContentDeliveryType_EMAIL.class);
+		ContentDelivery deliverer = Registry.query(ContentDelivery.class)
+				.clearTypeKey().withKeys(ContentDeliveryType.class,
+						ContentDeliveryType_EMAIL.class)
+				.impl();
 		TestContentRequest testContentRequest = new TestContentRequest();
 		testContentRequest.setEmailInline(true);
 		testContentRequest.setEmailSubject(Ax.format("Test: %s :: %s",

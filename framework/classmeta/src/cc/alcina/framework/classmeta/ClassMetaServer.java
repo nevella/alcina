@@ -51,7 +51,6 @@ public class ClassMetaServer {
 	// @SuppressWarnings("unused")
 	// private RdbProxies rdbProxies;
 
-
 	private void initLoggers() {
 		Logger logger = Logger.getRootLogger();
 		System.setProperty("org.slf4j.simpleLogger.defaultLogLevel", "warn");
@@ -80,9 +79,9 @@ public class ClassMetaServer {
 	}
 
 	private void initRegistry() {
-		Registry.registerSingleton(TimerWrapperProvider.class,
+		Registry.register().singleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
-		// Registry.registerSingleton(RdbProxies.class, new RdbProxies());
+		// Registry.register().singleton(RdbProxies.class,new RdbProxies());
 	}
 
 	private void start() throws Exception {

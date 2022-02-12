@@ -58,8 +58,7 @@ public class ServerUniquenessValidator extends ServerValidator {
 
 	public Class<? extends Entity> getObjectClass() {
 		if (objectClass == null && objectClassName != null) {
-			objectClass = Reflections
-					.forName(objectClassName);
+			objectClass = Reflections.forName(objectClassName);
 		}
 		return objectClass;
 	}

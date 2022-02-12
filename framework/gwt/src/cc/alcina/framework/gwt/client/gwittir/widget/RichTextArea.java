@@ -182,8 +182,7 @@ public class RichTextArea extends AbstractBoundWidget<String> implements
 		super.onDetach();
 	}
 
-	protected native void styleBody(Element elem,
-			String defaultFontSize) /*-{
+	protected native void styleBody(Element elem, String defaultFontSize) /*-{
 									if (elem.contentWindow && elem.contentWindow.document
 									&& elem.contentWindow.document.documentElement) {
 									elem.contentWindow.document.documentElement.setAttribute("style",

@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -43,10 +44,11 @@ import cc.alcina.framework.gwt.client.util.Lzw;
  * <p>
  * This mechanism is app restart, offline and (almost) crash proof <br>
  * </p>
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
+@Registration.Singleton
 public class LogStore {
 	public static final String STORAGE_COOKIE_KEY = LogStore.class.getName()
 			+ ".CookieStorage";
@@ -63,12 +65,7 @@ public class LogStore {
 			+ "TOPIC_DELETED";
 
 	public static LogStore get() {
-		LogStore singleton = Registry.checkSingleton(LogStore.class);
-		if (singleton == null) {
-			singleton = new LogStore();
-			Registry.registerSingleton(LogStore.class, singleton);
-		}
-		return singleton;
+		return Registry.impl(LogStore.class);
 	}
 
 	public static void notifyDeleted(Object nup) {

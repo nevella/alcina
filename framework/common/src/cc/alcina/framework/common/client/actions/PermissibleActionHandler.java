@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -22,15 +22,13 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * @author Nick Reddel
  */
 public interface PermissibleActionHandler<A extends PermissibleAction> {
-	public void handleAction(Widget sourceWidget, A action,
-			Object target);
+	public void handleAction(Widget sourceWidget, A action, Object target);
 
 	public static class DefaultPermissibleActionHandler {
 		public static void handleAction(Widget sourceWidget,
 				PermissibleAction action, Object target) {
-			PermissibleActionHandler handler = (PermissibleActionHandler) Registry
-					.get().instantiateSingle(PermissibleActionHandler.class,
-							action.getClass());
+			PermissibleActionHandler handler = Registry
+					.impl(PermissibleActionHandler.class, action.getClass());
 			handler.handleAction(sourceWidget, action, target);
 		}
 	}

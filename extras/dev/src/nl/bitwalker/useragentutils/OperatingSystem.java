@@ -238,6 +238,7 @@ public enum OperatingSystem {
 			DeviceType.MOBILE, null),
 	UNKNOWN(Manufacturer.OTHER, null, 1, "Unknown", new String[0], null,
 			DeviceType.UNKNOWN, null);
+
 	/**
 	 * Parses user agent string and returns the best match. Returns
 	 * OperatingSystem.UNKNOWN if there is no match.

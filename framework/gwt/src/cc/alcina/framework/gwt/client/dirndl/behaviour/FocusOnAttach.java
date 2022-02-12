@@ -8,8 +8,8 @@ public interface FocusOnAttach extends GwtEvents.Attach.Handler {
 	@Override
 	default void onAttach(Attach event) {
 		if (isFocusOnAttach()) {
-			FocusImpl.getFocusImplForWidget().focus(
-					event.getContext().node.getWidget().getElement());
+			FocusImpl.getFocusImplForWidget()
+					.focus(event.getContext().node.getWidget().getElement());
 		}
 	}
 

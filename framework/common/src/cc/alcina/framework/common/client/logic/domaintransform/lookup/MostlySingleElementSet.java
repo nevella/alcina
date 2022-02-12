@@ -19,7 +19,6 @@ public class MostlySingleElementSet<E> extends AbstractSet<E>
 		implements Cloneable, Serializable {
 	private int size = 0;
 
-
 	private Map<E, Boolean> map;
 
 	private E element;

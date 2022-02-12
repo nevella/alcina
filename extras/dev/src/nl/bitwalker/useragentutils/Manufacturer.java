@@ -116,6 +116,7 @@ public enum Manufacturer {
 	 * Mail.com Media Corporation
 	 */
 	MMC(19, "Mail.com Media Corporation");
+
 	private final byte id;
 
 	private final String name;

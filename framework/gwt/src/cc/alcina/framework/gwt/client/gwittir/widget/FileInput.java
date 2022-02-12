@@ -71,8 +71,7 @@ public class FileInput extends Widget
 	}
 
 	private static class FileInputImpl {
-		public native JsArray<Html5File>
-				getFiles(InputElement inputElement) /*-{
+		public native JsArray<Html5File> getFiles(InputElement inputElement) /*-{
 													var remote = inputElement.@com.google.gwt.dom.client.Element::typedRemote()();
 													return remote.value && remote.value!=""?
 													[{fileName: remote.value, fileSize: -1}]:
@@ -94,8 +93,7 @@ public class FileInput extends Widget
 
 	private static class FileInputImplHtml5 extends FileInputImpl {
 		@Override
-		public native JsArray<Html5File>
-				getFiles(InputElement inputElement) /*-{
+		public native JsArray<Html5File> getFiles(InputElement inputElement) /*-{
 													var remote = inputElement.@com.google.gwt.dom.client.Element::typedRemote()();
 													return remote.files;
 													}-*/;

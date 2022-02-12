@@ -6,8 +6,8 @@ import com.google.gwt.dom.client.ElementRemote;
 public class D3Utils {
 	private static int svgIdCounter;
 
-	public static native D3Visualisation createVisualisation(
-			String visualisationName, JavaScriptObject data)/*-{
+	public static native D3Visualisation
+			createVisualisation(String visualisationName, JavaScriptObject data)/*-{
 															try {
 															var visualisation = $wnd.jdm.graphs[visualisationName](data);
 															return visualisation;

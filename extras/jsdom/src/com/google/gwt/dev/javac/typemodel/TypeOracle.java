@@ -882,8 +882,8 @@ public class TypeOracle extends com.google.gwt.core.ext.typeinfo.TypeOracle {
 			throws ParseException, NotFoundException, BadTypeArgsException {
 		List<JClassType> typeArgList = new ArrayList<JClassType>();
 		int start = 0;
-		for (int offset = 0, length = typeArgContents
-				.length(); offset < length; ++offset) {
+		for (int offset = 0,
+				length = typeArgContents.length(); offset < length; ++offset) {
 			char ch = typeArgContents.charAt(offset);
 			switch (ch) {
 			case '<':

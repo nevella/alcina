@@ -9,8 +9,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MostlySing
  * 
  * 
  */
-public class TransactionalSet<E extends Entity> extends MostlySingleElementSet<E>
-		implements TransactionalCollection {
+public class TransactionalSet<E extends Entity>
+		extends MostlySingleElementSet<E> implements TransactionalCollection {
 	private Class<E> entityClass;
 
 	private Transaction baseTransaction;

@@ -36,8 +36,7 @@ public class DomainLookup<T, E extends Entity>
 	public DomainLookup(DomainStoreLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
 		if (descriptor.propertyPath != null) {
-			this.propertyPath = new PropertyPath(
-					descriptor.propertyPath);
+			this.propertyPath = new PropertyPath(descriptor.propertyPath);
 		}
 		Class indexClass = CommonUtils.getWrapperType(
 				descriptor.getLookupIndexClass(this.propertyPath));

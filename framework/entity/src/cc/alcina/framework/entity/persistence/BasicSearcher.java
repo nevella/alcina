@@ -14,46 +14,51 @@
 package cc.alcina.framework.entity.persistence;
 
 import java.util.List;
+
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
+
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.EqlWithParameters;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = Searcher.class, targetClass = SearchDefinition.class)
 @Registration({ Searcher.class, SearchDefinition.class })
 public class BasicSearcher implements Searcher {
+	private EntityManager entityManager;
 
-    private EntityManager entityManager;
+	public EntityManager getEntityManager() {
+		return this.entityManager;
+	}
 
-    public EntityManager getEntityManager() {
-        return this.entityManager;
-    }
+	@Override
+	public SearchResultsBase search(SearchDefinition def,
+			EntityManager entityManager) {
+		return searchWithTemp(def, entityManager, null);
+	}
 
-    @Override
-    public SearchResultsBase search(SearchDefinition def, EntityManager entityManager) {
-        return searchWithTemp(def, entityManager, null);
-    }
+	private Query searchStub(SingleTableSearchDefinition sdef, String prefix,
+			String postfix, boolean withOrderClause) {
+		EqlWithParameters ewp = getEqlWithParameters(sdef, withOrderClause);
+		Query query = getEntityManager()
+				.createQuery(prefix + " " + ewp.eql + postfix);
+		int i = 1;
+		for (Object o : ewp.parameters) {
+			query.setParameter(i++, o);
+		}
+		return query;
+	}
 
-    private Query searchStub(SingleTableSearchDefinition sdef, String prefix, String postfix, boolean withOrderClause) {
-        EqlWithParameters ewp = getEqlWithParameters(sdef, withOrderClause);
-        Query query = getEntityManager().createQuery(prefix + " " + ewp.eql + postfix);
-        int i = 1;
-        for (Object o : ewp.parameters) {
-            query.setParameter(i++, o);
-        }
-        return query;
-    }
+	protected EqlWithParameters getEqlWithParameters(
+			SingleTableSearchDefinition sdef, boolean withOrderClause) {
+		EqlWithParameters ewp = sdef.eql(withOrderClause);
+		return ewp;
+	}
 
-    protected EqlWithParameters getEqlWithParameters(SingleTableSearchDefinition sdef, boolean withOrderClause) {
-        EqlWithParameters ewp = sdef.eql(withOrderClause);
-        return ewp;
-    }
-
-    /*
+	/*
 	 * Like this because of...gwt serialization. See SearchResultsBase usage of
 	 * searchresult (which the db type may not implement - only required the
 	 * result does)
@@ -61,27 +66,32 @@ public class BasicSearcher implements Searcher {
 	 * hmmm...now got rid of searchresultsbase array (using garraylist instead)
 	 * - but leaving this code as is for now
 	 */
-    protected SearchResultsBase searchWithTemp(SearchDefinition def, EntityManager entityManager, List tempObjects) {
-        this.entityManager = entityManager;
-        SearchResultsBase result = new SearchResultsBase();
-        SingleTableSearchDefinition sdef = (SingleTableSearchDefinition) def;
-        Long resultCount = 0L;
-        List resultList = searchStub(sdef, sdef.resultEqlPrefix(), "", true).setMaxResults(def.getResultsPerPage()).setFirstResult(def.getPageNumber() * def.getResultsPerPage()).getResultList();
-        if (def.getResultsPerPage() < SearchDefinition.LARGE_SEARCH) {
-            Query idQuery = searchStub(sdef, sdef.idEqlPrefix(), "", false);
-            resultCount = (Long) idQuery.getSingleResult();
-        } else {
-            resultCount = Long.valueOf(resultList.size());
-        }
-        result.setTotalResultCount(resultCount == null ? 0 : resultCount.intValue());
-        result.setPageNumber(def.getPageNumber());
-        result.setPageResultCount(resultList.size());
-        result.setSearchDefinition(def);
-        if (tempObjects != null) {
-            tempObjects.addAll(resultList);
-        } else {
-            result.setResults(resultList);
-        }
-        return result;
-    }
+	protected SearchResultsBase searchWithTemp(SearchDefinition def,
+			EntityManager entityManager, List tempObjects) {
+		this.entityManager = entityManager;
+		SearchResultsBase result = new SearchResultsBase();
+		SingleTableSearchDefinition sdef = (SingleTableSearchDefinition) def;
+		Long resultCount = 0L;
+		List resultList = searchStub(sdef, sdef.resultEqlPrefix(), "", true)
+				.setMaxResults(def.getResultsPerPage())
+				.setFirstResult(def.getPageNumber() * def.getResultsPerPage())
+				.getResultList();
+		if (def.getResultsPerPage() < SearchDefinition.LARGE_SEARCH) {
+			Query idQuery = searchStub(sdef, sdef.idEqlPrefix(), "", false);
+			resultCount = (Long) idQuery.getSingleResult();
+		} else {
+			resultCount = Long.valueOf(resultList.size());
+		}
+		result.setTotalResultCount(
+				resultCount == null ? 0 : resultCount.intValue());
+		result.setPageNumber(def.getPageNumber());
+		result.setPageResultCount(resultList.size());
+		result.setSearchDefinition(def);
+		if (tempObjects != null) {
+			tempObjects.addAll(resultList);
+		} else {
+			result.setResults(resultList);
+		}
+		return result;
+	}
 }

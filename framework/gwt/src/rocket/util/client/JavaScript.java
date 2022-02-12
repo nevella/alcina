@@ -36,8 +36,7 @@ public class JavaScript {
 	 * @param element
 	 * @return
 	 */
-	public native static JavaScriptObject
-			castFromElement(final Element element)/*-{
+	public native static JavaScriptObject castFromElement(final Element element)/*-{
     return element;
 	}-*/;
 
@@ -51,8 +50,7 @@ public class JavaScript {
 	 * @param object
 	 * @return
 	 */
-	public native static Element
-			castToElement(final JavaScriptObject object)/*-{
+	public native static Element castToElement(final JavaScriptObject object)/*-{
     return object;
 	}-*/;
 
@@ -500,8 +498,8 @@ public class JavaScript {
     return value || null;
 	}-*/;
 
-	native private static JavaScriptObject getObject0(
-			final JavaScriptObject object, final String propertyName)/*-{
+	native private static JavaScriptObject
+			getObject0(final JavaScriptObject object, final String propertyName)/*-{
     var value = object[propertyName];
     return value || null;
 	}-*/;
@@ -598,8 +596,8 @@ public class JavaScript {
     return index;
 	}-*/;
 
-	native private static JavaScriptObject removeProperty0(
-			final JavaScriptObject object, final int index)/*-{
+	native private static JavaScriptObject
+			removeProperty0(final JavaScriptObject object, final int index)/*-{
     var previousValue = object[index];
     delete object[index];
     return previousValue || null;

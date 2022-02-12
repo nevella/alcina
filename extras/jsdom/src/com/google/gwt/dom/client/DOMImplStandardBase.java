@@ -222,12 +222,11 @@ class DOMImplStandardBase extends DOMImplStandard {
 	protected int getAbsoluteTop(Element elem) {
 		ClientRect rect = getBoundingClientRect(elem);
 		double top = rect != null
-				? rect.getSubPixelTop() + getScrollTop(elem.getOwnerDocument().typedRemote())
+				? rect.getSubPixelTop()
+						+ getScrollTop(elem.getOwnerDocument().typedRemote())
 				: getAbsoluteTopUsingOffsets(elem);
 		return toInt32(top);
 	}
-
-	
 
 	@Override
 	protected int getScrollLeft(Element elem) {
@@ -237,7 +236,6 @@ class DOMImplStandardBase extends DOMImplStandard {
 		}
 		return super.getScrollLeft(elem);
 	}
-
 
 	@Override
 	protected native int getTabIndex(ElementRemote elem) /*-{
@@ -251,8 +249,6 @@ class DOMImplStandardBase extends DOMImplStandard {
     return elem.ownerDocument.defaultView.getComputedStyle(elem, '').direction == 'rtl';
 	}-*/;
 
-	
-
 	@Override
 	protected void setScrollLeft(Element elem, int left) {
 		if (!elem.hasTagName(BodyElement.TAG) && isRTL(elem)) {
@@ -261,7 +257,6 @@ class DOMImplStandardBase extends DOMImplStandard {
 		super.setScrollLeft(elem, left);
 	}
 
-	
 	private static class ClientRect extends JavaScriptObject {
 		protected ClientRect() {
 		}

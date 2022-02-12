@@ -46,8 +46,8 @@ public class ClusterDefinition {
 	}
 
 	public ClusterMember provideCompilaationMember() {
-		return clusterMembers.stream().filter(m -> m.compilationMember).findFirst()
-				.get();
+		return clusterMembers.stream().filter(m -> m.compilationMember)
+				.findFirst().get();
 	}
 
 	public static class ClusterMember {

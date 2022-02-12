@@ -197,7 +197,8 @@ public class AsLiteralSerializer {
 		}
 		PropertyDescriptor[] propertyDescriptors = getPropertyDescriptorsForClassProperties(
 				source);
-		Object template = source.getClass().getDeclaredConstructor().newInstance();
+		Object template = source.getClass().getDeclaredConstructor()
+				.newInstance();
 		for (PropertyDescriptor pd : propertyDescriptors) {
 			Object tgt = pd.getReadMethod().invoke(source,
 					CommonUtils.EMPTY_OBJECT_ARRAY);

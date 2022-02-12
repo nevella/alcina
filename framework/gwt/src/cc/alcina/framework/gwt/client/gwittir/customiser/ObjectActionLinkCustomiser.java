@@ -47,8 +47,7 @@ public class ObjectActionLinkCustomiser implements Customiser {
 		for (NamedParameter p : info.parameters()) {
 			if (p.name().equals(ACTION_CLASS)) {
 				Class c = p.classValue();
-				actions.add((PermissibleAction) Reflections
-						.newInstance(c));
+				actions.add((PermissibleAction) Reflections.newInstance(c));
 			}
 		}
 		return new ObjectActionLinkProvider(actions);

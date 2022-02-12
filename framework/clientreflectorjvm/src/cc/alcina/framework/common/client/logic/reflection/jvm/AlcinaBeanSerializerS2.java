@@ -236,8 +236,8 @@ public class AlcinaBeanSerializerS2 extends AlcinaBeanSerializer {
 				} else {
 					Object value2 = deserializeField(jsonValue,
 							pd.getPropertyType());
-					if (value2 == null && Reflections
-							.at(pd.getPropertyType()).isPrimitive()) {
+					if (value2 == null && Reflections.at(pd.getPropertyType())
+							.isPrimitive()) {
 						// use default, probably a refactoring issue
 					} else {
 						try {

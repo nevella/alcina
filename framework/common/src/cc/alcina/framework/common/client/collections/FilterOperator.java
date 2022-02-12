@@ -61,5 +61,6 @@ public enum FilterOperator {
 			return "[in]";
 		}
 	};
+
 	public abstract String operationText();
 }

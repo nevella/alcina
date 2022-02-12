@@ -212,8 +212,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 		for (ClassrefScannerMetadata metadata : outgoingCache.classData
 				.values()) {
 			if (metadata.isClassRef) {
-				persistableClasses.add(Reflections
-						.forName(metadata.className));
+				persistableClasses.add(Reflections.forName(metadata.className));
 			}
 		}
 		if (!persistent) {
@@ -242,7 +241,8 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 				ClassRef ref = ClassRef.forClass(clazz);
 				if (ref == null) {
 					delta = true;
-					ref = classRefImplClass.getDeclaredConstructor().newInstance();
+					ref = classRefImplClass.getDeclaredConstructor()
+							.newInstance();
 					ref.setRefClass(clazz);
 					long id = 0;
 					if (AppPersistenceBase.isInstanceReadOnly()) {

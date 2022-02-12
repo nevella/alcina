@@ -73,8 +73,7 @@ public class ModelPlaceValueCustomiser
 			String template = "<a href='#%s'>%s</a>";
 			String token = place.toTokenString();
 			name = Ax.blankTo(name, "(Blank)");
-			return Ax.format(template, token,
-					SafeHtmlUtils.htmlEscape(name));
+			return Ax.format(template, token, SafeHtmlUtils.htmlEscape(name));
 		}
 	}
 }

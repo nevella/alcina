@@ -102,8 +102,7 @@ public class RunningActionsViewProvider implements ViewProvider {
 				refreshTimer.schedule(10000);
 			}
 		};
-		Client.commonRemoteService()
-				.listRunningJobs(callback);
+		Client.commonRemoteService().listRunningJobs(callback);
 	}
 
 	public static class ShowActionsViewProviderAction

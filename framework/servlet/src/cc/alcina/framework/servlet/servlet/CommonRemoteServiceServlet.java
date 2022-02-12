@@ -22,12 +22,15 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
+
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
@@ -38,6 +41,7 @@ import com.google.gwt.user.server.rpc.RemoteServiceServlet;
 import com.google.gwt.user.server.rpc.UnexpectedException;
 import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
 import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
@@ -73,6 +77,7 @@ import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -118,7 +123,6 @@ import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * Tests (todo) for transform persistence: invalid clientauth multiple
@@ -131,475 +135,583 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
  *
  * @author nick@alcina.cc
  */
-public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet implements CommonRemoteService, SearchRemoteService, ReflectiveRpcRemoteService, ReflectiveRemoteServiceHandler {
+public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
+		implements CommonRemoteService, SearchRemoteService,
+		ReflectiveRpcRemoteService, ReflectiveRemoteServiceHandler {
+	public static final String UA_NULL_SERVER = "null/server";
 
-    public static final String UA_NULL_SERVER = "null/server";
+	public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
 
-    public static final String THRD_LOCAL_RPC_RQ = "THRD_LOCAL_RPC_RQ";
+	public static final String THRD_LOCAL_USER_NAME = "THRD_LOCAL_USER_NAME";
 
-    public static final String THRD_LOCAL_USER_NAME = "THRD_LOCAL_USER_NAME";
+	public static final String THRD_LOCAL_RPC_PAYLOAD = "THRD_LOCAL_RPC_PAYLOAD";
 
-    public static final String THRD_LOCAL_RPC_PAYLOAD = "THRD_LOCAL_RPC_PAYLOAD";
+	public static final String CONTEXT_RPC_USER_ID = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_RPC_USER_ID";
 
-    public static final String CONTEXT_RPC_USER_ID = CommonRemoteServiceServlet.class.getName() + ".CONTEXT_RPC_USER_ID";
+	public static final String CONTEXT_OVERRIDE_CONTEXT = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_OVERRIDE_CONTEXT";
 
-    public static final String CONTEXT_OVERRIDE_CONTEXT = CommonRemoteServiceServlet.class.getName() + ".CONTEXT_OVERRIDE_CONTEXT";
+	public static final String CONTEXT_THREAD_LOCAL_HTTP_REQUEST = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_REQUEST";
 
-    public static final String CONTEXT_THREAD_LOCAL_HTTP_REQUEST = CommonRemoteServiceServlet.class.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_REQUEST";
+	public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE";
 
-    public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE = CommonRemoteServiceServlet.class.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE";
+	public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS";
 
-    public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS = CommonRemoteServiceServlet.class.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS";
+	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
-    public static boolean DUMP_STACK_TRACE_ON_OOM = true;
+	public static HttpServletRequest getContextThreadLocalRequest() {
+		return LooseContext.get(
+				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
+	}
 
-    public static HttpServletRequest getContextThreadLocalRequest() {
-        return LooseContext.get(CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_REQUEST);
-    }
+	public static HttpServletResponse getContextThreadLocalResponse() {
+		return LooseContext.get(
+				CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE);
+	}
 
-    public static HttpServletResponse getContextThreadLocalResponse() {
-        return LooseContext.get(CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE);
-    }
+	public static HttpContext getHttpContext() {
+		HttpContext context = new HttpContext();
+		context.request = getContextThreadLocalRequest();
+		context.response = getContextThreadLocalResponse();
+		return context;
+	}
 
-    public static HttpContext getHttpContext() {
-        HttpContext context = new HttpContext();
-        context.request = getContextThreadLocalRequest();
-        context.response = getContextThreadLocalResponse();
-        return context;
-    }
+	public static String getUserAgent(HttpServletRequest rq) {
+		return rq == null ? UA_NULL_SERVER : rq.getHeader("User-Agent");
+	}
 
-    public static String getUserAgent(HttpServletRequest rq) {
-        return rq == null ? UA_NULL_SERVER : rq.getHeader("User-Agent");
-    }
+	public static void setContextThreadLocalRequestResponse(
+			HttpServletRequest request, HttpServletResponse response) {
+		LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST, request);
+		LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE, response);
+	}
 
-    public static void setContextThreadLocalRequestResponse(HttpServletRequest request, HttpServletResponse response) {
-        LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST, request);
-        LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE, response);
-    }
-
-    /*
+	/*
 	 * Because GWT unexpected exception code resets the headers, we handle this
 	 * special
 	 */
-    protected static void setHeader(String key, String value) {
-        getContextThreadLocalResponse().setHeader(key, value);
-        StringMap cachedForUnexpectedException = (StringMap) getContextThreadLocalRequest().getAttribute(CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
-        cachedForUnexpectedException.put(key, value);
-    }
+	protected static void setHeader(String key, String value) {
+		getContextThreadLocalResponse().setHeader(key, value);
+		StringMap cachedForUnexpectedException = (StringMap) getContextThreadLocalRequest()
+				.getAttribute(
+						CommonRemoteServiceServlet.CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
+		cachedForUnexpectedException.put(key, value);
+	}
 
-    protected Logger logger = LoggerFactory.getLogger(getClass());
+	protected Logger logger = LoggerFactory.getLogger(getClass());
 
-    private ThreadLocal<Integer> looseContextDepth = new ThreadLocal<>();
+	private ThreadLocal<Integer> looseContextDepth = new ThreadLocal<>();
 
-    private AtomicInteger callCounter = new AtomicInteger(0);
+	private AtomicInteger callCounter = new AtomicInteger(0);
 
-    private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
+	private AtomicInteger rpcExceptionLogCounter = new AtomicInteger();
 
-    @Override
-    public String callRpc(String encodedRpcPayload) {
-        try {
-            ReflectiveRemoteServicePayload payload = ReflectiveSerializer.deserialize(encodedRpcPayload);
-            ReflectiveRemoteServiceHandler handler = Registry.impl(ReflectiveRemoteServiceHandler.class, payload.getAsyncInterfaceClass());
-            Class[] methodArgumentTypes = (Class[]) payload.getMethodArgumentTypes().toArray(new Class[payload.getMethodArgumentTypes().size()]);
-            Object[] methodArguments = (Object[]) payload.getMethodArguments().toArray(new Object[payload.getMethodArguments().size()]);
-            Method method = handler.getClass().getMethod(payload.getMethodName(), methodArgumentTypes);
-            method.setAccessible(true);
-            String key = Ax.format("callRpc::%s.%s", handler.getClass().getSimpleName(), method.getName());
-            try {
-                MetricLogging.get().start(key);
-                Object result = method.invoke(handler, methodArguments);
-                try {
-                    LooseContext.pushWithTrue(key);
-                    AlcinaTransient.Support.setTransienceContexts(TransienceContext.CLIENT, TransienceContext.RPC);
-                    return ReflectiveSerializer.serialize(result);
-                } finally {
-                    LooseContext.pop();
-                }
-            } finally {
-                MetricLogging.get().end(key);
-            }
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	@Override
+	public String callRpc(String encodedRpcPayload) {
+		try {
+			ReflectiveRemoteServicePayload payload = ReflectiveSerializer
+					.deserialize(encodedRpcPayload);
+			ReflectiveRemoteServiceHandler handler = Registry.impl(
+					ReflectiveRemoteServiceHandler.class,
+					payload.getAsyncInterfaceClass());
+			Class[] methodArgumentTypes = (Class[]) payload
+					.getMethodArgumentTypes().toArray(
+							new Class[payload.getMethodArgumentTypes().size()]);
+			Object[] methodArguments = (Object[]) payload.getMethodArguments()
+					.toArray(new Object[payload.getMethodArguments().size()]);
+			Method method = handler.getClass()
+					.getMethod(payload.getMethodName(), methodArgumentTypes);
+			method.setAccessible(true);
+			String key = Ax.format("callRpc::%s.%s",
+					handler.getClass().getSimpleName(), method.getName());
+			try {
+				MetricLogging.get().start(key);
+				Object result = method.invoke(handler, methodArguments);
+				try {
+					LooseContext.pushWithTrue(key);
+					AlcinaTransient.Support.setTransienceContexts(
+							TransienceContext.CLIENT, TransienceContext.RPC);
+					return ReflectiveSerializer.serialize(result);
+				} finally {
+					LooseContext.pop();
+				}
+			} finally {
+				MetricLogging.get().end(key);
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    @Override
-    @WebMethod(readonlyPermitted = true)
-    public List<ActionLogItem> getLogsForAction(RemoteAction action, Integer count) {
-        return JobRegistry.get().getLogsForAction(action, count);
-    }
+	@Override
+	@WebMethod(readonlyPermitted = true)
+	public List<ActionLogItem> getLogsForAction(RemoteAction action,
+			Integer count) {
+		return JobRegistry.get().getLogsForAction(action, count);
+	}
 
-    @Override
-    @WebMethod(readonlyPermitted = true)
-    public // FIXME - mvcc.jobs - remove
-    List<String> listRunningJobs() {
-        throw new UnsupportedOperationException();
-    }
+	@Override
+	@WebMethod(readonlyPermitted = true)
+	public // FIXME - mvcc.jobs - remove
+	List<String> listRunningJobs() {
+		throw new UnsupportedOperationException();
+	}
 
-    @Override
-    @WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
-    public Long log(ILogRecord logRecord) {
-        return Registry.impl(CommonPersistenceProvider.class).getCommonPersistence().persistLogRecord(logRecord);
-    }
+	@Override
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	public Long log(ILogRecord logRecord) {
+		return Registry.impl(CommonPersistenceProvider.class)
+				.getCommonPersistence().persistLogRecord(logRecord);
+	}
 
-    @Override
-    @WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
-    public Long logClientError(String exceptionToString) {
-        return logClientError(exceptionToString, LogMessageType.CLIENT_EXCEPTION.toString());
-    }
+	@Override
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	public Long logClientError(String exceptionToString) {
+		return logClientError(exceptionToString,
+				LogMessageType.CLIENT_EXCEPTION.toString());
+	}
 
-    @Override
-    @WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
-    public Long logClientError(String exceptionToString, String exceptionType) {
-        String remoteAddr = getRemoteAddress();
-        try {
-            exceptionToString = CommonUtils.nullToEmpty(exceptionToString).replace('\0', ' ');
-            LooseContext.pushWithKey(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS, remoteAddr);
-            if (exceptionToString.matches(".*ReflectiveSearchDefinitionSerializer.FlatTreeException.*")) {
-                Ax.out("Client exception:\n%s", exceptionToString);
-            }
-            return Registry.impl(CommonPersistenceProvider.class).getCommonPersistence().log(exceptionToString, exceptionType);
-        } finally {
-            LooseContext.pop();
-        }
-    }
+	@Override
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	public Long logClientError(String exceptionToString, String exceptionType) {
+		String remoteAddr = getRemoteAddress();
+		try {
+			exceptionToString = CommonUtils.nullToEmpty(exceptionToString)
+					.replace('\0', ' ');
+			LooseContext.pushWithKey(
+					CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
+					remoteAddr);
+			if (exceptionToString.matches(
+					".*ReflectiveSearchDefinitionSerializer.FlatTreeException.*")) {
+				Ax.out("Client exception:\n%s", exceptionToString);
+			}
+			return Registry.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence()
+					.log(exceptionToString, exceptionType);
+		} finally {
+			LooseContext.pop();
+		}
+	}
 
-    @Override
-    public void logClientRecords(String serializedLogRecords) {
-        Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
+	@Override
+	public void logClientRecords(String serializedLogRecords) {
+		Converter<String, ClientLogRecords> converter = new Converter<String, ClientLogRecord.ClientLogRecords>() {
+			@Override
+			public ClientLogRecords convert(String original) {
+				try {
+					return TransformManager.deserialize(original);
+				} catch (Exception e) {
+					System.out.format(
+							"problem deserializing clientlogrecord:\n%s\n",
+							original);
+					e.printStackTrace();
+					if (ResourceUtilities.getBoolean(
+							CommonRemoteServiceServlet.class,
+							"throwLogClientRecordExceptions")) {
+						throw new WrappedRuntimeException(e);
+					}
+					return null;
+				}
+			}
+		};
+		List<String> lines = Arrays.asList(serializedLogRecords.split("\n"));
+		List<ClientLogRecords> records = lines.stream().map(converter)
+				.filter(Objects::nonNull).collect(Collectors.toList());
+		String remoteAddr = getRemoteAddress();
+		for (ClientLogRecords r : records) {
+			for (ClientLogRecord clr : r.getLogRecords()) {
+				clr.setIpAddress(remoteAddr);
+				sanitiseClrString(clr);
+			}
+		}
+		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
+				.persistClientLogRecords(records);
+	}
 
-            @Override
-            public ClientLogRecords convert(String original) {
-                try {
-                    return TransformManager.deserialize(original);
-                } catch (Exception e) {
-                    System.out.format("problem deserializing clientlogrecord:\n%s\n", original);
-                    e.printStackTrace();
-                    if (ResourceUtilities.getBoolean(CommonRemoteServiceServlet.class, "throwLogClientRecordExceptions")) {
-                        throw new WrappedRuntimeException(e);
-                    }
-                    return null;
-                }
-            }
-        };
-        List<String> lines = Arrays.asList(serializedLogRecords.split("\n"));
-        List<ClientLogRecords> records = lines.stream().map(converter).filter(Objects::nonNull).collect(Collectors.toList());
-        String remoteAddr = getRemoteAddress();
-        for (ClientLogRecords r : records) {
-            for (ClientLogRecord clr : r.getLogRecords()) {
-                clr.setIpAddress(remoteAddr);
-                sanitiseClrString(clr);
-            }
-        }
-        Registry.impl(CommonPersistenceProvider.class).getCommonPersistence().persistClientLogRecords(records);
-    }
+	public void logRpcException(Exception ex) {
+		logRpcException(ex, LogMessageType.RPC_EXCEPTION.toString());
+	}
 
-    public void logRpcException(Exception ex) {
-        logRpcException(ex, LogMessageType.RPC_EXCEPTION.toString());
-    }
+	public void logRpcException(Exception ex, String exceptionType) {
+		String remoteAddr = getRemoteAddress();
+		if (rpcExceptionLogCounter.incrementAndGet() > 10000) {
+			Ax.err("Not logging rpc exception %s : %s - too many exceptions",
+					exceptionType, CommonUtils.toSimpleExceptionMessage(ex));
+			return;
+		}
+		AlcinaServlet.topicApplicationThrowables().publish(ex);
+		try {
+			LooseContext.pushWithKey(
+					CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
+					remoteAddr);
+			RPCRequest rpcRequest = getThreadRpcRequest();
+			StringWriter sw = new StringWriter();
+			PrintWriter pw = new PrintWriter(sw);
+			ex.printStackTrace(pw);
+			String msg = "RPC exception:\n";
+			if (rpcRequest != null) {
+				msg = describeRpcRequest(rpcRequest, msg);
+			}
+			msg += "\nStacktrace:\t " + sw.toString();
+			Ax.err(msg);
+			CommonPersistenceLocal cpl = Registry
+					.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence();
+			cpl.log(msg, exceptionType);
+		} finally {
+			LooseContext.pop();
+		}
+	}
 
-    public void logRpcException(Exception ex, String exceptionType) {
-        String remoteAddr = getRemoteAddress();
-        if (rpcExceptionLogCounter.incrementAndGet() > 10000) {
-            Ax.err("Not logging rpc exception %s : %s - too many exceptions", exceptionType, CommonUtils.toSimpleExceptionMessage(ex));
-            return;
-        }
-        AlcinaServlet.topicApplicationThrowables().publish(ex);
-        try {
-            LooseContext.pushWithKey(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS, remoteAddr);
-            RPCRequest rpcRequest = getThreadRpcRequest();
-            StringWriter sw = new StringWriter();
-            PrintWriter pw = new PrintWriter(sw);
-            ex.printStackTrace(pw);
-            String msg = "RPC exception:\n";
-            if (rpcRequest != null) {
-                msg = describeRpcRequest(rpcRequest, msg);
-            }
-            msg += "\nStacktrace:\t " + sw.toString();
-            Ax.err(msg);
-            CommonPersistenceLocal cpl = Registry.impl(CommonPersistenceProvider.class).getCommonPersistence();
-            cpl.log(msg, exceptionType);
-        } finally {
-            LooseContext.pop();
-        }
-    }
-
-    /**
-     * Note - don't (normally) call this server-side, particularly in a loop,
-     * since it spawns a potentially unlimited number of performers
-     */
-    @Override
-    public String performAction(RemoteAction action) {
-        Job job = null;
-        if (action instanceof SynchronousAction) {
-            job = JobRegistry.get().perform(action);
-        } else {
-            job = JobRegistry.createBuilder().withTask(action).create();
-        }
-        Transaction.commit();
-        DomainStore.waitUntilCurrentRequestsProcessed();
-        String idString = String.valueOf(job.getId());
-        return idString;
-    }
-
-    @Override
-    public void persistOfflineTransforms(List<DeltaApplicationRecord> uncommitted) throws WebException {
-        TransformCommit.commitBulkTransforms(uncommitted, true, false);
-    }
-
-    @Override
-    public void ping() {
-    }
-
-    @Override
-    public JobTracker.Response pollJobStatus(JobTracker.Request request) {
-        List<Job> jobs = MethodContext.instance().withContextTrue(DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES).call(() -> request.getIds().stream().map(Job::byId).filter(Objects::nonNull).collect(Collectors.toList()));
-        JobTracker.Response response = new JobTracker.Response();
-        response.setTrackers(jobs.stream().map(Job::asJobTracker).collect(Collectors.toList()));
-        return response;
-    }
-
-    @Override
-    public JobTracker pollJobStatus(String id, boolean cancel) {
-        Job job0 = MethodContext.instance().withContextTrue(DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES).call(() -> {
-            Job job = Job.byId(Long.parseLong(id));
-            if (job == null) {
-                return null;
-            }
-            if (cancel) {
-                job.cancel();
-                Transaction.commit();
-            }
-            return job;
-        });
-        return job0 == null ? null : job0.asJobTracker();
-    }
-
-    @Override
-    public final /*
-	 * Cannot be overridden - since it does some complex context arrangements.
-	 * To change behaviour, add subclass hooks (e.g.
-	 * afterAlcinaServletContextInitialisation)
+	/**
+	 * Note - don't (normally) call this server-side, particularly in a loop,
+	 * since it spawns a potentially unlimited number of performers
 	 */
-    String processCall(String payload) throws SerializationException {
-        RPCRequest rpcRequest = null;
-        boolean alcinaServletContextInitialised = false;
-        AlcinaServletContext alcinaServletContext = null;
-        try {
-            rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
-            String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
-            String name = rpcRequest.getMethod().getName();
-            String threadName = Ax.format("gwt-rpc:%s:%s%s", name, callCounter.incrementAndGet(), suffix);
-            alcinaServletContext = new AlcinaServletContext();
-            alcinaServletContextInitialised = true;
-            alcinaServletContext.begin(getThreadLocalRequest(), getThreadLocalResponse(), threadName);
-            afterAlcinaServletContextInitialisation();
-            LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST, getThreadLocalRequest());
-            LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE, getThreadLocalResponse());
-            getThreadLocalRequest().setAttribute(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS, new StringMap());
-            if (rpcRequest.getSerializationPolicy() instanceof LegacySerializationPolicy) {
-                throw new IncompatibleRemoteServiceException();
-            }
-            getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_RQ, rpcRequest);
-            getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_PAYLOAD, payload);
-            LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS, ServletLayerUtils.robustGetRemoteAddress(getThreadLocalRequest()));
-            LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_INSTANCE_ID, AuthenticationManager.provideAuthenticatedClientInstanceId());
-            RPCRequest f_rpcRequest = rpcRequest;
-            onAfterAlcinaAuthentication(name);
-            LooseContext.set(CONTEXT_RPC_USER_ID, PermissionsManager.get().getUserId());
-            InternalMetrics.get().startTracker(rpcRequest, () -> describeRpcRequest(f_rpcRequest, ""), InternalMetricTypeAlcina.client, Thread.currentThread().getName(), () -> true);
-            TransformCommit.prepareHttpRequestCommitContext(PermissionsManager.get().getClientInstance().getId(), PermissionsManager.get().getUserId(), ServletLayerUtils.robustGetRemoteAddress(getThreadLocalRequest()));
-            Method method;
-            try {
-                method = this.getClass().getMethod(name, rpcRequest.getMethod().getParameterTypes());
-                if (method.isAnnotationPresent(WebMethod.class)) {
-                    WebMethod webMethod = method.getAnnotation(WebMethod.class);
-                    AnnotatedPermissible ap = new AnnotatedPermissible(webMethod.customPermission());
-                    if (!PermissionsManager.get().isPermitted(ap)) {
-                        WebException wex = new WebException("Action not permitted: " + name);
-                        logRpcException(wex, LogMessageType.PERMISSIONS_EXCEPTION.toString());
-                        return RPC.encodeResponseForFailure(null, wex);
-                    }
-                    if (!webMethod.readonlyPermitted()) {
-                        try {
-                            AppPersistenceBase.checkNotReadOnly();
-                        } catch (ReadOnlyException e) {
-                            ExceptionMessage exceptionMessage = new OutOfBandMessage.ExceptionMessage();
-                            exceptionMessage.setMessageHtml(ReadonlySupportServletLayer.get().getNotPerformedBecauseReadonlyMessage());
-                            OutOfBandMessages.get().addMessage(exceptionMessage);
-                            throw e;
-                        }
-                    }
-                }
-            } catch (SecurityException ex) {
-                RPC.encodeResponseForFailure(null, ex);
-            } catch (NoSuchMethodException ex) {
-                RPC.encodeResponseForFailure(null, ex);
-            }
-            return invokeAndEncodeResponse(rpcRequest);
-        } catch (IncompatibleRemoteServiceException ex) {
-            getServletContext().log("An IncompatibleRemoteServiceException was thrown while processing this call.", ex);
-            return RPC.encodeResponseForFailure(null, ex);
-        } catch (UnexpectedException ex) {
-            logRpcException(ex);
-            throw ex;
-        } catch (OutOfMemoryError e) {
-            handleOom(payload, e);
-            throw e;
-        } catch (RuntimeException rex) {
-            logRpcException(rex);
-            throw rex;
-        } finally {
-            try {
-                HttpServletResponse threadLocalResponse = getThreadLocalResponse();
-                if (threadLocalResponse != null) {
-                    OutOfBandMessages.get().addToResponse(threadLocalResponse);
-                    /*
+	@Override
+	public String performAction(RemoteAction action) {
+		Job job = null;
+		if (action instanceof SynchronousAction) {
+			job = JobRegistry.get().perform(action);
+		} else {
+			job = JobRegistry.createBuilder().withTask(action).create();
+		}
+		Transaction.commit();
+		DomainStore.waitUntilCurrentRequestsProcessed();
+		String idString = String.valueOf(job.getId());
+		return idString;
+	}
+
+	@Override
+	public void persistOfflineTransforms(
+			List<DeltaApplicationRecord> uncommitted) throws WebException {
+		TransformCommit.commitBulkTransforms(uncommitted, true, false);
+	}
+
+	@Override
+	public void ping() {
+	}
+
+	@Override
+	public JobTracker.Response pollJobStatus(JobTracker.Request request) {
+		List<Job> jobs = MethodContext.instance().withContextTrue(
+				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
+				.call(() -> request.getIds().stream().map(Job::byId)
+						.filter(Objects::nonNull).collect(Collectors.toList()));
+		JobTracker.Response response = new JobTracker.Response();
+		response.setTrackers(jobs.stream().map(Job::asJobTracker)
+				.collect(Collectors.toList()));
+		return response;
+	}
+
+	@Override
+	public JobTracker pollJobStatus(String id, boolean cancel) {
+		Job job0 = MethodContext.instance().withContextTrue(
+				DomainStore.CONTEXT_DO_NOT_POPULATE_LAZY_PROPERTY_VALUES)
+				.call(() -> {
+					Job job = Job.byId(Long.parseLong(id));
+					if (job == null) {
+						return null;
+					}
+					if (cancel) {
+						job.cancel();
+						Transaction.commit();
+					}
+					return job;
+				});
+		return job0 == null ? null : job0.asJobTracker();
+	}
+
+	@Override
+	public final /*
+					 * Cannot be overridden - since it does some complex context
+					 * arrangements. To change behaviour, add subclass hooks
+					 * (e.g. afterAlcinaServletContextInitialisation)
+					 */
+	String processCall(String payload) throws SerializationException {
+		RPCRequest rpcRequest = null;
+		boolean alcinaServletContextInitialised = false;
+		AlcinaServletContext alcinaServletContext = null;
+		try {
+			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
+			String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
+			String name = rpcRequest.getMethod().getName();
+			String threadName = Ax.format("gwt-rpc:%s:%s%s", name,
+					callCounter.incrementAndGet(), suffix);
+			alcinaServletContext = new AlcinaServletContext();
+			alcinaServletContextInitialised = true;
+			alcinaServletContext.begin(getThreadLocalRequest(),
+					getThreadLocalResponse(), threadName);
+			afterAlcinaServletContextInitialisation();
+			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
+					getThreadLocalRequest());
+			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
+					getThreadLocalResponse());
+			getThreadLocalRequest().setAttribute(
+					CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS,
+					new StringMap());
+			if (rpcRequest
+					.getSerializationPolicy() instanceof LegacySerializationPolicy) {
+				throw new IncompatibleRemoteServiceException();
+			}
+			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_RQ, rpcRequest);
+			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_PAYLOAD,
+					payload);
+			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
+					ServletLayerUtils
+							.robustGetRemoteAddress(getThreadLocalRequest()));
+			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_INSTANCE_ID,
+					AuthenticationManager
+							.provideAuthenticatedClientInstanceId());
+			RPCRequest f_rpcRequest = rpcRequest;
+			onAfterAlcinaAuthentication(name);
+			LooseContext.set(CONTEXT_RPC_USER_ID,
+					PermissionsManager.get().getUserId());
+			InternalMetrics.get().startTracker(rpcRequest,
+					() -> describeRpcRequest(f_rpcRequest, ""),
+					InternalMetricTypeAlcina.client,
+					Thread.currentThread().getName(), () -> true);
+			TransformCommit.prepareHttpRequestCommitContext(
+					PermissionsManager.get().getClientInstance().getId(),
+					PermissionsManager.get().getUserId(), ServletLayerUtils
+							.robustGetRemoteAddress(getThreadLocalRequest()));
+			Method method;
+			try {
+				method = this.getClass().getMethod(name,
+						rpcRequest.getMethod().getParameterTypes());
+				if (method.isAnnotationPresent(WebMethod.class)) {
+					WebMethod webMethod = method.getAnnotation(WebMethod.class);
+					AnnotatedPermissible ap = new AnnotatedPermissible(
+							webMethod.customPermission());
+					if (!PermissionsManager.get().isPermitted(ap)) {
+						WebException wex = new WebException(
+								"Action not permitted: " + name);
+						logRpcException(wex,
+								LogMessageType.PERMISSIONS_EXCEPTION
+										.toString());
+						return RPC.encodeResponseForFailure(null, wex);
+					}
+					if (!webMethod.readonlyPermitted()) {
+						try {
+							AppPersistenceBase.checkNotReadOnly();
+						} catch (ReadOnlyException e) {
+							ExceptionMessage exceptionMessage = new OutOfBandMessage.ExceptionMessage();
+							exceptionMessage.setMessageHtml(
+									ReadonlySupportServletLayer.get()
+											.getNotPerformedBecauseReadonlyMessage());
+							OutOfBandMessages.get()
+									.addMessage(exceptionMessage);
+							throw e;
+						}
+					}
+				}
+			} catch (SecurityException ex) {
+				RPC.encodeResponseForFailure(null, ex);
+			} catch (NoSuchMethodException ex) {
+				RPC.encodeResponseForFailure(null, ex);
+			}
+			return invokeAndEncodeResponse(rpcRequest);
+		} catch (IncompatibleRemoteServiceException ex) {
+			getServletContext().log(
+					"An IncompatibleRemoteServiceException was thrown while processing this call.",
+					ex);
+			return RPC.encodeResponseForFailure(null, ex);
+		} catch (UnexpectedException ex) {
+			logRpcException(ex);
+			throw ex;
+		} catch (OutOfMemoryError e) {
+			handleOom(payload, e);
+			throw e;
+		} catch (RuntimeException rex) {
+			logRpcException(rex);
+			throw rex;
+		} finally {
+			try {
+				HttpServletResponse threadLocalResponse = getThreadLocalResponse();
+				if (threadLocalResponse != null) {
+					OutOfBandMessages.get().addToResponse(threadLocalResponse);
+					/*
 					 * save the username for metric logging - the user will be
 					 * cleared before the metrics are output
 					 */
-                    getThreadLocalRequest().setAttribute(THRD_LOCAL_USER_NAME, PermissionsManager.get().getUserName());
-                }
-                if (rpcRequest != null) {
-                    InternalMetrics.get().endTracker(rpcRequest);
-                }
-            } finally {
-                if (alcinaServletContextInitialised) {
-                    alcinaServletContext.end();
-                }
-            }
-        }
-    }
+					getThreadLocalRequest().setAttribute(THRD_LOCAL_USER_NAME,
+							PermissionsManager.get().getUserName());
+				}
+				if (rpcRequest != null) {
+					InternalMetrics.get().endTracker(rpcRequest);
+				}
+			} finally {
+				if (alcinaServletContextInitialised) {
+					alcinaServletContext.end();
+				}
+			}
+		}
+	}
 
-    protected void afterAlcinaServletContextInitialisation() {
-        // for subclasses
-    }
+	protected void afterAlcinaServletContextInitialisation() {
+		// for subclasses
+	}
 
-    public PublicationResult publish(ContentRequestBase<? extends ContentDefinition> cr) throws WebException {
-        return PublicationRequestHandler.get().publish(cr);
-    }
+	public PublicationResult
+			publish(ContentRequestBase<? extends ContentDefinition> cr)
+					throws WebException {
+		return PublicationRequestHandler.get().publish(cr);
+	}
 
-    @Override
-    public SearchResultsBase search(SearchDefinition def) {
-        return Registry.impl(CommonPersistenceProvider.class).getCommonPersistence().search(def);
-    }
+	@Override
+	public SearchResultsBase search(SearchDefinition def) {
+		return Registry.impl(CommonPersistenceProvider.class)
+				.getCommonPersistence().search(def);
+	}
 
-    @Override
-    public Response suggest(BoundSuggestOracleRequest request) {
-        try {
-            LooseContext.set(DomainSearcher.CONTEXT_HINT, request.getHint());
-            Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class.forName(request.getTargetClassName());
-            return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz).handleRequest(clazz, request, request.getHint());
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	@Override
+	public Response suggest(BoundSuggestOracleRequest request) {
+		try {
+			LooseContext.set(DomainSearcher.CONTEXT_HINT, request.getHint());
+			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
+					.forName(request.getTargetClassName());
+			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
+					.handleRequest(clazz, request, request.getHint());
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    @Override
-    @WebMethod(readonlyPermitted = false)
-    public DomainTransformResponse transform(DomainTransformRequest request) throws DomainTransformRequestException {
-        try {
-            for (DomainTransformEvent transform : request.allTransforms()) {
-                if (transform.getObjectClass().getAnnotation(DomainTransformPersistable.class) != null || (transform.getValueClass() != null && transform.getValueClass().getAnnotation(DomainTransformPersistable.class) != null)) {
-                    throw new PermissionsException(Ax.format("Illegal class for client modification: %s", transform));
-                }
-            }
-            return TransformCommit.get().transform(request, false, false, true).response;
-        } catch (DomainTransformRequestException dtre) {
-            throw dtre;
-        } catch (Exception e) {
-            DomainTransformResponse domainTransformResponse = new DomainTransformResponse();
-            domainTransformResponse.setRequest(request);
-            DomainTransformException transformException = new DomainTransformException(e.getMessage(), e);
-            transformException.setRequest(request);
-            transformException.setType(DomainTransformExceptionType.UNKNOWN);
-            domainTransformResponse.getTransformExceptions().add(transformException);
-            logRpcException(e);
-            throw new DomainTransformRequestException(domainTransformResponse);
-        }
-    }
+	@Override
+	@WebMethod(readonlyPermitted = false)
+	public DomainTransformResponse transform(DomainTransformRequest request)
+			throws DomainTransformRequestException {
+		try {
+			for (DomainTransformEvent transform : request.allTransforms()) {
+				if (transform.getObjectClass()
+						.getAnnotation(DomainTransformPersistable.class) != null
+						|| (transform.getValueClass() != null
+								&& transform.getValueClass().getAnnotation(
+										DomainTransformPersistable.class) != null)) {
+					throw new PermissionsException(Ax.format(
+							"Illegal class for client modification: %s",
+							transform));
+				}
+			}
+			return TransformCommit.get().transform(request, false, false,
+					true).response;
+		} catch (DomainTransformRequestException dtre) {
+			throw dtre;
+		} catch (Exception e) {
+			DomainTransformResponse domainTransformResponse = new DomainTransformResponse();
+			domainTransformResponse.setRequest(request);
+			DomainTransformException transformException = new DomainTransformException(
+					e.getMessage(), e);
+			transformException.setRequest(request);
+			transformException.setType(DomainTransformExceptionType.UNKNOWN);
+			domainTransformResponse.getTransformExceptions()
+					.add(transformException);
+			logRpcException(e);
+			throw new DomainTransformRequestException(domainTransformResponse);
+		}
+	}
 
-    @Override
-    public List<ServerValidator> validateOnServer(List<ServerValidator> validators) {
-        List<ServerValidator> results = new ArrayList<ServerValidator>();
-        for (ServerValidator validator : validators) {
-            ServerValidatorHandler handler = Registry.impl(ServerValidatorHandler.class, validator.getClass());
-            handler.handle(validator);
-            results.add(validator);
-        }
-        return results;
-    }
+	@Override
+	public List<ServerValidator>
+			validateOnServer(List<ServerValidator> validators) {
+		List<ServerValidator> results = new ArrayList<ServerValidator>();
+		for (ServerValidator validator : validators) {
+			ServerValidatorHandler handler = Registry
+					.impl(ServerValidatorHandler.class, validator.getClass());
+			handler.handle(validator);
+			results.add(validator);
+		}
+		return results;
+	}
 
-    @Override
-    @WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
-    public DomainUpdate waitForTransforms(DomainTransformCommitPosition position) throws PermissionsException {
-        if (!waitForTransformsEnabled()) {
-            throw new PermissionsException();
-        }
-        Long clientInstanceId = AuthenticationManager.provideAuthenticatedClientInstanceId();
-        if (clientInstanceId == null) {
-            throw new PermissionsException();
-        }
-        return new TransformCollector().waitForTransforms(position, clientInstanceId);
-    }
+	@Override
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	public DomainUpdate
+			waitForTransforms(DomainTransformCommitPosition position)
+					throws PermissionsException {
+		if (!waitForTransformsEnabled()) {
+			throw new PermissionsException();
+		}
+		Long clientInstanceId = AuthenticationManager
+				.provideAuthenticatedClientInstanceId();
+		if (clientInstanceId == null) {
+			throw new PermissionsException();
+		}
+		return new TransformCollector().waitForTransforms(position,
+				clientInstanceId);
+	}
 
-    private void sanitiseClrString(ClientLogRecord clr) {
-        clr.setMessage(CommonUtils.nullToEmpty(clr.getMessage()).replace('\0', ' '));
-    }
+	private void sanitiseClrString(ClientLogRecord clr) {
+		clr.setMessage(
+				CommonUtils.nullToEmpty(clr.getMessage()).replace('\0', ' '));
+	}
 
-    protected <T> T defaultProjection(T t) {
-        return GraphProjections.defaultProjections().project(t);
-    }
+	protected <T> T defaultProjection(T t) {
+		return GraphProjections.defaultProjections().project(t);
+	}
 
-    protected String describeRpcRequest(RPCRequest rpcRequest, String msg) {
-        msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
-        msg += "User: " + PermissionsManager.get().getUserString() + "\n";
-        msg += "Types: " + CommonUtils.joinWithNewlineTab(Arrays.asList(rpcRequest.getMethod().getParameters()));
-        msg += "\nParameters: \n";
-        Object[] parameters = rpcRequest.getParameters();
-        if (rpcRequest.getMethod().getName().equals("transform")) {
-        } else {
-            for (int idx = 0; idx < parameters.length; idx++) {
-                try {
-                    String serializedParameter = new JacksonJsonObjectSerializer().withIdRefs().withMaxLength(100000).withTruncateAtMaxLength(true).serializeNoThrow(parameters[idx]);
-                    msg += Ax.format("%s: %s\n", idx, serializedParameter);
-                } catch (Throwable e) {
-                    e.printStackTrace();
-                }
-            }
-        }
-        return msg;
-    }
+	protected String describeRpcRequest(RPCRequest rpcRequest, String msg) {
+		msg += "Method: " + rpcRequest.getMethod().getName() + "\n";
+		msg += "User: " + PermissionsManager.get().getUserString() + "\n";
+		msg += "Types: " + CommonUtils.joinWithNewlineTab(
+				Arrays.asList(rpcRequest.getMethod().getParameters()));
+		msg += "\nParameters: \n";
+		Object[] parameters = rpcRequest.getParameters();
+		if (rpcRequest.getMethod().getName().equals("transform")) {
+		} else {
+			for (int idx = 0; idx < parameters.length; idx++) {
+				try {
+					String serializedParameter = new JacksonJsonObjectSerializer()
+							.withIdRefs().withMaxLength(100000)
+							.withTruncateAtMaxLength(true)
+							.serializeNoThrow(parameters[idx]);
+					msg += Ax.format("%s: %s\n", idx, serializedParameter);
+				} catch (Throwable e) {
+					e.printStackTrace();
+				}
+			}
+		}
+		return msg;
+	}
 
-    @Override
-    protected void doUnexpectedFailure(Throwable e) {
-        if (e.getClass().getName().equals("org.apache.catalina.connector.ClientAbortException")) {
-            getLogger().debug("Client RPC call aborted by client");
-            return;
-        }
-        if (e instanceof ReadOnlyException) {
-            try {
-                HttpServletResponse response = getThreadLocalResponse();
-                /*
+	@Override
+	protected void doUnexpectedFailure(Throwable e) {
+		if (e.getClass().getName()
+				.equals("org.apache.catalina.connector.ClientAbortException")) {
+			getLogger().debug("Client RPC call aborted by client");
+			return;
+		}
+		if (e instanceof ReadOnlyException) {
+			try {
+				HttpServletResponse response = getThreadLocalResponse();
+				/*
 				 * don't reset - want to emit headers (and there's nothing salty
 				 * in the response)
 				 */
-                // response.reset();
-                ServletContext servletContext = getServletContext();
-                response.setContentType("text/plain");
-                response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
-                response.getOutputStream().write(e.toString().getBytes("UTF-8"));
-            } catch (Exception e2) {
-                throw new WrappedRuntimeException(e2);
-            }
-        } else {
-            e.printStackTrace();
-            try {
-                getThreadLocalResponse().reset();
-                StringMap cachedForUnexpectedException = (StringMap) getThreadLocalRequest().getAttribute(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
-                cachedForUnexpectedException.forEach((k, v) -> getThreadLocalResponse().setHeader(k, v));
-            } catch (IllegalStateException ex) {
-                /*
+				// response.reset();
+				ServletContext servletContext = getServletContext();
+				response.setContentType("text/plain");
+				response.setStatus(
+						HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
+				response.getOutputStream()
+						.write(e.toString().getBytes("UTF-8"));
+			} catch (Exception e2) {
+				throw new WrappedRuntimeException(e2);
+			}
+		} else {
+			e.printStackTrace();
+			try {
+				getThreadLocalResponse().reset();
+				StringMap cachedForUnexpectedException = (StringMap) getThreadLocalRequest()
+						.getAttribute(
+								CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS);
+				cachedForUnexpectedException.forEach(
+						(k, v) -> getThreadLocalResponse().setHeader(k, v));
+			} catch (IllegalStateException ex) {
+				/*
 				 * If we can't reset the request, the only way to signal that
 				 * something has gone wrong is to throw an exception from here.
 				 * It should be the case that we call the user's implementation
@@ -607,173 +719,193 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet im
 				 * that gets tripped is if the object serialization code blows
 				 * up.
 				 */
-                throw new RuntimeException("Unable to report failure", e);
-            }
-            ServletContext servletContext = getServletContext();
-            RPCServletUtils.writeResponseForUnexpectedFailure(servletContext, getThreadLocalResponse(), e);
-        }
-    }
+				throw new RuntimeException("Unable to report failure", e);
+			}
+			ServletContext servletContext = getServletContext();
+			RPCServletUtils.writeResponseForUnexpectedFailure(servletContext,
+					getThreadLocalResponse(), e);
+		}
+	}
 
-    protected Logger getLogger() {
-        return logger;
-    }
+	protected Logger getLogger() {
+		return logger;
+	}
 
-    protected String getRemoteAddress() {
-        return getThreadLocalRequest() == null ? null : getThreadLocalRequest().getRemoteAddr();
-    }
+	protected String getRemoteAddress() {
+		return getThreadLocalRequest() == null ? null
+				: getThreadLocalRequest().getRemoteAddr();
+	}
 
-    protected String getRpcHandlerThreadNameSuffix(RPCRequest rpcRequest) {
-        try {
-            Method method = this.getClass().getMethod(rpcRequest.getMethod().getName(), rpcRequest.getMethod().getParameterTypes());
-            if (method.isAnnotationPresent(WebMethod.class)) {
-                WebMethod webMethod = method.getAnnotation(WebMethod.class);
-                return webMethod.rpcHandlerThreadNameSuffix();
-            }
-            return "";
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	protected String getRpcHandlerThreadNameSuffix(RPCRequest rpcRequest) {
+		try {
+			Method method = this.getClass().getMethod(
+					rpcRequest.getMethod().getName(),
+					rpcRequest.getMethod().getParameterTypes());
+			if (method.isAnnotationPresent(WebMethod.class)) {
+				WebMethod webMethod = method.getAnnotation(WebMethod.class);
+				return webMethod.rpcHandlerThreadNameSuffix();
+			}
+			return "";
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    protected HttpSession getSession() {
-        return getSession(getThreadLocalRequest());
-    }
+	protected HttpSession getSession() {
+		return getSession(getThreadLocalRequest());
+	}
 
-    protected HttpSession getSession(HttpServletRequest request) {
-        return getSession(request, getThreadLocalResponse());
-    }
+	protected HttpSession getSession(HttpServletRequest request) {
+		return getSession(request, getThreadLocalResponse());
+	}
 
-    protected HttpSession getSession(HttpServletRequest request, HttpServletResponse response) {
-        return Registry.impl(SessionProvider.class).getSession(request, response);
-    }
+	protected HttpSession getSession(HttpServletRequest request,
+			HttpServletResponse response) {
+		return Registry.impl(SessionProvider.class).getSession(request,
+				response);
+	}
 
-    protected RPCRequest getThreadRpcRequest() {
-        return getThreadLocalRequest() == null ? null : (RPCRequest) getThreadLocalRequest().getAttribute(THRD_LOCAL_RPC_RQ);
-    }
+	protected RPCRequest getThreadRpcRequest() {
+		return getThreadLocalRequest() == null ? null
+				: (RPCRequest) getThreadLocalRequest()
+						.getAttribute(THRD_LOCAL_RPC_RQ);
+	}
 
-    protected String getUserAgent() {
-        return getUserAgent(getThreadLocalRequest());
-    }
+	protected String getUserAgent() {
+		return getUserAgent(getThreadLocalRequest());
+	}
 
-    protected void handleOom(String payload, OutOfMemoryError e) {
-        if (DUMP_STACK_TRACE_ON_OOM) {
-            System.out.println("Payload:");
-            System.out.println(payload);
-            e.printStackTrace();
-            SEUtilities.dumpAllThreads();
-        }
-    }
+	protected void handleOom(String payload, OutOfMemoryError e) {
+		if (DUMP_STACK_TRACE_ON_OOM) {
+			System.out.println("Payload:");
+			System.out.println(payload);
+			e.printStackTrace();
+			SEUtilities.dumpAllThreads();
+		}
+	}
 
-    protected String invokeAndEncodeResponse(RPCRequest rpcRequest) throws SerializationException {
-        return RpcRequestRouter.get().invokeAndEncodeResponse(this, rpcRequest);
-    }
+	protected String invokeAndEncodeResponse(RPCRequest rpcRequest)
+			throws SerializationException {
+		return RpcRequestRouter.get().invokeAndEncodeResponse(this, rpcRequest);
+	}
 
-    protected boolean isPersistOfflineTransforms() {
-        return true;
-    }
+	protected boolean isPersistOfflineTransforms() {
+		return true;
+	}
 
-    protected int nextTransformRequestId() {
-        return Registry.impl(TransformCommit.class).nextTransformRequestId();
-    }
+	protected int nextTransformRequestId() {
+		return Registry.impl(TransformCommit.class).nextTransformRequestId();
+	}
 
-    protected void onAfterAlcinaAuthentication(String methodName) {
-    }
+	protected void onAfterAlcinaAuthentication(String methodName) {
+	}
 
-    @Override
-    protected void onAfterResponseSerialized(String serializedResponse) {
-        LooseContext.confirmDepth(looseContextDepth.get());
-        PermissionsManager.get().setUser(null);
-        super.onAfterResponseSerialized(serializedResponse);
-    }
+	@Override
+	protected void onAfterResponseSerialized(String serializedResponse) {
+		LooseContext.confirmDepth(looseContextDepth.get());
+		PermissionsManager.get().setUser(null);
+		super.onAfterResponseSerialized(serializedResponse);
+	}
 
-    @Override
-    protected void onBeforeRequestDeserialized(String serializedRequest) {
-        super.onBeforeRequestDeserialized(serializedRequest);
-        looseContextDepth.set(LooseContext.depth());
-        getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
-    }
+	@Override
+	protected void onBeforeRequestDeserialized(String serializedRequest) {
+		super.onBeforeRequestDeserialized(serializedRequest);
+		looseContextDepth.set(LooseContext.depth());
+		getThreadLocalResponse().setHeader("Cache-Control", "no-cache");
+	}
 
-    protected void setLogger(Logger logger) {
-        this.logger = logger;
-    }
+	protected void setLogger(Logger logger) {
+		this.logger = logger;
+	}
 
-    protected boolean waitForTransformsEnabled() {
-        return false;
-    }
+	protected boolean waitForTransformsEnabled() {
+		return false;
+	}
 
-    public static abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseType> {
+	public static abstract class BoundSuggestOracleRequestHandler<T extends BoundSuggestOracleResponseType> {
+		public Response handleRequest(Class<T> clazz,
+				BoundSuggestOracleRequest request, String hint) {
+			Response response = new Response();
+			List<T> responses = getResponses(request.getQuery(),
+					request.getModel(), hint);
+			responses = projectResponses(responses, clazz);
+			response.setSuggestions(responses.stream()
+					.map(BoundSuggestOracleSuggestion::new)
+					.limit(getSuggestionLimit()).collect(Collectors.toList()));
+			if (offerNullSuggestion()) {
+				((List) response.getSuggestions()).add(0,
+						BoundSuggestOracleSuggestion.nullSuggestion());
+			}
+			return projectResponse(response);
+		}
 
-        public Response handleRequest(Class<T> clazz, BoundSuggestOracleRequest request, String hint) {
-            Response response = new Response();
-            List<T> responses = getResponses(request.getQuery(), request.getModel(), hint);
-            responses = projectResponses(responses, clazz);
-            response.setSuggestions(responses.stream().map(BoundSuggestOracleSuggestion::new).limit(getSuggestionLimit()).collect(Collectors.toList()));
-            if (offerNullSuggestion()) {
-                ((List) response.getSuggestions()).add(0, BoundSuggestOracleSuggestion.nullSuggestion());
-            }
-            return projectResponse(response);
-        }
+		protected Response projectResponse(Response response) {
+			return GraphProjections.defaultProjections().project(response);
+		}
 
-        protected Response projectResponse(Response response) {
-            return GraphProjections.defaultProjections().project(response);
-        }
+		protected abstract List<T> getResponses(String query,
+				BoundSuggestOracleModel model, String hint);
 
-        protected abstract List<T> getResponses(String query, BoundSuggestOracleModel model, String hint);
+		protected long getSuggestionLimit() {
+			return 50;
+		}
 
-        protected long getSuggestionLimit() {
-            return 50;
-        }
+		protected boolean offerNullSuggestion() {
+			return true;
+		}
 
-        protected boolean offerNullSuggestion() {
-            return true;
-        }
+		protected List<T> projectResponses(List<T> list, Class<T> clazz) {
+			if (Entity.class.isAssignableFrom(clazz)) {
+				list = GraphProjections.defaultProjections().maxDepth(1)
+						.project(list);
+			}
+			return list;
+		}
+	}
 
-        protected List<T> projectResponses(List<T> list, Class<T> clazz) {
-            if (Entity.class.isAssignableFrom(clazz)) {
-                list = GraphProjections.defaultProjections().maxDepth(1).project(list);
-            }
-            return list;
-        }
-    }
+	@RegistryLocation(registryPoint = OutOfBandMessages.class, implementationType = ImplementationType.SINGLETON)
+	@Registration.Singleton
+	public static class OutOfBandMessages {
+		public static final String ATTR = OutOfBandMessages.class.getName()
+				+ ".ATTR";
 
-    @RegistryLocation(registryPoint = OutOfBandMessages.class, implementationType = ImplementationType.SINGLETON)
-    @Registration.Singleton
-    public static class OutOfBandMessages {
+		public static Topic<List<OutOfBandMessage>> topicAppendMessages = Topic
+				.local();
 
-        public static final String ATTR = OutOfBandMessages.class.getName() + ".ATTR";
+		public static CommonRemoteServiceServlet.OutOfBandMessages get() {
+			return Registry
+					.impl(CommonRemoteServiceServlet.OutOfBandMessages.class);
+		}
 
-        public static Topic<List<OutOfBandMessage>> topicAppendMessages = Topic.local();
+		protected Logger logger = LoggerFactory.getLogger(getClass());
 
-        public static CommonRemoteServiceServlet.OutOfBandMessages get() {
-            return Registry.impl(CommonRemoteServiceServlet.OutOfBandMessages.class);
-        }
+		public void addMessage(OutOfBandMessage message) {
+			HttpServletRequest threadLocalRequest = getContextThreadLocalRequest();
+			if (threadLocalRequest == null) {
+				logger.info("No request - not publishing {}", message);
+				return;
+			}
+			ensureMessageList().add(message);
+		}
 
-        protected Logger logger = LoggerFactory.getLogger(getClass());
+		public void addToResponse(HttpServletResponse threadLocalResponse) {
+			List<OutOfBandMessage> messageList = ensureMessageList();
+			topicAppendMessages.publish(messageList);
+			if (messageList.size() > 0) {
+				threadLocalResponse.setHeader(
+						AlcinaRpcRequestBuilder.RESPONSE_HEADER_OUT_OF_BAND_MESSAGES,
+						TransformManager.serialize(messageList));
+			}
+		}
 
-        public void addMessage(OutOfBandMessage message) {
-            HttpServletRequest threadLocalRequest = getContextThreadLocalRequest();
-            if (threadLocalRequest == null) {
-                logger.info("No request - not publishing {}", message);
-                return;
-            }
-            ensureMessageList().add(message);
-        }
-
-        public void addToResponse(HttpServletResponse threadLocalResponse) {
-            List<OutOfBandMessage> messageList = ensureMessageList();
-            topicAppendMessages.publish(messageList);
-            if (messageList.size() > 0) {
-                threadLocalResponse.setHeader(AlcinaRpcRequestBuilder.RESPONSE_HEADER_OUT_OF_BAND_MESSAGES, TransformManager.serialize(messageList));
-            }
-        }
-
-        private List<OutOfBandMessage> ensureMessageList() {
-            List<OutOfBandMessage> result = (List<OutOfBandMessage>) getContextThreadLocalRequest().getAttribute(ATTR);
-            if (result == null) {
-                result = new ArrayList<>();
-                getContextThreadLocalRequest().setAttribute(ATTR, result);
-            }
-            return result;
-        }
-    }
+		private List<OutOfBandMessage> ensureMessageList() {
+			List<OutOfBandMessage> result = (List<OutOfBandMessage>) getContextThreadLocalRequest()
+					.getAttribute(ATTR);
+			if (result == null) {
+				result = new ArrayList<>();
+				getContextThreadLocalRequest().setAttribute(ATTR, result);
+			}
+			return result;
+		}
+	}
 }

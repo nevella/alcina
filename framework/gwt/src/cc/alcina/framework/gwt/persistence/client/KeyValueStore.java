@@ -4,8 +4,10 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
+@Registration.Singleton
 public class KeyValueStore {
 	public static KeyValueStore
 			createNonStandardKeyValueStore(PersistenceObjectStore delegate) {
@@ -15,12 +17,7 @@ public class KeyValueStore {
 	}
 
 	public static KeyValueStore get() {
-		KeyValueStore singleton = Registry.checkSingleton(KeyValueStore.class);
-		if (singleton == null) {
-			singleton = new KeyValueStore();
-			Registry.registerSingleton(KeyValueStore.class, singleton);
-		}
-		return singleton;
+		return Registry.impl(KeyValueStore.class);
 	}
 
 	protected PersistenceObjectStore objectStore;

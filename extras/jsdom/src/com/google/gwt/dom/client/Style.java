@@ -1016,6 +1016,7 @@ public class Style implements DomStyle {
 				return BORDER_STYLE_SOLID;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1048,6 +1049,7 @@ public class Style implements DomStyle {
 				return CLEAR_RIGHT;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1164,6 +1166,7 @@ public class Style implements DomStyle {
 				return CURSOR_ROW_RESIZE;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1286,6 +1289,7 @@ public class Style implements DomStyle {
 				return DISPLAY_INLINE_FLEX;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1312,6 +1316,7 @@ public class Style implements DomStyle {
 				return FLOAT_NONE;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1338,6 +1343,7 @@ public class Style implements DomStyle {
 				return FONT_STYLE_OBLIQUE;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1370,6 +1376,7 @@ public class Style implements DomStyle {
 				return FONT_WEIGHT_LIGHTER;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1442,6 +1449,7 @@ public class Style implements DomStyle {
 				return LIST_STYLE_TYPE_UPPER_ROMAN;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1504,6 +1512,7 @@ public class Style implements DomStyle {
 				return OUTLINE_STYLE_SOLID;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1536,6 +1545,7 @@ public class Style implements DomStyle {
 				return OVERFLOW_AUTO;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1568,6 +1578,7 @@ public class Style implements DomStyle {
 				return POSITION_FIXED;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1588,6 +1599,7 @@ public class Style implements DomStyle {
 				return TABLE_LAYOUT_FIXED;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1620,6 +1632,7 @@ public class Style implements DomStyle {
 				return TEXT_ALIGN_RIGHT;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1658,6 +1671,7 @@ public class Style implements DomStyle {
 				return TEXT_DECORATION_UNDERLINE;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1708,6 +1722,7 @@ public class Style implements DomStyle {
 				return TEXT_JUSTIFY_NONE;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1728,6 +1743,7 @@ public class Style implements DomStyle {
 				return TEXT_OVERFLOW_ELLIPSIS;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1760,6 +1776,7 @@ public class Style implements DomStyle {
 				return TEXT_TRANSFORM_UPPERCASE;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1822,6 +1839,7 @@ public class Style implements DomStyle {
 				return UNIT_MM;
 			}
 		};
+
 		public abstract String getType();
 	}
 
@@ -1877,6 +1895,7 @@ public class Style implements DomStyle {
 				return VERTICAL_ALIGN_TEXT_BOTTOM;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1897,6 +1916,7 @@ public class Style implements DomStyle {
 				return VISIBILITY_HIDDEN;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}
@@ -1935,6 +1955,7 @@ public class Style implements DomStyle {
 				return WHITE_SPACE_PRE_WRAP;
 			}
 		};
+
 		@Override
 		public abstract String getCssName();
 	}

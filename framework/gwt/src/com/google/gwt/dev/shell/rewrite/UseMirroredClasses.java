@@ -41,27 +41,31 @@ public class UseMirroredClasses extends ClassVisitor {
 			// The list of mirrored methods
 			// TODO(unnurg): Find a better way to track methods that will get
 			// rewritten - possibly by using annotations
-			
 			/**
-			 * NR - issue with compilation here, not sure why - but it this code ain't super
-			 * critical. Commented out map population so this visitor becomes a no-op
+			 * NR - issue with compilation here, not sure why - but it this code
+			 * ain't super critical. Commented out map population so this
+			 * visitor becomes a no-op
 			 * 
 			 * @author nick@alcina.cc
 			 *
 			 */
 			mirrorMap = new HashMap<String, HashMap<String, String>>();
 			HashMap<String, String> logRecordMethods = new HashMap<String, String>();
-			logRecordMethods.put("getLoggerName", "com/google/gwt/logging/impl/DevModeLoggingFixes:getLoggerName");
-//			mirrorMap.put("java/util/logging/LogRecord", logRecordMethods);
+			logRecordMethods.put("getLoggerName",
+					"com/google/gwt/logging/impl/DevModeLoggingFixes:getLoggerName");
+			// mirrorMap.put("java/util/logging/LogRecord", logRecordMethods);
 			HashMap<String, String> logManagerMethods = new HashMap<String, String>();
-			logManagerMethods.put("getLogger", "com/google/gwt/logging/impl/DevModeLoggingFixes:logManagerGetLogger");
+			logManagerMethods.put("getLogger",
+					"com/google/gwt/logging/impl/DevModeLoggingFixes:logManagerGetLogger");
 			logManagerMethods.put("getLoggerNames",
 					"com/google/gwt/logging/impl/DevModeLoggingFixes:logManagerGetLoggerNames");
-//			mirrorMap.put("java/util/logging/LogManager", logManagerMethods);
+			// mirrorMap.put("java/util/logging/LogManager", logManagerMethods);
 			HashMap<String, String> loggerMethods = new HashMap<String, String>();
-			loggerMethods.put("getName", "com/google/gwt/logging/impl/DevModeLoggingFixes:getName");
-			loggerMethods.put("getLogger", "com/google/gwt/logging/impl/DevModeLoggingFixes:loggerGetLogger");
-//			mirrorMap.put("java/util/logging/Logger", loggerMethods);
+			loggerMethods.put("getName",
+					"com/google/gwt/logging/impl/DevModeLoggingFixes:getName");
+			loggerMethods.put("getLogger",
+					"com/google/gwt/logging/impl/DevModeLoggingFixes:loggerGetLogger");
+			// mirrorMap.put("java/util/logging/Logger", loggerMethods);
 		}
 
 		private String className;
@@ -72,7 +76,8 @@ public class UseMirroredClasses extends ClassVisitor {
 		}
 
 		@Override
-		public void visitMethodInsn(int opcode, String owner, String name, String desc, boolean dintf) {
+		public void visitMethodInsn(int opcode, String owner, String name,
+				String desc, boolean dintf) {
 			// Check if this method is in our list
 			Map<String, String> mirroredMethods = mirrorMap.get(owner);
 			if (mirroredMethods == null) {
@@ -101,7 +106,8 @@ public class UseMirroredClasses extends ClassVisitor {
 				return;
 			}
 			if (opcode == Opcodes.INVOKESTATIC) {
-				super.visitMethodInsn(opcode, mirrorClass, mirrorMethod, desc, dintf);
+				super.visitMethodInsn(opcode, mirrorClass, mirrorMethod, desc,
+						dintf);
 				return;
 			}
 			// Get the types of the current method being invoked
@@ -114,9 +120,11 @@ public class UseMirroredClasses extends ClassVisitor {
 			// Copy over all the other args
 			System.arraycopy(argTypes, 0, newArgTypes, 1, argTypes.length);
 			// Specify the new descriptor that includes the "this" arg.
-			String newDesc = Type.getMethodDescriptor(Type.getReturnType(desc), newArgTypes);
+			String newDesc = Type.getMethodDescriptor(Type.getReturnType(desc),
+					newArgTypes);
 			// Call the corresponding static method on the mirror class
-			super.visitMethodInsn(Opcodes.INVOKESTATIC, mirrorClass, mirrorMethod, newDesc, dintf);
+			super.visitMethodInsn(Opcodes.INVOKESTATIC, mirrorClass,
+					mirrorMethod, newDesc, dintf);
 			return;
 		}
 	}
@@ -129,8 +137,10 @@ public class UseMirroredClasses extends ClassVisitor {
 	}
 
 	@Override
-	public MethodVisitor visitMethod(int access, String name, String desc, String signature, String[] exceptions) {
-		MethodVisitor mv = super.visitMethod(access, name, desc, signature, exceptions);
+	public MethodVisitor visitMethod(int access, String name, String desc,
+			String signature, String[] exceptions) {
+		MethodVisitor mv = super.visitMethod(access, name, desc, signature,
+				exceptions);
 		if (mv == null) {
 			return null;
 		}

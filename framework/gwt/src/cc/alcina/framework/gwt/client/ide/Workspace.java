@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -57,9 +57,9 @@ import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
 /**
  * Hooks up the various navigation views and the editor widget
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		PermissibleActionEvent.PermissibleActionSource {
@@ -164,6 +164,13 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		handleHasOrderValue(node, newObj);
 	}
 
+	public void redraw() {
+		if (visualiser == null) {
+			return;
+		}
+		visualiser.redraw();
+	}
+
 	public void registerViewProvider(ViewProvider v,
 			Class<? extends PermissibleAction> actionClass) {
 		viewProviderMap.put(actionClass, v);
@@ -261,10 +268,12 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 				handlerClass = CreateActionHandler.class;
 			}
 		}
-		WorkspaceActionHandler handler = (WorkspaceActionHandler) Registry.get()
-				.instantiateSingleOrNull(handlerClass,
-						singleObj == null ? clazz == null ? Object.class : clazz
-								: singleObj.getClass());
+		Class objectTargetClass = singleObj == null
+				? clazz == null ? Object.class : clazz
+				: singleObj.getClass();
+		WorkspaceActionHandler handler = (WorkspaceActionHandler) Registry
+				.query(WorkspaceActionHandler.class).clearTypeKey()
+				.withKeys(handlerClass, objectTargetClass).impl();
 		handler.performAction(evt, obj, singleObj != null ? singleObj : colln,
 				this, clazz);
 	}
@@ -362,12 +371,5 @@ public class Workspace implements HasLayoutInfo, PermissibleActionListener,
 		public void setViews(List<WorkspaceView> views) {
 			this.views = views;
 		}
-	}
-
-	public void redraw() {
-		if (visualiser == null) {
-			return;
-		}
-		visualiser.redraw();
 	}
 }

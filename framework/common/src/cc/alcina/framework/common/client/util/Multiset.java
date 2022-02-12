@@ -31,8 +31,6 @@ import cc.alcina.framework.common.client.domain.DomainCollections;
  * @param <V>
  */
 public class Multiset<K, V extends Set> implements Serializable {
-	
-
 	protected Map<K, V> map;
 
 	public Multiset() {

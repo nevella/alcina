@@ -36,12 +36,16 @@ public class CmdPersistentClassBuilder extends DevConsoleCommand {
 
 	@Override
 	public String run(String[] argv) throws Exception {
-		Stream<Class> entities = Registry.get().lookup(Entity.class).stream()
+		Stream<Class<?>> entities = Registry.query().withKeys(Entity.class)
+				.untypedRegistrations()
 				.filter(e -> e.getAnnotation(Table.class) != null);
-		Stream<Class> transformPersistent = Stream.of(PersistentImpl
-				.getImplementation(DomainTransformRequestPersistent.class),PersistentImpl
-				.getImplementation(DomainTransformEventPersistent.class));
-		String collect = Stream.concat(entities, transformPersistent).map(e -> e.getName()).sorted()
+		Stream<Class> transformPersistent = Stream.of(
+				PersistentImpl.getImplementation(
+						DomainTransformRequestPersistent.class),
+				PersistentImpl.getImplementation(
+						DomainTransformEventPersistent.class));
+		String collect = Stream.concat(entities, transformPersistent)
+				.map(e -> e.getName()).sorted()
 				.map(n -> Ax.format("<class>%s</class>", n))
 				.collect(Collectors.joining("\n"));
 		console.setClipboardContents(collect);

@@ -31,7 +31,6 @@ public class PerThreadLoggingHandler extends Handler {
 	@Override
 	public void publish(LogRecord record) {
 		// publishes all events - doesn't filter by log level
-
 		PerThreadBuffer buffer = handlers.get();
 		if (buffer != null) {
 			buffer.publish(record);

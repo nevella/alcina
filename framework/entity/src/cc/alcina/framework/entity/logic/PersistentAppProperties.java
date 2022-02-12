@@ -46,7 +46,6 @@ public class PersistentAppProperties {
 				});
 	}
 
-
 	public static void set(String key, String value) {
 		Transaction.commit();
 		ThreadedPermissionsManager.cast()

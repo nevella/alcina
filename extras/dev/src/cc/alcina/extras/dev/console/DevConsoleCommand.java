@@ -463,8 +463,8 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			List<Class> classes = Registry.get()
-					.lookup(DevConsoleRunnable.class);
+			List<Class> classes = Registry.query(DevConsoleRunnable.class)
+					.untypedRegistrations().collect(Collectors.toList());
 			String runnableName = argv.length == 0 ? "" : argv[0];
 			for (Class clazz : classes) {
 				if (clazz.getSimpleName().equals(runnableName)) {
@@ -754,7 +754,7 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 		 * inner join citation citation3_ on
 		 * documentov0_.citation_id=citation3_.id where citation3_.id=$1 limit
 		 * $2 DETAIL: parameters: $1 = '57051626', $2 = '2'
-		 * 
+		 *
 		 * @see DevConsoleCommand#getDescription()
 		 */
 		public String getDescription() {
@@ -830,8 +830,6 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 
 		@Override
 		public String run(final String[] argv) throws Exception {
-			List<Class> classes = Registry.get()
-					.lookup(DevConsoleRunnable.class);
 			Predicate<Class> filter = new Predicate<Class>() {
 				@Override
 				public boolean test(Class o) {
@@ -853,8 +851,10 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 					}
 				}
 			};
-			CmdExecRunnable.listRunnables(classes.stream().filter(filter)
-					.collect(Collectors.toList()), null);
+			CmdExecRunnable.listRunnables(
+					Registry.query(DevConsoleRunnable.class).untypedRegistrations()
+							.filter(filter).collect(Collectors.toList()),
+					null);
 			return "";
 		}
 	}

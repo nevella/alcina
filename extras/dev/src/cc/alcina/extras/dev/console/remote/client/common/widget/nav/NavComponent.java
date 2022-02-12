@@ -27,8 +27,9 @@ public class NavComponent extends Composite {
 		InlineLabel appNameLabel = new InlineLabel("Remote Console");
 		logo.add(appNameLabel);
 		RemoteConsoleModels.topicStartupModelLoaded()
-				.addRunnable(() -> appNameLabel.setText(
-						RemoteConsoleClientImpl.models().getStartupModel().getAppName()),
+				.addRunnable(
+						() -> appNameLabel.setText(RemoteConsoleClientImpl
+								.models().getStartupModel().getAppName()),
 						true);
 		bar.add(logo);
 	}

@@ -129,8 +129,7 @@ class CellBasedWidgetImplStandard extends CellBasedWidgetImpl {
 	 * @param typeName
 	 *            the name of the event to sink
 	 */
-	private native void sinkEventImpl(ElementRemote elem,
-			String typeName) /*-{
+	private native void sinkEventImpl(ElementRemote elem, String typeName) /*-{
 								elem
 								.addEventListener(
 								typeName,

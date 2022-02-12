@@ -28,7 +28,8 @@ public class RemoteConsoleInit {
 		addDevCssListener();
 		CommonUtils.setSupplier = () -> new LightSet();
 		if (GWT.isScript()) {
-			Registry.setDelegateCreator(new JsRegistryDelegateCreator());
+			Registry.Internals
+					.setDelegateCreator(new JsRegistryDelegateCreator());
 		}
 		JavascriptKeyableLookup.initJs();
 		RemoteConsoleModule.get();
@@ -38,8 +39,8 @@ public class RemoteConsoleInit {
 				this::handleStartupResponse);
 		// model = new JadexInitModel();
 		// model.fromJson(Jx.wndString(JadexInitModel.JS_INTEROP_KEY));
-		// Registry.registerSingleton(ClientNotifications.class,
-		// new JadeNotificationsImpl());
+		// Registry.register().singleton(ClientNotifications.class,// new
+		// JadeNotificationsImpl());
 	}
 
 	private void addDevCssListener() {

@@ -208,7 +208,7 @@ public class TaskRefactorRegistrations
 				case "RegistryLocation.PREFERRED_LIBRARY_PRIORITY":
 					return Priority.PREFERRED_LIBRARY;
 				case "RegistryLocation.MANUAL_PRIORITY":
-					return Priority.MANUAL;
+					return Priority.APP;
 				case "RegistryLocation.IGNORE_PRIORITY":
 					return Priority.IGNORE;
 				case "15":

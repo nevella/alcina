@@ -1241,8 +1241,7 @@ public class RelativePopupPanel extends SimplePanel
 		void setPosition(int offsetWidth, int offsetHeight);
 	}
 
-	public static class RelativePopupPanelFilter
-			implements Predicate<Widget> {
+	public static class RelativePopupPanelFilter implements Predicate<Widget> {
 		@Override
 		public boolean test(Widget o) {
 			return o instanceof RelativePopupPanel;

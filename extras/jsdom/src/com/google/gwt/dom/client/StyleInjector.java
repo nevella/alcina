@@ -359,8 +359,7 @@ public class StyleInjector {
 															return count;
 															}-*/;
 
-		private static native int
-				getDocumentStyleSheetLength(int index) /*-{
+		private static native int getDocumentStyleSheetLength(int index) /*-{
 														var remote = @com.google.gwt.dom.client.StyleInjector.StyleInjectorImplIE::getDocumentStyleSheet(I)(index);
 														return remote.sheet.cssText.length;
 														}-*/;
@@ -380,8 +379,7 @@ public class StyleInjector {
 
 		private boolean injectedOnce = false;
 
-		public native void appendContents(StyleElement style,
-				String contents) /*-{
+		public native void appendContents(StyleElement style, String contents) /*-{
 									style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText += contents;
 									}-*/;
 
@@ -444,13 +442,11 @@ public class StyleInjector {
 			return appendToStyleSheet(0, contents, false); // prepend
 		}
 
-		public native void prependContents(StyleElement style,
-				String contents) /*-{
+		public native void prependContents(StyleElement style, String contents) /*-{
 									style.@com.google.gwt.dom.client.Element::ensureRemote()().sheet.cssText = contents + style.sheet.cssText;
 									}-*/;
 
-		public native void setContents(StyleElement style,
-				String contents) /*-{
+		public native void setContents(StyleElement style, String contents) /*-{
 									debugger;
 									var elem = style.@com.google.gwt.dom.client.Element::ensureRemote()();
 									elem.sheet.cssText = contents ;
@@ -480,8 +476,7 @@ public class StyleInjector {
 			return styleElement;
 		}
 
-		private native ElementRemote
-				createNewStyleSheet0(String contents) /*-{
+		private native ElementRemote createNewStyleSheet0(String contents) /*-{
 														var sheet = $doc.createStyleSheet();
 														sheet.cssText=contents;
 														return sheet.owningElement;

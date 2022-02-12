@@ -80,7 +80,7 @@ import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener
 /*
  * Startup speed doc
  * @formatter:off
- * 
+ *
  * domainstore	prepare-domainstore	initialise-descriptor
 									mvcc
 				cluster-tr-listener	mark
@@ -315,7 +315,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	/**
 	 * Get the String residing on the clipboard.
-	 * 
+	 *
 	 * @return any text found on the Clipboard; if none found, return an empty
 	 *         String.
 	 */
@@ -344,8 +344,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		} catch (HeadlessException e) {
 			if (isOsX()) {
 				try {
-					Output output = new Shell()
-							.noLogging().runShell("", "pbpaste");
+					Output output = new Shell().noLogging().runShell("",
+							"pbpaste");
 					return output.output;
 				} catch (Exception e2) {
 					throw new WrappedRuntimeException(e2);
@@ -656,8 +656,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			try {
 				String path = "/tmp/pbcopy.txt";
 				ResourceUtilities.write(aString, path);
-				new Shell()
-						.runBashScript(Ax.format("pbcopy < %s", path));
+				new Shell().runBashScript(Ax.format("pbcopy < %s", path));
 			} catch (Exception e2) {
 				throw new WrappedRuntimeException(e2);
 			}
@@ -731,20 +730,16 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		synchronized (commandsById) {
 			commandsById.clear();
 			try {
-				List<Class> lookup = Registry.get()
-						.lookup(DevConsoleCommand.class);
-				filterLookup(lookup);
-				for (Class clazz : lookup) {
-					DevConsoleCommand cmd = (DevConsoleCommand) clazz
-							.getDeclaredConstructor().newInstance();
-					if (cmd.getShellClass() != shells.peek()) {
-						continue;
-					}
-					cmd.setEnvironment(this);
-					for (String s : cmd.getCommandIds()) {
-						commandsById.put(s, cmd);
-					}
-				}
+				Registry.query(DevConsoleCommand.class).implementations()
+						.filter(this::filterCommand).forEach(cmd -> {
+							if (cmd.getShellClass() != shells.peek()) {
+								return;
+							}
+							cmd.setEnvironment(this);
+							for (String s : cmd.getCommandIds()) {
+								commandsById.put(s, cmd);
+							}
+						});
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
@@ -768,7 +763,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	protected abstract void createDevHelper();
 
-	protected void filterLookup(List<Class> lookup) {
+	protected boolean filterCommand(DevConsoleCommand command) {
+		return true;
 	}
 
 	protected List<Class> getInitClasses() {
@@ -778,8 +774,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	protected void init() throws Exception {
 		instance = this;
-		Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
-		Registry.registerSingleton(DevConsole.class, this);
+		Registry.Internals
+				.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
+		Registry.register().singleton(DevConsole.class, this);
 		long statStartInit = System.currentTimeMillis();
 		AppLifecycleServletBase.setupBootstrapJvmServices();
 		Reflections.init();

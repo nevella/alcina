@@ -1032,7 +1032,7 @@ public class LiveTree {
 			String path = paths.pop();
 			TreePath<LiveNode> treePath = root.rootPath().ensurePath(path);
 			LiveNode liveNode = treePath.getValue();
-			//FIXME - dirndl 1.1 - null check - should a value-less path exist?
+			// FIXME - dirndl 1.1 - null check - should a value-less path exist?
 			if (liveNode != null && predicate.test(liveNode)) {
 				newGeneratorContext();
 				generatorContext.collateChildren = liveNode;

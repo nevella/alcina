@@ -88,11 +88,11 @@ public interface AuthenticationTokenStore {
 				setCookieValue(AuthenticationManager.COOKIE_NAME_SESSIONID,
 						clientInstance.getAuthenticationSession()
 								.getSessionId());
-				Ax.out("ClientInstance %s, %s validated", 
-						clientInstanceId, clientInstanceAuth);
+				Ax.out("ClientInstance %s, %s validated", clientInstanceId,
+						clientInstanceAuth);
 			} else {
-				Ax.err("ClientInstance %s, %s invalid", 
-						clientInstanceId, clientInstanceAuth);
+				Ax.err("ClientInstance %s, %s invalid", clientInstanceId,
+						clientInstanceAuth);
 			}
 			AuthenticationManager.get().initialiseContext(this);
 		}

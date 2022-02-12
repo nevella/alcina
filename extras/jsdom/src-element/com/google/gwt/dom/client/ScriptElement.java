@@ -132,7 +132,8 @@ public class ScriptElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/scripts.html#adef-src-SCRIPT">
 	 *      W3C HTML Specification</a>
 	 */
-	public void setSrc(@IsTrustedResourceUri String src) {
+	public void setSrc(@IsTrustedResourceUri
+	String src) {
 		this.setPropertyString("src", src);
 	}
 

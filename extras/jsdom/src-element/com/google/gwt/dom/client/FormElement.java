@@ -184,7 +184,8 @@ public class FormElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-action">
 	 *      W3C HTML Specification</a>
 	 */
-	public final void setAction(@IsSafeUri String action) {
+	public final void setAction(@IsSafeUri
+	String action) {
 		setPropertyString("action", action);
 	}
 

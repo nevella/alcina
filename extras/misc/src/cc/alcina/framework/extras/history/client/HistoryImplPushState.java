@@ -1,11 +1,11 @@
 /*
  * Copyright 2012 Johannes Barop
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  * in compliance with the License. You may obtain a copy of the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software distributed under the License
  * is distributed on an "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express
  * or implied. See the License for the specific language governing permissions and limitations under
@@ -27,18 +27,18 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 
 /**
  * Extends GWT's {@link HistoryImpl} and adds HTML5 pushState support.
- * 
+ *
  * <p>
  * The complete path is treated as history token.
  * </p>
- * 
+ *
  * <p>
  * The leading '/' is hidden from GWTs History API, so that the path '/' is
  * returned as an empty history token ('').
  * </p>
- * 
+ *
  * @author <a href="mailto:jb@barop.de">Johannes Barop</a>
- * 
+ *
  */
 public class HistoryImplPushState extends HistoryImpl {
 	/**
@@ -74,7 +74,7 @@ public class HistoryImplPushState extends HistoryImpl {
 		// lastPushed = initialToken;
 		if (!Window.Location.getHash().isEmpty()) {
 			String hash = Window.Location.getHash();
-			if (Registry.implOrNull(AlcinaHistory.class) != null) {
+			if (Registry.optional(AlcinaHistory.class).isPresent()) {
 				AlcinaHistory.initialiseDebugIds();
 			}
 			if (hash.startsWith("#")) {
@@ -150,7 +150,8 @@ public class HistoryImplPushState extends HistoryImpl {
 		}
 		setToken(token);
 	}
-	@RegistryLocation(registryPoint = BasePlace.HrefProvider.class,implementationType = ImplementationType.NONE)
+
+	@RegistryLocation(registryPoint = BasePlace.HrefProvider.class, implementationType = ImplementationType.NONE)
 	public static class HrefProviderPushState extends BasePlace.HrefProvider {
 		@Override
 		public String toHrefString(BasePlace basePlace) {

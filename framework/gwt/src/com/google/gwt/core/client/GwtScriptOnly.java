@@ -38,6 +38,6 @@ import java.lang.annotation.Target;
  * Not @deprecated coz dev mode is our friend
  */
 @Documented
-@Target({ElementType.TYPE, ElementType.METHOD})
+@Target({ ElementType.TYPE, ElementType.METHOD })
 public @interface GwtScriptOnly {
 }

@@ -405,6 +405,7 @@ public abstract class BrowserChannel {
 		FATAL_ERROR(7), CHECK_VERSIONS(8), PROTOCOL_VERSION(9),
 		CHOOSE_TRANSPORT(10), SWITCH_TRANSPORT(11), LOAD_MODULE(12),
 		REQUEST_ICON(13), USER_AGENT_ICON(14), REQUEST_PLUGIN(15);
+
 		private final int id;
 
 		private MessageType(int id) {
@@ -478,6 +479,7 @@ public abstract class BrowserChannel {
 		 */
 		public enum SpecialDispatchId {
 			HasMethod(0), HasProperty(1), GetProperty(2), SetProperty(3);
+
 			private final int id;
 
 			private SpecialDispatchId(int id) {
@@ -755,6 +757,7 @@ public abstract class BrowserChannel {
 			 * A Javascript undef value, also used for void returns.
 			 */
 			UNDEFINED(12);
+
 			private final int id;
 
 			private ValueType(int id) {

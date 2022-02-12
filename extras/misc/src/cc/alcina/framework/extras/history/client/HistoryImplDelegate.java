@@ -63,7 +63,7 @@ public class HistoryImplDelegate extends HistoryImpl {
 		// no hash
 		return History.encodeHistoryToken(targetHistoryToken);
 	}
-	
+
 	@Override
 	public void fireHistoryChangedImpl(String token) {
 		impl.fireHistoryChangedImpl(token);

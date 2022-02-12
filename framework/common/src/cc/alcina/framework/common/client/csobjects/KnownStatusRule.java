@@ -78,7 +78,8 @@ public @interface KnownStatusRule {
 			return annotationType;
 		}
 
-		public void setAnnotationType(Class<? extends Annotation> annotationType) {
+		public void
+				setAnnotationType(Class<? extends Annotation> annotationType) {
 			this.annotationType = annotationType;
 		}
 

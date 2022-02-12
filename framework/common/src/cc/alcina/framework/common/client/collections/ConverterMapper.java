@@ -46,8 +46,7 @@ public class ConverterMapper<A, B> implements Converter<A, B> {
 	@Override
 	public B convert(A a) {
 		try {
-			B b = rightSupplier == null
-					? Reflections.newInstance(rightClass)
+			B b = rightSupplier == null ? Reflections.newInstance(rightClass)
 					: rightSupplier.get();
 			apply(a, b);
 			return b;

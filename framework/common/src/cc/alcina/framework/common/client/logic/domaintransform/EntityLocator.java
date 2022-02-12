@@ -56,11 +56,12 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		return new EntityLocator(Reflections.forName(parts[2]),
 				Long.parseLong(parts[0]), Long.parseLong(parts[1]));
 	}
-	
-	public static EntityLocator parseRecoverable(String recoverable,Class clazz) {
+
+	public static EntityLocator parseRecoverable(String recoverable,
+			Class clazz) {
 		String[] parts = recoverable.split("/");
-		EntityLocator locator = new EntityLocator(clazz,
-				0L, Long.parseLong(parts[1]));
+		EntityLocator locator = new EntityLocator(clazz, 0L,
+				Long.parseLong(parts[1]));
 		locator.setClientInstanceId(Long.parseLong(parts[0]));
 		return locator;
 	}

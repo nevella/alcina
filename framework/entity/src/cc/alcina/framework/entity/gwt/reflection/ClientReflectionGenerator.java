@@ -45,7 +45,6 @@ import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPoint
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
@@ -54,31 +53,31 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 
 public class ClientReflectionGenerator extends Generator {
-	static Comparator<RegistryLocation> REGISTRY_LOCATION_COMPARATOR = new Comparator<RegistryLocation>() {
+	/*
+	 * Force consistent ordering across generators
+	 */
+	static Comparator<Registration> REGISTRY_LOCATION_COMPARATOR = new Comparator<Registration>() {
+		Map<Registration, String> comparables = new LinkedHashMap<>();
+
 		@Override
-		public int compare(RegistryLocation o1, RegistryLocation o2) {
-			int i = o1.registryPoint().getName()
-					.compareTo(o2.registryPoint().getName());
-			if (i != 0) {
-				return i;
-			}
-			i = o1.targetClass().getName()
-					.compareTo(o2.targetClass().getName());
-			if (i != 0) {
-				return i;
-			}
-			return CommonUtils.compareInts(o1.priority(), o2.priority());
+		public int compare(Registration o1, Registration o2) {
+			String c1 = comparables.computeIfAbsent(o1, this::toComparable);
+			String c2 = comparables.computeIfAbsent(o2, this::toComparable);
+			return c1.compareTo(c2);
+		}
+
+		String toComparable(Registration r) {
+			return Arrays.toString(r.value());
 		}
 	};
 
-	static final Predicate<RegistryLocation> CLIENT_VISIBLE_ANNOTATION_FILTER = new Predicate<RegistryLocation>() {
+	static final Predicate<Registration> CLIENT_VISIBLE_ANNOTATION_FILTER = new Predicate<Registration>() {
 		@Override
-		public boolean test(RegistryLocation o) {
-			return o.registryPoint()
+		public boolean test(Registration o) {
+			return o.value()[0]
 					.getAnnotation(NonClientRegistryPointType.class) == null;
 		}
 	};
@@ -414,7 +413,7 @@ public class ClientReflectionGenerator extends Generator {
 
 		Pattern setterPattern = Pattern.compile("(?:set)([A-Z].*)");
 
-		List<RegistryLocation> registrations = new ArrayList<>();
+		List<Registration> registrations = new ArrayList<>();
 
 		public ClassReflectorGenerator(JClassType type) {
 			super(type, classReflectorType);
@@ -523,16 +522,22 @@ public class ClientReflectionGenerator extends Generator {
 		}
 
 		void prepareRegistrations() {
-			Multimap<JClassType, List<Annotation>> superclassAnnotations = new Multimap<>();
-			JClassType cursor = type;
-			while (cursor.getSuperclass() != null) {
-				superclassAnnotations.addCollection(cursor,
-						Arrays.asList(cursor.getAnnotations()));
-				cursor = cursor.getSuperclass();
-			}
-			Registry.filterForRegistryPointUniqueness(superclassAnnotations)
-					.stream().filter(CLIENT_VISIBLE_ANNOTATION_FILTER)
-					.forEach(registrations::add);
+			// Multimap<JClassType, List<Annotation>> superclassAnnotations =
+			// new Multimap<>();
+			// JClassType cursor = type;
+			// while (cursor.getSuperclass() != null) {
+			// superclassAnnotations.addCollection(cursor,
+			// Arrays.asList(cursor.getAnnotations()));
+			// cursor = cursor.getSuperclass();
+			// }
+			// Registry.filterForRegistryPointUniqueness(superclassAnnotations)
+			// .stream().filter(CLIENT_VISIBLE_ANNOTATION_FILTER)
+			// .forEach(registrations::add);
+			// TODO - use annotation
+			// resolver needs to translate Registration.Singleton etc to
+			// Registration - filter via CLIENT_VISIBLE_ANNOTATION_FILTER - then
+			// add
+			throw new UnsupportedOperationException();
 		}
 
 		PropertyMethod toPropertyMethod(JMethod method) {

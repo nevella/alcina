@@ -299,6 +299,7 @@ public enum Browser {
 			RenderingEngine.OTHER, null),
 	UNKNOWN(Manufacturer.OTHER, null, 14, "Unknown", new String[0], null,
 			BrowserType.UNKNOWN, RenderingEngine.OTHER, null);
+
 	/**
 	 * Iterates over all Browsers to compare the browser signature with the user
 	 * agent string. If no match can be found Browser.UNKNOWN will be returned.

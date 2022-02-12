@@ -175,7 +175,8 @@ public class LinkElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/links.html#adef-href">
 	 *      W3C HTML Specification</a>
 	 */
-	public void setHref(@IsTrustedResourceUri String href) {
+	public void setHref(@IsTrustedResourceUri
+	String href) {
 		this.setPropertyString("href", href);
 	}
 

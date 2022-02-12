@@ -527,7 +527,8 @@ public interface DomStyle {
 	/**
 	 * Set the background-image css property.
 	 */
-	void setBackgroundImage(@IsSafeUri String value);
+	void setBackgroundImage(@IsSafeUri
+	String value);
 
 	/**
 	 * Set the border-color css property.

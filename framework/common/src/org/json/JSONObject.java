@@ -291,7 +291,8 @@ public class JSONObject {
 			if (b == '0' && s.length() > 2
 					&& (s.charAt(1) == 'x' || s.charAt(1) == 'X')) {
 				try {
-					return Integer.valueOf(Integer.parseInt(s.substring(2), 16));
+					return Integer
+							.valueOf(Integer.parseInt(s.substring(2), 16));
 				} catch (Exception ignore) {
 				}
 			}

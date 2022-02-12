@@ -21,11 +21,12 @@ import com.totsp.gwittir.client.ui.BoundWidget;
  * 
  * @author Nick Reddel
  */
-public  class BasicBindingAction<T extends BoundWidget<?>>
+public class BasicBindingAction<T extends BoundWidget<?>>
 		implements BindingAction<T>, HasBinding {
 	protected Binding binding = new Binding();
-	public BasicBindingAction withBinding(Binding binding ) {
-		this.binding=binding;
+
+	public BasicBindingAction withBinding(Binding binding) {
+		this.binding = binding;
 		return this;
 	}
 
@@ -61,7 +62,7 @@ public  class BasicBindingAction<T extends BoundWidget<?>>
 		return false;
 	}
 
-	protected  void set0(BoundWidget widget) {
+	protected void set0(BoundWidget widget) {
 		binding.setLeft();
 	}
 }

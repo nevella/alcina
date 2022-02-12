@@ -31,8 +31,7 @@ public class FlatSuggestorSearchable<TC extends TruncatedObjectCriterion>
 	@Override
 	public AbstractBoundWidget createEditor(TC criterion) {
 		BoundSuggestBox<Object> boundSuggestBox = new BoundSuggestBox<>();
-		TC newInstance = Reflections
-				.newInstance(getCriterionClass());
+		TC newInstance = Reflections.newInstance(getCriterionClass());
 		boundSuggestBox.suggestOracle(new BoundSuggestOracle()
 				.clazz(newInstance.getObjectClass()).hint(getHint()));
 		boundSuggestBox

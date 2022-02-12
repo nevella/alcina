@@ -190,16 +190,15 @@ public class CmdGenerateCrudUI extends DevConsoleCommand {
 			CompilationUnit unit = StaticJavaParser.parse(file);
 			this.entityPackageName = unit.getPackageDeclaration().get()
 					.getNameAsString();
-			this.basePackageName = this.entityPackageName.replaceFirst("(.+)\\.persistent(\\..+|$)", "$1");
+			this.basePackageName = this.entityPackageName
+					.replaceFirst("(.+)\\.persistent(\\..+|$)", "$1");
 			this.entityName = unit.getType(0).getNameAsString();
 			this.searchBasePath = Ax.format("%s/search/%s", this.outputBasePath,
 					this.entityName.toLowerCase());
 			new File(this.searchBasePath).mkdirs();
 			this.searchDefinitionPackageName = Ax.format("%s.search.%s",
-					this.basePackageName,
-					this.entityName.toLowerCase());
-			this.placePackageName = Ax.format("%s.place",
-					this.basePackageName);
+					this.basePackageName, this.entityName.toLowerCase());
+			this.placePackageName = Ax.format("%s.place", this.basePackageName);
 			this.searchDefinitionName = this.entityName + "SearchDefinition";
 			this.placeName = this.entityName + "Place";
 			set("entity-package-name", this.entityPackageName);

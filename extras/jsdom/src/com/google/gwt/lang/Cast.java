@@ -91,8 +91,7 @@ final class Cast {
 																		}-*/;
 
 	@HasNoSideEffects
-	static native boolean canCastClass(Class<?> srcClazz,
-			Class<?> dstClass) /*-{
+	static native boolean canCastClass(Class<?> srcClazz, Class<?> dstClass) /*-{
 								var srcTypeId = srcClazz.@java.lang.Class::typeId;
 								var dstTypeId = dstClass.@java.lang.Class::typeId;
 								var prototype = @com.google.gwt.lang.Runtime::prototypesByTypeId[srcTypeId];

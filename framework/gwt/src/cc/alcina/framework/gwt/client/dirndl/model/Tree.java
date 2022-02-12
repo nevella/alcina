@@ -320,6 +320,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		public void putTree(Tree tree) {
 			getTreePath().putTree(tree);
 		}
+
 		public AbstractPathNode(PN parent, String path) {
 			setParent(parent);
 			if (parent == null) {

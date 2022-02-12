@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 @Documented
 @ClientVisible
 @Inherited
-@Target({ ElementType.METHOD,ElementType.TYPE })
+@Target({ ElementType.METHOD, ElementType.TYPE })
 /**
  *
  * @author Nick Reddel

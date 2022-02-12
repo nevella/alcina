@@ -57,6 +57,7 @@ public enum DeviceType {
 	 * Other or unknow type of device.
 	 */
 	UNKNOWN("Unknown");
+
 	String name;
 
 	private DeviceType(String name) {

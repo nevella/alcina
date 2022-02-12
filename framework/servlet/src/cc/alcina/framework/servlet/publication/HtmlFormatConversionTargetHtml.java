@@ -1,10 +1,11 @@
 package cc.alcina.framework.servlet.publication;
 
 import java.io.InputStream;
+
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_HTML;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * Passthrough interface - does no work
@@ -14,16 +15,16 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 @RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_HTML.class)
 @Registration({ FormatConverter.class, FormatConversionTarget_HTML.class })
 public class HtmlFormatConversionTargetHtml implements FormatConverter {
+	public InputStream convert(PublicationContext ctx,
+			FormatConversionModel hfcm) throws Exception {
+		return ResourceUtilities.writeStringToInputStream(hfcm.html);
+	}
 
-    public InputStream convert(PublicationContext ctx, FormatConversionModel hfcm) throws Exception {
-        return ResourceUtilities.writeStringToInputStream(hfcm.html);
-    }
+	public String getFileExtension() {
+		return "html";
+	}
 
-    public String getFileExtension() {
-        return "html";
-    }
-
-    public String getMimeType() {
-        return "text/html";
-    }
+	public String getMimeType() {
+		return "text/html";
+	}
 }

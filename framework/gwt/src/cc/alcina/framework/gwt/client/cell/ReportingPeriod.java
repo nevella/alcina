@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.util.DatePair;
 @ClientInstantiable
 public enum ReportingPeriod {
 	MONTH, QUARTER, YEAR, FINANCIAL_YEAR;
+
 	@SuppressWarnings("deprecation")
 	public DatePair toDateRange(Date date) {
 		Date start = new Date(date.getTime());

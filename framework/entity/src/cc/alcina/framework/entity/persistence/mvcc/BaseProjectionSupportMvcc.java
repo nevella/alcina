@@ -3,10 +3,13 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import java.util.Comparator;
 import java.util.Map;
 import java.util.Set;
+
 import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplDelegateMapCreator;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -17,120 +20,128 @@ import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
 import cc.alcina.framework.common.client.util.trie.MultiTrie;
 import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class BaseProjectionSupportMvcc {
+	public static class BplDelegateMapCreatorNonTransactional
+			implements DelegateMapCreator {
+		@Override
+		public Map createDelegateMap(int depthFromRoot, int depth) {
+			return new Object2ObjectLinkedOpenHashMap();
+		}
+	}
 
-    public static class BplDelegateMapCreatorNonTransactional implements DelegateMapCreator {
+	@RegistryLocation(registryPoint = BplDelegateMapCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@Registration(value = BplDelegateMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class BplDelegateMapCreatorTransactional
+			extends BplDelegateMapCreator {
+		private boolean nonTransactionalDomain;
 
-        @Override
-        public Map createDelegateMap(int depthFromRoot, int depth) {
-            return new Object2ObjectLinkedOpenHashMap();
-        }
-    }
+		public BplDelegateMapCreatorTransactional() {
+			this.nonTransactionalDomain = IDomainStore
+					.isNonTransactionalDomain();
+		}
 
-    @RegistryLocation(registryPoint = BplDelegateMapCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-    @Registration(value = BplDelegateMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
-    public static class BplDelegateMapCreatorTransactional extends BplDelegateMapCreator {
+		@Override
+		public Map createDelegateMap(int depthFromRoot, int depth) {
+			if (getBuilder().getCreators() != null
+					&& getBuilder().getCreators().length > depthFromRoot) {
+				Map map = (Map) getBuilder().getCreators()[depthFromRoot].get();
+				Preconditions.checkState((nonTransactionalDomain)
+						^ (map instanceof TransactionalMap));
+				return map;
+			} else {
+				if (nonTransactionalDomain) {
+					return new Object2ObjectLinkedOpenHashMap<>();
+				} else {
+					return new TransactionalMap(Object.class, Object.class);
+				}
+			}
+		}
+	}
 
-        private boolean nonTransactionalDomain;
+	public static class Int2IntOpenHashMapCreator
+			implements CollectionCreators.MapCreator {
+		@Override
+		public Map get() {
+			throw new UnsupportedOperationException();
+			// return new Int2IntOpenHashMap();
+		}
+	}
 
-        public BplDelegateMapCreatorTransactional() {
-            this.nonTransactionalDomain = IDomainStore.isNonTransactionalDomain();
-        }
+	public static class Int2ObjectOpenHashMapCreator
+			implements CollectionCreators.MapCreator {
+		@Override
+		public Map get() {
+			throw new UnsupportedOperationException();
+			// return new Int2ObjectOpenHashMap();
+		}
+	}
 
-        @Override
-        public Map createDelegateMap(int depthFromRoot, int depth) {
-            if (getBuilder().getCreators() != null && getBuilder().getCreators().length > depthFromRoot) {
-                Map map = (Map) getBuilder().getCreators()[depthFromRoot].get();
-                Preconditions.checkState((nonTransactionalDomain) ^ (map instanceof TransactionalMap));
-                return map;
-            } else {
-                if (nonTransactionalDomain) {
-                    return new Object2ObjectLinkedOpenHashMap<>();
-                } else {
-                    return new TransactionalMap(Object.class, Object.class);
-                }
-            }
-        }
-    }
+	@RegistryLocation(registryPoint = CollectionCreators.MultiTrieCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@Registration(value = CollectionCreators.MultiTrieCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class MultiTrieCreatorImpl
+			extends CollectionCreators.MultiTrieCreator {
+		@Override
+		public <K, E extends Entity> MultiTrie<K, Set<E>> create(
+				KeyAnalyzer<? super K> keyAnalyzer, Class<E> entityClass) {
+			return new TransactionalMultiTrie<>(keyAnalyzer, entityClass);
+		}
+	}
 
-    public static class Int2IntOpenHashMapCreator implements CollectionCreators.MapCreator {
+	public static class Object2ObjectHashMapCreator
+			implements CollectionCreators.MapCreator {
+		@Override
+		public Map get() {
+			return new Object2ObjectLinkedOpenHashMap();
+		}
+	}
 
-        @Override
-        public Map get() {
-            throw new UnsupportedOperationException();
-            // return new Int2IntOpenHashMap();
-        }
-    }
+	public static class TransactionalObject2ObjectMapCreator
+			implements MapCreator {
+		@Override
+		public Object get() {
+			return new TransactionalMap(Object.class, Object.class);
+		}
+	}
 
-    public static class Int2ObjectOpenHashMapCreator implements CollectionCreators.MapCreator {
+	@RegistryLocation(registryPoint = CollectionCreators.TreeMapCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@Registration(value = CollectionCreators.TreeMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class TreeMapCreatorImpl
+			extends CollectionCreators.TreeMapCreator {
+		@Override
+		public Map get() {
+			return new TransactionalTreeMap(types.get(0), types.get(1),
+					new NullFriendlyComparatorWrapper(
+							Comparator.naturalOrder()));
+		}
+	}
 
-        @Override
-        public Map get() {
-            throw new UnsupportedOperationException();
-            // return new Int2ObjectOpenHashMap();
-        }
-    }
+	public static class TreeMapCreatorNonTransactional<K, V>
+			implements CollectionCreators.MapCreator<K, V> {
+		private Comparator<K> cmp;
 
-    @RegistryLocation(registryPoint = CollectionCreators.MultiTrieCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-    @Registration(value = CollectionCreators.MultiTrieCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
-    public static class MultiTrieCreatorImpl extends CollectionCreators.MultiTrieCreator {
+		@Override
+		public Map<K, V> get() {
+			return cmp == null ? new Object2ObjectAVLTreeMap<>()
+					: new Object2ObjectAVLTreeMap<>(cmp);
+		}
 
-        @Override
-        public <K, E extends Entity> MultiTrie<K, Set<E>> create(KeyAnalyzer<? super K> keyAnalyzer, Class<E> entityClass) {
-            return new TransactionalMultiTrie<>(keyAnalyzer, entityClass);
-        }
-    }
+		public TreeMapCreatorNonTransactional<K, V>
+				withComparator(Comparator cmp) {
+			this.cmp = cmp;
+			return this;
+		}
+	}
 
-    public static class Object2ObjectHashMapCreator implements CollectionCreators.MapCreator {
-
-        @Override
-        public Map get() {
-            return new Object2ObjectLinkedOpenHashMap();
-        }
-    }
-
-    public static class TransactionalObject2ObjectMapCreator implements MapCreator {
-
-        @Override
-        public Object get() {
-            return new TransactionalMap(Object.class, Object.class);
-        }
-    }
-
-    @RegistryLocation(registryPoint = CollectionCreators.TreeMapCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-    @Registration(value = CollectionCreators.TreeMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
-    public static class TreeMapCreatorImpl extends CollectionCreators.TreeMapCreator {
-
-        @Override
-        public Map get() {
-            return new TransactionalTreeMap(types.get(0), types.get(1), new NullFriendlyComparatorWrapper(Comparator.naturalOrder()));
-        }
-    }
-
-    public static class TreeMapCreatorNonTransactional<K, V> implements CollectionCreators.MapCreator<K, V> {
-
-        private Comparator<K> cmp;
-
-        @Override
-        public Map<K, V> get() {
-            return cmp == null ? new Object2ObjectAVLTreeMap<>() : new Object2ObjectAVLTreeMap<>(cmp);
-        }
-
-        public TreeMapCreatorNonTransactional<K, V> withComparator(Comparator cmp) {
-            this.cmp = cmp;
-            return this;
-        }
-    }
-
-    @RegistryLocation(registryPoint = CollectionCreators.TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
-    @Registration(value = CollectionCreators.TreeMapRevCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
-    public static class TreeMapRevCreatorImpl extends CollectionCreators.TreeMapRevCreator {
-
-        @Override
-        public Map get() {
-            return new TransactionalTreeMap(types.get(0), types.get(1), new NullFriendlyComparatorWrapper(Comparator.reverseOrder()));
-        }
-    }
+	@RegistryLocation(registryPoint = CollectionCreators.TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	@Registration(value = CollectionCreators.TreeMapRevCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	public static class TreeMapRevCreatorImpl
+			extends CollectionCreators.TreeMapRevCreator {
+		@Override
+		public Map get() {
+			return new TransactionalTreeMap(types.get(0), types.get(1),
+					new NullFriendlyComparatorWrapper(
+							Comparator.reverseOrder()));
+		}
+	}
 }

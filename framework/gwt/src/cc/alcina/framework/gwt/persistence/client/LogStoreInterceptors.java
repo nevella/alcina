@@ -69,7 +69,7 @@ public class LogStoreInterceptors {
 		if (Element.is(eTarget)) {
 			Element e = null;
 			try {
-				e=Element.as(eTarget);
+				e = Element.as(eTarget);
 			} catch (Exception e1) {
 				// FIXME - dirndl.1 - some invalid tables happening?
 				Ax.simpleExceptionOut(e1);

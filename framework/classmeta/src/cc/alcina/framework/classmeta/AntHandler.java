@@ -42,8 +42,7 @@ public class AntHandler extends AbstractHandler {
 	public AntHandler() {
 		String modelXml = ResourceUtilities
 				.read(ClassPersistenceScanHandler.class, "schema/antModel.xml");
-		model = JaxbUtils.xmlDeserialize(CachingAntModel.class,
-				modelXml);
+		model = JaxbUtils.xmlDeserialize(CachingAntModel.class, modelXml);
 	}
 
 	@Override
@@ -113,8 +112,7 @@ public class AntHandler extends AbstractHandler {
 						throw new UnsupportedOperationException();
 					}
 					try {
-						Output result = new Shell()
-								.runBashScript(script);
+						Output result = new Shell().runBashScript(script);
 						result.throwOnException();
 					} catch (Exception e) {
 						lastBuildException = e;

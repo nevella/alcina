@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -24,12 +23,8 @@ public class AlcinaPrehistory {
 		String preHistory = item.getPreHistory();
 		if (preHistoryHandlerMap == null) {
 			preHistoryHandlerMap = new LinkedHashMap<String, PreHistoryHandler>();
-			Registry.query(PreHistoryHandler.class).registrations()
-					.forEach(clazz -> {
-						PreHistoryHandler handler = (PreHistoryHandler) Reflections
-								.newInstance(clazz);
-						handler.register(preHistoryHandlerMap);
-					});
+			Registry.query(PreHistoryHandler.class).implementations()
+					.forEach(h -> h.register(preHistoryHandlerMap));
 		}
 		if (CommonUtils.isNotNullOrEmpty(preHistory)
 				&& !WidgetUtils.isNewTabModifier(event)) {

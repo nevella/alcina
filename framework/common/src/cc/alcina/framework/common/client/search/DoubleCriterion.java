@@ -21,8 +21,6 @@ import cc.alcina.framework.common.client.logic.domain.HasValue;
  */
 public class DoubleCriterion extends SearchCriterion
 		implements HasValue<Double> {
-	
-
 	private Double value;
 
 	public DoubleCriterion() {

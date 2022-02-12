@@ -106,6 +106,6 @@ public abstract class DevConsoleRunnable extends AbstractTaskPerformer {
 	}
 
 	protected void logJobResultFiles() {
-		Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");		
+		Ax.out("Job result files:\n/tmp/log/log.xml\n  /tmp/log/log.html");
 	}
 }

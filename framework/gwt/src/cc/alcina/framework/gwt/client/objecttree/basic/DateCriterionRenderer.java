@@ -13,20 +13,20 @@
  */
 package cc.alcina.framework.gwt.client.objecttree.basic;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.AbstractDateCriterion;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = TreeRenderer.class, targetClass = AbstractDateCriterion.class)
 @Registration({ TreeRenderer.class, AbstractDateCriterion.class })
-public class DateCriterionRenderer<T extends AbstractDateCriterion> extends SearchCriterionRenderer<AbstractDateCriterion> {
-
-    @Override
-    public String renderablePropertyName() {
-        return "date";
-    }
+public class DateCriterionRenderer<T extends AbstractDateCriterion>
+		extends SearchCriterionRenderer<AbstractDateCriterion> {
+	@Override
+	public String renderablePropertyName() {
+		return "date";
+	}
 }

@@ -204,8 +204,8 @@ public class LogStoreCompactor extends Consort<Phase> {
 				}
 			}
 			try {
-				ClientLogRecords records = 
-						TransformManager.deserialize(result.values().iterator().next());
+				ClientLogRecords records = TransformManager
+						.deserialize(result.values().iterator().next());
 				if (isCompacted(records) && continueIfCompacted()) {
 					recordId++;
 					replay(this);

@@ -173,7 +173,8 @@ public class ObjectElement extends Element {
 	 *      W3C HTML Specification</a>
 	 */
 	@SuppressIsTrustedResourceUriCastCheck
-	public final void setData(@IsTrustedResourceUri SafeUri data) {
+	public final void setData(@IsTrustedResourceUri
+	SafeUri data) {
 		setData(data.asString());
 	}
 
@@ -184,7 +185,8 @@ public class ObjectElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/objects.html#adef-data">
 	 *      W3C HTML Specification</a>
 	 */
-	public void setData(@IsTrustedResourceUri String data) {
+	public void setData(@IsTrustedResourceUri
+	String data) {
 		this.setPropertyString("data", data);
 	}
 

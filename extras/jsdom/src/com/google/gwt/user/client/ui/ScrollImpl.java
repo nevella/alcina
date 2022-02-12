@@ -142,8 +142,7 @@ class ScrollImpl {
 		}
 
 		@Override
-		public native void initialize(Element scrollable,
-				Element container) /*-{
+		public native void initialize(Element scrollable, Element container) /*-{
 									var scrollableRemote = scrollable.@com.google.gwt.dom.client.Element::typedRemote()();
 									var containerRemote = container.@com.google.gwt.dom.client.Element::typedRemote()();
 									// Remember the last scroll position.

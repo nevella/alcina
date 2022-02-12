@@ -32,7 +32,8 @@ public class ActionRefPlace extends BasePlace {
 	}
 
 	public Optional<EmitsTopic> emitsTopic() {
-		return Optional.ofNullable(Reflections.at(ref).annotation(EmitsTopic.class));
+		return Optional
+				.ofNullable(Reflections.at(ref).annotation(EmitsTopic.class));
 	}
 
 	public Optional<ActionHandler> getActionHandler() {
@@ -44,7 +45,9 @@ public class ActionRefPlace extends BasePlace {
 		/*
 		 * FIXME - dirndl1.1 - should annotation resolution be via context?
 		 */
-		return Optional.ofNullable(Reflections.at(ref).annotation(ActionRefHandler.class))
+		return Optional
+				.ofNullable(
+						Reflections.at(ref).annotation(ActionRefHandler.class))
 				.map(ann -> Reflections.newInstance(ann.value()));
 	}
 

@@ -119,7 +119,8 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 		execCommand("InsertHorizontalRule", null);
 	}
 
-	public void insertHTML(@IsSafeHtml String html) {
+	public void insertHTML(@IsSafeHtml
+	String html) {
 		execCommand("InsertHTML", html);
 	}
 
@@ -227,7 +228,8 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 	}
 
 	@Override
-	public final void setHTML(@IsSafeHtml String html) {
+	public final void setHTML(@IsSafeHtml
+	String html) {
 		if (beforeInitPlaceholder == null) {
 			setHTMLImpl(html);
 		} else {
@@ -407,7 +409,8 @@ public abstract class RichTextAreaImplStandard extends RichTextAreaImpl
 														}
 														}-*/;
 
-	protected native void setHTMLImpl(@IsSafeHtml String html) /*-{
+	protected native void setHTMLImpl(@IsSafeHtml
+	String html) /*-{
 																this.@com.google.gwt.user.client.ui.impl.RichTextAreaImpl::elem.contentWindow.document.body.innerHTML = html;
 																}-*/;
 

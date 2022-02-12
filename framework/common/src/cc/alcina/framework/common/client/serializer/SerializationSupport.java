@@ -18,23 +18,8 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 
 class SerializationSupport {
-	private Map<Class, List<Property>> serializationProperties = Registry
-			.impl(ConcurrentMapCreator.class).create();
-
-	private Map<Class, Map<String, Property>> serializationPropertiesByName = Registry
-			.impl(ConcurrentMapCreator.class).create();
-
 	private static Map<Class, Class> solePossibleImplementation = Registry
 			.impl(ConcurrentMapCreator.class).create();
-
-	private SerializationSupport() {
-	}
-
-	static SerializationSupport serializationInstance() {
-		SerializationSupport support = new SerializationSupport();
-		support.types = AlcinaTransient.Support.getTransienceContexts();
-		return support;
-	}
 
 	public static final Comparator<Property> PROPERTY_COMPARATOR = new Comparator<Property>() {
 		@Override
@@ -60,6 +45,65 @@ class SerializationSupport {
 		}
 	};
 
+	// Optimisation: share support for all deserializers - they don't use
+	// context transience.
+	static SerializationSupport deserializationInstance = new SerializationSupport();
+
+	public static Class solePossibleImplementation(Class type) {
+		Class<?> clazz = Domain.resolveEntityClass(type);
+		return solePossibleImplementation.computeIfAbsent(clazz, valueClass -> {
+			if (Reflections.isEffectivelyFinal(clazz)
+					|| (Reflections.isAssignableFrom(Entity.class, clazz) &&
+			// FXIME - reflection - Modifiers.nonAbstract emul
+			// non-abstract entity classes have no serializable subclasses (but
+			// do have mvcc subclass...)
+			!Reflections.at(clazz).isAbstract())) {
+				return valueClass;
+			} else if (PersistentImpl.hasImplementation(clazz)) {
+				return PersistentImpl.getImplementation(clazz);
+			} else {
+				return null;
+			}
+		});
+	}
+
+	static PropertySerialization getPropertySerialization(Class<?> clazz,
+			String propertyName) {
+		TypeSerialization typeSerialization = Annotations.resolve(clazz,
+				TypeSerialization.class);
+		PropertySerialization annotation = null;
+		if (typeSerialization != null) {
+			for (PropertySerialization p : typeSerialization.properties()) {
+				if (p.name().equals(propertyName)) {
+					annotation = p;
+					break;
+				}
+			}
+		}
+		if (annotation == null) {
+			annotation = Annotations.resolve(clazz, propertyName,
+					PropertySerialization.class);
+		}
+		return annotation;
+	}
+
+	static SerializationSupport serializationInstance() {
+		SerializationSupport support = new SerializationSupport();
+		support.types = AlcinaTransient.Support.getTransienceContexts();
+		return support;
+	}
+
+	private Map<Class, List<Property>> serializationProperties = Registry
+			.impl(ConcurrentMapCreator.class).create();
+
+	private Map<Class, Map<String, Property>> serializationPropertiesByName = Registry
+			.impl(ConcurrentMapCreator.class).create();
+
+	private TransienceContext[] types;
+
+	private SerializationSupport() {
+	}
+
 	public Property getPropertyReflector(Class<?> clazz, String propertyName) {
 		Map<String, Property> map = serializationPropertiesByName
 				.computeIfAbsent(clazz, c -> {
@@ -70,32 +114,6 @@ class SerializationSupport {
 				});
 		return map.get(propertyName);
 	}
-
-	public static Class solePossibleImplementation(Class type) {
-		Class<?> clazz = Domain.resolveEntityClass(type);
-		return solePossibleImplementation.computeIfAbsent(clazz, valueClass -> {
-			if (Reflections.isEffectivelyFinal(clazz)
-					|| (Reflections.isAssignableFrom(Entity.class, clazz) &&
-			// FXIME - meta - Modifiers.nonAbstract emul
-			// non-abstract entity classes have no serializable subclasses (but
-			// do have mvcc subclass...)
-			!Reflections.at(clazz).isAbstract())) {
-				return valueClass;
-			} else if (Registry.get().lookupSingle(PersistentImpl.class, clazz,
-					false) != Void.class) {
-				return Registry.get().lookupSingle(PersistentImpl.class, clazz,
-						false);
-			} else {
-				return null;
-			}
-		});
-	}
-
-	// Optimisation: share support for all deserializers - they don't use
-	// context transience.
-	static SerializationSupport deserializationInstance = new SerializationSupport();
-
-	private TransienceContext[] types;
 
 	private List<Property> getProperties0(Class forClass) {
 		Class clazz = Domain.resolveEntityClass(forClass);
@@ -131,25 +149,5 @@ class SerializationSupport {
 
 	List<Property> getProperties(Object value) {
 		return getProperties0(value.getClass());
-	}
-
-	static PropertySerialization getPropertySerialization(Class<?> clazz,
-			String propertyName) {
-		TypeSerialization typeSerialization = Annotations.resolve(clazz,
-				TypeSerialization.class);
-		PropertySerialization annotation = null;
-		if (typeSerialization != null) {
-			for (PropertySerialization p : typeSerialization.properties()) {
-				if (p.name().equals(propertyName)) {
-					annotation = p;
-					break;
-				}
-			}
-		}
-		if (annotation == null) {
-			annotation = Annotations.resolve(clazz, propertyName,
-					PropertySerialization.class);
-		}
-		return annotation;
 	}
 }

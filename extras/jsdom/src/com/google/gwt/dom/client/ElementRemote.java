@@ -20,7 +20,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	/*
 	 * Non-private for access from bytecode generated (ElementRemote$)
 	 */
-	 static RemoteCache cache = new RemoteCache();
+	static RemoteCache cache = new RemoteCache();
 
 	/**
 	 * Assert that the given {@link Node} is an {@link Element} and
@@ -1089,10 +1089,10 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 * 
 	 * 
 	 */
-	 static class RemoteCache {
-		 boolean lastIsResult;
+	static class RemoteCache {
+		boolean lastIsResult;
 
-		 JavaScriptObject lastIs;
+		JavaScriptObject lastIs;
 	}
 
 	static class ElementRemoteIndex extends JavaScriptObject {

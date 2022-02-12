@@ -65,7 +65,8 @@ public class CollectionDataProvider implements SortableDataProvider {
 			return new String[0];
 		}
 		List<String> fieldNames = new ArrayList<String>();
-		for (Property property : Reflections.at(first.getClass()).properties()) {
+		for (Property property : Reflections.at(first.getClass())
+				.properties()) {
 			try {
 				Object o = property.get(first);
 				if (o instanceof Collection) {
@@ -104,7 +105,8 @@ public class CollectionDataProvider implements SortableDataProvider {
 		try {
 			if (!sort.isEmpty()) {
 				Object o = sort.get(0);
-				Property property = Reflections.at(o.getClass()).property(propertyName);
+				Property property = Reflections.at(o.getClass())
+						.property(propertyName);
 				Map<Object, List<Object>> cMap = new HashMap<Object, List<Object>>();
 				for (Object o2 : sort) {
 					Object pVal = property.get(o2);

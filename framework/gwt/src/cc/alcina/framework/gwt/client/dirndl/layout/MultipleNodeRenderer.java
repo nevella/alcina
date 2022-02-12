@@ -51,10 +51,9 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 			 * rather than the class - otherwise will loop indefinitely
 			 */
 			Class ascendFrom = node.property != null
-					&& node.property
-							.has(MultipleNodeRendererLeaf.class)
-									? node.model.getClass()
-									: node.model.getClass().getSuperclass();
+					&& node.property.has(MultipleNodeRendererLeaf.class)
+							? node.model.getClass()
+							: node.model.getClass().getSuperclass();
 			Directed leafValue = leaf.value();
 			Directed directed = CustomReflectorResolver.forParentAndValue(
 					MultipleNodeRendererArgs.class, node, ascendFrom,

@@ -35,7 +35,7 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 	private int selfAndDescendantCount = -1;
 
 	public Topic<BeforeNodeRemovalEvent> beforeNodeRemoval = Topic.local();
-	
+
 	public Topic<NodeChangeEvent> afterNodeChange = Topic.local();
 
 	public DomainViewNode.LabelGenerator getLabelGenerator() {
@@ -94,7 +94,8 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			// delta children at the end to generate visual nodes after node
 			// tree complete
 			/*
-			 * FIXME - dirndl1.3 - what happens if changes occur at multiple nodes?
+			 * FIXME - dirndl1.3 - what happens if changes occur at multiple
+			 * nodes?
 			 */
 			if (requestPath != null) {
 				IdentityArrayList<TreeNode<DomainViewNode>> forceEmitEvent = new IdentityArrayList<>(
@@ -254,6 +255,7 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			this.next = next;
 		}
 	}
+
 	public class NodeChangeEvent {
 		public TreePath changed;
 
@@ -263,10 +265,10 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		}
 	}
 
-	public static class DomainViewNode extends Tree.AbstractPathNode<DomainViewNode> {
+	public static class DomainViewNode
+			extends Tree.AbstractPathNode<DomainViewNode> {
 		private DomainViewNodeContent<?> node;
 
-		
 		private LabelGenerator labelGenerator;
 
 		public DomainViewNode() {
@@ -274,7 +276,7 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 
 		public DomainViewNode(LabelGenerator labelGenerator,
 				DomainViewNode parent, String path) {
-			super(parent,path);
+			super(parent, path);
 			this.labelGenerator = labelGenerator == null ? new TextGenerator()
 					: labelGenerator;
 		}
@@ -311,8 +313,6 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			return this.node;
 		}
 
-		
-
 		public DomainViewTree provideContainingTree() {
 			return getTreePath().provideContainingTree();
 		}
@@ -324,7 +324,6 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			}
 			return cursor.getTreePath().toString();
 		}
-
 
 		public void removeFromParent() {
 			if (getParent() != null) {

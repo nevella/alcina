@@ -733,7 +733,8 @@ class DomStyleStatic {
 	/**
 	 * Set the background-image css property.
 	 */
-	static void setBackgroundImage(DomStyle domStyle, @IsSafeUri String value) {
+	static void setBackgroundImage(DomStyle domStyle, @IsSafeUri
+	String value) {
 		domStyle.setProperty(STYLE_BACKGROUND_IMAGE, value);
 	}
 

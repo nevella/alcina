@@ -5,65 +5,68 @@ import com.google.gwt.place.shared.PlaceChangeEvent;
 import com.google.gwt.user.client.Window;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
+
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.place.BasePlace;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = WindowTitleManager.class, implementationType = ImplementationType.SINGLETON)
 @ClientInstantiable
 @Registration.Singleton
 public class WindowTitleManager {
+	private EventBus eventBus;
 
-    private EventBus eventBus;
+	private String appName;
 
-    private String appName;
+	private String defaultPlaceName;
 
-    private String defaultPlaceName;
+	public WindowTitleManager() {
+	}
 
-    public WindowTitleManager() {
-    }
+	public void init(EventBus eventBus, String defaultPlaceName,
+			String appName) {
+		this.eventBus = eventBus;
+		this.defaultPlaceName = defaultPlaceName;
+		this.appName = appName;
+		setup();
+		DetailView.topicDetailModelObjectSet().add(new TopicListener<Entity>() {
+			@Override
+			public void topicPublished(String key, Entity message) {
+				updateTitle(Client.currentPlace());
+			}
+		});
+	}
 
-    public void init(EventBus eventBus, String defaultPlaceName, String appName) {
-        this.eventBus = eventBus;
-        this.defaultPlaceName = defaultPlaceName;
-        this.appName = appName;
-        setup();
-        DetailView.topicDetailModelObjectSet().add(new TopicListener<Entity>() {
+	protected String getTitlePartFromPlace(Place place,
+			String defaultPlaceName) {
+		String category = place.getClass().getSimpleName()
+				.replaceFirst("(.*)Place", "$1");
+		if (place instanceof BasePlace) {
+			return ((BasePlace) place).toTitleString();
+		} else {
+			return category;
+		}
+	}
 
-            @Override
-            public void topicPublished(String key, Entity message) {
-                updateTitle(Client.currentPlace());
-            }
-        });
-    }
+	protected void updateTitle(Place place) {
+		Window.setTitle(Ax.format("%s - %s",
+				getTitlePartFromPlace(place, defaultPlaceName), appName));
+	}
 
-    protected String getTitlePartFromPlace(Place place, String defaultPlaceName) {
-        String category = place.getClass().getSimpleName().replaceFirst("(.*)Place", "$1");
-        if (place instanceof BasePlace) {
-            return ((BasePlace) place).toTitleString();
-        } else {
-            return category;
-        }
-    }
-
-    protected void updateTitle(Place place) {
-        Window.setTitle(Ax.format("%s - %s", getTitlePartFromPlace(place, defaultPlaceName), appName));
-    }
-
-    void setup() {
-        final HandlerRegistration placeReg = eventBus.addHandler(PlaceChangeEvent.TYPE, new PlaceChangeEvent.Handler() {
-
-            @Override
-            public void onPlaceChange(PlaceChangeEvent event) {
-                Place newPlace = event.getNewPlace();
-                updateTitle(newPlace);
-            }
-        });
-    }
+	void setup() {
+		final HandlerRegistration placeReg = eventBus.addHandler(
+				PlaceChangeEvent.TYPE, new PlaceChangeEvent.Handler() {
+					@Override
+					public void onPlaceChange(PlaceChangeEvent event) {
+						Place newPlace = event.getNewPlace();
+						updateTitle(newPlace);
+					}
+				});
+	}
 }

@@ -135,24 +135,24 @@ public class JavaScriptObject implements JavascriptObjectEquivalent {
 		return (T) this;
 	}
 
-	 /**
-	   * Calls a native JS <code>equals</code> method if any, otherwise
-	   * returns <code>true</code> if the objects are JavaScript identical
-	   * (triple-equals).
-	   */
+	/**
+	 * Calls a native JS <code>equals</code> method if any, otherwise returns
+	 * <code>true</code> if the objects are JavaScript identical
+	 * (triple-equals).
+	 */
 	@Override
 	public final boolean equals(Object other) {
 		return super.equals(other);
 	}
 
-	 /**
-	   * Calls a native JS <code>hashCode</code> method if any, otherwise
-	   * uses a monotonically increasing counter to assign a hash code to the
-	   * underlying JavaScript object. Do not call this method on non-modifiable
-	   * JavaScript objects.
-	   *
-	   * @return the hash code of the object
-	   */
+	/**
+	 * Calls a native JS <code>hashCode</code> method if any, otherwise uses a
+	 * monotonically increasing counter to assign a hash code to the underlying
+	 * JavaScript object. Do not call this method on non-modifiable JavaScript
+	 * objects.
+	 *
+	 * @return the hash code of the object
+	 */
 	@Override
 	public final int hashCode() {
 		return super.hashCode();

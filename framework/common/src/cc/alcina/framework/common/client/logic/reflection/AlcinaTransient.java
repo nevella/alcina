@@ -70,7 +70,6 @@ public @interface AlcinaTransient {
 			return isTransient(annotation, getTransienceContexts());
 		}
 
-
 		public static void clearTransienceContext() {
 			setTransienceContexts((TransienceContext[]) null);
 		}

@@ -53,9 +53,8 @@ public class TreeResolver<A extends Annotation> {
 		this.mergeWithParent = parent.mergeWithParent;
 	}
 
-	public <TR extends TreeResolver<A>> TR finalChildResolver(
-			Property property, Class discriminator,
-			Supplier<TR> supplier) {
+	public <TR extends TreeResolver<A>> TR finalChildResolver(Property property,
+			Class discriminator, Supplier<TR> supplier) {
 		return (TR) finalChildren.ensure((Supplier) supplier, property,
 				discriminator);
 	}

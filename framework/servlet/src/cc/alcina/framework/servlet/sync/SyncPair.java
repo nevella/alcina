@@ -142,6 +142,7 @@ public class SyncPair<T> {
 				return null;
 			}
 		};
+
 		public abstract SyncAction getDirectedAction(boolean left);
 	}
 }

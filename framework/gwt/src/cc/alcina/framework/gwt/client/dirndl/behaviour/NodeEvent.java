@@ -53,9 +53,9 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	protected Object model;
 
 	public void bind(Widget widget, boolean bind) {
-//		logger.info("bind: {} {} {}",
-//				widget == null ? "(unbind)" : widget.getClass().getSimpleName(),
-//				getClass().getSimpleName(), bind);
+		// logger.info("bind: {} {} {}",
+		// widget == null ? "(unbind)" : widget.getClass().getSimpleName(),
+		// getClass().getSimpleName(), bind);
 		if (!bind) {
 			if (handlerRegistration != null) {
 				handlerRegistration.removeHandler();

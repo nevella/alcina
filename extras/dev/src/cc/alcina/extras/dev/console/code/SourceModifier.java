@@ -40,8 +40,8 @@ abstract class SourceModifier {
 			Class<? extends Annotation> annotationClass) {
 		Optional<AnnotationExpr> annotationExpr = node
 				.getAnnotationByClass(annotationClass);
-		if (annotationExpr.isPresent() && annotationExpr
-				.get() instanceof SingleMemberAnnotationExpr) {
+		if (annotationExpr.isPresent()
+				&& annotationExpr.get() instanceof SingleMemberAnnotationExpr) {
 			annotationExpr.get().remove();
 			annotationExpr = node.getAnnotationByClass(annotationClass);
 		}

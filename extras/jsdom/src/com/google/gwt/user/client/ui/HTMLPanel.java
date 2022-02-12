@@ -84,7 +84,8 @@ public class HTMLPanel extends ComplexPanel {
 	 * @param html
 	 *            the panel's HTML
 	 */
-	public HTMLPanel(@IsSafeHtml String html) {
+	public HTMLPanel(@IsSafeHtml
+	String html) {
 		/*
 		 * Normally would call this("div", html), but that method has some
 		 * slightly expensive IE defensiveness that we just don't need for a div
@@ -104,7 +105,8 @@ public class HTMLPanel extends ComplexPanel {
 	 *            the panel's HTML
 	 */
 	@SuppressIsSafeHtmlCastCheck
-	public HTMLPanel(String tag, @IsSafeHtml String html) {
+	public HTMLPanel(String tag, @IsSafeHtml
+	String html) {
 		// Optimization for when the HTML is empty.
 		if ("".equals(html)) {
 			setElement(Document.get().createElement(tag));

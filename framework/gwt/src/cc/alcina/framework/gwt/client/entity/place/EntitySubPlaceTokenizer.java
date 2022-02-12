@@ -65,7 +65,7 @@ public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity
 		if (place.fromId != 0) {
 			addTokenPart(place.fromId);
 		}
-		if (place.fromClass!=null) {
+		if (place.fromClass != null) {
 			addTokenPart(place.fromClass);
 		}
 	}

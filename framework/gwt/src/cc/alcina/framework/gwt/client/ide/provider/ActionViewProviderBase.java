@@ -328,8 +328,7 @@ public abstract class ActionViewProviderBase
 	public static class ActionViewProvider extends ActionViewProviderBase {
 		@Override
 		protected void performAction(AsyncCallback<String> asyncCallback) {
-			Client.commonRemoteService()
-					.performAction(action, asyncCallback);
+			Client.commonRemoteService().performAction(action, asyncCallback);
 			action.wasCalled();
 		}
 	}
@@ -407,8 +406,7 @@ public abstract class ActionViewProviderBase
 		@Override
 		public void onClick(ClickEvent event) {
 			PermissibleActionEvent action = new PermissibleActionEvent(
-					this.action,
-					Reflections.newInstance(ViewAction.class));
+					this.action, Reflections.newInstance(ViewAction.class));
 			fireVetoableActionEvent(action);
 		}
 

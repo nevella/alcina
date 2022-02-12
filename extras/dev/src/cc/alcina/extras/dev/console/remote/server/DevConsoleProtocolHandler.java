@@ -17,6 +17,7 @@ import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleRequest.RemoteC
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleResponse;
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleStartupModel;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote.ConsoleRecord;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
@@ -47,9 +48,9 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 				LooseContext.set(
 						DevConsoleRemote.CONTEXT_CALLER_CLIENT_INSTANCE_UID,
 						consoleRequest.getClientInstanceUid());
-				MethodHandler methodHandler = Registry.get()
-						.lookupImplementation(MethodHandler.class,
-								consoleRequest.getType(), "type");
+				MethodHandler methodHandler = Registry
+						.query(MethodHandler.class)
+						.forEnum(consoleRequest.getType());
 				RemoteConsoleResponse consoleResponse = methodHandler
 						.handle(consoleRequest, this);
 				response.getWriter().write(
@@ -63,8 +64,14 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 	}
 
 	@RegistryLocation(registryPoint = MethodHandler.class)
-	public static abstract class MethodHandler {
+	public static abstract class MethodHandler implements
+			Registration.EnumDiscriminator<RemoteConsoleRequestType> {
 		public abstract RemoteConsoleRequestType getType();
+
+		@Override
+		public RemoteConsoleRequestType provideEnumDiscriminator() {
+			return getType();
+		}
 
 		protected abstract RemoteConsoleResponse handle(
 				RemoteConsoleRequest consoleRequest,

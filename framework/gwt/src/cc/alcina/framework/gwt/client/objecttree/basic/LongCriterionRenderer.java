@@ -13,20 +13,20 @@
  */
 package cc.alcina.framework.gwt.client.objecttree.basic;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.LongCriterion;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = TreeRenderer.class, targetClass = LongCriterion.class)
 @Registration({ TreeRenderer.class, LongCriterion.class })
-public class LongCriterionRenderer extends SearchCriterionRenderer<LongCriterion> {
-
-    @Override
-    public String renderablePropertyName() {
-        return "long";
-    }
+public class LongCriterionRenderer
+		extends SearchCriterionRenderer<LongCriterion> {
+	@Override
+	public String renderablePropertyName() {
+		return "long";
+	}
 }

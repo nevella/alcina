@@ -25,13 +25,14 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * @author Nick Reddel
@@ -39,113 +40,124 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class AnnotationUtils {
+	private static Map<Method, Set<Annotation>> superMethodAnnotationMap = new ConcurrentHashMap<Method, Set<Annotation>>();
 
-    private static Map<Method, Set<Annotation>> superMethodAnnotationMap = new ConcurrentHashMap<Method, Set<Annotation>>();
+	// presence class, annotation simple name
+	private static UnsortedMultikeyMap<Annotation> classNameAnnotationMap = new UnsortedMultikeyMap<>(
+			2);
 
-    // presence class, annotation simple name
-    private static UnsortedMultikeyMap<Annotation> classNameAnnotationMap = new UnsortedMultikeyMap<>(2);
+	private static Map<Class, Multimap<Class, List<Annotation>>> superAnnotationMap = new ConcurrentHashMap<Class, Multimap<Class, List<Annotation>>>();
 
-    private static Map<Class, Multimap<Class, List<Annotation>>> superAnnotationMap = new ConcurrentHashMap<Class, Multimap<Class, List<Annotation>>>();
+	public static void checkNotObscuredAnnotation(PropertyDescriptor pd,
+			Class<? extends Annotation> annotationClass) {
+		try {
+			Method method = pd.getReadMethod();
+			Class cursor = method.getDeclaringClass();
+			if (method.getAnnotation(annotationClass) != null) {
+				return;
+			}
+			while (cursor.getSuperclass() != null) {
+				cursor = cursor.getSuperclass();
+				Method method2 = null;
+				try {
+					method2 = cursor.getMethod(method.getName(),
+							new Class[] {});
+				} catch (Exception e) {
+				}
+				if (method2 != null) {
+					if (method2.getAnnotation(annotationClass) != null) {
+						Ax.sysLogHigh("Overriding annotation in %s for %s.%s",
+								cursor, method.getDeclaringClass(),
+								method.getName());
+						throw new RuntimeException();
+					}
+				}
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
 
-    public static void checkNotObscuredAnnotation(PropertyDescriptor pd, Class<? extends Annotation> annotationClass) {
-        try {
-            Method method = pd.getReadMethod();
-            Class cursor = method.getDeclaringClass();
-            if (method.getAnnotation(annotationClass) != null) {
-                return;
-            }
-            while (cursor.getSuperclass() != null) {
-                cursor = cursor.getSuperclass();
-                Method method2 = null;
-                try {
-                    method2 = cursor.getMethod(method.getName(), new Class[] {});
-                } catch (Exception e) {
-                }
-                if (method2 != null) {
-                    if (method2.getAnnotation(annotationClass) != null) {
-                        Ax.sysLogHigh("Overriding annotation in %s for %s.%s", cursor, method.getDeclaringClass(), method.getName());
-                        throw new RuntimeException();
-                    }
-                }
-            }
-        } catch (Exception e) {
-            throw new WrappedRuntimeException(e);
-        }
-    }
+	public static <A extends Annotation> Collection<A> filterAnnotations(
+			Collection<Annotation> ann, Class<? extends A>... filterClasses) {
+		Set<A> result = new LinkedHashSet<A>();
+		List<Class<? extends A>> filterList = Arrays.asList(filterClasses);
+		for (Annotation a : ann) {
+			if (filterList.contains(a.annotationType())) {
+				result.add((A) a);
+			}
+		}
+		return result;
+	}
 
-    public static <A extends Annotation> Collection<A> filterAnnotations(Collection<Annotation> ann, Class<? extends A>... filterClasses) {
-        Set<A> result = new LinkedHashSet<A>();
-        List<Class<? extends A>> filterList = Arrays.asList(filterClasses);
-        for (Annotation a : ann) {
-            if (filterList.contains(a.annotationType())) {
-                result.add((A) a);
-            }
-        }
-        return result;
-    }
+	public static <A extends Annotation> void filterAnnotations(
+			Multimap<Class, List<Annotation>> ann,
+			Class<? extends A>... filterClasses) {
+		for (List<Annotation> anns : ann.values()) {
+			anns.retainAll(filterAnnotations(anns, filterClasses));
+		}
+	}
 
-    public static <A extends Annotation> void filterAnnotations(Multimap<Class, List<Annotation>> ann, Class<? extends A>... filterClasses) {
-        for (List<Annotation> anns : ann.values()) {
-            anns.retainAll(filterAnnotations(anns, filterClasses));
-        }
-    }
+	public static Multimap<Class, List<Annotation>>
+			getSuperclassAnnotations(Class clazz) {
+		Class forClass = clazz;
+		if (clazz.isInterface()) {
+			throw new RuntimeException(
+					"Should only check for classes, not interfaces");
+		}
+		if (superAnnotationMap.containsKey(clazz)) {
+			return superAnnotationMap.get(clazz);
+		}
+		Multimap<Class, List<Annotation>> values = new Multimap<Class, List<Annotation>>();
+		while (clazz != Object.class) {
+			values.addCollection(clazz, Arrays.asList(clazz.getAnnotations()));
+			clazz = clazz.getSuperclass();
+		}
+		superAnnotationMap.put(forClass, values);
+		return values;
+	}
 
-    public static Multimap<Class, List<Annotation>> getSuperclassAnnotations(Class clazz) {
-        Class forClass = clazz;
-        if (clazz.isInterface()) {
-            throw new RuntimeException("Should only check for classes, not interfaces");
-        }
-        if (superAnnotationMap.containsKey(clazz)) {
-            return superAnnotationMap.get(clazz);
-        }
-        Multimap<Class, List<Annotation>> values = new Multimap<Class, List<Annotation>>();
-        while (clazz != Object.class) {
-            values.addCollection(clazz, Arrays.asList(clazz.getAnnotations()));
-            clazz = clazz.getSuperclass();
-        }
-        superAnnotationMap.put(forClass, values);
-        return values;
-    }
+	public static Set<Annotation> getSuperclassAnnotationsForMethod(Method m) {
+		if (superMethodAnnotationMap.containsKey(m)) {
+			return superMethodAnnotationMap.get(m);
+		}
+		Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
+		Class c = m.getDeclaringClass();
+		while (c != Object.class) {
+			try {
+				Method m2 = c.getMethod(m.getName(), m.getParameterTypes());
+				for (Annotation a : m2.getAnnotations()) {
+					if (!uniqueMap.containsKey(a.annotationType())) {
+						uniqueMap.put(a.annotationType(), a);
+					}
+				}
+			} catch (Exception e) {
+			}
+			c = c.getSuperclass();
+		}
+		HashSet values = new HashSet(uniqueMap.values());
+		superMethodAnnotationMap.put(m, values);
+		return values;
+	}
 
-    public static Set<Annotation> getSuperclassAnnotationsForMethod(Method m) {
-        if (superMethodAnnotationMap.containsKey(m)) {
-            return superMethodAnnotationMap.get(m);
-        }
-        Map<Class, Annotation> uniqueMap = new HashMap<Class, Annotation>();
-        Class c = m.getDeclaringClass();
-        while (c != Object.class) {
-            try {
-                Method m2 = c.getMethod(m.getName(), m.getParameterTypes());
-                for (Annotation a : m2.getAnnotations()) {
-                    if (!uniqueMap.containsKey(a.annotationType())) {
-                        uniqueMap.put(a.annotationType(), a);
-                    }
-                }
-            } catch (Exception e) {
-            }
-            c = c.getSuperclass();
-        }
-        HashSet values = new HashSet(uniqueMap.values());
-        superMethodAnnotationMap.put(m, values);
-        return values;
-    }
-
-    public static boolean hasAnnotationNamed(Class clazz, Class<? extends Annotation> ann) {
-        String annClazzName = ann.getSimpleName();
-        if (!classNameAnnotationMap.containsKey(clazz, annClazzName)) {
-            Class c = clazz;
-            Annotation found = null;
-            while (c != Object.class && found == null) {
-                for (Annotation a : c.getAnnotations()) {
-                    if (a.annotationType().getSimpleName().equals(annClazzName)) {
-                        found = a;
-                        break;
-                    }
-                }
-                c = c.getSuperclass();
-            }
-            classNameAnnotationMap.put(clazz, annClazzName, found);
-        }
-        return classNameAnnotationMap.get(clazz, annClazzName) != null;
-    }
+	public static boolean hasAnnotationNamed(Class clazz,
+			Class<? extends Annotation> ann) {
+		String annClazzName = ann.getSimpleName();
+		if (!classNameAnnotationMap.containsKey(clazz, annClazzName)) {
+			Class c = clazz;
+			Annotation found = null;
+			while (c != Object.class && found == null) {
+				for (Annotation a : c.getAnnotations()) {
+					if (a.annotationType().getSimpleName()
+							.equals(annClazzName)) {
+						found = a;
+						break;
+					}
+				}
+				c = c.getSuperclass();
+			}
+			classNameAnnotationMap.put(clazz, annClazzName, found);
+		}
+		return classNameAnnotationMap.get(clazz, annClazzName) != null;
+	}
 }

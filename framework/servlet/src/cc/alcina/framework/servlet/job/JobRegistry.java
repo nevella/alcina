@@ -24,9 +24,12 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
@@ -57,6 +60,8 @@ import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.TransienceContext;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
@@ -88,8 +93,6 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.servlet.ThreadedPmClientInstanceResolverImpl;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
-import cc.alcina.framework.common.client.logic.reflection.Registrations;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * <h2>Overview</h2>
@@ -160,6 +163,8 @@ public class JobRegistry {
 
 	private static JobRegistry instance = null;
 
+	static Logger logger = LoggerFactory.getLogger(JobRegistry.class);
+
 	public static Builder createBuilder() {
 		return new Builder();
 	}
@@ -226,8 +231,6 @@ public class JobRegistry {
 
 	JobScheduler scheduler;
 
-	static Logger logger = LoggerFactory.getLogger(JobRegistry.class);
-
 	JobExecutors jobExecutors;
 
 	private boolean stopped;
@@ -237,30 +240,6 @@ public class JobRegistry {
 	Map<Job, ContextAwaiter> contextAwaiters = new ConcurrentHashMap<>();
 
 	public JobRegistry() {
-	}
-
-	public void init() {
-		TransformCommit.get()
-				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
-		jobExecutors = Registry.impl(JobExecutors.class);
-		jobExecutors.addScheduledJobExecutorChangeConsumer(leader -> {
-			if (leader && scheduler != null) {
-				scheduler.enqueueLeaderChangedEvent();
-			}
-		});
-		scheduler = new JobScheduler(this);
-		JobDomain.get().stateMessageEvents.add((k, messages) -> {
-			for (JobStateMessage message : messages) {
-				if (message == null) {
-					// FIXME - mvcc.5 - should not be
-					continue;
-				}
-				if (message.getProcessState() == null
-						&& activeJobs.containsKey(message.getJob())) {
-					updateThreadData(message);
-				}
-			}
-		});
 	}
 
 	// Directly acquire a resource (not via TaskPerformer.getResources)
@@ -310,6 +289,10 @@ public class JobRegistry {
 		});
 	}
 
+	public Stream<? extends Job> getActiveConsistencyJobs() {
+		return scheduler.aMoreDesirableSituation.getActiveJobs();
+	}
+
 	/*
 	 * PROCESSING or COMPLETE (not SEQUENCE_COMPLETE), this vm
 	 */
@@ -340,6 +323,10 @@ public class JobRegistry {
 		return JobDomain.get().getAllFutureJobs().map(FutureStat::new);
 	}
 
+	public Timestamp getJobMetadataLockTimestamp(String path) {
+		return jobExecutors.getJobMetadataLockTimestamp(path);
+	}
+
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
@@ -368,6 +355,30 @@ public class JobRegistry {
 		ThreadDataWaiter threadDataWaiter = new ThreadDataWaiter(job);
 		threadDataWaiter.await();
 		return threadDataWaiter.queriedJobs;
+	}
+
+	public void init() {
+		TransformCommit.get()
+				.setBackendTransformQueueMaxDelay(TRANSFORM_QUEUE_NAME, 1000);
+		jobExecutors = Registry.impl(JobExecutors.class);
+		jobExecutors.addScheduledJobExecutorChangeConsumer(leader -> {
+			if (leader && scheduler != null) {
+				scheduler.enqueueLeaderChangedEvent();
+			}
+		});
+		scheduler = new JobScheduler(this);
+		JobDomain.get().stateMessageEvents.add((k, messages) -> {
+			for (JobStateMessage message : messages) {
+				if (message == null) {
+					// FIXME - mvcc.5 - should not be
+					continue;
+				}
+				if (message.getProcessState() == null
+						&& activeJobs.containsKey(message.getJob())) {
+					updateThreadData(message);
+				}
+			}
+		});
 	}
 
 	public boolean isActiveCreator(Job job) {
@@ -655,7 +666,7 @@ public class JobRegistry {
 
 	/*
 	 * Jobs are always run in new (or job-only) threads
-	 * 
+	 *
 	 * FIXME - mvcc.jobs.1a - launcherthreadstate should go away
 	 */
 	void performJob(Job job, boolean queueJobPersistence,
@@ -795,6 +806,22 @@ public class JobRegistry {
 			return this;
 		}
 
+		public void ensureConsistency(Object futureConsistencyPriority) {
+			Optional<Job> existing = JobDomain.get()
+					.getFutureConsistencyJob(task);
+			if (existing.isPresent()) {
+				if (futureConsistencyPriority != JobDomain.DefaultConsistencyPriorities._default) {
+					existing.get().setConsistencyPriority(
+							futureConsistencyPriority.toString());
+					return;
+				}
+			} else {
+				withInitialState(JobState.FUTURE_CONSISTENCY).create()
+						.setConsistencyPriority(
+								futureConsistencyPriority.toString());
+			}
+		}
+
 		public Job followWith(Task task) {
 			this.task = task;
 			relationType = JobRelationType.SEQUENCE;
@@ -802,6 +829,41 @@ public class JobRegistry {
 			related = lastCreated;
 			create();
 			return lastCreated;
+		}
+
+		public void pruneCompletedResubmittedChildren() {
+			Preconditions.checkNotNull(lastCreated);
+			Job cursor = lastCreated.root();
+			List<Job> completed = new ArrayList<>();
+			while (cursor != null) {
+				cursor = cursor.getToRelations().stream().filter(
+						rel -> rel.getType() == JobRelationType.RESUBMIT)
+						.findFirst().map(JobRelation::getFrom).orElse(null);
+				if (cursor != null) {
+					cursor.provideChildren()
+							.filter(Job::provideIsCompletedNormally)
+							.forEach(completed::add);
+				}
+			}
+			while (true) {
+				Job hasEquivalentCompleted = lastCreated.root()
+						.provideChildren().sorted(EntityComparator.INSTANCE)
+						.filter(job -> completed.stream()
+								.anyMatch(job::provideEquivalentTask))
+						.findFirst().orElse(null);
+				if (hasEquivalentCompleted != null) {
+					Job equivalentCompleted = completed.stream().filter(
+							hasEquivalentCompleted::provideEquivalentTask)
+							.findFirst().get();
+					logger.info("pruneCompletedResubmittedChildren - "
+							+ "root {} - job {} - equivalent completed child: {}",
+							lastCreated.root(), hasEquivalentCompleted,
+							equivalentCompleted);
+					hasEquivalentCompleted.deleteEnsuringSequence();
+				} else {
+					break;
+				}
+			}
 		}
 
 		public Builder withAwaiter() {
@@ -849,50 +911,6 @@ public class JobRegistry {
 		public Builder withTask(Task task) {
 			this.task = task;
 			return this;
-		}
-
-		public void pruneCompletedResubmittedChildren() {
-			Preconditions.checkNotNull(lastCreated);
-			Job cursor = lastCreated.root();
-			List<Job> completed = new ArrayList<>();
-			while (cursor != null) {
-				cursor = cursor.getToRelations().stream().filter(
-						rel -> rel.getType() == JobRelationType.RESUBMIT)
-						.findFirst().map(JobRelation::getFrom).orElse(null);
-				if (cursor != null) {
-					cursor.provideChildren()
-							.filter(Job::provideIsCompletedNormally)
-							.forEach(completed::add);
-				}
-			}
-			while (true) {
-				Job hasEquivalentCompleted = lastCreated.root()
-						.provideChildren().sorted(EntityComparator.INSTANCE)
-						.filter(job -> completed.stream()
-								.anyMatch(job::provideEquivalentTask))
-						.findFirst().orElse(null);
-				if (hasEquivalentCompleted != null) {
-					Job equivalentCompleted = completed.stream().filter(
-							hasEquivalentCompleted::provideEquivalentTask)
-							.findFirst().get();
-					logger.info("pruneCompletedResubmittedChildren - "
-							+ "root {} - job {} - equivalent completed child: {}",
-							lastCreated.root(), hasEquivalentCompleted,
-							equivalentCompleted);
-					hasEquivalentCompleted.deleteEnsuringSequence();
-				} else {
-					break;
-				}
-			}
-		}
-
-		public void ensureConsistency(Object futureConsistencyPriority) {
-			if (JobDomain.get().hasFutureConsistencyJob(task)) {
-				return;
-			}
-			withInitialState(JobState.FUTURE_CONSISTENCY).create()
-					.setConsistencyPriority(
-							futureConsistencyPriority.toString());
 		}
 	}
 
@@ -1098,344 +1116,5 @@ public class JobRegistry {
 				JobDomain.get().stateMessageEvents.remove(listener);
 			}
 		}
-	}
-
-	public Timestamp getJobMetadataLockTimestamp(String path) {
-		return jobExecutors.getJobMetadataLockTimestamp(path);
-	}
-
-	public Stream<? extends Job> getActiveConsistencyJobs() {
-        return scheduler.aMoreDesirableSituation.getActiveJobs();
-    }=======if(initialState==JobState.PENDING&&(related==null||relationType==JobRelationType.RESUBMIT))
-
-	{
-		job.setPerformer(EntityLayerObjects.get().getServerAsClientInstance());
-	}if(awaiter)
-	{
-		JobRegistry.get().ensureAwaiter(job);
-	}if(task instanceof TransientFieldTask)
-	{
-		TransientFieldTasks.get().registerTask(job, task);
-	}task.onJobCreate(job);lastCreated=job;return job;
-	}
-
-	public Builder createReturnBuilder() {
-			create();
-			return this;
-		}
-
-	public Job followWith(Task task) {
-		this.task = task;
-		relationType = JobRelationType.SEQUENCE;
-		Preconditions.checkArgument(lastCreated != null);
-		related = lastCreated;
-		create();
-		return lastCreated;
-	}
-
-	public Builder withAwaiter() {
-		awaiter = true;
-		return this;
-	}
-
-	public Builder withContextParent() {
-		this.related = JobContext.get().getJob();
-		Preconditions.checkNotNull(related);
-		this.relationType = JobRelationType.PARENT_CHILD;
-		return this;
-	}
-
-	public Builder withContextPrevious() {
-		this.related = JobContext.get().getJob();
-		Preconditions.checkNotNull(related);
-		this.relationType = JobRelationType.SEQUENCE;
-		return this;
-	}
-
-	public Builder withInitialState(JobState initialState) {
-		this.initialState = initialState;
-		return this;
-	}
-
-	public Builder withRelated(Job related) {
-		this.related = related;
-		return this;
-	}
-
-	public Builder withRelationType(JobRelationType relationType) {
-		this.relationType = relationType;
-		return this;
-	}
-
-	public Builder withRunAt(LocalDateTime runAt) {
-		this.runAt = runAt;
-		if (runAt != null) {
-			this.initialState = JobState.FUTURE;
-		}
-		return this;
-	}
-
-	public Builder withTask(Task task) {
-		this.task = task;
-		return this;
-	}
-
-	public void pruneCompletedResubmittedChildren() {
-		Preconditions.checkNotNull(lastCreated);
-		Job cursor = lastCreated.root();
-		List<Job> completed = new ArrayList<>();
-		while (cursor != null) {
-			cursor = cursor.getToRelations().stream()
-					.filter(rel -> rel.getType() == JobRelationType.RESUBMIT)
-					.findFirst().map(JobRelation::getFrom).orElse(null);
-			if (cursor != null) {
-				cursor.provideChildren().filter(Job::provideIsCompletedNormally)
-						.forEach(completed::add);
-			}
-		}
-		while (true) {
-			Job hasEquivalentCompleted = lastCreated.root().provideChildren()
-					.sorted(EntityComparator.INSTANCE)
-					.filter(job -> completed.stream()
-							.anyMatch(job::provideEquivalentTask))
-					.findFirst().orElse(null);
-			if (hasEquivalentCompleted != null) {
-				Job equivalentCompleted = completed.stream()
-						.filter(hasEquivalentCompleted::provideEquivalentTask)
-						.findFirst().get();
-				logger.info("pruneCompletedResubmittedChildren - "
-						+ "root {} - job {} - equivalent completed child: {}",
-						lastCreated.root(), hasEquivalentCompleted,
-						equivalentCompleted);
-				hasEquivalentCompleted.deleteEnsuringSequence();
-			} else {
-				break;
-			}
-		}
-	}
-
-	public void ensureConsistency(Object futureConsistencyPriority) {
-		Optional<Job> existing = JobDomain.get().getFutureConsistencyJob(task);
-		if (existing.isPresent()) {
-			if (futureConsistencyPriority != JobDomain.DefaultConsistencyPriorities._default) {
-				existing.get().setConsistencyPriority(
-						futureConsistencyPriority.toString());
-				return;
-			}
-		} else {
-			withInitialState(JobState.FUTURE_CONSISTENCY).create()
-					.setConsistencyPriority(
-							futureConsistencyPriority.toString());
-		}
-	}
-}
-
-public static class FutureStat {
-	public String taskName;
-
-	public Date runAt;
-
-	public String jobId;
-
-	FutureStat(Job job) {
-		taskName = job.getTaskClassName();
-		runAt = job.getRunAt();
-		jobId = String.valueOf(job.getId());
-	}
-}
-
-@RegistryLocation(registryPoint = JobExecutors.class, implementationType = ImplementationType.INSTANCE)
-public static class JobExecutorsSingle implements JobExecutors {
-	@Override
-	public void
-			addScheduledJobExecutorChangeConsumer(Consumer<Boolean> consumer) {
-	}
-
-	@Override
-	public Object allocationLock(String path, boolean acquire) {
-		return new Object();
-	}
-
-	@Override
-	public List<ClientInstance> getActiveServers() {
-		return Arrays
-				.asList(EntityLayerObjects.get().getServerAsClientInstance());
-	}
-
-	@Override
-	public boolean isCurrentScheduledJobExecutor() {
-		return true;
-	}
-
-	@Override
-	public boolean isHighestBuildNumberInCluster() {
-		return true;
-	}
-}
-
-@RegistryLocation(registryPoint = Task.Performer.class, implementationType = ImplementationType.SINGLETON)
-public static class Performer implements Task.Performer {
-	@Override
-	public Job perform(Task task) {
-		return get().perform(task);
-	}
-
-	@Override
-	public Job schedule(Task task) {
-		return createBuilder().withTask(task).create();
-	}
-}
-
-static class ContextAwaiter {
-	CountDownLatch latch = new CountDownLatch(1);
-
-	Map<String, Object> copyContext = new LinkedHashMap<>();
-
-	private Job job;
-
-	public ContextAwaiter(Job job) {
-		this.job = job;
-		// we don't copy permissions manager/user - since often the launcher
-		// will be triggered by a system user context (because triggered by
-		// a transaction event)
-		//
-		// instead, all tasks for which runAsRoot returns false must
-		// implement iuser
-		copyContext.putAll(LooseContext.getContext().properties);
-	}
-
-	public void await(long maxTime) {
-		try {
-			maxTime = maxTime == 0 ? TimeConstants.ONE_HOUR_MS : maxTime;
-			long start = System.currentTimeMillis();
-			// do as a loop (rather than a simple wait) to avoid
-			// synchronisation (no guarantee job.provideIsComplete is
-			// doesn't change before latch.await)
-			while (maxTime == 0
-					|| System.currentTimeMillis() - start < maxTime) {
-				if (job.provideIsComplete()) {
-					break;
-				}
-				Transaction.ensureEnded();
-				long waitMillis = 1 * TimeConstants.ONE_SECOND_MS;
-				if (maxTime != 0 && maxTime < waitMillis) {
-					waitMillis = maxTime;
-				}
-				latch.await(waitMillis, TimeUnit.MILLISECONDS);
-				Transaction.begin();
-				if (job.provideIsComplete() || latch.getCount() <= 0) {
-					break;
-				}
-				// if awaiting during job performance
-				JobContext.checkCancelled();
-				long seconds = (System.currentTimeMillis() - start) / 1000;
-				// log on power-of-2 seconds
-				OptionalInt log = IntStream.range(0, 16).map(exp -> 1 << exp)
-						.filter(i -> i == seconds).findFirst();
-				if (log.isPresent()) {
-					JobRegistry.logger.warn("Waiting for job ({} secs) {}",
-							log.getAsInt(), job);
-				}
-			}
-			if (latch.getCount() > 0) {
-				JobRegistry.logger
-						.warn("DEVEX - 0 - Timed out waiting for job {}", job);
-			}
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		}
-	}
-}
-
-static class LauncherThreadState {
-	ClassLoader contextClassLoader;
-
-	Map<String, Object> copyContext = new LinkedHashMap<>();
-
-	String launchingThreadName;
-
-	long launchingThreadId;
-
-	public LauncherThreadState() {
-		// we don't copy permissions manager/user - since often the launcher
-		// will be triggered by a system user context (because triggered by
-		// a transaction event)
-		//
-		// instead, all tasks for which runAsRoot returns false must
-		// implement iuser
-		Thread currentThread = Thread.currentThread();
-		launchingThreadId = currentThread.getId();
-		launchingThreadName = currentThread.getName();
-		copyContext.putAll(LooseContext.getContext().properties);
-		contextClassLoader = currentThread.getContextClassLoader();
-	}
-
-	@Override
-	public String toString() {
-		return GraphProjection.fieldwiseToStringOneLine(this);
-	}
-}
-
-static class MissingPerformerPerformer implements TaskPerformer {
-	@Override
-	public void performAction(Task task) throws Exception {
-		throw new Exception(Ax.format("No performer found for task %s",
-				task.getClass().getName()));
-	}
-}
-
-class ThreadDataWaiter {
-	List<Job> queriedJobs = new ArrayList<>();
-
-	private Job job;
-
-	private CountDownLatch latch;
-
-	private TopicListener<List<JobStateMessage>> listener = (k, messages) -> {
-		for (JobStateMessage message : messages) {
-			if (message.getProcessState() != null
-					&& queriedJobs.contains(message.getJob())) {
-				latch.countDown();
-			}
-		}
-	};
-
-	public ThreadDataWaiter(Job job) {
-		this.job = job;
-	}
-
-	public void await() {
-		Stream.concat(Stream.of(job), job.provideDescendants())
-				.filter(j -> j.getState() == JobState.PROCESSING)
-				.forEach(job -> {
-					queriedJobs.add(job);
-					JobStateMessage stateMessage = PersistentImpl
-							.create(JobStateMessage.class);
-					stateMessage.setJob(job);
-				});
-		try {
-			JobDomain.get().stateMessageEvents.add(listener);
-			latch = new CountDownLatch(queriedJobs.size());
-			Transaction.commit();
-			latch.await(1, TimeUnit.SECONDS);
-			// FIXME - mvcc.jobs.2 - this is because all the population
-			// threads will be ... elsewhere
-			Thread.sleep(100);
-			DomainStore.waitUntilCurrentRequestsProcessed();
-		} catch (InterruptedException e) {
-			e.printStackTrace();
-		} finally {
-			JobDomain.get().stateMessageEvents.remove(listener);
-		}
-	}
-
-	}
-
-	public Timestamp getJobMetadataLockTimestamp(String path) {
-		return jobExecutors.getJobMetadataLockTimestamp(path);
-	}
-
-	public Stream<? extends Job> getActiveConsistencyJobs() {
-		return scheduler.aMoreDesirableSituation.getActiveJobs();
 	}
 }

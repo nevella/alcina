@@ -62,8 +62,7 @@ public class RenderedHtmlCustomiser implements Customiser {
 				String widgetCssClass) {
 			this.widgetCssClass = widgetCssClass;
 			renderer = rendererClass == null ? ToStringRenderer.INSTANCE
-					: (Renderer) Reflections
-							.newInstance(rendererClass);
+					: (Renderer) Reflections.newInstance(rendererClass);
 		}
 
 		@Override

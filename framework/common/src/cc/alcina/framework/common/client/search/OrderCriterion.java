@@ -25,8 +25,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  * @author Nick Reddel
  */
 public class OrderCriterion extends SearchCriterion {
-	
-
 	private Direction direction = Direction.ASCENDING;
 
 	public String addDirection(String criterionName) {

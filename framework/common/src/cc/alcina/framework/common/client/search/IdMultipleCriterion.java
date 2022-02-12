@@ -36,8 +36,6 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
  */
 public abstract class IdMultipleCriterion<E extends Entity>
 		extends SearchCriterion implements HasValue<Set<E>> {
-	
-
 	private Set<Long> ids = new LinkedHashSet<>();
 
 	private transient Set<E> value;

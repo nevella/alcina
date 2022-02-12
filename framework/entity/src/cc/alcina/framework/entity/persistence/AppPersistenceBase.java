@@ -97,11 +97,12 @@ public abstract class AppPersistenceBase {
 		Logger mainLogger = Logger
 				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		try {
-			Registry.impl(AppPersistenceBase.InitRegistrySupport.class).muteClassloaderLogging(true);
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
+					.muteClassloaderLogging(true);
 			ClassMetadataCache classInfo = new ServletClassMetadataCacheProvider()
 					.getClassInfo(mainLogger, true);
 			new RegistryScanner().scan(classInfo, new ArrayList<String>(),
-					Registry.get(), "entity-layer");
+					"entity-layer");
 		} catch (Exception e) {
 			mainLogger.warn("", e);
 		} finally {
@@ -134,7 +135,8 @@ public abstract class AppPersistenceBase {
 		Logger mainLogger = Logger
 				.getLogger(AlcinaWebappConfig.get().getMainLoggerName());
 		try {
-			Registry.impl(AppPersistenceBase.InitRegistrySupport.class).muteClassloaderLogging(true);
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
+					.muteClassloaderLogging(true);
 			ClassrefScanner classrefScanner = new ClassrefScanner();
 			if (AppPersistenceBase.isInstanceReadOnly()) {
 				classrefScanner.noPersistence();
@@ -150,6 +152,10 @@ public abstract class AppPersistenceBase {
 		}
 	}
 
+	public static class InitRegistrySupport {
+		public void muteClassloaderLogging(boolean mute) {
+		}
+	}
 
 	public static class ServletClassMetadataCacheProvider {
 		public ClassMetadataCache getClassInfo(Logger mainLogger,
@@ -159,13 +165,6 @@ public abstract class AppPersistenceBase {
 					entityLayer ? Arrays.asList(new String[] {})
 							: Arrays.asList(new String[] { "WEB-INF/classes",
 									"WEB-INF/lib" })).getClasses();
-		}
-	}
-
-
-	public static class InitRegistrySupport{
-		public void muteClassloaderLogging(boolean mute){
-			
 		}
 	}
 }

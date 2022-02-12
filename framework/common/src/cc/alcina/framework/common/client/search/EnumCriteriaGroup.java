@@ -21,8 +21,6 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 // TODO - make flat-serializable when needed
 @TypeSerialization(flatSerializable = false)
 public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
-	
-
 	public EnumCriteriaGroup() {
 		super();
 	}

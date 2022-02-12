@@ -16,8 +16,8 @@ public class FastIdLookupJvm implements FastIdLookup {
 	private Map<Long, Entity> idLookup = new LinkedHashMap<Long, Entity>();
 
 	private Map<Long, Entity> localIdLookup = new LinkedHashMap<Long, Entity>();
-	
-	private Map<Long, Entity> localIdToPromoted= new LinkedHashMap<Long, Entity>();
+
+	private Map<Long, Entity> localIdToPromoted = new LinkedHashMap<Long, Entity>();
 
 	private FastIdLookupDevValues values;
 
@@ -36,8 +36,8 @@ public class FastIdLookupJvm implements FastIdLookup {
 		checkId(id);
 		if (local) {
 			Entity entity = localIdLookup.get(id);
-			if(entity==null) {
-				entity=localIdToPromoted.get(id);
+			if (entity == null) {
+				entity = localIdToPromoted.get(id);
 			}
 			return entity;
 		} else {

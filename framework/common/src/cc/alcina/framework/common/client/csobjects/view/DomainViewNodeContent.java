@@ -30,7 +30,7 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 	private transient E entity;
 
 	private transient String __comparatorString;
-	
+
 	private transient Exception exception;
 
 	@AlcinaTransient

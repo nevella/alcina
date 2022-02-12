@@ -11,7 +11,9 @@ public class FastIdLookupScript implements FastIdLookup {
 	private JavascriptIntLookup idLookup = JavascriptIntLookup.create();
 
 	private JavascriptIntLookup localIdLookup = JavascriptIntLookup.create();
-	private JavascriptIntLookup localIdToPromoted = JavascriptIntLookup.create();
+
+	private JavascriptIntLookup localIdToPromoted = JavascriptIntLookup
+			.create();
 
 	private FastIdLookupScriptValues values;
 
@@ -24,8 +26,8 @@ public class FastIdLookupScript implements FastIdLookup {
 		int idi = LongWrapperHash.fastIntValue(id);
 		if (local) {
 			Entity entity = localIdLookup.get(idi);
-			if(entity==null) {
-				entity=localIdToPromoted.get(idi);
+			if (entity == null) {
+				entity = localIdToPromoted.get(idi);
 			}
 			return entity;
 		} else {
@@ -124,6 +126,7 @@ public class FastIdLookupScript implements FastIdLookup {
 			return localIdLookup.size() + idLookup.size();
 		}
 	}
+
 	@Override
 	public void changeMapping(Entity entity, long id, long localId) {
 		remove(id, false);

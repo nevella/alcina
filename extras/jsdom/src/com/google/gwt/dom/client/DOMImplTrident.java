@@ -28,8 +28,7 @@ abstract class DOMImplTrident extends DOMImpl {
 	 */
 	private static EventTarget currentEventTarget;
 
-	static native boolean isOrHasChildImpl(NodeRemote parent,
-			NodeRemote child) /*-{
+	static native boolean isOrHasChildImpl(NodeRemote parent, NodeRemote child) /*-{
 								// Element.contains() doesn't work with non-Element nodes on IE, so we have
 								// to deal explicitly with non-Element nodes here.
 								
@@ -209,8 +208,7 @@ abstract class DOMImplTrident extends DOMImpl {
 	}
 
 	@Override
-	protected native void dispatchEvent(ElementRemote target,
-			NativeEvent evt) /*-{
+	protected native void dispatchEvent(ElementRemote target, NativeEvent evt) /*-{
 								target.fireEvent("on" + evt.type, evt);
 								}-*/;
 
@@ -264,8 +262,7 @@ abstract class DOMImplTrident extends DOMImpl {
 	 * runtime JS exception.
 	 */
 	@Override
-	protected native String getAttribute(ElementRemote elem,
-			String name) /*-{
+	protected native String getAttribute(ElementRemote elem, String name) /*-{
 							var attr = elem.getAttribute(name);
 							return attr == null ? '' : attr + '';
 							}-*/;
@@ -326,8 +323,7 @@ abstract class DOMImplTrident extends DOMImpl {
 	}
 
 	@Override
-	protected native boolean hasAttribute(ElementRemote elem,
-			String name) /*-{
+	protected native boolean hasAttribute(ElementRemote elem, String name) /*-{
 							var node = elem.getAttributeNode(name);
 							return !!(node && node.specified);
 							}-*/;

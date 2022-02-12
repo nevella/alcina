@@ -1,28 +1,27 @@
 package cc.alcina.framework.gwt.client.tour.condition;
 
 import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @ClientInstantiable
 public class ReadOnlyEvaluator implements ConditionEvaluator {
+	@Override
+	public boolean evaluate(ConditionEvaluationContext context) {
+		return Registry.impl(ReadOnlyEvaluatorValueProvider.class).isReadOnly();
+	}
 
-    @Override
-    public boolean evaluate(ConditionEvaluationContext context) {
-        return Registry.impl(ReadOnlyEvaluatorValueProvider.class).isReadOnly();
-    }
-
-    @RegistryLocation(registryPoint = ReadOnlyEvaluatorValueProvider.class, implementationType = ImplementationType.INSTANCE)
-    @Registration(ReadOnlyEvaluatorValueProvider.class)
-    public static class ReadOnlyEvaluatorValueProvider {
-
-        public boolean isReadOnly() {
-            return GWT.isClient();
-        }
-    }
+	@RegistryLocation(registryPoint = ReadOnlyEvaluatorValueProvider.class, implementationType = ImplementationType.INSTANCE)
+	@Registration(ReadOnlyEvaluatorValueProvider.class)
+	public static class ReadOnlyEvaluatorValueProvider {
+		public boolean isReadOnly() {
+			return GWT.isClient();
+		}
+	}
 }

@@ -80,5 +80,4 @@ public interface JPAImplementation {
 	boolean isLazyInitialisationException(Exception e);
 
 	boolean isProxy(Entity e);
-
 }

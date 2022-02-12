@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -35,7 +35,7 @@ import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.ClasspathScanner.ClasspathVisitor;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class JBoss7Support {
@@ -50,11 +50,13 @@ public class JBoss7Support {
 		CachingClasspathScanner
 				.installUrlTranslator(new VFSClasspathUrlTranslator());
 		SourceFinder.sourceFinders.add(new SourceFinderVfs());
-		// ServerCodeCompiler.install(new VFSFileManager());
-		Registry.registerSingleton(AppPersistenceBase.InitRegistrySupport.class, new InitRegistrySupportImpl(),true);
+		Registry.register().singleton(
+				AppPersistenceBase.InitRegistrySupport.class,
+				new InitRegistrySupportImpl());
 	}
 
-	public static class InitRegistrySupportImpl extends AppPersistenceBase.InitRegistrySupport{
+	public static class InitRegistrySupportImpl
+			extends AppPersistenceBase.InitRegistrySupport {
 		private Level level;
 
 		@Override
@@ -67,8 +69,9 @@ public class JBoss7Support {
 			} else {
 				logger.setLevel(level);
 			}
-		}	
+		}
 	}
+
 	public static class VFSClasspathUrlTranslator
 			implements ClasspathUrlTranslator {
 		@Override

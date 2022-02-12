@@ -35,7 +35,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandlerShort;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -63,8 +62,7 @@ public class DevConsoleCommandTransforms {
 		while (rs.next()) {
 			long id = rs.getLong("id");
 			String cn = rs.getString("refclassname");
-			Class clazz = Registry.get().lookupSingle(PersistentImpl.class,
-					ClassRef.class);
+			Class clazz = PersistentImpl.getImplementation(ClassRef.class);
 			ClassRef cr = (ClassRef) clazz.getDeclaredConstructor()
 					.newInstance();
 			cr.setId(id);

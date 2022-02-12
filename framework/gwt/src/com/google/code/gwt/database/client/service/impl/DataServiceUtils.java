@@ -13,7 +13,6 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-
 package com.google.code.gwt.database.client.service.impl;
 
 import java.util.AbstractSequentialList;
@@ -29,119 +28,142 @@ import com.google.code.gwt.database.rebind.DataServiceGenerator;
  * @author bguijt
  */
 public class DataServiceUtils {
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, boolean[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, boolean[] array) {
-    for (int i=0; i<array.length; i++) {
-      if (i > 0) sql.append(",");
-      sql.append("?");
-      params[offset++] = array[i];
-    }
-    return offset;
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, byte[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, byte[] array) {
-    for (int i=0; i<array.length; i++) {
-      if (i > 0) sql.append(",");
-      sql.append("?");
-      params[offset++] = array[i];
-    }
-    return offset;
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, short[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, short[] array) {
-    for (int i=0; i<array.length; i++) {
-      if (i > 0) sql.append(",");
-      sql.append("?");
-      params[offset++] = array[i];
-    }
-    return offset;
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, char[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, char[] array) {
-    for (int i=0; i<array.length; i++) {
-      if (i > 0) sql.append(",");
-      sql.append("?");
-      params[offset++] = array[i];
-    }
-    return offset;
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, int[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, int[] array) {
-    for (int i=0; i<array.length; i++) {
-      if (i > 0) sql.append(",");
-      sql.append("?");
-      params[offset++] = array[i];
-    }
-    return offset;
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, long[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, long[] array) {
-    for (int i=0; i<array.length; i++) {
-      if (i > 0) sql.append(",");
-      sql.append("?");
-      params[offset++] = array[i];
-    }
-    return offset;
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, float[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, float[] array) {
-    for (int i=0; i<array.length; i++) {
-      if (i > 0) sql.append(",");
-      sql.append("?");
-      params[offset++] = array[i];
-    }
-    return offset;
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, double[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, double[] array) {
-    for (int i=0; i<array.length; i++) {
-      if (i > 0) sql.append(",");
-      sql.append("?");
-      params[offset++] = array[i];
-    }
-    return offset;
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, Object[] array) {
+		for (int i = 0; i < array.length; i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array[i];
+		}
+		return offset;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, Object[] array) {
-    for (int i=0; i<array.length; i++) {
-      if (i > 0) sql.append(",");
-      sql.append("?");
-      params[offset++] = array[i];
-    }
-    return offset;
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, AbstractSequentialList<?> array) {
+		return addParameter(sql, params, offset, (Iterable<?>) array);
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, AbstractSequentialList<?> array) {
-    return addParameter(sql, params, offset, (Iterable<?>) array);
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, List<?> array) {
+		for (int i = 0; i < array.size(); i++) {
+			if (i > 0)
+				sql.append(",");
+			sql.append("?");
+			params[offset++] = array.get(i);
+		}
+		return offset;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, List<?> array) {
-    for (int i=0; i<array.size(); i++) {
-      if (i > 0) sql.append(",");
-      sql.append("?");
-      params[offset++] = array.get(i);
-    }
-    return offset;
-  }
+	public static int addParameter(StringBuilder sql, Object[] params,
+			int offset, Iterable<?> array) {
+		int i = offset;
+		for (Object object : array) {
+			if (i > offset)
+				sql.append(",");
+			sql.append("?");
+			params[i++] = object;
+		}
+		return i;
+	}
 
-  public static int addParameter(StringBuilder sql, Object[] params, int offset, Iterable<?> array) {
-    int i = offset;
-    for (Object object : array) {
-      if (i > offset) sql.append(",");
-      sql.append("?");
-      params[i++] = object;
-    }
-    return i;
-  }
-  
-  public static int getSize(Iterable<?> array) {
-    if (array instanceof Collection<?>) {
-      return ((Collection<?>) array).size();
-    }
-    int size = 0;
-    for (@SuppressWarnings("unused") Object object : array) {
-      size++;
-    }
-    return size;
-  }
+	public static int getSize(Iterable<?> array) {
+		if (array instanceof Collection<?>) {
+			return ((Collection<?>) array).size();
+		}
+		int size = 0;
+		for (@SuppressWarnings("unused")
+		Object object : array) {
+			size++;
+		}
+		return size;
+	}
 }

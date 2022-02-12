@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -23,6 +23,7 @@ import java.util.function.BiPredicate;
 
 import com.google.gwt.user.client.History;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -31,9 +32,10 @@ import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
+@Registration.Singleton
 public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	// for testing - FF dev mode does some weird double-unencoding
 	public static final String BASE64_PREFIX = "__b64__";
@@ -175,7 +177,7 @@ public abstract class AlcinaHistory<I extends AlcinaHistoryItem> {
 	/**
 	 * '&' in values is encoded as &&, to allow for hotmail escaping '&' in the
 	 * hash as a whole - see fromHash
-	 * 
+	 *
 	 * encodedValues will not be double-encoded
 	 */
 	public static String toHash(Map<String, String> params,

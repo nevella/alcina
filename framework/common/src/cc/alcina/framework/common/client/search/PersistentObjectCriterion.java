@@ -10,8 +10,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 @TypeSerialization(flatSerializable = false)
 public class PersistentObjectCriterion extends SearchCriterion {
-	
-
 	private ClassRef classRef;
 
 	public PersistentObjectCriterion() {

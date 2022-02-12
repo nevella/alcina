@@ -178,8 +178,8 @@ public class ActionProgress extends Composite
 					}
 				};
 				if (!checking) {
-					Client.commonRemoteService()
-							.pollJobStatus(id, false, callback);
+					Client.commonRemoteService().pollJobStatus(id, false,
+							callback);
 					checking = true;
 				}
 			}
@@ -298,8 +298,8 @@ public class ActionProgress extends Composite
 		cancelLink.setVisible(false);
 		cancellingStatusMessage.setText(" - Cancelling...");
 		cancellingStatusMessage.setVisible(true);
-		Client.commonRemoteService().pollJobStatus(getId(),
-				true, new AsyncCallback<JobTracker>() {
+		Client.commonRemoteService().pollJobStatus(getId(), true,
+				new AsyncCallback<JobTracker>() {
 					@Override
 					public void onFailure(Throwable e) {
 						cancellingStatusMessage.setText(" - Error cancelling");

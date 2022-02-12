@@ -124,12 +124,11 @@ public class Gallery {
 				.executeScript("return document.documentElement.outerHTML;");
 		try {
 			Document w3cdoc = ResourceUtilities
-					.loadHtmlDocumentFromString(pageSource,false);
+					.loadHtmlDocumentFromString(pageSource, false);
 			DomDoc doc = new DomDoc(w3cdoc);
 			doc.xpath("//script ").forEach(DomNode::removeFromParent);
-			List<DomNode> stylesheetNodes = doc.xpath(
-					"//link[@rel='stylesheet'] ")
-					.nodes();
+			List<DomNode> stylesheetNodes = doc
+					.xpath("//link[@rel='stylesheet'] ").nodes();
 			for (DomNode node : stylesheetNodes) {
 				String href = node.attr("href");
 				if (href.startsWith("/")) {

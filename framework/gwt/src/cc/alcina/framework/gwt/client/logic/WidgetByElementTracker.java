@@ -9,24 +9,16 @@ import com.google.gwt.event.logical.shared.AttachEvent.Handler;
 import com.google.gwt.user.client.ui.InsertPanel.ForIsWidget;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
+@Registration.Singleton
 public class WidgetByElementTracker implements Handler {
 	public static WidgetByElementTracker get() {
-		WidgetByElementTracker singleton = Registry
-				.checkSingleton(WidgetByElementTracker.class);
-		if (singleton == null) {
-			singleton = new WidgetByElementTracker();
-			Registry.registerSingleton(WidgetByElementTracker.class, singleton);
-		}
-		return singleton;
+		return Registry.impl(WidgetByElementTracker.class);
 	}
 
 	Map<Element, Widget> perElementWidgets = new LinkedHashMap<Element, Widget>();
-
-	private WidgetByElementTracker() {
-		super();
-	}
 
 	public Widget findBestWidgetForElement(ForIsWidget fiw, Element elt) {
 		for (int i = 0; i < fiw.getWidgetCount(); i++) {

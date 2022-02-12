@@ -156,8 +156,7 @@ public class FormPanelImpl {
 	 * @param form
 	 *            the form whose onSubmit event is to be unhooked
 	 */
-	public native void unhookEvents(Element iframe_multi,
-			Element form_multi) /*-{
+	public native void unhookEvents(Element iframe_multi, Element form_multi) /*-{
 								@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(form_multi);
 								if (iframe_multi != null) {
 								@cc.alcina.framework.gwt.client.util.WidgetUtils::ensureRemote(Lcom/google/gwt/dom/client/Element;)(iframe_multi);

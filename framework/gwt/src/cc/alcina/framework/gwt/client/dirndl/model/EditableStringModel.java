@@ -47,6 +47,4 @@ public class EditableStringModel extends Model {
 			return super.getString();
 		}
 	}
-	
-	
 }

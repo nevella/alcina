@@ -147,8 +147,8 @@ public class LiSet<H extends Entity> extends AbstractSet<H>
 		try {
 			LiSet clone = (LiSet) super.clone();
 			if (clone.elementData != null) {
-				clone.elementData = 
-						Arrays.copyOf(clone.elementData, clone.elementData.length);
+				clone.elementData = Arrays.copyOf(clone.elementData,
+						clone.elementData.length);
 			}
 			if (clone.degenerate != null) {
 				clone.degenerate = degenerateCreator.copy(clone.degenerate);

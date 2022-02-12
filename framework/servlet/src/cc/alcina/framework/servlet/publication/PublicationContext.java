@@ -1,16 +1,12 @@
 package cc.alcina.framework.servlet.publication;
 
-import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
@@ -87,18 +83,12 @@ public class PublicationContext {
 		String xmlForm = "Unable to serialize publication request";
 		String modelString = xmlForm;
 		try {
-			Set<Class> jaxbClasses = new HashSet<Class>(
-					Registry.get().lookup(JaxbContextRegistration.class));
 			String contentDefSerialized = "(no xmlrootelement annotation)";
-			try {
-				contentDefSerialized = JaxbUtils
-						.xmlSerialize(contentDefinition, jaxbClasses);
-			} catch (Exception e) {
-			}
+			contentDefSerialized = JaxbUtils.xmlSerialize(contentDefinition);
 			xmlForm = Ax.format(
 					"Content definition:\n%s\n\n" + "Delivery model:\n%s",
-					contentDefSerialized, JaxbUtils
-							.xmlSerialize(deliveryModel, jaxbClasses));
+					contentDefSerialized,
+					JaxbUtils.xmlSerialize(deliveryModel));
 			if (xmlForm.length() > 5000) {
 				xmlForm = Ax.format(
 						"(Large definition/model)\n"
@@ -107,9 +97,7 @@ public class PublicationContext {
 						contentDefinition.getClass().getSimpleName(),
 						contentDefSerialized.length(),
 						deliveryModel.getClass().getSimpleName(),
-						JaxbUtils
-								.xmlSerialize(deliveryModel, jaxbClasses)
-								.length());
+						JaxbUtils.xmlSerialize(deliveryModel).length());
 			}
 			modelString = deliveryModel.toString();
 		} catch (Exception e2) {

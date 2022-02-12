@@ -18,7 +18,7 @@ public abstract class LayoutManagerBase
 	public LayoutManagerBase() {
 		Window.addResizeHandler(this);
 		LayoutEvents.get().addLayoutEventListener(this);
-		Registry.registerSingleton(LayoutManagerBase.class, this);
+		Registry.register().singleton(LayoutManagerBase.class, this);
 	}
 
 	public boolean isDisplayInitialised() {

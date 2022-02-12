@@ -6,7 +6,7 @@ import java.util.function.Supplier;
 /**
  * Beginnings of a general approach to decoupling hints - let's see if it works
  * 
- * FIXME - 2022 - cleanup "LooseContext" vs "LooseContextInstance" 
+ * FIXME - 2022 - cleanup "LooseContext" vs "LooseContextInstance"
  * 
  * @author nick@alcina.cc
  * 
@@ -200,9 +200,8 @@ public abstract class LooseContext {
 	public static class LooseContextStackException extends RuntimeException {
 	}
 
-	public static void allowUnbalancedFrameRemoval(
-			Class clazz, String pushMethodName) {
-		getContext().allowUnbalancedFrameRemoval(
-				 clazz,  pushMethodName);
+	public static void allowUnbalancedFrameRemoval(Class clazz,
+			String pushMethodName) {
+		getContext().allowUnbalancedFrameRemoval(clazz, pushMethodName);
 	}
 }

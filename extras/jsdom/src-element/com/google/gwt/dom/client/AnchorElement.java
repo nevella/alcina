@@ -181,7 +181,8 @@ public class AnchorElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/links.html#adef-href">
 	 *      W3C HTML Specification</a>
 	 */
-	public void setHref(@IsSafeUri String href) {
+	public void setHref(@IsSafeUri
+	String href) {
 		this.setPropertyString("href", href);
 	}
 

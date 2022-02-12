@@ -15,6 +15,7 @@ package cc.alcina.framework.gwt.client.entity;
 
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
@@ -24,121 +25,132 @@ import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.misc.PerUserProperties;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
-import cc.alcina.framework.common.client.logic.reflection.Registrations;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @Bean(display = @Display(name = "Developer"))
 @XmlRootElement
-@RegistryLocations(value = { @RegistryLocation(registryPoint = JaxbContextRegistration.class), @RegistryLocation(registryPoint = PerUserProperties.class) })
-@Registrations({ @Registration(JaxbContextRegistration.class), @Registration(PerUserProperties.class) })
-public class GeneralProperties extends Bindable implements UserPropertyPersistable {
+@RegistryLocations(value = {
+		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
+		@RegistryLocation(registryPoint = PerUserProperties.class) })
+@Registrations({ @Registration(JaxbContextRegistration.class),
+		@Registration(PerUserProperties.class) })
+public class GeneralProperties extends Bindable
+		implements UserPropertyPersistable {
+	public static final transient int DEFAULT_FILTER_DELAY = 500;
 
-    public static final transient int DEFAULT_FILTER_DELAY = 500;
+	public static final transient String PROPERTY_TRANSIENT_CSS = "transientCss";
 
-    public static final transient String PROPERTY_TRANSIENT_CSS = "transientCss";
+	public static final transient String PROPERTY_PERSISTENT_CSS = "persistentCss";
 
-    public static final transient String PROPERTY_PERSISTENT_CSS = "persistentCss";
+	public static GeneralProperties get() {
+		return Registry.impl(GeneralProperties.class);
+	}
 
-    public static GeneralProperties get() {
-        return Registry.impl(GeneralProperties.class);
-    }
+	private UserPropertyPersistable.Support userPropertySupport;
 
-    private UserPropertyPersistable.Support userPropertySupport;
+	private boolean autoSave;
 
-    private boolean autoSave;
+	private int filterDelayMs = DEFAULT_FILTER_DELAY;
 
-    private int filterDelayMs = DEFAULT_FILTER_DELAY;
+	private String transientCss = "";
 
-    private String transientCss = "";
+	private String persistentCss = "";
 
-    private String persistentCss = "";
+	private boolean allowAdminInvalidObjectWrite = true;
 
-    private boolean allowAdminInvalidObjectWrite = true;
+	public GeneralProperties() {
+	}
 
-    public GeneralProperties() {
-    }
+	@Display(name = "ui.filterComponentActuationDelay")
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
+	public int getFilterDelayMs() {
+		return filterDelayMs;
+	}
 
-    @Display(name = "ui.filterComponentActuationDelay")
-    @PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
-    public int getFilterDelayMs() {
-        return filterDelayMs;
-    }
+	@Display(helpText = "CSS which will be saved on the server, and reapplied each time you log in", name = "designer.persistentCss")
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
+	@Custom(customiserClass = TextAreaCustomiser.class)
+	public String getPersistentCss() {
+		return this.persistentCss;
+	}
 
-    @Display(helpText = "CSS which will be saved on the server, and reapplied each time you log in", name = "designer.persistentCss")
-    @PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
-    @Custom(customiserClass = TextAreaCustomiser.class)
-    public String getPersistentCss() {
-        return this.persistentCss;
-    }
+	@Display(helpText = "CSS which will be applied in this session, but not saved on the server", name = "designer.transientCss", focus = true)
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
+	@Custom(customiserClass = TextAreaCustomiser.class)
+	@XmlTransient
+	public String getTransientCss() {
+		return this.transientCss;
+	}
 
-    @Display(helpText = "CSS which will be applied in this session, but not saved on the server", name = "designer.transientCss", focus = true)
-    @PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
-    @Custom(customiserClass = TextAreaCustomiser.class)
-    @XmlTransient
-    public String getTransientCss() {
-        return this.transientCss;
-    }
+	@Override
+	@AlcinaTransient
+	@XmlTransient
+	public UserPropertyPersistable.Support getUserPropertySupport() {
+		if (this.userPropertySupport != null) {
+			this.userPropertySupport.ensureListeners();
+		}
+		return this.userPropertySupport;
+	}
 
-    @Override
-    @AlcinaTransient
-    @XmlTransient
-    public UserPropertyPersistable.Support getUserPropertySupport() {
-        if (this.userPropertySupport != null) {
-            this.userPropertySupport.ensureListeners();
-        }
-        return this.userPropertySupport;
-    }
+	@Display(name = "admin.allowAdminInvalidObjectWrite")
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
+	public boolean isAllowAdminInvalidObjectWrite() {
+		return allowAdminInvalidObjectWrite;
+	}
 
-    @Display(name = "admin.allowAdminInvalidObjectWrite")
-    @PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
-    public boolean isAllowAdminInvalidObjectWrite() {
-        return allowAdminInvalidObjectWrite;
-    }
+	@Display(name = "domain.autoSaveChanges")
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
+	public boolean isAutoSave() {
+		return autoSave;
+	}
 
-    @Display(name = "domain.autoSaveChanges")
-    @PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
-    public boolean isAutoSave() {
-        return autoSave;
-    }
+	public void setAllowAdminInvalidObjectWrite(
+			boolean allowAdminInvalidObjectWrite) {
+		boolean old_allowAdminInvalidObjectWrite = this.allowAdminInvalidObjectWrite;
+		this.allowAdminInvalidObjectWrite = allowAdminInvalidObjectWrite;
+		propertyChangeSupport().firePropertyChange(
+				"allowAdminInvalidObjectWrite",
+				old_allowAdminInvalidObjectWrite, allowAdminInvalidObjectWrite);
+	}
 
-    public void setAllowAdminInvalidObjectWrite(boolean allowAdminInvalidObjectWrite) {
-        boolean old_allowAdminInvalidObjectWrite = this.allowAdminInvalidObjectWrite;
-        this.allowAdminInvalidObjectWrite = allowAdminInvalidObjectWrite;
-        propertyChangeSupport().firePropertyChange("allowAdminInvalidObjectWrite", old_allowAdminInvalidObjectWrite, allowAdminInvalidObjectWrite);
-    }
+	public void setAutoSave(boolean autoSave) {
+		boolean old_autoSave = this.autoSave;
+		this.autoSave = autoSave;
+		propertyChangeSupport().firePropertyChange("autoSave", old_autoSave,
+				autoSave);
+	}
 
-    public void setAutoSave(boolean autoSave) {
-        boolean old_autoSave = this.autoSave;
-        this.autoSave = autoSave;
-        propertyChangeSupport().firePropertyChange("autoSave", old_autoSave, autoSave);
-    }
+	public void setFilterDelayMs(int filterDelayMs) {
+		int old_filterDelayMs = this.filterDelayMs;
+		this.filterDelayMs = filterDelayMs;
+		propertyChangeSupport().firePropertyChange("filterDelayMs",
+				old_filterDelayMs, filterDelayMs);
+	}
 
-    public void setFilterDelayMs(int filterDelayMs) {
-        int old_filterDelayMs = this.filterDelayMs;
-        this.filterDelayMs = filterDelayMs;
-        propertyChangeSupport().firePropertyChange("filterDelayMs", old_filterDelayMs, filterDelayMs);
-    }
+	public void setPersistentCss(String persistentCss) {
+		String old_persistentCss = this.persistentCss;
+		this.persistentCss = persistentCss;
+		propertyChangeSupport().firePropertyChange("persistentCss",
+				old_persistentCss, persistentCss);
+	}
 
-    public void setPersistentCss(String persistentCss) {
-        String old_persistentCss = this.persistentCss;
-        this.persistentCss = persistentCss;
-        propertyChangeSupport().firePropertyChange("persistentCss", old_persistentCss, persistentCss);
-    }
+	public void setTransientCss(String transientCss) {
+		String old_transientCss = this.transientCss;
+		this.transientCss = transientCss;
+		propertyChangeSupport().firePropertyChange("transientCss",
+				old_transientCss, transientCss);
+	}
 
-    public void setTransientCss(String transientCss) {
-        String old_transientCss = this.transientCss;
-        this.transientCss = transientCss;
-        propertyChangeSupport().firePropertyChange("transientCss", old_transientCss, transientCss);
-    }
-
-    @Override
-    public void setUserPropertySupport(UserPropertyPersistable.Support userPropertySupport) {
-        this.userPropertySupport = userPropertySupport;
-    }
+	@Override
+	public void setUserPropertySupport(
+			UserPropertyPersistable.Support userPropertySupport) {
+		this.userPropertySupport = userPropertySupport;
+	}
 }

@@ -101,8 +101,7 @@ public class DevConsoleCommandsDeploy {
 					targetDockerHostSshPrivateKey, targetDockerHostSshUser,
 					targetDockerHostName, cmd);
 			Ax.out(script);
-			Output output = new Shell()
-					.runBashScript(script);
+			Output output = new Shell().runBashScript(script);
 			output.throwOnException();
 		}
 	}

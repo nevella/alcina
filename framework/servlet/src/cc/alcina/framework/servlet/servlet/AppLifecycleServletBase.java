@@ -104,11 +104,12 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	public static void setupAppServerBootstrapJvmServices() {
-		Registry.setProvider(new ClassLoaderAwareRegistryProvider());
+		Registry.Internals.setProvider(new ClassLoaderAwareRegistryProvider());
 	}
 
 	public static void setupBootstrapJvmServices() {
-		Registry.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
+		Registry.Internals
+				.setDelegateCreator(new DelegateMapCreatorConcurrentNoNulls());
 		CollectionCreators.Bootstrap
 				.setConcurrentClassMapCreator(new ConcurrentMapCreatorJvm());
 		CollectionCreators.Bootstrap
@@ -299,9 +300,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());
 		Reflections.init();
-		Registry.registerSingleton(AlcinaWebappConfig.class, config);
-		Registry.registerSingleton(AppLifecycleServletBase.class, this);
-		Registry.registerSingleton(AppPersistenceBase.InitRegistrySupport.class,
+		Registry.register().singleton(AlcinaWebappConfig.class, config);
+		Registry.register().singleton(AppLifecycleServletBase.class, this);
+		Registry.register().singleton(
+				AppPersistenceBase.InitRegistrySupport.class,
 				new AppPersistenceBase.InitRegistrySupport());
 	}
 
@@ -323,7 +325,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		ThreadlocalLooseContextProvider ttmInstance = ThreadlocalLooseContextProvider
 				.ttmInstance();
 		LooseContext.register(ttmInstance);
-		Registry.registerSingleton(TimerWrapperProvider.class,
+		Registry.register().singleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
 		GWT.setBridge(new GWTBridgeHeadless());
@@ -373,7 +375,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			}
 			{
 				PerThreadAppender appender = new PerThreadAppender(layout);
-				Registry.registerSingleton(PerThreadLogging.class, appender);
+				Registry.register().singleton(PerThreadLogging.class, appender);
 				appender.setName("per-thread-appender");
 				logger.addAppender(appender);
 			}
@@ -404,7 +406,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 						logLevelField.set(handler, java.util.logging.Level.ALL);
 					} else if (handler.getClass().getName().equals(
 							"cc.alcina.framework.servlet.logging.PerThreadLoggingHandler")) {
-						Registry.registerSingleton(PerThreadLogging.class,
+						Registry.register().singleton(PerThreadLogging.class,
 								new PerThreadLoggingWrapper(handler));
 					}
 				}
@@ -452,9 +454,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 					.muteClassloaderLogging(true);
 			ClassMetadataCache classes = classMetadataCacheProvider
 					.getClassInfo(logger, false);
-			Registry servletLayerRegistry = Registry.get();
+			Registry servletLayerRegistry = Registry.internals().instance();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					servletLayerRegistry, "servlet-layer");
+					"servlet-layer");
 			EntityLayerObjects.get()
 					.setServletLayerRegistry(servletLayerRegistry);
 		} catch (Exception e) {
@@ -551,15 +553,16 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		try {
 			Transaction.begin();
 			ThreadedPermissionsManager.cast().pushSystemUser();
-			Registry.impls(LifecycleService.class).forEach(service -> {
-				try {
-					service.onApplicationStartup();
-				} catch (Exception e) {
-					Ax.sysLogHigh("Exception starting up %s",
-							service.getClass().getSimpleName());
-					e.printStackTrace();
-				}
-			});
+			Registry.query(LifecycleService.class).implementations()
+					.forEach(service -> {
+						try {
+							service.onApplicationStartup();
+						} catch (Exception e) {
+							Ax.sysLogHigh("Exception starting up %s",
+									service.getClass().getSimpleName());
+							e.printStackTrace();
+						}
+					});
 			if (serializationSignatureListener != null) {
 				boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities
 						.is(AppLifecycleServletBase.class,

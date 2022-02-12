@@ -38,12 +38,13 @@ public class IdentityArrayList<T> extends ArrayList<T> {
 	}
 
 	public IdentityArrayList(Collection<? extends T> c) {
-		super(c==null?Collections.emptyList():c);
+		super(c == null ? Collections.emptyList() : c);
 	}
 
-	public static <T> IdentityArrayList<T> copyOf(Collection<? extends T> c){
+	public static <T> IdentityArrayList<T> copyOf(Collection<? extends T> c) {
 		return new IdentityArrayList<>(c);
 	}
+
 	@Override
 	public boolean equals(Object obj) {
 		return this == obj;

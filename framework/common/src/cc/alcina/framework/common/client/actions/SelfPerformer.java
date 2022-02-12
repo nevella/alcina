@@ -25,5 +25,4 @@ public interface SelfPerformer<T extends Task>
 	default void run() {
 		perform();
 	}
-	
 }

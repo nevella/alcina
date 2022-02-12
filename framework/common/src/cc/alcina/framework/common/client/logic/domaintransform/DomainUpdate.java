@@ -3,93 +3,95 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 import java.sql.Timestamp;
 import java.util.List;
+
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class DomainUpdate implements Serializable {
+	public List<DomainTransformRequest> requests;
 
-    public List<DomainTransformRequest> requests;
+	public DomainTransformCommitPosition commitPosition;
 
-    public DomainTransformCommitPosition commitPosition;
+	@Bean
+	@RegistryLocation(registryPoint = TreeSerializable.class)
+	@Registration(TreeSerializable.class)
+	public static class DomainTransformCommitPosition implements
+			TreeSerializable, Comparable<DomainTransformCommitPosition> {
+		private Timestamp commitTimestamp;
 
-    @Bean
-    @RegistryLocation(registryPoint = TreeSerializable.class)
-    @Registration(TreeSerializable.class)
-    public static class DomainTransformCommitPosition implements TreeSerializable, Comparable<DomainTransformCommitPosition> {
+		private Long commitRequestId;
 
-        private Timestamp commitTimestamp;
+		public DomainTransformCommitPosition() {
+		}
 
-        private Long commitRequestId;
+		public DomainTransformCommitPosition(long commitRequestId,
+				Timestamp commitTimestamp) {
+			this.commitTimestamp = commitTimestamp;
+			this.commitRequestId = commitRequestId;
+		}
 
-        public DomainTransformCommitPosition() {
-        }
+		@Override
+		public int compareTo(DomainTransformCommitPosition o) {
+			if (commitTimestamp == null) {
+				return o.commitTimestamp == null ? 0 : -1;
+			}
+			int i = commitTimestamp.compareTo(o.commitTimestamp);
+			if (i != 0) {
+				return i;
+			}
+			return CommonUtils.compareLongs(commitRequestId, o.commitRequestId);
+		}
 
-        public DomainTransformCommitPosition(long commitRequestId, Timestamp commitTimestamp) {
-            this.commitTimestamp = commitTimestamp;
-            this.commitRequestId = commitRequestId;
-        }
+		@Override
+		public boolean equals(Object obj) {
+			if (obj instanceof DomainTransformCommitPosition) {
+				DomainTransformCommitPosition o = (DomainTransformCommitPosition) obj;
+				return CommonUtils.equals(commitTimestamp, o.commitTimestamp,
+						commitRequestId, o.commitRequestId);
+			} else {
+				return false;
+			}
+		}
 
-        @Override
-        public int compareTo(DomainTransformCommitPosition o) {
-            if (commitTimestamp == null) {
-                return o.commitTimestamp == null ? 0 : -1;
-            }
-            int i = commitTimestamp.compareTo(o.commitTimestamp);
-            if (i != 0) {
-                return i;
-            }
-            return CommonUtils.compareLongs(commitRequestId, o.commitRequestId);
-        }
+		public Long getCommitRequestId() {
+			return commitRequestId;
+		}
 
-        @Override
-        public boolean equals(Object obj) {
-            if (obj instanceof DomainTransformCommitPosition) {
-                DomainTransformCommitPosition o = (DomainTransformCommitPosition) obj;
-                return CommonUtils.equals(commitTimestamp, o.commitTimestamp, commitRequestId, o.commitRequestId);
-            } else {
-                return false;
-            }
-        }
+		public Timestamp getCommitTimestamp() {
+			return commitTimestamp;
+		}
 
-        public Long getCommitRequestId() {
-            return commitRequestId;
-        }
+		public void setCommitRequestId(Long commitRequestId) {
+			this.commitRequestId = commitRequestId;
+		}
 
-        public Timestamp getCommitTimestamp() {
-            return commitTimestamp;
-        }
+		public void setCommitTimestamp(Timestamp commitTimestamp) {
+			this.commitTimestamp = commitTimestamp;
+		}
 
-        public void setCommitRequestId(Long commitRequestId) {
-            this.commitRequestId = commitRequestId;
-        }
+		@Override
+		public String toString() {
+			return Ax.format("commit position: %s/%s", commitTimestamp,
+					commitRequestId);
+		}
+	}
 
-        public void setCommitTimestamp(Timestamp commitTimestamp) {
-            this.commitTimestamp = commitTimestamp;
-        }
+	@RegistryLocation(registryPoint = DomainTransformCommitPositionProvider.class, implementationType = ImplementationType.SINGLETON)
+	@ClientInstantiable
+	@Registration.Singleton
+	public static class DomainTransformCommitPositionProvider {
+		public long getCurrentTransactionId() {
+			return 0;
+		}
 
-        @Override
-        public String toString() {
-            return Ax.format("commit position: %s/%s", commitTimestamp, commitRequestId);
-        }
-    }
-
-    @RegistryLocation(registryPoint = DomainTransformCommitPositionProvider.class, implementationType = ImplementationType.SINGLETON)
-    @ClientInstantiable
-    @Registration.Singleton
-    public static class DomainTransformCommitPositionProvider {
-
-        public long getCurrentTransactionId() {
-            return 0;
-        }
-
-        public DomainTransformCommitPosition getPosition() {
-            return null;
-        }
-    }
+		public DomainTransformCommitPosition getPosition() {
+			return null;
+		}
+	}
 }

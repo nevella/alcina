@@ -366,10 +366,10 @@ public class DevMode extends DevModeBase implements RestartServerCallback {
 					@Override
 					public final void run() {
 						try {
-							Registry.registerSingleton(
+							Registry.register().singleton(
 									TimerWrapperProvider.class,
 									new TimerWrapperProviderJvm());
-							Registry.registerSingleton(XhrTcpBridge.class,
+							Registry.register().singleton(XhrTcpBridge.class,
 									new XhrTcpBridge());
 							codeServerHttp
 									.start(options.getCodeServerPort() + 1);

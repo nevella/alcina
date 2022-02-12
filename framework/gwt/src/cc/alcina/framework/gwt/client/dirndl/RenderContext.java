@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -19,6 +19,7 @@ import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
@@ -28,10 +29,11 @@ import cc.alcina.framework.gwt.client.objecttree.IsRenderableFilter;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
- * 
+ *
  * @author Nick Reddel //FIXME - dirndl.1 - delegate to DirectedContext (if
  *         there is one), and eventually remove
  */
+@Registration.Singleton
 public class RenderContext extends LooseContextInstance {
 	private static final String ON_DETACH_CALLBACK = RenderContext.class
 			.getName() + ".ON_DETACH_CALLBACK";
@@ -70,21 +72,16 @@ public class RenderContext extends LooseContextInstance {
 					"Branching from already branched RenderContext");
 		}
 		trunk = get();
-		Registry.registerSingleton(RenderContext.class, trunk.snapshot());
+		Registry.register().singleton(RenderContext.class, trunk.snapshot());
 		return get();
 	}
 
 	public static RenderContext get() {
-		RenderContext singleton = Registry.checkSingleton(RenderContext.class);
-		if (singleton == null) {
-			singleton = new RenderContext();
-			Registry.registerSingleton(RenderContext.class, singleton);
-		}
-		return singleton;
+		return Registry.impl(RenderContext.class);
 	}
 
 	public static void merge() {
-		Registry.registerSingleton(RenderContext.class, trunk);
+		Registry.register().singleton(RenderContext.class, trunk);
 		trunk = null;
 	}
 
@@ -188,7 +185,7 @@ public class RenderContext extends LooseContextInstance {
 	 * We use snapshot() for bound tables (which means RenderContext.get() won't
 	 * work during setup), but branch()/merge() for object trees (heavier use of
 	 * alcina) (.get() *will* work during setup)
-	 * 
+	 *
 	 * FIXME - directedlayout.1 - - given it's single threaded, push/pop of
 	 * snapshots probably makes even more sense...although the new thinking is
 	 * "rendercontext should be widget-tree based, not call-stack-tree based

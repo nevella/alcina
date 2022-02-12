@@ -110,13 +110,13 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	@Override
 	public Optional<Long> lastModified(String path) {
-		return checkExists(path) ? Optional.of(getCacheFile(path))
-				.map(File::lastModified)
+		return checkExists(path)
+				? Optional.of(getCacheFile(path)).map(File::lastModified)
 				: Optional.empty();
 	}
 
 	private boolean checkExists(String path) {
-		if(existsCache!=null&&!existsCache.contains(path)){
+		if (existsCache != null && !existsCache.contains(path)) {
 			return false;
 		}
 		return getCacheFile(path).exists();
@@ -137,7 +137,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 			lock.lock();
 			File cacheFile = getCacheFile(path);
 			serializationStrategy.serializeToFile(t, cacheFile);
-			if(existsCache!=null){
+			if (existsCache != null) {
 				existsCache.add(path);
 			}
 		} finally {
@@ -173,7 +173,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 	@Override
 	public void remove(String path) {
 		getCacheFile(path).delete();
-		if(existsCache!=null){
+		if (existsCache != null) {
 			existsCache.remove(path);
 		}
 	}

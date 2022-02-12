@@ -89,8 +89,7 @@ public class Grid extends HTMLTable {
 		}
 	}
 
-	private static native void addRows0(Element table, int rows,
-			int columns) /*-{
+	private static native void addRows0(Element table, int rows, int columns) /*-{
 							var td = $doc.createElement("td");
 							td.innerHTML = "&nbsp;";
 							var row = $doc.createElement("tr");

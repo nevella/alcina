@@ -453,7 +453,7 @@ public class DomNode {
 	}
 
 	public boolean tagIsOneOf(String... tags) {
-		if (isElement()||isProcessingInstruction()) {
+		if (isElement() || isProcessingInstruction()) {
 			for (int idx = 0; idx < tags.length; idx++) {
 				if (name().equalsIgnoreCase(tags[idx])) {
 					return true;

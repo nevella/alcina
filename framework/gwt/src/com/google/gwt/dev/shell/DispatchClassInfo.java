@@ -35,214 +35,205 @@ import cc.alcina.framework.common.client.util.Ax;
  * various Java classes and assigns DISPID's to them.
  */
 public class DispatchClassInfo {
-  private Class<?> cls;
+	private Class<?> cls;
 
-  private final int clsId;
+	private final int clsId;
 
-  private ArrayList<Member> memberById;
+	private ArrayList<Member> memberById;
 
-  private HashMap<String, Integer> memberIdByName;
+	private HashMap<String, Integer> memberIdByName;
 
-  public DispatchClassInfo(Class<?> cls, int classId) {
-    this.cls = cls;
-    clsId = classId;
-  }
-
-  public int getClassId() {
-    return clsId;
-  }
-
-  public Member getMember(int id) {
-    lazyInitTargetMembers();
-    id &= 0xffff;
-    return memberById.get(id);
-  }
-
-  public int getMemberId(String mangledMemberName) {
-    lazyInitTargetMembers();
-
-    Integer id = memberIdByName.get(mangledMemberName);
-    if (id == null) {
-      return -1;
-    }
-
-    return id.intValue();
-  }
-
-  private void addMember(
-      LinkedHashMap<String, LinkedHashMap<String, Member>> members,
-      Member member, String sig) {
-    String fullSig = getJsniSignature(member);
-    LinkedHashMap<String, Member> membersWithSig = members.get(sig);
-    if (membersWithSig == null) {
-      membersWithSig = new LinkedHashMap<String, Member>();
-      members.put(sig, membersWithSig);
-    }
-    membersWithSig.put(fullSig, member);
-  }
-
-  private void addMemberIfUnique(String name, List<Member> membersForName) {
-    if (membersForName.size() == 1) {
-      memberById.add(membersForName.get(0));
-      memberIdByName.put(
-          StringInterner.get().intern(name), memberById.size() - 1);
-    }
-  }
-
-  private List<Member> filterOutSyntheticMembers(Collection<Member> members) {
-    List<Member> nonSynth = new ArrayList<Member>();
-    for (Member member : members) {
-      if (!member.isSynthetic()) {
-        nonSynth.add(member);
-      }
-    }
-    return nonSynth;
-  }
-
-  private LinkedHashMap<String, LinkedHashMap<String, Member>> findMostDerivedMembers(
-      Class<?> targetClass, boolean addConstructors) {
-    LinkedHashMap<String, LinkedHashMap<String, Member>> members = new LinkedHashMap<String, LinkedHashMap<String, Member>>();
-    findMostDerivedMembers(members, targetClass, addConstructors);
-    return members;
-  }
-
-  /**
-   * For each available JSNI reference, find the most derived field or method
-   * that matches it. For wildcard references, there will be more than one of
-   * them, one for each signature matched.
-   */
-  private void findMostDerivedMembers(
-      LinkedHashMap<String, LinkedHashMap<String, Member>> members,
-      Class<?> targetClass, boolean addConstructors) {
-    /*
-     * Analyze superclasses and interfaces first. More derived members will thus
-     * be seen later.
-     */
-    Class<?> superclass = targetClass.getSuperclass();
-    if (superclass != null) {
-      findMostDerivedMembers(members, superclass, false);
-    }
-    for (Class<?> intf : targetClass.getInterfaces()) {
-      findMostDerivedMembers(members, intf, false);
-    }
-
-    if (addConstructors) {
-      for (Constructor<?> ctor : targetClass.getDeclaredConstructors()) {
-        ctor.setAccessible(true);
-        addMember(members, ctor, getJsniSignature(ctor));
-      }
-    }
-
-    // Get the methods on this class/interface.
-    for (Method method : targetClass.getDeclaredMethods()) {
-      try {
-		method.setAccessible(true);
-		  addMember(members, method, getJsniSignature(method));
-	} catch (Exception e) {
-		//hosted mode - non-jvm reflection only
-		Ax.simpleExceptionOut(e);
+	public DispatchClassInfo(Class<?> cls, int classId) {
+		this.cls = cls;
+		clsId = classId;
 	}
-    }
 
-    // Get the fields on this class/interface.
-    Field[] fields = targetClass.getDeclaredFields();
-    for (Field field : fields) {
-      field.setAccessible(true);
-      addMember(members, field, field.getName());
-    }
+	public int getClassId() {
+		return clsId;
+	}
 
-    // Add a synthetic field to access class literals from JSNI
-    addMember(members, new SyntheticClassMember(targetClass), "class");
-  }
+	public Member getMember(int id) {
+		lazyInitTargetMembers();
+		id &= 0xffff;
+		return memberById.get(id);
+	}
 
-  private String getJsniSignature(Member member) {
-    String name;
-    Class<?>[] paramTypes;
+	public int getMemberId(String mangledMemberName) {
+		lazyInitTargetMembers();
+		Integer id = memberIdByName.get(mangledMemberName);
+		if (id == null) {
+			return -1;
+		}
+		return id.intValue();
+	}
 
-    if (member instanceof Field) {
-      return member.getName();
-    } else if (member instanceof SyntheticClassMember) {
-      return member.getName();
-    } else if (member instanceof Method) {
-      name = member.getName();
-      paramTypes = ((Method) member).getParameterTypes();
-    } else if (member instanceof Constructor<?>) {
-      name = "new";
-      paramTypes = ((Constructor<?>) member).getParameterTypes();
-    } else {
-      throw new RuntimeException("Unexpected member type "
-          + member.getClass().getName());
-    }
+	private void addMember(
+			LinkedHashMap<String, LinkedHashMap<String, Member>> members,
+			Member member, String sig) {
+		String fullSig = getJsniSignature(member);
+		LinkedHashMap<String, Member> membersWithSig = members.get(sig);
+		if (membersWithSig == null) {
+			membersWithSig = new LinkedHashMap<String, Member>();
+			members.put(sig, membersWithSig);
+		}
+		membersWithSig.put(fullSig, member);
+	}
 
-    StringBuffer sb = new StringBuffer();
-    sb.append(name);
-    sb.append("(");
-    for (int i = 0; i < paramTypes.length; ++i) {
-      Class<?> type = paramTypes[i];
-      String typeSig = getTypeSig(type);
-      sb.append(typeSig);
-    }
-    sb.append(")");
+	private void addMemberIfUnique(String name, List<Member> membersForName) {
+		if (membersForName.size() == 1) {
+			memberById.add(membersForName.get(0));
+			memberIdByName.put(StringInterner.get().intern(name),
+					memberById.size() - 1);
+		}
+	}
 
-    String mangledName = StringInterner.get().intern(sb.toString());
+	private List<Member> filterOutSyntheticMembers(Collection<Member> members) {
+		List<Member> nonSynth = new ArrayList<Member>();
+		for (Member member : members) {
+			if (!member.isSynthetic()) {
+				nonSynth.add(member);
+			}
+		}
+		return nonSynth;
+	}
 
-    return mangledName;
-  }
+	private LinkedHashMap<String, LinkedHashMap<String, Member>>
+			findMostDerivedMembers(Class<?> targetClass,
+					boolean addConstructors) {
+		LinkedHashMap<String, LinkedHashMap<String, Member>> members = new LinkedHashMap<String, LinkedHashMap<String, Member>>();
+		findMostDerivedMembers(members, targetClass, addConstructors);
+		return members;
+	}
 
-  /*
-   * TODO(jat): generics?
-   */
-  private String getTypeSig(Class<?> type) {
-    if (type.isArray()) {
-      return "[" + getTypeSig(type.getComponentType());
-    }
+	/**
+	 * For each available JSNI reference, find the most derived field or method
+	 * that matches it. For wildcard references, there will be more than one of
+	 * them, one for each signature matched.
+	 */
+	private void findMostDerivedMembers(
+			LinkedHashMap<String, LinkedHashMap<String, Member>> members,
+			Class<?> targetClass, boolean addConstructors) {
+		/*
+		 * Analyze superclasses and interfaces first. More derived members will
+		 * thus be seen later.
+		 */
+		Class<?> superclass = targetClass.getSuperclass();
+		if (superclass != null) {
+			findMostDerivedMembers(members, superclass, false);
+		}
+		for (Class<?> intf : targetClass.getInterfaces()) {
+			findMostDerivedMembers(members, intf, false);
+		}
+		if (addConstructors) {
+			for (Constructor<?> ctor : targetClass.getDeclaredConstructors()) {
+				ctor.setAccessible(true);
+				addMember(members, ctor, getJsniSignature(ctor));
+			}
+		}
+		// Get the methods on this class/interface.
+		for (Method method : targetClass.getDeclaredMethods()) {
+			try {
+				method.setAccessible(true);
+				addMember(members, method, getJsniSignature(method));
+			} catch (Exception e) {
+				// hosted mode - non-jvm reflection only
+				Ax.simpleExceptionOut(e);
+			}
+		}
+		// Get the fields on this class/interface.
+		Field[] fields = targetClass.getDeclaredFields();
+		for (Field field : fields) {
+			field.setAccessible(true);
+			addMember(members, field, field.getName());
+		}
+		// Add a synthetic field to access class literals from JSNI
+		addMember(members, new SyntheticClassMember(targetClass), "class");
+	}
 
-    if (type.isPrimitive()) {
-      if (type.equals(int.class)) {
-        return "I";
-      } else if (type.equals(boolean.class)) {
-        return "Z";
-      } else if (type.equals(char.class)) {
-        return "C";
-      } else if (type.equals(long.class)) {
-        return "J";
-      } else if (type.equals(short.class)) {
-        return "S";
-      } else if (type.equals(float.class)) {
-        return "F";
-      } else if (type.equals(double.class)) {
-        return "D";
-      } else if (type.equals(byte.class)) {
-        return "B";
-      } else {
-        throw new RuntimeException("Unexpected primitive type: "
-            + type.getName());
-      }
-    } else {
-      StringBuffer sb = new StringBuffer();
-      sb.append("L");
-      sb.append(type.getName().replace('.', '/'));
-      sb.append(";");
-      return sb.toString();
-    }
-  }
+	private String getJsniSignature(Member member) {
+		String name;
+		Class<?>[] paramTypes;
+		if (member instanceof Field) {
+			return member.getName();
+		} else if (member instanceof SyntheticClassMember) {
+			return member.getName();
+		} else if (member instanceof Method) {
+			name = member.getName();
+			paramTypes = ((Method) member).getParameterTypes();
+		} else if (member instanceof Constructor<?>) {
+			name = "new";
+			paramTypes = ((Constructor<?>) member).getParameterTypes();
+		} else {
+			throw new RuntimeException(
+					"Unexpected member type " + member.getClass().getName());
+		}
+		StringBuffer sb = new StringBuffer();
+		sb.append(name);
+		sb.append("(");
+		for (int i = 0; i < paramTypes.length; ++i) {
+			Class<?> type = paramTypes[i];
+			String typeSig = getTypeSig(type);
+			sb.append(typeSig);
+		}
+		sb.append(")");
+		String mangledName = StringInterner.get().intern(sb.toString());
+		return mangledName;
+	}
 
-  private void lazyInitTargetMembers() {
-    if (memberById == null) {
-      memberById = new ArrayList<Member>();
-      memberById.add(null); // 0 is reserved; it's magic on Win32
-      memberIdByName = new HashMap<String, Integer>();
+	/*
+	 * TODO(jat): generics?
+	 */
+	private String getTypeSig(Class<?> type) {
+		if (type.isArray()) {
+			return "[" + getTypeSig(type.getComponentType());
+		}
+		if (type.isPrimitive()) {
+			if (type.equals(int.class)) {
+				return "I";
+			} else if (type.equals(boolean.class)) {
+				return "Z";
+			} else if (type.equals(char.class)) {
+				return "C";
+			} else if (type.equals(long.class)) {
+				return "J";
+			} else if (type.equals(short.class)) {
+				return "S";
+			} else if (type.equals(float.class)) {
+				return "F";
+			} else if (type.equals(double.class)) {
+				return "D";
+			} else if (type.equals(byte.class)) {
+				return "B";
+			} else {
+				throw new RuntimeException(
+						"Unexpected primitive type: " + type.getName());
+			}
+		} else {
+			StringBuffer sb = new StringBuffer();
+			sb.append("L");
+			sb.append(type.getName().replace('.', '/'));
+			sb.append(";");
+			return sb.toString();
+		}
+	}
 
-      LinkedHashMap<String, LinkedHashMap<String, Member>> members = findMostDerivedMembers(
-          cls, true);
-      for (Entry<String, LinkedHashMap<String, Member>> entry : members.entrySet()) {
-        String name = entry.getKey();
-
-        List<Member> membersForName = new ArrayList<Member>(
-            entry.getValue().values());
-        addMemberIfUnique(name, membersForName); // backward compatibility
-        addMemberIfUnique(name, filterOutSyntheticMembers(membersForName));
-      }
-    }
-  }
+	private void lazyInitTargetMembers() {
+		if (memberById == null) {
+			memberById = new ArrayList<Member>();
+			memberById.add(null); // 0 is reserved; it's magic on Win32
+			memberIdByName = new HashMap<String, Integer>();
+			LinkedHashMap<String, LinkedHashMap<String, Member>> members = findMostDerivedMembers(
+					cls, true);
+			for (Entry<String, LinkedHashMap<String, Member>> entry : members
+					.entrySet()) {
+				String name = entry.getKey();
+				List<Member> membersForName = new ArrayList<Member>(
+						entry.getValue().values());
+				addMemberIfUnique(name, membersForName); // backward
+															// compatibility
+				addMemberIfUnique(name,
+						filterOutSyntheticMembers(membersForName));
+			}
+		}
+	}
 }

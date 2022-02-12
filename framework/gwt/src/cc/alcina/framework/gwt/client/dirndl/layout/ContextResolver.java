@@ -10,11 +10,10 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 @ClientInstantiable
 public class ContextResolver extends AnnotationLocation.Resolver {
-
 	protected TreeResolver<Directed> directedResolver;
 
 	protected ContextResolver parent;
-	
+
 	private Object model;
 
 	public <T> T getModel() {
@@ -39,8 +38,6 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		// TODO Auto-generated method stub
 	}
 
-	
-
 	public <A extends Annotation> TreeResolver<A>
 			getTreeResolver(Class<A> clazz) {
 		if (clazz == Directed.class) {
@@ -50,7 +47,7 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	}
 
 	public Property resolveDirectedProperty(Property property) {
-		return property.has(Directed.class)?property:null;
+		return property.has(Directed.class) ? property : null;
 	}
 
 	public Object resolveModel(Object model) {
@@ -60,7 +57,6 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	public <T> T resolveRenderContextProperty(String key) {
 		return null;
 	}
-
 
 	protected void init() {
 		directedResolver = parent != null ? parent.directedResolver

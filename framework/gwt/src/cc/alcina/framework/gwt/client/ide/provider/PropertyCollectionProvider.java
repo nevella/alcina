@@ -104,8 +104,8 @@ public class PropertyCollectionProvider<E>
 
 	@Override
 	public void onDetach() {
-		getDomainObject().removePropertyChangeListener(
-				getProperty().getName(), this);
+		getDomainObject().removePropertyChangeListener(getProperty().getName(),
+				this);
 	}
 
 	@Override

@@ -68,6 +68,7 @@ public enum BrowserType {
 	 * Downloading tools
 	 */
 	TOOL("Downloading tool"), UNKNOWN("unknown");
+
 	private String name;
 
 	private BrowserType(String name) {

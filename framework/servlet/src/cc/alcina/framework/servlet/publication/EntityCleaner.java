@@ -8,24 +8,21 @@ import java.util.regex.Pattern;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 /**
  * Convert html to unicode entities for XHTML processing
- * 
+ *
  * @author nreddel@barnet.com.au
- * 
+ *
  */
+@Registration.Singleton
 public class EntityCleaner {
 	public static EntityCleaner get() {
-		EntityCleaner singleton = Registry.checkSingleton(EntityCleaner.class);
-		if (singleton == null) {
-			singleton = new EntityCleaner();
-			Registry.registerSingleton(EntityCleaner.class, singleton);
-		}
-		return singleton;
+		return Registry.impl(EntityCleaner.class);
 	}
 
 	public static void main(String[] args) {

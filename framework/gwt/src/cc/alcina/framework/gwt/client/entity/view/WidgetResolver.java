@@ -1,15 +1,15 @@
 package cc.alcina.framework.gwt.client.entity.view;
 
 import com.google.gwt.user.client.ui.IsWidget;
+
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = WidgetResolver.class)
 @Registration(WidgetResolver.class)
 public class WidgetResolver {
-
-    public IsWidget resolve(Class modelClass, Class context) {
-        return (IsWidget) Registry.impl(WidgetResolver.class, modelClass);
-    }
+	public IsWidget resolve(Class modelClass, Class context) {
+		return (IsWidget) Registry.impl(WidgetResolver.class, modelClass);
+	}
 }

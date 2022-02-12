@@ -12,8 +12,8 @@ import cc.alcina.framework.common.client.util.StringMap;
 
 public abstract class DevConsoleFilter {
 	public static String
-			describeFilters(Class<? extends DevConsoleFilter> registryPoint) {
-		return Registry.impls(registryPoint).stream()
+			describeFilters(Class<? extends DevConsoleFilter> filterClass) {
+		return Registry.query(filterClass).implementations()
 				.map(new PropertyConverter<DevConsoleFilter, String>("key"))
 				.collect(Collectors.joining("|"));
 	}
@@ -24,22 +24,21 @@ public abstract class DevConsoleFilter {
 	}
 
 	public static String getFilters(
-			Class<? extends DevConsoleFilter> registryPoint, String[] argv,
+			Class<? extends DevConsoleFilter> filterClass, String[] argv,
 			Predicate<String> allowFilter) {
 		List<String> filters = new ArrayList<String>();
-		List<? extends DevConsoleFilter> impls = Registry.impls(registryPoint);
 		StringMap kv = new StringMap();
 		for (int i = 0; i < argv.length; i += 2) {
 			kv.put(argv[i], argv[i + 1]);
 		}
-		for (DevConsoleFilter impl : impls) {
+		Registry.query(filterClass).implementations().forEach(impl -> {
 			if (kv.containsKey(impl.getKey()) || impl.hasDefault()) {
 				String filterString = impl.getFilter(kv.get(impl.getKey()));
 				if (allowFilter == null || allowFilter.test(filterString)) {
 					filters.add(filterString);
 				}
 			}
-		}
+		});
 		return CommonUtils.join(filters, " and ");
 	}
 

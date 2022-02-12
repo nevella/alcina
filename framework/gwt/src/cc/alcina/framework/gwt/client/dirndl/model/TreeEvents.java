@@ -21,8 +21,8 @@ public class TreeEvents {
 		}
 	}
 
-	public static class NodeToggleButtonClicked extends
-			TopicEvent<Tree.TreeNode, NodeToggleButtonClicked.Handler> {
+	public static class NodeToggleButtonClicked
+			extends TopicEvent<Tree.TreeNode, NodeToggleButtonClicked.Handler> {
 		@Override
 		public void dispatch(NodeToggleButtonClicked.Handler handler) {
 			handler.onNodeToggleButtonClicked(this);

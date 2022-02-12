@@ -16,10 +16,12 @@ public abstract class SearchOrder<T, V extends Comparable>
 	public V comparable(T o) {
 		return apply(o);
 	}
-@Override
-public boolean equivalentTo(SearchOrder other) {
-	return getClass()==other.getClass();
-}
+
+	@Override
+	public boolean equivalentTo(SearchOrder other) {
+		return getClass() == other.getClass();
+	}
+
 	@Override
 	public int compare(T o1, T o2) {
 		int comparison = CommonUtils.compareWithNullMinusOne(comparable(o1),

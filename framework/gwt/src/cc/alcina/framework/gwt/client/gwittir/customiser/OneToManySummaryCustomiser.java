@@ -63,8 +63,8 @@ public class OneToManySummaryCustomiser
 			Entity source = (Entity) html.getModel();
 			Entity mostRecent = o.getLastModified();
 			EntityPlace instancePlace = (EntityPlace) RegistryHistoryMapper
-					.get().getPlaceByModelClass(Reflections
-							.forName(o.getEntityClassName()));
+					.get().getPlaceByModelClass(
+							Reflections.forName(o.getEntityClassName()));
 			EntityPlace searchPlace = instancePlace.copy();
 			TruncatedObjectCriterion objectCriterion = Registry
 					.impl(TruncatedObjectCriterion.class, source.entityClass());
@@ -74,13 +74,13 @@ public class OneToManySummaryCustomiser
 				String template = "<a href='#%s'>%s</a>";
 				String token = searchPlace.toTokenString();
 				return Ax.format(template, token,
-						instancePlace.provideCategoryString(o.getSize(),true));
+						instancePlace.provideCategoryString(o.getSize(), true));
 			} else {
 				String template = "<a href='#%s'>%s</a> - most recent: %s";
 				instancePlace.withEntity(mostRecent);
 				String token = searchPlace.toTokenString();
 				return Ax.format(template, token,
-						instancePlace.provideCategoryString(o.getSize(),true),
+						instancePlace.provideCategoryString(o.getSize(), true),
 						mostRecent.toString());
 			}
 		}

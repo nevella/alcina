@@ -25,25 +25,26 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
 	@Override
 	public Response toResponse(Exception e) {
 		try {
-			//will be null if failure occurs before entry filter (e.g. no path)
-			HttpContext httpContext = AlcinaServletContext
-					.httpContext();
-			String requestorIp = httpContext==null?"unknown":ServletLayerUtils
-					.robustGetRemoteAddress(httpContext.request);
+			// will be null if failure occurs before entry filter (e.g. no path)
+			HttpContext httpContext = AlcinaServletContext.httpContext();
+			String requestorIp = httpContext == null ? "unknown"
+					: ServletLayerUtils
+							.robustGetRemoteAddress(httpContext.request);
 			// TODO: Do something better than an if chain
-			String requestURI = httpContext==null?"unknown":httpContext.request.getRequestURI();
+			String requestURI = httpContext == null ? "unknown"
+					: httpContext.request.getRequestURI();
 			if (e instanceof NotFoundException) {
-				LOGGER.warn("Unknown route {uri={}, ip={}}",
-						requestURI, requestorIp);
-				if(httpContext==null){
+				LOGGER.warn("Unknown route {uri={}, ip={}}", requestURI,
+						requestorIp);
+				if (httpContext == null) {
 					e.printStackTrace();
 				}
 				// Invalid request URI
 				return Response.status(Status.NOT_FOUND).build();
 			} else if (e instanceof NotAllowedException
 					|| e instanceof NotSupportedException) {
-				LOGGER.warn("Bad request type/body {uri={}, ip={}}",
-						requestURI, requestorIp);
+				LOGGER.warn("Bad request type/body {uri={}, ip={}}", requestURI,
+						requestorIp);
 				// Invalid request type/body
 				return Response.status(Status.BAD_REQUEST).build();
 			} else {

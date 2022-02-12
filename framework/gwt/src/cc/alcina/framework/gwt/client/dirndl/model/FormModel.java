@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Consumer;
+
 import com.google.gwt.event.dom.client.DomEvent;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyDownEvent;
@@ -24,6 +25,7 @@ import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
+
 import cc.alcina.framework.common.client.actions.LocalActionWithParameters;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
@@ -42,6 +44,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -74,477 +77,527 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 import cc.alcina.framework.gwt.client.util.Async;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = FormModel.class, implementationType = ImplementationType.INSTANCE)
 @Directed(receives = { GwtEvents.Attach.class, DomEvents.KeyDown.class })
 @Registration(FormModel.class)
-public class FormModel extends Model implements DomEvents.Submit.Handler, GwtEvents.Attach.Handler, DomEvents.KeyDown.Handler {
+public class FormModel extends Model implements DomEvents.Submit.Handler,
+		GwtEvents.Attach.Handler, DomEvents.KeyDown.Handler {
+	protected List<FormElement> elements = new ArrayList<>();
 
-    protected List<FormElement> elements = new ArrayList<>();
+	protected List<Link> actions = new ArrayList<>();
 
-    protected List<Link> actions = new ArrayList<>();
+	private FormModelState state;
 
-    private FormModelState state;
+	public List<Link> getActions() {
+		return this.actions;
+	}
 
-    public List<Link> getActions() {
-        return this.actions;
-    }
+	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
 
-    private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
+	private boolean unAttachConfirmsTransformClear = false;
 
-    private boolean unAttachConfirmsTransformClear = false;
+	private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
+		CommitToStorageTransformListener.get().flush();
+		// FIXME - mvcc.adjunct - need to ask adjuncts
+		if (TransformManager.get()
+				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN)
+				.size() > 0) {
+			e.setWarning("Form has unsaved changes. Please confirm to close");
+			unAttachConfirmsTransformClear = true;
+		}
+	};
 
-    private PlaceChangeRequestEvent.Handler dirtyChecker = e -> {
-        CommitToStorageTransformListener.get().flush();
-        // FIXME - mvcc.adjunct - need to ask adjuncts
-        if (TransformManager.get().getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size() > 0) {
-            e.setWarning("Form has unsaved changes. Please confirm to close");
-            unAttachConfirmsTransformClear = true;
-        }
-    };
+	@Override
+	public void onAttach(Attach event) {
+		bind(event);
+		focus(event);
+		checkDirty(event);
+	}
 
-    @Override
-    public void onAttach(Attach event) {
-        bind(event);
-        focus(event);
-        checkDirty(event);
-    }
+	@Override
+	public void onKeyDown(KeyDown event) {
+		KeyDownEvent domEvent = (KeyDownEvent) event.getContext().gwtEvent;
+		if (domEvent.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
+			domEvent.preventDefault();
+			domEvent.stopPropagation();
+			// this is before KEY_ENTER is applied, so current form field
+			// may not have fired 'onchange'
+			GwittirUtils.commitAllTextBoxes(getState().formBinding);
+			ActionRefPlace place = new ActionRefPlace(SubmitRef.class);
+			new SubmitHandler().handleAction(event.getContext().node, domEvent,
+					place);
+		}
+	}
 
-    @Override
-    public void onKeyDown(KeyDown event) {
-        KeyDownEvent domEvent = (KeyDownEvent) event.getContext().gwtEvent;
-        if (domEvent.getNativeKeyCode() == KeyCodes.KEY_ENTER) {
-            domEvent.preventDefault();
-            domEvent.stopPropagation();
-            // this is before KEY_ENTER is applied, so current form field
-            // may not have fired 'onchange'
-            GwittirUtils.commitAllTextBoxes(getState().formBinding);
-            ActionRefPlace place = new ActionRefPlace(SubmitRef.class);
-            new SubmitHandler().handleAction(event.getContext().node, domEvent, place);
-        }
-    }
+	private void bind(Attach event) {
+		if (event.isAttached()) {
+			getState().formBinding.bind();
+		} else {
+			getState().formBinding.unbind();
+		}
+	}
 
-    private void bind(Attach event) {
-        if (event.isAttached()) {
-            getState().formBinding.bind();
-        } else {
-            getState().formBinding.unbind();
-        }
-    }
+	private void checkDirty(Attach event) {
+		if (event.isAttached()) {
+			registrations.put(this, Client.get().getEventBus()
+					.addHandler(PlaceChangeRequestEvent.TYPE, dirtyChecker));
+		} else {
+			// if we're navigating away, and dirty
+			if (unAttachConfirmsTransformClear) {
+				TransformManager.get().clearTransforms();
+			}
+			HandlerRegistration registration = registrations.remove(this);
+			if (registration != null) {
+				registration.removeHandler();
+			}
+		}
+	}
 
-    private void checkDirty(Attach event) {
-        if (event.isAttached()) {
-            registrations.put(this, Client.get().getEventBus().addHandler(PlaceChangeRequestEvent.TYPE, dirtyChecker));
-        } else {
-            // if we're navigating away, and dirty
-            if (unAttachConfirmsTransformClear) {
-                TransformManager.get().clearTransforms();
-            }
-            HandlerRegistration registration = registrations.remove(this);
-            if (registration != null) {
-                registration.removeHandler();
-            }
-        }
-    }
+	private void focus(Attach event) {
+		Optional<FormElement> focus = getElements().stream()
+				.filter(FormElement::isFocusOnAttach).findFirst();
+		if (focus.isPresent()) {
+			Node childWithModel = event.getContext().node
+					.childWithModel(m -> m != null && m instanceof ValueModel
+							&& m == focus.get().getValue());
+			((Focusable) childWithModel.getWidget()).setFocus(true);
+		}
+		// FIXME - dirndl 1.3 - this should be an annotation on the field,
+		//
+	}
 
-    private void focus(Attach event) {
-        Optional<FormElement> focus = getElements().stream().filter(FormElement::isFocusOnAttach).findFirst();
-        if (focus.isPresent()) {
-            Node childWithModel = event.getContext().node.childWithModel(m -> m != null && m instanceof ValueModel && m == focus.get().getValue());
-            ((Focusable) childWithModel.getWidget()).setFocus(true);
-        }
-        // FIXME - dirndl 1.3 - this should be an annotation on the field,
-        // 
-    }
+	public FormModel() {
+	}
 
-    public FormModel() {
-    }
+	public List<FormElement> getElements() {
+		return this.elements;
+	}
 
-    public List<FormElement> getElements() {
-        return this.elements;
-    }
+	public FormModelState getState() {
+		return this.state;
+	}
 
-    public FormModelState getState() {
-        return this.state;
-    }
+	@Override
+	public void onSubmit(Submit event) {
+		submit(event.getContext().node);
+	}
 
-    @Override
-    public void onSubmit(Submit event) {
-        submit(event.getContext().node);
-    }
+	public boolean submit(Node node) {
+		Consumer<Void> onValid = o -> {
+			if (getState().model instanceof Entity) {
+				ClientTransformManager.cast()
+						.promoteToDomainObject(getState().model);
+				AsyncCallback callback = Async.callbackBuilder().success(o2 -> {
+					EntityPlace entityPlace = ((EntityPlace) Client
+							.currentPlace()).copy();
+					entityPlace.action = EntityAction.VIEW;
+					Client.goTo(entityPlace);
+				}).build();
+				CommitToStorageTransformListener.get()
+						.flushWithOneoffCallback(callback);
+			}
+			if (Client.currentPlace() instanceof EntityPlace) {
+			} else if (Client.currentPlace() instanceof CategoryNamePlace) {
+				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
+						.currentPlace();
+				DefaultPermissibleActionHandler.handleAction(null,
+						categoryNamePlace.ensureAction(), node);
+			}
+		};
+		return new FormValidation().validate(onValid, getState().formBinding);
+	}
 
-    public boolean submit(Node node) {
-        Consumer<Void> onValid = o -> {
-            if (getState().model instanceof Entity) {
-                ClientTransformManager.cast().promoteToDomainObject(getState().model);
-                AsyncCallback callback = Async.callbackBuilder().success(o2 -> {
-                    EntityPlace entityPlace = ((EntityPlace) Client.currentPlace()).copy();
-                    entityPlace.action = EntityAction.VIEW;
-                    Client.goTo(entityPlace);
-                }).build();
-                CommitToStorageTransformListener.get().flushWithOneoffCallback(callback);
-            }
-            if (Client.currentPlace() instanceof EntityPlace) {
-            } else if (Client.currentPlace() instanceof CategoryNamePlace) {
-                CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client.currentPlace();
-                DefaultPermissibleActionHandler.handleAction(null, categoryNamePlace.ensureAction(), node);
-            }
-        };
-        return new FormValidation().validate(onValid, getState().formBinding);
-    }
+	public static class BindableFormModelTransformer extends
+			AbstractContextSensitiveModelTransform<Bindable, FormModel> {
+		@Override
+		public FormModel apply(Bindable bindable) {
+			FormModelState state = new FormModelState();
+			state.editable = true;
+			if (bindable instanceof Entity && state.editable) {
+				bindable = ClientTransformManager.cast()
+						.ensureEditable((Entity) bindable);
+			}
+			state.model = bindable;
+			state.adjunct = true;
+			BindableFormModelTransformer.Args args = node
+					.annotation(BindableFormModelTransformer.Args.class);
+			if (args != null) {
+				state.adjunct = args.adjunct();
+			}
+			return new FormModelTransformer().withContextNode(node)
+					.apply(state);
+		}
 
-    public static class BindableFormModelTransformer extends AbstractContextSensitiveModelTransform<Bindable, FormModel> {
+		@ClientVisible
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE, ElementType.METHOD })
+		public @interface Args {
+			boolean adjunct() default false;
+		}
+	}
 
-        @Override
-        public FormModel apply(Bindable bindable) {
-            FormModelState state = new FormModelState();
-            state.editable = true;
-            if (bindable instanceof Entity && state.editable) {
-                bindable = ClientTransformManager.cast().ensureEditable((Entity) bindable);
-            }
-            state.model = bindable;
-            state.adjunct = true;
-            BindableFormModelTransformer.Args args = node.annotation(BindableFormModelTransformer.Args.class);
-            if (args != null) {
-                state.adjunct = args.adjunct();
-            }
-            return new FormModelTransformer().withContextNode(node).apply(state);
-        }
-
-        @ClientVisible
-        @Retention(RetentionPolicy.RUNTIME)
-        @Documented
-        @Target({ ElementType.TYPE, ElementType.METHOD })
-        public @interface Args {
-
-            boolean adjunct() default false;
-        }
-    }
-
-    public static class CancelHandler extends ActionHandler {
-
-        @Override
-        public void handleAction(Node node, GwtEvent event, ActionRefPlace place) {
-            Place currentPlace = Client.currentPlace();
-            /*
+	public static class CancelHandler extends ActionHandler {
+		@Override
+		public void handleAction(Node node, GwtEvent event,
+				ActionRefPlace place) {
+			Place currentPlace = Client.currentPlace();
+			/*
 			 * FIXME - adjunct
 			 */
-            FormModel formModel = (FormModel) node.ancestorModel(m -> m instanceof FormModel);
-            TransformManager.get().removeTransformsFor(formModel.getState().model);
-            TransformManager.get().deregisterProvisionalObject(formModel.getState().model);
-            if (currentPlace instanceof EntityPlace) {
-                EntityPlace entityPlace = ((EntityPlace) currentPlace).copy();
-                entityPlace.action = EntityAction.VIEW;
-                Client.goTo(entityPlace);
-            } else if (currentPlace instanceof CategoryNamePlace) {
-                CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace).copy();
-                categoryNamePlace.nodeName = null;
-                Client.goTo(categoryNamePlace);
-            }
-        }
-    }
+			FormModel formModel = (FormModel) node
+					.ancestorModel(m -> m instanceof FormModel);
+			TransformManager.get()
+					.removeTransformsFor(formModel.getState().model);
+			TransformManager.get()
+					.deregisterProvisionalObject(formModel.getState().model);
+			if (currentPlace instanceof EntityPlace) {
+				EntityPlace entityPlace = ((EntityPlace) currentPlace).copy();
+				entityPlace.action = EntityAction.VIEW;
+				Client.goTo(entityPlace);
+			} else if (currentPlace instanceof CategoryNamePlace) {
+				CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
+						.copy();
+				categoryNamePlace.nodeName = null;
+				Client.goTo(categoryNamePlace);
+			}
+		}
+	}
 
-    @Ref("cancel")
-    @ActionRefHandler(CancelHandler.class)
-    @EmitsTopic(NodeEvents.Cancelled.class)
-    public static class CancelRef extends ActionRef {
-    }
+	@Ref("cancel")
+	@ActionRefHandler(CancelHandler.class)
+	@EmitsTopic(NodeEvents.Cancelled.class)
+	public static class CancelRef extends ActionRef {
+	}
 
-    public static class EntityTransformer extends AbstractContextSensitiveModelTransform<DirectedEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
+	public static class EntityTransformer extends
+			AbstractContextSensitiveModelTransform<DirectedEntityActivity<? extends EntityPlace, ? extends Entity>, FormModel> {
+		@Override
+		public FormModel apply(
+				DirectedEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
+			FormModelState state = new FormModelState();
+			Entity entity = activity.getEntity();
+			state.editable = activity.getPlace().action.isEditable();
+			if (entity != null && state.editable) {
+				entity = ClientTransformManager.cast().ensureEditable(entity);
+			}
+			state.model = entity;
+			state.adjunct = state.editable
+					&& ClientTransformManager.cast().isProvisionalEditing();
+			return new FormModelTransformer().withContextNode(node)
+					.apply(state);
+		}
+	}
 
-        @Override
-        public FormModel apply(DirectedEntityActivity<? extends EntityPlace, ? extends Entity> activity) {
-            FormModelState state = new FormModelState();
-            Entity entity = activity.getEntity();
-            state.editable = activity.getPlace().action.isEditable();
-            if (entity != null && state.editable) {
-                entity = ClientTransformManager.cast().ensureEditable(entity);
-            }
-            state.model = entity;
-            state.adjunct = state.editable && ClientTransformManager.cast().isProvisionalEditing();
-            return new FormModelTransformer().withContextNode(node).apply(state);
-        }
-    }
+	public static class FormElement extends Model {
+		protected LabelModel label;
 
-    public static class FormElement extends Model {
+		protected FormValueModel value;
 
-        protected LabelModel label;
+		protected Field field;
 
-        protected FormValueModel value;
+		private Bindable bindable;
 
-        protected Field field;
+		private boolean focusOnAttach;
 
-        private Bindable bindable;
+		public FormElement() {
+		}
 
-        private boolean focusOnAttach;
+		public FormElement(Field field, Bindable bindable) {
+			this.field = field;
+			this.bindable = bindable;
+			this.label = Registry.impl(LabelModel.class).withFormElement(this);
+			this.value = new FormValueModel(this);
+		}
 
-        public FormElement() {
-        }
+		public String getElementName() {
+			return Ax.format("_dl_form_%s", field.getPropertyName());
+		}
 
-        public FormElement(Field field, Bindable bindable) {
-            this.field = field;
-            this.bindable = bindable;
-            this.label = Registry.impl(LabelModel.class).withFormElement(this);
-            this.value = new FormValueModel(this);
-        }
+		public Field getField() {
+			return this.field;
+		}
 
-        public String getElementName() {
-            return Ax.format("_dl_form_%s", field.getPropertyName());
-        }
+		@Directed
+		public LabelModel getLabel() {
+			return this.label;
+		}
 
-        public Field getField() {
-            return this.field;
-        }
+		@Directed
+		public FormValueModel getValue() {
+			return this.value;
+		}
 
-        @Directed
-        public LabelModel getLabel() {
-            return this.label;
-        }
+		public boolean isFocusOnAttach() {
+			return this.focusOnAttach;
+		}
 
-        @Directed
-        public FormValueModel getValue() {
-            return this.value;
-        }
+		public void setFocusOnAttach(boolean focusOnAttach) {
+			this.focusOnAttach = focusOnAttach;
+		}
+	}
 
-        public boolean isFocusOnAttach() {
-            return this.focusOnAttach;
-        }
+	public static class FormModelState {
+		public Bindable presentationModel;
 
-        public void setFocusOnAttach(boolean focusOnAttach) {
-            this.focusOnAttach = focusOnAttach;
-        }
-    }
+		public boolean expectsModel;
 
-    public static class FormModelState {
+		public boolean editable;
 
-        public Bindable presentationModel;
+		private boolean adjunct;
 
-        public boolean expectsModel;
+		private Bindable model;
 
-        public boolean editable;
+		// FIXME - dirndl.1 - set up for object binding checks
+		public Binding formBinding = new Binding();
 
-        private boolean adjunct;
+		public Bindable getModel() {
+			return this.model;
+		}
+	}
 
-        private Bindable model;
+	@ClientInstantiable
+	public static class FormModelTransformer extends
+			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
+		@Override
+		public FormModel apply(FormModelState state) {
+			FormModel model = Registry.impl(FormModel.class);
+			model.state = state;
+			if (state.model == null && state.expectsModel) {
+				return model;
+			}
+			Args args = node.annotation(Args.class);
+			ActionsModulator actionsModulator = args != null
+					? Reflections.newInstance(args.actionsModulator())
+					: new ActionsModulator();
+			FieldModulator fieldModulator = args != null
+					? Reflections.newInstance(args.fieldModulator())
+					: new FieldModulator();
+			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
+			ModalResolver childResolver = ModalResolver
+					.single(node.getResolver(), !state.editable);
+			node.pushChildResolver(childResolver);
+			if (state.model != null) {
+				if (state.model instanceof UserProperty) {
+					state.presentationModel = (Bindable) ((UserProperty) state.model)
+							.ensureUserPropertySupport().getPersistable();
+				}
+				if (state.presentationModel == null) {
+					state.presentationModel = state.model;
+				}
+			}
+			if (state.presentationModel != null) {
+				List<Field> fields = GwittirBridge.get()
+						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
+								state.presentationModel, factory,
+								state.editable, state.adjunct, childResolver);
+				fields.stream()
+						.filter(field -> fieldModulator
+								.accept(state.presentationModel, field))
+						.map(field -> {
+							FormElement e = new FormElement(field,
+									state.presentationModel);
+							if (args != null && args.focusOnAttach()
+									.equals(field.getPropertyName())) {
+								e.setFocusOnAttach(true);
+							}
+							return e;
+						}).forEach(model.elements::add);
+			}
+			if (state.adjunct) {
+				model.actions.add(new Link()
+						.withPlace(new ActionRefPlace(SubmitRef.class))
+						.withPrimaryAction(true));
+				model.actions.add(new Link()
+						.withPlace(new ActionRefPlace(CancelRef.class)));
+			} else {
+				if (state.presentationModel != null) {
+					Bean bean = Reflections
+							.at(state.presentationModel.getClass())
+							.annotation(Bean.class);
+					if (bean != null) {
+						Arrays.stream(bean.actions().value())
+								.map(a -> Reflections
+										.newInstance(a.actionClass()))
+								.filter(a -> a instanceof NonstandardObjectAction)
+								.map(a -> (NonstandardObjectAction) a)
+								.forEach(action -> {
+									model.actions.add(new Link()
+											.withNonstandardObjectAction(
+													action));
+								});
+					}
+				}
+			}
+			model.actions.removeIf(actionsModulator::isRemoveAction);
+			for (Link link : model.actions) {
+				String overrideLinkText = actionsModulator
+						.getOverrideLinkText(link);
+				if (overrideLinkText != null) {
+					link.withText(overrideLinkText);
+				}
+			}
+			return model;
+		}
 
-        // FIXME - dirndl.1 - set up for object binding checks
-        public Binding formBinding = new Binding();
+		@ClientInstantiable
+		public static class ActionsModulator {
+			public String getOverrideLinkText(Link linkModel) {
+				return null;
+			}
 
-        public Bindable getModel() {
-            return this.model;
-        }
-    }
+			public boolean isRemoveAction(Link linkModel) {
+				return false;
+			}
+		}
 
-    @ClientInstantiable
-    public static class FormModelTransformer extends AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
+		@Retention(RetentionPolicy.RUNTIME)
+		@Documented
+		@Target({ ElementType.TYPE, ElementType.METHOD })
+		@ClientVisible
+		public static @interface Args {
+			Class<? extends ActionsModulator> actionsModulator() default ActionsModulator.class;
 
-        @Override
-        public FormModel apply(FormModelState state) {
-            FormModel model = Registry.impl(FormModel.class);
-            model.state = state;
-            if (state.model == null && state.expectsModel) {
-                return model;
-            }
-            Args args = node.annotation(Args.class);
-            ActionsModulator actionsModulator = args != null ? Reflections.newInstance(args.actionsModulator()) : new ActionsModulator();
-            FieldModulator fieldModulator = args != null ? Reflections.newInstance(args.fieldModulator()) : new FieldModulator();
-            BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-            ModalResolver childResolver = ModalResolver.single(node.getResolver(), !state.editable);
-            node.pushChildResolver(childResolver);
-            if (state.model != null) {
-                if (state.model instanceof UserProperty) {
-                    state.presentationModel = (Bindable) ((UserProperty) state.model).ensureUserPropertySupport().getPersistable();
-                }
-                if (state.presentationModel == null) {
-                    state.presentationModel = state.model;
-                }
-            }
-            if (state.presentationModel != null) {
-                List<Field> fields = GwittirBridge.get().fieldsForReflectedObjectAndSetupWidgetFactoryAsList(state.presentationModel, factory, state.editable, state.adjunct, childResolver);
-                fields.stream().filter(field -> fieldModulator.accept(state.presentationModel, field)).map(field -> {
-                    FormElement e = new FormElement(field, state.presentationModel);
-                    if (args != null && args.focusOnAttach().equals(field.getPropertyName())) {
-                        e.setFocusOnAttach(true);
-                    }
-                    return e;
-                }).forEach(model.elements::add);
-            }
-            if (state.adjunct) {
-                model.actions.add(new Link().withPlace(new ActionRefPlace(SubmitRef.class)).withPrimaryAction(true));
-                model.actions.add(new Link().withPlace(new ActionRefPlace(CancelRef.class)));
-            } else {
-                if (state.presentationModel != null) {
-                    Bean bean = Reflections.at(state.presentationModel.getClass()).annotation(Bean.class);
-                    if (bean != null) {
-                        Arrays.stream(bean.actions().value()).map(a -> Reflections.newInstance(a.actionClass())).filter(a -> a instanceof NonstandardObjectAction).map(a -> (NonstandardObjectAction) a).forEach(action -> {
-                            model.actions.add(new Link().withNonstandardObjectAction(action));
-                        });
-                    }
-                }
-            }
-            model.actions.removeIf(actionsModulator::isRemoveAction);
-            for (Link link : model.actions) {
-                String overrideLinkText = actionsModulator.getOverrideLinkText(link);
-                if (overrideLinkText != null) {
-                    link.withText(overrideLinkText);
-                }
-            }
-            return model;
-        }
+			Class<? extends FieldModulator> fieldModulator() default FieldModulator.class;
 
-        @ClientInstantiable
-        public static class ActionsModulator {
+			String focusOnAttach() default "";
+		}
 
-            public String getOverrideLinkText(Link linkModel) {
-                return null;
-            }
+		@ClientInstantiable
+		public static class FieldModulator {
+			public boolean accept(Bindable model, Field field) {
+				return true;
+			}
+		}
+	}
 
-            public boolean isRemoveAction(Link linkModel) {
-                return false;
-            }
-        }
+	public static class FormValueModel extends Model implements ValueModel {
+		protected FormElement formElement;
 
-        @Retention(RetentionPolicy.RUNTIME)
-        @Documented
-        @Target({ ElementType.TYPE, ElementType.METHOD })
-        @ClientVisible
-        public static @interface Args {
+		public FormValueModel() {
+		}
 
-            Class<? extends ActionsModulator> actionsModulator() default ActionsModulator.class;
+		public FormValueModel(FormElement formElement) {
+			this.formElement = formElement;
+		}
 
-            Class<? extends FieldModulator> fieldModulator() default FieldModulator.class;
+		@Override
+		public Bindable getBindable() {
+			return formElement.bindable;
+		}
 
-            String focusOnAttach() default "";
-        }
+		@Override
+		public Field getField() {
+			return formElement.field;
+		}
 
-        @ClientInstantiable
-        public static class FieldModulator {
+		public FormElement getFormElement() {
+			return this.formElement;
+		}
 
-            public boolean accept(Bindable model, Field field) {
-                return true;
-            }
-        }
-    }
+		@Override
+		public String getGroupName() {
+			return formElement.getElementName();
+		}
+	}
 
-    public static class FormValueModel extends Model implements ValueModel {
+	@RegistryLocation(registryPoint = LabelModel.class, implementationType = ImplementationType.INSTANCE)
+	@Registration(LabelModel.class)
+	public static class LabelModel extends Model {
+		protected FormElement formElement;
 
-        protected FormElement formElement;
+		public LabelModel withFormElement(FormElement formElement) {
+			this.formElement = formElement;
+			return this;
+		}
 
-        public FormValueModel() {
-        }
+		public Field getField() {
+			return formElement.field;
+		}
 
-        public FormValueModel(FormElement formElement) {
-            this.formElement = formElement;
-        }
+		public FormElement getFormElement() {
+			return this.formElement;
+		}
+	}
 
-        @Override
-        public Bindable getBindable() {
-            return formElement.bindable;
-        }
+	public static class ModelEventContext {
+	}
 
-        @Override
-        public Field getField() {
-            return formElement.field;
-        }
+	@ClientInstantiable
+	public static class PermissibleActionFormTransformer extends
+			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
+		@Override
+		public FormModel apply(PermissibleAction action) {
+			FormModelState state = new FormModelState();
+			state.editable = true;
+			state.adjunct = true;
+			state.expectsModel = true;
+			if (action instanceof PermissibleEntityAction) {
+				Entity entity = ((PermissibleEntityAction) action).getEntity();
+				ObjectPermissions op = Reflections.at(entity.getClass())
+						.annotation(ObjectPermissions.class);
+				op = op == null
+						? PermissionsManager.get().getDefaultObjectPermissions()
+						: op;
+				state.editable = PermissionsManager.get().isPermitted(entity,
+						op.write());
+				if (state.editable) {
+					entity = ClientTransformManager.cast()
+							.ensureEditable(entity);
+				} else {
+					state.adjunct = false;
+				}
+				state.model = entity;
+			} else if (action instanceof RemoteActionWithParameters) {
+				state.model = (Bindable) ((RemoteActionWithParameters) action)
+						.getParameters();
+			} else if (action instanceof LocalActionWithParameters) {
+				if (((LocalActionWithParameters) action)
+						.getParameters() instanceof FormEditableParameters) {
+					state.model = (Bindable) ((LocalActionWithParameters) action)
+							.getParameters();
+				} else {
+					state.model = null;
+					state.expectsModel = false;
+				}
+			}
+			return new FormModelTransformer().withContextNode(node)
+					.apply(state);
+		}
+	}
 
-        public FormElement getFormElement() {
-            return this.formElement;
-        }
-
-        @Override
-        public String getGroupName() {
-            return formElement.getElementName();
-        }
-    }
-
-    @RegistryLocation(registryPoint = LabelModel.class, implementationType = ImplementationType.INSTANCE)
-    @Registration(LabelModel.class)
-    public static class LabelModel extends Model {
-
-        protected FormElement formElement;
-
-        public LabelModel withFormElement(FormElement formElement) {
-            this.formElement = formElement;
-            return this;
-        }
-
-        public Field getField() {
-            return formElement.field;
-        }
-
-        public FormElement getFormElement() {
-            return this.formElement;
-        }
-    }
-
-    public static class ModelEventContext {
-    }
-
-    @ClientInstantiable
-    public static class PermissibleActionFormTransformer extends AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
-
-        @Override
-        public FormModel apply(PermissibleAction action) {
-            FormModelState state = new FormModelState();
-            state.editable = true;
-            state.adjunct = true;
-            state.expectsModel = true;
-            if (action instanceof PermissibleEntityAction) {
-                Entity entity = ((PermissibleEntityAction) action).getEntity();
-                ObjectPermissions op = Reflections.at(entity.getClass()).annotation(ObjectPermissions.class);
-                op = op == null ? PermissionsManager.get().getDefaultObjectPermissions() : op;
-                state.editable = PermissionsManager.get().isPermitted(entity, op.write());
-                if (state.editable) {
-                    entity = ClientTransformManager.cast().ensureEditable(entity);
-                } else {
-                    state.adjunct = false;
-                }
-                state.model = entity;
-            } else if (action instanceof RemoteActionWithParameters) {
-                state.model = (Bindable) ((RemoteActionWithParameters) action).getParameters();
-            } else if (action instanceof LocalActionWithParameters) {
-                if (((LocalActionWithParameters) action).getParameters() instanceof FormEditableParameters) {
-                    state.model = (Bindable) ((LocalActionWithParameters) action).getParameters();
-                } else {
-                    state.model = null;
-                    state.expectsModel = false;
-                }
-            }
-            return new FormModelTransformer().withContextNode(node).apply(state);
-        }
-    }
-
-    /*
+	/*
 	 * FIXME - dirndl 1.2 - move to OlForm
 	 */
-    public static class SubmitHandler extends ActionHandler {
+	public static class SubmitHandler extends ActionHandler {
+		@Override
+		public void handleAction(Node node, GwtEvent event,
+				ActionRefPlace place) {
+			((DomEvent) event).preventDefault();
+			FormModel formModel = (FormModel) node
+					.ancestorModel(m -> m instanceof FormModel);
+			if (formModel.submit(node)) {
+				Optional<EmitsTopic> emitsTopic = place.emitsTopic();
+				Class<? extends TopicEvent> type = emitsTopic.get().value();
+				Context context = NodeEvent.Context.newTopicContext(event,
+						node);
+				TopicEvent.fire(context, type, formModel);
+			}
+		}
+	}
 
-        @Override
-        public void handleAction(Node node, GwtEvent event, ActionRefPlace place) {
-            ((DomEvent) event).preventDefault();
-            FormModel formModel = (FormModel) node.ancestorModel(m -> m instanceof FormModel);
-            if (formModel.submit(node)) {
-                Optional<EmitsTopic> emitsTopic = place.emitsTopic();
-                Class<? extends TopicEvent> type = emitsTopic.get().value();
-                Context context = NodeEvent.Context.newTopicContext(event, node);
-                TopicEvent.fire(context, type, formModel);
-            }
-        }
-    }
+	@Ref("submit")
+	@ActionRefHandler(SubmitHandler.class)
+	@EmitsTopic(value = NodeEvents.Submitted.class, hasValidation = true)
+	public static class SubmitRef extends ActionRef {
+	}
 
-    @Ref("submit")
-    @ActionRefHandler(SubmitHandler.class)
-    @EmitsTopic(value = NodeEvents.Submitted.class, hasValidation = true)
-    public static class SubmitRef extends ActionRef {
-    }
+	public interface ValueModel {
+		Bindable getBindable();
 
-    public interface ValueModel {
+		Field getField();
 
-        Bindable getBindable();
-
-        Field getField();
-
-        String getGroupName();
-    }
+		String getGroupName();
+	}
 }

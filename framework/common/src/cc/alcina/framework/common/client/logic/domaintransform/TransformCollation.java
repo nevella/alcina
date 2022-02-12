@@ -313,10 +313,10 @@ public class TransformCollation {
 			return events.stream().anyMatch(
 					e -> e.getTransformType() == TransformType.DELETE_OBJECT);
 		}
-		
+
 		public boolean hasPropertyTransform() {
-			return events.stream().anyMatch(
-					e -> Ax.notBlank(e.getPropertyName()));
+			return events.stream()
+					.anyMatch(e -> Ax.notBlank(e.getPropertyName()));
 		}
 
 		public boolean hasNoCreateTransform() {
@@ -370,10 +370,10 @@ public class TransformCollation {
 		public void removeTransformsFromRequest() {
 			TransformCollation.this.removeTransformsFromRequest(this);
 		}
-
 	}
+
 	public <T extends Entity> Stream<T> modified(Class<T> clazz) {
-		return query(clazz).stream()
-				.<T> map(QueryResult::getEntity).filter(Objects::nonNull);
+		return query(clazz).stream().<T> map(QueryResult::getEntity)
+				.filter(Objects::nonNull);
 	}
 }

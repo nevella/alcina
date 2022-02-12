@@ -23,8 +23,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
  * @author Nick Reddel
  */
 public abstract class LocalSearchDefinition extends SearchDefinition {
-	
-
 	private Class resultClass;
 
 	public Class getResultClass() {

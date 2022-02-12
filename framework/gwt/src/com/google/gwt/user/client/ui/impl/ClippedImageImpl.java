@@ -37,83 +37,88 @@ import com.google.gwt.user.client.ui.Image;
  * may change in the future.
  */
 public class ClippedImageImpl {
+	interface DraggableTemplate extends SafeHtmlTemplates {
+		@SafeHtmlTemplates.Template("<img src='{0}' "
+				+ "style='{1}' border='0' draggable='true'>")
+		SafeHtml image(SafeUri clearImage, SafeStyles style);
+	}
 
-  interface DraggableTemplate extends SafeHtmlTemplates {
-    @SafeHtmlTemplates.Template("<img src='{0}' "
-        + "style='{1}' border='0' draggable='true'>")
-    SafeHtml image(SafeUri clearImage, SafeStyles style);
-  }
+	interface Template extends SafeHtmlTemplates {
+		@SafeHtmlTemplates.Template("<img src='{0}' "
+				+ "style='{1}' border='0'>")
+		SafeHtml image(SafeUri clearImage, SafeStyles style);
+	}
 
-  interface Template extends SafeHtmlTemplates {
-    @SafeHtmlTemplates.Template("<img src='{0}' "
-        + "style='{1}' border='0'>")
-    SafeHtml image(SafeUri clearImage, SafeStyles style);
-  }
+	protected static final SafeUri clearImage = UriUtils
+			.fromTrustedString(GWT.getModuleBaseURL() + "clear.cache.gif");
 
-  protected static final SafeUri clearImage =
-    UriUtils.fromTrustedString(GWT.getModuleBaseURL() + "clear.cache.gif");
-  private static Template template;
-  private static DraggableTemplate draggableTemplate;
+	private static Template template;
 
-  public void adjust(Element img, SafeUri url, int left, int top, int width, int height) {
-    String style = "url(\"" + url.asString() + "\") no-repeat " + (-left + "px ") + (-top + "px");
-    img.getStyle().setProperty("background", style);
-    img.getStyle().setPropertyPx("width", width);
-    img.getStyle().setPropertyPx("height", height);
-  }
+	private static DraggableTemplate draggableTemplate;
 
-  public Element createStructure(SafeUri url, int left, int top, int width, int height) {
-    Element tmp = Document.get().createSpanElement();
-    tmp.setInnerSafeHtml(getSafeHtml(url, left, top, width, height));
+	public void adjust(Element img, SafeUri url, int left, int top, int width,
+			int height) {
+		String style = "url(\"" + url.asString() + "\") no-repeat "
+				+ (-left + "px ") + (-top + "px");
+		img.getStyle().setProperty("background", style);
+		img.getStyle().setPropertyPx("width", width);
+		img.getStyle().setPropertyPx("height", height);
+	}
 
-    Element elem = tmp.getFirstChildElement();
-    elem.implAccess().ensureRemote();
-    elem.setPropertyJSO("onload", createOnLoadHandlerFunction());
-    return elem;
-  }
+	public Element createStructure(SafeUri url, int left, int top, int width,
+			int height) {
+		Element tmp = Document.get().createSpanElement();
+		tmp.setInnerSafeHtml(getSafeHtml(url, left, top, width, height));
+		Element elem = tmp.getFirstChildElement();
+		elem.implAccess().ensureRemote();
+		elem.setPropertyJSO("onload", createOnLoadHandlerFunction());
+		return elem;
+	}
 
-  public static native JavaScriptObject createOnLoadHandlerFunction() /*-{
+	public static native JavaScriptObject createOnLoadHandlerFunction() /*-{
     return function() {
       this.__gwtLastUnhandledEvent = 'load';
     }
   }-*/;
 
-  public Element getImgElement(Image image) {
-    return image.getElement();
-  }
+	public Element getImgElement(Image image) {
+		return image.getElement();
+	}
 
-  public SafeHtml getSafeHtml(SafeUri url, int left, int top, int width, int height) {
-    return getSafeHtml(url, left, top, width, height, false);
-  }
+	public SafeHtml getSafeHtml(SafeUri url, int left, int top, int width,
+			int height) {
+		return getSafeHtml(url, left, top, width, height, false);
+	}
 
-  public SafeHtml getSafeHtml(SafeUri url, int left, int top, int width, int height,
-      boolean isDraggable) {
-    SafeStylesBuilder builder = new SafeStylesBuilder();
-    builder.width(width, Unit.PX).height(height, Unit.PX).trustedNameAndValue("background",
-        "url(" + url.asString() + ") " + "no-repeat " + (-left + "px ") + (-top + "px"));
+	public SafeHtml getSafeHtml(SafeUri url, int left, int top, int width,
+			int height, boolean isDraggable) {
+		SafeStylesBuilder builder = new SafeStylesBuilder();
+		builder.width(width, Unit.PX).height(height, Unit.PX)
+				.trustedNameAndValue("background",
+						"url(" + url.asString() + ") " + "no-repeat "
+								+ (-left + "px ") + (-top + "px"));
+		if (!isDraggable) {
+			return getTemplate().image(clearImage, SafeStylesUtils
+					.fromTrustedString(builder.toSafeStyles().asString()));
+		} else {
+			return getDraggableTemplate().image(clearImage, SafeStylesUtils
+					.fromTrustedString(builder.toSafeStyles().asString()));
+		}
+	}
 
-    if (!isDraggable) {
-      return getTemplate().image(clearImage,
-        SafeStylesUtils.fromTrustedString(builder.toSafeStyles().asString()));
-    } else {
-      return getDraggableTemplate().image(clearImage,
-          SafeStylesUtils.fromTrustedString(builder.toSafeStyles().asString()));
-    }
-  }
+	private DraggableTemplate getDraggableTemplate() {
+		// no need to synchronize, JavaScript in the browser is single-threaded
+		if (draggableTemplate == null) {
+			draggableTemplate = GWT.create(DraggableTemplate.class);
+		}
+		return draggableTemplate;
+	}
 
-  private DraggableTemplate getDraggableTemplate() {
-    // no need to synchronize, JavaScript in the browser is single-threaded
-    if (draggableTemplate == null) {
-      draggableTemplate = GWT.create(DraggableTemplate.class);
-    }
-    return draggableTemplate;
-  }
-
-  private Template getTemplate() {
-    // no need to synchronize, JavaScript in the browser is single-threaded
-    if (template == null) {
-      template = GWT.create(Template.class);
-    }
-    return template;
-  }
+	private Template getTemplate() {
+		// no need to synchronize, JavaScript in the browser is single-threaded
+		if (template == null) {
+			template = GWT.create(Template.class);
+		}
+		return template;
+	}
 }

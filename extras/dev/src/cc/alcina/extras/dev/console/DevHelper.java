@@ -91,12 +91,12 @@ public abstract class DevHelper {
 		return clientInstance;
 	}
 
-	public static void setDefaultClientInstance(ClientInstance clientInstance) {
-		DevHelper.clientInstance = clientInstance;
-	}
-
 	public static IUser getDefaultUser() {
 		return DevHelper.defaultUser;
+	}
+
+	public static void setDefaultClientInstance(ClientInstance clientInstance) {
+		DevHelper.clientInstance = clientInstance;
 	}
 
 	public static void setDefaultUser(IUser defaultUser) {
@@ -326,7 +326,7 @@ public abstract class DevHelper {
 		AlcinaWebappConfig config = new AlcinaWebappConfig();
 		config.setStartDate(new Date());
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
-		Registry.registerSingleton(AlcinaWebappConfig.class, config);
+		Registry.register().singleton(AlcinaWebappConfig.class, config);
 		registerNames(config);
 		initDataFolder();
 		ClassMetadata.USE_MD5_CHANGE_CHECK = true;
@@ -338,7 +338,7 @@ public abstract class DevHelper {
 		XmlUtils.noTransformerCaching = true;
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
 		AlcinaTopics.notifyDevWarningListenerDelta(devWarningListener, true);
-		Registry.registerSingleton(TimerWrapperProvider.class,
+		Registry.register().singleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
 		PermissionsManager.register(new ThreadedPermissionsManager());
 		try {
@@ -433,7 +433,7 @@ public abstract class DevHelper {
 							.getClasses();
 			// FIXME - devconsort - no classmeta call?
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
-					Registry.get(), "dev-helper");
+					"dev-helper");
 			long t2 = System.currentTimeMillis();
 			System.out.println("Registry scan: " + (t2 - t1));
 		} catch (Exception e) {
@@ -516,8 +516,6 @@ public abstract class DevHelper {
 	}
 
 	protected abstract String getJbossConfigPrompt(String path);
-
-	
 
 	protected abstract void initCustomServicesFirstHalf();
 

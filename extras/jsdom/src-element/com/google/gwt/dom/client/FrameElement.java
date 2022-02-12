@@ -264,7 +264,8 @@ public class FrameElement extends Element {
 	 *      W3C HTML Specification</a>
 	 */
 	@SuppressIsTrustedResourceUriCastCheck
-	public final void setSrc(@IsTrustedResourceUri SafeUri src) {
+	public final void setSrc(@IsTrustedResourceUri
+	SafeUri src) {
 		setSrc(src.asString());
 	}
 
@@ -275,7 +276,8 @@ public class FrameElement extends Element {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-src-FRAME">
 	 *      W3C HTML Specification</a>
 	 */
-	public void setSrc(@IsTrustedResourceUri String src) {
+	public void setSrc(@IsTrustedResourceUri
+	String src) {
 		this.setPropertyString("src", src);
 	}
 

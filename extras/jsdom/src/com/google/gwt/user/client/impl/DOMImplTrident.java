@@ -203,8 +203,7 @@ public abstract class DOMImplTrident extends DOMImpl {
 											}-*/;
 
 	@Override
-	public native void insertChild(Element parent, Element child,
-			int index) /*-{
+	public native void insertChild(Element parent, Element child, int index) /*-{
 						if (index >= parent.children.length)
 						parent.appendChild(child);
 						else

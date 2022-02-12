@@ -514,9 +514,9 @@ public class DomainStoreDataProvider<T extends Entity>
 				Column column = table.getColumn(idx);
 				if (column instanceof SortableColumn) {
 					SortableColumn sortableColumn = (SortableColumn) column;
-					if (sortableColumn.sortFunction() != null && sortableColumn
-							.sortFunction().getClass().getName()
-							.equals(order.getKey())) {
+					if (sortableColumn.sortFunction() != null
+							&& sortableColumn.sortFunction().getClass()
+									.getName().equals(order.getKey())) {
 						if (!cleared) {
 							columnSortList.clear();
 						}

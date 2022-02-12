@@ -153,7 +153,8 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	 * @param asHTML
 	 *            <code>true</code> to treat the specified label as html
 	 */
-	public CheckBox(@IsSafeHtml String label, boolean asHTML) {
+	public CheckBox(@IsSafeHtml
+	String label, boolean asHTML) {
 		this();
 		if (asHTML) {
 			setHTML(label);
@@ -409,7 +410,8 @@ public class CheckBox extends ButtonBase implements HasName, HasValue<Boolean>,
 	}
 
 	@Override
-	public void setHTML(@IsSafeHtml String html) {
+	public void setHTML(@IsSafeHtml
+	String html) {
 		directionalTextHelper.setHtml(html);
 	}
 

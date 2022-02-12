@@ -40,10 +40,10 @@ public class PropertyPath {
 		if (obj == null) {
 			throw new NoSuchElementException();
 		}
-		try{
+		try {
 			getChainedProperty(obj);
 			return true;
-		}catch(NoSuchElementException e){
+		} catch (NoSuchElementException e) {
 			return false;
 		}
 	}

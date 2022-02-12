@@ -37,8 +37,8 @@ public class ClasspathScannerResolver {
 					ClassPersistenceScanHandler.class,
 					Ax.format("schema/%s/meta.translation.%s.xml", folder,
 							translationKey));
-			translationData = JaxbUtils
-					.xmlDeserialize(TranslationData.class, translationXml);
+			translationData = JaxbUtils.xmlDeserialize(TranslationData.class,
+					translationXml);
 		}
 		for (URL url : typedRequest.classPaths) {
 			if (translationData != null) {

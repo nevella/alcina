@@ -23,7 +23,7 @@ public class DomainHandlerClient implements DomainHandler {
 			if (objectId == 0) {
 				resultConsumer.accept(null);
 			} else {
-				Registry.impl(DomainHandlerClientRemoteResolver.class,clazz)
+				Registry.impl(DomainHandlerClientRemoteResolver.class, clazz)
 						.resolve(clazz, objectId, resultConsumer);
 			}
 		}
@@ -36,7 +36,8 @@ public class DomainHandlerClient implements DomainHandler {
 
 	@Override
 	public <V extends Entity> V find(Class clazz, long id) {
-		return (V) TransformManager.get().getObjectStore().getObject(clazz, id, 0);
+		return (V) TransformManager.get().getObjectStore().getObject(clazz, id,
+				0);
 	}
 
 	@Override

@@ -41,7 +41,7 @@ public abstract class InternalMetric<U extends InternalMetric>
 	private String lockType;
 
 	private String blackboxData;
-	
+
 	private long clientInstanceId;
 
 	public long getClientInstanceId() {

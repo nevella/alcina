@@ -28,8 +28,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  */
 public class AbstractDateCriterion extends SearchCriterion
 		implements HasValue<Date> {
-	
-
 	private Date date;
 
 	private Direction direction = Direction.ASCENDING;

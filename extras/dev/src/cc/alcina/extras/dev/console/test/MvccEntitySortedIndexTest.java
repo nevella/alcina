@@ -19,7 +19,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
  * 
  * @author nick@alcina.cc
  * 
- * Note that sorted projections are only post-tx
+ *         Note that sorted projections are only post-tx
  *
  */
 public class MvccEntitySortedIndexTest<IU extends Entity & IUser, IG extends Entity & IGroup>

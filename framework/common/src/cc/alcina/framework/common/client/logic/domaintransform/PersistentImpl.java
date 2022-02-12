@@ -7,9 +7,9 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 
 /**
  * maaarrrkkkerrrr
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public interface PersistentImpl {
 	static <A extends Entity> A create(Class<A> clazz) {
@@ -26,7 +26,8 @@ public interface PersistentImpl {
 	}
 
 	static <A> Class<? extends A> getImplementation(Class<A> clazz) {
-		return Registry.get().lookupSingle(PersistentImpl.class, clazz);
+		return Registry.query(clazz).clearTypeKey()
+				.withKeys(PersistentImpl.class, clazz).registration();
 	}
 
 	static Class getImplementationNonGeneric(Class clazz) {
@@ -39,5 +40,10 @@ public interface PersistentImpl {
 
 	static <A> A getNewImplementationInstance(Class<A> clazz) {
 		return Reflections.newInstance(getImplementation(clazz));
+	}
+
+	static boolean hasImplementation(Class<?> clazz) {
+		return Registry.query().withKeys(PersistentImpl.class, clazz)
+				.untypedRegistrations().count() > 0;
 	}
 }

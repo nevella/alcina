@@ -13,20 +13,20 @@
  */
 package cc.alcina.framework.gwt.client.objecttree.basic;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.EnumCriterion;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * @author Nick Reddel
  */
 @RegistryLocation(registryPoint = TreeRenderer.class, targetClass = EnumCriterion.class)
 @Registration({ TreeRenderer.class, EnumCriterion.class })
-public class EnumCriterionRenderer<T extends EnumCriterion> extends SearchCriterionRenderer<T> {
-
-    @Override
-    public String renderablePropertyName() {
-        return "value";
-    }
+public class EnumCriterionRenderer<T extends EnumCriterion>
+		extends SearchCriterionRenderer<T> {
+	@Override
+	public String renderablePropertyName() {
+		return "value";
+	}
 }

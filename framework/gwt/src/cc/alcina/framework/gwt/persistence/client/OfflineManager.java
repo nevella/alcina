@@ -7,6 +7,7 @@ import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -18,23 +19,18 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 /**
  * TODO: this should be a singleton...with listeners rather than
  * 'registerUpdatingCallback' etc
- * 
+ *
  * and should be a state machine. in fact, izz a mess!
- * 
+ *
  * refactor-consort
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
+@Registration.Singleton
 public class OfflineManager {
 	public static OfflineManager get() {
-		OfflineManager singleton = Registry
-				.checkSingleton(OfflineManager.class);
-		if (singleton == null) {
-			singleton = new OfflineManager();
-			Registry.registerSingleton(OfflineManager.class, singleton);
-		}
-		return singleton;
+		return Registry.impl(OfflineManager.class);
 	}
 
 	private final String APPLICATION_CHANGED_ON_THE_SERVER_PLEASE_WAIT = "Application changed on the server - please wait";

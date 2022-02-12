@@ -64,7 +64,6 @@ public @interface Display {
 	boolean focus() default false;
 
 	String helpText() default "";
-
 	// FIXME - dirndl.1 - default to "", de-infixd property name
 
 	String name();

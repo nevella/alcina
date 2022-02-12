@@ -10,6 +10,7 @@ import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -247,13 +248,15 @@ public class DomainStoreQueryTranslator {
 			DomainStoreCriteria domainStoreCriteria, Criterion criterion)
 			throws NotHandledException {
 		boolean handled = false;
-		for (CriterionTranslator translator : Registry
-				.impls(CriterionTranslator.class)) {
-			if (translator.handles(criterion.getClass())) {
-				return translator.handle(criterion, domainStoreCriteria, this);
-			}
+		Optional<CriterionTranslator> translator = Registry
+				.query(CriterionTranslator.class).implementations()
+				.filter(t -> t.handles(criterion.getClass())).findFirst();
+		if (translator.isPresent()) {
+			return translator.get().handle(criterion, domainStoreCriteria,
+					this);
+		} else {
+			throw new NotHandledException(criterion);
 		}
-		throw new NotHandledException(criterion);
 	}
 
 	protected void handleProjections() throws Exception {

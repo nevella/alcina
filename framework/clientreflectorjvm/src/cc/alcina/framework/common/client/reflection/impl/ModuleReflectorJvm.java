@@ -122,8 +122,7 @@ public class ModuleReflectorJvm extends ModuleReflector {
 					}
 					return c;
 				}
-			}.scan(classes, new ArrayList<String>(), Registry.get(),
-					"client-reflector");
+			}.scan(classes, new ArrayList<String>(), "client-reflector");
 		} catch (Throwable e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);

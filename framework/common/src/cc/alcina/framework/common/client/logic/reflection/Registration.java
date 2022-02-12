@@ -20,6 +20,8 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
@@ -35,6 +37,8 @@ import java.lang.annotation.Target;
  * <li>Denote a class as possessing a given attribute (multiple)
  * </ul>
  *
+ * @see Registry
+ *
  * @author Nick Reddel
  *
  *
@@ -49,6 +53,13 @@ public @interface Registration {
 
 	Class[] value();
 
+	/**
+	 * Enables filtering of registered implementations by an enum value
+	 */
+	public interface EnumDiscriminator<E extends Enum> {
+		E provideEnumDiscriminator();
+	}
+
 	public enum Implementation {
 		// Single implementation class allowed
 		INSTANCE,
@@ -61,7 +72,8 @@ public @interface Registration {
 	}
 
 	public enum Priority {
-		IGNORE, _DEFAULT, INTERMEDIATE_LIBRARY, PREFERRED_LIBRARY, MANUAL
+		IGNORE, _DEFAULT, BASE_LIBRARY, INTERMEDIATE_LIBRARY, PREFERRED_LIBRARY,
+		APP
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)

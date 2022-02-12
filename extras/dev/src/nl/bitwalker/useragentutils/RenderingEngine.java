@@ -81,6 +81,7 @@ public enum RenderingEngine {
 	 * Other or unknown layout engine.
 	 */
 	OTHER("Other");
+
 	String name;
 
 	private RenderingEngine(String name) {

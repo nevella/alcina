@@ -11,8 +11,6 @@ import cc.alcina.framework.common.client.util.Ax;
 
 public class ClassMetadataCache<T extends ClassMetadata>
 		implements Serializable {
-	
-
 	public Map<String, T> classData = new LinkedHashMap<String, T>();
 
 	public List<String> ignorePackageSegments = new ArrayList<String>();

@@ -159,8 +159,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		return code;
 	}
 
-	static native boolean
-			shouldTreeDelegateFocusToElement(Element elem) /*-{
+	static native boolean shouldTreeDelegateFocusToElement(Element elem) /*-{
     var name = elem.nodeName;
     return ((name == "SELECT") || (name == "INPUT") || (name == "TEXTAREA")
         || (name == "OPTION") || (name == "BUTTON") || (name == "LABEL"));

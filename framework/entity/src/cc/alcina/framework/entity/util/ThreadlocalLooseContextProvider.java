@@ -5,206 +5,225 @@ import java.lang.invoke.MethodType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Stack;
+
 import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalLooseContextProvider extends LooseContext {
+	private static ThreadLocal<ThreadlocalLooseContextProvider> threadLocalInstance = new ThreadLocal<>() {
+		@Override
+		protected synchronized ThreadlocalLooseContextProvider initialValue() {
+			ThreadlocalLooseContextProvider provider = new ThreadlocalLooseContextProvider();
+			return provider;
+		}
+	};
 
-    private static ThreadLocal<ThreadlocalLooseContextProvider> threadLocalInstance = new ThreadLocal<>() {
+	public static ThreadlocalLooseContextProvider cast() {
+		return (ThreadlocalLooseContextProvider) LooseContext.getInstance();
+	}
 
-        @Override
-        protected synchronized ThreadlocalLooseContextProvider initialValue() {
-            ThreadlocalLooseContextProvider provider = new ThreadlocalLooseContextProvider();
-            return provider;
-        }
-    };
+	/**
+	 * Convenience "override" of LooseContextProvider.get()
+	 */
+	public static ThreadlocalLooseContextProvider get() {
+		return ThreadlocalLooseContextProvider.cast();
+	}
 
-    public static ThreadlocalLooseContextProvider cast() {
-        return (ThreadlocalLooseContextProvider) LooseContext.getInstance();
-    }
+	public static ThreadlocalLooseContextProvider ttmInstance() {
+		return new ThreadlocalLooseContextProvider();
+	}
 
-    /**
-     * Convenience "override" of LooseContextProvider.get()
-     */
-    public static ThreadlocalLooseContextProvider get() {
-        return ThreadlocalLooseContextProvider.cast();
-    }
+	private static boolean debugStackEntry;
 
-    public static ThreadlocalLooseContextProvider ttmInstance() {
-        return new ThreadlocalLooseContextProvider();
-    }
+	public static boolean isDebugStackEntry() {
+		return ThreadlocalLooseContextProvider.debugStackEntry;
+	}
 
-    private static boolean debugStackEntry;
+	public static void setDebugStackEntry(boolean debugStackEntry) {
+		ThreadlocalLooseContextProvider.debugStackEntry = debugStackEntry;
+	}
 
-    public static boolean isDebugStackEntry() {
-        return ThreadlocalLooseContextProvider.debugStackEntry;
-    }
+	@Override
+	public LooseContext getT() {
+		return (LooseContext) threadLocalInstance.get();
+	}
 
-    public static void setDebugStackEntry(boolean debugStackEntry) {
-        ThreadlocalLooseContextProvider.debugStackEntry = debugStackEntry;
-    }
+	@Override
+	protected LooseContextInstance getContext0() {
+		if (context == null) {
+			context = new LooseContextInstanceJvm();
+		}
+		return context;
+	}
 
-    @Override
-    public LooseContext getT() {
-        return (LooseContext) threadLocalInstance.get();
-    }
+	static class LooseContextInstanceJvm extends LooseContextInstance {
+		int pushCount;
 
-    @Override
-    protected LooseContextInstance getContext0() {
-        if (context == null) {
-            context = new LooseContextInstanceJvm();
-        }
-        return context;
-    }
+		@Override
+		public void push() {
+			super.push();
+			if (isDebugStackEntry()) {
+				pushCount++;
+				if (stackInfoStack == null) {
+					stackInfoStack = new Stack<>();
+				}
+				StackInfo stackInfo = new StackInfo(true, pushCount);
+				changes.add(stackInfo);
+				stackInfoStack.push(stackInfo);
+			}
+		}
 
-    static class LooseContextInstanceJvm extends LooseContextInstance {
+		private Stack<StackInfo> stackInfoStack;
 
-        int pushCount;
+		public LooseContextInstanceJvm() {
+		}
 
-        @Override
-        public void push() {
-            super.push();
-            if (isDebugStackEntry()) {
-                pushCount++;
-                if (stackInfoStack == null) {
-                    stackInfoStack = new Stack<>();
-                }
-                StackInfo stackInfo = new StackInfo(true, pushCount);
-                changes.add(stackInfo);
-                stackInfoStack.push(stackInfo);
-            }
-        }
+		protected void allowUnbalancedFrameRemoval(Class clazz,
+				String pushMethodName) {
+			if (isDebugStackEntry()) {
+				stackInfoStack.peek().allowUnbalancedFrameRemoval(clazz,
+						pushMethodName);
+			}
+		}
 
-        private Stack<StackInfo> stackInfoStack;
+		List<StackInfo> changes = new ArrayList<>();
 
-        public LooseContextInstanceJvm() {
-        }
+		public void pop() {
+			if (isDebugStackEntry()) {
+				StackInfo info = stackInfoStack.size() > 0
+						? stackInfoStack.pop()
+						: null;
+				StackInfo stackInfo = new StackInfo(false, pushCount);
+				changes.add(stackInfo);
+				if (info == null) {
+					Ax.sysLogHigh("Unbalanced stack");
+					changes.forEach(Ax::out);
+					Preconditions.checkState(false);
+				}
+				if (!info.equals(stackInfo)
+						&& !info.allowUnbalancedFrameRemoval) {
+					Ax.sysLogHigh("Unbalanced stack");
+					Ax.out(info);
+					Ax.out(stackInfo);
+					Ax.out("==================");
+					changes.forEach(Ax::out);
+					Preconditions.checkState(info.equals(stackInfo));
+				}
+			}
+			super.pop();
+			if (isDebugStackEntry()) {
+				pushCount--;
+				if (pushCount == 0) {
+					changes.clear();
+				}
+			}
+		}
 
-        protected void allowUnbalancedFrameRemoval(Class clazz, String pushMethodName) {
-            if (isDebugStackEntry()) {
-                stackInfoStack.peek().allowUnbalancedFrameRemoval(clazz, pushMethodName);
-            }
-        }
+		static class StackInfo {
+			private String className;
 
-        List<StackInfo> changes = new ArrayList<>();
+			private String methodName;
 
-        public void pop() {
-            if (isDebugStackEntry()) {
-                StackInfo info = stackInfoStack.size() > 0 ? stackInfoStack.pop() : null;
-                StackInfo stackInfo = new StackInfo(false, pushCount);
-                changes.add(stackInfo);
-                if (info == null) {
-                    Ax.sysLogHigh("Unbalanced stack");
-                    changes.forEach(Ax::out);
-                    Preconditions.checkState(false);
-                }
-                if (!info.equals(stackInfo) && !info.allowUnbalancedFrameRemoval) {
-                    Ax.sysLogHigh("Unbalanced stack");
-                    Ax.out(info);
-                    Ax.out(stackInfo);
-                    Ax.out("==================");
-                    changes.forEach(Ax::out);
-                    Preconditions.checkState(info.equals(stackInfo));
-                }
-            }
-            super.pop();
-            if (isDebugStackEntry()) {
-                pushCount--;
-                if (pushCount == 0) {
-                    changes.clear();
-                }
-            }
-        }
+			private MethodType methodType;
 
-        static class StackInfo {
+			private boolean push;
 
-            private String className;
+			private int depth;
 
-            private String methodName;
+			private int lineNumber;
 
-            private MethodType methodType;
+			boolean allowUnbalancedFrameRemoval;
 
-            private boolean push;
+			@Override
+			public String toString() {
+				return Ax.format("%s - %s - %s.%s::%s - %s",
+						push ? "Push" : "Pop ", CommonUtils.padThree(depth),
+						className, methodName, lineNumber, methodType);
+			}
 
-            private int depth;
+			void allowUnbalancedFrameRemoval(Class clazz,
+					String pushMethodName) {
+				allowUnbalancedFrameRemoval = className.equals(clazz.getName())
+						&& methodName.equals(pushMethodName);
+			}
 
-            private int lineNumber;
+			@Override
+			public boolean equals(Object obj) {
+				if (obj instanceof StackInfo) {
+					StackInfo o = (StackInfo) obj;
+					return className.equals(o.className)
+							&& methodName.equals(o.methodName)
+							&& methodType.equals(o.methodType);
+				} else {
+					return super.equals(obj);
+				}
+			}
 
-            boolean allowUnbalancedFrameRemoval;
+			public StackInfo(boolean push, int depth) {
+				this.push = push;
+				this.depth = depth;
+				StackWalker
+						.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+						.walk(s -> {
+							s.filter(frame -> notLooseContextFrame(frame))
+									.limit(1).forEach(frame -> {
+										this.className = frame.getClassName();
+										this.methodName = frame.getMethodName();
+										this.methodType = frame.getMethodType();
+										this.lineNumber = frame.getLineNumber();
+									});
+							return null;
+						});
+			}
 
-            @Override
-            public String toString() {
-                return Ax.format("%s - %s - %s.%s::%s - %s", push ? "Push" : "Pop ", CommonUtils.padThree(depth), className, methodName, lineNumber, methodType);
-            }
+			private boolean notLooseContextFrame(StackFrame frame) {
+				if (StackInfo.class.getName().equals(frame.getClassName())) {
+					return false;
+				} else if (LooseContextInstanceJvm.class.getName()
+						.equals(frame.getClassName())) {
+					return false;
+				} else if (LooseContextInstance.class.getName()
+						.equals(frame.getClassName())) {
+					return false;
+				} else if (LooseContext.class.getName()
+						.equals(frame.getClassName())) {
+					return false;
+				} else if (ThreadlocalLooseContextProvider.class.getName()
+						.equals(frame.getClassName())) {
+					return false;
+				} else {
+					return true;
+				}
+			}
+		}
 
-            void allowUnbalancedFrameRemoval(Class clazz, String pushMethodName) {
-                allowUnbalancedFrameRemoval = className.equals(clazz.getName()) && methodName.equals(pushMethodName);
-            }
+		void beforeRemovePerContext() {
+			if (isDebugStackEntry() && pushCount != 0) {
+				Ax.sysLogHigh("Unbalanced stack");
+				changes.forEach(Ax::out);
+				throw new IllegalStateException(
+						"Clearing context with non-zero stack depth");
+			}
+		}
+	}
 
-            @Override
-            public boolean equals(Object obj) {
-                if (obj instanceof StackInfo) {
-                    StackInfo o = (StackInfo) obj;
-                    return className.equals(o.className) && methodName.equals(o.methodName) && methodType.equals(o.methodType);
-                } else {
-                    return super.equals(obj);
-                }
-            }
-
-            public StackInfo(boolean push, int depth) {
-                this.push = push;
-                this.depth = depth;
-                StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE).walk(s -> {
-                    s.filter(frame -> notLooseContextFrame(frame)).limit(1).forEach(frame -> {
-                        this.className = frame.getClassName();
-                        this.methodName = frame.getMethodName();
-                        this.methodType = frame.getMethodType();
-                        this.lineNumber = frame.getLineNumber();
-                    });
-                    return null;
-                });
-            }
-
-            private boolean notLooseContextFrame(StackFrame frame) {
-                if (StackInfo.class.getName().equals(frame.getClassName())) {
-                    return false;
-                } else if (LooseContextInstanceJvm.class.getName().equals(frame.getClassName())) {
-                    return false;
-                } else if (LooseContextInstance.class.getName().equals(frame.getClassName())) {
-                    return false;
-                } else if (LooseContext.class.getName().equals(frame.getClassName())) {
-                    return false;
-                } else if (ThreadlocalLooseContextProvider.class.getName().equals(frame.getClassName())) {
-                    return false;
-                } else {
-                    return true;
-                }
-            }
-        }
-
-        void beforeRemovePerContext() {
-            if (isDebugStackEntry() && pushCount != 0) {
-                Ax.sysLogHigh("Unbalanced stack");
-                changes.forEach(Ax::out);
-                throw new IllegalStateException("Clearing context with non-zero stack depth");
-            }
-        }
-    }
-
-    @Override
-    protected void removePerThreadContext0() {
-        ThreadlocalLooseContextProvider contextProvider = threadLocalInstance.get();
-        if (contextProvider != null && contextProvider.context != null) {
-            ((LooseContextInstanceJvm) contextProvider.context).beforeRemovePerContext();
-        }
-        threadLocalInstance.remove();
-    }
+	@Override
+	protected void removePerThreadContext0() {
+		ThreadlocalLooseContextProvider contextProvider = threadLocalInstance
+				.get();
+		if (contextProvider != null && contextProvider.context != null) {
+			((LooseContextInstanceJvm) contextProvider.context)
+					.beforeRemovePerContext();
+		}
+		threadLocalInstance.remove();
+	}
 }

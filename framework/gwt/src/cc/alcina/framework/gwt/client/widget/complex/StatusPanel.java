@@ -223,7 +223,6 @@ public class StatusPanel extends Composite {
 		}
 		content.setHTML(html);
 		setShowingProblem(false);
-		
 	}
 
 	private void updateHandlers(boolean show) {

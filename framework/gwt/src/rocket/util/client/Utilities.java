@@ -630,8 +630,7 @@ public class Utilities {
 		return decoded.toString();
 	}
 
-	native private static String
-			toCssPropertyName0(final String propertyName)/*-{
+	native private static String toCssPropertyName0(final String propertyName)/*-{
 															return propertyName.replace(/([A-Z])/g, "-$1" ).toLowerCase()
 															}-*/;
 }

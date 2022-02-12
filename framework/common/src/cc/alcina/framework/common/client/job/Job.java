@@ -10,11 +10,14 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
+
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.GwtTransient;
+
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
@@ -36,6 +39,7 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -47,1058 +51,1138 @@ import cc.alcina.framework.common.client.util.HasEquivalenceString;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @RegistryLocation(registryPoint = PersistentImpl.class, targetClass = Job.class)
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 @Registration({ PersistentImpl.class, Job.class })
-public abstract class Job extends VersionableEntity<Job> implements HasIUser, Comparable<Job> {
+public abstract class Job extends VersionableEntity<Job>
+		implements HasIUser, Comparable<Job> {
+	private static final transient String CONSISTENCY_PRIORITY_DEFAULT = "_default";
 
-    private static final transient String CONSISTENCY_PRIORITY_DEFAULT = "_default";
+	public static final transient String PROPERTY_STATE = "state";
 
-    public static final transient String PROPERTY_STATE = "state";
+	public static Job byId(long id) {
+		return PersistentImpl.find(Job.class, id);
+	}
 
-    public static Job byId(long id) {
-        return PersistentImpl.find(Job.class, id);
-    }
+	@GwtTransient
+	private Task task;
 
-    @GwtTransient
-    private Task task;
+	private String taskSerialized;
 
-    private String taskSerialized;
+	private String taskClassName;
 
-    private String taskClassName;
+	private Date runAt;
 
-    private Date runAt;
+	private Date startTime;
 
-    private Date startTime;
+	private Date endTime;
 
-    private Date endTime;
+	private JobState state;
 
-    private JobState state;
+	private String resultMessage;
 
-    private String resultMessage;
+	private String statusMessage;
 
-    private String statusMessage;
+	private String log;
 
-    private String log;
+	private double completion;
 
-    private double completion;
+	private JobResultType resultType;
 
-    private JobResultType resultType;
+	private boolean stacktraceRequested;
 
-    private boolean stacktraceRequested;
+	private int retryCount;
 
-    private int retryCount;
+	private int performerVersionNumber;
 
-    private int performerVersionNumber;
+	@GwtTransient
+	private Object result;
 
-    @GwtTransient
-    private Object result;
+	@GwtTransient
+	private String resultSerialized;
 
-    @GwtTransient
-    private String resultSerialized;
+	@GwtTransient
+	private Object largeResult;
 
-    @GwtTransient
-    private Object largeResult;
+	@GwtTransient
+	private String largeResultSerialized;
 
-    @GwtTransient
-    private String largeResultSerialized;
+	private String processStateSerialized;
 
-    private String processStateSerialized;
+	@GwtTransient
+	private volatile ProcessState processState;
 
-    @GwtTransient
-    private volatile ProcessState processState;
+	private transient String cachedDisplayName;
 
-    private transient String cachedDisplayName;
+	@GwtTransient
+	private String taskSignature;
 
-    @GwtTransient
-    private String taskSignature;
+	private transient Job firstInSequence;
 
-    private transient Job firstInSequence;
+	@GwtTransient
+	private String consistencyPriority;
 
-    @GwtTransient
-    private String consistencyPriority;
+	public String getConsistencyPriority() {
+		return this.consistencyPriority;
+	}
 
-    public String getConsistencyPriority() {
-        return this.consistencyPriority;
-    }
+	public void setConsistencyPriority(String consistencyPriority) {
+		String old_consistencyPriority = this.consistencyPriority;
+		this.consistencyPriority = consistencyPriority;
+		propertyChangeSupport().firePropertyChange("consistencyPriority",
+				old_consistencyPriority, consistencyPriority);
+	}
 
-    public void setConsistencyPriority(String consistencyPriority) {
-        String old_consistencyPriority = this.consistencyPriority;
-        this.consistencyPriority = consistencyPriority;
-        propertyChangeSupport().firePropertyChange("consistencyPriority", old_consistencyPriority, consistencyPriority);
-    }
+	public Job() {
+	}
 
-    public Job() {
-    }
+	public Job(long id) {
+		setId(id);
+	}
 
-    public Job(long id) {
-        setId(id);
-    }
+	@Override
+	public void addPropertyChangeListener(PropertyChangeListener listener) {
+		this.propertyChangeSupport().addPropertyChangeListener(listener);
+	}
 
-    @Override
-    public void addPropertyChangeListener(PropertyChangeListener listener) {
-        this.propertyChangeSupport().addPropertyChangeListener(listener);
-    }
+	// FIXME - mvcc.jobs - get rid'o'me
+	public JobResult asJobResult() {
+		JobResult result = new JobResult() {
+			@Override
+			public String getActionLog() {
+				return getLog();
+			}
 
-    // FIXME - mvcc.jobs - get rid'o'me
-    public JobResult asJobResult() {
-        JobResult result = new JobResult() {
+			@Override
+			public // FIXME - mvcc.jobs - get rid'o'me
+			ActionLogItem getActionLogItem() {
+				ActionLogItem logItem = Reflections.newInstance(
+						PersistentImpl.getImplementation(ActionLogItem.class));
+				logItem.setActionClass((Class) getTask().getClass());
+				logItem.setActionClassName(getTaskClassName());
+				logItem.setActionDate(getEndTime());
+				logItem.setActionLog(
+						CommonUtils.trimToWsChars(getLog(), 200000, true));
+				logItem.setShortDescription(getResultMessage());
+				return logItem;
+			}
+		};
+		result.setProducedObject(getResult());
+		return result;
+	}
 
-            @Override
-            public String getActionLog() {
-                return getLog();
-            }
+	public JobTracker asJobTracker() {
+		JobTrackerImpl tracker = new JobTrackerImpl();
+		tracker.setCancelled(resolveState() == JobState.CANCELLED);
+		tracker.setComplete(resolveState().isComplete());
+		tracker.setEndTime(endTime);
+		tracker.setId(String.valueOf(getId()));
+		tracker.setJobName(getTask().getName());
+		tracker.setJobResult(resultMessage);
+		tracker.setJobResultType(getResultType());
+		tracker.setLog(log);
+		tracker.setPercentComplete(completion);
+		tracker.setProgressMessage(statusMessage);
+		tracker.setStartTime(startTime);
+		if (tracker.isComplete()) {
+			domain().ensurePopulated();
+			tracker.setSerializedResult(getResultSerialized());
+		}
+		return tracker;
+	}
 
-            @Override
-            public // FIXME - mvcc.jobs - get rid'o'me
-            ActionLogItem getActionLogItem() {
-                ActionLogItem logItem = Reflections.newInstance(PersistentImpl.getImplementation(ActionLogItem.class));
-                logItem.setActionClass((Class) getTask().getClass());
-                logItem.setActionClassName(getTaskClassName());
-                logItem.setActionDate(getEndTime());
-                logItem.setActionLog(CommonUtils.trimToWsChars(getLog(), 200000, true));
-                logItem.setShortDescription(getResultMessage());
-                return logItem;
-            }
-        };
-        result.setProducedObject(getResult());
-        return result;
-    }
+	public void cancel() {
+		if (!resolveState().isComplete()) {
+			setState(JobState.CANCELLED);
+			setEndTime(new Date());
+			setResultType(JobResultType.DID_NOT_COMPLETE);
+			// no need to set child state - completed states propagate down
+		}
+	}
 
-    public JobTracker asJobTracker() {
-        JobTrackerImpl tracker = new JobTrackerImpl();
-        tracker.setCancelled(resolveState() == JobState.CANCELLED);
-        tracker.setComplete(resolveState().isComplete());
-        tracker.setEndTime(endTime);
-        tracker.setId(String.valueOf(getId()));
-        tracker.setJobName(getTask().getName());
-        tracker.setJobResult(resultMessage);
-        tracker.setJobResultType(getResultType());
-        tracker.setLog(log);
-        tracker.setPercentComplete(completion);
-        tracker.setProgressMessage(statusMessage);
-        tracker.setStartTime(startTime);
-        if (tracker.isComplete()) {
-            domain().ensurePopulated();
-            tracker.setSerializedResult(getResultSerialized());
-        }
-        return tracker;
-    }
+	public <T extends Task> T castTask() {
+		return (T) getTask();
+	}
 
-    public void cancel() {
-        if (!resolveState().isComplete()) {
-            setState(JobState.CANCELLED);
-            setEndTime(new Date());
-            setResultType(JobResultType.DID_NOT_COMPLETE);
-            // no need to set child state - completed states propagate down
-        }
-    }
+	@Override
+	public int compareTo(Job o) {
+		return EntityComparator.INSTANCE.compare(domainIdentity(), o);
+	}
 
-    public <T extends Task> T castTask() {
-        return (T) getTask();
-    }
+	public void createRelation(Job to, JobRelationType type) {
+		String invalidMessage = null;
+		Preconditions.checkArgument(to != domainIdentity());
+		if (type == JobRelationType.RESUBMIT) {
+			if (to.provideToResubmitRelation().isPresent()) {
+				invalidMessage = "to has existing incoming resubmit relation";
+			}
+		} else {
+			if (to.provideToAntecedentRelation().isPresent()) {
+				invalidMessage = Ax.format(
+						"to has existing incoming antecedent relation: %s",
+						to.provideToAntecedentRelation().get());
+			}
+		}
+		Job from = domainIdentity();
+		if (type == JobRelationType.SEQUENCE) {
+			Optional<? extends JobRelation> next = null;
+			while ((next = from.getFromRelations().stream()
+					.filter(r -> r.getType() == JobRelationType.SEQUENCE)
+					.findFirst()).isPresent()) {
+				from = next.get().getTo();
+			}
+		}
+		if (type != JobRelationType.PARENT_CHILD && from.getFromRelations()
+				.stream().anyMatch(r -> r.getType() == type)) {
+			invalidMessage = Ax.format(
+					"from has existing outgoing relation: %s",
+					from.getFromRelations().stream()
+							.filter(r -> r.getType() == type).findFirst()
+							.get());
+		}
+		if (invalidMessage != null) {
+			throw new IllegalStateException(invalidMessage);
+		}
+		JobRelation relation = PersistentImpl.create(JobRelation.class);
+		relation.setType(type);
+		relation.setFrom(from);
+		relation.setTo(to);
+	}
 
-    @Override
-    public int compareTo(Job o) {
-        return EntityComparator.INSTANCE.compare(domainIdentity(), o);
-    }
+	// Delete while ensuring job sequencing is still correct after deletion
+	public void deleteEnsuringSequence() {
+		Optional<? extends JobRelation> previousRelation = getToRelations()
+				.stream().filter(JobRelation::provideIsSequential).findFirst();
+		Optional<? extends JobRelation> nextRelation = getFromRelations()
+				.stream().filter(JobRelation::provideIsSequential).findFirst();
+		if (previousRelation.isPresent() && nextRelation.isPresent()) {
+			// If this job is in the middle of the chain,
+			// re-link it so ensure the sequence stays connected
+			Job previous = previousRelation.get().getFrom();
+			Job next = nextRelation.get().getTo();
+			// delete before creating new relation (required for validation)
+			JobRelationType type = previousRelation.get().getType();
+			delete();
+			// Create new relation
+			previous.createRelation(next, type);
+		} else {
+			delete();
+		}
+	}
 
-    public void createRelation(Job to, JobRelationType type) {
-        String invalidMessage = null;
-        Preconditions.checkArgument(to != domainIdentity());
-        if (type == JobRelationType.RESUBMIT) {
-            if (to.provideToResubmitRelation().isPresent()) {
-                invalidMessage = "to has existing incoming resubmit relation";
-            }
-        } else {
-            if (to.provideToAntecedentRelation().isPresent()) {
-                invalidMessage = Ax.format("to has existing incoming antecedent relation: %s", to.provideToAntecedentRelation().get());
-            }
-        }
-        Job from = domainIdentity();
-        if (type == JobRelationType.SEQUENCE) {
-            Optional<? extends JobRelation> next = null;
-            while ((next = from.getFromRelations().stream().filter(r -> r.getType() == JobRelationType.SEQUENCE).findFirst()).isPresent()) {
-                from = next.get().getTo();
-            }
-        }
-        if (type != JobRelationType.PARENT_CHILD && from.getFromRelations().stream().anyMatch(r -> r.getType() == type)) {
-            invalidMessage = Ax.format("from has existing outgoing relation: %s", from.getFromRelations().stream().filter(r -> r.getType() == type).findFirst().get());
-        }
-        if (invalidMessage != null) {
-            throw new IllegalStateException(invalidMessage);
-        }
-        JobRelation relation = PersistentImpl.create(JobRelation.class);
-        relation.setType(type);
-        relation.setFrom(from);
-        relation.setTo(to);
-    }
+	public ProcessState ensureProcessState() {
+		// looks like at least JDK17 instruction reordering breaks this (second
+		// getter can return null), unless
+		// synchronized
+		synchronized (domainIdentity()) {
+			if (getProcessState() == null) {
+				setProcessState(new ProcessState());
+			}
+		}
+		return getProcessState();
+	}
 
-    // Delete while ensuring job sequencing is still correct after deletion
-    public void deleteEnsuringSequence() {
-        Optional<? extends JobRelation> previousRelation = getToRelations().stream().filter(JobRelation::provideIsSequential).findFirst();
-        Optional<? extends JobRelation> nextRelation = getFromRelations().stream().filter(JobRelation::provideIsSequential).findFirst();
-        if (previousRelation.isPresent() && nextRelation.isPresent()) {
-            // If this job is in the middle of the chain,
-            // re-link it so ensure the sequence stays connected
-            Job previous = previousRelation.get().getFrom();
-            Job next = nextRelation.get().getTo();
-            // delete before creating new relation (required for validation)
-            JobRelationType type = previousRelation.get().getType();
-            delete();
-            // Create new relation
-            previous.createRelation(next, type);
-        } else {
-            delete();
-        }
-    }
+	public double getCompletion() {
+		return this.completion;
+	}
 
-    public ProcessState ensureProcessState() {
-        // looks like at least JDK17 instruction reordering breaks this (second
-        // getter can return null), unless
-        // synchronized
-        synchronized (domainIdentity()) {
-            if (getProcessState() == null) {
-                setProcessState(new ProcessState());
-            }
-        }
-        return getProcessState();
-    }
+	@Transient
+	public abstract ClientInstance getCreator();
 
-    public double getCompletion() {
-        return this.completion;
-    }
+	public Date getEndTime() {
+		return this.endTime;
+	}
 
-    @Transient
-    public abstract ClientInstance getCreator();
+	@Transient
+	public abstract Set<? extends JobRelation> getFromRelations();
 
-    public Date getEndTime() {
-        return this.endTime;
-    }
+	@Transient
+	@DomainProperty(serialize = true)
+	public Object getLargeResult() {
+		largeResult = TransformManager.resolveMaybeDeserialize(largeResult,
+				this.largeResultSerialized, null);
+		return this.largeResult;
+	}
 
-    @Transient
-    public abstract Set<? extends JobRelation> getFromRelations();
+	@Lob
+	@Transient
+	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
+	public String getLargeResultSerialized() {
+		return this.largeResultSerialized;
+	}
 
-    @Transient
-    @DomainProperty(serialize = true)
-    public Object getLargeResult() {
-        largeResult = TransformManager.resolveMaybeDeserialize(largeResult, this.largeResultSerialized, null);
-        return this.largeResult;
-    }
+	@Lob
+	@Transient
+	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
+	public String getLog() {
+		return this.log;
+	}
 
-    @Lob
-    @Transient
-    @DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
-    public String getLargeResultSerialized() {
-        return this.largeResultSerialized;
-    }
+	@Transient
+	public abstract ClientInstance getPerformer();
 
-    @Lob
-    @Transient
-    @DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
-    public String getLog() {
-        return this.log;
-    }
+	public int getPerformerVersionNumber() {
+		return this.performerVersionNumber;
+	}
 
-    @Transient
-    public abstract ClientInstance getPerformer();
+	@Transient
+	@DomainProperty(serialize = true)
+	public ProcessState getProcessState() {
+		processState = TransformManager.resolveMaybeDeserialize(processState,
+				this.processStateSerialized, null);
+		return this.processState;
+	}
 
-    public int getPerformerVersionNumber() {
-        return this.performerVersionNumber;
-    }
+	@Lob
+	@Transient
+	@DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
+	public String getProcessStateSerialized() {
+		return this.processStateSerialized;
+	}
 
-    @Transient
-    @DomainProperty(serialize = true)
-    public ProcessState getProcessState() {
-        processState = TransformManager.resolveMaybeDeserialize(processState, this.processStateSerialized, null);
-        return this.processState;
-    }
+	@Transient
+	@DomainProperty(serialize = true)
+	public Object getResult() {
+		result = TransformManager.resolveMaybeDeserialize(result,
+				this.resultSerialized, null);
+		return this.result;
+	}
 
-    @Lob
-    @Transient
-    @DomainStoreProperty(loadType = DomainStorePropertyLoadType.LAZY)
-    public String getProcessStateSerialized() {
-        return this.processStateSerialized;
-    }
+	public String getResultMessage() {
+		return this.resultMessage;
+	}
 
-    @Transient
-    @DomainProperty(serialize = true)
-    public Object getResult() {
-        result = TransformManager.resolveMaybeDeserialize(result, this.resultSerialized, null);
-        return this.result;
-    }
+	@Transient
+	@Lob
+	public String getResultSerialized() {
+		return this.resultSerialized;
+	}
 
-    public String getResultMessage() {
-        return this.resultMessage;
-    }
+	public JobResultType getResultType() {
+		return this.resultType;
+	}
 
-    @Transient
-    @Lob
-    public String getResultSerialized() {
-        return this.resultSerialized;
-    }
+	public int getRetryCount() {
+		return this.retryCount;
+	}
 
-    public JobResultType getResultType() {
-        return this.resultType;
-    }
+	public Date getRunAt() {
+		return this.runAt;
+	}
 
-    public int getRetryCount() {
-        return this.retryCount;
-    }
+	public Date getStartTime() {
+		return this.startTime;
+	}
 
-    public Date getRunAt() {
-        return this.runAt;
-    }
-
-    public Date getStartTime() {
-        return this.startTime;
-    }
-
-    /*
+	/*
 	 * Normally use resolveState - some completed states inherit from the parent
 	 */
-    public JobState getState() {
-        return this.state;
-    }
+	public JobState getState() {
+		return this.state;
+	}
 
-    @Transient
-    public abstract Set<? extends JobStateMessage> getStateMessages();
+	@Transient
+	public abstract Set<? extends JobStateMessage> getStateMessages();
 
-    public String getStatusMessage() {
-        return this.statusMessage;
-    }
+	public String getStatusMessage() {
+		return this.statusMessage;
+	}
 
-    @Transient
-    @DomainProperty(serialize = true)
-    public Task getTask() {
-        task = TransformManager.resolveMaybeDeserialize(task, this.taskSerialized, null, Reflections.forName(taskClassName));
-        return this.task;
-    }
+	@Transient
+	@DomainProperty(serialize = true)
+	public Task getTask() {
+		task = TransformManager.resolveMaybeDeserialize(task,
+				this.taskSerialized, null, Reflections.forName(taskClassName));
+		return this.task;
+	}
 
-    public String getTaskClassName() {
-        return this.taskClassName;
-    }
+	public String getTaskClassName() {
+		return this.taskClassName;
+	}
 
-    public boolean provideEquivalentTask(Job other) {
-        return CommonUtils.equals(getTaskClassName(), other.getTaskClassName(), getTaskSerialized(), other.getTaskSerialized());
-    }
+	public boolean provideEquivalentTask(Job other) {
+		return CommonUtils.equals(getTaskClassName(), other.getTaskClassName(),
+				getTaskSerialized(), other.getTaskSerialized());
+	}
 
-    @Lob
-    @Transient
-    public String getTaskSerialized() {
-        return this.taskSerialized;
-    }
+	@Lob
+	@Transient
+	public String getTaskSerialized() {
+		return this.taskSerialized;
+	}
 
-    public String getTaskSignature() {
-        return this.taskSignature;
-    }
+	public String getTaskSignature() {
+		return this.taskSignature;
+	}
 
-    @Transient
-    public abstract Set<? extends JobRelation> getToRelations();
+	@Transient
+	public abstract Set<? extends JobRelation> getToRelations();
 
-    public boolean hasSelfOrAncestorTask(Class<? extends Task> taskClass) {
-        if (provideIsTaskClass(taskClass)) {
-            return true;
-        }
-        return provideParent().map(job -> job.hasSelfOrAncestorTask(taskClass)).orElse(false);
-    }
+	public boolean hasSelfOrAncestorTask(Class<? extends Task> taskClass) {
+		if (provideIsTaskClass(taskClass)) {
+			return true;
+		}
+		return provideParent().map(job -> job.hasSelfOrAncestorTask(taskClass))
+				.orElse(false);
+	}
 
-    // not used, replaced by jobstatemessage - FIXME mvcc.jobs.2 - remove
-    public boolean isStacktraceRequested() {
-        return this.stacktraceRequested;
-    }
+	// not used, replaced by jobstatemessage - FIXME mvcc.jobs.2 - remove
+	public boolean isStacktraceRequested() {
+		return this.stacktraceRequested;
+	}
 
-    public void persistProcessState() {
-        ProcessState state = ensureProcessState();
-        setProcessStateSerialized(TransformManager.serialize(state));
-    }
+	public void persistProcessState() {
+		ProcessState state = ensureProcessState();
+		setProcessStateSerialized(TransformManager.serialize(state));
+	}
 
-    public boolean provideCanDeserializeTask() {
-        try {
-            Objects.requireNonNull(getTask());
-            return true;
-        } catch (Exception e) {
-            // Invalid class/serialized form
-            return false;
-        }
-    }
+	public boolean provideCanDeserializeTask() {
+		try {
+			Objects.requireNonNull(getTask());
+			return true;
+		} catch (Exception e) {
+			// Invalid class/serialized form
+			return false;
+		}
+	}
 
-    public Stream<Job> provideChildren() {
-        if (getFromRelations().isEmpty()) {
-            return Stream.empty();
-        }
-        /*
+	public Stream<Job> provideChildren() {
+		if (getFromRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		/*
 		 * requires the final filter for indexing during a deletion cycle
 		 */
-        return getFromRelations().stream().filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD).map(JobRelation::getTo).filter(Objects::nonNull);
-    }
+		return getFromRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD)
+				.map(JobRelation::getTo).filter(Objects::nonNull);
+	}
 
-    public Date provideCreationDateOrNow() {
-        return getCreationDate() == null ? new Date() : getCreationDate();
-    }
+	public Date provideCreationDateOrNow() {
+		return getCreationDate() == null ? new Date() : getCreationDate();
+	}
 
-    public Stream<Job> provideDescendants() {
-        if (getFromRelations().isEmpty()) {
-            return Stream.empty();
-        }
-        return Stream.concat(provideChildren(), provideChildren().flatMap(Job::provideDescendants));
-    }
+	public Stream<Job> provideDescendants() {
+		if (getFromRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		return Stream.concat(provideChildren(),
+				provideChildren().flatMap(Job::provideDescendants));
+	}
 
-    public Stream<Job> provideDescendantsAndSubsequents() {
-        if (getFromRelations().isEmpty()) {
-            return Stream.empty();
-        }
-        Stream s1 = Stream.concat(provideChildren(), provideChildren().flatMap(Job::provideDescendantsAndSubsequents));
-        Stream s2 = Stream.concat(provideSubsequents(), provideSubsequents().flatMap(Job::provideDescendantsAndSubsequents));
-        return Stream.concat(s1, s2);
-    }
+	public Stream<Job> provideDescendantsAndSubsequents() {
+		if (getFromRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		Stream s1 = Stream.concat(provideChildren(), provideChildren()
+				.flatMap(Job::provideDescendantsAndSubsequents));
+		Stream s2 = Stream.concat(provideSubsequents(), provideSubsequents()
+				.flatMap(Job::provideDescendantsAndSubsequents));
+		return Stream.concat(s1, s2);
+	}
 
-    public Optional<Exception> provideException() {
-        return getResultType() == JobResultType.EXCEPTION ? Optional.of(new Exception(getResultMessage())) : Optional.empty();
-    }
+	public Optional<Exception> provideException() {
+		return getResultType() == JobResultType.EXCEPTION
+				? Optional.of(new Exception(getResultMessage()))
+				: Optional.empty();
+	}
 
-    public Job provideFirstInSequence() {
-        if (firstInSequence == null) {
-            Optional<Job> previous = providePrevious();
-            if (previous.isPresent()) {
-                firstInSequence = providePrevious().get().provideFirstInSequence();
-            } else {
-                firstInSequence = domainIdentity();
-            }
-        }
-        return firstInSequence;
-    }
+	public Job provideFirstInSequence() {
+		if (firstInSequence == null) {
+			Optional<Job> previous = providePrevious();
+			if (previous.isPresent()) {
+				firstInSequence = providePrevious().get()
+						.provideFirstInSequence();
+			} else {
+				firstInSequence = domainIdentity();
+			}
+		}
+		return firstInSequence;
+	}
 
-    public boolean provideHasCompletePredecesorOrNone() {
-        Optional<? extends JobRelation> predecessor = getToRelations().stream().filter(rel -> rel.getType() == JobRelationType.SEQUENCE).findFirst();
-        return !predecessor.isPresent() || predecessor.get().getFrom().provideIsComplete();
-    }
+	public boolean provideHasCompletePredecesorOrNone() {
+		Optional<? extends JobRelation> predecessor = getToRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
+				.findFirst();
+		return !predecessor.isPresent()
+				|| predecessor.get().getFrom().provideIsComplete();
+	}
 
-    public boolean provideHasIncompleteSubsequent() {
-        return getFromRelations().stream().filter(rel -> rel.getTo().provideIsNotComplete()).anyMatch(rel -> rel.getType() == JobRelationType.SEQUENCE);
-    }
+	public boolean provideHasIncompleteSubsequent() {
+		return getFromRelations().stream()
+				.filter(rel -> rel.getTo().provideIsNotComplete())
+				.anyMatch(rel -> rel.getType() == JobRelationType.SEQUENCE);
+	}
 
-    public boolean provideIsActive() {
-        return resolveState() == JobState.PROCESSING;
-    }
+	public boolean provideIsActive() {
+		return resolveState() == JobState.PROCESSING;
+	}
 
-    public boolean provideIsAllocatable() {
-        // FIXME - mvcc.jobs.1a - there still seem to be issues with state
-        // propagation in JobDescriptor
-        if (provideIsComplete()) {
-            return false;
-        }
-        if (getRunAt() != null && getRunAt().after(new Date())) {
-            return false;
-        }
-        if (getToRelations().stream().anyMatch(rel -> rel.getType() == JobRelationType.SEQUENCE && !rel.getFrom().provideIsComplete())) {
-            return false;
-        }
-        return true;
-    }
+	public boolean provideIsAllocatable() {
+		// FIXME - mvcc.jobs.1a - there still seem to be issues with state
+		// propagation in JobDescriptor
+		if (provideIsComplete()) {
+			return false;
+		}
+		if (getRunAt() != null && getRunAt().after(new Date())) {
+			return false;
+		}
+		if (getToRelations().stream()
+				.anyMatch(rel -> rel.getType() == JobRelationType.SEQUENCE
+						&& !rel.getFrom().provideIsComplete())) {
+			return false;
+		}
+		return true;
+	}
 
-    public boolean provideIsComplete() {
-        JobState resolvedState = resolveState();
-        return resolvedState == null ? false : resolvedState.isComplete();
-    }
+	public boolean provideIsComplete() {
+		JobState resolvedState = resolveState();
+		return resolvedState == null ? false : resolvedState.isComplete();
+	}
 
-    public boolean provideIsCompletedNormally() {
-        JobState resolvedState = resolveState();
-        return resolvedState == null ? false : resolvedState.isCompletedNormally();
-    }
+	public boolean provideIsCompletedNormally() {
+		JobState resolvedState = resolveState();
+		return resolvedState == null ? false
+				: resolvedState.isCompletedNormally();
+	}
 
-    public boolean provideIsCompleteWithEndTime() {
-        return provideIsComplete() && getEndTime() != null;
-    }
+	public boolean provideIsCompleteWithEndTime() {
+		return provideIsComplete() && getEndTime() != null;
+	}
 
-    public boolean provideIsFirstInSequence() {
-        return provideFirstInSequence() == domainIdentity();
-    }
+	public boolean provideIsFirstInSequence() {
+		return provideFirstInSequence() == domainIdentity();
+	}
 
-    public boolean provideIsFuture() {
-        return resolveState() == JobState.FUTURE;
-    }
+	public boolean provideIsFuture() {
+		return resolveState() == JobState.FUTURE;
+	}
 
-    public boolean provideIsInCompletedQueue() {
-        Optional<Job> parent = provideFirstInSequence().provideParent();
-        if (parent.isPresent() && parent.get().provideIsNotComplete()) {
-            return false;
-        }
-        return provideIsComplete();
-    }
+	public boolean provideIsInCompletedQueue() {
+		Optional<Job> parent = provideFirstInSequence().provideParent();
+		if (parent.isPresent() && parent.get().provideIsNotComplete()) {
+			return false;
+		}
+		return provideIsComplete();
+	}
 
-    public boolean provideIsLastInSequence() {
-        return getFromRelations().stream().noneMatch(rel -> rel.getType() == JobRelationType.SEQUENCE);
-    }
+	public boolean provideIsLastInSequence() {
+		return getFromRelations().stream()
+				.noneMatch(rel -> rel.getType() == JobRelationType.SEQUENCE);
+	}
 
-    public boolean provideIsNotComplete() {
-        return !resolveState().isComplete();
-    }
+	public boolean provideIsNotComplete() {
+		return !resolveState().isComplete();
+	}
 
-    public boolean provideIsNotTopLevel() {
-        return !provideIsTopLevel();
-    }
+	public boolean provideIsNotTopLevel() {
+		return !provideIsTopLevel();
+	}
 
-    public boolean provideIsPending() {
-        return resolveState() == JobState.PENDING;
-    }
+	public boolean provideIsPending() {
+		return resolveState() == JobState.PENDING;
+	}
 
-    public boolean provideIsSequenceComplete() {
-        return provideIsComplete() && (!provideHasIncompleteSubsequent() || resolveState() == JobState.ABORTED);
-    }
+	public boolean provideIsSequenceComplete() {
+		return provideIsComplete() && (!provideHasIncompleteSubsequent()
+				|| resolveState() == JobState.ABORTED);
+	}
 
-    public boolean provideIsSibling(Job job) {
-        return provideRelatedSequential().stream().anyMatch(j -> j == job);
-    }
+	public boolean provideIsSibling(Job job) {
+		return provideRelatedSequential().stream().anyMatch(j -> j == job);
+	}
 
-    public boolean provideIsTaskClass(Class<? extends Task> taskClass) {
-        return Objects.equals(getTaskClassName(), taskClass.getName());
-    }
+	public boolean provideIsTaskClass(Class<? extends Task> taskClass) {
+		return Objects.equals(getTaskClassName(), taskClass.getName());
+	}
 
-    public boolean provideIsTopLevel() {
-        return !provideFirstInSequence().provideParent().isPresent();
-    }
+	public boolean provideIsTopLevel() {
+		return !provideFirstInSequence().provideParent().isPresent();
+	}
 
-    public String provideName() {
-        try {
-            return getTask().getName();
-        } catch (Exception e) {
-            Ax.simpleExceptionOut(e);
-            return getTaskClassName();
-        }
-    }
+	public String provideName() {
+		try {
+			return getTask().getName();
+		} catch (Exception e) {
+			Ax.simpleExceptionOut(e);
+			return getTaskClassName();
+		}
+	}
 
-    public Optional<Job> provideNextInSequence() {
-        if (getFromRelations().isEmpty()) {
-            return Optional.empty();
-        }
-        return getFromRelations().stream().filter(r -> r.getType() == JobRelationType.SEQUENCE).map(JobRelation::getTo).findFirst();
-    }
+	public Optional<Job> provideNextInSequence() {
+		if (getFromRelations().isEmpty()) {
+			return Optional.empty();
+		}
+		return getFromRelations().stream()
+				.filter(r -> r.getType() == JobRelationType.SEQUENCE)
+				.map(JobRelation::getTo).findFirst();
+	}
 
-    /*
+	/*
 	 * Often will want to call provideFirstInSequence().provideParent()
 	 */
-    public Optional<Job> provideParent() {
-        return provideToAntecedentRelation().filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD).map(JobRelation::getFrom);
-    }
+	public Optional<Job> provideParent() {
+		return provideToAntecedentRelation()
+				.filter(rel -> rel.getType() == JobRelationType.PARENT_CHILD)
+				.map(JobRelation::getFrom);
+	}
 
-    public Job provideParentOrSelf() {
-        return provideParent().orElse(domainIdentity());
-    }
+	public Job provideParentOrSelf() {
+		return provideParent().orElse(domainIdentity());
+	}
 
-    public Optional<Job> providePrevious() {
-        return provideToAntecedentRelation().filter(rel -> rel.getType() == JobRelationType.SEQUENCE).map(JobRelation::getFrom);
-    }
+	public Optional<Job> providePrevious() {
+		return provideToAntecedentRelation()
+				.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
+				.map(JobRelation::getFrom);
+	}
 
-    public Job providePreviousOrSelfInSequence() {
-        return providePrevious().orElse(domainIdentity());
-    }
+	public Job providePreviousOrSelfInSequence() {
+		return providePrevious().orElse(domainIdentity());
+	}
 
-    public List<Job> provideRelatedSequential() {
-        // backup to the start of the sequence, then traverse
-        Job cursor = provideFirstInSequence();
-        List<Job> result = new ArrayList<>();
-        while (true) {
-            result.add(cursor);
-            Optional<Job> next = cursor.provideNextInSequence();
-            if (next.isPresent()) {
-                cursor = next.get();
-            } else {
-                break;
-            }
-        }
-        return result;
-    }
+	public List<Job> provideRelatedSequential() {
+		// backup to the start of the sequence, then traverse
+		Job cursor = provideFirstInSequence();
+		List<Job> result = new ArrayList<>();
+		while (true) {
+			result.add(cursor);
+			Optional<Job> next = cursor.provideNextInSequence();
+			if (next.isPresent()) {
+				cursor = next.get();
+			} else {
+				break;
+			}
+		}
+		return result;
+	}
 
-    public Job provideRelatedSubqueueOwner() {
-        Job first = provideFirstInSequence();
-        if (first != domainIdentity()) {
-            return first;
-        }
-        return provideParentOrSelf();
-    }
+	public Job provideRelatedSubqueueOwner() {
+		Job first = provideFirstInSequence();
+		if (first != domainIdentity()) {
+			return first;
+		}
+		return provideParentOrSelf();
+	}
 
-    /*
+	/*
 	 * self, previous in stream, and, if present, repeat from parent
 	 */
-    @MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-    public Stream<Job> provideSelfAndAntecedents() {
-        Job cursor = domainIdentity();
-        List<Job> selfAndPreviousSiblings = new ArrayList<>();
-        while (true) {
-            selfAndPreviousSiblings.add(cursor);
-            Optional<Job> previous = cursor.providePrevious();
-            if (previous.isPresent()) {
-                cursor = previous.get();
-            } else {
-                break;
-            }
-        }
-        Optional<Job> parent = cursor.provideParent();
-        return Stream.concat(selfAndPreviousSiblings.stream(), parent.map(Job::provideSelfAndAntecedents).orElse(Stream.empty()));
-    }
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+	public Stream<Job> provideSelfAndAntecedents() {
+		Job cursor = domainIdentity();
+		List<Job> selfAndPreviousSiblings = new ArrayList<>();
+		while (true) {
+			selfAndPreviousSiblings.add(cursor);
+			Optional<Job> previous = cursor.providePrevious();
+			if (previous.isPresent()) {
+				cursor = previous.get();
+			} else {
+				break;
+			}
+		}
+		Optional<Job> parent = cursor.provideParent();
+		return Stream.concat(selfAndPreviousSiblings.stream(), parent
+				.map(Job::provideSelfAndAntecedents).orElse(Stream.empty()));
+	}
 
-    public String provideShortName() {
-        return provideName().replaceFirst(".+\\.", "");
-    }
+	public String provideShortName() {
+		return provideName().replaceFirst(".+\\.", "");
+	}
 
-    public Stream<Job> provideSubsequents() {
-        if (getFromRelations().isEmpty()) {
-            return Stream.empty();
-        }
-        /*
+	public Stream<Job> provideSubsequents() {
+		if (getFromRelations().isEmpty()) {
+			return Stream.empty();
+		}
+		/*
 		 * requires the final filter for indexing during a deletion cycle
 		 */
-        return getFromRelations().stream().filter(rel -> rel.getType() == JobRelationType.SEQUENCE).map(JobRelation::getTo).filter(Objects::nonNull);
-    }
-
-    public Class<? extends Task> provideTaskClass() {
-        if (provideCanDeserializeTask()) {
-            return getTask().getClass();
-        } else {
-            return null;
-        }
-    }
-
-    public Job provideTopLevelAncestor() {
-        return provideIsTopLevel() ? domainIdentity() : provideParent().get().provideTopLevelAncestor();
-    }
-
-    public Stream<Job> provideUncompletedChildren() {
-        return provideChildren().filter(Job::provideIsNotComplete);
-    }
-
-    public Set<Job> provideUncompletedSequential() {
-        return provideRelatedSequential().stream().filter(Job::provideIsNotComplete).collect(Collectors.toSet());
-    }
-
-    public Date resolveCompletionDate() {
-        return resolveCompletionDate0(0);
-    }
-
-    public Date resolveCompletionDateOrLastModificationDate() {
-        Date completionDate = resolveCompletionDate();
-        if (completionDate != null) {
-            return completionDate;
-        }
-        if (getLastModificationDate() != null) {
-            return getLastModificationDate();
-        }
-        return getCreationDate();
-    }
-
-    public JobState resolveState() {
-        return resolveState0(0);
-    }
-
-    public Job root() {
-        return provideParent().map(Job::root).orElse(domainIdentity());
-    }
-
-    public void setCompletion(double completion) {
-        double old_completion = this.completion;
-        this.completion = completion;
-        propertyChangeSupport().firePropertyChange("completion", old_completion, completion);
-    }
-
-    public abstract void setCreator(ClientInstance performer);
-
-    public void setEndTime(Date endTime) {
-        Date old_endTime = this.endTime;
-        this.endTime = endTime;
-        propertyChangeSupport().firePropertyChange("endTime", old_endTime, endTime);
-    }
-
-    @Override
-    public void setId(long id) {
-        this.id = id;
-    }
-
-    public void setLargeResult(Object largeResult) {
-        Object old_largeResult = this.largeResult;
-        this.largeResult = largeResult;
-        propertyChangeSupport().firePropertyChange("largeResult", old_largeResult, largeResult);
-    }
-
-    public void setLargeResultSerialized(String largeResultSerialized) {
-        String old_largeResultSerialized = this.largeResultSerialized;
-        this.largeResultSerialized = largeResultSerialized;
-        propertyChangeSupport().firePropertyChange("largeResultSerialized", old_largeResultSerialized, largeResultSerialized);
-    }
-
-    public void setLog(String log) {
-        String old_log = this.log;
-        this.log = log;
-        propertyChangeSupport().firePropertyChange("log", old_log, log);
-    }
-
-    public abstract void setPerformer(ClientInstance performer);
-
-    public void setPerformerVersionNumber(int performerVersionNumber) {
-        int old_performerVersionNumber = this.performerVersionNumber;
-        this.performerVersionNumber = performerVersionNumber;
-        propertyChangeSupport().firePropertyChange("performerVersionNumber", old_performerVersionNumber, performerVersionNumber);
-    }
-
-    public void setProcessState(ProcessState processState) {
-        ProcessState old_processState = this.processState;
-        this.processState = processState;
-        propertyChangeSupport().firePropertyChange("processState", old_processState, processState);
-    }
-
-    public void setProcessStateSerialized(String processStateSerialized) {
-        String old_processStateSerialized = this.processStateSerialized;
-        this.processStateSerialized = processStateSerialized;
-        propertyChangeSupport().firePropertyChange("processStateSerialized", old_processStateSerialized, processStateSerialized);
-    }
-
-    public void setResult(Object result) {
-        Object old_result = this.result;
-        this.result = result;
-        propertyChangeSupport().firePropertyChange("result", old_result, result);
-    }
-
-    public void setResultMessage(String resultMessage) {
-        resultMessage = CommonUtils.trimToWsChars(resultMessage, 200, true);
-        String old_resultMessage = this.resultMessage;
-        this.resultMessage = resultMessage;
-        propertyChangeSupport().firePropertyChange("resultMessage", old_resultMessage, resultMessage);
-    }
-
-    public void setResultSerialized(String resultSerialized) {
-        String old_resultSerialized = this.resultSerialized;
-        this.resultSerialized = resultSerialized;
-        propertyChangeSupport().firePropertyChange("resultSerialized", old_resultSerialized, resultSerialized);
-    }
-
-    public void setResultType(JobResultType resultType) {
-        JobResultType old_resultType = this.resultType;
-        this.resultType = resultType;
-        propertyChangeSupport().firePropertyChange("resultType", old_resultType, resultType);
-    }
-
-    public void setRetryCount(int retryCount) {
-        int old_retryCount = this.retryCount;
-        this.retryCount = retryCount;
-        propertyChangeSupport().firePropertyChange("retryCount", old_retryCount, retryCount);
-    }
-
-    public void setRunAt(Date runAt) {
-        Preconditions.checkState(runAt == null || !provideFirstInSequence().provideParent().isPresent());
-        Date old_runAt = this.runAt;
-        this.runAt = runAt;
-        propertyChangeSupport().firePropertyChange("runAt", old_runAt, runAt);
-    }
-
-    public void setStacktraceRequested(boolean stacktraceRequested) {
-        boolean old_stacktraceRequested = this.stacktraceRequested;
-        this.stacktraceRequested = stacktraceRequested;
-        propertyChangeSupport().firePropertyChange("stacktraceRequested", old_stacktraceRequested, stacktraceRequested);
-    }
-
-    public void setStartTime(Date startTime) {
-        Date old_startTime = this.startTime;
-        this.startTime = startTime;
-        propertyChangeSupport().firePropertyChange("startTime", old_startTime, startTime);
-    }
-
-    public void setState(JobState state) {
-        JobState old_state = this.state;
-        this.state = state;
-        propertyChangeSupport().firePropertyChange("state", old_state, state);
-    }
-
-    public void setStatusMessage(String statusMessage) {
-        statusMessage = CommonUtils.trimToWsChars(statusMessage, 200, true);
-        String old_statusMessage = this.statusMessage;
-        this.statusMessage = statusMessage;
-        propertyChangeSupport().firePropertyChange("statusMessage", old_statusMessage, statusMessage);
-    }
-
-    public void setTask(Task task) {
-        Task old_task = this.task;
-        this.task = task;
-        propertyChangeSupport().firePropertyChange("task", old_task, task);
-    }
-
-    public void setTaskClassName(String taskClassName) {
-        String old_taskClassName = this.taskClassName;
-        this.taskClassName = taskClassName;
-        propertyChangeSupport().firePropertyChange("taskClassName", old_taskClassName, taskClassName);
-        cachedDisplayName = null;
-    }
-
-    public void setTaskSerialized(String taskSerialized) {
-        String old_taskSerialized = this.taskSerialized;
-        this.taskSerialized = taskSerialized;
-        propertyChangeSupport().firePropertyChange("taskSerialized", old_taskSerialized, taskSerialized);
-    }
-
-    public void setTaskSignature(String taskSignature) {
-        String old_taskSignature = this.taskSignature;
-        this.taskSignature = taskSignature;
-        propertyChangeSupport().firePropertyChange("taskSignature", old_taskSignature, taskSignature);
-    }
-
-    public void throwIfException() {
-        if (getResultType() == JobResultType.EXCEPTION) {
-            throw new JobException(getLog());
-        }
-    }
-
-    public String toDisplayName() {
-        if (cachedDisplayName == null) {
-            cachedDisplayName = toDisplayName0();
-        }
-        return cachedDisplayName;
-    }
-
-    @Override
-    public String toString() {
-        return toDisplayName() + " - " + resolveState();
-    }
-
-    public String toStringFull() {
-        return Ax.format("%s - %s - %s from: %s to: %s", toLocator(), provideName(), resolveState(), toString(getFromRelations()), toString(getToRelations()));
-    }
-
-    private Optional<? extends JobRelation> provideToAntecedentRelation() {
-        if (getToRelations().isEmpty()) {
-            return Optional.empty();
-        }
-        return getToRelations().stream().filter(rel -> rel.getType() != JobRelationType.RESUBMIT).findFirst();
-    }
-
-    private Optional<? extends JobRelation> provideToResubmitRelation() {
-        if (getToRelations().isEmpty()) {
-            return Optional.empty();
-        }
-        return getToRelations().stream().filter(rel -> rel.getType() == JobRelationType.RESUBMIT).findFirst();
-    }
-
-    private Date resolveCompletionDate0(int depth) {
-        if (depth > 10) {
-            throw new RuntimeException("Invalid job depth - maybe a loop?");
-        }
-        if (this.state == null) {
-            return null;
-        }
-        if (this.state.isComplete()) {
-            return this.endTime;
-        }
-        Optional<Job> parent = provideFirstInSequence().provideParent();
-        if (parent.isPresent()) {
-            return parent.get().resolveCompletionDate0(depth + 1);
-        }
-        return null;
-    }
-
-    private JobState resolveState0(int depth) {
-        if (depth > 10) {
-            throw new RuntimeException("Invalid job depth - maybe a loop?");
-        }
-        if (this.state == null) {
-            return null;
-        }
-        if (this.state.isComplete()) {
-            return this.state;
-        }
-        Optional<Job> parent = provideFirstInSequence().provideParent();
-        if (parent.isPresent()) {
-            JobState parentState = parent.get().resolveState0(depth + 1);
-            if (parentState != null && parentState.isComplete()) {
-                return parentState;
-            }
-        }
-        return this.state;
-    }
-
-    private String toDisplayName0() {
-        if (getTaskClassName() == null) {
-            return Ax.format("%s - <null task>", toLocator().toRecoverableNumericString());
-        }
-        if (provideCanDeserializeTask()) {
-            return Ax.format("%s::%s", task.getName(), toLocator().toRecoverableNumericString());
-        } else {
-            return Ax.format("%s::%s", getTaskClassName().replaceFirst(".+\\.(.+)", "$1"), toLocator().toRecoverableNumericString());
-        }
-    }
-
-    private String toString(Set<? extends JobRelation> relations) {
-        String suffix = relations.size() > 4 ? Ax.format(" (%s)", relations.size()) : "";
-        return relations.stream().limit(4).map(rel -> rel.toStringOther(domainIdentity())).collect(Collectors.joining(", ")) + suffix;
-    }
-
-    public static abstract class ClientInstanceLoadOracle extends DomainStorePropertyLoadOracle<Job> {
-    }
-
-    public static class JobException extends RuntimeException {
-
-        public JobException(String message) {
-            super(message);
-        }
-    }
-
-    @Bean
-    public static class ProcessState extends Model {
-
-        private List<ResourceRecord> resources = new ArrayList<>();
-
-        private String threadName;
-
-        private String allocatorThreadName;
-
-        private String stackTrace;
-
-        private String trimmedStackTrace;
-
-        public ResourceRecord addResourceRecord(JobResource resource) {
-            ResourceRecord record = new ResourceRecord();
-            record.setClassName(resource.getClass().getName());
-            record.setPath(resource.getPath());
-            resources.add(record);
-            return record;
-        }
-
-        public String getAllocatorThreadName() {
-            return this.allocatorThreadName;
-        }
-
-        public List<ResourceRecord> getResources() {
-            return this.resources;
-        }
-
-        public String getStackTrace() {
-            return this.stackTrace;
-        }
-
-        public String getThreadName() {
-            return this.threadName;
-        }
-
-        public String getTrimmedStackTrace() {
-            return this.trimmedStackTrace;
-        }
-
-        public ResourceRecord provideRecord(ResourceRecord record) {
-            return HasEquivalenceHelper.getEquivalent(getResources(), record);
-        }
-
-        public void setAllocatorThreadName(String allocatorThreadName) {
-            this.allocatorThreadName = allocatorThreadName;
-        }
-
-        public void setResources(List<ResourceRecord> resources) {
-            this.resources = resources;
-        }
-
-        public void setStackTrace(String stackTrace) {
-            this.stackTrace = stackTrace;
-        }
-
-        public void setThreadName(String threadName) {
-            this.threadName = threadName;
-        }
-
-        public void setTrimmedStackTrace(String trimmedStackTrace) {
-            this.trimmedStackTrace = trimmedStackTrace;
-        }
-    }
-
-    @Bean
-    public static class ResourceRecord extends Model implements HasEquivalenceString<ResourceRecord> {
-
-        private boolean acquiredFromAntecedent;
-
-        private boolean acquired;
-
-        private String className;
-
-        private String path;
-
-        @Override
-        public String equivalenceString() {
-            return Ax.format("%s::%s", getClassName(), getPath());
-        }
-
-        public String getClassName() {
-            return this.className;
-        }
-
-        public String getPath() {
-            return this.path;
-        }
-
-        public boolean isAcquired() {
-            return this.acquired;
-        }
-
-        public boolean isAcquiredFromAntecedent() {
-            return this.acquiredFromAntecedent;
-        }
-
-        public void setAcquired(boolean acquired) {
-            this.acquired = acquired;
-        }
-
-        public void setAcquiredFromAntecedent(boolean acquiredFromAntecedent) {
-            this.acquiredFromAntecedent = acquiredFromAntecedent;
-        }
-
-        public void setClassName(String className) {
-            this.className = className;
-        }
-
-        public void setPath(String path) {
-            this.path = path;
-        }
-
-        @Override
-        public String toString() {
-            return Ax.format("%s::%s - Acquired: %s - Antecedent: %s", getClassName().replaceFirst("(.+)(\\..+)", "$2"), getPath(), isAcquired(), isAcquiredFromAntecedent());
-        }
-    }
-
-    public static class RunAtComparator implements Comparator<Job> {
-
-        @Override
-        public int compare(Job o1, Job o2) {
-            Date runAt1 = o1.getRunAt();
-            Date runAt2 = o2.getRunAt();
-            if (runAt1 == null && runAt2 != null) {
-                return -1;
-            }
-            if (runAt1 != null && runAt2 == null) {
-                return 1;
-            }
-            if (runAt1 != null && runAt2 != null) {
-                int i = runAt1.compareTo(runAt2);
-                if (i != 0) {
-                    return i;
-                }
-            }
-            return EntityComparator.INSTANCE.compare(o1, o2);
-        }
-    }
-
-    @RegistryLocation(registryPoint = DebugLogWriter.class, implementationType = ImplementationType.INSTANCE)
-    @Registration(DebugLogWriter.class)
-    public static class DebugLogWriter {
-
-        public void write(Job job) {
-            throw new UnsupportedOperationException();
-        }
-    }
-
-    public void writeLargeObject() {
-        Registry.impl(DebugLogWriter.class).write(domainIdentity());
-    }
-
-    public String provideConsistencyPriority() {
-        return Optional.ofNullable(getConsistencyPriority()).orElse(Job.CONSISTENCY_PRIORITY_DEFAULT);
-    }
+		return getFromRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.SEQUENCE)
+				.map(JobRelation::getTo).filter(Objects::nonNull);
+	}
+
+	public Class<? extends Task> provideTaskClass() {
+		if (provideCanDeserializeTask()) {
+			return getTask().getClass();
+		} else {
+			return null;
+		}
+	}
+
+	public Job provideTopLevelAncestor() {
+		return provideIsTopLevel() ? domainIdentity()
+				: provideParent().get().provideTopLevelAncestor();
+	}
+
+	public Stream<Job> provideUncompletedChildren() {
+		return provideChildren().filter(Job::provideIsNotComplete);
+	}
+
+	public Set<Job> provideUncompletedSequential() {
+		return provideRelatedSequential().stream()
+				.filter(Job::provideIsNotComplete).collect(Collectors.toSet());
+	}
+
+	public Date resolveCompletionDate() {
+		return resolveCompletionDate0(0);
+	}
+
+	public Date resolveCompletionDateOrLastModificationDate() {
+		Date completionDate = resolveCompletionDate();
+		if (completionDate != null) {
+			return completionDate;
+		}
+		if (getLastModificationDate() != null) {
+			return getLastModificationDate();
+		}
+		return getCreationDate();
+	}
+
+	public JobState resolveState() {
+		return resolveState0(0);
+	}
+
+	public Job root() {
+		return provideParent().map(Job::root).orElse(domainIdentity());
+	}
+
+	public void setCompletion(double completion) {
+		double old_completion = this.completion;
+		this.completion = completion;
+		propertyChangeSupport().firePropertyChange("completion", old_completion,
+				completion);
+	}
+
+	public abstract void setCreator(ClientInstance performer);
+
+	public void setEndTime(Date endTime) {
+		Date old_endTime = this.endTime;
+		this.endTime = endTime;
+		propertyChangeSupport().firePropertyChange("endTime", old_endTime,
+				endTime);
+	}
+
+	@Override
+	public void setId(long id) {
+		this.id = id;
+	}
+
+	public void setLargeResult(Object largeResult) {
+		Object old_largeResult = this.largeResult;
+		this.largeResult = largeResult;
+		propertyChangeSupport().firePropertyChange("largeResult",
+				old_largeResult, largeResult);
+	}
+
+	public void setLargeResultSerialized(String largeResultSerialized) {
+		String old_largeResultSerialized = this.largeResultSerialized;
+		this.largeResultSerialized = largeResultSerialized;
+		propertyChangeSupport().firePropertyChange("largeResultSerialized",
+				old_largeResultSerialized, largeResultSerialized);
+	}
+
+	public void setLog(String log) {
+		String old_log = this.log;
+		this.log = log;
+		propertyChangeSupport().firePropertyChange("log", old_log, log);
+	}
+
+	public abstract void setPerformer(ClientInstance performer);
+
+	public void setPerformerVersionNumber(int performerVersionNumber) {
+		int old_performerVersionNumber = this.performerVersionNumber;
+		this.performerVersionNumber = performerVersionNumber;
+		propertyChangeSupport().firePropertyChange("performerVersionNumber",
+				old_performerVersionNumber, performerVersionNumber);
+	}
+
+	public void setProcessState(ProcessState processState) {
+		ProcessState old_processState = this.processState;
+		this.processState = processState;
+		propertyChangeSupport().firePropertyChange("processState",
+				old_processState, processState);
+	}
+
+	public void setProcessStateSerialized(String processStateSerialized) {
+		String old_processStateSerialized = this.processStateSerialized;
+		this.processStateSerialized = processStateSerialized;
+		propertyChangeSupport().firePropertyChange("processStateSerialized",
+				old_processStateSerialized, processStateSerialized);
+	}
+
+	public void setResult(Object result) {
+		Object old_result = this.result;
+		this.result = result;
+		propertyChangeSupport().firePropertyChange("result", old_result,
+				result);
+	}
+
+	public void setResultMessage(String resultMessage) {
+		resultMessage = CommonUtils.trimToWsChars(resultMessage, 200, true);
+		String old_resultMessage = this.resultMessage;
+		this.resultMessage = resultMessage;
+		propertyChangeSupport().firePropertyChange("resultMessage",
+				old_resultMessage, resultMessage);
+	}
+
+	public void setResultSerialized(String resultSerialized) {
+		String old_resultSerialized = this.resultSerialized;
+		this.resultSerialized = resultSerialized;
+		propertyChangeSupport().firePropertyChange("resultSerialized",
+				old_resultSerialized, resultSerialized);
+	}
+
+	public void setResultType(JobResultType resultType) {
+		JobResultType old_resultType = this.resultType;
+		this.resultType = resultType;
+		propertyChangeSupport().firePropertyChange("resultType", old_resultType,
+				resultType);
+	}
+
+	public void setRetryCount(int retryCount) {
+		int old_retryCount = this.retryCount;
+		this.retryCount = retryCount;
+		propertyChangeSupport().firePropertyChange("retryCount", old_retryCount,
+				retryCount);
+	}
+
+	public void setRunAt(Date runAt) {
+		Preconditions.checkState(runAt == null
+				|| !provideFirstInSequence().provideParent().isPresent());
+		Date old_runAt = this.runAt;
+		this.runAt = runAt;
+		propertyChangeSupport().firePropertyChange("runAt", old_runAt, runAt);
+	}
+
+	public void setStacktraceRequested(boolean stacktraceRequested) {
+		boolean old_stacktraceRequested = this.stacktraceRequested;
+		this.stacktraceRequested = stacktraceRequested;
+		propertyChangeSupport().firePropertyChange("stacktraceRequested",
+				old_stacktraceRequested, stacktraceRequested);
+	}
+
+	public void setStartTime(Date startTime) {
+		Date old_startTime = this.startTime;
+		this.startTime = startTime;
+		propertyChangeSupport().firePropertyChange("startTime", old_startTime,
+				startTime);
+	}
+
+	public void setState(JobState state) {
+		JobState old_state = this.state;
+		this.state = state;
+		propertyChangeSupport().firePropertyChange("state", old_state, state);
+	}
+
+	public void setStatusMessage(String statusMessage) {
+		statusMessage = CommonUtils.trimToWsChars(statusMessage, 200, true);
+		String old_statusMessage = this.statusMessage;
+		this.statusMessage = statusMessage;
+		propertyChangeSupport().firePropertyChange("statusMessage",
+				old_statusMessage, statusMessage);
+	}
+
+	public void setTask(Task task) {
+		Task old_task = this.task;
+		this.task = task;
+		propertyChangeSupport().firePropertyChange("task", old_task, task);
+	}
+
+	public void setTaskClassName(String taskClassName) {
+		String old_taskClassName = this.taskClassName;
+		this.taskClassName = taskClassName;
+		propertyChangeSupport().firePropertyChange("taskClassName",
+				old_taskClassName, taskClassName);
+		cachedDisplayName = null;
+	}
+
+	public void setTaskSerialized(String taskSerialized) {
+		String old_taskSerialized = this.taskSerialized;
+		this.taskSerialized = taskSerialized;
+		propertyChangeSupport().firePropertyChange("taskSerialized",
+				old_taskSerialized, taskSerialized);
+	}
+
+	public void setTaskSignature(String taskSignature) {
+		String old_taskSignature = this.taskSignature;
+		this.taskSignature = taskSignature;
+		propertyChangeSupport().firePropertyChange("taskSignature",
+				old_taskSignature, taskSignature);
+	}
+
+	public void throwIfException() {
+		if (getResultType() == JobResultType.EXCEPTION) {
+			throw new JobException(getLog());
+		}
+	}
+
+	public String toDisplayName() {
+		if (cachedDisplayName == null) {
+			cachedDisplayName = toDisplayName0();
+		}
+		return cachedDisplayName;
+	}
+
+	@Override
+	public String toString() {
+		return toDisplayName() + " - " + resolveState();
+	}
+
+	public String toStringFull() {
+		return Ax.format("%s - %s - %s from: %s to: %s", toLocator(),
+				provideName(), resolveState(), toString(getFromRelations()),
+				toString(getToRelations()));
+	}
+
+	private Optional<? extends JobRelation> provideToAntecedentRelation() {
+		if (getToRelations().isEmpty()) {
+			return Optional.empty();
+		}
+		return getToRelations().stream()
+				.filter(rel -> rel.getType() != JobRelationType.RESUBMIT)
+				.findFirst();
+	}
+
+	private Optional<? extends JobRelation> provideToResubmitRelation() {
+		if (getToRelations().isEmpty()) {
+			return Optional.empty();
+		}
+		return getToRelations().stream()
+				.filter(rel -> rel.getType() == JobRelationType.RESUBMIT)
+				.findFirst();
+	}
+
+	private Date resolveCompletionDate0(int depth) {
+		if (depth > 10) {
+			throw new RuntimeException("Invalid job depth - maybe a loop?");
+		}
+		if (this.state == null) {
+			return null;
+		}
+		if (this.state.isComplete()) {
+			return this.endTime;
+		}
+		Optional<Job> parent = provideFirstInSequence().provideParent();
+		if (parent.isPresent()) {
+			return parent.get().resolveCompletionDate0(depth + 1);
+		}
+		return null;
+	}
+
+	private JobState resolveState0(int depth) {
+		if (depth > 10) {
+			throw new RuntimeException("Invalid job depth - maybe a loop?");
+		}
+		if (this.state == null) {
+			return null;
+		}
+		if (this.state.isComplete()) {
+			return this.state;
+		}
+		Optional<Job> parent = provideFirstInSequence().provideParent();
+		if (parent.isPresent()) {
+			JobState parentState = parent.get().resolveState0(depth + 1);
+			if (parentState != null && parentState.isComplete()) {
+				return parentState;
+			}
+		}
+		return this.state;
+	}
+
+	private String toDisplayName0() {
+		if (getTaskClassName() == null) {
+			return Ax.format("%s - <null task>",
+					toLocator().toRecoverableNumericString());
+		}
+		if (provideCanDeserializeTask()) {
+			return Ax.format("%s::%s", task.getName(),
+					toLocator().toRecoverableNumericString());
+		} else {
+			return Ax.format("%s::%s",
+					getTaskClassName().replaceFirst(".+\\.(.+)", "$1"),
+					toLocator().toRecoverableNumericString());
+		}
+	}
+
+	private String toString(Set<? extends JobRelation> relations) {
+		String suffix = relations.size() > 4
+				? Ax.format(" (%s)", relations.size())
+				: "";
+		return relations.stream().limit(4)
+				.map(rel -> rel.toStringOther(domainIdentity()))
+				.collect(Collectors.joining(", ")) + suffix;
+	}
+
+	public static abstract class ClientInstanceLoadOracle
+			extends DomainStorePropertyLoadOracle<Job> {
+	}
+
+	public static class JobException extends RuntimeException {
+		public JobException(String message) {
+			super(message);
+		}
+	}
+
+	@Bean
+	public static class ProcessState extends Model {
+		private List<ResourceRecord> resources = new ArrayList<>();
+
+		private String threadName;
+
+		private String allocatorThreadName;
+
+		private String stackTrace;
+
+		private String trimmedStackTrace;
+
+		public ResourceRecord addResourceRecord(JobResource resource) {
+			ResourceRecord record = new ResourceRecord();
+			record.setClassName(resource.getClass().getName());
+			record.setPath(resource.getPath());
+			resources.add(record);
+			return record;
+		}
+
+		public String getAllocatorThreadName() {
+			return this.allocatorThreadName;
+		}
+
+		public List<ResourceRecord> getResources() {
+			return this.resources;
+		}
+
+		public String getStackTrace() {
+			return this.stackTrace;
+		}
+
+		public String getThreadName() {
+			return this.threadName;
+		}
+
+		public String getTrimmedStackTrace() {
+			return this.trimmedStackTrace;
+		}
+
+		public ResourceRecord provideRecord(ResourceRecord record) {
+			return HasEquivalenceHelper.getEquivalent(getResources(), record);
+		}
+
+		public void setAllocatorThreadName(String allocatorThreadName) {
+			this.allocatorThreadName = allocatorThreadName;
+		}
+
+		public void setResources(List<ResourceRecord> resources) {
+			this.resources = resources;
+		}
+
+		public void setStackTrace(String stackTrace) {
+			this.stackTrace = stackTrace;
+		}
+
+		public void setThreadName(String threadName) {
+			this.threadName = threadName;
+		}
+
+		public void setTrimmedStackTrace(String trimmedStackTrace) {
+			this.trimmedStackTrace = trimmedStackTrace;
+		}
+	}
+
+	@Bean
+	public static class ResourceRecord extends Model
+			implements HasEquivalenceString<ResourceRecord> {
+		private boolean acquiredFromAntecedent;
+
+		private boolean acquired;
+
+		private String className;
+
+		private String path;
+
+		@Override
+		public String equivalenceString() {
+			return Ax.format("%s::%s", getClassName(), getPath());
+		}
+
+		public String getClassName() {
+			return this.className;
+		}
+
+		public String getPath() {
+			return this.path;
+		}
+
+		public boolean isAcquired() {
+			return this.acquired;
+		}
+
+		public boolean isAcquiredFromAntecedent() {
+			return this.acquiredFromAntecedent;
+		}
+
+		public void setAcquired(boolean acquired) {
+			this.acquired = acquired;
+		}
+
+		public void setAcquiredFromAntecedent(boolean acquiredFromAntecedent) {
+			this.acquiredFromAntecedent = acquiredFromAntecedent;
+		}
+
+		public void setClassName(String className) {
+			this.className = className;
+		}
+
+		public void setPath(String path) {
+			this.path = path;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s::%s - Acquired: %s - Antecedent: %s",
+					getClassName().replaceFirst("(.+)(\\..+)", "$2"), getPath(),
+					isAcquired(), isAcquiredFromAntecedent());
+		}
+	}
+
+	public static class RunAtComparator implements Comparator<Job> {
+		@Override
+		public int compare(Job o1, Job o2) {
+			Date runAt1 = o1.getRunAt();
+			Date runAt2 = o2.getRunAt();
+			if (runAt1 == null && runAt2 != null) {
+				return -1;
+			}
+			if (runAt1 != null && runAt2 == null) {
+				return 1;
+			}
+			if (runAt1 != null && runAt2 != null) {
+				int i = runAt1.compareTo(runAt2);
+				if (i != 0) {
+					return i;
+				}
+			}
+			return EntityComparator.INSTANCE.compare(o1, o2);
+		}
+	}
+
+	@RegistryLocation(registryPoint = DebugLogWriter.class, implementationType = ImplementationType.INSTANCE)
+	@Registration(DebugLogWriter.class)
+	public static class DebugLogWriter {
+		public void write(Job job) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	public void writeLargeObject() {
+		Registry.impl(DebugLogWriter.class).write(domainIdentity());
+	}
+
+	public String provideConsistencyPriority() {
+		return Optional.ofNullable(getConsistencyPriority())
+				.orElse(Job.CONSISTENCY_PRIORITY_DEFAULT);
+	}
 }

@@ -21,8 +21,6 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
  * @author Nick Reddel
  */
 public class LongCriterion extends SearchCriterion implements HasValue<Long> {
-	
-
 	private Long value;
 
 	public LongCriterion() {

@@ -5,8 +5,6 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class BooleanEnumCriterion extends EnumCriterion<BooleanEnum> {
-	
-
 	private BooleanEnum booleanEnum;
 
 	public BooleanEnumCriterion() {

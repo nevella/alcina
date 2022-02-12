@@ -70,8 +70,7 @@ public class TextRemote extends NodeRemote implements DomText {
 	/**
 	 * Replaces data at the given [offset, length] range with the given string.
 	 */
-	private final native void replaceData0(int offset, int length,
-			String data) /*-{
+	private final native void replaceData0(int offset, int length, String data) /*-{
 							this.replaceData(offset, length, data);
 							}-*/;
 

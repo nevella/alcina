@@ -75,7 +75,8 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	@Override
 	public <T extends Entity> T getObject(T entity) {
 		return (T) (entity == null ? null
-				: getObject(entity.entityClass(), entity.getId(), entity.getLocalId()));
+				: getObject(entity.entityClass(), entity.getId(),
+						entity.getLocalId()));
 	}
 
 	@Override
@@ -101,6 +102,4 @@ public class DetachedCacheObjectStore implements ObjectStore {
 	public void setLazyObjectLoader(LazyObjectLoader lazyObjectLoader) {
 		this.lazyObjectLoader = lazyObjectLoader;
 	}
-
-	
 }

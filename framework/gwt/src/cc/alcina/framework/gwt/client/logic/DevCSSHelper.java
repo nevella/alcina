@@ -11,25 +11,17 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class DevCSSHelper {
 	public static DevCSSHelper get() {
-		DevCSSHelper singleton = Registry.checkSingleton(DevCSSHelper.class);
-		if (singleton == null) {
-			singleton = new DevCSSHelper();
-			Registry.registerSingleton(DevCSSHelper.class, singleton);
-		}
-		return singleton;
+		return Registry.impl(DevCSSHelper.class);
 	}
 
 	private PropertyChangeListener cssPropertyListener = new PropertyChangeListener() {
+		@Override
 		public void propertyChange(PropertyChangeEvent evt) {
 			updateDeveloperCss();
 		}
 	};
 
 	private Element styleElement;
-
-	private DevCSSHelper() {
-		super();
-	}
 
 	public void addCssListeners(GeneralProperties props) {
 		props.addPropertyChangeListener(

@@ -178,7 +178,7 @@ public class Registry0 {
 		get().registerSingletonInLookups(type, object, removeExisting, keys);
 		get().register(object.getClass(), type,
 				Registration.Implementation.SINGLETON,
-				Registration.Priority.MANUAL, keys);
+				Registration.Priority.APP, keys);
 	}
 
 	public static void registerSingleton(Object object, Class<?> type,

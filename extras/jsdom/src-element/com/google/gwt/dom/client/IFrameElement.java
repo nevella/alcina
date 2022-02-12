@@ -224,7 +224,8 @@ public class IFrameElement extends FrameElement {
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/present/frames.html#adef-src-FRAME">
 	 *      W3C HTML Specification</a>
 	 */
-	public void setSrc(@IsSafeUri String src) {
+	public void setSrc(@IsSafeUri
+	String src) {
 		this.setPropertyString("src", src);
 	}
 
