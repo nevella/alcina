@@ -278,7 +278,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		invokeAllWithThrow(calls);
 		new StatCategory_DomainStore.Warmup.Loader.JoinTables().emit();
 		MetricLogging.get().end("tables");
-		interns = null;
+		// clear existing interns, but intern incoming changes - optimal
+		// allocation
+		interns = new ConcurrentHashMap<>();
 		MetricLogging.get().start("xrefs");
 		for (EntityRefs ll : warmupEntityRefss) {
 			calls.add(() -> {
