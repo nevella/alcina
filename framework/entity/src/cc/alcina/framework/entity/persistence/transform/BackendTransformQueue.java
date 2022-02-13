@@ -124,8 +124,8 @@ public class BackendTransformQueue {
 		try {
 			LooseContext.pushWithTrue(
 					AdjunctTransformCollation.CONTEXT_TM_TRANSFORMS_ARE_EX_THREAD);
-			LooseContext.pushWithTrue(
-					TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
+			LooseContext
+					.setTrue(TransformCommit.CONTEXT_FORCE_COMMIT_AS_ONE_CHUNK);
 			Transaction.commit();
 		} finally {
 			LooseContext.pop();
