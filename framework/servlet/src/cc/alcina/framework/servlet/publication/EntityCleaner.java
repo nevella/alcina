@@ -32,8 +32,7 @@ public class EntityCleaner {
 
 	private Map<String, String> htmlToNumericEntities = new LinkedHashMap<String, String>();
 
-	private EntityCleaner() {
-		super();
+	public EntityCleaner() {
 		readEntityFile();
 	}
 
