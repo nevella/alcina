@@ -44,6 +44,7 @@ import com.barbarysoftware.watchservice.WatchKey;
 import com.barbarysoftware.watchservice.WatchService;
 import com.barbarysoftware.watchservice.WatchableFile;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class WatchDirOsX {
@@ -64,10 +65,20 @@ public abstract class WatchDirOsX {
 	/**
 	 * Creates a WatchService and registers the given directory
 	 */
-	WatchDirOsX(Path dir) throws IOException {
+	public WatchDirOsX(Path dir) throws IOException {
 		this.watcher = WatchService.newWatchService();
 		this.keys = new HashMap<>();
 		register(dir);
+		new Thread() {
+			@Override
+			public void run() {
+				try {
+					processEvents();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			};
+		}.start();
 	}
 
 	public void close() {
