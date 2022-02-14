@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Multimap;
 
-@RegistryLocation(registryPoint = XmlTokens.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class XmlTokens {
 	public static XmlTokens get() {

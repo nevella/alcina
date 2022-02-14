@@ -847,7 +847,7 @@ public class PermissionsManager implements DomainTransformListener {
 		}
 	}
 
-	@RegistryLocation(registryPoint = PermissionsExtensionForClass.class)
+	
 	@ClientInstantiable
 	@Registration(PermissionsExtensionForClass.class)
 	public static abstract class PermissionsExtensionForClass<C>
@@ -855,7 +855,7 @@ public class PermissionsManager implements DomainTransformListener {
 		public abstract Class<C> getGenericClass();
 	}
 
-	@RegistryLocation(registryPoint = PermissionsExtensionForRule.class)
+	
 	@ClientInstantiable
 	@Registration(PermissionsExtensionForRule.class)
 	public static abstract class PermissionsExtensionForRule

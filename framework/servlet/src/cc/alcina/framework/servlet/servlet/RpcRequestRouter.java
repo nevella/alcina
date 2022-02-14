@@ -19,7 +19,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationProxy;
 
-@RegistryLocation(registryPoint = RpcRequestRouter.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class RpcRequestRouter {
 	public static final String CONTEXT_IN_RPC_CALL = RpcRequestRouter.class

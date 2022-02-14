@@ -32,7 +32,7 @@ import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
-@RegistryLocation(registryPoint = AppController.class, implementationType = ImplementationType.SINGLETON)
+
 @ClientInstantiable
 @Registration.Singleton
 public class AppController {

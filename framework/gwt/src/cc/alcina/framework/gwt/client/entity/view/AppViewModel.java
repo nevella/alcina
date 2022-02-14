@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
-@RegistryLocation(registryPoint = AppViewModel.class, implementationType = ImplementationType.SINGLETON)
+
 @ClientInstantiable
 @Registration.Singleton
 public class AppViewModel {

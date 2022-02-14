@@ -23,14 +23,10 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
-
 import org.apache.commons.lang.StringEscapeUtils;
-
 import com.totsp.gwittir.client.beans.Converter;
-
 import cc.alcina.extras.dev.console.DevConsoleDebugCommands.CmdDrillClientException.DevConsoleDebugPaths;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
@@ -64,6 +60,7 @@ import elemental.json.JsonObject;
 import nl.bitwalker.useragentutils.Browser;
 import nl.bitwalker.useragentutils.RenderingEngine;
 import nl.bitwalker.useragentutils.UserAgent;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @SuppressWarnings("deprecation")
 public class DevConsoleDebugCommands {
@@ -489,9 +486,9 @@ public class DevConsoleDebugCommands {
 			// Matcher m2 = stp.matcher(stf);
 			LinkedHashMap<String, String> km = new LinkedHashMap<String, String>();
 			LinkedHashMap<String, String> stm = new LinkedHashMap<String, String>();
-			boolean ffStack = browser
-					.getRenderingEngine() == RenderingEngine.GECKO;// text.contains("stack:
-																	// ");
+			boolean ffStack = browser.getRenderingEngine() == // text.contains("stack:
+					RenderingEngine.GECKO;
+			// ");
 			String regex = ffStack && text.contains("stack:")
 					? "stack:(.+)-----\n"
 					: text.contains("compatible; MSIE 10.0")
@@ -651,7 +648,8 @@ public class DevConsoleDebugCommands {
 						.contains("Localdom unable to parse issue debug")) {
 					ResourceUtilities.logToFile(clientLogRecord.getMessage(),
 							DevConsoleDebugCommands2.LOCAL_DOM_EXCEPTION_LOG_PATH);
-					break;// just get the first
+					// just get the first
+					break;
 				}
 			}
 			Ax.out(clrs.stream().map(recordsConverter)
@@ -1015,7 +1013,8 @@ public class DevConsoleDebugCommands {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DevConsoleDebugPeer.class, implementationType = ImplementationType.INSTANCE)
+	
+	@Registration(DevConsoleDebugPeer.class)
 	public static abstract class DevConsoleDebugPeer {
 		public abstract List<ILogRecord> filterByComponent(
 				List<ILogRecord> logRecords, String componentKey);
@@ -1026,7 +1025,8 @@ public class DevConsoleDebugCommands {
 				getPaths(DevConsoleProperties props);
 	}
 
-	@RegistryLocation(registryPoint = IgnoreExceptionPatternProvider.class, implementationType = ImplementationType.SINGLETON)
+	
+	@Registration.Singleton
 	public static class IgnoreExceptionPatternProvider {
 		public static DevConsoleDebugCommands.IgnoreExceptionPatternProvider
 				get() {

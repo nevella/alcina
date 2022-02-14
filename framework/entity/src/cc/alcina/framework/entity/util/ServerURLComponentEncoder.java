@@ -23,7 +23,7 @@ import cc.alcina.framework.entity.SEUtilities;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = UrlComponentEncoder.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+
 // only used in hosted mode
 @ClientInstantiable
 @Registration.Singleton(value = UrlComponentEncoder.class, priority = Registration.Priority.PREFERRED_LIBRARY)

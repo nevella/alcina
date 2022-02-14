@@ -535,7 +535,7 @@ public class DomainStoreDataProvider<T extends Entity>
 		}
 	}
 
-	@RegistryLocation(registryPoint = SearchModelPerformer.class)
+	
 	public interface SearchModelPerformer {
 		void searchModel(BindableSearchDefinition def,
 				AsyncCallback<ModelSearchResults> callback);

@@ -17,12 +17,9 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.JobRelation;
@@ -471,7 +468,7 @@ public class JobScheduler {
 		}
 	}
 
-	@RegistryLocation(registryPoint = ExecutionConstraints.class, implementationType = ImplementationType.FACTORY)
+	
 	@Registration(value = ExecutionConstraints.class, implementation = Registration.Implementation.FACTORY)
 	public static class DefaultExecutionConstraintsProvider
 			implements RegistryFactory<ExecutionConstraints> {
@@ -481,7 +478,7 @@ public class JobScheduler {
 		}
 	}
 
-	@RegistryLocation(registryPoint = ResubmitPolicy.class, implementationType = ImplementationType.FACTORY)
+	
 	@Registration(value = ResubmitPolicy.class, implementation = Registration.Implementation.FACTORY)
 	public static class DefaultRetryPolicyProvider
 			implements RegistryFactory<ResubmitPolicy> {
@@ -491,11 +488,12 @@ public class JobScheduler {
 		}
 	}
 
-	@RegistryLocation(registryPoint = Schedule.class, implementationType = ImplementationType.INSTANCE)
+	
+	@Registration(Schedule.class)
 	public static class DefaultSchedule extends Schedule {
 	}
 
-	@RegistryLocation(registryPoint = Schedule.class, implementationType = ImplementationType.FACTORY)
+	
 	@Registration(value = Schedule.class, implementation = Registration.Implementation.FACTORY)
 	public static class DefaultScheduleProvider
 			implements RegistryFactory<Schedule> {
@@ -662,7 +660,7 @@ public class JobScheduler {
 		}
 	}
 
-	@RegistryLocation(registryPoint = RetentionPolicy.class)
+	
 	@Registration(RetentionPolicy.class)
 	public static class RetentionPolicy {
 		public void delete(Job job) {

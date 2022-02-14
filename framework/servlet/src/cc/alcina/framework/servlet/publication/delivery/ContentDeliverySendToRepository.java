@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.publication.RepositoryDelivery;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-@RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = ContentDeliveryType_SEND_TO_REPOSITORY.class)
+
 @Registration({ ContentDeliveryType.class,
 		ContentDeliveryType_SEND_TO_REPOSITORY.class })
 public class ContentDeliverySendToRepository implements ContentDelivery {

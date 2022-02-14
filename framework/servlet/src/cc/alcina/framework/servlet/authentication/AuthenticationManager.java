@@ -34,7 +34,7 @@ import cc.alcina.framework.servlet.servlet.AuthenticationTokenStore;
  * Companion class Authenticator (subclassed per-app) handles password
  * validation, user creation - i.e. relatively infrequent authentication events
  */
-@RegistryLocation(registryPoint = AuthenticationManager.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class AuthenticationManager {
 	private static final String CONTEXT_AUTHENTICATION_CONTEXT = AuthenticationManager.class

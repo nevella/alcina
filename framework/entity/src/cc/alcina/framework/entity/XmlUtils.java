@@ -1703,7 +1703,7 @@ public class XmlUtils {
 		}
 	}
 
-	@RegistryLocation(registryPoint = XPointerConverter.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class XPointerConverter {
 		public String toSimpleXPointer(Node n) {

@@ -3,23 +3,23 @@ package cc.alcina.extras.webdriver;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
-
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
-
 import cc.alcina.extras.webdriver.api.WebdriverTest;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
+@Registration(JaxbContextRegistration.class)
 public class WDConfigurationItem {
 	public String uri;
 
@@ -68,9 +68,10 @@ public class WDConfigurationItem {
 				topLevelClassName, uri);
 	}
 
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+	
 	@XmlRootElement(name = "wdConfiguration")
 	@XmlAccessorType(XmlAccessType.FIELD)
+	@Registration(JaxbContextRegistration.class)
 	public static class WDConfiguration {
 		@XmlElementWrapper(name = "items")
 		@XmlElement(name = "item")
@@ -81,7 +82,8 @@ public class WDConfigurationItem {
 		public int recurrentTestPeriodSeconds = 60 * 5;
 	}
 
-	@RegistryLocation(registryPoint = WDDriverHandlerProvider.class, implementationType = ImplementationType.SINGLETON)
+	
+	@Registration.Singleton
 	public static abstract class WDDriverHandlerProvider {
 		public static WDConfigurationItem.WDDriverHandlerProvider get() {
 			return Registry

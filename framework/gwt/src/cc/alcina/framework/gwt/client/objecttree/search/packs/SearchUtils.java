@@ -212,7 +212,7 @@ public class SearchUtils {
 		}
 	}
 
-	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class)
+	
 	@ClientInstantiable
 	@Registration(SearchUtilsIdsHelper.class)
 	public static abstract class SearchUtilsIdsHelper {
@@ -227,7 +227,7 @@ public class SearchUtils {
 		}
 	}
 
-	@RegistryLocation(registryPoint = SearchUtilsIdsHelper.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton(SearchUtilsIdsHelper.class)
 	public static class SearchUtilsIdsHelperSingleThreaded
 			extends SearchUtilsIdsHelper {
@@ -256,7 +256,7 @@ public class SearchUtils {
 		}
 	}
 
-	@RegistryLocation(registryPoint = SearchUtilsRegExpHelper.class)
+	
 	@ClientInstantiable
 	@Registration(SearchUtilsRegExpHelper.class)
 	public static abstract class SearchUtilsRegExpHelper {
@@ -265,7 +265,7 @@ public class SearchUtils {
 		}
 	}
 
-	@RegistryLocation(registryPoint = SearchUtilsRegExpHelper.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton(SearchUtilsRegExpHelper.class)
 	public static class SearchUtilsRegExpHelperSingleThreaded
 			extends SearchUtilsRegExpHelper {

@@ -15,7 +15,7 @@ public interface SearcherCollectionSource {
 	<T> Optional<Stream<T>> getSourceStreamFor(Class<T> clazz,
 			SearchDefinition def);
 
-	@RegistryLocation(registryPoint = SearcherCollectionSource.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton(SearcherCollectionSource.class)
 	public static class SearcherCollectionSource_Domain
 			implements SearcherCollectionSource {

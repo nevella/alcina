@@ -59,7 +59,7 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
  *
  * @author nick@alcina.cc
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DomUtils implements NodeFromXpathProvider {
 	public static String containerTagRegex = "(?i)/?(judgment|doc)";
@@ -881,7 +881,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		Node resolve(String xpathStr, int backupAbsTextOffset);
 	}
 
-	@RegistryLocation(registryPoint = DomUtilsBlockResolver.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class DomUtilsBlockResolver {

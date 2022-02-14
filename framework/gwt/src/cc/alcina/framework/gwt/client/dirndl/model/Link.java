@@ -207,7 +207,7 @@ public class Link extends Model {
 		return this;
 	}
 
-	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Link.class)
+	
 	@Registration({ DirectedNodeRenderer.class, Link.class })
 	public static class LinkRenderer extends LeafNodeRenderer {
 		@Override

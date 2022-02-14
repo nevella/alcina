@@ -11,7 +11,7 @@ import cc.alcina.framework.gwt.client.lux.LuxFormCellRenderer;
 import cc.alcina.framework.gwt.client.lux.LuxStyleValidationFeedback;
 
 @ClientInstantiable
-@RegistryLocation(registryPoint = LoginFormUI.class, implementationType = ImplementationType.INSTANCE)
+
 @Registration(LoginFormUI.class)
 public class LoginFormUI {
 	public GridFormCellRenderer getRenderer() {

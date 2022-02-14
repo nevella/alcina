@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
-@RegistryLocation(registryPoint = UserlandProvider.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class UserlandProvider {
 	public static UserlandProvider get() {

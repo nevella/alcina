@@ -110,7 +110,7 @@ public class TransformPersister {
 		}
 	}
 
-	@RegistryLocation(registryPoint = TransformPersisterPeer.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(TransformPersisterPeer.class)
 	public static class TransformPersisterPeer {
 		public static TransformPersister.TransformPersisterPeer get() {

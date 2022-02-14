@@ -5,7 +5,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
-//@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Entity.class)
+//
 //not registered - because entities are often the backing objects for actions. Subclass with a filter if you want to mockup
 public class MockupEntityNodeRenderer extends LeafNodeRenderer {
 	@Override

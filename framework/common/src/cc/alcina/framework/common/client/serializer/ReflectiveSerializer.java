@@ -344,7 +344,7 @@ public class ReflectiveSerializer {
 		}
 	}
 
-	@RegistryLocation(registryPoint = TypeSerializer.class)
+	
 	@Bean
 	@Registration(TypeSerializer.class)
 	public static abstract class TypeSerializer {
@@ -381,7 +381,7 @@ public class ReflectiveSerializer {
 				SerialNode serialNode);
 	}
 
-	@RegistryLocation(registryPoint = ValueSerializer.class)
+	
 	@Bean
 	@Registration(ValueSerializer.class)
 	public static abstract class ValueSerializer<T> {

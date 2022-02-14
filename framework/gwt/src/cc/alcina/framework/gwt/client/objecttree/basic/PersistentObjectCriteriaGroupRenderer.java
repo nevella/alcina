@@ -40,7 +40,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = TreeRenderer.class, targetClass = PersistentObjectCriteriaGroup.class)
+
 @Registration({ TreeRenderer.class, PersistentObjectCriteriaGroup.class })
 public class PersistentObjectCriteriaGroupRenderer
 		extends CriteriaGroupRenderer<PersistentObjectCriteriaGroup> {

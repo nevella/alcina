@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
-@RegistryLocation(registryPoint = TreeRenderer.class, targetClass = SearchDefinition.class)
+
 @Registration({ TreeRenderer.class, SearchDefinition.class })
 public class SearchDefinitionRenderer<SD extends SearchDefinition>
 		extends AbstractRenderer<SD> {

@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
-@RegistryLocation(registryPoint = AuthenticationExpiration.class, implementationType = ImplementationType.INSTANCE)
+
 @Registration(AuthenticationExpiration.class)
 public class AuthenticationExpiration {
 	public void checkExpiration(AuthenticationSession session) {

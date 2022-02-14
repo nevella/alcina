@@ -7,9 +7,9 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 
-@RegistryLocations({
-		@RegistryLocation(registryPoint = KnownsRegistrar.class, implementationType = ImplementationType.SINGLETON),
-		@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class) })
+
+		
+		
 @Registrations({
 		@Registration(value = KnownsRegistrar.class, implementation = Registration.Implementation.SINGLETON),
 		@Registration(ClearStaticFieldsOnAppShutdown.class) })

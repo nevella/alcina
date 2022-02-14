@@ -168,7 +168,7 @@ public class ReadonlyInMemoryPersister {
 		}
 	}
 
-	@RegistryLocation(registryPoint = InMemoryPersistableProvider.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(InMemoryPersistableProvider.class)
 	public static class InMemoryPersistableProvider {
 		public Stream<Class> permittedClasses() {

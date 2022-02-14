@@ -41,7 +41,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class JaxbUtils {
 	private static JaxbUtils singleton;
@@ -185,7 +185,7 @@ public class JaxbUtils {
 		return jc;
 	}
 
-	@RegistryLocation(registryPoint = JaxbUtils.PreProcessor.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(JaxbUtils.PreProcessor.class)
 	public abstract static class PreProcessor {
 		public abstract String preprocess(String xmlStr);

@@ -16,7 +16,7 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
  *
  * @author nick@alcina.cc
  */
-@RegistryLocation(registryPoint = CheckOfflineSufficentPlayer.class, implementationType = ImplementationType.SINGLETON)
+
 @ClientInstantiable
 @Registration.Singleton
 public class CheckOfflineSufficentPlayer

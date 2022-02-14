@@ -12,7 +12,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
  *
  * @author nick@alcina.cc
  */
-@RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_HTML.class)
+
 @Registration({ FormatConverter.class, FormatConversionTarget_HTML.class })
 public class HtmlFormatConversionTargetHtml implements FormatConverter {
 	public InputStream convert(PublicationContext ctx,

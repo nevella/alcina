@@ -6,14 +6,14 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-
 import javax.xml.bind.annotation.XmlRootElement;
-
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+
 @XmlRootElement
+@Registration(JaxbContextRegistration.class)
 public class DevConsoleProperties {
 	@SetPropInfo(key = "id-or-set", description = "id or id set")
 	public String idOrSet;
@@ -61,21 +61,21 @@ public class DevConsoleProperties {
 	public String remoteSshPort = "22";
 
 	@SetPropInfo(key = "font-name")
-	/*
-	 * Mac - "Prestige Elite Std"
-	 */
-	public String fontName = "Courier New";
+	public String /*
+					 * Mac - "Prestige Elite Std"
+					 */
+	fontName = "Courier New";
 
 	@SetPropInfo(key = "conn-production-tunnel-cmd", description = "e.g. (rundeck) run -j jade/db/production_tunnel")
 	public String connectionProductionTunnelCmd = "";
 
 	@SetPropInfo(key = "list-uploaded-requests", description = "see class file comment")
-	/**
-	 * <pre>
-	 * /Users/ouiji/Documents/lib/java/rundeck/tools/bin/dispatch  -I cosa.int.barnet.com.au -f -- 'ls /root/.alcina/cosa-server/offlineTransforms-partial > /root/off-trans.txt; echo ok'
-	 * </pre>
-	 */
-	public String productionListUploadedRequests = "";
+	public String /**
+					 * <pre>
+					 * /Users/ouiji/Documents/lib/java/rundeck/tools/bin/dispatch  -I cosa.int.barnet.com.au -f -- 'ls /root/.alcina/cosa-server/offlineTransforms-partial > /root/off-trans.txt; echo ok'
+					 * </pre>
+					 */
+	productionListUploadedRequests = "";
 
 	@SetPropInfo(key = "restart-command", description = "Remote control command to restart console server")
 	public String restartCommand = "";

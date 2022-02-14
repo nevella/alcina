@@ -168,7 +168,7 @@ public @interface ModalDisplay {
 		}
 	}
 
-	@RegistryLocation(registryPoint = ModeTransformer.class, implementationType = ImplementationType.INSTANCE)
+	
 	@ClientInstantiable
 	@Registration(ModeTransformer.class)
 	public static class ModeTransformer implements Function<Mode, Mode> {

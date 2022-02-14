@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
-@RegistryLocation(registryPoint = DTRProtocolHandler.class)
+
 @ClientInstantiable
 @Registration(DTRProtocolHandler.class)
 public class PlaintextProtocolHandler implements DTRProtocolHandler {

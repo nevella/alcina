@@ -26,12 +26,10 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
-
 import org.hibernate.HibernateException;
 import org.hibernate.LazyInitializationException;
 import org.hibernate.engine.internal.StatefulPersistenceContext;
@@ -45,7 +43,6 @@ import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.IdentifierProperty;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.Entity.EntityClassResolver;
@@ -69,12 +66,13 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDataFilter;
 import cc.alcina.framework.entity.projection.GraphProjection.InstantiateImplCallback;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
- *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = JPAImplementation.class, implementationType = ImplementationType.SINGLETON)
+
+@Registration.Singleton(JPAImplementation.class)
 public class JPAHibernateImpl implements JPAImplementation {
 	public static final InstantiateImplCallback CLASSREF_AND_USERLAND_GETTER_CALLBACK = new InstantiateImplCallback<LazyInitializer>() {
 		@Override
@@ -345,7 +343,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return ((Entity) o).toLocator();
 	}
 
-	@RegistryLocation(registryPoint = PersistenSetProjectionCreator.class, implementationType = ImplementationType.SINGLETON)
+	
+	@Registration.Singleton
 	public static class PersistenSetProjectionCreator {
 		public Set
 				createPersistentSetProjection(GraphProjectionContext context) {

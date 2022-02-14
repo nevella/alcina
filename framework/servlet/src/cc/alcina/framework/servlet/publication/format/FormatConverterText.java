@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget.Form
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-@RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_TEXT.class)
+
 @Registration({ FormatConverter.class, FormatConversionTarget_TEXT.class })
 public class FormatConverterText implements FormatConverter {
 	public InputStream convert(PublicationContext ctx,

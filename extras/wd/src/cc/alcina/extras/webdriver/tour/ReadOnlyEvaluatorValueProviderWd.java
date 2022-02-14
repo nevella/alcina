@@ -4,8 +4,10 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.tour.condition.ReadOnlyEvaluator.ReadOnlyEvaluatorValueProvider;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-@RegistryLocation(registryPoint = ReadOnlyEvaluatorValueProvider.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+
+@Registration(value = ReadOnlyEvaluatorValueProvider.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 public class ReadOnlyEvaluatorValueProviderWd
 		extends ReadOnlyEvaluatorValueProvider {
 	@Override

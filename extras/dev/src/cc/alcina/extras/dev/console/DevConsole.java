@@ -24,11 +24,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
-
 import org.apache.log4j.Logger;
-
 import com.fasterxml.jackson.databind.ObjectMapper;
-
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
@@ -76,6 +73,7 @@ import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /*
  * Startup speed doc
@@ -86,7 +84,8 @@ import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener
 				cluster-tr-listener	mark
  * @formatter:on
  */
-@RegistryLocation(registryPoint = DevConsole.class, implementationType = ImplementationType.SINGLETON)
+
+@Registration.Singleton
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
 		implements ClipboardOwner {
 	private static BiPrintStream out;
@@ -759,7 +758,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
-			};
+			}
 		}.start();
 	}
 
@@ -928,7 +927,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		NORMAL, OK, ERR, COMMAND
 	}
 
-	@RegistryLocation(registryPoint = LogMuter.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	
+	@Registration.Singleton(value = LogMuter.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class LogMuter_DevConsole extends LogMuter {
 		@Override
 		public void muteAllLogging(boolean muteAll) {

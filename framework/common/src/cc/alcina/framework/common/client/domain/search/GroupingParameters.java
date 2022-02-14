@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
-@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+
 @Registration(JaxbContextRegistration.class)
 public class GroupingParameters<GP extends GroupingParameters> extends Bindable
 		implements Serializable, HasReflectiveEquivalence<GP>,

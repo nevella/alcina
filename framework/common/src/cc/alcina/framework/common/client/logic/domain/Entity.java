@@ -52,7 +52,7 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
  * TransformManager }. Note that the only id type supported is <code>long</code>
  */
 @MappedSuperclass
-@RegistryLocation(registryPoint = Entity.class, implementationType = ImplementationType.MULTIPLE)
+
 @NonClientRegistryPointType
 @DomainTransformPropagation(PropagationType.PERSISTENT)
 // ensure { "id", "localId" } are before other properties (because needed for

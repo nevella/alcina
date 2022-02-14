@@ -49,7 +49,7 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.HandlerData;
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.Type;
 
-@RegistryLocation(registryPoint = DomainViews.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public abstract class DomainViews {
 	public static DomainViews get() {

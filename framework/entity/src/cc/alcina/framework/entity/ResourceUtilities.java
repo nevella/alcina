@@ -92,7 +92,7 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
  *         FIXME - 2022 - migrate property treatment to Configuration static
  *         singleton
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ResourceUtilities {
 	private static Map<String, String> customProperties = new ConcurrentHashMap<String, String>();

@@ -38,7 +38,7 @@ import cc.alcina.framework.gwt.persistence.client.DeltaStore;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta.DeltaApplicationRecordToDomainModelDeltaConverter;
 
-@RegistryLocation(registryPoint = HandshakeConsortModel.class, implementationType = ImplementationType.SINGLETON)
+
 @ClientInstantiable
 @Registration.Singleton
 public class HandshakeConsortModel {

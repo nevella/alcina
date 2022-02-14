@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  *
  * @author nick@alcina.cc
  */
-@RegistryLocation(registryPoint = DateUtils.class, implementationType = ImplementationType.SINGLETON)
+
 @SuppressWarnings("deprecation")
 @ClientInstantiable
 @Registration.Singleton

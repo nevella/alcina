@@ -38,7 +38,7 @@ import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.Sta
 /*
  * mvcc.4 - serialize to streams rather than strings
  */
-@RegistryLocation(registryPoint = ClusterTransformSerializer.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class ClusterTransformSerializer {
 	private static final int CHUNK_SIZE = 500000;

@@ -44,8 +44,8 @@ import cc.alcina.framework.common.client.util.StringMap;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = TreeSerializable.class)
-@Registration(TreeSerializable.class)
+
+
 public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		Bindable implements DeliveryModel, TreeSerializable, Definition {
 	static final long serialVersionUID = -1L;

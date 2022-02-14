@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalLooseContextProvider extends LooseContext {
 	private static ThreadLocal<ThreadlocalLooseContextProvider> threadLocalInstance = new ThreadLocal<>() {

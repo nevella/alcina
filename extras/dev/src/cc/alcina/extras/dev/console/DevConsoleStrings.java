@@ -6,15 +6,15 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-
 import javax.xml.bind.annotation.XmlRootElement;
-
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+
 @XmlRootElement
+@Registration(JaxbContextRegistration.class)
 public class DevConsoleStrings {
 	public transient Set<String> tags = new LinkedHashSet<String>();
 

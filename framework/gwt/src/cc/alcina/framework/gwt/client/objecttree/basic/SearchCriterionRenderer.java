@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
-@RegistryLocation(registryPoint = TreeRenderer.class, targetClass = SearchCriterion.class)
+
 @Registration({ TreeRenderer.class, SearchCriterion.class })
 public class SearchCriterionRenderer<T extends SearchCriterion>
 		extends AbstractRenderer<T> {

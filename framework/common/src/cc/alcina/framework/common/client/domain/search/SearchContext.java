@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 
-@RegistryLocation(registryPoint = SearchContext.class, implementationType = ImplementationType.INSTANCE)
+
 @Registration(SearchContext.class)
 public class SearchContext {
 	public static final String CONTEXT_INSTANCE = SearchContext.class

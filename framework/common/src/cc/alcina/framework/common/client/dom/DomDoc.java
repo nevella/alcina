@@ -181,7 +181,7 @@ public class DomDoc extends DomNode {
 	void register(DomNode xmlNode) {
 	}
 
-	@RegistryLocation(registryPoint = PerDocumentSupplier.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class PerDocumentSupplier {
@@ -198,7 +198,7 @@ public class DomDoc extends DomNode {
 		}
 	}
 
-	@RegistryLocation(registryPoint = ReadonlyDocCache.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class ReadonlyDocCache {
 		public static DomDoc.ReadonlyDocCache get() {

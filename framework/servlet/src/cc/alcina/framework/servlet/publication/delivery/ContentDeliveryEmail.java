@@ -57,7 +57,7 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
  *
  * @author nick@alcina.cc
  */
-@RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = ContentDeliveryType_EMAIL.class)
+
 @Registration({ ContentDeliveryType.class, ContentDeliveryType_EMAIL.class })
 public class ContentDeliveryEmail implements ContentDelivery {
 	public static final String PUBLICATION_REASON_MESSAGE = "<!--PUBLICATION_REASON_MESSAGE-->";

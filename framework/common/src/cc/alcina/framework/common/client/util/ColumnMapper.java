@@ -44,7 +44,7 @@ public abstract class ColumnMapper<T> {
 	protected abstract Class<T> mappedClass();
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+	
 	@Registration(JaxbContextRegistration.class)
 	public static class RowModel_SingleCell implements Serializable {
 		public String value;

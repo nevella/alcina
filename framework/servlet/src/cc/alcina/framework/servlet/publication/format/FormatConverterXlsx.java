@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget.Form
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-@RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_XLSX.class)
+
 @Registration({ FormatConverter.class, FormatConversionTarget_XLSX.class })
 public class FormatConverterXlsx implements FormatConverter {
 	public InputStream convert(PublicationContext ctx,

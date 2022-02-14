@@ -8,20 +8,11 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.StringMap;
 
-/*
- * Important! (because hard to enforce) - any class that implements
- * TreeSerializable should also have (usually via a superclass)
+/**
  *
- * @RegistryLocation(registryPoint = TreeSerializable.class)
- *
- * FIXME - reflection - add to this interface, remove others
- *
- * That is used by app server code to generate
- * the serialization signature of the reachable
- * serializables at startup time, and to
- * validate the serializable classes (most
- * importantly that any non-property fields are
- * transient)
+ * That is used by app server code to generate the serialization signature of
+ * the reachable serializables at startup time, and to validate the serializable
+ * classes (most importantly that any non-property fields are transient)
  *
  * @author nick@alcina.cc
  *

@@ -17,7 +17,7 @@ import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.persistence.client.LogStore;
 
 @ClientInstantiable
-@RegistryLocation(registryPoint = UserStoryTeller.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public abstract class UserStoryTeller
 		implements TopicListener<ClientLogRecord> {

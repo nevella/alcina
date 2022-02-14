@@ -43,7 +43,7 @@ public class Shell {
 		}
 	}
 
-	@RegistryLocation(registryPoint = Pool.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class Pool {
 		private ExecutorService threadPool;

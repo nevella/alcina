@@ -44,7 +44,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *
  *
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Registry {
 	public static final String MARKER_RESOURCE = "registry.properties";
@@ -118,7 +118,7 @@ public class Registry {
 		return new Register();
 	}
 
-	@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+	
 	@Registration(ClearStaticFieldsOnAppShutdown.class)
 	public static class BasicRegistryProvider implements RegistryProvider {
 		private volatile Registry instance;
@@ -318,6 +318,11 @@ public class Registry {
 						implementation);
 			} else {
 				RegistryKey typeKey = registryKeys.get(type);
+				if (implementations.exists(typeKey)) {
+					throw new IllegalStateException(Ax.format(
+							"Registering %s at key %s - existing registration",
+							implementation, typeKey));
+				}
 				Preconditions.checkState(!implementations.exists(typeKey));
 				registrations.clear(typeKey);
 				add(registryKeys.get(implementation.getClass()),
@@ -686,7 +691,10 @@ public class Registry {
 		void put(Object implementation) {
 			Class<? extends Object> clazz = implementation.getClass();
 			synchronized (this) {
-				if (byClass.containsKey(clazz)) {
+				Object existing = byClass.get(clazz);
+				// a singleton can be registered to multiple keys, so the logic
+				// of this check is correct
+				if (existing != null && existing != implementation) {
 					throw new IllegalStateException(Ax.format(
 							"Existing registration of singleton - %s\n\t:: %s",
 							clazz.getName(),

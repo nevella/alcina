@@ -2,7 +2,6 @@ package cc.alcina.framework.servlet.actionhandlers;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.job.Task;
@@ -11,8 +10,10 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.knowns.KnownJob;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-@RegistryLocation(registryPoint = TreeSerializable.class)
+
+
 public abstract class AbstractTaskPerformer
 		implements Runnable, Task, TaskPerformer {
 	protected transient Logger logger = LoggerFactory.getLogger(getClass());

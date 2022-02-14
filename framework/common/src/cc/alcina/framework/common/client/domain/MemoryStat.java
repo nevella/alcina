@@ -108,7 +108,7 @@ public class MemoryStat {
 		MemoryStat addMemoryStats(MemoryStat parent);
 	}
 
-	@RegistryLocation(registryPoint = ObjectMemory.class)
+	
 	@Registration(ObjectMemory.class)
 	public static abstract class ObjectMemory {
 		public abstract void dumpStats();

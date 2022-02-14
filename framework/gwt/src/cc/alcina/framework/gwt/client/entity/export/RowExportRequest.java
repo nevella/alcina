@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
-@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+
 @XmlRootElement
 @TypeSerialization(flatSerializable = false)
 @Registration(JaxbContextRegistration.class)

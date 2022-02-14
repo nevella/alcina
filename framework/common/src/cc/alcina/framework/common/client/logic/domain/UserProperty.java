@@ -31,7 +31,7 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
-@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = UserProperty.class)
+
 @DomainTransformPropagation(PropagationType.PERSISTENT)
 @Registration({ PersistentImpl.class, UserProperty.class })
 public abstract class UserProperty<T extends UserProperty>

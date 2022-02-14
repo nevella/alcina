@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 
-@RegistryLocation(registryPoint = DebugLogWriter.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+
 @Registration(value = DebugLogWriter.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 public class DebugLogWriterImpl extends Job.DebugLogWriter {
 	public void write(Job job) {

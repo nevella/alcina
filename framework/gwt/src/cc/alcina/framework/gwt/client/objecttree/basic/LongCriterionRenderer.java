@@ -21,7 +21,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = TreeRenderer.class, targetClass = LongCriterion.class)
+
 @Registration({ TreeRenderer.class, LongCriterion.class })
 public class LongCriterionRenderer
 		extends SearchCriterionRenderer<LongCriterion> {

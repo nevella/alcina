@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.KryoUtils;
+import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.util.ClasspathScanner;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
@@ -91,13 +92,10 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 		int invalidatedParentCount = 0;
 		do {
 			invalidatedThisPass.clear();
+			int loggedThisPass = 0;
 			for (ClassMetadata meta : classpathCache.classData.values()) {
 				String className = meta.className;
 				T out = null;
-				if (meta.className.equals(
-						"au.com.victorianreports.crm.dev.VrDevConsoleCommand")) {
-					int debug = 3;
-				}
 				T existing = passIncomingCache.classData.get(meta.className);
 				boolean unchanged = existing != null
 						&& existing.isUnchangedFrom(meta, this);
@@ -119,7 +117,9 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 						out.ensureMd5(this);
 						invalidatedThisPass.add(className);
 						if (passIncomingCache.classData.size() > 0) {
-							Ax.out("\t%s", clazz.getName());
+							if (loggedThisPass++ < 10) {
+								Ax.out("\t%s", clazz.getName());
+							}
 						}
 						ensured.add(className);
 					} catch (RegistryException rre) {
@@ -179,7 +179,10 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 					try {
 						LooseContext.pushWithTrue(
 								JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL);
-						JacksonUtils.serializeToFile(outgoingCache, cacheFile);
+						String out = JacksonUtils.defaultSerializer()
+								.withMaxLength(Integer.MAX_VALUE)
+								.serialize(outgoingCache);
+						ResourceUtilities.write(out, cacheFile);
 					} catch (Throwable t) {
 						t.printStackTrace();
 					} finally {

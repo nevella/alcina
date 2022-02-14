@@ -75,7 +75,7 @@ public class UnsubscribeServlet extends AlcinaServlet {
 		}
 	}
 
-	@RegistryLocation(registryPoint = UnsubscribeHandler.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(UnsubscribeHandler.class)
 	public abstract static class UnsubscribeHandler {
 		protected abstract String handle(UnsubscribeRequest unsubscribe);

@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
-@RegistryLocation(registryPoint = DOMImpl.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton(DOMImpl.class)
 public class DOMImplHeadless extends DOMImpl {
 	@Override

@@ -865,7 +865,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
-	@RegistryLocation(registryPoint = OutOfBandMessages.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class OutOfBandMessages {
 		public static final String ATTR = OutOfBandMessages.class.getName()

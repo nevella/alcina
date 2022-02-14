@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @SearchDefinitionSerializationInfo("fctsc")
-@RegistryLocation(registryPoint = SearchDefinitionSerializationInfo.class)
+
 @TypeSerialization("finishedfrom")
 @Registration(SearchDefinitionSerializationInfo.class)
 public class FinishedFromCriterion extends DateCriterion {

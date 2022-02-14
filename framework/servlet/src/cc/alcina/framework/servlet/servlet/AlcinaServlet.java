@@ -25,7 +25,7 @@ import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public abstract class AlcinaServlet extends HttpServlet {
 	private static Topic<Throwable> topicApplicationThrowables = Topic.local();

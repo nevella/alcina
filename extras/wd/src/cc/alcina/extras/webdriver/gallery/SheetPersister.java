@@ -14,12 +14,9 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
-
 import org.apache.commons.lang.StringEscapeUtils;
-
 import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.RowData;
-
 import cc.alcina.extras.webdriver.gallery.GalleryConfiguration.Element;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDoc;
@@ -35,6 +32,7 @@ import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.servlet.google.DriveAccessor;
 import cc.alcina.framework.servlet.google.SheetAccessor;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class SheetPersister {
 	File base;
@@ -152,15 +150,9 @@ public class SheetPersister {
 		String json = JacksonUtils.serializeNoTypes(images);
 		String js = Ax.format("let __viewer_data=JSON.parse(\"%s\");",
 				StringEscapeUtils.escapeJavaScript(json));
-		doc.html().head().builder().tag("script")
-				// .text(js)
-				.append();
-		doc.html().head().builder().tag("script")
-				// .text(ResourceUtilities.readRelativeResource("res/viewer.js"))
-				.append();
-		doc.html().head().builder().tag("style")
-				// .text(ResourceUtilities.readRelativeResource("res/viewer.css"))
-				.append();
+		doc.html().head().builder().tag("script").append();
+		doc.html().head().builder().tag("script").append();
+		doc.html().head().builder().tag("style").append();
 		DomNode main = doc.html().body().builder().tag("div").className("main")
 				.append();
 		DomNode left = main.builder().tag("div").className("left").append();
@@ -243,7 +235,8 @@ public class SheetPersister {
 		files.parallelStream().forEach(GalleryFile::upload);
 	}
 
-	@RegistryLocation(registryPoint = BuildNumberProvider.class, implementationType = ImplementationType.INSTANCE)
+	
+	@Registration(BuildNumberProvider.class)
 	public static class BuildNumberProvider {
 		public static SheetPersister.BuildNumberProvider get() {
 			return Registry.impl(SheetPersister.BuildNumberProvider.class);

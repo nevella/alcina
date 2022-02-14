@@ -17,7 +17,7 @@ import cc.alcina.framework.gwt.client.lux.LuxStyle;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
 
 // FIXME - directedlayout.1 - make loading async (i.e. make this a non-startup module)
-@RegistryLocation(registryPoint = ViewModelView.class, targetClass = LoginViewModel.class)
+
 @ClientInstantiable
 @Registration({ ViewModelView.class, LoginViewModel.class })
 public class LoginView extends AbstractViewModelView<LoginViewModel> {

@@ -99,7 +99,7 @@ public interface EntityDataObject {
 			this.size = size;
 		}
 
-		@RegistryLocation(registryPoint = SizeProvider.class)
+		
 		public static interface SizeProvider {
 			int getSize(OneToManyMultipleSummary oneToManyMultipleSummary,
 					Entity source);

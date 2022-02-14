@@ -172,7 +172,7 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		}
 	}
 
-	@RegistryLocation(registryPoint = ReflectiveChainedPropertyTypeProvider.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public abstract static class ReflectiveChainedPropertyTypeProvider {
 		public abstract Class getLookupIndexClass(Class clazz,

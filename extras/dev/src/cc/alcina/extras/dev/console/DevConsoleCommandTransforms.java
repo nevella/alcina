@@ -21,9 +21,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
-
 import javax.persistence.Table;
-
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
@@ -48,6 +46,7 @@ import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class DevConsoleCommandTransforms {
 	static boolean classRefsEnsured;
@@ -184,7 +183,8 @@ public class DevConsoleCommandTransforms {
 			return "";
 		}
 
-		@RegistryLocation(registryPoint = CmdListClientLogRecordsFilter.class)
+		
+		@Registration(CmdListClientLogRecordsFilter.class)
 		public abstract static class CmdListClientLogRecordsFilter
 				extends DevConsoleFilter {
 		}
@@ -477,7 +477,8 @@ public class DevConsoleCommandTransforms {
 							.describeFilters(CmdListTransformsFilter.class));
 		}
 
-		@RegistryLocation(registryPoint = CmdListTransformsFilter.class)
+		
+		@Registration(CmdListTransformsFilter.class)
 		public abstract static class CmdListTransformsFilter
 				extends DevConsoleFilter {
 		}
@@ -783,7 +784,8 @@ public class DevConsoleCommandTransforms {
 				if (line.contains("kXZ3")) {
 					int j = 3;
 				}
-				int idx = line.length() - 1;// ignore terminating "|"
+				// ignore terminating "|"
+				int idx = line.length() - 1;
 				if (idx < 1) {
 					continue;
 				}

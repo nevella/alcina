@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerial
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
-@RegistryLocation(registryPoint = SearchDefinitionSerializationInfo.class)
+
 @TypeSerialization(flatSerializable = false)
 @Registration(SearchDefinitionSerializationInfo.class)
 public abstract class EntityCriteriaGroup extends CriteriaGroup {

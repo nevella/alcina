@@ -24,7 +24,7 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
-@RegistryLocation(registryPoint = DirectedActivity.class, implementationType = ImplementationType.INSTANCE)
+
 @ClientInstantiable
 @Registration(DirectedActivity.class)
 public class DirectedActivity<P extends BasePlace> extends Model

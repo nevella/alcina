@@ -21,7 +21,7 @@ public class CollectionCreatorsClient {
 		return GWT.isScript();
 	}
 
-	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton(CollectionCreators.MultisetCreator.class)
 	public static class CacheMultisetCreatorClient<K, V>
@@ -54,7 +54,7 @@ public class CollectionCreatorsClient {
 		}
 	}
 
-	@RegistryLocation(registryPoint = CollectionCreators.TypedMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton(CollectionCreators.TypedMapCreator.class)
 	public static class TypedMapCreatorCreatorClient<K, V>

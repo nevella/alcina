@@ -22,7 +22,7 @@ import cc.alcina.framework.gwt.client.entity.view.EntityActions;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 
-@RegistryLocation(registryPoint = DirectedBindableSearchActivity.class, implementationType = ImplementationType.INSTANCE)
+
 @ClientInstantiable
 @Registration(DirectedBindableSearchActivity.class)
 public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends Bindable & SearchResult>
@@ -54,7 +54,7 @@ public class DirectedBindableSearchActivity<BP extends BindablePlace, B extends 
 		super.start(panel, eventBus);
 	}
 
-	@RegistryLocation(registryPoint = DirectedBindableSearchActivity.class, targetClass = EntityPlace.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration({ DirectedBindableSearchActivity.class, EntityPlace.class })
 	public static class DirectedBindableSearchActivity_Entity<E extends Entity & SearchResult>
 			extends DirectedBindableSearchActivity<EntityPlace, E> {

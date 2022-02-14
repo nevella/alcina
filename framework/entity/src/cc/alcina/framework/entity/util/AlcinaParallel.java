@@ -161,7 +161,7 @@ public class AlcinaParallel {
 		};
 	}
 
-	@RegistryLocation(registryPoint = AlcinaParallelJobChecker.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(AlcinaParallelJobChecker.class)
 	public static class AlcinaParallelJobChecker {
 		public boolean isCancelled() {

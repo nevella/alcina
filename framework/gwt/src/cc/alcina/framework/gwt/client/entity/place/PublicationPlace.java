@@ -23,7 +23,7 @@ public class PublicationPlace extends BasePlace {
 				.getHref(this);
 	}
 
-	@RegistryLocation(registryPoint = PublicationPlaceAbsoluteHrefSupplier.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class PublicationPlaceAbsoluteHrefSupplier {
 		public String getHref(PublicationPlace basePlace) {

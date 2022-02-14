@@ -131,7 +131,7 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		}
 	}
 
-	@RegistryLocation(registryPoint = ApplicationHeaders.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class ApplicationHeaders {

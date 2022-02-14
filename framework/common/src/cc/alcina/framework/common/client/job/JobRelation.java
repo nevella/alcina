@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.util.Ax;
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
-@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = JobRelation.class)
+
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 @Registration({ PersistentImpl.class, JobRelation.class })
 public abstract class JobRelation<T extends JobRelation> extends Entity<T> {

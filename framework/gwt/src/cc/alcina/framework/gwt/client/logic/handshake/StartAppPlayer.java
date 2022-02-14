@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.state.EndpointPlayer;
 
 @ClientInstantiable
-@RegistryLocation(registryPoint = StartAppPlayer.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class StartAppPlayer extends EndpointPlayer<HandshakeState> {
 	public StartAppPlayer() {

@@ -64,7 +64,7 @@ import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 /**
  * @author nick@alcina.cc
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class TransformPersisterInPersistenceContext {
 	public static final String CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM = TransformPersisterInPersistenceContext.class

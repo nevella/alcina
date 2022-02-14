@@ -24,7 +24,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 /*
  * For infrastructure components where blocking due to log emission > writer speed can cause feedback
  */
-@RegistryLocation(registryPoint = OffThreadLogger.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class OffThreadLogger implements InvocationHandler {
 	public static OffThreadLogger get() {

@@ -12,7 +12,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.gwt.client.action.DtrSimpleAdminPersistenceAction;
 import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 
-@RegistryLocation(registryPoint = TaskPerformer.class, targetClass = DtrSimpleAdminPersistenceAction.class)
+
 @Registration({ TaskPerformer.class, DtrSimpleAdminPersistenceAction.class })
 public class DtrSimpleAdminPersistenceHandler
 		extends BaseRemoteActionPerformer<DtrSimpleAdminPersistenceAction> {

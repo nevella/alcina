@@ -182,7 +182,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 	}
 
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+	
 	@Registration(JaxbContextRegistration.class)
 	public static class FooterModel {
 		public Long publicationLongId;
@@ -202,7 +202,7 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 
 	@XmlRootElement(name = "info")
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+	
 	@Registration(JaxbContextRegistration.class)
 	public static class WrapperModel {
 		public String css;

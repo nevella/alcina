@@ -42,11 +42,11 @@ import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
 @Bean
-@RegistryLocations({
-		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
-		@RegistryLocation(registryPoint = TreeSerializable.class) })
+
+		
+		
 @Registrations({ @Registration(JaxbContextRegistration.class),
-		@Registration(TreeSerializable.class) })
+		 })
 public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 		implements TreeRenderable, Permissible, HasPermissionsValidation,
 		HasReflectiveEquivalence<CriteriaGroup>, TreeSerializable,

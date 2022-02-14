@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-@RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_XML.class)
+
 @Registration({ FormatConverter.class, FormatConversionTarget_XML.class })
 public class FormatConverterXml implements FormatConverter {
 	@Override

@@ -5,7 +5,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 
-@RegistryLocation(registryPoint = PersistenceLayerTransformExceptionPolicyFactory.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton(PersistenceLayerTransformExceptionPolicyFactory.class)
 public class BasicPersistenceLayerTransformExceptionPolicyFactory
 		implements PersistenceLayerTransformExceptionPolicyFactory {

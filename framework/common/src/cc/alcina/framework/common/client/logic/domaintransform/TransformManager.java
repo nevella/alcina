@@ -2090,7 +2090,7 @@ public abstract class TransformManager
 		}
 	}
 
-	@RegistryLocation(registryPoint = Serializer.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class Serializer {

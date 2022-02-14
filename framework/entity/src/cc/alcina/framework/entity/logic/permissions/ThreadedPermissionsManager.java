@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.util.ThrowingRunnable;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ThreadedPermissionsManager extends PermissionsManager {
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {

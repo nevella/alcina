@@ -41,11 +41,11 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 @Bean(allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
-@RegistryLocations({
-		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
-		@RegistryLocation(registryPoint = TreeSerializable.class) })
+
+		
+		
 @Registrations({ @Registration(JaxbContextRegistration.class),
-		@Registration(TreeSerializable.class) })
+		 })
 public abstract class SearchCriterion extends Bindable
 		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion>,
 		TreeSerializable {

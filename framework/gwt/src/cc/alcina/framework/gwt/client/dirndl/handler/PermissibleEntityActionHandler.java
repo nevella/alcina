@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
-@RegistryLocation(registryPoint = PermissibleActionHandler.class, targetClass = PermissibleEntityAction.class, implementationType = ImplementationType.INSTANCE)
+
 @ClientInstantiable
 @Registration({ PermissibleActionHandler.class, PermissibleEntityAction.class })
 public class PermissibleEntityActionHandler

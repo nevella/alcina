@@ -318,7 +318,7 @@ public class TableModel extends Model {
 		}
 	}
 
-	@RegistryLocation(registryPoint = TableTypeFactory.class, implementationType = ImplementationType.INSTANCE)
+	
 	@ClientInstantiable
 	@Registration(TableTypeFactory.class)
 	public static class TableTypeFactory extends BoundWidgetTypeFactory {

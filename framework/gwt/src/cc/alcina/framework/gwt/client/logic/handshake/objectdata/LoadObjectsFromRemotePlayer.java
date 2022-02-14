@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 
-@RegistryLocation(registryPoint = LoadObjectsFromRemotePlayer.class, implementationType = ImplementationType.SINGLETON)
+
 @ClientInstantiable
 @Registration.Singleton
 public abstract class LoadObjectsFromRemotePlayer extends

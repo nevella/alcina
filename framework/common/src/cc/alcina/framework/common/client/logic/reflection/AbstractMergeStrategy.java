@@ -42,8 +42,8 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			List<A> atClass = atClass(annotationClass, reflector);
 			result = merge(result, atClass);
 			if (inheritance.contains(Inheritance.INTERFACE)) {
-				reflector.getInterfaces().stream().filter(visited::add)
-						.forEach(stack::add);
+				reflector.getInterfaces().stream().filter(this::permitPackages)
+						.filter(visited::add).forEach(stack::add);
 			}
 		}
 		return result;
@@ -59,6 +59,15 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 
 	protected abstract List<A> atClass(Class<A> annotationClass,
 			ClassReflector<?> reflector);
+
+	boolean permitPackages(Class clazz) {
+		switch (clazz.getPackageName()) {
+		case "javax.swing":
+			return false;
+		default:
+			return true;
+		}
+	}
 
 	public static abstract class AdditiveMergeStrategy<A extends Annotation>
 			extends AbstractMergeStrategy<A> {

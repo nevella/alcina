@@ -124,8 +124,8 @@ public interface DeliveryModel extends TreeSerializable {
 	}
 
 	// Parameters for ContentDeliveryType_MULTIPLE
-	@RegistryLocation(registryPoint = TreeSerializable.class)
-	@Registration(TreeSerializable.class)
+	
+	
 	public static class MultipleDeliveryEntry implements TreeSerializable {
 		private String emailSubject;
 

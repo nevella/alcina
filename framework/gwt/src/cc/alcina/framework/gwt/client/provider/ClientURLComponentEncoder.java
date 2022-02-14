@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = UrlComponentEncoder.class, implementationType = ImplementationType.SINGLETON)
+
 @ClientInstantiable
 @Registration.Singleton(UrlComponentEncoder.class)
 public class ClientURLComponentEncoder implements UrlComponentEncoder {

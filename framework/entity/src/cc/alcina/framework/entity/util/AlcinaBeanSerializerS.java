@@ -493,7 +493,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		return arr;
 	}
 
-	@RegistryLocation(registryPoint = ClassNameTranslator.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class ClassNameTranslator {

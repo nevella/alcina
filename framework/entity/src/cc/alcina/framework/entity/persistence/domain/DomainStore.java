@@ -149,7 +149,7 @@ import cc.alcina.framework.entity.util.RunnableCallable;
  *         FIXME - mvcc.5 - don't add listeners during postprocess
  *         (optimisation)
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DomainStore implements IDomainStore {
 	private static volatile QueryPool queryPool;
@@ -1110,7 +1110,7 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	@RegistryLocation(registryPoint = SizeProvider.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton(SizeProvider.class)
 	public static class DomainSizeProvider implements SizeProvider {
 		@Override
@@ -1207,7 +1207,7 @@ public class DomainStore implements IDomainStore {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainStores.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class DomainStores {
 		// not concurrent, handle in methods

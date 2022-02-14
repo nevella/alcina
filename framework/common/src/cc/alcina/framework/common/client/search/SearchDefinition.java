@@ -50,12 +50,12 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 
-@RegistryLocations({
-		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
-		@RegistryLocation(registryPoint = TreeSerializable.class) })
+
+		
+		
 @Bean
 @Registrations({ @Registration(JaxbContextRegistration.class),
-		@Registration(TreeSerializable.class) })
+		 })
 public abstract class SearchDefinition extends Bindable
 		implements TreeSerializable, TreeRenderable, ContentDefinition,
 		HasPermissionsValidation, HasReflectiveEquivalence<SearchDefinition>,

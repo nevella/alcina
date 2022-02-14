@@ -11,7 +11,7 @@ import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
 
-@RegistryLocation(registryPoint = ReadonlySupportServletLayer.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class ReadonlySupportServletLayer {
 	public static ReadonlySupportServletLayer get() {

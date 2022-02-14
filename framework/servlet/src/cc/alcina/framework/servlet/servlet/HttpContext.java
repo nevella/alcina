@@ -20,7 +20,7 @@ public class HttpContext implements AuthenticationTokenStore {
 	public HttpContext() {
 	}
 
-	@RegistryLocation(registryPoint = HttpContextLifecycle.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class HttpContextLifecycle {
 		public static HttpContext.HttpContextLifecycle get() {

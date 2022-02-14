@@ -58,7 +58,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 @Registration.Singleton
 public class EncryptionUtils {

@@ -103,7 +103,7 @@ public class TransformHistory {
 		return info;
 	}
 
-	@RegistryLocation(registryPoint = TransformHistorySearcher.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(TransformHistorySearcher.class)
 	public static abstract class TransformHistorySearcher {
 		public static TransformHistory.TransformHistorySearcher get() {

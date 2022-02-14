@@ -3,24 +3,22 @@ package cc.alcina.framework.jscodeserver;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * TODO-jscs
- * 
- * Disconnect after timeout
- * 
- * 
- * @author nick@alcina.cc
  *
+ * Disconnect after timeout
+ *
+ * @author nick@alcina.cc
  */
-@RegistryLocation(registryPoint = XhrTcpBridge.class, implementationType = ImplementationType.SINGLETON)
+
+@Registration.Singleton
 public class XhrTcpBridge {
 	public static final String HEADER_HANDLE_ID = "XhrTcpBridge.handle_id";
 

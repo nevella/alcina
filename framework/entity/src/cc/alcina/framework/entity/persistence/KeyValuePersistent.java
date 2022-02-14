@@ -32,7 +32,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPersistable
-@RegistryLocation(registryPoint = PersistentImpl.class, targetClass = KeyValuePersistent.class)
+
 @Registration({ PersistentImpl.class, KeyValuePersistent.class })
 public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 		extends VersionableEntity<T> {

@@ -51,7 +51,7 @@ public class AlcinaLogUtils {
 		}
 	}
 
-	@RegistryLocation(registryPoint = LogMuter.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class LogMuter {
 		public void muteAllLogging(boolean muteAll) {

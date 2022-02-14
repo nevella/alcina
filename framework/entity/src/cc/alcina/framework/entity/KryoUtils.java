@@ -51,7 +51,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ThrowingSupplier;
 import cc.alcina.framework.entity.KryoUtils.KryoPool.KryoPoolObjectFactory;
 
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class KryoUtils {
 	public static final String CONTEXT_OVERRIDE_CLASSLOADER = KryoUtils.class
@@ -370,7 +370,7 @@ public class KryoUtils {
 		}
 	}
 
-	@RegistryLocation(registryPoint = KryoCreationCustomiser.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class KryoCreationCustomiser {

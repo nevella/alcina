@@ -23,13 +23,13 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
-@RegistryLocations({
-		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
-		@RegistryLocation(registryPoint = TreeSerializable.class) })
+
+		
+		
 @Bean
 @XmlAccessorType(XmlAccessType.FIELD)
 @Registrations({ @Registration(JaxbContextRegistration.class),
-		@Registration(TreeSerializable.class) })
+		 })
 public class IntPair implements Comparable<IntPair>, Serializable,
 		Iterable<Integer>, TreeSerializable {
 	public static List<IntPair> asRangeList(List<Integer> ints) {

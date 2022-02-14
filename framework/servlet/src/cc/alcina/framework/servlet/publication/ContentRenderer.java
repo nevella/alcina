@@ -107,7 +107,7 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 		}
 	}
 
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+	
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@XmlRootElement
 	@Registration(JaxbContextRegistration.class)
@@ -129,7 +129,7 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
-	@RegistryLocation(registryPoint = JaxbContextRegistration.class)
+	
 	@Registration(JaxbContextRegistration.class)
 	public static class RenderTransformWrapper implements Serializable {
 		// public ContentDefinition cd;

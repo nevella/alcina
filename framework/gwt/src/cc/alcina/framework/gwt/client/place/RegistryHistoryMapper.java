@@ -24,7 +24,7 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
 
 @ClientInstantiable
-@RegistryLocation(registryPoint = RegistryHistoryMapper.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	public static RegistryHistoryMapper get() {

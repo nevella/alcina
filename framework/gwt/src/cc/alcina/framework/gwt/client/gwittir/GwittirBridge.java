@@ -705,7 +705,7 @@ public class GwittirBridge {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainListProvider.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class DomainListProvider {

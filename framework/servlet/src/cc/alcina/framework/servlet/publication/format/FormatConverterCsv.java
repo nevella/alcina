@@ -15,7 +15,7 @@ import cc.alcina.framework.servlet.grid.ExcelExporter;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-@RegistryLocation(registryPoint = FormatConverter.class, targetClass = FormatConversionTarget_CSV.class)
+
 @Registration({ FormatConverter.class, FormatConversionTarget_CSV.class })
 public class FormatConverterCsv implements FormatConverter {
 	@Override

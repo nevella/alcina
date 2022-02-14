@@ -429,7 +429,7 @@ public class DomainStoreTransformSequencer
 		return loaderDatabase.domainDescriptor.isUsesCommitSequencer();
 	}
 
-	@RegistryLocation(registryPoint = ClusteredSequencing.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(ClusteredSequencing.class)
 	public static class ClusteredSequencing {
 		public boolean isPrimarySequenceRefresher() {

@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
-@RegistryLocation(registryPoint = ReflectiveCommonRemoteServiceAsync.class, implementationType = ImplementationType.SINGLETON)
+
 @ClientInstantiable
 @Registration.Singleton
 public class ReflectiveCommonRemoteServiceAsync extends

@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.util.RandomProvider;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = RandomProvider.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+
 @IgnoreIntrospectionChecks
 @Registration.Singleton(value = RandomProvider.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 public class ServerRandomProvider implements RandomProvider {

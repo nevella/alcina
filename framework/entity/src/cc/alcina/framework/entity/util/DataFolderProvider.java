@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 
-//@RegistryLocation(registryPoint = DataFolderProvider.class, implementationType = ImplementationType.SINGLETON)
+//
 //No registry annotation, register manually in AppLifecycleServlet.initBootstrapRegistry
 public abstract class DataFolderProvider {
 	public static DataFolderProvider get() {

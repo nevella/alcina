@@ -250,7 +250,7 @@ public class Publisher {
 		return result;
 	}
 
-	@RegistryLocation(registryPoint = PublicationPersister.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class PublicationPersister {
 		public static Publisher.PublicationPersister get() {

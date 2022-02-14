@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
-@RegistryLocation(registryPoint = DTRProtocolHandler.class)
+
 @ClientInstantiable
 @Registration(DTRProtocolHandler.class)
 public class PlaintextProtocolHandlerShort implements DTRProtocolHandler {

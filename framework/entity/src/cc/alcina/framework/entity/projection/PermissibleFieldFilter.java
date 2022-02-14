@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class PermissibleFieldFilter implements GraphProjectionFieldFilter {
 	public static boolean disablePerObjectPermissions;

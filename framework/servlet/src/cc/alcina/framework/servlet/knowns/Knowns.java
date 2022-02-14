@@ -35,7 +35,7 @@ import cc.alcina.framework.entity.util.SynchronizedDateFormat;
 
 /*
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Knowns {
 	public static Object reachableKnownsModificationNotifier = new Object();
@@ -279,7 +279,7 @@ public class Knowns {
 	 *
 	 * @author nick@alcina.cc
 	 */
-	@RegistryLocation(registryPoint = KnownNodeAppLogic.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class KnownNodeAppLogic {
 		public void processNodeRule(KnownRenderableNode node,

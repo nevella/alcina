@@ -19,8 +19,8 @@ public class DomainUpdate implements Serializable {
 	public DomainTransformCommitPosition commitPosition;
 
 	@Bean
-	@RegistryLocation(registryPoint = TreeSerializable.class)
-	@Registration(TreeSerializable.class)
+	
+	
 	public static class DomainTransformCommitPosition implements
 			TreeSerializable, Comparable<DomainTransformCommitPosition> {
 		private Timestamp commitTimestamp;
@@ -82,7 +82,7 @@ public class DomainUpdate implements Serializable {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DomainTransformCommitPositionProvider.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class DomainTransformCommitPositionProvider {

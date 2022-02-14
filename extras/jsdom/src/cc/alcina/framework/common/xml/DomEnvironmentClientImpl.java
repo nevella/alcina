@@ -2,7 +2,6 @@ package cc.alcina.framework.common.xml;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
-
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomEnvironment;
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -10,12 +9,11 @@ import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-@RegistryLocation(registryPoint = DomEnvironment.class, implementationType = ImplementationType.SINGLETON)
+
 @ClientInstantiable
-/*
- * Not yet implemented, but could be without much difficulty
- */
+@Registration.Singleton(DomEnvironment.class)
 public class DomEnvironmentClientImpl implements DomEnvironment {
 	@Override
 	public XpathEvaluator createXpathEvaluator(DomNode xmlNode,

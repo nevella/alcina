@@ -28,7 +28,7 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	@RegistryLocation(registryPoint = OutOfBandMessageHandler.class, targetClass = ClientInstanceMessage.class)
+	
 	@ClientInstantiable
 	@Registration({ OutOfBandMessageHandler.class,
 			ClientInstanceMessage.class })
@@ -63,7 +63,7 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	@RegistryLocation(registryPoint = OutOfBandMessageHandler.class, targetClass = ExceptionMessage.class)
+	
 	@ClientInstantiable
 	@Registration({ OutOfBandMessageHandler.class, ExceptionMessage.class })
 	public static class ExceptionMessageHandler
@@ -93,7 +93,7 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	@RegistryLocation(registryPoint = OutOfBandMessageHandler.class, targetClass = ReadonlyInstanceMessage.class)
+	
 	@ClientInstantiable
 	@Registration({ OutOfBandMessageHandler.class,
 			ReadonlyInstanceMessage.class })

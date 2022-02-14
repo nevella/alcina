@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
-@RegistryLocation(registryPoint = DomainDefinitionHandler.class)
+
 @ClientInstantiable
 @Registration(DomainDefinitionHandler.class)
 public abstract class DomainDefinitionHandler<SD extends SearchDefinition> {

@@ -136,7 +136,7 @@ public class TaskReportDevMetrics extends AbstractTaskPerformer {
 		logger.info("Log output to job.largeResult");
 	}
 
-	@RegistryLocation(registryPoint = DevMetricLogSearcher.class)
+	
 	@Registration(DevMetricLogSearcher.class)
 	public static abstract class DevMetricLogSearcher {
 		public abstract List<ILogRecord>

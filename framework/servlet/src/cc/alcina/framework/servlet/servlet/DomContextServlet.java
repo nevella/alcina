@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.util.DomContext;
 
-@RegistryLocation(registryPoint = DomContext.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton(DomContext.class)
 public class DomContextServlet extends DomContext {
 	public static final String CONTEXT_DOCS = DomContextServlet.class.getName()

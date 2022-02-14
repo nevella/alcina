@@ -45,7 +45,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
  *
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = FromOfflineConflictResolver.class, implementationType = ImplementationType.INSTANCE)
+
 @ClientInstantiable
 @Registration(FromOfflineConflictResolver.class)
 public class FromOfflineConflictResolver {

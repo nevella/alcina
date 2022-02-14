@@ -23,7 +23,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class EntityLayerLogging {
 	public static final transient String CONTEXT_MUTE_PERSISTENT_LOGGING = EntityLayerLogging.class

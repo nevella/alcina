@@ -64,7 +64,7 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
-@RegistryLocation(registryPoint = DevConsoleCommand.class)
+
 @Registration(DevConsoleCommand.class)
 @Directed(tag = "asdeee")
 public abstract class DevConsoleCommand<C extends DevConsole> {

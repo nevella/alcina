@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.servlet.publication.Publisher;
 
-@RegistryLocation(registryPoint = PublicationRequestHandler.class, implementationType = ImplementationType.INSTANCE)
+
 @Registration(PublicationRequestHandler.class)
 public class PublicationRequestHandler {
 	public static PublicationRequestHandler get() {

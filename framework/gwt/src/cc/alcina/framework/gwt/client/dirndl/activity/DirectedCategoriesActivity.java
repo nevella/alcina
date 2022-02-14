@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
-@RegistryLocation(registryPoint = DirectedCategoriesActivity.class, implementationType = ImplementationType.INSTANCE)
+
 @ClientInstantiable
 @Registration(DirectedCategoriesActivity.class)
 public class DirectedCategoriesActivity<CNP extends CategoryNamePlace>

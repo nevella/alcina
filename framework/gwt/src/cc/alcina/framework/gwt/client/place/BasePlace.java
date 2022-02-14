@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 
 @ClientInstantiable
-@RegistryLocation(registryPoint = BasePlace.class)
+
 @Registration(BasePlace.class)
 public abstract class BasePlace extends Place implements Serializable {
 	public static String tokenFor(BasePlace p) {
@@ -94,7 +94,7 @@ public abstract class BasePlace extends Place implements Serializable {
 				.removeAppPrefixAndLeadingSlashes(toTokenString());
 	}
 
-	@RegistryLocation(registryPoint = BasePlaceAbsoluteHrefSupplier.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class BasePlaceAbsoluteHrefSupplier {
 		public String getHref(BasePlace basePlace) {
@@ -102,7 +102,7 @@ public abstract class BasePlace extends Place implements Serializable {
 		}
 	}
 
-	@RegistryLocation(registryPoint = HrefProvider.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class HrefProvider {

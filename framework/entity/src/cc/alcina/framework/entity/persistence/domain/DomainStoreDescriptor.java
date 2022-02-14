@@ -382,7 +382,7 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		}
 	}
 
-	@RegistryLocation(registryPoint = TestSupport.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static abstract class TestSupport {
 		public static DomainStoreDescriptor.TestSupport get() {

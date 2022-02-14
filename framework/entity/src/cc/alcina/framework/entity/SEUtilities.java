@@ -107,7 +107,7 @@ import cc.alcina.framework.common.client.util.TextUtils;
 /**
  * @author nick@alcina.cc
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class SEUtilities {
 	public static int idCounter = 1;
@@ -1681,7 +1681,7 @@ public class SEUtilities {
 		}
 	}
 
-	@RegistryLocation(registryPoint = IidGenerator.class)
+	
 	@Registration(IidGenerator.class)
 	public static class IidGeneratorJ2SE implements IidGenerator {
 		@Override
@@ -2013,7 +2013,7 @@ public class SEUtilities {
 		}
 	}
 
-	@RegistryLocation(registryPoint = YearResolver.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton(YearResolver.class)
 	public static class YearResolverImpl implements YearResolver {
 		private Calendar calendar = new GregorianCalendar();

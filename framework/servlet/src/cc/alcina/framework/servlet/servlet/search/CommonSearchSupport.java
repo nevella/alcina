@@ -40,7 +40,7 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionCont
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 
-@RegistryLocation(registryPoint = CommonSearchSupport.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class CommonSearchSupport {
 	public static final transient String CONTEXT_DO_NOT_PROJECT_SEARCH = CommonSearchSupport.class
@@ -268,7 +268,7 @@ public class CommonSearchSupport {
 		protected abstract ModelSearchResults searchModel0();
 	}
 
-	@RegistryLocation(registryPoint = SearchResultProjector.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(SearchResultProjector.class)
 	public static class SearchResultProjector {
 		private boolean projectAsSingleEntityDataObjects;

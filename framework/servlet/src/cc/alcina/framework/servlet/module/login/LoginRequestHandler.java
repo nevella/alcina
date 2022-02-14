@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.authentication.Authenticator;
 
-@RegistryLocation(registryPoint = LoginRequestHandler.class, implementationType = ImplementationType.INSTANCE)
+
 @Registration(LoginRequestHandler.class)
 public abstract class LoginRequestHandler<U extends IUser> {
 	protected LoginRequest loginRequest;

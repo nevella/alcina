@@ -50,7 +50,7 @@ import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
 
-@RegistryLocation(registryPoint = InternalMetrics.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class InternalMetrics {
 	private static final int PERSIST_PERIOD = 1000;
@@ -577,7 +577,7 @@ public class InternalMetrics {
 		return returnLong;
 	}
 
-	@RegistryLocation(registryPoint = ContainerProvider.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class ContainerProvider {
 		public static InternalMetrics.ContainerProvider get() {

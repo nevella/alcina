@@ -95,7 +95,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ReferenceOpenHashMap;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class GraphProjection {
 	public static final int LOOKUP_SIZE = 1000;

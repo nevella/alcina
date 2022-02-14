@@ -28,7 +28,7 @@ public class CollectionCreatorsMvcc {
 		}
 	}
 
-	@RegistryLocation(registryPoint = CollectionCreators.MultisetCreator.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	
 	@Registration(value = CollectionCreators.MultisetCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class DomainStoreMultisetCreator<K, V>
 			implements CollectionCreators.MultisetCreator<K, V> {
@@ -52,7 +52,7 @@ public class CollectionCreatorsMvcc {
 		}
 	}
 
-	@RegistryLocation(registryPoint = CollectionCreators.TypedMapCreator.class, implementationType = ImplementationType.SINGLETON, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+	
 	@ClientInstantiable
 	@Registration.Singleton(value = CollectionCreators.TypedMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class TypedMapCreatorCreatorMvcc<K, V>

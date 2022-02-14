@@ -17,7 +17,7 @@ public class ReadOnlyEvaluator implements ConditionEvaluator {
 		return Registry.impl(ReadOnlyEvaluatorValueProvider.class).isReadOnly();
 	}
 
-	@RegistryLocation(registryPoint = ReadOnlyEvaluatorValueProvider.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(ReadOnlyEvaluatorValueProvider.class)
 	public static class ReadOnlyEvaluatorValueProvider {
 		public boolean isReadOnly() {

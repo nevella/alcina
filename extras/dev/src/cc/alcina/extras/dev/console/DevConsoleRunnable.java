@@ -16,7 +16,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
 
-@RegistryLocation(registryPoint = DevConsoleRunnable.class)
+
 @TypeSerialization(flatSerializable = false)
 @Registration(DevConsoleRunnable.class)
 public abstract class DevConsoleRunnable extends AbstractTaskPerformer {

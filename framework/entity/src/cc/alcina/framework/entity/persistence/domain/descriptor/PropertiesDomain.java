@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.entity.persistence.domain.LockUtils;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
-@RegistryLocation(registryPoint = PropertiesDomain.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class PropertiesDomain {
 	public static PropertiesDomain get() {
@@ -62,7 +62,7 @@ public class PropertiesDomain {
 				.getPersistable();
 	}
 
-	@RegistryLocation(registryPoint = Locks.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class Locks {
 		public static PropertiesDomain.Locks get() {

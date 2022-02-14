@@ -28,7 +28,7 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = TreeRenderer.class, targetClass = EnumMultipleCriterion.class)
+
 @Registration({ TreeRenderer.class, EnumMultipleCriterion.class })
 public class EnumMultipleCriterionRenderer<T extends EnumMultipleCriterion>
 		extends SearchCriterionRenderer<T> {

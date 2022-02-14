@@ -91,7 +91,7 @@ import cc.alcina.framework.entity.util.MethodContext;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = CommonPersistenceBase.class, implementationType = ImplementationType.INSTANCE)
+
 @Registration(CommonPersistenceBase.class)
 public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 	// note - this'll be a function of the stack depth of the eql ast processor
@@ -740,7 +740,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 		return DomainLinker.linkToDomain(results);
 	}
 
-	@RegistryLocation(registryPoint = CommonPersistenceConnectionProvider.class)
+	
 	@Registration(CommonPersistenceConnectionProvider.class)
 	public abstract static class CommonPersistenceConnectionProvider {
 		public abstract Connection getConnection();

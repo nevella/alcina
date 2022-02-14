@@ -27,7 +27,7 @@ public abstract class Reference {
 		return Reflections.at(refClass).annotation(Ref.class).value();
 	}
 
-	@RegistryLocation(registryPoint = Resolver.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class Resolver {
 		public static Reference.Resolver get() {

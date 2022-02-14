@@ -22,7 +22,7 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 /**
  * @author nick@alcina.cc
  */
-@RegistryLocation(registryPoint = ContentDeliveryType.class, targetClass = ContentDeliveryType_LOCAL_FILESYSTEM.class)
+
 @Registration({ ContentDeliveryType.class,
 		ContentDeliveryType_LOCAL_FILESYSTEM.class })
 public class ContentDeliveryLocalFilesystem implements ContentDelivery {

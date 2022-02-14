@@ -56,7 +56,7 @@ public class CollectionCreators {
 		}
 	}
 
-	@RegistryLocation(registryPoint = ConcurrentMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class ConcurrentMapCreator {
@@ -73,7 +73,7 @@ public class CollectionCreators {
 		}
 	}
 
-	@RegistryLocation(registryPoint = CollectionCreators.HashMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	
 	@ClientInstantiable
 	@Registration.Singleton(CollectionCreators.HashMapCreator.class)
 	public static class HashMapCreator {
@@ -94,7 +94,7 @@ public class CollectionCreators {
 				Class<V> valueClass);
 	}
 
-	@RegistryLocation(registryPoint = MultiTrieCreator.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(MultiTrieCreator.class)
 	public static class MultiTrieCreator {
 		public MultiTrieCreator() {
@@ -106,7 +106,7 @@ public class CollectionCreators {
 		}
 	}
 
-	@RegistryLocation(registryPoint = TreeMapCreator.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(TreeMapCreator.class)
 	public static class TreeMapCreator implements MapCreator {
 		public List<Class> types;
@@ -125,7 +125,7 @@ public class CollectionCreators {
 		}
 	}
 
-	@RegistryLocation(registryPoint = TreeMapRevCreator.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(TreeMapRevCreator.class)
 	public static class TreeMapRevCreator implements MapCreator {
 		public List<Class> types;
@@ -148,7 +148,7 @@ public class CollectionCreators {
 		public Map<K, V> create(Class<K> keyClass, Class<V> valueClass);
 	}
 
-	@RegistryLocation(registryPoint = UnsortedMapCreator.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class UnsortedMapCreator implements DelegateMapCreator {
 		@Override

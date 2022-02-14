@@ -8,7 +8,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 // FIXME - mvcc.jobs.1a - all api in use?
 public interface JobExecutors {
 	void addScheduledJobExecutorChangeConsumer(

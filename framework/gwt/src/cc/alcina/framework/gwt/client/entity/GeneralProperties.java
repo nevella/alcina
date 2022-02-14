@@ -36,9 +36,9 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 @Bean(display = @Display(name = "Developer"))
 @XmlRootElement
-@RegistryLocations(value = {
-		@RegistryLocation(registryPoint = JaxbContextRegistration.class),
-		@RegistryLocation(registryPoint = PerUserProperties.class) })
+
+		
+		
 @Registrations({ @Registration(JaxbContextRegistration.class),
 		@Registration(PerUserProperties.class) })
 public class GeneralProperties extends Bindable

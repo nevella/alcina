@@ -129,7 +129,7 @@ public class StandardSchedules {
 		}
 	}
 
-	@RegistryLocation(registryPoint = RecurrentJobsExecutorServiceProvider.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class RecurrentJobsExecutorServiceProvider
 			implements ExecutorServiceProvider {

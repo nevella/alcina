@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @SearchDefinitionSerializationInfo("stdc")
-@RegistryLocation(registryPoint = SearchDefinitionSerializationInfo.class)
+
 @TypeSerialization("startdate")
 @Registration(SearchDefinitionSerializationInfo.class)
 public class StartDateCriterion extends DateCriterion {

@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ADMIN))
 @MappedSuperclass
-@RegistryLocation(registryPoint = VersionableEntity.class)
+
 @Bean
 @Registration(VersionableEntity.class)
 public abstract class VersionableEntity<T extends VersionableEntity>

@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CachingMap;
 
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DTRProtocolSerializer {
 	public static final String CONTEXT_EXCEPTION_DEBUG = DTRProtocolSerializer.class

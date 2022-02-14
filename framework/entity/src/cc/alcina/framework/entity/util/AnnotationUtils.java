@@ -37,7 +37,7 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 /**
  * @author Nick Reddel
  */
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class AnnotationUtils {
 	private static Map<Method, Set<Annotation>> superMethodAnnotationMap = new ConcurrentHashMap<Method, Set<Annotation>>();

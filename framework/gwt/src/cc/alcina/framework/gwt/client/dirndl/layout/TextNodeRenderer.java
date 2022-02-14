@@ -66,7 +66,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 	 * Normally entities, if directly rendered, are the models for actions - so
 	 * just some simple text...
 	 */
-	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Entity.class)
+	
 	@Registration({ DirectedNodeRenderer.class, Entity.class })
 	public static class EntityNodeRenderer extends TextNodeRenderer {
 		@Override
@@ -75,7 +75,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Date.class)
+	
 	@Registration({ DirectedNodeRenderer.class, Date.class })
 	public static class DateNodeRenderer extends TextNodeRenderer {
 		@Override
@@ -84,7 +84,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Enum.class)
+	
 	@Registration({ DirectedNodeRenderer.class, Enum.class })
 	public static class EnumNodeRenderer extends HasDisplayNameRenderer {
 	}
@@ -100,12 +100,12 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = String.class)
+	
 	@Registration({ DirectedNodeRenderer.class, String.class })
 	public static class StringNodeRenderer extends TextNodeRenderer {
 	}
 
-	@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = Number.class)
+	
 	@Registration({ DirectedNodeRenderer.class, Number.class })
 	public static class NumberNodeRenderer extends TextNodeRenderer {
 	}

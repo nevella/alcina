@@ -78,7 +78,7 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 import cc.alcina.framework.gwt.client.util.Async;
 
-@RegistryLocation(registryPoint = FormModel.class, implementationType = ImplementationType.INSTANCE)
+
 @Directed(receives = { GwtEvents.Attach.class, DomEvents.KeyDown.class })
 @Registration(FormModel.class)
 public class FormModel extends Model implements DomEvents.Submit.Handler,
@@ -502,7 +502,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 		}
 	}
 
-	@RegistryLocation(registryPoint = LabelModel.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(LabelModel.class)
 	public static class LabelModel extends Model {
 		protected FormElement formElement;

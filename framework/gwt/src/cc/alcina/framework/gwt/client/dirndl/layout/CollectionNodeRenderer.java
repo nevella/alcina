@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
-@RegistryLocation(registryPoint = DirectedNodeRenderer.class, targetClass = AbstractCollection.class)
+
 @Registration({ DirectedNodeRenderer.class, AbstractCollection.class })
 public class CollectionNodeRenderer extends DirectedNodeRenderer {
 	@Override

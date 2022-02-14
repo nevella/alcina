@@ -148,9 +148,9 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
  *
  * @author nick@alcina.cc
  */
-@RegistryLocations({
-		@RegistryLocation(registryPoint = JobRegistry.class, implementationType = ImplementationType.SINGLETON),
-		@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class) })
+
+		
+		
 @Registrations({
 		@Registration(value = JobRegistry.class, implementation = Registration.Implementation.SINGLETON),
 		@Registration(ClearStaticFieldsOnAppShutdown.class) })
@@ -725,7 +725,7 @@ public class JobRegistry {
 		}
 	}
 
-	@RegistryLocation(registryPoint = ActionPerformerTrackMetrics.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton
 	public static class ActionPerformerTrackMetrics
 			implements Supplier<Boolean> {
@@ -928,7 +928,7 @@ public class JobRegistry {
 		}
 	}
 
-	@RegistryLocation(registryPoint = JobExecutors.class, implementationType = ImplementationType.INSTANCE)
+	
 	@Registration(JobExecutors.class)
 	public static class JobExecutorsSingle implements JobExecutors {
 		@Override
@@ -958,7 +958,7 @@ public class JobRegistry {
 		}
 	}
 
-	@RegistryLocation(registryPoint = Task.Performer.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton(Task.Performer.class)
 	public static class Performer implements Task.Performer {
 		@Override

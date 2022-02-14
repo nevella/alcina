@@ -68,7 +68,7 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceList
  * FIXME - 2022 - any non-transactional refs (particularly collections) to mvcc
  * objects should filter by Domain.notRemoved
  */
-@RegistryLocation(registryPoint = JobDomain.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class JobDomain {
 	public static JobDomain get() {
@@ -763,7 +763,7 @@ public class JobDomain {
 	 * don't need (only needed pre-completion for execution constraints). So
 	 * filter appropriately
 	 */
-	@RegistryLocation(registryPoint = ClientInstanceLoadOracle.class, implementationType = ImplementationType.SINGLETON)
+	
 	@Registration.Singleton(ClientInstanceLoadOracle.class)
 	public static class ClientInstanceLoadOracleImpl
 			extends ClientInstanceLoadOracle {

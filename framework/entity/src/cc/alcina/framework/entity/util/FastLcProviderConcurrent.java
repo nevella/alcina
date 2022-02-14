@@ -7,7 +7,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.entity.util.CachingConcurrentMap.CachingConcurrentLcMap;
 
-@RegistryLocation(registryPoint = FastLcProvider.class, implementationType = ImplementationType.INSTANCE, priority = RegistryLocation.PREFERRED_LIBRARY_PRIORITY)
+
 @ClientInstantiable
 @Registration(value = FastLcProvider.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 public class FastLcProviderConcurrent extends FastLcProvider {

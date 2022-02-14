@@ -31,7 +31,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  * @author Nick Reddel
  */
 @SearchDefinitionSerializationInfo("tx")
-@RegistryLocation(registryPoint = SearchDefinitionSerializationInfo.class)
+
 @TypeSerialization("text")
 @Registration(SearchDefinitionSerializationInfo.class)
 public class TxtCriterion extends SearchCriterion implements HasValue<String> {

@@ -17,7 +17,7 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 
-@RegistryLocation(registryPoint = PublicationDomain.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton
 public class PublicationDomain {
 	public static PublicationDomain get() {

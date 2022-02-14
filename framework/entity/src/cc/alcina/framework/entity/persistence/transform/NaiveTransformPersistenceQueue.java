@@ -15,7 +15,7 @@ import cc.alcina.framework.entity.transform.TransformPersistenceToken;
  *
  * @author nick@alcina.cc
  */
-@RegistryLocation(registryPoint = TransformPersistenceQueue.class, implementationType = ImplementationType.SINGLETON)
+
 @Registration.Singleton(TransformPersistenceQueue.class)
 public class NaiveTransformPersistenceQueue
 		implements TransformPersistenceQueue {
