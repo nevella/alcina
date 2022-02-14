@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @SearchDefinitionSerializationInfo("mdfc")
-
 @TypeSerialization("modifiedfrom")
 @Registration(SearchDefinitionSerializationInfo.class)
 public class ModifiedFromCriterion extends DateCriterion {

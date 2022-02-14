@@ -18,7 +18,6 @@ import cc.alcina.framework.gwt.client.util.OnetimeWrappingAsyncCallback;
 import cc.alcina.framework.gwt.client.util.WrappingAsyncCallback;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.LocalPersistenceTuple;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public class DatabaseStatsObserver {

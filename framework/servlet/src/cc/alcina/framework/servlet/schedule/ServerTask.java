@@ -13,8 +13,6 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.knowns.KnownJob;
 
-
-
 public abstract class ServerTask<T extends Task> implements SelfPerformer<T> {
 	protected String value;
 

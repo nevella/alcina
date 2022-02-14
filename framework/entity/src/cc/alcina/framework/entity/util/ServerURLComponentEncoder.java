@@ -23,7 +23,6 @@ import cc.alcina.framework.entity.SEUtilities;
 /**
  * @author Nick Reddel
  */
-
 // only used in hosted mode
 @ClientInstantiable
 @Registration.Singleton(value = UrlComponentEncoder.class, priority = Registration.Priority.PREFERRED_LIBRARY)

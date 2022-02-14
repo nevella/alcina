@@ -15,7 +15,6 @@ import cc.alcina.framework.gwt.client.entity.view.ViewModelView;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsort;
 import cc.alcina.framework.gwt.client.lux.LuxStyle;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
-
 // FIXME - directedlayout.1 - make loading async (i.e. make this a non-startup module)
 
 @ClientInstantiable

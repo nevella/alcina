@@ -148,9 +148,6 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
  *
  * @author nick@alcina.cc
  */
-
-		
-		
 @Registrations({
 		@Registration(value = JobRegistry.class, implementation = Registration.Implementation.SINGLETON),
 		@Registration(ClearStaticFieldsOnAppShutdown.class) })
@@ -725,7 +722,6 @@ public class JobRegistry {
 		}
 	}
 
-	
 	@Registration.Singleton
 	public static class ActionPerformerTrackMetrics
 			implements Supplier<Boolean> {
@@ -928,7 +924,6 @@ public class JobRegistry {
 		}
 	}
 
-	
 	@Registration(JobExecutors.class)
 	public static class JobExecutorsSingle implements JobExecutors {
 		@Override
@@ -958,7 +953,6 @@ public class JobRegistry {
 		}
 	}
 
-	
 	@Registration.Singleton(Task.Performer.class)
 	public static class Performer implements Task.Performer {
 		@Override

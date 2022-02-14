@@ -40,7 +40,6 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
 import cc.alcina.framework.entity.util.MethodContext;
 
-
 @Registration.Singleton
 public class AuthenticationPersistence {
 	public static final transient String CONTEXT_IDLE_TIMEOUT_DISABLED = AuthenticationPersistence.class

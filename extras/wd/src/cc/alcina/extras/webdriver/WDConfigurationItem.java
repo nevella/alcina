@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 @Registration(JaxbContextRegistration.class)
@@ -68,7 +67,6 @@ public class WDConfigurationItem {
 				topLevelClassName, uri);
 	}
 
-	
 	@XmlRootElement(name = "wdConfiguration")
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@Registration(JaxbContextRegistration.class)
@@ -82,7 +80,6 @@ public class WDConfigurationItem {
 		public int recurrentTestPeriodSeconds = 60 * 5;
 	}
 
-	
 	@Registration.Singleton
 	public static abstract class WDDriverHandlerProvider {
 		public static WDConfigurationItem.WDDriverHandlerProvider get() {

@@ -17,7 +17,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
  *
  * @author nick@alcina.cc
  */
-
 @Registration.Singleton
 public class XhrTcpBridge {
 	public static final String HEADER_HANDLE_ID = "XhrTcpBridge.handle_id";

@@ -64,7 +64,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
  * Analyse source, look for entrypoint accesses from accessing code (either
  * static calls or constructor calls - initially just static calls) and rewrite
  */
-
 @Registration({ TaskPerformer.class, TaskConvertToProxies.class })
 public class ConvertToProxiesPerformer
 		implements TaskPerformer<TaskConvertToProxies> {

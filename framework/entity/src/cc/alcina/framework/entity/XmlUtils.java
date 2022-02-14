@@ -1703,7 +1703,6 @@ public class XmlUtils {
 		}
 	}
 
-	
 	@Registration.Singleton
 	public static class XPointerConverter {
 		public String toSimpleXPointer(Node n) {

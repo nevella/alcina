@@ -18,7 +18,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.TimeConstants;
 
-
 @Registration(KnownStatusRuleHandler.class)
 public abstract class KnownStatusRuleHandler
 		implements Registration.EnumDiscriminator<KnownStatusRuleName> {

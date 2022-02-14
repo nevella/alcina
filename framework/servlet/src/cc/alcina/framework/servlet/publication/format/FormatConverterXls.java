@@ -15,7 +15,6 @@ import cc.alcina.framework.servlet.grid.ExcelExporter;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-
 @Registration({ FormatConverter.class, FormatConversionTarget_XLS.class })
 public class FormatConverterXls implements FormatConverter {
 	public InputStream convert(PublicationContext ctx,

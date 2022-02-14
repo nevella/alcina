@@ -61,7 +61,6 @@ public class TopicPublisher {
 		}
 	}
 
-	
 	@Registration(ClearStaticFieldsOnAppShutdown.class)
 	public static class GlobalTopicPublisher extends TopicPublisher {
 		private static volatile GlobalTopicPublisher singleton;

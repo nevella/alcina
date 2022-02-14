@@ -183,7 +183,6 @@ public class DevConsoleCommandTransforms {
 			return "";
 		}
 
-		
 		@Registration(CmdListClientLogRecordsFilter.class)
 		public abstract static class CmdListClientLogRecordsFilter
 				extends DevConsoleFilter {
@@ -477,7 +476,6 @@ public class DevConsoleCommandTransforms {
 							.describeFilters(CmdListTransformsFilter.class));
 		}
 
-		
 		@Registration(CmdListTransformsFilter.class)
 		public abstract static class CmdListTransformsFilter
 				extends DevConsoleFilter {

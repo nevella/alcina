@@ -40,7 +40,6 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionDualFilter;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DomainDeltaSequencer {
 	private static Map<Class, Method> rpcReflectiveMethods = new LinkedHashMap<>();

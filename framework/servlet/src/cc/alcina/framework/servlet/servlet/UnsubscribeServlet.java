@@ -75,7 +75,6 @@ public class UnsubscribeServlet extends AlcinaServlet {
 		}
 	}
 
-	
 	@Registration(UnsubscribeHandler.class)
 	public abstract static class UnsubscribeHandler {
 		protected abstract String handle(UnsubscribeRequest unsubscribe);

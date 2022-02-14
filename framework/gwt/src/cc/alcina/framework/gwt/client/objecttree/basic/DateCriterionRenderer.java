@@ -21,7 +21,6 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 /**
  * @author Nick Reddel
  */
-
 @Registration({ TreeRenderer.class, AbstractDateCriterion.class })
 public class DateCriterionRenderer<T extends AbstractDateCriterion>
 		extends SearchCriterionRenderer<AbstractDateCriterion> {

@@ -235,7 +235,6 @@ public class SheetPersister {
 		files.parallelStream().forEach(GalleryFile::upload);
 	}
 
-	
 	@Registration(BuildNumberProvider.class)
 	public static class BuildNumberProvider {
 		public static SheetPersister.BuildNumberProvider get() {

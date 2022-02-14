@@ -18,7 +18,6 @@ import cc.alcina.framework.servlet.grid.ExcelExporter;
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-
 @Registration({ FormatConverter.class, FormatConversionTarget_JSON.class })
 public class FormatConverterJson implements FormatConverter {
 	@Override

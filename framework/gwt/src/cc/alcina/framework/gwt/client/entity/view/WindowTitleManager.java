@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public class WindowTitleManager {

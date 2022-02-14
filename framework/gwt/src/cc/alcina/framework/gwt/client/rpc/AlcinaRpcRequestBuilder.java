@@ -131,7 +131,6 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class ApplicationHeaders {

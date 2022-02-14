@@ -16,7 +16,6 @@ import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
  *
  * @author nick@alcina.cc
  */
-
 @ClientInstantiable
 @Registration.Singleton
 public class CheckOfflineSufficentPlayer

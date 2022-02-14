@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
-
 @Registration(DomainCriterionHandler.class)
 public abstract class DomainCriterionHandler<SC extends SearchCriterion> {
 	protected Class<SC> searchCriterionClass;

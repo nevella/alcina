@@ -24,7 +24,6 @@ import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 /**
  * @author nick@alcina.cc
  */
-
 @ClientInstantiable
 @Registration.Singleton
 public class TreeRenderingInfoProvider {

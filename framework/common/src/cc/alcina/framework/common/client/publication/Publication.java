@@ -39,7 +39,6 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.StandardLabelCustomiser
 @ObjectPermissions(create = @Permission(access = AccessLevel.EVERYONE), delete = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 @MappedSuperclass
 @Bean
-
 @DomainTransformPropagation(value = PropagationType.NON_PERSISTENT, persistNonRoot = false)
 @Registration({ PersistentImpl.class, Publication.class })
 public abstract class Publication extends Entity<Publication>

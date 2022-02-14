@@ -12,8 +12,6 @@ import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.knowns.KnownJob;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-
-
 public abstract class AbstractTaskPerformer
 		implements Runnable, Task, TaskPerformer {
 	protected transient Logger logger = LoggerFactory.getLogger(getClass());

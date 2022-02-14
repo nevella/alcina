@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @SearchDefinitionSerializationInfo("endc")
-
 @TypeSerialization("enddate")
 @Registration(SearchDefinitionSerializationInfo.class)
 public class EndDateCriterion extends DateCriterion {

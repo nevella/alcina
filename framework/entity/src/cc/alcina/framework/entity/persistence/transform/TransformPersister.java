@@ -110,7 +110,6 @@ public class TransformPersister {
 		}
 	}
 
-	
 	@Registration(TransformPersisterPeer.class)
 	public static class TransformPersisterPeer {
 		public static TransformPersister.TransformPersisterPeer get() {

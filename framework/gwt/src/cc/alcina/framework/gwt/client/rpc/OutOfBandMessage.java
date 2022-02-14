@@ -28,7 +28,6 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration({ OutOfBandMessageHandler.class,
 			ClientInstanceMessage.class })
@@ -63,7 +62,6 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration({ OutOfBandMessageHandler.class, ExceptionMessage.class })
 	public static class ExceptionMessageHandler
@@ -93,7 +91,6 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration({ OutOfBandMessageHandler.class,
 			ReadonlyInstanceMessage.class })

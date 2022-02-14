@@ -44,7 +44,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *
  *
  */
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Registry {
 	public static final String MARKER_RESOURCE = "registry.properties";
@@ -118,7 +117,6 @@ public class Registry {
 		return new Register();
 	}
 
-	
 	@Registration(ClearStaticFieldsOnAppShutdown.class)
 	public static class BasicRegistryProvider implements RegistryProvider {
 		private volatile Registry instance;

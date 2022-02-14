@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  *
  * @author nick@alcina.cc
  */
-
 @SuppressWarnings("deprecation")
 @ClientInstantiable
 @Registration.Singleton

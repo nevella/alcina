@@ -250,7 +250,6 @@ public class Publisher {
 		return result;
 	}
 
-	
 	@Registration.Singleton
 	public static class PublicationPersister {
 		public static Publisher.PublicationPersister get() {

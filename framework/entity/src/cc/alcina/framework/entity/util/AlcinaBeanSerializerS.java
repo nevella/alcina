@@ -493,7 +493,6 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		return arr;
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class ClassNameTranslator {

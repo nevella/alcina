@@ -41,7 +41,6 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 /**
  * @author Nick Reddel
  */
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public abstract class ClassRef extends Entity implements TreeSerializable {
 	private static Map<String, ClassRef> refMap = new HashMap<String, ClassRef>();

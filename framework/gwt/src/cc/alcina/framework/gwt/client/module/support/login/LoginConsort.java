@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.module.support.login.LoginConsort.State;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
 
-
 @ClientInstantiable
 @Registration(LoginConsort.class)
 public abstract class LoginConsort extends Consort<State> {

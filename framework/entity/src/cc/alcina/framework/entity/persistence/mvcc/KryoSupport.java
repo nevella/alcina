@@ -21,7 +21,6 @@ public class KryoSupport {
 	public static final String CONTEXT_DESERIALIZING_PRODUCTION_GRAPH = KryoSupport.class
 			.getName() + ".CONTEXT_DESERIALIZING_PRODUCTION_GRAPH";
 
-	
 	@Registration.Singleton(SerializerFactory.class)
 	public static class MvccInterceptorSerializer implements SerializerFactory {
 		@Override

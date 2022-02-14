@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.gwt.client.Client;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public class WaitForTransformsClient implements AsyncCallback<DomainUpdate> {

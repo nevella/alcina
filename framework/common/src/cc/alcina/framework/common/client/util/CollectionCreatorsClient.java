@@ -21,7 +21,6 @@ public class CollectionCreatorsClient {
 		return GWT.isScript();
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton(CollectionCreators.MultisetCreator.class)
 	public static class CacheMultisetCreatorClient<K, V>
@@ -54,7 +53,6 @@ public class CollectionCreatorsClient {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton(CollectionCreators.TypedMapCreator.class)
 	public static class TypedMapCreatorCreatorClient<K, V>

@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-
 @ClientInstantiable
 @Registration.Singleton(DomEnvironment.class)
 public class DomEnvironmentClientImpl implements DomEnvironment {

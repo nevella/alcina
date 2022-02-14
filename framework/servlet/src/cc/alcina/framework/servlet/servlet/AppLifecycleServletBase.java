@@ -99,7 +99,6 @@ import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
-
 @Registration.Singleton
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	private static Topic<Void> topicConfigurationReloaded = Topic.local();

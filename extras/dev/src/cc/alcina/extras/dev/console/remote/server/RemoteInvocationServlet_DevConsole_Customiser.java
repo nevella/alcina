@@ -5,7 +5,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-
 @Registration(RemoteInvocationServlet_DevConsole_Customiser.class)
 public class RemoteInvocationServlet_DevConsole_Customiser {
 	public static RemoteInvocationServlet_DevConsole_Customiser get() {

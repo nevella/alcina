@@ -103,7 +103,6 @@ import cc.alcina.framework.entity.util.MethodContext;
  *
  *         TODO - mvcc.5 - remove/encapsulate dependence on DomainStore
  */
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ThreadlocalTransformManager extends TransformManager {
 	public static final String CONTEXT_TEST_PERMISSIONS = ThreadlocalTransformManager.class

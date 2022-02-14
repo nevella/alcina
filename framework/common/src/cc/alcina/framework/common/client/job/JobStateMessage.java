@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
 @Bean
-
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 @Registration({ PersistentImpl.class, JobStateMessage.class })
 public abstract class JobStateMessage<T extends JobStateMessage>

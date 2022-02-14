@@ -20,7 +20,6 @@ public class HttpContext implements AuthenticationTokenStore {
 	public HttpContext() {
 	}
 
-	
 	@Registration.Singleton
 	public static class HttpContextLifecycle {
 		public static HttpContext.HttpContextLifecycle get() {

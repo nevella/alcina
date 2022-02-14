@@ -63,7 +63,6 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 		}
 	}
 
-	
 	@Registration(MethodHandler.class)
 	public static abstract class MethodHandler implements
 			Registration.EnumDiscriminator<RemoteConsoleRequestType> {

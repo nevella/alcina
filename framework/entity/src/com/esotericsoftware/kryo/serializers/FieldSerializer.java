@@ -75,7 +75,6 @@ import cc.alcina.framework.entity.util.CachingConcurrentMap;
  * @author Nathan Sweet <misc@n4te.com>
  * @author Roman Levenstein <romixlev@gmail.com>
  */
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class FieldSerializer<T> extends Serializer<T>
 		implements Comparator<FieldSerializer.CachedField> {

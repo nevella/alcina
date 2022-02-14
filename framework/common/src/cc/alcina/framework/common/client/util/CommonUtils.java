@@ -58,7 +58,6 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 /**
  * @author Nick Reddel
  */
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class CommonUtils {
 	private static final Predicate<?> PREDICATE_FALSE = o -> false;

@@ -158,7 +158,6 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 				: handlerManager;
 	}
 
-	
 	@ClientInstantiable
 	@Registration({ HasSearchables.class, Bindable.class })
 	public static class HasSearchables {

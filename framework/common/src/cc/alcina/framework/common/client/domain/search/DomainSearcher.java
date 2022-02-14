@@ -28,7 +28,6 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DomainSearcher<T extends Entity> {
 	public static final String CONTEXT_HINT = DomainSearcher.class.getName()
@@ -125,7 +124,6 @@ public class DomainSearcher<T extends Entity> {
 		}
 	}
 
-	
 	@Registration(DomainSearcherAppFilter.class)
 	public static abstract class DomainSearcherAppFilter {
 		public abstract <T extends Entity> Predicate<T>

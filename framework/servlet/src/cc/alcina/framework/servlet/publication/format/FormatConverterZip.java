@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget.Form
 import cc.alcina.framework.servlet.publication.FormatConverter;
 import cc.alcina.framework.servlet.publication.PublicationContext;
 
-
 @Registration({ FormatConverter.class, FormatConversionTarget_ZIP.class })
 public class FormatConverterZip implements FormatConverter {
 	public InputStream convert(PublicationContext ctx,

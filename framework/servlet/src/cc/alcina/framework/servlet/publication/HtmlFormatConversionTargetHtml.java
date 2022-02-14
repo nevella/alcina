@@ -12,7 +12,6 @@ import cc.alcina.framework.entity.ResourceUtilities;
  *
  * @author nick@alcina.cc
  */
-
 @Registration({ FormatConverter.class, FormatConversionTarget_HTML.class })
 public class HtmlFormatConversionTargetHtml implements FormatConverter {
 	public InputStream convert(PublicationContext ctx,

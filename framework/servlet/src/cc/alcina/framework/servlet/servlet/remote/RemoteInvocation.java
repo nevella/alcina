@@ -40,7 +40,6 @@ import cc.alcina.framework.servlet.servlet.remote.RemoteInvocationProxy.RemoteIn
  * org.apache.http.client is in gwt-dev - so we don't require it in eclipse
  */
 @SuppressWarnings("deprecation")
-
 @Registration(RemoteInvocation.class)
 public class RemoteInvocation {
 	private Object interceptionResult;

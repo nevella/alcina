@@ -12,7 +12,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Multimap;
 
-
 @Registration.Singleton
 public class XmlTokens {
 	public static XmlTokens get() {

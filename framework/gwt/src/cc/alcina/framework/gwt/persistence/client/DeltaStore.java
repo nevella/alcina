@@ -35,7 +35,6 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 
-
 /*
  * Use one object store so we can have easy transactionality
  */

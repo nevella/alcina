@@ -306,7 +306,6 @@ public class DomainStoreQueryTranslator {
 		void addFilter(T criterion, DomainStoreQuery<E> query);
 	}
 
-	
 	@Registration(CriterionTranslator.class)
 	public abstract static class CriterionTranslator<C extends Criterion> {
 		FieldHelper fieldHelper = new FieldHelper();

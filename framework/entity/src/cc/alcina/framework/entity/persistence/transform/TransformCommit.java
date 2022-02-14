@@ -88,7 +88,6 @@ import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
 /**
  * @author nick@alcina.cc
  */
-
 @Registration.Singleton
 public class TransformCommit {
 	private static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = TransformCommit.class
@@ -995,7 +994,6 @@ public class TransformCommit {
 		}
 	}
 
-	
 	@Registration.Singleton
 	public static class ExternalTransformLocks {
 		public static TransformCommit.ExternalTransformLocks get() {

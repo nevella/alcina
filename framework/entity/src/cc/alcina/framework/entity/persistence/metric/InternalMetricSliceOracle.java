@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 
-
 @Registration.Singleton
 public class InternalMetricSliceOracle {
 	private List<Long> deadlockedThreadIds;

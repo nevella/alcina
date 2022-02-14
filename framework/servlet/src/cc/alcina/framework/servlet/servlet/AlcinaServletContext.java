@@ -17,7 +17,6 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class AlcinaServletContext {
 	private int looseContextDepth = -1;

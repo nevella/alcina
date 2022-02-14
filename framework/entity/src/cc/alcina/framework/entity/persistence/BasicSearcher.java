@@ -25,7 +25,6 @@ import cc.alcina.framework.common.client.search.EqlWithParameters;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;
 
-
 @Registration({ Searcher.class, SearchDefinition.class })
 public class BasicSearcher implements Searcher {
 	private EntityManager entityManager;

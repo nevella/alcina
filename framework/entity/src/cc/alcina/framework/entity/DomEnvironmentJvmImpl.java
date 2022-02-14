@@ -18,7 +18,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-
 @Registration.Singleton(value = DomEnvironment.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 public class DomEnvironmentJvmImpl implements DomEnvironment {
 	@Override

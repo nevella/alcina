@@ -1013,7 +1013,6 @@ public class DevConsoleDebugCommands {
 		}
 	}
 
-	
 	@Registration(DevConsoleDebugPeer.class)
 	public static abstract class DevConsoleDebugPeer {
 		public abstract List<ILogRecord> filterByComponent(
@@ -1025,7 +1024,6 @@ public class DevConsoleDebugCommands {
 				getPaths(DevConsoleProperties props);
 	}
 
-	
 	@Registration.Singleton
 	public static class IgnoreExceptionPatternProvider {
 		public static DevConsoleDebugCommands.IgnoreExceptionPatternProvider

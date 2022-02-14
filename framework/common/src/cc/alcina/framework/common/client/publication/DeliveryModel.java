@@ -122,10 +122,8 @@ public interface DeliveryModel extends TreeSerializable {
 
 		public String dataSourceMimeType;
 	}
-
 	// Parameters for ContentDeliveryType_MULTIPLE
-	
-	
+
 	public static class MultipleDeliveryEntry implements TreeSerializable {
 		private String emailSubject;
 

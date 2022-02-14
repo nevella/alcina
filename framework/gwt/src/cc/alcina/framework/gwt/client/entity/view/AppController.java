@@ -32,7 +32,6 @@ import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public class AppController {

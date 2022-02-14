@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 
 @ClientInstantiable
-
 @Registration(BasePlaceTokenizer.class)
 public abstract class BasePlaceTokenizer<P extends Place>
 		implements PlaceTokenizer<P> {

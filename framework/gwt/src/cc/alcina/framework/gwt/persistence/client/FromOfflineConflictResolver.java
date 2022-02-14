@@ -45,7 +45,6 @@ import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
  *
  * @author Nick Reddel
  */
-
 @ClientInstantiable
 @Registration(FromOfflineConflictResolver.class)
 public class FromOfflineConflictResolver {

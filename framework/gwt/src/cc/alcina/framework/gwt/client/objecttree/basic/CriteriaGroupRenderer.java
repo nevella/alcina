@@ -21,7 +21,6 @@ import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderable;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
-
 @Registration({ TreeRenderer.class, CriteriaGroup.class })
 public class CriteriaGroupRenderer<T extends CriteriaGroup>
 		extends AbstractRenderer<T> {

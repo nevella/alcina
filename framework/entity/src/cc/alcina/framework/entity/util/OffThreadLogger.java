@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
-
 /*
  * For infrastructure components where blocking due to log emission > writer speed can cause feedback
  */

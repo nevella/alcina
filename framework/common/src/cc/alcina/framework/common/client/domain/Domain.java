@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Domain {
 	private static DomainHandler handler = new DomainHandlerNonTransactional();

@@ -28,7 +28,6 @@ public class CollectionCreatorsMvcc {
 		}
 	}
 
-	
 	@Registration(value = CollectionCreators.MultisetCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class DomainStoreMultisetCreator<K, V>
 			implements CollectionCreators.MultisetCreator<K, V> {
@@ -52,7 +51,6 @@ public class CollectionCreatorsMvcc {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton(value = CollectionCreators.TypedMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class TypedMapCreatorCreatorMvcc<K, V>

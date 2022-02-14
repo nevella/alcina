@@ -34,7 +34,6 @@ import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.State;
-
 /*
  * mvcc.4 - serialize to streams rather than strings
  */

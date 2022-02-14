@@ -18,7 +18,6 @@ import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-
 @ClientInstantiable
 @Registration(DirectedEntityActivity.class)
 public class DirectedEntityActivity<EP extends EntityPlace, E extends Entity>

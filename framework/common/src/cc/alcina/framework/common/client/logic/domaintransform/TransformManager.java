@@ -2090,7 +2090,6 @@ public abstract class TransformManager
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class Serializer {

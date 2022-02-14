@@ -22,7 +22,6 @@ import cc.alcina.framework.servlet.servlet.DownloadServlet.DownloadItem;
  *
  * @author nick@alcina.cc
  */
-
 @Registration({ ContentDeliveryType.class,
 		ContentDeliveryType_DOWNLOAD_ATTACHMENT.class })
 public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {

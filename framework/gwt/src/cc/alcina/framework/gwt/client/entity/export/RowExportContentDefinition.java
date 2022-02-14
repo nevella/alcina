@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
-
 @XmlRootElement
 @Bean
 @ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))

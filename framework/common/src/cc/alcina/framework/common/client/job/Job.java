@@ -54,7 +54,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
-
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 @Registration({ PersistentImpl.class, Job.class })
 public abstract class Job extends VersionableEntity<Job>
@@ -1169,7 +1168,6 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 	}
 
-	
 	@Registration(DebugLogWriter.class)
 	public static class DebugLogWriter {
 		public void write(Job job) {

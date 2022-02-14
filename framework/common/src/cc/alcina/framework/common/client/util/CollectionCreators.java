@@ -56,7 +56,6 @@ public class CollectionCreators {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class ConcurrentMapCreator {
@@ -73,7 +72,6 @@ public class CollectionCreators {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton(CollectionCreators.HashMapCreator.class)
 	public static class HashMapCreator {
@@ -94,7 +92,6 @@ public class CollectionCreators {
 				Class<V> valueClass);
 	}
 
-	
 	@Registration(MultiTrieCreator.class)
 	public static class MultiTrieCreator {
 		public MultiTrieCreator() {
@@ -106,7 +103,6 @@ public class CollectionCreators {
 		}
 	}
 
-	
 	@Registration(TreeMapCreator.class)
 	public static class TreeMapCreator implements MapCreator {
 		public List<Class> types;
@@ -125,7 +121,6 @@ public class CollectionCreators {
 		}
 	}
 
-	
 	@Registration(TreeMapRevCreator.class)
 	public static class TreeMapRevCreator implements MapCreator {
 		public List<Class> types;
@@ -148,7 +143,6 @@ public class CollectionCreators {
 		public Map<K, V> create(Class<K> keyClass, Class<V> valueClass);
 	}
 
-	
 	@Registration.Singleton
 	public static class UnsortedMapCreator implements DelegateMapCreator {
 		@Override

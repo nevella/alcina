@@ -15,7 +15,6 @@ import cc.alcina.framework.entity.transform.TransformPersistenceToken;
  *
  * @author nick@alcina.cc
  */
-
 @Registration.Singleton(TransformPersistenceQueue.class)
 public class NaiveTransformPersistenceQueue
 		implements TransformPersistenceQueue {

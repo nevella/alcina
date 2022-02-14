@@ -468,7 +468,6 @@ public class JobScheduler {
 		}
 	}
 
-	
 	@Registration(value = ExecutionConstraints.class, implementation = Registration.Implementation.FACTORY)
 	public static class DefaultExecutionConstraintsProvider
 			implements RegistryFactory<ExecutionConstraints> {
@@ -478,7 +477,6 @@ public class JobScheduler {
 		}
 	}
 
-	
 	@Registration(value = ResubmitPolicy.class, implementation = Registration.Implementation.FACTORY)
 	public static class DefaultRetryPolicyProvider
 			implements RegistryFactory<ResubmitPolicy> {
@@ -488,12 +486,10 @@ public class JobScheduler {
 		}
 	}
 
-	
 	@Registration(Schedule.class)
 	public static class DefaultSchedule extends Schedule {
 	}
 
-	
 	@Registration(value = Schedule.class, implementation = Registration.Implementation.FACTORY)
 	public static class DefaultScheduleProvider
 			implements RegistryFactory<Schedule> {
@@ -660,7 +656,6 @@ public class JobScheduler {
 		}
 	}
 
-	
 	@Registration(RetentionPolicy.class)
 	public static class RetentionPolicy {
 		public void delete(Job job) {

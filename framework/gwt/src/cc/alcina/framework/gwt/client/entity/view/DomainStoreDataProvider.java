@@ -535,7 +535,6 @@ public class DomainStoreDataProvider<T extends Entity>
 		}
 	}
 
-	
 	public interface SearchModelPerformer {
 		void searchModel(BindableSearchDefinition def,
 				AsyncCallback<ModelSearchResults> callback);

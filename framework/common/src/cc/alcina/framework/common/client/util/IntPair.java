@@ -23,13 +23,9 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
 @JsonAutoDetect(getterVisibility = JsonAutoDetect.Visibility.NONE, isGetterVisibility = JsonAutoDetect.Visibility.NONE, setterVisibility = JsonAutoDetect.Visibility.NONE, fieldVisibility = JsonAutoDetect.Visibility.ANY)
-
-		
-		
 @Bean
 @XmlAccessorType(XmlAccessType.FIELD)
-@Registrations({ @Registration(JaxbContextRegistration.class),
-		 })
+@Registrations({ @Registration(JaxbContextRegistration.class), })
 public class IntPair implements Comparable<IntPair>, Serializable,
 		Iterable<Integer>, TreeSerializable {
 	public static List<IntPair> asRangeList(List<Integer> ints) {

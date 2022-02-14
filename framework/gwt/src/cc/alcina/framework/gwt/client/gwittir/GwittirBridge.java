@@ -705,7 +705,6 @@ public class GwittirBridge {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class DomainListProvider {

@@ -82,7 +82,6 @@ public interface DomEnvironment {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration(StyleResolver.class)
 	public static class StyleResolverHtml implements StyleResolver {

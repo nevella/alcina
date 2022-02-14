@@ -21,7 +21,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DevStats {
 	static Topic<String> topicEmitStat = Topic.local();
@@ -152,7 +151,6 @@ public class DevStats {
 		}
 	}
 
-	
 	@Registration(StatProvider.class)
 	public static abstract class StatProvider {
 		private LogProvider logProvider;

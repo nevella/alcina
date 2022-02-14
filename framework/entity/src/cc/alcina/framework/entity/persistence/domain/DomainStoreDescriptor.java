@@ -382,7 +382,6 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		}
 	}
 
-	
 	@Registration.Singleton
 	public static abstract class TestSupport {
 		public static DomainStoreDescriptor.TestSupport get() {

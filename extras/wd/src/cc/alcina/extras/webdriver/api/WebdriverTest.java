@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-
 @Registration(WebdriverTest.class)
 public abstract class WebdriverTest {
 	protected static Map<Class<? extends WebdriverTest>, WebdriverTest> testTemplates;

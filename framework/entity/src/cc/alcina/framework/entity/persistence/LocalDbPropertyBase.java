@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * FIXME - apdm - revert to non-domain, use only for pre-store
  * (db_update_version) kvs
  */
-
 @Registration({ PersistentImpl.class, LocalDbPropertyBase.class })
 public abstract class LocalDbPropertyBase extends Entity {
 	public static final transient String KEY_FIELD_NAME = "propertyKey";

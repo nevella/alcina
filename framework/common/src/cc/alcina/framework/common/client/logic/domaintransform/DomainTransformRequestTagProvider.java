@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public class DomainTransformRequestTagProvider {

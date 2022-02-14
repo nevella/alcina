@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
-
 @XmlRootElement
 @Registration(JaxbContextRegistration.class)
 public class BasicGridContentDefinition implements ContentDefinition {

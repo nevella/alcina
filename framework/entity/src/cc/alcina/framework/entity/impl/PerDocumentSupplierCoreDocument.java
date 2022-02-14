@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
-
 @Registration.Singleton(value = PerDocumentSupplier.class, priority = Registration.Priority.APP)
 public class PerDocumentSupplierCoreDocument extends PerDocumentSupplier {
 	public static final transient String CORE_DOCUMENT_DOM_DOC_KEY = PerDocumentSupplierCoreDocument.class

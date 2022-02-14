@@ -155,7 +155,6 @@ public class NodeFactory {
 		return nodeCreator.createDomainNode(domainObject, this);
 	}
 
-	
 	@ClientInstantiable
 	@Registration(NodeCreator.class)
 	public static class DefaultNodeCreator implements NodeCreator {

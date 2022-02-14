@@ -30,7 +30,6 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	
 	@Registration(value = BplDelegateMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class BplDelegateMapCreatorTransactional
 			extends BplDelegateMapCreator {
@@ -77,7 +76,6 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	
 	@Registration(value = CollectionCreators.MultiTrieCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class MultiTrieCreatorImpl
 			extends CollectionCreators.MultiTrieCreator {
@@ -104,7 +102,6 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	
 	@Registration(value = CollectionCreators.TreeMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class TreeMapCreatorImpl
 			extends CollectionCreators.TreeMapCreator {
@@ -133,7 +130,6 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	
 	@Registration(value = CollectionCreators.TreeMapRevCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class TreeMapRevCreatorImpl
 			extends CollectionCreators.TreeMapRevCreator {

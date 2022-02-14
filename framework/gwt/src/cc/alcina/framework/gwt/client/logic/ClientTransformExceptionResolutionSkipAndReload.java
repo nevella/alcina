@@ -50,7 +50,6 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener.Sta
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 
-
 @ClientInstantiable
 @Registration.Singleton(ClientTransformExceptionResolver.class)
 public class ClientTransformExceptionResolutionSkipAndReload

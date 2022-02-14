@@ -32,7 +32,6 @@ import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Transactions {
 	private static Transactions instance;

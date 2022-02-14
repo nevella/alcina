@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
-
 @Registration(DirectedNodeRenderer.class)
 public class DefaultNodeRenderer extends ContainerNodeRenderer {
 	@Override

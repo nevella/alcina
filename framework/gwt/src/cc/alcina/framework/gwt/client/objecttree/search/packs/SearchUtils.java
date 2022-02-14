@@ -212,7 +212,6 @@ public class SearchUtils {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration(SearchUtilsIdsHelper.class)
 	public static abstract class SearchUtilsIdsHelper {
@@ -227,7 +226,6 @@ public class SearchUtils {
 		}
 	}
 
-	
 	@Registration.Singleton(SearchUtilsIdsHelper.class)
 	public static class SearchUtilsIdsHelperSingleThreaded
 			extends SearchUtilsIdsHelper {
@@ -256,7 +254,6 @@ public class SearchUtils {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration(SearchUtilsRegExpHelper.class)
 	public static abstract class SearchUtilsRegExpHelper {
@@ -265,7 +262,6 @@ public class SearchUtils {
 		}
 	}
 
-	
 	@Registration.Singleton(SearchUtilsRegExpHelper.class)
 	public static class SearchUtilsRegExpHelperSingleThreaded
 			extends SearchUtilsRegExpHelper {

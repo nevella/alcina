@@ -103,7 +103,6 @@ public class TransformHistory {
 		return info;
 	}
 
-	
 	@Registration(TransformHistorySearcher.class)
 	public static abstract class TransformHistorySearcher {
 		public static TransformHistory.TransformHistorySearcher get() {

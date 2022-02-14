@@ -49,7 +49,6 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.HandlerData;
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask.Type;
 
-
 @Registration.Singleton
 public abstract class DomainViews {
 	public static DomainViews get() {

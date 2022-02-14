@@ -24,7 +24,6 @@ import cc.alcina.framework.common.client.util.RandomProvider;
 /**
  * @author Nick Reddel
  */
-
 @ClientInstantiable
 @Registration.Singleton(RandomProvider.class)
 public class ClientRandomProvider implements RandomProvider {

@@ -31,7 +31,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 /**
  * @author Nick Reddel
  */
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class MetricLoggingBase {
 	final static Logger logger = LoggerFactory.getLogger(MetricLogging.class);

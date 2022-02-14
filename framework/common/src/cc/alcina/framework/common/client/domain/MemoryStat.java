@@ -108,7 +108,6 @@ public class MemoryStat {
 		MemoryStat addMemoryStats(MemoryStat parent);
 	}
 
-	
 	@Registration(ObjectMemory.class)
 	public static abstract class ObjectMemory {
 		public abstract void dumpStats();

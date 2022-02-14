@@ -12,7 +12,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
-
 @ClientInstantiable
 @Registration({ PermissibleActionHandler.class, PermissibleEntityAction.class })
 public class PermissibleEntityActionHandler

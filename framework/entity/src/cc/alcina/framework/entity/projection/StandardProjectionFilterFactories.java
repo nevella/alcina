@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 
 public class StandardProjectionFilterFactories {
-	
 	@Registration(value = CollectionProjectionFilter.class, implementation = Registration.Implementation.FACTORY)
 	public static class ProjectionDomainFilterFactory
 			implements RegistryFactory<CollectionProjectionFilter> {
@@ -16,7 +15,6 @@ public class StandardProjectionFilterFactories {
 		}
 	}
 
-	
 	@Registration(value = PermissibleFieldFilter.class, implementation = Registration.Implementation.FACTORY)
 	public static class ProjectionFieldFilterFactory
 			implements RegistryFactory<PermissibleFieldFilter> {

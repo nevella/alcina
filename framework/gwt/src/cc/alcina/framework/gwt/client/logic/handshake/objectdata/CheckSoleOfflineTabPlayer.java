@@ -10,7 +10,6 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.handshake.CheckSoleInstancePlayer.NotSoleInstanceException;
 import cc.alcina.framework.gwt.persistence.client.ClientSession;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public class CheckSoleOfflineTabPlayer

@@ -80,7 +80,6 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 		logger.info("Reaped {} jobs", reaped.get());
 	}
 
-	
 	@Registration(value = { Schedule.class,
 			TaskReapJobs.class }, implementation = Registration.Implementation.FACTORY)
 	public static class ScheduleFactory extends HourlyScheduleFactory {

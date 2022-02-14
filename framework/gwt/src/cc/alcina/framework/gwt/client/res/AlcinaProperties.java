@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public class AlcinaProperties {

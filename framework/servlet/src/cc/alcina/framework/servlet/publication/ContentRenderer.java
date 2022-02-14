@@ -107,7 +107,6 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 		}
 	}
 
-	
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@XmlRootElement
 	@Registration(JaxbContextRegistration.class)
@@ -129,7 +128,6 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
-	
 	@Registration(JaxbContextRegistration.class)
 	public static class RenderTransformWrapper implements Serializable {
 		// public ContentDefinition cd;

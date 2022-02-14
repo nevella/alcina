@@ -161,7 +161,6 @@ public class AlcinaParallel {
 		};
 	}
 
-	
 	@Registration(AlcinaParallelJobChecker.class)
 	public static class AlcinaParallelJobChecker {
 		public boolean isCancelled() {

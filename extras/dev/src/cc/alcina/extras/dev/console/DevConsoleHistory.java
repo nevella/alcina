@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-
 @XmlRootElement
 @Registration(JaxbContextRegistration.class)
 public class DevConsoleHistory {

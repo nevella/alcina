@@ -43,7 +43,6 @@ public class Shell {
 		}
 	}
 
-	
 	@Registration.Singleton
 	public static class Pool {
 		private ExecutorService threadPool;

@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.TextNodeRenderer;
 
-
 @Registration({ DirectedNodeRenderer.class, TreePath.class })
 public class TreePathNodeRenderer extends TextNodeRenderer {
 	public TreePathNodeRenderer() {

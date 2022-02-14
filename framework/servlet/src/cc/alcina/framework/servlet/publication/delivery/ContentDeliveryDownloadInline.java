@@ -15,7 +15,6 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 import cc.alcina.framework.servlet.servlet.DownloadServlet;
 import cc.alcina.framework.servlet.servlet.DownloadServlet.DownloadItem;
 
-
 @Registration({ ContentDeliveryType.class,
 		ContentDeliveryType_DOWNLOAD_PREVIEW.class })
 public class ContentDeliveryDownloadInline implements ContentDelivery {

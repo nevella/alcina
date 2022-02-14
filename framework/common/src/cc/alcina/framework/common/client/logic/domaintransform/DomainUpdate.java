@@ -19,8 +19,6 @@ public class DomainUpdate implements Serializable {
 	public DomainTransformCommitPosition commitPosition;
 
 	@Bean
-	
-	
 	public static class DomainTransformCommitPosition implements
 			TreeSerializable, Comparable<DomainTransformCommitPosition> {
 		private Timestamp commitTimestamp;
@@ -82,7 +80,6 @@ public class DomainUpdate implements Serializable {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton
 	public static class DomainTransformCommitPositionProvider {

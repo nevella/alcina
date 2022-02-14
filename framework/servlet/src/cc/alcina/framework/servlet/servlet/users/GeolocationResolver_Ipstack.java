@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 
-
 @Registration.Singleton(GeolocationResolver.class)
 public class GeolocationResolver_Ipstack implements GeolocationResolver {
 	private CachingMap<String, String> ipToLocation = new CachingMap<>(

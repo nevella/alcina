@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
-
 @Registration.Singleton
 public class TransientFieldTasks {
 	public static TransientFieldTasks get() {

@@ -129,7 +129,6 @@ public class StandardSchedules {
 		}
 	}
 
-	
 	@Registration.Singleton
 	public static class RecurrentJobsExecutorServiceProvider
 			implements ExecutorServiceProvider {

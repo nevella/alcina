@@ -32,7 +32,6 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
 import cc.alcina.framework.entity.util.SynchronizedDateFormat;
-
 /*
  */
 
@@ -279,7 +278,6 @@ public class Knowns {
 	 *
 	 * @author nick@alcina.cc
 	 */
-	
 	@Registration.Singleton
 	public static class KnownNodeAppLogic {
 		public void processNodeRule(KnownRenderableNode node,

@@ -41,7 +41,6 @@ import cc.alcina.framework.common.client.util.LooseContext;
 /**
  * @author Nick Reddel
  */
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class JaxbUtils {
 	private static JaxbUtils singleton;
@@ -185,7 +184,6 @@ public class JaxbUtils {
 		return jc;
 	}
 
-	
 	@Registration(JaxbUtils.PreProcessor.class)
 	public abstract static class PreProcessor {
 		public abstract String preprocess(String xmlStr);

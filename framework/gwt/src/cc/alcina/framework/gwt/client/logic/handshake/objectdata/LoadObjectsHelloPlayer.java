@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlaye
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public class LoadObjectsHelloPlayer extends

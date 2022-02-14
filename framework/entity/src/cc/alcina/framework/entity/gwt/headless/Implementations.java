@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 
 public class Implementations {
-	
 	@ClientInstantiable
 	@Registration(value = UIObject.DebugIdImpl.class, priority = Registration.Priority.APP, implementation = Registration.Implementation.FACTORY)
 	public static class DebugIdImplFactory

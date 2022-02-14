@@ -344,7 +344,6 @@ public class ReflectiveSerializer {
 		}
 	}
 
-	
 	@Bean
 	@Registration(TypeSerializer.class)
 	public static abstract class TypeSerializer {
@@ -381,7 +380,6 @@ public class ReflectiveSerializer {
 				SerialNode serialNode);
 	}
 
-	
 	@Bean
 	@Registration(ValueSerializer.class)
 	public static abstract class ValueSerializer<T> {

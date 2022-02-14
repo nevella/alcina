@@ -126,7 +126,6 @@ public class HistoryImplPushState extends HistoryImpl {
 		setToken(token);
 	}
 
-	
 	@Registration(value = BasePlace.HrefProvider.class, implementation = Registration.Implementation.NONE)
 	public static class HrefProviderPushState extends BasePlace.HrefProvider {
 		@Override

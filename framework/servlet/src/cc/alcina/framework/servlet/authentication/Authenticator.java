@@ -31,7 +31,6 @@ import cc.alcina.framework.servlet.module.login.LoginModel;
 import cc.alcina.framework.servlet.module.login.LoginRequestHandler.TwoFactorAuthResult;
 import cc.alcina.framework.servlet.module.login.TwoFactorAuthentication;
 
-
 @Registration(Authenticator.class)
 public abstract class Authenticator<U extends Entity & IUser> {
 	public static final String CONTEXT_BYPASS_PASSWORD_CHECK = Authenticator.class
@@ -234,7 +233,6 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		}
 	}
 
-	
 	@Registration(PasswordEncryptionSupport.class)
 	public static class ScryptSupport implements PasswordEncryptionSupport {
 		private static final int N = 16384;

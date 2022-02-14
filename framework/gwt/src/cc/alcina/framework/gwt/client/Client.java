@@ -33,7 +33,6 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public abstract class Client {
@@ -151,7 +150,6 @@ public abstract class Client {
 	}
 
 	@ClientInstantiable
-	
 	@Registration(PlaceNavigator.class)
 	public static class PlaceNavigatorImpl implements PlaceNavigator {
 		@Override

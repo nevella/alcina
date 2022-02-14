@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
 @ClientInstantiable
-
 @Registration(BaseProjectionLookupBuilder.BplDelegateMapCreator.class)
 public class BplMapCreatorClient extends BplDelegateMapCreatorStd {
 	@Override

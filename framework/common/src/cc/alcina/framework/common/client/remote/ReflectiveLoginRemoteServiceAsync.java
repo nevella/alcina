@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public class ReflectiveLoginRemoteServiceAsync

@@ -329,7 +329,6 @@ public class DomainTransformPersistenceQueue {
 		}
 	}
 
-	
 	@Registration.Singleton(value = DomainTransformCommitPositionProvider.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class DomainTransformCommitPositionProvider_EventsQueue
 			extends DomainTransformCommitPositionProvider {

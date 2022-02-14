@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 
-
 @Registration(TransformPropagationPolicy.class)
 public class TransformPropagationPolicy {
 	public static final transient String CONTEXT_PROPAGATION_FILTER = TransformPropagationPolicy.class

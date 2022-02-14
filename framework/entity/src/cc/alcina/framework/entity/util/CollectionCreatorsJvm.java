@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCrea
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class CollectionCreatorsJvm {
-	
 	@ClientInstantiable
 	@Registration.Singleton(value = ConcurrentMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class ConcurrentMapCreatorJvm extends ConcurrentMapCreator {
@@ -33,7 +32,6 @@ public class CollectionCreatorsJvm {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton(value = CollectionCreators.HashMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class HashMapCreatorJvm extends HashMapCreator {
@@ -52,7 +50,6 @@ public class CollectionCreatorsJvm {
 		}
 	}
 
-	
 	@Registration.Singleton(value = UnsortedMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class UnsortedMapCreatorJvm extends UnsortedMapCreator {
 		@Override

@@ -99,7 +99,6 @@ public interface EntityDataObject {
 			this.size = size;
 		}
 
-		
 		public static interface SizeProvider {
 			int getSize(OneToManyMultipleSummary oneToManyMultipleSummary,
 					Entity source);

@@ -318,7 +318,6 @@ public class TableModel extends Model {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration(TableTypeFactory.class)
 	public static class TableTypeFactory extends BoundWidgetTypeFactory {

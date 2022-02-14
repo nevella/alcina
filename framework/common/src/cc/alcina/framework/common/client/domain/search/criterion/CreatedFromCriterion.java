@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @SearchDefinitionSerializationInfo("ctsc")
-
 @TypeSerialization("createdfrom")
 @Registration(SearchDefinitionSerializationInfo.class)
 public class CreatedFromCriterion extends DateCriterion {

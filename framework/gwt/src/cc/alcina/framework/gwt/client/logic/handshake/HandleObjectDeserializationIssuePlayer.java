@@ -11,7 +11,6 @@ import cc.alcina.framework.gwt.client.util.AsyncCallbackStd.ReloadOnSuccessCallb
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 
 @ClientInstantiable
-
 @Registration.Singleton
 public class HandleObjectDeserializationIssuePlayer
 		extends EndpointPlayer<HandshakeState> {

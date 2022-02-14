@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
-
 @ClientInstantiable
 @Registration.Singleton
 public class AlcinaPrehistory {
@@ -41,7 +40,6 @@ public class AlcinaPrehistory {
 	}
 
 	@ClientInstantiable
-	
 	@Registration(PreHistoryHandler.class)
 	public abstract static class PreHistoryHandler<I extends AlcinaHistoryItem> {
 		public abstract void handle(NativeEvent event, I item);

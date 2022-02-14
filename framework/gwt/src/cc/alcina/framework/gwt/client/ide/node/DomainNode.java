@@ -125,7 +125,6 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 				.satisfiesFilter(userObject, filterText);
 	}
 
-	
 	@ClientInstantiable
 	@Registration.Singleton(HasSatisfiesFilter.class)
 	public static class DefaultHasSatisfiesFilter<T>

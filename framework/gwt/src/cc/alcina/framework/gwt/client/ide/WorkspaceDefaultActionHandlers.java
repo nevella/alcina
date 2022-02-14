@@ -61,7 +61,6 @@ public class WorkspaceDefaultActionHandlers {
 		protected abstract boolean editView();
 	}
 
-	
 	@Registration(CloneActionHandler.class)
 	public static class DefaultCloneActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements CloneActionHandler {
@@ -110,7 +109,6 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	
 	@Registration(CreateActionHandler.class)
 	public static class DefaultCreateActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements CreateActionHandler {
@@ -152,7 +150,6 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	
 	@Registration(DeleteActionHandler.class)
 	public static class DefaultDeleteActionHandler extends
 			WorkspaceDefaultActionHandlerBase implements DeleteActionHandler {
@@ -209,7 +206,6 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	
 	@Registration(EditActionHandler.class)
 	public static class DefaultEditActionHandler extends BaseViewActionHandler
 			implements EditActionHandler {
@@ -219,7 +215,6 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	
 	@Registration(ViewActionHandler.class)
 	public static class DefaultViewActionHandler extends BaseViewActionHandler
 			implements ViewActionHandler {

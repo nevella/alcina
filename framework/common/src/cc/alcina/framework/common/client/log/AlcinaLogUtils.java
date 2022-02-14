@@ -51,7 +51,6 @@ public class AlcinaLogUtils {
 		}
 	}
 
-	
 	@Registration.Singleton
 	public static class LogMuter {
 		public void muteAllLogging(boolean muteAll) {

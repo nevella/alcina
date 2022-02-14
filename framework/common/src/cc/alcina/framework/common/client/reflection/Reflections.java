@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.reflection.impl.ForName;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Reflections {
 	private static Reflections theInstance;

@@ -41,7 +41,6 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
  *
  * @author nick@alcina.cc
  */
-
 @ClientInstantiable
 @Registration.Singleton
 public class HandshakeConsort

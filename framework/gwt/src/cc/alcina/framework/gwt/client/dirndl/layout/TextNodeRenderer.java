@@ -61,12 +61,11 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 	protected String getText(Node node) {
 		return node.model == null ? "<null text>" : getModelText(node.model);
 	}
-
 	/*
 	 * Normally entities, if directly rendered, are the models for actions - so
 	 * just some simple text...
 	 */
-	
+
 	@Registration({ DirectedNodeRenderer.class, Entity.class })
 	public static class EntityNodeRenderer extends TextNodeRenderer {
 		@Override
@@ -75,7 +74,6 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	
 	@Registration({ DirectedNodeRenderer.class, Date.class })
 	public static class DateNodeRenderer extends TextNodeRenderer {
 		@Override
@@ -84,7 +82,6 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	
 	@Registration({ DirectedNodeRenderer.class, Enum.class })
 	public static class EnumNodeRenderer extends HasDisplayNameRenderer {
 	}
@@ -100,12 +97,10 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	
 	@Registration({ DirectedNodeRenderer.class, String.class })
 	public static class StringNodeRenderer extends TextNodeRenderer {
 	}
 
-	
 	@Registration({ DirectedNodeRenderer.class, Number.class })
 	public static class NumberNodeRenderer extends TextNodeRenderer {
 	}

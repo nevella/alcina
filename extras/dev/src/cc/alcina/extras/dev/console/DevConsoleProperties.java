@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-
 @XmlRootElement
 @Registration(JaxbContextRegistration.class)
 public class DevConsoleProperties {

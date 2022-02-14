@@ -22,7 +22,6 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 /**
  * @author nick@alcina.cc
  */
-
 @Registration({ ContentDeliveryType.class, ContentDeliveryType_MULTIPLE.class })
 public class ContentDeliveryMultiple implements ContentDelivery {
 	Logger logger = LoggerFactory.getLogger(getClass());

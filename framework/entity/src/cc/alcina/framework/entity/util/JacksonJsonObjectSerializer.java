@@ -44,7 +44,6 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObject;
 
-
 @Registration(JsonObjectSerializer.class)
 public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public static final String CONTEXT_WITHOUT_MAPPER_POOL = JacksonJsonObjectSerializer.class

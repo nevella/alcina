@@ -11,7 +11,6 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 
-
 @Registration({ ServerValidatorHandler.class, ServerUniquenessValidator.class })
 public class ServerUniquenessValidationHandler
 		implements ServerValidatorHandler<ServerUniquenessValidator> {

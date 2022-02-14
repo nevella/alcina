@@ -37,7 +37,6 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
  * FIXME - mvcc.5 - backup (zk) persistence of transforms? - use the
  * cli-id/dtr-uuid/event-id path. cluster leader to TCOB
  */
-
 @Registration.Singleton
 public class BackendTransformQueue {
 	private static final String DEFAULT_QUEUE_NAME = "default-queue";

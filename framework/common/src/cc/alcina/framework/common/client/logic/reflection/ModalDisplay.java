@@ -168,7 +168,6 @@ public @interface ModalDisplay {
 		}
 	}
 
-	
 	@ClientInstantiable
 	@Registration(ModeTransformer.class)
 	public static class ModeTransformer implements Function<Mode, Mode> {

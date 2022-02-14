@@ -22,7 +22,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Regi
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 
-
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ClassLoaderAwareRegistryProvider implements RegistryProvider {
 	public static void clearThreadLocals(Class... clear) {

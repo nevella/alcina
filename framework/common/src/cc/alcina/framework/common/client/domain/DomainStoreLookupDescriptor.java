@@ -172,7 +172,6 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 		}
 	}
 
-	
 	@Registration.Singleton
 	public abstract static class ReflectiveChainedPropertyTypeProvider {
 		public abstract Class getLookupIndexClass(Class clazz,

@@ -10,7 +10,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.Imple
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-
 @ClientInstantiable
 @Registration.Singleton(ActivityMapper.class)
 public class RemoteConsoleActivityMapper implements ActivityMapper {

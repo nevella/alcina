@@ -74,7 +74,6 @@ import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-
 /*
  * Startup speed doc
  * @formatter:off
@@ -927,7 +926,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		NORMAL, OK, ERR, COMMAND
 	}
 
-	
 	@Registration.Singleton(value = LogMuter.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class LogMuter_DevConsole extends LogMuter {
 		@Override

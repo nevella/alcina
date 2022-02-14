@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 
-
 @Registration(ActionRef.class)
 public abstract class ActionRef extends Reference {
 	public static Class<? extends ActionRef> forId(String token) {

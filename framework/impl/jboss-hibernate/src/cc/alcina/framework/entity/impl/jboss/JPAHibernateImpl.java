@@ -71,7 +71,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 /**
  * @author Nick Reddel
  */
-
 @Registration.Singleton(JPAImplementation.class)
 public class JPAHibernateImpl implements JPAImplementation {
 	public static final InstantiateImplCallback CLASSREF_AND_USERLAND_GETTER_CALLBACK = new InstantiateImplCallback<LazyInitializer>() {
@@ -343,7 +342,6 @@ public class JPAHibernateImpl implements JPAImplementation {
 		return ((Entity) o).toLocator();
 	}
 
-	
 	@Registration.Singleton
 	public static class PersistenSetProjectionCreator {
 		public Set

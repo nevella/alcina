@@ -8,7 +8,6 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 
-
 @Registration(BindablePlace.class)
 public abstract class BindablePlace<SD extends BindableSearchDefinition>
 		extends BasePlace implements PlaceWithSearchDefinition<SD> {

@@ -6,7 +6,6 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.gwt.client.tour.condition.ReadOnlyEvaluator.ReadOnlyEvaluatorValueProvider;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-
 @Registration(value = ReadOnlyEvaluatorValueProvider.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 public class ReadOnlyEvaluatorValueProviderWd
 		extends ReadOnlyEvaluatorValueProvider {

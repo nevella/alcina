@@ -44,7 +44,6 @@ import cc.alcina.framework.servlet.publication.ContentRenderer.RenderTransformWr
 public class BasicGridPublisher {
 	public static final int PUB_MAX_RESULTS = 100000;
 
-	
 	@Registration({ ContentModelHandler.class,
 			BasicGridContentDefinition.class })
 	public static class BasicExcelPublisherContentHandler extends
@@ -89,7 +88,6 @@ public class BasicGridPublisher {
 
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
-	
 	@Registration(JaxbContextRegistration.class)
 	public static class BasicGridInfo extends RenderTransformWrapper {
 		public BasicGridContentDefinition cd;
@@ -106,7 +104,6 @@ public class BasicGridPublisher {
 
 	@XmlRootElement
 	@XmlAccessorType(XmlAccessType.FIELD)
-	
 	@Registration(JaxbContextRegistration.class)
 	public static class BasicGridPublicationModel
 			implements PublicationContent {
@@ -117,7 +114,6 @@ public class BasicGridPublisher {
 		}
 	}
 
-	
 	@Registration({ ContentRenderer.class, BasicGridPublicationModel.class })
 	public static class BasicGridPublicationModelRenderer extends
 			ContentRenderer<BasicGridContentDefinition, BasicGridPublicationModel, ContentRequestBase> {
