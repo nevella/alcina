@@ -23,7 +23,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIte
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -189,7 +188,6 @@ public class ReflectiveSerializer {
 			}
 			Bean bean = Annotations.resolve(lookupClass, Bean.class);
 			boolean resolveWithReflectiveTypeSerializer = bean != null;
-			// FIXME - reflection - move isAssignable
 			if (!GWT.isClient()) {
 				resolveWithReflectiveTypeSerializer |= Reflections
 						.isAssignableFrom(TreeSerializable.class, lookupClass)
