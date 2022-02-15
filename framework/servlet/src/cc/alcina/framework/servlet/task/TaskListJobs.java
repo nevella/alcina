@@ -74,12 +74,12 @@ public class TaskListJobs extends AbstractTaskPerformer
 			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
 					job.getTaskSerialized());
 			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
-					.filter(textFilter).filter(sectionFilter).parallel();
-			ObjectWrapper<Stream<? extends Entity>> mutableStream = ObjectWrapper
+					.filter(textFilter).filter(sectionFilter);
+			ObjectWrapper<Stream<? extends Entity>> streamRef = ObjectWrapper
 					.of(stream);
 			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
-					() -> mutableStream.get().collect(Collectors.toList()),
-					mutableStream);
+					() -> streamRef.get().collect(Collectors.toList()),
+					streamRef, true);
 			jobs.forEach(job -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(String.valueOf(job.getId()))
@@ -130,15 +130,17 @@ public class TaskListJobs extends AbstractTaskPerformer
 			Stream<? extends Job> stream = recentlyCompletedJobs
 					.filter(textFilter).filter((Predicate) topLevelAdditional)
 					.limit(limit);
+			boolean parallel = false;
 			if (Ax.notBlank(filter)) {
 				stream = stream.sorted(
 						Comparator.comparing(Job::getEndTime).reversed());
+				parallel = true;
 			}
-			ObjectWrapper<Stream<? extends Entity>> mutableStream = ObjectWrapper
+			ObjectWrapper<Stream<? extends Entity>> streamRef = ObjectWrapper
 					.of(stream);
 			List<Job> jobs = (List<Job>) DomainStore.queryPool().call(
-					() -> mutableStream.get().collect(Collectors.toList()),
-					mutableStream);
+					() -> streamRef.get().collect(Collectors.toList()),
+					streamRef, parallel);
 			jobs.forEach(job -> {
 				DomNodeHtmlTableCellBuilder cellBuilder = builder.row()
 						.cell(String.valueOf(job.getId()))

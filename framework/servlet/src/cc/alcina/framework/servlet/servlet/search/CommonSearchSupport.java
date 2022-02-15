@@ -163,11 +163,11 @@ public class CommonSearchSupport {
 					def);
 			// FIXME - 2022 - there may be places where we can get result set
 			// size without collecting (i.e. index-only)
-			ObjectWrapper<Stream<? extends Entity>> mutableStream = ObjectWrapper
+			ObjectWrapper<Stream<? extends Entity>> streamRef = ObjectWrapper
 					.of(search);
 			List<Entity> rows = DomainStore.queryPool().call(
-					() -> mutableStream.get().collect(Collectors.toList()),
-					mutableStream);
+					() -> streamRef.get().collect(Collectors.toList()),
+					streamRef, true);
 			IntPair range = new IntPair(
 					def.getResultsPerPage() * (def.getPageNumber()),
 					def.getResultsPerPage() * (def.getPageNumber() + 1));
