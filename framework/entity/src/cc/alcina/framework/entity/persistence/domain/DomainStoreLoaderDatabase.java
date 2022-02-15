@@ -101,6 +101,7 @@ import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.stat.StatCategory_DomainStore;
 import cc.alcina.framework.entity.transform.DomainTransformEventPersistent;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.util.AnnotationUtils;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.SqlUtils;
@@ -210,7 +211,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	}
 
 	@Override
-	public DomainStoreTransformSequencer getTransformSequencer() {
+	public DomainTransformPersistenceQueue.Sequencer getTransformSequencer() {
 		return this.transformSequencer;
 	}
 
@@ -242,7 +243,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		warmupTransaction = Transaction.current();
 		warmupTransaction.setTimeout(60 * TimeConstants.ONE_MINUTE_MS);
 		transformSequencer.setInitialised(true);
-		transformSequencer.initialEnsureTimestamps();
+		transformSequencer.waitForWritableTransactionsToTerminate();
 		{
 			Connection conn = getConnection();
 			transformSequencer.markHighestVisibleTransformList(conn);

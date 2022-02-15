@@ -127,6 +127,7 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 
 /**
@@ -380,7 +381,7 @@ public class DomainStore implements IDomainStore {
 		return getPersistenceEvents().getQueue().getTransformCommitPosition();
 	}
 
-	public DomainStoreTransformSequencer getTransformSequencer() {
+	public DomainTransformPersistenceQueue.Sequencer getTransformSequencer() {
 		return loader.getTransformSequencer();
 	}
 
