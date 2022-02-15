@@ -169,6 +169,7 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public void onTransformRequestAborted(long requestId) {
+		sequencer.onPersistedRequestAborted(requestId);
 		events.add(Event.aborted(requestId));
 	}
 
@@ -529,6 +530,8 @@ public class DomainTransformPersistenceQueue {
 		void refresh();
 
 		void vacuumTables();
+
+		void onPersistedRequestAborted(long requestId);
 	}
 
 	static class Event {

@@ -12,6 +12,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.stream.Collectors;
 
 import javax.persistence.Table;
 
@@ -79,6 +80,11 @@ public class DomainStoreTransformSequencer
 			return;
 		}
 		refreshPositions(requestId, System.currentTimeMillis());
+	}
+
+	@Override
+	public void onPersistedRequestAborted(long requestId) {
+		pendingRequestIds.remove(requestId);
 	}
 
 	@Override
@@ -184,9 +190,11 @@ public class DomainStoreTransformSequencer
 		long end = System.nanoTime();
 		if (end - start > ResourceUtilities.getInteger(
 				DomainStoreTransformSequencer.class, "logRefreshTime")) {
-			logger.warn("Long refresh time: {}  - {} ms",
-					CommonUtils.joinWithNewlines(pendingRequestIds.keySet()),
-					end - start);
+			logger.warn("Long refresh time: {} ids - {} ns - {}",
+					pendingRequestIds.size(), end - start,
+					pendingRequestIds.keySet().stream().limit(20)
+							.map(String::valueOf)
+							.collect(Collectors.joining(", ")));
 		}
 		if (positions.size() > 0) {
 			publishUnpublishedPositions(positions);
