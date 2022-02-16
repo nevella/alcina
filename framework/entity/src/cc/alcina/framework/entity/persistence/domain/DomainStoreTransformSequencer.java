@@ -56,6 +56,8 @@ public class DomainStoreTransformSequencer
 	 */
 	private ConcurrentHashMap<Long, Boolean> pendingRequestIds = new ConcurrentHashMap<>();
 
+	private ConcurrentHashMap<Long, Boolean> abortedRequestIds = new ConcurrentHashMap<>();
+
 	DomainTransformCommitPosition highestVisiblePosition;
 
 	List<DomainTransformCommitPosition> unpublishedPositions = new ArrayList<>();
@@ -85,10 +87,17 @@ public class DomainStoreTransformSequencer
 	@Override
 	public void onPersistedRequestAborted(long requestId) {
 		pendingRequestIds.remove(requestId);
+		logger.info("Received aborted request id: {}", requestId);
+		abortedRequestIds.put(requestId, true);
 	}
 
 	@Override
 	public void onPersistedRequestPreCommitted(long requestId) {
+		if (abortedRequestIds.containsKey(requestId)) {
+			logger.info("Received precommit after aborted request - id: {}",
+					requestId);
+			return;
+		}
 		pendingRequestIds.put(requestId, true);
 	}
 
