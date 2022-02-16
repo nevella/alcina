@@ -333,20 +333,30 @@ public class DomainStoreTransformSequencer
 		//@formatter:on
 		long start = System.currentTimeMillis();
 		PreparedStatement statement = conn.prepareStatement(sql);
-		while (true) {
+		long logFrequencyMillis = 1000;
+		long lastLog = 0;
+		long now = 0;
+		while ((now = System.currentTimeMillis()) - start < commitTimeout) {
 			statement.setTimestamp(1, new Timestamp(start));
 			conn.commit();
 			try (ResultSet rs = statement.executeQuery()) {
 				if (!rs.next()) {
 					break;
 				}
-				logger.info("Waiting on transactions:");
-				do {
-					logger.info(
-							"\tpid: {} - client_addr: {} - xact_start: {} - query: {}",
-							rs.getLong("pid"), rs.getString("client_addr"),
-							rs.getString("xact_start"), rs.getString("query"));
-				} while (rs.next());
+				if (now - lastLog > logFrequencyMillis) {
+					do {
+						logger.info(
+								"Waiting on transactions: pid: {} - client_addr: {} - xact_start: {} - query: {}",
+								rs.getLong("pid"), rs.getString("client_addr"),
+								rs.getString("xact_start"),
+								rs.getString("query"));
+					} while (rs.next());
+					lastLog = now;
+					logFrequencyMillis *= 2;
+					if (logFrequencyMillis > TimeConstants.ONE_MINUTE_MS) {
+						logFrequencyMillis = TimeConstants.ONE_MINUTE_MS;
+					}
+				}
 			}
 			Thread.sleep(1000);
 		}
