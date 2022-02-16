@@ -1822,7 +1822,7 @@ public class DomainStore implements IDomainStore {
 		public void onDomainTransformRequestPersistence(
 				DomainTransformPersistenceEvent evt) {
 			switch (evt.getPersistenceEventType()) {
-			case PRE_COMMIT:
+			case PREPARE_COMMIT:
 				break;
 			case COMMIT_ERROR:
 				break;

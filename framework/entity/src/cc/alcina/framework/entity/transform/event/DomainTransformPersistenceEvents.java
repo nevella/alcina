@@ -29,9 +29,9 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
 public class DomainTransformPersistenceEvents {
 	private static final String CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS = DomainTransformPersistenceEvents.class
 			.getName() + ".CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS";
+
 	public static final String CONTEXT_FIRING_EVENT = DomainTransformPersistenceEvents.class
 			.getName() + ".CONTEXT_FIRING_EVENT";
-
 
 	public static void setLocalCommitTimeout(long timeout) {
 		LooseContext.set(CONTEXT_OVERRIDE_LOCAL_COMMIT_TIMEOUT_MS, timeout);
@@ -56,6 +56,7 @@ public class DomainTransformPersistenceEvents {
 			DomainTransformPersistenceListener listener) {
 		listenerList.add(listener);
 	}
+
 	public void fireDomainTransformPersistenceEvent(
 			DomainTransformPersistenceEvent event) {
 		Preconditions.checkState(!LooseContext.is(CONTEXT_FIRING_EVENT));
@@ -66,6 +67,7 @@ public class DomainTransformPersistenceEvents {
 			LooseContext.pop();
 		}
 	}
+
 	private void fireDomainTransformPersistenceEvent0(
 			DomainTransformPersistenceEvent event) {
 		if (event.isLocalToVm()) {
@@ -85,7 +87,7 @@ public class DomainTransformPersistenceEvents {
 			}
 		}
 		switch (event.getPersistenceEventType()) {
-		case PRE_COMMIT: {
+		case PREPARE_COMMIT: {
 			if (event.getTransformPersistenceToken()
 					.isRequestorExternalToThisJvm()) {
 				transformLocalIdSupport.runWithOffsetLocalIdCounter(
@@ -98,14 +100,15 @@ public class DomainTransformPersistenceEvents {
 			}
 			break;
 		}
-		case PRE_FLUSH: {
+		case PRE_COMMIT: {
 			event.getPersistedRequests()
-					.forEach(queue::onPersistedRequestPreCommitted);
+					.forEach(queue::onPersistedRequestPreFlushed);
 			break;
 		}
 		case COMMIT_OK:
 		case COMMIT_ERROR: {
-			event.getPersistedRequests().forEach(queue::onRequestDataReceived);
+			event.getPersistedRequests().forEach(
+					request -> queue.onRequestDataReceived(request, false));
 			if (event.isLocalToVm() && !event.isFiringFromQueue()) {
 				event.getPersistedRequestIds().forEach(
 						id -> queue.onTransformRequestCommitted(id, true));
@@ -171,8 +174,8 @@ public class DomainTransformPersistenceEvents {
 			monitor = this;
 			break;
 		// can fire in parallel
+		case PREPARE_COMMIT:
 		case PRE_COMMIT:
-		case PRE_FLUSH:
 			monitor = new Object();
 			break;
 		default:
@@ -201,7 +204,7 @@ public class DomainTransformPersistenceEvents {
 									Thread.currentThread().getName(),
 									() -> true);
 							listener.onDomainTransformRequestPersistence(event);
-							if (persistenceEventType == DomainTransformPersistenceEventType.PRE_COMMIT) {
+							if (persistenceEventType == DomainTransformPersistenceEventType.PREPARE_COMMIT) {
 								TransformManager.get()
 										.checkNoPendingTransforms();
 							}
@@ -237,8 +240,8 @@ public class DomainTransformPersistenceEvents {
 			RuntimeException rex) {
 		rex.printStackTrace();
 		switch (persistenceEventType) {
+		case PREPARE_COMMIT:
 		case PRE_COMMIT:
-		case PRE_FLUSH:
 			throw rex;
 		default:
 			break;

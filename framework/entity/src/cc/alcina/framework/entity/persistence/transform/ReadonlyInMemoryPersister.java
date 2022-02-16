@@ -141,7 +141,7 @@ public class ReadonlyInMemoryPersister {
 		DomainStore.writableStore().getPersistenceEvents()
 				.fireDomainTransformPersistenceEvent(
 						new DomainTransformPersistenceEvent(token, wrapper,
-								DomainTransformPersistenceEventType.PRE_FLUSH,
+								DomainTransformPersistenceEventType.PRE_COMMIT,
 								true));
 	}
 

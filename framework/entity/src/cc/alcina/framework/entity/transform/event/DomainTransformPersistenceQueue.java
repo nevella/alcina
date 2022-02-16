@@ -127,7 +127,7 @@ public class DomainTransformPersistenceQueue {
 		eventQueue.debugState();
 	}
 
-	public void onPersistedRequestPreCommitted(
+	public void onPersistedRequestPreFlushed(
 			DomainTransformRequestPersistent request) {
 		sequencer.onPersistedRequestPreCommitted(request.getId());
 	}
@@ -142,9 +142,11 @@ public class DomainTransformPersistenceQueue {
 		state.onPreparingVmLocalRequest(dtr);
 	}
 
-	public void
-			onRequestDataReceived(DomainTransformRequestPersistent request) {
-		onPersistedRequestPreCommitted(request);
+	public void onRequestDataReceived(DomainTransformRequestPersistent request,
+			boolean preFlush) {
+		if (preFlush) {
+			onPersistedRequestPreFlushed(request);
+		}
 		long requestId = request.getId();
 		logger.debug("Pre-commit: {}", requestId);
 		if (loadedRequests.containsKey(requestId)) {

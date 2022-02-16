@@ -159,9 +159,9 @@ public class DomainStoreTransformSequencer
 				tableName,
 				EntityPersistenceHelper.toInClause(pendingRequestIds.keySet()));
 		List<DomainTransformCommitPosition> positions = new ArrayList<>();
-		try (PreparedStatement pStatement = conn.prepareStatement(querySql)) {
-			pStatement.setFetchSize(10000);
-			ResultSet rs = pStatement.executeQuery();
+		try (Statement statement = conn.createStatement()) {
+			statement.setFetchSize(10000);
+			ResultSet rs = statement.executeQuery(querySql);
 			while (rs.next()) {
 				long id = rs.getLong(1);
 				Timestamp xminTimestamp = rs.getTimestamp(2);
@@ -175,6 +175,7 @@ public class DomainStoreTransformSequencer
 					positions.add(position);
 				}
 			}
+			rs.close();
 		} catch (SQLException sqlex) {
 			logger.warn("Issue in query: ids: {}", pendingRequestIds.keySet());
 			throw sqlex;
@@ -295,17 +296,19 @@ public class DomainStoreTransformSequencer
 		PreparedStatement statement = conn.prepareStatement(sql);
 		while (true) {
 			statement.setTimestamp(1, new Timestamp(start));
-			ResultSet rs = statement.executeQuery();
-			if (!rs.next()) {
-				break;
+			conn.commit();
+			try (ResultSet rs = statement.executeQuery()) {
+				if (!rs.next()) {
+					break;
+				}
+				logger.info("Waiting on transactions:");
+				do {
+					logger.info(
+							"\tpid: {} - client_addr: {} - xact_start: {} - query: {}",
+							rs.getLong("pid"), rs.getString("client_addr"),
+							rs.getString("xact_start"), rs.getString("query"));
+				} while (rs.next());
 			}
-			logger.info("Waiting on transactions:");
-			do {
-				logger.info(
-						"\tpid: {} - client_addr: {} - xact_start: {} - query: {}",
-						rs.getLong("pid"), rs.getString("client_addr"),
-						rs.getString("xact_start"), rs.getString("query"));
-			} while (rs.next());
 			Thread.sleep(1000);
 		}
 		return System.currentTimeMillis() - start;

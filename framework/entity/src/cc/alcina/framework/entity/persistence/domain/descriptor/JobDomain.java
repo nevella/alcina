@@ -101,7 +101,7 @@ public class JobDomain {
 				logger.info("Issue with job transform details:\n{}",
 						event.getTransformPersistenceToken().getRequest());
 				break;
-			case PRE_FLUSH:
+			case PRE_COMMIT:
 				Set<Long> ids = collation.query(jobImplClass).stream()
 						.map(qr -> qr.entityCollation.getId())
 						.collect(Collectors.toSet());
