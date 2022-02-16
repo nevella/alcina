@@ -98,7 +98,7 @@ public class JobDomain {
 				break;
 			}
 			case COMMIT_ERROR:
-				logger.info("Issue with job transform details:\n{}",
+				logger.trace("Issue with job transform details:\n{}",
 						event.getTransformPersistenceToken().getRequest());
 				break;
 			case PRE_COMMIT:

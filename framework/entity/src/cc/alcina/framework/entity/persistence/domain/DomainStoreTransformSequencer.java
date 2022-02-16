@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.Doma
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
@@ -34,6 +35,13 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
  * A postgres-specific class to order applications of transformrequests to the
  * domain by db transactionCommitTime. It uses pg_xact_commit_timestamp(xmin) to
  * order these correctly.
+ * 
+ * FIXME - mvcc:
+ * 
+ * As it now is, COMMIT_ERRROR dtr events are fired (and ignored) on
+ * non-originating servers - remove?
+ * 
+ * 
  * 
  * @author nick@alcina.cc
  * 
@@ -53,8 +61,11 @@ public class DomainStoreTransformSequencer
 	 * Synchronization - this is iterated over in refreshPositions0, but a
 	 * concurrent add will not cause problems (since the ultimate concurrency
 	 * control is the db-tx visibility of the dtr id)
+	 * 
+	 * Value is precommit receipt time, used for invalidation of requests from
+	 * restarted servers
 	 */
-	private ConcurrentHashMap<Long, Boolean> pendingRequestIds = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Long, Long> pendingRequestIds = new ConcurrentHashMap<>();
 
 	private ConcurrentHashMap<Long, Boolean> abortedRequestIds = new ConcurrentHashMap<>();
 
@@ -65,6 +76,8 @@ public class DomainStoreTransformSequencer
 	Map<Long, DomainTransformCommitPosition> visiblePositions = new LinkedHashMap<>();
 
 	private volatile boolean initialised = false;
+
+	private long commitTimeout = 10 * TimeConstants.ONE_MINUTE_MS;
 
 	DomainStoreTransformSequencer(DomainStoreLoaderDatabase loaderDatabase) {
 		this.loaderDatabase = loaderDatabase;
@@ -98,7 +111,7 @@ public class DomainStoreTransformSequencer
 					requestId);
 			return;
 		}
-		pendingRequestIds.put(requestId, true);
+		pendingRequestIds.put(requestId, System.currentTimeMillis());
 	}
 
 	@Override
@@ -119,9 +132,12 @@ public class DomainStoreTransformSequencer
 		if (connection == null) {
 			connection = loaderDatabase.dataSource.getConnection();
 			connection.setAutoCommit(false);
+			xminStatement = connection.createStatement();
 		}
 		return connection;
 	}
+
+	private Statement xminStatement;
 
 	private synchronized void publishUnpublishedPositions(
 			List<DomainTransformCommitPosition> positions) {
@@ -158,20 +174,33 @@ public class DomainStoreTransformSequencer
 		if (publishedIds.containsKey(ignoreIfSeenRequestId)) {
 			return 0;
 		}
-		String tableName = tableName();
 		long start = System.nanoTime();
+		long queryStart = 0;
+		long queryFirst = 0;
+		long startMillis = System.currentTimeMillis();
+		pendingRequestIds.entrySet().removeIf(v -> {
+			boolean remove = startMillis - v.getValue() > commitTimeout;
+			if (remove) {
+				logger.info("Removing timed out pending request: {} ", v);
+			}
+			return remove;
+		});
 		Timestamp highestVisible = highestVisiblePosition.getCommitTimestamp();
-		String querySql = null;
-		querySql = Ax.format(
-				"select id, pg_xact_commit_timestamp(xmin) as commit_timestamp "
-						+ "from %s where id in %s order by pg_xact_commit_timestamp(xmin) desc ",
-				tableName,
-				EntityPersistenceHelper.toInClause(pendingRequestIds.keySet()));
 		List<DomainTransformCommitPosition> positions = new ArrayList<>();
-		try (Statement statement = conn.createStatement()) {
-			statement.setFetchSize(10000);
-			ResultSet rs = statement.executeQuery(querySql);
+		if (pendingRequestIds.isEmpty()) {
+			return 0;
+		}
+		try {
+			String querySql = null;
+			querySql = Ax.format(
+					"select id, pg_xact_commit_timestamp(xmin) as commit_timestamp "
+							+ "from %s where id in %s order by pg_xact_commit_timestamp(xmin) desc ",
+					tableName(), EntityPersistenceHelper
+							.toInClause(pendingRequestIds.keySet()));
+			queryStart = System.nanoTime();
+			ResultSet rs = xminStatement.executeQuery(querySql);
 			while (rs.next()) {
+				queryFirst = queryFirst == 0 ? System.nanoTime() : queryFirst;
 				long id = rs.getLong(1);
 				Timestamp xminTimestamp = rs.getTimestamp(2);
 				DomainTransformCommitPosition position = new DomainTransformCommitPosition(
@@ -200,8 +229,9 @@ public class DomainStoreTransformSequencer
 		long end = System.nanoTime();
 		if (end - start > ResourceUtilities.getInteger(
 				DomainStoreTransformSequencer.class, "logRefreshTime")) {
-			logger.warn("Long refresh time: {} ids - {} ns - {}",
+			logger.warn("Long refresh time: {} ids - {} ns - query {} ns - {}",
 					pendingRequestIds.size(), end - start,
+					queryFirst - queryStart,
 					pendingRequestIds.keySet().stream().limit(20)
 							.map(String::valueOf)
 							.collect(Collectors.joining(", ")));
