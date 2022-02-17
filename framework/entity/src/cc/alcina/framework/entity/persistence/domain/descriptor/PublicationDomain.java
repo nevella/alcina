@@ -50,7 +50,7 @@ public class PublicationDomain {
 		public void onDomainTransformRequestPersistence(
 				DomainTransformPersistenceEvent event) {
 			if (event
-					.getPersistenceEventType() == DomainTransformPersistenceEventType.PRE_COMMIT) {
+					.getPersistenceEventType() == DomainTransformPersistenceEventType.PREPARE_COMMIT) {
 				AdjunctTransformCollation collation = event
 						.getTransformPersistenceToken().getTransformCollation();
 				if (collation.has(iUserImpl)) {

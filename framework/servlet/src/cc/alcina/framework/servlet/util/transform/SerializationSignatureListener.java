@@ -86,7 +86,7 @@ public class SerializationSignatureListener
 			return;
 		}
 		switch (event.getPersistenceEventType()) {
-		case PRE_COMMIT:
+		case PREPARE_COMMIT:
 			TransformPersistenceToken token = event
 					.getTransformPersistenceToken();
 			for (DomainTransformEvent transform : token.getRequest()

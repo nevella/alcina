@@ -128,8 +128,8 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvents;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue;
 import cc.alcina.framework.entity.util.OffThreadLogger;
-import cc.alcina.framework.entity.util.RunnableCallable;
 
 /**
  * <h3>Locking notes:</h3>
@@ -383,7 +383,7 @@ public class DomainStore implements IDomainStore {
 		return getPersistenceEvents().getQueue().getTransformCommitPosition();
 	}
 
-	public DomainStoreTransformSequencer getTransformSequencer() {
+	public DomainTransformPersistenceQueue.Sequencer getTransformSequencer() {
 		return loader.getTransformSequencer();
 	}
 
@@ -1404,9 +1404,7 @@ public class DomainStore implements IDomainStore {
 	public static class QueryPool {
 		private final ForkJoinPool pool;
 
-		private Transaction transaction;
-
-		private AtomicInteger activeQueries = new AtomicInteger();
+		private volatile Transaction transaction;
 
 		private LooseContextInstance contextInstance;
 
@@ -1426,51 +1424,46 @@ public class DomainStore implements IDomainStore {
 		}
 
 		/*
-		 * Note - the stream must be explicitly called parallel() prior to
-		 * method entry to be evaluated in parallel (even if runInPool evaluates
-		 * to true) parallel here.
+		 * The use of a reference to the stream (rather than the stream) is so
+		 * that the actual stream used by the callable can be changed based on
+		 * the context and serial arguments
 		 */
 		public <T> T call(Callable<T> callable,
-				ObjectWrapper<Stream<? extends Entity>> mutableStream) {
+				ObjectWrapper<Stream<? extends Entity>> streamRef,
+				boolean parallel) {
 			boolean runInPool = false;
-			if (!LooseContext.is(CONTEXT_SERIAL_QUERY)) {
+			parallel &= !LooseContext.is(CONTEXT_SERIAL_QUERY);
+			if (parallel) {
 				synchronized (this) {
 					Transaction current = Transaction.current();
-					if (transaction == null || current == transaction) {
+					if (transaction == null) {
 						runInPool = true;
 						transaction = current;
 						this.contextInstance = LooseContext.getContext()
 								.snapshot();
-						activeQueries.incrementAndGet();
 					}
 				}
 			}
 			if (runInPool) {
 				try {
-					mutableStream.set(mutableStream.get().parallel());
+					streamRef.set(streamRef.get().parallel());
 					return pool.submit(callable).get();
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				} finally {
-					activeQueries.decrementAndGet();
-					if (activeQueries.get() == 0) {
-						transaction = null;
+					synchronized (this) {
 						contextInstance = null;
+						transaction = null;
 					}
 				}
 			} else {
-				mutableStream.set(mutableStream.get().sequential());
+				streamRef.set(streamRef.get().sequential());
 				try {
 					return callable.call();
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
 			}
-		}
-
-		public void run(Runnable runnable,
-				ObjectWrapper<Stream<? extends Entity>> streamWrapper) {
-			call(new RunnableCallable(runnable), streamWrapper);
 		}
 
 		class WorkerThread extends ForkJoinWorkerThread {
@@ -1823,7 +1816,7 @@ public class DomainStore implements IDomainStore {
 		public void onDomainTransformRequestPersistence(
 				DomainTransformPersistenceEvent evt) {
 			switch (evt.getPersistenceEventType()) {
-			case PRE_COMMIT:
+			case PREPARE_COMMIT:
 				break;
 			case COMMIT_ERROR:
 				break;

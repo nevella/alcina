@@ -45,6 +45,7 @@ import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueue.Event.Type;
 import cc.alcina.framework.entity.util.OffThreadLogger;
 import it.unimi.dsi.fastutil.longs.LongLinkedOpenHashSet;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 /**
@@ -125,7 +126,7 @@ public class DomainTransformPersistenceQueue {
 		eventQueue.debugState();
 	}
 
-	public void onPersistedRequestPreCommitted(
+	public void onPersistedRequestPreFlushed(
 			DomainTransformRequestPersistent request) {
 		sequencer.onPersistedRequestPreCommitted(request.getId());
 	}
@@ -140,9 +141,11 @@ public class DomainTransformPersistenceQueue {
 		state.onPreparingVmLocalRequest(dtr);
 	}
 
-	public void
-			onRequestDataReceived(DomainTransformRequestPersistent request) {
-		onPersistedRequestPreCommitted(request);
+	public void onRequestDataReceived(DomainTransformRequestPersistent request,
+			boolean preFlush) {
+		if (preFlush) {
+			onPersistedRequestPreFlushed(request);
+		}
 		long requestId = request.getId();
 		logger.debug("Pre-commit: {}", requestId);
 		if (loadedRequests.containsKey(requestId)) {
@@ -162,10 +165,12 @@ public class DomainTransformPersistenceQueue {
 
 	public void onSequencedCommitPositions(
 			List<DomainTransformCommitPosition> positions) {
+		state.addCommitPositions(positions);
 		positions.forEach(p -> events.add(Event.committed(p)));
 	}
 
 	public void onTransformRequestAborted(long requestId) {
+		sequencer.onPersistedRequestAborted(requestId);
 		events.add(Event.aborted(requestId));
 	}
 
@@ -519,13 +524,15 @@ public class DomainTransformPersistenceQueue {
 	}
 
 	public interface Sequencer {
-		Long getLastRequestIdAtTimestamp(Timestamp timestamp);
-
 		void onPersistedRequestCommitted(long requestId);
 
 		void onPersistedRequestPreCommitted(long requestId);
 
 		void refresh();
+
+		void vacuumTables();
+
+		void onPersistedRequestAborted(long requestId);
 	}
 
 	static class Event {
@@ -665,7 +672,7 @@ public class DomainTransformPersistenceQueue {
 			this.awaitingTimestamp = timestamp;
 			if (!state.isTimstampVisible(timestamp)) {
 				awaitingRequestIds
-						.add(sequencer.getLastRequestIdAtTimestamp(timestamp));
+						.add(state.getLastRequestIdAtTimestamp(timestamp));
 			} else {
 				if (state.isAwaitEmptyEventQueue(timestamp)) {
 					withAwaitEventEmptyQueue(true);
@@ -693,6 +700,8 @@ public class DomainTransformPersistenceQueue {
 
 		private DomainTransformCommitPosition transformCommitPosition;
 
+		private Map<Timestamp, DomainTransformCommitPosition> commitPositionsByTimestamp = new Object2ObjectOpenHashMap<>();
+
 		public synchronized boolean isTimstampVisible(Timestamp timestamp) {
 			if (transformCommitPosition == null) {
 				return false;
@@ -704,6 +713,18 @@ public class DomainTransformPersistenceQueue {
 			} else {
 				return true;
 			}
+		}
+
+		synchronized Long getLastRequestIdAtTimestamp(Timestamp timestamp) {
+			DomainTransformCommitPosition position = commitPositionsByTimestamp
+					.get(timestamp);
+			return position == null ? null : position.getCommitRequestId();
+		}
+
+		synchronized void addCommitPositions(
+				List<DomainTransformCommitPosition> positions) {
+			positions.forEach(p -> commitPositionsByTimestamp
+					.put(p.getCommitTimestamp(), p));
 		}
 
 		public synchronized void removeFiredFrom(Set<Long> requestIds) {

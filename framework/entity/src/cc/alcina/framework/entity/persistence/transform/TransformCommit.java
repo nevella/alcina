@@ -936,7 +936,7 @@ public class TransformCommit {
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
 									persistenceToken, null,
-									DomainTransformPersistenceEventType.PRE_COMMIT,
+									DomainTransformPersistenceEventType.PREPARE_COMMIT,
 									true));
 			persistenceToken.getTransformCollation().refreshFromRequest();
 			persistenceToken.getTransformCollation()

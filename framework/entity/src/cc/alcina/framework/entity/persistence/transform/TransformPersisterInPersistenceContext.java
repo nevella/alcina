@@ -449,7 +449,7 @@ public class TransformPersisterInPersistenceContext {
 						.fireDomainTransformPersistenceEvent(
 								new DomainTransformPersistenceEvent(token,
 										wrapper,
-										DomainTransformPersistenceEventType.PRE_FLUSH,
+										DomainTransformPersistenceEventType.PRE_COMMIT,
 										true));
 				return;
 			case RETRY_WITH_IGNORES:

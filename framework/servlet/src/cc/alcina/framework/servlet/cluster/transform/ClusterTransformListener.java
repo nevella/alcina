@@ -36,7 +36,7 @@ public class ClusterTransformListener
 
 	Logger logger = OffThreadLogger.getLogger(getClass());
 
-	private ConcurrentHashMap<Long, CountDownLatch> preFlushLatches = new ConcurrentHashMap<>();
+	private ConcurrentHashMap<Long, CountDownLatch> preCommitLatches = new ConcurrentHashMap<>();
 
 	public ClusterTransformListener(TransformCommitLogHost commitLogHost,
 			TransformCommitLog transformCommitLog, DomainStore domainStore) {
@@ -64,12 +64,12 @@ public class ClusterTransformListener
 		List<DomainTransformRequestPersistent> requests = event
 				.getPersistedRequests();
 		switch (event.getPersistenceEventType()) {
-		case PRE_COMMIT:
+		case PREPARE_COMMIT:
 			break;
 		case COMMIT_OK:
 			publishRequests(requests, ClusterTransformRequest.State.COMMIT);
 			break;
-		case PRE_FLUSH:
+		case PRE_COMMIT:
 			if (requests.isEmpty()) {
 				return;
 			}
@@ -80,7 +80,7 @@ public class ClusterTransformListener
 						.setContextClassLoader(ClassLoaderAwareRegistryProvider
 								.get().getServletLayerClassloader());
 				CountDownLatch latch = new CountDownLatch(1);
-				preFlushLatches.put(event.getMaxPersistedRequestId(), latch);
+				preCommitLatches.put(event.getMaxPersistedRequestId(), latch);
 				publishRequests(requests, State.PRE_COMMIT);
 				try {
 					long start = System.currentTimeMillis();
@@ -154,10 +154,10 @@ public class ClusterTransformListener
 				.getPersistenceEvents().getQueue();
 		switch (request.state) {
 		case PRE_COMMIT:
-			queue.onRequestDataReceived(request.request);
+			queue.onRequestDataReceived(request.request,true);
 			logger.info("Post request data received: {} {}", request.id,
 					request.state);
-			CountDownLatch latch = preFlushLatches
+			CountDownLatch latch = preCommitLatches
 					.remove(request.request.getId());
 			if (latch != null) {
 				latch.countDown();
