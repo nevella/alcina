@@ -998,41 +998,61 @@ public class ResourceUtilities {
 		return instance;
 	}
 
+	// Helper class to make web requests of various kinds
 	public static class SimpleQuery {
+
+		// URL to request
 		private String strUrl;
 
+		// Body for POST and PUT requests
 		private String body;
 
+		// Headers to add to request
 		private StringMap headers = new StringMap();
 
+		// Internal connection handle
 		private HttpURLConnection connection;
-
-		private boolean asPut = false;
-
-		private boolean asPost = false;
-
+		
+		// Request is gzipped
 		private boolean gzip;
 
+		// Decode GZIP responses
 		private boolean decodeGz;
 
+		// Content type of response
 		private String contentType;
 
+		// Content-Disposition field of response
 		private String contentDisposition;
 
+		// Method to request
+		private String method = "GET";
+
+		// Response code of response
+		private int responseCode;
+
+		// Query string parameters for request
 		private StringMap queryStringParameters;
 
+		// Throw on response codes >= 400
+		private boolean throwOnResponseCode = true;
+
+		// Add a custom HostnameVerifier when making the request
 		private HostnameVerifier hostnameVerifier;
 
 		public SimpleQuery(String strUrl) {
 			this.strUrl = strUrl;
 		}
 
+		// Request the URL and return as bytes
 		public byte[] asBytes() throws Exception {
 			InputStream in = null;
 			connection = null;
+			// Ensure headers are present
 			if (headers == null) {
 				headers = new StringMap();
 			}
+			// Generate query string if present and add to request URL
 			if (queryStringParameters != null) {
 				if (!strUrl.contains("?")) {
 					strUrl += "?";
@@ -1043,27 +1063,29 @@ public class ResourceUtilities {
 				}).collect(Collectors.joining("&"));
 			}
 			try {
+				// Setup connection to remote
 				URL url = new URL(strUrl);
 				connection = (HttpURLConnection) (url.openConnection());
 				connection.setDoOutput(true);
 				connection.setDoInput(true);
 				connection.setUseCaches(false);
+				// If custom HostnameVerifier present, set on connection
 				if (hostnameVerifier != null
 						&& connection instanceof HttpsURLConnection) {
 					((HttpsURLConnection) connection)
 							.setHostnameVerifier(hostnameVerifier);
 				}
-				if (asPost) {
-					connection.setRequestMethod("POST");
-				} else if (asPut) {
-					connection.setRequestMethod("PUT");
-				}
+				// Set response method
+				connection.setRequestMethod(method);
+				// Add GZIP to accepted encoding if accepted
 				if (gzip) {
 					headers.put("accept-encoding", "gzip");
 				}
+				// Add each header to connection
 				for (Entry<String, String> e : headers.entrySet()) {
 					connection.setRequestProperty(e.getKey(), e.getValue());
 				}
+				// If body is present, send to remote
 				if (body != null) {
 					OutputStream out = connection.getOutputStream();
 					Writer wout = new OutputStreamWriter(out, "UTF-8");
@@ -1071,24 +1093,32 @@ public class ResourceUtilities {
 					wout.flush();
 					wout.close();
 				}
+				// Read response
 				in = connection.getInputStream();
-				byte[] input = readStreamToByteArray(in);
-				int responseCode = connection.getResponseCode();
-				if (responseCode >= 400) {
+				byte[] respBytes = readStreamToByteArray(in);
+				responseCode = connection.getResponseCode();
+				// If throwOnResponseCode and we get a 4xx or 5xx code
+				// throw a StatusCodeException
+				if (responseCode >= 400 && throwOnResponseCode) {
 					throw new StatusCodeException(responseCode,
 							connection.getResponseMessage());
 				}
+				// If decodeGz, decode the gzipped data
 				if (decodeGz) {
-					input = maybeDecodeGzip(input);
+					respBytes = maybeDecodeGzip(respBytes);
 				}
+				// Store some other response data to the class
 				contentType = connection.getContentType();
 				contentDisposition = connection
 						.getHeaderField("Content-Disposition");
-				return input;
+				// Return byte arrays
+				return respBytes;
 			} catch (IOException ioe) {
+				// If there's a connection present, get the error our of it
 				if (connection != null) {
 					InputStream err = connection.getErrorStream();
 					String errString = null;
+					// If an error is present, decode it to a string and throw
 					if (err != null) {
 						byte[] input = readStreamToByteArray(err);
 						if (decodeGz) {
@@ -1101,6 +1131,7 @@ public class ResourceUtilities {
 					throw ioe;
 				}
 			} finally {
+				// Ensure streams and connection are closed
 				if (in != null) {
 					in.close();
 				}
@@ -1110,10 +1141,12 @@ public class ResourceUtilities {
 			}
 		}
 
+		// Request the URL and return as string
 		public String asString() throws Exception {
 			return new String(asBytes(), StandardCharsets.UTF_8);
 		}
 
+		// Request the URL and print the response string
 		public void echo() {
 			try {
 				Ax.out(asString());
@@ -1122,14 +1155,17 @@ public class ResourceUtilities {
 			}
 		}
 
+		// Get Content-Disposition header value from response
 		public String getContentDisposition() {
 			return this.contentDisposition;
 		}
 
+		// Get Content-Type header value from response
 		public String getContentType() {
 			return this.contentType;
 		}
 
+		// Set Authorization header with basic authentication pair
 		public SimpleQuery withBasicAuthentication(String username,
 				String password) {
 			String auth = Ax.format("%s:%s", username, password);
@@ -1139,52 +1175,73 @@ public class ResourceUtilities {
 			return this;
 		}
 
+		// Set Authorization header with bearer token
 		public SimpleQuery withBearerAuthentication(String token) {
 			headers.put("Authorization", Ax.format("Bearer %s", token));
 			return this;
 		}
 
+		// Set whether to decode on gzipped response
 		public SimpleQuery withDecodeGz(boolean decodeGz) {
 			this.decodeGz = decodeGz;
 			return this;
 		}
 
+		// Set whether to accept a gzipped response
 		public SimpleQuery withGzip(boolean gzip) {
 			this.gzip = gzip;
 			return this;
 		}
 
+		// Set whether to throw on a 4xx or 5xx response code
+		public SimpleQuery withThrowOnResponseCode(boolean throwOnResponseCode) {
+			this.throwOnResponseCode = throwOnResponseCode;
+			return this;
+		}
+
+		// Set headers on request
 		public SimpleQuery withHeaders(StringMap headers) {
 			this.headers = headers;
 			return this;
 		}
 
+		// Set custom HostnameVerifier for the request
 		public SimpleQuery
 				withHostnameVerifier(HostnameVerifier hostnameVerifier) {
 			this.hostnameVerifier = hostnameVerifier;
 			return this;
 		}
 
+		// Set body for the request
 		public SimpleQuery withBody(String body) {
 			this.body = body;
 			return this;
 		}
 
+		// Set method for the request
+		public SimpleQuery withMethod(String method) {
+			this.method = method;
+			return this;
+		}
+
+		// Set to a POST request, with given body
 		public SimpleQuery withPostBody(String postBody) {
-			this.asPost = true;
+			this.method = "POST";
 			this.body = postBody;
 			return this;
 		}
 
+		// Set as a PUT request
 		public SimpleQuery asPut() {
-			this.asPut = true;
+			this.method = "PUT";
 			return this;
 		}
 
+		// Set to a POST request with given query params as body
 		public SimpleQuery
 				withPostBodyQueryParameters(StringMap queryParameters) {
-			asPost = true;
-			body = queryParameters.entrySet().stream().map(e -> {
+			this.method = "POST";
+			this.body = queryParameters.entrySet().stream().map(e -> {
 				return Ax.format("%s=%s", e.getKey(),
 						UrlComponentEncoder.get().encode(e.getValue()));
 			}).collect(Collectors.joining("&"));
@@ -1192,12 +1249,15 @@ public class ResourceUtilities {
 			return this;
 		}
 
+		// Set query string parameters for the request
 		public SimpleQuery
 				withQueryStringParameters(StringMap queryStringParameters) {
 			this.queryStringParameters = queryStringParameters;
 			return this;
 		}
 
+		// If the request reports a Content-Encoding of gzip, decode request as gzip
+		//  otherwise, just return the input as is
 		private byte[] maybeDecodeGzip(byte[] input) throws IOException {
 			if ("gzip".equals(connection.getHeaderField("content-encoding"))) {
 				return readStreamToByteArray(
@@ -1207,8 +1267,9 @@ public class ResourceUtilities {
 			}
 		}
 
+		// Set Content-Type header to given string
 		public SimpleQuery withContentType(String string) {
-			headers.put("content-type", "application/json");
+			headers.put("content-type", string);
 			return this;
 		}
 	}
