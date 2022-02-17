@@ -154,7 +154,7 @@ public class ClusterTransformListener
 				.getPersistenceEvents().getQueue();
 		switch (request.state) {
 		case PRE_COMMIT:
-			queue.onRequestDataReceived(request.request,true);
+			queue.onRequestDataReceived(request.request, true);
 			logger.info("Post request data received: {} {}", request.id,
 					request.state);
 			CountDownLatch latch = preCommitLatches
