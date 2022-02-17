@@ -15,10 +15,10 @@ public abstract class ModuleReflector {
 		ClientReflections.register(this);
 	}
 
-	protected abstract void registerForNames(Map<String, Supplier<Class>> map);
+	protected abstract void registerForNames(Map<String, Class> map);
 
 	protected abstract void registerReflectorSuppliers(
-			Map<String, Supplier<ClassReflector>> map);
+			Map<Class, Supplier<ClassReflector>> map);
 
 	protected abstract void registerRegistrations();
 }

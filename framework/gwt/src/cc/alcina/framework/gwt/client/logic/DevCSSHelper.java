@@ -5,10 +5,12 @@ import java.beans.PropertyChangeListener;
 
 import com.google.gwt.dom.client.Element;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
+@Registration.Singleton
 public class DevCSSHelper {
 	public static DevCSSHelper get() {
 		return Registry.impl(DevCSSHelper.class);

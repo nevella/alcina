@@ -792,14 +792,18 @@ public class ReflectiveSerializer {
 
 		protected ValueSerializer
 				getValueSerializer(Class<? extends Object> serializerType) {
-			if (CommonUtils.isEnumOrEnumSubclass(serializerType)) {
-				serializerType = Enum.class;
-			}
-			if (Reflections.isAssignableFrom(BasePlace.class, serializerType)) {
-				serializerType = BasePlace.class;
-			}
 			ValueSerializer valueSerializer = valueSerializers
 					.get(serializerType);
+			if (valueSerializer == null) {
+				if (CommonUtils.isEnumOrEnumSubclass(serializerType)) {
+					serializerType = Enum.class;
+				}
+				if (Reflections.isAssignableFrom(BasePlace.class,
+						serializerType)) {
+					serializerType = BasePlace.class;
+				}
+				valueSerializer = valueSerializers.get(serializerType);
+			}
 			return valueSerializer;
 		}
 	}

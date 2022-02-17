@@ -15,7 +15,7 @@ import java.util.stream.Collectors;
 import com.google.gwt.core.client.GwtScriptOnly;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.reflection.AnnotationResolver;
+import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.Method;
@@ -26,19 +26,16 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 
-/*
- * Overridden by super-source for GWT
- */
-@GwtScriptOnly
+//to revert to jvm implementation in dev mode, add @GwtScriptOnly
 public class ClassReflectorProvider {
 	public static ClassReflector getClassReflector(Class clazz) {
 		return ClientReflections.getClassReflector(clazz);
 	}
 	@GwtScriptOnly
-	public static class ClassAnnotationResolver implements AnnotationResolver {
+	public static class ClassAnnotationProvider implements AnnotationProvider {
 		private Class clazz;
 
-		public ClassAnnotationResolver(Class clazz) {
+		public ClassAnnotationProvider(Class clazz) {
 			this.clazz = clazz;
 		}
 

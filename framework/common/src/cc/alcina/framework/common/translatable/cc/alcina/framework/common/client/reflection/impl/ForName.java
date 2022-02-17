@@ -5,7 +5,7 @@ import com.google.gwt.core.client.GwtScriptOnly;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.ClientReflections;
 
-@GwtScriptOnly
+//to revert to jvm implementation in dev mode, add @GwtScriptOnly
 public class ForName {
 	public static void init() {
 	}

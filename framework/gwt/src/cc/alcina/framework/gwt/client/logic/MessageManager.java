@@ -46,10 +46,6 @@ public class MessageManager {
 		return Registry.impl(MessageManager.class);
 	}
 
-	private MessageManager() {
-		super();
-	}
-
 	public void centerMessage(String message) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_CENTER_MESSAGE_PUBLISHED,
 				message);

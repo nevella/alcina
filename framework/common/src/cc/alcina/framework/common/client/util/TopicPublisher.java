@@ -9,12 +9,11 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /*
  * Key 'null' (when passed to addTopicListener) receives all topics
- * 
+ *
  * Thread-safe (accesses to lookup are synchronized - defensive copy made for publishTopic)
  */
 public class TopicPublisher {
@@ -75,16 +74,12 @@ public class TopicPublisher {
 			}
 			return singleton;
 		}
-
-		private GlobalTopicPublisher() {
-			super();
-		}
 	}
 
 	/*
 	 * Global topics are not tied to a particular instance of topic - they're
 	 * application-global message publication points.
-	 * 
+	 *
 	 * In hindsight, they may be an unnecessary abstraction - since if the topic
 	 * key (string) is visible, generally the API (i.e. the published object
 	 * class) of the topic is as well. That is to say that possibly 'local'

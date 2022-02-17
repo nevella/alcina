@@ -85,10 +85,6 @@ public class RenderContext extends LooseContextInstance {
 		trunk = null;
 	}
 
-	private RenderContext() {
-		super();
-	}
-
 	@Override
 	public <T> T get(String key) {
 		if (DirectedLayout.current != null) {

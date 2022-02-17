@@ -11,6 +11,8 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;
@@ -39,18 +41,20 @@ public class ModuleReflectorJvm extends ModuleReflector {
 	}
 
 	@Override
-	protected void registerForNames(Map<String, Supplier<Class>> map) {
+	protected void registerForNames(Map<String, Class> map) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	protected void registerReflectorSuppliers(
-			Map<String, Supplier<ClassReflector>> map) {
+			Map<Class, Supplier<ClassReflector>> map) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
 	protected void registerRegistrations() {
+		Registry.register().singleton(AnnotationLocation.Resolver.class,
+				new DefaultAnnotationResolver());
 		try {
 			LooseContext.pushWithKey(KryoUtils.CONTEXT_OVERRIDE_CLASSLOADER,
 					ClassMetadata.class.getClassLoader());

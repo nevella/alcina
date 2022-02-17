@@ -17,8 +17,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClientReflectorFactory;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;
@@ -138,14 +136,9 @@ public abstract class Client {
 		}
 
 		public static void registry() {
-			// initialise clientreflections
+			Reflections.init();
 			ModuleReflector moduleReflector = ClientReflectorFactory.create();
 			moduleReflector.register();
-			Reflections.init();
-			if (GWT.isScript()) {
-				throw new UnsupportedOperationException("TODO - registry");
-			}
-			// complete=true;
 		}
 	}
 

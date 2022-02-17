@@ -69,8 +69,7 @@ public class ClientSession implements ClosingHandler {
 
 	private CrossTabCookie persistingChunkCookie;
 
-	private ClientSession() {
-		super();
+	public ClientSession() {
 		init();
 	}
 

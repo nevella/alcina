@@ -84,6 +84,8 @@ public class ClientReflectionGenerator extends Generator {
 
 	static final String REF_IMPL = "__refImpl";
 
+	static final String ANN_IMPL = "__annImpl";
+
 	static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {
 			return t.isParameterized().getBaseType().getErasedType();
@@ -100,7 +102,8 @@ public class ClientReflectionGenerator extends Generator {
 		}
 	}
 
-	static String implementationName(JClassType type) {
+	static String implementationName(JClassType type,
+			boolean annotationImplementation) {
 		List<JClassType> enclosedTypes = new ArrayList<>();
 		while (type != null) {
 			enclosedTypes.add(type);
@@ -110,7 +113,7 @@ public class ClientReflectionGenerator extends Generator {
 		for (int idx = enclosedTypes.size() - 1; idx >= 0; idx--) {
 			builder.append(enclosedTypes.get(idx).getSimpleSourceName());
 		}
-		builder.append(REF_IMPL);
+		builder.append(annotationImplementation ? ANN_IMPL : REF_IMPL);
 		return builder.toString();
 	}
 
@@ -146,6 +149,8 @@ public class ClientReflectionGenerator extends Generator {
 
 	ClientReflectionFilter reflectionFilter;
 
+	AnnotationLocationTypeInfo.Resolver annotationResolver = new AnnotationLocationTypeInfo.Resolver();
+
 	@Override
 	public String generate(TreeLogger logger, GeneratorContext context,
 			String typeName) throws UnableToCompleteException {
@@ -167,7 +172,7 @@ public class ClientReflectionGenerator extends Generator {
 						System.currentTimeMillis() - start);
 				filter.generationComplete();
 			}
-			return moduleGenerator.fqn();
+			return moduleGenerator.implementationFqn();
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
@@ -291,7 +296,7 @@ public class ClientReflectionGenerator extends Generator {
 			writeExpression(sourceWriter);
 			sourceWriter.println(";");
 			sourceWriter.println(
-					"resolver.annotations.put(%s.class,annotation);",
+					"provider.annotations.put(%s.class,annotation);",
 					annotation.annotationType().getCanonicalName());
 			sourceWriter.outdent();
 			sourceWriter.println("}");
@@ -335,7 +340,7 @@ public class ClientReflectionGenerator extends Generator {
 		Class<? extends Annotation> annotationClass;
 
 		public AnnotationImplementationGenerator(JClassType annotationType) {
-			super(annotationType, annotationType);
+			super(annotationType, annotationType, true);
 			try {
 				annotationClass = (Class<? extends Annotation>) Class
 						.forName(annotationType.getQualifiedBinaryName());
@@ -352,7 +357,7 @@ public class ClientReflectionGenerator extends Generator {
 
 		@Override
 		protected void prepare() {
-			annotationImplFqn.put(annotationClass, fqn());
+			annotationImplFqn.put(annotationClass, implementationFqn());
 			visibleAnnotationTypes.add(annotationClass);
 			Arrays.stream(annotationClass.getDeclaredMethods())
 					.map(Method::getReturnType)
@@ -416,7 +421,7 @@ public class ClientReflectionGenerator extends Generator {
 		List<Registration> registrations = new ArrayList<>();
 
 		public ClassReflectorGenerator(JClassType type) {
-			super(type, classReflectorType);
+			super(type, classReflectorType, false);
 			this.type = type;
 		}
 
@@ -433,7 +438,7 @@ public class ClientReflectionGenerator extends Generator {
 					&& !type.getQualifiedSourceName().equals("java.lang.Class")
 					&& Arrays.stream(type.getConstructors())
 							.filter(c -> c.getParameters().length == 0)
-							.findFirst().isPresent();
+							.findFirst().filter(c -> c.isPublic()).isPresent();
 			Arrays.stream(type.getAnnotations())
 					.filter(a -> a.annotationType() != Registration.class && a
 							.annotationType() != Registration.Singleton.class
@@ -470,15 +475,24 @@ public class ClientReflectionGenerator extends Generator {
 							.getCanonicalName());
 			composerFactory.addImport(Registration.class.getName());
 			sourceWriter = createWriter(composerFactory, printWriter);
+			if (hasCallableNoArgsConstructor) {
+				sourceWriter.println("public static %s __new(){",
+						reflectedTypeFqn());
+				sourceWriter.indent();
+				sourceWriter.println("return new %s();", reflectedTypeFqn());
+				sourceWriter.outdent();
+				sourceWriter.println("}");
+				sourceWriter.println();
+			}
 			sourceWriter.println("protected void init0(){");
 			sourceWriter.indent();
-			sourceWriter.println("Class clazz = %s.class;", fqn());
+			sourceWriter.println("Class clazz = %s.class;", reflectedTypeFqn());
 			sourceWriter
 					.println("List<Property> properties = new ArrayList<>();");
 			propertyGenerators.values().forEach(PropertyGenerator::write);
 			sourceWriter.println("List<Class> interfaces = new ArrayList<>();");
 			sourceWriter.println(
-					"AnnotationResolver.LookupResolver resolver = new AnnotationResolver.LookupResolver();");
+					"AnnotationProvider.LookupProvider provider = new AnnotationProvider.LookupProvider();");
 			annotationExpressionWriters.forEach(
 					expressionWriter -> expressionWriter.write(sourceWriter));
 			sourceWriter.println(
@@ -486,7 +500,8 @@ public class ClientReflectionGenerator extends Generator {
 			sourceWriter.println(
 					"properties" + ".forEach(p->byName.put(p.getName(),p));");
 			if (hasCallableNoArgsConstructor) {
-				sourceWriter.println("Supplier supplier = %s::new;", fqn());
+				sourceWriter.println("Supplier supplier = %s::__new;",
+						implementationFqn());
 			} else {
 				sourceWriter.println("Supplier supplier = null;");
 			}
@@ -499,7 +514,7 @@ public class ClientReflectionGenerator extends Generator {
 			// will probably need to adjust
 			sourceWriter.println("boolean reflective = true;");
 			sourceWriter.println("boolean isAbstract = %s;", isAbstract);
-			sourceWriter.println("init(clazz, properties, byName, resolver,"
+			sourceWriter.println("init(clazz, properties, byName, provider,"
 					+ " supplier, assignableTo, interfaces, reflective, isAbstract);");
 			sourceWriter.outdent();
 			sourceWriter.println("}");
@@ -509,8 +524,9 @@ public class ClientReflectionGenerator extends Generator {
 		void prepareProperties() {
 			boolean hasReflectableProperties = has(type, Bean.class);
 			if (hasReflectableProperties) {
-				Arrays.stream(type.getMethods()).map(this::toPropertyMethod)
-						.filter(Objects::nonNull).forEach(m -> {
+				Arrays.stream(type.getInheritableMethods())
+						.map(this::toPropertyMethod).filter(Objects::nonNull)
+						.forEach(m -> {
 							PropertyGenerator propertyGenerator = propertyGenerators
 									.computeIfAbsent(m.propertyName,
 											PropertyGenerator::new);
@@ -522,22 +538,11 @@ public class ClientReflectionGenerator extends Generator {
 		}
 
 		void prepareRegistrations() {
-			// Multimap<JClassType, List<Annotation>> superclassAnnotations =
-			// new Multimap<>();
-			// JClassType cursor = type;
-			// while (cursor.getSuperclass() != null) {
-			// superclassAnnotations.addCollection(cursor,
-			// Arrays.asList(cursor.getAnnotations()));
-			// cursor = cursor.getSuperclass();
-			// }
-			// Registry.filterForRegistryPointUniqueness(superclassAnnotations)
-			// .stream().filter(CLIENT_VISIBLE_ANNOTATION_FILTER)
-			// .forEach(registrations::add);
-			// TODO - use annotation
-			// resolver needs to translate Registration.Singleton etc to
-			// Registration - filter via CLIENT_VISIBLE_ANNOTATION_FILTER - then
-			// add
-			throw new UnsupportedOperationException();
+			List<Registration> annotations = new AnnotationLocationTypeInfo(
+					type, annotationResolver)
+							.getAnnotations(Registration.class);
+			annotations.stream().filter(CLIENT_VISIBLE_ANNOTATION_FILTER)
+					.forEach(registrations::add);
 		}
 
 		PropertyMethod toPropertyMethod(JMethod method) {
@@ -545,6 +550,9 @@ public class ClientReflectionGenerator extends Generator {
 				return null;
 			}
 			if (method.getName().equals("getClass")) {
+				return null;
+			}
+			if (!method.isPublic()) {
 				return null;
 			}
 			// getter
@@ -573,19 +581,24 @@ public class ClientReflectionGenerator extends Generator {
 			 * gwt compiler can't handle the class literal in the lambda - so
 			 * use an anonymous class
 			 */
-			sourceWriter.println(
-					"map.put(\"%s\",new Supplier(){public Object get(){return %s.class;}});",
-					type.getQualifiedBinaryName(), fqn());
+			// sourceWriter.println(
+			// "map.put(\"%s\",new Supplier(){public Object get(){return
+			// %s.class;}});",
+			// type.getQualifiedBinaryName(), fqn());
+			// back to direct, not suppliers
+			sourceWriter.println("map.put(\"%s\", %s.class);",
+					type.getQualifiedBinaryName(), reflectedTypeFqn());
 		}
 
 		void writeRegisterReflectorSupplier(SourceWriter sourceWriter) {
-			sourceWriter.println("map.put(\"%s\",%s::new);", fqn(), fqn());
+			sourceWriter.println("map.put(%s.class,%s::new);",
+					reflectedTypeFqn(), implementationFqn());
 		}
 
 		void writeRegisterRegistrations(SourceWriter sourceWriter) {
 			registrations.stream().sorted(REGISTRY_LOCATION_COMPARATOR)
 					.forEach(l -> {
-						sourceWriter.print("Registry.get().register(%s.class,",
+						sourceWriter.print("Registry.register().add(%s.class,",
 								type.getQualifiedSourceName());
 						AnnotationExpressionWriter instanceGenerator = new AnnotationExpressionWriter(
 								l);
@@ -641,7 +654,7 @@ public class ClientReflectionGenerator extends Generator {
 				sourceWriter.println("{");
 				sourceWriter.indent();
 				sourceWriter.println(
-						"AnnotationResolver.LookupResolver resolver = new AnnotationResolver.LookupResolver();");
+						"AnnotationProvider.LookupProvider provider = new AnnotationProvider.LookupProvider();");
 				annotationExpressionWriters
 						.forEach(expressionWriter -> expressionWriter
 								.write(sourceWriter));
@@ -658,7 +671,7 @@ public class ClientReflectionGenerator extends Generator {
 						ClassReflectorGenerator.this.type
 								.getQualifiedSourceName());
 				sourceWriter.print(
-						"Property property = new Property(name, getter, setter, propertyType, definingType, resolver);");
+						"Property property = new Property(name, getter, setter, propertyType, definingType, provider);");
 				sourceWriter.println("properties.add(property);");
 				sourceWriter.outdent();
 				sourceWriter.println("}");
@@ -724,8 +737,13 @@ public class ClientReflectionGenerator extends Generator {
 
 		protected ModuleReflectionGenerator(String implementationName,
 				JClassType superClassOrInterfaceType) {
-			super(superClassOrInterfaceType.getPackage().getName(),
+			super(null, superClassOrInterfaceType.getPackage().getName(),
 					implementationName, superClassOrInterfaceType);
+		}
+
+		private boolean hasRegistrations(JClassType t) {
+			return new AnnotationLocationTypeInfo(t, annotationResolver)
+					.hasAnnotation(Registration.class);
 		}
 
 		private void writeMethodDefinition(String methodName,
@@ -769,7 +787,9 @@ public class ClientReflectionGenerator extends Generator {
 		List<JClassType> determineReachableTypes() {
 			return Arrays.stream(context.getTypeOracle().getTypes())
 					.filter(t -> (has(t, ClientInstantiable.class)
-							|| has(t, Bean.class)
+							|| has(t, Bean.class) || hasRegistrations(t)
+							// the annotations themselves
+							|| t.isAnnotationPresent(ClientVisible.class)
 							|| filter.isReflectableJavaCoreClass(t)
 							|| filter.isReflectableJavaCollectionClass(t)))
 					.filter(reflectionFilter::permit)
@@ -780,8 +800,10 @@ public class ClientReflectionGenerator extends Generator {
 		}
 
 		void prepareAnnotationImplementationGenerators() {
-			Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> t.isAnnotationPresent(ClientVisible.class))
+			Arrays.stream(context.getTypeOracle().getTypes()).filter(t -> t
+					.isAnnotationPresent(ClientVisible.class)
+					|| t.getQualifiedSourceName().equals(
+							"cc.alcina.framework.common.client.logic.reflection.Registration"))
 					.map(JClassType::isAnnotation)
 					.map(AnnotationImplementationGenerator::new).sorted()
 					.forEach(annotationImplementations::add);
@@ -830,14 +852,13 @@ public class ClientReflectionGenerator extends Generator {
 		}
 
 		void writeRegisterForNames() {
-			writeForClassReflectors("registerForNames",
-					"Map<String, Supplier<Class>>",
+			writeForClassReflectors("registerForNames", "Map<String, Class>",
 					crg -> crg.writeRegisterForName(sourceWriter));
 		}
 
 		void writeRegisterReflectorSuppliers() {
 			writeForClassReflectors("registerReflectorSuppliers",
-					"Map<String, Supplier<ClassReflector>>",
+					"Map<Class, Supplier<ClassReflector>>",
 					crg -> crg.writeRegisterReflectorSupplier(sourceWriter));
 		}
 
@@ -868,16 +889,23 @@ public class ClientReflectionGenerator extends Generator {
 
 		JClassType superClassOrInterfaceType;
 
+		private JClassType reflectedType;
+
 		protected UnitGenerator(JClassType reflectionInfoForType,
-				JClassType superClassOrInterfaceType) {
-			this(reflectionInfoForType.getPackage().getName(),
-					implementationName(reflectionInfoForType),
+				JClassType superClassOrInterfaceType,
+				boolean annotationImplementation) {
+			this(reflectionInfoForType,
+					reflectionInfoForType.getPackage().getName(),
+					implementationName(reflectionInfoForType,
+							annotationImplementation),
 					superClassOrInterfaceType);
 		}
 
-		protected UnitGenerator(String packageName, String implementationName,
+		protected UnitGenerator(JClassType reflectedType, String packageName,
+				String implementationName,
 				JClassType superClassOrInterfaceType) {
 			super();
+			this.reflectedType = reflectedType;
 			if (packageName.startsWith("java")) {
 				packageName = getClass().getPackageName() + "."
 						+ packageName.replace(".", "_");
@@ -906,8 +934,12 @@ public class ClientReflectionGenerator extends Generator {
 				String className) {
 		}
 
-		protected String fqn() {
+		protected String implementationFqn() {
 			return packageName + "." + implementationName;
+		}
+
+		protected String reflectedTypeFqn() {
+			return reflectedType.getQualifiedSourceName();
 		}
 	}
 }

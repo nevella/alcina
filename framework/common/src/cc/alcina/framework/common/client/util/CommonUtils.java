@@ -50,7 +50,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -99,6 +98,28 @@ public class CommonUtils {
 			.collect(Collectors.toSet());
 
 	static Logger logger = LoggerFactory.getLogger(CommonUtils.class);
+
+	public static final Set<String> COLLECTION_CLASS_NAMES = Arrays
+			.asList(ArrayList.class, LinkedList.class, HashSet.class,
+					LinkedHashSet.class, TreeSet.class, HashMap.class,
+					LinkedHashMap.class, TreeMap.class, LightSet.class,
+					LiSet.class, LightMap.class, CountingMap.class)
+			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
+
+	public static final Set<String> CORE_CLASS_NAMES = Arrays
+			.asList(Class.class, Timestamp.class, Date.class, String.class)
+			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
+
+	public static final Set<String> PRIMITIVE_CLASS_NAMES = Arrays
+			.asList(long.class, int.class, short.class, char.class, byte.class,
+					boolean.class, double.class, float.class, void.class)
+			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
+
+	public static final Set<String> PRIMITIVE_WRAPPER_CLASS_NAMES = Arrays
+			.asList(Long.class, Double.class, Float.class, Short.class,
+					Byte.class, Integer.class, Boolean.class, Character.class,
+					Void.class)
+			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 
 	public static void addIfNotNull(List l, Object o) {
 		if (o != null) {
@@ -1969,17 +1990,6 @@ public class CommonUtils {
 		}
 		return false;
 	}
-
-	public static final Set<String> COLLECTION_CLASS_NAMES = Arrays
-			.asList(ArrayList.class, LinkedList.class, HashSet.class,
-					LinkedHashSet.class, TreeSet.class, HashMap.class,
-					LinkedHashMap.class, TreeMap.class, LightSet.class,
-					LiSet.class, LightMap.class, CountingMap.class)
-			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
-
-	public static final Set<String> CORE_CLASS_NAMES = Arrays
-			.asList(Class.class, Timestamp.class, Date.class).stream()
-			.map(Class::getCanonicalName).collect(Collectors.toSet());
 
 	public enum ComparatorResult {
 		BOTH_NON_NULL, BOTH_NULL, FIRST_NULL, SECOND_NULL;

@@ -32,9 +32,6 @@ public class StandardDataImageProvider {
 	private StandardDataImages dataImages = GWT
 			.create(StandardDataImages.class);
 
-	private StandardDataImageProvider() {
-	}
-
 	public AbstractImagePrototype getByName(String s) {
 		s = (s == null) ? "" : s;
 		if (s.equals("leaf")) {

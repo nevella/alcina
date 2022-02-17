@@ -46,7 +46,11 @@ public interface IntrospectorFilter {
 
 	default boolean isReflectableJavaCoreClass(JClassType jClassType) {
 		return CommonUtils.CORE_CLASS_NAMES
-				.contains(jClassType.getQualifiedSourceName());
+				.contains(jClassType.getQualifiedSourceName())
+				|| CommonUtils.PRIMITIVE_CLASS_NAMES
+						.contains(jClassType.getQualifiedSourceName())
+				|| CommonUtils.PRIMITIVE_WRAPPER_CLASS_NAMES
+						.contains(jClassType.getQualifiedSourceName());
 	}
 
 	boolean omitForModule(JClassType jClassType,

@@ -90,7 +90,9 @@ public class Object {
    */
   protected void finalize() throws Throwable {
   }
-  
+  /**
+   * NR - Added for subclass JRE compatibility
+   */
   protected  Object clone() throws CloneNotSupportedException{
 	  throw new CloneNotSupportedException();
   }

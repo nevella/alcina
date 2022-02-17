@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -62,15 +62,15 @@ import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
 
 /**
- * 
+ *
  * <OL>
  * <LI>UTC date</LI>
  * <LI>CSS utils</LI>
- * 
+ *
  * </ol>
- * 
+ *
  * @author Nick Reddel
- * 
+ *
  */
 public class ClientUtils {
 	private static final String HEAD = "head";
@@ -175,8 +175,8 @@ public class ClientUtils {
 	}
 
 	public static native int getDateTzOffsetMinutes() /*-{
-														return new Date().getTimezoneOffset();
-														}-*/;
+    return new Date().getTimezoneOffset();
+	}-*/;
 
 	public static String getHashIfSelfrefUrl(Element anchor) {
 		String href = anchor.getAttribute("href");
@@ -208,19 +208,19 @@ public class ClientUtils {
 	}
 
 	public static native void invokeJsDebugger() /*-{
-													debugger;
-													}-*/;
+    debugger;
+	}-*/;
 
 	public static native void invokeJsDebugger(Element e) /*-{
-															var v = e;
-															var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
-															debugger;
-															}-*/;
+    var v = e;
+    var jso = e.@com.google.gwt.dom.client.Element::typedRemote()();
+    debugger;
+	}-*/;
 
 	public static native void invokeJsDebugger(JavaScriptObject jso) /*-{
-																		debugger;
-																		var v = jso;
-																		}-*/;
+    debugger;
+    var v = jso;
+	}-*/;
 
 	public static <T extends JavaScriptObject> List<T>
 			jsArrayToTypedArray(JsArray<T> typedArray) {
@@ -232,18 +232,18 @@ public class ClientUtils {
 	}
 
 	public static native JavaScriptObject jsonParse(String json) /*-{
-																	var dateTimeReviver = function(key, value) {
-																	var a;
-																	if (typeof value === 'string') {
-																	a = /__JsDate\((\d*)\)/.exec(value);
-																	if (a) {
-																	return new Date(+a[1]);
-																	}
-																	}
-																	return value;
-																	}
-																	return JSON.parse(json, dateTimeReviver);
-																	}-*/;
+    var dateTimeReviver = function(key, value) {
+      var a;
+      if (typeof value === 'string') {
+        a = /__JsDate\((\d*)\)/.exec(value);
+        if (a) {
+          return new Date(+a[1]);
+        }
+      }
+      return value;
+    }
+    return JSON.parse(json, dateTimeReviver);
+	}-*/;
 
 	public static List<String>
 			jsStringArrayAsStringList(JsArrayString arrayString) {
@@ -342,9 +342,9 @@ public class ClientUtils {
 	}
 
 	public static native String prettyFormatJson(String json)/*-{
-																var obj = JSON.parse(json);
-																return JSON.stringify(obj, null, 2);
-																}-*/;
+    var obj = JSON.parse(json);
+    return JSON.stringify(obj, null, 2);
+	}-*/;
 
 	public static void refireHistoryTokenIfSame(String token) {
 		if (token == null) {
@@ -367,15 +367,15 @@ public class ClientUtils {
 
 	public static native boolean setCssTextViaCssTextProperty(Element elem,
 			String css) /*-{
-						var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
-						var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
-						
-						if ('cssText' in sheet) { // Internet Explorer
-						sheet.cssText = css;
-						return true;
-						}
-						return false;//do innerText
-						}-*/;
+    var styleTag = elem.@com.google.gwt.dom.client.Element::typedRemote()();
+    var sheet = styleTag.sheet ? styleTag.sheet : styleTag.styleSheet;
+
+    if ('cssText' in sheet) { // Internet Explorer
+      sheet.cssText = css;
+      return true;
+    }
+    return false;//do innerText
+	}-*/;
 
 	public static void setElementStyle(Element eltMulti, String css) {
 		if (eltMulti.implAccess().linkedToRemote()) {
@@ -440,8 +440,8 @@ public class ClientUtils {
 	}
 
 	public static native String stringify(JavaScriptObject jso) /*-{
-																return JSON.stringify(jso);
-																}-*/;
+    return JSON.stringify(jso);
+	}-*/;
 
 	public static void submitForm(Map<String, String> params, String url) {
 		FormPanel p = new FormPanel("_self");
@@ -533,8 +533,8 @@ public class ClientUtils {
 	}
 
 	public static native String wndString(String key)/*-{
-														return $wnd[key];
-														}-*/;
+    return $wnd[key];
+	}-*/;
 
 	private static void addHidden(Panel p, String key, String value) {
 		p.add(new Hidden(key, value));
@@ -561,13 +561,13 @@ public class ClientUtils {
 	}
 
 	private static native void setElementStyle0(Element eltMulti, String css) /*-{
-						var e = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
-						if (e.style && typeof (e.style.cssText) == "string") {
-						e.style.cssText = css;
-						} else {
-						e.style = css;
-						}
-						}-*/;
+    var e = eltMulti.@com.google.gwt.dom.client.Element::typedRemote()();
+    if (e.style && typeof (e.style.cssText) == "string") {
+      e.style.cssText = css;
+    } else {
+      e.style = css;
+    }
+	}-*/;
 
 	public static class EditContentViewWidgets {
 		public PaneWrapperWithObjects wrapper;

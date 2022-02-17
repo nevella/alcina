@@ -40,6 +40,9 @@ public class AnnotationLocation {
 		this.resolver = resolver;
 	}
 
+	protected AnnotationLocation() {
+	}
+
 	@Override
 	public boolean equals(Object obj) {
 		if (obj instanceof AnnotationLocation) {

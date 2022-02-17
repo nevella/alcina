@@ -157,7 +157,7 @@ public class LogStore {
 
 	private boolean emittedLogStoreException = false;
 
-	protected LogStore() {
+	public LogStore() {
 		if (!AlcinaProperties.is(AlcinaProperties.class,
 				AlcinaProperties.NON_BROWSER)) {
 			String cookie = Cookies.getCookie(STORAGE_COOKIE_KEY);

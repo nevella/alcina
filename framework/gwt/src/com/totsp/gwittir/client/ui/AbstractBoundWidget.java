@@ -27,11 +27,14 @@ import com.google.gwt.user.client.ui.Composite;
 import com.totsp.gwittir.client.action.Action;
 import com.totsp.gwittir.client.action.BindingAction;
 
+import cc.alcina.framework.common.client.logic.reflection.Bean;
+
 /**
- * 
+ *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
+@Bean
 public abstract class AbstractBoundWidget<T> extends Composite
 		implements BoundWidget<T> {
 	private Action<BoundWidget<T>> action;

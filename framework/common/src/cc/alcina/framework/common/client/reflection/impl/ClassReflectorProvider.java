@@ -4,6 +4,7 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -13,6 +14,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Method;
@@ -24,13 +26,12 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.SEUtilities;
 
-/*
- * Overridden by super-source for GWT
- */
 public class ClassReflectorProvider {
 	public static ClassReflector getClassReflector(Class clazz) {
-		List<PropertyDescriptor> descriptors = SEUtilities
-				.getPropertyDescriptorsSortedByField(clazz);
+		List<PropertyDescriptor> descriptors = clazz
+				.getAnnotation(Bean.class) == null ? new ArrayList<>()
+						: SEUtilities
+								.getPropertyDescriptorsSortedByField(clazz);
 		List<Property> properties = descriptors.stream()
 				.map(d -> ClassReflectorProvider.createProperty(clazz, d))
 				.collect(Collectors.toList());
@@ -73,6 +74,18 @@ public class ClassReflectorProvider {
 				supplier, assignableTo, interfaces, reflective, isAbstract);
 	}
 
+	private static Method createMethod(java.lang.reflect.Method reflectMethod) {
+		return reflectMethod == null ? null
+				: new Method(reflectMethod,
+						new MethodInvokerImpl(reflectMethod),
+						reflectMethod.getReturnType());
+	}
+
+	private static AnnotationProvider createProvider(Class clazz,
+			java.lang.reflect.Method readMethod) {
+		return new MethodAnnotationProvider(clazz, readMethod);
+	}
+
 	static Property createProperty(Class clazz, PropertyDescriptor descriptor) {
 		return new Property(descriptor.getName(),
 				createMethod(descriptor.getReadMethod()),
@@ -81,9 +94,22 @@ public class ClassReflectorProvider {
 				createProvider(clazz, descriptor.getReadMethod()));
 	}
 
-	private static AnnotationProvider createProvider(Class clazz,
-			java.lang.reflect.Method readMethod) {
-		return new MethodAnnotationProvider(clazz, readMethod);
+	static ReflectiveAccess reckonAccess(Class clazz) {
+		return new ReflectiveAccess.DefaultValue();
+	}
+
+	public static class ClassAnnotationProvider implements AnnotationProvider {
+		private Class clazz;
+
+		public ClassAnnotationProvider(Class clazz) {
+			this.clazz = clazz;
+		}
+
+		@Override
+		public <A extends Annotation> A
+				getAnnotation(Class<A> annotationClass) {
+			return (A) clazz.getAnnotation(annotationClass);
+		}
 	}
 
 	static class MethodAnnotationProvider implements AnnotationProvider {
@@ -106,27 +132,6 @@ public class ClassReflectorProvider {
 		}
 	}
 
-	public static class ClassAnnotationProvider implements AnnotationProvider {
-		private Class clazz;
-
-		public ClassAnnotationProvider(Class clazz) {
-			this.clazz = clazz;
-		}
-
-		@Override
-		public <A extends Annotation> A
-				getAnnotation(Class<A> annotationClass) {
-			return (A) clazz.getAnnotation(annotationClass);
-		}
-	}
-
-	private static Method createMethod(java.lang.reflect.Method reflectMethod) {
-		return reflectMethod == null ? null
-				: new Method(reflectMethod,
-						new MethodInvokerImpl(reflectMethod),
-						reflectMethod.getReturnType());
-	}
-
 	static class MethodInvokerImpl<T>
 			implements BiFunction<Object, Object[], T> {
 		private java.lang.reflect.Method reflectMethod;
@@ -143,9 +148,5 @@ public class ClassReflectorProvider {
 				throw new WrappedRuntimeException(e);
 			}
 		}
-	}
-
-	static ReflectiveAccess reckonAccess(Class clazz) {
-		return new ReflectiveAccess.DefaultValue();
 	}
 }

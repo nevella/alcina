@@ -38,8 +38,7 @@ public class LayoutEvents {
 
 	private int globalRelayoutQueuedCount;
 
-	private LayoutEvents() {
-		super();
+	public LayoutEvents() {
 		listeners = new ArrayList<LayoutEventListener>();
 	}
 

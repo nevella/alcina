@@ -33,8 +33,7 @@ public class LooseActionRegistry {
 
 	private Map<String, LooseActionHandler> actionHandlers;
 
-	private LooseActionRegistry() {
-		super();
+	public LooseActionRegistry() {
 		actionHandlers = new HashMap<String, LooseActionHandler>();
 		loadFromRegistry();
 	}

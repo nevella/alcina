@@ -45,10 +45,6 @@ public class OfflineManager {
 
 	private Timer appCacheResolutionTimer;
 
-	private OfflineManager() {
-		super();
-	}
-
 	public boolean checkCacheLoading(AsyncCallback completionCallback) {
 		Registry.impl(ClientNotifications.class)
 				.log("OfflineUtils.checkCacheLoading");
