@@ -1094,14 +1094,35 @@ public class ResourceUtilities {
 					wout.close();
 				}
 				// Read response
-				in = connection.getInputStream();
-				byte[] respBytes = readStreamToByteArray(in);
+				byte[] respBytes = null;
 				responseCode = connection.getResponseCode();
-				// If throwOnResponseCode and we get a 4xx or 5xx code
-				// throw a StatusCodeException
-				if (responseCode >= 400 && throwOnResponseCode) {
-					throw new StatusCodeException(responseCode,
-							connection.getResponseMessage());
+				// If the response code is bad, read the error stream instead
+				if (responseCode >= 400) {
+					InputStream err = connection.getErrorStream();
+					respBytes = readStreamToByteArray(err);
+					// If throwOnResponseCode and we get a 4xx or 5xx code
+					// throw a IOException
+					if (throwOnResponseCode) {
+						// If decodeGz, decode the gzipped data
+						if (decodeGz) {
+							respBytes = maybeDecodeGzip(respBytes);
+						}
+						// Read the error into a string
+						String errString = new String(respBytes, StandardCharsets.UTF_8);
+						// For backwards compat, read the stream anyway to get the error
+						// Store the IOException returned, then throw it with the decoded string
+						IOException ioe = null;
+						try {
+							in = connection.getInputStream();
+						} catch (IOException e) {
+							ioe = e;
+						}
+						throw new IOException(errString, ioe);
+					}
+				} else {
+					in = connection.getInputStream();
+					// If code is good, read the stream normally
+					respBytes = readStreamToByteArray(in);
 				}
 				// If decodeGz, decode the gzipped data
 				if (decodeGz) {
@@ -1113,23 +1134,6 @@ public class ResourceUtilities {
 						.getHeaderField("Content-Disposition");
 				// Return byte arrays
 				return respBytes;
-			} catch (IOException ioe) {
-				// If there's a connection present, get the error our of it
-				if (connection != null) {
-					InputStream err = connection.getErrorStream();
-					String errString = null;
-					// If an error is present, decode it to a string and throw
-					if (err != null) {
-						byte[] input = readStreamToByteArray(err);
-						if (decodeGz) {
-							input = maybeDecodeGzip(input);
-						}
-						errString = new String(input, StandardCharsets.UTF_8);
-					}
-					throw new IOException(errString, ioe);
-				} else {
-					throw ioe;
-				}
 			} finally {
 				// Ensure streams and connection are closed
 				if (in != null) {
@@ -1163,6 +1167,11 @@ public class ResourceUtilities {
 		// Get Content-Type header value from response
 		public String getContentType() {
 			return this.contentType;
+		}
+
+		// Get status code of the response
+		public int getResponseCode() {
+			return this.responseCode;
 		}
 
 		// Set Authorization header with basic authentication pair
