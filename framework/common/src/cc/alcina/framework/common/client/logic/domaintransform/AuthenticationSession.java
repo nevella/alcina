@@ -166,4 +166,9 @@ public abstract class AuthenticationSession
 				toStringEntity(), sessionId, getUser(), startTime,
 				authenticationType, endReason);
 	}
+
+	public void markInvalid(String reason) {
+		setEndReason(reason);
+		setEndTime(new Date());		
+	}
 }

@@ -69,8 +69,7 @@ public class AuthenticationManager {
 			boolean createClientInstance) {
 		AuthenticationContext context = ensureContext();
 		if (context.session != null) {
-			context.session.setEndTime(new Date());
-			context.session.setEndReason("Replaced by new session");
+			invalidateSession(context.session, "Replaced by new session");
 		}
 		String sessionId = SEUtilities.generateId();
 		AuthenticationSession session = persistence.createAuthenticationSession(
@@ -206,6 +205,7 @@ public class AuthenticationManager {
 	}
 
 	private boolean isExpired(AuthenticationSession session) {
+		ensureContext().localAuthenticator.checkExternalExpiration(session);
 		boolean result = session.provideIsExpired();
 		if (result && session.getEndTime() == null) {
 			logger.warn(
@@ -277,5 +277,10 @@ public class AuthenticationManager {
 		<U extends Entity & IUser> Authenticator<U> typedAuthenticator() {
 			return (Authenticator<U>) localAuthenticator;
 		}
+	}
+
+	public void invalidateSession(AuthenticationSession session, String reason) {
+		session.markInvalid(reason);
+		ensureContext().localAuthenticator.invalidateSession(session);
 	}
 }
