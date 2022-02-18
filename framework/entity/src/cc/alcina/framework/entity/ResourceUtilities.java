@@ -70,13 +70,12 @@ import org.xml.sax.InputSource;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.shared.GWT;
-import com.google.gwt.user.client.rpc.StatusCodeException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -88,7 +87,8 @@ import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 /**
  * @author nick@alcina.cc
  *
- * FIXME - 2022 - migrate property treatment to Configuration static singleton
+ *         FIXME - 2022 - migrate property treatment to Configuration static
+ *         singleton
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ResourceUtilities {
@@ -159,26 +159,6 @@ public class ResourceUtilities {
 			}
 		}
 		return tgtBean;
-	}
-
-	private static DOMParser createDOMParser(boolean elementNamesToUpperCase) {
-		DOMParser parser = new DOMParser(new HTMLConfiguration());
-		try {
-			parser.setFeature(
-					"http://cyberneko.org/html/features/scanner/fix-mswindows-refs",
-					true);
-			parser.setFeature(
-					"http://cyberneko.org/html/features/scanner/ignore-specified-charset",
-					true);
-			if (!elementNamesToUpperCase) {
-				parser.setProperty(
-						"http://cyberneko.org/html/properties/names/elems",
-						"lower");
-			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
-		return parser;
 	}
 
 	public static <T> T deserializeKryoOrAlcina(String string, Class<T> clazz) {
@@ -266,7 +246,8 @@ public class ResourceUtilities {
 				if (project) {
 					if (value instanceof Map) {
 						Map map = (Map) value;
-						Map newMap = (Map) map.getClass().getDeclaredConstructor().newInstance();
+						Map newMap = (Map) map.getClass()
+								.getDeclaredConstructor().newInstance();
 						newMap.putAll(map);
 						value = newMap;
 					} else {
@@ -970,6 +951,26 @@ public class ResourceUtilities {
 		bw.close();
 	}
 
+	private static DOMParser createDOMParser(boolean elementNamesToUpperCase) {
+		DOMParser parser = new DOMParser(new HTMLConfiguration());
+		try {
+			parser.setFeature(
+					"http://cyberneko.org/html/features/scanner/fix-mswindows-refs",
+					true);
+			parser.setFeature(
+					"http://cyberneko.org/html/features/scanner/ignore-specified-charset",
+					true);
+			if (!elementNamesToUpperCase) {
+				parser.setProperty(
+						"http://cyberneko.org/html/properties/names/elems",
+						"lower");
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+		return parser;
+	}
+
 	private static InputStream getResourceAsStream(Class clazz, String path) {
 		InputStream stream = clazz.getResourceAsStream(path);
 		if (stream == null) {
@@ -1000,7 +1001,6 @@ public class ResourceUtilities {
 
 	// Helper class to make web requests of various kinds
 	public static class SimpleQuery {
-
 		// URL to request
 		private String strUrl;
 
@@ -1012,7 +1012,7 @@ public class ResourceUtilities {
 
 		// Internal connection handle
 		private HttpURLConnection connection;
-		
+
 		// Request is gzipped
 		private boolean gzip;
 
@@ -1108,9 +1108,12 @@ public class ResourceUtilities {
 							respBytes = maybeDecodeGzip(respBytes);
 						}
 						// Read the error into a string
-						String errString = new String(respBytes, StandardCharsets.UTF_8);
-						// For backwards compat, read the stream anyway to get the error
-						// Store the IOException returned, then throw it with the decoded string
+						String errString = new String(respBytes,
+								StandardCharsets.UTF_8);
+						// For backwards compat, read the stream anyway to get
+						// the error
+						// Store the IOException returned, then throw it with
+						// the decoded string
 						IOException ioe = null;
 						try {
 							in = connection.getInputStream();
@@ -1143,6 +1146,12 @@ public class ResourceUtilities {
 					connection.disconnect();
 				}
 			}
+		}
+
+		// Set as a PUT request
+		public SimpleQuery asPut() {
+			this.method = "PUT";
+			return this;
 		}
 
 		// Request the URL and return as string
@@ -1190,6 +1199,18 @@ public class ResourceUtilities {
 			return this;
 		}
 
+		// Set body for the request
+		public SimpleQuery withBody(String body) {
+			this.body = body;
+			return this;
+		}
+
+		// Set Content-Type header to given string
+		public SimpleQuery withContentType(String string) {
+			headers.put("content-type", string);
+			return this;
+		}
+
 		// Set whether to decode on gzipped response
 		public SimpleQuery withDecodeGz(boolean decodeGz) {
 			this.decodeGz = decodeGz;
@@ -1199,12 +1220,6 @@ public class ResourceUtilities {
 		// Set whether to accept a gzipped response
 		public SimpleQuery withGzip(boolean gzip) {
 			this.gzip = gzip;
-			return this;
-		}
-
-		// Set whether to throw on a 4xx or 5xx response code
-		public SimpleQuery withThrowOnResponseCode(boolean throwOnResponseCode) {
-			this.throwOnResponseCode = throwOnResponseCode;
 			return this;
 		}
 
@@ -1221,12 +1236,6 @@ public class ResourceUtilities {
 			return this;
 		}
 
-		// Set body for the request
-		public SimpleQuery withBody(String body) {
-			this.body = body;
-			return this;
-		}
-
 		// Set method for the request
 		public SimpleQuery withMethod(String method) {
 			this.method = method;
@@ -1237,12 +1246,6 @@ public class ResourceUtilities {
 		public SimpleQuery withPostBody(String postBody) {
 			this.method = "POST";
 			this.body = postBody;
-			return this;
-		}
-
-		// Set as a PUT request
-		public SimpleQuery asPut() {
-			this.method = "PUT";
 			return this;
 		}
 
@@ -1265,8 +1268,16 @@ public class ResourceUtilities {
 			return this;
 		}
 
-		// If the request reports a Content-Encoding of gzip, decode request as gzip
-		//  otherwise, just return the input as is
+		// Set whether to throw on a 4xx or 5xx response code
+		public SimpleQuery
+				withThrowOnResponseCode(boolean throwOnResponseCode) {
+			this.throwOnResponseCode = throwOnResponseCode;
+			return this;
+		}
+
+		// If the request reports a Content-Encoding of gzip, decode request as
+		// gzip
+		// otherwise, just return the input as is
 		private byte[] maybeDecodeGzip(byte[] input) throws IOException {
 			if ("gzip".equals(connection.getHeaderField("content-encoding"))) {
 				return readStreamToByteArray(
@@ -1274,12 +1285,6 @@ public class ResourceUtilities {
 			} else {
 				return input;
 			}
-		}
-
-		// Set Content-Type header to given string
-		public SimpleQuery withContentType(String string) {
-			headers.put("content-type", string);
-			return this;
 		}
 	}
 }
