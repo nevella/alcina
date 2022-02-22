@@ -131,7 +131,7 @@ public class Ax {
 		return t == null ? ifNull : t;
 	}
 
-	public static <T> Optional<T> optionalFirst(Collection<T> collection) {
+	public static <T> Optional<T> firstOptional(Collection<T> collection) {
 		return collection.size() == 0 ? Optional.empty()
 				: Optional.ofNullable(collection.iterator().next());
 	}

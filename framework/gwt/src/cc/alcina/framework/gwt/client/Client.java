@@ -12,7 +12,6 @@ import com.google.web.bindery.event.shared.SimpleEventBus;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
@@ -125,7 +124,6 @@ public abstract class Client {
 
 		public static void preRegistry() {
 			startTime = System.currentTimeMillis();
-			LiSet liSet = new LiSet();
 			CommonUtils.setSupplier = () -> new LightSet();
 			LocalDom.mutations.setDisabled(true);
 			if (GWT.isScript()) {

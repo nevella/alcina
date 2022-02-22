@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.reflection;
 
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -20,7 +21,13 @@ public class ClientReflections {
 	}
 
 	public static ClassReflector<?> getClassReflector(Class clazz) {
-		return perClassReflectorSuppliers.get(clazz).get();
+		Supplier<ClassReflector> supplier = perClassReflectorSuppliers
+				.get(clazz);
+		if (supplier == null) {
+			throw new NoSuchElementException(
+					"No reflector for " + clazz.getName());
+		}
+		return supplier.get();
 	}
 
 	public static boolean isAssignableFrom(Class from, Class to) {

@@ -20,7 +20,6 @@ import com.totsp.gwittir.client.ui.Renderer;
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -61,28 +60,36 @@ public class RenderContext extends LooseContextInstance {
 
 	private static RenderContext trunk = null;
 
+	private static RenderContext branch = null;
+
 	/**
 	 * In the case of object tree rendering, it makes sense to temporarily make
 	 * the get() instance totally independent - until the initial (sychronous)
 	 * setup has finished
 	 */
 	public static RenderContext branch() {
-		if (trunk != null) {
+		if (branch != null) {
 			throw new RuntimeException(
 					"Branching from already branched RenderContext");
 		}
-		trunk = get();
-		Registry.register().singleton(RenderContext.class, trunk.snapshot());
+		branch = get();
+		trunk = trunk.snapshot();
 		return get();
 	}
 
 	public static RenderContext get() {
-		return Registry.impl(RenderContext.class);
+		if (trunk == null) {
+			trunk = new RenderContext();
+		}
+		return branch != null ? branch : trunk;
 	}
 
 	public static void merge() {
-		Registry.register().singleton(RenderContext.class, trunk);
-		trunk = null;
+		if (branch == null) {
+			throw new RuntimeException("No branch");
+		}
+		trunk = branch;
+		branch = null;
 	}
 
 	@Override

@@ -236,6 +236,8 @@
 		<property name="project.gwt.compile.jvmarg1" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg2" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg3" value="-Dblank" />
+		<property name="project.gwt.compile.jvmarg4" value="-Dblank" />
+		<property name="project.gwt.compile.jvmarg5" value="-Dblank" />
 		<if>
 			<available file="${project.gwt-unitcache.script.dir}" type="dir" />
 			<then>
@@ -266,6 +268,8 @@
 			<jvmarg value="${project.gwt.compile.jvmarg1}" />
 			<jvmarg value="${project.gwt.compile.jvmarg2}" />
 			<jvmarg value="${project.gwt.compile.jvmarg3}" />
+			<jvmarg value="${project.gwt.compile.jvmarg4}" />
+			<jvmarg value="${project.gwt.compile.jvmarg5}" />
 			<arg line="-style ${gwt.codestyle}" />
 			<arg value="-sourceLevel" />
 			<arg value="11" />

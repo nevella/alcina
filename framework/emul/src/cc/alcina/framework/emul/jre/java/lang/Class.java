@@ -80,6 +80,16 @@ public final class Class<T> implements Type {
   }
 
   /**
+   * Create a Class object for a class.
+   *
+   * @skip
+   */
+  @DoNotInline
+  static <T> Class<T> createForLambda(
+      JavaScriptObject typeId) {
+    return createForClass(Object.class.getPackageName(),"anon_"+typeId.toString(),typeId,Object.class);
+  }
+  /**
    * Create a Class object for an enum.
    *
    * @skip

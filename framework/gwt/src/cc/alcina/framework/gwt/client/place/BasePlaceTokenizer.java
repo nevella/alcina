@@ -11,7 +11,6 @@ import com.google.gwt.place.shared.PlaceTokenizer;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchDefinitionSerializer;
@@ -22,7 +21,7 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 @ClientInstantiable
 @Registration(BasePlaceTokenizer.class)
 public abstract class BasePlaceTokenizer<P extends Place>
-		implements PlaceTokenizer<P> {
+		implements PlaceTokenizer<P>, Registration.Ensure {
 	protected StringBuilder tokenBuilder;
 
 	protected String[] parts;

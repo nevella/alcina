@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -63,8 +63,6 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
@@ -476,7 +474,7 @@ public class GwittirBridge {
 						propertyName,
 						TextProvider.get().getLabelText(propertyLocation), bwp,
 						validator, validationFeedback,
-						getDefaultConverter(bwp, type), type);
+						getDefaultConverter(bwp, type), clazz);
 				if (!display.styleName().isEmpty()) {
 					field.setStyleName(display.styleName());
 				}
@@ -619,7 +617,8 @@ public class GwittirBridge {
 	// FIXME - reflection - probably remove
 	public boolean hasDescriptor(Class clazz) {
 		try {
-			return Reflections.at(clazz).has(Bean.class);
+			return !CommonUtils.PRIMITIVE_CLASS_NAMES.contains(clazz.getName())
+					&& Reflections.at(clazz).has(Bean.class);
 		} catch (RuntimeException re) {
 			return false;
 		}
@@ -716,16 +715,6 @@ public class GwittirBridge {
 		}
 	}
 
-	public static class GwittirDateRendererProvider {
-		public BoundWidgetProvider getRenderer(Display display) {
-			if (display.rendererHint().equals(HINT_DATE_WITH_TIME_TITLE)) {
-				return AU_DATE_TIME_TITLE_PROVIDER;
-			} else {
-				return AU_DATE_PROVIDER;
-			}
-		}
-	}
-
 	public static class FieldOrdering implements Comparator<Field> {
 		private final ClassReflector<?> classReflector;
 
@@ -770,6 +759,16 @@ public class GwittirBridge {
 			}
 			return RenderedProperty.displayName(p1)
 					.compareToIgnoreCase(RenderedProperty.displayName(p2));
+		}
+	}
+
+	public static class GwittirDateRendererProvider {
+		public BoundWidgetProvider getRenderer(Display display) {
+			if (display.rendererHint().equals(HINT_DATE_WITH_TIME_TITLE)) {
+				return AU_DATE_TIME_TITLE_PROVIDER;
+			} else {
+				return AU_DATE_PROVIDER;
+			}
 		}
 	}
 }

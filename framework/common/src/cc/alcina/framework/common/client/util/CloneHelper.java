@@ -60,9 +60,6 @@ public class CloneHelper {
 
 	private Map createdMap = new IdentityHashMap();
 
-	// optimisation, part. for GWT
-	private Object[] args = new Object[1];
-
 	/*
 	 * note, there won't be any property change listeners on the cloned object,
 	 * so invoking the mutator won't cause args to be reused (i.e. this to be
@@ -84,8 +81,7 @@ public class CloneHelper {
 				if (val instanceof Collection) {
 					val = CommonUtils.shallowCollectionClone((Collection) val);
 				}
-				args[0] = val;
-				property.set(target, args);
+				property.set(target, val);
 			}
 		}
 	}

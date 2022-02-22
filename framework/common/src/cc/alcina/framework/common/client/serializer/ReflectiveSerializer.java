@@ -344,7 +344,7 @@ public class ReflectiveSerializer {
 
 	@Bean
 	@Registration(TypeSerializer.class)
-	public static abstract class TypeSerializer {
+	public static abstract class TypeSerializer implements Registration.Ensure {
 		public void childDeserializationComplete(GraphNode graphNode,
 				GraphNode child) {
 		}
@@ -380,7 +380,8 @@ public class ReflectiveSerializer {
 
 	@Bean
 	@Registration(ValueSerializer.class)
-	public static abstract class ValueSerializer<T> {
+	public static abstract class ValueSerializer<T>
+			implements Registration.Ensure {
 		public abstract List<Class> serializesTypes();
 
 		protected T fromJson(Class<? extends T> clazz, JsonValue value) {
@@ -716,7 +717,9 @@ public class ReflectiveSerializer {
 			String className = array.getString(0);
 			JsonSerialNode valueChild = new JsonSerialNode(array.get(1));
 			node.serialNode = valueChild;
-			return Reflections.forName(className);
+			Class<?> forName = Reflections.forName(className);
+			Preconditions.checkState(forName != null);
+			return forName;
 		}
 
 		@Override

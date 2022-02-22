@@ -8,14 +8,13 @@ import com.google.gwt.place.shared.Place;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 
 @ClientInstantiable
 @Registration(BasePlace.class)
-public abstract class BasePlace extends Place implements Serializable {
+public abstract class BasePlace extends Place
+		implements Serializable, Registration.Ensure {
 	public static String tokenFor(BasePlace p) {
 		return RegistryHistoryMapper.get().getToken(p);
 	}

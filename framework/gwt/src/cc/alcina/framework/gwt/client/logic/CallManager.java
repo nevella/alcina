@@ -19,6 +19,7 @@ import java.util.Map;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.TopicPublisher;
 import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
@@ -28,6 +29,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
  *
  * @author Nick Reddel
  */
+@Registration.Singleton
 public class CallManager {
 	public static final String TOPIC_CALL_MADE = CallManager.class.getName()
 			+ ".TOPIC_CALL_MADE";
@@ -44,7 +46,7 @@ public class CallManager {
 
 	private ArrayList<AsyncCallback> running;
 
-	private CallManager() {
+	public CallManager() {
 		cancelled = new ArrayList<AsyncCallback>();
 		displayTexts = new HashMap<AsyncCallback, String>();
 		topicListeners = new HashMap<AsyncCallback, TopicPublisher.TopicListener>();

@@ -1,87 +1,83 @@
 package cc.alcina.framework.entity.gwt.reflection;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.Objects;
 
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 
-import cc.alcina.framework.common.client.util.AlcinaCollectors;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.util.JacksonUtils;
+import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
+import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 
 public class ClientReflectionFilter {
 	private GeneratorContext context;
 
+	private File typesFile;
+
+	private ReachabilityData.ModuleTypes moduleTypes;
+
 	private String moduleName;
-
-	private File cacheFile;
-
-	private ReachabilityData reachabilityData;
 
 	public void init(GeneratorContext context, String moduleName)
 			throws Exception {
 		this.context = context;
 		this.moduleName = moduleName;
-		cacheFile = getCacheFile();
-		if (cacheFile.exists()) {
-			reachabilityData = JacksonUtils.deserializeFromFile(cacheFile,
-					ReachabilityData.class);
-		} else {
-			reachabilityData = new ReachabilityData();
-			reachabilityData.moduleName = moduleName;
+		if (Objects.equals(moduleName, ReflectionModule.INITIAL)) {
+			ReachabilityData.initConfiguration(context.getPropertyOracle());
 		}
-		reachabilityData.generateLookup();
+		typesFile = ReachabilityData.getCacheFile("reachability.json");
+		if (typesFile.exists()) {
+			try {
+				moduleTypes = ReachabilityData.deserialize(
+						ReachabilityData.ModuleTypes.class, typesFile);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+		if (moduleTypes == null) {
+			moduleTypes = new ReachabilityData.ModuleTypes();
+		}
+		moduleTypes.ensureTypeList(moduleName);
+		moduleTypes.generateLookup();
 	}
 
-	protected File getCacheFile() throws Exception {
-		Optional<String> configurationFolderPath = Ax.optionalFirst(context
-				.getPropertyOracle()
-				.getConfigurationProperty(
-						ClientReflectionFilter.class.getName() + ".dataFolder")
-				.getValues());
-		JClassType[] types = context.getTypeOracle().getTypes();
-		// first type will be compilation module name
-		String defaultFolderPath = Ax.format(
-				"/var/local/build/gwt/client-reflection-filter/%s", types[0]);
-		String folderPath = configurationFolderPath.orElse(defaultFolderPath);
-		return new File(Ax.format("%s/reachability.json", folderPath));
+	private boolean isInitial() {
+		return moduleName.equals(ReflectionModule.INITIAL);
 	}
 
-	protected void onGenerationComplete() {
-		JacksonUtils.serializeToFile(reachabilityData, cacheFile);
+	protected boolean isReflectableJavaCollectionClass(JClassType jClassType) {
+		return CommonUtils.COLLECTION_CLASS_NAMES
+				.contains(jClassType.getQualifiedSourceName());
+	}
+
+	protected boolean isReflectableJavaCoreClass(JClassType jClassType) {
+		return CommonUtils.CORE_CLASS_NAMES
+				.contains(jClassType.getQualifiedSourceName())
+				|| CommonUtils.PRIMITIVE_CLASS_NAMES
+						.contains(jClassType.getQualifiedSourceName())
+				|| CommonUtils.PRIMITIVE_WRAPPER_CLASS_NAMES
+						.contains(jClassType.getQualifiedSourceName());
+	}
+
+	protected void onGenerationComplete(AppImplRegistrations registrations,
+			AppReflectableTypes reflectableTypes) {
+		ReachabilityData.serialize(moduleTypes, typesFile);
+		if (isInitial()) {
+			File registryFile = ReachabilityData.getRegistryFile();
+			ReachabilityData.serialize(registrations, registryFile);
+			File reflectableTypesFile = ReachabilityData
+					.getReflectableTypesFile();
+			ReachabilityData.serialize(reflectableTypes, reflectableTypesFile);
+		}
 	}
 
 	protected boolean permit(JClassType type) {
-		if (!context.isProdMode() || "yep".length() > 0) {
+		if (!context.isProdMode() && moduleTypes.moduleLists.size() == 0) {
 			return true;
 		} else {
-			return reachabilityData.sourceNameType
-					.containsKey(type.getQualifiedSourceName());
+			return moduleTypes.permit(type, moduleName);
 		}
-	}
-
-	public static class ReachabilityData {
-		public String moduleName;
-
-		public List<Type> reachable = new ArrayList<>();
-
-		public transient Map<String, Type> sourceNameType;
-
-		public void generateLookup() {
-			sourceNameType = reachable.stream().collect(
-					AlcinaCollectors.toKeyMap(t -> t.qualifiedSourceName));
-		}
-	}
-
-	public static class Type {
-		public String qualifiedSourceName;
-
-		public boolean allSubclassesReachable;
-
-		public String moduleName;
 	}
 }

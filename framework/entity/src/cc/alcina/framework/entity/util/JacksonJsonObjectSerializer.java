@@ -34,8 +34,6 @@ import com.fasterxml.jackson.databind.introspect.ObjectIdInfo;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -102,6 +100,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 					return mapper.readValue(json, clazz);
 				}
 			} catch (Exception e) {
+				Ax.err(e.getMessage());
+				int debug = 3;
 				// deserialization issue
 			}
 			return deserialize_v1(json, clazz);

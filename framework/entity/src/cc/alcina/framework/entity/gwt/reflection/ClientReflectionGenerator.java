@@ -21,6 +21,7 @@ import java.util.function.Supplier;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.GeneratorContext;
@@ -28,16 +29,17 @@ import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JMethod;
+import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JType;
-import com.google.gwt.core.ext.typeinfo.NotFoundException;
+import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
 import com.totsp.gwittir.client.beans.annotations.Omit;
-import com.totsp.gwittir.rebind.beans.IntrospectorFilter;
-import com.totsp.gwittir.rebind.beans.IntrospectorFilterHelper;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.domain.DomainCollections;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
@@ -47,13 +49,20 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
+import cc.alcina.framework.common.client.reflection.AsyncSerializableTypes;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ToStringComparator;
+import cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator.ClassReflectorGenerator.PropertyGenerator;
+import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
+import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
+import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
 
 public class ClientReflectionGenerator extends Generator {
 	/*
@@ -86,6 +95,8 @@ public class ClientReflectionGenerator extends Generator {
 
 	static final String ANN_IMPL = "__annImpl";
 
+	private static boolean alcinaCollectionsConfigured;
+
 	static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {
 			return t.isParameterized().getBaseType().getErasedType();
@@ -117,11 +128,7 @@ public class ClientReflectionGenerator extends Generator {
 		return builder.toString();
 	}
 
-	IntrospectorFilter filter;
-
 	long start;
-
-	String moduleName;
 
 	TreeLogger logger;
 
@@ -130,8 +137,6 @@ public class ClientReflectionGenerator extends Generator {
 	ModuleReflectionGenerator moduleGenerator;
 
 	JClassType generatingType;
-
-	int maxReflectors = Integer.MAX_VALUE;
 
 	ReflectionModule module;
 
@@ -147,7 +152,7 @@ public class ClientReflectionGenerator extends Generator {
 
 	JClassType classReflectorType;
 
-	ClientReflectionFilter reflectionFilter;
+	ClientReflectionFilter filter;
 
 	AnnotationLocationTypeInfo.Resolver annotationResolver = new AnnotationLocationTypeInfo.Resolver();
 
@@ -165,12 +170,16 @@ public class ClientReflectionGenerator extends Generator {
 			if (moduleGenerator.isPending()) {
 				moduleGenerator.prepare();
 				moduleGenerator.write();
+				ReachabilityData.AppImplRegistrations registrations = moduleGenerator
+						.listImplementationRegistrations();
+				ReachabilityData.AppReflectableTypes reflectableTypes = moduleGenerator
+						.listReflectableTypes();
+				filter.onGenerationComplete(registrations, reflectableTypes);
 				System.out.format(
-						"Client reflection generation  [%s] -  %s types - %s ms\n",
-						filter.getModuleName(),
+						"Client reflection generation  [%s] -  %s/%s types - %s ms\n",
+						module.value(), moduleGenerator.writeReflectors.size(),
 						moduleGenerator.classReflectors.size(),
 						System.currentTimeMillis() - start);
-				filter.generationComplete();
 			}
 			return moduleGenerator.implementationFqn();
 		} catch (Exception e) {
@@ -184,10 +193,9 @@ public class ClientReflectionGenerator extends Generator {
 				.getConfigurationProperty(
 						ClientReflectionFilter.class.getName())
 				.getValues().get(0);
-		reflectionFilter = (ClientReflectionFilter) Class
-				.forName(filterClassName).getDeclaredConstructor()
-				.newInstance();
-		reflectionFilter.init(context, moduleName);
+		filter = (ClientReflectionFilter) Class.forName(filterClassName)
+				.getDeclaredConstructor().newInstance();
+		filter.init(context, module.value());
 	}
 
 	void addImport(ClassSourceFileComposerFactory factory, Class<?> type) {
@@ -215,19 +223,29 @@ public class ClientReflectionGenerator extends Generator {
 		}
 	}
 
+	JClassType getType(String typeName) {
+		try {
+			return context.getTypeOracle().getType(typeName);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	<A extends Annotation> boolean has(JClassType t, Class<A> annotationClass) {
 		return t.getAnnotation(annotationClass) != null;
 	}
 
-	void setupEnvironment() throws NotFoundException {
-		filter = IntrospectorFilterHelper.getFilter(context);
+	void setupEnvironment() {
+		if (!alcinaCollectionsConfigured) {
+			Registry.register().singleton(DomainCollections.class,
+					new DomainCollections());
+			alcinaCollectionsConfigured = true;
+		}
 		start = System.currentTimeMillis();
 		String superClassName = null;
-		generatingType = context.getTypeOracle().getType(typeName);
-		classReflectorType = context.getTypeOracle()
-				.getType(ClassReflector.class.getCanonicalName());
+		generatingType = getType(typeName);
+		classReflectorType = getType(ClassReflector.class.getCanonicalName());
 		module = generatingType.getAnnotation(ReflectionModule.class);
-		filter.setModuleName(module.value());
 		implementationName = String.format("ModuleReflector_%s_Impl",
 				module.value());
 	}
@@ -432,6 +450,13 @@ public class ClientReflectionGenerator extends Generator {
 		}
 
 		@Override
+		protected void createPrintWriter(boolean inConstructor) {
+			if (!inConstructor) {
+				super.createPrintWriter(inConstructor);
+			}
+		}
+
+		@Override
 		protected void prepare() {
 			isAbstract = type.isAbstract();
 			hasCallableNoArgsConstructor = !isAbstract
@@ -455,6 +480,7 @@ public class ClientReflectionGenerator extends Generator {
 
 		@Override
 		protected void write() {
+			createPrintWriter(false);
 			composerFactory.setSuperclass(
 					superClassOrInterfaceType.getQualifiedSourceName());
 			composerFactory.addImport(LinkedHashMap.class.getName());
@@ -677,16 +703,22 @@ public class ClientReflectionGenerator extends Generator {
 				sourceWriter.println("}");
 			}
 
+			boolean isSerializable() {
+				return getter != null && setter != null && !getter.method
+						.isAnnotationPresent(AlcinaTransient.class);
+			}
+
 			void printMethodFunction(PropertyMethod method) {
 				if (method == null) {
 					sourceWriter.print("null");
 					return;
 				}
 				sourceWriter.print("new Method(");
-				String toString = Ax.format("[Method: %s]",
-						method.method.getName());
-				sourceWriter.print(stringLiteral(toString));
-				sourceWriter.print(", ");
+				// doesn't intern - so fairly bulky for final artifact
+				// String toString = Ax.format("[Method: %s]",
+				// method.method.getName());
+				// sourceWriter.print(stringLiteral(toString));
+				sourceWriter.print("null , ");
 				method.printInvoker();
 				sourceWriter.print(", ");
 				sourceWriter.print("%s.class",
@@ -731,14 +763,118 @@ public class ClientReflectionGenerator extends Generator {
 	class ModuleReflectionGenerator extends UnitGenerator {
 		List<AnnotationImplementationGenerator> annotationImplementations = new ArrayList<>();
 
-		List<ClassReflectorGenerator> classReflectors = new ArrayList<>();
+		Map<JClassType, ClassReflectorGenerator> classReflectors = new LinkedHashMap<>();
+
+		List<ClassReflectorGenerator> writeReflectors;
 
 		boolean alreadyWritten = false;
+
+		private Multiset<JClassType, Set<JClassType>> subtypes;
 
 		protected ModuleReflectionGenerator(String implementationName,
 				JClassType superClassOrInterfaceType) {
 			super(null, superClassOrInterfaceType.getPackage().getName(),
 					implementationName, superClassOrInterfaceType);
+		}
+
+		/*
+		 * Not all registrations! Only those for which Registry.impl() or
+		 * Registry.Query.forEnum() could return the registration
+		 */
+		public AppImplRegistrations listImplementationRegistrations() {
+			AppImplRegistrations implRegistrations = new AppImplRegistrations();
+			List<Registration> allRegistrations = new ArrayList<>();
+			computeRegistryTypes().stream().forEach(t -> {
+				List<Registration> typeRegistrations = new AnnotationLocationTypeInfo(
+						t, annotationResolver)
+								.getAnnotations(Registration.class);
+				allRegistrations.addAll(typeRegistrations);
+				implRegistrations.add(t, typeRegistrations);
+			});
+			Predicate<Registration> permitEqualPriorityTest = r -> Registration.EnumDiscriminator.class
+					.isAssignableFrom(r.value()[0])
+					|| Registration.Ensure.class.isAssignableFrom(r.value()[0]);
+			Set<Registration> implementationRegistrations = Registry.Internals
+					.removeNonImplmentationRegistrations(allRegistrations,
+							permitEqualPriorityTest)
+					.stream().collect(Collectors.toSet());
+			implRegistrations.entries.removeIf(
+					e -> !e.retainRegistrations(implementationRegistrations));
+			return implRegistrations;
+		}
+
+		public AppReflectableTypes listReflectableTypes() {
+			AppReflectableTypes reflectableTypes = new AppReflectableTypes();
+			computeReflectableTypes().forEach(reflectableTypes::addType);
+			return reflectableTypes;
+		}
+
+		private Set<JClassType>
+				computeAsyncSerializableArguments(JClassType type) {
+			JClassType asyncCallbackType = getType(
+					AsyncCallback.class.getCanonicalName());
+			return Arrays.stream(type.getMethods())
+					.flatMap(m -> Arrays.stream(m.getParameterTypes())
+							.filter(t -> t instanceof JParameterizedType
+									&& ((JParameterizedType) t)
+											.getBaseType() == asyncCallbackType)
+							.flatMap(t -> ReachabilityData
+									.toReachableConcreteTypes(t, subtypes)))
+					.filter(t -> t != asyncCallbackType.getErasedType())
+					.filter(ReachabilityData::excludeJavaType)
+					.collect(AlcinaCollectors.toLinkedHashSet());
+		}
+
+		private Multiset<JClassType, Set<JClassType>>
+				computeAsyncSerializableTypes(
+						Multiset<JClassType, Set<JClassType>> subtypes) {
+			Multiset<JClassType, Set<JClassType>> result = new Multiset<JClassType, Set<JClassType>>();
+			subtypes.get(
+					getType(AsyncSerializableTypes.class.getCanonicalName()))
+					.forEach(t -> result.put(t,
+							computeAsyncSerializableArguments(t)));
+			return result;
+		}
+
+		private Multiset<JClassType, Set<JClassType>> computeSettableTypes() {
+			Multiset<JClassType, Set<JClassType>> result = new Multiset<JClassType, Set<JClassType>>();
+			Arrays.stream(context.getTypeOracle().getTypes())
+					.filter(t -> t.isAnnotationPresent(Bean.class))
+					.forEach(t -> result.put(t.getErasedType(),
+							computeSetterArguments(t)));
+			return result;
+		}
+
+		private Set<JClassType> computeSetterArguments(JClassType type) {
+			if (type.getName().contains("DomainTranche")) {
+				int debug = 3;
+			}
+			ClassReflectorGenerator reflectorGenerator = classReflectors
+					.get(type.getErasedType());
+			if (reflectorGenerator == null) {
+				return Collections.emptySet();
+			}
+			Set<JClassType> computed = reflectorGenerator.propertyGenerators
+					.values().stream().filter(PropertyGenerator::isSerializable)
+					.map(generator -> generator.setter.method)
+					.flatMap(m -> Arrays.stream(m.getParameterTypes())
+							.flatMap(t -> ReachabilityData
+									.toReachableConcreteTypes(t, subtypes)))
+					.filter(ReachabilityData::excludeJavaType)
+					.collect(AlcinaCollectors.toLinkedHashSet());
+			return computed;
+		}
+
+		private Multiset<JClassType, Set<JClassType>> computeSubtypes() {
+			Multiset<JClassType, Set<JClassType>> result = new Multiset<>();
+			Arrays.stream(context.getTypeOracle().getTypes())
+					.map(JClassType::getErasedType).distinct().forEach(t -> {
+						Set<? extends JClassType> supertypeHierarchy = t
+								.getFlattenedSupertypeHierarchy();
+						supertypeHierarchy.stream()
+								.forEach(st -> result.add(st, t));
+					});
+			return result;
 		}
 
 		private boolean hasRegistrations(JClassType t) {
@@ -757,11 +893,13 @@ public class ClientReflectionGenerator extends Generator {
 		@Override
 		protected void prepare() {
 			prepareAnnotationImplementationGenerators();
-			List<JClassType> types = determineReachableTypes();
-			types.stream().limit(maxReflectors)
-					.map(ClassReflectorGenerator::new)
-					.forEach(classReflectors::add);
-			classReflectors.forEach(ClassReflectorGenerator::prepare);
+			List<JClassType> types = computeReachableTypes();
+			types.stream().map(ClassReflectorGenerator::new)
+					.forEach(crg -> classReflectors.put(crg.type, crg));
+			classReflectors.values().forEach(ClassReflectorGenerator::prepare);
+			writeReflectors = classReflectors.values().stream()
+					.filter(r -> filter.permit(r.type))
+					.collect(Collectors.toList());
 		}
 
 		@Override
@@ -774,6 +912,7 @@ public class ClientReflectionGenerator extends Generator {
 			composerFactory.addImport(Map.class.getName());
 			composerFactory.addImport(Registry.class.getName());
 			composerFactory.addImport(ClientReflections.class.getName());
+			composerFactory.addImport(ClassReflector.class.getName());
 			composerFactory.addImport(Supplier.class.getName());
 			composerFactory.setSuperclass(
 					superClassOrInterfaceType.getQualifiedSourceName());
@@ -784,7 +923,7 @@ public class ClientReflectionGenerator extends Generator {
 			closeClassBody();
 		}
 
-		List<JClassType> determineReachableTypes() {
+		List<JClassType> computeReachableTypes() {
 			return Arrays.stream(context.getTypeOracle().getTypes())
 					.filter(t -> (has(t, ClientInstantiable.class)
 							|| has(t, Bean.class) || hasRegistrations(t)
@@ -792,11 +931,40 @@ public class ClientReflectionGenerator extends Generator {
 							|| t.isAnnotationPresent(ClientVisible.class)
 							|| filter.isReflectableJavaCoreClass(t)
 							|| filter.isReflectableJavaCollectionClass(t)))
-					.filter(reflectionFilter::permit)
 					.map(JClassType::getFlattenedSupertypeHierarchy)
 					.flatMap(Collection::stream)
 					.map(ClientReflectionGenerator::erase).distinct()
 					.filter(t -> t.isPublic()).collect(Collectors.toList());
+		}
+
+		Stream<TypeHierarchy> computeReflectableTypes() {
+			subtypes = computeSubtypes();
+			Multiset<JClassType, Set<JClassType>> asyncSerializableTypes = computeAsyncSerializableTypes(
+					subtypes);
+			Multiset<JClassType, Set<JClassType>> settableTypes = computeSettableTypes();
+			return Arrays.stream(context.getTypeOracle().getTypes())
+					.filter(t -> (has(t, ClientInstantiable.class)
+							|| has(t, Bean.class) || hasRegistrations(t)
+							// the annotations themselves
+							|| t.isAnnotationPresent(ClientVisible.class)
+							|| filter.isReflectableJavaCoreClass(t)
+							|| filter.isReflectableJavaCollectionClass(t)))
+					.map(JClassType::getFlattenedSupertypeHierarchy)
+					.flatMap(Collection::stream)
+					.map(ClientReflectionGenerator::erase).distinct()
+					.filter(t -> !t.getQualifiedSourceName()
+							.equals(Object.class.getCanonicalName()))
+					.filter(t -> t.isPublic()).map(t -> new TypeHierarchy(t,
+							subtypes, asyncSerializableTypes, settableTypes));
+		}
+
+		List<JClassType> computeRegistryTypes() {
+			return Arrays.stream(context.getTypeOracle().getTypes())
+					.filter(t -> hasRegistrations(t))
+					.map(ClientReflectionGenerator::erase).distinct()
+					// only interested in instantiable types
+					.filter(t -> t.isPublic() && !t.isAbstract())
+					.collect(Collectors.toList());
 		}
 
 		void prepareAnnotationImplementationGenerators() {
@@ -813,7 +981,7 @@ public class ClientReflectionGenerator extends Generator {
 		}
 
 		void writeClassReflectors() {
-			classReflectors.forEach(ClassReflectorGenerator::write);
+			writeReflectors.forEach(ClassReflectorGenerator::write);
 		}
 
 		void writeForClassReflectors(String methodName, String mapSignature,
@@ -822,11 +990,11 @@ public class ClientReflectionGenerator extends Generator {
 			String methodArguments = Ax.notBlank(mapSignature)
 					? Ax.format("%s map", mapSignature)
 					: "";
-			if (classReflectors.isEmpty()) {
+			if (writeReflectors.isEmpty()) {
 				writeMethodDefinition(methodName, methodArguments, "public",
 						"");
 			}
-			for (int idx = 0; idx < classReflectors.size(); idx++) {
+			for (int idx = 0; idx < writeReflectors.size(); idx++) {
 				boolean writePreamble = idx % 100 == 0;
 				boolean initial = idx == 0;
 				if (writePreamble) {
@@ -844,7 +1012,7 @@ public class ClientReflectionGenerator extends Generator {
 					writeMethodDefinition(methodName, methodArguments,
 							accessModifier, methodIndex);
 				}
-				perReflector.accept(classReflectors.get(idx));
+				perReflector.accept(writeReflectors.get(idx));
 			}
 			sourceWriter.outdent();
 			sourceWriter.println("}");
@@ -915,9 +1083,7 @@ public class ClientReflectionGenerator extends Generator {
 			this.superClassOrInterfaceType = superClassOrInterfaceType;
 			composerFactory = new ClassSourceFileComposerFactory(packageName,
 					implementationName);
-			printWriter = context.tryCreate(logger, packageName,
-					implementationName);
-			pending = printWriter != null;
+			createPrintWriter(true);
 		}
 
 		public boolean isPending() {
@@ -928,6 +1094,12 @@ public class ClientReflectionGenerator extends Generator {
 			sourceWriter.outdent();
 			sourceWriter.println("}");
 			context.commit(logger, printWriter);
+		}
+
+		protected void createPrintWriter(boolean inConstructor) {
+			printWriter = context.tryCreate(logger, packageName,
+					implementationName);
+			pending = printWriter != null;
 		}
 
 		protected void createSourceWriter(String packageName,

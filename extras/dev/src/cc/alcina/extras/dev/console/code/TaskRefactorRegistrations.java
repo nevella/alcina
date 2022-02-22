@@ -183,8 +183,8 @@ public class TaskRefactorRegistrations
 				case "ImplementationType.SINGLETON":
 					return Implementation.SINGLETON;
 				case "ImplementationType.NONE":
-					// FIXME - reflection - remove
-					return Implementation.NONE;
+					// Fix by hand (Priority.REMOVE, probably)
+					throw new UnsupportedOperationException();
 				default:
 					throw new UnsupportedOperationException();
 				}
@@ -219,7 +219,7 @@ public class TaskRefactorRegistrations
 				case "RegistryLocation.MANUAL_PRIORITY":
 					return Priority.APP;
 				case "RegistryLocation.IGNORE_PRIORITY":
-					return Priority.IGNORE;
+					return Priority.REMOVE;
 				case "15":
 					return Priority.INTERMEDIATE_LIBRARY;
 				case "20":

@@ -70,6 +70,13 @@ public @interface Registration {
 	Class[] value();
 
 	/**
+	 * Register in the first client module that this registry node is visible,
+	 * including when equal priority types exist at the registry node
+	 */
+	public interface Ensure {
+	}
+
+	/**
 	 * Enables filtering of registered implementations by an enum value
 	 */
 	public interface EnumDiscriminator<E extends Enum> {
@@ -82,7 +89,7 @@ public @interface Registration {
 		// registree is a factory, instantiate as a singleton
 		FACTORY,
 		// registree is the impl, should be instantiated as a singleton
-		SINGLETON, NONE
+		SINGLETON
 	}
 
 	public static class MergeStrategy
@@ -190,8 +197,6 @@ public @interface Registration {
 	public enum Priority {
 		// Do not register this class
 		REMOVE,
-		// Do not instantiate this class
-		IGNORE,
 		// Default priority
 		_DEFAULT,
 		// Higher priorities

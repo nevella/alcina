@@ -43,6 +43,9 @@ public interface IUserStory<U extends IUserStory> extends HasId {
 	default void obfuscateClientEvents() {
 		List<String> buffer = new ArrayList<>();
 		for (String line : getStory().split("\n")) {
+			if (line.isEmpty()) {
+				continue;
+			}
 			ClientLogRecords records = TransformManager.deserialize(line);
 			List<ClientLogRecord> list = records.getLogRecords();
 			for (ClientLogRecord record : list) {

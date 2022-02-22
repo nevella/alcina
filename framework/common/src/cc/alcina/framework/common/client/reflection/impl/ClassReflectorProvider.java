@@ -4,7 +4,6 @@ import java.beans.PropertyDescriptor;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Modifier;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -14,7 +13,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Method;
@@ -28,10 +26,8 @@ import cc.alcina.framework.entity.SEUtilities;
 
 public class ClassReflectorProvider {
 	public static ClassReflector getClassReflector(Class clazz) {
-		List<PropertyDescriptor> descriptors = clazz
-				.getAnnotation(Bean.class) == null ? new ArrayList<>()
-						: SEUtilities
-								.getPropertyDescriptorsSortedByField(clazz);
+		List<PropertyDescriptor> descriptors = SEUtilities
+				.getPropertyDescriptorsSortedByField(clazz);
 		List<Property> properties = descriptors.stream()
 				.map(d -> ClassReflectorProvider.createProperty(clazz, d))
 				.collect(Collectors.toList());

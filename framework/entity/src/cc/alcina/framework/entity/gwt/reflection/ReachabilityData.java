@@ -1,0 +1,452 @@
+package cc.alcina.framework.entity.gwt.reflection;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
+import java.util.Set;
+import java.util.Stack;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+import com.fasterxml.jackson.core.JsonGenerator;
+import com.fasterxml.jackson.core.JsonParser;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationContext;
+import com.fasterxml.jackson.databind.SerializerProvider;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
+import com.fasterxml.jackson.databind.ser.std.StdSerializer;
+import com.google.gwt.core.ext.PropertyOracle;
+import com.google.gwt.core.ext.typeinfo.JArrayType;
+import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JGenericType;
+import com.google.gwt.core.ext.typeinfo.JParameterizedType;
+import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
+import com.google.gwt.core.ext.typeinfo.JRawType;
+import com.google.gwt.core.ext.typeinfo.JRealClassType;
+import com.google.gwt.core.ext.typeinfo.JType;
+import com.google.gwt.core.ext.typeinfo.JTypeParameter;
+import com.google.gwt.core.ext.typeinfo.JWildcardType;
+
+import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.Multiset;
+import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
+
+class ReachabilityData {
+	static final String DATA_FOLDER_CONFIGURATION_KEY = "ClientReflectionGenerator.ReachabilityData.folder";
+
+	static final String FILTER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.FilterPeer.className";
+
+	static final String LINKER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.LinkerPeer.className";
+
+	static String dataFolder;
+
+	static Set<String> typeParametersLogged = new LinkedHashSet<>();
+
+	static Class<? extends ClientReflectionFilterPeer> filterPeerClass;
+
+	static Class<? extends ReachabilityLinkerPeer> linkerPeerClass;
+
+	private static Set<JClassType> computeImplementations(
+			JTypeParameter typeParameter,
+			Multiset<JClassType, Set<JClassType>> subtypes) {
+		Set<JClassType> result = null;
+		JClassType firstBound = typeParameter.getFirstBound();
+		if (typeParameter.getBounds().length > 1) {
+			result = subtypes.get(firstBound).stream()
+					.collect(AlcinaCollectors.toLinkedHashSet());
+			for (int idx = 1; idx < typeParameter.getBounds().length; idx++) {
+				JClassType bound = typeParameter.getBounds()[idx];
+				result.retainAll(subtypes.get(bound));
+			}
+		} else {
+			result = Stream.of(firstBound).collect(Collectors.toSet());
+		}
+		if (result.size() > 0
+				&& typeParametersLogged.add(typeParameter.toString())) {
+			Ax.out(" -- %s", typeParameter);
+		}
+		return result;
+	}
+
+	private static boolean isObjectType(JClassType type) {
+		return type.getQualifiedSourceName()
+				.equals(Object.class.getCanonicalName());
+	}
+
+	static <T> T deserialize(Class<T> clazz, File file) {
+		String json = ResourceUtilities.read(file);
+		return new JacksonJsonObjectSerializer().withIdRefs().deserialize(json,
+				clazz);
+	}
+
+	// java.xx class reachability is configured in code
+	static boolean excludeJavaType(JClassType type) {
+		return !type.getPackage().getName().startsWith("java");
+	}
+
+	static File getCacheFile(String fileName) {
+		new File(dataFolder).mkdirs();
+		return new File(Ax.format("%s/%s", dataFolder, fileName));
+	}
+
+	static File getReflectableTypesFile() {
+		return getCacheFile("reflectable-types.json");
+	}
+
+	static File getRegistryFile() {
+		return getCacheFile("registrations.json");
+	}
+
+	static void initConfiguration(PropertyOracle propertyOracle) {
+		try {
+			dataFolder = Ax.first(propertyOracle
+					.getConfigurationProperty(DATA_FOLDER_CONFIGURATION_KEY)
+					.getValues());
+			filterPeerClass = (Class<? extends ClientReflectionFilterPeer>) Class
+					.forName(Ax.first(propertyOracle
+							.getConfigurationProperty(
+									FILTER_PEER_CONFIGURATION_KEY)
+							.getValues()));
+			linkerPeerClass = (Class<? extends ReachabilityLinkerPeer>) Class
+					.forName(Ax.first(propertyOracle
+							.getConfigurationProperty(
+									LINKER_PEER_CONFIGURATION_KEY)
+							.getValues()));
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	@SuppressWarnings("deprecation")
+	static <T> void serialize(Object object, File file) {
+		String existing = file.exists() ? ResourceUtilities.read(file) : null;
+		String json = new JacksonJsonObjectSerializer().withDefaults(false)
+				.withPrettyPrint().withIdRefs().withAllowUnknownProperties()
+				.serialize(object);
+		if (!Objects.equals(existing, json)) {
+			ResourceUtilities.write(json, file);
+		}
+	}
+
+	static Stream<JClassType> toReachableConcreteTypes(JType type,
+			Multiset<JClassType, Set<JClassType>> subtypes) {
+		if (type.getQualifiedSourceName().contains("DomainTranche") || type
+				.getQualifiedSourceName().contains("DomainModelObject")) {
+			int debug = 3;
+		}
+		Set<JClassType> resolved = new LinkedHashSet<>();
+		Set<JType> visited = new LinkedHashSet<>();
+		Stack<JType> unresolved = new Stack<>();
+		unresolved.add(type);
+		while (unresolved.size() > 0) {
+			JType pop = unresolved.pop();
+			if (!visited.add(pop)) {
+				continue;
+			}
+			if (pop instanceof JPrimitiveType) {
+				// ignore, only interested in class types
+			} else {
+				JClassType cursor = (JClassType) pop;
+				if (cursor instanceof JParameterizedType) {
+					JParameterizedType parameterizedType = (JParameterizedType) cursor;
+					unresolved.add(parameterizedType.getBaseType());
+					Arrays.stream(parameterizedType.getTypeArgs())
+							.forEach(unresolved::add);
+				} else if (cursor instanceof JGenericType) {
+					JGenericType genericType = (JGenericType) cursor;
+					resolved.add(cursor.getErasedType());
+					Arrays.stream(genericType.getTypeParameters())
+							.forEach(unresolved::add);
+					// nope, must be abstract
+				} else if (cursor instanceof JRealClassType) {
+					resolved.add(cursor);
+				} else if (cursor instanceof JRawType) {
+					JRawType rawType = (JRawType) cursor;
+					resolved.add(cursor.getErasedType());
+					unresolved.add(rawType.getBaseType());
+					// ignore
+				} else if (cursor instanceof JWildcardType) {
+					JWildcardType wildcardType = (JWildcardType) cursor;
+					switch (wildcardType.getBoundType()) {
+					case EXTENDS:
+						unresolved.add(wildcardType.getBaseType());
+						break;
+					case UNBOUND:
+					case SUPER:
+						// throw new UnsupportedOperationException(
+						// "Illegal bound type");
+						// ignore
+						break;
+					}
+					// ignore
+				} else if (cursor instanceof JTypeParameter) {
+					JTypeParameter jTypeParameter = (JTypeParameter) cursor;
+					Set<JClassType> implementations = computeImplementations(
+							jTypeParameter, subtypes);
+					unresolved.addAll(implementations);
+					// ignore
+				} else if (cursor instanceof JArrayType) {
+					// ignore - arrays are illegal for serialization
+				} else {
+					throw new UnsupportedOperationException();
+				}
+			}
+		}
+		// hard-coded - TODO - revisit reachability
+		resolved.removeIf(ReachabilityData::isObjectType);
+		resolved.removeIf(
+				t -> t.getQualifiedSourceName().equals(Entity.class.getName()));
+		resolved.removeIf(
+				t -> t.getQualifiedSourceName().equals(Enum.class.getName()));
+		return resolved.stream();
+	}
+
+	static class AppImplRegistrations {
+		List<Entry> entries = new ArrayList<>();
+
+		void add(JClassType t, List<Registration> registrations) {
+			registrations.stream()
+					.map(registration -> new Entry(t, registration))
+					.forEach(entries::add);
+		}
+
+		static class Entry {
+			Type registered;
+
+			List<Type> keys;
+
+			private transient Registration registration;
+
+			Entry() {
+			}
+
+			Entry(JClassType t, Registration registration) {
+				this.registration = registration;
+				registered = Type.get(t);
+				keys = Arrays.stream(registration.value()).map(Type::get)
+						.collect(Collectors.toList());
+			}
+
+			public boolean retainRegistrations(Set<Registration> retain) {
+				return retain.contains(registration);
+			}
+
+			@Override
+			public String toString() {
+				return String.format("%-50s <-- %s", registered, keys);
+			}
+
+			boolean isVisible(Set<Type> types) {
+				return types.containsAll(keys);
+			}
+		}
+	}
+
+	static class AppReflectableTypes {
+		List<TypeHierarchy> typeHierarchies = new ArrayList<>();
+
+		transient Map<Type, TypeHierarchy> byType;
+
+		public TypeHierarchy typeHierarchy(Type t) {
+			return byType.get(t);
+		}
+
+		void addType(TypeHierarchy t) {
+			typeHierarchies.add(t);
+		}
+
+		void buildLookup() {
+			byType = typeHierarchies.stream()
+					.collect(AlcinaCollectors.toKeyMap(th -> th.type));
+		}
+
+		boolean contains(Type t) {
+			return byType.containsKey(t);
+		}
+	}
+
+	static class ModuleTypes {
+		List<TypeList> moduleLists = new ArrayList<>();
+
+		transient Map<String, Type> sourceNameType = new LinkedHashMap<>();
+
+		transient Map<Type, String> typeModule = new LinkedHashMap<>();
+
+		public boolean permit(JClassType type, String moduleName) {
+			Type t = typeFor(type.getQualifiedSourceName());
+			return t != null && typeModule.get(t).equals(moduleName);
+		}
+
+		public Set<Type> typesFor(List<String> moduleNames) {
+			return moduleLists.stream()
+					.filter(ml -> moduleNames.contains(ml.moduleName))
+					.flatMap(tl -> tl.types.stream()).sorted()
+					.collect(AlcinaCollectors.toLinkedHashSet());
+		}
+
+		TypeList ensureTypeList(String moduleName) {
+			Optional<TypeList> optional = moduleLists.stream()
+					.filter(tl -> Objects.equals(tl.moduleName, moduleName))
+					.findFirst();
+			if (optional.isEmpty()) {
+				TypeList typeList = new TypeList();
+				typeList.moduleName = moduleName;
+				moduleLists.add(typeList);
+				return typeList;
+			} else {
+				return optional.get();
+			}
+		}
+
+		void generateLookup() {
+			moduleLists.forEach(ml -> {
+				ml.types.forEach(t -> {
+					sourceNameType.put(t.qualifiedSourceName, t);
+					typeModule.put(t, ml.moduleName);
+				});
+			});
+		}
+
+		Type typeFor(String qualifiedSourceName) {
+			return sourceNameType.get(qualifiedSourceName);
+		}
+
+		static class TypeList {
+			String moduleName;
+
+			List<Type> types = new ArrayList<>();
+		}
+	}
+
+	@JsonSerialize(using = TypeQnameSerializer.class)
+	@JsonDeserialize(using = TypeQnameDeserializer.class)
+	static class Type implements Comparable<Type> {
+		private transient static Map<String, Type> forName = new LinkedHashMap<>();
+
+		static Type get(Class clazz) {
+			return get(clazz.getCanonicalName());
+		}
+
+		static Type get(JClassType t) {
+			return get(t.getQualifiedSourceName());
+		}
+
+		static Type get(String qualifiedSourceName) {
+			return forName.computeIfAbsent(qualifiedSourceName, n -> {
+				Type type = new Type();
+				type.qualifiedSourceName = n;
+				return type;
+			});
+		}
+
+		String qualifiedSourceName;
+
+		Type() {
+		}
+
+		@Override
+		public int compareTo(Type o) {
+			return qualifiedSourceName.compareTo(o.qualifiedSourceName);
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return obj instanceof Type && ((Type) obj).qualifiedSourceName
+					.equals(qualifiedSourceName);
+		}
+
+		@Override
+		public int hashCode() {
+			return qualifiedSourceName.hashCode();
+		}
+
+		@Override
+		public String toString() {
+			return qualifiedSourceName;
+		}
+	}
+
+	static class TypeHierarchy {
+		Type type;
+
+		List<Type> typeAndSuperTypes;
+
+		List<Type> subtypes;
+
+		/*
+		 * Types which are either arguments or parameterized type arguments of
+		 * property set methods - e.g. setRecords(List<Record>) would have
+		 * settableTypes List and Record
+		 */
+		List<Type> settableTypes;
+
+		/*
+		 * Types which are parameterized type arguments of AsyncCallback method
+		 * arguments - so login(LoginRequest request,
+		 * AsyncCallback<LoginResponse> callback) has asyncSerializableType
+		 * LoginResponse
+		 */
+		List<Type> asyncSerializableTypes;
+
+		TypeHierarchy() {
+		}
+
+		TypeHierarchy(JClassType classType,
+				Multiset<JClassType, Set<JClassType>> subtypes,
+				Multiset<JClassType, Set<JClassType>> asyncSerializableTypes,
+				Multiset<JClassType, Set<JClassType>> settableTypes) {
+			type = Type.get(classType);
+			this.typeAndSuperTypes = classType.getFlattenedSupertypeHierarchy()
+					.stream().map(Type::get).collect(Collectors.toList());
+			this.subtypes = asList(classType, subtypes);
+			this.settableTypes = asList(classType, settableTypes);
+			this.asyncSerializableTypes = asList(classType,
+					asyncSerializableTypes);
+		}
+
+		private List<Type> asList(JClassType classType,
+				Multiset<JClassType, Set<JClassType>> associated) {
+			return associated.containsKey(classType) ? associated.get(classType)
+					.stream().map(Type::get).collect(Collectors.toList())
+					: new ArrayList<>();
+		}
+	}
+
+	static class TypeQnameDeserializer extends StdDeserializer<Type> {
+		TypeQnameDeserializer() {
+			super(Type.class);
+		}
+
+		@Override
+		public Type deserialize(JsonParser p, DeserializationContext ctxt)
+				throws IOException, JsonProcessingException {
+			return Type.get(p.getText());
+		}
+	}
+
+	static class TypeQnameSerializer extends StdSerializer<Type> {
+		TypeQnameSerializer() {
+			super(Type.class);
+		}
+
+		@Override
+		public void serialize(Type value, JsonGenerator gen,
+				SerializerProvider provider) throws IOException {
+			gen.writeString(value.qualifiedSourceName);
+		}
+	}
+}

@@ -4,11 +4,15 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Stack;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -18,7 +22,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Implementation;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Registrations.RegistrationData;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -138,6 +141,33 @@ public class Registry {
 	}
 
 	public static class Internals {
+		public static List<Registration> removeNonImplmentationRegistrations(
+				List<Registration> registrations,
+				Predicate<Registration> permitEqualPriorityTest) {
+			List<Registration> result = new ArrayList<>();
+			LookupTree<List<Registration>> lookup = new LookupTree<>();
+			registrations.forEach(r -> lookup.add(Arrays.stream(r.value())
+					.map(RegistryKey::new).collect(Collectors.toList()), r));
+			List<List<Registration>> allValues = lookup.allValues();
+			return allValues.stream().filter(Objects::nonNull).filter(list -> {
+				if (list.size() > 1) {
+					List<Priority> priorities = list.stream()
+							.map(r -> r.priority())
+							.sorted(Comparator.reverseOrder())
+							.collect(Collectors.toList());
+					// equal priorities, not an enumdiscriminator list
+					if (priorities.get(0) == priorities.get(1)
+							&& !permitEqualPriorityTest.test(list.get(0))) {
+						return false;
+					} else {
+						return true;
+					}
+				} else {
+					return true;
+				}
+			}).flatMap(Collection::stream).collect(Collectors.toList());
+		}
+
 		public static void
 				setDelegateCreator(DelegateMapCreator delegateCreator) {
 			Registry.delegateCreator = delegateCreator;
@@ -478,16 +508,28 @@ public class Registry {
 		}
 	}
 
-	class LookupTree<T> {
+	static class LookupTree<T> {
 		Node root = new Node();
-
-		public void clear(RegistryKey key) {
-			root.map.remove(key);
-		}
 
 		void add(List<RegistryKey> keys, Object value) {
 			Iterator<RegistryKey> itr = keys.iterator();
 			root.add(itr, value);
+		}
+
+		List<T> allValues() {
+			List<T> result = new ArrayList<>();
+			Stack<Node> stack = new Stack<>();
+			stack.push(root);
+			while (stack.size() > 0) {
+				Node node = stack.pop();
+				result.add(node.value);
+				node.map.values().forEach(stack::add);
+			}
+			return result;
+		}
+
+		void clear(RegistryKey key) {
+			root.map.remove(key);
 		}
 
 		void dump() {

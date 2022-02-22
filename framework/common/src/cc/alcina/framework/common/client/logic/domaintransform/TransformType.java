@@ -13,10 +13,13 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform;
 
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+
 /**
  * 
  * @author Nick Reddel
  */
+@ClientInstantiable
 public enum TransformType {
 	CREATE_OBJECT, DELETE_OBJECT, ADD_REF_TO_COLLECTION,
 	REMOVE_REF_FROM_COLLECTION, CHANGE_PROPERTY_REF, NULL_PROPERTY_REF,
