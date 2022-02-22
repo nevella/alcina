@@ -1099,16 +1099,22 @@ public class ResourceUtilities {
 				// If the response code is bad, read the error stream instead
 				if (responseCode >= 400) {
 					InputStream err = connection.getErrorStream();
-					respBytes = readStreamToByteArray(err);
+					if (err != null) {
+						respBytes = readStreamToByteArray(err);
+					}
 					// If throwOnResponseCode and we get a 4xx or 5xx code
 					// throw a IOException
 					if (throwOnResponseCode) {
-						// If decodeGz, decode the gzipped data
-						if (decodeGz) {
-							respBytes = maybeDecodeGzip(respBytes);
+						// Read the error string if available
+						String errString = null;
+						if (respBytes != null) {
+							// If decodeGz, decode the gzipped data
+							if (decodeGz) {
+								respBytes = maybeDecodeGzip(respBytes);
+							}
+							// Read the error into a string
+							errString = new String(respBytes, StandardCharsets.UTF_8);
 						}
-						// Read the error into a string
-						String errString = new String(respBytes, StandardCharsets.UTF_8);
 						// For backwards compat, read the stream anyway to get the error
 						// Store the IOException returned, then throw it with the decoded string
 						IOException ioe = null;
@@ -1117,15 +1123,21 @@ public class ResourceUtilities {
 						} catch (IOException e) {
 							ioe = e;
 						}
-						throw new IOException(errString, ioe);
+
+						// Throw with errString if available, otherwise just throw
+						if (errString != null) {
+							throw new IOException(errString, ioe);
+						} else {
+							throw new IOException(ioe);
+						}
 					}
 				} else {
 					in = connection.getInputStream();
 					// If code is good, read the stream normally
 					respBytes = readStreamToByteArray(in);
 				}
-				// If decodeGz, decode the gzipped data
-				if (decodeGz) {
+				// If decodeGz and bytes are non-null, decode the gzipped data
+				if (decodeGz && respBytes != null) {
 					respBytes = maybeDecodeGzip(respBytes);
 				}
 				// Store some other response data to the class
@@ -1147,7 +1159,12 @@ public class ResourceUtilities {
 
 		// Request the URL and return as string
 		public String asString() throws Exception {
-			return new String(asBytes(), StandardCharsets.UTF_8);
+			byte[] respBytes = asBytes();
+			if (respBytes != null) {
+				return new String(respBytes, StandardCharsets.UTF_8);
+			} else {
+				return null;
+			}
 		}
 
 		// Request the URL and print the response string
