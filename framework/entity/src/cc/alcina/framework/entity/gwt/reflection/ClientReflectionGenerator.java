@@ -14,6 +14,7 @@
 package cc.alcina.framework.entity.gwt.reflection;
 
 import java.beans.PropertyDescriptor;
+import java.io.File;
 import java.io.PrintWriter;
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Inherited;
@@ -25,7 +26,6 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -73,9 +73,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.MethodContext;
 
 /**
@@ -563,6 +563,29 @@ public class ClientReflectionGenerator extends Generator {
 		sw.println("}");
 		sw.outdent();
 		sw.println("}");
+		Types types = new Types();
+		types.instantiable = instantiableTypes.stream()
+				.map(JClassType::getQualifiedBinaryName)
+				.collect(Collectors.toList());
+		types.beanInfo = beanInfoTypes.stream()
+				.map(JClassType::getQualifiedBinaryName)
+				.collect(Collectors.toList());
+		String fileName = Ax.format("/var/local/build/reflection.v1/%s/%s.json",
+				filter.getClass().getSimpleName(), moduleName);
+		@SuppressWarnings("deprecation")
+		String json = new JacksonJsonObjectSerializer().withDefaults(false)
+				.withPrettyPrint().withIdRefs().withAllowUnknownProperties()
+				.serialize(types);
+		File file = new File(fileName);
+		file.getParentFile().mkdirs();
+		Ax.out("wrote legacy reachability to:\n\t%s", file);
+		ResourceUtilities.write(json, file);
+	}
+
+	static class Types {
+		List<String> instantiable;
+
+		List<String> beanInfo;
 	}
 
 	private static Comparator<JClassType> CLASS_NAME_COMPARATOR = new Comparator<JClassType>() {
