@@ -2,6 +2,9 @@ package cc.alcina.framework.entity.gwt.reflection;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
@@ -25,6 +28,8 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.google.gwt.core.ext.PropertyOracle;
+import com.google.gwt.core.ext.linker.ArtifactSet;
+import com.google.gwt.core.ext.linker.SyntheticArtifact;
 import com.google.gwt.core.ext.typeinfo.JArrayType;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JGenericType;
@@ -38,6 +43,7 @@ import com.google.gwt.core.ext.typeinfo.JWildcardType;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -46,12 +52,6 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 
 class ReachabilityData {
-	static final String DATA_FOLDER_CONFIGURATION_KEY = "ClientReflectionGenerator.ReachabilityData.folder";
-
-	static final String FILTER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.FilterPeer.className";
-
-	static final String LINKER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.LinkerPeer.className";
-
 	static String dataFolder;
 
 	static Set<String> typeParametersLogged = new LinkedHashSet<>();
@@ -87,6 +87,14 @@ class ReachabilityData {
 				.equals(Object.class.getCanonicalName());
 	}
 
+	@SuppressWarnings("deprecation")
+	private static byte[] toJsonBytes(Object object) {
+		String json = new JacksonJsonObjectSerializer().withDefaults(false)
+				.withPrettyPrint().withIdRefs().withAllowUnknownProperties()
+				.serialize(object);
+		return json.getBytes(StandardCharsets.UTF_8);
+	}
+
 	static <T> T deserialize(Class<T> clazz, File file) {
 		String json = ResourceUtilities.read(file);
 		return new JacksonJsonObjectSerializer().withIdRefs().deserialize(json,
@@ -98,45 +106,32 @@ class ReachabilityData {
 		return !type.getPackage().getName().startsWith("java");
 	}
 
-	static File getCacheFile(String fileName) {
+	static File getReachabilityFile(String fileName) {
 		new File(dataFolder).mkdirs();
 		return new File(Ax.format("%s/%s", dataFolder, fileName));
 	}
 
-	static File getReflectableTypesFile() {
-		return getCacheFile("reflectable-types.json");
-	}
-
-	static File getRegistryFile() {
-		return getCacheFile("registrations.json");
-	}
-
 	static void initConfiguration(PropertyOracle propertyOracle) {
 		try {
-			dataFolder = Ax.first(propertyOracle
-					.getConfigurationProperty(DATA_FOLDER_CONFIGURATION_KEY)
+			dataFolder = Ax.first(propertyOracle.getConfigurationProperty(
+					ClientReflectionGenerator.DATA_FOLDER_CONFIGURATION_KEY)
 					.getValues());
 			filterPeerClass = (Class<? extends ClientReflectionFilterPeer>) Class
-					.forName(Ax.first(propertyOracle
-							.getConfigurationProperty(
-									FILTER_PEER_CONFIGURATION_KEY)
+					.forName(Ax.first(propertyOracle.getConfigurationProperty(
+							ClientReflectionGenerator.FILTER_PEER_CONFIGURATION_KEY)
 							.getValues()));
 			linkerPeerClass = (Class<? extends ReachabilityLinkerPeer>) Class
-					.forName(Ax.first(propertyOracle
-							.getConfigurationProperty(
-									LINKER_PEER_CONFIGURATION_KEY)
+					.forName(Ax.first(propertyOracle.getConfigurationProperty(
+							ClientReflectionGenerator.LINKER_PEER_CONFIGURATION_KEY)
 							.getValues()));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
-	@SuppressWarnings("deprecation")
 	static <T> void serialize(Object object, File file) {
 		String existing = file.exists() ? ResourceUtilities.read(file) : null;
-		String json = new JacksonJsonObjectSerializer().withDefaults(false)
-				.withPrettyPrint().withIdRefs().withAllowUnknownProperties()
-				.serialize(object);
+		String json = new String(toJsonBytes(object));
 		if (!Objects.equals(existing, json)) {
 			ResourceUtilities.write(json, file);
 		}
@@ -144,10 +139,6 @@ class ReachabilityData {
 
 	static Stream<JClassType> toReachableConcreteTypes(JType type,
 			Multiset<JClassType, Set<JClassType>> subtypes) {
-		if (type.getQualifiedSourceName().contains("DomainTranche") || type
-				.getQualifiedSourceName().contains("DomainModelObject")) {
-			int debug = 3;
-		}
 		Set<JClassType> resolved = new LinkedHashSet<>();
 		Set<JType> visited = new LinkedHashSet<>();
 		Stack<JType> unresolved = new Stack<>();
@@ -215,13 +206,42 @@ class ReachabilityData {
 		return resolved.stream();
 	}
 
+	static <T> T typedArtifact(Class<T> clazz,
+			Class<? extends SyntheticArtifact> artifactClass,
+			ArtifactSet artifacts) {
+		SyntheticArtifact artifact = artifacts.find(artifactClass).iterator()
+				.next();
+		try {
+			InputStream contents = artifact.getContents(null);
+			return new JacksonJsonObjectSerializer().withIdRefs()
+					.deserialize(new InputStreamReader(contents), clazz);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	static class AppImplRegistrations {
+		static AppImplRegistrations fromArtifact(ArtifactSet artifacts) {
+			return typedArtifact(AppImplRegistrations.class, Artifact.class,
+					artifacts);
+		}
+
 		List<Entry> entries = new ArrayList<>();
 
 		void add(JClassType t, List<Registration> registrations) {
 			registrations.stream()
 					.map(registration -> new Entry(t, registration))
 					.forEach(entries::add);
+		}
+
+		Artifact serialize() {
+			return new Artifact("registrations", this);
+		}
+
+		static class Artifact extends BaseArtifact {
+			public Artifact(String partialName, Object object) {
+				super(partialName, object);
+			}
 		}
 
 		static class Entry {
@@ -257,13 +277,14 @@ class ReachabilityData {
 	}
 
 	static class AppReflectableTypes {
+		static AppReflectableTypes fromArtifact(ArtifactSet artifacts) {
+			return typedArtifact(AppReflectableTypes.class, Artifact.class,
+					artifacts);
+		}
+
 		List<TypeHierarchy> typeHierarchies = new ArrayList<>();
 
 		transient Map<Type, TypeHierarchy> byType;
-
-		public TypeHierarchy typeHierarchy(Type t) {
-			return byType.get(t);
-		}
 
 		void addType(TypeHierarchy t) {
 			typeHierarchies.add(t);
@@ -276,6 +297,67 @@ class ReachabilityData {
 
 		boolean contains(Type t) {
 			return byType.containsKey(t);
+		}
+
+		Artifact serialize() {
+			return new Artifact("reflectable-types", this);
+		}
+
+		TypeHierarchy typeHierarchy(Type t) {
+			return byType.get(t);
+		}
+
+		static class Artifact extends BaseArtifact {
+			public Artifact(String partialName, Object object) {
+				super(partialName, object);
+			}
+		}
+	}
+
+	abstract static class BaseArtifact extends SyntheticArtifact {
+		BaseArtifact(String partialName, Object object) {
+			super(ReflectionReachabilityLinker.class,
+					"reflection/" + partialName + ".json", toJsonBytes(object));
+		}
+	}
+
+	static class LegacyModuleAssignments {
+		static LegacyModuleAssignments fromArtifact(ArtifactSet artifacts) {
+			return typedArtifact(LegacyModuleAssignments.class, Artifact.class,
+					artifacts);
+		}
+
+		Map<String, List<Type>> byModule = new LinkedHashMap<>();
+
+		void addType(JClassType t, String moduleName) {
+			byModule.computeIfAbsent(moduleName, name -> new ArrayList<>())
+					.add(Type.get(t));
+		}
+
+		boolean notAssignedToModule(Type t, String moduleName) {
+			if (byModule.size() > 0) {
+				switch (moduleName) {
+				case ReflectionModule.INITIAL:
+				case ReflectionModule.LEFTOVER:
+					return byModule.containsKey(moduleName)
+							? !byModule.get(moduleName).contains(t)
+							: true;
+				default:
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}
+
+		Artifact serialize() {
+			return new Artifact("legacy-assignments", this);
+		}
+
+		static class Artifact extends BaseArtifact {
+			public Artifact(String partialName, Object object) {
+				super(partialName, object);
+			}
 		}
 	}
 
@@ -329,6 +411,57 @@ class ReachabilityData {
 			String moduleName;
 
 			List<Type> types = new ArrayList<>();
+		}
+	}
+
+	static class ProcessHistory {
+		List<Entry> entries = new ArrayList<>();
+
+		static class Entry {
+			Type type;
+
+			String moduleName;
+
+			int pass;
+
+			String log;
+		}
+	}
+
+	@JsonSerialize(using = ReasonSerializer.class)
+	@JsonDeserialize(using = ReasonDeserializer.class)
+	static class Reason {
+		String reason;
+
+		Reason() {
+		}
+
+		Reason(String reason) {
+			this.reason = reason;
+		}
+	}
+
+	static class ReasonDeserializer extends StdDeserializer<Reason> {
+		ReasonDeserializer() {
+			super(Reason.class);
+		}
+
+		@Override
+		public Reason deserialize(JsonParser p, DeserializationContext ctxt)
+				throws IOException, JsonProcessingException {
+			return new Reason(p.getText());
+		}
+	}
+
+	static class ReasonSerializer extends StdSerializer<Reason> {
+		ReasonSerializer() {
+			super(Reason.class);
+		}
+
+		@Override
+		public void serialize(Reason value, JsonGenerator gen,
+				SerializerProvider provider) throws IOException {
+			gen.writeString(value.reason);
 		}
 	}
 
@@ -448,5 +581,11 @@ class ReachabilityData {
 				SerializerProvider provider) throws IOException {
 			gen.writeString(value.qualifiedSourceName);
 		}
+	}
+
+	static class TypeReason {
+		Type type;
+
+		Reason reason;
 	}
 }

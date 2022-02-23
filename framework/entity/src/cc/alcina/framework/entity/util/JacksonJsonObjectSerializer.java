@@ -22,10 +22,14 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import com.fasterxml.jackson.annotation.JsonAutoDetect;
 import com.fasterxml.jackson.annotation.JsonInclude.Include;
 import com.fasterxml.jackson.annotation.ObjectIdGenerator;
+import com.fasterxml.jackson.core.util.DefaultIndenter;
+import com.fasterxml.jackson.core.util.DefaultPrettyPrinter;
 import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.PropertyName;
+import com.fasterxml.jackson.databind.SerializationConfig;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.databind.introspect.Annotated;
 import com.fasterxml.jackson.databind.introspect.JacksonAnnotationIntrospector;
@@ -148,8 +152,14 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 				StringWriter writer = new LengthLimitedStringWriter(maxLength,
 						truncateAtMaxLength);
 				if (withPrettyPrint) {
-					mapper.writerWithDefaultPrettyPrinter().writeValue(writer,
-							object);
+					SerializationConfig config = mapper
+							.getSerializationConfig();
+					DefaultPrettyPrinter prettyPrinter = (DefaultPrettyPrinter) config
+							.constructDefaultPrettyPrinter();
+					prettyPrinter.indentArraysWith(
+							DefaultIndenter.SYSTEM_LINEFEED_INSTANCE);
+					ObjectWriter objectWriter = mapper.writer(prettyPrinter);
+					objectWriter.writeValue(writer, object);
 				} else {
 					mapper.writeValue(writer, object);
 				}

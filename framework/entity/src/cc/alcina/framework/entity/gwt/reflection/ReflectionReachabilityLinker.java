@@ -1,18 +1,3 @@
-/*
- * Copyright 2009 Google Inc.
- *
- * Licensed under the Apache License, Version 2.0 (the "License"); you may not
- * use this file except in compliance with the License. You may obtain a copy of
- * the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
- * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
- * License for the specific language governing permissions and limitations under
- * the License.
- */
 package cc.alcina.framework.entity.gwt.reflection;
 
 import java.io.BufferedInputStream;
@@ -58,6 +43,7 @@ import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
+import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.LegacyModuleAssignments;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.ModuleTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.ModuleTypes.TypeList;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.Type;
@@ -73,6 +59,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.Type;
  * - omit registrations which are effectively markers (is a) rather than implementations (is the):
  *   - are multiple unless
  *   - the registree implements Registration.EnumDiscriminator and is a subclass of the first registration key
+ *   - or the implements Registration.ensure
  *   - (implementation: those registrations are omitted from AppImplRegistrations.entries)
  * - for classes which are reachable by async serialization (incoming rpc), mark their *direct* subtypes as reachable
  * </pre>
@@ -104,16 +91,17 @@ public class ReflectionReachabilityLinker extends Linker {
 			FragmentIdToName idToName = new FragmentIdToName(artifacts);
 			Multiset<Integer, Set<String>> reachedClassOrConstantNames = getNames(
 					compilationResults);
-			File typesFile = ReachabilityData.getCacheFile("reachability.json");
-			File registrationsFile = ReachabilityData.getRegistryFile();
-			File reflectableTypesFile = ReachabilityData
-					.getReflectableTypesFile();
+			// TODO - replace with artifacts...probably.
+			File typesFile = ReachabilityData
+					.getReachabilityFile("reachability.json");
 			ModuleTypes moduleTypes = ReachabilityData
 					.deserialize(ModuleTypes.class, typesFile);
-			AppImplRegistrations appRegistrations = ReachabilityData
-					.deserialize(AppImplRegistrations.class, registrationsFile);
-			AppReflectableTypes reflectableTypes = ReachabilityData.deserialize(
-					AppReflectableTypes.class, reflectableTypesFile);
+			AppImplRegistrations appRegistrations = AppImplRegistrations
+					.fromArtifact(artifacts);
+			AppReflectableTypes reflectableTypes = AppReflectableTypes
+					.fromArtifact(artifacts);
+			LegacyModuleAssignments legacyModuleAssignments = LegacyModuleAssignments
+					.fromArtifact(artifacts);
 			reflectableTypes.buildLookup();
 			boolean delta = false;
 			com.google.gwt.dev.Compiler.recompile = false;
@@ -129,11 +117,14 @@ public class ReflectionReachabilityLinker extends Linker {
 				String moduleName = idToName.idToName(fragmentId);
 				delta |= applyReachedNames(logger, moduleName,
 						typesVisibleFromSymbolNames, moduleTypes,
-						appRegistrations, reflectableTypes, idToName);
+						appRegistrations, reflectableTypes,
+						legacyModuleAssignments, idToName);
 			}
 			if (delta) {
-				ReachabilityData.serialize(moduleTypes, typesFile);
 				int maxPass = Integer.getInteger("reachability.pass", 25);
+				if (maxPass > 0) {
+					ReachabilityData.serialize(moduleTypes, typesFile);
+				}
 				if (pass++ < maxPass) {
 					logger.log(TreeLogger.Type.INFO, Ax.format(
 							"Recompile - reflection changes - pass %s", pass));
@@ -145,13 +136,14 @@ public class ReflectionReachabilityLinker extends Linker {
 	}
 
 	/**
-	 * @param idToName
 	 *
 	 */
 	private boolean applyReachedNames(TreeLogger logger, String moduleName,
 			Set<String> typesVisibleFromSymbolNames, ModuleTypes moduleTypes,
 			AppImplRegistrations appRegistrations,
-			AppReflectableTypes reflectableTypes, FragmentIdToName idToName) {
+			AppReflectableTypes reflectableTypes,
+			LegacyModuleAssignments legacyModuleAssignments,
+			FragmentIdToName idToName) {
 		TypeList typeList = moduleTypes.ensureTypeList(moduleName);
 		Set<Type> dependencyModuleTypes = moduleTypes
 				.typesFor(idToName.computeDepdendencyNames(moduleName));
@@ -211,6 +203,10 @@ public class ReflectionReachabilityLinker extends Linker {
 			passDelta = passTypes.size() - asyncReachableTypes.size();
 			asyncReachableTypes = passTypes;
 		} while (passDelta > 0);
+		/*
+		 * we've computed potential incoming types from deserialization, now add
+		 * them to outgoing reachables
+		 */
 		asyncReachableTypes.stream().filter(reflectableTypes::contains)
 				.filter(t -> !dependencyModuleTypes.contains(t))
 				.forEach(type -> {
@@ -219,9 +215,24 @@ public class ReflectionReachabilityLinker extends Linker {
 						addedFromAsyncSerialization.add(type);
 					}
 				});
+		/*
+		 * remove if there's a legacy rule preventing it (for now)
+		 */
+		outgoingReflectedModuleTypes.removeIf(t -> {
+			boolean remove = legacyModuleAssignments.notAssignedToModule(t,
+					moduleName);
+			if (remove) {
+				logger.log(TreeLogger.Type.INFO, Ax.format("\t[x]: %s", t));
+			}
+			return remove;
+		});
+		/*
+		 * add supertypes of outgoing reflectable types
+		 */
+		outgoingReflectedModuleTypes.
 		// copy to avoid cme
-		outgoingReflectedModuleTypes.stream().collect(Collectors.toList())
-				.stream().filter(reflectableTypes::contains)
+				stream().collect(Collectors.toList()).stream()
+				.filter(reflectableTypes::contains)
 				.map(reflectableTypes::typeHierarchy)
 				.map(t -> t.typeAndSuperTypes).flatMap(Collection::stream)
 				.filter(t -> !dependencyModuleTypes.contains(t))

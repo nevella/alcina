@@ -97,6 +97,12 @@ public class ClientReflectionGenerator extends Generator {
 
 	private static boolean alcinaCollectionsConfigured;
 
+	static final String DATA_FOLDER_CONFIGURATION_KEY = "ClientReflectionGenerator.ReachabilityData.folder";
+
+	static final String FILTER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.FilterPeer.className";
+
+	static final String LINKER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.LinkerPeer.className";
+
 	static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {
 			return t.isParameterized().getBaseType().getErasedType();
@@ -174,11 +180,13 @@ public class ClientReflectionGenerator extends Generator {
 						.listImplementationRegistrations();
 				ReachabilityData.AppReflectableTypes reflectableTypes = moduleGenerator
 						.listReflectableTypes();
-				filter.onGenerationComplete(registrations, reflectableTypes);
+				filter.onGenerationComplete(registrations, reflectableTypes,
+						Arrays.stream(context.getTypeOracle().getTypes()));
 				System.out.format(
-						"Client reflection generation  [%s] -  %s/%s types - %s ms\n",
+						"Client reflection generation  [%s] -  %s/%s/%s reflected types - %s ms\n",
 						module.value(), moduleGenerator.writeReflectors.size(),
 						moduleGenerator.classReflectors.size(),
+						context.getTypeOracle().getTypes().length,
 						System.currentTimeMillis() - start);
 			}
 			return moduleGenerator.implementationFqn();
@@ -189,13 +197,8 @@ public class ClientReflectionGenerator extends Generator {
 	}
 
 	private void setupFilter() throws Exception {
-		String filterClassName = context.getPropertyOracle()
-				.getConfigurationProperty(
-						ClientReflectionFilter.class.getName())
-				.getValues().get(0);
-		filter = (ClientReflectionFilter) Class.forName(filterClassName)
-				.getDeclaredConstructor().newInstance();
-		filter.init(context, module.value());
+		filter = new ClientReflectionFilter();
+		filter.init(logger, context, module.value());
 	}
 
 	void addImport(ClassSourceFileComposerFactory factory, Class<?> type) {
@@ -515,12 +518,18 @@ public class ClientReflectionGenerator extends Generator {
 			sourceWriter.println("Class clazz = %s.class;", reflectedTypeFqn());
 			sourceWriter
 					.println("List<Property> properties = new ArrayList<>();");
-			propertyGenerators.values().forEach(PropertyGenerator::write);
+			propertyGenerators.values().stream()
+					.filter(propertyGenerator -> filter.emitProperty(type,
+							propertyGenerator.name))
+					.forEach(PropertyGenerator::write);
 			sourceWriter.println("List<Class> interfaces = new ArrayList<>();");
 			sourceWriter.println(
 					"AnnotationProvider.LookupProvider provider = new AnnotationProvider.LookupProvider();");
-			annotationExpressionWriters.forEach(
-					expressionWriter -> expressionWriter.write(sourceWriter));
+			annotationExpressionWriters.stream()
+					.filter(aew -> filter.emitAnnotation(type,
+							aew.annotation.annotationType()))
+					.forEach(expressionWriter -> expressionWriter
+							.write(sourceWriter));
 			sourceWriter.println(
 					"Map<String, Property> byName = new LinkedHashMap<>();");
 			sourceWriter.println(
@@ -898,7 +907,7 @@ public class ClientReflectionGenerator extends Generator {
 					.forEach(crg -> classReflectors.put(crg.type, crg));
 			classReflectors.values().forEach(ClassReflectorGenerator::prepare);
 			writeReflectors = classReflectors.values().stream()
-					.filter(r -> filter.permit(r.type))
+					.filter(r -> filter.emitType(r.type))
 					.collect(Collectors.toList());
 		}
 
