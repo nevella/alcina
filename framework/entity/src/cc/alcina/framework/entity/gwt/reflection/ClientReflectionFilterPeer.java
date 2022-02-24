@@ -19,8 +19,12 @@ public interface ClientReflectionFilterPeer {
 		return true;
 	}
 
-	default boolean emitType(JClassType type, String moduleName) {
-		return true;
+	/*
+	 * Normally, use reachability. Returning non-null (generally fixing dev
+	 * relection issues) is a temporary fix
+	 */
+	default Boolean emitType(JClassType type, String moduleName) {
+		return null;
 	}
 
 	default Multiset<String, Set<JClassType>> getLegacyModuleTypeAssignments(

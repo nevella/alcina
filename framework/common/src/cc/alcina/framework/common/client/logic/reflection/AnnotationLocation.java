@@ -8,6 +8,7 @@ import java.util.Objects;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -118,8 +119,11 @@ public class AnnotationLocation {
 		if (classLocation == null) {
 			return null;
 		} else {
-			return (A) Reflections.at(classLocation)
-					.annotation(annotationClass);
+			ClassReflector<?> classReflector = Reflections.at(classLocation);
+			if (classReflector == null) {
+				return null;
+			}
+			return (A) classReflector.annotation(annotationClass);
 		}
 	}
 

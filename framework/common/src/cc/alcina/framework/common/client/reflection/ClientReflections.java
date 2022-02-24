@@ -24,6 +24,10 @@ public class ClientReflections {
 		Supplier<ClassReflector> supplier = perClassReflectorSuppliers
 				.get(clazz);
 		if (supplier == null) {
+			if (clazz.getName().startsWith("java.")) {
+				// private internal class, e.g. Arrays$ArrayList
+				return null;
+			}
 			throw new NoSuchElementException(
 					"No reflector for " + clazz.getName());
 		}

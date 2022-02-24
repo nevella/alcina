@@ -164,68 +164,81 @@ public class ReflectionReachabilityLinker extends Linker {
 		 */
 		Set<Type> outgoingReflectedModuleTypes = typesVisibleFromSymbolNames
 				.stream().map(Type::get).filter(reflectableTypes::contains)
+				.filter(t -> !dependencyModuleTypes.contains(t))
 				.collect(AlcinaCollectors.toLinkedHashSet());
 		Set<AppImplRegistrations.Entry> addedFromRegistration = new LinkedHashSet<>();
 		Set<Type> addedFromHierarchy = new LinkedHashSet<>();
 		Set<Type> addedFromAsyncSerialization = new LinkedHashSet<>();
-		appRegistrations.entries.stream().filter(e -> e.isVisible(visibleTypes))
-				.filter(e -> !dependencyModuleTypes.contains(e.registered))
-				.forEach(e -> {
-					outgoingReflectedModuleTypes.add(e.registered);
-					if (previouslyVisibleTypes.add(e.registered)) {
-						addedFromRegistration.add(e);
-					}
-				});
-		int passDelta = 0;
-		Set<Type> initialAsyncReachableTypes = visibleTypes.stream()
-				.filter(reflectableTypes::contains)
-				.map(reflectableTypes::typeHierarchy)
-				.flatMap(th -> th.asyncSerializableTypes.stream())
-				.collect(AlcinaCollectors.toLinkedHashSet());
-		Set<Type> asyncReachableTypes = initialAsyncReachableTypes;
-		/*
-		 * For each reachable async type, add settabletypes and subtypes. Loop
-		 * until all added
-		 */
-		do {
-			Set<Type> passTypes = asyncReachableTypes.stream()
-					.collect(AlcinaCollectors.toLinkedHashSet());
-			Type orElse = passTypes.stream()
-					.filter(t -> t.qualifiedSourceName.equals(
-							"cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta"))
-					.findFirst().orElse(null);
-			boolean b = reflectableTypes.contains(orElse);
-			asyncReachableTypes.stream().filter(reflectableTypes::contains)
+		if (legacyModuleAssignments.hasAssignments()) {
+			outgoingReflectedModuleTypes.clear();
+			reflectableTypes.byType.keySet().stream()
+					.filter(t -> legacyModuleAssignments.isAssignedToModule(t,
+							moduleName))
+					.forEach(outgoingReflectedModuleTypes::add);
+			/*
+			 * transitional - add (and only add) all types in the legacy module
+			 */
+		} else {
+			appRegistrations.entries.stream()
+					.filter(e -> e.isVisible(visibleTypes))
+					.filter(e -> !dependencyModuleTypes.contains(e.registered))
+					.forEach(e -> {
+						outgoingReflectedModuleTypes.add(e.registered);
+						if (previouslyVisibleTypes.add(e.registered)) {
+							addedFromRegistration.add(e);
+						}
+					});
+			int passDelta = 0;
+			Set<Type> initialAsyncReachableTypes = visibleTypes.stream()
+					.filter(reflectableTypes::contains)
 					.map(reflectableTypes::typeHierarchy)
-					.flatMap(h -> Stream.concat(h.settableTypes.stream(),
-							h.subtypes.stream()))
-					.forEach(passTypes::add);
-			passDelta = passTypes.size() - asyncReachableTypes.size();
-			asyncReachableTypes = passTypes;
-		} while (passDelta > 0);
-		/*
-		 * we've computed potential incoming types from deserialization, now add
-		 * them to outgoing reachables
-		 */
-		asyncReachableTypes.stream().filter(reflectableTypes::contains)
-				.filter(t -> !dependencyModuleTypes.contains(t))
-				.forEach(type -> {
-					outgoingReflectedModuleTypes.add(type);
-					if (previouslyVisibleTypes.add(type)) {
-						addedFromAsyncSerialization.add(type);
-					}
-				});
-		/*
-		 * remove if there's a legacy rule preventing it (for now)
-		 */
-		outgoingReflectedModuleTypes.removeIf(t -> {
-			boolean remove = legacyModuleAssignments.notAssignedToModule(t,
-					moduleName);
-			if (remove) {
-				logger.log(TreeLogger.Type.INFO, Ax.format("\t[x]: %s", t));
-			}
-			return remove;
-		});
+					.flatMap(th -> th.asyncSerializableTypes.stream())
+					.collect(AlcinaCollectors.toLinkedHashSet());
+			Set<Type> asyncReachableTypes = initialAsyncReachableTypes;
+			/*
+			 * For each reachable async type, add settabletypes and subtypes.
+			 * Loop until all added
+			 */
+			do {
+				Set<Type> passTypes = asyncReachableTypes.stream()
+						.collect(AlcinaCollectors.toLinkedHashSet());
+				Type orElse = passTypes.stream()
+						.filter(t -> t.qualifiedSourceName.equals(
+								"cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta"))
+						.findFirst().orElse(null);
+				boolean b = reflectableTypes.contains(orElse);
+				asyncReachableTypes.stream().filter(reflectableTypes::contains)
+						.map(reflectableTypes::typeHierarchy)
+						.flatMap(h -> Stream.concat(h.settableTypes.stream(),
+								h.subtypes.stream()))
+						.forEach(passTypes::add);
+				passDelta = passTypes.size() - asyncReachableTypes.size();
+				asyncReachableTypes = passTypes;
+			} while (passDelta > 0);
+			/*
+			 * we've computed potential incoming types from deserialization, now
+			 * add them to outgoing reachables
+			 */
+			asyncReachableTypes.stream().filter(reflectableTypes::contains)
+					.filter(t -> !dependencyModuleTypes.contains(t))
+					.forEach(type -> {
+						outgoingReflectedModuleTypes.add(type);
+						if (previouslyVisibleTypes.add(type)) {
+							addedFromAsyncSerialization.add(type);
+						}
+					});
+			/*
+			 * remove if there's a legacy rule preventing it (for now)
+			 */
+			outgoingReflectedModuleTypes.removeIf(t -> {
+				boolean remove = !legacyModuleAssignments.isAssignedToModule(t,
+						moduleName);
+				if (remove) {
+					logger.log(TreeLogger.Type.INFO, Ax.format("\t[x]: %s", t));
+				}
+				return remove;
+			});
+		}
 		/*
 		 * add supertypes of outgoing reflectable types
 		 */

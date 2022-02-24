@@ -97,17 +97,16 @@ public class CloneHelper {
 			if (property.isReadOnly() || property.has(AlcinaTransient.class)) {
 				continue;
 			}
-			Object[] args = new Object[1];
 			Object val = property.get(o);
 			if (createdMap.containsKey(val)) {
 				val = createdMap.get(val);
 			}
 			if (val != null) {
 				if (!ignore(o.getClass(), property.getName(), o)) {
-					args[0] = deepProperty(o, property.getName())
+					val = deepProperty(o, property.getName())
 							? deepObjectClone(val)
 							: shallowishObjectClone(val);
-					property.set(ret, args);
+					property.set(ret, val);
 				}
 			}
 		}

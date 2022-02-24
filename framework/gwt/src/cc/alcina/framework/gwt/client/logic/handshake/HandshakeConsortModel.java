@@ -26,8 +26,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
@@ -184,8 +182,8 @@ public class HandshakeConsortModel {
 	public void registerInitialObjects(GeneralProperties generalProperties,
 			IUser currentUser) {
 		if (generalProperties != null) {
-			Registry.register().singleton(GeneralProperties.class,
-					generalProperties);
+			Registry.impl(GeneralProperties.Holder.class)
+					.setInstance(generalProperties);
 		}
 		if (currentUser != null) {
 			PermissionsManager.get().setUser(currentUser);

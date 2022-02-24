@@ -45,6 +45,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
@@ -103,7 +104,8 @@ public class CommonUtils {
 			.asList(ArrayList.class, LinkedList.class, HashSet.class,
 					LinkedHashSet.class, TreeSet.class, HashMap.class,
 					LinkedHashMap.class, TreeMap.class, LightSet.class,
-					LiSet.class, LightMap.class, CountingMap.class)
+					LiSet.class, LightMap.class, CountingMap.class,
+					IdentityArrayList.class)
 			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 
 	public static final Set<String> CORE_CLASS_NAMES = Arrays

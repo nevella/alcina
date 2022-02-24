@@ -23,11 +23,13 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.ext.Generator;
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
+import com.google.gwt.core.ext.typeinfo.JField;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
@@ -44,6 +46,7 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
+import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
@@ -57,6 +60,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 import cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator.ClassReflectorGenerator.PropertyGenerator;
@@ -429,6 +433,8 @@ public class ClientReflectionGenerator extends Generator {
 
 		List<AnnotationExpressionWriter> annotationExpressionWriters = new ArrayList<>();
 
+		List<PropertyGenerator> sortedPropertyGenerators;
+
 		JClassType type;
 
 		boolean hasCallableNoArgsConstructor;
@@ -484,6 +490,16 @@ public class ClientReflectionGenerator extends Generator {
 		@Override
 		protected void write() {
 			createPrintWriter(false);
+			if (printWriter == null) {
+				// FIXME - reflection - not correctly segregated modules
+				return;
+			}
+			if (type.getName().contains("EdTopModule")) {
+				sortedPropertyGenerators = null;
+				List<PropertyGenerator> list = sortedPropertyGenerators()
+						.collect(Collectors.toList());
+				int debug = 3;
+			}
 			composerFactory.setSuperclass(
 					superClassOrInterfaceType.getQualifiedSourceName());
 			composerFactory.addImport(LinkedHashMap.class.getName());
@@ -518,7 +534,7 @@ public class ClientReflectionGenerator extends Generator {
 			sourceWriter.println("Class clazz = %s.class;", reflectedTypeFqn());
 			sourceWriter
 					.println("List<Property> properties = new ArrayList<>();");
-			propertyGenerators.values().stream()
+			sortedPropertyGenerators()
 					.filter(propertyGenerator -> filter.emitProperty(type,
 							propertyGenerator.name))
 					.forEach(PropertyGenerator::write);
@@ -578,6 +594,15 @@ public class ClientReflectionGenerator extends Generator {
 							.getAnnotations(Registration.class);
 			annotations.stream().filter(CLIENT_VISIBLE_ANNOTATION_FILTER)
 					.forEach(registrations::add);
+		}
+
+		Stream<PropertyGenerator> sortedPropertyGenerators() {
+			if (sortedPropertyGenerators == null) {
+				sortedPropertyGenerators = propertyGenerators.values().stream()
+						.sorted(new PropertyOrdering())
+						.collect(Collectors.toList());
+			}
+			return sortedPropertyGenerators.stream();
 		}
 
 		PropertyMethod toPropertyMethod(JMethod method) {
@@ -674,6 +699,15 @@ public class ClientReflectionGenerator extends Generator {
 				return name.compareTo(o.name);
 			}
 
+			public String getName() {
+				return this.name;
+			}
+
+			@Override
+			public String toString() {
+				return name;
+			}
+
 			@Override
 			protected void prepare() {
 				annotationExpressionWriters = getter == null ? new ArrayList<>()
@@ -767,6 +801,95 @@ public class ClientReflectionGenerator extends Generator {
 				}
 			}
 		}
+
+		/*
+		 * Parallels cc.alcina.framework.entity.SEUtilities.
+		 * getPropertyDescriptorsSortedByField(Class<?>)
+		 */
+		class PropertyOrdering implements Comparator<PropertyGenerator> {
+			private Map<String, Integer> fieldOrdinals;
+
+			private PropertyOrder propertyOrder;
+
+			public PropertyOrdering() {
+				Multimap<JClassType, List<JField>> declaredFieldsByClass = new Multimap<>();
+				JClassType cursor = type;
+				while (cursor != null
+						&& !ReachabilityData.isObjectType(cursor)) {
+					declaredFieldsByClass.put(cursor,
+							Arrays.stream(cursor.getFields())
+									.collect(Collectors.toList()));
+					cursor = cursor.getSuperclass();
+				}
+				List<JClassType> classOrder = declaredFieldsByClass.keySet()
+						.stream().collect(Collectors.toList());
+				Comparator<JClassType> classOrderComparator = new Comparator<JClassType>() {
+					@Override
+					public int compare(JClassType o1, JClassType o2) {
+						JClassType ancestor = o1.isAssignableFrom(o2) ? o1 : o2;
+						JClassType descendant = o1.isAssignableFrom(o2) ? o2
+								: o1;
+						if (descendant.getSuperclass() == ancestor) {
+							// possible annotation re-ordering
+							PropertyOrder propertyOrder = (PropertyOrder) ancestor
+									.getAnnotation(PropertyOrder.class);
+							if (propertyOrder != null
+									&& !propertyOrder.beforeSubclass()) {
+								Preconditions.checkState(
+										propertyOrder.value().length == 0);
+								return o1 == ancestor ? 1 : -1;
+							} else {
+								return o1 == ancestor ? -1 : 1;
+							}
+						} else {
+							return o1 == ancestor ? -1 : 1;
+						}
+					}
+				};
+				Collections.sort(classOrder, classOrderComparator);
+				List<JField> fieldOrder = new ArrayList<>();
+				for (JClassType classOrdered : classOrder) {
+					declaredFieldsByClass.get(classOrdered)
+							.forEach(fieldOrder::add);
+				}
+				fieldOrdinals = new LinkedHashMap<>();
+				fieldOrder.stream().map(JField::getName).distinct().forEach(
+						name -> fieldOrdinals.put(name, fieldOrdinals.size()));
+				propertyOrder = type.getAnnotation(PropertyOrder.class);
+			}
+
+			@Override
+			public int compare(PropertyGenerator o1, PropertyGenerator o2) {
+				if (propertyOrder != null && propertyOrder.value().length > 0) {
+					int idx1 = Arrays.asList(propertyOrder.value())
+							.indexOf(o1.getName());
+					int idx2 = Arrays.asList(propertyOrder.value())
+							.indexOf(o2.getName());
+					if (idx1 == -1) {
+						if (idx2 == -1) {
+							// fall through
+						} else {
+							return 1;
+						}
+					} else {
+						if (idx2 == -1) {
+							return -1;
+						} else {
+							return idx1 - idx2;
+						}
+					}
+				}
+				int ordinal1 = fieldOrdinals.computeIfAbsent(o1.getName(),
+						key -> -1);
+				int ordinal2 = fieldOrdinals.computeIfAbsent(o2.getName(),
+						key -> -1);
+				int i = ordinal1 - ordinal2;
+				if (i != 0) {
+					return i;
+				}
+				return o1.getName().compareTo(o2.getName());
+			}
+		}
 	}
 
 	class ModuleReflectionGenerator extends UnitGenerator {
@@ -855,16 +978,14 @@ public class ClientReflectionGenerator extends Generator {
 		}
 
 		private Set<JClassType> computeSetterArguments(JClassType type) {
-			if (type.getName().contains("DomainTranche")) {
-				int debug = 3;
-			}
 			ClassReflectorGenerator reflectorGenerator = classReflectors
 					.get(type.getErasedType());
 			if (reflectorGenerator == null) {
 				return Collections.emptySet();
 			}
-			Set<JClassType> computed = reflectorGenerator.propertyGenerators
-					.values().stream().filter(PropertyGenerator::isSerializable)
+			Set<JClassType> computed = reflectorGenerator
+					.sortedPropertyGenerators()
+					.filter(PropertyGenerator::isSerializable)
 					.map(generator -> generator.setter.method)
 					.flatMap(m -> Arrays.stream(m.getParameterTypes())
 							.flatMap(t -> ReachabilityData

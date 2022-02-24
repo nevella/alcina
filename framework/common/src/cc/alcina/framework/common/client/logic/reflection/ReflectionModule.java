@@ -33,6 +33,10 @@ public @interface ReflectionModule {
 
 	public static final String LEFTOVER = "Leftover";
 
+	public static final String UNKNOWN = "Unknown";
+
+	public static final String NONE = "None";
+
 	boolean initial() default false;
 
 	/*

@@ -82,11 +82,6 @@ class ReachabilityData {
 		return result;
 	}
 
-	private static boolean isObjectType(JClassType type) {
-		return type.getQualifiedSourceName()
-				.equals(Object.class.getCanonicalName());
-	}
-
 	@SuppressWarnings("deprecation")
 	private static byte[] toJsonBytes(Object object) {
 		String json = new JacksonJsonObjectSerializer().withDefaults(false)
@@ -127,6 +122,11 @@ class ReachabilityData {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	static boolean isObjectType(JClassType type) {
+		return type.getQualifiedSourceName()
+				.equals(Object.class.getCanonicalName());
 	}
 
 	static <T> void serialize(Object object, File file) {
@@ -329,18 +329,22 @@ class ReachabilityData {
 
 		Map<String, List<Type>> byModule = new LinkedHashMap<>();
 
+		public boolean hasAssignments() {
+			return byModule.size() > 0;
+		}
+
 		void addType(JClassType t, String moduleName) {
 			byModule.computeIfAbsent(moduleName, name -> new ArrayList<>())
 					.add(Type.get(t));
 		}
 
-		boolean notAssignedToModule(Type t, String moduleName) {
+		boolean isAssignedToModule(Type t, String moduleName) {
 			if (byModule.size() > 0) {
 				switch (moduleName) {
 				case ReflectionModule.INITIAL:
 				case ReflectionModule.LEFTOVER:
 					return byModule.containsKey(moduleName)
-							? !byModule.get(moduleName).contains(t)
+							? byModule.get(moduleName).contains(t)
 							: true;
 				default:
 					return false;

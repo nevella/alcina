@@ -69,8 +69,9 @@ public class ClientReflectionFilter {
 	}
 
 	protected boolean emitType(JClassType type) {
-		if (!peer.emitType(type, moduleName)) {
-			return false;
+		Boolean emit = peer.emitType(type, moduleName);
+		if (emit != null) {
+			return emit;
 		}
 		if (!context.isProdMode() && moduleTypes.moduleLists.size() == 0) {
 			return true;

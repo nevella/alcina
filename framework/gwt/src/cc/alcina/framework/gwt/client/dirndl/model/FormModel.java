@@ -45,8 +45,6 @@ import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -82,17 +80,13 @@ import cc.alcina.framework.gwt.client.util.Async;
 @Registration(FormModel.class)
 public class FormModel extends Model implements DomEvents.Submit.Handler,
 		GwtEvents.Attach.Handler, DomEvents.KeyDown.Handler {
+	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
+
 	protected List<FormElement> elements = new ArrayList<>();
 
 	protected List<Link> actions = new ArrayList<>();
 
 	private FormModelState state;
-
-	public List<Link> getActions() {
-		return this.actions;
-	}
-
-	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
 
 	private boolean unAttachConfirmsTransformClear = false;
 
@@ -106,6 +100,21 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 			unAttachConfirmsTransformClear = true;
 		}
 	};
+
+	public FormModel() {
+	}
+
+	public List<Link> getActions() {
+		return this.actions;
+	}
+
+	public List<FormElement> getElements() {
+		return this.elements;
+	}
+
+	public FormModelState getState() {
+		return this.state;
+	}
 
 	@Override
 	public void onAttach(Attach event) {
@@ -127,6 +136,36 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 			new SubmitHandler().handleAction(event.getContext().node, domEvent,
 					place);
 		}
+	}
+
+	@Override
+	public void onSubmit(Submit event) {
+		submit(event.getContext().node);
+	}
+
+	public boolean submit(Node node) {
+		Consumer<Void> onValid = o -> {
+			if (getState().model instanceof Entity) {
+				ClientTransformManager.cast()
+						.promoteToDomainObject(getState().model);
+				AsyncCallback callback = Async.callbackBuilder().success(o2 -> {
+					EntityPlace entityPlace = ((EntityPlace) Client
+							.currentPlace()).copy();
+					entityPlace.action = EntityAction.VIEW;
+					Client.goTo(entityPlace);
+				}).build();
+				CommitToStorageTransformListener.get()
+						.flushWithOneoffCallback(callback);
+			}
+			if (Client.currentPlace() instanceof EntityPlace) {
+			} else if (Client.currentPlace() instanceof CategoryNamePlace) {
+				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
+						.currentPlace();
+				DefaultPermissibleActionHandler.handleAction(null,
+						categoryNamePlace.ensureAction(), node);
+			}
+		};
+		return new FormValidation().validate(onValid, getState().formBinding);
 	}
 
 	private void bind(Attach event) {
@@ -164,47 +203,6 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 		}
 		// FIXME - dirndl 1.3 - this should be an annotation on the field,
 		//
-	}
-
-	public FormModel() {
-	}
-
-	public List<FormElement> getElements() {
-		return this.elements;
-	}
-
-	public FormModelState getState() {
-		return this.state;
-	}
-
-	@Override
-	public void onSubmit(Submit event) {
-		submit(event.getContext().node);
-	}
-
-	public boolean submit(Node node) {
-		Consumer<Void> onValid = o -> {
-			if (getState().model instanceof Entity) {
-				ClientTransformManager.cast()
-						.promoteToDomainObject(getState().model);
-				AsyncCallback callback = Async.callbackBuilder().success(o2 -> {
-					EntityPlace entityPlace = ((EntityPlace) Client
-							.currentPlace()).copy();
-					entityPlace.action = EntityAction.VIEW;
-					Client.goTo(entityPlace);
-				}).build();
-				CommitToStorageTransformListener.get()
-						.flushWithOneoffCallback(callback);
-			}
-			if (Client.currentPlace() instanceof EntityPlace) {
-			} else if (Client.currentPlace() instanceof CategoryNamePlace) {
-				CategoryNamePlace categoryNamePlace = (CategoryNamePlace) Client
-						.currentPlace();
-				DefaultPermissibleActionHandler.handleAction(null,
-						categoryNamePlace.ensureAction(), node);
-			}
-		};
-		return new FormValidation().validate(onValid, getState().formBinding);
 	}
 
 	public static class BindableFormModelTransformer extends
@@ -505,17 +503,17 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 	public static class LabelModel extends Model {
 		protected FormElement formElement;
 
-		public LabelModel withFormElement(FormElement formElement) {
-			this.formElement = formElement;
-			return this;
-		}
-
 		public Field getField() {
 			return formElement.field;
 		}
 
 		public FormElement getFormElement() {
 			return this.formElement;
+		}
+
+		public LabelModel withFormElement(FormElement formElement) {
+			this.formElement = formElement;
+			return this;
 		}
 	}
 

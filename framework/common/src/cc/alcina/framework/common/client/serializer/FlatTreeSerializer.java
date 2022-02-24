@@ -322,7 +322,8 @@ public class FlatTreeSerializer {
 		if (ClassReflector.stdAndPrimitives.contains(clazz)) {
 			return true;
 		}
-		if (Reflections.isAssignableFrom(Enum.class, clazz)) {
+		if (clazz.isEnum() || (clazz.getSuperclass() != null
+				&& clazz.getSuperclass().isEnum())) {
 			return true;
 		}
 		if (clazz.isArray() && clazz.getComponentType() == byte.class) {

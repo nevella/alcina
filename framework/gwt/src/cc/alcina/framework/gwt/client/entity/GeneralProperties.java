@@ -47,7 +47,20 @@ public class GeneralProperties extends Bindable
 	public static final transient String PROPERTY_PERSISTENT_CSS = "persistentCss";
 
 	public static GeneralProperties get() {
-		return Registry.impl(GeneralProperties.class);
+		return Registry.impl(Holder.class).getInstance();
+	}
+
+	@Registration.Singleton
+	public static class Holder {
+		private GeneralProperties instance;
+
+		public GeneralProperties getInstance() {
+			return this.instance;
+		}
+
+		public void setInstance(GeneralProperties instance) {
+			this.instance = instance;
+		}
 	}
 
 	private UserPropertyPersistable.Support userPropertySupport;
