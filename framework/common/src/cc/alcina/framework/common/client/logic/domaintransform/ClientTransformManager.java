@@ -51,11 +51,6 @@ public abstract class ClientTransformManager extends TransformManager {
 		super.clearUserObjects();
 	}
 
-	public void setupClientListeners() {
-		addDomainTransformListener(new RecordTransformListener());
-		addDomainTransformListener(new CommitToLocalDomainTransformListener());
-	}
-
 	public Entity ensureEditable(Entity<?> entity) {
 		if (Reflections.at(entity.getClass())
 				.has(NonDomainTransformPersistable.class)) {
@@ -100,7 +95,7 @@ public abstract class ClientTransformManager extends TransformManager {
 		List children = new ArrayList();
 		ClassReflector<? extends Entity> classReflector = Reflections
 				.at(domainObject.getClass());
-		if (!classReflector.isReflective()) {
+		if (!classReflector.provideIsReflective()) {
 			return children;
 		}
 		Collection<Property> properties = classReflector.properties();
@@ -225,6 +220,11 @@ public abstract class ClientTransformManager extends TransformManager {
 
 	public void setProvisionalEditing(boolean provisionalEditing) {
 		this.provisionalEditing = provisionalEditing;
+	}
+
+	public void setupClientListeners() {
+		addDomainTransformListener(new RecordTransformListener());
+		addDomainTransformListener(new CommitToLocalDomainTransformListener());
 	}
 
 	@Override

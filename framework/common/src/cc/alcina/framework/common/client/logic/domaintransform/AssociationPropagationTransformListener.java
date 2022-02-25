@@ -65,7 +65,7 @@ public class AssociationPropagationTransformListener
 					.property(event.getPropertyName())
 					.annotation(Association.class);
 			if (!Reflections.at(association.implementationClass())
-					.isReflective()) {
+					.provideIsReflective()) {
 				return;
 			}
 		}
@@ -115,7 +115,7 @@ public class AssociationPropagationTransformListener
 						} else if (association.dereferenceOnDelete()) {
 							if (!Reflections
 									.at(association.implementationClass())
-									.isReflective()) {
+									.provideIsReflective()) {
 								return;
 							}
 							Property associatedProperty = Reflections

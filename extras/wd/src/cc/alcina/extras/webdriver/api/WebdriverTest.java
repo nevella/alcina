@@ -7,17 +7,18 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
 import org.openqa.selenium.WebDriver;
+
 import cc.alcina.extras.webdriver.WDToken;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @Registration(WebdriverTest.class)
-public abstract class WebdriverTest {
+public abstract class WebdriverTest implements Registration.Ensure {
 	protected static Map<Class<? extends WebdriverTest>, WebdriverTest> testTemplates;
 
 	protected int myLevel;

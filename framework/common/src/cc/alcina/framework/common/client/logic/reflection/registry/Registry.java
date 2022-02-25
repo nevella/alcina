@@ -236,7 +236,7 @@ public class Registry {
 			return implementations()
 					.filter(e -> ((Registration.EnumDiscriminator) e)
 							.provideEnumDiscriminator() == enumValue)
-					.findFirst().get();
+					.findFirst().orElse(null);
 		}
 
 		public boolean hasImplementation() {
@@ -353,9 +353,12 @@ public class Registry {
 				}
 				Preconditions.checkState(!implementations.exists(typeKey));
 				registrations.clear(typeKey);
+				Implementation implementationType = implementation instanceof RegistryFactory
+						? Implementation.FACTORY
+						: Implementation.SINGLETON;
 				add(registryKeys.get(implementation.getClass()),
-						Collections.singletonList(typeKey),
-						Implementation.SINGLETON, Priority.APP);
+						Collections.singletonList(typeKey), implementationType,
+						Priority.APP);
 				singletons.put(implementation);
 			}
 		}

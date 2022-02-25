@@ -97,12 +97,21 @@ public class TransformCollation {
 						&& valueCollation.isCreatedAndDeleted());
 	}
 
+	public <T extends Entity> Stream<T> modified(Class<T> clazz) {
+		return query(clazz).stream().<T> map(QueryResult::getEntity)
+				.filter(Objects::nonNull);
+	}
+
 	public <E extends Entity> Query query(Class<E> clazz) {
 		return new Query(clazz);
 	}
 
 	public <E extends Entity> Query query(E entity) {
 		return new Query(entity);
+	}
+
+	public void removeTransformFromRequest(DomainTransformEvent event) {
+		throw new UnsupportedOperationException();
 	}
 
 	public void setPerClass(MultikeyMap<EntityCollation> perClass) {
@@ -135,10 +144,6 @@ public class TransformCollation {
 		perLocator = null;
 	}
 
-	public void removeTransformFromRequest(DomainTransformEvent event) {
-		throw new UnsupportedOperationException();
-	}
-
 	protected void removeTransformsFromRequest(QueryResult queryResult) {
 		queryResult.events.forEach(this::removeTransformFromRequest);
 	}
@@ -159,7 +164,9 @@ public class TransformCollation {
 		}
 
 		public <E extends Entity> E getEntity() {
-			return TransformManager.get().getObject(locator);
+			E entity = TransformManager.get().getObject(locator);
+			// handle deletion
+			return entity != null ? entity : (E) transforms.get(0).getSource();
 		}
 
 		public Class<? extends Entity> getEntityClass() {
@@ -314,11 +321,6 @@ public class TransformCollation {
 					e -> e.getTransformType() == TransformType.DELETE_OBJECT);
 		}
 
-		public boolean hasPropertyTransform() {
-			return events.stream()
-					.anyMatch(e -> Ax.notBlank(e.getPropertyName()));
-		}
-
 		public boolean hasNoCreateTransform() {
 			return !hasCreateTransform();
 		}
@@ -356,6 +358,11 @@ public class TransformCollation {
 							name -> Objects.equals(e.getPropertyName(), name)));
 		}
 
+		public boolean hasPropertyTransform() {
+			return events.stream()
+					.anyMatch(e -> Ax.notBlank(e.getPropertyName()));
+		}
+
 		public boolean hasTransformsOtherThan(Enum... names) {
 			return events.stream()
 					.anyMatch(e -> e.getPropertyName() == null
@@ -370,10 +377,5 @@ public class TransformCollation {
 		public void removeTransformsFromRequest() {
 			TransformCollation.this.removeTransformsFromRequest(this);
 		}
-	}
-
-	public <T extends Entity> Stream<T> modified(Class<T> clazz) {
-		return query(clazz).stream().<T> map(QueryResult::getEntity)
-				.filter(Objects::nonNull);
 	}
 }

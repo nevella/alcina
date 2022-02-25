@@ -8,11 +8,6 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 public class RenderedProperty {
-	public static int orderingHint(Property p) {
-		return p.has(Display.class) ? p.annotation(Display.class).orderingHint()
-				: 0;
-	}
-
 	public static String displayName(Property p) {
 		String name = p.has(Display.class) ? p.annotation(Display.class).name()
 				: p.getName();
@@ -22,5 +17,10 @@ public class RenderedProperty {
 							.apply(p.getName());
 		}
 		return name;
+	}
+
+	public static int orderingHint(Property p) {
+		return p.has(Display.class) ? p.annotation(Display.class).orderingHint()
+				: 0;
 	}
 }

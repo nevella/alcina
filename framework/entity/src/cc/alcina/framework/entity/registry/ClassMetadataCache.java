@@ -11,6 +11,19 @@ import cc.alcina.framework.common.client.util.Ax;
 
 public class ClassMetadataCache<T extends ClassMetadata>
 		implements Serializable {
+	/*
+	 * @formatter:off
+	 * Version history:
+	 *
+	 * 20220224 - 02 - change registration merge strategy
+	 * 20220224 - 01 - baseline
+	 *
+	 * @formatter:on
+	 */
+	public static final transient int CURRENT_VERSION = 2;
+
+	public int version;
+
 	public Map<String, T> classData = new LinkedHashMap<String, T>();
 
 	public List<String> ignorePackageSegments = new ArrayList<String>();

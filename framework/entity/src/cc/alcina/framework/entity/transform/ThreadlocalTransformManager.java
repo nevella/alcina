@@ -71,7 +71,6 @@ import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -1152,7 +1151,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 		@Override
 		public void deregister(Entity entity) {
-			throw new UnsupportedOperationException();
+			// noop
 		}
 
 		@Override

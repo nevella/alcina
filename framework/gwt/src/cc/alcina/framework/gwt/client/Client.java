@@ -137,6 +137,7 @@ public abstract class Client {
 			Reflections.init();
 			ModuleReflector moduleReflector = ClientReflectorFactory.create();
 			moduleReflector.register();
+			Init.complete = true;
 		}
 	}
 

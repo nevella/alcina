@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -320,7 +320,7 @@ public class ContentViewFactory {
 			bean = new CloneHelper().shallowishBeanClone(bean);
 			cloned = true;
 		}
-		if (!Reflections.at(bean.getClass()).isReflective()) {
+		if (!Reflections.at(bean.getClass()).provideIsReflective()) {
 			throw new RuntimeException(
 					"Unviewable bean type: " + bean.getClass());
 		}
@@ -435,7 +435,7 @@ public class ContentViewFactory {
 	public Widget createExtraActionsWidget(final Object bean) {
 		ClassReflector<? extends Object> reflector = Reflections
 				.at(bean.getClass());
-		if (!reflector.isReflective()) {
+		if (!reflector.provideIsReflective()) {
 			return null;
 		}
 		FlowPanel fp = null;
@@ -471,28 +471,6 @@ public class ContentViewFactory {
 		return fp;
 	}
 
-	private List<Class<? extends PermissibleAction>>
-			getBeanActions(Object bean) {
-		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
-		ObjectActions actions = Reflections.at(bean.getClass())
-				.annotation(Bean.class).actions();
-		if (actions != null) {
-			for (Action action : actions.value()) {
-				Class<? extends PermissibleAction> actionClass = action
-						.actionClass();
-				boolean noPermissionsCheck = actionClass == CreateAction.class
-						|| actionClass == EditAction.class
-						|| actionClass == ViewAction.class
-						|| actionClass == DeleteAction.class;
-				if (noPermissionsCheck || PermissionsManager.get().isPermitted(
-						bean, new AnnotatedPermissible(action.permission()))) {
-					result.add(actionClass);
-				}
-			}
-		}
-		return result;
-	}
-
 	public PaneWrapperWithObjects createMultipleBeanView(Collection beans) {
 		boolean cloned = false;
 		if (!doNotClone && !autoSave && editable) {
@@ -503,7 +481,7 @@ public class ContentViewFactory {
 			beans = beansCopy;
 			cloned = true;
 		}
-		if (!Reflections.at(beanClass).isReflective()) {
+		if (!Reflections.at(beanClass).provideIsReflective()) {
 			throw new RuntimeException("Unviewable bean type: " + beanClass);
 		}
 		Object bean = beans.iterator().hasNext() ? beans.iterator().next()
@@ -764,8 +742,8 @@ public class ContentViewFactory {
 		List<SimpleHistoryEventInfo> history = Arrays
 				.asList(new SimpleHistoryEventInfo[] {
 						new SimpleHistoryEventInfo(objName()),
-						new SimpleHistoryEventInfo(
-								RenderedClass.getTypeDisplayName(beanClass)),
+						new SimpleHistoryEventInfo(RenderedClass
+								.getTypeDisplayName(bean.getClass())),
 						new SimpleHistoryEventInfo(
 								TextProvider.get().getObjectName(bean)) });
 		TextProvider.get().setTrimmed(false);
@@ -790,6 +768,28 @@ public class ContentViewFactory {
 			vp.addVetoableActionListener(actionListener);
 		}
 		return vp;
+	}
+
+	private List<Class<? extends PermissibleAction>>
+			getBeanActions(Object bean) {
+		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
+		ObjectActions actions = Reflections.at(bean.getClass())
+				.annotation(Bean.class).actions();
+		if (actions != null) {
+			for (Action action : actions.value()) {
+				Class<? extends PermissibleAction> actionClass = action
+						.actionClass();
+				boolean noPermissionsCheck = actionClass == CreateAction.class
+						|| actionClass == EditAction.class
+						|| actionClass == ViewAction.class
+						|| actionClass == DeleteAction.class;
+				if (noPermissionsCheck || PermissionsManager.get().isPermitted(
+						bean, new AnnotatedPermissible(action.permission()))) {
+					result.add(actionClass);
+				}
+			}
+		}
+		return result;
 	}
 
 	private String objName() {

@@ -5,8 +5,6 @@ import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 
-//populates ForName, Reflections
-@ReflectionModule(value = ReflectionModule.INITIAL, initial = true)
 public abstract class ModuleReflector {
 	public ModuleReflector() {
 	}
@@ -21,4 +19,8 @@ public abstract class ModuleReflector {
 			Map<Class, Supplier<ClassReflector>> map);
 
 	protected abstract void registerRegistrations();
+
+	@ReflectionModule(value = ReflectionModule.INITIAL, initial = true)
+	public static abstract class Initial extends ModuleReflector {
+	}
 }

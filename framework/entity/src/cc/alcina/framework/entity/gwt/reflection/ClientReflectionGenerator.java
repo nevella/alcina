@@ -15,6 +15,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -107,6 +108,10 @@ public class ClientReflectionGenerator extends Generator {
 
 	static final String LINKER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.LinkerPeer.className";
 
+	private static String lastModuleName;
+
+	private static AtomicInteger reachedDevModeUnknown = new AtomicInteger();
+
 	static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {
 			return t.isParameterized().getBaseType().getErasedType();
@@ -138,6 +143,20 @@ public class ClientReflectionGenerator extends Generator {
 		return builder.toString();
 	}
 
+	static boolean isReflectableJavaCollectionClass(JClassType jClassType) {
+		return CommonUtils.COLLECTION_CLASS_NAMES
+				.contains(jClassType.getQualifiedSourceName());
+	}
+
+	static boolean isReflectableJavaCoreClass(JClassType jClassType) {
+		return CommonUtils.CORE_CLASS_NAMES
+				.contains(jClassType.getQualifiedSourceName())
+				|| CommonUtils.PRIMITIVE_CLASS_NAMES
+						.contains(jClassType.getQualifiedSourceName())
+				|| CommonUtils.PRIMITIVE_WRAPPER_CLASS_NAMES
+						.contains(jClassType.getQualifiedSourceName());
+	}
+
 	long start;
 
 	TreeLogger logger;
@@ -149,6 +168,8 @@ public class ClientReflectionGenerator extends Generator {
 	JClassType generatingType;
 
 	ReflectionModule module;
+
+	String moduleName;
 
 	String typeName;
 
@@ -184,14 +205,15 @@ public class ClientReflectionGenerator extends Generator {
 						.listImplementationRegistrations();
 				ReachabilityData.AppReflectableTypes reflectableTypes = moduleGenerator
 						.listReflectableTypes();
-				filter.onGenerationComplete(registrations, reflectableTypes,
-						Arrays.stream(context.getTypeOracle().getTypes()));
-				System.out.format(
+				String emitMessage = String.format(
 						"Client reflection generation  [%s] -  %s/%s/%s reflected types - %s ms\n",
-						module.value(), moduleGenerator.writeReflectors.size(),
+						moduleName, moduleGenerator.writeReflectors.size(),
 						moduleGenerator.classReflectors.size(),
 						context.getTypeOracle().getTypes().length,
 						System.currentTimeMillis() - start);
+				filter.onGenerationComplete(registrations, reflectableTypes,
+						Arrays.stream(context.getTypeOracle().getTypes()),
+						emitMessage);
 			}
 			return moduleGenerator.implementationFqn();
 		} catch (Exception e) {
@@ -201,8 +223,15 @@ public class ClientReflectionGenerator extends Generator {
 	}
 
 	private void setupFilter() throws Exception {
-		filter = new ClientReflectionFilter();
-		filter.init(logger, context, module.value());
+		if (module != null) {
+			ModuleReflectionFilter modulefilter = new ModuleReflectionFilter();
+			modulefilter.init(logger, context, module.value());
+			filter = modulefilter;
+		} else {
+			String className = System
+					.getProperty(ClientReflections.DEV_MODE_REFLECTOR);
+			filter = new ReachedClassFilter(lastModuleName, className);
+		}
 	}
 
 	void addImport(ClassSourceFileComposerFactory factory, Class<?> type) {
@@ -253,8 +282,16 @@ public class ClientReflectionGenerator extends Generator {
 		generatingType = getType(typeName);
 		classReflectorType = getType(ClassReflector.class.getCanonicalName());
 		module = generatingType.getAnnotation(ReflectionModule.class);
-		implementationName = String.format("ModuleReflector_%s_Impl",
-				module.value());
+		if (module == null) {
+			implementationName = String.format("DevModeReflector_%s",
+					reachedDevModeUnknown.getAndIncrement());
+			moduleName = "(Dev/hosted)";
+		} else {
+			implementationName = String.format("ModuleReflector_%s_Impl",
+					module.value());
+			moduleName = module.value();
+			lastModuleName = moduleName;
+		}
 	}
 
 	String stringLiteral(String value) {
@@ -346,8 +383,7 @@ public class ClientReflectionGenerator extends Generator {
 					Object defaultValue = annotation.annotationType()
 							.getDeclaredMethod(method.getName(), new Class[0])
 							.getDefaultValue();
-					if (!CommonUtils.equalsWithNullEmptyEquality(
-							annotationValue, defaultValue)) {
+					if (!Objects.equals(annotationValue, defaultValue)) {
 						sourceWriter.print("._set%s(", method.getName());
 						writeAnnotationValue(sourceWriter, annotationValue,
 								method.getReturnType());
@@ -563,10 +599,9 @@ public class ClientReflectionGenerator extends Generator {
 						i.getQualifiedSourceName());
 			});
 			// will probably need to adjust
-			sourceWriter.println("boolean reflective = true;");
 			sourceWriter.println("boolean isAbstract = %s;", isAbstract);
 			sourceWriter.println("init(clazz, properties, byName, provider,"
-					+ " supplier, assignableTo, interfaces, reflective, isAbstract);");
+					+ " supplier, assignableTo, interfaces,  isAbstract);");
 			sourceWriter.outdent();
 			sourceWriter.println("}");
 			closeClassBody();
@@ -1059,8 +1094,8 @@ public class ClientReflectionGenerator extends Generator {
 							|| has(t, Bean.class) || hasRegistrations(t)
 							// the annotations themselves
 							|| t.isAnnotationPresent(ClientVisible.class)
-							|| filter.isReflectableJavaCoreClass(t)
-							|| filter.isReflectableJavaCollectionClass(t)))
+							|| isReflectableJavaCoreClass(t)
+							|| isReflectableJavaCollectionClass(t)))
 					.map(JClassType::getFlattenedSupertypeHierarchy)
 					.flatMap(Collection::stream)
 					.map(ClientReflectionGenerator::erase).distinct()
@@ -1077,8 +1112,8 @@ public class ClientReflectionGenerator extends Generator {
 							|| has(t, Bean.class) || hasRegistrations(t)
 							// the annotations themselves
 							|| t.isAnnotationPresent(ClientVisible.class)
-							|| filter.isReflectableJavaCoreClass(t)
-							|| filter.isReflectableJavaCollectionClass(t)))
+							|| isReflectableJavaCoreClass(t)
+							|| isReflectableJavaCollectionClass(t)))
 					.map(JClassType::getFlattenedSupertypeHierarchy)
 					.flatMap(Collection::stream)
 					.map(ClientReflectionGenerator::erase).distinct()

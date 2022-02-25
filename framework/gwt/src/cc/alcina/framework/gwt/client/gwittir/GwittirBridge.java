@@ -396,8 +396,8 @@ public class GwittirBridge {
 					|| association.implementationClass() == void.class)
 							? domainType
 							: association.implementationClass();
-			boolean isDomainClass = GwittirBridge.get()
-					.hasDescriptor(domainType);
+			boolean isDomainClass = Reflections.isAssignableFrom(Entity.class,
+					domainType);
 			if (bwp == null && isDomainClass) {
 				if (fieldEditable) {
 					bwp = Registry.impl(DomainListProvider.class)
@@ -528,7 +528,7 @@ public class GwittirBridge {
 			return new Field(propertyName,
 					TextProvider.get().getLabelText(propertyLocation), bwp,
 					getValidator(type, obj, propertyName, vf), vf,
-					getDefaultConverter(bwp, type), type);
+					getDefaultConverter(bwp, type), clazz);
 		}
 		return null;
 	}
@@ -611,16 +611,6 @@ public class GwittirBridge {
 			return cv;
 		} else {
 			return validatorMap.get(clazz);
-		}
-	}
-
-	// FIXME - reflection - probably remove
-	public boolean hasDescriptor(Class clazz) {
-		try {
-			return !CommonUtils.PRIMITIVE_CLASS_NAMES.contains(clazz.getName())
-					&& Reflections.at(clazz).has(Bean.class);
-		} catch (RuntimeException re) {
-			return false;
 		}
 	}
 

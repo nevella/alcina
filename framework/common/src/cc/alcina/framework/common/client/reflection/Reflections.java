@@ -4,7 +4,6 @@ import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.reflection.impl.ClassReflectorProvider;
 import cc.alcina.framework.common.client.reflection.impl.ForName;
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -13,12 +12,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class Reflections {
 	private static Reflections theInstance;
-
-	private Map<Class, ClassReflector> reflectors = CollectionCreators.Bootstrap
-			.createConcurrentClassMap();
-
-	private Map<String, Class> forName = CollectionCreators.Bootstrap
-			.createConcurrentStringMap();
 
 	public static <T> ClassReflector<T> at(Class<T> clazz) {
 		return get().reflectors.computeIfAbsent(clazz,
@@ -57,8 +50,19 @@ public class Reflections {
 		return get().applicationName;
 	}
 
+	public static void init() {
+		ForName.init();
+		theInstance = new Reflections();
+	}
+
 	public static boolean isAssignableFrom(Class from, Class to) {
-		return at(to).isAssignableTo(from);
+		if (from == to) {
+			return true;
+		}
+		if (to.isPrimitive()) {
+			return false;
+		}
+		return get().hasReflectionMetadata(to) && at(to).isAssignableTo(from);
 	}
 
 	public static boolean isEffectivelyFinal(Class clazz) {
@@ -82,14 +86,23 @@ public class Reflections {
 		return theInstance;
 	}
 
-	public static void init() {
-		ForName.init();
-		theInstance = new Reflections();
-	}
+	private Map<Class, ClassReflector> reflectors = CollectionCreators.Bootstrap
+			.createConcurrentClassMap();
+
+	private Map<String, Class> forName = CollectionCreators.Bootstrap
+			.createConcurrentStringMap();
 
 	private String applicationName = "app";
 
 	public void appShutdown() {
 		theInstance = null;
+	}
+
+	/*
+	 * private because not generally encouraged (code shouldn't have to check) -
+	 * used by isAssignableFrom which is already, in a way, a metadata check
+	 */
+	private boolean hasReflectionMetadata(Class clazz) {
+		return forName(clazz.getName()) != null;
 	}
 }

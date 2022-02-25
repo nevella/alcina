@@ -196,7 +196,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 	protected abstract T createMetadata(String className, ClassMetadata found);
 
 	protected ClassMetadataCache getCached(File cacheFile) {
-		return MethodContext.instance()
+		ClassMetadataCache cache = MethodContext.instance()
 				.withContextTrue(
 						JacksonJsonObjectSerializer.CONTEXT_WITHOUT_MAPPER_POOL)
 				.withContextClassloader(getClass().getClassLoader())
@@ -223,6 +223,11 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 						return new ClassMetadataCache();
 					}
 				});
+		if (cache.version != ClassMetadataCache.CURRENT_VERSION) {
+			cache = new ClassMetadataCache<>();
+			cache.version = cache.CURRENT_VERSION;
+		}
+		return cache;
 	}
 
 	protected File getHomeDir() {

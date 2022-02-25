@@ -36,7 +36,6 @@ import org.apache.commons.io.output.NullOutputStream;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_EMAIL;
@@ -352,6 +351,9 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			} catch (IOException | MessagingException e) {
 				throw new MessageSizeUndeterminedException(e);
 			}
+		}
+		if (!ResourceUtilities.is(ContentDeliveryEmail.class, "smtp.enabled")) {
+			return "Disabled";
 		}
 		Transport transport = session.getTransport("smtp");
 		transport.connect(host, port, userName, password);

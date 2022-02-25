@@ -7,6 +7,9 @@ import java.util.function.Supplier;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 
 public class ClientReflections {
+	public static final String DEV_MODE_REFLECTOR = ClientReflections.class
+			.getName() + ".DEV_MODE_REFLECTOR";
+
 	static Map<Class, Supplier<ClassReflector>> perClassReflectorSuppliers = CollectionCreators.Bootstrap
 			.createConcurrentClassMap();
 
@@ -24,10 +27,26 @@ public class ClientReflections {
 		Supplier<ClassReflector> supplier = perClassReflectorSuppliers
 				.get(clazz);
 		if (supplier == null) {
-			if (clazz.getName().startsWith("java.")) {
-				// private internal class, e.g. Arrays$ArrayList
-				return null;
+			if (clazz.getName().startsWith("java.") || clazz.isPrimitive()) {
+				// non-public internal class, either GWT or JDK, e.g.
+				// Arrays$ArrayList - or primitive
+				return ClassReflector.emptyReflector(clazz);
 			}
+			// if (!GWT.isScript()) {
+			// // FIXME - reflection - although this is fancy, better to add
+			// // all unknown reflectables to UNKNOWN on build of Initial and
+			// // include in initial if dev mode
+			// //
+			// // effectively call back into the generator
+			// System.setProperty(DEV_MODE_REFLECTOR, clazz.getName());
+			// DevModeReflector devModeReflector = GWT
+			// .create(DevModeReflector.class);
+			// register(devModeReflector);
+			// supplier = perClassReflectorSuppliers.get(clazz);
+			// if (supplier != null) {
+			// return supplier.get();
+			// }
+			// }
 			throw new NoSuchElementException(
 					"No reflector for " + clazz.getName());
 		}
@@ -54,8 +73,9 @@ public class ClientReflections {
 		synchronized (assignableTo) {
 			map = CollectionCreators.Bootstrap.createConcurrentClassMap();
 			map.put(to, Boolean.TRUE);
-			if (to.getSuperclass() != null) {
-				map.putAll(computeToMap(to.getSuperclass()));
+			Class superclass = to.getSuperclass();
+			if (superclass != null) {
+				map.putAll(computeToMap(superclass));
 			}
 			for (Class implemented : getClassReflector(to).getInterfaces()) {
 				map.putAll(computeToMap(implemented));

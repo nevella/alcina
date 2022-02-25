@@ -21,7 +21,6 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringPair;
@@ -331,7 +330,8 @@ public class LogStore {
 			return;
 		}
 		if (!Client.Init.isComplete()) {
-			Ax.out("Before reflection: \n%s\n%s\n", topic, message);
+			//
+			// Ax.out("Before reflection: \n%s\n%s\n", topic, message);
 			return;
 		}
 		if (topic.equals(AlcinaTopics.LOG_CATEGORY_TRANSFORM)) {

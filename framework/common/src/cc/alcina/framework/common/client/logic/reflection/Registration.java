@@ -27,6 +27,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.Resolution.Inheritance;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -92,6 +93,10 @@ public @interface Registration {
 		SINGLETON
 	}
 
+	/*
+	 * Must keep in sync with (GWT typeinfo) equivalent -
+	 * AnnotationLocationTypeInfo
+	 */
 	public static class MergeStrategy
 			extends AdditiveMergeStrategy<Registration> {
 		@Override
@@ -103,14 +108,29 @@ public @interface Registration {
 		public List<Registration> merge(List<Registration> higher,
 				List<Registration> lower) {
 			List<Registration> merged = super.merge(higher, lower);
-			// Remove any registrations with identical keys. Note that this
+			// Remove any registrations with identical *normalised* keys. Note
+			// that this
 			// applies even if a class higher in the hierarchy has a higher
 			// Priority registration - it allows, for instance, subclasses to
 			// mark themselves as *not* registered at a particular point (via
 			// Implementation.NONE)
+			//
+			// Normalised keys -> map key[n] where n >0 to Object.class, so
+			// TreeRenderer.class, SearchDefinition.class
+			// TODO - document why different for n>0 to n==0
+			//
 			Set<List<Class>> seenKeys = new LinkedHashSet<>();
-			merged.removeIf(r -> !seenKeys.add(Arrays.asList(r.value())));
+			merged.removeIf(r -> !seenKeys.add(normaliseKeys(r)));
 			return merged;
+		}
+
+		private List<Class> normaliseKeys(Registration r) {
+			List<Class> result = new ArrayList<>();
+			for (int idx = 0; idx < r.value().length; idx++) {
+				Class clazz = r.value()[idx];
+				result.add(idx == 0 ? clazz : Object.class);
+			}
+			return result;
 		}
 
 		@Override

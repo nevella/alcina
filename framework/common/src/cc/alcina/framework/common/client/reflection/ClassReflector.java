@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.reflection;
 
 import java.lang.annotation.Annotation;
 import java.sql.Timestamp;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -10,6 +11,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+
+import cc.alcina.framework.common.client.logic.reflection.Bean;
 
 /*
  * TODO - caching annotation facade? Or cache on the resolver (possibly latter)
@@ -49,21 +52,27 @@ public class ClassReflector<T> {
 	public static final Set<Class> primitives = new HashSet<Class>(
 			primitiveClassMap.values());
 
+	public static ClassReflector<?> emptyReflector(Class clazz) {
+		return new ClassReflector<>(clazz, Collections.emptyList(),
+				Collections.emptyMap(), new AnnotationProvider.LookupProvider(),
+				null, t -> false, Collections.emptyList(),
+				// may in fact be true, but unused
+				false);
+	}
+
 	private Class<T> reflectedClass;
 
 	private Map<String, Property> byName;
 
 	private List<Property> properties;
 
-	private AnnotationProvider annotationResolver;
+	private AnnotationProvider annotationProvider;
 
 	private Supplier<T> constructor;
 
 	private Predicate<Class> assignableTo;
 
 	private boolean primitive;
-
-	private boolean reflective;
 
 	private boolean isAbstract;
 
@@ -74,10 +83,10 @@ public class ClassReflector<T> {
 	public ClassReflector(Class<T> reflectedClass, List<Property> properties,
 			Map<String, Property> byName, AnnotationProvider annotationResolver,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
-			List<Class> interfaces, boolean reflective, boolean isAbstract) {
+			List<Class> interfaces, boolean isAbstract) {
 		this();
 		init(reflectedClass, properties, byName, annotationResolver,
-				constructor, assignableTo, interfaces, reflective, isAbstract);
+				constructor, assignableTo, interfaces, isAbstract);
 	}
 
 	protected ClassReflector() {
@@ -85,7 +94,7 @@ public class ClassReflector<T> {
 	}
 
 	public <A extends Annotation> A annotation(Class<A> annotationClass) {
-		return annotationResolver.getAnnotation(annotationClass);
+		return annotationProvider.getAnnotation(annotationClass);
 	}
 
 	public List<Class> getInterfaces() {
@@ -97,7 +106,7 @@ public class ClassReflector<T> {
 	}
 
 	public <A extends Annotation> boolean has(Class<A> annotationClass) {
-		return annotationResolver.hasAnnotation(annotationClass);
+		return annotationProvider.hasAnnotation(annotationClass);
 	}
 
 	public boolean hasProperty(String propertyName) {
@@ -116,10 +125,6 @@ public class ClassReflector<T> {
 		return primitive;
 	}
 
-	public boolean isReflective() {
-		return reflective;
-	}
-
 	public T newInstance() {
 		return constructor.get();
 	}
@@ -130,6 +135,13 @@ public class ClassReflector<T> {
 
 	public Property property(String name) {
 		return byName.get(name);
+	}
+
+	// FIXME - reflection - this should probably go away - code which checks
+	// generally is only reachable with a reflectable object (but check
+	// associationpropagationlistener)
+	public boolean provideIsReflective() {
+		return has(Bean.class);
 	}
 
 	public T templateInstance() {
@@ -145,16 +157,15 @@ public class ClassReflector<T> {
 	}
 
 	protected void init(Class<T> reflectedClass, List<Property> properties,
-			Map<String, Property> byName, AnnotationProvider annotationResolver,
+			Map<String, Property> byName, AnnotationProvider annotationProvider,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
-			List<Class> interfaces, boolean reflective, boolean isAbstract) {
+			List<Class> interfaces, boolean isAbstract) {
 		this.reflectedClass = reflectedClass;
 		this.properties = properties;
 		this.byName = byName;
-		this.annotationResolver = annotationResolver;
+		this.annotationProvider = annotationProvider;
 		this.constructor = constructor;
 		this.assignableTo = assignableTo;
-		this.reflective = reflective;
 		this.isAbstract = isAbstract;
 		this.interfaces = interfaces;
 		this.primitive = ClassReflector.primitives.contains(reflectedClass);

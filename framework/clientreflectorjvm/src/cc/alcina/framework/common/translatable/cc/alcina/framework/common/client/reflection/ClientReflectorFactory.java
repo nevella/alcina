@@ -13,7 +13,7 @@ public class ClientReflectorFactory {
 		if (!ReflectionConstants.useJvmIntrospector()) {
 			GWT.log("Using generated reflector", null);
 			System.out.println("Using generated reflector");
-			return GWT.create(ModuleReflector.class);
+			return GWT.create(ModuleReflector.Initial.class);
 		} else {
 			GWT.log("Using jvm reflector", null);
 			System.out.println("Using jvm reflector");

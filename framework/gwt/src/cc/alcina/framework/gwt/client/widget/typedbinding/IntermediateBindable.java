@@ -2,6 +2,8 @@ package cc.alcina.framework.gwt.client.widget.typedbinding;
 
 import java.beans.PropertyChangeListener;
 
+import com.totsp.gwittir.client.beans.annotations.Omit;
+
 import cc.alcina.framework.common.client.csobjects.Bindable;
 
 public abstract class IntermediateBindable extends Bindable
@@ -25,6 +27,7 @@ public abstract class IntermediateBindable extends Bindable
 	}
 
 	@Override
+	@Omit
 	public EnumeratedBindingSupport getEnumeratedBindingSupport() {
 		return enumeratedBindingSupport;
 	}

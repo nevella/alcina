@@ -17,8 +17,6 @@ import cc.alcina.framework.common.client.reflection.AnnotationProvider;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Method;
 import cc.alcina.framework.common.client.reflection.Property;
-import cc.alcina.framework.common.client.reflection.ReflectiveAccess;
-import cc.alcina.framework.common.client.reflection.ReflectiveAccess.Access;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -63,11 +61,9 @@ public class ClassReflectorProvider {
 		Predicate<Class> assignableTo = c -> c.isAssignableFrom(clazz);
 		ClassAnnotationProvider annotationResolver = new ClassAnnotationProvider(
 				clazz);
-		ReflectiveAccess access = new ReflectiveAccess.DefaultValue();
-		boolean reflective = ReflectiveAccess.Support.has(access, Access.CLASS);
 		List<Class> interfaces = Arrays.asList(clazz.getInterfaces());
 		return new ClassReflector(clazz, properties, byName, annotationResolver,
-				supplier, assignableTo, interfaces, reflective, isAbstract);
+				supplier, assignableTo, interfaces, isAbstract);
 	}
 
 	private static Method createMethod(java.lang.reflect.Method reflectMethod) {
@@ -88,10 +84,6 @@ public class ClassReflectorProvider {
 				createMethod(descriptor.getWriteMethod()),
 				descriptor.getPropertyType(), clazz,
 				createProvider(clazz, descriptor.getReadMethod()));
-	}
-
-	static ReflectiveAccess reckonAccess(Class clazz) {
-		return new ReflectiveAccess.DefaultValue();
 	}
 
 	public static class ClassAnnotationProvider implements AnnotationProvider {
