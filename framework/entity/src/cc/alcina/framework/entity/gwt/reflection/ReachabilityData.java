@@ -28,6 +28,7 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.databind.deser.std.StdDeserializer;
 import com.fasterxml.jackson.databind.ser.std.StdSerializer;
 import com.google.gwt.core.ext.PropertyOracle;
+import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.linker.ArtifactSet;
 import com.google.gwt.core.ext.linker.SyntheticArtifact;
 import com.google.gwt.core.ext.typeinfo.JArrayType;
@@ -129,11 +130,18 @@ class ReachabilityData {
 				.equals(Object.class.getCanonicalName());
 	}
 
-	static <T> void serialize(Object object, File file) {
+	static <T> void serializeModuleTypes(TreeLogger logger, ModuleTypes moduleTypes,
+			File file) {
 		String existing = file.exists() ? ResourceUtilities.read(file) : null;
-		String json = new String(toJsonBytes(object));
+		String json = new String(toJsonBytes(moduleTypes));
 		if (!Objects.equals(existing, json)) {
-			ResourceUtilities.write(json, file);
+			if (Boolean.getBoolean("reachability.production")) {
+				logger.log(TreeLogger.Type.ERROR,
+						"Not committing reachability changes (production build system)");
+				throw new IllegalStateException();
+			} else {
+				ResourceUtilities.write(json, file);
+			}
 		}
 	}
 

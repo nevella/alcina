@@ -123,7 +123,8 @@ public class ReflectionReachabilityLinker extends Linker {
 			if (delta) {
 				int maxPass = Integer.getInteger("reachability.pass", 25);
 				if (maxPass > 0) {
-					ReachabilityData.serialize(moduleTypes, typesFile);
+					ReachabilityData.serializeModuleTypes(logger, moduleTypes,
+							typesFile);
 				}
 				if (pass++ < maxPass) {
 					logger.log(TreeLogger.Type.INFO, Ax.format(

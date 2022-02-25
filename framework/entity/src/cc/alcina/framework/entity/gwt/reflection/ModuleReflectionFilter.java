@@ -83,7 +83,7 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 			AppReflectableTypes reflectableTypes,
 			Stream<JClassType> compilationTypes, String emitMessage)
 			throws UnableToCompleteException {
-		ReachabilityData.serialize(moduleTypes, typesFile);
+		ReachabilityData.serializeModuleTypes(logger, moduleTypes, typesFile);
 		if (isInitial()) {
 			LegacyModuleAssignments legacyModuleAssignments = getLegacyModuleAssignments(
 					compilationTypes);
