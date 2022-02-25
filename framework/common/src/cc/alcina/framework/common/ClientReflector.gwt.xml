@@ -16,7 +16,7 @@
 	<set-configuration-property name="ClientReflectionGenerator.FilterPeer.className" value="cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilterPeer$Default" />
 	
 	<define-configuration-property name="ClientReflectionGenerator.LinkerPeer.className" is-multi-valued="false" />
-	<set-configuration-property name="ClientReflectionGenerator.LinkerPeer.className" value="cc.alcina.framework.entity.gwt.reflection.ClientReflectionFilterPeer$Default" />
+	<set-configuration-property name="ClientReflectionGenerator.LinkerPeer.className" value="cc.alcina.framework.entity.gwt.reflection.ReachabilityLinkerPeer$Default" />
 	
 	<define-linker name="reflectiveReachability" class="cc.alcina.framework.entity.gwt.reflection.ReflectionReachabilityLinker" />
 	<add-linker name="reflectiveReachability" />

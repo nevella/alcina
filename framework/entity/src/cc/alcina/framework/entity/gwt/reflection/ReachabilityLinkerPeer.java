@@ -1,4 +1,6 @@
 package cc.alcina.framework.entity.gwt.reflection;
 
-class ReachabilityLinkerPeer {
+public interface ReachabilityLinkerPeer {
+	public static class Default implements ReachabilityLinkerPeer {
+	}
 }
