@@ -229,15 +229,19 @@ public class ReflectionReachabilityLinker extends Linker {
 					});
 			/*
 			 * remove if there's a legacy rule preventing it (for now)
+			 *
+			 * FIXME - reflection - plan is to warn and change the rules rather
+			 * than remove
 			 */
-			outgoingReflectedModuleTypes.removeIf(t -> {
-				boolean remove = !legacyModuleAssignments.isAssignedToModule(t,
-						moduleName);
-				if (remove) {
-					logger.log(TreeLogger.Type.INFO, Ax.format("\t[x]: %s", t));
-				}
-				return remove;
-			});
+			// outgoingReflectedModuleTypes.removeIf(t -> {
+			// boolean remove = !legacyModuleAssignments.isAssignedToModule(t,
+			// moduleName);
+			// if (remove) {
+			// logger.log(TreeLogger.Type.INFO, Ax.format("\t[x]: %s", t));
+			// }
+			//// return remove;
+			// return false;
+			// });
 		}
 		/*
 		 * add supertypes of outgoing reflectable types
