@@ -754,6 +754,43 @@ public class SEUtilities {
 		return cal;
 	}
 
+	/**
+	 * Compare 2 dates without considering the time
+	 * Always treats null dates as the oldest date
+	 * @param d1 Date 1
+	 * @param d2 Date 2
+	 * @return Negative if Date 1 is before Date 2, positive if Date 1 is after Date 2, 0 if they are the same day
+	 */
+	public static int compareDateWithoutTime(Date d1, Date d2) {
+		// Handle null value combinations
+		if (d1 == null && d2 != null) {
+			return -1;
+		} else if (d1 != null && d2 == null) {
+			return 1;
+		} else if (d1 == null && d2 == null) {
+			return 0;
+		}
+
+		// Set up calendars for the given dates
+		Calendar c1 = Calendar.getInstance();
+		Calendar c2 = Calendar.getInstance();
+		c1.setTime(d1);
+		c2.setTime(d2);
+
+		// Clear the time parts of the calendars
+		c1.clear(Calendar.MILLISECOND);
+		c2.clear(Calendar.MILLISECOND);
+		c1.clear(Calendar.SECOND);
+		c2.clear(Calendar.SECOND);
+		c1.clear(Calendar.MINUTE);
+		c2.clear(Calendar.MINUTE);
+		c1.clear(Calendar.HOUR);
+		c2.clear(Calendar.HOUR);
+
+		// Compare the calendars
+		return c1.compareTo(c2);
+	}
+
 	public static File getChildFile(File folder, String childFileName) {
 		return new File(
 				String.format("%s/%s", folder.getPath(), childFileName));
