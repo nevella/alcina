@@ -135,29 +135,8 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		@Override
 		public List<Registration> merge(List<Registration> higher,
 				List<Registration> lower) {
-			List<Registration> merged = super.merge(higher, lower);
-			// Remove any registrations with identical *normalised* keys. Note
-			// that this
-			// applies even if a class higher in the hierarchy has a higher
-			// Priority registration - it allows, for instance, subclasses to
-			// mark themselves as *not* registered at a particular point (via
-			// Implementation.NONE)
-			//
-			// Normalised keys -> map key[n] where n >1 to Object.class, so
-			// TreeRenderer.class, SearchDefinition.class
-			//
-			Set<List<Class>> seenKeys = new LinkedHashSet<>();
-			merged.removeIf(r -> !seenKeys.add(normaliseKeys(r)));
-			return merged;
-		}
-
-		private List<Class> normaliseKeys(Registration r) {
-			List<Class> result = new ArrayList<>();
-			for (int idx = 0; idx < r.value().length; idx++) {
-				Class clazz = r.value()[idx];
-				result.add(idx == 0 ? clazz : Object.class);
-			}
-			return result;
+			return Registration.MergeStrategy.Shared.merge(higher, lower,
+					(t1, t2) -> t2.isAssignableFrom(t1));
 		}
 
 		@Override

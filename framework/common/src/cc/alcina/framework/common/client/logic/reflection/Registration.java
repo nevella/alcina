@@ -21,14 +21,15 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.LinkedHashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.function.BiPredicate;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.Resolution.Inheritance;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -107,30 +108,8 @@ public @interface Registration {
 		@Override
 		public List<Registration> merge(List<Registration> higher,
 				List<Registration> lower) {
-			List<Registration> merged = super.merge(higher, lower);
-			// Remove any registrations with identical *normalised* keys. Note
-			// that this
-			// applies even if a class higher in the hierarchy has a higher
-			// Priority registration - it allows, for instance, subclasses to
-			// mark themselves as *not* registered at a particular point (via
-			// Implementation.NONE)
-			//
-			// Normalised keys -> map key[n] where n >0 to Object.class, so
-			// TreeRenderer.class, SearchDefinition.class
-			// TODO - document why different for n>0 to n==0
-			//
-			Set<List<Class>> seenKeys = new LinkedHashSet<>();
-			merged.removeIf(r -> !seenKeys.add(normaliseKeys(r)));
-			return merged;
-		}
-
-		private List<Class> normaliseKeys(Registration r) {
-			List<Class> result = new ArrayList<>();
-			for (int idx = 0; idx < r.value().length; idx++) {
-				Class clazz = r.value()[idx];
-				result.add(idx == 0 ? clazz : Object.class);
-			}
-			return result;
+			return Shared.merge(higher, lower,
+					(t1, t2) -> Reflections.isAssignableFrom(t1, t2));
 		}
 
 		@Override
@@ -155,6 +134,87 @@ public @interface Registration {
 						reflector.getReflectedClass()));
 			}
 			return result;
+		}
+
+		public static class Shared {
+			public static List<Registration> merge(List<Registration> higher,
+					List<Registration> lower,
+					BiPredicate<Class, Class> assignableFrom) {
+				if (higher.isEmpty()) {
+					return lower;
+				}
+				if (lower.isEmpty()) {
+					return higher;
+				}
+				// Remove any registrations with identical 'descendant' keys
+				// (more
+				// below). Note
+				// that this
+				// applies even if a class higher in the hierarchy has a higher
+				// Priority registration - it allows, for instance, subclasses
+				// to
+				// mark themselves as *not* registered at a particular point
+				// (via
+				// Implementation.NONE)
+				//
+				// Descendant keys -> keys[a] is a descendant of keys[a'] (a'
+				// super
+				// a) if keys[a][0]==keys[a'][0] and keys[a][n] is a subtype of
+				// (or
+				// equal to)
+				// keys[a'][n] for all n>0
+				//
+				// e.g. [TreeRenderer.class, MySearchDefinition.class] in a
+				// subtype
+				// removes parent [TreeRenderer.class, SearchDefinition.class]
+				//
+				// The reasoning is that the parent is a 'catchall'
+				// implementation
+				// of service keys[a][0] that is better served (for a more
+				// specific
+				// key keys[a][n>0] by the more specific
+				// subtype
+				//
+				List<Registration> merged = higher.stream()
+						.collect(Collectors.toList());
+				lower.stream().filter(
+						k -> !containsDescendant(higher, k, assignableFrom))
+						.forEach(merged::add);
+				return merged;
+			}
+
+			private static boolean containsDescendant(
+					List<Registration> higherList,
+					Registration lowerRegistration,
+					BiPredicate<Class, Class> assignableFrom) {
+				return higherList.stream().anyMatch(higherRegistration -> {
+					Class[] higher = higherRegistration.value();
+					Class[] lower = lowerRegistration.value();
+					if (higher[0] != lower[0]) {
+						return false;
+					}
+					if (higher.length < lower.length) {
+						throw new IllegalArgumentException(
+								"Registrations with the same initial key must have >= length (in a subtype chain)");
+					}
+					if (higher.length == 1) {
+						return true;
+					}
+					for (int idx = 1; idx < higher.length - 1; idx++) {
+						if (idx == lower.length) {
+							return true;
+						}
+						if (higher[idx] != lower[idx]) {
+							return false;
+						}
+					}
+					if (higher.length > lower.length) {
+						return true;
+					}
+					return assignableFrom.test(lower[higher.length - 1],
+							higher[higher.length - 1]);
+				});
+			}
 		}
 
 		static class SingletonWrapper implements Registration {

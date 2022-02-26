@@ -6,6 +6,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.csobjects.KnownStatusRule.KnownStatusRuleImpl;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 
 @Bean
 public class KnownNodeMetadata implements Serializable {
@@ -78,6 +79,7 @@ public class KnownNodeMetadata implements Serializable {
 		}
 	}
 
+	@ClientInstantiable
 	public enum Type {
 		Job, Other
 	}

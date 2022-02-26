@@ -15,12 +15,13 @@ public class ClassMetadataCache<T extends ClassMetadata>
 	 * @formatter:off
 	 * Version history:
 	 *
+	 *20220225 - 03 - change registration merge strategy
 	 * 20220224 - 02 - change registration merge strategy
 	 * 20220224 - 01 - baseline
 	 *
 	 * @formatter:on
 	 */
-	public static final transient int CURRENT_VERSION = 2;
+	public static final transient int CURRENT_VERSION = 3;
 
 	public int version;
 
