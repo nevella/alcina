@@ -130,8 +130,8 @@ class ReachabilityData {
 				.equals(Object.class.getCanonicalName());
 	}
 
-	static <T> void serializeModuleTypes(TreeLogger logger, ModuleTypes moduleTypes,
-			File file) {
+	static <T> void serializeModuleTypes(TreeLogger logger,
+			ModuleTypes moduleTypes, File file) {
 		String existing = file.exists() ? ResourceUtilities.read(file) : null;
 		String json = new String(toJsonBytes(moduleTypes));
 		if (!Objects.equals(existing, json)) {
@@ -326,6 +326,7 @@ class ReachabilityData {
 		BaseArtifact(String partialName, Object object) {
 			super(ReflectionReachabilityLinker.class,
 					"reflection/" + partialName + ".json", toJsonBytes(object));
+			setVisibility(Visibility.Private);
 		}
 	}
 
