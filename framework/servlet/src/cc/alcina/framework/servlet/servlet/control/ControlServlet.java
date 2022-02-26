@@ -26,8 +26,8 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlBuilder;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.ResourceUtilities.SimpleQuery;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.SimpleHttp;
 import cc.alcina.framework.entity.control.ClusterStateProvider;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
@@ -66,7 +66,7 @@ public class ControlServlet extends AlcinaServlet {
 		queryParameters.put("taskJson",
 				JacksonUtils.serializeWithDefaultsAndTypes(task));
 		try {
-			return new SimpleQuery(url)
+			return new SimpleHttp(url)
 					.withQueryStringParameters(queryParameters).asString();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

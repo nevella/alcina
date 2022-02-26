@@ -83,6 +83,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 		File cacheFile = new File(cachePath);
 		ClassMetadataCache<T> incomingCache = getCached(cacheFile);
 		outgoingCache = new ClassMetadataCache();
+		outgoingCache.version = ClassMetadataCache.CURRENT_VERSION;
 		long start = System.currentTimeMillis();
 		Set<String> invalidated = new ObjectOpenHashSet<>();
 		Set<String> invalidatedThisPass = new ObjectOpenHashSet<>();
@@ -225,7 +226,7 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 				});
 		if (cache.version != ClassMetadataCache.CURRENT_VERSION) {
 			cache = new ClassMetadataCache<>();
-			cache.version = cache.CURRENT_VERSION;
+			cache.version = ClassMetadataCache.CURRENT_VERSION;
 		}
 		return cache;
 	}

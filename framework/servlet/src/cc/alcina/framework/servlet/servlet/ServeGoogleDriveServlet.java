@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.ResourceUtilities.SimpleQuery;
+import cc.alcina.framework.entity.SimpleHttp;
 
 /**
  *
@@ -41,7 +41,7 @@ public class ServeGoogleDriveServlet extends HttpServlet {
 		String sUrl = "https://drive.google.com/uc?id=" + id;
 		try {
 			ServletOutputStream os = response.getOutputStream();
-			SimpleQuery query = new ResourceUtilities.SimpleQuery(sUrl);
+			SimpleHttp query = new SimpleHttp(sUrl);
 			byte[] bytes = query.asBytes();
 			response.setContentType(query.getContentType());
 			response.setContentLength(bytes.length);

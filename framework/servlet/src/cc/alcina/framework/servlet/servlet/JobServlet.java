@@ -30,8 +30,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlBuilder;
-import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.ResourceUtilities.SimpleQuery;
+import cc.alcina.framework.entity.SimpleHttp;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
@@ -81,7 +80,7 @@ public class JobServlet extends AlcinaServlet {
 
 	public static long invokeAsSystemUser(String taskUrl) {
 		taskUrl += "&return_job_id=true";
-		SimpleQuery query = new ResourceUtilities.SimpleQuery(taskUrl);
+		SimpleHttp query = new SimpleHttp(taskUrl);
 		StringMap headers = new StringMap();
 		ClientInstance clientInstance = EntityLayerObjects.get()
 				.getServerAsClientInstance();

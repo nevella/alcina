@@ -25,7 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.ResourceUtilities.SimpleQuery;
+import cc.alcina.framework.entity.SimpleHttp;
 
 /**
  *
@@ -44,7 +44,7 @@ public class StripAttachmentHeaderServlet extends HttpServlet {
 		String sUrl = url + "?" + request.getQueryString();
 		try {
 			ServletOutputStream os = response.getOutputStream();
-			SimpleQuery query = new ResourceUtilities.SimpleQuery(sUrl);
+			SimpleHttp query = new SimpleHttp(sUrl);
 			byte[] bytes = query.asBytes();
 			response.setContentType(query.getContentType());
 			response.setContentLength(bytes.length);
