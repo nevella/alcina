@@ -16,6 +16,9 @@ import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
@@ -103,6 +106,8 @@ public class Registry {
 	public String name;
 
 	Registry sharedImplementations;
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public Internals instanceInternals() {
 		return new Internals(this);
@@ -405,22 +410,29 @@ public class Registry {
 								.implementation(query, throwIfNotNull);
 						return data;
 					}
-					Iterator<RegistrationData> itr = registrations
-							.registrations(ascent.keys).stream().sorted()
+					List<RegistrationData> located = registrations
+							.registrations(ascent.keys);
+					Iterator<RegistrationData> itr = located.stream().sorted()
 							.iterator();
 					if (itr.hasNext()) {
 						RegistrationData first = itr.next();
 						if (itr.hasNext()) {
 							RegistrationData second = itr.next();
 							if (first.priority == second.priority) {
-								throw new IllegalStateException(Ax.format(
-										"Query: %s - resolved keys: %s - equal top priorities: \n%s",
-										query, ascent.keys,
-										registrations.registrations(ascent.keys)
-												.stream().sorted()
-												.map(Object::toString)
-												.collect(Collectors
-														.joining("\n"))));
+								if (first.registeringClassKey == second.registeringClassKey
+										&& located.size() == 2) {
+									logger.warn(
+											"Duplicate registration of same class (probably fragment/split issue):\n{}",
+											located);
+								} else {
+									throw new IllegalStateException(Ax.format(
+											"Query: %s - resolved keys: %s - equal top priorities: \n%s",
+											query, ascent.keys,
+											located.stream().sorted()
+													.map(Object::toString)
+													.collect(Collectors
+															.joining("\n"))));
+								}
 							}
 						}
 						data = new ImplementationData(first);
