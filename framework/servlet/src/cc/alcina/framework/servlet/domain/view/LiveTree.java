@@ -51,7 +51,7 @@ import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
  * partly driven by the separation of 'node' and 'path' (which really, really
  * helps). But NodeModel -> TreeNode...the model *is* the logical node for all
  * intents n purps
- * 
+ *
  */
 public class LiveTree {
 	private DomainTransformCommitPosition earliestPosition;
@@ -85,7 +85,7 @@ public class LiveTree {
 	 * children, it may have categorising project nodes (e.g. first letter) that
 	 * are affected by a change to it. On the other hand, maybe it's the
 	 * projections which should listen...
-	 * 
+	 *
 	 * In any case, 'entityPaths' causing treepath deltas to fire is a good
 	 * first path
 	 */
@@ -179,6 +179,36 @@ public class LiveTree {
 				processEvents();
 			}
 		}
+	}
+
+	public void invalidateIf(Predicate<LiveNode> predicate) {
+		Stack<String> paths = new Stack<>();
+		paths.push(root.rootPath().toString());
+		while (paths.size() != 0) {
+			String path = paths.pop();
+			TreePath<LiveNode> treePath = root.rootPath().ensurePath(path);
+			LiveNode liveNode = treePath.getValue();
+			// FIXME - dirndl 1.1 - null check - should a value-less path exist?
+			if (liveNode != null && predicate.test(liveNode)) {
+				newGeneratorContext();
+				generatorContext.collateChildren = liveNode;
+				liveNode.generateNode();
+			}
+			if (treePath.getChildren().size() > 0) {
+				paths.push(treePath.getChildren().iterator().next().toString());
+			}
+			String successorPath = treePath.provideSuccessorPath();
+			if (successorPath != null) {
+				paths.push(successorPath);
+			}
+		}
+	}
+
+	public void invalidatePath(TreePath path) {
+		LiveNode liveNode = root.ensurePath(path.toString()).getValue();
+		newGeneratorContext();
+		generatorContext.collateChildren = liveNode;
+		liveNode.generateNode();
 	}
 
 	public void onInvalidateTree() {
@@ -310,22 +340,22 @@ public class LiveTree {
 	}
 
 	/*
-	 * 
+	 *
 	 * Phase 1: modelchange collation Transform model changes to path changes.
 	 * Use a counter (-1 for remove, +1 for add)
-	 * 
+	 *
 	 * A node is add/remove/change if collated change (by path) counter is >0,0
 	 * or <0
-	 * 
+	 *
 	 * If collated change !=0, remove all collated child path changes (since
 	 * children will be regenerated)
-	 * 
+	 *
 	 * Phase 2: pathchange cascade Then apply pathChanges - which, if the type
 	 * is 'add' may in turn generate child path changes. Loop until exhausted
-	 * 
+	 *
 	 * Phase 3: bottom-up generate nodes of dirty paths
-	 * 
-	 * 
+	 *
+	 *
 	 */
 	private void processEvents() {
 		// modelchange collation
@@ -526,6 +556,10 @@ public class LiveTree {
 			}
 		}
 		return result;
+	}
+
+	boolean containsEntity(Entity e) {
+		return entityNodes.containsKey(e);
 	}
 
 	public class GeneratorContext {
@@ -909,12 +943,12 @@ public class LiveTree {
 				GeneratorContext generatorContext, boolean add) {
 		}
 
-		default TransformFilter
-				transformFilter(DomainViewSearchDefinition def) {
+		default void invalidate(GeneratorContext generatorContext, Entity e) {
 			throw new UnsupportedOperationException();
 		}
 
-		default void invalidate(GeneratorContext generatorContext, Entity e) {
+		default TransformFilter
+				transformFilter(DomainViewSearchDefinition def) {
 			throw new UnsupportedOperationException();
 		}
 	}
@@ -1011,40 +1045,6 @@ public class LiveTree {
 			return new TreePath.DepthSegmentComparator().compare(
 					root.ensurePath(o1.getTreePath()),
 					root.ensurePath(o2.getTreePath()));
-		}
-	}
-
-	boolean containsEntity(Entity e) {
-		return entityNodes.containsKey(e);
-	}
-
-	public void invalidatePath(TreePath path) {
-		LiveNode liveNode = root.ensurePath(path.toString()).getValue();
-		newGeneratorContext();
-		generatorContext.collateChildren = liveNode;
-		liveNode.generateNode();
-	}
-
-	public void invalidateIf(Predicate<LiveNode> predicate) {
-		Stack<String> paths = new Stack<>();
-		paths.push(root.rootPath().toString());
-		while (paths.size() != 0) {
-			String path = paths.pop();
-			TreePath<LiveNode> treePath = root.rootPath().ensurePath(path);
-			LiveNode liveNode = treePath.getValue();
-			// FIXME - dirndl 1.1 - null check - should a value-less path exist?
-			if (liveNode != null && predicate.test(liveNode)) {
-				newGeneratorContext();
-				generatorContext.collateChildren = liveNode;
-				liveNode.generateNode();
-			}
-			if (treePath.getChildren().size() > 0) {
-				paths.push(treePath.getChildren().iterator().next().toString());
-			}
-			String successorPath = treePath.provideSuccessorPath();
-			if (successorPath != null) {
-				paths.push(successorPath);
-			}
 		}
 	}
 }
