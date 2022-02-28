@@ -23,7 +23,6 @@ import org.jboss.vfs.VFS;
 import org.jboss.vfs.VirtualFile;
 import org.jboss.vfs.VirtualFileFilter;
 
-import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.classmeta.ClasspathUrlTranslator;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -47,8 +46,6 @@ public class JBoss7Support {
 
 	public static void install() {
 		ClasspathScanner.installVisitor(VFSClasspathVisitor.class);
-		CachingClasspathScanner
-				.installUrlTranslator(new VFSClasspathUrlTranslator());
 		SourceFinder.sourceFinders.add(new SourceFinderVfs());
 		Registry.register().singleton(
 				AppPersistenceBase.InitRegistrySupport.class,

@@ -39,7 +39,6 @@ import com.google.gwt.core.client.GWTBridge;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.classmeta.CachingClasspathScanner;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -72,6 +71,7 @@ import cc.alcina.framework.entity.registry.ClassMetadata;
 import cc.alcina.framework.entity.registry.ClassMetadataCache;
 import cc.alcina.framework.entity.registry.RegistryScanner;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.entity.util.ClasspathScanner.ServletClasspathScanner;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.SafeConsoleAppender;
 import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
@@ -432,7 +432,7 @@ public abstract class DevHelper {
 			Logger logger = getTestLogger();
 			long t1 = System.currentTimeMillis();
 			ClassMetadataCache classes = null;
-			classes = new CachingClasspathScanner("*", true, true, null,
+			classes = new ServletClasspathScanner("*", true, true, null,
 					Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
 							.getClasses();
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
