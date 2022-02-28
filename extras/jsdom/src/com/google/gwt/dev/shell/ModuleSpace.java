@@ -598,7 +598,8 @@ public abstract class ModuleSpace implements ShellJavaScriptHost {
 			String toTry = sourceName;
 			while (true) {
 				try {
-					return Class.forName(toTry, true, getIsolatedClassLoader());
+					return Class.forName(toTry, false,
+							getIsolatedClassLoader());
 				} catch (ClassNotFoundException e) {
 					// Assume that the last '.' should be '$' and try again.
 					//

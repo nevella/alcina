@@ -13,8 +13,8 @@
 	<inherits name='de.benediktmeurer.gwt.slf4j.jul.JUL'/>
 	<!-- FIXME - 2022 - cleanup unused -->
 	<define-configuration-property name="alcina.introspectorFilter.classname" is-multi-valued="false"/>
-	<define-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls" is-multi-valued="false"/>
-	<set-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls" value="false"/>
+	<define-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingResourceUrls" is-multi-valued="false"/>
+	<set-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingResourceUrls" value="false"/>
 	<define-configuration-property name="alcina.introspectorFilter.dataFile" is-multi-valued="false"/>
 	<extend-configuration-property name="rpc.blacklist" value="cc.alcina.framework.common.client.util.AlcinaBeanSerializer.SerializationHolder"/>
 	

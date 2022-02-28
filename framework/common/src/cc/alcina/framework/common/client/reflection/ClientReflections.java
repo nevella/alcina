@@ -1,8 +1,11 @@
 package cc.alcina.framework.common.client.reflection;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.NoSuchElementException;
-import java.util.function.Supplier;
+import java.util.Objects;
+import java.util.Optional;
 
 import cc.alcina.framework.common.client.util.CollectionCreators;
 
@@ -10,23 +13,26 @@ public class ClientReflections {
 	public static final String DEV_MODE_REFLECTOR = ClientReflections.class
 			.getName() + ".DEV_MODE_REFLECTOR";
 
-	static Map<Class, Supplier<ClassReflector>> perClassReflectorSuppliers = CollectionCreators.Bootstrap
-			.createConcurrentClassMap();
-
-	static Map<String, Class> forNames = CollectionCreators.Bootstrap
-			.createConcurrentStringMap();
+	static List<ModuleReflector> moduleReflectors = new ArrayList<>();
 
 	static Map<Class, Map<Class, Boolean>> assignableTo = CollectionCreators.Bootstrap
 			.createConcurrentClassMap();
 
 	public static Class<?> forName(String fqn) {
-		return forNames.get(fqn);
+		Optional<Class> optional = moduleReflectors.stream()
+				.map(mr -> mr.forName(fqn)).filter(Objects::nonNull)
+				.findFirst();
+		if (optional.isEmpty()) {
+			throw new NoSuchElementException("No forName for " + fqn);
+		}
+		return optional.get();
 	}
 
 	public static ClassReflector<?> getClassReflector(Class clazz) {
-		Supplier<ClassReflector> supplier = perClassReflectorSuppliers
-				.get(clazz);
-		if (supplier == null) {
+		Optional<ClassReflector> optional = moduleReflectors.stream()
+				.map(mr -> mr.getClassReflector(clazz)).filter(Objects::nonNull)
+				.findFirst();
+		if (optional.isEmpty()) {
 			if (clazz.getName().startsWith("java.") || clazz.isPrimitive()) {
 				// non-public internal class, either GWT or JDK, e.g.
 				// Arrays$ArrayList - or primitive
@@ -50,7 +56,7 @@ public class ClientReflections {
 			throw new NoSuchElementException(
 					"No reflector for " + clazz.getName());
 		}
-		return supplier.get();
+		return optional.get();
 	}
 
 	public static boolean isAssignableFrom(Class from, Class to) {
@@ -58,8 +64,7 @@ public class ClientReflections {
 	}
 
 	public static void register(ModuleReflector reflector) {
-		reflector.registerReflectorSuppliers(perClassReflectorSuppliers);
-		reflector.registerForNames(forNames);
+		moduleReflectors.add(reflector);
 		reflector.registerRegistrations();
 	}
 

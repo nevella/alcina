@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -53,7 +53,7 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 // FIXME - dirndl1.1
 // implements SupportsGeneratorResultCaching {
 {
-	public static final String IGNORE_DATA_URLS = "alcina.SimpleCssResourceGenerator.ignoreMissingDataUrls";
+	public static final String IGNORE_MISSING_RESOURCE_URLS = "alcina.SimpleCssResourceGenerator.ignoreMissingResourceUrls";
 
 	/**
 	 * Java compiler has a limit of 2^16 bytes for encoding string constants in
@@ -62,7 +62,7 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 	 */
 	private static final int MAX_STRING_CHUNK = 16383;
 
-	boolean logMissingUrlResources = true;
+	private String ignoreMissingUrlResources;
 
 	@Override
 	public String createAssignment(TreeLogger logger, ResourceContext context,
@@ -70,8 +70,8 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 		try {
 			ConfigurationProperty cp = context.getGeneratorContext()
 					.getPropertyOracle()
-					.getConfigurationProperty(IGNORE_DATA_URLS);
-			logMissingUrlResources = !Boolean.valueOf(cp.getValues().get(0));
+					.getConfigurationProperty(IGNORE_MISSING_RESOURCE_URLS);
+			ignoreMissingUrlResources = cp.getValues().get(0);
 		} catch (BadPropertyValueException e1) {
 			e1.printStackTrace();
 		}
@@ -139,6 +139,11 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 			}
 			// url = url.replaceFirst("(.+?)\\?.*", "$1");
 			url = url.replace("'", "").replace("\"", "");
+			if (url.startsWith("data:")) {
+				continue;
+			}
+			// access gwt contexts via reflection to get the image file. FIXME -
+			// 2023 - there's probably an easier way...
 			StandardGeneratorContext generatorContext = (StandardGeneratorContext) context
 					.getGeneratorContext();
 			Field compilerContextField = StandardGeneratorContext.class
@@ -164,9 +169,9 @@ public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
 				if (url.contains("://")) {
 					continue;
 				} else {
-					if (logMissingUrlResources) {
+					if (!url.matches(ignoreMissingUrlResources)) {
+						System.out.println("missing url resource - " + url);
 						String[] pub = getAllPublicFiles(module);
-						// System.out.println("missing url resource - " + url);
 						for (String path : pub) {
 							if (path.contains(url)) {
 								System.out.format("Maybe - %s : %s\n", url,

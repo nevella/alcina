@@ -78,6 +78,7 @@ import elemental.json.JsonValue;
  */
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializer {
+	// FIXME - reflection - jsclassmap if client (and general switch to Maps)
 	private static Map<Class, TypeSerializer> typeSerializers = Registry
 			.impl(ConcurrentMapCreator.class).create();
 

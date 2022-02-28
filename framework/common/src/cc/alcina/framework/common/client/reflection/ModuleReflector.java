@@ -1,8 +1,5 @@
 package cc.alcina.framework.common.client.reflection;
 
-import java.util.Map;
-import java.util.function.Supplier;
-
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 
 public abstract class ModuleReflector {
@@ -13,10 +10,13 @@ public abstract class ModuleReflector {
 		ClientReflections.register(this);
 	}
 
-	protected abstract void registerForNames(Map<String, Class> map);
+	protected abstract Class forName(String className);
 
-	protected abstract void registerReflectorSuppliers(
-			Map<Class, Supplier<ClassReflector>> map);
+	protected ClassReflector getClassReflector(Class clazz) {
+		return getClassReflector_(clazz.getName());
+	}
+
+	protected abstract ClassReflector getClassReflector_(String className);
 
 	protected abstract void registerRegistrations();
 

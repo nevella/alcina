@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.gwt.reflection;
 
 import java.io.PrintWriter;
+import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
 import java.lang.reflect.Method;
@@ -25,8 +26,11 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.ext.Generator;
+import com.google.gwt.core.ext.CachedGeneratorResult;
 import com.google.gwt.core.ext.GeneratorContext;
+import com.google.gwt.core.ext.IncrementalGenerator;
+import com.google.gwt.core.ext.RebindMode;
+import com.google.gwt.core.ext.RebindResult;
 import com.google.gwt.core.ext.TreeLogger;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
@@ -34,6 +38,8 @@ import com.google.gwt.core.ext.typeinfo.JField;
 import com.google.gwt.core.ext.typeinfo.JMethod;
 import com.google.gwt.core.ext.typeinfo.JParameterizedType;
 import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
+import com.google.gwt.core.ext.typeinfo.JRawType;
+import com.google.gwt.core.ext.typeinfo.JRealClassType;
 import com.google.gwt.core.ext.typeinfo.JType;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
@@ -58,7 +64,6 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -69,7 +74,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistr
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
 
-public class ClientReflectionGenerator extends Generator {
+public class ClientReflectionGenerator extends IncrementalGenerator {
 	/*
 	 * Force consistent ordering across generators
 	 */
@@ -88,6 +93,8 @@ public class ClientReflectionGenerator extends Generator {
 		}
 	};
 
+	private static final long GENERATOR_VERSION_ID = 1L;
+
 	static final Predicate<Registration> CLIENT_VISIBLE_ANNOTATION_FILTER = new Predicate<Registration>() {
 		@Override
 		public boolean test(Registration o) {
@@ -95,6 +102,8 @@ public class ClientReflectionGenerator extends Generator {
 					.getAnnotation(NonClientRegistryPointType.class) == null;
 		}
 	};
+
+	private static final String CACHED_TYPE_INFORMATION = "cached-type-info";
 
 	static final String REF_IMPL = "__refImpl";
 
@@ -188,8 +197,9 @@ public class ClientReflectionGenerator extends Generator {
 	AnnotationLocationTypeInfo.Resolver annotationResolver = new AnnotationLocationTypeInfo.Resolver();
 
 	@Override
-	public String generate(TreeLogger logger, GeneratorContext context,
-			String typeName) throws UnableToCompleteException {
+	public RebindResult generateIncrementally(TreeLogger logger,
+			GeneratorContext context, String typeName)
+			throws UnableToCompleteException {
 		try {
 			this.logger = logger;
 			this.context = context;
@@ -198,28 +208,41 @@ public class ClientReflectionGenerator extends Generator {
 			setupFilter();
 			moduleGenerator = new ModuleReflectionGenerator(implementationName,
 					generatingType);
-			if (moduleGenerator.isPending()) {
-				moduleGenerator.prepare();
-				moduleGenerator.write();
-				ReachabilityData.AppImplRegistrations registrations = moduleGenerator
-						.listImplementationRegistrations();
-				ReachabilityData.AppReflectableTypes reflectableTypes = moduleGenerator
-						.listReflectableTypes();
-				String emitMessage = String.format(
-						"Client reflection generation  [%s] -  %s/%s/%s reflected types - %s ms\n",
-						moduleName, moduleGenerator.writeReflectors.size(),
-						moduleGenerator.classReflectors.size(),
-						context.getTypeOracle().getTypes().length,
-						System.currentTimeMillis() - start);
-				filter.onGenerationComplete(registrations, reflectableTypes,
-						Arrays.stream(context.getTypeOracle().getTypes()),
-						emitMessage);
+			if (useCachedResult(logger, context)) {
+				return new RebindResult(RebindMode.USE_ALL_CACHED, typeName);
 			}
-			return moduleGenerator.implementationFqn();
+			moduleGenerator.createPrintWriter(false);
+			// should only be called once from code
+			Preconditions.checkState(moduleGenerator.isPending());
+			moduleGenerator.prepare();
+			moduleGenerator.write();
+			ReachabilityData.AppImplRegistrations registrations = moduleGenerator
+					.listImplementationRegistrations();
+			ReachabilityData.AppReflectableTypes reflectableTypes = moduleGenerator
+					.listReflectableTypes();
+			String emitMessage = String.format(
+					"Client reflection generation  [%s] -  %s/%s/%s reflected types - %s ms\n",
+					moduleName, moduleGenerator.writeReflectors.size(),
+					moduleGenerator.classReflectors.size(),
+					context.getTypeOracle().getTypes().length,
+					System.currentTimeMillis() - start);
+			filter.onGenerationComplete(registrations, reflectableTypes,
+					Arrays.stream(context.getTypeOracle().getTypes()),
+					emitMessage);
+			RebindResult result = new RebindResult(RebindMode.USE_ALL_NEW,
+					moduleGenerator.implementationFqn());
+			result.putClientData(CACHED_TYPE_INFORMATION,
+					new IncrementalSupport().prepareCacheInfo());
+			return result;
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	public long getVersionId() {
+		return GENERATOR_VERSION_ID;
 	}
 
 	private void setupFilter() throws Exception {
@@ -232,6 +255,28 @@ public class ClientReflectionGenerator extends Generator {
 					.getProperty(ClientReflections.DEV_MODE_REFLECTOR);
 			filter = new ReachedClassFilter(lastModuleName, className);
 		}
+	}
+
+	protected boolean useCachedResult(TreeLogger logger,
+			GeneratorContext generatorContext) {
+		/*
+		 * Do a series of checks to see if we can use a previously cached
+		 * result, and if so, we can skip further execution and return
+		 * immediately.
+		 */
+		boolean useCache = false;
+		CachedGeneratorResult lastRebindResult = generatorContext
+				.getCachedGeneratorResult();
+		if (lastRebindResult != null
+				&& generatorContext.isGeneratorResultCachingEnabled()) {
+			IncrementalSupport incrementalSupport = (IncrementalSupport) lastRebindResult
+					.getClientData(CACHED_TYPE_INFORMATION);
+			if (incrementalSupport != null && incrementalSupport
+					.checkSourcesUnmodified(logger, generatorContext)) {
+				useCache = true;
+			}
+		}
+		return useCache;
 	}
 
 	void addImport(ClassSourceFileComposerFactory factory, Class<?> type) {
@@ -530,12 +575,6 @@ public class ClientReflectionGenerator extends Generator {
 				// FIXME - reflection - not correctly segregated modules
 				return;
 			}
-			if (type.getName().contains("EdTopModule")) {
-				sortedPropertyGenerators = null;
-				List<PropertyGenerator> list = sortedPropertyGenerators()
-						.collect(Collectors.toList());
-				int debug = 3;
-			}
 			composerFactory.setSuperclass(
 					superClassOrInterfaceType.getQualifiedSourceName());
 			composerFactory.addImport(LinkedHashMap.class.getName());
@@ -555,10 +594,13 @@ public class ClientReflectionGenerator extends Generator {
 					cc.alcina.framework.common.client.reflection.Method.class
 							.getCanonicalName());
 			composerFactory.addImport(Registration.class.getName());
+			if (hasCallableNoArgsConstructor) {
+				composerFactory
+						.addImplementedInterface(Supplier.class.getName());
+			}
 			sourceWriter = createWriter(composerFactory, printWriter);
 			if (hasCallableNoArgsConstructor) {
-				sourceWriter.println("public static %s __new(){",
-						reflectedTypeFqn());
+				sourceWriter.println("public  %s get(){", reflectedTypeFqn());
 				sourceWriter.indent();
 				sourceWriter.println("return new %s();", reflectedTypeFqn());
 				sourceWriter.outdent();
@@ -587,7 +629,7 @@ public class ClientReflectionGenerator extends Generator {
 			sourceWriter.println(
 					"properties" + ".forEach(p->byName.put(p.getName(),p));");
 			if (hasCallableNoArgsConstructor) {
-				sourceWriter.println("Supplier supplier = %s::__new;",
+				sourceWriter.println("Supplier supplier = this;",
 						implementationFqn());
 			} else {
 				sourceWriter.println("Supplier supplier = null;");
@@ -669,25 +711,22 @@ public class ClientReflectionGenerator extends Generator {
 			return null;
 		}
 
-		void writeRegisterForName(SourceWriter sourceWriter) {
-			// sourceWriter.println("map.put(\"%s\",() -> %s.class);",
-			// type.getQualifiedBinaryName(), fqn());
-			/*
-			 * gwt compiler can't handle the class literal in the lambda - so
-			 * use an anonymous class
-			 */
-			// sourceWriter.println(
-			// "map.put(\"%s\",new Supplier(){public Object get(){return
-			// %s.class;}});",
-			// type.getQualifiedBinaryName(), fqn());
-			// back to direct, not suppliers
-			sourceWriter.println("map.put(\"%s\", %s.class);",
-					type.getQualifiedBinaryName(), reflectedTypeFqn());
+		void writeForNameCase(SourceWriter sourceWriter) {
+			sourceWriter.println("case \"%s\":", type.getQualifiedBinaryName());
+			sourceWriter.indent();
+			sourceWriter.println("return %s.class;", reflectedTypeFqn());
+			sourceWriter.outdent();
 		}
 
-		void writeRegisterReflectorSupplier(SourceWriter sourceWriter) {
-			sourceWriter.println("map.put(%s.class,%s::new);",
-					reflectedTypeFqn(), implementationFqn());
+		/*
+		 * Using a switch avoids an extra type per reflected class. Ditto
+		 * generated ClassReflector being its own instance supplier
+		 */
+		void writeReflectorCase(SourceWriter sourceWriter) {
+			sourceWriter.println("case \"%s\":", reflectedTypeFqBinaryName());
+			sourceWriter.indent();
+			sourceWriter.println("return new %s();", implementationFqn());
+			sourceWriter.outdent();
 		}
 
 		void writeRegisterRegistrations(SourceWriter sourceWriter) {
@@ -927,6 +966,41 @@ public class ClientReflectionGenerator extends Generator {
 		}
 	}
 
+	//
+	//
+	// FIXME - 2023 - write only changed classreflectors (although this gets us
+	// 90% of possible speedup)
+	class IncrementalSupport implements Serializable {
+		Map<String, Long> writeableTimes;
+
+		boolean checkSourcesUnmodified(TreeLogger logger,
+				GeneratorContext genContext) {
+			return writeableTimes().equals(writeableTimes);
+		}
+
+		IncrementalSupport prepareCacheInfo() {
+			this.writeableTimes = writeableTimes();
+			return this;
+		}
+
+		Map<String, Long> writeableTimes() {
+			Map<String, Long> writeableTimes = new LinkedHashMap<>();
+			writeableTypes().forEach(t -> writeableTimes
+					.put(t.getQualifiedSourceName(), t.getLastModifiedTime()));
+			return writeableTimes;
+		}
+
+		Stream<JRealClassType> writeableTypes() {
+			Stream<JRealClassType> writeReflectorTypes = moduleGenerator.writeReflectors
+					.stream().map(r -> r.realType())
+					.map(t -> (JRealClassType) t);
+			Stream<JRealClassType> annotationTypes = moduleGenerator.annotationImplementations
+					.stream().map(r -> r.realType())
+					.map(t -> (JRealClassType) t);
+			return Stream.concat(writeReflectorTypes, annotationTypes);
+		}
+	}
+
 	class ModuleReflectionGenerator extends UnitGenerator {
 		List<AnnotationImplementationGenerator> annotationImplementations = new ArrayList<>();
 
@@ -1047,12 +1121,19 @@ public class ClientReflectionGenerator extends Generator {
 					.hasAnnotation(Registration.class);
 		}
 
-		private void writeMethodDefinition(String methodName,
-				String methodArguments, String accessModifier,
+		private void writeMethodDefinition(String accessModifier,
+				String returnType, String methodName, String methodArguments,
 				String methodIndex) {
-			sourceWriter.println("%s void %s%s(%s){", accessModifier,
+			sourceWriter.println("%s %s %s%s(%s){", accessModifier, returnType,
 					methodName, methodIndex, methodArguments);
 			sourceWriter.indent();
+		}
+
+		@Override
+		protected void createPrintWriter(boolean inConstructor) {
+			if (!inConstructor) {
+				super.createPrintWriter(inConstructor);
+			}
 		}
 
 		@Override
@@ -1082,8 +1163,8 @@ public class ClientReflectionGenerator extends Generator {
 			composerFactory.setSuperclass(
 					superClassOrInterfaceType.getQualifiedSourceName());
 			sourceWriter = createWriter(composerFactory, printWriter);
-			writeRegisterReflectorSuppliers();
-			writeRegisterForNames();
+			writeReflectorCases();
+			writeForNameCases();
 			writeRegisterRegistrations();
 			closeClassBody();
 		}
@@ -1149,15 +1230,16 @@ public class ClientReflectionGenerator extends Generator {
 			writeReflectors.forEach(ClassReflectorGenerator::write);
 		}
 
-		void writeForClassReflectors(String methodName, String mapSignature,
+		void writeForClassReflectors(String methodName, String methodArguments,
+				String returnType,
 				Consumer<ClassReflectorGenerator> perReflector) {
-			String mapName = Ax.notBlank(mapSignature) ? "map" : "";
-			String methodArguments = Ax.notBlank(mapSignature)
-					? Ax.format("%s map", mapSignature)
-					: "";
+			boolean voidMethod = returnType.equals("void");
+			String methodArgumentName = methodArguments.isEmpty() ? ""
+					: methodArguments.replaceFirst(".+ (.+)", "$1");
 			if (writeReflectors.isEmpty()) {
-				writeMethodDefinition(methodName, methodArguments, "public",
-						"");
+				String accessModifier = "public";
+				writeMethodDefinition(accessModifier, returnType, methodName,
+						methodArguments, "");
 			}
 			for (int idx = 0; idx < writeReflectors.size(); idx++) {
 				boolean writePreamble = idx % 100 == 0;
@@ -1165,38 +1247,64 @@ public class ClientReflectionGenerator extends Generator {
 				if (writePreamble) {
 					String accessModifier = initial ? "public" : "private";
 					String methodIndex = initial ? "" : "_" + idx / 100;
+					// first terminate current container method
 					if (initial) {
 					} else {
 						// continue registration with next method
-						sourceWriter.println("%s%s(%s);", methodName,
-								methodIndex, mapName);
+						if (voidMethod) {
+							sourceWriter.println("%s%s(%s);", methodName,
+									methodIndex, methodArgumentName);
+						} else {
+							sourceWriter.println("default:");
+							sourceWriter.indent();
+							sourceWriter.println("return %s%s(%s);", methodName,
+									methodIndex, methodArgumentName);
+							sourceWriter.outdent();
+							sourceWriter.outdent();
+							sourceWriter.println("}");
+						}
 						sourceWriter.outdent();
 						sourceWriter.println("}");
 						sourceWriter.println();
 					}
-					writeMethodDefinition(methodName, methodArguments,
-							accessModifier, methodIndex);
+					// write method preamble
+					writeMethodDefinition(accessModifier, returnType,
+							methodName, methodArguments, methodIndex);
+					if (!voidMethod) {
+						sourceWriter.println("switch (%s){",
+								methodArgumentName);
+						sourceWriter.indent();
+					}
 				}
 				perReflector.accept(writeReflectors.get(idx));
+			}
+			// terminate last method
+			if (!voidMethod) {
+				sourceWriter.println("default:");
+				sourceWriter.indent();
+				sourceWriter.println("return null;");
+				sourceWriter.outdent();
+				sourceWriter.outdent();
+				sourceWriter.println("}");
 			}
 			sourceWriter.outdent();
 			sourceWriter.println("}");
 			sourceWriter.println();
 		}
 
-		void writeRegisterForNames() {
-			writeForClassReflectors("registerForNames", "Map<String, Class>",
-					crg -> crg.writeRegisterForName(sourceWriter));
+		void writeForNameCases() {
+			writeForClassReflectors("forName", "String className", "Class",
+					crg -> crg.writeForNameCase(sourceWriter));
 		}
 
-		void writeRegisterReflectorSuppliers() {
-			writeForClassReflectors("registerReflectorSuppliers",
-					"Map<Class, Supplier<ClassReflector>>",
-					crg -> crg.writeRegisterReflectorSupplier(sourceWriter));
+		void writeReflectorCases() {
+			writeForClassReflectors("getClassReflector_", "String className",
+					"ClassReflector",
+					crg -> crg.writeReflectorCase(sourceWriter));
 		}
 
 		void writeRegisterRegistrations() {
-			writeForClassReflectors("registerRegistrations", "",
+			writeForClassReflectors("registerRegistrations", "", "void",
 					crg -> crg.writeRegisterRegistrations(sourceWriter));
 		}
 	}
@@ -1273,6 +1381,22 @@ public class ClientReflectionGenerator extends Generator {
 
 		protected String implementationFqn() {
 			return packageName + "." + implementationName;
+		}
+
+		protected JRealClassType realType() {
+			if (reflectedType instanceof JRealClassType) {
+				return (JRealClassType) reflectedType;
+			} else if (reflectedType instanceof JParameterizedType) {
+				return ((JParameterizedType) reflectedType).getBaseType();
+			} else if (reflectedType instanceof JRawType) {
+				return ((JRawType) reflectedType).getBaseType();
+			} else {
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		protected String reflectedTypeFqBinaryName() {
+			return reflectedType.getQualifiedBinaryName();
 		}
 
 		protected String reflectedTypeFqn() {
