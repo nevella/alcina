@@ -182,7 +182,8 @@ public class AnalyseThreadDump {
 								ResourceUtilities.get(AnalyseThreadDump.class,
 										"ignoreableThreadNamePattern"))
 						|| name.matches(
-								"(VM Periodic Task Thread|C2 CompilerThread0|Reference Handler|C1 CompilerThread0|pool-shell-io.*)");
+								"(VM Periodic Task Thread|C2 CompilerThread0"
+										+ "|Reference Handler|C1 CompilerThread0|pool-shell-io.*|Keep-Alive-Timer)");
 			}
 
 			String toStringForDump() {
