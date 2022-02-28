@@ -37,6 +37,7 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 import cc.alcina.framework.entity.util.SynchronizedSimpleDateFormat;
+import cc.alcina.framework.servlet.logging.AnalyseThreadDump;
 
 public class DevConsoleCommandInternalMetrics {
 	public static class CmdDrillMetric extends DevConsoleCommand {
@@ -309,7 +310,7 @@ public class DevConsoleCommandInternalMetrics {
 						joined = Ax.format("Waiting for lock: %s\n",
 								threadInfo.lock, joined);
 					}
-					if (CmdAnalyseStackTrace.ignoreableStackTrace(joined)) {
+					if (AnalyseThreadDump.ignoreableStackTrace(joined)) {
 						return;
 					}
 				}
