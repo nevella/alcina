@@ -34,7 +34,7 @@ public class ClassMetadataCache<T extends ClassMetadata>
 				+ classData.keySet().stream().collect(Collectors.joining("\n"));
 	}
 
-	public void insert(T item) {
+	public synchronized void insert(T item) {
 		for (String segment : ignorePackageSegments) {
 			if (item.className.startsWith(segment)) {
 				return;

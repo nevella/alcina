@@ -28,15 +28,14 @@ import java.nio.file.Paths;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import org.apache.log4j.Logger;
 
@@ -224,22 +223,14 @@ public class ClasspathScanner {
 	}
 
 	public static class DirectoryVisitor extends ClasspathVisitor {
-		private ThreadPoolExecutor executor;
-
-		AtomicInteger submitted = new AtomicInteger(0);
-
 		public DirectoryVisitor(ClasspathScanner scanner) {
 			super(scanner);
-			executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-					Runtime.getRuntime().availableProcessors());
 		}
 
 		@Override
 		public void enumerateClasses(URL url) throws Exception {
 			String file = sanitizeFileURL(url);
-			submitted.incrementAndGet();
-			executor.execute(() -> getClassesFromDirectory(file, file));
-			executor.awaitTermination(100, TimeUnit.SECONDS);
+			getClassesFromDirectory(file, file);
 		}
 
 		@Override
@@ -263,15 +254,9 @@ public class ClasspathScanner {
 								e.printStackTrace();
 							}
 					} else if (scanner.isRecur()) {
-						submitted.incrementAndGet();
-						executor.execute(() -> getClassesFromDirectory(
-								path + "/" + file, root));
+						getClassesFromDirectory(path + "/" + file, root);
 					}
 				}
-			}
-			int count = submitted.decrementAndGet();
-			if (count == 0) {
-				executor.shutdown();
 			}
 		}
 	}
@@ -306,12 +291,12 @@ public class ClasspathScanner {
 			public FileVisitResult visitFile(Path path,
 					BasicFileAttributes attr) {
 				try {
-					if (attr.isRegularFile()
-							&& path.toString().endsWith(".class")) {
-						String classPath = path.toString()
+					String pathString = path.toString();
+					if (attr.isRegularFile() && pathString.endsWith(".class")) {
+						String classPath = pathString
 								.substring(root.length() + 1);
 						add(classPath, attr.lastModifiedTime().toMillis(),
-								path.toUri().toURL(), null);
+								new URL("file://" + pathString), null);
 					}
 					return FileVisitResult.CONTINUE;
 				} catch (Exception e) {
@@ -414,13 +399,26 @@ public class ClasspathScanner {
 
 		@Override
 		public ClassMetadataCache getClasses() throws Exception {
-			List<URL> visitedUrls = new ArrayList<URL>();
-			List<ClassLoader> classLoaders = getScannerClassLoadersToTry();
-			for (ClassLoader classLoader : classLoaders) {
-				scanForRegProps(resourceName, classLoader, visitedUrls);
-				scanForRegProps("META-INF/" + resourceName, classLoader,
-						visitedUrls);
-			}
+			Stream<URL> urls = getScannerClassLoadersToTry().stream()
+					.flatMap(classLoader -> {
+						try {
+							List<URL> list1 = scanForRegProps(resourceName,
+									classLoader);
+							List<URL> list2 = scanForRegProps(
+									"META-INF/" + resourceName, classLoader);
+							return Stream.concat(list1.stream(), list2.stream())
+									.distinct();
+						} catch (Exception e) {
+							throw new WrappedRuntimeException(e);
+						}
+					});
+			// because this occurs very early, it doesn't seem parallel() helps
+			// (since UnixFile.toString() is a big hit, either way)
+			//
+			// FIXME - 2023 - possibly check with GraalVM/a precompiler?
+			urls.collect(Collectors.toList()).stream()
+					// .parallel()
+					.forEach(url -> invokeHandler(url));
 			return classDataCache;
 		}
 
@@ -434,16 +432,11 @@ public class ClasspathScanner {
 		}
 
 		// lifted from seam 1.21
-		private void scanForRegProps(String resourceName,
-				ClassLoader classLoader, List<URL> visitedUrls)
-				throws Exception {
+		private List<URL> scanForRegProps(String resourceName,
+				ClassLoader classLoader) throws Exception {
 			List<URL> urls = new ArrayList<URL>();
 			if (resourceName == null) {
 				for (URL url : ((URLClassLoader) classLoader).getURLs()) {
-					if (visitedUrls.contains(url)) {
-						continue;
-					}
-					visitedUrls.add(url);
 					String urlPath = url.getFile();
 					if (urlPath.endsWith("/")) {
 						urlPath = urlPath.substring(0, urlPath.length() - 1);
@@ -456,38 +449,20 @@ public class ClasspathScanner {
 							.getResources(resourceName);
 					while (urlEnum.hasMoreElements()) {
 						URL url = urlEnum.nextElement();
-						if (visitedUrls.contains(url)) {
-							continue;
-						}
-						visitedUrls.add(url);
 						url = invokeResolver(url);
 						URL newUrl = cleanUrl(resourceName, url);
 						urls.add(newUrl);
 					}
 				} catch (IOException ioe) {
 					warn("could not read: " + resourceName, ioe);
-					return;
+					return Collections.emptyList();
 				}
 			}
-			for (URL url : urls) {
-				if (visitedUrls.contains(url)) {
-					continue;
-				}
-				visitedUrls.add(url);
+			return urls.stream().filter(url -> {
 				String urlPath = url.getFile();
-				boolean ignore = false;
-				for (String s : ignorePathSegments) {
-					if (urlPath.contains(s)) {
-						// info("ignored: " + urlPath);
-						ignore = true;
-						break;
-					}
-				}
-				if (ignore) {
-					continue;
-				}
-				invokeHandler(url);
-			}
+				return !ignorePathSegments.stream()
+						.anyMatch(s -> urlPath.contains(s));
+			}).collect(Collectors.toList());
 		}
 
 		private void warn(String message, Exception t) {
