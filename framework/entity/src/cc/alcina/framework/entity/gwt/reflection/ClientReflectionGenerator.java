@@ -975,7 +975,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		boolean checkSourcesUnmodified(TreeLogger logger,
 				GeneratorContext genContext) {
-			return writeableTimes().equals(writeableTimes);
+			// return writeableTimes().equals(writeableTimes);
+			// see https://github.com/nevella/alcina/issues/15
+			// GWT doesn't monitor FS changes correctly - reenable once fixed
+			return false;
 		}
 
 		IncrementalSupport prepareCacheInfo() {
