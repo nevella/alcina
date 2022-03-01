@@ -158,6 +158,17 @@ public class AnalyseThreadDump {
 			return distinctWaits;
 		}
 
+		public String dumpDistinctNames() {
+			Multimap<String, List<TdModelThread>> byLines = threads.stream()
+					.filter(tmt -> !tmt.ignoreable()).collect(AlcinaCollectors
+							.toKeyMultimap(tmt -> tmt.lines.toString()));
+			String distinctWaits = byLines.entrySet().stream().sorted(
+					(e1, e2) -> e1.getValue().size() - e2.getValue().size())
+					.map(e -> e.getValue().get(0).name)
+					.collect(Collectors.joining("\n"));
+			return distinctWaits;
+		}
+
 		enum State {
 			outside_thread, first_thread_line, post_first_thread_line,
 			synchronizers
