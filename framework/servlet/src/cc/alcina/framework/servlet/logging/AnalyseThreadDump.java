@@ -86,6 +86,12 @@ public class AnalyseThreadDump {
 			if (lines[0].matches(".*at sun.nio.ch.EPoll.wait.*")) {
 				return true;
 			}
+			if (lines[0]
+					.matches(".*at java.net.SocketInputStream.socketRead0.*")) {
+				if (joined.contains("com.sun.mail.iap.ResponseInputStream")) {
+					return true;
+				}
+			}
 			if (joined.contains(
 					"javax.management.remote.JMXConnectorFactory.connect")) {
 				return true;
@@ -152,8 +158,7 @@ public class AnalyseThreadDump {
 							.toKeyMultimap(tmt -> tmt.lines.toString()));
 			String distinctWaits = byLines.entrySet().stream().sorted(
 					(e1, e2) -> e1.getValue().size() - e2.getValue().size())
-					.map(e -> String.format("%5s %-40s", e.getValue().size(),
-							e.getValue().get(0).toStringForDump()))
+					.map(e -> e.getValue().get(0).toStringForDump())
 					.collect(Collectors.joining("\n"));
 			return distinctWaits;
 		}
@@ -194,7 +199,8 @@ public class AnalyseThreadDump {
 										"ignoreableThreadNamePattern"))
 						|| name.matches(
 								"(VM Periodic Task Thread|C2 CompilerThread0"
-										+ "|Reference Handler|C1 CompilerThread0|pool-shell-io.*|Keep-Alive-Timer)");
+										+ "|Reference Handler|C1 CompilerThread0|pool-shell-io.*|Keep-Alive-Timer"
+										+ "|cluster1-timeouter-0|threadDeathWatcher-.*|Signal Dispatcher)");
 			}
 
 			String toStringForDump() {
