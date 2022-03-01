@@ -213,6 +213,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			}
 			moduleGenerator.createPrintWriter(false);
 			// should only be called once from code
+			if (moduleGenerator.printWriter == null) {
+				RebindResult result = new RebindResult(RebindMode.USE_EXISTING,
+						moduleGenerator.implementationFqn());
+				return result;
+			}
 			Preconditions.checkState(moduleGenerator.isPending());
 			moduleGenerator.prepare();
 			moduleGenerator.write();
@@ -666,6 +671,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		void prepareRegistrations() {
+			if (type.getQualifiedSourceName().equals(
+					"au.com.barnet.jade.client.renderers.ArticleSearchDefinitionRenderer")) {
+				int debug = 3;
+			}
 			List<Registration> annotations = new AnnotationLocationTypeInfo(
 					type, annotationResolver)
 							.getAnnotations(Registration.class);
@@ -1283,12 +1292,16 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			}
 			// terminate last method
 			if (!voidMethod) {
-				sourceWriter.println("default:");
-				sourceWriter.indent();
-				sourceWriter.println("return null;");
-				sourceWriter.outdent();
-				sourceWriter.outdent();
-				sourceWriter.println("}");
+				if (writeReflectors.isEmpty()) {
+					sourceWriter.println("return null;");
+				} else {
+					sourceWriter.println("default:");
+					sourceWriter.indent();
+					sourceWriter.println("return null;");
+					sourceWriter.outdent();
+					sourceWriter.outdent();
+					sourceWriter.println("}");
+				}
 			}
 			sourceWriter.outdent();
 			sourceWriter.println("}");

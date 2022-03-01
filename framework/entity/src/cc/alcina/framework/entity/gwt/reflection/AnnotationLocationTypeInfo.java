@@ -136,7 +136,7 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		public List<Registration> merge(List<Registration> higher,
 				List<Registration> lower) {
 			return Registration.MergeStrategy.Shared.merge(higher, lower,
-					(t1, t2) -> t2.isAssignableFrom(t1));
+					(t1, t2) -> t1.isAssignableFrom(t2));
 		}
 
 		@Override
