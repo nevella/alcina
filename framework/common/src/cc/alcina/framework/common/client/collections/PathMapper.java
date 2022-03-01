@@ -168,8 +168,10 @@ public class PathMapper {
 				return;
 			}
 			try {
-				if (!required && !mapper.leftAccessor.hasPropertyKey(left,
-						leftName)) {
+				// If mapped field is not required, and either left object is null or
+				//  the property key is not available on the left object
+				if (!required && (left == null || !mapper.leftAccessor.hasPropertyKey(left,
+						leftName))) {
 					return;
 				}
 				Object value = mapper.leftAccessor.getPropertyValue(left,
