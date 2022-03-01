@@ -838,7 +838,7 @@ public class PermissionsManager implements DomainTransformListener {
 		OFFLINE, ONLINE
 	}
 
-	public static interface PermissionsExtension {
+	public static interface PermissionsExtension extends Registration.Ensure {
 		public Boolean isPermitted(Object o, Permissible p);
 
 		default Boolean isPermitted(Object o, Object assigningTo,
