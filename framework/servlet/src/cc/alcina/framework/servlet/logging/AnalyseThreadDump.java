@@ -200,7 +200,8 @@ public class AnalyseThreadDump {
 						|| name.matches(
 								"(VM Periodic Task Thread|C2 CompilerThread0"
 										+ "|Reference Handler|C1 CompilerThread0|pool-shell-io.*|Keep-Alive-Timer"
-										+ "|cluster1-timeouter-0|threadDeathWatcher-.*|Signal Dispatcher)");
+										+ "|cluster1-timeouter-0|threadDeathWatcher-.*|Signal Dispatcher"
+										+ "|kafka-coordinator-heartbeat-thread)");
 			}
 
 			String toStringForDump() {

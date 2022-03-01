@@ -740,7 +740,7 @@ public class GwittirBridge {
 				}
 			}
 			Property p1 = classReflector.property(o1.getPropertyName());
-			Property p2 = classReflector.property(o1.getPropertyName());
+			Property p2 = classReflector.property(o2.getPropertyName());
 			int orderingHint1 = RenderedProperty.orderingHint(p1);
 			int orderingHint2 = RenderedProperty.orderingHint(p2);
 			int i = CommonUtils.compareInts(orderingHint1, orderingHint2);
