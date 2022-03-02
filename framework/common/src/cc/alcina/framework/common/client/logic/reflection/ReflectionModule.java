@@ -33,9 +33,22 @@ public @interface ReflectionModule {
 
 	public static final String LEFTOVER = "Leftover";
 
+	/*
+	 * Type is reachable and has not been analysed by the linker
+	 */
 	public static final String UNKNOWN = "Unknown";
 
-	public static final String NONE = "None";
+	/*
+	 * Type is reachable, has been analysed by the linker and is not reached by
+	 * any module
+	 */
+	public static final String NOT_REACHED = "NotReached";
+
+	/*
+	 * Type is reachable but excluded (by a code rule) from reflection
+	 * generation
+	 */
+	public static final String EXCLUDED = "Excluded";
 
 	boolean initial() default false;
 

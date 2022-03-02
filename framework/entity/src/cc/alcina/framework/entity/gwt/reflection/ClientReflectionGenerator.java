@@ -16,7 +16,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -75,6 +74,13 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistr
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
 
+/*
+ * Documentation notes
+ * - note module assignment (unknown, not_reached, excluded) and how that relates to production compilation
+ * - explain caching (and interaction with gwt watch service)
+ * - document the evils of generics (in serializable types) when pruning reachability
+ *
+ */
 public class ClientReflectionGenerator extends IncrementalGenerator {
 	/*
 	 * Force consistent ordering across generators
@@ -117,10 +123,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	static final String FILTER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.FilterPeer.className";
 
 	static final String LINKER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.LinkerPeer.className";
-
-	private static String lastModuleName;
-
-	private static AtomicInteger reachedDevModeUnknown = new AtomicInteger();
 
 	static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {
@@ -197,6 +199,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	AnnotationLocationTypeInfo.Resolver annotationResolver = new AnnotationLocationTypeInfo.Resolver();
 
+	boolean reflectUnknownInInitialModule;
+
 	@Override
 	public RebindResult generateIncrementally(TreeLogger logger,
 			GeneratorContext context, String typeName)
@@ -210,19 +214,17 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			setupFilter();
 			moduleGenerator = new ModuleReflectionGenerator(implementationName,
 					generatingType);
+			moduleGenerator.prepare();
 			if (useCachedResult(logger, context)) {
 				return new RebindResult(RebindMode.USE_ALL_CACHED, typeName);
 			}
-			moduleGenerator.createPrintWriter(false);
+			boolean updated = moduleGenerator.write();
 			// should only be called once from code
-			if (moduleGenerator.printWriter == null) {
+			if (!updated) {
 				RebindResult result = new RebindResult(RebindMode.USE_EXISTING,
 						moduleGenerator.implementationFqn());
 				return result;
 			}
-			Preconditions.checkState(moduleGenerator.isPending());
-			moduleGenerator.prepare();
-			moduleGenerator.write();
 			ReachabilityData.AppImplRegistrations registrations = moduleGenerator
 					.listImplementationRegistrations();
 			ReachabilityData.AppReflectableTypes reflectableTypes = moduleGenerator
@@ -247,8 +249,14 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 	}
 
+	@Override
+	public long getVersionId() {
+		return GENERATOR_VERSION_ID;
+	}
+
 	private void checkSinglePermutationBuild(TreeLogger logger,
 			GeneratorContext context) throws BadPropertyValueException {
+		// TODO - jjs can access permutationlist (in precompile phase)
 		Preconditions.checkArgument(
 				context.getPropertyOracle()
 						.getSelectionProperty(logger, "user.agent")
@@ -256,21 +264,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				"Only configured for single-permutation (safari) builds");
 	}
 
-	@Override
-	public long getVersionId() {
-		return GENERATOR_VERSION_ID;
-	}
-
 	private void setupFilter() throws Exception {
-		if (module != null) {
-			ModuleReflectionFilter modulefilter = new ModuleReflectionFilter();
-			modulefilter.init(logger, context, module.value());
-			filter = modulefilter;
-		} else {
-			String className = System
-					.getProperty(ClientReflections.DEV_MODE_REFLECTOR);
-			filter = new ReachedClassFilter(lastModuleName, className);
-		}
+		ModuleReflectionFilter modulefilter = new ModuleReflectionFilter();
+		modulefilter.init(logger, context, module.value(),
+				reflectUnknownInInitialModule);
+		filter = modulefilter;
 	}
 
 	protected boolean useCachedResult(TreeLogger logger,
@@ -343,16 +341,17 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		generatingType = getType(typeName);
 		classReflectorType = getType(ClassReflector.class.getCanonicalName());
 		module = generatingType.getAnnotation(ReflectionModule.class);
-		if (module == null) {
-			implementationName = String.format("DevModeReflector_%s",
-					reachedDevModeUnknown.getAndIncrement());
-			moduleName = "(Dev/hosted)";
-		} else {
-			implementationName = String.format("ModuleReflector_%s_Impl",
-					module.value());
-			moduleName = module.value();
-			lastModuleName = moduleName;
-		}
+		implementationName = String.format("ModuleReflector_%s_Impl",
+				module.value());
+		moduleName = module.value();
+		/*
+		 * In dev mode -or- production compilation mode, add any unknown
+		 * reflectable typeinfo to the initial module. That ensures the program
+		 * is correct, but non-optimal -- optimisation occurs during
+		 * reachability linking
+		 */
+		reflectUnknownInInitialModule = !context.isProdMode()
+				|| Boolean.getBoolean("reachability.production");
 	}
 
 	String stringLiteral(String value) {
@@ -487,7 +486,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		@Override
-		protected void write() {
+		protected boolean write() {
+			if (!createPrintWriter()) {
+				return false;
+			}
 			composerFactory.addImport(Annotation.class.getCanonicalName());
 			composerFactory.addImplementedInterface(
 					annotationClass.getCanonicalName());
@@ -521,6 +523,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					annotationClass.getCanonicalName());
 			sourceWriter.println("}");
 			closeClassBody();
+			return true;
 		}
 	}
 
@@ -556,13 +559,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		@Override
-		protected void createPrintWriter(boolean inConstructor) {
-			if (!inConstructor) {
-				super.createPrintWriter(inConstructor);
-			}
-		}
-
-		@Override
 		protected void prepare() {
 			isAbstract = type.isAbstract();
 			hasCallableNoArgsConstructor = !isAbstract
@@ -585,11 +581,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		@Override
-		protected void write() {
-			createPrintWriter(false);
-			if (printWriter == null) {
+		protected boolean write() {
+			if (!createPrintWriter()) {
 				// FIXME - reflection - not correctly segregated modules
-				return;
+				return false;
 			}
 			composerFactory.setSuperclass(
 					superClassOrInterfaceType.getQualifiedSourceName());
@@ -663,6 +658,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			sourceWriter.outdent();
 			sourceWriter.println("}");
 			closeClassBody();
+			return true;
 		}
 
 		void prepareProperties() {
@@ -813,7 +809,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			}
 
 			@Override
-			protected void write() {
+			protected boolean write() {
 				sourceWriter.println("{");
 				sourceWriter.indent();
 				sourceWriter.println(
@@ -838,6 +834,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				sourceWriter.println("properties.add(property);");
 				sourceWriter.outdent();
 				sourceWriter.println("}");
+				return true;
 			}
 
 			boolean isSerializable() {
@@ -1153,16 +1150,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		@Override
-		protected void createPrintWriter(boolean inConstructor) {
-			if (!inConstructor) {
-				super.createPrintWriter(inConstructor);
-			}
-		}
-
-		@Override
 		protected void prepare() {
 			prepareAnnotationImplementationGenerators();
 			List<JClassType> types = computeReachableTypes();
+			filter.updateReachableTypes(types);
 			types.stream().map(ClassReflectorGenerator::new)
 					.forEach(crg -> classReflectors.put(crg.type, crg));
 			classReflectors.values().forEach(ClassReflectorGenerator::prepare);
@@ -1172,9 +1163,11 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		@Override
-		protected void write() {
+		protected boolean write() {
+			if (!createPrintWriter()) {
+				return false;
+			}
 			annotationImplementations.stream()
-					.filter(AnnotationImplementationGenerator::isPending)
 					.forEach(AnnotationImplementationGenerator::write);
 			writeClassReflectors();
 			composerFactory.addImport(LinkedHashMap.class.getName());
@@ -1190,6 +1183,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			writeForNameCases();
 			writeRegisterRegistrations();
 			closeClassBody();
+			return true;
 		}
 
 		List<JClassType> computeReachableTypes() {
@@ -1237,15 +1231,14 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		void prepareAnnotationImplementationGenerators() {
-			Arrays.stream(context.getTypeOracle().getTypes()).filter(t -> t
-					.isAnnotationPresent(ClientVisible.class)
-					|| t.getQualifiedSourceName().equals(
-							"cc.alcina.framework.common.client.logic.reflection.Registration"))
+			Arrays.stream(context.getTypeOracle().getTypes())
+					.filter(t -> t.isAnnotationPresent(ClientVisible.class)
+							|| t.getQualifiedSourceName().equals(
+									Registration.class.getCanonicalName()))
 					.map(JClassType::isAnnotation)
 					.map(AnnotationImplementationGenerator::new).sorted()
 					.forEach(annotationImplementations::add);
 			annotationImplementations.stream()
-					.filter(AnnotationImplementationGenerator::isPending)
 					.forEach(AnnotationImplementationGenerator::prepare);
 		}
 
@@ -1339,7 +1332,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	abstract class ReflectorGenerator {
 		protected abstract void prepare();
 
-		protected abstract void write();
+		/**
+		 * @return true if code was written
+		 */
+		protected abstract boolean write();
 	}
 
 	abstract class UnitGenerator extends ReflectorGenerator {
@@ -1352,8 +1348,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		protected String implementationName;
 
 		protected PrintWriter printWriter;
-
-		boolean pending;
 
 		JClassType superClassOrInterfaceType;
 
@@ -1383,11 +1377,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			this.superClassOrInterfaceType = superClassOrInterfaceType;
 			composerFactory = new ClassSourceFileComposerFactory(packageName,
 					implementationName);
-			createPrintWriter(true);
-		}
-
-		public boolean isPending() {
-			return this.pending;
 		}
 
 		protected void closeClassBody() {
@@ -1396,10 +1385,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			context.commit(logger, printWriter);
 		}
 
-		protected void createPrintWriter(boolean inConstructor) {
+		protected boolean createPrintWriter() {
 			printWriter = context.tryCreate(logger, packageName,
 					implementationName);
-			pending = printWriter != null;
+			return printWriter != null;
 		}
 
 		protected void createSourceWriter(String packageName,

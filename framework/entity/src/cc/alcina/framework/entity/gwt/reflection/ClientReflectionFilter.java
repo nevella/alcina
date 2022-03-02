@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.gwt.reflection;
 
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.stream.Stream;
 
 import com.google.gwt.core.ext.UnableToCompleteException;
@@ -20,4 +21,6 @@ public interface ClientReflectionFilter {
 	void onGenerationComplete(AppImplRegistrations registrations,
 			AppReflectableTypes reflectableTypes, Stream<JClassType> stream,
 			String emitMessage) throws UnableToCompleteException;
+
+	void updateReachableTypes(List<JClassType> types);
 }

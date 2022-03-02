@@ -136,9 +136,8 @@ class ReachabilityData {
 		String json = new String(toJsonBytes(moduleTypes));
 		if (!Objects.equals(existing, json)) {
 			if (Boolean.getBoolean("reachability.production")) {
-				logger.log(TreeLogger.Type.ERROR,
+				logger.log(TreeLogger.Type.WARN,
 						"Not committing reachability changes (production build system)");
-				throw new IllegalStateException();
 			} else {
 				ResourceUtilities.write(json, file);
 			}
@@ -393,6 +392,21 @@ class ReachabilityData {
 					.collect(AlcinaCollectors.toLinkedHashSet());
 		}
 
+		public boolean unknownToNotReached() {
+			TypeList unknown = ensureTypeList(ReflectionModule.UNKNOWN);
+			TypeList notReached = ensureTypeList(ReflectionModule.NOT_REACHED);
+			List<Type> preAssignTypes = notReached.types;
+			notReached.types = Stream
+					.concat(preAssignTypes.stream(), unknown.types.stream())
+					.distinct().collect(Collectors.toList());
+			unknown.types.clear();
+			return !(notReached.types.equals(preAssignTypes));
+		}
+
+		boolean doesNotContain(JClassType type) {
+			return typeFor(type.getQualifiedSourceName()) == null;
+		}
+
 		TypeList ensureTypeList(String moduleName) {
 			Optional<TypeList> optional = moduleLists.stream()
 					.filter(tl -> Objects.equals(tl.moduleName, moduleName))
@@ -424,6 +438,10 @@ class ReachabilityData {
 			String moduleName;
 
 			List<Type> types = new ArrayList<>();
+
+			void add(JClassType jClassType) {
+				types.add(Type.get(jClassType));
+			}
 		}
 	}
 

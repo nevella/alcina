@@ -239,6 +239,7 @@
 		<property name="project.gwt.compile.jvmarg3" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg4" value="-Dblank" />
 		<property name="project.gwt.compile.jvmarg5" value="-Dblank" />
+		<property name="project.gwt.compile.jvmarg6" value="-Dblank" />
 		<if>
 			<available file="${project.gwt-unitcache.script.dir}" type="dir" />
 			<then>
@@ -247,6 +248,7 @@
 				</delete>
 			</then>
 		</if>
+		<echo message="-Xmx${framework.gwt.jvm.maxHeapSizeMb}M"/>
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
@@ -271,7 +273,9 @@
 			<jvmarg value="${project.gwt.compile.jvmarg3}" />
 			<jvmarg value="${project.gwt.compile.jvmarg4}" />
 			<jvmarg value="${project.gwt.compile.jvmarg5}" />
+			<jvmarg value="${project.gwt.compile.jvmarg6}" />
 			<arg line="-style ${gwt.codestyle}" />
+			<arg value="-XcompilePerFile" />
 			<arg value="-sourceLevel" />
 			<arg value="11" />
 			<arg line="${project.gwt.compile.flags}" />

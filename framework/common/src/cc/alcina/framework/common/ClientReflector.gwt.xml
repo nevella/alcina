@@ -7,9 +7,7 @@
 	<generate-with class="cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator">
 		<when-type-assignable class="cc.alcina.framework.common.client.reflection.ModuleReflector" />
 	</generate-with>
-	<generate-with class="cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator">
-		<when-type-assignable class="cc.alcina.framework.common.client.reflection.DevModeReflector" />
-	</generate-with>
+
 	<define-configuration-property name="ClientReflectionGenerator.ReachabilityData.folder" is-multi-valued="false" />
 	
 	<define-configuration-property name="ClientReflectionGenerator.FilterPeer.className" is-multi-valued="false" />

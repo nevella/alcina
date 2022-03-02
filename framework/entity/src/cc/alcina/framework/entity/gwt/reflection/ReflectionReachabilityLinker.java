@@ -203,11 +203,6 @@ public class ReflectionReachabilityLinker extends Linker {
 			do {
 				Set<Type> passTypes = asyncReachableTypes.stream()
 						.collect(AlcinaCollectors.toLinkedHashSet());
-				Type orElse = passTypes.stream()
-						.filter(t -> t.qualifiedSourceName.equals(
-								"cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta"))
-						.findFirst().orElse(null);
-				boolean b = reflectableTypes.contains(orElse);
 				asyncReachableTypes.stream().filter(reflectableTypes::contains)
 						.map(reflectableTypes::typeHierarchy)
 						.flatMap(h -> Stream.concat(h.settableTypes.stream(),
@@ -286,8 +281,9 @@ public class ReflectionReachabilityLinker extends Linker {
 		addedFromAsyncSerialization.stream().limit(maxEmit).forEach(t -> {
 			logger.log(TreeLogger.Type.INFO, Ax.format("\t[s]: %s", t));
 		});
+		boolean unknownAssignmentChanged = moduleTypes.unknownToNotReached();
 		boolean delta = split.firstOnly.size() > 0
-				|| split.secondOnly.size() > 0;
+				|| split.secondOnly.size() > 0 || unknownAssignmentChanged;
 		return delta;
 	}
 

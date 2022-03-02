@@ -38,21 +38,6 @@ public class ClientReflections {
 				// Arrays$ArrayList - or primitive
 				return ClassReflector.emptyReflector(clazz);
 			}
-			// if (!GWT.isScript()) {
-			// // FIXME - reflection - although this is fancy, better to add
-			// // all unknown reflectables to UNKNOWN on build of Initial and
-			// // include in initial if dev mode
-			// //
-			// // effectively call back into the generator
-			// System.setProperty(DEV_MODE_REFLECTOR, clazz.getName());
-			// DevModeReflector devModeReflector = GWT
-			// .create(DevModeReflector.class);
-			// register(devModeReflector);
-			// supplier = perClassReflectorSuppliers.get(clazz);
-			// if (supplier != null) {
-			// return supplier.get();
-			// }
-			// }
 			throw new NoSuchElementException(
 					"No reflector for " + clazz.getName());
 		}

@@ -2,18 +2,22 @@ package cc.alcina.framework.entity.gwt.reflection;
 
 import java.io.File;
 import java.lang.annotation.Annotation;
+import java.util.List;
 import java.util.Objects;
 import java.util.stream.Stream;
 
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.TreeLogger;
+import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.LegacyModuleAssignments;
+import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.ModuleTypes.TypeList;
 
 public class ModuleReflectionFilter implements ClientReflectionFilter {
 	private GeneratorContext context;
@@ -27,6 +31,8 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 	private ClientReflectionFilterPeer peer;
 
 	private TreeLogger logger;
+
+	private boolean reflectUnknownInInitialModule;
 
 	@Override
 	public boolean emitAnnotation(JClassType type,
@@ -45,18 +51,20 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 		if (emit != null) {
 			return emit;
 		}
-		if (!context.isProdMode() && moduleTypes.moduleLists.size() == 0) {
+		if (moduleTypes.permit(type, moduleName)) {
 			return true;
-		} else {
-			return moduleTypes.permit(type, moduleName);
 		}
+		return isInitial() && reflectUnknownInInitialModule
+				&& moduleTypes.permit(type, ReflectionModule.UNKNOWN);
 	}
 
 	public void init(TreeLogger logger, GeneratorContext context,
-			String moduleName) throws Exception {
+			String moduleName, boolean reflectUnknownInInitialModule)
+			throws Exception {
 		this.logger = logger;
 		this.context = context;
 		this.moduleName = moduleName;
+		this.reflectUnknownInInitialModule = reflectUnknownInInitialModule;
 		if (Objects.equals(moduleName, ReflectionModule.INITIAL)) {
 			ReachabilityData.initConfiguration(context.getPropertyOracle());
 		}
@@ -92,6 +100,21 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 			context.commitArtifact(logger, legacyModuleAssignments.serialize());
 		}
 		System.out.println(emitMessage);
+	}
+
+	@Override
+	public void updateReachableTypes(List<JClassType> types) {
+		TypeList unknownList = moduleTypes
+				.ensureTypeList(ReflectionModule.UNKNOWN);
+		unknownList.types.clear();
+		types.stream().filter(moduleTypes::doesNotContain)
+				.forEach(unknownList::add);
+		if (unknownList.types.size() > 0) {
+			logger.log(Type.INFO,
+					Ax.format("%s classes with unknown reachability",
+							unknownList.types.size()));
+		}
+		moduleTypes.generateLookup();
 	}
 
 	private boolean isInitial() {
