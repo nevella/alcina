@@ -29,6 +29,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.ui.ToStringRenderer;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.gwt.client.gwittir.RequiresContextBindable;
 import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
 import cc.alcina.framework.gwt.client.widget.SelectWithSearch;
@@ -266,16 +267,21 @@ public class BoundSelector extends AbstractBoundWidget
 		initWidget(container);
 	}
 
-	protected void addItems(Collection<?> items) {
-		items = items.stream().filter(Objects::nonNull)
+	protected void addItems(Collection<?> toAdd) {
+		toAdd = toAdd.stream().filter(Objects::nonNull)
 				.collect(Collectors.toList());
-		if (items.isEmpty()) {
+		if (toAdd.isEmpty()) {
 			return;
 		}
-		boolean delta = search.getSelectedItems().addAll(items);
-		if (delta) {
-			((List) results.getItemMap().get(""))
-					.addAll(search.getSelectedItems());
+		Set<?> selectedItems = search.getSelectedItems();
+		boolean hadDelta = selectedItems.addAll((Collection) toAdd);
+		if (hadDelta) {
+			List<?> list = (List) results.getItemMap().get("");
+			// o(n) add, ensuring no repetitions and preserving order
+			Set<?> delta = selectedItems.stream()
+					.collect(AlcinaCollectors.toLinkedHashSet());
+			list.forEach(elem -> delta.remove(elem));
+			list.addAll((Set) delta);
 			results.setItemMap(results.getItemMap());
 			search.getFilter().saveLastText();
 			search.getFilter().clear();
