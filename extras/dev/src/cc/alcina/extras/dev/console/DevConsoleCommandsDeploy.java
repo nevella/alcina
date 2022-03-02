@@ -22,6 +22,7 @@ public class DevConsoleCommandsDeploy {
 		return response;
 	}
 
+	// normally call from a task, rather than directly
 	public static class CmdDeploy extends DevConsoleCommand {
 		@Override
 		public boolean clsBeforeRun() {
@@ -30,7 +31,7 @@ public class DevConsoleCommandsDeploy {
 
 		@Override
 		public String[] getCommandIds() {
-			return new String[] { "deploy" };
+			return new String[] { "deploy.cmd" };
 		}
 
 		@Override
