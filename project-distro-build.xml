@@ -248,7 +248,6 @@
 				</delete>
 			</then>
 		</if>
-		<echo message="-Xmx${framework.gwt.jvm.maxHeapSizeMb}M"/>
 		<java failonerror="true" fork="true" classname="com.google.gwt.dev.Compiler">
 			<classpath>
 				<pathelement path="${project.gwt.classpath.src}" />
