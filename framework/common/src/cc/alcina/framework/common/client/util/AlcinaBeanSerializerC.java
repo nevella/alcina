@@ -178,6 +178,9 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		for (String propertyName : props.keySet()) {
 			try {
 				Property property = classReflector.property(propertyName);
+				if (property == null) {
+					throw new NoSuchPropertyException(propertyName);
+				}
 				Class type = property.getType();
 				JSONValue jsonValue = props.get(propertyName);
 				Object value = deserializeField(jsonValue, type);
