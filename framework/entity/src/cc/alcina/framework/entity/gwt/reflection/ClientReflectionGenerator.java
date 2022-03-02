@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.ext.BadPropertyValueException;
 import com.google.gwt.core.ext.CachedGeneratorResult;
 import com.google.gwt.core.ext.GeneratorContext;
 import com.google.gwt.core.ext.IncrementalGenerator;
@@ -201,6 +202,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			GeneratorContext context, String typeName)
 			throws UnableToCompleteException {
 		try {
+			checkSinglePermutationBuild(logger, context);
 			this.logger = logger;
 			this.context = context;
 			this.typeName = typeName;
@@ -243,6 +245,15 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	private void checkSinglePermutationBuild(TreeLogger logger,
+			GeneratorContext context) throws BadPropertyValueException {
+		Preconditions.checkArgument(
+				context.getPropertyOracle()
+						.getSelectionProperty(logger, "user.agent")
+						.getCurrentValue().equals("safari"),
+				"Only configured for single-permutation (safari) builds");
 	}
 
 	@Override
