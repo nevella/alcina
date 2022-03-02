@@ -199,9 +199,9 @@ public class AnalyseThreadDump {
 										"ignoreableThreadNamePattern"))
 						|| name.matches(
 								"(VM Periodic Task Thread|C2 CompilerThread0"
-										+ "|Reference Handler|C1 CompilerThread0|pool-shell-io.*|Keep-Alive-Timer"
+										+ "|Reference Handler|C1 CompilerThread\\d+|pool-shell-io.*|Keep-Alive-Timer"
 										+ "|cluster1-timeouter-0|threadDeathWatcher-.*|Signal Dispatcher"
-										+ "|kafka-coordinator-heartbeat-thread)");
+										+ "|kafka-coordinator-heartbeat-thread|Keep-Alive-SocketCleaner)");
 			}
 
 			String toStringForDump() {
