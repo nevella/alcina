@@ -20,7 +20,7 @@ public class RemoteExec {
 		Shell shell = new Shell();
 		shell.logToStdOut = false;
 		shell.logToFile = logFile.getPath();
-		Output output = exec(command, shell, true);
+		Output output = exec(command, shell);
 		if (isRemote()) {
 			syncTargetFolder(false);
 		}
@@ -43,28 +43,16 @@ public class RemoteExec {
 	}
 
 	private Output exec(String cmd) throws Exception {
-		return exec(cmd, new Shell(), false);
+		return exec(cmd, new Shell());
 	}
 
-	private Output exec(String cmd, Shell shell, boolean runInContainer)
-			throws Exception {
+	private Output exec(String cmd, Shell shell) throws Exception {
 		String script = cmd;
 		if (isRemote()) {
-			if (runInContainer) {
-				script = Ax.format(
-						"ssh -i %s -o StrictHostKeyChecking=no -t %s@%s 'PATH=$PATH:/usr/local/bin &&"
-								+ " docker exec %s /bin/bash -c '\"'\"' %s'\"'\"' '",
-						remoteConnection.sshPrivateKey,
-						remoteConnection.sshUser,
-						remoteConnection.dockerHostName,
-						remoteConnection.containerName, cmd);
-			} else {
-				script = Ax.format(
-						"ssh -i %s -o StrictHostKeyChecking=no -t %s@%s 'PATH=$PATH:/usr/local/bin && %s'",
-						remoteConnection.sshPrivateKey,
-						remoteConnection.sshUser,
-						remoteConnection.dockerHostName, cmd);
-			}
+			script = Ax.format(
+					"ssh -i %s -o StrictHostKeyChecking=no -p %s -t %s@%s 'PATH=$PATH:/usr/local/bin && %s'",
+					remoteConnection.sshPrivateKey, remoteConnection.sshPort,
+					remoteConnection.sshUser, remoteConnection.hostName, cmd);
 		}
 		Ax.out(script);
 		Output output = shell.runBashScript(script);
@@ -85,24 +73,16 @@ public class RemoteExec {
 		}
 		String local = targetFolder + "/";
 		String remote = Ax.format("%s@%s:%s/", remoteConnection.sshUser,
-				remoteConnection.dockerHostName, targetFolder);
+				remoteConnection.hostName, targetFolder);
 		String from = fromToTo ? local : remote;
 		String to = fromToTo ? remote : local;
-		if (!fromToTo) {
-			exec(Ax.format("docker cp  %s:%s %s/..",
-					remoteConnection.containerName, targetFolder,
-					targetFolder));
-		}
 		String rsync = Ax.format(
-				"rsync -avz --delete --rsh \"/usr/bin/ssh -i %s -o StrictHostKeychecking=no -p 22\""
+				"rsync -avz --delete --rsh \"/usr/bin/ssh -i %s -o StrictHostKeychecking=no -p %s \""
 						+ " %s %s",
-				remoteConnection.sshPrivateKey, from, to);
+				remoteConnection.sshPrivateKey, remoteConnection.sshPort, from,
+				to);
 		Ax.out(rsync);
 		new Shell().runBashScript(rsync);
-		if (fromToTo) {
-			exec(Ax.format("docker cp %s %s:%s", targetFolder,
-					remoteConnection.containerName, targetFolder));
-		}
 		if (!fromToTo) {
 			// TODO - check it's tmp
 			// exec(Ax.format("rm -rf %s", targetFolder));
@@ -110,18 +90,18 @@ public class RemoteExec {
 	}
 
 	public static class RemoteConnection {
-		String containerName;
-
-		String dockerHostName;
+		String hostName;
 
 		String sshUser;
 
 		String sshPrivateKey;
 
-		public RemoteConnection(String containerName, String dockerHostName,
-				String sshUser, String sshPrivateKey) {
-			this.containerName = containerName;
-			this.dockerHostName = dockerHostName;
+		int sshPort;
+
+		public RemoteConnection(String hostName, int sshPort, String sshUser,
+				String sshPrivateKey) {
+			this.hostName = hostName;
+			this.sshPort = sshPort;
 			this.sshUser = sshUser;
 			this.sshPrivateKey = sshPrivateKey;
 		}
