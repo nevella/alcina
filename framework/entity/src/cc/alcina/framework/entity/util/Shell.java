@@ -16,8 +16,6 @@ import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
@@ -43,18 +41,8 @@ public class Shell {
 		}
 	}
 
-	@Registration.Singleton
-	public static class Pool {
-		private ExecutorService threadPool;
-
-		public Pool() {
-			this.threadPool = Executors
-					.newCachedThreadPool(new NamedThreadFactory("shell-io"));
-		}
-
-		static Shell.Pool get() {
-			return Registry.impl(Shell.Pool.class);
-		}
+	public static void receiveStream(StreamBuffer streamBuffer) {
+		Pool.get().threadPool.execute(streamBuffer);
 	}
 
 	public String ERROR_MARKER = "**>";
@@ -201,7 +189,9 @@ public class Shell {
 			timer.cancel();
 		}
 		return new Output(outputBuffer.getStreamResult(),
-				errorBuffer.getStreamResult(), timedOut, process.exitValue());
+				errorBuffer.getStreamResult(), timedOut, process.exitValue(),
+				Ax.isBlank(logToFile) ? null
+						: ResourceUtilities.read(logToFile));
 	}
 
 	private String getScriptExtension() {
@@ -236,10 +226,6 @@ public class Shell {
 		receiveStream(outputBuffer);
 	}
 
-	public static void receiveStream(StreamBuffer streamBuffer) {
-		Pool.get().threadPool.execute(streamBuffer);
-	}
-
 	public static class Output {
 		public String output;
 
@@ -249,12 +235,15 @@ public class Shell {
 
 		public int exitValue;
 
+		public String logFileContents;
+
 		public Output(String output, String error, boolean timedOut,
-				int exitValue) {
+				int exitValue, String logFileContents) {
 			this.output = output;
 			this.error = error;
 			this.timedOut = timedOut;
 			this.exitValue = exitValue;
+			this.logFileContents = logFileContents;
 		}
 
 		public boolean failed() {
@@ -267,6 +256,20 @@ public class Shell {
 						error);
 			}
 			return this;
+		}
+	}
+
+	@Registration.Singleton
+	public static class Pool {
+		static Shell.Pool get() {
+			return Registry.impl(Shell.Pool.class);
+		}
+
+		private ExecutorService threadPool;
+
+		public Pool() {
+			this.threadPool = Executors
+					.newCachedThreadPool(new NamedThreadFactory("shell-io"));
 		}
 	}
 }
