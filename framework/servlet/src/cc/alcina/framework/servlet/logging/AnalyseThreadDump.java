@@ -83,6 +83,12 @@ public class AnalyseThreadDump {
 			if (lines[0].matches(".*at sun.nio.fs.LinuxWatchService.poll.*")) {
 				return true;
 			}
+			if (lines[0].matches(".*at java.lang.Thread.sleep.*")) {
+				if (joined.contains(
+						"cc.alcina.framework.entity.persistence.metric.InternalMetrics.profile")) {
+					return true;
+				}
+			}
 			if (lines[0].matches(".*at sun.nio.ch.EPoll.wait.*")) {
 				return true;
 			}
@@ -198,7 +204,7 @@ public class AnalyseThreadDump {
 								ResourceUtilities.get(AnalyseThreadDump.class,
 										"ignoreableThreadNamePattern"))
 						|| name.matches(
-								"(VM Periodic Task Thread|C2 CompilerThread0"
+								"(VM Periodic Task Thread|C2 CompilerThread\\d+"
 										+ "|Reference Handler|C1 CompilerThread\\d+|pool-shell-io.*|Keep-Alive-Timer"
 										+ "|cluster1-timeouter-0|threadDeathWatcher-.*|Signal Dispatcher"
 										+ "|kafka-coordinator-heartbeat-thread|Keep-Alive-SocketCleaner)");
