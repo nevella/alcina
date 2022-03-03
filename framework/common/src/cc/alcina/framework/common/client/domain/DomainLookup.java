@@ -19,8 +19,25 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.PropertyPath;
 
+/**
+ * <p>
+ * A mapping from a domain type to a projected value (possibly a collection),
+ * indexed on the projected value.
+ *
+ * <p>
+ * Warning! There is an edge case where distribution of values is not ideal for
+ * high write loads, specifically for Class X, index on X.v.y0...y(n) where v is
+ * a collection with many elements.
+ *
+ * <p>
+ * This class will emit a warning if an inappropriate distribution is found -
+ * generally that sort of distribution is better handled with a multi-layered
+ * (DomainProjection) cache
+ */
 public class DomainLookup<T, E extends Entity>
 		implements DomainListener<E>, IndexedValueProvider<E> {
+	private static final int WARN_DISTRIBUTION = 100;
+
 	private Multiset<T, Set<E>> store;
 
 	protected DomainStoreLookupDescriptor descriptor;
@@ -32,6 +49,8 @@ public class DomainLookup<T, E extends Entity>
 	private Predicate<E> relevanceFilter;
 
 	private Converter<T, T> normaliser;
+
+	private boolean distributionWarned = false;
 
 	public DomainLookup(DomainStoreLookupDescriptor descriptor) {
 		this.descriptor = descriptor;
@@ -102,6 +121,11 @@ public class DomainLookup<T, E extends Entity>
 		Object v1 = getChainedProperty(entity);
 		if (v1 instanceof Collection) {
 			Set deduped = new LinkedHashSet((Collection) v1);
+			if (deduped.size() > WARN_DISTRIBUTION && !distributionWarned) {
+				distributionWarned = true;
+				Ax.err("Distribution warning - consider a different index structure: %s",
+						this);
+			}
 			for (Object v2 : deduped) {
 				add(normalise((T) v2), entity);
 			}

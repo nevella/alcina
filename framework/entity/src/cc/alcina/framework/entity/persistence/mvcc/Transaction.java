@@ -32,13 +32,29 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 import it.unimi.dsi.fastutil.Hash;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 
-/*
- * DOCUMENT - there are some slight differences between 'ensure ended' and 'ensure begun' - particularly around state TO_DB_ABORTED.
- * 
- *  This behavioural difference serves to make ABORT (transform commit error) handling more intentional - a simple 'ensureBegun' won't be enough - see e.e. JobRegistry.performJob0
- *  
- *  Note that ordering is only meaningful for committed transactions (all uses of tx ordering must respect that).
+/**
+ * DOCUMENT - there are some slight differences between 'ensure ended' and
+ * 'ensure begun' - particularly around state TO_DB_ABORTED.
+ *
+ * This behavioural difference serves to make ABORT (transform commit error)
+ * handling more intentional - a simple 'ensureBegun' won't be enough - see e.e.
+ * JobRegistry.performJob0
+ *
+ * Note that ordering is only meaningful for committed transactions (all uses of
+ * tx ordering must respect that).
+ *
+ * =================
+ *
+ * Performance notes:
+ *
+ * The synchronization of resolvedMostRecentVisibleTransactions (a per-tx mvcc
+ * resolution lookup) only kicks in when accessed multithreaded (i.e. in a
+ * readonly transaction). resolvedMostRecentVisibleTransactions is only used
+ * when a given MvccObject has multiiple versions - which is rare _except_
+ * during bulk updates - which are themselves definitely run single-threaded, so
+ * the logic of the optimisation holds.
  */
 public class Transaction implements Comparable<Transaction> {
 	public static final String CONTEXT_RETAIN_TRANSACTION_TRACES = Transaction.class
@@ -51,6 +67,10 @@ public class Transaction implements Comparable<Transaction> {
 	};
 
 	static Logger logger = LoggerFactory.getLogger(Transaction.class);
+
+	// optimisation check - seems a lot of time spent in the threadlocal check
+	private static Map<Thread, Transaction> perThreadTransaction = new ConcurrentHashMap<>(
+			1000);
 
 	public static void begin() {
 		begin(TransactionPhase.TO_DB_PREPARING);
@@ -128,6 +148,19 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
+	/*
+	 * Called in locations a transaction *should* be active, but isn't
+	 */
+	public static void debugCurrentThreadTransaction() {
+		Transaction currentThreadTransaction = provideCurrentThreadTransaction();
+		if (currentThreadTransaction == null) {
+			logger.warn("DEVEX - 0 - no current thread transaction");
+		} else {
+			logger.warn("DEVEX - 0 - current thread transaction:\n{}",
+					currentThreadTransaction.toDebugString());
+		}
+	}
+
 	public static void end() {
 		if (!Transactions.isInitialised()) {
 			return;
@@ -181,14 +214,14 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
-	public static boolean isInTransaction() {
-		return perThreadTransaction.containsKey(Thread.currentThread());
-	}
-
 	public static boolean isInActiveTransaction() {
 		Transaction currentThreadTransaction = provideCurrentThreadTransaction();
 		return currentThreadTransaction != null
 				&& !currentThreadTransaction.getPhase().isComplete();
+	}
+
+	public static boolean isInTransaction() {
+		return perThreadTransaction.containsKey(Thread.currentThread());
 	}
 
 	/*
@@ -223,16 +256,8 @@ public class Transaction implements Comparable<Transaction> {
 		transaction.threadCount.decrementAndGet();
 	}
 
-	private static void removeThreadLocalTransaction() {
-		perThreadTransaction.remove(Thread.currentThread());
-	}
-
-	// optimisation check - seems a lot of time spent in the threadlocal check
-	private static Map<Thread, Transaction> perThreadTransaction = new ConcurrentHashMap<>(
-			1000);
-
-	static void reapUnreferencedTransactions() {
-		perThreadTransaction.keySet().removeIf(t -> !t.isAlive());
+	private static Transaction getPerThreadTransaction() {
+		return perThreadTransaction.get(Thread.currentThread());
 	}
 
 	private static Transaction provideCurrentThreadTransaction() {
@@ -250,13 +275,17 @@ public class Transaction implements Comparable<Transaction> {
 		return transaction;
 	}
 
-	private static Transaction getPerThreadTransaction() {
-		return perThreadTransaction.get(Thread.currentThread());
+	private static void removeThreadLocalTransaction() {
+		perThreadTransaction.remove(Thread.currentThread());
 	}
 
 	private static boolean retainStartEndTraces() {
 		return ResourceUtilities.is(Transaction.class, "retainTraces")
 				|| LooseContext.is(CONTEXT_RETAIN_TRANSACTION_TRACES);
+	}
+
+	private static void setThreadLocalTransaction(Transaction transaction) {
+		perThreadTransaction.put(Thread.currentThread(), transaction);
 	}
 
 	static void begin(TransactionPhase initialPhase) {
@@ -289,11 +318,11 @@ public class Transaction implements Comparable<Transaction> {
 		}
 	}
 
-	private static void setThreadLocalTransaction(Transaction transaction) {
-		perThreadTransaction.put(Thread.currentThread(), transaction);
+	static void reapUnreferencedTransactions() {
+		perThreadTransaction.keySet().removeIf(t -> !t.isAlive());
 	}
 
-	private ConcurrentHashMap<MvccObjectVersions, Transaction> resolvedMostRecentVisibleTransactions = new ConcurrentHashMap<>(
+	private Map<MvccObjectVersions, Transaction> resolvedMostRecentVisibleTransactions = new Object2ObjectOpenHashMap<>(
 			Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
 
 	Thread originatingThread;
@@ -649,13 +678,24 @@ public class Transaction implements Comparable<Transaction> {
 
 	/*
 	 * Cache the result (for a given object, and a given transaction, it may be
-	 * called many times)
+	 * called many times). Non-synchronized if single-threaded
 	 */
 	Transaction
 			mostRecentVisibleCommittedTransaction(MvccObjectVersions versions) {
-		return resolvedMostRecentVisibleTransactions.computeIfAbsent(versions,
-				v -> TransactionVersions.mostRecentCommonVisible(
-						v.versions.keySet(), committedTransactions));
+		if (threadCount.get() == 1) {
+			return resolvedMostRecentVisibleTransactions
+					.computeIfAbsent(versions,
+							v -> TransactionVersions.mostRecentCommonVisible(
+									v.versions.keySet(),
+									committedTransactions));
+		} else {
+			synchronized (resolvedMostRecentVisibleTransactions) {
+				return resolvedMostRecentVisibleTransactions.computeIfAbsent(
+						versions,
+						v -> TransactionVersions.mostRecentCommonVisible(
+								v.versions.keySet(), committedTransactions));
+			}
+		}
 	}
 
 	void setId(TransactionId id) {
@@ -684,18 +724,5 @@ public class Transaction implements Comparable<Transaction> {
 			NavigableSet<Transaction> otherCommittedTransactionsSet) {
 		return TransactionVersions.commonVisible(committedTransactions,
 				otherCommittedTransactionsSet);
-	}
-
-	/*
-	 * Called in locations a transaction *should* be active, but isn't
-	 */
-	public static void debugCurrentThreadTransaction() {
-		Transaction currentThreadTransaction = provideCurrentThreadTransaction();
-		if (currentThreadTransaction == null) {
-			logger.warn("DEVEX - 0 - no current thread transaction");
-		} else {
-			logger.warn("DEVEX - 0 - current thread transaction:\n{}",
-					currentThreadTransaction.toDebugString());
-		}
 	}
 }
