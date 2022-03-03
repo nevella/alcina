@@ -37,14 +37,14 @@ import it.unimi.dsi.fastutil.longs.Long2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 /*
- * 
- * This class is intended for transaction-aware indices and lookups. 
- * 
-* It replaces TransactionalMapOld - the layer-based implementation did not scale during long-running txs 
+ *
+ * This class is intended for transaction-aware indices and lookups.
+ *
+* It replaces TransactionalMapOld - the layer-based implementation did not scale during long-running txs
  * ***(v2)
- * 
+ *
  * transitions through 1-1 :-> baseLayer :-> transactional
- *   
+ *
  */
 public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		implements TransactionalCollection, UnboxedLongMap<V> {
