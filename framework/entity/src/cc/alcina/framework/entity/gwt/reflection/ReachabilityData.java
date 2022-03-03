@@ -396,10 +396,17 @@ class ReachabilityData {
 			TypeList unknown = ensureTypeList(ReflectionModule.UNKNOWN);
 			TypeList notReached = ensureTypeList(ReflectionModule.NOT_REACHED);
 			List<Type> preAssignTypes = notReached.types;
-			notReached.types = Stream
+			Set<Type> notReachedComputed = Stream
 					.concat(preAssignTypes.stream(), unknown.types.stream())
-					.distinct().collect(Collectors.toList());
+					.collect(AlcinaCollectors.toLinkedHashSet());
 			unknown.types.clear();
+			moduleLists.stream()
+					.filter(tl -> ReflectionModule.Modules
+							.provideIsFragment(tl.moduleName))
+					.forEach(
+							tl -> tl.types.forEach(notReachedComputed::remove));
+			notReached.types = notReachedComputed.stream()
+					.collect(Collectors.toList());
 			return !(notReached.types.equals(preAssignTypes));
 		}
 

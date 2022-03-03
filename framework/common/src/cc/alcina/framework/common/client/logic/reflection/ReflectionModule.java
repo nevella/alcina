@@ -56,4 +56,17 @@ public @interface ReflectionModule {
 	 * FIXME - reflection - to Class<? extends ClientModule>
 	 */
 	String value();
+
+	public static class Modules {
+		public static boolean provideIsFragment(String moduleName) {
+			switch (moduleName) {
+			case UNKNOWN:
+			case NOT_REACHED:
+			case EXCLUDED:
+				return false;
+			default:
+				return true;
+			}
+		}
+	}
 }
