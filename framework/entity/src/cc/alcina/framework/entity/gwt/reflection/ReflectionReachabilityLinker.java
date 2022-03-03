@@ -126,10 +126,13 @@ public class ReflectionReachabilityLinker extends Linker {
 					ReachabilityData.serializeModuleTypes(logger, moduleTypes,
 							typesFile);
 				}
-				if (pass++ < maxPass) {
-					logger.log(TreeLogger.Type.INFO, Ax.format(
-							"Recompile - reflection changes - pass %s", pass));
-					com.google.gwt.dev.Compiler.recompile = true;
+				if (!Boolean.getBoolean("reachability.production")) {
+					if (pass++ < maxPass) {
+						logger.log(TreeLogger.Type.INFO, Ax.format(
+								"Recompile - reflection changes - pass %s",
+								pass));
+						com.google.gwt.dev.Compiler.recompile = true;
+					}
 				}
 			}
 		}
