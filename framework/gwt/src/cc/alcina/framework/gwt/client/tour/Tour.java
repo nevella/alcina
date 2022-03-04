@@ -105,6 +105,8 @@ public interface Tour {
 
 		public String getActionValue();
 
+		public String getComment();
+
 		public int getDelay();
 
 		public Condition getIgnoreActionIf();

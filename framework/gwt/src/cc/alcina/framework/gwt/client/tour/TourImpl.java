@@ -246,6 +246,8 @@ public class TourImpl implements Tour {
 
 		private String style;
 
+		private String comment;
+
 		@Override
 		public Action getAction() {
 			return this.action;
@@ -259,6 +261,11 @@ public class TourImpl implements Tour {
 		@Override
 		public String getCaption() {
 			return this.caption;
+		}
+
+		@Override
+		public String getComment() {
+			return this.comment;
 		}
 
 		@Override
@@ -328,6 +335,10 @@ public class TourImpl implements Tour {
 
 		public void setCaption(String caption) {
 			this.caption = caption;
+		}
+
+		public void setComment(String comment) {
+			this.comment = comment;
 		}
 
 		public void setDelay(int delay) {

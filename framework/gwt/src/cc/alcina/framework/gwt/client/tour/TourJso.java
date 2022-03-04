@@ -166,7 +166,7 @@ public final class TourJso extends JavaScriptObject implements Tour {
 
 		final public native String asString()
 		/*-{
-		return JSON.stringify(this);
+      return JSON.stringify(this);
 		}-*/;
 
 		@Override
@@ -178,6 +178,11 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		@Override
 		final public native String getActionValue()/*-{
       return this.actionValue;
+		}-*/;
+
+		@Override
+		final public native String getComment()/*-{
+      return this.comment;
 		}-*/;
 
 		@Override
