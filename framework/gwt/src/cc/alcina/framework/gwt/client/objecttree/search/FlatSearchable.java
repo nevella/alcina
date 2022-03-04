@@ -20,8 +20,6 @@ import com.totsp.gwittir.client.validator.Validator;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
@@ -29,8 +27,10 @@ import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 
+@Reflected
 public abstract class FlatSearchable<SC extends SearchCriterion>
-		implements Comparable<FlatSearchable>, HasValueChangeHandlers {
+		implements Comparable<FlatSearchable>, HasValueChangeHandlers,
+		Registration.Ensure {
 	private static transient Comparator<FlatSearchable> comparator;
 	static {
 		comparator = Comparator.comparing(FlatSearchable::getCategory);

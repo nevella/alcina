@@ -50,10 +50,10 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.DomainCollections;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.NonClientRegistryPointType;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
@@ -1190,8 +1190,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		List<JClassType> computeReachableTypes() {
 			return Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> (has(t, Reflected.class)
-							|| has(t, Bean.class) || hasRegistrations(t)
+					.filter(t -> (has(t, Reflected.class) || has(t, Bean.class)
+							|| hasRegistrations(t)
 							// the annotations themselves
 							|| t.isAnnotationPresent(ClientVisible.class)
 							|| isReflectableJavaCoreClass(t)
@@ -1208,8 +1208,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					subtypes);
 			Multiset<JClassType, Set<JClassType>> settableTypes = computeSettableTypes();
 			return Arrays.stream(context.getTypeOracle().getTypes())
-					.filter(t -> (has(t, Reflected.class)
-							|| has(t, Bean.class) || hasRegistrations(t)
+					.filter(t -> (has(t, Reflected.class) || has(t, Bean.class)
+							|| hasRegistrations(t)
 							// the annotations themselves
 							|| t.isAnnotationPresent(ClientVisible.class)
 							|| isReflectableJavaCoreClass(t)
