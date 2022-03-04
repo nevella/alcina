@@ -3,11 +3,11 @@ package cc.alcina.framework.gwt.client.gwittir.widget;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
-@ClientInstantiable
+@Reflected
 public class FileSelectorInfo extends Bindable
 		implements Serializable, TreeSerializable {
 	private String fileName;
