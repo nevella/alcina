@@ -206,7 +206,9 @@ public class AnalyseThreadDump {
 						|| name.matches(
 								"(VM Periodic Task Thread|C2 CompilerThread\\d+"
 										+ "|Reference Handler|C1 CompilerThread\\d+|pool-shell-io.*|Keep-Alive-Timer"
-										+ "|cluster1-timeouter-0|threadDeathWatcher-.*|Signal Dispatcher|Service Thread"
+										+ "|cluster1-timeouter-0|threadDeathWatcher-.*"
+										+ "|Signal Dispatcher|Service Thread|Monitor Deflation Thread|Sweeper thread"
+										+ "|DeploymentScanner-threads.*"
 										+ "|kafka-coordinator-heartbeat-thread|Keep-Alive-SocketCleaner)");
 			}
 
