@@ -574,8 +574,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 									.contains(a.annotationType()))
 					.map(AnnotationExpressionWriter::new).sorted()
 					.forEach(annotationExpressionWriters::add);
+			// properties are needed even for abstract classes (for annotation
+			// access)
+			prepareProperties();
 			if (!isAbstract) {
-				prepareProperties();
 				prepareRegistrations();
 			}
 		}

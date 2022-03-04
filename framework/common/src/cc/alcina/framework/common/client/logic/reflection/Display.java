@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -18,13 +18,20 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Collections;
+import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.reflection.Resolution.Inheritance;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
 @Target({ ElementType.METHOD })
+@Resolution(inheritance = {
+		Inheritance.PROPERTY }, mergeStrategy = Display.MergeStrategy.class)
 /**
  *
  * @author Nick Reddel
@@ -78,4 +85,22 @@ public @interface Display {
 	Permission visible() default @Permission(access = AccessLevel.EVERYONE);
 
 	String widgetStyleName() default "";
+
+	@ClientInstantiable
+	public static class MergeStrategy
+			extends AbstractMergeStrategy.SingleResultMergeStrategy<Display> {
+		@Override
+		protected List<Display> atClass(Class<Display> annotationClass,
+				ClassReflector<?> reflector) {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		protected List<Display> atProperty(Class<Display> annotationClass,
+				Property property) {
+			Display annotation = property.annotation(annotationClass);
+			return annotation == null ? Collections.emptyList()
+					: Collections.singletonList(annotation);
+		}
+	}
 }

@@ -23,19 +23,20 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	@Override
 	public List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
 			List<Inheritance> inheritance) {
+		if (!inheritance.contains(Inheritance.CLASS)) {
+			return Collections.emptyList();
+		}
 		List<A> result = new ArrayList<>();
 		Set<Class> stack = new LinkedHashSet<>();
 		Set<Class> visited = new LinkedHashSet<>();
 		stack.add(clazz);
-		if (inheritance.contains(Inheritance.CLASS)) {
-			Class<?> cursor = clazz;
-			while ((cursor = cursor.getSuperclass()) != null) {
-				stack.add(cursor);
-			}
+		Class<?> cursor = clazz;
+		while ((cursor = cursor.getSuperclass()) != null) {
+			stack.add(cursor);
 		}
 		while (stack.size() > 0) {
 			Iterator<Class> itr = stack.iterator();
-			Class cursor = itr.next();
+			cursor = itr.next();
 			itr.remove();
 			visited.add(cursor);
 			ClassReflector<?> reflector = Reflections.at(cursor);
@@ -52,13 +53,38 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	@Override
 	public List<A> resolveProperty(Class<A> annotationClass, Property property,
 			List<Inheritance> inheritance) {
-		// not implemented...yet
-		Preconditions.checkState(property == null);
-		return Collections.emptyList();
+		if (!inheritance.contains(Inheritance.PROPERTY)) {
+			return Collections.emptyList();
+		}
+		List<A> result = new ArrayList<>();
+		Class cursor = property.getDefiningType();
+		boolean includeErased = inheritance
+				.contains(Inheritance.ERASED_PROPERTY);
+		while (cursor != null) {
+			Property cursorProperty = Reflections.at(cursor)
+					.property(property.getName());
+			if (cursorProperty != null) {
+				if (!includeErased) {
+					if (cursorProperty.getType() != property.getType()) {
+						cursorProperty = null;
+					}
+				}
+			}
+			if (cursorProperty != null) {
+				List<A> atProperty = atProperty(annotationClass,
+						cursorProperty);
+				result = merge(result, atProperty);
+			}
+			cursor = cursor.getSuperclass();
+		}
+		return result;
 	}
 
 	protected abstract List<A> atClass(Class<A> annotationClass,
 			ClassReflector<?> reflector);
+
+	protected abstract List<A> atProperty(Class<A> annotationClass,
+			Property property);
 
 	boolean permitPackages(Class clazz) {
 		switch (clazz.getPackageName()) {
@@ -81,6 +107,21 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			}
 			return Stream.concat(higher.stream(), lower.stream())
 					.collect(Collectors.toList());
+		}
+	}
+
+	public static abstract class SingleResultMergeStrategy<A extends Annotation>
+			extends AbstractMergeStrategy<A> {
+		@Override
+		public List<A> merge(List<A> higher, List<A> lower) {
+			if (higher.isEmpty()) {
+				return lower;
+			}
+			if (lower.isEmpty()) {
+				return higher;
+			}
+			Preconditions.checkState(higher.size() == 1);
+			return higher;
 		}
 	}
 }

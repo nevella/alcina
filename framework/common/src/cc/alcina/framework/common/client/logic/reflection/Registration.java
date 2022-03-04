@@ -27,8 +27,8 @@ import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.Resolution.Inheritance;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 
@@ -134,6 +134,12 @@ public @interface Registration {
 						reflector.getReflectedClass()));
 			}
 			return result;
+		}
+
+		@Override
+		protected List<Registration> atProperty(
+				Class<Registration> annotationClass, Property property) {
+			throw new UnsupportedOperationException();
 		}
 
 		public static class Shared {

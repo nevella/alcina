@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 
@@ -52,12 +51,12 @@ public abstract class VersionableEntity<T extends VersionableEntity>
 
 	@Override
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
-	@Display(name = "Id", displayMask = Display.DISPLAY_RO_PROPERTY, styleName = "nowrap id", orderingHint = 5)
+	@Display(name = "Id", displayMask = Display.DISPLAY_RO_PROPERTY, styleName = "nowrap id", orderingHint = 5, visible = @Permission(access = AccessLevel.ADMIN))
 	@Transient
 	public abstract long getId();
 
 	@Override
-	@Display(name = "Last modified", orderingHint = 999)
+	@Display(name = "Last modified", orderingHint = 999, visible = @Permission(access = AccessLevel.ADMIN))
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
 	public Date getLastModificationDate() {
 		return this.lastModificationDate;
