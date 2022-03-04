@@ -5,10 +5,10 @@ import java.util.List;
 
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
-@ClientInstantiable
+@Reflected
 public abstract class DirectedNodeRenderer {
 	public abstract Widget render(Node node);
 

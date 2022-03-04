@@ -6,7 +6,7 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.EntitySearchDefinition;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -18,7 +18,6 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @XmlRootElement
-@Bean
 @ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
 @TypeSerialization(flatSerializable = false)
 @Registration(JaxbContextRegistration.class)
@@ -56,7 +55,7 @@ public class RowExportContentDefinition extends Bindable
 		this.searchDefinition = def;
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public enum RowExportFormat {
 		CSV, HTML;
 

@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringI
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -343,7 +344,7 @@ public class ReflectiveSerializer {
 		}
 	}
 
-	@Bean
+	@Reflected
 	@Registration(TypeSerializer.class)
 	public static abstract class TypeSerializer implements Registration.Ensure {
 		public void childDeserializationComplete(GraphNode graphNode,
@@ -379,7 +380,7 @@ public class ReflectiveSerializer {
 				SerialNode serialNode);
 	}
 
-	@Bean
+	@Reflected
 	@Registration(ValueSerializer.class)
 	public static abstract class ValueSerializer<T>
 			implements Registration.Ensure {

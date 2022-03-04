@@ -7,12 +7,12 @@ import com.google.gwt.core.shared.GWT;
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder;
 import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplDelegateMapCreatorStd;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
-@ClientInstantiable
+@Reflected
 @Registration(BaseProjectionLookupBuilder.BplDelegateMapCreator.class)
 public class BplMapCreatorClient extends BplDelegateMapCreatorStd {
 	@Override

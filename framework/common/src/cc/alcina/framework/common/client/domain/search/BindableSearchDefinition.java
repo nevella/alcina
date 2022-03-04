@@ -13,7 +13,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.SpecificIdOrder;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.OrderGroup;
 import cc.alcina.framework.common.client.search.SearchDefinition;
@@ -150,7 +150,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		setResultsPerPage(50);
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@TypeSerialization(flatSerializable = false)
 	public static class DataNullSearchDefinition
 			extends EntitySearchDefinition {

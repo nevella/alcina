@@ -4,11 +4,11 @@ import java.util.Date;
 
 import com.google.gwt.user.datepicker.client.CalendarUtil;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.DatePair;
 
-@ClientInstantiable
+@Reflected
 public enum ReportingPeriod {
 	MONTH, QUARTER, YEAR, FINANCIAL_YEAR;
 

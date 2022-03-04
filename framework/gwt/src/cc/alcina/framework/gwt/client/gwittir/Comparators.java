@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.gwittir;
 import java.util.Comparator;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 
 public class Comparators {
@@ -34,7 +34,7 @@ public class Comparators {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static class IdComparator implements Comparator<HasId> {
 		public static final Comparators.EqualsComparator INSTANCE = new Comparators.EqualsComparator();
 

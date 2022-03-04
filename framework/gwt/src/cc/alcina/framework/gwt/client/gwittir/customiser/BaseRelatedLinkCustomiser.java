@@ -7,13 +7,13 @@ import java.util.stream.Collectors;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundTypedHtml;
 
-@ClientInstantiable
+@Reflected
 public abstract class BaseRelatedLinkCustomiser<T, R>
 		implements Customiser, BoundWidgetProvider {
 	@Override

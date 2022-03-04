@@ -15,12 +15,12 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundHTML;
 
-@ClientInstantiable
+@Reflected
 /**
  *
  * @author Nick Reddel

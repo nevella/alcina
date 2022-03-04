@@ -13,14 +13,14 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.renderer;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
  * 
  * @author Nick Reddel
  */
-@ClientInstantiable
+@Reflected
 public class DisplayNameRenderer extends FlexibleToStringRenderer {
 	public static final DisplayNameRenderer INSTANCE = new DisplayNameRenderer();
 

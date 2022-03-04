@@ -86,7 +86,7 @@ public @interface Display {
 
 	String widgetStyleName() default "";
 
-	@ClientInstantiable
+	@Reflected
 	public static class MergeStrategy
 			extends AbstractMergeStrategy.SingleResultMergeStrategy<Display> {
 		@Override

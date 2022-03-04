@@ -8,12 +8,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.SimpleStringParser;
 
-@ClientInstantiable
+@Reflected
 @Registration(DTRProtocolHandler.class)
 public class PlaintextProtocolHandler1pt1 implements DTRProtocolHandler {
 	public static final String VERSION = "1.1 - plain text, GWT2.1";

@@ -15,14 +15,14 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 /**
  *
  * @author Nick Reddel
  */
 public interface ToStringFunction<T> extends Function<T, String> {
-	@ClientInstantiable
+	@Reflected
 	public static class ExplicitIdentity implements ToStringFunction<String> {
 		@Override
 		public String apply(String t) {
@@ -30,7 +30,7 @@ public interface ToStringFunction<T> extends Function<T, String> {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static class Identity implements ToStringFunction<String> {
 		@Override
 		public String apply(String t) {

@@ -28,7 +28,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -46,7 +46,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-@ClientInstantiable
+@Reflected
 public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	private static boolean useContextClassloader;
 
@@ -493,7 +493,7 @@ public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 		return arr;
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton
 	public static class ClassNameTranslator {
 		public String translate(String className) {

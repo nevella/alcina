@@ -24,7 +24,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
@@ -155,7 +155,7 @@ public class NodeFactory {
 		return nodeCreator.createDomainNode(domainObject, this);
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration(NodeCreator.class)
 	public static class DefaultNodeCreator implements NodeCreator {
 		@Override

@@ -41,7 +41,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -295,7 +295,7 @@ public class ClassrefScanner extends CachingScanner<ClassrefScannerMetadata> {
 			 */
 			boolean bi = clazz.isAnnotationPresent(Bean.class);
 			boolean in = AnnotationUtils.hasAnnotationNamed(clazz,
-					ClientInstantiable.class);
+					Reflected.class);
 			boolean dtp = clazz
 					.isAnnotationPresent(DomainTransformPersistable.class);
 			boolean nonPersistent = clazz

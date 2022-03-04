@@ -18,14 +18,14 @@ import java.util.Date;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 /**
  * 
  * @author nick@alcina.cc
  * 
  */
-@ClientInstantiable
+@Reflected
 public class ShortDateValidator implements Validator {
 	public static final ShortDateValidator INSTANCE = new ShortDateValidator();
 

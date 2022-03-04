@@ -13,7 +13,7 @@ import com.google.gwt.place.shared.PlaceHistoryMapper;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -23,7 +23,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlaceTokenizer;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	public static RegistryHistoryMapper get() {

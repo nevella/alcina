@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlaye
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public class LoadObjectsHelloPlayer extends
 		RunnableAsyncCallbackPlayer<LoginResponse, LoadObjectDataState> {

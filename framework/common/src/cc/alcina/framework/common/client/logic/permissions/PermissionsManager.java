@@ -35,7 +35,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Permission.SimplePermissions;
@@ -829,7 +829,7 @@ public class PermissionsManager implements DomainTransformListener {
 	protected void removePerThreadContext0() {
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public enum LoginState {
 		NOT_LOGGED_IN, LOGGED_IN
 	}
@@ -847,14 +847,14 @@ public class PermissionsManager implements DomainTransformListener {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration(PermissionsExtensionForClass.class)
 	public static abstract class PermissionsExtensionForClass<C>
 			implements PermissionsExtension {
 		public abstract Class<C> getGenericClass();
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration(PermissionsExtensionForRule.class)
 	public static abstract class PermissionsExtensionForRule
 			implements PermissionsExtension {

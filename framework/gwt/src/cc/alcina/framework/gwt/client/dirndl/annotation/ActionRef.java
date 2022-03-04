@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 
 import com.google.gwt.event.shared.GwtEvent;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
@@ -21,7 +21,7 @@ public abstract class ActionRef extends Reference {
 		return Reference.forId(ActionRef.class, token);
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static abstract class ActionHandler {
 		public abstract void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place);

@@ -15,7 +15,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Annotations;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -87,7 +87,7 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public abstract static class AbstractModelTransform<A, B>
 			implements ModelTransform<A, B> {
 	}
@@ -98,7 +98,7 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 				withContextNode(DirectedLayout.Node node);
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static abstract class ListModelTransform<A, B>
 			implements ModelTransform<List<A>, Model> {
 		@Override

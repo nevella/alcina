@@ -7,13 +7,13 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.SimpleStringParser20;
 
-@ClientInstantiable
+@Reflected
 @Registration(DTRProtocolHandler.class)
 public class PlaintextProtocolHandler1pt0 implements DTRProtocolHandler {
 	public static final String VERSION = "1.0 - plain text";

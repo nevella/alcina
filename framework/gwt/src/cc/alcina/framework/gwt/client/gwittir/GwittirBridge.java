@@ -54,7 +54,7 @@ import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.Association;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Display;
@@ -694,7 +694,7 @@ public class GwittirBridge {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton
 	public static class DomainListProvider {
 		public BoundWidgetProvider getProvider(

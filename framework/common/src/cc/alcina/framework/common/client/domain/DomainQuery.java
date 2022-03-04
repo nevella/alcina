@@ -17,7 +17,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -183,7 +183,7 @@ public abstract class DomainQuery<E extends Entity> {
 	/*
 	 * Ignoreable if server-only, client-side
 	 */
-	@ClientInstantiable
+	@Reflected
 	public enum Hint {
 		WITH_LAZY_PROPERTIES
 	}

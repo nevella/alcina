@@ -13,7 +13,7 @@ import com.google.gwt.user.datepicker.client.CalendarUtil;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -212,7 +212,7 @@ public class SearchUtils {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration(SearchUtilsIdsHelper.class)
 	public static abstract class SearchUtilsIdsHelper {
 		public static SearchUtils.SearchUtilsIdsHelper get() {
@@ -254,7 +254,7 @@ public class SearchUtils {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration(SearchUtilsRegExpHelper.class)
 	public static abstract class SearchUtilsRegExpHelper {
 		public boolean matches(String query, Entity entity) {

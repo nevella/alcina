@@ -13,7 +13,7 @@
  */
 package cc.alcina.framework.entity.util;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -24,7 +24,7 @@ import cc.alcina.framework.entity.SEUtilities;
  * @author Nick Reddel
  */
 // only used in hosted mode
-@ClientInstantiable
+@Reflected
 @Registration.Singleton(value = UrlComponentEncoder.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 public class ServerURLComponentEncoder implements UrlComponentEncoder {
 	public String decode(String componentText) {

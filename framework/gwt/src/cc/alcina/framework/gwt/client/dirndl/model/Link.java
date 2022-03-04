@@ -15,10 +15,8 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
 import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
@@ -41,7 +39,6 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
  * Also, this class was a very early Dirndl member - can possibly be simplified
  * to 'ideal dirndl' (no transformer, just bindings and resolvers)
  */
-@Bean
 @LinkRendererPrimaryClassName("-ol-primary")
 public class Link extends Model {
 	private BasePlace place;

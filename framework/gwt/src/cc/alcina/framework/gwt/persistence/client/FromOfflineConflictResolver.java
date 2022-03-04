@@ -26,7 +26,7 @@ import com.google.gwt.user.client.ui.TextArea;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -45,7 +45,7 @@ import cc.alcina.framework.gwt.client.widget.dialog.GlassDialogBox;
  *
  * @author Nick Reddel
  */
-@ClientInstantiable
+@Reflected
 @Registration(FromOfflineConflictResolver.class)
 public class FromOfflineConflictResolver {
 	@SuppressWarnings("unused")

@@ -17,7 +17,7 @@ import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
@@ -122,7 +122,7 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 		return this;
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static enum TxtCriterionType {
 		CONTAINS, EQUALS, EQUALS_OR_LIKE
 	}

@@ -4,11 +4,11 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.user.client.rpc.RpcRequestBuilder;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-@ClientInstantiable
+@Reflected
 @Registration(AlcinaRpcRequestBuilderLight.class)
 public abstract class AlcinaRpcRequestBuilderLight extends RpcRequestBuilder {
 	public AlcinaRpcRequestBuilderLight() {

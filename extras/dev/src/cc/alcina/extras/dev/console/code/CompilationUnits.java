@@ -26,6 +26,7 @@ import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
+import com.google.common.base.Function;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -234,11 +235,17 @@ public class CompilationUnits {
 	}
 
 	public void writeDirty(boolean test) {
+		writeDirty(test, null);
+	}
+
+	public void writeDirty(boolean test,
+			Function<CompilationUnitWrapper, String> mapper) {
 		File outDir = new File("/tmp/refactor");
 		SEUtilities.deleteDirectory(outDir);
 		outDir.mkdirs();
-		units.stream().filter(u -> u.dirty)
-				.forEach(u -> u.writeTo(test ? outDir : null));
+		units.stream().filter(u -> u.dirty).forEach(u -> {
+			u.writeTo(test ? outDir : null, mapper);
+		});
 	}
 
 	public static class ClassOrInterfaceDeclarationWrapper {
@@ -489,14 +496,17 @@ public class CompilationUnits {
 			return unit;
 		}
 
-		public void writeTo(File outDir) {
+		public void writeTo(File outDir,
+				Function<CompilationUnitWrapper, String> mapper) {
 			if (outDir == null) {
 				outDir = getFile().getParentFile();
 			}
 			File outFile = SEUtilities.getChildFile(outDir,
 					getFile().getName());
 			try {
-				ResourceUtilities.writeStringToFile(unit.toString(), outFile);
+				String modified = mapper == null ? unit.toString()
+						: mapper.apply(this);
+				ResourceUtilities.writeStringToFile(modified, outFile);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}

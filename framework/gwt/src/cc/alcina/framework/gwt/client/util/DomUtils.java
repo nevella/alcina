@@ -24,7 +24,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.domaintransform.SequentialIdGenerator;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -880,7 +880,7 @@ public class DomUtils implements NodeFromXpathProvider {
 		Node resolve(String xpathStr, int backupAbsTextOffset);
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton
 	public static class DomUtilsBlockResolver {
 		public boolean isBlockHTMLElement(Element e) {

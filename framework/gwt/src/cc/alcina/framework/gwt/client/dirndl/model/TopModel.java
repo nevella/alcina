@@ -11,7 +11,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
  * Renders by delegating to the model field
  */
 @Directed(renderer = DelegatingNodeRenderer.class)
-@Bean
 public class TopModel extends Bindable {
 	private Object model;
 

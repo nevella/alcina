@@ -3,11 +3,11 @@ package cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
-@ClientInstantiable
+@Reflected
 @Deprecated
 @Registration(DTRProtocolHandler.class)
 public class GwtRpcProtocolHandler implements DTRProtocolHandler {

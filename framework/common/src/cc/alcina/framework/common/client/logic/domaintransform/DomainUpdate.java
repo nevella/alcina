@@ -5,7 +5,7 @@ import java.sql.Timestamp;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -80,7 +80,7 @@ public class DomainUpdate implements Serializable {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton
 	public static class DomainTransformCommitPositionProvider {
 		public long getCurrentTransactionId() {

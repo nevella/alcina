@@ -22,14 +22,14 @@ package cc.alcina.framework.common.client.gwittir.validator;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 /**
  *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
-@ClientInstantiable
+@Reflected
 public class DoubleValidator implements Validator {
 	public static final DoubleValidator INSTANCE = new DoubleValidator();
 

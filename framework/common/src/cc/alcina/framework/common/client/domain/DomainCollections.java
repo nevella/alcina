@@ -7,13 +7,13 @@ import java.util.Set;
 import java.util.TreeSet;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public class DomainCollections {
 	public static DomainCollections get() {

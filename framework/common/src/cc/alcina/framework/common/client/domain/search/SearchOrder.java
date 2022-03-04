@@ -5,11 +5,11 @@ import java.util.Comparator;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence;
 
-@ClientInstantiable
+@Reflected
 public abstract class SearchOrder<T, V extends Comparable>
 		implements Function<T, V>, Serializable, Comparator<T>,
 		HasEquivalence<SearchOrder> {

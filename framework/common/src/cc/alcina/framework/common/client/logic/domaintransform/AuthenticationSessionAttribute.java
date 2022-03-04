@@ -17,10 +17,10 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 @MappedSuperclass
-@ClientInstantiable
+@Reflected
 public abstract class AuthenticationSessionAttribute
 		extends Entity<AuthenticationSessionAttribute> {
 	private String key;

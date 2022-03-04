@@ -7,7 +7,6 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 
-@Bean
 public class LoginRequest extends Bindable {
 	private String userName;
 

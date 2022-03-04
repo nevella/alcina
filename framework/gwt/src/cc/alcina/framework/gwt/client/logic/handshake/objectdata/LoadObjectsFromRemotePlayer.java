@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public abstract class LoadObjectsFromRemotePlayer extends
 		RunnableAsyncCallbackPlayer<LoadObjectsResponse, LoadObjectDataState> {

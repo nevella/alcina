@@ -40,7 +40,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -354,7 +354,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static class FormModelTransformer extends
 			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
 		@Override
@@ -438,7 +438,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 			return model;
 		}
 
-		@ClientInstantiable
+		@Reflected
 		public static class ActionsModulator {
 			public String getOverrideLinkText(Link linkModel) {
 				return null;
@@ -461,7 +461,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 			String focusOnAttach() default "";
 		}
 
-		@ClientInstantiable
+		@Reflected
 		public static class FieldModulator {
 			public boolean accept(Bindable model, Field field) {
 				return true;
@@ -520,7 +520,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 	public static class ModelEventContext {
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static class PermissibleActionFormTransformer extends
 			AbstractContextSensitiveModelTransform<PermissibleAction, FormModel> {
 		@Override

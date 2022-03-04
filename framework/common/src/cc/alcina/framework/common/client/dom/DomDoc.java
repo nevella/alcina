@@ -13,7 +13,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.NamespaceResult;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -181,7 +181,7 @@ public class DomDoc extends DomNode {
 	void register(DomNode xmlNode) {
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton
 	public static class PerDocumentSupplier {
 		private Map<Document, DomDoc> perDocument;

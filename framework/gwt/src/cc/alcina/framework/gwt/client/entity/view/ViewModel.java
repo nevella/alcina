@@ -9,7 +9,6 @@ import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 
-@Bean
 public class ViewModel<P extends Place> extends Bindable {
 	private boolean active;
 

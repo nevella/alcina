@@ -3,12 +3,12 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 import java.lang.annotation.Annotation;
 
 import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
-@ClientInstantiable
+@Reflected
 public class ContextResolver extends AnnotationLocation.Resolver {
 	protected TreeResolver<Directed> directedResolver;
 

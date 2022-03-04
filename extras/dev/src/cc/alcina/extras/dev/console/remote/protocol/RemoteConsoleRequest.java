@@ -7,12 +7,11 @@ import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
-@Bean
 public class RemoteConsoleRequest extends Bindable {
 	private transient static String generatedClientInstanceUid;
 
@@ -71,7 +70,7 @@ public class RemoteConsoleRequest extends Bindable {
 		this.type = type;
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public enum RemoteConsoleRequestType {
 		STARTUP, GET_RECORDS, COMPLETE, DO_COMMAND, ARROW_UP, ARROW_DOWN
 	}

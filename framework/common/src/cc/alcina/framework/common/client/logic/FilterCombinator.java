@@ -13,13 +13,13 @@
  */
 package cc.alcina.framework.common.client.logic;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 /**
  *
  * @author Nick Reddel
  */
-@ClientInstantiable
+@Reflected
 public enum FilterCombinator {
 	AND, OR
 }

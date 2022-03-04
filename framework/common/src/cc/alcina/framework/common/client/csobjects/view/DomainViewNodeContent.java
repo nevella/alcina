@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.Doma
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -133,7 +133,7 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 		return null;
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static enum Children {
 		BREADTH_FIRST, DEPTH_FIRST, IMMEDIATE_ONLY, NONE;
 	}
@@ -427,7 +427,7 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static enum WaitPolicy {
 		RETURN_NODES, WAIT_FOR_DELTAS, CANCEL_WAITS;
 	}

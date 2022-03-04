@@ -35,13 +35,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -123,17 +120,6 @@ public abstract class Job extends VersionableEntity<Job>
 
 	@GwtTransient
 	private String consistencyPriority;
-
-	public String getConsistencyPriority() {
-		return this.consistencyPriority;
-	}
-
-	public void setConsistencyPriority(String consistencyPriority) {
-		String old_consistencyPriority = this.consistencyPriority;
-		this.consistencyPriority = consistencyPriority;
-		propertyChangeSupport().firePropertyChange("consistencyPriority",
-				old_consistencyPriority, consistencyPriority);
-	}
 
 	public Job() {
 	}
@@ -288,6 +274,10 @@ public abstract class Job extends VersionableEntity<Job>
 		return this.completion;
 	}
 
+	public String getConsistencyPriority() {
+		return this.consistencyPriority;
+	}
+
 	@Transient
 	public abstract ClientInstance getCreator();
 
@@ -402,11 +392,6 @@ public abstract class Job extends VersionableEntity<Job>
 		return this.taskClassName;
 	}
 
-	public boolean provideEquivalentTask(Job other) {
-		return CommonUtils.equals(getTaskClassName(), other.getTaskClassName(),
-				getTaskSerialized(), other.getTaskSerialized());
-	}
-
 	@Lob
 	@Transient
 	public String getTaskSerialized() {
@@ -460,6 +445,11 @@ public abstract class Job extends VersionableEntity<Job>
 				.map(JobRelation::getTo).filter(Objects::nonNull);
 	}
 
+	public String provideConsistencyPriority() {
+		return Optional.ofNullable(getConsistencyPriority())
+				.orElse(Job.CONSISTENCY_PRIORITY_DEFAULT);
+	}
+
 	public Date provideCreationDateOrNow() {
 		return getCreationDate() == null ? new Date() : getCreationDate();
 	}
@@ -481,6 +471,11 @@ public abstract class Job extends VersionableEntity<Job>
 		Stream s2 = Stream.concat(provideSubsequents(), provideSubsequents()
 				.flatMap(Job::provideDescendantsAndSubsequents));
 		return Stream.concat(s1, s2);
+	}
+
+	public boolean provideEquivalentTask(Job other) {
+		return CommonUtils.equals(getTaskClassName(), other.getTaskClassName(),
+				getTaskSerialized(), other.getTaskSerialized());
 	}
 
 	public Optional<Exception> provideException() {
@@ -756,6 +751,13 @@ public abstract class Job extends VersionableEntity<Job>
 				completion);
 	}
 
+	public void setConsistencyPriority(String consistencyPriority) {
+		String old_consistencyPriority = this.consistencyPriority;
+		this.consistencyPriority = consistencyPriority;
+		propertyChangeSupport().firePropertyChange("consistencyPriority",
+				old_consistencyPriority, consistencyPriority);
+	}
+
 	public abstract void setCreator(ClientInstance performer);
 
 	public void setEndTime(Date endTime) {
@@ -937,6 +939,10 @@ public abstract class Job extends VersionableEntity<Job>
 				toString(getToRelations()));
 	}
 
+	public void writeLargeObject() {
+		Registry.impl(DebugLogWriter.class).write(domainIdentity());
+	}
+
 	private Optional<? extends JobRelation> provideToAntecedentRelation() {
 		if (getToRelations().isEmpty()) {
 			return Optional.empty();
@@ -1020,13 +1026,19 @@ public abstract class Job extends VersionableEntity<Job>
 			extends DomainStorePropertyLoadOracle<Job> {
 	}
 
+	@Registration(DebugLogWriter.class)
+	public static class DebugLogWriter {
+		public void write(Job job) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	public static class JobException extends RuntimeException {
 		public JobException(String message) {
 			super(message);
 		}
 	}
 
-	@Bean
 	public static class ProcessState extends Model {
 		private List<ResourceRecord> resources = new ArrayList<>();
 
@@ -1091,7 +1103,6 @@ public abstract class Job extends VersionableEntity<Job>
 		}
 	}
 
-	@Bean
 	public static class ResourceRecord extends Model
 			implements HasEquivalenceString<ResourceRecord> {
 		private boolean acquiredFromAntecedent;
@@ -1166,21 +1177,5 @@ public abstract class Job extends VersionableEntity<Job>
 			}
 			return EntityComparator.INSTANCE.compare(o1, o2);
 		}
-	}
-
-	@Registration(DebugLogWriter.class)
-	public static class DebugLogWriter {
-		public void write(Job job) {
-			throw new UnsupportedOperationException();
-		}
-	}
-
-	public void writeLargeObject() {
-		Registry.impl(DebugLogWriter.class).write(domainIdentity());
-	}
-
-	public String provideConsistencyPriority() {
-		return Optional.ofNullable(getConsistencyPriority())
-				.orElse(Job.CONSISTENCY_PRIORITY_DEFAULT);
 	}
 }

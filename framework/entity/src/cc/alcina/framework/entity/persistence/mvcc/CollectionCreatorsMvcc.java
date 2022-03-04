@@ -7,7 +7,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.DegenerateCreator;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -51,7 +51,7 @@ public class CollectionCreatorsMvcc {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton(value = CollectionCreators.TypedMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class TypedMapCreatorCreatorMvcc<K, V>
 			implements CollectionCreators.TypedMapCreator<K, V> {

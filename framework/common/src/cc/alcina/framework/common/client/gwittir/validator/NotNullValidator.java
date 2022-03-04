@@ -22,7 +22,7 @@ package cc.alcina.framework.common.client.gwittir.validator;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 /**
  *
@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  *         Cooper</a> Modified - Nick Reddel, added ClientInstantiable
  *         annotation for framework support
  */
-@ClientInstantiable
+@Reflected
 public class NotNullValidator implements Validator {
 	public static final NotNullValidator INSTANCE = new NotNullValidator();
 

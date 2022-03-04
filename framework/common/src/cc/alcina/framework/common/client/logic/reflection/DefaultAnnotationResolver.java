@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.Resolution.Inheritance
 import cc.alcina.framework.common.client.logic.reflection.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton(Resolver.class)
 public class DefaultAnnotationResolver extends Resolver {
 	@Override

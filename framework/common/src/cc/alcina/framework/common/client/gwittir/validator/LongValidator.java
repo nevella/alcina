@@ -16,13 +16,13 @@ package cc.alcina.framework.common.client.gwittir.validator;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 /**
  * 
  * @author nick@alcina.cc
  */
-@ClientInstantiable
+@Reflected
 public class LongValidator implements Validator {
 	public static final LongValidator INSTANCE = new LongValidator();
 

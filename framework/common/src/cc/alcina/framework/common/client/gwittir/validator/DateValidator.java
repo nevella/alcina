@@ -23,13 +23,13 @@ import java.util.Date;
 
 import com.totsp.gwittir.client.validator.ValidationException;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
  *
  */
-@ClientInstantiable
+@Reflected
 public class DateValidator extends RegexValidator {
 	public DateValidator() {
 	}

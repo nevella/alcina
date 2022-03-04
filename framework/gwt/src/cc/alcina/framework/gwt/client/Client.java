@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.Javascript
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClientReflectorFactory;
@@ -30,7 +30,7 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BasePlace.PlaceNavigator;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public abstract class Client {
 	public static CommonRemoteServiceAsync commonRemoteService() {
@@ -141,7 +141,7 @@ public abstract class Client {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration(PlaceNavigator.class)
 	public static class PlaceNavigatorImpl implements PlaceNavigator {
 		@Override

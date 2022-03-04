@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaL
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaMetadata;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -38,7 +38,7 @@ import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 /*
  * Use one object store so we can have easy transactionality
  */
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public class DeltaStore {
 	public static final String CONTENT = "content:";

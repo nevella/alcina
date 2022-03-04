@@ -22,7 +22,7 @@ import com.google.gwt.user.client.ui.TreeItem;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -125,7 +125,7 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 				.satisfiesFilter(userObject, filterText);
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton(HasSatisfiesFilter.class)
 	public static class DefaultHasSatisfiesFilter<T>
 			implements HasSatisfiesFilter<T> {

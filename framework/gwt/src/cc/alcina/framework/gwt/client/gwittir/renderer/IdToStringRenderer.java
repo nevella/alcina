@@ -15,14 +15,14 @@ package cc.alcina.framework.gwt.client.gwittir.renderer;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 
 /**
  * 
  * @author Nick Reddel
  */
-@ClientInstantiable
+@Reflected
 public class IdToStringRenderer extends FlexibleToStringRenderer<HasId> {
 	public static final IdToStringRenderer INSTANCE = new IdToStringRenderer();
 

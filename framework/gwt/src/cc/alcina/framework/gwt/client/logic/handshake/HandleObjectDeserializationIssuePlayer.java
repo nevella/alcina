@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 
 import com.google.gwt.user.client.Window;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.state.EndpointPlayer;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd.ReloadOnSuccessCallback;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public class HandleObjectDeserializationIssuePlayer
 		extends EndpointPlayer<HandshakeState> {

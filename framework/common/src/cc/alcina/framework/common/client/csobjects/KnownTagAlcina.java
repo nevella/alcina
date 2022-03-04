@@ -1,8 +1,8 @@
 package cc.alcina.framework.common.client.csobjects;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
-@ClientInstantiable
+@Reflected
 public enum KnownTagAlcina implements KnownTag {
 	Root(null),
 	/*

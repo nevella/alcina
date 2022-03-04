@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * @author nick@alcina.cc
  *
  */
-@ClientInstantiable
+@Reflected
 public class RegistryLookupCustomiser implements Customiser {
 	public static final String MARKER_CLASS = "marker-class";
 

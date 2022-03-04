@@ -16,7 +16,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.CollectionModific
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IVersionableOwnable;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -224,7 +224,7 @@ public class WorkspaceDefaultActionHandlers {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public abstract static class WorkspaceDefaultActionHandlerBase {
 		protected ContentViewFactory getContentViewFactory() {
 			ContentViewFactory viewFactory = new ContentViewFactory();

@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.permissions.HasOwner;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
@@ -252,7 +252,7 @@ public abstract class Publication extends Entity<Publication>
 		public DeliveryModel provideDeliveryModel();
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static class PublicationRepublishLink extends PermissibleAction {
 		@Override
 		@AlcinaTransient

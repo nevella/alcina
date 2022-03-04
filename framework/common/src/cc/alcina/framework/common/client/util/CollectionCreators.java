@@ -11,7 +11,7 @@ import java.util.TreeMap;
 import java.util.function.Supplier;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -56,7 +56,7 @@ public class CollectionCreators {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton
 	public static class ConcurrentMapCreator {
 		public <K, V> Map<K, V> create() {
@@ -72,7 +72,7 @@ public class CollectionCreators {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton(CollectionCreators.HashMapCreator.class)
 	public static class HashMapCreator {
 		public <K, V> Map<K, V> copy(Map<K, V> from) {

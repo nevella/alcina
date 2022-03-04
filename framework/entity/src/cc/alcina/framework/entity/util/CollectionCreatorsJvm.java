@@ -3,7 +3,7 @@ package cc.alcina.framework.entity.util;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCrea
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class CollectionCreatorsJvm {
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton(value = ConcurrentMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class ConcurrentMapCreatorJvm extends ConcurrentMapCreator {
 		@Override
@@ -32,7 +32,7 @@ public class CollectionCreatorsJvm {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton(value = CollectionCreators.HashMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class HashMapCreatorJvm extends HashMapCreator {
 		@Override

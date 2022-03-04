@@ -15,7 +15,7 @@ package cc.alcina.framework.gwt.client.gwittir.renderer;
 
 import com.totsp.gwittir.client.ui.Renderer;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 /**
  * To allow subclassing
@@ -24,7 +24,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
  *
  * @param <T>
  */
-@ClientInstantiable
+@Reflected
 public class ReflectInstantiableToStringRenderer<T>
 		implements Renderer<T, String> {
 	public static final ReflectInstantiableToStringRenderer<Object> INSTANCE = new ReflectInstantiableToStringRenderer<Object>();

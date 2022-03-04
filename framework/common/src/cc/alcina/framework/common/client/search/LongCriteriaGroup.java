@@ -16,10 +16,8 @@ package cc.alcina.framework.common.client.search;
 import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
-@Bean
 /**
  *
  * @author Nick Reddel
@@ -44,14 +42,14 @@ public class LongCriteriaGroup extends CriteriaGroup<LongCriterion> {
 	}
 
 	@Override
-	@AlcinaTransient
-	public String getDisplayName() {
-		return this.displayName;
+	public Class entityClass() {
+		return null;
 	}
 
 	@Override
-	public Class entityClass() {
-		return null;
+	@AlcinaTransient
+	public String getDisplayName() {
+		return this.displayName;
 	}
 
 	public void setDisplayName(String displayName) {

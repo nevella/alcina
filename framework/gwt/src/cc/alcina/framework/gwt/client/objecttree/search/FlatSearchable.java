@@ -18,7 +18,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -158,7 +158,7 @@ public abstract class FlatSearchable<SC extends SearchCriterion>
 				: handlerManager;
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration({ HasSearchables.class, Bindable.class })
 	public static class HasSearchables {
 		private Map<Class<? extends SearchCriterion>, FlatSearchable> searchables;

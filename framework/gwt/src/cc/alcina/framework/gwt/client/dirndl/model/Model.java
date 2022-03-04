@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
  * @author nick@alcina.cc
  *
  */
-@Bean
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 public abstract class Model extends Bindable {
 	public static final transient Object MODEL_UPDATED = new Object();

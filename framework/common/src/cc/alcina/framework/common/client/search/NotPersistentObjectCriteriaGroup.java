@@ -7,11 +7,9 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.permissions.PermissibleChildClasses;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 
-@Bean
 @PermissibleChildClasses({ PersistentObjectCriterion.class })
 // TODO - make flat-serializable when needed
 @TypeSerialization(flatSerializable = false)
@@ -21,12 +19,6 @@ public class NotPersistentObjectCriteriaGroup
 
 	public NotPersistentObjectCriteriaGroup() {
 		super();
-	}
-
-	@Override
-	@AlcinaTransient
-	public String getDisplayName() {
-		return "Object type";
 	}
 
 	@Override
@@ -46,5 +38,11 @@ public class NotPersistentObjectCriteriaGroup
 					.collect(Collectors.toList());
 		}
 		return ewp;
+	}
+
+	@Override
+	@AlcinaTransient
+	public String getDisplayName() {
+		return "Object type";
 	}
 }

@@ -18,7 +18,7 @@ import com.google.gwt.core.client.GWT;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -378,7 +378,7 @@ public class TreePath<T> extends Model
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static enum Operation {
 		INSERT, CHANGE, REMOVE;
 	}

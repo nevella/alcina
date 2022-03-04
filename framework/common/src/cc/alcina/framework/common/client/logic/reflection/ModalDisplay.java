@@ -124,7 +124,7 @@ public @interface ModalDisplay {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public enum Mode {
 		SINGLE_ANY, SINGLE_READ, SINGLE_WRITE, MULTIPLE_ANY, MULTIPLE_READ,
 		MULTIPLE_WRITE;
@@ -168,7 +168,7 @@ public @interface ModalDisplay {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration(ModeTransformer.class)
 	public static class ModeTransformer implements Function<Mode, Mode> {
 		@Override

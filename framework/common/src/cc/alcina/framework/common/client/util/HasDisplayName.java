@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.util;
 
 import com.totsp.gwittir.client.ui.Renderer;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 public interface HasDisplayName {
 	public static String displayName(Object o) {
@@ -20,7 +20,7 @@ public interface HasDisplayName {
 
 	public String displayName();
 
-	@ClientInstantiable
+	@Reflected
 	public static class HasDisplayNameRenderer
 			implements Renderer<HasDisplayName, String> {
 		public static final HasDisplayNameRenderer INSTANCE = new HasDisplayNameRenderer();
@@ -31,7 +31,7 @@ public interface HasDisplayName {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static class HasDisplayNameRendererNull
 			implements Renderer<HasDisplayName, String> {
 		public static final HasDisplayNameRenderer INSTANCE = new HasDisplayNameRenderer();

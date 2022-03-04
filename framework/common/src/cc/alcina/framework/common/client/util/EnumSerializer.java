@@ -1,12 +1,12 @@
 package cc.alcina.framework.common.client.util;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public class EnumSerializer {
 	public <T extends Enum> T deserialize(Class<T> enumClass, String text) {

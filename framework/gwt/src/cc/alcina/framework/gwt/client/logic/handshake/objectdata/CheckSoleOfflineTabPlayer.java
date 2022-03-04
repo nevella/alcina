@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -10,7 +10,7 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.handshake.CheckSoleInstancePlayer.NotSoleInstanceException;
 import cc.alcina.framework.gwt.persistence.client.ClientSession;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public class CheckSoleOfflineTabPlayer
 		extends RunnableAsyncCallbackPlayer<Boolean, LoadObjectDataState> {

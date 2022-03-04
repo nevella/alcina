@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.persistence.client;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -18,7 +18,7 @@ import cc.alcina.framework.gwt.client.util.OnetimeWrappingAsyncCallback;
 import cc.alcina.framework.gwt.client.util.WrappingAsyncCallback;
 import cc.alcina.framework.gwt.persistence.client.LocalTransformPersistence.LocalPersistenceTuple;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public class DatabaseStatsObserver {
 	public static final transient String SERIALIZED_MAX_KEY = CommonUtils

@@ -6,12 +6,12 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 
-@ClientInstantiable
+@Reflected
 @Registration(BasePlace.class)
 public abstract class BasePlace extends Place
 		implements Serializable, Registration.Ensure {
@@ -99,7 +99,7 @@ public abstract class BasePlace extends Place
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton
 	public static class HrefProvider {
 		public static BasePlace.HrefProvider get() {

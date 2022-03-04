@@ -14,15 +14,18 @@
 package cc.alcina.framework.common.client.search;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
-@Bean
 // TODO - make flat-serializable when needed
 @TypeSerialization(flatSerializable = false)
 public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
 	public EnumCriteriaGroup() {
 		super();
+	}
+
+	@Override
+	public Class entityClass() {
+		return null;
 	}
 
 	@Override
@@ -32,11 +35,6 @@ public class EnumCriteriaGroup extends CriteriaGroup<EnumCriterion> {
 			return "";
 		}
 		return getCriteria().iterator().next().getDisplayName();
-	}
-
-	@Override
-	public Class entityClass() {
-		return null;
 	}
 
 	@Override

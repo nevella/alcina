@@ -1,8 +1,8 @@
 package cc.alcina.framework.common.client.csobjects;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
-@ClientInstantiable
+@Reflected
 public enum JobResultType {
 	OK, WARN, FAIL, EXCEPTION, DID_NOT_COMPLETE;
 

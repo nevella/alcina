@@ -40,7 +40,7 @@ import com.esotericsoftware.minlog.Log;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -369,7 +369,7 @@ public class KryoUtils {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton
 	public static class KryoCreationCustomiser {
 		public void configure(Kryo kryo) {

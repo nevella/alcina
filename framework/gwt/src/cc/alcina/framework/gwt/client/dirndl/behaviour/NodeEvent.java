@@ -12,7 +12,7 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -20,7 +20,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.NodeEventRece
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 
-@ClientInstantiable
+@Reflected
 /*
  * FIXME - dirndl 1.3 - don't like the interplay between NodeEvent,
  * BehaviourBinding and NodeEventReceiver...

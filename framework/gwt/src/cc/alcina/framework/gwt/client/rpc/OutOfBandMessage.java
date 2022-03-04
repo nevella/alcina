@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.rpc;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -14,8 +14,7 @@ import cc.alcina.framework.gwt.client.ClientState;
  * Will be delivered in http header of RPC request
  */
 public interface OutOfBandMessage {
-	@Bean
-	public static class ClientInstanceMessage extends Bindable
+		public static class ClientInstanceMessage extends Bindable
 			implements OutOfBandMessage {
 		private String messageHtml;
 
@@ -28,7 +27,7 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration({ OutOfBandMessageHandler.class,
 			ClientInstanceMessage.class })
 	public static class ClientInstanceMessageHandler
@@ -48,8 +47,7 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	@Bean
-	public static class ExceptionMessage extends Bindable
+		public static class ExceptionMessage extends Bindable
 			implements OutOfBandMessage {
 		private String messageHtml;
 
@@ -62,7 +60,7 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration({ OutOfBandMessageHandler.class, ExceptionMessage.class })
 	public static class ExceptionMessageHandler
 			implements OutOfBandMessageHandler<ExceptionMessage> {
@@ -77,8 +75,7 @@ public interface OutOfBandMessage {
 		void handle(T outOfBandMessage);
 	}
 
-	@Bean
-	public static class ReadonlyInstanceMessage extends Bindable
+		public static class ReadonlyInstanceMessage extends Bindable
 			implements OutOfBandMessage {
 		private boolean readonly;
 
@@ -91,7 +88,7 @@ public interface OutOfBandMessage {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration({ OutOfBandMessageHandler.class,
 			ReadonlyInstanceMessage.class })
 	public static class ReadonlyInstanceMessageHandler

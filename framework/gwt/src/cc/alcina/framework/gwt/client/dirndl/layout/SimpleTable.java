@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -18,7 +18,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.SimpleTable.Transform.LModel
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class SimpleTable {
-	@ClientInstantiable
+	@Reflected
 	public static class Transform implements ModelTransform<Object, LModel> {
 		@Directed(tag = "table")
 		public static class LModel extends Model {

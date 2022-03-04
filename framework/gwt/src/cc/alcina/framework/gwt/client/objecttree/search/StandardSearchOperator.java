@@ -4,10 +4,10 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-@ClientInstantiable
+@Reflected
 public enum StandardSearchOperator implements SearchOperator {
 	CONTAINS, DOES_NOT_CONTAIN, EQUALS, LESS_THAN, GREATER_THAN, ALL_OF,
 	AT_LEAST_ONE_OF, DOES_NOT_EQUAL, STARTS_WITH, LESS_THAN_OR_EQUAL_TO,

@@ -13,13 +13,13 @@
  */
 package cc.alcina.framework.common.client.logic.domaintransform;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 /**
  * TO_STORAGE transforms will be recorded to client-local storage (and replayed
  * on offline restart), and applied to server graph (db) store
  */
-@ClientInstantiable
+@Reflected
 public enum CommitType {
 	TO_LOCAL_BEAN, TO_LOCAL_GRAPH, TO_STORAGE, ALL_COMMITTED
 }

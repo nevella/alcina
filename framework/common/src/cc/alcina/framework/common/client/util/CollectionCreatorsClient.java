@@ -9,7 +9,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -21,7 +21,7 @@ public class CollectionCreatorsClient {
 		return GWT.isScript();
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton(CollectionCreators.MultisetCreator.class)
 	public static class CacheMultisetCreatorClient<K, V>
 			implements CollectionCreators.MultisetCreator<K, V> {
@@ -53,7 +53,7 @@ public class CollectionCreatorsClient {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton(CollectionCreators.TypedMapCreator.class)
 	public static class TypedMapCreatorCreatorClient<K, V>
 			implements CollectionCreators.TypedMapCreator<K, V> {

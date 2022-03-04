@@ -10,7 +10,7 @@ import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.csobjects.SearchResult;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -131,7 +131,7 @@ public class DomainTransformEventView extends DomainTransformEvent
 		this.userId = userId;
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static class ShortTransformTypeRenderer
 			implements Renderer<TransformType, String> {
 		@Override

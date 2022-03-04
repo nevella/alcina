@@ -11,7 +11,7 @@ import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 
 import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -82,7 +82,7 @@ public interface DomEnvironment {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration(StyleResolver.class)
 	public static class StyleResolverHtml implements StyleResolver {
 		@Override

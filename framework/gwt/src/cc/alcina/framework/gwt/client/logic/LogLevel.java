@@ -13,13 +13,13 @@
  */
 package cc.alcina.framework.gwt.client.logic;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 /**
  *
  * @author Nick Reddel
  */
-@ClientInstantiable
+@Reflected
 public enum LogLevel {
 	OFF, FATAL, ERROR, WARN, INFO, DEBUG, ALL
 }

@@ -26,7 +26,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -50,7 +50,7 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener.Sta
 import cc.alcina.framework.gwt.client.util.RelativePopupPositioning;
 import cc.alcina.framework.gwt.client.widget.dialog.OkCancelDialogBox;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton(ClientTransformExceptionResolver.class)
 public class ClientTransformExceptionResolutionSkipAndReload
 		implements ClientTransformExceptionResolver,
@@ -210,8 +210,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		}
 	}
 
-	@Bean
-	public static class DTEView extends Bindable {
+		public static class DTEView extends Bindable {
 		boolean reloadRequired = false;
 
 		RecommendedAction recommendedAction;

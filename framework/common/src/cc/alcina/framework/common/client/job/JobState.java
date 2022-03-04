@@ -1,8 +1,8 @@
 package cc.alcina.framework.common.client.job;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
-@ClientInstantiable
+@Reflected
 public enum JobState {
 	FUTURE, PENDING, ALLOCATED, PROCESSING, CANCELLED, ABORTED, COMPLETED,
 	SKIPPED, SEQUENCE_COMPLETE, FUTURE_CONSISTENCY;

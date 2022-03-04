@@ -15,7 +15,7 @@ import cc.alcina.framework.common.client.domain.search.DisplaySearchOrder;
 import cc.alcina.framework.common.client.domain.search.SearchOrder;
 import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
@@ -318,7 +318,7 @@ public class TableModel extends Model {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration(TableTypeFactory.class)
 	public static class TableTypeFactory extends BoundWidgetTypeFactory {
 	}

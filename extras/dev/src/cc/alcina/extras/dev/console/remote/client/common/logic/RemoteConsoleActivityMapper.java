@@ -4,13 +4,13 @@ import com.google.gwt.activity.shared.Activity;
 import com.google.gwt.activity.shared.ActivityMapper;
 import com.google.gwt.place.shared.Place;
 import cc.alcina.extras.dev.console.remote.client.module.console.ConsoleActivity;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton(ActivityMapper.class)
 public class RemoteConsoleActivityMapper implements ActivityMapper {
 	@Override

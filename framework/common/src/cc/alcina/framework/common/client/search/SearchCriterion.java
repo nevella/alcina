@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -151,7 +151,7 @@ public abstract class SearchCriterion extends Bindable
 	 *
 	 * @author nick@alcina.cc
 	 */
-	@ClientInstantiable
+	@Reflected
 	public enum Direction {
 		ASCENDING, DESCENDING
 	}

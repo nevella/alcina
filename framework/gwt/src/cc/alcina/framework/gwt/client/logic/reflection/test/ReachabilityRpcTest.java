@@ -7,7 +7,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsRequest;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
@@ -22,7 +22,7 @@ public class ReachabilityRpcTest {
 		void out();
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration.Singleton
 	public static class ReflectiveLoginRemoteServiceAsync2
 			extends ReflectiveRemoteServiceAsync {
@@ -45,7 +45,7 @@ public class ReachabilityRpcTest {
 	}
 
 	@Registration({ Int2.class, Reg1.class })
-	@ClientInstantiable
+	@Reflected
 	public static class Reg2 implements Int1 {
 		@Override
 		public void out() {

@@ -14,9 +14,9 @@
 package cc.alcina.framework.common.client.actions.instances;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
-@ClientInstantiable
+@Reflected
 /**
  *
  * @author Nick Reddel

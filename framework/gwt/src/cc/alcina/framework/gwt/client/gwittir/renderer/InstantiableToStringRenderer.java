@@ -21,14 +21,14 @@ package cc.alcina.framework.gwt.client.gwittir.renderer;
 
 import com.totsp.gwittir.client.ui.Renderer;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 
 /**
  *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
-@ClientInstantiable
+@Reflected
 public class InstantiableToStringRenderer<T> implements Renderer<T, String> {
 	/** Creates a new instance of ToStringRenderer */
 	public InstantiableToStringRenderer() {

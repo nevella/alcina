@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -74,7 +74,7 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 				other.toLocator().toIdPairString(), other.provideName());
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static enum JobRelationType {
 		PARENT_CHILD, SEQUENCE, RESUBMIT;
 

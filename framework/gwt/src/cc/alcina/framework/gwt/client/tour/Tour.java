@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.tour;
 import java.util.List;
 import java.util.Optional;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public interface Tour {
@@ -11,7 +11,7 @@ public interface Tour {
 
 	public List<? extends Tour.Step> getSteps();
 
-	@ClientInstantiable
+	@Reflected
 	enum Action {
 		CLICK, SET_TEXT, NONE, SCRIPT, SELECT, EVAL
 	}
@@ -60,7 +60,7 @@ public interface Tour {
 		AND, OR, NOT
 	}
 
-	@ClientInstantiable
+	@Reflected
 	enum Pointer {
 		CENTER_UP, LEFT_UP, CENTER_DOWN, RIGHT_UP, RIGHT_DOWN
 	}
@@ -75,7 +75,7 @@ public interface Tour {
 		public String getStyle();
 	}
 
-	@ClientInstantiable
+	@Reflected
 	enum PositioningDirection {
 		CENTER_TOP, LEFT_BOTTOM, RIGHT_BOTTOM, RIGHT_TOP, TOP_LEFT, LEFT_TOP,
 		BOTTOM_RIGHT, BOTTOM_LEFT, TOP_RIGHT, BOTTOM_CENTER

@@ -6,7 +6,7 @@ import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.SimplePanel;
 
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -17,7 +17,7 @@ import cc.alcina.framework.gwt.client.lux.LuxStyle;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
 // FIXME - directedlayout.1 - make loading async (i.e. make this a non-startup module)
 
-@ClientInstantiable
+@Reflected
 @Registration({ ViewModelView.class, LoginViewModel.class })
 public class LoginView extends AbstractViewModelView<LoginViewModel> {
 	private SimplePanel panel;

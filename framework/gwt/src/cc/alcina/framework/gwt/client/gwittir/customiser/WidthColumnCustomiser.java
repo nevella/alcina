@@ -17,12 +17,12 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.gwt.client.gwittir.HasMaxWidth;
 
-@ClientInstantiable
+@Reflected
 /**
  *
  * @author Nick Reddel
@@ -37,7 +37,7 @@ public class WidthColumnCustomiser implements Customiser {
 		return new StringLabelProvider(columnWidth);
 	}
 
-	@ClientInstantiable
+	@Reflected
 	public static class StringLabelProvider
 			implements BoundWidgetProvider, HasMaxWidth {
 		private String columnWidth;

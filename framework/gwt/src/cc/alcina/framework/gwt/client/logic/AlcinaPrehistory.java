@@ -5,7 +5,7 @@ import java.util.Map;
 
 import com.google.gwt.dom.client.NativeEvent;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
-@ClientInstantiable
+@Reflected
 @Registration.Singleton
 public class AlcinaPrehistory {
 	private Map<String, PreHistoryHandler> preHistoryHandlerMap;
@@ -39,7 +39,7 @@ public class AlcinaPrehistory {
 		}
 	}
 
-	@ClientInstantiable
+	@Reflected
 	@Registration(PreHistoryHandler.class)
 	public abstract static class PreHistoryHandler<I extends AlcinaHistoryItem> {
 		public abstract void handle(NativeEvent event, I item);
