@@ -146,7 +146,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private BackupLazyLoader backupLazyLoader = new BackupLazyLoader();
 
-	private List<EntityRefs> warmupEntityRefss = new ArrayList<>();
+	private List<EntityRefs> warmupEntityRefs = new ArrayList<>();
 
 	DomainStoreDescriptor domainDescriptor;
 
@@ -283,7 +283,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		// allocation
 		interns = new ConcurrentHashMap<>();
 		MetricLogging.get().start("xrefs");
-		for (EntityRefs ll : warmupEntityRefss) {
+		for (EntityRefs ll : warmupEntityRefs) {
 			calls.add(() -> {
 				ll.resolve();
 				return null;
@@ -292,7 +292,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		invokeAllWithThrow(calls);
 		MetricLogging.get().end("xrefs");
 		new StatCategory_DomainStore.Warmup.Loader.Xrefs().emit();
-		warmupEntityRefss.clear();
+		warmupEntityRefs.clear();
 		// lazy tables, load a segment (for large db dev work)
 		if (domainDescriptor.getDomainSegmentLoader() != null) {
 			MetricLogging.get().start("domain-segment");
@@ -329,6 +329,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			calls.add(new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
+					Thread.currentThread().setName("loader-lookup-"
+							+ descriptor.clazz.getSimpleName());
 					for (DomainStoreLookupDescriptor lookupDescriptor : descriptor.lookupDescriptors) {
 						lookupDescriptor.setDomainStore(store);
 						lookupDescriptor.createLookup();
@@ -349,6 +351,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			calls.add(new Callable<Void>() {
 				@Override
 				public Void call() throws Exception {
+					Thread.currentThread().setName("loader-projections-"
+							+ descriptor.clazz.getSimpleName());
 					for (DomainProjection projection : descriptor.projections) {
 						if (projection.isEnabled()) {
 							store.addValues(projection);
@@ -977,7 +981,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	synchronized EntityRefs warmupEntityRefs() {
 		EntityRefs result = new EntityRefs();
-		warmupEntityRefss.add(result);
+		warmupEntityRefs.add(result);
 		return result;
 	}
 
@@ -1818,6 +1822,10 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						DomainStore.CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS)) {
 					this.items.clear();
 					return null;
+				}
+				if (this.items.size() > 0) {
+					Thread.currentThread().setName("loader-ref-"
+							+ items.get(0).source.getClass().getSimpleName());
 				}
 				for (Ref item : this.items) {
 					try {
