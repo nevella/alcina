@@ -17,13 +17,9 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
 
-/*
- * Non-abstract to export reflected annotations
- */
-public class DomainViewTree extends Tree<DomainViewNode> {
+public abstract class DomainViewTree extends Tree<DomainViewNode> {
 	DomainViewNode.LabelGenerator labelGenerator = new DomainViewNode.TextGenerator();
 
 	private TreePath<DomainViewNode> openingToPath = null;
@@ -32,11 +28,13 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 
 	private DomainViewNodeContent.Response lastResponse;
 
-	private int selfAndDescendantCount = -1;
-
 	public Topic<BeforeNodeRemovalEvent> beforeNodeRemoval = Topic.local();
 
 	public Topic<NodeChangeEvent> afterNodeChange = Topic.local();
+
+	private boolean saveResponses;
+
+	private List<DomainViewNodeContent.Response> savedResponses = new ArrayList<>();
 
 	public DomainViewNode.LabelGenerator getLabelGenerator() {
 		return this.labelGenerator;
@@ -46,13 +44,27 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		return this.lastResponse;
 	}
 
+	public List<DomainViewNodeContent.Response> getSavedResponses() {
+		return this.savedResponses;
+	}
+
 	public boolean isDepthFirst() {
 		return this.depthFirst;
+	}
+
+	/**
+	 * Save responses for tree state debugging
+	 */
+	public boolean isSaveResponses() {
+		return this.saveResponses;
 	}
 
 	public void mergeResponse(DomainViewNodeContent.Response response) {
 		DomainViewNode root = null;
 		DomainViewNode target = null;
+		if (isSaveResponses()) {
+			savedResponses.add(response);
+		}
 		// TODO - handle interrupt/fail
 		if (response == null) {
 			Response lastResponse = getLastResponse();
@@ -114,17 +126,12 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		}
 		if (GWT.isClient() && isDepthFirst()
 				&& request.getWaitPolicy() == WaitPolicy.RETURN_NODES) {
-			selfAndDescendantCount = response.getSelfAndDescendantCount();
-			// FIXME - dirndl 1.3 - not sure about the logic for which
-			// selfAndDescendantCount...in fact, this may all be overly complex
-			// & getTransforms().size() is fine?
-			ClientNotifications.get().log(
-					"Det. paginator :: depth-first: %s - selfAndDescendantCount: %s - transforms: %s",
-					isDepthFirst(), selfAndDescendantCount,
-					root.getTreePath().getSelfAndDescendantCount(),
-					response.getTransforms().size(), response.getRequest());
-			// if (selfAndDescendantCount > root.getTreePath()
-			// .getSelfAndDescendantCount()) {
+			// if there are transforms in this response, add a paginator at the
+			// end (since there may be more)
+			//
+			// once a request (possibly triggered by
+			// paginator scrolling into view) returns a zero-transform response,
+			// there's no need to display the paginator
 			if (response.getTransforms().size() > 0) {
 				Paginator paginator = new Paginator();
 				paginator.setText("Loading ...");
@@ -174,9 +181,7 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		loadChildren(getRoot());
 	}
 
-	public void sendRequest(Request<?> request) {
-		throw new UnsupportedOperationException();
-	}
+	public abstract void sendRequest(Request<?> request);
 
 	public void setDepthFirst(boolean depthFirst) {
 		this.depthFirst = depthFirst;
@@ -192,6 +197,10 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 		this.lastResponse = lastResponse;
 		propertyChangeSupport().firePropertyChange("lastResponse",
 				old_lastResponse, lastResponse);
+	}
+
+	public void setSaveResponses(boolean saveResponses) {
+		this.saveResponses = saveResponses;
 	}
 
 	protected void apply(Transform transform, WaitPolicy waitPolicy) {
@@ -253,15 +262,6 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 			super();
 			this.removed = removed;
 			this.next = next;
-		}
-	}
-
-	public class NodeChangeEvent {
-		public TreePath changed;
-
-		public NodeChangeEvent(TreePath changed) {
-			super();
-			this.changed = changed;
 		}
 	}
 
@@ -400,6 +400,25 @@ public class DomainViewTree extends Tree<DomainViewNode> {
 				nodeLabelText.setText(t.getName());
 				return nodeLabelText;
 			}
+		}
+	}
+
+	/*
+	 * Populated by application code, not rpc calls
+	 */
+	public static class Local extends DomainViewTree {
+		@Override
+		public void sendRequest(Request<?> request) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
+	public class NodeChangeEvent {
+		public TreePath changed;
+
+		public NodeChangeEvent(TreePath changed) {
+			super();
+			this.changed = changed;
 		}
 	}
 }
