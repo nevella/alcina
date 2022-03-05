@@ -166,7 +166,11 @@ public class TransformCollation {
 		public <E extends Entity> E getEntity() {
 			E entity = TransformManager.get().getObject(locator);
 			// handle deletion
-			return entity != null ? entity : (E) transforms.get(0).getSource();
+			// return entity != null ? entity : (E)
+			// transforms.get(0).getSource();
+			// reverted - should be handled by deletion/tx aware code (including
+			// in client)
+			return entity;
 		}
 
 		public Class<? extends Entity> getEntityClass() {
