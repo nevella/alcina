@@ -19,6 +19,10 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.widget;
 
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
+import com.google.gwt.event.dom.client.HasClickHandlers;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment;
 import com.google.gwt.user.client.ui.HasHorizontalAlignment.HorizontalAlignmentConstant;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
@@ -29,7 +33,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.MultilineWidget;
  *
  */
 public class BoundHTML extends AbstractBoundWidget<String>
-		implements MultilineWidget {
+		implements MultilineWidget, HasClickHandlers {
 	private com.google.gwt.user.client.ui.HTML base;
 
 	/** Creates a new instance of Label */
@@ -39,6 +43,11 @@ public class BoundHTML extends AbstractBoundWidget<String>
 
 	public BoundHTML(String text) {
 		this.init(text);
+	}
+
+	@Override
+	public HandlerRegistration addClickHandler(ClickHandler handler) {
+		return addDomHandler(handler, ClickEvent.getType());
 	}
 
 	@Override
