@@ -81,8 +81,8 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.MethodContext;
+import cc.alcina.framework.entity.util.ProcessLogFolder;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
-import cc.alcina.framework.servlet.task.TaskReapProcessLogs;
 
 /**
  * @author nick@alcina.cc
@@ -1009,7 +1009,7 @@ public class TransformCommit {
 	}
 
 	public static class ProcessLogFolder_Dtr_Exception
-			extends TaskReapProcessLogs.ProcessLogFolder {
+			extends ProcessLogFolder {
 		@Override
 		public String getFolder() {
 			return DTR_EXCEPTION;
@@ -1017,7 +1017,7 @@ public class TransformCommit {
 	}
 
 	public static class ProcessLogFolder_Offline_Transforms_Partial
-			extends TaskReapProcessLogs.ProcessLogFolder {
+			extends ProcessLogFolder {
 		@Override
 		public String getFolder() {
 			return OFFLINE_TRANSFORMS_PARTIAL;

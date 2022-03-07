@@ -719,7 +719,7 @@ public class GwittirBridge {
 
 		@Override
 		public int compare(Field o1, Field o2) {
-			if (propertyOrder.value().length > 0) {
+			if (propertyOrder != null) {
 				int idx1 = Arrays.asList(propertyOrder.value())
 						.indexOf(o1.getPropertyName());
 				int idx2 = Arrays.asList(propertyOrder.value())

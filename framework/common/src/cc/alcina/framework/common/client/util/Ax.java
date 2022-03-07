@@ -57,6 +57,11 @@ public class Ax {
 						: collection.iterator().next();
 	}
 
+	public static <T> Optional<T> firstOptional(Collection<T> collection) {
+		return collection.size() == 0 ? Optional.empty()
+				: Optional.ofNullable(collection.iterator().next());
+	}
+
 	public static String format(String template, Object... args) {
 		return CommonUtils.format(template, args);
 	}
@@ -131,11 +136,6 @@ public class Ax {
 		return t == null ? ifNull : t;
 	}
 
-	public static <T> Optional<T> firstOptional(Collection<T> collection) {
-		return collection.size() == 0 ? Optional.empty()
-				: Optional.ofNullable(collection.iterator().next());
-	}
-
 	public static void out(Object o) {
 		if (o instanceof Collection) {
 			System.out.println(CommonUtils.joinWithNewlines((Collection) o));
@@ -167,6 +167,10 @@ public class Ax {
 
 	public static String timestamp(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME_MS);
+	}
+
+	public static String timestampYmd(Date date) {
+		return CommonUtils.formatDate(date, DateStyle.TIMESTAMP);
 	}
 
 	public static String trim(String s, int maxChars) {

@@ -14,7 +14,7 @@ public abstract class ServerTask<T extends Task> implements SelfPerformer<T> {
 	protected String value;
 
 	@JsonIgnore
-	protected Logger logger = LoggerFactory.getLogger(getClass());
+	protected transient Logger logger = LoggerFactory.getLogger(getClass());
 
 	public String getValue() {
 		return this.value;

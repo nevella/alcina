@@ -1,10 +1,8 @@
 package cc.alcina.extras.dev.console.code;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
-import java.util.stream.Collectors;
 
 import com.github.javaparser.ast.NodeList;
 import com.github.javaparser.ast.body.ClassOrInterfaceDeclaration;
@@ -33,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
 import cc.alcina.framework.servlet.schedule.ServerTask;
@@ -193,14 +192,7 @@ public class TaskRefactorRegistrations
 		}
 
 		private NameExpr getNestedName(Class clazz) {
-			List<String> simpleNames = new ArrayList<>();
-			Class cursor = clazz;
-			do {
-				simpleNames.add(cursor.getSimpleName());
-			} while ((cursor = cursor.getEnclosingClass()) != null);
-			Collections.reverse(simpleNames);
-			return new NameExpr(
-					simpleNames.stream().collect(Collectors.joining(".")));
+			return new NameExpr(SEUtilities.getNestedSimpleName(clazz));
 		}
 
 		private Priority getPriority(NormalAnnotationExpr in) {

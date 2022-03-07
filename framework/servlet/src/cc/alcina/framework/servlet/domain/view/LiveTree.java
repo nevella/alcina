@@ -1,15 +1,22 @@
 package cc.alcina.framework.servlet.domain.view;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Date;
 import java.util.Deque;
 import java.util.Iterator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
@@ -17,10 +24,13 @@ import java.util.Stack;
 import java.util.TreeMap;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.view.DomainView;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent;
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Request;
@@ -33,16 +43,23 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Walker;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
+import cc.alcina.framework.entity.util.JacksonUtils;
+import cc.alcina.framework.entity.util.ProcessLogger;
 import cc.alcina.framework.servlet.domain.view.DomainViews.Key;
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
 
@@ -93,7 +110,10 @@ public class LiveTree {
 
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	ProcessLoggerImpl processLogger = new ProcessLoggerImpl();
+
 	public LiveTree(Key key) {
+		processLogger.inject();
 		logger.warn("First time generate livetree - {}", key);
 		earliestPosition = DomainStore.writableStore()
 				.getTransformCommitPosition();
@@ -165,6 +185,8 @@ public class LiveTree {
 	}
 
 	public void index(DomainTransformPersistenceEvent event, boolean add) {
+		processLogger.inject();
+		ProcessLoggerImpl.context().logIndexPersistenceEvent(event, add);
 		if (!add) {
 			// first phase of two (remove, then add)
 			newGeneratorContext();
@@ -219,6 +241,10 @@ public class LiveTree {
 			next.run();
 			itr.remove();
 		}
+	}
+
+	public String persistProcessLog() {
+		return processLogger.persist();
 	}
 
 	public List<Transform> toTransforms(TreePath<LiveNode> path) {
@@ -950,6 +976,140 @@ public class LiveTree {
 		default TransformFilter
 				transformFilter(DomainViewSearchDefinition def) {
 			throw new UnsupportedOperationException();
+		}
+	}
+
+	public static class ProcessLoggerImpl extends ProcessLogger<LiveTree> {
+		public static ProcessLoggerImpl context() {
+			return LooseContext.get(ProcessLoggerImpl.class.getName());
+		}
+
+		Map<Long, PersistenceEventPayload> persistenceEventPayloads = new LinkedHashMap<>();
+
+		List<Event> events = new ArrayList<>();
+
+		boolean loggedFirstException;
+
+		public void logGenerationException(String pathInfo, Exception e,
+				Entity entity) {
+			ExceptionEvent exceptionEvent = new ExceptionEvent(
+					CommonUtils.toSimpleExceptionMessage(e),
+					SEUtilities.getFullExceptionMessage(e), pathInfo,
+					entity == null ? null : entity.toLocator());
+			events.add(exceptionEvent);
+			if (!loggedFirstException) {
+				loggedFirstException = true;
+				persist();
+			}
+		}
+
+		public void logIndexPersistenceEvent(
+				DomainTransformPersistenceEvent event, boolean add) {
+			PersistenceEventPayload payload = persistenceEventPayloads
+					.computeIfAbsent(event.getMaxPersistedRequestId(),
+							key -> new PersistenceEventPayload(event));
+			PersistenceEvent persistenceEvent = new PersistenceEvent(payload,
+					add);
+			events.add(persistenceEvent);
+		}
+
+		@Override
+		public String toString() {
+			return events.stream().map(Object::toString)
+					.collect(Collectors.joining("\n"));
+		}
+
+		abstract static class Event {
+			Date date = new Date();
+		}
+
+		static class ExceptionEvent extends Event {
+			String exception;
+
+			String pathInfo;
+
+			String entityLocation;
+
+			private String shortException;
+
+			public ExceptionEvent() {
+			}
+
+			public ExceptionEvent(String shortException, String exception,
+					String pathInfo, EntityLocator entity) {
+				this.shortException = shortException;
+				this.exception = exception;
+				this.pathInfo = pathInfo;
+				this.entityLocation = entity == null ? null
+						: entity.toParseableString();
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s - exception - %s - %s - %s",
+						Ax.timestampYmd(date), pathInfo, entityLocation,
+						shortException);
+			}
+		}
+
+		static class PersistenceEvent extends Event {
+			PersistenceEventPayload payload;
+
+			boolean add;
+
+			public PersistenceEvent() {
+			}
+
+			public PersistenceEvent(PersistenceEventPayload payload,
+					boolean add) {
+				this.payload = payload;
+				this.add = add;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s - dtr - %s", Ax.timestampYmd(date),
+						payload.id);
+			}
+		}
+
+		static class PersistenceEventPayload extends Event {
+			long id;
+
+			byte[] data;
+
+			PersistenceEventPayload() {
+			}
+
+			PersistenceEventPayload(DomainTransformPersistenceEvent event) {
+				DomainTransformRequestPersistent request = event
+						.getPersistedRequests().get(0);
+				id = request.getId();
+				try {
+					ByteArrayOutputStream out = new ByteArrayOutputStream();
+					OutputStream outputStream = new GZIPOutputStream(out);
+					new JacksonJsonObjectSerializer().withIdRefs()
+							.withTypeInfo().withMaxLength(Integer.MAX_VALUE)
+							.serializeToStream(request, outputStream);
+					data = out.toByteArray();
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+
+			DomainTransformRequestPersistent provideRequest() {
+				try {
+					InputStream inputStream = new GZIPInputStream(
+							new ByteArrayInputStream(data));
+					DomainTransformRequestPersistent request = JacksonUtils
+							.deserialize(inputStream,
+									DomainTransformRequestPersistent.class);
+					inputStream.close();
+					return request;
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
 		}
 	}
 

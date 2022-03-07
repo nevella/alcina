@@ -872,6 +872,16 @@ public class SEUtilities {
 				: path;
 	}
 
+	public static String getNestedSimpleName(Class clazz) {
+		List<String> simpleNames = new ArrayList<>();
+		Class cursor = clazz;
+		do {
+			simpleNames.add(cursor.getSimpleName());
+		} while ((cursor = cursor.getEnclosingClass()) != null);
+		Collections.reverse(simpleNames);
+		return simpleNames.stream().collect(Collectors.joining("."));
+	}
+
 	public static <T> T getOrCreate(Collection<T> existing, String propertyName,
 			String propertyValue, Class itemClass) throws Exception {
 		PropertyDescriptor descriptor = getPropertyDescriptorByName(itemClass,

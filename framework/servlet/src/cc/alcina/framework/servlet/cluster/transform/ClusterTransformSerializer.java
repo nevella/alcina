@@ -98,7 +98,7 @@ public class ClusterTransformSerializer {
 		/*
 		 * Only send payload in PRE_COMMIT phase - this ensures that the request
 		 * is at least sent to kafka before db commit.
-		 * 
+		 *
 		 * Kafka network conditions may mean it's received after a corresponding
 		 * db update, but at least we won't hit gc() events etc between db
 		 * update and packet send

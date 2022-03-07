@@ -704,7 +704,8 @@ public class CommonUtils {
 			return format("%s%s%s_%s%s%s_%s", padTwo(date.getYear() + 1900),
 					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
 					padTwo(date.getHours()), padTwo(date.getMinutes()),
-					padTwo(date.getSeconds()), date.getTime() % 1000);
+					padTwo(date.getSeconds()),
+					padThree((int) (date.getTime() % 1000)));
 		case TIMESTAMP_HUMAN:
 			return format("%s.%s.%s %s:%s:%s", padTwo(date.getYear() + 1900),
 					padTwo(date.getMonth() + 1), padTwo(date.getDate()),
