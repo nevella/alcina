@@ -1,12 +1,15 @@
 package cc.alcina.framework.entity.gwt.reflection;
 
+import java.io.File;
 import java.lang.annotation.Annotation;
 import java.util.Set;
 import java.util.stream.Stream;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
 
+import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.util.Multiset;
+import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.ModuleTypes;
 
 public interface ClientReflectionFilterPeer {
 	default <A extends Annotation> boolean emitAnnotation(JClassType type,
@@ -29,7 +32,24 @@ public interface ClientReflectionFilterPeer {
 
 	default Multiset<String, Set<JClassType>> getLegacyModuleTypeAssignments(
 			Stream<JClassType> compilationTypes) {
-		return new Multiset<>();
+		File legacyTypesFile = ReachabilityData
+				.getReachabilityFile("legacy-reachability.json");
+		if (legacyTypesFile.exists()) {
+			ModuleTypes moduleTypes = ReachabilityData
+					.deserialize(ModuleTypes.class, legacyTypesFile);
+			moduleTypes.generateLookup();
+			Multiset<String, Set<JClassType>> result = new Multiset<>();
+			compilationTypes.forEach(t -> {
+				String moduleName = moduleTypes
+						.moduleFor(t.getQualifiedSourceName());
+				if (ReflectionModule.Modules.provideIsFragment(moduleName)) {
+					result.add(moduleName, t);
+				}
+			});
+			return result;
+		} else {
+			return new Multiset<>();
+		}
 	}
 
 	public static class Default implements ClientReflectionFilterPeer {

@@ -437,6 +437,11 @@ class ReachabilityData {
 			});
 		}
 
+		String moduleFor(String qualifiedSourceName) {
+			Type type = typeFor(qualifiedSourceName);
+			return typeModule.get(type);
+		}
+
 		Type typeFor(String qualifiedSourceName) {
 			return sourceNameType.get(qualifiedSourceName);
 		}
