@@ -21,8 +21,8 @@ import com.google.gwt.core.shared.GWT;
 import com.google.gwt.user.client.Window;
 import com.totsp.gwittir.client.validator.ValidationException;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TextUtils;
 
