@@ -82,12 +82,17 @@ import cc.alcina.framework.entity.transform.policy.TransformPropagationPolicy;
 import cc.alcina.framework.entity.util.DataFolderProvider;
 import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.persistence.client.DTESerializationPolicy;
+import cc.alcina.framework.servlet.task.TaskReapProcessLogs;
 
 /**
  * @author nick@alcina.cc
  */
 @Registration.Singleton
 public class TransformCommit {
+	private static final String OFFLINE_TRANSFORMS_PARTIAL = "offlineTransforms-partial";
+
+	private static final String DTR_EXCEPTION = "dtr-exception";
+
 	private static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = TransformCommit.class
 			.getName() + ".TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION";
 
@@ -136,7 +141,7 @@ public class TransformCommit {
 						records.get(0).getClientInstanceId(), CommonUtils
 								.formatDate(new Date(), DateStyle.TIMESTAMP));
 				File offlineDir = DataFolderProvider.get()
-						.getChildFile("offlineTransforms-partial");
+						.getChildFile(OFFLINE_TRANSFORMS_PARTIAL);
 				File saveDir = SEUtilities.getChildFile(offlineDir, folderName);
 				saveDir.mkdirs();
 				DeltaApplicationRecordSerializerImpl recordSerializer = new DeltaApplicationRecordSerializerImpl();
@@ -831,9 +836,9 @@ public class TransformCommit {
 				logger.warn("Event: " + ex.getEvent().toDebugString());
 			}
 		}
-		File file = DataFolderProvider.get()
-				.getChildFile(Ax.format("dtr-exception/%s.txt", LocalDateTime
-						.now().format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
+		File file = DataFolderProvider.get().getChildFile(
+				Ax.format("%s/%s.txt", DTR_EXCEPTION, LocalDateTime.now()
+						.format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)));
 		file.getParentFile().mkdirs();
 		ResourceUtilities.write(response.getRequest().toString(), file);
 		logger.warn(
@@ -1000,6 +1005,22 @@ public class TransformCommit {
 
 		public void lock(boolean lock, ClientInstance clientInstance) {
 			// NOOP - always succeed
+		}
+	}
+
+	public static class ProcessLogFolder_Dtr_Exception
+			extends TaskReapProcessLogs.ProcessLogFolder {
+		@Override
+		public String getFolder() {
+			return DTR_EXCEPTION;
+		}
+	}
+
+	public static class ProcessLogFolder_Offline_Transforms_Partial
+			extends TaskReapProcessLogs.ProcessLogFolder {
+		@Override
+		public String getFolder() {
+			return OFFLINE_TRANSFORMS_PARTIAL;
 		}
 	}
 
