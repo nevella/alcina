@@ -652,9 +652,9 @@ class ReachabilityData {
 	}
 
 	static class TypesReason {
-		List<Type> types = new ArrayList<>();
-
 		Reason reason;
+
+		List<Type> types = new ArrayList<>();
 	}
 
 	static class TypesReasons {
