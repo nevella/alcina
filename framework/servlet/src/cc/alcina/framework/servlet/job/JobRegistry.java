@@ -62,9 +62,6 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient.Transi
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
@@ -812,9 +809,11 @@ public class JobRegistry {
 					return;
 				}
 			} else {
-				withInitialState(JobState.FUTURE_CONSISTENCY).create()
-						.setConsistencyPriority(
-								futureConsistencyPriority.toString());
+				Job job = withInitialState(JobState.FUTURE_CONSISTENCY)
+						.create();
+				job.setConsistencyPriority(
+						futureConsistencyPriority.toString());
+				logger.info("created-future-consistency - {}", job);
 			}
 		}
 

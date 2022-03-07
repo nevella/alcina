@@ -1818,10 +1818,20 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					 * synced per class (really, pd) ..so run linear
 					 */
 			Void call() throws Exception {
+				String entryName = Thread.currentThread().getName();
+				try {
+					call0();
+				} finally {
+					Thread.currentThread().setName(entryName);
+				}
+				return null;
+			}
+
+			private void call0() throws Exception {
 				if (LooseContext.is(
 						DomainStore.CONTEXT_DO_NOT_RESOLVE_LOAD_TABLE_REFS)) {
 					this.items.clear();
-					return null;
+					return;
 				}
 				if (this.items.size() > 0) {
 					Thread.currentThread().setName("loader-ref-"
@@ -1953,7 +1963,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				}
 				// leave the class keys at the top
 				this.items.clear();
-				return null;
+				return;
 			}
 		}
 
