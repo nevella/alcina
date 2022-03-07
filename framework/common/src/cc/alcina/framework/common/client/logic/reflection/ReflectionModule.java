@@ -59,6 +59,9 @@ public @interface ReflectionModule {
 
 	public static class Modules {
 		public static boolean provideIsFragment(String moduleName) {
+			if (moduleName == null) {
+				return false;
+			}
 			switch (moduleName) {
 			case UNKNOWN:
 			case NOT_REACHED:

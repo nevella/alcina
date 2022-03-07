@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -48,6 +49,8 @@ import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
@@ -60,6 +63,13 @@ class ReachabilityData {
 	static Class<? extends ClientReflectionFilterPeer> filterPeerClass;
 
 	static Class<? extends ReachabilityLinkerPeer> linkerPeerClass;
+
+	public static File getReachabilityLogFile(String fileName, Date date) {
+		String logFolder = dataFolder + "/log";
+		new File(logFolder).mkdirs();
+		return new File(Ax.format("%s/%s", logFolder, Ax.format(fileName,
+				CommonUtils.formatDate(date, DateStyle.TIMESTAMP))));
+	}
 
 	private static Set<JClassType> computeImplementations(
 			JTypeParameter typeParameter,
@@ -130,10 +140,10 @@ class ReachabilityData {
 				.equals(Object.class.getCanonicalName());
 	}
 
-	static <T> void serializeModuleTypes(TreeLogger logger,
-			ModuleTypes moduleTypes, File file) {
+	static <T> void serializeReachabilityFile(TreeLogger logger,
+			Object contents, File file) {
 		String existing = file.exists() ? ResourceUtilities.read(file) : null;
-		String json = new String(toJsonBytes(moduleTypes));
+		String json = new String(toJsonBytes(contents));
 		if (!Objects.equals(existing, json)) {
 			if (Boolean.getBoolean("reachability.production")) {
 				logger.log(TreeLogger.Type.WARN,
@@ -479,8 +489,23 @@ class ReachabilityData {
 		Reason() {
 		}
 
+		Reason(int fragmentNumber, String fragmentName, String reason) {
+			this.reason = Ax.format("%s - %s - %s", fragmentNumber,
+					fragmentName, reason);
+		}
+
 		Reason(String reason) {
 			this.reason = reason;
+		}
+
+		@Override
+		public boolean equals(Object obj) {
+			return Objects.equals(reason, ((Reason) obj).reason);
+		}
+
+		@Override
+		public int hashCode() {
+			return reason.hashCode();
 		}
 	}
 
@@ -626,9 +651,30 @@ class ReachabilityData {
 		}
 	}
 
-	static class TypeReason {
-		Type type;
+	static class TypesReason {
+		List<Type> types = new ArrayList<>();
 
 		Reason reason;
+	}
+
+	static class TypesReasons {
+		List<TypesReason> typesReasons = new ArrayList<>();;
+
+		transient Map<Reason, TypesReason> byReason = new LinkedHashMap<>();
+
+		void add(Reason reason, Type type) {
+			TypesReason typesReason = byReason.get(reason);
+			if (typesReason == null) {
+				typesReason = new TypesReason();
+				typesReason.reason = reason;
+				typesReasons.add(typesReason);
+				byReason.put(reason, typesReason);
+			}
+			typesReason.types.add(type);
+		}
+
+		void generateLookup() {
+			typesReasons.forEach(tr -> byReason.put(tr.reason, tr));
+		}
 	}
 }

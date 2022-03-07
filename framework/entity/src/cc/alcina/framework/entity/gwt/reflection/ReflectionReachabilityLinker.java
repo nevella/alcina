@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -46,7 +47,9 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectable
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.LegacyModuleAssignments;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.ModuleTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.ModuleTypes.TypeList;
+import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.Reason;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.Type;
+import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypesReasons;
 
 /**
  * Calculates reachable reflective classes from registration data.
@@ -106,27 +109,37 @@ public class ReflectionReachabilityLinker extends Linker {
 			boolean delta = false;
 			com.google.gwt.dev.Compiler.recompile = false;
 			List<Integer> fragmentIds = idToName.getKeysInDependencyOrder();
+			TypesReasons typesReasons = new TypesReasons();
 			for (Integer fragmentId : fragmentIds) {
-				Set<String> typesVisibleFromSymbolNames = reachedClassOrConstantNames
-						.get(fragmentId);
 				// can be null if no symbols (e.g. leftover fragment for single
 				// split point program)
-				typesVisibleFromSymbolNames = typesVisibleFromSymbolNames == null
-						? Collections.emptySet()
-						: typesVisibleFromSymbolNames;
+				Set<String> typesVisibleFromSymbolNames = reachedClassOrConstantNames
+						.getAndEnsure(fragmentId);
 				String moduleName = idToName.idToName(fragmentId);
 				delta |= applyReachedNames(logger, moduleName,
 						typesVisibleFromSymbolNames, moduleTypes,
 						appRegistrations, reflectableTypes,
-						legacyModuleAssignments, idToName);
+						legacyModuleAssignments, idToName, typesReasons);
 			}
 			if (delta) {
 				int maxPass = Integer.getInteger("reachability.pass", 25);
 				if (maxPass > 0) {
-					ReachabilityData.serializeModuleTypes(logger, moduleTypes,
-							typesFile);
+					ReachabilityData.serializeReachabilityFile(logger,
+							moduleTypes, typesFile);
 				}
 				if (!Boolean.getBoolean("reachability.production")) {
+					Date date = new Date();
+					File typesSnapshotFile = ReachabilityData
+							.getReachabilityLogFile(
+									"reachability-snapshot-%s.json", date);
+					ReachabilityData.serializeReachabilityFile(logger,
+							moduleTypes, typesSnapshotFile);
+					File typesReasonsFile = ReachabilityData
+							.getReachabilityLogFile(
+									"reachability-snapshot-%s-reasons.json",
+									date);
+					ReachabilityData.serializeReachabilityFile(logger,
+							typesReasons, typesReasonsFile);
 					if (pass++ < maxPass) {
 						logger.log(TreeLogger.Type.INFO, Ax.format(
 								"Recompile - reflection changes - pass %s",
@@ -140,6 +153,7 @@ public class ReflectionReachabilityLinker extends Linker {
 	}
 
 	/**
+	 * @param typeReasons
 	 *
 	 */
 	private boolean applyReachedNames(TreeLogger logger, String moduleName,
@@ -147,7 +161,7 @@ public class ReflectionReachabilityLinker extends Linker {
 			AppImplRegistrations appRegistrations,
 			AppReflectableTypes reflectableTypes,
 			LegacyModuleAssignments legacyModuleAssignments,
-			FragmentIdToName idToName) {
+			FragmentIdToName idToName, TypesReasons typesReasons) {
 		TypeList typeList = moduleTypes.ensureTypeList(moduleName);
 		Set<Type> dependencyModuleTypes = moduleTypes
 				.typesFor(idToName.computeDepdendencyNames(moduleName));
@@ -173,75 +187,71 @@ public class ReflectionReachabilityLinker extends Linker {
 		Set<AppImplRegistrations.Entry> addedFromRegistration = new LinkedHashSet<>();
 		Set<Type> addedFromHierarchy = new LinkedHashSet<>();
 		Set<Type> addedFromAsyncSerialization = new LinkedHashSet<>();
-		if (legacyModuleAssignments.hasAssignments()) {
-			outgoingReflectedModuleTypes.clear();
-			reflectableTypes.byType.keySet().stream()
-					.filter(t -> legacyModuleAssignments.isAssignedToModule(t,
-							moduleName))
-					.forEach(outgoingReflectedModuleTypes::add);
-			/*
-			 * transitional - add (and only add) all types in the legacy module
-			 */
-		} else {
-			appRegistrations.entries.stream()
-					.filter(e -> e.isVisible(visibleTypes))
-					.filter(e -> !dependencyModuleTypes.contains(e.registered))
-					.forEach(e -> {
-						outgoingReflectedModuleTypes.add(e.registered);
-						if (previouslyVisibleTypes.add(e.registered)) {
-							addedFromRegistration.add(e);
-						}
-					});
-			int passDelta = 0;
-			Set<Type> initialAsyncReachableTypes = visibleTypes.stream()
-					.filter(reflectableTypes::contains)
-					.map(reflectableTypes::typeHierarchy)
-					.flatMap(th -> th.asyncSerializableTypes.stream())
+		appRegistrations.entries.stream().filter(e -> e.isVisible(visibleTypes))
+				.filter(e -> !dependencyModuleTypes.contains(e.registered))
+				.forEach(e -> {
+					outgoingReflectedModuleTypes.add(e.registered);
+					if (previouslyVisibleTypes.add(e.registered)) {
+						addedFromRegistration.add(e);
+						Reason reason = new Reason(
+								idToName.fragmentId(moduleName), moduleName,
+								"from registration");
+						typesReasons.add(reason, e.registered);
+					}
+				});
+		int passDelta = 0;
+		Set<Type> initialAsyncReachableTypes = visibleTypes.stream()
+				.filter(reflectableTypes::contains)
+				.map(reflectableTypes::typeHierarchy)
+				.flatMap(th -> th.asyncSerializableTypes.stream())
+				.collect(AlcinaCollectors.toLinkedHashSet());
+		Set<Type> asyncReachableTypes = initialAsyncReachableTypes;
+		/*
+		 * For each reachable async type, add settabletypes and subtypes. Loop
+		 * until all added
+		 */
+		do {
+			Set<Type> passTypes = asyncReachableTypes.stream()
 					.collect(AlcinaCollectors.toLinkedHashSet());
-			Set<Type> asyncReachableTypes = initialAsyncReachableTypes;
-			/*
-			 * For each reachable async type, add settabletypes and subtypes.
-			 * Loop until all added
-			 */
-			do {
-				Set<Type> passTypes = asyncReachableTypes.stream()
-						.collect(AlcinaCollectors.toLinkedHashSet());
-				asyncReachableTypes.stream().filter(reflectableTypes::contains)
-						.map(reflectableTypes::typeHierarchy)
-						.flatMap(h -> Stream.concat(h.settableTypes.stream(),
-								h.subtypes.stream()))
-						.forEach(passTypes::add);
-				passDelta = passTypes.size() - asyncReachableTypes.size();
-				asyncReachableTypes = passTypes;
-			} while (passDelta > 0);
-			/*
-			 * we've computed potential incoming types from deserialization, now
-			 * add them to outgoing reachables
-			 */
 			asyncReachableTypes.stream().filter(reflectableTypes::contains)
-					.filter(t -> !dependencyModuleTypes.contains(t))
-					.forEach(type -> {
-						outgoingReflectedModuleTypes.add(type);
-						if (previouslyVisibleTypes.add(type)) {
-							addedFromAsyncSerialization.add(type);
-						}
-					});
-			/*
-			 * remove if there's a legacy rule preventing it (for now)
-			 *
-			 * FIXME - reflection - plan is to warn and change the rules rather
-			 * than remove
-			 */
-			// outgoingReflectedModuleTypes.removeIf(t -> {
-			// boolean remove = !legacyModuleAssignments.isAssignedToModule(t,
-			// moduleName);
-			// if (remove) {
-			// logger.log(TreeLogger.Type.INFO, Ax.format("\t[x]: %s", t));
-			// }
-			//// return remove;
-			// return false;
-			// });
-		}
+					.map(reflectableTypes::typeHierarchy)
+					.flatMap(h -> Stream.concat(h.settableTypes.stream(),
+							h.subtypes.stream()))
+					.forEach(passTypes::add);
+			passDelta = passTypes.size() - asyncReachableTypes.size();
+			asyncReachableTypes = passTypes;
+		} while (passDelta > 0);
+		/*
+		 * we've computed potential incoming types from deserialization, now add
+		 * them to outgoing reachables
+		 */
+		asyncReachableTypes.stream().filter(reflectableTypes::contains)
+				.filter(t -> !dependencyModuleTypes.contains(t))
+				.forEach(type -> {
+					outgoingReflectedModuleTypes.add(type);
+					if (previouslyVisibleTypes.add(type)) {
+						addedFromAsyncSerialization.add(type);
+						Reason reason = new Reason(
+								idToName.fragmentId(moduleName), moduleName,
+								"from async serialization");
+						typesReasons.add(reason, type);
+					}
+				});
+		/*
+		 * remove if there's a legacy rule preventing it (for now)
+		 *
+		 * FIXME - reflection - plan is to warn and change the rules rather than
+		 * remove
+		 */
+		// outgoingReflectedModuleTypes.removeIf(t -> {
+		// boolean remove = !legacyModuleAssignments.isAssignedToModule(t,
+		// moduleName);
+		// if (remove) {
+		// logger.log(TreeLogger.Type.INFO, Ax.format("\t[x]: %s", t));
+		// }
+		//// return remove;
+		// return false;
+		// });
 		/*
 		 * add supertypes of outgoing reflectable types
 		 */
@@ -256,6 +266,10 @@ public class ReflectionReachabilityLinker extends Linker {
 					outgoingReflectedModuleTypes.add(type);
 					if (previouslyVisibleTypes.add(type)) {
 						addedFromHierarchy.add(type);
+						Reason reason = new Reason(
+								idToName.fragmentId(moduleName), moduleName,
+								"from type hierarchy");
+						typesReasons.add(reason, type);
 					}
 				});
 		if (pass > 0) {
@@ -387,6 +401,19 @@ public class ReflectionReachabilityLinker extends Linker {
 			} else {
 				return Arrays.asList(ReflectionModule.INITIAL,
 						ReflectionModule.LEFTOVER);
+			}
+		}
+
+		public int fragmentId(String moduleName) {
+			switch (moduleName) {
+			case ReflectionModule.INITIAL:
+				return 0;
+			case ReflectionModule.LEFTOVER:
+				return fragmentNames.size() + 1;
+			default:
+				return fragmentNames.entrySet().stream()
+						.filter(e -> e.getValue().equals(moduleName))
+						.findFirst().get().getKey();
 			}
 		}
 
