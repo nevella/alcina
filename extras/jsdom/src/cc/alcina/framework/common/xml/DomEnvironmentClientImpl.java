@@ -2,14 +2,13 @@ package cc.alcina.framework.common.xml;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomEnvironment;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 @Reflected
 @Registration.Singleton(DomEnvironment.class)

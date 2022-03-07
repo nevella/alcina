@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
 

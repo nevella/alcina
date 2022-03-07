@@ -5,7 +5,6 @@ import java.io.FileOutputStream;
 import java.io.InputStream;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_DOWNLOAD_ATTACHMENT;
 import cc.alcina.framework.common.client.publication.DeliveryModel;

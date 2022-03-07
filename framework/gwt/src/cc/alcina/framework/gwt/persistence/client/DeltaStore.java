@@ -22,8 +22,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaM
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaSignature;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.state.AllStatesConsort;

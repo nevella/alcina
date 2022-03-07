@@ -1,7 +1,6 @@
 package cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 
 @Registration(DTRProtocolHandler.class)
 public class PlaintextProtocolHandler0pt1 extends PlaintextProtocolHandler1pt0 {

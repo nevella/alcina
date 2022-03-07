@@ -9,7 +9,6 @@ import java.lang.annotation.Target;
 import com.google.gwt.event.shared.GwtEvent;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;

@@ -14,16 +14,18 @@ import java.util.Map;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.stream.Collectors;
+
 import org.apache.commons.lang.StringEscapeUtils;
+
 import com.google.api.services.sheets.v4.model.GridRange;
 import com.google.api.services.sheets.v4.model.RowData;
+
 import cc.alcina.extras.webdriver.gallery.GalleryConfiguration.Element;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -32,7 +34,6 @@ import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.servlet.google.DriveAccessor;
 import cc.alcina.framework.servlet.google.SheetAccessor;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class SheetPersister {
 	File base;

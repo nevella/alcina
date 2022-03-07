@@ -3,8 +3,6 @@ package cc.alcina.framework.entity.persistence.transform;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;

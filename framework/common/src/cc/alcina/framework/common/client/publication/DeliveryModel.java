@@ -19,8 +19,6 @@ import java.util.Map;
 import java.util.function.BiFunction;
 
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.publication.Publication.Definition;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.StringMap;

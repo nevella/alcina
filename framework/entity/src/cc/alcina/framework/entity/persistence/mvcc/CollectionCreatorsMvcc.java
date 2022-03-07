@@ -8,8 +8,6 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet.DegenerateCreator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multiset;

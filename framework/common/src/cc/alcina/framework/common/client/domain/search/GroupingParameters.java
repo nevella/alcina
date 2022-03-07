@@ -7,7 +7,6 @@ import java.util.List;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.ColumnSearchOrder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.search.ReflectCloneable;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;

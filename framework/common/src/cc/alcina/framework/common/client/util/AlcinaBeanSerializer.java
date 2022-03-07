@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 

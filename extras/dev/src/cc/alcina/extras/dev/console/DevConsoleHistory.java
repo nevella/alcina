@@ -5,11 +5,12 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
+
 import javax.xml.bind.annotation.XmlRootElement;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @XmlRootElement
 @Registration(JaxbContextRegistration.class)

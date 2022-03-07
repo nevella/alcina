@@ -5,8 +5,6 @@ import com.google.gwt.user.client.Window;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.IUserStory;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;

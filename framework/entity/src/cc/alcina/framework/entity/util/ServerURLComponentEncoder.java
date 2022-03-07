@@ -14,8 +14,6 @@
 package cc.alcina.framework.entity.util;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.entity.SEUtilities;

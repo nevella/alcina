@@ -3,8 +3,6 @@ package cc.alcina.framework.servlet.servlet.control;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
 @Registration(ControlServletState.class)
 public class ControlServletState {

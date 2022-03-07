@@ -3,18 +3,18 @@ package cc.alcina.extras.webdriver;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.List;
+
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
+
 import cc.alcina.extras.webdriver.api.WebdriverTest;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)

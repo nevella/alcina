@@ -24,8 +24,11 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
+
 import org.apache.log4j.Logger;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+
 import cc.alcina.extras.dev.console.DevConsoleCommand.CmdHelp;
 import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
@@ -37,8 +40,16 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEv
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+/*
+ * Startup speed doc
+ * @formatter:off
+ *
+ * domainstore	prepare-domainstore	initialise-descriptor
+									mvcc
+				cluster-tr-listener	mark
+ * @formatter:on
+ */
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -73,16 +84,6 @@ import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-/*
- * Startup speed doc
- * @formatter:off
- *
- * domainstore	prepare-domainstore	initialise-descriptor
-									mvcc
-				cluster-tr-listener	mark
- * @formatter:on
- */
 
 @Registration.Singleton
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>

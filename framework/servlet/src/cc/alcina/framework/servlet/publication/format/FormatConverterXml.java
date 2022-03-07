@@ -6,7 +6,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.Optional;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget.FormatConversionTarget_XML;
 import cc.alcina.framework.common.client.publication.PublicationContent;

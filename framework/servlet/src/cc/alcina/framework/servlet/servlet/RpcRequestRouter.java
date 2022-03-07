@@ -10,8 +10,6 @@ import com.google.gwt.user.server.rpc.RPCRequest;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.ServerControlAction;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;

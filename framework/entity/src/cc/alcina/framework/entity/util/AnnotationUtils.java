@@ -29,7 +29,6 @@ import java.util.concurrent.ConcurrentHashMap;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;

@@ -5,7 +5,6 @@ package cc.alcina.framework.gwt.client.entity.export;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;

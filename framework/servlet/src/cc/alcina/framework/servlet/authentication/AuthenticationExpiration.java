@@ -2,8 +2,6 @@ package cc.alcina.framework.servlet.authentication;
 
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
 @Registration(AuthenticationExpiration.class)
 public class AuthenticationExpiration {

@@ -18,7 +18,6 @@ import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleResponse;
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleStartupModel;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote.ConsoleRecord;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;

@@ -49,7 +49,6 @@ import org.apache.commons.pool2.impl.GenericObjectPool;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
 /*The "large" functions assume a byte structure of [first 128] public-key RSA encrypted 3DES key, byte 129 onwards 3dse encrypted data

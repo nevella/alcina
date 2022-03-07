@@ -6,10 +6,11 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+
 import javax.xml.bind.annotation.XmlRootElement;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
+
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 
 @XmlRootElement
 @Registration(JaxbContextRegistration.class)

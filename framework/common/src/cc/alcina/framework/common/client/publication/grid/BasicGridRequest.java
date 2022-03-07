@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.publication.grid;
 import javax.xml.bind.annotation.XmlRootElement;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;

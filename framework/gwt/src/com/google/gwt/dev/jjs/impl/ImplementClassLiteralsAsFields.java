@@ -15,6 +15,9 @@
  */
 package com.google.gwt.dev.jjs.impl;
 
+import java.util.Map;
+import java.util.Set;
+
 import com.google.gwt.dev.jjs.Correlation.Literal;
 import com.google.gwt.dev.jjs.SourceInfo;
 import com.google.gwt.dev.jjs.ast.Context;
@@ -62,11 +65,6 @@ import com.google.gwt.thirdparty.guava.common.collect.Lists;
 import com.google.gwt.thirdparty.guava.common.collect.Maps;
 import com.google.gwt.thirdparty.guava.common.collect.Multimap;
 import com.google.gwt.thirdparty.guava.common.collect.Sets;
-
-import cc.alcina.framework.common.client.util.Ax;
-
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Create fields to represent the mechanical implementation of class literals.

@@ -27,8 +27,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.Doma
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPositionProvider;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LongPair;
 import cc.alcina.framework.common.client.util.TimeConstants;

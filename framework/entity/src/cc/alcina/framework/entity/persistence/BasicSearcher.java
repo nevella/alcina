@@ -20,7 +20,6 @@ import javax.persistence.Query;
 
 import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.EqlWithParameters;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.SingleTableSearchDefinition;

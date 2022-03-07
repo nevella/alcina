@@ -49,7 +49,6 @@ import com.esotericsoftware.reflectasm.FieldAccess;
 
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.entity.util.CachingConcurrentMap;
 

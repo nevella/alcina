@@ -17,7 +17,6 @@ import cc.alcina.framework.common.client.csobjects.SearchResultsBase;
 import cc.alcina.framework.common.client.domain.search.BindableSearchDefinition;
 import cc.alcina.framework.common.client.domain.search.ModelSearchResults;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;

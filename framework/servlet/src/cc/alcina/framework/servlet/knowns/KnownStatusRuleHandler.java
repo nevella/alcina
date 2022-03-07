@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.csobjects.KnownStatusRuleName;
 import cc.alcina.framework.common.client.csobjects.KnownTagAlcina;
 import cc.alcina.framework.common.client.csobjects.OpStatus;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.util.TimeConstants;
 
 @Registration(KnownStatusRuleHandler.class)

@@ -9,8 +9,6 @@ import java.util.function.Supplier;
 import javax.sql.DataSource;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
 @Registration(DataSourceAdapter.class)
 public abstract class DataSourceAdapter implements DataSource {

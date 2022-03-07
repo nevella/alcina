@@ -7,9 +7,6 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.actions.SelfPerformer;
 import cc.alcina.framework.common.client.job.Task;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.knowns.KnownJob;
 

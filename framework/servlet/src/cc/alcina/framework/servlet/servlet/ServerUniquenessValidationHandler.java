@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.gwittir.validator.ServerUniquenessValidator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;

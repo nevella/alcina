@@ -10,8 +10,6 @@ import cc.alcina.framework.common.client.domain.BaseProjectionLookupBuilder.BplD
 import cc.alcina.framework.common.client.domain.IDomainStore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.MapCreator;

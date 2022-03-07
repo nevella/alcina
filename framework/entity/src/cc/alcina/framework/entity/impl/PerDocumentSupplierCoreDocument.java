@@ -6,8 +6,6 @@ import org.w3c.dom.Document;
 import cc.alcina.framework.common.client.dom.DomDoc;
 import cc.alcina.framework.common.client.dom.DomDoc.PerDocumentSupplier;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
 @Registration.Singleton(value = PerDocumentSupplier.class, priority = Registration.Priority.APP)
 public class PerDocumentSupplierCoreDocument extends PerDocumentSupplier {

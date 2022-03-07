@@ -22,8 +22,6 @@ import cc.alcina.framework.common.client.domain.search.SearchOrders;
 import cc.alcina.framework.common.client.domain.search.SearcherCollectionSource;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.SearchCriterion;

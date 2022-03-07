@@ -5,8 +5,6 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.impl.DOMImpl;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 
 @Registration.Singleton(DOMImpl.class)
 public class DOMImplHeadless extends DOMImpl {

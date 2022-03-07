@@ -18,7 +18,6 @@ import com.totsp.gwittir.client.beans.BindingBuilder;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.search.EnumMultipleCriterion;
 import cc.alcina.framework.gwt.client.gwittir.provider.ListBoxEnumProvider;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;

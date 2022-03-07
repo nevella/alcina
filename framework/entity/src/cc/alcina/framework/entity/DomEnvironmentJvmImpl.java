@@ -14,8 +14,6 @@ import cc.alcina.framework.common.client.dom.DomEnvironment;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 @Registration.Singleton(value = DomEnvironment.class, priority = Registration.Priority.PREFERRED_LIBRARY)

@@ -3,8 +3,6 @@ package cc.alcina.framework.entity.impl;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Job.DebugLogWriter;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 

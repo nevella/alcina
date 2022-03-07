@@ -8,8 +8,6 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 import cc.alcina.framework.entity.SEUtilities;

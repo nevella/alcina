@@ -23,10 +23,14 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
+
 import org.apache.commons.lang.StringEscapeUtils;
+
 import com.totsp.gwittir.client.beans.Converter;
+
 import cc.alcina.extras.dev.console.DevConsoleDebugCommands.CmdDrillClientException.DevConsoleDebugPaths;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
@@ -36,8 +40,7 @@ import cc.alcina.framework.common.client.log.ILogRecord;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -60,7 +63,6 @@ import elemental.json.JsonObject;
 import nl.bitwalker.useragentutils.Browser;
 import nl.bitwalker.useragentutils.RenderingEngine;
 import nl.bitwalker.useragentutils.UserAgent;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @SuppressWarnings("deprecation")
 public class DevConsoleDebugCommands {

@@ -4,8 +4,6 @@ import java.util.Optional;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
 public interface SearcherCollectionSource {

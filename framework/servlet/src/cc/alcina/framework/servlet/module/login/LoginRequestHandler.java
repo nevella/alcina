@@ -8,8 +8,6 @@ import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.LoginResponseState;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;

@@ -21,8 +21,6 @@ import cc.alcina.framework.common.client.csobjects.KnownStatusRule;
 import cc.alcina.framework.common.client.csobjects.OpStatus;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryProvider;
 import cc.alcina.framework.common.client.util.Ax;

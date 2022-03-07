@@ -35,7 +35,6 @@ import cc.alcina.framework.common.client.domain.search.SearchOrders.ColumnSearch
 import cc.alcina.framework.common.client.domain.search.SearchOrders.SerializableSearchOrder;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;

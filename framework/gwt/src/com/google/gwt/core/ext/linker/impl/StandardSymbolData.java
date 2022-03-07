@@ -15,8 +15,6 @@
  */
 package com.google.gwt.core.ext.linker.impl;
 
-import com.google.gwt.core.ext.linker.SymbolData;
-
 import java.io.File;
 import java.io.IOException;
 import java.io.InvalidObjectException;
@@ -24,6 +22,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.URI;
 import java.net.URISyntaxException;
+
+import com.google.gwt.core.ext.linker.SymbolData;
 
 /**
  * An immutable implementation of SymbolData.

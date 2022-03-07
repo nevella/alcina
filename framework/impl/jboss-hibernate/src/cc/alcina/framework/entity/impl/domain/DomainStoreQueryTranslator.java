@@ -16,6 +16,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
 import org.hibernate.NullPrecedence;
 import org.hibernate.criterion.AliasedProjection;
 import org.hibernate.criterion.Conjunction;
@@ -37,14 +38,16 @@ import org.hibernate.criterion.SimpleSubqueryExpression;
 import org.hibernate.internal.CriteriaImpl;
 import org.hibernate.internal.CriteriaImpl.CriterionEntry;
 import org.hibernate.transform.ResultTransformer;
+
 import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.CompositeFilter;
 import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.OrderCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
@@ -57,7 +60,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreQuery;
 import cc.alcina.framework.entity.persistence.domain.NotCacheFilter;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 public class DomainStoreQueryTranslator {
 	DomainStoreQuery query;

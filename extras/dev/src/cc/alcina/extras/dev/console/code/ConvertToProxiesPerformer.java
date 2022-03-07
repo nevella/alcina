@@ -22,8 +22,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import com.github.javaparser.StaticJavaParser;
 import com.github.javaparser.ast.CompilationUnit;
 import com.github.javaparser.ast.Modifier.Keyword;
@@ -43,12 +45,13 @@ import com.github.javaparser.ast.stmt.IfStmt;
 import com.github.javaparser.ast.stmt.ReturnStmt;
 import com.github.javaparser.ast.visitor.VoidVisitorAdapter;
 import com.google.common.base.Preconditions;
+
 import cc.alcina.extras.dev.console.code.CompilationUnits.ClassOrInterfaceDeclarationWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapper;
 import cc.alcina.extras.dev.console.code.CompilationUnits.CompilationUnitWrapperVisitor;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -56,7 +59,6 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.FsObjectCache;
 import cc.alcina.framework.entity.util.PersistentObjectCache.SingletonCache;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 /**
  * Write wrapping versions of all classes

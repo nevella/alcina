@@ -3,7 +3,6 @@ package cc.alcina.framework.servlet.publication.delivery;
 import java.io.InputStream;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType.ContentDeliveryType_SEND_TO_REPOSITORY;

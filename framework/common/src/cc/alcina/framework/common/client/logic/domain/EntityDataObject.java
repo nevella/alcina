@@ -5,7 +5,6 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
