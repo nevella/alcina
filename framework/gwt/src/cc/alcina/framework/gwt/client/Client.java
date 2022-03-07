@@ -149,4 +149,10 @@ public abstract class Client {
 			Client.goTo(place);
 		}
 	}
+
+	/*
+	 * Marker to indicate basic required support classes
+	 */
+	public static class SupportReachability {
+	}
 }
