@@ -17,7 +17,7 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Transient;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 @MappedSuperclass
 @Reflected

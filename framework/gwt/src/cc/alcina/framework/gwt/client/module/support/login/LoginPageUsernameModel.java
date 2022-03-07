@@ -2,12 +2,12 @@ package cc.alcina.framework.gwt.client.module.support.login;
 
 import cc.alcina.framework.common.client.gwittir.validator.NotBlankValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Validator;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
 import cc.alcina.framework.gwt.client.widget.typedbinding.EnumeratedBinding;
 import cc.alcina.framework.gwt.client.widget.typedbinding.IntermediateBindable;

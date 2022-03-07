@@ -19,7 +19,7 @@ import java.util.List;
 import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.gwittir.widget.FileSelectorInfo;
 

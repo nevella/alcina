@@ -15,8 +15,8 @@ package cc.alcina.framework.gwt.client.gwittir.customiser;
 
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
-import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 
 /**
  *

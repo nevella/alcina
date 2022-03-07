@@ -3,10 +3,10 @@ package cc.alcina.framework.entity.gwt.headless;
 import com.google.gwt.user.client.ui.UIObject;
 import com.google.gwt.user.client.ui.UIObject.DebugIdImpl;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.RegistryFactory;
 
 public class Implementations {

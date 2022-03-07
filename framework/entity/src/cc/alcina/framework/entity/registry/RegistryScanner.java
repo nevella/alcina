@@ -23,9 +23,9 @@ import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.logic.reflection.Annotations;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;

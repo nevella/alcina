@@ -14,8 +14,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import cc.alcina.framework.common.client.csobjects.KnownNodeMetadata.KnownNodeProperty;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 

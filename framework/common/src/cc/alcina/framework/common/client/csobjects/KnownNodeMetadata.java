@@ -5,8 +5,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.csobjects.KnownStatusRule.KnownStatusRuleImpl;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 @Bean
 public class KnownNodeMetadata implements Serializable {

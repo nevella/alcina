@@ -4,9 +4,9 @@ import com.google.gwt.http.client.RequestBuilder;
 import com.google.gwt.user.client.rpc.RpcRequestBuilder;
 import com.google.gwt.user.client.rpc.ServiceDefTarget;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 @Reflected
 @Registration(AlcinaRpcRequestBuilderLight.class)

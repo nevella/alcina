@@ -12,7 +12,7 @@ import java.util.Set;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
-import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 /*
  * TODO - caching annotation facade? Or cache on the resolver (possibly latter)

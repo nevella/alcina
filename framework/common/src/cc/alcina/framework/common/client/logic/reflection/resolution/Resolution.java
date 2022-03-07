@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.logic.reflection;
+package cc.alcina.framework.common.client.logic.reflection.resolution;
 
 import java.lang.annotation.Annotation;
 import java.lang.annotation.Documented;
@@ -22,6 +22,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Property;
 
 @Retention(RetentionPolicy.RUNTIME)

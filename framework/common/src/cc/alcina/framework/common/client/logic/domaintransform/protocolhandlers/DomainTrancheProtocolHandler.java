@@ -3,9 +3,9 @@ package cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 @Reflected
 @Registration(DTRProtocolHandler.class)

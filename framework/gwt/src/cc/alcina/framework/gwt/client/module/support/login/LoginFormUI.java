@@ -2,10 +2,10 @@ package cc.alcina.framework.gwt.client.module.support.login;
 
 import com.totsp.gwittir.client.validator.ValidationFeedback;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.gwittir.widget.GridFormCellRenderer;
 import cc.alcina.framework.gwt.client.lux.LuxFormCellRenderer;
 import cc.alcina.framework.gwt.client.lux.LuxStyleValidationFeedback;

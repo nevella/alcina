@@ -15,7 +15,7 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 
-import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 /**
  *

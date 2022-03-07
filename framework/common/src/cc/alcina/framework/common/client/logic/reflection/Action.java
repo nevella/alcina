@@ -19,6 +19,7 @@ import java.lang.annotation.RetentionPolicy;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

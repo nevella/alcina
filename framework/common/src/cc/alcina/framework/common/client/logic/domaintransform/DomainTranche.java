@@ -6,7 +6,7 @@ import java.util.Collection;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 @Bean
 public class DomainTranche<T extends DomainModelObject>

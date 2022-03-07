@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.tour.condition;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
 

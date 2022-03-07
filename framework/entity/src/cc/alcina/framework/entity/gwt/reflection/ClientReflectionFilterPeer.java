@@ -7,7 +7,7 @@ import java.util.stream.Stream;
 
 import com.google.gwt.core.ext.typeinfo.JClassType;
 
-import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ReflectionModule;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.ModuleTypes;
 

@@ -10,8 +10,8 @@ import java.lang.annotation.Target;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
-import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolver;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited

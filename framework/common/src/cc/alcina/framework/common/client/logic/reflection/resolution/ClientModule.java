@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.logic.reflection;
+package cc.alcina.framework.common.client.logic.reflection.resolution;
 
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -7,6 +7,7 @@ import java.util.function.Supplier;
 
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.ReflectionModule;
 import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;
 

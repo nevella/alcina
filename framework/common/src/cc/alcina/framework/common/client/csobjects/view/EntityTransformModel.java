@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.csobjects.view;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 

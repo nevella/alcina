@@ -11,7 +11,7 @@ import java.lang.annotation.Target;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
-import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 @Documented
 @Retention(RUNTIME)

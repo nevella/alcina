@@ -1,10 +1,10 @@
 package cc.alcina.framework.common.client.util;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 @Reflected
 @Registration.Singleton

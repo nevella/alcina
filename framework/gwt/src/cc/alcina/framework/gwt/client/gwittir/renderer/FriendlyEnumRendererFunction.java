@@ -15,7 +15,7 @@ package cc.alcina.framework.gwt.client.gwittir.renderer;
 
 import java.util.function.Function;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**

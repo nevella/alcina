@@ -9,6 +9,7 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 @Retention(RetentionPolicy.RUNTIME)

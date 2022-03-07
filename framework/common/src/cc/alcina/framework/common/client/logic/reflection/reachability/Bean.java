@@ -11,7 +11,7 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.logic.reflection;
+package cc.alcina.framework.common.client.logic.reflection.reachability;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
@@ -21,7 +21,17 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Make type info available to the GWT client
+ * Types with this annotation have reflection metadata available client-side -
+ * including, but not limited to:
+ *
+ * clientInstantiable
+ *
+ * forName
+ *
+ * bean property introspection
+ *
+ * type/method annotation access
+ *
  *
  * @author nick@alcina.cc
  *
@@ -30,5 +40,6 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 @Target({ ElementType.TYPE })
-public @interface Reflected {
+@ClientVisible
+public @interface Bean {
 }

@@ -14,7 +14,7 @@
 package cc.alcina.framework.common.client.actions.instances;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 @Reflected
 /**

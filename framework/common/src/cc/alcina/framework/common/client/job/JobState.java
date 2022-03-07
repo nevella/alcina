@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.job;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 @Reflected
 public enum JobState {

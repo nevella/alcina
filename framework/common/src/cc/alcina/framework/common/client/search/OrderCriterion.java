@@ -16,7 +16,7 @@ package cc.alcina.framework.common.client.search;
 import java.util.Comparator;
 import java.util.Objects;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 

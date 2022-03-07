@@ -20,7 +20,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.EntityDataObject.OneToManySummary;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;

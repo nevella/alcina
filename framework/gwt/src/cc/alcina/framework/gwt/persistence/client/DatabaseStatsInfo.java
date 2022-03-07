@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.io.Serializable;
 import java.util.Map.Entry;
 
-import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;

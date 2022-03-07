@@ -20,7 +20,7 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
-import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 
 /**
  * 

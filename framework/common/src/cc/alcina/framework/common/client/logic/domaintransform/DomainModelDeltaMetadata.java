@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 import java.io.Serializable;
 import java.util.Date;
 
-import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 @Bean
 public class DomainModelDeltaMetadata implements Serializable {

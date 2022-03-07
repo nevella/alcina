@@ -1,7 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.TreeResolver;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;

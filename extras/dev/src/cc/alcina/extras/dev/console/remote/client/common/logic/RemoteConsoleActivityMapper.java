@@ -6,8 +6,8 @@ import com.google.gwt.place.shared.Place;
 import cc.alcina.extras.dev.console.remote.client.module.console.ConsoleActivity;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.place.BasePlaceTokenizer;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
 @Reflected

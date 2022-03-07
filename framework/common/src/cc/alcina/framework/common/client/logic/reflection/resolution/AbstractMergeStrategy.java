@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.logic.reflection;
+package cc.alcina.framework.common.client.logic.reflection.resolution;
 
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
@@ -12,8 +12,8 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.logic.reflection.Resolution.Inheritance;
-import cc.alcina.framework.common.client.logic.reflection.Resolution.MergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;

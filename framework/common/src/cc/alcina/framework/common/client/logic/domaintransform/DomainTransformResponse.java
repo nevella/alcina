@@ -17,8 +17,8 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
-import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 /**
  * 

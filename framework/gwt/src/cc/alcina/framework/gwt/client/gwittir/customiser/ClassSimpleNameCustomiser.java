@@ -17,7 +17,7 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 
 import cc.alcina.framework.common.client.logic.reflection.Custom;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ClassSimpleNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 

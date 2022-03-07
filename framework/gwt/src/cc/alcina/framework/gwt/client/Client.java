@@ -14,8 +14,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.Javascript
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.ClientReflectorFactory;
 import cc.alcina.framework.common.client.reflection.ModuleReflector;

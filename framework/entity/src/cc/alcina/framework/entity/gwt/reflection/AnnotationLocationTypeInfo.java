@@ -16,13 +16,13 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
-import cc.alcina.framework.common.client.logic.reflection.Resolution;
-import cc.alcina.framework.common.client.logic.reflection.Resolution.Inheritance;
-import cc.alcina.framework.common.client.logic.reflection.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo.AbstractMergeStrategy.AdditiveMergeStrategy;

@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.gwittir;
 import java.util.Comparator;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.ToStringComparator;
 
 public class Comparators {

@@ -6,7 +6,6 @@ import cc.alcina.framework.common.client.actions.RemoteParameters;
 import cc.alcina.framework.common.client.gwittir.validator.InstantiableDoubleValidator;
 import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
@@ -14,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Validator;
 import cc.alcina.framework.common.client.logic.reflection.Validators;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 import cc.alcina.framework.gwt.client.logic.LogLevel;
 

@@ -1,6 +1,6 @@
 package cc.alcina.framework.common.client.reflection;
 
-import cc.alcina.framework.common.client.logic.reflection.ReflectionModule;
+import cc.alcina.framework.common.client.logic.reflection.reachability.ReflectionModule;
 
 public abstract class ModuleReflector {
 	public ModuleReflector() {

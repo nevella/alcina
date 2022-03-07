@@ -2,7 +2,7 @@ package cc.alcina.framework.common.client.util;
 
 import com.totsp.gwittir.client.ui.Renderer;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 
 public interface HasDisplayName {
 	public static String displayName(Object o) {

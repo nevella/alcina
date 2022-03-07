@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.logic.reflection;
+package cc.alcina.framework.common.client.logic.reflection.resolution;
 
 import java.lang.annotation.Annotation;
 import java.util.List;

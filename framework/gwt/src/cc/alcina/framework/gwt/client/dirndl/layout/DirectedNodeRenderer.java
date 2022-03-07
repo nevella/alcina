@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 @Reflected

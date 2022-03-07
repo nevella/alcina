@@ -3,7 +3,7 @@ package cc.alcina.framework.gwt.client.tour;
 import java.util.List;
 import java.util.Optional;
 
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 public interface Tour {

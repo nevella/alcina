@@ -7,10 +7,13 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.logic.reflection.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
-import cc.alcina.framework.common.client.logic.reflection.Resolution.Inheritance;
-import cc.alcina.framework.common.client.logic.reflection.Resolution.MergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 @Reflected

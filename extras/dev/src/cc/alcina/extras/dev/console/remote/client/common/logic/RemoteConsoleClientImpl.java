@@ -4,7 +4,7 @@ import com.google.gwt.place.shared.PlaceController;
 import com.google.gwt.place.shared.PlaceHistoryHandler;
 
 import cc.alcina.extras.dev.console.remote.client.common.logic.RemoteConsoleActivityMapper.ConsolePlace;
-import cc.alcina.framework.common.client.logic.reflection.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
