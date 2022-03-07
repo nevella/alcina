@@ -78,7 +78,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Action;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
@@ -774,7 +773,7 @@ public class ContentViewFactory {
 			getBeanActions(Object bean) {
 		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
 		ObjectActions actions = Reflections.at(bean.getClass())
-				.annotation(Bean.class).actions();
+				.annotation(ObjectActions.class);
 		if (actions != null) {
 			for (Action action : actions.value()) {
 				Class<? extends PermissibleAction> actionClass = action

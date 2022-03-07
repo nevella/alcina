@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.actions.instances.ViewAction;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Action;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -20,21 +20,17 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class RenderedClass {
-	public static String getTypeDisplayName(Class<?> beanClass) {
-		String tn = Reflections.at(beanClass).annotation(Bean.class).display()
-				.name();
-		if (CommonUtils.isNullOrEmpty(tn)) {
-			tn = CommonUtils.capitaliseFirst(beanClass.getSimpleName());
-		}
-		return TextProvider.get().getUiObjectText(beanClass,
-				TextProvider.DISPLAY_NAME, tn);
+	public static List<String> allInterestingProperties(Object bean) {
+		return Reflections.at(bean.getClass()).properties().stream()
+				.filter(Property::isWriteable).map(p -> p.getName())
+				.collect(Collectors.toList());
 	}
 
 	public static List<Class<? extends PermissibleAction>>
 			getActions(Class<?> clazz, Object object) {
 		List<Class<? extends PermissibleAction>> result = new ArrayList<Class<? extends PermissibleAction>>();
-		ObjectActions actions = Reflections.at(clazz).annotation(Bean.class)
-				.actions();
+		ObjectActions actions = Reflections.at(clazz)
+				.annotation(ObjectActions.class);
 		for (Action action : actions.value()) {
 			Class<? extends PermissibleAction> actionClass = action
 					.actionClass();
@@ -50,9 +46,13 @@ public class RenderedClass {
 		return result;
 	}
 
-	public static List<String> allInterestingProperties(Object bean) {
-		return Reflections.at(bean.getClass()).properties().stream()
-				.filter(Property::isWriteable).map(p -> p.getName())
-				.collect(Collectors.toList());
+	public static String getTypeDisplayName(Class<?> beanClass) {
+		Display display = Reflections.at(beanClass).annotation(Display.class);
+		String tn = display == null ? "" : display.name();
+		if (CommonUtils.isNullOrEmpty(tn)) {
+			tn = CommonUtils.capitaliseFirst(beanClass.getSimpleName());
+		}
+		return TextProvider.get().getUiObjectText(beanClass,
+				TextProvider.DISPLAY_NAME, tn);
 	}
 }

@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -27,14 +27,13 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.misc.PerUserProperties;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
-@Bean(display = @Display(name = "Developer"))
+@Bean
+@Display(name = "Developer")
 @XmlRootElement
 @Registrations({ @Registration(JaxbContextRegistration.class),
 		@Registration(PerUserProperties.class) })
@@ -48,19 +47,6 @@ public class GeneralProperties extends Bindable
 
 	public static GeneralProperties get() {
 		return Registry.impl(Holder.class).getInstance();
-	}
-
-	@Registration.Singleton
-	public static class Holder {
-		private GeneralProperties instance;
-
-		public GeneralProperties getInstance() {
-			return this.instance;
-		}
-
-		public void setInstance(GeneralProperties instance) {
-			this.instance = instance;
-		}
 	}
 
 	private UserPropertyPersistable.Support userPropertySupport;
@@ -162,5 +148,18 @@ public class GeneralProperties extends Bindable
 	public void setUserPropertySupport(
 			UserPropertyPersistable.Support userPropertySupport) {
 		this.userPropertySupport = userPropertySupport;
+	}
+
+	@Registration.Singleton
+	public static class Holder {
+		private GeneralProperties instance;
+
+		public GeneralProperties getInstance() {
+			return this.instance;
+		}
+
+		public void setInstance(GeneralProperties instance) {
+			this.instance = instance;
+		}
 	}
 }

@@ -39,9 +39,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
+import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -410,11 +410,11 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 						.withPlace(new ActionRefPlace(CancelRef.class)));
 			} else {
 				if (state.presentationModel != null) {
-					Bean bean = Reflections
+					ObjectActions actions = Reflections
 							.at(state.presentationModel.getClass())
-							.annotation(Bean.class);
-					if (bean != null) {
-						Arrays.stream(bean.actions().value())
+							.annotation(ObjectActions.class);
+					if (actions != null) {
+						Arrays.stream(actions.value())
 								.map(a -> Reflections
 										.newInstance(a.actionClass()))
 								.filter(a -> a instanceof NonstandardObjectAction)

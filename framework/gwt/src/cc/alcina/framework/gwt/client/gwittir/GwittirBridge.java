@@ -350,15 +350,15 @@ public class GwittirBridge {
 	// reflection/registry
 	public Field getField(Class<?> clazz, String propertyName,
 			boolean editableWidgets, boolean multiple,
-			BoundWidgetTypeFactory factory, Object obj,
+			BoundWidgetTypeFactory factory, Object object,
 			AnnotationLocation.Resolver resolver) {
 		AnnotationLocation clazzLocation = new AnnotationLocation(clazz, null,
 				resolver);
-		Bean beanInfo = clazzLocation.getAnnotation(Bean.class);
+		Bean bean = clazzLocation.getAnnotation(Bean.class);
 		ClassReflector<?> classReflector = Reflections.at(clazz);
 		ObjectPermissions op = clazzLocation
 				.getAnnotation(ObjectPermissions.class);
-		obj = obj != null ? obj : classReflector.templateInstance();
+		object = object != null ? object : classReflector.templateInstance();
 		Property property = Reflections.at(clazz).property(propertyName);
 		AnnotationLocation propertyLocation = new AnnotationLocation(clazz,
 				property, resolver);
@@ -367,15 +367,17 @@ public class GwittirBridge {
 		int position = multiple ? RelativePopupValidationFeedback.BOTTOM
 				: RelativePopupValidationFeedback.RIGHT;
 		Display display = propertyLocation.getAnnotation(Display.class);
+		Display.AllProperties displayAllProperties = propertyLocation
+				.getAnnotation(Display.AllProperties.class);
 		if (display != null) {
 			PropertyPermissions pp = propertyLocation
 					.getAnnotation(PropertyPermissions.class);
 			Association association = propertyLocation
 					.getAnnotation(Association.class);
 			boolean fieldVisible = PermissionsManager.get()
-					.checkEffectivePropertyPermission(op, pp, obj, true)
+					.checkEffectivePropertyPermission(op, pp, object, true)
 					&& display != null
-					&& PermissionsManager.get().isPermitted(obj,
+					&& PermissionsManager.get().isPermitted(object,
 							display.visible())
 					&& ((display.displayMask()
 							& Display.DISPLAY_AS_PROPERTY) != 0);
@@ -386,7 +388,7 @@ public class GwittirBridge {
 			boolean propertyIsCollection = type == Set.class;
 			boolean fieldEditable = editableWidgets
 					&& (PermissionsManager.get()
-							.checkEffectivePropertyPermission(op, pp, obj,
+							.checkEffectivePropertyPermission(op, pp, object,
 									false)
 							|| ((display.displayMask()
 									& Display.DISPLAY_EDITABLE) != 0))
@@ -466,7 +468,7 @@ public class GwittirBridge {
 						validationFeedback = validationFeedbackSupplier
 								.apply(propertyName);
 					}
-					validator = getValidator(domainType, obj, propertyName,
+					validator = getValidator(domainType, object, propertyName,
 							validationFeedback);
 				}
 				Field field = new // FIXME - dirndl.2
@@ -489,9 +491,9 @@ public class GwittirBridge {
 				}
 				return field;
 			}
-		} else if (beanInfo.allPropertiesVisualisable()
+		} else if (displayAllProperties != null
 				&& PermissionsManager.get().checkEffectivePropertyPermission(op,
-						null, obj, !editableWidgets)) {
+						null, object, !editableWidgets)) {
 			// no property info, but all writeable (if object is set)
 			RelativePopupValidationFeedback vf = new RelativePopupValidationFeedback(
 					position);
@@ -527,7 +529,7 @@ public class GwittirBridge {
 			}
 			return new Field(propertyName,
 					TextProvider.get().getLabelText(propertyLocation), bwp,
-					getValidator(type, obj, propertyName, vf), vf,
+					getValidator(type, object, propertyName, vf), vf,
 					getDefaultConverter(bwp, type), clazz);
 		}
 		return null;
@@ -712,10 +714,7 @@ public class GwittirBridge {
 
 		FieldOrdering(ClassReflector<?> classReflector) {
 			this.classReflector = classReflector;
-			PropertyOrder classAnnotation = classReflector
-					.annotation(PropertyOrder.class);
-			this.propertyOrder = classAnnotation != null ? classAnnotation
-					: classReflector.annotation(Bean.class).propertyOrder();
+			this.propertyOrder = classReflector.annotation(PropertyOrder.class);
 		}
 
 		@Override

@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.module.login.LoginRequest;
 import cc.alcina.framework.gwt.client.widget.typedbinding.EnumeratedBinding;
 import cc.alcina.framework.gwt.client.widget.typedbinding.IntermediateBindable;
 
-@Bean(allPropertiesVisualisable = true)
+@Bean@Display.AllProperties
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 public class LoginPage2FAModel extends IntermediateBindable {
 	private LoginRequest loginRequest;

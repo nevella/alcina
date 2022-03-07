@@ -15,13 +15,7 @@ package cc.alcina.framework.common.client.csobjects;
 
 import java.io.Serializable;
 
-import cc.alcina.framework.common.client.actions.instances.ViewAction;
-import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
-import cc.alcina.framework.common.client.logic.reflection.Action;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
-import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
-import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
-import cc.alcina.framework.common.client.logic.reflection.Permission;
 
 /**
  *
@@ -31,8 +25,6 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 @Bean
 public class Bindable extends BaseSourcesPropertyChangeEvents
 		implements Serializable, IsBindable {
-	@Bean(actions = @ObjectActions({ @Action(actionClass = ViewAction.class) }))
-	@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT), delete = @Permission(access = AccessLevel.ROOT))
 	public static class BindableAdapter extends Bindable {
 	}
 

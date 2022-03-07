@@ -15,7 +15,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.PasswordCustomiser;
 import cc.alcina.framework.gwt.client.widget.typedbinding.EnumeratedBinding;
 import cc.alcina.framework.gwt.client.widget.typedbinding.IntermediateBindable;
 
-@Bean(allPropertiesVisualisable = true)
+@Bean@Display.AllProperties
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
 public class LoginPagePasswordModel extends IntermediateBindable {
 	private LoginRequest loginRequest;

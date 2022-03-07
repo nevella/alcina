@@ -32,8 +32,6 @@ import java.lang.annotation.Target;
  *
  * type/method annotation access
  *
- * FIXME - dirndl.1.2 - move the visualisation properties to another annotation
- * (since this is often used for pure model types)
  *
  * @author nick@alcina.cc
  *
@@ -44,11 +42,4 @@ import java.lang.annotation.Target;
 @Target({ ElementType.TYPE })
 @ClientVisible
 public @interface Bean {
-	ObjectActions actions() default @ObjectActions({});
-
-	boolean allPropertiesVisualisable() default false;
-
-	Display display() default @Display(name = "");
-
-	PropertyOrder propertyOrder() default @PropertyOrder(value = {});
 }

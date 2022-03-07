@@ -29,13 +29,9 @@ import cc.alcina.framework.common.client.reflection.Property;
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
-@Target({ ElementType.METHOD })
+@Target({ ElementType.METHOD, ElementType.TYPE })
 @Resolution(inheritance = {
 		Inheritance.PROPERTY }, mergeStrategy = Display.MergeStrategy.class)
-/**
- *
- * @author Nick Reddel
- */
 public @interface Display {
 	public static final int DISPLAY_AS_PROPERTY = 1;
 
@@ -85,6 +81,17 @@ public @interface Display {
 	Permission visible() default @Permission(access = AccessLevel.EVERYONE);
 
 	String widgetStyleName() default "";
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@ClientVisible
+	@Target({ ElementType.TYPE })
+	/**
+	 *
+	 * Marks that all properties should be displayed, irresepective of @Display annotation presence
+	 */
+	public @interface AllProperties {
+	}
 
 	@Reflected
 	public static class MergeStrategy
