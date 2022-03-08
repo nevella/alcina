@@ -14,15 +14,6 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 
-import com.google.gwt.json.client.JSONArray;
-import com.google.gwt.json.client.JSONBoolean;
-import com.google.gwt.json.client.JSONNull;
-import com.google.gwt.json.client.JSONNumber;
-import com.google.gwt.json.client.JSONObject;
-import com.google.gwt.json.client.JSONParser;
-import com.google.gwt.json.client.JSONString;
-import com.google.gwt.json.client.JSONValue;
-
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -32,8 +23,16 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
+import elemental.json.Json;
+import elemental.json.JsonArray;
+import elemental.json.JsonNull;
+import elemental.json.JsonNumber;
+import elemental.json.JsonObject;
+import elemental.json.JsonString;
+import elemental.json.JsonValue;
 
 @Reflected
+@SuppressWarnings("deprecation")
 public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 	IdentityHashMap seenOut = new IdentityHashMap();
 
@@ -45,7 +44,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 
 	@Override
 	public <T> T deserialize(String jsonString) {
-		JSONObject obj = (JSONObject) JSONParser.parseStrict(jsonString);
+		JsonObject obj = Json.instance().parse(jsonString);
 		return (T) deserializeObject(obj);
 	}
 
@@ -60,18 +59,18 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		return string;
 	}
 
-	private Object deserializeField(JSONValue jsonValue, Class type) {
-		if (jsonValue == null || jsonValue.isNull() != null) {
+	private Object deserializeField(JsonValue jsonValue, Class type) {
+		if (jsonValue == null || jsonValue instanceof JsonNull) {
 			return null;
 		}
 		if (type == Long.class || type == long.class) {
-			return Long.valueOf(jsonValue.isString().stringValue());
+			return Long.valueOf(jsonValue.asString());
 		}
 		if (type == String.class) {
-			return jsonValue.isString().stringValue();
+			return jsonValue.asString();
 		}
 		if (type == Date.class || type == Timestamp.class) {
-			String s = jsonValue.isString().stringValue();
+			String s = jsonValue.asString();
 			if (s.contains(",")) {
 				String[] parts = s.split(",");
 				Timestamp timestamp = new Timestamp(Long.parseLong(parts[0]));
@@ -86,19 +85,19 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			}
 		}
 		if (type.isEnum()) {
-			return Enum.valueOf(type, jsonValue.isString().stringValue());
+			return Enum.valueOf(type, jsonValue.asString());
 		}
 		if (type == Integer.class || type == int.class) {
-			return ((Double) jsonValue.isNumber().doubleValue()).intValue();
+			return ((Double) jsonValue.asNumber()).intValue();
 		}
 		if (type == Double.class || type == double.class) {
-			return jsonValue.isNumber().doubleValue();
+			return jsonValue.asNumber();
 		}
 		if (type == Boolean.class || type == boolean.class) {
-			return jsonValue.isBoolean().booleanValue();
+			return jsonValue.asBoolean();
 		}
 		if (type == Class.class) {
-			return getClassMaybeAbbreviated(jsonValue.isString().stringValue());
+			return getClassMaybeAbbreviated(jsonValue.asString());
 		}
 		Collection c = null;
 		if (type == Set.class || type == LinkedHashSet.class) {
@@ -111,10 +110,10 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			c = new ArrayList();
 		}
 		if (c != null) {
-			JSONArray array = jsonValue.isArray();
-			int size = array.size();
+			JsonArray array = (JsonArray) jsonValue;
+			int size = array.length();
 			for (int i = 0; i < size; i++) {
-				JSONValue jv = array.get(i);
+				JsonValue jv = array.get(i);
 				c.add(deserializeValue(jv));
 			}
 			return c;
@@ -130,28 +129,27 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			m = new CountingMap();
 		}
 		if (m != null) {
-			JSONArray array = jsonValue.isArray();
-			int size = array.size();
+			JsonArray array = (JsonArray) jsonValue;
+			int size = array.length();
 			for (int i = 0; i < size; i += 2) {
-				JSONValue jv = array.get(i);
-				JSONValue jv2 = array.get(i + 1);
+				JsonValue jv = array.get(i);
+				JsonValue jv2 = array.get(i + 1);
 				m.put(deserializeValue(jv), deserializeValue(jv2));
 			}
 			return m;
 		}
 		if (CommonUtils.isOrHasSuperClass(type, BasePlace.class)) {
-			return RegistryHistoryMapper.get()
-					.getPlace(jsonValue.isString().stringValue());
+			return RegistryHistoryMapper.get().getPlace(jsonValue.asString());
 		}
-		return deserializeObject(jsonValue.isObject());
+		return deserializeObject((JsonObject) jsonValue);
 	}
 
-	private Object deserializeObject(JSONObject jsonObj) {
+	private Object deserializeObject(JsonObject jsonObj) {
 		if (jsonObj == null) {
 			return null;
 		}
-		JSONString cn = (JSONString) jsonObj.get(CLASS_NAME);
-		String cns = cn.stringValue();
+		JsonString cn = (JsonString) jsonObj.get(CLASS_NAME);
+		String cns = cn.asString();
 		Class clazz = null;
 		try {
 			clazz = getClassMaybeAbbreviated(cns);
@@ -163,26 +161,25 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 				return null;
 			}
 		}
-		JSONObject props = (JSONObject) jsonObj
+		JsonObject props = (JsonObject) jsonObj
 				.get(getPropertyFieldName(jsonObj));
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)) {
 			return deserializeField(jsonObj.get(LITERAL), clazz);
 		}
-		if (jsonObj.containsKey(REF)) {
-			return seenIn
-					.get((int) ((JSONNumber) jsonObj.get(REF)).doubleValue());
+		if (jsonObj.hasKey(REF)) {
+			return seenIn.get((int) ((JsonNumber) jsonObj.get(REF)).asNumber());
 		}
 		Object obj = Reflections.newInstance(clazz);
 		seenIn.put(seenIn.size(), obj);
 		ClassReflector classReflector = Reflections.at(clazz);
-		for (String propertyName : props.keySet()) {
+		for (String propertyName : props.keys()) {
 			try {
 				Property property = classReflector.property(propertyName);
 				if (property == null) {
 					throw new NoSuchPropertyException(propertyName);
 				}
 				Class type = property.getType();
-				JSONValue jsonValue = props.get(propertyName);
+				JsonValue jsonValue = props.get(propertyName);
 				Object value = deserializeField(jsonValue, type);
 				property.set(obj, value);
 			} catch (NoSuchPropertyException e) {
@@ -196,17 +193,16 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		return obj;
 	}
 
-	private Object deserializeValue(JSONValue jv) {
-		if (jv.isNull() != null) {
+	private Object deserializeValue(JsonValue jv) {
+		if (jv instanceof JsonNull) {
 			return null;
 		} else {
-			return deserializeObject((JSONObject) jv);
+			return deserializeObject((JsonObject) jv);
 		}
 	}
 
-	private String getPropertyFieldName(JSONObject jsonObj) {
-		return jsonObj.containsKey(PROPERTIES_SHORT) ? PROPERTIES_SHORT
-				: PROPERTIES;
+	private String getPropertyFieldName(JsonObject jsonObj) {
+		return jsonObj.hasKey(PROPERTIES_SHORT) ? PROPERTIES_SHORT : PROPERTIES;
 	}
 
 	/**
@@ -216,9 +212,9 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 	 * @param type
 	 * @return
 	 */
-	private JSONValue serializeField(Object value, Class type) {
+	private JsonValue serializeField(Object value, Class type) {
 		if (value == null) {
-			return JSONNull.getInstance();
+			return Json.createNull();
 		}
 		if (type == Object.class) {
 			type = value.getClass();
@@ -226,29 +222,29 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		if (type == Long.class || type == long.class || type == String.class
 				|| type.isEnum() || (type.getSuperclass() != null
 						&& type.getSuperclass().isEnum())) {
-			return new JSONString(value.toString());
+			return Json.create(value.toString());
 		}
 		if (type == Double.class || type == double.class
 				|| type == Integer.class || type == int.class) {
-			return new JSONNumber(((Number) value).doubleValue());
+			return Json.create(((Number) value).doubleValue());
 		}
 		if (type == Boolean.class || type == boolean.class) {
-			return JSONBoolean.getInstance((Boolean) value);
+			return Json.create((Boolean) value);
 		}
 		if (type == Date.class) {
-			return new JSONString(String.valueOf(((Date) value).getTime()));
+			return Json.create(String.valueOf(((Date) value).getTime()));
 		}
 		if (type == Class.class) {
-			return new JSONString(((Class) value).getName());
+			return Json.create(((Class) value).getName());
 		}
 		if (type == Timestamp.class) {
-			return new JSONString(Ax.format("%s,%s",
+			return Json.create(Ax.format("%s,%s",
 					String.valueOf(((Timestamp) value).getTime()),
 					String.valueOf(((Timestamp) value).getNanos())));
 		}
 		if (value instanceof Collection) {
 			Collection c = (Collection) value;
-			JSONArray arr = new JSONArray();
+			JsonArray arr = Json.createArray();
 			int i = 0;
 			for (Object o : c) {
 				arr.set(i++, serializeObject(o));
@@ -257,7 +253,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		}
 		if (value instanceof Map) {
 			Map m = (Map) value;
-			JSONArray arr = new JSONArray();
+			JsonArray arr = Json.createArray();
 			int i = 0;
 			for (Object o : m.entrySet()) {
 				Entry e = (Entry) o;
@@ -267,16 +263,16 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			return arr;
 		}
 		if (value instanceof BasePlace) {
-			return new JSONString(((BasePlace) value).toTokenString());
+			return Json.create(((BasePlace) value).toTokenString());
 		}
 		return serializeObject(value);
 	}
 
-	private JSONObject serializeObject(Object object) {
+	private JsonObject serializeObject(Object object) {
 		if (object == null) {
 			return null;
 		}
-		JSONObject jo = new JSONObject();
+		JsonObject jo = Json.createObject();
 		Class<? extends Object> type = object.getClass();
 		if (!type.isEnum() && type.getSuperclass() != null
 				&& type.getSuperclass().isEnum()) {
@@ -284,7 +280,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		}
 		String typeName = type.getName();
 		typeName = normaliseReverseAbbreviation(type, typeName);
-		jo.put(CLASS_NAME, new JSONString(typeName));
+		jo.put(CLASS_NAME, Json.create(typeName));
 		Class<? extends Object> clazz = object.getClass();
 		if (CommonUtils.isStandardJavaClassOrEnum(clazz)
 				|| clazz == Class.class) {
@@ -292,7 +288,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 			return jo;
 		}
 		if (seenOut.containsKey(object)) {
-			jo.put(REF, new JSONNumber((int) seenOut.get(object)));
+			jo.put(REF, Json.create((int) seenOut.get(object)));
 			return jo;
 		} else {
 			seenOut.put(object, seenOut.size());
@@ -300,7 +296,7 @@ public class AlcinaBeanSerializerC extends AlcinaBeanSerializer {
 		GwittirBridge gb = GwittirBridge.get();
 		ClassReflector<?> classReflector = Reflections.at(clazz);
 		Object template = classReflector.templateInstance();
-		JSONObject props = new JSONObject();
+		JsonObject props = Json.createObject();
 		jo.put(propertyFieldName, props);
 		for (Property property : classReflector.properties()) {
 			if (property.isReadOnly()) {
