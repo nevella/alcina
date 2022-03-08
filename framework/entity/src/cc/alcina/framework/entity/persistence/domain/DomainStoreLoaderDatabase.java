@@ -164,7 +164,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 	private ConnectionPool connectionPool;
 
-	private Map<Object, Object> interns = new ConcurrentHashMap<>();
+	private Interns interns = new Interns();
 
 	public DomainStoreLoaderDatabase(DomainStore store,
 			RetargetableDataSource dataSource,
@@ -281,10 +281,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		MetricLogging.get().end("tables");
 		// clear existing interns, but intern incoming changes - optimal
 		// allocation
-		interns = new ConcurrentHashMap<>();
-		// in fact, that causes (among other things) lazy property caching
-		// so...no
-		interns = null;
+		interns.setRotating(true);
 		MetricLogging.get().start("xrefs");
 		for (EntityRefs ll : warmupEntityRefs) {
 			calls.add(() -> {
@@ -1274,18 +1271,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			if (object == null) {
 				return null;
 			}
-			if (interns == null) {
-				return object;
-			}
-			// don't use computeIfAbsent - we're not concerned about the odd
-			// duplicate
-			// return interns.computeIfAbsent(object, Function.identity());
-			Object v;
-			if ((v = interns.get(object)) == null) {
-				interns.put(object, object);
-				v = object;
-			}
-			return v;
+			return interns.get(object);
 		}
 	}
 
@@ -2101,6 +2087,50 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					if (modCount != expectedModCount)
 						throw new ConcurrentModificationException();
 				}
+			}
+		}
+	}
+
+	class Interns {
+		private static final int ROTATE_SIZE = 2000;
+
+		boolean rotating;
+
+		Map<Object, Object> map = new ConcurrentHashMap<>();
+
+		public Object get(Object object) {
+			// don't use computeIfAbsent - we're not concerned about the odd
+			// duplicate
+			// return interns.computeIfAbsent(object, Function.identity());
+			Object v;
+			if ((v = map.get(object)) == null) {
+				// map ref may have changed via rotate, but we don't care
+				map.put(object, object);
+				v = object;
+			}
+			if (rotating) {
+				// fairly arbitrary size - gain most of the benefits of Date
+				// interning,
+				// at least
+				if (map.size() > ROTATE_SIZE) {
+					rotate();
+				}
+			}
+			return v;
+		}
+
+		public boolean isRotating() {
+			return this.rotating;
+		}
+
+		public void setRotating(boolean rotating) {
+			rotate();
+			this.rotating = rotating;
+		}
+
+		private synchronized void rotate() {
+			if (map.size() > 0) {
+				map = new ConcurrentHashMap<>();
 			}
 		}
 	}

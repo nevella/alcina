@@ -2,6 +2,8 @@ package cc.alcina.framework.entity.persistence.mvcc;
 
 import java.util.Collections;
 import java.util.Iterator;
+import java.util.Map;
+import java.util.concurrent.ConcurrentNavigableMap;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -21,13 +23,13 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  * Note that like a TransactionalMap, the owning MvccObject will not be
  * reachable by any transaction started before it is committed to the domain
  * graph (unless the object is created within that transaction).
- * 
+ *
  * synchronization - resolution of version is synchronized on the baseobject, as
  * is vacuum/removal of this from base object.
- * 
+ *
  * vacuum map swap is synchronized on (this)
- * 
- * 
+ *
+ *
  * Complexities related to lazy load (e.g.
  * TransformCommit.getLocatorMapForClient) - two lazy-loaded mvcc objects,
  * identical class/id, are non-identical. The MvccObject (entity) is unique
@@ -35,16 +37,16 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  * TransactionalValue and possible replacement in
  * DomainStore.SubgraphTransformManagerPostProcess.getEntityForCreate(DomainTransformEvent)
  * and local-id/creation checks in DomainStore.find(Class<T>, long)
- * 
+ *
  * FIXME - mvcc.5 - Docs - why/how do readable/writeable operate? Answer: the
  * "read" version is immutable and used as the source of later transaction's
  * versions. Note that read-only _versions_ are rare (possibly non-existent?
  * lazy-load?), but read-only _access_ (to prior visible tx version) is
  * definitely not.
- * 
+ *
  * @author nick@alcina.cc
- * 
- * 
+ *
+ *
  *
  * @param <T>
  */
@@ -54,6 +56,39 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	protected static int notifyResolveNullCount = 100;
 
 	protected static int notifyInvalidReadStateCount = 100;
+
+	private static final ConcurrentSkipListMap<Transaction, ObjectVersion> EMPTY = new ConcurrentSkipListMap<Transaction, ObjectVersion>() {
+		@Override
+		public void clear() {
+			throw new UnsupportedOperationException();
+		};
+
+		@Override
+		public ObjectVersion put(Transaction key, ObjectVersion value) {
+			throw new UnsupportedOperationException();
+		};
+
+		@Override
+		public void
+				putAll(Map<? extends Transaction, ? extends ObjectVersion> m) {
+			throw new UnsupportedOperationException();
+		};
+
+		@Override
+		public ObjectVersion putIfAbsent(Transaction key, ObjectVersion value) {
+			throw new UnsupportedOperationException();
+		};
+
+		@Override
+		public ObjectVersion remove(Object key) {
+			throw new UnsupportedOperationException();
+		};
+
+		@Override
+		public boolean remove(Object key, Object value) {
+			throw new UnsupportedOperationException();
+		};
+	};
 
 	// called in a synchronized block (synchronized on domainIdentity)
 	static <E extends Entity> MvccObjectVersions<E> ensureEntity(
@@ -73,12 +108,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				initialObjectIsWriteable);
 	}
 
-	/*
-	 * Used as a monitor for any post-constructor operations which would change
-	 * the map size (so read is not synchronized, write always is).
-	 */
-	volatile ConcurrentSkipListMap<Transaction, ObjectVersion<T>> versions = new ConcurrentSkipListMap<>(
-			Collections.reverseOrder());
+	private volatile ConcurrentSkipListMap<Transaction, ObjectVersion<T>> versions;
 
 	protected volatile T visibleAllTransactions;
 
@@ -93,6 +123,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	// debugging
 	private TransactionId initialTransactionId;
 
+	/*
+	 * Used as a monitor for any post-constructor operations which would change
+	 * the map size (so read is not synchronized, write always is).
+	 */
 	private AtomicInteger size = new AtomicInteger();
 
 	Transaction initialWriteableTransaction;
@@ -140,7 +174,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			T object = visibleAllTransactions;
 			Transaction transaction = null;
 			synchronized (this) {
-				Iterator<ObjectVersion<T>> itr = versions.values().iterator();
+				Iterator<ObjectVersion<T>> itr = versions().values().iterator();
 				if (itr.hasNext()) {
 					ObjectVersion<T> firstVersion = itr.next();
 					object = firstVersion.object;
@@ -148,7 +182,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				}
 			}
 			return Ax.format("versions: %s : base: %s/%s : initial-tx: %s",
-					versions.size(), object.getClass(),
+					versions().size(), object.getClass(),
 					System.identityHashCode(object),
 					transaction == null ? transaction : "base");
 		} catch (Exception e) {
@@ -172,14 +206,14 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	private T resolve0(Transaction transaction, boolean write) {
 		/*
 		 * TODO - doc - this makes sense but explain why...
-		 * 
+		 *
 		 * and the doc is...I think - that this occurs either for
 		 * TransactionalValue or during
 		 * zeroVersions->visibleAllTransactions->remove-mvccObjectVersions
 		 * vacuum sequence.
 		 */
 		if ((size.get() == 0 || (transaction.isEmptyCommittedTransactions()
-				&& !versions.containsKey(transaction))) && !write) {
+				&& !versions().containsKey(transaction))) && !write) {
 			if (mayBeReachableFromPreCreationTransactions()
 					&& !transaction.isVisible(firstCommittedTransactionId)) {
 				return null;
@@ -187,7 +221,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				return visibleAllTransactions;
 			}
 		}
-		ObjectVersion<T> version = versions.get(transaction);
+		ObjectVersion<T> version = versions().get(transaction);
 		if (version != null && version.isCorrectWriteableState(write)) {
 			return version.object;
 		}
@@ -209,7 +243,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		ObjectVersion<T> mostRecentVersion = version;
 		if (mostRecentVersion == null) {
 			mostRecentVersion = mostRecentTransaction == null ? null
-					: versions.get(mostRecentTransaction);
+					: versions().get(mostRecentTransaction);
 		}
 		if (mostRecentVersion != null) {
 			mostRecentObject = mostRecentVersion.object;
@@ -256,7 +290,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected void debugNotResolved() {
 		FormatBuilder fb = new FormatBuilder();
-		fb.line("Version count: %s", versions.size());
+		fb.line("Version count: %s", versions().size());
 		fb.line("visibleAllTransactions: %s", visibleAllTransactions != null);
 		fb.line("cachedResolution: %s", cachedResolution);
 		fb.line("firstCommittedTransactionId: %s", firstCommittedTransactionId);
@@ -283,7 +317,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 						"onResolveNull: \nVersions: {}\nCurrent tx-id: {} - highest visible id: {}\n"
 								+ "Visible all tx?: {}\nFirst committed tx-id: {}\nInitial  txid: {}"
 								+ "\nInitial writeable tx: {}\nCached resolution: {}",
-						versions.keySet(), Transaction.current(),
+						versions().keySet(), Transaction.current(),
 						Transaction
 								.current().highestVisibleCommittedTransactionId,
 						visibleAllTransactions != null,
@@ -301,19 +335,22 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 * Guaranteed that version.transaction does not exist
 	 */
 	protected void putVersion(ObjectVersion<T> version) {
-		versions.put(version.transaction, version);
+		if (versions == null) {
+			versions = new ConcurrentSkipListMap<>(Collections.reverseOrder());
+		}
+		versions().put(version.transaction, version);
 		size.incrementAndGet();
 		Transactions.get().onAddedVacuumable(version.transaction, this);
 		updateCached(version.transaction, version.object, version.writeable);
 	}
 
 	protected void removeWithSize(Transaction tx) {
-		ObjectVersion<T> version = versions.get(tx);
+		ObjectVersion<T> version = versions().get(tx);
 		if (version != null) {
 			if (tx.isToDomainCommitted()) {
 				visibleAllTransactions = version.object;
 			}
-			versions.remove(tx);
+			versions().remove(tx);
 			cachedResolution = null;
 			size.decrementAndGet();
 		}
@@ -332,12 +369,12 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	/*
-	 * 
-	 * 
+	 *
+	 *
 	 * the two bulk removal operations effectively use the same 'iterate across
 	 * the smallest set' optimisation of AbstractSet, tailored to avoid
 	 * CSLM.size()
-	 * 
+	 *
 	 */
 	protected void vacuum0(VacuumableTransactions vacuumableTransactions) {
 		int maxToRemove = vacuumableTransactions.completedDomainTransactions
@@ -374,7 +411,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			 * there's a narrow window where we'd return an older version)
 			 */
 			if (mostRecentCommonVisible != null) {
-				ObjectVersion<T> version = versions
+				ObjectVersion<T> version = versions()
 						.get(mostRecentCommonVisible);
 				if (firstCommittedTransactionId == null) {
 					firstCommittedTransactionId = vacuumableTransactions.oldestVacuumableDomainTransaction
@@ -400,7 +437,16 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 						.forEach(this::removeWithSize);
 			}
 		}
-		// }
+		if (size.get() == 0) {
+			versions = null;
+			cachedResolution = null;
+			return;
+		}
+	}
+
+	protected ConcurrentNavigableMap<Transaction, ObjectVersion<T>> versions() {
+		ConcurrentNavigableMap versions = this.versions;
+		return versions == null ? (ConcurrentNavigableMap) EMPTY : versions;
 	}
 
 	boolean hasNoVisibleTransaction() {
@@ -453,7 +499,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		version.object = domainIdentity;
 		version.transaction = transaction;
 		version.writeable = true;
-		versions.put(transaction, version);
+		versions().put(transaction, version);
 		updateCached(transaction, domainIdentity, true);
 	}
 
@@ -466,10 +512,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				&& cachedResolution.writableTransactionId == transaction
 						.getId();
 		if ((size.get() == 0 || (transaction.isEmptyCommittedTransactions()
-				&& !versions.containsKey(transaction)))) {
+				&& !versions().containsKey(transaction)))) {
 			// no
 		} else {
-			ObjectVersion<T> version = versions.get(transaction);
+			ObjectVersion<T> version = versions().get(transaction);
 			if (version != null && version.writeable) {
 				verified = true;
 			}

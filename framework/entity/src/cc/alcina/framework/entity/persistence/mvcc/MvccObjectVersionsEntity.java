@@ -51,7 +51,7 @@ public class MvccObjectVersionsEntity<T extends Entity>
 			T object = domainIdentity;
 			Transaction transaction = null;
 			synchronized (this) {
-				Iterator<ObjectVersion<T>> itr = versions.values().iterator();
+				Iterator<ObjectVersion<T>> itr = versions().values().iterator();
 				if (itr.hasNext()) {
 					ObjectVersion<T> firstVersion = itr.next();
 					object = firstVersion.object;
@@ -66,7 +66,7 @@ public class MvccObjectVersionsEntity<T extends Entity>
 					"localId");
 			Object id = idField.get(object);
 			return Ax.format("versions: %s : base: %s/%s/%s : initial-tx: %s",
-					versions.size(), object.getClass(), id,
+					versions().size(), object.getClass(), id,
 					System.identityHashCode(object),
 					transaction == null ? transaction : "base");
 		} catch (Exception e) {

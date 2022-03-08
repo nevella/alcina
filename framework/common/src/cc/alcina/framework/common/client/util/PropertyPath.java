@@ -48,8 +48,12 @@ public class PropertyPath {
 		}
 	}
 
+	public boolean isSinglePathSegment() {
+		return paths.length == 1;
+	}
+
 	public void setChainedProperty(Object obj, Object value) {
-		if (paths.length == 1) {
+		if (isSinglePathSegment()) {
 			ensureAccessors(obj, 0);
 			accessors[0].set(obj, value);
 		}
@@ -99,7 +103,7 @@ public class PropertyPath {
 		if (obj == null) {
 			return null;
 		}
-		if (paths.length == 1) {
+		if (isSinglePathSegment()) {
 			ensureAccessors(obj, 0);
 			Property accessor = accessors[0];
 			return type ? accessor.getType() : accessor.get(obj);

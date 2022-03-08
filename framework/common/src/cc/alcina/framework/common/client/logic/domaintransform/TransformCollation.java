@@ -159,6 +159,18 @@ public class TransformCollation {
 			this.locator = locator;
 		}
 
+		public boolean doesNotContainsNames(Entity.PropertyEnum... names) {
+			Set<String> transformedPropertyNames = getTransformedPropertyNames();
+			return Arrays.stream(names).map(Entity.PropertyEnum::name)
+					.noneMatch(transformedPropertyNames::contains);
+		}
+
+		public boolean doesNotContainsNames(String... propertyNames) {
+			Set<String> transformedPropertyNames = getTransformedPropertyNames();
+			return Arrays.stream(propertyNames)
+					.noneMatch(transformedPropertyNames::contains);
+		}
+
 		public DomainTransformEvent first() {
 			return Ax.first(transforms);
 		}
@@ -202,6 +214,10 @@ public class TransformCollation {
 			return last().getTransformType() == TransformType.DELETE_OBJECT;
 		}
 
+		public boolean isPropertyOnly() {
+			return !isCreated() && !isDeleted();
+		}
+
 		public DomainTransformEvent last() {
 			return Ax.last(transforms);
 		}
@@ -213,7 +229,7 @@ public class TransformCollation {
 
 		@Override
 		public String toString() {
-			return locator.toIdPairString();
+			return locator.toParseableString();
 		}
 
 		protected Multimap<String, List<DomainTransformEvent>>

@@ -733,7 +733,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				if (isNotRemovedValueMarker(baseObject)) {
 					return (V) baseObject.get();
 				}
-				Optional<ObjectVersion<ObjectWrapper>> version = versions
+				Optional<ObjectVersion<ObjectWrapper>> version = versions()
 						.values().stream()
 						.filter(ov -> isNotRemovedValueMarker(ov.object))
 						.findFirst();

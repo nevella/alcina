@@ -500,6 +500,8 @@ public abstract class Entity<T extends Entity> extends Bindable
 	}
 
 	public interface PropertyEnum {
+		String name();
+
 		default Predicate<? super DomainTransformEvent> transformFilter() {
 			return event -> Objects.equals(event.getPropertyName(),
 					((Enum) this).name());

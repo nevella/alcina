@@ -686,14 +686,14 @@ public class Transaction implements Comparable<Transaction> {
 			return resolvedMostRecentVisibleTransactions
 					.computeIfAbsent(versions,
 							v -> TransactionVersions.mostRecentCommonVisible(
-									v.versions.keySet(),
+									v.versions().keySet(),
 									committedTransactions));
 		} else {
 			synchronized (resolvedMostRecentVisibleTransactions) {
 				return resolvedMostRecentVisibleTransactions.computeIfAbsent(
 						versions,
 						v -> TransactionVersions.mostRecentCommonVisible(
-								v.versions.keySet(), committedTransactions));
+								v.versions().keySet(), committedTransactions));
 			}
 		}
 	}

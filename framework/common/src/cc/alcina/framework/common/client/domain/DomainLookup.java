@@ -12,6 +12,7 @@ import java.util.stream.Stream;
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.MultisetCreator;
@@ -137,6 +138,16 @@ public class DomainLookup<T, E extends Entity>
 	@Override
 	public boolean isEnabled() {
 		return this.enabled;
+	}
+
+	public boolean isIgnoreForIndexing(EntityCollation entityCollation) {
+		if (propertyPath.isSinglePathSegment()
+				&& entityCollation.isPropertyOnly() && entityCollation
+						.doesNotContainsNames(propertyPath.getPropertyPath())) {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public Set<T> keys() {

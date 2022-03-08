@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
 /*
- * Call initialise once all infrastructure (mvcc) is ready 
+ * Call initialise once all infrastructure (mvcc) is ready
  */
 public class DomainClassDescriptor<T extends Entity>
 		implements MemoryStatProvider {
@@ -127,6 +127,10 @@ public class DomainClassDescriptor<T extends Entity>
 			EntityCollation entityCollation) {
 		for (DomainStoreLookupDescriptor lookupDescriptor : lookupDescriptors) {
 			DomainLookup lookup = lookupDescriptor.getLookup();
+			if (entityCollation != null
+					&& lookup.isIgnoreForIndexing(entityCollation)) {
+				continue;
+			}
 			if (add) {
 				lookup.insert(obj);
 			} else {
