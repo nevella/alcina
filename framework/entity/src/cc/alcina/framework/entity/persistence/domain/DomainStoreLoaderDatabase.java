@@ -282,6 +282,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		// clear existing interns, but intern incoming changes - optimal
 		// allocation
 		interns = new ConcurrentHashMap<>();
+		// in fact, that causes (among other things) lazy property caching
+		// so...no
+		interns = null;
 		MetricLogging.get().start("xrefs");
 		for (EntityRefs ll : warmupEntityRefs) {
 			calls.add(() -> {
