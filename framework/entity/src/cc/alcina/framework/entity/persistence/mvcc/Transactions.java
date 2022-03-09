@@ -139,6 +139,11 @@ public class Transactions {
 					//
 					boolean writeableVersion = state == ResolvedVersionState.WRITE;
 					if (versions != null) {
+						T resolved = versions.resolveWithoutSync(transaction,
+								writeableVersion);
+						if (resolved != null) {
+							return resolved;
+						}
 						synchronized (versions) {
 							if (((MvccObjectVersionsMvccObject) versions).attached) {
 								// valid

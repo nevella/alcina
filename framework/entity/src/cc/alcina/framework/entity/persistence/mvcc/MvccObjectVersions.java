@@ -203,7 +203,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 * writeable version). Note that all this is not hit unless the mvcc object
 	 * is modified during the jvm lifetime -
 	 */
-	private synchronized T resolve0(Transaction transaction, boolean write) {
+	private synchronized T resolveWithSync(Transaction transaction,
+			boolean write) {
 		/*
 		 * TODO - doc - this makes sense but explain why...
 		 *
@@ -471,45 +472,25 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	boolean hasNoVisibleTransaction() {
-		return resolve(false, false) == null;
+		return resolve(false) == null;
 	}
 
 	boolean hasVisibleVersion() {
-		return resolve(false, false) != null;
+		return resolve(false) != null;
 	}
 
-	T resolve(boolean write) {
-		return resolve(write, true);
-	}
-
-	T resolve(boolean write, boolean notifyResolveNull) {
+	T resolve(boolean writeableVersion) {
 		Transaction transaction = Transaction.current();
-		if (write && transaction.isReadonly()
-				&& !TransformManager.get().isIgnorePropertyChanges()) {
-			throw new MvccException("Writing within a readonly transaction");
+		T resolved = resolveWithoutSync(transaction, writeableVersion);
+		if (resolved != null) {
+			return resolved;
 		}
-		// try cached
-		CachedResolution cachedResolution = this.cachedResolution;
-		if (write) {
-			if (cachedResolution != null
-					&& cachedResolution.writableTransactionId == transaction
-							.getId()) {
-				return cachedResolution.writeable;
-			}
-		} else {
-			if (cachedResolution != null
-					&& cachedResolution.readTransactionId == transaction
-							.getId()) {
-				return cachedResolution.read;
-			}
-		}
-		T resolved;
 		// try non-cached and update cached
-		resolved = resolve0(transaction, write);
+		resolved = resolveWithSync(transaction, writeableVersion);
 		if (resolved == null) {
-			onResolveNull(write);
+			onResolveNull(writeableVersion);
 		}
-		updateCached(transaction, resolved, write);
+		updateCached(transaction, resolved, writeableVersion);
 		return resolved;
 	}
 
@@ -523,6 +504,29 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		version.writeable = true;
 		versions().put(transaction, version);
 		updateCached(transaction, domainIdentity, true);
+	}
+
+	T resolveWithoutSync(Transaction transaction, boolean writeableVersion) {
+		if (writeableVersion && transaction.isReadonly()
+				&& !TransformManager.get().isIgnorePropertyChanges()) {
+			throw new MvccException("Writing within a readonly transaction");
+		}
+		// try cached
+		CachedResolution cachedResolution = this.cachedResolution;
+		if (writeableVersion) {
+			if (cachedResolution != null
+					&& cachedResolution.writableTransactionId == transaction
+							.getId()) {
+				return cachedResolution.writeable;
+			}
+		} else {
+			if (cachedResolution != null
+					&& cachedResolution.readTransactionId == transaction
+							.getId()) {
+				return cachedResolution.read;
+			}
+		}
+		return null;
 	}
 
 	void verifyWritable(Transaction transaction) {
