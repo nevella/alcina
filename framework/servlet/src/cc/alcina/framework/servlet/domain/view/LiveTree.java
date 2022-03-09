@@ -694,8 +694,14 @@ public class LiveTree {
 				// add the remove operation, will be handled in processevents
 				PathChange change = new PathChange();
 				change.operation = Operation.REMOVE;
-				change.path = childPath.getValue().path;
-				addPathChange(change);
+				// FIXME - under what circumstances is this null? Probably an
+				// issue...
+				if (childPath.getValue() != null) {
+					change.path = childPath.getValue().path;
+					addPathChange(change);
+				} else {
+					int debug = 3;
+				}
 				return childPath;
 			} else {
 				return null;
