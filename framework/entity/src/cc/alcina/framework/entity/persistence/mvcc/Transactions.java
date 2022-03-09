@@ -121,20 +121,32 @@ public class Transactions {
 					return t;
 				} else {
 					//
-					// mutation of mvccObject.__versions ref is locked by a
-					// single monitor to avoid inflation of entity object
-					// headers
+					// there's an interplay of locks here that dovetails with
+					// MvccObjectVersionsMvccObject.vacuum0
+					//
+					// our order: get - if non-null, lock MvccObjectVersions
+					// instance, validate, resolve.
+					//
+					// if invalid or null, global lock, ensure (vacuum will not
+					// hold both)
 					//
 					// mutation/concurrent access to instances of
 					// MvccObjectVersions handled in-class
 					//
-					synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
-						versions = mvccObject.__getMvccVersions__();
-						if (versions == null) {
-							versions = MvccObjectVersions.ensureEntity(t,
-									transaction, false);
+					boolean writeableVersion = state == ResolvedVersionState.WRITE;
+					versions = mvccObject.__getMvccVersions__();
+					if (versions != null) {
+						synchronized (versions) {
+							if (versions.domainIdentity != null) {
+								// valid
+								return versions.resolve(writeableVersion);
+							}
 						}
-						boolean writeableVersion = state == ResolvedVersionState.WRITE;
+					}
+					// fallthrough, invalid or null
+					synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
+						versions = MvccObjectVersions.ensureEntity(t,
+								transaction, false);
 						/*
 						 * see docs for READ_INVALID
 						 */
@@ -237,13 +249,21 @@ public class Transactions {
 			if (transaction.isBaseTransaction()) {
 				return t;
 			} else {
-				//
-				synchronized (t) {
-					versions = mvccObject.__getMvccVersions__();
-					if (versions == null) {
-						versions = MvccObjectVersions.ensureTrieEntry(t,
-								transaction, false);
+				// see logic for resolve()
+				boolean writeableVersion = write;
+				versions = mvccObject.__getMvccVersions__();
+				if (versions != null) {
+					synchronized (versions) {
+						if (versions.domainIdentity != null) {
+							// valid
+							return versions.resolve(write);
+						}
 					}
+				}
+				// fallthrough, invalid or null
+				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
+					versions = MvccObjectVersions.ensureTrieEntry(t,
+							transaction, false);
 					return versions.resolve(write);
 				}
 			}

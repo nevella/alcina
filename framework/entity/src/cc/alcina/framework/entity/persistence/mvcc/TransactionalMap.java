@@ -592,10 +592,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		public void delta(int delta) {
-			int result = resolve(true).addAndGet(delta);
-			if (result < 0) {
-				int debug = 3;
-			}
+			resolve(true).addAndGet(delta);
 		}
 
 		@Override
@@ -637,6 +634,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			if (get(key) != null) {
 				return;
 			}
+			// won't be vacuumed (since tx is live) so no need to synchronize
 			V value = getAnyTransaction();
 			put(value);
 		}
@@ -649,8 +647,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				 */
 				return nonConcurrent.get(key);
 			}
-			// not-not - but otherwise so many single nots
-			if (!isNotRemovedValueMarker(o)) {
+			if (isRemovedValueMarker(o)) {
 				throw new UnsupportedOperationException();
 			}
 			return (V) o.get();
@@ -675,7 +672,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				 */
 				return nonConcurrent.containsKey(key);
 			}
-			return isNotRemovedValueMarker(o);
+			return notRemovedValueMarker(o);
 		}
 
 		public void remove() {
@@ -724,41 +721,40 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			}
 		}
 
-		V getAnyTransaction() {
-			/*
-			 * synchronized: must block vacuum() calls
-			 */
-			synchronized (this) {
-				ObjectWrapper baseObject = visibleAllTransactions;
-				if (isNotRemovedValueMarker(baseObject)) {
-					return (V) baseObject.get();
-				}
-				Optional<ObjectVersion<ObjectWrapper>> version = versions()
-						.values().stream()
-						.filter(ov -> isNotRemovedValueMarker(ov.object))
-						.findFirst();
-				if (version.isEmpty()) {
-					throw new IllegalStateException(Ax.format(
-							"getAnyTransaction - no non-removed value (vacuum race?): %s",
-							key));
-				}
-				return (V) version.get().object.get();
+		/*
+		 * synchronized: must block vacuum() calls
+		 */
+		synchronized V getAnyTransaction() {
+			ObjectWrapper baseObject = visibleAllTransactions;
+			if (notRemovedValueMarker(baseObject)) {
+				return (V) baseObject.get();
 			}
+			Optional<ObjectVersion<ObjectWrapper>> version = versions().values()
+					.stream().filter(ov -> notRemovedValueMarker(ov.object))
+					.findFirst();
+			if (version.isEmpty()) {
+				throw new IllegalStateException(Ax.format(
+						"getAnyTransaction - no non-removed value (vacuum race?): %s",
+						key));
+			}
+			return (V) version.get().object.get();
 		}
 
-		boolean isNotRemovedValueMarker(ObjectWrapper o) {
-			return o.get() != REMOVED_VALUE_MARKER;
+		boolean isRemovedValueMarker(ObjectWrapper o) {
+			return o.get() == REMOVED_VALUE_MARKER;
 		}
 
-		boolean put(V value) {
-			synchronized (this) {
-				if (concurrent.get(wrapTransactionalKey(key)) == null) {
-					// vacuumed
-					return false;
-				}
-				resolve(true).set(value);
-				return true;
+		boolean notRemovedValueMarker(ObjectWrapper o) {
+			return !isRemovedValueMarker(o);
+		}
+
+		synchronized boolean put(V value) {
+			if (concurrent.get(wrapTransactionalKey(key)) == null) {
+				// vacuumed
+				return false;
 			}
+			resolve(true).set(value);
+			return true;
 		}
 	}
 

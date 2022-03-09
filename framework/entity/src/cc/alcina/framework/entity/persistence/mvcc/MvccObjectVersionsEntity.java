@@ -46,17 +46,15 @@ public class MvccObjectVersionsEntity<T extends Entity>
 	}
 
 	@Override
-	public String toString() {
+	public synchronized String toString() {
 		try {
 			T object = domainIdentity;
 			Transaction transaction = null;
-			synchronized (this) {
-				Iterator<ObjectVersion<T>> itr = versions().values().iterator();
-				if (itr.hasNext()) {
-					ObjectVersion<T> firstVersion = itr.next();
-					object = firstVersion.object;
-					transaction = firstVersion.transaction;
-				}
+			Iterator<ObjectVersion<T>> itr = versions().values().iterator();
+			if (itr.hasNext()) {
+				ObjectVersion<T> firstVersion = itr.next();
+				object = firstVersion.object;
+				transaction = firstVersion.transaction;
 			}
 			/*
 			 * use field rather than getters to not resolve

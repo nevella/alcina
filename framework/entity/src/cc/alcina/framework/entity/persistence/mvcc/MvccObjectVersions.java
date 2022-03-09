@@ -3,8 +3,6 @@ package cc.alcina.framework.entity.persistence.mvcc;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.Map;
-import java.util.concurrent.ConcurrentNavigableMap;
-import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
 import org.slf4j.Logger;
@@ -17,6 +15,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.VacuumableTransactions;
+import it.unimi.dsi.fastutil.objects.Object2ObjectAVLTreeMap;
 import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
 
 /**
@@ -24,11 +23,9 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  * reachable by any transaction started before it is committed to the domain
  * graph (unless the object is created within that transaction).
  *
- * synchronization - resolution of version is synchronized on the baseobject, as
- * is vacuum/removal of this from base object.
- *
- *
- * vacuum map swap is synchronized on (this)
+ * Synchronization - access to transaction versions is synchronized, mostly at
+ * the method level. This does not include the fast path access to cached
+ * resolution
  *
  *
  * Complexities related to lazy load (e.g.
@@ -58,7 +55,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected static int notifyInvalidReadStateCount = 100;
 
-	private static final ConcurrentSkipListMap<Transaction, ObjectVersion> EMPTY = new ConcurrentSkipListMap<Transaction, ObjectVersion>() {
+	private static final Object2ObjectAVLTreeMap<Transaction, ObjectVersion> EMPTY = new Object2ObjectAVLTreeMap<Transaction, ObjectVersion>() {
 		@Override
 		public void clear() {
 			throw new UnsupportedOperationException();
@@ -111,7 +108,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				initialObjectIsWriteable);
 	}
 
-	private volatile ConcurrentSkipListMap<Transaction, ObjectVersion<T>> versions;
+	// concurrency not required
+	private volatile Object2ObjectAVLTreeMap<Transaction, ObjectVersion<T>> versions;
 
 	protected volatile T visibleAllTransactions;
 
@@ -168,22 +166,22 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	@Override
-	public String toString() {
+	public synchronized String toString() {
 		try {
 			T object = visibleAllTransactions;
 			Transaction transaction = null;
-			synchronized (this) {
-				Iterator<ObjectVersion<T>> itr = versions().values().iterator();
-				if (itr.hasNext()) {
-					ObjectVersion<T> firstVersion = itr.next();
-					object = firstVersion.object;
-					transaction = firstVersion.transaction;
-				}
+			String message = null;
+			Iterator<ObjectVersion<T>> itr = versions().values().iterator();
+			if (itr.hasNext()) {
+				ObjectVersion<T> firstVersion = itr.next();
+				object = firstVersion.object;
+				transaction = firstVersion.transaction;
 			}
-			return Ax.format("versions: %s : base: %s/%s : initial-tx: %s",
+			message = Ax.format("versions: %s : base: %s/%s : initial-tx: %s",
 					versions().size(), object.getClass(),
 					System.identityHashCode(object),
 					transaction == null ? transaction : "base");
+			return message;
 		} catch (Exception e) {
 			return "exception..";
 		}
@@ -191,9 +189,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	@Override
 	public void vacuum(VacuumableTransactions vacuumableTransactions) {
-		synchronized (this) {
-			vacuum0(vacuumableTransactions);
-		}
+		vacuum0(vacuumableTransactions);
 	}
 
 	/*
@@ -202,7 +198,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 * writeable version). Note that all this is not hit unless the mvcc object
 	 * is modified during the jvm lifetime -
 	 */
-	private T resolve0(Transaction transaction, boolean write) {
+	private synchronized T resolve0(Transaction transaction, boolean write) {
 		/*
 		 * TODO - doc - this makes sense but explain why...
 		 *
@@ -284,7 +280,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected abstract void copyObject(T fromObject, T baseObject);
 
-	protected void debugNotResolved() {
+	protected synchronized void debugNotResolved() {
 		FormatBuilder fb = new FormatBuilder();
 		fb.line("Version count: %s", versions().size());
 		fb.line("visibleAllTransactions: %s", visibleAllTransactions != null);
@@ -306,7 +302,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		return false;
 	}
 
-	protected void onResolveNull(boolean write) {
+	protected synchronized void onResolveNull(boolean write) {
 		if (!mayBeReachableFromPreCreationTransactions()) {
 			if (notifyResolveNullCount-- >= 0) {
 				logger.warn(
@@ -328,22 +324,23 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	/*
-	 * Guaranteed that version.transaction does not exist
+	 * Guaranteed that version.transaction does not exist. Synchronized either
+	 * by resolve0 or not required since called by constructor
 	 */
 	protected void putVersion(ObjectVersion<T> version) {
-		synchronized (this) {
-			if (versions == null) {
-				versions = new ConcurrentSkipListMap<>(
-						Collections.reverseOrder());
-			}
-			versions().put(version.transaction, version);
-			size.incrementAndGet();
-			Transactions.get().onAddedVacuumable(version.transaction, this);
-			updateCached(version.transaction, version.object,
-					version.writeable);
+		if (versions == null) {
+			versions = new Object2ObjectAVLTreeMap<>(
+					Collections.reverseOrder());
 		}
+		versions().put(version.transaction, version);
+		size.incrementAndGet();
+		Transactions.get().onAddedVacuumable(version.transaction, this);
+		updateCached(version.transaction, version.object, version.writeable);
 	}
 
+	/*
+	 * Synchronized by resolve0 or vacuum0
+	 */
 	protected void removeWithSize(Transaction tx) {
 		ObjectVersion<T> version = versions().get(tx);
 		if (version != null) {
@@ -376,13 +373,17 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 * CSLM.size()
 	 *
 	 */
-	protected void vacuum0(VacuumableTransactions vacuumableTransactions) {
+	protected synchronized void
+			vacuum0(VacuumableTransactions vacuumableTransactions) {
 		int maxToRemove = vacuumableTransactions.completedDomainTransactions
 				.size()
 				+ vacuumableTransactions.completedNonDomainTransactions.size();
 		if (size.get() == 0) {
 			return;
 		}
+		/*
+		 * clear initialWriteableTransaction if possible
+		 */
 		boolean hadInitialWriteableTransaction = initialWriteableTransaction != null;
 		if (hadInitialWriteableTransaction) {
 			if (vacuumableTransactions.completedNonDomainTransactions
@@ -392,6 +393,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				initialWriteableTransaction = null;
 			}
 		}
+		/*
+		 * loop NonDomainTransactio removal differently, depending on relative
+		 * size of the two sets
+		 */
 		if (size.get() > vacuumableTransactions.completedNonDomainTransactions
 				.size()) {
 			vacuumableTransactions.completedNonDomainTransactions
@@ -402,7 +407,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 							.contains(tx))
 					.forEach(this::removeWithSize);
 		}
-		if (vacuumableTransactions.oldestVacuumableDomainTransaction != null) {
+		/*
+		 * try do remove domain transactions
+		 */
+		if (vacuumableTransactions.oldestVacuumableDomainTransaction != null
+				&& versions.size() > 0) {
 			Transaction mostRecentCommonVisible = TransactionVersions
 					.mostRecentCommonVisible(versions.keySet(),
 							vacuumableTransactions.completedDomainTransactions);
@@ -429,14 +438,16 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 					removeWithSize(bidiItr.previous());
 				}
 			} else {
-				versions.descendingKeySet().tailSet(
-						vacuumableTransactions.oldestVacuumableDomainTransaction)
-						.stream()
-						.filter(tx -> vacuumableTransactions.completedDomainTransactions
-								.contains(tx))
-						.forEach(this::removeWithSize);
+				ObjectBidirectionalIterator<Transaction> bidiItr = versions
+						.keySet().iterator(versions.lastKey());
+				while (bidiItr.hasPrevious()) {
+					removeWithSize(bidiItr.previous());
+				}
 			}
 		}
+		/*
+		 * Null references if possible (memory)
+		 */
 		if (size.get() == 0) {
 			versions = null;
 			cachedResolution = null;
@@ -444,9 +455,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
-	protected ConcurrentNavigableMap<Transaction, ObjectVersion<T>> versions() {
-		ConcurrentNavigableMap versions = this.versions;
-		return versions == null ? (ConcurrentNavigableMap) EMPTY : versions;
+	protected Object2ObjectAVLTreeMap<Transaction, ObjectVersion<T>>
+			versions() {
+		Object2ObjectAVLTreeMap versions = this.versions;
+		return versions == null ? (Object2ObjectAVLTreeMap) EMPTY : versions;
 	}
 
 	boolean hasNoVisibleTransaction() {
@@ -483,10 +495,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			}
 		}
 		T resolved;
-		synchronized (this) {
-			// try non-cached and update cached
-			resolved = resolve0(transaction, write);
-		}
+		// try non-cached and update cached
+		resolved = resolve0(transaction, write);
 		if (resolved == null) {
 			onResolveNull(write);
 		}
@@ -579,10 +589,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			super.putVersion(version);
 		}
 
-		// synchronized on domain identity by vacuum call
 		@Override
 		protected void vacuum0(VacuumableTransactions vacuumableTransactions) {
+			// synchronized method
 			super.vacuum0(vacuumableTransactions);
+			// !!not!! synchronized (avoid deadlock with creation)
 			if (getSize() == 0) {
 				// monitor for creation/removal of
 				// domainIdentity.__mvccVersions__.
@@ -597,6 +608,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 									.__setMvccVersions__(null);
 							((MvccObject) domainIdentity)
 									.__setMvccVersions__(null);
+							// invalidate the MvccObjectVersions instance
+							domainIdentity = null;
 						}
 					}
 				}
