@@ -1080,6 +1080,9 @@ public class LiveTree {
 		}
 
 		static class PersistenceEventPayload extends Event {
+			// cache because this gets repeated for both index phases, each view
+			static transient PersistenceEventPayload lastSerialized;
+
 			long id;
 
 			byte[] data;
@@ -1091,6 +1094,9 @@ public class LiveTree {
 				DomainTransformRequestPersistent request = event
 						.getPersistedRequests().get(0);
 				id = request.getId();
+				if (lastSerialized != null && lastSerialized.id == id) {
+					data = lastSerialized.data;
+				}
 				try {
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
 					OutputStream outputStream = new GZIPOutputStream(out);
@@ -1101,6 +1107,7 @@ public class LiveTree {
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
+				lastSerialized = this;
 			}
 
 			DomainTransformRequestPersistent provideRequest() {
