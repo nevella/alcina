@@ -27,6 +27,7 @@ import it.unimi.dsi.fastutil.objects.ObjectBidirectionalIterator;
  * synchronization - resolution of version is synchronized on the baseobject, as
  * is vacuum/removal of this from base object.
  *
+ *
  * vacuum map swap is synchronized on (this)
  *
  *
@@ -90,6 +91,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		};
 	};
 
+	static final Object MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR = new Object();
+
 	// called in a synchronized block (synchronized on domainIdentity)
 	static <E extends Entity> MvccObjectVersions<E> ensureEntity(
 			E domainIdentity, Transaction transaction,
@@ -123,10 +126,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	// debugging
 	private TransactionId initialTransactionId;
 
-	/*
-	 * Used as a monitor for any post-constructor operations which would change
-	 * the map size (so read is not synchronized, write always is).
-	 */
 	private AtomicInteger size = new AtomicInteger();
 
 	Transaction initialWriteableTransaction;
@@ -192,7 +191,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	@Override
 	public void vacuum(VacuumableTransactions vacuumableTransactions) {
-		synchronized (domainIdentity) {
+		synchronized (this) {
 			vacuum0(vacuumableTransactions);
 		}
 	}
@@ -256,9 +255,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			version.object = copyObject(mostRecentObject);
 			version.writeable = true;
 			// will remove the readable version, if any
-			// note that resolve() is synchronized on domainIdentity, so no need
-			// here...
-			// synchronized (domainIdentity) {
 			removeWithSize(transaction);
 			// put before register (which will call resolve());
 			putVersion(version);
@@ -335,13 +331,17 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	 * Guaranteed that version.transaction does not exist
 	 */
 	protected void putVersion(ObjectVersion<T> version) {
-		if (versions == null) {
-			versions = new ConcurrentSkipListMap<>(Collections.reverseOrder());
+		synchronized (this) {
+			if (versions == null) {
+				versions = new ConcurrentSkipListMap<>(
+						Collections.reverseOrder());
+			}
+			versions().put(version.transaction, version);
+			size.incrementAndGet();
+			Transactions.get().onAddedVacuumable(version.transaction, this);
+			updateCached(version.transaction, version.object,
+					version.writeable);
 		}
-		versions().put(version.transaction, version);
-		size.incrementAndGet();
-		Transactions.get().onAddedVacuumable(version.transaction, this);
-		updateCached(version.transaction, version.object, version.writeable);
 	}
 
 	protected void removeWithSize(Transaction tx) {
@@ -482,8 +482,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 				return cachedResolution.read;
 			}
 		}
-		// try non-cached and update cached
-		T resolved = resolve0(transaction, write);
+		T resolved;
+		synchronized (this) {
+			// try non-cached and update cached
+			resolved = resolve0(transaction, write);
+		}
 		if (resolved == null) {
 			onResolveNull(write);
 		}
@@ -582,20 +585,21 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			super.vacuum0(vacuumableTransactions);
 			if (getSize() == 0) {
 				// monitor for creation/removal of
-				// domainIdentity.__mvccVersions__. Not used since currently
-				// parent monitor is domainIdentity
-				// synchronized (domainIdentity) {
-				if (initialWriteableTransaction == null) {
-					if (visibleAllTransactions != null) {
-						if (visibleAllTransactions != domainIdentity) {
-							copyObject(visibleAllTransactions, domainIdentity);
+				// domainIdentity.__mvccVersions__.
+				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
+					if (initialWriteableTransaction == null) {
+						if (visibleAllTransactions != null) {
+							if (visibleAllTransactions != domainIdentity) {
+								copyObject(visibleAllTransactions,
+										domainIdentity);
+							}
+							((MvccObject) visibleAllTransactions)
+									.__setMvccVersions__(null);
+							((MvccObject) domainIdentity)
+									.__setMvccVersions__(null);
 						}
-						((MvccObject) visibleAllTransactions)
-								.__setMvccVersions__(null);
-						((MvccObject) domainIdentity).__setMvccVersions__(null);
 					}
 				}
-				// }
 			}
 		}
 	}

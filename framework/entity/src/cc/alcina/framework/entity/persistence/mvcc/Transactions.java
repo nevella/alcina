@@ -120,12 +120,15 @@ public class Transactions {
 						&& transaction == versions.initialWriteableTransaction)) {
 					return t;
 				} else {
-					// FIXME - mvcc.5 - this synchronization means that (a) a
-					// bunch of entities have issues with
-					// System.identityHashCode and that all the concurrency in
-					// MvccObjectVersions is unneccesary. But it's safe, at
-					// least...
-					synchronized (t) {
+					//
+					// mutation of mvccObject.__versions ref is locked by a
+					// single monitor to avoid inflation of entity object
+					// headers
+					//
+					// mutation/concurrent access to instances of
+					// MvccObjectVersions handled in-class
+					//
+					synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
 						versions = mvccObject.__getMvccVersions__();
 						if (versions == null) {
 							versions = MvccObjectVersions.ensureEntity(t,
@@ -417,14 +420,14 @@ public class Transactions {
 	 * "committedTransactions" - if all active transactions include a given
 	 * transaction in their set of visible completed transactions, it can be
 	 * compacted with the base layer
-	 * 
+	 *
 	 * This code relies on the commit ordering of
 	 * Transactions.committedTransactions and Transaction.committedTransactions.
-	 * 
+	 *
 	 * TODO - maybe 'reference' counting would be more optimal?
-	 * 
+	 *
 	 * also - just remove txid (since txs are sorted)(albeit in reverse)
-	 * 
+	 *
 	 */
 	List<Transaction> getVacuumableCommittedTransactions() {
 		synchronized (transactionMetadataLock) {

@@ -728,7 +728,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			/*
 			 * synchronized: must block vacuum() calls
 			 */
-			synchronized (domainIdentity) {
+			synchronized (this) {
 				ObjectWrapper baseObject = visibleAllTransactions;
 				if (isNotRemovedValueMarker(baseObject)) {
 					return (V) baseObject.get();
@@ -751,12 +751,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 
 		boolean put(V value) {
-			/*
-			 * this synchronization may or may not be spendy - I have a feeling
-			 * not (compared to resolve) since concurrent access should be very
-			 * rare
-			 */
-			synchronized (domainIdentity) {
+			synchronized (this) {
 				if (concurrent.get(wrapTransactionalKey(key)) == null) {
 					// vacuumed
 					return false;
