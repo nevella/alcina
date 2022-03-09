@@ -16,25 +16,26 @@ public class TaskPeristDomainViewLog
 		extends ServerTask<TaskPeristDomainViewLog> {
 	private EntityLocator rootEntity;
 
+	public transient ProcessLoggerImpl processLoggerImpl;
+
 	public EntityLocator getRootEntity() {
 		return this.rootEntity;
 	}
 
-	public void setRootEntity(EntityLocator rootEntity) {
-		this.rootEntity = rootEntity;
-	}
-
 	@Override
-	protected void performAction0(TaskPeristDomainViewLog task)
-			throws Exception {
+	public void performAction0(TaskPeristDomainViewLog task) throws Exception {
 		Function<LiveTree, String> lambda = liveTree -> {
 			return liveTree.persistProcessLog();
 		};
 		DomainViewNodeContent.Request request = new DomainViewNodeContent.Request();
 		request.setRoot(rootEntity);
 		String path = DomainViews.get().submitLambda(request, lambda);
-		ProcessLoggerImpl processLoggerImpl = JacksonUtils.deserializeFromFile(
-				new File(path), LiveTree.ProcessLoggerImpl.class);
+		processLoggerImpl = JacksonUtils.deserializeFromFile(new File(path),
+				LiveTree.ProcessLoggerImpl.class);
 		Ax.out(processLoggerImpl);
+	}
+
+	public void setRootEntity(EntityLocator rootEntity) {
+		this.rootEntity = rootEntity;
 	}
 }

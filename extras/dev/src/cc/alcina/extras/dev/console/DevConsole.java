@@ -891,6 +891,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				if (!Objects.equals(modCommand, props.lastCommand)) {
 					props.lastCommand = modCommand;
 					serializeObject(props, consolePropertiesFile);
+					serializeObject(history, consoleHistoryFile);
 				}
 			}
 		} catch (Exception e) {

@@ -430,6 +430,7 @@ public class LiveTree {
 		transactionTransforms.put(currentPosition, result);
 		checkChangeListeners();
 		context.finish();
+		processLogger.logProcessEvents(this);
 		root.trace(false);
 	}
 
@@ -660,7 +661,7 @@ public class LiveTree {
 
 		public List<Transform> generateTransformResult() {
 			List<Transform> result = new ArrayList<>();
-			if (treeCreation) {
+			if (treeCreation && !logCreationTransforms()) {
 				return result;// not needed (will always walk the tree for first
 								// 'get')
 			}
@@ -683,6 +684,10 @@ public class LiveTree {
 		public void removePathChange(TreePath<LiveNode> path) {
 			pathChanged.remove(path);
 			depthChanged.remove(path.depth(), path);
+		}
+
+		private boolean logCreationTransforms() {
+			return Ax.isTest();
 		}
 
 		private TreePath<LiveNode> removeChild(LiveNode liveNode,
@@ -996,6 +1001,10 @@ public class LiveTree {
 
 		boolean loggedFirstException;
 
+		public List<Event> getEvents() {
+			return this.events;
+		}
+
 		public void logGenerationException(String pathInfo, Exception e,
 				Entity entity) {
 			ExceptionEvent exceptionEvent = new ExceptionEvent(
@@ -1019,14 +1028,23 @@ public class LiveTree {
 			events.add(persistenceEvent);
 		}
 
+		public void logProcessEvents(LiveTree liveTree) {
+			ProcessEvent event = new ProcessEvent(liveTree);
+			events.add(event);
+		}
+
 		@Override
 		public String toString() {
 			return events.stream().map(Object::toString)
 					.collect(Collectors.joining("\n"));
 		}
 
-		abstract static class Event {
+		public abstract static class Event {
 			Date date = new Date();
+
+			public String toLogText() {
+				return toString();
+			};
 		}
 
 		static class ExceptionEvent extends Event {
@@ -1122,6 +1140,37 @@ public class LiveTree {
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
+			}
+		}
+
+		static class ProcessEvent extends Event {
+			DomainTransformCommitPosition currentPosition;
+
+			private List<Transform> transforms;
+
+			public ProcessEvent(LiveTree liveTree) {
+				this.currentPosition = liveTree.currentPosition;
+				List<Transform> list = liveTree.transactionTransforms
+						.get(currentPosition);
+				this.transforms = list;
+			}
+
+			ProcessEvent() {
+			}
+
+			@Override
+			public String toLogText() {
+				return CommonUtils.joinWithNewlines(transforms);
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("%s - tree - %s", Ax.timestampYmd(date),
+						transforms.size());
+			}
+
+			private boolean logInitialTransforms() {
+				return Ax.isTest();
 			}
 		}
 	}

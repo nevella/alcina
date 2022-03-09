@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
@@ -33,15 +34,6 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 
 	private transient Exception exception;
 
-	@AlcinaTransient
-	public Exception getException() {
-		return this.exception;
-	}
-
-	public void setException(Exception exception) {
-		this.exception = exception;
-	}
-
 	@Override
 	public int compareTo(DomainViewNodeContent o) {
 		int stringCmp = comparatorString().compareTo(o.comparatorString());
@@ -57,8 +49,15 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 	public abstract Class<E> entityClass();
 
 	@AlcinaTransient
+	@JsonIgnore
 	public E getEntity() {
 		return this.entity;
+	}
+
+	@AlcinaTransient
+	@JsonIgnore
+	public Exception getException() {
+		return this.exception;
 	}
 
 	public String getHighestPrecedenceName() {
@@ -83,6 +82,10 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 
 	public void setEntity(E entity) {
 		this.entity = entity;
+	}
+
+	public void setException(Exception exception) {
+		this.exception = exception;
 	}
 
 	public void setName(String name) {
