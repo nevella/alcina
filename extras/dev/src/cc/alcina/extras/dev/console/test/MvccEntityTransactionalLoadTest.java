@@ -19,7 +19,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 
 /**
- * 
+ *
  * @author nick@alcina.cc
  *
  */
@@ -58,8 +58,8 @@ public class MvccEntityTransactionalLoadTest<IU extends Entity & IUser, IG exten
 			public void run() {
 				try {
 					Transaction.ensureBegun();
-					int addCount = 120;
-					int deleteCount = 10;
+					int addCount = 10;
+					int deleteCount = 5;
 					addedCount = 0;
 					for (int idx = 0; idx < addCount; idx++) {
 						IUser user = Domain.create(getUserClass());

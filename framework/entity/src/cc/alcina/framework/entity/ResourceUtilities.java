@@ -91,7 +91,7 @@ public class ResourceUtilities {
 
 	private static boolean clientWithJvmProperties;
 
-	private static ConcurrentHashMap<String, String> cache = new ConcurrentHashMap<>();
+	private static Map<String, String> cache = new ConcurrentHashMap<>();
 
 	public static void appShutdown() {
 	}
@@ -806,9 +806,11 @@ public class ResourceUtilities {
 		set(Ax.format("%s.%s", clazz.getSimpleName(), key), value);
 	}
 
-	public static synchronized void set(String key, String value) {
+	public static String set(String key, String value) {
+		String existing = customProperties.get(key);
 		customProperties.put(key, value);
 		cache.clear();
+		return existing;
 	}
 
 	public static void

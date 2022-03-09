@@ -162,6 +162,9 @@ class Vacuum {
 	 * cost
 	 */
 	interface Vacuumable {
+		default void onAddToVacuumQueue() {
+		}
+
 		void vacuum(VacuumableTransactions vacuumableTransactions);
 	}
 

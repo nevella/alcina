@@ -28,8 +28,7 @@ public class TaskSetProperty extends ServerTask<TaskSetProperty> {
 
 	@Override
 	protected void performAction0(TaskSetProperty task) throws Exception {
-		String existing = ResourceUtilities.get(key);
-		ResourceUtilities.set(key, value);
+		String existing = ResourceUtilities.set(key, value);
 		logger.info("TaskSetProperty - {} - '{}' => '{}'", key, existing,
 				value);
 	}

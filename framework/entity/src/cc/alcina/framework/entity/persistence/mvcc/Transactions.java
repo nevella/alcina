@@ -27,6 +27,7 @@ import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
+import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.MvccObjectVersionsMvccObject;
 import cc.alcina.framework.entity.persistence.mvcc.Vacuum.Vacuumable;
 import it.unimi.dsi.fastutil.objects.ObjectAVLTreeSet;
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
@@ -103,10 +104,13 @@ public class Transactions {
 				// no transactional versions, return base
 				return t;
 			} else {
-				// if returning 'domainIdentity', no need to synchronize (it's
-				// being
-				// returned as domainIdentity(), not for fields - and the
-				// identity itself is immutable)
+				// if returning 'domainIdentity', no need to synchronize (the
+				// MvccObjects is
+				// being used as an identity marker, its fields are still only
+				// internally accessible
+				// - and the
+				// identity itself is immutable). This is true even if during
+				// the vacuum copy-to-domain-identity phase
 				if (domainIdentity) {
 					return versions.domainIdentity;
 				}
@@ -134,10 +138,9 @@ public class Transactions {
 					// MvccObjectVersions handled in-class
 					//
 					boolean writeableVersion = state == ResolvedVersionState.WRITE;
-					versions = mvccObject.__getMvccVersions__();
 					if (versions != null) {
 						synchronized (versions) {
-							if (versions.domainIdentity != null) {
+							if (((MvccObjectVersionsMvccObject) versions).attached) {
 								// valid
 								return versions.resolve(writeableVersion);
 							}
@@ -145,8 +148,13 @@ public class Transactions {
 					}
 					// fallthrough, invalid or null
 					synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
-						versions = MvccObjectVersions.ensureEntity(t,
-								transaction, false);
+						// double-check, guard synchronous creation
+						versions = mvccObject.__getMvccVersions__();
+						if (versions == null
+								|| !((MvccObjectVersionsMvccObject) versions).attached) {
+							versions = MvccObjectVersions.ensureEntity(t,
+									transaction, false);
+						}
 						/*
 						 * see docs for READ_INVALID
 						 */
@@ -262,8 +270,10 @@ public class Transactions {
 				}
 				// fallthrough, invalid or null
 				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
-					versions = MvccObjectVersions.ensureTrieEntry(t,
-							transaction, false);
+					if (versions == null || versions.domainIdentity == null) {
+						versions = MvccObjectVersions.ensureTrieEntry(t,
+								transaction, false);
+					}
 					return versions.resolve(write);
 				}
 			}

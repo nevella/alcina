@@ -55,8 +55,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected static int notifyInvalidReadStateCount = 100;
 
-	static MvccObject detaching;
-
 	private static final Object2ObjectAVLTreeMap<Transaction, ObjectVersion> EMPTY = new Object2ObjectAVLTreeMap<Transaction, ObjectVersion>() {
 		@Override
 		public void clear() {
@@ -92,7 +90,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	static final Object MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR = new Object();
 
-	// called in a synchronized block (synchronized on domainIdentity)
+	// called in a synchronized block (synchronized on domainIdentity) -- or --
+	// unreachable domainIdentity unreachable from other txs
 	static <E extends Entity> MvccObjectVersions<E> ensureEntity(
 			E domainIdentity, Transaction transaction,
 			boolean initialObjectIsWriteable) {
@@ -111,11 +110,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	// concurrency not required
-	private volatile Object2ObjectAVLTreeMap<Transaction, ObjectVersion<T>> versions;
+	private Object2ObjectAVLTreeMap<Transaction, ObjectVersion<T>> versions;
 
-	protected volatile T visibleAllTransactions;
+	protected T visibleAllTransactions;
 
-	private volatile CachedResolution cachedResolution;
+	private CachedResolution cachedResolution;
 
 	/*
 	 * Only used to determine if a txmap key is not visible to a given
@@ -159,7 +158,11 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		} else {
 			version.object = copyObject(t);
 		}
+		// order is critical here - attach must come late to prevent incomplete
+		// object access via Transactions.resolve() - but before
+		// onVersionCreation
 		putVersion(version);
+		attach();
 		onVersionCreation(version);
 	}
 
@@ -254,7 +257,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			version.writeable = true;
 			// will remove the readable version, if any
 			removeWithSize(transaction);
-			// put before register (which will call resolve());
+			// put before onVersionCreation (which - for entity subtype - will
+			// call back into resolve());
 			putVersion(version);
 			// }
 			onVersionCreation(version);
@@ -266,6 +270,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			 */
 			return mostRecentObject;
 		}
+	}
+
+	protected void attach() {
 	}
 
 	protected T copyObject(T mostRecentObject) {
@@ -508,7 +515,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	// sorted maps are nice but also painful (boiling down to "the comparable
 	// must be invariant") - this takes care of
-	void resolveInvariantToDomainIdentity() {
+	synchronized void resolveInvariantToDomainIdentity() {
 		Transaction transaction = Transaction.current();
 		ObjectVersion<T> version = new ObjectVersion<>();
 		version.object = domainIdentity;
@@ -570,6 +577,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	// here
 	static abstract class MvccObjectVersionsMvccObject<T>
 			extends MvccObjectVersions<T> {
+		boolean attached;
+
 		MvccObjectVersionsMvccObject(T t, Transaction initialTransaction,
 				boolean initialObjectIsWriteable) {
 			super(t, initialTransaction, initialObjectIsWriteable);
@@ -587,43 +596,57 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 
 		@Override
-		protected void putVersion(ObjectVersion<T> version) {
+		protected void attach() {
+			attached = true;
 			((MvccObject) domainIdentity).__setMvccVersions__(this);
-			((MvccObject) version.object).__setMvccVersions__(this);
+		}
+
+		@Override
+		protected void putVersion(ObjectVersion<T> version) {
+			if (domainIdentity != version.object) {
+				((MvccObject) version.object).__setMvccVersions__(this);
+			}
 			super.putVersion(version);
 		}
 
 		@Override
 		protected void vacuum0(VacuumableTransactions vacuumableTransactions) {
-			// synchronized method
-			boolean detach = false;
-			T domainEntityRef = domainIdentity;
 			synchronized (this) {
 				super.vacuum0(vacuumableTransactions);
 				if (getSize() == 0) {
-					if (initialWriteableTransaction == null) {
-						if (visibleAllTransactions != null) {
-							detach = true;
-							if (visibleAllTransactions != domainIdentity) {
-								copyObject(visibleAllTransactions,
-										domainIdentity);
-								((MvccObject) visibleAllTransactions)
-										.__setMvccVersions__(null);
+					// check not already detached (? should that double-vacuum
+					// be possible ?)
+					if (attached) {
+						// check initial transaction was vacuumed
+						if (initialWriteableTransaction == null) {
+							// and that there's a version visible to all
+							// transactions
+							if (visibleAllTransactions != null) {
+								attached = false;
+								/*
+								 * The MvccObject has one visible state to all
+								 * transactions, so the MvccObjectVersions
+								 * instance can be detached from the MvccObject
+								 */
+								if (visibleAllTransactions != domainIdentity) {
+									copyObject(visibleAllTransactions,
+											domainIdentity);
+									((MvccObject) visibleAllTransactions)
+											.__setMvccVersions__(null);
+								}
 							}
-							domainIdentity = null;
 						}
 					}
 				}
 			}
 			// !!not!! synchronized on this (avoid deadlock with creation)
-			if (detach) {
+			if (!attached) {
 				// double-check final detach - an assigning thread may have
 				// injected a new MvccObjectVersions, albeit unlikely
 				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
-					if (((MvccObject) domainEntityRef)
+					if (((MvccObject) domainIdentity)
 							.__getMvccVersions__() == this) {
-						((MvccObject) domainEntityRef)
-								.__setMvccVersions__(null);
+						((MvccObject) domainIdentity).__setMvccVersions__(null);
 					}
 				}
 			}

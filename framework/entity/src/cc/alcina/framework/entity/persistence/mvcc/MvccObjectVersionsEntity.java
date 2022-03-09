@@ -13,6 +13,8 @@ import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
 
 public class MvccObjectVersionsEntity<T extends Entity>
 		extends MvccObjectVersionsMvccObject<T> {
+	private static transient int addToVacuumWarnCounter = 0;
+
 	private int hash;
 
 	public MvccObjectVersionsEntity(T t, Transaction initialTransaction,
@@ -43,6 +45,17 @@ public class MvccObjectVersionsEntity<T extends Entity>
 			}
 		}
 		return hash;
+	}
+
+	@Override
+	public void onAddToVacuumQueue() {
+		if (domainIdentity == null) {
+			if (addToVacuumWarnCounter++ < 10) {
+				logger.warn("Add to vacuum - already detached",
+						new Exception());
+			}
+		}
+		super.onAddToVacuumQueue();
 	}
 
 	@Override
