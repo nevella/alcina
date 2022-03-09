@@ -55,6 +55,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected static int notifyInvalidReadStateCount = 100;
 
+	static MvccObject detaching;
+
 	private static final Object2ObjectAVLTreeMap<Transaction, ObjectVersion> EMPTY = new Object2ObjectAVLTreeMap<Transaction, ObjectVersion>() {
 		@Override
 		public void clear() {
@@ -564,6 +566,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
+	// T extends MvccObject, but makes the generics harder so not restricted
+	// here
 	static abstract class MvccObjectVersionsMvccObject<T>
 			extends MvccObjectVersions<T> {
 		MvccObjectVersionsMvccObject(T t, Transaction initialTransaction,
@@ -592,25 +596,34 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		@Override
 		protected void vacuum0(VacuumableTransactions vacuumableTransactions) {
 			// synchronized method
-			super.vacuum0(vacuumableTransactions);
-			// !!not!! synchronized (avoid deadlock with creation)
-			if (getSize() == 0) {
-				// monitor for creation/removal of
-				// domainIdentity.__mvccVersions__.
-				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
+			boolean detach = false;
+			T domainEntityRef = domainIdentity;
+			synchronized (this) {
+				super.vacuum0(vacuumableTransactions);
+				if (getSize() == 0) {
 					if (initialWriteableTransaction == null) {
 						if (visibleAllTransactions != null) {
+							detach = true;
 							if (visibleAllTransactions != domainIdentity) {
 								copyObject(visibleAllTransactions,
 										domainIdentity);
+								((MvccObject) visibleAllTransactions)
+										.__setMvccVersions__(null);
 							}
-							((MvccObject) visibleAllTransactions)
-									.__setMvccVersions__(null);
-							((MvccObject) domainIdentity)
-									.__setMvccVersions__(null);
-							// invalidate the MvccObjectVersions instance
 							domainIdentity = null;
 						}
+					}
+				}
+			}
+			// !!not!! synchronized on this (avoid deadlock with creation)
+			if (detach) {
+				// double-check final detach - an assigning thread may have
+				// injected a new MvccObjectVersions, albeit unlikely
+				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
+					if (((MvccObject) domainEntityRef)
+							.__getMvccVersions__() == this) {
+						((MvccObject) domainEntityRef)
+								.__setMvccVersions__(null);
 					}
 				}
 			}
