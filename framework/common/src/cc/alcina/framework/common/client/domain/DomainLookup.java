@@ -141,7 +141,7 @@ public class DomainLookup<T, E extends Entity>
 	}
 
 	public boolean isIgnoreForIndexing(EntityCollation entityCollation) {
-		if (propertyPath.isSinglePathSegment()
+		if (propertyPath != null && propertyPath.isSinglePathSegment()
 				&& entityCollation.isPropertyOnly() && entityCollation
 						.doesNotContainsNames(propertyPath.getPropertyPath())) {
 			return true;
