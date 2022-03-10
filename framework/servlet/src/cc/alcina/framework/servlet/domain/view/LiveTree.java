@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.Stack;
 import java.util.TreeMap;
@@ -166,12 +167,14 @@ public class LiveTree {
 		response.getTransforms().forEach(annotator::annotate);
 		response.setRequest(request);
 		response.setPosition(currentPosition);
-		response.setSelfAndDescendantCount(request.getTreePath() == null
-				? root.provideSelfAndDescendantCount(
-						transformFilter.filterKey())
-				: root.ensurePath(request.getTreePath())
-						.provideSelfAndDescendantCount(
-								transformFilter.filterKey()));
+		response.setSelfAndDescendantCount(
+				request.getTreePath() == null
+						? root.provideSelfAndDescendantCount(
+								transformFilter.filterKey())
+						: root.getPath(request.getTreePath())
+								.map(p -> p.provideSelfAndDescendantCount(
+										transformFilter.filterKey()))
+								.orElse(0));
 		return response;
 	}
 
@@ -208,7 +211,7 @@ public class LiveTree {
 		paths.push(root.rootPath().toString());
 		while (paths.size() != 0) {
 			String path = paths.pop();
-			TreePath<LiveNode> treePath = root.rootPath().ensurePath(path);
+			TreePath<LiveNode> treePath = root.rootPath().getPath(path).get();
 			LiveNode liveNode = treePath.getValue();
 			// FIXME - dirndl 1.1 - null check - should a value-less path exist?
 			if (liveNode != null && predicate.test(liveNode)) {
@@ -227,7 +230,12 @@ public class LiveTree {
 	}
 
 	public void invalidatePath(TreePath path) {
-		LiveNode liveNode = root.ensurePath(path.toString()).getValue();
+		Optional<TreePath<LiveNode>> pathOptional = root
+				.getPath(path.toString());
+		if (pathOptional.isEmpty()) {
+			return;
+		}
+		LiveNode liveNode = pathOptional.get().getValue();
 		newGeneratorContext();
 		generatorContext.collateChildren = liveNode;
 		liveNode.generateNode();
@@ -296,51 +304,6 @@ public class LiveTree {
 	private long getEvictMillis() {
 		return ResourceUtilities.getInteger(LiveTree.class, "evictSeconds")
 				* TimeConstants.ONE_SECOND_MS;
-	}
-
-	private Transform modifyTransformForFilter(TransformFilter transformFilter,
-			Transform t) {
-		if (transformFilter.test(t)) {
-			if (t.getOperation() == Operation.CHANGE) {
-				// FIXME - dirndl1.1 - this may fail (not
-				// properly
-				// update client) if transforms are not in tree
-				// order. need to fix navigation server-side
-				t = t.copy();
-				t.setBeforePath(null);
-				TreePath<LiveNode> path = root.ensurePath(t.getTreePath());
-				Walker<LiveNode> walker = path.walker();
-				while (true) {
-					TreePath<LiveNode> previous = walker.previous();
-					if (previous == null) {
-						break;
-					}
-					if (previous.getValue() == null) {
-						// not in tree (but in paths)
-						continue;
-					}
-					Transform test = new Transform();
-					test.setNode(previous.getValue().getViewNode());
-					test.setTreePath(previous.toString());
-					test.setOperation(Operation.INSERT);
-					if (transformFilter.test(test)) {
-						t.setBeforePath(previous.toString());
-						break;
-					}
-				}
-				t.setOperation(Operation.INSERT);
-				return t;
-			} else {
-				return t;
-			}
-		} else {
-			// any filtered transform should be a remove
-			// operation(rather
-			// than just dropping)...think about it
-			t = t.copy();
-			t.setOperation(Operation.REMOVE);
-			return t;
-		}
 	}
 
 	private void newGeneratorContext() {
@@ -434,6 +397,59 @@ public class LiveTree {
 		root.trace(false);
 	}
 
+	private Transform projectTransformForFilter(TransformFilter transformFilter,
+			Transform t) {
+		if (transformFilter.test(t)) {
+			if (t.getOperation() == Operation.CHANGE) {
+				// FIXME - dirndl1.1 - this may fail (not
+				// properly
+				// update client) if transforms are not in tree
+				// order. need to fix navigation server-side
+				t = t.copy();
+				t.setBeforePath(null);
+				TreePath<LiveNode> path = root.getPath(t.getTreePath()).get();
+				Walker<LiveNode> walker = path.walker();
+				while (true) {
+					TreePath<LiveNode> previous = walker.previous();
+					if (previous == null) {
+						break;
+					}
+					if (previous.getValue() == null) {
+						// not in tree (but in paths)
+						continue;
+					}
+					Transform test = new Transform();
+					test.setNode(previous.getValue().getViewNode());
+					test.setTreePath(previous.toString());
+					test.setOperation(Operation.INSERT);
+					if (transformFilter.test(test)) {
+						t.setBeforePath(previous.toString());
+						break;
+					}
+				}
+				t.setOperation(Operation.INSERT);
+				return t;
+			} else {
+				return t;
+			}
+		} else {
+			// any filtered transform should be a remove
+			// operation(rather
+			// than just dropping)...think about it
+			t = t.copy();
+			t.setOperation(Operation.REMOVE);
+			return t;
+		}
+	}
+
+	private void removeChangedIfInsert(List<Transform> list) {
+		Set<String> insertPaths = list.stream()
+				.filter(t -> t.getOperation() == Operation.INSERT)
+				.map(Transform::getTreePath).collect(Collectors.toSet());
+		list.removeIf(t -> t.getOperation() == Operation.CHANGE
+				&& insertPaths.contains(t.getTreePath()));
+	}
+
 	private List<Transform> requestToTransform(
 			Request<? extends DomainViewSearchDefinition> request,
 			Response response, TransformFilter transformFilter) {
@@ -472,8 +488,7 @@ public class LiveTree {
 		for (List<Transform> perTransaction : since) {
 			perTransaction.stream()
 					.map(t -> transformFilter.isPassthrough() ? t
-							: modifyTransformForFilter(transformFilter, t))
-					.sorted(new TransformApplicationOrder())
+							: projectTransformForFilter(transformFilter, t))
 					.forEach(transforms::add);
 		}
 		return transforms;
@@ -483,8 +498,9 @@ public class LiveTree {
 			Request<? extends DomainViewSearchDefinition> request,
 			TransformFilter transformFilter) {
 		List<Transform> result = new ArrayList<>();
-		LiveNode node = root.ensurePath(request.getTreePath()).getValue();
-		if (node != null) {
+		Optional<TreePath<LiveNode>> path = root.getPath(request.getTreePath());
+		if (path.isPresent() && path.get().getValue() != null) {
+			LiveNode node = path.get().getValue();
 			String filterKey = transformFilter.filterKey();
 			if (Ax.notBlank(filterKey)
 					&& initialisedNodeFilters.add(filterKey)) {
@@ -672,12 +688,18 @@ public class LiveTree {
 					transform.putPath(liveNode.path);
 					transform.setNode(liveNode.viewNode);
 					transform.setOperation(liveNode.collateOperations());
-					transform.setBeforePath(
-							liveNode.path.provideSuccessorPath());
+					if (!treeCreation) {
+						transform.setBeforePath(
+								liveNode.path.provideSuccessorPath());
+					}
 					Ax.out(transform);
 					result.add(transform);
 				}
 			});
+			if (!treeCreation) {
+				removeChangedIfInsert(result);
+				result.sort(new TransformApplicationOrder());
+			}
 			return result;
 		}
 
@@ -692,9 +714,10 @@ public class LiveTree {
 
 		private TreePath<LiveNode> removeChild(LiveNode liveNode,
 				Object discriminator) {
-			if (liveNode.path.hasChildPath(discriminator)) {
-				TreePath<LiveNode> childPath = liveNode.path
-						.ensureChildPath(discriminator);
+			Optional<TreePath<LiveNode>> childPathOptional = liveNode.path
+					.getChildPath(discriminator);
+			if (childPathOptional.isPresent()) {
+				TreePath<LiveNode> childPath = childPathOptional.get();
 				// childPath.removeFromParent();
 				// add the remove operation, will be handled in processevents
 				PathChange change = new PathChange();
@@ -1168,10 +1191,6 @@ public class LiveTree {
 				return Ax.format("%s - tree - %s", Ax.timestampYmd(date),
 						transforms.size());
 			}
-
-			private boolean logInitialTransforms() {
-				return Ax.isTest();
-			}
 		}
 	}
 
@@ -1192,6 +1211,11 @@ public class LiveTree {
 		@Override
 		public int compareTo(SegmentComparable o) {
 			return comparable.compareTo(o.comparable);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Comparable: %s", comparable);
 		}
 	}
 
@@ -1257,16 +1281,30 @@ public class LiveTree {
 		}
 	}
 
+	/*
+	 * Note - the ordering here is more complex than straight tree ordering, but
+	 * it means Transform insert is simpler (just provide before X, rather than
+	 * after X and insert-at-start - since null is ambiguous if after)
+	 */
 	class TransformApplicationOrder implements Comparator<Transform> {
 		@Override
 		public int compare(Transform o1, Transform o2) {
-			int i = o1.getOperation().compareTo(o2.getOperation());
+			int i = CommonUtils.compareInts(
+					o1.getOperation().transformApplicationOrder(),
+					o2.getOperation().transformApplicationOrder());
 			if (i != 0) {
 				return i;
 			}
-			return new TreePath.DepthSegmentComparator().compare(
-					root.ensurePath(o1.getTreePath()),
-					root.ensurePath(o2.getTreePath()));
+			if (o1.getOperation() != Operation.INSERT) {
+				return 0;
+			}
+			/*
+			 * for an identical parent, order -reverse- tree order (so
+			 * insert.beforeOtherNode works correctly)
+			 */
+			return new TreePath.DepthSegmentComparator(true).compare(
+					root.getPath(o1.getTreePath()).get(),
+					root.getPath(o2.getTreePath()).get());
 		}
 	}
 }

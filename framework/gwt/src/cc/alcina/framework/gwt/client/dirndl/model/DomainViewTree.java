@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -217,12 +218,13 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 			case INSERT:
 				String parentPathStr = TreePath
 						.parentPath(transform.getTreePath());
-				if (!getRoot().getTreePath().hasPath(parentPathStr)) {
+				Optional<TreePath<DomainViewNode>> parentPathOptional = getRoot()
+						.getTreePath().getPath(parentPathStr);
+				if (parentPathOptional.isEmpty()) {
 					return;
 				}
-				TreePath<DomainViewNode> parent = getRoot().getTreePath()
-						.ensurePath(parentPathStr);
-				if (!parent.hasChildrenLoaded() && !isDepthFirst()) {
+				TreePath<DomainViewNode> parentPath = parentPathOptional.get();
+				if (!parentPath.hasChildrenLoaded() && !isDepthFirst()) {
 					return;
 				}
 				if (transform.getBeforePath() != null && !getRoot()
@@ -291,7 +293,8 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 		public DomainViewNode ensureNode(DomainViewNodeContent nodeContent,
 				String path, String beforePath,
 				boolean fireCollectionModificationEvents) {
-			TreePath<DomainViewNode> otherTreePath = treePath.ensurePath(path);
+			TreePath<DomainViewNode> otherTreePath = treePath
+					.ensurePath(path);
 			if (otherTreePath.getValue() == null) {
 				DomainViewNode parent = otherTreePath.getParent() == null ? null
 						: otherTreePath.getParent().getValue();
@@ -355,9 +358,10 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 			case INSERT:
 				int index = newValue.size();
 				if (beforePath != null) {
-					if (node.getTreePath().hasPath(beforePath)) {
-						DomainViewNode beforePathNode = node.getTreePath()
-								.ensurePath(beforePath).getValue();
+					Optional<TreePath<DomainViewNode>> path = node.getTreePath()
+							.getPath(beforePath);
+					if (path.isPresent()) {
+						DomainViewNode beforePathNode = path.get().getValue();
 						index = beforePathNode.getParent().getChildren()
 								.indexOf(beforePathNode);
 					}

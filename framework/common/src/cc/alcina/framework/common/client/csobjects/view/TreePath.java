@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -119,12 +120,11 @@ public class TreePath<T> extends Model
 		return ensureChildPath(segment);
 	}
 
-	public TreePath<T> ensureChildPath(Object segment) {
-		return ensurePath(toString() + "." + asSegment(segment));
-	}
-
+	/*
+	 * Prefer getPath() - unless the node must be created if absent
+	 */
 	public TreePath<T> ensurePath(String stringPath) {
-		return paths.path(stringPath);
+		return paths.ensurePath(stringPath);
 	}
 
 	@Override
@@ -134,6 +134,10 @@ public class TreePath<T> extends Model
 
 	public <E extends Entity> E find(Class<E> clazz) {
 		return Domain.find(clazz, segmentAsLong());
+	}
+
+	public Optional<TreePath<T>> getChildPath(Object segment) {
+		return getPath(childPath(segment));
 	}
 
 	@AlcinaTransient
@@ -146,6 +150,10 @@ public class TreePath<T> extends Model
 
 	public TreePath<T> getParent() {
 		return this.parent;
+	}
+
+	public Optional<TreePath<T>> getPath(String stringPath) {
+		return (Optional<TreePath<T>>) (Optional<?>) paths.getPath(stringPath);
 	}
 
 	public String getSegment() {
@@ -241,10 +249,7 @@ public class TreePath<T> extends Model
 	}
 
 	public void removeFromParent() {
-		paths.remove(toString());
-		parent.children.remove(this);
-		parent.recalculateCount();
-		parent = null;
+		removeFromParent(true);
 	}
 
 	public TreePath<T> rootPath() {
@@ -323,11 +328,30 @@ public class TreePath<T> extends Model
 		}
 	}
 
+	private TreePath<T> ensureChildPath(Object segment) {
+		return ensurePath(childPath(segment));
+	}
+
 	private List<TreePath<T>> ensureChildren() {
 		if (children == null) {
 			children = paths.createChildList();
 		}
 		return children;
+	}
+
+	private void removeFromParent(boolean recalc) {
+		// concurrent dance
+		if (children != null) {
+			children.stream().collect(Collectors.toList())
+					//
+					.forEach(path -> path.removeFromParent(false));
+		}
+		paths.remove(toString());
+		parent.children.remove(this);
+		if (recalc) {
+			parent.recalculateCount();
+		}
+		parent = null;
 	}
 
 	private long segmentAsLong() {
@@ -349,9 +373,19 @@ public class TreePath<T> extends Model
 		}
 	}
 
+	String childPath(Object segment) {
+		return toString() + "." + asSegment(segment);
+	}
+
 	public static class DepthSegmentComparator
 			implements Comparator<TreePath<?>> {
 		static final SegmentComparator INSTANCE = new SegmentComparator();
+
+		private boolean reverseIfSameSegment;
+
+		public DepthSegmentComparator(boolean reverseIfSameSegment) {
+			this.reverseIfSameSegment = reverseIfSameSegment;
+		}
 
 		@Override
 		public int compare(TreePath<?> o1, TreePath<?> o2) {
@@ -374,13 +408,27 @@ public class TreePath<T> extends Model
 				c1 = c1.getParent();
 				c2 = c2.getParent();
 			}
-			return SegmentComparator.INSTANCE.compare(c1, c2);
+			int segmentComparison = SegmentComparator.INSTANCE.compare(c1, c2);
+			return segmentComparison * (reverseIfSameSegment ? -1 : 1);
 		}
 	}
 
 	@Reflected
 	public static enum Operation {
 		INSERT, CHANGE, REMOVE;
+
+		public int transformApplicationOrder() {
+			switch (this) {
+			case REMOVE:
+				return 0;
+			case CHANGE:
+				return 1;
+			case INSERT:
+				return 2;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
 	}
 
 	public static class SegmentComparator implements Comparator<TreePath> {
@@ -403,12 +451,12 @@ public class TreePath<T> extends Model
 	public static class Walker<T> {
 		TreePath<T> current;
 
-		public T current() {
-			return this.current.getValue();
-		}
-
 		public Walker(TreePath<T> from) {
 			current = from;
+		}
+
+		public T current() {
+			return this.current.getValue();
 		}
 
 		public TreePath next() {
@@ -464,7 +512,7 @@ public class TreePath<T> extends Model
 	}
 
 	static class Paths {
-		public Comparable segmentComparable;
+		Comparable segmentComparable;
 
 		TreePath root;
 
@@ -476,24 +524,28 @@ public class TreePath<T> extends Model
 
 		boolean trace;
 
-		public Paths(TreePath root) {
+		Paths(TreePath root) {
 			this.root = root;
 			put(root);
 		}
 
-		public void clearNonRoot() {
+		private void checkTrace(String op, String path) {
+			if (!GWT.isClient()) {
+				if (trace) {
+					Ax.out("treePath:%s:%s", op, path);
+				}
+			}
+		}
+
+		void clearNonRoot() {
 			byString.entrySet().removeIf(e -> e.getValue() != root);
 		}
 
-		public List createChildList() {
+		List createChildList() {
 			return childListCreator.get();
 		}
 
-		public boolean hasPath(String stringPath) {
-			return byString.containsKey(stringPath);
-		}
-
-		public TreePath path(String stringPath) {
+		TreePath ensurePath(String stringPath) {
 			String cursor = stringPath;
 			TreePath treePath = null;
 			int idx = -1;
@@ -524,28 +576,12 @@ public class TreePath<T> extends Model
 			}
 		}
 
-		/*
-		 * avoid requiring each treenode to have a containing tree ref
-		 */
-		public void putTree(Object containingTree) {
-			this.containingTree = containingTree;
+		Optional<TreePath> getPath(String path) {
+			return Optional.ofNullable(byString.get(path));
 		}
 
-		public void remove(String path) {
-			checkTrace("remove", path);
-			byString.remove(path);
-		}
-
-		public void setChildListCreator(Supplier<List> childListCreator) {
-			this.childListCreator = childListCreator;
-		}
-
-		private void checkTrace(String op, String path) {
-			if (!GWT.isClient()) {
-				if (trace) {
-					Ax.out("treePath:%s:%s", op, path);
-				}
-			}
+		boolean hasPath(String stringPath) {
+			return byString.containsKey(stringPath);
 		}
 
 		void put(TreePath path) {
@@ -554,6 +590,22 @@ public class TreePath<T> extends Model
 				checkTrace("add", stringPath);
 			}
 			byString.put(stringPath, path);
+		}
+
+		/*
+		 * avoid requiring each treenode to have a containing tree ref
+		 */
+		void putTree(Object containingTree) {
+			this.containingTree = containingTree;
+		}
+
+		void remove(String path) {
+			checkTrace("remove", path);
+			byString.remove(path);
+		}
+
+		void setChildListCreator(Supplier<List> childListCreator) {
+			this.childListCreator = childListCreator;
 		}
 	}
 }
