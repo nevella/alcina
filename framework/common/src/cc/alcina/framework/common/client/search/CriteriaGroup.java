@@ -165,6 +165,10 @@ public abstract class CriteriaGroup<SC extends SearchCriterion> extends Bindable
 
 	@PropertySerialization(defaultProperty = true)
 	public Set<SC> getCriteria() {
+		// Patch for JAD-14760
+		if (this.criteria == null) {
+			this.criteria = new LightSet<SC>();
+		}
 		return this.criteria;
 	}
 
