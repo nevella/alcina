@@ -661,7 +661,10 @@ public class Registry {
 		Stream<Class> stream(Query<?> query) {
 			return registrations(query.asRegistrationKeys()).stream()
 					.map(RegistrationData::getRegisteringClassKey)
-					.map(RegistryKey::clazz);
+					.map(RegistryKey::clazz)
+					// FIXME - reflection - patch double-registration (legacy
+					// client modules?)
+					.distinct();
 		}
 
 		class RegistrationData implements Comparable<RegistrationData> {

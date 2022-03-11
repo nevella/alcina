@@ -16,6 +16,7 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -31,6 +32,7 @@ import elemental.json.JsonString;
 import elemental.json.JsonValue;
 
 @SuppressWarnings("deprecation")
+@Reflected
 public class AlcinaBeanSerializerCElemental extends AlcinaBeanSerializer {
 	IdentityHashMap seenOut = new IdentityHashMap();
 

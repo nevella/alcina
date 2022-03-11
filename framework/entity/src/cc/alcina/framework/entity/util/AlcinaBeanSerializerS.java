@@ -44,7 +44,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
-@Reflected
 public class AlcinaBeanSerializerS extends AlcinaBeanSerializer {
 	private static boolean useContextClassloader;
 
