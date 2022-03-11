@@ -274,7 +274,6 @@
 			<jvmarg value="${project.gwt.compile.jvmarg5}" />
 			<jvmarg value="${project.gwt.compile.jvmarg6}" />
 			<arg line="-style ${gwt.codestyle}" />
-			<arg value="-XcompilePerFile" />
 			<arg value="-sourceLevel" />
 			<arg value="11" />
 			<arg line="${project.gwt.compile.flags}" />
