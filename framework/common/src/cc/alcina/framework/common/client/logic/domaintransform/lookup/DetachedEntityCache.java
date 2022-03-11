@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.domain.MemoryStat;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -381,8 +382,9 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 			MemoryStat self = new MemoryStat(this);
 			parent.addChild(self);
 			entry.getValue().values().forEach(e -> {
-				self.objectMemory.walkStats(e, self.counter, o -> o == e
-						|| !Entity.class.isAssignableFrom(o.getClass()));
+				self.objectMemory.walkStats(e, self.counter,
+						o -> o == e || !Reflections
+								.isAssignableFrom(Entity.class, o.getClass()));
 			});
 			return self;
 		}
