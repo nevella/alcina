@@ -497,6 +497,8 @@ public class GraphProjection {
 
 	private long start = 0;
 
+	private boolean attemptToProjectModuleFields;
+
 	public GraphProjection() {
 		this.dumpProjectionStats = LooseContext
 				.is(CONTEXT_DUMP_PROJECTION_STATS);
@@ -602,6 +604,10 @@ public class GraphProjection {
 	 */
 	public LinkedHashMap<Entity, Entity> getReplaceMap() {
 		return this.replaceMap;
+	}
+
+	public boolean isAttemptToProjectModuleFields() {
+		return this.attemptToProjectModuleFields;
 	}
 
 	public boolean isCollectionReachedCheck() {
@@ -908,6 +914,11 @@ public class GraphProjection {
 		return (E) reached.put(source, projected);
 	}
 
+	public void setAttemptToProjectModuleFields(
+			boolean attemptToProjectModuleFields) {
+		this.attemptToProjectModuleFields = attemptToProjectModuleFields;
+	}
+
 	public void setCollectionReachedCheck(boolean collectionReachedCheck) {
 		this.collectionReachedCheck = collectionReachedCheck;
 	}
@@ -939,12 +950,25 @@ public class GraphProjection {
 			Field[] fields = c.getDeclaredFields();
 			List<Field> nonStatic = new ArrayList<Field>();
 			for (Field field : fields) {
-				if (Modifier.isStatic(field.getModifiers())
-						|| !c.getModule().isOpen(c.getPackageName())) {
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
+				boolean open = c.getModule().isOpen(c.getPackageName());
+				if (!attemptToProjectModuleFields && !open) {
 					continue;
 				} else {
-					field.setAccessible(true);
-					nonStatic.add(field);
+					if (!open) {
+						try {
+							field.setAccessible(true);
+							nonStatic.add(field);
+						} catch (Exception e) {
+							Ax.out("Not accessible: %s.%s", c.getSimpleName(),
+									field.getName());
+						}
+					} else {
+						field.setAccessible(true);
+						nonStatic.add(field);
+					}
 				}
 			}
 			perClassDeclaredFields.put(c, nonStatic);

@@ -2,7 +2,6 @@ package cc.alcina.framework.entity.persistence.domain;
 
 import java.lang.reflect.Array;
 import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Date;
@@ -14,8 +13,16 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Timer;
 import java.util.TreeSet;
+import java.util.function.BiFunction;
+import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
+
+import org.openjdk.jol.info.ClassLayout;
+import org.openjdk.jol.vm.VM;
+
+import com.google.common.base.Function;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -61,10 +68,6 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		return domainSegmentLoader;
 	}
 
-	public boolean isUsesCommitSequencer() {
-		return true;
-	}
-
 	public abstract Class<? extends DomainTransformRequestPersistent>
 			getDomainTransformRequestPersistentClass();
 
@@ -93,6 +96,10 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		DomainStoreLazyLoader lazyLoader = locator.clazz
 				.getAnnotation(DomainStoreLazyLoader.class);
 		return lazyLoader != null && lazyLoader.enqueueLazyLoads();
+	}
+
+	public boolean isUsesCommitSequencer() {
+		return true;
 	}
 
 	public void onAppShutdown() {
@@ -146,7 +153,7 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 					|| Set.class.isAssignableFrom(clazz);
 		};
 
-		GraphProjection projection = new GraphProjection();
+		GraphProjection projection;
 
 		IdentityHashMap seen = new IdentityHashMap<>();
 
@@ -159,6 +166,8 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		private Map<Class, Boolean> shallowResult = new HashMap<>();
 
 		public ObjectMemoryImpl() {
+			projection = new GraphProjection();
+			projection.setAttemptToProjectModuleFields(true);
 			projection.setFilters(new AllFieldsFilter() {
 				@Override
 				public boolean permitTransient(Field field) {
@@ -275,7 +284,6 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 			}
 		}
 
-		@SuppressWarnings("unused")
 		private static class ShallowObjectSizeCalculator {
 			private static long getPrimitiveFieldSize(final Class<?> type) {
 				if (type == boolean.class || type == byte.class) {
@@ -295,12 +303,7 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 								+ type.getName());
 			}
 
-			// private ObjectSizeCalculator objectSizeCalculator;
 			private Map<Class, Long> instanceSize = new LinkedHashMap<>();
-
-			private Method classInfoMethod;
-
-			private Field objectSizeField;
 
 			private long arrayHeaderSize;
 
@@ -310,30 +313,9 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 
 			public ShallowObjectSizeCalculator() {
 				try {
-					// MemoryLayoutSpecification memoryLayoutSpecification =
-					// ObjectSizeCalculator
-					// .getEffectiveMemoryLayoutSpecification();
-					// this.objectSizeCalculator = new ObjectSizeCalculator(
-					// memoryLayoutSpecification);
-					// classInfoMethod = Arrays
-					// .stream(objectSizeCalculator.getClass()
-					// .getDeclaredMethods())
-					// .filter(m -> m.getName().equals("getClassSizeInfo"))
-					// .findFirst().get();
-					// classInfoMethod.setAccessible(true);
-					// Object objectSizeInfo = classInfoMethod.invoke(
-					// objectSizeCalculator,
-					// new Object[] { Object.class });
-					// objectSizeField = objectSizeInfo.getClass()
-					// .getDeclaredField("objectSize");
-					// objectSizeField.setAccessible(true);
-					// arrayHeaderSize = memoryLayoutSpecification
-					// .getArrayHeaderSize();
-					// objectPadding = memoryLayoutSpecification
-					// .getObjectPadding();
-					// referenceSize = memoryLayoutSpecification
-					// .getReferenceSize();
-					throw new UnsupportedOperationException();
+					arrayHeaderSize = VM.current().arrayHeaderSize();
+					objectPadding = VM.current().objectAlignment();
+					referenceSize = VM.current().addressSize();
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
 				}
@@ -365,12 +347,19 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 
 			private long getClassInstanceSize(Class clazz) {
 				try {
-					// Object objectSizeInfo = classInfoMethod.invoke(
-					// objectSizeCalculator, new Object[] { clazz });
-					// return objectSizeField.getLong(objectSizeInfo);
-					throw new UnsupportedOperationException();
+					if (Function.class.isAssignableFrom(clazz)
+							|| Consumer.class.isAssignableFrom(clazz)
+							|| Supplier.class.isAssignableFrom(clazz)
+							|| Predicate.class.isAssignableFrom(clazz)
+							|| BiFunction.class.isAssignableFrom(clazz)) {
+						return objectPadding;
+					}
+					ClassLayout classLayout = ClassLayout.parseClass(clazz);
+					return classLayout.instanceSize();
 				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
+					Ax.simpleExceptionOut(e);
+					return 0L;
+					// throw new WrappedRuntimeException(e);
 				}
 			}
 
