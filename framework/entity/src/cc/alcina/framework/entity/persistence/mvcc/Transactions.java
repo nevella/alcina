@@ -139,15 +139,11 @@ public class Transactions {
 					//
 					boolean writeableVersion = state == ResolvedVersionState.WRITE;
 					if (versions != null) {
-						/*
-						 * Disabled - 2022.03.10 - heuristic because there seem
-						 * to be some vacuum issues
-						 */
-						// T resolved = versions.resolveWithoutSync(transaction,
-						// writeableVersion);
-						// if (resolved != null) {
-						// return resolved;
-						// }
+						T resolved = versions.resolveWithoutSync(transaction,
+								writeableVersion);
+						if (resolved != null) {
+							return resolved;
+						}
 						synchronized (versions) {
 							if (((MvccObjectVersionsMvccObject) versions).attached) {
 								// valid
@@ -161,8 +157,8 @@ public class Transactions {
 						versions = mvccObject.__getMvccVersions__();
 						if (versions == null
 								|| !((MvccObjectVersionsMvccObject) versions).attached) {
-							versions = MvccObjectVersions.createEntityVersions(t,
-									transaction, false);
+							versions = MvccObjectVersions.createEntityVersions(
+									t, transaction, false);
 						}
 						/*
 						 * see docs for READ_INVALID
@@ -176,6 +172,42 @@ public class Transactions {
 			}
 		} else {
 			return t;
+		}
+	}
+
+	public static <K, V> TransactionalTrieEntry<K, V>
+			resolve(TransactionalTrieEntry<K, V> t, boolean write) {
+		MvccObject mvccObject = (MvccObject) t;
+		MvccObjectVersions<TransactionalTrieEntry> versions = mvccObject
+				.__getMvccVersions__();
+		if (versions == null && !write) {
+			// no transactional versions, return base
+			return t;
+		} else {
+			Transaction transaction = Transaction.current();
+			if (transaction.isBaseTransaction()) {
+				return t;
+			} else {
+				// see logic for resolve()
+				boolean writeableVersion = write;
+				versions = mvccObject.__getMvccVersions__();
+				if (versions != null) {
+					synchronized (versions) {
+						if (versions.domainIdentity != null) {
+							// valid
+							return versions.resolve(write);
+						}
+					}
+				}
+				// fallthrough, invalid or null
+				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
+					if (versions == null || versions.domainIdentity == null) {
+						versions = MvccObjectVersions.createTrieEntryVersions(t,
+								transaction, false);
+					}
+					return versions.resolve(write);
+				}
+			}
 		}
 	}
 
@@ -251,42 +283,6 @@ public class Transactions {
 		// to avoid synchronizing on o - slower, but means that object can
 		// maintain an identity hashcode
 		throw new UnsupportedOperationException();
-	}
-
-	static <K, V> TransactionalTrieEntry<K, V>
-			resolveTrieEntry(TransactionalTrieEntry<K, V> t, boolean write) {
-		MvccObject mvccObject = (MvccObject) t;
-		MvccObjectVersions<TransactionalTrieEntry> versions = mvccObject
-				.__getMvccVersions__();
-		if (versions == null && !write) {
-			// no transactional versions, return base
-			return t;
-		} else {
-			Transaction transaction = Transaction.current();
-			if (transaction.isBaseTransaction()) {
-				return t;
-			} else {
-				// see logic for resolve()
-				boolean writeableVersion = write;
-				versions = mvccObject.__getMvccVersions__();
-				if (versions != null) {
-					synchronized (versions) {
-						if (versions.domainIdentity != null) {
-							// valid
-							return versions.resolve(write);
-						}
-					}
-				}
-				// fallthrough, invalid or null
-				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
-					if (versions == null || versions.domainIdentity == null) {
-						versions = MvccObjectVersions.createTrieEntryVersions(t,
-								transaction, false);
-					}
-					return versions.resolve(write);
-				}
-			}
-		}
 	}
 
 	private Vacuum vacuum = new Vacuum();

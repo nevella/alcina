@@ -10,7 +10,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	protected TransactionalTrieEntry(K key, V value, int bitIndex) {
 		super(key, value, bitIndex);
 		if (!Transaction.current().isBaseTransaction()) {
-			Transactions.resolveTrieEntry(this, true);
+			Transactions.resolve(this, true);
 		}
 	}
 
@@ -42,7 +42,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.equals(o);
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.equals(o);
 		} else {
@@ -56,7 +56,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.getKey();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.getKey();
 		} else {
@@ -70,7 +70,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.getValue();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.getValue();
 		} else {
@@ -84,7 +84,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.hashCode();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.hashCode();
 		} else {
@@ -98,7 +98,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.isEmpty();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.isEmpty();
 		} else {
@@ -112,7 +112,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.isExternalNode();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.isExternalNode();
 		} else {
@@ -126,7 +126,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.isInternalNode();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.isInternalNode();
 		} else {
@@ -137,7 +137,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	@Override
 	public V setKeyValue(K key, V value) {
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, true);
+				.resolve(this, true);
 		if (__instance__ == this) {
 			return super.setKeyValue(key, value);
 		} else {
@@ -148,7 +148,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	@Override
 	public V setValue(V value) {
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, true);
+				.resolve(this, true);
 		if (__instance__ == this) {
 			return super.setValue(value);
 		} else {
@@ -162,7 +162,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.toString();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.toString();
 		} else {
@@ -176,7 +176,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.getBitIndex();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.getBitIndex();
 		} else {
@@ -190,7 +190,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.getLeft();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.getLeft();
 		} else {
@@ -204,7 +204,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.getParent();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.getParent();
 		} else {
@@ -218,7 +218,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.getPredecessor();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.getPredecessor();
 		} else {
@@ -232,7 +232,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 			return super.getRight();
 		}
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, false);
+				.resolve(this, false);
 		if (__instance__ == this) {
 			return super.getRight();
 		} else {
@@ -243,7 +243,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	@Override
 	protected void setBitIndex(int bitIndex) {
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, true);
+				.resolve(this, true);
 		if (__instance__ == this) {
 			super.setBitIndex(bitIndex);
 			return;
@@ -256,7 +256,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	@Override
 	protected void setKey(K key) {
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, true);
+				.resolve(this, true);
 		if (__instance__ == this) {
 			super.setKey(key);
 			return;
@@ -269,7 +269,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	@Override
 	protected void setLeft(TrieEntry<K, V> left) {
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, true);
+				.resolve(this, true);
 		if (__instance__ == this) {
 			super.setLeft(left);
 			return;
@@ -282,7 +282,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	@Override
 	protected void setParent(TrieEntry<K, V> parent) {
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, true);
+				.resolve(this, true);
 		if (__instance__ == this) {
 			super.setParent(parent);
 			return;
@@ -295,7 +295,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	@Override
 	protected void setPredecessor(TrieEntry<K, V> predecessor) {
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, true);
+				.resolve(this, true);
 		if (__instance__ == this) {
 			super.setPredecessor(predecessor);
 			return;
@@ -308,7 +308,7 @@ public class TransactionalTrieEntry<K, V> extends TrieEntry<K, V>
 	@Override
 	protected void setRight(TrieEntry<K, V> right) {
 		TransactionalTrieEntry<K, V> __instance__ = Transactions
-				.resolveTrieEntry(this, true);
+				.resolve(this, true);
 		if (__instance__ == this) {
 			super.setRight(right);
 			return;
