@@ -38,12 +38,12 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 /**
  *
  * @author Nick Reddel
- * 
+ *
  *         Thread safety. For server-side implementations, modifications of
  *         per-class maps is thread-safe, but modification of the top-level maps
  *         is not. Server-side, the top-level maps should be fully populated
  *         before their contents are populated.
- * 
+ *
  */
 public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	protected Map<Class, Map<Long, Entity>> domain;
@@ -64,6 +64,8 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	public MemoryStat addMemoryStats(MemoryStat parent) {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
+		domain.entrySet().stream().map(e -> new DomainClassStatWrapper(e))
+				.forEach(w -> w.addMemoryStats(self));
 		self.objectMemory.walkStats(this, self.counter, o -> o == this
 				|| !self.objectMemory.isMemoryStatProvider(o.getClass()));
 		return self;
@@ -364,5 +366,30 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 
 	public static interface CreatedLocalDebug {
 		void debugCreation(long localId, Entity entity);
+	}
+
+	class DomainClassStatWrapper implements MemoryStatProvider {
+		private Entry<Class, Map<Long, Entity>> entry;
+
+		public DomainClassStatWrapper(
+				Map.Entry<Class, Map<Long, Entity>> entry) {
+			this.entry = entry;
+		}
+
+		@Override
+		public MemoryStat addMemoryStats(MemoryStat parent) {
+			MemoryStat self = new MemoryStat(this);
+			parent.addChild(self);
+			entry.getValue().values().forEach(e -> {
+				self.objectMemory.walkStats(e, self.counter, o -> o == e
+						|| !Entity.class.isAssignableFrom(o.getClass()));
+			});
+			return self;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("DomainClassStat: %s", entry.getKey().getName());
+		}
 	}
 }
