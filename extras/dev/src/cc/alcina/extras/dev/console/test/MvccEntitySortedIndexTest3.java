@@ -45,9 +45,9 @@ public class MvccEntitySortedIndexTest3<IU extends Entity & IUser, IG extends En
 
 	transient CountDownLatch thread1CompletedLatch = new CountDownLatch(1);
 
-	private Thread0 thread0;
+	transient private Thread0 thread0;
 
-	private MvccEntitySortedIndexTest3<IU, IG>.Thread1 thread1;
+	transient private Thread1 thread1;
 
 	private void checkDates() {
 		entityDates.forEach((e, d) -> {
@@ -67,12 +67,13 @@ public class MvccEntitySortedIndexTest3<IU extends Entity & IUser, IG extends En
 
 	@Override
 	protected void run0() throws Exception {
+		Transaction.ensureEnded();
 		thread0 = new Thread0();
 		thread1 = new Thread1();
 		thread0.start();
 		thread1.start();
 		thread1CompletedLatch.await();
-		Transaction.endAndBeginNew();
+		Transaction.ensureBegun();
 		checkDates();
 		deleteEntities();
 	}
@@ -109,7 +110,7 @@ public class MvccEntitySortedIndexTest3<IU extends Entity & IUser, IG extends En
 		}
 
 		private void mutateEntities() {
-			for (int txIdx = 0; txIdx < 10; txIdx++) {
+			for (int txIdx = 0; txIdx < 40; txIdx++) {
 				for (int idx = 0; idx < 20; idx++) {
 					Entity entity = randomEntity();
 					setDate(entity);
@@ -141,12 +142,12 @@ public class MvccEntitySortedIndexTest3<IU extends Entity & IUser, IG extends En
 					Transaction.ensureBegun();
 					HasDate randomEntity = (HasDate) randomEntity();
 					Date date = randomEntity.getDate();
-					if (counter++ % 1000 == 0) {
+					if (counter++ % 100 == 0) {
 						Ax.out("reader - %s - %s - %s", counter, randomEntity,
 								date);
+						Transaction.endAndBeginNew();
 					}
-					Thread.sleep(0, 100000);
-					Transaction.endAndBeginNew();
+					Thread.sleep(0, 1000);
 					if (modificationCompleteLatch.getCount() <= 0) {
 						thread1CompletedLatch.countDown();
 						break;
