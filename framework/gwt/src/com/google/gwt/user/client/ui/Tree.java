@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -197,7 +197,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Constructs a tree that uses the specified ClientBundle for images.
-	 * 
+	 *
 	 * @param resources
 	 *            a bundle that provides tree specific images
 	 */
@@ -209,7 +209,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	 * Constructs a tree that uses the specified ClientBundle for images. If
 	 * this tree does not use leaf images, the width of the Resources's leaf
 	 * image will control the leaf indent.
-	 * 
+	 *
 	 * @param resources
 	 *            a bundle that provides tree specific images
 	 * @param useLeafImages
@@ -221,7 +221,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Constructs a tree that uses the specified image bundle for images.
-	 * 
+	 *
 	 * @param images
 	 *            a bundle that provides tree specific images
 	 * @deprecated replaced by {@link #Tree(Resources)}
@@ -235,7 +235,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	 * Constructs a tree that uses the specified image bundle for images. If
 	 * this tree does not use leaf images, the width of the TreeImage's leaf
 	 * image will control the leaf indent.
-	 * 
+	 *
 	 * @param images
 	 *            a bundle that provides tree specific images
 	 * @param useLeafImages
@@ -249,7 +249,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Overloaded version for IsWidget.
-	 * 
+	 *
 	 * @see #add(Widget)
 	 */
 	@Override
@@ -259,7 +259,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Adds the widget as a root tree item.
-	 * 
+	 *
 	 * @see com.google.gwt.user.client.ui.HasWidgets#add(com.google.gwt.user.client.ui.Widget)
 	 * @param widget
 	 *            widget to add.
@@ -295,7 +295,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Adds an item to the root level of this tree.
-	 * 
+	 *
 	 * @param isItem
 	 *            the wrapper of item to be added
 	 */
@@ -306,7 +306,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Overloaded version for IsWidget.
-	 * 
+	 *
 	 * @see #addItem(Widget)
 	 */
 	@Override
@@ -316,7 +316,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Adds a simple tree item containing the specified html.
-	 * 
+	 *
 	 * @param itemHtml
 	 *            the html of the item to be added
 	 * @return the item that was added
@@ -328,7 +328,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Adds a simple tree item containing the specified html.
-	 * 
+	 *
 	 * @param itemHtml
 	 *            the text of the item to be added
 	 * @return the item that was added
@@ -339,7 +339,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Adds an item to the root level of this tree.
-	 * 
+	 *
 	 * @param item
 	 *            the item to be added
 	 */
@@ -350,7 +350,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Adds a new tree item containing the specified widget.
-	 * 
+	 *
 	 * @param widget
 	 *            the widget to be added
 	 * @return the new item
@@ -440,7 +440,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Adds a simple tree item containing the specified text.
-	 * 
+	 *
 	 * @param itemText
 	 *            the text of the item to be added
 	 * @return the item that was added
@@ -488,7 +488,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Gets the top-level tree item at the specified index.
-	 * 
+	 *
 	 * @param index
 	 *            the index to be retrieved
 	 * @return the item at that index
@@ -499,7 +499,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Gets the number of items contained at the root of this tree.
-	 * 
+	 *
 	 * @return this tree's item count
 	 */
 	public int getItemCount() {
@@ -508,7 +508,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Gets the currently selected item.
-	 * 
+	 *
 	 * @return the selected item
 	 */
 	public TreeItem getSelectedItem() {
@@ -523,7 +523,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	/**
 	 * Inserts a child tree item at the specified index containing the specified
 	 * html.
-	 * 
+	 *
 	 * @param beforeIndex
 	 *            the index where the item will be inserted
 	 * @param itemHtml
@@ -539,7 +539,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	/**
 	 * Inserts a child tree item at the specified index containing the specified
 	 * text.
-	 * 
+	 *
 	 * @param beforeIndex
 	 *            the index where the item will be inserted
 	 * @param itemText
@@ -554,7 +554,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Inserts an item into the root level of this tree.
-	 * 
+	 *
 	 * @param beforeIndex
 	 *            the index where the item will be inserted
 	 * @param item
@@ -569,7 +569,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	/**
 	 * Inserts a child tree item at the specified index containing the specified
 	 * widget.
-	 * 
+	 *
 	 * @param beforeIndex
 	 *            the index where the item will be inserted
 	 * @param widget
@@ -692,7 +692,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Overloaded version for IsWidget.
-	 * 
+	 *
 	 * @see #remove(Widget)
 	 */
 	@Override
@@ -724,7 +724,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Removes an item from the root level of this tree.
-	 * 
+	 *
 	 * @param isItem
 	 *            the wrapper of item to be removed
 	 */
@@ -738,7 +738,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Removes an item from the root level of this tree.
-	 * 
+	 *
 	 * @param item
 	 *            the item to be removed
 	 */
@@ -808,7 +808,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Selects a specified item.
-	 * 
+	 *
 	 * @param item
 	 *            the item to be selected, or <code>null</code> to deselect all
 	 *            items
@@ -819,7 +819,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Selects a specified item.
-	 * 
+	 *
 	 * @param item
 	 *            the item to be selected, or <code>null</code> to deselect all
 	 *            items
@@ -845,7 +845,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Iterator of tree items.
-	 * 
+	 *
 	 * @return the iterator
 	 */
 	public Iterator<TreeItem> treeItemIterator() {
@@ -888,10 +888,6 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		return false;
 	}
 
-	protected boolean isToggleSelectionOnLabelClick() {
-		return false;
-	}
-
 	private TreeItem findDeepestOpenChild(TreeItem item) {
 		if (!item.getState()) {
 			return item;
@@ -921,7 +917,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	/**
 	 * Get the top parent above this {@link TreeItem} that is in closed state.
 	 * In other words, get the parent that is guaranteed to be visible.
-	 * 
+	 *
 	 * @param item
 	 * @return the closed parent, or null if all parents are opened
 	 */
@@ -1159,10 +1155,6 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 		}
 	}
 
-	protected boolean useCssTreeImages() {
-		return false;
-	}
-
 	private void showImage(TreeItem treeItem, AbstractImagePrototype proto,
 			String className) {
 		Element holder = treeItem.getImageHolderElement();
@@ -1275,7 +1267,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	 * Indicates if keyboard navigation is enabled for the Tree and for a given
 	 * TreeItem. Subclasses of Tree can override this function to selectively
 	 * enable or disable keyboard navigation.
-	 * 
+	 *
 	 * @param currentItem
 	 *            the currently selected TreeItem
 	 * @return <code>true</code> if the Tree will response to arrow keys by
@@ -1283,6 +1275,10 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	 */
 	protected boolean isKeyboardNavigationEnabled(TreeItem currentItem) {
 		return true;
+	}
+
+	protected boolean isToggleSelectionOnLabelClick() {
+		return false;
 	}
 
 	@Override
@@ -1296,7 +1292,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	 * <ul>
 	 * <li>-root = The root {@link TreeItem}.</li>
 	 * </ul>
-	 * 
+	 *
 	 * @see UIObject#onEnsureDebugId(String)
 	 */
 	@Override
@@ -1307,6 +1303,10 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	@Override
 	protected void onLoad() {
+	}
+
+	protected boolean useCssTreeImages() {
+		return false;
 	}
 
 	void adopt(Widget widget, TreeItem treeItem) {
@@ -1368,7 +1368,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 	/**
 	 * Called only from {@link TreeItem}: Shows the closed image on that tree
 	 * item.
-	 * 
+	 *
 	 * @param treeItem
 	 *            the tree item
 	 */
@@ -1378,7 +1378,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Called only from {@link TreeItem}: Shows the leaf image on a tree item.
-	 * 
+	 *
 	 * @param treeItem
 	 *            the tree item
 	 */
@@ -1396,7 +1396,7 @@ public class Tree extends Widget implements HasTreeItems.ForIsWidget,
 
 	/**
 	 * Called only from {@link TreeItem}: Shows the open image on a tree item.
-	 * 
+	 *
 	 * @param treeItem
 	 *            the tree item
 	 */

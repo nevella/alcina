@@ -62,6 +62,7 @@ public class ElementLocal extends NodeLocal
 		ElementLocal cloneLocal = new ElementLocal(ownerDocument, tagName);
 		Element clone = LocalDom.createElement(tagName).putLocal(cloneLocal);
 		clone.cloneLocalStyle(element);
+		cloneLocal.hasUnparsedStyle = hasUnparsedStyle;
 		cloneLocal.attributes.putAll(attributes);
 		cloneLocal.eventBits = eventBits;
 		if (deep) {
