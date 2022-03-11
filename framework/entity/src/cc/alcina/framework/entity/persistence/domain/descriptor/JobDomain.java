@@ -218,6 +218,13 @@ public class JobDomain {
 		cleanupQueues();
 		return getVisibleQueues().flatMap(AllocationQueue::getActiveJobs)
 				.distinct()
+				// FIXME - mvcc.4 - propagation/vacuum issue?
+				.peek(j -> {
+					if (j.getStartTime() == null) {
+						logger.warn("Active job with null start time - {} {}",
+								j.getId(), j.getTaskClassName());
+					}
+				}).filter(j -> j.getStartTime() != null)
 				.sorted(Comparator.comparing(Job::getStartTime).reversed());
 	}
 

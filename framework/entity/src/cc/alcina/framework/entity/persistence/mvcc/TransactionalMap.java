@@ -258,8 +258,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 										ObjectWrapper.of(REMOVED_VALUE_MARKER),
 										currentTransaction));
 			}
-			transactionalValue.remove();
-			sizeMetadata.delta(-1);
+			if (transactionalValue.remove()) {
+				sizeMetadata.delta(-1);
+			}
 		}
 		return existing;
 	}
@@ -675,8 +676,19 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			return notRemovedValueMarker(o);
 		}
 
-		public void remove() {
-			resolve(true).set(REMOVED_VALUE_MARKER);
+		/**
+		 * return true if changed
+		 */
+		public boolean remove() {
+			ObjectWrapper resolved = resolve(true);
+			if (notRemovedValueMarker(resolved)) {
+				resolved.set(REMOVED_VALUE_MARKER);
+				return true;
+			} else {
+				// Note that this shouldn't normally happen
+				// FIXME - mvcc.4 - log
+				return false;
+			}
 		}
 
 		@Override
