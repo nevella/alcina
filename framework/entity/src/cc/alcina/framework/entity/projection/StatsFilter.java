@@ -528,6 +528,11 @@ public class StatsFilter extends CollectionProjectionFilter {
 		}
 
 		@Override
+		protected boolean checkObjectPermissions(Object source) {
+			return true;
+		}
+
+		@Override
 		protected <T> T newInstance(Class sourceClass,
 				GraphProjectionContext context) throws Exception {
 			try {

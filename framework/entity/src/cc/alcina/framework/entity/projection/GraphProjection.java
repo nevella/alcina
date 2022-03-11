@@ -1028,6 +1028,34 @@ public class GraphProjection {
 		return false;
 	}
 
+	protected boolean checkObjectPermissions(Object source) {
+		if (source instanceof HasReadPermission
+				&& !dataFilter.ignoreObjectHasReadPermissionCheck()) {
+			return ((HasReadPermission) source).canRead();
+		}
+		Class<? extends Object> sourceClass = source.getClass();
+		if (!perObjectPermissionClasses.containsKey(sourceClass)) {
+			Boolean result = fieldFilter == null ? Boolean.TRUE
+					: fieldFilter.permitClass(sourceClass);
+			perObjectPermissionClasses.put(sourceClass, result);
+		}
+		if (disablePerObjectPermissions) {
+			return true;
+		}
+		Boolean valid = perObjectPermissionClasses.get(sourceClass);
+		if (valid == null) {
+			// per-objected
+			Permission permission = ensurePerClassReadPermission(sourceClass);
+			if (permission == null) {
+				return true;
+			} else {
+				AnnotatedPermissible ap = new AnnotatedPermissible(permission);
+				return PermissionsManager.get().isPermitted(source, ap);
+			}
+		}
+		return valid;
+	}
+
 	protected <T> T newInstance(Class sourceClass,
 			GraphProjectionContext context) throws Exception {
 		if (constructorMethodsLookup.containsKey(sourceClass)) {
@@ -1065,34 +1093,6 @@ public class GraphProjection {
 		}
 		return (T) constructorLookup.get(sourceClass)
 				.newInstance(new Object[] {});
-	}
-
-	boolean checkObjectPermissions(Object source) {
-		if (source instanceof HasReadPermission
-				&& !dataFilter.ignoreObjectHasReadPermissionCheck()) {
-			return ((HasReadPermission) source).canRead();
-		}
-		Class<? extends Object> sourceClass = source.getClass();
-		if (!perObjectPermissionClasses.containsKey(sourceClass)) {
-			Boolean result = fieldFilter == null ? Boolean.TRUE
-					: fieldFilter.permitClass(sourceClass);
-			perObjectPermissionClasses.put(sourceClass, result);
-		}
-		if (disablePerObjectPermissions) {
-			return true;
-		}
-		Boolean valid = perObjectPermissionClasses.get(sourceClass);
-		if (valid == null) {
-			// per-objected
-			Permission permission = ensurePerClassReadPermission(sourceClass);
-			if (permission == null) {
-				return true;
-			} else {
-				AnnotatedPermissible ap = new AnnotatedPermissible(permission);
-				return PermissionsManager.get().isPermitted(source, ap);
-			}
-		}
-		return valid;
 	}
 
 	/*
