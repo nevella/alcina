@@ -8,6 +8,7 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 
@@ -66,10 +67,11 @@ public class LazyPropertyLoadTask<T extends Entity>
 		}
 		try {
 			LooseContext.pushWithTrue(CONTEXT_IN_LAZY_PROPERTY_LOAD);
-			String sqlFilter = String.format(" id in %s",
-					EntityPersistenceHelper.toInClause(objects));
-			String key = Ax.format("load :: %s (%s)",
-					getClass().getSimpleName(), objects.size());
+			String inClause = EntityPersistenceHelper.toInClause(objects);
+			String sqlFilter = String.format(" id in %s", inClause);
+			String key = Ax.format("load :: %s (%s) (%s)",
+					clazz.getSimpleName(), objects.size(),
+					CommonUtils.trimToWsChars(inClause, 100));
 			metric(key, false);
 			List<T> values = loadTable(clazz, sqlFilter, true);
 			metric(key, true);
