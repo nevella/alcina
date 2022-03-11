@@ -4,6 +4,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -45,7 +46,9 @@ import cc.alcina.framework.common.client.csobjects.view.TreePath.Walker;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
+import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.PlaintextProtocolHandler;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -58,8 +61,6 @@ import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
-import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
-import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.ProcessLogger;
 import cc.alcina.framework.servlet.domain.view.DomainViews.Key;
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
@@ -1141,9 +1142,11 @@ public class LiveTree {
 				try {
 					ByteArrayOutputStream out = new ByteArrayOutputStream();
 					OutputStream outputStream = new GZIPOutputStream(out);
-					new JacksonJsonObjectSerializer().withIdRefs()
-							.withTypeInfo().withMaxLength(Integer.MAX_VALUE)
-							.serializeToStream(request, outputStream);
+					String serializedEvents = new PlaintextProtocolHandler()
+							.serialize(request.getEvents().stream().limit(10000)
+									.collect(Collectors.toList()));
+					outputStream.write(
+							serializedEvents.getBytes(StandardCharsets.UTF_8));
 					data = out.toByteArray();
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
@@ -1155,10 +1158,15 @@ public class LiveTree {
 				try {
 					InputStream inputStream = new GZIPInputStream(
 							new ByteArrayInputStream(data));
-					DomainTransformRequestPersistent request = JacksonUtils
-							.deserialize(inputStream,
-									DomainTransformRequestPersistent.class);
-					inputStream.close();
+					String serializedEvents = ResourceUtilities
+							.readStreamToString(inputStream);
+					DomainTransformRequestPersistent request = PersistentImpl
+							.getImplementation(
+									DomainTransformRequestPersistent.class)
+							.getDeclaredConstructor().newInstance();
+					request.setId(id);
+					request.setEvents(new PlaintextProtocolHandler()
+							.deserialize(serializedEvents));
 					return request;
 				} catch (Exception e) {
 					throw new WrappedRuntimeException(e);
