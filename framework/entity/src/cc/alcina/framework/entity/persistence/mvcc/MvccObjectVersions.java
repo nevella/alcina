@@ -92,7 +92,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	// called in a synchronized block (synchronized on domainIdentity) -- or --
 	// unreachable domainIdentity unreachable from other txs
-	static <E extends Entity> MvccObjectVersions<E> ensureEntity(
+	static <E extends Entity> MvccObjectVersions<E> createEntityVersions(
 			E domainIdentity, Transaction transaction,
 			boolean initialObjectIsWriteable) {
 		MvccObject mvccObject = (MvccObject) domainIdentity;
@@ -101,7 +101,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	// called in a synchronized block (synchronized on domainIdentity)
-	static MvccObjectVersions<TransactionalTrieEntry> ensureTrieEntry(
+	static MvccObjectVersions<TransactionalTrieEntry> createTrieEntryVersions(
 			TransactionalTrieEntry domainIdentity, Transaction transaction,
 			boolean initialObjectIsWriteable) {
 		MvccObject mvccObject = (MvccObject) domainIdentity;

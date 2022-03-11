@@ -161,7 +161,7 @@ public class Transactions {
 						versions = mvccObject.__getMvccVersions__();
 						if (versions == null
 								|| !((MvccObjectVersionsMvccObject) versions).attached) {
-							versions = MvccObjectVersions.ensureEntity(t,
+							versions = MvccObjectVersions.createEntityVersions(t,
 									transaction, false);
 						}
 						/*
@@ -280,7 +280,7 @@ public class Transactions {
 				// fallthrough, invalid or null
 				synchronized (MvccObjectVersions.MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR) {
 					if (versions == null || versions.domainIdentity == null) {
-						versions = MvccObjectVersions.ensureTrieEntry(t,
+						versions = MvccObjectVersions.createTrieEntryVersions(t,
 								transaction, false);
 					}
 					return versions.resolve(write);

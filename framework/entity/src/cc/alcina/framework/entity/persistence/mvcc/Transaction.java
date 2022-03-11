@@ -402,7 +402,7 @@ public class Transaction implements Comparable<Transaction> {
 		 * MvccObjectVersions.ensureEntity since this is a newly created object
 		 */
 		if (!isBaseTransaction()) {
-			MvccObjectVersions<T> versions = MvccObjectVersions.ensureEntity(t,
+			MvccObjectVersions<T> versions = MvccObjectVersions.createEntityVersions(t,
 					this, true);
 		}
 		return t;
