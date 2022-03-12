@@ -3,6 +3,9 @@ package cc.alcina.framework.common.client.reflection;
 import java.util.function.BiFunction;
 
 public class Method<T> {
+	public static final transient Method EXISTS_REF = new Method(null, null,
+			null);
+
 	private Object nativeMethod;
 
 	private BiFunction<Object, Object[], T> invoker;
@@ -16,16 +19,16 @@ public class Method<T> {
 		this.returnType = returnType;
 	}
 
-	@Override
-	public String toString() {
-		return nativeMethod.toString();
+	public Class getReturnType() {
+		return returnType;
 	}
 
 	public T invoke(Object target, Object[] args) {
 		return invoker.apply(target, args);
 	}
 
-	public Class getReturnType() {
-		return returnType;
+	@Override
+	public String toString() {
+		return nativeMethod.toString();
 	}
 }

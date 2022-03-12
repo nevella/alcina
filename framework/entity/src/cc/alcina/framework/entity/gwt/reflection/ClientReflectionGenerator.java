@@ -607,6 +607,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					cc.alcina.framework.common.client.reflection.Method.class
 							.getCanonicalName());
 			composerFactory.addImport(Registration.class.getName());
+			composerFactory.addImport(Override.class.getName());
 			if (hasCallableNoArgsConstructor) {
 				composerFactory
 						.addImplementedInterface(Supplier.class.getName());
@@ -821,21 +822,27 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 								.write(sourceWriter));
 				sourceWriter.println("String name = %s;", stringLiteral(name));
 				sourceWriter.print("Method getter = ");
-				printMethodFunction(getter);
-				sourceWriter.println(";");
+				printMethodRef(getter);
 				sourceWriter.print("Method setter = ");
-				printMethodFunction(setter);
-				sourceWriter.println(";");
+				printMethodRef(setter);
 				sourceWriter.println("Class propertyType = %s.class;",
 						propertyType.getQualifiedSourceName());
 				sourceWriter.println("Class definingType = %s.class;",
 						ClassReflectorGenerator.this.type
 								.getQualifiedSourceName());
 				sourceWriter.print(
-						"Property property = new Property(name, getter, setter, propertyType, definingType, provider);");
+						"Property property = new Property(name, getter, setter, propertyType, definingType, provider)");
+				sourceWriter.println("{");
+				sourceWriter.indent();
+				printMethodHoist(getter);
+				printMethodHoist(setter);
+				sourceWriter.outdent();
+				sourceWriter.println("};");
+				sourceWriter.println("");
 				sourceWriter.println("properties.add(property);");
 				sourceWriter.outdent();
 				sourceWriter.println("}");
+				sourceWriter.println("");
 				return true;
 			}
 
@@ -844,6 +851,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						.isAnnotationPresent(AlcinaTransient.class);
 			}
 
+			// unused, can remove
 			void printMethodFunction(PropertyMethod method) {
 				if (method == null) {
 					sourceWriter.print("null");
@@ -862,6 +870,23 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 								.getQualifiedSourceName());
 				sourceWriter.print(")");
 			}
+
+			void printMethodHoist(PropertyMethod method) {
+				if (method == null) {
+					return;
+				}
+				method.printHoist();
+			}
+
+			void printMethodRef(PropertyMethod method) {
+				if (method == null) {
+					sourceWriter.print("null;");
+					return;
+				} else {
+					sourceWriter.print("Method.EXISTS_REF;");
+					return;
+				}
+			}
 		}
 
 		class PropertyMethod {
@@ -876,6 +901,30 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				this.propertyName = propertyName;
 				this.getter = getter;
 				this.method = method;
+			}
+
+			public void printHoist() {
+				if (getter) {
+					sourceWriter.println("@Override");
+					sourceWriter.println("public Object get(Object bean){");
+					sourceWriter.indent();
+					sourceWriter.print("return  ((%s)bean).%s();",
+							method.getEnclosingType().getQualifiedSourceName(),
+							method.getName());
+					sourceWriter.outdent();
+					sourceWriter.println("}");
+				} else {
+					sourceWriter.println("@Override");
+					sourceWriter.println(
+							"public void set(Object bean,Object value){");
+					sourceWriter.indent();
+					sourceWriter.print("  ((%s)bean).%s((%s)value);",
+							method.getEnclosingType().getQualifiedSourceName(),
+							method.getName(), method.getParameters()[0]
+									.getType().getQualifiedSourceName());
+					sourceWriter.outdent();
+					sourceWriter.println("}");
+				}
 			}
 
 			public void printInvoker() {
