@@ -46,6 +46,10 @@ public class ShellWrapper {
 
 	private Process process;
 
+	public Process getProcess() {
+		return this.process;
+	}
+
 	protected boolean timedOut;
 
 	public boolean logToStdOut = true;
@@ -194,7 +198,7 @@ public class ShellWrapper {
 		return osName.indexOf("win") >= 0;
 	}
 
-	protected void launchProcess(String[] cmdAndArgs,
+	public void launchProcess(String[] cmdAndArgs,
 			Callback<String> outputCallback, Callback<String> errorCallback)
 			throws IOException {
 		if (cmdAndArgs[0].equals("/bin/bash") && isWindows()) {

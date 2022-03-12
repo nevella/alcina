@@ -19,35 +19,18 @@ import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 @Bean( allPropertiesVisualisable = true)
 @ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
-public class ServerControlParams extends Bindable implements RemoteParameters {
-	private String propertyValue;
+public class RemoteDebugParams extends Bindable implements RemoteParameters {
+	private String command;
 
-	private String propertyName;
-
-	@Display(name = "App property name/Task FQN", orderingHint = 20, styleName = "wide-text", focus = true)
-	public String getPropertyName() {
-		return this.propertyName;
+	@Display(name = "Command", orderingHint = 20, styleName = "wide-text", focus = true)
+	public String getCommand() {
+		return this.command;
 	}
 
-	@Custom(customiserClass = TextAreaCustomiser.class, parameters = {
-			@NamedParameter(name = TextAreaCustomiser.WIDTH, intValue = 400),
-			@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 15) })
-	@Display(name = "App property value/Task param", orderingHint = 25, styleName = "wide-text")
-	public String getPropertyValue() {
-		return this.propertyValue;
-	}
-
-	public void setPropertyName(String propertyName) {
-		String old_propertyName = this.propertyName;
-		this.propertyName = propertyName;
-		propertyChangeSupport().firePropertyChange("propertyName",
-				old_propertyName, propertyName);
-	}
-
-	public void setPropertyValue(String propertyValue) {
-		String old_propertyValue = this.propertyValue;
-		this.propertyValue = propertyValue;
-		propertyChangeSupport().firePropertyChange("propertyValue",
-				old_propertyValue, propertyValue);
+	public void setCommand(String command) {
+		String old_command = this.command;
+		this.command = command;
+		propertyChangeSupport().firePropertyChange("command", old_command, command);
+		
 	}
 }

@@ -42,14 +42,15 @@ public class StreamBuffer extends Thread {
 	public synchronized void run() {
 		try {
 			InputStreamReader isr = new InputStreamReader(is);
-			BufferedReader br = new BufferedReader(isr);
-			String line = null;
-			while ((line = br.readLine()) != null) {
-				if (buf.length() > 0) {
-					buf.append("\n");
+			StringBuilder line = new StringBuilder();
+			int in = -1;
+			while ((in = isr.read()) != -1) {
+				char c = (char) in;
+				line.append(c);
+				if (c == '\n') {
+					outputCallback.accept(line.toString());
+					line = new StringBuilder();
 				}
-				buf.append(line);
-				outputCallback.accept(line);
 			}
 			closed = true;
 			notifyAll();
