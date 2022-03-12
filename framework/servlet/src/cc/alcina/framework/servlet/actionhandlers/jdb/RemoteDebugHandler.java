@@ -28,6 +28,7 @@ import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
  * self - at least under JDK11. Causes a JVM hang, although everything appears
  * fine from jhsdb clhsdb --pid `jps`
  * 
+ * So, usage requires at least two mx instances in the cluster and open port 8787 on each instance
  * 
  * @author nick@alcina.cc
  *
