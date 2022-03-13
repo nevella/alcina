@@ -222,7 +222,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			moduleGenerator.prepare();
 			if (useCachedResult(logger, context)) {
 				logger.log(Type.INFO, String.format(
-						"Client reflection generation  [%s] - using cached reflection metadata",
+						"Reflection [%s] - using cached reflection metadata",
 						moduleName));
 				return new RebindResult(RebindMode.USE_ALL_CACHED, typeName);
 			}
@@ -238,7 +238,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			ReachabilityData.AppReflectableTypes reflectableTypes = moduleGenerator
 					.listReflectableTypes();
 			String emitMessage = String.format(
-					"Client reflection generation  [%s] -  %s/%s/%s reflected types - %s ms\n",
+					"Reflection [%s] -  %s/%s/%s reflected types - %s ms\n",
 					moduleName, moduleGenerator.writeReflectors.size(),
 					moduleGenerator.classReflectors.size(),
 					context.getTypeOracle().getTypes().length,
@@ -249,7 +249,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			RebindResult result = new RebindResult(RebindMode.USE_ALL_NEW,
 					moduleGenerator.implementationFqn());
 			result.putClientData(CACHED_TYPE_INFORMATION,
-					new IncrementalSupport(this).prepareCacheInfo());
+					new IncrementalSupport().prepareCacheInfo(this));
 			return result;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -294,7 +294,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			IncrementalSupport incrementalSupport = (IncrementalSupport) lastRebindResult
 					.getClientData(CACHED_TYPE_INFORMATION);
 			if (incrementalSupport != null && incrementalSupport
-					.checkSourcesUnmodified(logger, generatorContext)) {
+					.checkSourcesUnmodified(logger, this)) {
 				useCache = true;
 			}
 		}
@@ -1049,43 +1049,33 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	static class IncrementalSupport implements Serializable {
 		Map<String, Long> writeableTimes;
 
-		private transient ClientReflectionGenerator reflectionGenerator;
-
-		public IncrementalSupport(
-				ClientReflectionGenerator clientReflectionGenerator) {
-			this.reflectionGenerator = clientReflectionGenerator;
+		public IncrementalSupport() {
 		}
 
 		boolean checkSourcesUnmodified(TreeLogger logger,
-				GeneratorContext generatorContext) {
-			boolean unmodified = writeableTimes(generatorContext)
+				ClientReflectionGenerator reflectionGenerator) {
+			boolean unmodified = writeableTimes(reflectionGenerator)
 					.equals(writeableTimes);
 			return unmodified;
 		}
 
-		IncrementalSupport prepareCacheInfo() {
-			this.writeableTimes = writeableTimes(reflectionGenerator.context);
+		IncrementalSupport prepareCacheInfo(
+				ClientReflectionGenerator reflectionGenerator) {
+			this.writeableTimes = writeableTimes(reflectionGenerator);
 			return this;
 		}
 
-		Map<String, Long> writeableTimes(GeneratorContext generatorContext) {
+		Map<String, Long>
+				writeableTimes(ClientReflectionGenerator reflectionGenerator) {
 			Map<String, Long> writeableTimes = new LinkedHashMap<>();
-			TypeOracle typeOracle = generatorContext.getTypeOracle();
-			writeableTypes().forEach(t -> {
-				try {
-					JRealClassType oracleType = (JRealClassType) typeOracle
-							.getType(t.getQualifiedSourceName());
-					writeableTimes.put(t.getQualifiedSourceName(),
-							oracleType == null ? null
-									: oracleType.getLastModifiedTime());
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			});
+			TypeOracle typeOracle = reflectionGenerator.context.getTypeOracle();
+			writeableTypes(reflectionGenerator).forEach(t -> writeableTimes
+					.put(t.getQualifiedSourceName(), t.getLastModifiedTime()));
 			return writeableTimes;
 		}
 
-		Stream<JRealClassType> writeableTypes() {
+		Stream<JRealClassType>
+				writeableTypes(ClientReflectionGenerator reflectionGenerator) {
 			Stream<JRealClassType> writeReflectorTypes = reflectionGenerator.moduleGenerator.writeReflectors
 					.stream().map(r -> r.realType())
 					.map(t -> (JRealClassType) t);
