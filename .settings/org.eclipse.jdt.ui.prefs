@@ -2,7 +2,7 @@
 <<<<<<<=HEAD
 >>>>>>>=main
 eclipse.preferences.version=1
-editor_save_participant_org.eclipse.jdt.ui.postsavelistener.cleanup=true
+editor_save_participant_org.eclipse.jdt.ui.postsavelistener.cleanup=false
 formatter_profile=_noIncodeLinesTabs
 formatter_settings_version=21
 org.eclipse.jdt.ui.javadoc=false

@@ -32,6 +32,7 @@ import com.google.gwt.core.ext.IncrementalGenerator;
 import com.google.gwt.core.ext.RebindMode;
 import com.google.gwt.core.ext.RebindResult;
 import com.google.gwt.core.ext.TreeLogger;
+import com.google.gwt.core.ext.TreeLogger.Type;
 import com.google.gwt.core.ext.UnableToCompleteException;
 import com.google.gwt.core.ext.typeinfo.JClassType;
 import com.google.gwt.core.ext.typeinfo.JField;
@@ -41,6 +42,8 @@ import com.google.gwt.core.ext.typeinfo.JPrimitiveType;
 import com.google.gwt.core.ext.typeinfo.JRawType;
 import com.google.gwt.core.ext.typeinfo.JRealClassType;
 import com.google.gwt.core.ext.typeinfo.JType;
+import com.google.gwt.core.ext.typeinfo.TypeOracle;
+import com.google.gwt.dev.resource.Resource;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
@@ -64,6 +67,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -78,6 +82,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
  * Documentation notes
  * - note module assignment (unknown, not_reached, excluded) and how that relates to production compilation
  * - explain caching (and interaction with gwt watch service)
+ * -- can probably do caching *better* - at the moment any change to files should cause initial full recalc
  * - document the evils of generics (in serializable types) when pruning reachability
  *
  */
@@ -216,6 +221,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					generatingType);
 			moduleGenerator.prepare();
 			if (useCachedResult(logger, context)) {
+				logger.log(Type.INFO, String.format(
+						"Client reflection generation  [%s] - using cached reflection metadata",
+						moduleName));
 				return new RebindResult(RebindMode.USE_ALL_CACHED, typeName);
 			}
 			boolean updated = moduleGenerator.write();
@@ -241,7 +249,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			RebindResult result = new RebindResult(RebindMode.USE_ALL_NEW,
 					moduleGenerator.implementationFqn());
 			result.putClientData(CACHED_TYPE_INFORMATION,
-					new IncrementalSupport().prepareCacheInfo());
+					new IncrementalSupport(this).prepareCacheInfo());
 			return result;
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -1038,34 +1046,50 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	//
 	// FIXME - 2023 - write only changed classreflectors (although this gets us
 	// 90% of possible speedup)
-	class IncrementalSupport implements Serializable {
+	static class IncrementalSupport implements Serializable {
 		Map<String, Long> writeableTimes;
 
+		private transient ClientReflectionGenerator reflectionGenerator;
+
+		public IncrementalSupport(
+				ClientReflectionGenerator clientReflectionGenerator) {
+			this.reflectionGenerator = clientReflectionGenerator;
+		}
+
 		boolean checkSourcesUnmodified(TreeLogger logger,
-				GeneratorContext genContext) {
-			// return writeableTimes().equals(writeableTimes);
-			// see https://github.com/nevella/alcina/issues/15
-			// GWT doesn't monitor FS changes correctly - reenable once fixed
-			return false;
+				GeneratorContext generatorContext) {
+			boolean unmodified = writeableTimes(generatorContext)
+					.equals(writeableTimes);
+			return unmodified;
 		}
 
 		IncrementalSupport prepareCacheInfo() {
-			this.writeableTimes = writeableTimes();
+			this.writeableTimes = writeableTimes(reflectionGenerator.context);
 			return this;
 		}
 
-		Map<String, Long> writeableTimes() {
+		Map<String, Long> writeableTimes(GeneratorContext generatorContext) {
 			Map<String, Long> writeableTimes = new LinkedHashMap<>();
-			writeableTypes().forEach(t -> writeableTimes
-					.put(t.getQualifiedSourceName(), t.getLastModifiedTime()));
+			TypeOracle typeOracle = generatorContext.getTypeOracle();
+			writeableTypes().forEach(t -> {
+				try {
+					JRealClassType oracleType = (JRealClassType) typeOracle
+							.getType(t.getQualifiedSourceName());
+					writeableTimes.put(t.getQualifiedSourceName(),
+							oracleType == null ? null
+									: oracleType.getLastModifiedTime());
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			});
 			return writeableTimes;
 		}
 
 		Stream<JRealClassType> writeableTypes() {
-			Stream<JRealClassType> writeReflectorTypes = moduleGenerator.writeReflectors
+			Stream<JRealClassType> writeReflectorTypes = reflectionGenerator.moduleGenerator.writeReflectors
 					.stream().map(r -> r.realType())
 					.map(t -> (JRealClassType) t);
-			Stream<JRealClassType> annotationTypes = moduleGenerator.annotationImplementations
+			Stream<JRealClassType> annotationTypes = reflectionGenerator.moduleGenerator.annotationImplementations
 					.stream().map(r -> r.realType())
 					.map(t -> (JRealClassType) t);
 			return Stream.concat(writeReflectorTypes, annotationTypes);
