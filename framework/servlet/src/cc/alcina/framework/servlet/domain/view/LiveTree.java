@@ -114,7 +114,15 @@ public class LiveTree {
 
 	ProcessLoggerImpl processLogger = new ProcessLoggerImpl();
 
+	private Key key;
+
+	@Override
+	public String toString() {
+		return Ax.format("Live tree: [%s]", key);
+	}
+
 	public LiveTree(Key key) {
+		this.key = key;
 		processLogger.inject();
 		logger.warn("First time generate livetree - {}", key);
 		earliestPosition = DomainStore.writableStore()
@@ -362,7 +370,7 @@ public class LiveTree {
 		toRemove.forEach(context::removePathChange);
 		// Phase 2 - cascade collated changes. A linked hashset can, after all,
 		// function as a FIFO queue.
-		root.trace(!context.treeCreation);
+//		root.trace(!context.treeCreation);
 		do {
 			Iterator<TreePath<LiveNode>> iterator = pathChanged.iterator();
 			TreePath<LiveNode> pathChange = iterator.next();
@@ -388,7 +396,10 @@ public class LiveTree {
 			}
 		}
 		List<Transform> result = context.generateTransformResult();
-		result.forEach(Ax::out);
+		if (result.size() > 0) {
+			logger.info("{} - generated {} node transforms", this,
+					result.size());
+		}
 		modifiedNodes.forEach(LiveNode::clearContextData);
 		modifiedNodes.clear();
 		transactionTransforms.put(currentPosition, result);
@@ -693,7 +704,6 @@ public class LiveTree {
 						transform.setBeforePath(
 								liveNode.path.provideSuccessorPath());
 					}
-					Ax.out(transform);
 					result.add(transform);
 				}
 			});
@@ -1310,9 +1320,24 @@ public class LiveTree {
 			 * for an identical parent, order -reverse- tree order (so
 			 * insert.beforeOtherNode works correctly)
 			 */
-			return new TreePath.DepthSegmentComparator(true).compare(
-					root.getPath(o1.getTreePath()).get(),
-					root.getPath(o2.getTreePath()).get());
+			Optional<TreePath<LiveNode>> path1 = root.getPath(o1.getTreePath());
+			Optional<TreePath<LiveNode>> path2 = root.getPath(o2.getTreePath());
+			/*
+			 * FIXME - dirndl.2 - is there an invariant that ensures this never
+			 * occurs? Is it comparing removed nodes?
+			 */
+			if (path1.isEmpty()) {
+				if (path2.isEmpty()) {
+					return 0;
+				} else {
+					return 1;
+				}
+			}
+			if (path2.isEmpty()) {
+				return -1;
+			}
+			return new TreePath.DepthSegmentComparator(true)
+					.compare(path1.get(), path2.get());
 		}
 	}
 }
