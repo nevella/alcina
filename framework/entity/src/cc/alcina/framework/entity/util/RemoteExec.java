@@ -56,8 +56,24 @@ public class RemoteExec {
 		}
 		Ax.out(script);
 		Output output = shell.runBashScript(script);
-		output.throwOnException();
+		if (isThrowOnException()) {
+			output.throwOnException();
+		}
 		return output;
+	}
+
+	private boolean throwOnException = true;
+
+	public boolean isThrowOnException() {
+		return this.throwOnException;
+	}
+
+	public void setThrowOnException(boolean throwOnException) {
+		this.throwOnException = throwOnException;
+	}
+	public RemoteExec withThrowOnException(boolean throwOnException) {
+		this.throwOnException = throwOnException;
+		return this;
 	}
 
 	private boolean isRemote() {
