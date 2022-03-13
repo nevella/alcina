@@ -80,14 +80,14 @@ public final class Class<T> implements Type {
   }
 
   /**
-   * Create a Class object for a class.
+   * Create a Class object for an anonymous class. Produces no extra string literals, so compacts nicely
    *
    * @skip
    */
   @DoNotInline
-  static <T> Class<T> createForLambda(
+  static <T> Class<T> createForAnonymousClass(Class<? super T> superclass,
       JavaScriptObject typeId) {
-    return createForClass(Object.class.getPackageName(),"anon_"+typeId.toString(),typeId,Object.class);
+    return createForClass(superclass.getPackageName(),"anon_"+typeId.toString(),typeId,superclass);
   }
   /**
    * Create a Class object for an enum.
