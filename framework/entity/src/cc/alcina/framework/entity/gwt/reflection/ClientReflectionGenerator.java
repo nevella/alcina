@@ -4,6 +4,7 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -17,6 +18,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
+import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -43,7 +45,6 @@ import com.google.gwt.core.ext.typeinfo.JRawType;
 import com.google.gwt.core.ext.typeinfo.JRealClassType;
 import com.google.gwt.core.ext.typeinfo.JType;
 import com.google.gwt.core.ext.typeinfo.TypeOracle;
-import com.google.gwt.dev.resource.Resource;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.rebind.ClassSourceFileComposerFactory;
 import com.google.gwt.user.rebind.SourceWriter;
@@ -67,12 +68,12 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.ClientReflections;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ToStringComparator;
+import cc.alcina.framework.entity.ClassUtils;
 import cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator.ClassReflectorGenerator.PropertyGenerator;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
@@ -705,6 +706,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				sortedPropertyGenerators = propertyGenerators.values().stream()
 						.sorted(new PropertyOrdering())
 						.collect(Collectors.toList());
+				if (reflectedTypeFqn().contains("ConsideredCaseNode")) {
+					int debug = 3;
+				}
 			}
 			return sortedPropertyGenerators.stream();
 		}
@@ -961,6 +965,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 			private PropertyOrder propertyOrder;
 
+			private PropertyOrder.Custom customOrder;
+
 			public PropertyOrdering() {
 				Multimap<JClassType, List<JField>> declaredFieldsByClass = new Multimap<>();
 				JClassType cursor = type;
@@ -980,17 +986,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						JClassType descendant = o1.isAssignableFrom(o2) ? o2
 								: o1;
 						if (descendant.getSuperclass() == ancestor) {
-							// possible annotation re-ordering
-							PropertyOrder propertyOrder = (PropertyOrder) ancestor
-									.getAnnotation(PropertyOrder.class);
-							if (propertyOrder != null
-									&& !propertyOrder.beforeSubclass()) {
-								Preconditions.checkState(
-										propertyOrder.value().length == 0);
-								return o1 == ancestor ? 1 : -1;
-							} else {
-								return o1 == ancestor ? -1 : 1;
-							}
+							return o1 == ancestor ? -1 : 1;
 						} else {
 							return o1 == ancestor ? -1 : 1;
 						}
@@ -1006,10 +1002,19 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				fieldOrder.stream().map(JField::getName).distinct().forEach(
 						name -> fieldOrdinals.put(name, fieldOrdinals.size()));
 				propertyOrder = type.getAnnotation(PropertyOrder.class);
+				customOrder = PropertyOrder.Support.customOrder(propertyOrder,
+						ClassUtils.NO_ARGS_INSTANTIATOR);
 			}
 
 			@Override
 			public int compare(PropertyGenerator o1, PropertyGenerator o2) {
+				if (customOrder != null) {
+					int custom = customOrder.compare(o1.getName(),
+							o2.getName());
+					if (custom != 0) {
+						return custom;
+					}
+				}
 				if (propertyOrder != null && propertyOrder.value().length > 0) {
 					int idx1 = Arrays.asList(propertyOrder.value())
 							.indexOf(o1.getName());

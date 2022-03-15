@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -21,7 +20,6 @@ import com.google.gwt.user.client.rpc.GwtTransient;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
-import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager.CollectionModificationType;
@@ -496,15 +494,6 @@ public abstract class Entity<T extends Entity> extends Bindable
 					return result;
 				}
 			}
-		}
-	}
-
-	public interface PropertyEnum {
-		String name();
-
-		default Predicate<? super DomainTransformEvent> transformFilter() {
-			return event -> Objects.equals(event.getPropertyName(),
-					((Enum) this).name());
 		}
 	}
 }

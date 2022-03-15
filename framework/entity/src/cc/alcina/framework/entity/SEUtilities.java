@@ -91,6 +91,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
+import cc.alcina.framework.common.client.logic.reflection.PropertyOrder.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -975,14 +976,7 @@ public class SEUtilities {
 								// possible annotation re-ordering
 								PropertyOrder propertyOrder = (PropertyOrder) ancestor
 										.getAnnotation(PropertyOrder.class);
-								if (propertyOrder != null
-										&& !propertyOrder.beforeSubclass()) {
-									Preconditions.checkState(
-											propertyOrder.value().length == 0);
-									return o1 == ancestor ? 1 : -1;
-								} else {
-									return o1 == ancestor ? -1 : 1;
-								}
+								return o1 == ancestor ? -1 : 1;
 							} else {
 								return o1 == ancestor ? -1 : 1;
 							}
@@ -1000,10 +994,20 @@ public class SEUtilities {
 									fieldOrdinals.size()));
 					PropertyOrder propertyOrder = (PropertyOrder) clazz
 							.getAnnotation(PropertyOrder.class);
+					PropertyOrder.Custom customOrder = PropertyOrder.Support
+							.customOrder(propertyOrder,
+									ClassUtils.NO_ARGS_INSTANTIATOR);
 					Comparator<PropertyDescriptor> pdComparator = new Comparator<PropertyDescriptor>() {
 						@Override
 						public int compare(PropertyDescriptor o1,
 								PropertyDescriptor o2) {
+							if (customOrder != null) {
+								int custom = customOrder.compare(o1.getName(),
+										o2.getName());
+								if (custom != 0) {
+									return custom;
+								}
+							}
 							if (propertyOrder != null
 									&& propertyOrder.value().length > 0) {
 								int idx1 = Arrays.asList(propertyOrder.value())

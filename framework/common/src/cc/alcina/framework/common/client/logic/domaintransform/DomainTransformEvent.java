@@ -27,6 +27,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.protocolhandlers.DTRProtocolSerializer;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -527,7 +528,7 @@ public class DomainTransformEvent
 		return EntityLocator.valueLocator(this);
 	}
 
-	public boolean provideIsPropertyName(Entity.PropertyEnum property) {
+	public boolean provideIsPropertyName(PropertyEnum property) {
 		return Objects.equals(propertyName, property.toString());
 	}
 }

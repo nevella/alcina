@@ -15,23 +15,49 @@ package cc.alcina.framework.common.client.logic.reflection;
 
 import java.lang.annotation.Documented;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Comparator;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.reflection.Reflections;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
+@Inherited
 @Target({ ElementType.TYPE })
 /**
- * *Not* inherited
+ * If inheriting, the annotation should have an empty value() and non-default custom() 
  * 
  * @author Nick Reddel
  */
 public @interface PropertyOrder {
-	public boolean beforeSubclass() default true;
+	public static class Support {
+		public static PropertyOrder.Custom customOrder(
+				PropertyOrder propertyOrder,
+				Function<Class, Object> instantiator) {
+			return propertyOrder == null
+					|| propertyOrder.custom() == Custom.Default.class ? null
+							: (Custom) instantiator.apply(propertyOrder.custom());
+		}
+	}
 
 	public String[] value();
+
+	public Class<? extends PropertyOrder.Custom> custom() default Custom.Default.class;
+
+	@Reflected
+	public abstract class Custom implements Comparator<String> {
+		public static class Default extends PropertyOrder.Custom {
+			@Override
+			public int compare(String o1, String o2) {
+				return 0;
+			}
+		}
+	}
 }

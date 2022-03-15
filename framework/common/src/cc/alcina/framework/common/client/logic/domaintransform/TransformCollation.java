@@ -13,6 +13,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -159,9 +160,9 @@ public class TransformCollation {
 			this.locator = locator;
 		}
 
-		public boolean doesNotContainsNames(Entity.PropertyEnum... names) {
+		public boolean doesNotContainsNames(PropertyEnum... names) {
 			Set<String> transformedPropertyNames = getTransformedPropertyNames();
-			return Arrays.stream(names).map(Entity.PropertyEnum::name)
+			return Arrays.stream(names).map(PropertyEnum::name)
 					.noneMatch(transformedPropertyNames::contains);
 		}
 
