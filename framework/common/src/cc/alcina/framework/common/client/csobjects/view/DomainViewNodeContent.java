@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public abstract class DomainViewNodeContent<E extends Entity> extends Model
-		implements Comparable<DomainViewNodeContent<E>> {
+		implements Comparable<DomainViewNodeContent<E>>,HasEntity {
 	private String name;
 
 	private String publicationText;
@@ -44,6 +44,10 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 			return EntityComparator.INSTANCE.compare(entity, o.getEntity());
 		}
 		return 0;
+	}
+	@Override
+	public E provideEntity() {
+		return  getEntity();
 	}
 
 	public abstract Class<E> entityClass();

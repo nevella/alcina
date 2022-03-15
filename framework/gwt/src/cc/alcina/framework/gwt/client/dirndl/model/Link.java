@@ -204,7 +204,6 @@ public class Link extends Model {
 		return this;
 	}
 
-	@Registration({ DirectedNodeRenderer.class, Link.class })
 	public static class LinkRenderer extends LeafNodeRenderer {
 		@Override
 		public Widget render(Node node) {
