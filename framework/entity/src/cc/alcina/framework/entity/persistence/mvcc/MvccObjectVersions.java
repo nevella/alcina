@@ -623,10 +623,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 					if (attached) {
 						// check initial transaction was vacuumed
 						if (initialWriteableTransaction == null) {
-							// and that there's a version visible to all
-							// transactions
+							// if there's a version visible to all
+							// transactions, copy to domainidentity and detach
 							if (visibleAllTransactions != null) {
-								attached = false;
 								/*
 								 * The MvccObject has one visible state to all
 								 * transactions, so the MvccObjectVersions
@@ -639,6 +638,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 											.__setMvccVersions__(null);
 								}
 							}
+							//removal from the mvccobject will occur in a different (the global) monitor context
+							attached = false;
 						}
 					}
 				}
