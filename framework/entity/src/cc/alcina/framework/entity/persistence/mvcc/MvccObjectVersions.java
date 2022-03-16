@@ -625,6 +625,8 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 						if (initialWriteableTransaction == null) {
 							// if there's a version visible to all
 							// transactions, copy to domainidentity and detach
+							//
+							//TODO - document when, and when not, visibleAllTransactions == null
 							if (visibleAllTransactions != null) {
 								/*
 								 * The MvccObject has one visible state to all

@@ -85,6 +85,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
  * - explain caching (and interaction with gwt watch service)
  * -- can probably do caching *better* - at the moment any change to files should cause initial full recalc
  * - document the evils of generics (in serializable types) when pruning reachability
+ * - document why this (alignment of reflection with async modules) is needed
  *
  */
 public class ClientReflectionGenerator extends IncrementalGenerator {
