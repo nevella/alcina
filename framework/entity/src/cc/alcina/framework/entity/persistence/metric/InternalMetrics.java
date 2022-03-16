@@ -270,7 +270,7 @@ public class InternalMetrics {
 		if (type == InternalMetricTypeAlcina.health) {
 			// reuse persistent record (1 per vm) for health metric
 			if (lastHealthMetric != null
-					&& lastHealthMetric.persistentId != 0) {
+					&& lastHealthMetric.persistentId != 0 ) {
 				metric.setPersistentId(lastHealthMetric.persistentId);
 			}
 			lastHealthMetric = metric;

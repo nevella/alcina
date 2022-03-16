@@ -132,6 +132,8 @@ public class InternalMetricData {
 
 	public void setPersistentId(long id) {
 		persistentId = id;
-		persistent.setId(id);
+		if (persistent != null) {
+			persistent.setId(id);
+		}
 	}
 }
