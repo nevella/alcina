@@ -39,6 +39,7 @@ import com.google.gwt.core.client.GWTBridge;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -54,6 +55,7 @@ import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResol
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
@@ -367,6 +369,10 @@ public abstract class DevHelper {
 		if (configLoaded) {
 			return;
 		}
+		if(prompter instanceof ConsolePrompter && getPropertyFilePath()!=null){
+		((ConsolePrompter) prompter).setDefaultValue(
+				getPropertyFilePath());
+		}
 		Preferences prefs = Preferences.userNodeForPackage(getClass());
 		configPath = null;
 		while (true) {
@@ -461,6 +467,53 @@ public abstract class DevHelper {
 		initLightweightServices();
 	}
 
+	protected void copyTemplates() {
+		{
+			String nonTemplatePath = getPropertyFilePath();
+			if (nonTemplatePath == null) {
+				// not yet configured
+				return;
+			}
+			File nonTemplateFile = new File(nonTemplatePath);
+			if (!nonTemplateFile.exists()) {
+				try {
+					Ax.out("Copying template %s", nonTemplateFile.getName());
+					SEUtilities.copyFile(
+							new File(nonTemplatePath + ".template"),
+							nonTemplateFile);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+		{
+			String nonTemplatePath = getNonVcsJavaTaskFilePath();
+			if (nonTemplatePath == null) {
+				// not yet configured
+				return;
+			}
+			File nonTemplateFile = new File(nonTemplatePath);
+			if (!nonTemplateFile.exists()) {
+				try {
+					Ax.out("Copying template %s", nonTemplateFile.getName());
+					SEUtilities.copyFile(
+							new File(nonTemplatePath + ".template"),
+							nonTemplateFile);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+	}
+
+	protected String getNonVcsJavaTaskFilePath() {
+		return null;
+	}
+
+	protected String getPropertyFilePath() {
+		return null;
+	}
+
 	public abstract DevHelper solidTestEnvSecondHalf();
 
 	public void useMountSshfsFs() {
@@ -525,11 +578,25 @@ public abstract class DevHelper {
 	protected abstract void registerNames(AlcinaWebappConfig config);
 
 	public static class ConsolePrompter implements StringPrompter {
+		private String defaultValue;
+
+		public String getDefaultValue() {
+			return this.defaultValue;
+		}
+
+		public void setDefaultValue(String defaultValue) {
+			this.defaultValue = defaultValue;
+		}
+
 		@Override
 		public String getValue(String prompt) {
-			return SEUtilities.consoleReadline(String.format("%s\n> ", prompt));
+			return defaultValue == null
+					? SEUtilities
+							.consoleReadline(String.format("%s\n> ", prompt))
+					: defaultValue;
 		}
 	}
+
 
 	public static class MessagingWriter extends PrintWriter {
 		private static boolean written;
