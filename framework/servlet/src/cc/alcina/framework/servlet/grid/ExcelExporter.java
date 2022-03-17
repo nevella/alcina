@@ -51,8 +51,11 @@ public class ExcelExporter {
 
 	public static final String CONTEXT_DATES_AS_DATE_TIME = ExcelExporter.class
 			.getName() + ".CONTEXT_DATES_AS_DATE_TIME";
+	public static final String CONTEXT_USE_FIELD_ORDER = ExcelExporter.class
+			.getName() + ".CONTEXT_USE_FIELD_ORDE";
 
 	private static final String DOC_TEMPLATE_XML = "docTemplate.xml";
+	
 
 	private Element sheetTemplate = null;
 
@@ -140,7 +143,8 @@ public class ExcelExporter {
 		}
 		Object o = coll.iterator().next();
 		Class clazz = o.getClass();
-		List<PropertyDescriptor> pds = SEUtilities
+		List<PropertyDescriptor> pds = LooseContext.is(CONTEXT_USE_FIELD_ORDER)?SEUtilities
+				.getPropertyDescriptorsSortedByField(clazz):SEUtilities
 				.getPropertyDescriptorsSortedByName(clazz);
 		List<PdMultiplexer> pdMultis = pds.stream().filter(pd -> !ignorePd(pd))
 				.map(PdMultiplexer::new).sorted().collect(Collectors.toList());
