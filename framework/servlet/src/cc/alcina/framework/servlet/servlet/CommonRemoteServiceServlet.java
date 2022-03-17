@@ -229,14 +229,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			try {
 				MetricLogging.get().start(key);
 				Object result = method.invoke(handler, methodArguments);
-				try {
-					LooseContext.pushWithTrue(key);
-					AlcinaTransient.Support.setTransienceContexts(
-							TransienceContext.CLIENT, TransienceContext.RPC);
-					return ReflectiveSerializer.serialize(result);
-				} finally {
-					LooseContext.pop();
-				}
+				return ReflectiveRemoteServiceHandler.serializeForClient(result);
 			} finally {
 				MetricLogging.get().end(key);
 			}
