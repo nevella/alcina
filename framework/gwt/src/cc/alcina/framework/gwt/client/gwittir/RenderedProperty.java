@@ -8,15 +8,8 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.LooseContext;
 
 public class RenderedProperty {
-	public static String displayName(Property p) {
-		String name = p.has(Display.class) ? p.annotation(Display.class).name()
-				: p.getName();
-		if (LooseContext.has(TextProvider.CONTEXT_NAME_TRANSLATOR)) {
-			name = ((Function<String, String>) LooseContext
-					.get(TextProvider.CONTEXT_NAME_TRANSLATOR))
-							.apply(p.getName());
-		}
-		return name;
+	public static String displayName(Property property) {
+		return TextProvider.get().getLabelText(property.getDefiningType(), property);
 	}
 
 	public static int orderingHint(Property p) {

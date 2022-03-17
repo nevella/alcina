@@ -78,7 +78,7 @@ public class TextProvider {
 	public String getLabelText(AnnotationLocation location) {
 		Display display = location.getAnnotation(Display.class);
 		String rawName = display == null ? location.property.getName()
-				: display.name();
+				: Display.Support.name(location.property,display);
 		if (LooseContext.has(CONTEXT_NAME_TRANSLATOR)) {
 			rawName = ((Function<String, String>) LooseContext
 					.get(CONTEXT_NAME_TRANSLATOR))

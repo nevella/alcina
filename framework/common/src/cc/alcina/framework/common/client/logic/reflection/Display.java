@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.util.CommonUtils;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -72,9 +73,10 @@ public @interface Display {
 	boolean focus() default false;
 
 	String helpText() default "";
-	// FIXME - dirndl.1 - default to "", de-infixd property name
 
-	String name();
+	// FIXME - 2022 - task to remove name() where equal to deinfixed property
+	// name
+	String name() default "";
 
 	// FIXME - dirndl.1 - this should be defined in @Bean (with sections)
 	int orderingHint() default 100;
@@ -98,6 +100,21 @@ public @interface Display {
 	 * annotation presence
 	 */
 	public @interface AllProperties {
+	}
+
+	public static class Support {
+		public static String name(Property property, Display display) {
+			if (display == null) {
+				if (property == null) {
+					return "";
+				} else {
+					return CommonUtils.deInfix(property.getName());
+				}
+			}
+			String name = display.name();
+			return name.isEmpty() ? CommonUtils.deInfix(property.getName())
+					: name;
+		}
 	}
 
 	@Reflected
