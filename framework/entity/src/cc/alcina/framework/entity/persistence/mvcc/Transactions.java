@@ -582,4 +582,8 @@ public class Transactions {
 			return vacuum.getVacuumThread();
 		}
 	}
+
+	public static Map<String, String> primitiveFieldValues(Object object) {
+		return ResourceUtilities.primitiveFieldValues(object);
+	}
 }
