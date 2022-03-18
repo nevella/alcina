@@ -32,13 +32,15 @@ public class ElementLocal extends NodeLocal
 	boolean requiresSync;
 
 	boolean hasUnparsedStyle;
+	
+	private static final  RegExp PERMITTED_TAGS = RegExp.compile("[A-Za-z0-9\\-_]+");
 
 	ElementLocal(DocumentLocal document_Jvm, String tagName) {
 		ownerDocument = document_Jvm;
 		this.tagName = tagName;
-		if (!GWT.isScript()) {
+		if (!GWT.isScript()&&GWT.isClient()) {
 			// . is legal - but gets very confusing with css, so don't permit
-			Preconditions.checkArgument(tagName.matches("[A-Za-z0-9\\-_]+"));
+			Preconditions.checkArgument(PERMITTED_TAGS.exec(tagName)!=null);
 		}
 	}
 

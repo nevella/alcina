@@ -1,8 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.lang.annotation.Annotation;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolver;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -62,4 +65,16 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		directedResolver = parent != null ? parent.directedResolver
 				: new TreeResolver<>(Directed.class, Directed::merge);
 	}
+
+	/*
+	 * very simple caching, but lowers allocation *a lot*
+	 */
+	public Class<? extends DirectedNodeRenderer>
+			resolveModelRenderer(Object model) {
+		return modelRenderers.computeIfAbsent(model.getClass(),
+				clazz -> Registry.query(DirectedNodeRenderer.class)
+						.addKeys(clazz).registration());
+	}
+
+	Map<Class, Class<? extends DirectedNodeRenderer>> modelRenderers = new LinkedHashMap<>();
 }
