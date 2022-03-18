@@ -556,6 +556,8 @@ class ReachabilityData {
 
 		String qualifiedSourceName;
 
+		transient Class clazz;
+
 		Type() {
 		}
 
@@ -579,6 +581,24 @@ class ReachabilityData {
 		public String toString() {
 			return qualifiedSourceName;
 		}
+
+		public Class<?> getType() {
+			if (clazz == null) {
+				try {
+					clazz = Class.forName(qualifiedSourceName);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+			return clazz;
+		}
+
+		public boolean matchesClass(Class clazz) {
+			return qualifiedSourceName.equals(clazz.getCanonicalName());
+		}
+
+
+
 	}
 
 	static class TypeHierarchy {
@@ -603,6 +623,8 @@ class ReachabilityData {
 		 */
 		List<Type> asyncSerializableTypes;
 
+		 String packageName;
+
 		TypeHierarchy() {
 		}
 
@@ -611,6 +633,7 @@ class ReachabilityData {
 				Multiset<JClassType, Set<JClassType>> asyncSerializableTypes,
 				Multiset<JClassType, Set<JClassType>> settableTypes) {
 			type = Type.get(classType);
+			this.packageName=classType.getPackage().getName();
 			this.typeAndSuperTypes = classType.getFlattenedSupertypeHierarchy()
 					.stream().map(Type::get).collect(Collectors.toList());
 			this.subtypes = asList(classType, subtypes);

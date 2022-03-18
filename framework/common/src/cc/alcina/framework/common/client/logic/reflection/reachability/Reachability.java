@@ -13,18 +13,9 @@ public class Reachability {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE })
-	public @interface Entry {
-		Rule[] exclude() default {};
-
-		Rule[] explain() default {};
-
-		Rule[] include() default {};
-	}
-
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE })
 	public @interface Rule {
+		Action action();
+
 		Class[] classes() default {};
 
 		String packageName() default "";
@@ -32,15 +23,24 @@ public class Reachability {
 		String reason() default "";
 
 		Class[] subtypes() default {};
+
+	}
+
+	public enum Action {
+		INCLUDE, EXCLUDE
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE })
 	public @interface Rules {
-		Class<? extends RuleSet>[] ruleSets() default {};
+		Rule[] value() default {};
 
-		Entry[] value() default {};
+		/*
+		 * ruleSets are processed after directly reached rules - to order them
+		 * before, encapsulate the rules in a ruleset
+		 */
+		Class<? extends RuleSet>[] ruleSets() default {};
 	}
 
 	/*

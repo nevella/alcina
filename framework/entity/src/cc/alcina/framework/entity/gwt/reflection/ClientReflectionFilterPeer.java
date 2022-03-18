@@ -29,6 +29,8 @@ public interface ClientReflectionFilterPeer {
 	default Boolean emitType(JClassType type, String moduleName) {
 		return null;
 	}
+	
+	
 
 	default Multiset<String, Set<JClassType>> getLegacyModuleTypeAssignments(
 			Stream<JClassType> compilationTypes) {

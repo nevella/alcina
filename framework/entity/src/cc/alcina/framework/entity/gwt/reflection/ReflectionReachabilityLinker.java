@@ -72,6 +72,8 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypesReasons;
 public class ReflectionReachabilityLinker extends Linker {
 	static int pass = 1;
 
+	private ReachabilityLinkerPeer peer;
+
 	@Override
 	public String getDescription() {
 		return "Calculates reachable reflective classes";
@@ -86,6 +88,7 @@ public class ReflectionReachabilityLinker extends Linker {
 			ArtifactSet artifacts, boolean onePermutation) {
 		SortedSet<StandardCompilationResult> compilationResults = artifacts
 				.find(StandardCompilationResult.class);
+		
 		// if obf, ignore for reachability filtering
 		// TODO - 2022 - obf probably elides because of the getNames()
 		// computation - check
@@ -106,6 +109,13 @@ public class ReflectionReachabilityLinker extends Linker {
 			LegacyModuleAssignments legacyModuleAssignments = LegacyModuleAssignments
 					.fromArtifact(artifacts);
 			reflectableTypes.buildLookup();
+			try {
+				this.peer = ReachabilityData.linkerPeerClass.getConstructor()
+						.newInstance();
+				this.peer.reflectableTypes=reflectableTypes;
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
 			boolean delta = false;
 			com.google.gwt.dev.Compiler.recompile = false;
 			List<Integer> fragmentIds = idToName.getKeysInDependencyOrder();
@@ -201,6 +211,7 @@ public class ReflectionReachabilityLinker extends Linker {
 			appRegistrations.entries.stream()
 					.filter(e -> e.isVisible(visibleTypes))
 					.filter(e -> !dependencyModuleTypes.contains(e.registered))
+					.filter(e->peer.permit(e.registered))
 					.forEach(e -> {
 						outgoingReflectedModuleTypes.add(e.registered);
 						if (previouslyVisibleTypes.add(e.registered)) {
@@ -301,7 +312,7 @@ public class ReflectionReachabilityLinker extends Linker {
 				.collect(Collectors.toList());
 		logger.log(TreeLogger.Type.INFO, Ax.format("Reachability [%s] - :: %s",
 				moduleName, split.toSizes()));
-		int maxEmit = Integer.getInteger("reachability.emit", 5);
+		int maxEmit = Integer.getInteger("reachability.emit", 25);
 		addedFromRegistration.stream().limit(maxEmit).forEach(t -> {
 			logger.log(TreeLogger.Type.INFO, Ax.format("\t[r]: %s", t));
 		});
