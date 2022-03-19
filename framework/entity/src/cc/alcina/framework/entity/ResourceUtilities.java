@@ -45,6 +45,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -206,31 +207,9 @@ public class ResourceUtilities {
 			boolean withShallowCopiedCollections,
 			Set<String> ignoreFieldNames) {
 		try {
-			List<Field> allFields = new ArrayList<Field>();
-			Class c = t.getClass();
-			while (c != Object.class) {
-				Field[] fields = c.getDeclaredFields();
-				for (Field field : fields) {
-					if (Modifier.isStatic(field.getModifiers())) {
-						continue;
-					}
-					if (Modifier.isFinal(field.getModifiers())) {
-						continue;
-					}
-					if (Modifier.isTransient(field.getModifiers())
-							&& !withTransients) {
-						continue;
-					}
-					if (ignoreFieldNames != null
-							&& ignoreFieldNames.contains(field.getName())) {
-						continue;
-					}
-					field.setAccessible(true);
-					allFields.add(field);
-				}
-				c = c.getSuperclass();
-			}
-			for (Field field : allFields) {
+			List<Field> fields = getFieldsForCopyOrLog(t, withTransients,
+					ignoreFieldNames);
+			for (Field field : fields) {
 				Object value = field.get(t);
 				boolean project = false;
 				if (value != null && withShallowCopiedCollections) {
@@ -265,6 +244,35 @@ public class ResourceUtilities {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	protected static <T> List<Field> getFieldsForCopyOrLog(T t,
+			boolean withTransients, Set<String> ignoreFieldNames) {
+		List<Field> result = new ArrayList<>();
+		Class c = t.getClass();
+		while (c != Object.class) {
+			Field[] fields = c.getDeclaredFields();
+			for (Field field : fields) {
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
+				}
+				if (Modifier.isFinal(field.getModifiers())) {
+					continue;
+				}
+				if (Modifier.isTransient(field.getModifiers())
+						&& !withTransients) {
+					continue;
+				}
+				if (ignoreFieldNames != null
+						&& ignoreFieldNames.contains(field.getName())) {
+					continue;
+				}
+				field.setAccessible(true);
+				result.add(field);
+			}
+			c = c.getSuperclass();
+		}
+		return result;
 	}
 
 	public static String get(Class clazz, String propertyName) {
@@ -994,5 +1002,21 @@ public class ResourceUtilities {
 		constructor.setAccessible(true);
 		T instance = constructor.newInstance();
 		return instance;
+	}
+
+	public static Map<String, String> primitiveFieldValues(Object t) {
+		try {
+			Map<String, String> map = new LinkedHashMap<>();
+			List<Field> fields = getFieldsForCopyOrLog(t, false, null);
+			for (Field field : fields) {
+				if (GraphProjection.isPrimitiveOrDataClass(field.getType())) {
+					Object value = field.get(t);
+					map.put(field.getName(), String.valueOf(value));
+				}
+			}
+			return map;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 }

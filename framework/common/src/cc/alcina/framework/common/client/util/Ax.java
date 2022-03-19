@@ -180,4 +180,14 @@ public class Ax {
 	public static double twoPlaces(double d) {
 		return CommonUtils.roundNumeric(d, 2);
 	}
+
+	public static String displayName(Object object) {
+		if (object == null) {
+			return null;
+		}
+		if (object instanceof HasDisplayName) {
+			return ((HasDisplayName) object).displayName();
+		}
+		return friendly(object);
+	}
 }

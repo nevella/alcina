@@ -283,18 +283,31 @@ public abstract class DomainViews {
 			Collection<LiveTree> liveTrees = trees.values();
 			Transaction.end();
 			Transaction.join(task.modelChange.preCommit);
-			liveTrees
-					.forEach(tree -> tree.index(task.modelChange.event, false));
-			Transaction.end();
-			Transaction.join(task.modelChange.postCommit);
-			liveTrees.forEach(tree -> tree.index(task.modelChange.event, true));
+			/*
+			 * Ordering - we have to invalidate trees *first* - so they fire a
+			 * full invalidation event rather than partial
+			 * 
+			 * In particular, the client relies on dtr position to know if it
+			 * should refresh - but the dtr pos of freshly generated,
+			 * invalidated tree will be the same as that of transforms affecting
+			 * the 'old' tree. So the client can't use logic 'my dtrpos is
+			 * earlier than the earliest of the new tree' - because it isn't.
+			 * 
+			 * It could use 'my tree first dtr pos is earlier than the server
+			 * tree earliest pos' - but that would require sending two over the
+			 * wire. So this way is better (invalidate trees first).
+			 */
 			task.modelChange.event.getTransformPersistenceToken()
 					.getTransformCollation()
 					.query(PersistentImpl.getImplementation(DomainView.class))
 					.stream().filter(QueryResult::hasNoDeleteTransform)
 					.filter(this::filterViewTransformCollation)
-					.forEach(qr -> onViewModified((DomainView) qr.getEntity()));
-			;
+					.forEach(qr -> onViewModified(qr.<DomainView> getEntity()));
+			liveTrees
+					.forEach(tree -> tree.index(task.modelChange.event, false));
+			Transaction.end();
+			Transaction.join(task.modelChange.postCommit);
+			liveTrees.forEach(tree -> tree.index(task.modelChange.event, true));
 			Transaction.end();
 			break;
 		// throw new UnsupportedOperationException();

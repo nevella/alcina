@@ -122,6 +122,7 @@ public class MvccObjectVersionsEntity<T extends Entity>
 
 	@Override
 	protected void onVersionCreation(ObjectVersion<T> version) {
+		super.onVersionCreation(version);
 		if (version.writeable) {
 			ThreadlocalTransformManager.cast()
 					.registerDomainObject(version.object, true);
