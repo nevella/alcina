@@ -106,7 +106,7 @@ public class LiveTree {
 	 * projections which should listen...
 	 *
 	 * In any case, 'entityPaths' causing treepath deltas to fire is a good
-	 * first path
+	 * first path/step
 	 */
 	private Multimap<Entity, List<LiveNode>> entityNodes = new Multimap<>();
 
@@ -370,7 +370,7 @@ public class LiveTree {
 		toRemove.forEach(context::removePathChange);
 		// Phase 2 - cascade collated changes. A linked hashset can, after all,
 		// function as a FIFO queue.
-//		root.trace(!context.treeCreation);
+		// root.trace(!context.treeCreation);
 		do {
 			Iterator<TreePath<LiveNode>> iterator = pathChanged.iterator();
 			TreePath<LiveNode> pathChange = iterator.next();
