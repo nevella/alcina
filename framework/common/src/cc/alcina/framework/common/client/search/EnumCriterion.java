@@ -22,6 +22,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.HasDisplayName.HasDisplayNameRenderer;
 import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
@@ -135,7 +136,7 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		@Override
 		public AbstractBoundWidget createEditor() {
 			return new FlatSearchSelector(enumClass, 1,
-					FriendlyEnumRenderer.INSTANCE,
+					HasDisplayNameRenderer.INSTANCE,
 					() -> Arrays.asList(enumClass.getEnumConstants()));
 		}
 
