@@ -51,6 +51,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
@@ -486,16 +487,34 @@ class ReachabilityData {
 	static class Reason {
 		String reason;
 
+		Category category;
+
+		enum Category {
+			CODE, REGISTRY, RPC, HIERARCHY
+		}
+
 		Reason() {
 		}
 
-		Reason(int fragmentNumber, String fragmentName, String reason) {
-			this.reason = Ax.format("%s - %s - %s", fragmentNumber,
-					fragmentName, reason);
+		Reason(int fragmentNumber, String fragmentName, Category category) {
+			this(fragmentNumber, fragmentName, category, null);
+		}
+
+		Reason(int fragmentNumber, String fragmentName, Category category,
+				String reason) {
+			this.category = category;
+			FormatBuilder fb = new FormatBuilder().separator("-");
+			fb.appendIfNotBlank(fragmentNumber, fragmentName,
+					Ax.friendly(category), reason);
+			this.reason = fb.toString();
 		}
 
 		Reason(String reason) {
 			this.reason = reason;
+			String[] splits = reason.split(" - ");
+			if(splits.length>2){
+				category=CommonUtils.getEnumValueOrNull(Category.class, splits[2],true,null);
+			}
 		}
 
 		@Override
@@ -596,15 +615,16 @@ class ReachabilityData {
 		public boolean matchesClass(Class clazz) {
 			return qualifiedSourceName.equals(clazz.getCanonicalName());
 		}
-
-
-
 	}
 
 	static class TypeHierarchy {
 		Type type;
 
 		List<Type> typeAndSuperTypes;
+		
+		Stream<Type> typeAndSuperTypes(){
+			return typeAndSuperTypes.stream();
+		}
 
 		List<Type> subtypes;
 
@@ -616,30 +636,30 @@ class ReachabilityData {
 		List<Type> settableTypes;
 
 		/*
-		 * Types which are parameterized type arguments of AsyncCallback method
+		 * Types which are parameterized type arguments of ReflectiveRpc method 
 		 * arguments - so login(LoginRequest request,
-		 * AsyncCallback<LoginResponse> callback) has asyncSerializableType
+		 * AsyncCallback<LoginResponse> callback) has rpcSerializableTypes and LoginResponse
 		 * LoginResponse
 		 */
-		List<Type> asyncSerializableTypes;
+		List<Type> rpcSerializableTypes;
 
-		 String packageName;
+		String packageName;
 
 		TypeHierarchy() {
 		}
 
 		TypeHierarchy(JClassType classType,
 				Multiset<JClassType, Set<JClassType>> subtypes,
-				Multiset<JClassType, Set<JClassType>> asyncSerializableTypes,
+				Multiset<JClassType, Set<JClassType>> rpcSerializableTypes,
 				Multiset<JClassType, Set<JClassType>> settableTypes) {
 			type = Type.get(classType);
-			this.packageName=classType.getPackage().getName();
+			this.packageName = classType.getPackage().getName();
 			this.typeAndSuperTypes = classType.getFlattenedSupertypeHierarchy()
 					.stream().map(Type::get).collect(Collectors.toList());
 			this.subtypes = asList(classType, subtypes);
 			this.settableTypes = asList(classType, settableTypes);
-			this.asyncSerializableTypes = asList(classType,
-					asyncSerializableTypes);
+			this.rpcSerializableTypes = asList(classType,
+					rpcSerializableTypes);
 		}
 
 		private List<Type> asList(JClassType classType,
@@ -698,6 +718,14 @@ class ReachabilityData {
 
 		void generateLookup() {
 			typesReasons.forEach(tr -> byReason.put(tr.reason, tr));
+		}
+	}
+
+	public static <T> T newInstance(Class<? extends T> clazz) {
+		try {
+			return clazz.getConstructor().newInstance();
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
 		}
 	}
 }

@@ -3,8 +3,11 @@ package cc.alcina.framework.entity.gwt.reflection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.Stack;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.Action;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.Rule;
@@ -30,7 +33,42 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
  *
  */
 public class RulesFilter extends ReachabilityLinkerPeer {
-	List<Rule> rules = new ArrayList<>();
+	List<RuleFilter> rules = new ArrayList<>();
+
+	class RuleFilter {
+		private Rule rule;
+
+		private Set<Type> directTypes;
+
+		private Set<Type> subtypeHierarchyTypes;
+
+		public RuleFilter(Rule rule) {
+			this.rule = rule;
+			this.directTypes = Arrays.stream(rule.classes()).map(Type::get)
+					.filter(Objects::nonNull).collect(Collectors.toSet());
+			this.subtypeHierarchyTypes = Arrays.stream(rule.subtypes())
+					.map(Type::get).filter(Objects::nonNull)
+					.map(reflectableTypes.byType::get).filter(Objects::nonNull)
+					.flatMap(TypeHierarchy::typeAndSuperTypes)
+					.collect(Collectors.toSet());
+		}
+
+		public Optional<Rule> match(Type type) {
+			TypeHierarchy hierarchy = reflectableTypes.byType.get(type);
+			if (rule.packageName().length() > 0) {
+				if (hierarchy.packageName.startsWith(rule.packageName())) {
+					return Optional.of(rule);
+				}
+			}
+			if (directTypes.contains(type)) {
+				return Optional.of(rule);
+			}
+			if (subtypeHierarchyTypes.contains(type)) {
+				return Optional.of(rule);
+			}
+			return Optional.empty();
+		}
+	}
 
 	public RulesFilter() {
 		populateRulesList();
@@ -42,7 +80,8 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 		while (ruleBearers.size() > 0) {
 			Class<?> bearer = ruleBearers.pop();
 			Rules rules = bearer.getAnnotation(Rules.class);
-			Arrays.stream(rules.value()).forEach(this.rules::add);
+			Arrays.stream(rules.value()).map(RuleFilter::new)
+					.forEach(this.rules::add);
 			Arrays.stream(rules.ruleSets()).forEach(ruleBearers::push);
 		}
 	}
@@ -60,30 +99,18 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 
 	private Optional<Rule> getMatch(Type type) {
 		TypeHierarchy hierarchy = reflectableTypes.byType.get(type);
-		for (Rule rule : rules) {
-			if (rule.packageName().length() > 0) {
-				if (hierarchy.packageName.startsWith(rule.packageName())) {
-					return Optional.of(rule);
-				}
-			}
-			if (rule.classes().length > 0) {
-				for (int idx = 0; idx < rule.classes().length; idx++) {
-					if (type.matchesClass(rule.classes()[idx])) {
-						return Optional.of(rule);
-					}
-				}
-			}
-			if (rule.subtypes().length > 0) {
-				for (int idx = 0; idx < rule.subtypes().length; idx++) {
-					Class test = rule.subtypes()[idx];
-					for (Type cursor : hierarchy.typeAndSuperTypes) {
-						if (cursor.matchesClass(test)) {
-							return Optional.of(rule);
-						}
-					}
-				}
+		for (RuleFilter filter : rules) {
+			Optional<Rule> match = filter.match(type);
+			if (match.isPresent()) {
+				return match;
 			}
 		}
 		return Optional.empty();
+	}
+
+	@Override
+	public Optional<String> explain(Type type) {
+		Optional<Rule> match = getMatch(type);
+		return match.map(Rule::reason);
 	}
 }
