@@ -61,7 +61,7 @@ public class NodeFactory {
 
 	private Multimap<Class, List<Property>> subCollectionFolders = new Multimap<Class, List<Property>>();
 
-	protected NodeFactory() {
+	public NodeFactory() {
 		super();
 	}
 
@@ -164,7 +164,7 @@ public class NodeFactory {
 		}
 	}
 
-	public static interface NodeCreator {
+	public static interface NodeCreator extends Registration.Ensure {
 		public DomainNode createDomainNode(
 				SourcesPropertyChangeEvents domainObject, NodeFactory factory);
 	}
