@@ -46,16 +46,14 @@ public class TransformHistory {
 
 	public static TransformHistory get(Entity entity) {
 		TransformHistory cached = cache.get().get(entity.toLocator());
-		// If we get passed in an MVCC object, 
-		//  resolve that back to its original class instead of the MVCC generated one
-		Class<?> clazz = null;
-		if (Mvcc.isMvccObject(entity)) {
-			clazz = Mvcc.resolveEntityClass(entity.getClass());
-		} else {
-			clazz = entity.getClass();
-		}
 		return cached != null ? cached
-				: get(clazz, Collections.singleton(entity.getId()));
+				: get(
+						// If we get passed in an MVCC object,
+						// resolve that back to its original class instead of
+						// the MVCC generated
+						// one
+						entity.entityClass(),
+						Collections.singleton(entity.getId()));
 	}
 
 	private static TransformHistory get(Class<?> clazz, Set<Long> ids) {
