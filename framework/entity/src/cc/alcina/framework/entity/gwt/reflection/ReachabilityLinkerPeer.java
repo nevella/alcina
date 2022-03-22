@@ -16,10 +16,17 @@ public abstract class ReachabilityLinkerPeer {
 		public Optional<String> explain(Type type) {
 			return Optional.empty();
 		}
+
+		@Override
+		protected void init(AppReflectableTypes reflectableTypes2) {
+			
+		}
 	}
 
 	protected AppReflectableTypes reflectableTypes;
 	public abstract boolean permit(Type type);
 	
 	public abstract Optional<String> explain(Type type);
+
+	protected abstract void init(AppReflectableTypes reflectableTypes2);
 }

@@ -7,6 +7,7 @@ import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -65,12 +66,7 @@ class ReachabilityData {
 
 	static Class<? extends ReachabilityLinkerPeer> linkerPeerClass;
 
-	public static File getReachabilityLogFile(String fileName, Date date) {
-		String logFolder = dataFolder + "/log";
-		new File(logFolder).mkdirs();
-		return new File(Ax.format("%s/%s", logFolder, Ax.format(fileName,
-				CommonUtils.formatDate(date, DateStyle.TIMESTAMP))));
-	}
+	
 
 	private static Set<JClassType> computeImplementations(
 			JTypeParameter typeParameter,
@@ -484,13 +480,18 @@ class ReachabilityData {
 
 	@JsonSerialize(using = ReasonSerializer.class)
 	@JsonDeserialize(using = ReasonDeserializer.class)
-	static class Reason {
+	static class Reason implements Comparable<Reason> {
 		String reason;
 
 		Category category;
 
 		enum Category {
 			CODE, REGISTRY, RPC, HIERARCHY
+		}
+
+		@Override
+		public String toString() {
+			return reason;
 		}
 
 		Reason() {
@@ -512,8 +513,9 @@ class ReachabilityData {
 		Reason(String reason) {
 			this.reason = reason;
 			String[] splits = reason.split(" - ");
-			if(splits.length>2){
-				category=CommonUtils.getEnumValueOrNull(Category.class, splits[2],true,null);
+			if (splits.length > 2) {
+				category = CommonUtils.getEnumValueOrNull(Category.class,
+						splits[2], true, null);
 			}
 		}
 
@@ -525,6 +527,11 @@ class ReachabilityData {
 		@Override
 		public int hashCode() {
 			return reason.hashCode();
+		}
+
+		@Override
+		public int compareTo(Reason o) {
+			return reason.compareTo(o.reason);
 		}
 	}
 
@@ -621,12 +628,16 @@ class ReachabilityData {
 		Type type;
 
 		List<Type> typeAndSuperTypes;
-		
-		Stream<Type> typeAndSuperTypes(){
+
+		Stream<Type> typeAndSuperTypes() {
 			return typeAndSuperTypes.stream();
 		}
 
 		List<Type> subtypes;
+
+		public Stream<Type> subtypes() {
+			return this.subtypes.stream();
+		}
 
 		/*
 		 * Types which are either arguments or parameterized type arguments of
@@ -636,10 +647,10 @@ class ReachabilityData {
 		List<Type> settableTypes;
 
 		/*
-		 * Types which are parameterized type arguments of ReflectiveRpc method 
+		 * Types which are parameterized type arguments of ReflectiveRpc method
 		 * arguments - so login(LoginRequest request,
-		 * AsyncCallback<LoginResponse> callback) has rpcSerializableTypes and LoginResponse
-		 * LoginResponse
+		 * AsyncCallback<LoginResponse> callback) has rpcSerializableTypes and
+		 * LoginResponse LoginResponse
 		 */
 		List<Type> rpcSerializableTypes;
 
@@ -658,8 +669,7 @@ class ReachabilityData {
 					.stream().map(Type::get).collect(Collectors.toList());
 			this.subtypes = asList(classType, subtypes);
 			this.settableTypes = asList(classType, settableTypes);
-			this.rpcSerializableTypes = asList(classType,
-					rpcSerializableTypes);
+			this.rpcSerializableTypes = asList(classType, rpcSerializableTypes);
 		}
 
 		private List<Type> asList(JClassType classType,
@@ -694,10 +704,20 @@ class ReachabilityData {
 		}
 	}
 
-	static class TypesReason {
+	static class TypesReason implements Comparable<TypesReason> {
 		Reason reason;
 
 		List<Type> types = new ArrayList<>();
+
+		@Override
+		public int compareTo(TypesReason o) {
+			return reason.compareTo(o.reason);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s - %s types", reason, types.size());
+		}
 	}
 
 	static class TypesReasons {
@@ -718,6 +738,11 @@ class ReachabilityData {
 
 		void generateLookup() {
 			typesReasons.forEach(tr -> byReason.put(tr.reason, tr));
+		}
+
+		public void sort() {
+			Collections.sort(typesReasons);
+			typesReasons.forEach(tr->Collections.sort(tr.types));
 		}
 	}
 

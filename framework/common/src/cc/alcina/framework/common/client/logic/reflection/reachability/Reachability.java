@@ -16,13 +16,21 @@ public class Reachability {
 	public @interface Rule {
 		Action action();
 
+		String reason() default "";
+
+		Condition condition();
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE })
+	public @interface Condition {
 		Class[] classes() default {};
 
 		String packageName() default "";
 
-		String reason() default "";
-
 		Class[] subtypes() default {};
+		Class<? extends RuleSet> ruleSet() default RuleSet.Empty.class;
 
 	}
 
@@ -35,17 +43,13 @@ public class Reachability {
 	@Target({ ElementType.TYPE })
 	public @interface Rules {
 		Rule[] value() default {};
-
-		/*
-		 * ruleSets are processed after directly reached rules - to order them
-		 * before, encapsulate the rules in a ruleset
-		 */
-		Class<? extends RuleSet>[] ruleSets() default {};
 	}
 
 	/*
 	 * Annotation carrier class, assists composition of rules
 	 */
 	public static interface RuleSet {
+		public static class Empty implements RuleSet {
+		}
 	}
 }
