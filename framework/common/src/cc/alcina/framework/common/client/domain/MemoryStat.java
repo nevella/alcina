@@ -1,10 +1,14 @@
 package cc.alcina.framework.common.client.domain;
 
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.LinkedHashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
@@ -38,35 +42,123 @@ public class MemoryStat {
 		this.objectMemory = objectMemory;
 	}
 
-	public String toString(Predicate<Class> classFilter) {
-		FormatBuilder builder = new FormatBuilder();
-		builder.indent(depth() * 4);
-		builder.line(root.toString());
-		// builder.indent(depth() * 4 + 2);
-		// builder.line(counter.toString());
-		Counter deep = new Counter();
-		deep.accumulate(this);
-		builder.line(deep.toString());
-		if (classFilter != null && deep.perClassCount.keySet().stream()
-				.anyMatch(classFilter::test)) {
-			builder.line("Per-class");
-			builder.line("========");
-			deep.perClassCount.entrySet().stream()
-					.filter(e -> classFilter.test(e.getKey()))
-					.forEach(e -> builder.line("%s   %s   %s",
-							CommonUtils.padStringRight(
-									String.valueOf(e.getValue()), 10, ' '),
-							CommonUtils.padStringRight(
-									String.valueOf(
+	boolean hasChildren() {
+		return children.size() > 0;
+	}
+
+	public Query query() {
+		return new Query(this);
+	}
+
+	public enum Order {
+		NAME, ENCOUNTER, SIZE_REVERSED
+	}
+
+	public static class Query {
+		private Predicate<Class> classFilter;
+
+		private boolean leafOnly;
+
+		private Order order = Order.ENCOUNTER;
+
+		private MemoryStat from;
+
+		public Query(MemoryStat from) {
+			this.from = from;
+		}
+
+		public Query withClassFilter(Predicate<Class> classFilter) {
+			this.classFilter = classFilter;
+			return this;
+		}
+
+		public Query withLeafOnly(boolean leafOnly) {
+			this.leafOnly = leafOnly;
+			return this;
+		}
+
+		public Query withOrder(Order order) {
+			this.order = order;
+			return this;
+		}
+
+		static class Cmp implements Comparator<MemoryStat> {
+			private Order order;
+
+			public Cmp(Order order) {
+				this.order = order;
+			}
+
+			@Override
+			public int compare(MemoryStat o1, MemoryStat o2) {
+				switch (order) {
+				case ENCOUNTER:
+					return 0;
+				case NAME:
+					return o1.root.toString().compareTo(o2.root.toString());
+				case SIZE_REVERSED:
+					Counter c1 = new Counter();
+					c1.accumulate(o1);
+					Counter c2 = new Counter();
+					c2.accumulate(o2);
+					return -CommonUtils.compareLongs(c1.size,
+							c2.size);
+				default:
+					throw new UnsupportedOperationException();
+				}
+			}
+		}
+
+		List<MemoryStat> stats = new ArrayList<>();
+
+		public String execute() {
+			LinkedList<MemoryStat> stack = new LinkedList<>();
+			// push, pop from top to preserve encounter order
+			stack.addFirst(from);
+			Cmp cmp = new Cmp(order);
+			while (stack.size() > 0) {
+				MemoryStat stat = stack.removeFirst();
+				// reverse, because adding to the front of the list - want the
+				// 1st element of non-reversed sort added last
+				stats.add(stat);
+				stat.children.stream().sorted(cmp.reversed())
+						.forEach(stack::addFirst);
+			}
+			if (leafOnly) {
+				stats.removeIf(MemoryStat::hasChildren);
+				Collections.sort(stats, cmp);
+			}
+			FormatBuilder builder = new FormatBuilder();
+			builder.appendPadLeft(14, "Size");
+			builder.appendPadLeft(10, "Count");
+			builder.appendBlock("  Object");
+			builder.fill(100, "=");
+			for (MemoryStat stat : stats) {
+				Counter deep = new Counter();
+				deep.accumulate(stat);
+				builder.appendPadLeft(14, deep.size);
+				builder.appendPadLeft(10, deep.count);
+				builder.appendPadLeft(stat.depth()*2+2, "");
+				builder.appendBlock(stat.root.toString());
+				if (classFilter != null && deep.perClassCount.keySet().stream()
+						.anyMatch(classFilter::test)) {
+					builder.indent(stat.depth() * 4 + 25);
+					builder.line("Per-class");
+					builder.line("========");
+					deep.perClassCount.entrySet().stream()
+							.filter(e -> classFilter.test(e.getKey()))
+							.forEach(e -> builder.line("%s   %s   %s",
+									CommonUtils.padStringRight(
+											String.valueOf(e.getValue()), 10,
+											' '),
+									CommonUtils.padStringRight(String.valueOf(
 											deep.perClassSize.get(e.getKey())),
-									10, ' '),
-							e.getKey().getSimpleName()));
+											10, ' '),
+									e.getKey().getSimpleName()));
+				}
+			}
+			return builder.toString();
 		}
-		builder.indent(0);
-		for (MemoryStat stat : children) {
-			builder.appendIfNotBlank(stat.toString(classFilter));
-		}
-		return builder.toString();
 	}
 
 	int depth() {

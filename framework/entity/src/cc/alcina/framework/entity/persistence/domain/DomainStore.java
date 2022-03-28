@@ -307,6 +307,15 @@ public class DomainStore implements IDomainStore {
 		graphProjection = new GraphProjection();
 	}
 
+	@Override
+	public MemoryStat addMemoryStats(MemoryStat parent) {
+		MemoryStat self = new MemoryStat(this);
+		parent.addChild(self);
+		self.objectMemory.walkStats(this, self.counter, o -> o == this
+				|| !self.objectMemory.isMemoryStatProvider(o.getClass()));
+		return self;
+	}
+
 	public void appShutdown() {
 		if (isWritable() && queryPool != null) {
 			queryPool.pool.shutdown();
@@ -362,6 +371,11 @@ public class DomainStore implements IDomainStore {
 		 */
 		cache.addMemoryStats(top);
 		getDomainDescriptor().addMemoryStats(top);
+		/*
+		 * Add self at end (only memory not reachable from
+		 * lookups/projections/entity cache)
+		 */
+		addMemoryStats(top);
 		return top;
 	}
 
