@@ -1,5 +1,8 @@
 package cc.alcina.framework.servlet.publication;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.dom.DomDoc;
@@ -15,21 +18,14 @@ public class DirndlRenderer {
 		return new DirndlRenderer();
 	}
 
-	private Class styleRelativeClass;
-
-	private String styleRelativeFilename;
+	private List<StylePath> stylePaths = new ArrayList<>();
 
 	private Model renderable;
 
-	public DirndlRenderer withRenderable(Model renderable) {
-		this.renderable = renderable;
-		return this;
-	}
-
-	public DirndlRenderer withStyleFile(Class<?> styleRelativeClass,
+	public DirndlRenderer addStyleFile(Class<?> styleRelativeClass,
 			String styleRelativeFilename) {
-		this.styleRelativeClass = styleRelativeClass;
-		this.styleRelativeFilename = styleRelativeFilename;
+		stylePaths
+				.add(new StylePath(styleRelativeClass, styleRelativeFilename));
 		return this;
 	}
 
@@ -40,13 +36,30 @@ public class DirndlRenderer {
 		DomDoc doc = DomDoc.basicHtmlDoc();
 		DomNode div = doc.html().body().builder().tag("div").append();
 		div.setInnerXml(outerHtml);
-		if (styleRelativeClass != null) {
-			String style = ResourceUtilities.read(styleRelativeClass,
-					styleRelativeFilename);
+		stylePaths.forEach(p -> {
+			String style = ResourceUtilities.read(p.styleRelativeClass,
+					p.styleRelativeFilename);
 			if (Ax.notBlank(style)) {
 				doc.html().appendStyleNode(style);
 			}
-		}
+		});
 		return doc;
+	}
+
+	public DirndlRenderer withRenderable(Model renderable) {
+		this.renderable = renderable;
+		return this;
+	}
+
+	static class StylePath {
+		Class<?> styleRelativeClass;
+
+		String styleRelativeFilename;
+
+		public StylePath(Class<?> styleRelativeClass,
+				String styleRelativeFilename) {
+			this.styleRelativeClass = styleRelativeClass;
+			this.styleRelativeFilename = styleRelativeFilename;
+		}
 	}
 }

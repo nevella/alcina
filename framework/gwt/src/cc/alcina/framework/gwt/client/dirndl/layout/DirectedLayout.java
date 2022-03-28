@@ -30,7 +30,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -254,9 +253,7 @@ public class DirectedLayout {
 			Class<? extends DirectedNodeRenderer> rendererClass = directed
 					.renderer();
 			if (rendererClass == ModelClassNodeRenderer.class) {
-				rendererClass = 
-						resolver.resolveModelRenderer(model)
-						;
+				rendererClass = resolver.resolveModelRenderer(model);
 			}
 			renderer = Reflections.newInstance(rendererClass);
 			return renderer;

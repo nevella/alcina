@@ -18,14 +18,64 @@ import cc.alcina.framework.gwt.client.dirndl.layout.SimpleTable.Transform.LModel
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class SimpleTable {
+	public static class KeyValues {
+		List<Element> elements = new ArrayList<>();
+
+		void add(String key, Object value) {
+			elements.add(new Element(key, value.toString()));
+		}
+
+		static class Element {
+			String key;
+
+			String value;
+
+			Element(String key, String value) {
+				super();
+				this.key = key;
+				this.value = value;
+			}
+		}
+	}
+
 	@Reflected
 	public static class Transform implements ModelTransform<Object, LModel> {
+		@Override
+		public Transform.LModel apply(Object t) {
+			if (t instanceof Bindable) {
+				return LModel.ofBindable((Bindable) t);
+			} else if (t instanceof KeyValues) {
+				return LModel.ofKeyValues((KeyValues) t);
+			} else {
+				throw new UnsupportedOperationException();
+			}
+		}
+
 		@Directed(tag = "table")
 		public static class LModel extends Model {
-			public LModel() {
+			public static LModel ofBindable(Bindable model) {
+				LModel result = new LModel();
+				List<Property> properties = Reflections.at(model.getClass())
+						.properties();
+				result.rows = properties.stream()
+						.filter(Property::provideNotDefaultIgnoreable)
+						.map(r -> new Row(r, model))
+						.collect(Collectors.toList());
+				return result;
+			}
+
+			public static LModel ofKeyValues(KeyValues kvs) {
+				LModel result = new LModel();
+				result.rows = kvs.elements.stream()
+						.map(kv -> new Row(kv.key, kv.value))
+						.collect(Collectors.toList());
+				return result;
 			}
 
 			private List<LModel.Row> rows;
+
+			public LModel() {
+			}
 
 			@Directed
 			public List<LModel.Row> getRows() {
@@ -34,22 +84,12 @@ public class SimpleTable {
 
 			@Directed(tag = "tr")
 			public static class Row extends Model {
-				public Row() {
-				}
-
 				private String key;
 
-				@Directed(tag = "th")
-				public String getKey() {
-					return this.key;
-				}
-
-				@Directed(tag = "td")
-				public String getValue() {
-					return this.value;
-				}
-
 				private String value;
+
+				public Row() {
+				}
 
 				public Row(Property property, Bindable model) {
 					key = CommonUtils.titleCase(property.getName());
@@ -70,54 +110,16 @@ public class SimpleTable {
 					this.key = key;
 					this.value = value;
 				}
-			}
 
-			public static LModel ofBindable(Bindable model) {
-				LModel result = new LModel();
-				List<Property> properties = Reflections.at(model.getClass())
-						.properties();
-				result.rows = properties.stream().map(r -> new Row(r, model))
-						.collect(Collectors.toList());
-				return result;
-			}
+				@Directed(tag = "th")
+				public String getKey() {
+					return this.key;
+				}
 
-			public static LModel ofKeyValues(KeyValues kvs) {
-				LModel result = new LModel();
-				result.rows = kvs.elements.stream()
-						.map(kv -> new Row(kv.key, kv.value))
-						.collect(Collectors.toList());
-				return result;
-			}
-		}
-
-		@Override
-		public Transform.LModel apply(Object t) {
-			if (t instanceof Bindable) {
-				return LModel.ofBindable((Bindable) t);
-			} else if (t instanceof KeyValues) {
-				return LModel.ofKeyValues((KeyValues) t);
-			} else {
-				throw new UnsupportedOperationException();
-			}
-		}
-	}
-
-	public static class KeyValues {
-		List<Element> elements = new ArrayList<>();
-
-		void add(String key, Object value) {
-			elements.add(new Element(key, value.toString()));
-		}
-
-		static class Element {
-			String key;
-
-			String value;
-
-			Element(String key, String value) {
-				super();
-				this.key = key;
-				this.value = value;
+				@Directed(tag = "td")
+				public String getValue() {
+					return this.value;
+				}
 			}
 		}
 	}
