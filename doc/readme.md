@@ -1,10 +1,13 @@
 # Welcome to Alcina
 
 Named for an opera by the baroque composer Georg Friederich Händel, Alcina is an integrated set of 
-software components that collectively implement a particular client/server programming idiom.
+software components that collectively implement a "semi-declarative" client/server programming idiom.
 
-The idiom is named "semi-declarative", and it encourages granular programming in certain key areas
-of the client/server software stack, with the end goal being to minimise replication, reuse domain 
+Semi-declarative code is an attempt to reconcile the virtues of declarative and imperative programming - 
+the basic philosophy being "declarative for composition" - say, composing a UI from an annotated object tree 
+rather than widget.add methods - "imperative for logic" - falling back on imperative code to resolve more
+ complex logical decisions. This encourages granular programming in certain key areas
+of the client/server software stack, and helps to minimise code replication, reuse domain 
 logic and maximise (within limits) performance.
 
 The main components of Alcina are (in no particular order):
@@ -22,13 +25,15 @@ Conversion of all mutations of relational persistent objects (entities) in a gra
 sequence of operations ("transforms"). This has the following benefits:
 *	Low-code **relational** offline support. Although many systems (Firebase et al.) offer simple key/value offline
 	browser support, relational offline support is significantly more complex and still has few implementations
-	 (Apple CoreData is another).
+	 (Apple CoreData is another)
 *	Undo support	 
-*	Reduces difficulties involved in EJB manipulations of highly connected graphs.
-*	Provides a natural way to program cancellable edits (via AdjunctTransformManager (client) (v2 in progress)).
+*	Reduces difficulties involved in EJB manipulations of highly connected graphs
+*	Provides a natural way to program cancellable edits (via AdjunctTransformManager (client) (v2 in progress))
 *	Centralisation of permissions domain logic
 *	Provides an audit log
-*	Provides a centralised application-side stream for processor domain logic ('cascades' or 'triggers'), both client and server.
+*	Provides a centralised application-side stream for processor domain logic ('cascades' or 'triggers'), both client and server
+*	Reduces the differentiation between client and server code, since they use the same persistence mechanism (although 
+	transactions are explicit server-side, implicit client-side)
 
 ##	Dirndl
 "**Dir**ectedA**ndD**irected**L**ayout - a complete UI framework, runnable client- or server-side, that uses the 
