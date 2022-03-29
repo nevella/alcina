@@ -116,11 +116,6 @@ public class LiveTree {
 
 	private Key key;
 
-	@Override
-	public String toString() {
-		return Ax.format("Live tree: [%s]", key);
-	}
-
 	public LiveTree(Key key) {
 		this.key = key;
 		processLogger.inject();
@@ -262,6 +257,11 @@ public class LiveTree {
 
 	public String persistProcessLog() {
 		return processLogger.persist();
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("Live tree: [%s]", key);
 	}
 
 	public List<Transform> toTransforms(TreePath<LiveNode> path) {
@@ -857,6 +857,25 @@ public class LiveTree {
 			}
 		}
 
+		private void onChange0() {
+			switch (collateOperations()) {
+			case INSERT:
+				// will not have a viewNode yet
+				// indexInEntityMap(true);
+				generator.onTreeAddition(generatorContext, this);
+				break;
+			case REMOVE:
+				indexInEntityMap(false);
+				path.removeFromParent();
+				if (generator != null) {
+					generatorContext.removedIndexers.add(generator);
+				}
+				break;
+			case CHANGE:
+				break;
+			}
+		}
+
 		protected Entity provideEntity() {
 			return viewNode == null ? null : viewNode.getEntity();
 		}
@@ -941,21 +960,11 @@ public class LiveTree {
 		}
 
 		void onChange() {
-			switch (collateOperations()) {
-			case INSERT:
-				// will not have a viewNode yet
-				// indexInEntityMap(true);
-				generator.onTreeAddition(generatorContext, this);
-				break;
-			case REMOVE:
-				indexInEntityMap(false);
-				path.removeFromParent();
-				if (generator != null) {
-					generatorContext.removedIndexers.add(generator);
-				}
-				break;
-			case CHANGE:
-				break;
+			try {
+				onChange0();
+			} catch (Exception e) {
+				e.printStackTrace();
+				addExceptionChild(path, e);
 			}
 		}
 
@@ -979,7 +988,7 @@ public class LiveTree {
 			@Override
 			public String toString() {
 				return Ax.format(
-						"%s :: %s\n" + "==================================\n",
+						"%s :: %s\n" + "==================================\n%s",
 						path.toString(),
 						(data instanceof Entity
 								? ((Entity) data).toStringEntity()
