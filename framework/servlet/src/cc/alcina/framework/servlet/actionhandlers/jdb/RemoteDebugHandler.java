@@ -2,7 +2,6 @@ package cc.alcina.framework.servlet.actionhandlers.jdb;
 
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -19,7 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.util.ShellWrapper;
+import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.job.BaseRemoteActionPerformer;
 
@@ -105,7 +104,7 @@ public class RemoteDebugHandler
 			}
 		}
 
-		ShellWrapper jdb = null;
+		Shell jdb = null;
 
 		private void checkJdbStarted() throws JdbStateException {
 			if (jdb == null) {
@@ -152,7 +151,7 @@ public class RemoteDebugHandler
 			String connectionString = Ax.format(
 					"com.sun.jdi.SocketAttach:hostname=%s,port=%s", jdbHostname,
 					jdbPort);
-			jdb = new ShellWrapper();
+			jdb = new Shell();
 			jdb.launchProcess(
 					new String[] { jdbPath, "-connect", connectionString },
 					this::onMessage, this::onMessage);
