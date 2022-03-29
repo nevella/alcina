@@ -103,6 +103,13 @@ public class TransformCollation {
 				.filter(Objects::nonNull);
 	}
 
+	public <T extends Entity> Stream<T>
+			modifiedExcludingProperties(Class<T> clazz, Enum... excludes) {
+		return query(clazz).stream()
+				.filter(qr -> qr.hasPropertyNameExcluding(excludes))
+				.<T> map(QueryResult::getEntity).filter(Objects::nonNull);
+	}
+
 	public <E extends Entity> Query query(Class<E> clazz) {
 		return new Query(clazz);
 	}
@@ -221,6 +228,15 @@ public class TransformCollation {
 
 		public DomainTransformEvent last() {
 			return Ax.last(transforms);
+		}
+
+		public boolean onlyContainsNames(PropertyEnum... names) {
+			if (!isPropertyOnly()) {
+				return false;
+			}
+			Set<String> transformedPropertyNames = getTransformedPropertyNames();
+			return Arrays.stream(names).map(PropertyEnum::name)
+					.allMatch(transformedPropertyNames::contains);
 		}
 
 		@Override

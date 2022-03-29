@@ -127,8 +127,8 @@ public class DomainClassDescriptor<T extends Entity>
 			EntityCollation entityCollation) {
 		for (DomainStoreLookupDescriptor lookupDescriptor : lookupDescriptors) {
 			DomainLookup lookup = lookupDescriptor.getLookup();
-			if (entityCollation != null
-					&& lookup.isIgnoreForIndexing(entityCollation)) {
+			if (entityCollation != null && (isIgnoreForIndexing(entityCollation)
+					|| lookup.isIgnoreForIndexing(entityCollation))) {
 				continue;
 			}
 			if (add) {
@@ -141,7 +141,8 @@ public class DomainClassDescriptor<T extends Entity>
 			if (!committed && projection.isCommitOnly()) {
 				continue;
 			}
-			if (projection.isIgnoreForIndexing(entityCollation)) {
+			if (entityCollation != null && (isIgnoreForIndexing(entityCollation)
+					|| projection.isIgnoreForIndexing(entityCollation))) {
 				continue;
 			}
 			try {
@@ -170,6 +171,10 @@ public class DomainClassDescriptor<T extends Entity>
 	}
 
 	public boolean isIgnoreColumn(String name) {
+		return false;
+	}
+
+	public boolean isIgnoreForIndexing(EntityCollation entityCollation) {
 		return false;
 	}
 
