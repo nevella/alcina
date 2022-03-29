@@ -309,6 +309,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		}
 	}
 
+	@Reflected
 	public enum RecommendedAction {
 		OK, SKIP, IRRESOLVABLE, RETRY
 	}
