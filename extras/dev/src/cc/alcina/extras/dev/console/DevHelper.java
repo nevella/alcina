@@ -546,9 +546,22 @@ public abstract class DevHelper {
 	protected abstract void registerNames(AlcinaWebappConfig config);
 
 	public static class ConsolePrompter implements StringPrompter {
+		private String defaultValue;
+
+		public String getDefaultValue() {
+			return this.defaultValue;
+		}
+
+		public void setDefaultValue(String defaultValue) {
+			this.defaultValue = defaultValue;
+		}
+
 		@Override
 		public String getValue(String prompt) {
-			return SEUtilities.consoleReadline(String.format("%s\n> ", prompt));
+			return defaultValue == null
+					? SEUtilities
+							.consoleReadline(String.format("%s\n> ", prompt))
+					: defaultValue;
 		}
 	}
 

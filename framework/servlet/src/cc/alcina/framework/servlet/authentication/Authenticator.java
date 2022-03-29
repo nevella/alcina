@@ -252,4 +252,11 @@ public abstract class Authenticator<U extends Entity & IUser> {
 			}
 		}
 	}
+
+	public void invalidateSession(AuthenticationSession asi) {
+	}
+
+	public void checkExternalExpiration(AuthenticationSession session) {
+		
+	}
 }

@@ -81,6 +81,7 @@ import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
@@ -218,6 +219,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initBootstrapRegistry();
 			initNames();
 			loadCustomProperties();
+			addImmutableSecurityProperties();
 			initDevConsoleAndWebApp();
 			initContainerBridge();
 			initServices();
@@ -476,6 +478,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		EntityLayerLogging.setLogLevelsFromCustomProperties();
 	}
 
+	protected void addImmutableSecurityProperties(){
+		ResourceUtilities.addImmutableCustomPropertyKey(RemoteDebugHandler.immutableSecurityProperty());
+	}
 	protected void loadCustomProperties() {
 		try {
 			String loggerLevels = getDefaultLoggerLevels();
