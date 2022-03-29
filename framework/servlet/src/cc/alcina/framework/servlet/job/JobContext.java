@@ -181,6 +181,10 @@ public class JobContext {
 		if (has()) {
 			get().getJob().setLargeResult(largeResult);
 		} else {
+			if (largeResult == null) {
+				Ax.sysLogHigh("Large result is null");
+				return;
+			}
 			ResourceUtilities.logToFile(largeResult.toString());
 		}
 	}
@@ -242,6 +246,23 @@ public class JobContext {
 		this.allocator = allocator;
 		this.logger = LoggerFactory.getLogger(performer.getClass());
 		noHttpContext = AlcinaServletContext.httpContext() == null;
+	}
+
+	/*
+	 * Public (since jobs may want to launch logical children, await, continue)
+	 * - but restricted to performer thread. Note that the state should be
+	 * switched back from to SubqueuePhase.Self once the children have completed
+	 * - that's a future refinment.
+	 *
+	 * Note that if parent job behaviour is setup - run children - cleanuup -
+	 * finish, and the parent has no subsequent (sequence) jobs, current 'stay
+	 * in SubqueuePhase.Children' behaviour will _work_ - but it's not pretty.
+	 *
+	 * FIXME - mvcc.5 - allow self/children execution interleaving
+	 */
+	public void awaitChildCompletion() {
+		Preconditions.checkArgument(thread == Thread.currentThread());
+		allocator.awaitChildCompletion(this);
 	}
 
 	public ExecutionConstraints getExecutionConstraints() {
@@ -385,23 +406,6 @@ public class JobContext {
 			 */
 			TransformCommit.commitWithBackoff();
 		}
-	}
-
-	/*
-	 * Public (since jobs may want to launch logical children, await, continue)
-	 * - but restricted to performer thread. Note that the state should be
-	 * switched back from to SubqueuePhase.Self once the children have completed
-	 * - that's a future refinment.
-	 * 
-	 * Note that if parent job behaviour is setup - run children - cleanuup -
-	 * finish, and the parent has no subsequent (sequence) jobs, current 'stay
-	 * in SubqueuePhase.Children' behaviour will _work_ - but it's not pretty.
-	 * 
-	 * FIXME - mvcc.5 - allow self/children execution interleaving
-	 */
-	public void awaitChildCompletion() {
-		Preconditions.checkArgument(thread == Thread.currentThread());
-		allocator.awaitChildCompletion(this);
 	}
 
 	void awaitSequenceCompletion() {

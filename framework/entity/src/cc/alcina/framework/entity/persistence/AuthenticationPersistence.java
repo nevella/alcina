@@ -94,7 +94,7 @@ public class AuthenticationPersistence {
 								e.entityClass(), false)
 						.forEach(events::add));
 		/*
-		 * 
+		 *
 		 */
 		events.stream().filter(DomainTransformEvent::provideIsCreationTransform)
 				.forEach(TransformManager.get()::addTransform);
@@ -229,7 +229,8 @@ public class AuthenticationPersistence {
 	private BootstrapCreationResult
 			createBootstrapClientInstance(EntityManager em, String hostName) {
 		BootstrapCreationResult result = new BootstrapCreationResult();
-		String authenticationSessionUid = Ax.format("servlet:%s", hostName);
+		String authenticationSessionUid = Ax.format("%s%s",
+				ClientInstance.SERVLET_PREFIX, hostName);
 		String iidUid = authenticationSessionUid;
 		List<Entity> createdObjects = new ArrayList<>();
 		Iid iid = (Iid) Ax.first(em.createQuery(Ax.format(

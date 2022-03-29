@@ -38,6 +38,7 @@ import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -479,7 +480,7 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	public Optional<Exception> provideException() {
-		return getResultType() == JobResultType.EXCEPTION
+		return provideIsException()
 				? Optional.of(new Exception(getResultMessage()))
 				: Optional.empty();
 	}
@@ -545,6 +546,10 @@ public abstract class Job extends VersionableEntity<Job>
 
 	public boolean provideIsCompleteWithEndTime() {
 		return provideIsComplete() && getEndTime() != null;
+	}
+
+	public boolean provideIsException() {
+		return getResultType() == JobResultType.EXCEPTION;
 	}
 
 	public boolean provideIsFirstInSequence() {
@@ -1101,6 +1106,10 @@ public abstract class Job extends VersionableEntity<Job>
 		public void setTrimmedStackTrace(String trimmedStackTrace) {
 			this.trimmedStackTrace = trimmedStackTrace;
 		}
+	}
+
+	public enum Property implements PropertyEnum {
+		state, resultType
 	}
 
 	public static class ResourceRecord extends Model
