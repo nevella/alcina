@@ -33,7 +33,7 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 		jobs.forEach(job -> {
 			boolean delete = false;
 			if (!job.provideCanDeserializeTask()) {
-				if (job.provideIsNotComplete()) {
+				if (job.getState() != null && job.provideIsNotComplete()) {
 				} else {
 					Date date = job.resolveCompletionDate();
 					if (date == null) {
