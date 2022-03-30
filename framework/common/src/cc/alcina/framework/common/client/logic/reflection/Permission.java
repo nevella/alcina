@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -30,6 +30,38 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 @Inherited
 @Target({ ElementType.METHOD, ElementType.TYPE })
 /**
+ *
+ * <p>
+ * A given user passes a permission test if one of the following is true:
+ * </p>
+ *
+ * <ul>
+ * <li>The permission AccessLevel is one of [EVERYONE, LOGGED_IN, ADMIN,
+ * DEVELOPER, ROOT] and their AccessLevel (which will be one of those values)
+ * has an ordinal &gt;= the permission AccessLevel ordinal
+ * <li>The permission AccessLevel == AccessLevel.GROUP and the user is a member
+ * of the group with the name of the Permission rule() value *or* an Admin
+ * <li>The permission AccessLevel == AccessLevel.ADMIN_OR_OWNER and the user is
+ * the object owner *or* an Admin
+ * <li>The permission rule() annotation attribute is non-empty, AccessLevel !=
+ * AccessLevel.GROUP and the rule evaluator corresponding to the rule()
+ * attribute returns true for the given user, object and context. The evaluator
+ * can be found by searching for usages of the string value of the rule()
+ * attribute
+ * </ul>
+ *
+ * <p>
+ * TODO:
+ * </p>
+ * <ul>
+ * <li>Explain the rationale (as opposed to say java.security.Principal et al)
+ * of the permissions system
+ * <li>Explain assignment permissions
+ * <li>Explain the permissions stack, how loginstate/user map to access level
+ * <li>Interaction with projection (this also contributes to 'philosophy of
+ * Alcina - details' - correct permissions for a large application are actually
+ * *really hard* without something like projection
+ * </ul>
  *
  * @author Nick Reddel
  */
