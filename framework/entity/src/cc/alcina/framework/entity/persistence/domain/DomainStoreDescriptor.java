@@ -6,6 +6,7 @@ import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -22,6 +23,8 @@ import java.util.stream.Stream;
 
 import org.openjdk.jol.info.ClassLayout;
 import org.openjdk.jol.vm.VM;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.DomainClassDescriptor;
@@ -162,7 +165,11 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 
 		Set<String> notShallow = new TreeSet<>();
 
+		Set<Class> ignoreNotFound = new HashSet<>();
+
 		private Map<Class, Boolean> shallowResult = new HashMap<>();
+
+		transient Logger logger = LoggerFactory.getLogger(getClass());
 
 		public ObjectMemoryImpl() {
 			projection = new GraphProjection();
@@ -203,6 +210,10 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 			if (filter != null && !filter.test(o)) {
 				return;
 			}
+			if (counter.count == 0) {
+				logger.info("Walking memory stat: {}",
+						o instanceof Entity ? o.getClass() : o.toString());
+			}
 			if (seen.put(o, o) != null) {
 				return;
 			}
@@ -215,7 +226,9 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 				return;
 			}
 			try {
-				if (clazz.isArray()) {
+				if (ignoreNotFound.contains(clazz)) {
+					// noop
+				} else if (clazz.isArray()) {
 					Class<?> componentType = clazz.getComponentType();
 					if (componentType.isPrimitive()) {
 						return;
@@ -226,18 +239,24 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 						}
 					}
 				} else {
-					List<Field> fields = projection.getFieldsForClass(clazz);
-					for (Field field : fields) {
-						if (Modifier.isStatic(field.getModifiers())) {
-							continue;
+					try {
+						List<Field> fields = projection
+								.getFieldsForClass(clazz);
+						for (Field field : fields) {
+							if (Modifier.isStatic(field.getModifiers())) {
+								continue;
+							}
+							if (field.getType().isPrimitive()) {
+								// done, allocated in container
+								continue;
+							} else {
+								Object value = field.get(o);
+								walkStats(value, counter, filter);
+							}
 						}
-						if (field.getType().isPrimitive()) {
-							// done, allocated in container
-							continue;
-						} else {
-							Object value = field.get(o);
-							walkStats(value, counter, filter);
-						}
+					} catch (ClassNotFoundException | NoClassDefFoundError e) {
+						ignoreNotFound.add(clazz);
+						Ax.simpleExceptionOut(e);
 					}
 				}
 			} catch (Exception e) {
@@ -359,6 +378,9 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 					Ax.simpleExceptionOut(e);
 					return 0L;
 					// throw new WrappedRuntimeException(e);
+				} catch (NoClassDefFoundError ncdfe) {
+					Ax.simpleExceptionOut(ncdfe);
+					return 0L;
 				}
 			}
 
