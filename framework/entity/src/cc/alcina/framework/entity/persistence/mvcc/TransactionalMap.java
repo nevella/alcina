@@ -742,7 +742,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				return (V) baseObject.get();
 			}
 			Optional<ObjectVersion<ObjectWrapper>> version = versions().values()
-					.stream().filter(ov -> notRemovedValueMarker(ov.object))
+					.stream().filter(objectVersion -> notRemovedValueMarker(objectVersion.object))
 					.findFirst();
 			if (version.isEmpty()) {
 				throw new IllegalStateException(Ax.format(
