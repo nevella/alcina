@@ -60,6 +60,8 @@ public abstract class Job extends VersionableEntity<Job>
 
 	public static final transient String PROPERTY_STATE = "state";
 
+	public static transient boolean throwOnDeserializationException = false;
+
 	public static Job byId(long id) {
 		return PersistentImpl.find(Job.class, id);
 	}
@@ -429,8 +431,12 @@ public abstract class Job extends VersionableEntity<Job>
 			Objects.requireNonNull(getTask());
 			return true;
 		} catch (Exception e) {
-			// Invalid class/serialized form
-			return false;
+			if (throwOnDeserializationException) {
+				throw new RuntimeException(e);
+			} else {
+				// Invalid class/serialized form
+				return false;
+			}
 		}
 	}
 
