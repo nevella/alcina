@@ -149,7 +149,7 @@ public class DomainDeltaSequencer {
 		addTransport(signature, inLoadSequence, transport);
 	}
 
-	public void addTransport(DomainModelDeltaSignature signature,
+	public synchronized void addTransport(DomainModelDeltaSignature signature,
 			boolean inLoadSequence, DomainModelDeltaTransport transport) {
 		response.getDeltaTransports().add(transport);
 		response.getPreserveClientDeltaSignatures().add(signature.toString());

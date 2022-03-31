@@ -33,6 +33,7 @@ import java.util.Map.Entry;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.concurrent.Future;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
@@ -302,33 +303,6 @@ public class CommonUtils {
 			idx += occurrence.length();
 		}
 		return result;
-	}
-
-	/**
-	 * Convert a List into a Stream of sublists of given length
-	 * If not enough elements present, will present a smaller sublist
-	 * @param <T> List item type
-	 * @param source Original list
-	 * @param length Maximum list of sublists
-	 * @return Stream of smaller Lists
-	 * @throws IllegalArgumentException  if length is negative or 0
-	 */
-	public static <T> Stream<List<T>> listToBatches(List<T> source, int length) {
-		// Length must be postive
-		if (length <= 0) {
-			throw new IllegalArgumentException("length = " + length);
-		}
-		// If we have an empty original list, return an empty stream
-		int size = source.size();
-		if (size <= 0) {
-			return Stream.empty();
-		}
-		// Number of chunks to generate
-		int numChunks = (size - 1) / length;
-		// Generate the stream to generate sublists
-		return IntStream.range(0, numChunks + 1)
-				.mapToObj(n ->
-					source.subList(n * length, n == numChunks ? size : (n + 1) * length));
 	}
 
 	public static boolean currencyEquals(double d1, double d2) {
@@ -1241,6 +1215,38 @@ public class CommonUtils {
 		return s.substring(0, 1).toLowerCase() + s.substring(1);
 	}
 
+	/**
+	 * Convert a List into a Stream of sublists of given length If not enough
+	 * elements present, will present a smaller sublist
+	 *
+	 * @param <T>
+	 *            List item type
+	 * @param source
+	 *            Original list
+	 * @param length
+	 *            Maximum list of sublists
+	 * @return Stream of smaller Lists
+	 * @throws IllegalArgumentException
+	 *             if length is negative or 0
+	 */
+	public static <T> Stream<List<T>> listToBatches(List<T> source,
+			int length) {
+		// Length must be postive
+		if (length <= 0) {
+			throw new IllegalArgumentException("length = " + length);
+		}
+		// If we have an empty original list, return an empty stream
+		int size = source.size();
+		if (size <= 0) {
+			return Stream.empty();
+		}
+		// Number of chunks to generate
+		int numChunks = (size - 1) / length;
+		// Generate the stream to generate sublists
+		return IntStream.range(0, numChunks + 1).mapToObj(n -> source
+				.subList(n * length, n == numChunks ? size : (n + 1) * length));
+	}
+
 	public static int luhnChecksum(String numericalString,
 			boolean hasCheckDigit) {
 		int length = numericalString.length();
@@ -1695,6 +1701,14 @@ public class CommonUtils {
 		result.firstOnly.removeAll(result.intersection);
 		result.secondOnly.removeAll(result.intersection);
 		return result;
+	}
+
+	public static void throwIfCompletedWithException(List<Future> futures)
+			throws Exception {
+		for (Future future : futures) {
+			// will throw if there was an exception
+			future.get();
+		}
 	}
 
 	public static String titleCase(String s) {

@@ -1,7 +1,8 @@
 # Welcome to Alcina
 
 Named for an opera by the baroque composer Georg Friederich Händel, Alcina is an integrated set of 
-software components that collectively implement a "semi-declarative" client/server programming idiom.
+software components that collectively implement a "semi-declarative" client/server programming idiom 
+which guides application design towards processing streams .
 
 Semi-declarative code is an attempt to reconcile the virtues of declarative and imperative programming - 
 the basic philosophy being "declarative for composition" - say, composing a UI from an annotated object tree 
@@ -16,7 +17,8 @@ The main components of Alcina are (in no particular order):
 Features which allow GWT - https://github.com/gwtproject/gwt - to be a reasonable development environment
 for modern browsers:
 *	**Websocket/pure-js dev mode** - code and debug in java with <1s refresh times
-*	**Local DOM** - a GWT virtual dom, minimising jvm/browser rpc and enabling pure- or close-to-pure server page generation
+*	**Local DOM** - a GWT virtual dom, minimising jvm/browser rpc and enabling close-to-pure server-side applications
+	(i.e. where client app state is maintained and html generated server side, client code mainly routes DOM events)
 *	**Reflection** - implementation of class/property reflection in the GWT client, and tooling to minimise the 
 	client footprint
 
