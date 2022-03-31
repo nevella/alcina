@@ -131,16 +131,20 @@ public class ExcelExporter {
 			table.appendChild(row);
 		}
 	}
-
 	public void addCollectionToBook(Collection coll, Document book,
 			String sheetName) throws Exception {
+		 addCollectionToBook(coll, book, sheetName,false);
+	}
+	public void addCollectionToBook(Collection coll, Document book,
+			String sheetName, boolean sortColumnsByFieldName) throws Exception {
 		if (!coll.iterator().hasNext()) {
 			coll = new ArrayList();
 			coll.add(new ExcelEmptyBean());
 		}
 		Object o = coll.iterator().next();
 		Class clazz = o.getClass();
-		List<PropertyDescriptor> pds = SEUtilities
+		List<PropertyDescriptor> pds = sortColumnsByFieldName?SEUtilities
+				.getPropertyDescriptorsSortedByField(clazz):SEUtilities
 				.getPropertyDescriptorsSortedByName(clazz);
 		List<PdMultiplexer> pdMultis = pds.stream().filter(pd -> !ignorePd(pd))
 				.map(PdMultiplexer::new).sorted().collect(Collectors.toList());

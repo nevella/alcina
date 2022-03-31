@@ -20,7 +20,10 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import cc.alcina.framework.common.client.Reflections;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+import cc.alcina.framework.common.client.logic.permissions.Permissible;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
@@ -39,4 +42,30 @@ public @interface ObjectPermissions {
 	Permission read() default @Permission(access = AccessLevel.ADMIN_OR_OWNER);
 
 	Permission write() default @Permission(access = AccessLevel.ADMIN_OR_OWNER);
+
+	public enum Action {
+		create, delete, read, write;
+
+		public Permission asPermission(Object withPermissions) {
+			Class clazz = withPermissions instanceof Class?(Class) withPermissions:withPermissions.getClass();
+			ObjectPermissions objectPermissions = Reflections.classLookup()
+					.getAnnotationForClass(clazz,
+							ObjectPermissions.class);
+			if(objectPermissions==null){
+				objectPermissions=PermissionsManager.get().getDefaultObjectPermissions();
+			}
+			switch (this) {
+			case create:
+				return objectPermissions.create();
+			case delete:
+				return objectPermissions.delete();
+			case read:
+				return objectPermissions.read();
+			case write:
+				return objectPermissions.write();
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+	}
 }
