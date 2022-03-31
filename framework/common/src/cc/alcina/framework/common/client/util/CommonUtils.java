@@ -37,6 +37,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import org.slf4j.Logger;
@@ -301,6 +302,33 @@ public class CommonUtils {
 			idx += occurrence.length();
 		}
 		return result;
+	}
+
+	/**
+	 * Convert a List into a Stream of sublists of given length
+	 * If not enough elements present, will present a smaller sublist
+	 * @param <T> List item type
+	 * @param source Original list
+	 * @param length Maximum list of sublists
+	 * @return Stream of smaller Lists
+	 * @throws IllegalArgumentException  if length is negative or 0
+	 */
+	public static <T> Stream<List<T>> listToBatches(List<T> source, int length) {
+		// Length must be postive
+		if (length <= 0) {
+			throw new IllegalArgumentException("length = " + length);
+		}
+		// If we have an empty original list, return an empty stream
+		int size = source.size();
+		if (size <= 0) {
+			return Stream.empty();
+		}
+		// Number of chunks to generate
+		int numChunks = (size - 1) / length;
+		// Generate the stream to generate sublists
+		return IntStream.range(0, numChunks + 1)
+				.mapToObj(n ->
+					source.subList(n * length, n == numChunks ? size : (n + 1) * length));
 	}
 
 	public static boolean currencyEquals(double d1, double d2) {
