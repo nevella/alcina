@@ -151,6 +151,22 @@ public class NodeEvents {
 		}
 	}
 
+	public static class Insert extends TopicEvent<Object, Insert.Handler> {
+		@Override
+		public void dispatch(Insert.Handler handler) {
+			handler.onInsert(this);
+		}
+
+		@Override
+		public Class<Insert.Handler> getHandlerClass() {
+			return Insert.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onInsert(Insert event);
+		}
+	}
+
 	public static class Options extends TopicEvent<Object, Options.Handler> {
 		@Override
 		public void dispatch(Options.Handler handler) {
@@ -183,22 +199,6 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Insert extends TopicEvent<Object, Insert.Handler> {
-		@Override
-		public void dispatch(Insert.Handler handler) {
-			handler.onInsert(this);
-		}
-
-		@Override
-		public Class<Insert.Handler> getHandlerClass() {
-			return Insert.Handler.class;
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onInsert(Insert event);
-		}
-	}
-
 	// FIXME - to 'submit'
 	public static class Submitted
 			extends TopicEvent<Object, Submitted.Handler> {
@@ -214,6 +214,22 @@ public class NodeEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onSubmitted(Submitted event);
+		}
+	}
+
+	public static class Toggle extends TopicEvent<Object, Toggle.Handler> {
+		@Override
+		public void dispatch(Toggle.Handler handler) {
+			handler.onToggle(this);
+		}
+
+		@Override
+		public Class<Toggle.Handler> getHandlerClass() {
+			return Toggle.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onToggle(Toggle event);
 		}
 	}
 }
