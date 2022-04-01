@@ -232,22 +232,4 @@ public class NodeEvents {
 			void onToggle(Toggle event);
 		}
 	}
-
-	// FIXME - implement propertly
-	public static class Toggle
-			extends TopicEvent<Object, Toggle.Handler> {
-	@Override
-	public void dispatch(Toggle.Handler handler) {
-		handler.onToggle(this);
-	}
-
-	@Override
-	public Class<Toggle.Handler> getHandlerClass() {
-		return Toggle.Handler.class;
-	}
-
-	public interface Handler extends NodeEvent.Handler {
-		void onToggle(Toggle event);
-	}
-}
 }
