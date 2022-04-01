@@ -161,6 +161,10 @@ public class Multimap<K, V extends List>
 		return (T) CommonUtils.first(getAndEnsure(key));
 	}
 
+	public K firstKey() {
+		return Ax.first(keySet());
+	}
+
 	@Override
 	public V get(Object key) {
 		return this.map.get(key);

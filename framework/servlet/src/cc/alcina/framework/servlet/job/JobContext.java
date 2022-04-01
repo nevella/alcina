@@ -238,10 +238,13 @@ public class JobContext {
 
 	LauncherThreadState launcherThreadState;
 
+	private TreeProcess treeProcess;
+
 	public JobContext(Job job, TaskPerformer performer,
 			LauncherThreadState launcherThreadState, JobAllocator allocator) {
 		this.job = job;
 		this.performer = performer;
+		treeProcess = new TreeProcess(performer);
 		this.launcherThreadState = launcherThreadState;
 		this.allocator = allocator;
 		this.logger = LoggerFactory.getLogger(performer.getClass());
@@ -283,6 +286,10 @@ public class JobContext {
 
 	public TaskPerformer getPerformer() {
 		return this.performer;
+	}
+
+	public TreeProcess getTreeProcess() {
+		return this.treeProcess;
 	}
 
 	public void incrementItemCount(int delta) {
