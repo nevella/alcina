@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.csobjects.view.HasFilteredSelfAndDescen
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Walker;
+import cc.alcina.framework.common.client.domain.DomainLookup;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -70,6 +71,36 @@ import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
  * partly driven by the separation of 'node' and 'path' (which really, really
  * helps). But NodeModel -> TreeNode...the model *is* the logical node for all
  * intents n purps
+ *
+ * <h2>Overview</h2>
+ * <p>
+ * A LiveTree is a complex rendering of a portion of a domain graph, operating
+ * on the principle of 'recursive generation' used elsewhere in Alcina
+ * (DirectedLayout, SelectionTraversal) et al.
+ * </p>
+ * <p>
+ * <strong>Initial tree population.</strong> The initial seed of the tree is a
+ * DomainView instance. An initial {@link LiveNode} is generated for the seed,
+ * and an initial seed {@link PathChange} event is generated. The event
+ * processing algorithm is then called.
+ * </p>
+ * <p>
+ * <strong>Change (domaintransform) processing.</strong> Existing generators
+ * [TODO: define] can choose to generate PathChange events from transforms if,
+ * say, the transform affects an existing node or matches the generation
+ * criteria of the node parent. The code used to determine which events to
+ * generate can be complex - partially due to performance requirements - but
+ * generally the most efficient way is to have both inital population and change
+ * response route to a method which accepts a stream of entities and a
+ * GeneratorContext - say:
+ * </p>
+ * <code>
+ * protected void delta(GeneratorContext context, Entity entity, boolean add) {}
+ * </code>
+ * <p>
+ * to generate PathChange objects.
+ * </p>
+ *
  *
  */
 public class LiveTree {
@@ -337,21 +368,54 @@ public class LiveTree {
 				});
 	}
 
-	/*
+	/**
 	 *
-	 * Phase 1: modelchange collation Transform model changes to path changes.
-	 * Use a counter (-1 for remove, +1 for add)
-	 *
+	 * <p>
+	 * Note: Alcina index updates work by - for a given entity E - removing the
+	 * index entry for E pre transform application, then inserting an index
+	 * entry for E post transform application. As far as I can see (having not
+	 * read the literature), that's the only generally way to correctly keep
+	 * indicies live. Certain transforms (or transformcollations) can be not
+	 * applied to an index during DomainStore commit updates - via say
+	 * {@link DomainLookup#isIgnoreForIndexing et al} - but that's purely an
+	 * optimisation and not strictly necessary for index correctness.
+	 * <p>
+	 * PathChange events are created from DomainStore commits - via
+	 * {@link NodeGenerator#indexChanges} - in more or less the same way, so in
+	 * many cases (if a change doesn't affect the generated LiveNode) there will
+	 * be a remove() and add() of exactly the same node. This is why the tree
+	 * update algorithm first generates all PathChange events from model changes
+	 * (possibly with lots of balanced add/remove events for a given node), then
+	 * collates those changes (phase 1 of the algorithm) and for any balanced
+	 * nodes, only regenerates the <em>content</em> of the node rather than
+	 * requiring the node to be removed then re-added.
+	 * </p>
+	 * <p>
+	 * TODO - explain the relationship of path to node - and why the algorithm
+	 * deals with paths rather than nodes
+	 * </p>
+	 * <p>
+	 * <b>Phase 1</b>: modelchange collation. Transform model changes to path
+	 * changes. Use a counter (-1 for remove, +1 for add)
+	 * </p>
+	 * <p>
 	 * A node is add/remove/change if collated change (by path) counter is >0,0
 	 * or <0
-	 *
+	 * </p>
+	 * <p>
 	 * If collated change !=0, remove all collated child path changes (since
 	 * children will be regenerated)
+	 * </p>
 	 *
-	 * Phase 2: pathchange cascade Then apply pathChanges - which, if the type
-	 * is 'add' may in turn generate child path changes. Loop until exhausted
+	 * <p>
+	 * <b>Phase 2</b>: pathchange cascade Then apply pathChanges - which, if the
+	 * type is 'add' may in turn generate child path changes. Loop until
+	 * exhausted
+	 * </p>
 	 *
-	 * Phase 3: bottom-up generate nodes of dirty paths
+	 * <p>
+	 * <b>Phase 3</b>: bottom-up generate nodes of dirty paths
+	 * </p>
 	 *
 	 *
 	 */

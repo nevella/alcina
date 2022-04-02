@@ -65,3 +65,8 @@ Smaller components, again in no particular order:
 
 ##	Webdriver
 
+##	Consort
+
+##	DomainView
+
+##	SelectionTraversal
