@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,11 +16,16 @@ package cc.alcina.framework.entity.transform;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -32,11 +37,17 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class DomainTransformLayerWrapper implements Serializable {
 	static final transient long serialVersionUID = 1;
+
+	private static transient Logger logger = LoggerFactory
+			.getLogger(DomainTransformLayerWrapper.class);
+
+	private static Set<List<Class>> nonEntityWarningsEmitted = Collections
+			.synchronizedSet(new HashSet<>());
 
 	public DomainTransformResponse response;
 
@@ -71,6 +82,12 @@ public class DomainTransformLayerWrapper implements Serializable {
 	}
 
 	public boolean containsTransformClasses(List<Class> classes) {
+		// FIXME - 2022 - convert to precondition
+		if (classes.stream().anyMatch(c -> !Entity.class.isAssignableFrom(c))) {
+			if (nonEntityWarningsEmitted.add(classes)) {
+				logger.warn("non-transform-classes-filter - {}", classes);
+			}
+		}
 		return !CommonUtils.intersection(getTransformedClasses(), classes)
 				.isEmpty();
 	}

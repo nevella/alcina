@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.util.Ax;
@@ -132,9 +133,9 @@ public class DomainModelDeltaSignature implements Serializable {
 		return sig;
 	}
 
-	public String nonVersionedUserSignature() {
+	public String nonVersionedUserSignature(IUser iUser) {
 		return Ax.format("%s,%s,%s,%s", classSimpleName, id, sid,
-				PermissionsManager.get().getUserId());
+				iUser.getId());
 	}
 
 	public boolean provideRequiresHash() {
