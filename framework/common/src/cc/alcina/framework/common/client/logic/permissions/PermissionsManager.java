@@ -54,6 +54,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
  * Permissions type ADMIN_OR_OWNER pretty much mandates that the object
  * implement HasOwner
  * </p>
+ * TODO - 2022 - make most methods static, call through to content instance
  *
  * @author Nick Reddel
  */
@@ -217,6 +218,10 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public static boolean isOnline() {
 		return !isOffline();
+	}
+
+	public static boolean isSystemUser() {
+		return Objects.equals(get().getSystemUser(), get().getUser());
 	}
 
 	public static void register(PermissionsManager pm) {
