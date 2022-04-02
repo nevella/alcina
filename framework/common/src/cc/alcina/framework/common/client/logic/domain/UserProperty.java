@@ -150,7 +150,8 @@ public abstract class UserProperty<T extends UserProperty>
 	}
 
 	public UserPropertyPersistable providePersistable() {
-		return this.userPropertySupport.getPersistable();
+		return this.userPropertySupport == null ? null
+				: this.userPropertySupport.getPersistable();
 	}
 
 	public void serializeObject(Object object) {
