@@ -770,6 +770,13 @@ public class JobRegistry {
 			if (runAt != null) {
 				Preconditions.checkArgument(initialState == JobState.FUTURE);
 			}
+			if (initialState == JobState.FUTURE_CONSISTENCY
+					&& !PermissionsManager.isSystemUser()) {
+				// raise the priority of jobs that are directly caused by
+				// non-system users
+				job.setConsistencyPriority(
+						JobDomain.DefaultConsistencyPriorities.high.toString());
+			}
 			job.setRunAt(SEUtilities.toOldDate(runAt));
 			if (related != null) {
 				related.createRelation(job, relationType);
