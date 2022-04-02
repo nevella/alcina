@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 /**
  * Important! Don't allow a signature part to contain a comma - that's the
  * delimiter character
- * 
+ *
  * @author nick@alcina.cc
  *
  */
@@ -130,6 +130,11 @@ public class DomainModelDeltaSignature implements Serializable {
 		sig.id = id;
 		sig.sid = sid;
 		return sig;
+	}
+
+	public String nonVersionedUserSignature() {
+		return Ax.format("%s,%s,%s,%s", classSimpleName, id, sid,
+				PermissionsManager.get().getUserId());
 	}
 
 	public boolean provideRequiresHash() {
