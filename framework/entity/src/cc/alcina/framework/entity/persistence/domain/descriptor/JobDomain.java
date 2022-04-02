@@ -1286,9 +1286,12 @@ public class JobDomain {
 			}
 
 			public Optional<Job> getExistingConsistencyJobForTask(Task task) {
-				return Optional.ofNullable(getLookup().get(
+				MultikeyMap<Job> map = getLookup().asMapEnsure(false,
 						task.getClass().getName(), TransformManager.Serializer
-								.get().serialize(task, true)));
+								.get().serialize(task, true));
+				return map == null ? Optional.empty()
+						: ((Map<Long, Job>) map.delegate()).values().stream()
+								.findFirst();
 			}
 
 			@Override
