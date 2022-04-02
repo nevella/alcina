@@ -160,9 +160,12 @@ public abstract class WebdriverTest implements Registration.Ensure {
 						throw e;
 					} else {
 						attempt++;
+						Ax.out("============================================================");
 						Ax.out("Unit test execption - retrying [%s/%s]",
 								attempt, maxAttempts);
-						System.out.println(e);
+						Ax.out("============================================================");
+						e.printStackTrace();
+						Ax.out("============================================================\n");
 					}
 				}
 			}
