@@ -143,7 +143,8 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 		testResult.setResultType(TestResultType.OK);
 		try {
-			int retryCount = getRetryCount();
+			int maxAttempts = getRetryCount();
+			int attempt = 1;
 			while (true) {
 				try {
 					testResult.setStartTimeExcludingDependent(
@@ -155,10 +156,12 @@ public abstract class WebdriverTest implements Registration.Ensure {
 					uiStateChange(token, returnsUIState());
 					break;
 				} catch (Exception e) {
-					if (--retryCount == 0) {
+					if (attempt >= maxAttempts) {
 						throw e;
 					} else {
-						System.out.println("Unit test execption - retrying ");
+						attempt++;
+						Ax.out("Unit test execption - retrying [%s/%s]",
+								attempt, maxAttempts);
 						System.out.println(e);
 					}
 				}
