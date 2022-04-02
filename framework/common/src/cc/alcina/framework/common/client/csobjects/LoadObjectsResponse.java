@@ -3,9 +3,12 @@ package cc.alcina.framework.common.client.csobjects;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaTransport;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelHolder;
+import cc.alcina.framework.common.client.logic.domaintransform.DomainModelObject;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTranche;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
@@ -39,6 +42,15 @@ public class LoadObjectsResponse implements Serializable {
 
 	public LoadObjectsRequest getRequest() {
 		return request;
+	}
+
+	public <T extends DomainModelObject> T
+			provideDomainModelObject(Class<T> clazz) {
+		return (T) getDeltaTransports().stream()
+				.map(DomainModelDeltaTransport::getDelta)
+				.map(DomainModelDelta::getDomainModelObject)
+				.filter(Objects::nonNull).filter(dmo -> dmo.getClass() == clazz)
+				.findFirst().get();
 	}
 
 	public void putDomainModelHolder(DomainModelHolder domainModelHolder) {
