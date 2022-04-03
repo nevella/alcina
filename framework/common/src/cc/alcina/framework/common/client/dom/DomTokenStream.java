@@ -14,7 +14,7 @@ import org.w3c.dom.traversal.TreeWalker;
 public class DomTokenStream implements Iterator<DomNode> {
 	private TreeWalker tw;
 
-	private DomDoc doc;
+	private DomDocument doc;
 
 	Node next = null;
 
@@ -25,7 +25,7 @@ public class DomTokenStream implements Iterator<DomNode> {
 	private Node last;
 
 	public DomTokenStream(DomNode node) {
-		this.doc = node.doc;
+		this.doc = node.document;
 		this.tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(node.node,
 				NodeFilter.SHOW_ALL, null, true);
 		next();
@@ -51,7 +51,7 @@ public class DomTokenStream implements Iterator<DomNode> {
 		}
 	}
 
-	public DomDoc getDoc() {
+	public DomDocument getDoc() {
 		return this.doc;
 	}
 

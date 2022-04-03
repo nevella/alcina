@@ -19,7 +19,7 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 
 	public static String toHtmlGrid(List<String> headers, List<Row> values,
 			String title, int maxColWidth) {
-		DomDoc doc = DomDoc.basicHtmlDoc();
+		DomDocument doc = DomDocument.basicHtmlDoc();
 		if (!LooseContext.is(CONTEXT_NO_TD_STYLES)) {
 			doc.xpath("//head").node().builder().tag("style")
 					.text("td {white-space: nowrap; \n"

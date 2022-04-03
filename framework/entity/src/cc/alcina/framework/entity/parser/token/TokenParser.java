@@ -7,7 +7,7 @@ import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.XmlUtils.SurroundingBlockTuple;
@@ -65,7 +65,7 @@ public class TokenParser<T extends ParserToken, S extends AbstractParserSlice<T>
 		Node n = null;
 		peer.resetContext(true);
 		SurroundingBlockTuple lastSurroundingTuple = null;
-		long nodeCount = new DomDoc(doc).children.stream().count();
+		long nodeCount = new DomDocument(doc).children.stream().count();
 		int nodeIndex = 0;
 		while ((n = walker.nextNode()) != null) {
 			ParserContext<T, S> context = peer.getContext();

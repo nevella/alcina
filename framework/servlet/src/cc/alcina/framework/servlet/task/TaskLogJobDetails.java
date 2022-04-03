@@ -8,7 +8,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
@@ -164,7 +164,7 @@ public class TaskLogJobDetails extends AbstractTaskPerformer {
 		} else {
 			List<Job> threadData = JobRegistry.get().getThreadData(job);
 			job.domain().ensurePopulated();
-			DomDoc doc = DomDoc.basicHtmlDoc();
+			DomDocument doc = DomDocument.basicHtmlDoc();
 			String css = ResourceUtilities
 					.readRelativeResource("res/TaskListJobs.css");
 			doc.xpath("//head").node().builder().tag("style").text(css)

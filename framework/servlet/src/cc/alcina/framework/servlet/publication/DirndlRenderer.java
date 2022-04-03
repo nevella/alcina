@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -29,11 +29,11 @@ public class DirndlRenderer {
 		return this;
 	}
 
-	public DomDoc render() {
+	public DomDocument render() {
 		Widget widget = new DirectedLayout().render(new ContextResolver(), null,
 				renderable);
 		String outerHtml = widget.getElement().getOuterHtml();
-		DomDoc doc = DomDoc.basicHtmlDoc();
+		DomDocument doc = DomDocument.basicHtmlDoc();
 		DomNode div = doc.html().body().builder().tag("div").append();
 		div.setInnerXml(outerHtml);
 		stylePaths.forEach(p -> {

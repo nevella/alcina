@@ -3,10 +3,10 @@ package cc.alcina.framework.gwt.client.util;
 import com.google.gwt.dom.client.Document;
 import com.google.gwt.dom.client.Element;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 
 public class DomContextGwt extends DomContext {
-	DomDoc doc = null;
+	DomDocument doc = null;
 
 	@Override
 	protected void clearReferences0() {
@@ -38,9 +38,9 @@ public class DomContextGwt extends DomContext {
 	}
 
 	@Override
-	protected DomDoc getXmlDoc(org.w3c.dom.Document domDocument) {
+	protected DomDocument getXmlDoc(org.w3c.dom.Document domDocument) {
 		if (doc == null) {
-			doc = DomDoc.documentFor(getDocument0());
+			doc = DomDocument.documentFor(getDocument0());
 		}
 		return doc;
 	}
@@ -52,7 +52,7 @@ public class DomContextGwt extends DomContext {
 	}
 
 	@Override
-	protected void putXmlDoc0(DomDoc doc) {
+	protected void putXmlDoc0(DomDocument doc) {
 		// multi-document environments only
 		throw new UnsupportedOperationException();
 	}

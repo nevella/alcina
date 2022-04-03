@@ -193,8 +193,8 @@ public class DomNodeBuilder {
 		return node;
 	}
 
-	private DomDoc doc() {
-		return relativeTo.doc;
+	private DomDocument doc() {
+		return relativeTo.document;
 	}
 
 	private DomNode insertBefore(DomNode insertBefore) {

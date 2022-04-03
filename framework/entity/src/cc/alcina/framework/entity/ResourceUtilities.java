@@ -69,7 +69,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -449,17 +449,17 @@ public class ResourceUtilities {
 		});
 	}
 
-	public static DomDoc loadXmlDocFromHtmlString(String html,
+	public static DomDocument loadXmlDocFromHtmlString(String html,
 			boolean upperCaseTags) {
 		try {
-			return new DomDoc(loadHtmlDocumentFromString(html, upperCaseTags));
+			return new DomDocument(loadHtmlDocumentFromString(html, upperCaseTags));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
-	public static DomDoc loadXmlDocFromUrl(String url) {
-		return new DomDoc(loadHtmlDocumentFromUrl(url));
+	public static DomDocument loadXmlDocFromUrl(String url) {
+		return new DomDocument(loadHtmlDocumentFromUrl(url));
 	}
 
 	public static void logToFile(String content) {

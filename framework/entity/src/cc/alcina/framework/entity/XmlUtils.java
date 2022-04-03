@@ -76,7 +76,7 @@ import org.xml.sax.SAXParseException;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolver;
 import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolverHtml;
 import cc.alcina.framework.common.client.dom.DomNode;
@@ -174,7 +174,7 @@ public class XmlUtils {
 	}
 
 	public static void cleanNamespacedAttributes(Document doc) {
-		DomDoc.documentFor(doc).children.stream().filter(DomNode::isElement)
+		DomDocument.documentFor(doc).children.stream().filter(DomNode::isElement)
 				.forEach(n -> {
 					if (n.domElement().hasAttributes()) {
 						n.attributes().keySet().stream()
@@ -556,7 +556,7 @@ public class XmlUtils {
 
 	public static SurroundingBlockTuple getSurroundingBlockTuple(Node node,
 			StyleResolver blockResolver) {
-		DomDoc xmlDoc = new DomDoc(node.getOwnerDocument());
+		DomDocument xmlDoc = new DomDocument(node.getOwnerDocument());
 		DomNode prev = xmlDoc.nodeFor(node);
 		DomNode next = prev;
 		SurroundingBlockTuple tuple = new SurroundingBlockTuple(prev.domNode());
@@ -668,7 +668,7 @@ public class XmlUtils {
 			}
 			m.appendTail(out);
 			if (LooseContext.is(CONTEXT_XSL_STRIP_WHITESPACE)) {
-				DomDoc doc = new DomDoc(out.toString());
+				DomDocument doc = new DomDocument(out.toString());
 				doc.children.stream().filter(DomNode::isText).forEach(
 						n -> n.setText(trimAndNormaliseWrappingNewlines(
 								n.parent().nameIs("xsl:text"),

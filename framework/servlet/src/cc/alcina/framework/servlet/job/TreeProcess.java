@@ -99,6 +99,10 @@ public class TreeProcess {
 			}
 			return null;
 		}
+
+		default T processValue() {
+			return (T) this;
+		}
 	}
 
 	public interface Node extends HasDisplayName {
@@ -131,6 +135,24 @@ public class TreeProcess {
 			return HasDisplayName.displayName(getValue());
 		}
 
+		/**
+		 * If not isDescendantsComplete and all children are descendantComplete,
+		 * set descendantComplete to true
+		 *
+		 * @return true if treeComplete changed
+		 */
+		default boolean evaluateDescendantsComplete() {
+			if (isDescendantsComplete()) {
+				return false;
+			}
+			if (getChildren().stream().allMatch(Node::isDescendantsComplete)) {
+				setDescendantsComplete(true);
+				return true;
+			} else {
+				return false;
+			}
+		}
+
 		List<Node> getChildren();
 
 		Node getParent();
@@ -140,6 +162,10 @@ public class TreeProcess {
 		// because the tree is add-only (i.e. nodes can't be removed), it makes
 		// sense to cache this
 		int index();
+
+		boolean isDescendantsComplete();
+
+		boolean isSelfComplete();
 
 		int levelIndex();
 
@@ -171,8 +197,16 @@ public class TreeProcess {
 			tree().onEvent(Event.node_selected, node);
 		}
 
+		void setDescendantsComplete(boolean descendantsComplete);
+
+		void setSelfComplete(boolean selfComplete);
+
 		default TreeProcess tree() {
 			return root().tree();
+		}
+
+		default <T> T typedValue() {
+			return (T) getValue();
 		}
 	}
 
@@ -205,6 +239,10 @@ public class TreeProcess {
 		private int index;
 
 		private int levelIndex;
+
+		private boolean selfComplete;
+
+		private boolean descendantsComplete;
 
 		public NodeImpl(Node parent, Object value) {
 			this(null, parent, value);
@@ -247,8 +285,28 @@ public class TreeProcess {
 		}
 
 		@Override
+		public boolean isDescendantsComplete() {
+			return this.descendantsComplete;
+		}
+
+		@Override
+		public boolean isSelfComplete() {
+			return this.selfComplete;
+		}
+
+		@Override
 		public int levelIndex() {
 			return this.levelIndex;
+		}
+
+		@Override
+		public void setDescendantsComplete(boolean descendantsComplete) {
+			this.descendantsComplete = descendantsComplete;
+		}
+
+		@Override
+		public void setSelfComplete(boolean selfComplete) {
+			this.selfComplete = selfComplete;
 		}
 
 		@Override

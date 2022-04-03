@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Stack;
 import java.util.function.Supplier;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomTokenStream;
 import cc.alcina.framework.common.client.util.Ax;
@@ -33,7 +33,7 @@ public class StructuredTokenParser<C extends StructuredTokenParserContext> {
 			LooseContext.push();
 			openNodes = new Stack<>();
 			this.tokens = tokens;
-			DomDoc outDoc = new DomDoc("<root/>");
+			DomDocument outDoc = new DomDocument("<root/>");
 			XmlTokenOutput out = new XmlTokenOutput(outDoc);
 			LooseContext.set(DomNode.CONTEXT_DEBUG_SUPPORT, out);
 			context.out = out;

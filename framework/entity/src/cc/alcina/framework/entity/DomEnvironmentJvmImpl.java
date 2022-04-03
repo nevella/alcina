@@ -9,7 +9,7 @@ import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomEnvironment;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
@@ -75,7 +75,7 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	}
 
 	@Override
-	public NamespaceResult removeNamespaces(DomDoc xmlDoc) {
+	public NamespaceResult removeNamespaces(DomDocument xmlDoc) {
 		NamespaceResult result = new NamespaceResult();
 		String xml = xmlDoc.fullToString();
 		Pattern p = Pattern.compile("(?s)<([A-Za-z]\\S+) .+?>");
@@ -88,7 +88,7 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	}
 
 	@Override
-	public NamespaceResult restoreNamespaces(DomDoc xmlDoc, String firstTag) {
+	public NamespaceResult restoreNamespaces(DomDocument xmlDoc, String firstTag) {
 		NamespaceResult result = new NamespaceResult();
 		result.xml = xmlDoc.fullToString();
 		Pattern p = Pattern.compile("(?s)<[A-Za-z]\\S+>");
@@ -108,7 +108,7 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	}
 
 	@Override
-	public String toHtml(DomDoc doc) {
+	public String toHtml(DomDocument doc) {
 		String xml = doc.prettyToString();
 		xml = XmlUtils.expandEmptyElements(xml);
 		return XmlUtils.fixStyleNodeContents(xml);

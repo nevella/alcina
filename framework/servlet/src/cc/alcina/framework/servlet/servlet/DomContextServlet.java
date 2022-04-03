@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -47,7 +47,7 @@ public class DomContextServlet extends DomContext {
 	}
 
 	@Override
-	protected DomDoc getXmlDoc(Document domDocument) {
+	protected DomDocument getXmlDoc(Document domDocument) {
 		return xmlDocs().get(domDocument);
 	}
 
@@ -57,7 +57,7 @@ public class DomContextServlet extends DomContext {
 	}
 
 	@Override
-	protected void putXmlDoc0(DomDoc doc) {
+	protected void putXmlDoc0(DomDocument doc) {
 		/*
 		 * critical - otherwise very leak-possible
 		 */
@@ -82,7 +82,7 @@ public class DomContextServlet extends DomContext {
 		DomNode.from(elem).style().setProperty(key, value);
 	}
 
-	Map<Document, DomDoc> xmlDocs() {
+	Map<Document, DomDocument> xmlDocs() {
 		return LooseContext.ensure(CONTEXT_DOCS, () -> new LinkedHashMap<>());
 	}
 }

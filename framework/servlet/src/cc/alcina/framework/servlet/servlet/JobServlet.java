@@ -20,7 +20,7 @@ import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.actions.ServerControlAction;
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -169,7 +169,7 @@ public class JobServlet extends AlcinaServlet {
 			String message = Ax.blankTo(job.getLog(),
 					Ax.format("Job %s - complete", job));
 			if (Ax.matches(request.getHeader("User-Agent"), ".*Mozilla.*")) {
-				DomDoc doc = DomDoc.basicHtmlDoc();
+				DomDocument doc = DomDocument.basicHtmlDoc();
 				doc.html().head().builder().tag("title")
 						.text(Ax.format("Job - %s",
 								job.getTask().getClass().getSimpleName()))
