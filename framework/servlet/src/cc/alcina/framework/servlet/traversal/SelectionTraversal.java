@@ -1,13 +1,14 @@
 package cc.alcina.framework.servlet.traversal;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.servlet.job.TreeProcess.Node;
 
 /**
  * A generalised engine for rule-based transformation.
@@ -42,14 +43,12 @@ public class SelectionTraversal {
 
 	private Generation currentGeneration;
 
+	private Generation nextGeneration;
+
 	private List<Generation> generations = new ArrayList<>();
 
-	public void addSelector(Selector selector) {
-		selectors.add(currentGeneration, selector);
-	}
-
-	public Generation getCurrentGeneration() {
-		return this.currentGeneration;
+	public void addSelector(Generation generation, Selector selector) {
+		selectors.add(generation, selector);
 	}
 
 	public List<Generation> getGenerations() {
@@ -60,8 +59,17 @@ public class SelectionTraversal {
 		return this.rootSelection;
 	}
 
-	public void setCurrentGeneration(Generation currentGeneration) {
-		this.currentGeneration = currentGeneration;
+	public <G extends Generation> void populateGenerations(Class<G> clazz) {
+		Arrays.stream(clazz.getEnumConstants()).forEach(generations::add);
+	}
+
+	public synchronized void select(Generation generation,
+			Selection selection) {
+		selections.add(generation, selection);
+	}
+
+	public synchronized void select(Selection selection) {
+		select(nextGeneration, selection);
 	}
 
 	public void setRootSelection(Selection rootSelection) {
@@ -74,15 +82,22 @@ public class SelectionTraversal {
 		selections.add(selectors.firstKey(), rootSelection);
 		for (Generation generation : generations) {
 			currentGeneration = generation;
-			List<Selection> toProcess = selections.get(generation);
+			nextGeneration = Ax.next(generations, currentGeneration);
+			List<Selection> toProcess = selections.getAndEnsure(generation);
 			for (Selection selection : toProcess) {
 				try {
 					enterSelectionContext(selection);
 					selection.processNode().select(null);
-					List<Selector> processors = selectors.get(generation);
+					List<Selector> processors = selectors
+							.getAndEnsure(generation);
 					for (Selector processor : processors) {
 						if (processor.handles(selection)) {
-							processor.process(this, selection);
+							try {
+								processor.process(this, selection);
+							} catch (Exception e) {
+								// TODO blah blah
+								e.printStackTrace();
+							}
 						}
 					}
 				} finally {
@@ -96,16 +111,12 @@ public class SelectionTraversal {
 		}
 	}
 
-	private void enterSelectionContext(Selection selection) {
-		selection.processNode().asNodePath().stream()
-				.<Selection> map(Node::typedValue)
-				.forEach(Selection::enterContext);
+	private void enterSelectionContext(Selection<?> selection) {
+		selection.ancestorSelections().forEach(Selection::enterContext);
 	}
 
-	private void exitSelectionContext(Selection selection) {
-		selection.processNode().asNodePath().stream()
-				.<Selection> map(Node::typedValue)
-				.forEach(Selection::exitContext);
+	private void exitSelectionContext(Selection<?> selection) {
+		selection.ancestorSelections().forEach(Selection::exitContext);
 	}
 
 	/*
@@ -115,7 +126,7 @@ public class SelectionTraversal {
 		selection.processNode().setSelfComplete(true);
 		Selection cursor = selection;
 		while (cursor != null) {
-			if (cursor.processNode().evaluateDescendantsComplete()) {
+			if (cursor.processNode().evaluateReleaseResources()) {
 				cursor.releaseResources();
 				cursor = cursor.parentSelection();
 			} else {

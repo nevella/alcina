@@ -4,11 +4,14 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.logging.Level;
+import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.actions.TaskPerformer;
+import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IntPair;
@@ -37,6 +40,10 @@ public class TreeProcess {
 		onEvent(Event.node_added, root);
 	}
 
+	public Cursor getCursor() {
+		return new Cursor();
+	}
+
 	public Collection<? extends Exception> getProcessExceptions() {
 		return processExceptions;
 	}
@@ -53,9 +60,11 @@ public class TreeProcess {
 	}
 
 	public void onEvent(Event event, Node node) {
+		int depth = node.depth();
 		switch (event) {
 		case node_added:
-			levelSize(node.depth());
+			int levelSize = levelSize(depth);
+			levelSizes.set(depth, levelSize + 1);
 			break;
 		case node_selected: {
 			selected = node;
@@ -66,7 +75,7 @@ public class TreeProcess {
 					skip(1)
 					//
 					.forEach(n -> {
-						IntPair pair = new IntPair(n.levelIndex(),
+						IntPair pair = new IntPair(n.indexInLevel(),
 								levelSizes.get(n.depth()));
 						position.append(pair);
 					});
@@ -86,6 +95,16 @@ public class TreeProcess {
 		return root;
 	}
 
+	public class Cursor {
+		public List<Integer> indicies() {
+			return selected.asNodeIndicies();
+		}
+
+		public int lastIndex() {
+			return Ax.last(indicies());
+		}
+	}
+
 	public interface HasNode<T> {
 		public Node processNode();
 
@@ -103,11 +122,18 @@ public class TreeProcess {
 		default T processValue() {
 			return (T) this;
 		}
+
+		boolean referencesParentResources();
 	}
 
 	public interface Node extends HasDisplayName {
 		default Node add(Object o) {
 			throw new UnsupportedOperationException();
+		}
+
+		default List<Integer> asNodeIndicies() {
+			return asNodePath().stream().map(Node::indexInLevel)
+					.collect(Collectors.toList());
 		}
 
 		default List<Node> asNodePath() {
@@ -136,17 +162,21 @@ public class TreeProcess {
 		}
 
 		/**
-		 * If not isDescendantsComplete and all children are descendantComplete,
-		 * set descendantComplete to true
+		 * Release resources if all children released *OR* do not reference
+		 * parent resources
 		 *
 		 * @return true if treeComplete changed
 		 */
-		default boolean evaluateDescendantsComplete() {
-			if (isDescendantsComplete()) {
+		default boolean evaluateReleaseResources() {
+			if (isReleasedResources()) {
 				return false;
 			}
-			if (getChildren().stream().allMatch(Node::isDescendantsComplete)) {
-				setDescendantsComplete(true);
+			if (getChildren().stream()
+					.allMatch(n -> n.isReleasedResources()
+							|| (n.getValue() instanceof HasNode
+									&& !((HasNode) n.getValue())
+											.referencesParentResources()))) {
+				setReleasedResources(true);
 				return true;
 			} else {
 				return false;
@@ -159,15 +189,20 @@ public class TreeProcess {
 
 		Object getValue();
 
+		default boolean hasValueClass(Class clazz) {
+			return Reflections.isAssignableFrom(clazz, getValue().getClass());
+		}
 		// because the tree is add-only (i.e. nodes can't be removed), it makes
 		// sense to cache this
-		int index();
+		//
 
-		boolean isDescendantsComplete();
+		int indexInLevel();
+
+		int indexInParent();
+
+		boolean isReleasedResources();
 
 		boolean isSelfComplete();
-
-		int levelIndex();
 
 		default void log(Level level, String template, Object... args) {
 			// TODO - if needed - add tree info
@@ -197,7 +232,7 @@ public class TreeProcess {
 			tree().onEvent(Event.node_selected, node);
 		}
 
-		void setDescendantsComplete(boolean descendantsComplete);
+		void setReleasedResources(boolean reachable);
 
 		void setSelfComplete(boolean selfComplete);
 
@@ -242,7 +277,7 @@ public class TreeProcess {
 
 		private boolean selfComplete;
 
-		private boolean descendantsComplete;
+		private boolean releasedResources;
 
 		public NodeImpl(Node parent, Object value) {
 			this(null, parent, value);
@@ -280,13 +315,18 @@ public class TreeProcess {
 		}
 
 		@Override
-		public int index() {
+		public int indexInLevel() {
+			return this.levelIndex;
+		}
+
+		@Override
+		public int indexInParent() {
 			return index;
 		}
 
 		@Override
-		public boolean isDescendantsComplete() {
-			return this.descendantsComplete;
+		public boolean isReleasedResources() {
+			return this.releasedResources;
 		}
 
 		@Override
@@ -295,13 +335,8 @@ public class TreeProcess {
 		}
 
 		@Override
-		public int levelIndex() {
-			return this.levelIndex;
-		}
-
-		@Override
-		public void setDescendantsComplete(boolean descendantsComplete) {
-			this.descendantsComplete = descendantsComplete;
+		public void setReleasedResources(boolean releasedResources) {
+			this.releasedResources = releasedResources;
 		}
 
 		@Override

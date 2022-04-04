@@ -1,5 +1,8 @@
 package cc.alcina.framework.servlet.traversal;
 
+import java.util.stream.Stream;
+
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.servlet.job.TreeProcess.HasNode;
 import cc.alcina.framework.servlet.job.TreeProcess.Node;
 
@@ -15,7 +18,38 @@ import cc.alcina.framework.servlet.job.TreeProcess.Node;
 public interface Selection<T> extends HasNode<Selection> {
 	public T get();
 
-	public default Selection parentSelection() {
+	default <V extends Selection> V ancestorSelection(Class<V> clazz) {
+		Selection cursor = this;
+		while (cursor != null) {
+			if (Reflections.isAssignableFrom(clazz, cursor.getClass())) {
+				return (V) cursor;
+			}
+			cursor = cursor.parentSelection();
+		}
+		return null;
+	}
+
+	default Stream<Selection> ancestorSelections() {
+		return processNode().asNodePath().stream()
+				.filter(n -> n.hasValueClass(Selection.class))
+				.<Selection> map(Node::typedValue);
+	}
+
+	default <ST extends T> ST cast() {
+		return (ST) get();
+	}
+
+	/**
+	 * This method (and teardown exitContext) should generally only operate on
+	 * context properties - see
+	 */
+	default void enterContext() {
+	}
+
+	default void exitContext() {
+	};
+
+	default Selection parentSelection() {
 		Node parent = processNode().getParent();
 		if (parent == null) {
 			return null;
@@ -26,50 +60,12 @@ public interface Selection<T> extends HasNode<Selection> {
 		} else {
 			return null;
 		}
-	}
-
-	public Class<T> type();;
-
-	/**
-	 * This method (and teardown exitContext) should generally only operate on
-	 * context properties - see
-	 */
-	default void enterContext() {
 	};
 
-	default void exitContext() {
+	default boolean referencesAncestorResources() {
+		return true;
 	};
 
 	default void releaseResources() {
-	}
-
-	public static abstract class AbstractSelection<T> implements Selection<T> {
-		private T value;
-
-		private Node node;
-
-		public AbstractSelection(Node parentNode, T value) {
-			this.value = value;
-			this.node = parentNode.add(this);
-		}
-
-		public AbstractSelection(Selection parent, T value) {
-			this(parent.processNode(), value);
-		}
-
-		@Override
-		public T get() {
-			return value;
-		}
-
-		@Override
-		public Node processNode() {
-			return node;
-		}
-
-		@Override
-		public Class<T> type() {
-			return (Class<T>) value.getClass();
-		}
 	}
 }

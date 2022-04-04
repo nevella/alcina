@@ -43,6 +43,16 @@ public class Ax {
 		return CommonUtils.formatDate(date, DateStyle.AU_DATE_TIME);
 	}
 
+	public static String displayName(Object object) {
+		if (object == null) {
+			return null;
+		}
+		if (object instanceof HasDisplayName) {
+			return ((HasDisplayName) object).displayName();
+		}
+		return friendly(object);
+	}
+
 	public static void err(Object object) {
 		System.err.println(object);
 	}
@@ -116,6 +126,15 @@ public class Ax {
 		System.out.println(CommonUtils.joinWithNewlines(collection));
 	}
 
+	public static <T> T next(List<T> list, T element) {
+		int index = list.indexOf(element);
+		if (index == -1 || index + 1 == list.size()) {
+			return null;
+		} else {
+			return list.get(index + 1);
+		}
+	}
+
 	public static boolean notBlank(String string) {
 		return !isBlank(string);
 	}
@@ -179,15 +198,5 @@ public class Ax {
 
 	public static double twoPlaces(double d) {
 		return CommonUtils.roundNumeric(d, 2);
-	}
-
-	public static String displayName(Object object) {
-		if (object == null) {
-			return null;
-		}
-		if (object instanceof HasDisplayName) {
-			return ((HasDisplayName) object).displayName();
-		}
-		return friendly(object);
 	}
 }
