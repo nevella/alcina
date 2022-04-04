@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.traversal;
+package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.servlet.job.JobContext;
 
 /**
  * A generalised engine for rule-based transformation.
@@ -30,11 +29,14 @@ import cc.alcina.framework.servlet.job.JobContext;
  *
  * Current naive implementation requires produced selections be in generation
  * g+1 - that may be all that's needed
+ *
  */
 public class SelectionTraversal {
 	GenerationStore generationStore = new GenerationStore();
 
 	public Topic<Selection> selectionAdded = Topic.local();
+
+	public Topic<Selection> selectionProcessed = Topic.local();
 
 	Selection rootSelection;
 
@@ -105,8 +107,8 @@ public class SelectionTraversal {
 					exitSelectionContext(selection);
 					selection.processNode().setSelfComplete(true);
 					releaseCompletedSelections(selection);
+					selectionProcessed.publish(selection);
 				}
-				JobContext.checkCancelled();
 			}
 			List<Generation> currentSelectionKeys = selections.keySet().stream()
 					.collect(Collectors.toList());

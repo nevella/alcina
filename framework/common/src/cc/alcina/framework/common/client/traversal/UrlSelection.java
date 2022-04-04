@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.traversal;
+package cc.alcina.framework.common.client.traversal;
 
 import cc.alcina.framework.entity.SEUtilities;
 
