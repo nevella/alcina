@@ -9,6 +9,7 @@ import java.util.stream.Collectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.servlet.job.JobContext;
 
 /**
  * A generalised engine for rule-based transformation.
@@ -105,10 +106,12 @@ public class SelectionTraversal {
 					selection.processNode().setSelfComplete(true);
 					releaseCompletedSelections(selection);
 				}
+				JobContext.checkCancelled();
 			}
 			List<Generation> currentSelectionKeys = selections.keySet().stream()
 					.collect(Collectors.toList());
 		}
+		selections.asCountingMap().entrySet().forEach(Ax::out);
 	}
 
 	private void enterSelectionContext(Selection<?> selection) {
