@@ -120,6 +120,12 @@ public class JobServlet extends AlcinaServlet {
 		case detail:
 			job = new TaskLogJobDetails().withValue(id).perform();
 			break;
+		case control_job:
+			job = new TaskLogJobDetails()
+					.withValue(String.valueOf(JobRegistry.get()
+							.getLaunchedFromControlServlet().getId()))
+					.perform();
+			break;
 		case cancel:
 			job = new TaskCancelJob().withValue(id).perform();
 			break;
@@ -192,6 +198,6 @@ public class JobServlet extends AlcinaServlet {
 	}
 
 	enum Action {
-		list, cancel, detail, wakeup, task, run, control
+		list, cancel, detail, wakeup, task, run, control, control_job
 	}
 }

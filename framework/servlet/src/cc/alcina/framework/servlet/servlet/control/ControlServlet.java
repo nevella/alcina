@@ -206,17 +206,22 @@ public class ControlServlet extends AlcinaServlet {
 		}
 		String taskClassName = req.getParameter("taskClassName");
 		String taskJson = req.getParameter("taskJson");
-		return MethodContext.instance().withRootPermissions(true).call(() -> {
-			Task task = null;
-			if (taskJson == null) {
-				task = (Task) Reflections
-						.newInstance(Class.forName(taskClassName));
-			} else {
-				task = (Task) JacksonUtils.deserialize(taskJson,
-						Class.forName(taskClassName));
-			}
-			return JobRegistry.get().perform(task).getLog();
-		});
+		return MethodContext.instance()
+				// FIXME - instead, use a threaded topic listener (in the
+				// context)
+				.withContextTrue(
+						JobRegistry.CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET)
+				.withRootPermissions(true).call(() -> {
+					Task task = null;
+					if (taskJson == null) {
+						task = (Task) Reflections
+								.newInstance(Class.forName(taskClassName));
+					} else {
+						task = (Task) JacksonUtils.deserialize(taskJson,
+								Class.forName(taskClassName));
+					}
+					return JobRegistry.get().perform(task).getLog();
+				});
 	}
 
 	private String testSendmail() throws Exception {

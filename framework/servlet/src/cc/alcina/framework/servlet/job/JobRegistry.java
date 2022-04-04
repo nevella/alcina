@@ -152,6 +152,9 @@ public class JobRegistry {
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_NO_ACTION_LOG";
 
+	public static final String CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET";
+
 	public static final String TRANSFORM_QUEUE_NAME = JobRegistry.class
 			.getName();
 
@@ -232,6 +235,8 @@ public class JobRegistry {
 	private AtomicInteger extJobSystemIdCounter = new AtomicInteger();
 
 	Map<Job, ContextAwaiter> contextAwaiters = new ConcurrentHashMap<>();
+
+	private Job launchedFromControlServlet;
 
 	public JobRegistry() {
 	}
@@ -321,6 +326,10 @@ public class JobRegistry {
 		return jobExecutors.getJobMetadataLockTimestamp(path);
 	}
 
+	public Job getLaunchedFromControlServlet() {
+		return this.launchedFromControlServlet;
+	}
+
 	public List<ActionLogItem> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
@@ -397,6 +406,11 @@ public class JobRegistry {
 				}
 			}
 			Job job = createBuilder().withTask(task).withAwaiter().create();
+			if (LooseContext.has(CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET)) {
+				// FIXME - use job creation/completion topics
+				launchedFromControlServlet = job;
+				LooseContext.remove(CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET);
+			}
 			return await(job);
 		} catch (Exception e) {
 			e.printStackTrace();
