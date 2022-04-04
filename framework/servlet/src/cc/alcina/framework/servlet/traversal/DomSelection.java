@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.traversal;
+package cc.alcina.framework.servlet.traversal;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
