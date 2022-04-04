@@ -722,9 +722,13 @@ public class SEUtilities {
 	}
 
 	public static String generateId() {
+		return generateId(32);
+	}
+
+	public static String generateId(int length) {
 		char[][] ranges = { { 'a', 'z' }, { 'A', 'Z' }, { '0', '9' },
 				{ '_', '_' } };
-		return generateId(ranges, 32);
+		return generateId(ranges, length);
 	}
 
 	public static String generateId(char[][] ranges, int length) {
