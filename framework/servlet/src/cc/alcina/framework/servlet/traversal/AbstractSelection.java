@@ -7,22 +7,26 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	private Node node;
 
-	public AbstractSelection(Node parentNode, T value) {
+	private String pathSegment;
+
+	public AbstractSelection(Node parentNode, T value, String pathSegment) {
 		this.value = value;
+		this.pathSegment = pathSegment;
 		this.node = parentNode.add(this);
 	}
 
-	public AbstractSelection(Selection parent) {
-		this(parent.processNode(), null);
-	}
-
-	public AbstractSelection(Selection parent, T value) {
-		this(parent.processNode(), value);
+	public AbstractSelection(Selection parent, T value, String pathSegment) {
+		this(parent.processNode(), value, pathSegment);
 	}
 
 	@Override
 	public T get() {
 		return value;
+	}
+
+	@Override
+	public String getPathSegment() {
+		return this.pathSegment;
 	}
 
 	@Override
@@ -32,5 +36,10 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	public void set(T value) {
 		this.value = value;
+	}
+
+	@Override
+	public String toString() {
+		return getPathSegment();
 	}
 }

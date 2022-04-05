@@ -18,6 +18,12 @@ import cc.alcina.framework.servlet.job.TreeProcess.Node;
 public interface Selection<T> extends HasNode<Selection> {
 	public T get();
 
+	/**
+	 * Describes the notional path segment of the selection (for debugging and
+	 * logging)
+	 */
+	public String getPathSegment();
+
 	default <V extends Selection> V ancestorSelection(Class<V> clazz) {
 		Selection cursor = this;
 		while (cursor != null) {

@@ -13,7 +13,8 @@ public abstract class HttpUrlSelector<I extends UrlSelection, O extends Selectio
 			DomDocument domDocument = ResourceUtilities
 					.loadXmlDocFromUrl(selection.get());
 			Document<DomDocument> out = new DomSelection.Document<DomDocument>(
-					selection, domDocument);
+					selection, domDocument,
+					domDocument.getDocumentElementNode().name());
 			traversal.select(out);
 		}
 	}

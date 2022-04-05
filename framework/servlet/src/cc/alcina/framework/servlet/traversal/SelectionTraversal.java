@@ -64,6 +64,8 @@ public class SelectionTraversal {
 
 	public <G extends Generation> void populateGenerations(Class<G> clazz) {
 		Arrays.stream(clazz.getEnumConstants()).forEach(generations::add);
+		generations.forEach(selectors::getAndEnsure);
+		generations.forEach(selections::getAndEnsure);
 	}
 
 	public synchronized void select(Generation generation,
@@ -86,13 +88,12 @@ public class SelectionTraversal {
 		for (Generation generation : generations) {
 			currentGeneration = generation;
 			nextGeneration = Ax.next(generations, currentGeneration);
-			List<Selection> toProcess = selections.getAndEnsure(generation);
+			List<Selection> toProcess = selections.get(generation);
 			for (Selection selection : toProcess) {
 				try {
 					enterSelectionContext(selection);
 					selection.processNode().select(null);
-					List<Selector> processors = selectors
-							.getAndEnsure(generation);
+					List<Selector> processors = selectors.get(generation);
 					for (Selector processor : processors) {
 						if (processor.handles(selection)) {
 							try {
