@@ -1,8 +1,11 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Comparator;
+
 import com.totsp.gwittir.client.ui.Renderer;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.CommonUtils.ComparatorResult;
 
 public interface HasDisplayName {
 	public static String displayName(Object o) {
@@ -19,6 +22,24 @@ public interface HasDisplayName {
 	}
 
 	public String displayName();
+
+	public static class HasDisplayNameComparator
+			implements Comparator<HasDisplayName> {
+		@Override
+		public int compare(HasDisplayName o1, HasDisplayName o2) {
+			ComparatorResult result = CommonUtils.compareNullCheck(o1, o2);
+			if (result != ComparatorResult.BOTH_NON_NULL) {
+				return result.direction();
+			}
+			String name1 = o1.displayName();
+			String name2 = o2.displayName();
+			result = CommonUtils.compareNullCheck(name1, name2);
+			if (result != ComparatorResult.BOTH_NON_NULL) {
+				return result.direction();
+			}
+			return name1.compareTo(name2);
+		}
+	}
 
 	@Reflected
 	public static class HasDisplayNameRenderer

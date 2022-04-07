@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 
 public class CodeBuilder extends FormatBuilder {
-	static String asStringLiteral(String value) {
+	public static String asStringLiteral(String value) {
 		return Ax.format("\"%s\"", StringEscapeUtils.escapeJava(value));
 	}
 
