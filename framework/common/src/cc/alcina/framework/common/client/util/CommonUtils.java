@@ -795,6 +795,14 @@ public class CommonUtils {
 		return null;
 	}
 
+	public static Class<? extends Enum> getEnumType(Enum e) {
+		if (e.getClass().getSuperclass().isEnum()) {
+			return (Class<? extends Enum>) e.getClass().getSuperclass();
+		} else {
+			return e.getClass();
+		}
+	}
+
 	public static <E extends Enum> E getEnumValueOrNull(Class<E> enumClass,
 			String value) {
 		return getEnumValueOrNull(enumClass, value, false, null);
