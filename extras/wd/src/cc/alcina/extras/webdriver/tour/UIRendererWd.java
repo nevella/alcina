@@ -17,7 +17,7 @@ import cc.alcina.extras.webdriver.WDUtils;
 import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeBuilder;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -252,7 +252,7 @@ public class UIRendererWd extends UIRenderer {
 		}
 
 		void render() {
-			DomDoc doc = DomDoc.from("<div/>");
+			DomDocument doc = DomDocument.from("<div/>");
 			DomNode root = doc.getDocumentElementNode();
 			root.setClassName("tmwd-popup");
 			String direction = dashedEnum(

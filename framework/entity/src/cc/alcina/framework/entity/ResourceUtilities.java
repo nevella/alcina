@@ -69,7 +69,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.shared.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -246,35 +246,6 @@ public class ResourceUtilities {
 		}
 	}
 
-	protected static <T> List<Field> getFieldsForCopyOrLog(T t,
-			boolean withTransients, Set<String> ignoreFieldNames) {
-		List<Field> result = new ArrayList<>();
-		Class c = t.getClass();
-		while (c != Object.class) {
-			Field[] fields = c.getDeclaredFields();
-			for (Field field : fields) {
-				if (Modifier.isStatic(field.getModifiers())) {
-					continue;
-				}
-				if (Modifier.isFinal(field.getModifiers())) {
-					continue;
-				}
-				if (Modifier.isTransient(field.getModifiers())
-						&& !withTransients) {
-					continue;
-				}
-				if (ignoreFieldNames != null
-						&& ignoreFieldNames.contains(field.getName())) {
-					continue;
-				}
-				field.setAccessible(true);
-				result.add(field);
-			}
-			c = c.getSuperclass();
-		}
-		return result;
-	}
-
 	public static String get(Class clazz, String propertyName) {
 		return getBundledString(clazz, propertyName);
 	}
@@ -449,17 +420,18 @@ public class ResourceUtilities {
 		});
 	}
 
-	public static DomDoc loadXmlDocFromHtmlString(String html,
+	public static DomDocument loadXmlDocFromHtmlString(String html,
 			boolean upperCaseTags) {
 		try {
-			return new DomDoc(loadHtmlDocumentFromString(html, upperCaseTags));
+			return new DomDocument(
+					loadHtmlDocumentFromString(html, upperCaseTags));
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
 	}
 
-	public static DomDoc loadXmlDocFromUrl(String url) {
-		return new DomDoc(loadHtmlDocumentFromUrl(url));
+	public static DomDocument loadXmlDocFromUrl(String url) {
+		return new DomDocument(loadHtmlDocumentFromUrl(url));
 	}
 
 	public static void logToFile(String content) {
@@ -490,6 +462,22 @@ public class ResourceUtilities {
 			return null;
 		}
 		return object.toString();
+	}
+
+	public static Map<String, String> primitiveFieldValues(Object t) {
+		try {
+			Map<String, String> map = new LinkedHashMap<>();
+			List<Field> fields = getFieldsForCopyOrLog(t, false, null);
+			for (Field field : fields) {
+				if (GraphProjection.isPrimitiveOrDataClass(field.getType())) {
+					Object value = field.get(t);
+					map.put(field.getName(), String.valueOf(value));
+				}
+			}
+			return map;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static String read(Class clazz, String path) {
@@ -1004,19 +992,32 @@ public class ResourceUtilities {
 		return instance;
 	}
 
-	public static Map<String, String> primitiveFieldValues(Object t) {
-		try {
-			Map<String, String> map = new LinkedHashMap<>();
-			List<Field> fields = getFieldsForCopyOrLog(t, false, null);
+	protected static <T> List<Field> getFieldsForCopyOrLog(T t,
+			boolean withTransients, Set<String> ignoreFieldNames) {
+		List<Field> result = new ArrayList<>();
+		Class c = t.getClass();
+		while (c != Object.class) {
+			Field[] fields = c.getDeclaredFields();
 			for (Field field : fields) {
-				if (GraphProjection.isPrimitiveOrDataClass(field.getType())) {
-					Object value = field.get(t);
-					map.put(field.getName(), String.valueOf(value));
+				if (Modifier.isStatic(field.getModifiers())) {
+					continue;
 				}
+				if (Modifier.isFinal(field.getModifiers())) {
+					continue;
+				}
+				if (Modifier.isTransient(field.getModifiers())
+						&& !withTransients) {
+					continue;
+				}
+				if (ignoreFieldNames != null
+						&& ignoreFieldNames.contains(field.getName())) {
+					continue;
+				}
+				field.setAccessible(true);
+				result.add(field);
 			}
-			return map;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			c = c.getSuperclass();
 		}
+		return result;
 	}
 }

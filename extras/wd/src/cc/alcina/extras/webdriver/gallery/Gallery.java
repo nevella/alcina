@@ -9,7 +9,7 @@ import org.openqa.selenium.remote.RemoteWebDriver;
 import org.w3c.dom.Document;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -125,7 +125,7 @@ public class Gallery {
 		try {
 			Document w3cdoc = ResourceUtilities
 					.loadHtmlDocumentFromString(pageSource, false);
-			DomDoc doc = new DomDoc(w3cdoc);
+			DomDocument doc = new DomDocument(w3cdoc);
 			doc.xpath("//script ").forEach(DomNode::removeFromParent);
 			List<DomNode> stylesheetNodes = doc
 					.xpath("//link[@rel='stylesheet'] ").nodes();

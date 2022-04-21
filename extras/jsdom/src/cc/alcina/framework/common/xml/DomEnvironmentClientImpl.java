@@ -3,7 +3,7 @@ package cc.alcina.framework.common.xml;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomEnvironment;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
@@ -40,12 +40,12 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	}
 
 	@Override
-	public NamespaceResult removeNamespaces(DomDoc xmlDoc) {
+	public NamespaceResult removeNamespaces(DomDocument xmlDoc) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public NamespaceResult restoreNamespaces(DomDoc xmlDoc, String firstTag) {
+	public NamespaceResult restoreNamespaces(DomDocument xmlDoc, String firstTag) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -60,7 +60,7 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	}
 
 	@Override
-	public String toHtml(DomDoc doc) {
+	public String toHtml(DomDocument doc) {
 		throw new UnsupportedOperationException();
 	}
 }

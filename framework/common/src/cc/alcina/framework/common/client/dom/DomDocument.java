@@ -21,24 +21,24 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.Multimap;
 
-public class DomDoc extends DomNode {
+public class DomDocument extends DomNode {
 	private static transient PerDocumentSupplier perDocumentSupplier = Registry
 			.impl(PerDocumentSupplier.class);
 
-	public static DomDoc basicHtmlDoc() {
-		return new DomDoc("<html><head></head><body></body></html>");
+	public static DomDocument basicHtmlDoc() {
+		return new DomDocument("<html><head></head><body></body></html>");
 	}
 
 	public static DomNode createDocumentElement(String tag) {
-		return new DomDoc(Ax.format("<%s/>", tag)).getDocumentElementNode();
+		return new DomDocument(Ax.format("<%s/>", tag)).getDocumentElementNode();
 	}
 
-	public static DomDoc documentFor(Document document) {
+	public static DomDocument documentFor(Document document) {
 		return perDocumentSupplier.get(document);
 	}
 
-	public static DomDoc from(String xml) {
-		return new DomDoc(xml);
+	public static DomDocument from(String xml) {
+		return new DomDocument(xml);
 	}
 
 	private CachingMap<Node, DomNode> nodes = new CachingMap<Node, DomNode>(
@@ -54,14 +54,14 @@ public class DomDoc extends DomNode {
 
 	private Multimap<String, List<DomNode>> byTag;
 
-	public DomDoc(Document domDocument) {
+	public DomDocument(Document domDocument) {
 		super(null, null);
 		this.node = domDocument;
 		nodes.put(this.node, this);
-		this.doc = this;
+		this.document = this;
 	}
 
-	public DomDoc(String xml) {
+	public DomDocument(String xml) {
 		super(null, null);
 		loadFromXml(xml);
 	}
@@ -153,7 +153,7 @@ public class DomDoc extends DomNode {
 		this.readonly = readonly;
 	}
 
-	public DomDoc withUseCachedElementIds(boolean useCachedElementIds) {
+	public DomDocument withUseCachedElementIds(boolean useCachedElementIds) {
 		this.useCachedElementIds = useCachedElementIds;
 		return this;
 	}
@@ -162,7 +162,7 @@ public class DomDoc extends DomNode {
 		try {
 			this.node = DomEnvironment.get().loadFromXml(xml);
 			nodes.put(this.node, this);
-			this.doc = this;
+			this.document = this;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -182,31 +182,31 @@ public class DomDoc extends DomNode {
 	@Reflected
 	@Registration.Singleton
 	public static class PerDocumentSupplier {
-		private Map<Document, DomDoc> perDocument;
+		private Map<Document, DomDocument> perDocument;
 
 		public PerDocumentSupplier() {
 			perDocument = new LinkedHashMap<>();
 		}
 
-		public DomDoc get(Document document) {
+		public DomDocument get(Document document) {
 			synchronized (perDocument) {
-				return perDocument.computeIfAbsent(document, DomDoc::new);
+				return perDocument.computeIfAbsent(document, DomDocument::new);
 			}
 		}
 	}
 
 	@Registration.Singleton
 	public static class ReadonlyDocCache {
-		public static DomDoc.ReadonlyDocCache get() {
-			return Registry.impl(DomDoc.ReadonlyDocCache.class);
+		public static DomDocument.ReadonlyDocCache get() {
+			return Registry.impl(DomDocument.ReadonlyDocCache.class);
 		}
 
 		private int maxSize = 0;
 
-		private Map<String, DomDoc> docs = new LinkedHashMap<String, DomDoc>() {
+		private Map<String, DomDocument> docs = new LinkedHashMap<String, DomDocument>() {
 			@Override
 			protected boolean
-					removeEldestEntry(Map.Entry<String, DomDoc> eldest) {
+					removeEldestEntry(Map.Entry<String, DomDocument> eldest) {
 				return size() > maxSize;
 			}
 		};
@@ -215,10 +215,10 @@ public class DomDoc extends DomNode {
 
 		int hitCount = 0;
 
-		public synchronized DomDoc get(String xml) {
-			DomDoc doc = docs.get(xml);
+		public synchronized DomDocument get(String xml) {
+			DomDocument doc = docs.get(xml);
 			if (doc == null) {
-				doc = new DomDoc(xml);
+				doc = new DomDocument(xml);
 				doc.setReadonly(true);
 				docs.put(xml, doc);
 				missCount++;

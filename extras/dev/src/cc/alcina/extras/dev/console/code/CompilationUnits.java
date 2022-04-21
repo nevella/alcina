@@ -427,11 +427,11 @@ public class CompilationUnits {
 	}
 
 	public static class CompilationUnitWrapper {
-		private String path;
+		public String path;
 
 		public List<ClassOrInterfaceDeclarationWrapper> declarations = new ArrayList<>();
 
-		transient CompilationUnit unit;
+		public transient CompilationUnit unit;
 
 		public boolean dirty;
 

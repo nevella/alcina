@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 
 public class TransformHistory {
 	private static ThreadLocal<Map<EntityLocator, TransformHistory>> cache = new ThreadLocal<Map<EntityLocator, TransformHistory>>() {
@@ -46,7 +47,13 @@ public class TransformHistory {
 	public static TransformHistory get(Entity entity) {
 		TransformHistory cached = cache.get().get(entity.toLocator());
 		return cached != null ? cached
-				: get(entity.getClass(), Collections.singleton(entity.getId()));
+				: get(
+						// If we get passed in an MVCC object,
+						// resolve that back to its original class instead of
+						// the MVCC generated
+						// one
+						entity.entityClass(),
+						Collections.singleton(entity.getId()));
 	}
 
 	private static TransformHistory get(Class<?> clazz, Set<Long> ids) {

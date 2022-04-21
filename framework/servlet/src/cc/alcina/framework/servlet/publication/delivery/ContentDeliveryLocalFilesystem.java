@@ -7,6 +7,8 @@ import java.io.InputStream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.logic.permissions.Permissible;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
@@ -39,7 +41,10 @@ public class ContentDeliveryLocalFilesystem implements ContentDelivery {
 		String suggestedFileName = deliveryModel.getSuggestedFileName();
 		File folder = new File(localDeliveryFolder);
 		folder.mkdirs();
-		File file = SEUtilities.getChildFile(folder, suggestedFileName);
+		if(!PermissionsManager.get().isAdmin()||!ResourceUtilities.is("permitAbsoluteSuggestedPath")){
+			suggestedFileName=suggestedFileName.replace("/", "_").replace("\\", "_");
+		}
+		File file = suggestedFileName.startsWith("/")?new File(suggestedFileName):SEUtilities.getChildFile(folder, suggestedFileName);
 		ResourceUtilities.writeStreamToStream(convertedContent,
 				new FileOutputStream(file));
 		logger.info("Wrote publication to local path: {}", file);

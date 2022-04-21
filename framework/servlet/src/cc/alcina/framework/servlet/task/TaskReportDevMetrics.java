@@ -6,7 +6,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.log.ILogRecord;
@@ -79,7 +79,7 @@ public class TaskReportDevMetrics extends AbstractTaskPerformer {
 
 	@Override
 	protected void run0() throws Exception {
-		DomDoc doc = DomDoc.basicHtmlDoc();
+		DomDocument doc = DomDocument.basicHtmlDoc();
 		String css = ResourceUtilities
 				.readRelativeResource("res/TaskReportDevMetrics.css");
 		doc.xpath("//head").node().builder().tag("style").text(css).append();

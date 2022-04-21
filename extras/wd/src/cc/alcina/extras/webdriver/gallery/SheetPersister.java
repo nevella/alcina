@@ -22,7 +22,7 @@ import com.google.api.services.sheets.v4.model.RowData;
 
 import cc.alcina.extras.webdriver.gallery.GalleryConfiguration.Element;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -145,7 +145,7 @@ public class SheetPersister {
 	}
 
 	private void updateViewer() throws IOException {
-		DomDoc doc = DomDoc.basicHtmlDoc();
+		DomDocument doc = DomDocument.basicHtmlDoc();
 		List<Image> images = nameTuples().values().stream().map(Image::new)
 				.collect(Collectors.toList());
 		String json = JacksonUtils.serializeNoTypes(images);

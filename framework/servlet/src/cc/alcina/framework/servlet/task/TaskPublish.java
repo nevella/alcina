@@ -4,6 +4,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.schedule.ServerTask;
@@ -20,8 +21,17 @@ public class TaskPublish extends ServerTask<TaskPublish> {
 		setPublicationRequest(publicationRequest);
 	}
 
+	@Override
+	public String getName() {
+		return getPublicationRequest().provideJobName();
+	}
+
 	public ContentRequestBase getPublicationRequest() {
 		return this.publicationRequest;
+	}
+
+	public void setPublicationRequest(ContentRequestBase publicationRequest) {
+		this.publicationRequest = publicationRequest;
 	}
 
 	public TaskPublish withRequest(ContentRequestBase publicationRequest) {
@@ -30,20 +40,13 @@ public class TaskPublish extends ServerTask<TaskPublish> {
 	}
 
 	@Override
-	public String getName() {
-		return getPublicationRequest().provideJobName();
-	}
-
-	public void setPublicationRequest(ContentRequestBase publicationRequest) {
-		this.publicationRequest = publicationRequest;
-	}
-
-	@Override
 	protected void performAction0(TaskPublish task) throws Exception {
 		PublicationResult result = Registry
 				.impl(PublicationRequestHandler.class)
 				.publish(getPublicationRequest());
-		result.ensureMinimal();
+		if (!Ax.isTest()) {
+			result.ensureMinimal();
+		}
 		JobContext.get().getJob().setResult(result);
 		Transaction.commit();
 	}

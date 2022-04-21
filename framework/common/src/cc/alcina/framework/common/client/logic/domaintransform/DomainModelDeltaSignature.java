@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.io.Serializable;
 
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.util.Ax;
@@ -10,7 +11,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 /**
  * Important! Don't allow a signature part to contain a comma - that's the
  * delimiter character
- * 
+ *
  * @author nick@alcina.cc
  *
  */
@@ -130,6 +131,11 @@ public class DomainModelDeltaSignature implements Serializable {
 		sig.id = id;
 		sig.sid = sid;
 		return sig;
+	}
+
+	public String nonVersionedUserSignature(IUser iUser) {
+		return Ax.format("%s,%s,%s,%s", classSimpleName, id, sid,
+				iUser.getId());
 	}
 
 	public boolean provideRequiresHash() {

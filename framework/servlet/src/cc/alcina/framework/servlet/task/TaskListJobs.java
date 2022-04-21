@@ -11,7 +11,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.csobjects.JobResultType;
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
@@ -59,7 +59,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 		return builder;
 	}
 
-	protected void addActive(DomDoc doc, String sectionFilterName,
+	protected void addActive(DomDocument doc, String sectionFilterName,
 			Predicate<Job> sectionFilter) {
 		{
 			doc.html().body().builder().tag("h2")
@@ -105,7 +105,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 		}
 	}
 
-	protected void addCompleted(DomDoc doc, String sectionFilterName,
+	protected void addCompleted(DomDocument doc, String sectionFilterName,
 			boolean topLevel, int limit) {
 		{
 			doc.html().body().builder().tag("h2")
@@ -159,7 +159,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 
 	@Override
 	protected void run0() throws Exception {
-		DomDoc doc = DomDoc.basicHtmlDoc();
+		DomDocument doc = DomDocument.basicHtmlDoc();
 		String css = ResourceUtilities
 				.readRelativeResource("res/TaskListJobs.css");
 		doc.xpath("//head").node().builder().tag("style").text(css).append();
@@ -224,7 +224,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 		logger.info("Log output to job.largeResult");
 	}
 
-	private void addConsistency(DomDoc doc) {
+	private void addConsistency(DomDocument doc) {
 		{
 			doc.html().body().builder().tag("h2")
 					.text("Active consistency jobs").append();

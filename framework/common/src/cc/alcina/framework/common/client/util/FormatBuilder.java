@@ -131,4 +131,17 @@ public class FormatBuilder {
 			sb.append(separator);
 		}
 	}
+
+	public void appendPadLeft(int width, Object object) {
+		sb.append(CommonUtils.padStringLeft(object.toString(), width, " "));
+	}
+	public void appendPadRight(int width, Object object) {
+		sb.append(CommonUtils.padStringRight(object.toString(), width, ' '));
+	}
+
+	public void fill(int width, String fill) {
+		sb.append(CommonUtils.padStringLeft("", width, fill));
+		sb.append("\n");
+		
+	}
 }

@@ -13,6 +13,8 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
+import cc.alcina.framework.common.client.logic.domain.UserProperty;
+import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -22,6 +24,8 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 //FIXME - mvcc.jobs.2 - make query/queryresult typed?
 public class TransformCollation {
+	private static transient Class<? extends UserProperty> userPropertyPersistableImpl;
+
 	// class/locator/collation
 	private MultikeyMap<EntityCollation> perClass;
 
@@ -91,6 +95,32 @@ public class TransformCollation {
 		return false;
 	}
 
+	public boolean hasPersistable(
+			Class<? extends UserPropertyPersistable>... userPropertyPersistableClasses) {
+		if (userPropertyPersistableImpl == null) {
+			userPropertyPersistableImpl = PersistentImpl
+					.getImplementation(UserProperty.class);
+		}
+		if (!has(userPropertyPersistableImpl)) {
+			return false;
+		}
+		// FIXME - 2023 - doesn't handle deletions, but that is in fact hard
+		// (since non-transactional)
+		Set<Class> modifiedPersistableClasses = query(
+				userPropertyPersistableImpl).stream()
+						.filter(QueryResult::hasNoDeleteTransform)
+						.<UserProperty> map(QueryResult::getEntity)
+						.map(UserProperty::providePersistable)
+						.filter(Objects::nonNull).map(Object::getClass)
+						.collect(Collectors.toSet());
+		for (Class clazz : userPropertyPersistableClasses) {
+			if (modifiedPersistableClasses.contains(clazz)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public boolean isCreatedAndDeleted(DomainTransformEvent event) {
 		EntityCollation valueCollation = forLocator(event.toValueLocator());
 		return forLocator(event.toObjectLocator()).isCreatedAndDeleted()
@@ -101,6 +131,13 @@ public class TransformCollation {
 	public <T extends Entity> Stream<T> modified(Class<T> clazz) {
 		return query(clazz).stream().<T> map(QueryResult::getEntity)
 				.filter(Objects::nonNull);
+	}
+
+	public <T extends Entity> Stream<T>
+			modifiedExcludingProperties(Class<T> clazz, Enum... excludes) {
+		return query(clazz).stream()
+				.filter(qr -> qr.hasPropertyNameExcluding(excludes))
+				.<T> map(QueryResult::getEntity).filter(Objects::nonNull);
 	}
 
 	public <E extends Entity> Query query(Class<E> clazz) {
@@ -221,6 +258,15 @@ public class TransformCollation {
 
 		public DomainTransformEvent last() {
 			return Ax.last(transforms);
+		}
+
+		public boolean onlyContainsNames(PropertyEnum... names) {
+			if (!isPropertyOnly()) {
+				return false;
+			}
+			Set<String> transformedPropertyNames = getTransformedPropertyNames();
+			return Arrays.stream(names).map(PropertyEnum::name)
+					.allMatch(transformedPropertyNames::contains);
 		}
 
 		@Override

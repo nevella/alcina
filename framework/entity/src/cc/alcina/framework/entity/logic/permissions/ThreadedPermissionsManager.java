@@ -93,10 +93,6 @@ public class ThreadedPermissionsManager extends PermissionsManager {
 		return (ThreadedPermissionsManager) threadLocalInstance.get();
 	}
 
-	public boolean isSystemUser() {
-		return getUserName().equals(PermissionsManager.SYSTEM_USER_NAME);
-	}
-
 	public void popSystemOrCurrentUser() {
 		popUser();
 	}

@@ -14,7 +14,7 @@ import javax.xml.transform.dom.DOMSource;
 
 import org.w3c.dom.Document;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
@@ -78,7 +78,7 @@ public abstract class ContentRenderer<D extends ContentDefinition, M extends Pub
 		m.marshal(wrapper, doc);
 		boolean logDocXml = false;
 		if (logDocXml) {
-			new DomDoc(doc).logPretty();
+			new DomDocument(doc).logPretty();
 		}
 	}
 

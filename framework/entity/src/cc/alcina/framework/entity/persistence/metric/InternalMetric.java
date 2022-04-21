@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.BlackboxData;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.JacksonUtils;
 
 @MappedSuperclass
@@ -44,12 +45,9 @@ public abstract class InternalMetric<U extends InternalMetric>
 
 	private long clientInstanceId;
 
-	public long getClientInstanceId() {
-		return this.clientInstanceId;
-	}
+	private transient ThreadHistory threadHistory;
 
-	public void setClientInstanceId(long clientInstanceId) {
-		this.clientInstanceId = clientInstanceId;
+	public InternalMetric() {
 	}
 
 	@Lob
@@ -58,17 +56,12 @@ public abstract class InternalMetric<U extends InternalMetric>
 		return this.blackboxData;
 	}
 
-	public void setBlackboxData(String blackboxData) {
-		this.blackboxData = blackboxData;
-	}
-
-	private transient ThreadHistory threadHistory;
-
-	public InternalMetric() {
-	}
-
 	public String getCallName() {
 		return this.callName;
+	}
+
+	public long getClientInstanceId() {
+		return this.clientInstanceId;
 	}
 
 	public Date getEndTime() {
@@ -109,7 +102,8 @@ public abstract class InternalMetric<U extends InternalMetric>
 			threadHistory = new ThreadHistory();
 			if (sliceJson != null) {
 				try {
-					threadHistory = JsonObjectSerializer.get()
+					threadHistory = new JacksonJsonObjectSerializer()
+							.withAllowUnknownProperties()
 							.deserialize(sliceJson, ThreadHistory.class);
 				} catch (Exception e) {
 					threadHistory.note = "Unable to deserialize";
@@ -127,8 +121,20 @@ public abstract class InternalMetric<U extends InternalMetric>
 		return this.updateTime;
 	}
 
+	public BlackboxData provideBlackboxData() {
+		return JacksonUtils.deserialize(blackboxData, BlackboxData.class);
+	}
+
+	public void setBlackboxData(String blackboxData) {
+		this.blackboxData = blackboxData;
+	}
+
 	public void setCallName(String callName) {
 		this.callName = callName;
+	}
+
+	public void setClientInstanceId(long clientInstanceId) {
+		this.clientInstanceId = clientInstanceId;
 	}
 
 	public void setEndTime(Date end) {
@@ -183,9 +189,5 @@ public abstract class InternalMetric<U extends InternalMetric>
 	@Override
 	public String toString() {
 		return GraphProjection.fieldwiseToStringOneLine(this);
-	}
-
-	public BlackboxData provideBlackboxData() {
-		return JacksonUtils.deserialize(blackboxData, BlackboxData.class);
 	}
 }

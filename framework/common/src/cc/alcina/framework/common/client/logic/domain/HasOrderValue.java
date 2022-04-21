@@ -43,8 +43,8 @@ public interface HasOrderValue {
 			newHov.setOrderValue(currentOv + delta);
 			int minDiff = 0;
 			for (HasOrderValue hov : tmp) {
-				int ov = CommonUtils.iv(hov.getOrderValue());
-				if (ov > currentOv) {
+				int orderValue = CommonUtils.iv(hov.getOrderValue());
+				if (orderValue > currentOv) {
 					minDiff = Math.min(minDiff, currentOv);
 				}
 			}
@@ -53,9 +53,9 @@ public interface HasOrderValue {
 					: 0;
 			if (add != 0) {
 				for (HasOrderValue hov : tmp) {
-					int ov = CommonUtils.iv(hov.getOrderValue());
-					if (ov > currentOv) {
-						hov.setOrderValue(ov + add);
+					int orderValue = CommonUtils.iv(hov.getOrderValue());
+					if (orderValue > currentOv) {
+						hov.setOrderValue(orderValue + add);
 					}
 				}
 			}

@@ -65,6 +65,8 @@ public class InternalMetricSliceOracle {
 			return true;
 		} else if (imd.type == InternalMetricTypeAlcina.servlet) {
 			return true;
+		} else if (imd.type == InternalMetricTypeAlcina.tranche) {
+			return true;
 		} else {
 			Ax.err("Internal metric type not supported: %s", imd.type);
 			return false;

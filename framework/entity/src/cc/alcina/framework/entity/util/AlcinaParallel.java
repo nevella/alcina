@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
@@ -44,7 +45,7 @@ public class AlcinaParallel {
 
 	public void cancel() {
 		cancelled = true;
-		executor.shutdownNow();
+		maybeShutdownExecutor();
 	}
 
 	public AlcinaParallelResults run() {
@@ -78,9 +79,10 @@ public class AlcinaParallel {
 			}
 			return new AlcinaParallelResults();
 		} else {
-			executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
-					parameters.threadCount,
-					new NamedThreadFactory(parameters.provideThreadName()));
+			executor = parameters.executor != null ? parameters.executor
+					: (ThreadPoolExecutor) Executors.newFixedThreadPool(
+							parameters.threadCount, new NamedThreadFactory(
+									parameters.provideThreadName()));
 			LooseContextInstance snapshot = LooseContext.getContext()
 					.snapshot();
 			List<Callable> callables = parameters.runnables.stream().map(
@@ -101,8 +103,14 @@ public class AlcinaParallel {
 					Transaction.begin();
 				}
 			}
-			executor.shutdown();
+			maybeShutdownExecutor();
 			return new AlcinaParallelResults();
+		}
+	}
+
+	private void maybeShutdownExecutor() {
+		if (parameters.executor == null) {
+			executor.shutdown();
 		}
 	}
 
@@ -197,6 +205,8 @@ public class AlcinaParallel {
 
 		private boolean wrapInTransaction;
 
+		private ThreadPoolExecutor executor;
+
 		public Parameters() {
 		}
 
@@ -208,6 +218,7 @@ public class AlcinaParallel {
 			this.serial = builder.withSerial;
 			this.transaction = builder.transaction;
 			this.wrapInTransaction = builder.wrapInTransaction;
+			this.executor = builder.executor;
 		}
 
 		public String provideThreadName() {
@@ -230,6 +241,8 @@ public class AlcinaParallel {
 
 			private boolean wrapInTransaction;
 
+			private ThreadPoolExecutor executor;
+
 			private Builder() {
 			}
 
@@ -243,6 +256,11 @@ public class AlcinaParallel {
 
 			public Builder withCancelOnException(boolean cancelOnException) {
 				this.cancelOnException = cancelOnException;
+				return this;
+			}
+
+			public Builder withExecutor(ThreadPoolExecutor executor) {
+				this.executor = executor;
 				return this;
 			}
 
@@ -263,6 +281,12 @@ public class AlcinaParallel {
 
 			public Builder withThreadName(String threadName) {
 				this.threadName = threadName;
+				return this;
+			}
+
+			public Builder withThrowingRunnables(
+					List<ThrowingRunnable> throwingRunnables) {
+				runnables = ThrowingRunnable.asRunnables(throwingRunnables);
 				return this;
 			}
 

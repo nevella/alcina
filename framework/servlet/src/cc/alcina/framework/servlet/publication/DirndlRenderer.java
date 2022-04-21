@@ -1,8 +1,11 @@
 package cc.alcina.framework.servlet.publication;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -15,38 +18,48 @@ public class DirndlRenderer {
 		return new DirndlRenderer();
 	}
 
-	private Class styleRelativeClass;
-
-	private String styleRelativeFilename;
+	private List<StylePath> stylePaths = new ArrayList<>();
 
 	private Model renderable;
+
+	public DirndlRenderer addStyleFile(Class<?> styleRelativeClass,
+			String styleRelativeFilename) {
+		stylePaths
+				.add(new StylePath(styleRelativeClass, styleRelativeFilename));
+		return this;
+	}
+
+	public DomDocument render() {
+		Widget widget = new DirectedLayout().render(new ContextResolver(), null,
+				renderable);
+		String outerHtml = widget.getElement().getOuterHtml();
+		DomDocument doc = DomDocument.basicHtmlDoc();
+		DomNode div = doc.html().body().builder().tag("div").append();
+		div.setInnerXml(outerHtml);
+		stylePaths.forEach(p -> {
+			String style = ResourceUtilities.read(p.styleRelativeClass,
+					p.styleRelativeFilename);
+			if (Ax.notBlank(style)) {
+				doc.html().appendStyleNode(style);
+			}
+		});
+		return doc;
+	}
 
 	public DirndlRenderer withRenderable(Model renderable) {
 		this.renderable = renderable;
 		return this;
 	}
 
-	public DirndlRenderer withStyleFile(Class<?> styleRelativeClass,
-			String styleRelativeFilename) {
-		this.styleRelativeClass = styleRelativeClass;
-		this.styleRelativeFilename = styleRelativeFilename;
-		return this;
-	}
+	static class StylePath {
+		Class<?> styleRelativeClass;
 
-	public DomDoc render() {
-		Widget widget = new DirectedLayout().render(new ContextResolver(), null,
-				renderable);
-		String outerHtml = widget.getElement().getOuterHtml();
-		DomDoc doc = DomDoc.basicHtmlDoc();
-		DomNode div = doc.html().body().builder().tag("div").append();
-		div.setInnerXml(outerHtml);
-		if (styleRelativeClass != null) {
-			String style = ResourceUtilities.read(styleRelativeClass,
-					styleRelativeFilename);
-			if (Ax.notBlank(style)) {
-				doc.html().appendStyleNode(style);
-			}
+		String styleRelativeFilename;
+
+		public StylePath(Class<?> styleRelativeClass,
+				String styleRelativeFilename) {
+			this.styleRelativeClass = styleRelativeClass;
+			this.styleRelativeFilename = styleRelativeFilename;
 		}
-		return doc;
 	}
 }

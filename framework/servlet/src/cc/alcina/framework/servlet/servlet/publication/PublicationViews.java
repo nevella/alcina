@@ -9,7 +9,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
@@ -38,7 +38,7 @@ public class PublicationViews {
 
 	public void build(long id, String delta) {
 		Publication publication = PersistentImpl.find(Publication.class, id);
-		DomDoc doc = DomDoc.basicHtmlDoc();
+		DomDocument doc = DomDocument.basicHtmlDoc();
 		String css = ResourceUtilities.readClassPathResourceAsString(
 				PublicationViews.class, "publication-view.css");
 		doc.xpath("//head").node().builder().tag("style").text(css).append();

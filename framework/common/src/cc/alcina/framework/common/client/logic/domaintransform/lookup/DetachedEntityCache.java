@@ -65,7 +65,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	public MemoryStat addMemoryStats(MemoryStat parent) {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
-		domain.entrySet().stream().map(e -> new DomainClassStatWrapper(e))
+		domain.keySet().stream().map(key -> new DomainClassStatWrapper(key,domain.get(key),local.get(key)))
 				.forEach(w -> w.addMemoryStats(self));
 		self.objectMemory.walkStats(this, self.counter, o -> o == this
 				|| !self.objectMemory.isMemoryStatProvider(o.getClass()));
@@ -253,7 +253,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 
 	@Override
 	public String toString() {
-		return "Cache: " + domain;
+		return Ax.format("Cache [%s domain classes]", domain.size());
 	}
 
 	private <T> T getUnboxed(Class<T> clazz, long id) {
@@ -369,19 +369,25 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		void debugCreation(long localId, Entity entity);
 	}
 
-	class DomainClassStatWrapper implements MemoryStatProvider {
-		private Entry<Class, Map<Long, Entity>> entry;
+	static class DomainClassStatWrapper implements MemoryStatProvider {
 
-		public DomainClassStatWrapper(
-				Map.Entry<Class, Map<Long, Entity>> entry) {
-			this.entry = entry;
+		private Class key;
+		private Map<Long, Entity> domain;
+		private Map<Long, Entity> local;
+
+		public DomainClassStatWrapper(Class key, Map<Long, Entity> domain,
+				Map<Long, Entity> local) {
+					this.key = key;
+					this.domain = domain;
+					this.local = local;
 		}
 
 		@Override
 		public MemoryStat addMemoryStats(MemoryStat parent) {
 			MemoryStat self = new MemoryStat(this);
 			parent.addChild(self);
-			entry.getValue().values().forEach(e -> {
+			Stream.concat(domain.values().stream(), local.values().stream())
+			.forEach(e -> {
 				self.objectMemory.walkStats(e, self.counter,
 						o -> o == e || !Reflections
 								.isAssignableFrom(Entity.class, o.getClass()));
@@ -391,7 +397,7 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 
 		@Override
 		public String toString() {
-			return Ax.format("DomainClassStat: %s", entry.getKey().getName());
+			return Ax.format("DomainClassStat: %s", key.getName());
 		}
 	}
 }

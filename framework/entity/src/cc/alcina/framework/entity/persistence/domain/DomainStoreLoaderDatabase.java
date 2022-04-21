@@ -440,10 +440,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					.collect(Collectors.toList());
 		}
 		List<Future> futures = (List) executor.invokeAll(tasks);
-		for (Future future : futures) {
-			// will throw if there was an exception
-			future.get();
-		}
+		CommonUtils.throwIfCompletedWithException(futures);
 		initialList.clear();
 	}
 

@@ -86,6 +86,16 @@ public class Property {
 		return getter == null;
 	}
 
+	public boolean provideNotDefaultIgnoreable() {
+		switch (name) {
+		case "class":
+		case "propertyChangeListeners":
+			return false;
+		default:
+			return true;
+		}
+	}
+
 	public boolean provideWriteableNonTransient() {
 		return !isReadOnly() && !name.equals("propertyChangeListeners");
 	}

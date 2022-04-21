@@ -149,6 +149,11 @@ public abstract class UserProperty<T extends UserProperty>
 		return this.value;
 	}
 
+	public UserPropertyPersistable providePersistable() {
+		return this.userPropertySupport == null ? null
+				: this.userPropertySupport.getPersistable();
+	}
+
 	public void serializeObject(Object object) {
 		setCategory(object.getClass().getName());
 		setValue(TransformManager.serialize(object));

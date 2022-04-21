@@ -13,6 +13,8 @@
  */
 package cc.alcina.framework.common.client.util;
 
+import java.util.Date;
+
 /**
  *
  * @author Nick Reddel
@@ -29,6 +31,10 @@ public class TimeConstants {
 	public static final long ONE_WEEK_MS = ONE_DAY_MS * 7;
 
 	public static final long ONE_YEAR_MS = ONE_DAY_MS * 365;
+
+	public static boolean withinDays(Date date, int days) {
+		return date == null ? false : within(date.getTime(), days * ONE_DAY_MS);
+	}
 
 	public static boolean within(long time, long delta) {
 		return (System.currentTimeMillis() - time) < delta;

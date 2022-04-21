@@ -10,6 +10,7 @@ import java.util.Objects;
 import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import org.w3c.dom.Element;
@@ -1107,11 +1108,18 @@ public class DomUtils implements NodeFromXpathProvider {
 								&& e.getTagName().equalsIgnoreCase("A")) {
 							int debug = 3;
 						} else {
-							Preconditions.checkState(
-									e.getChildNodes().getLength() == 1);
-							Preconditions.checkState(e.getChildNodes().item(0)
-									.getNodeType() == Node.TEXT_NODE);
-							kids.add(e.getChildNodes().item(0));
+							DomNode domNode = DomNode.from(e);
+							List<DomNode> nonProcesingInstructionChildren = domNode.children
+									.stream()
+									.filter(n2 -> !n2.isProcessingInstruction())
+									.collect(Collectors.toList());
+							Preconditions
+									.checkState(nonProcesingInstructionChildren
+											.size() == 1);
+							Preconditions
+									.checkState(nonProcesingInstructionChildren
+											.get(0).isText());
+							kids.add(nonProcesingInstructionChildren.get(0).domNode());
 						}
 					} else {
 						if (Ax.notBlank(currentEltUnwrapId)) {

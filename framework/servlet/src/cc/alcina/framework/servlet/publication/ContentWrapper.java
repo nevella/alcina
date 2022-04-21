@@ -1,6 +1,8 @@
 package cc.alcina.framework.servlet.publication;
 
+import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
+import java.io.OutputStreamWriter;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -196,6 +198,33 @@ public abstract class ContentWrapper<D extends ContentDefinition, M extends Publ
 		public String unsubscribeHtml;
 
 		public boolean showPublicationInfo = true;
+	}
+
+	public static class Passthrough<D extends ContentDefinition, M extends PublicationContent, V extends DeliveryModel>
+			extends ContentWrapper<D, M, V> {
+		@Override
+		public void wrapContent(ContentDefinition contentDefinition,
+				PublicationContent publicationContent,
+				DeliveryModel deliveryModel,
+				ContentRendererResults rendererResults, long publicationId,
+				long publicationUserId) throws Exception {
+			if (rendererResults.bytes == null
+					&& rendererResults.htmlContent != null) {
+				ByteArrayOutputStream baos = new ByteArrayOutputStream();
+				OutputStreamWriter osw = new OutputStreamWriter(baos, "UTF-8");
+				osw.write(rendererResults.htmlContent);
+				osw.close();
+				rendererResults.bytes = baos.toByteArray();
+			}
+			wrappedBytes = rendererResults.bytes;
+			wrappedContent = rendererResults.htmlContent;
+		}
+
+		@Override
+		protected void prepareWrapper(long publicationId,
+				long publicationUserId) throws Exception {
+			wrapper.rendererResults = rendererResults;
+		}
 	}
 
 	@XmlRootElement(name = "info")

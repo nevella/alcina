@@ -1,6 +1,6 @@
 package cc.alcina.framework.entity.parser.structured;
 
-import cc.alcina.framework.common.client.dom.DomDoc;
+import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNode.DomNodeDebugSupport;
 import cc.alcina.framework.common.client.util.Ax;
@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.XmlUtils;
 
 public class XmlTokenOutput implements DomNodeDebugSupport {
-	private DomDoc outDoc;
+	private DomDocument outDoc;
 
 	private DomNode writeCursor;
 
@@ -24,7 +24,7 @@ public class XmlTokenOutput implements DomNodeDebugSupport {
 	private CachingMap<DomNode, DomNodeDebugInfo> debugMap = new CachingMap<>(
 			DomNodeDebugInfo::new);
 
-	public XmlTokenOutput(DomDoc outDoc) {
+	public XmlTokenOutput(DomDocument outDoc) {
 		this.outDoc = outDoc;
 		writeCursor = outDoc.root();
 	}
@@ -103,7 +103,7 @@ public class XmlTokenOutput implements DomNodeDebugSupport {
 		return this.lastTextNode;
 	}
 
-	public DomDoc getOutDoc() {
+	public DomDocument getOutDoc() {
 		return this.outDoc;
 	}
 
@@ -175,7 +175,7 @@ public class XmlTokenOutput implements DomNodeDebugSupport {
 	}
 
 	public void writeXml(String xmlString) {
-		DomDoc insert = new DomDoc(xmlString);
+		DomDocument insert = new DomDocument(xmlString);
 		DomNode documentElementNode = insert.getDocumentElementNode();
 		if (documentElementNode.tagIs("strip")) {
 			documentElementNode.children.nodes()
