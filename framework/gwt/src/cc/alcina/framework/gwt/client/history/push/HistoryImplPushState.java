@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.extras.history.client;
+package cc.alcina.framework.gwt.client.history.push;
 
 import java.util.Objects;
 
@@ -115,7 +115,7 @@ public class HistoryImplPushState extends HistoryImpl {
     var oldHandler = $wnd.onpopstate;
     $wnd.onpopstate = $entry(function(e) {
       if (e.state && e.state.historyToken) {
-        that.@cc.alcina.framework.extras.history.client.HistoryImplPushState::onPopState(Ljava/lang/String;)(e.state.historyToken);
+        that.@cc.alcina.framework.gwt.client.history.push.HistoryImplPushState::onPopState(Ljava/lang/String;)(e.state.historyToken);
       }
       if (oldHandler) {
         oldHandler(e);

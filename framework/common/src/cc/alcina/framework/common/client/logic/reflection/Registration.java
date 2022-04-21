@@ -287,7 +287,9 @@ public @interface Registration {
 		// Default priority
 		_DEFAULT,
 		// Higher priorities
-		BASE_LIBRARY, INTERMEDIATE_LIBRARY, PREFERRED_LIBRARY, APP
+		BASE_LIBRARY, INTERMEDIATE_LIBRARY, PREFERRED_LIBRARY, APP,
+		// if say a client registration is app, server depends on client code
+		APP_OVERRIDE
 	}
 
 	@Retention(RetentionPolicy.RUNTIME)

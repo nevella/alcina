@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.extras.history.client;
+package cc.alcina.framework.gwt.client.history.push;
 
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.HistoryImpl;

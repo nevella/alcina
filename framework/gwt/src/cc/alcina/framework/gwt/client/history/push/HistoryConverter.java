@@ -11,7 +11,7 @@
  * or implied. See the License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.extras.history.client;
+package cc.alcina.framework.gwt.client.history.push;
 
 /**
  * Class which helps to convert the history token to a format which is suitable

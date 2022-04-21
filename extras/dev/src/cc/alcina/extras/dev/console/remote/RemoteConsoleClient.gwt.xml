@@ -7,7 +7,7 @@
 	<inherits name="com.google.gwt.user.Debug" />
 	<inherits name="com.google.gwt.http.HTTP" />
 	<inherits name="elemental.Json" />
-	<inherits name='cc.alcina.framework.extras.history.PushState' />
+	<inherits name='cc.alcina.framework.gwt.client.history.PushState' />
 	<inherits name='com.google.gwt.user.client.AlcinaClientSerializationOverride' />
 	<source path="client" />
 	<source path="protocol" />

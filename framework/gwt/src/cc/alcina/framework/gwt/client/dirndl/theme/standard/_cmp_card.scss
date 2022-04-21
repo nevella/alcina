@@ -1,0 +1,44 @@
+@use '../_theme';
+@use '_base';
+
+.ol-card {
+  border: theme.$panel-border;
+  border-radius: theme.$panel-border-radius;
+  background-color: theme.$panel-background-color;
+  color: theme.$panel-color;
+  width: theme.$card-width;
+  margin: theme.$card-margin;
+}
+
+.ol-card > header {
+  border-bottom: theme.$card-header-border;
+  padding: theme.$card-header-padding;
+  color: theme.$title-color;
+  font-weight: theme.$title-font-weight;
+  font-size: theme.$title-font-size;
+  font-family: theme.$title-font-family;
+  justify-content: theme.$card-header-justify;
+  display: flex;
+  > label {
+    flex-grow: 1;
+  }
+}
+
+.ol-card > footer {
+  border-top: theme.$card-footer-border;
+  justify-content: theme.$card-header-justify;
+  display: block;
+  padding: theme.$card-footer-padding;
+}
+
+.ol-card > contents {
+  padding: theme.$card-body-padding;
+  min-height: theme.$card-body-min-height;
+  display: block;
+}
+.ol-card-container {
+  display: flex;
+  max-width: 100%;
+  flex-wrap: wrap;
+  justify-content: center;
+}
