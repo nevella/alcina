@@ -169,13 +169,18 @@ public class XmlUtils {
 		return true;
 	}
 
+	public static String balanceForXhtml(String htmlContent) {
+		htmlContent = htmlContent.replaceAll("(?i)<META(.*?)>", "<META$1/>");
+		return htmlContent;
+	}
+
 	public static List<Element> childElements(Node node) {
 		return nodeListToElementList(node.getChildNodes());
 	}
 
 	public static void cleanNamespacedAttributes(Document doc) {
-		DomDocument.documentFor(doc).children.stream().filter(DomNode::isElement)
-				.forEach(n -> {
+		DomDocument.documentFor(doc).children.stream()
+				.filter(DomNode::isElement).forEach(n -> {
 					if (n.domElement().hasAttributes()) {
 						n.attributes().keySet().stream()
 								.collect(Collectors.toList())
@@ -325,6 +330,11 @@ public class XmlUtils {
 
 	public static Element firstElementChild(Node node) {
 		return CommonUtils.first(nodeListToElementList(node.getChildNodes()));
+	}
+
+	public static String fixStyleNodeContents(String result) {
+		return Pattern.compile("(?is)<style>.+?</style>").matcher(result)
+				.replaceAll(mr -> mr.group().replace("&gt;", ">"));
 	}
 
 	public static Element getAncestorWithTagName(Node n, String tagName) {
@@ -1847,15 +1857,5 @@ public class XmlUtils {
 				exception.printStackTrace();
 			}
 		}
-	}
-
-	public static String balanceForXhtml(String htmlContent) {
-		htmlContent = htmlContent.replaceAll("(?i)<META(.*?)>", "<META$1/>");
-		return htmlContent;
-	}
-
-	public static String fixStyleNodeContents(String result) {
-		return Pattern.compile("(?is)<style>.+?</style>").matcher(result)
-				.replaceAll(mr -> mr.group().replace("&gt;", ">"));
 	}
 }

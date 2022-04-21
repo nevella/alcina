@@ -1306,6 +1306,10 @@ public class DomNode {
 			return node().ntc();
 		}
 
+		public String textNormalisedOrEmpty() {
+			return Optional.ofNullable(node()).map(DomNode::ntc).orElse("");
+		}
+
 		public String textOrEmpty() {
 			return Optional.ofNullable(node()).map(DomNode::textContent)
 					.orElse("");
