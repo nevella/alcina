@@ -4,9 +4,10 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
 
-/*
- * Contains either a standard layout model (such as HeaderContent) (for normal UI) or a model which is essentially a modal in-page
- * 
+/**
+ * Contains either a standard layout model (such as HeaderContent) (for normal
+ * UI) or a model which is essentially a modal in-page
+ *
  * Renders by delegating to the model field
  */
 @Directed(renderer = DelegatingNodeRenderer.class)

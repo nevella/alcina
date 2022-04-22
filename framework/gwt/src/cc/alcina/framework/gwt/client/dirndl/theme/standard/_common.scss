@@ -9,21 +9,3 @@
     color: theme.$grey-link-hover-color;
   }
 }
-.ol-content-box {
-  padding: theme.$content-box-padding;
-}
-.ol-panel {
-  border: theme.$panel-border;
-  border-radius: theme.$panel-border-radius;
-  background-color: theme.$panel-background-color;
-  color: theme.$panel-color;
-}
-.ol-content-area {
-  width: 100%;
-  padding: 0 calc(50% - 500px);
-  margin: 0 auto;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  background-color: theme.$content-area-background-color;
-}

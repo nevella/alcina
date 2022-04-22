@@ -319,6 +319,16 @@ public class Registry {
 	}
 
 	public class Register {
+		public void add(Class registeringClass, List<Class> keys,
+				Registration.Implementation implementation,
+				Registration.Priority priority) {
+			registrations
+					.register(registryKeys.get(registeringClass),
+							keys.stream().map(registryKeys::get)
+									.collect(Collectors.toList()),
+							implementation, priority);
+		}
+
 		public void add(Class registeringClass, Registration registration) {
 			add(registryKeys.get(registeringClass),
 					Arrays.stream(registration.value()).map(registryKeys::get)
