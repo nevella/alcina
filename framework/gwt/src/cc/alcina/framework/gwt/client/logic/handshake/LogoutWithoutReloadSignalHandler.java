@@ -2,9 +2,9 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.consort.Consort;
+import cc.alcina.framework.common.client.consort.ConsortSignalHandler;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
-import cc.alcina.framework.common.client.state.Consort;
-import cc.alcina.framework.common.client.state.ConsortSignalHandler;
 
 public class LogoutWithoutReloadSignalHandler
 		implements ConsortSignalHandler<HandshakeSignal> {

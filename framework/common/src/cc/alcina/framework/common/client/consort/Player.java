@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.state;
+package cc.alcina.framework.common.client.consort;
 
 import java.util.ArrayList;
 import java.util.Arrays;

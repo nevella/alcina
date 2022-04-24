@@ -32,6 +32,12 @@ public class TopicPublisher {
 		lookup.getAndEnsure(topic).clear();
 	}
 
+	public boolean hasListeners(String key) {
+		synchronized (lookup) {
+			return lookup.containsKey(key) && lookup.get(key).size() > 0;
+		}
+	}
+
 	public void listenerDelta(String key, TopicListener listener, boolean add) {
 		if (add) {
 			addTopicListener(key, listener);
@@ -144,6 +150,10 @@ public class TopicPublisher {
 
 		public void delta(TopicListener<T> listener, boolean add) {
 			topicPublisher.listenerDelta(topic, listener, add);
+		}
+
+		public boolean hasListeners() {
+			return topicPublisher.hasListeners(topic);
 		}
 
 		public void publish(T t) {

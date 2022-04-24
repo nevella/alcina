@@ -1,10 +1,10 @@
 package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 
+import cc.alcina.framework.common.client.consort.Consort;
+import cc.alcina.framework.common.client.consort.ConsortPlayer;
+import cc.alcina.framework.common.client.consort.EndpointPlayer;
+import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.state.Consort;
-import cc.alcina.framework.common.client.state.ConsortPlayer;
-import cc.alcina.framework.common.client.state.EndpointPlayer;
-import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeState;
 

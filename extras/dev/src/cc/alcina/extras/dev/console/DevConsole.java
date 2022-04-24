@@ -34,10 +34,12 @@ import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.extras.dev.console.remote.server.DevConsoleRemote;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils.LogMuter;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -73,14 +75,18 @@ import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole;
 import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole.InitJaxbServices;
 import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole.InitLightweightServices;
 import cc.alcina.framework.entity.stat.StatCategory_Console.InitPostObjectServices;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEvent;
+import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable.AlcinaChildContextRunner;
 import cc.alcina.framework.entity.util.BiPrintStream;
 import cc.alcina.framework.entity.util.BiPrintStream.NullPrintStream;
 import cc.alcina.framework.entity.util.CollectionCreatorsJvm.DelegateMapCreatorConcurrentNoNulls;
 import cc.alcina.framework.entity.util.JaxbUtils;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
+import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
@@ -206,6 +212,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		new DevStats().parse(logProvider).dump(true);
 		logProvider.startRemote();
 		JobRegistry.get().init();
+		JobLogTimer.get().init();
 		AlcinaTopics.applicationRestart.add((k, v) -> getInstance().restart());
 	}
 
@@ -927,6 +934,49 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public enum DevConsoleStyle {
 		NORMAL, OK, ERR, COMMAND
+	}
+
+	@Registration.Singleton
+	public static class JobLogTimer
+			implements DomainTransformPersistenceListener {
+		public static DevConsole.JobLogTimer get() {
+			return Registry.impl(DevConsole.JobLogTimer.class);
+		}
+
+		private AtEndOfEventSeriesTimer<Job> timer;
+
+		public JobLogTimer() {
+		}
+
+		public void init() {
+			DomainStore.stores().writableStore().getPersistenceEvents()
+					.addDomainTransformPersistenceListener(this);
+			int delay = 2000;
+			this.timer = new AtEndOfEventSeriesTimer<Job>(delay, () -> {
+				MethodContext.instance().withWrappingTransaction().run(() -> {
+					Job job = timer.getLastObject();
+					Ax.out("[Job progress :: %s] - %s", job,
+							job.getStatusMessage());
+				});
+			}).maxDelayFromFirstAction(delay);
+		}
+
+		@Override
+		public void onDomainTransformRequestPersistence(
+				DomainTransformPersistenceEvent event) {
+			switch (event.getPersistenceEventType()) {
+			case COMMIT_OK: {
+				TransformCollation collation = event.getPostProcessCollation();
+				Class<? extends Job> jobImplClass = PersistentImpl
+						.getImplementation(Job.class);
+				if (collation.has(jobImplClass)) {
+					Job job = collation.query(jobImplClass).stream().findFirst()
+							.get().<Job> getEntity();
+					timer.triggerEventOccurred(job);
+				}
+			}
+			}
+		}
 	}
 
 	@Registration.Singleton(value = LogMuter.class, priority = Registration.Priority.PREFERRED_LIBRARY)

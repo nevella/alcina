@@ -7,12 +7,12 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.consort.Consort;
+import cc.alcina.framework.common.client.consort.LoopingPlayer;
+import cc.alcina.framework.common.client.consort.Player;
+import cc.alcina.framework.common.client.consort.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
-import cc.alcina.framework.common.client.state.Consort;
-import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
-import cc.alcina.framework.common.client.state.LoopingPlayer;
-import cc.alcina.framework.common.client.state.Player;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TimerWrapper;

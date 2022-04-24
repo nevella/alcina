@@ -8,6 +8,8 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.user.client.rpc.SerializationException;
 
 import cc.alcina.framework.common.client.collections.IteratorWithCurrent;
+import cc.alcina.framework.common.client.consort.LoopingPlayer;
+import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.logic.RepeatingCommandWithPostCompletionCallback;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecordType;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
@@ -16,8 +18,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainModelObject
 import cc.alcina.framework.common.client.logic.domaintransform.HasRequestReplayId;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.state.LoopingPlayer;
-import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasSize;

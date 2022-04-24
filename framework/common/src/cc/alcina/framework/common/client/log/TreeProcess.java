@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.job;
+package cc.alcina.framework.common.client.log;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -12,9 +12,11 @@ import org.slf4j.LoggerFactory;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 
 /**
  * Models an operation which can be modelled as a tree structure. Particularly
@@ -30,6 +32,8 @@ public class TreeProcess {
 
 	private List<NodeException> processExceptions = new ArrayList<>();
 
+	public Topic<String> positionChangedMessage = Topic.local();
+
 	private Node selected;
 
 	Logger logger;
@@ -37,7 +41,7 @@ public class TreeProcess {
 	public TreeProcess(TaskPerformer performer) {
 		root = new NodeImpl(this, null, performer);
 		logger = LoggerFactory.getLogger(performer.getClass());
-		onEvent(Event.node_added, root);
+		onEvent(Event.node_added, root, null);
 	}
 
 	public Cursor getCursor() {
@@ -59,7 +63,8 @@ public class TreeProcess {
 		return levelSizes.get(depth);
 	}
 
-	public void onEvent(Event event, Node node) {
+	public void onEvent(Event event, Node node,
+			ProcessContextProvider processContextProvider) {
 		int depth = node.depth();
 		switch (event) {
 		case node_added:
@@ -68,21 +73,10 @@ public class TreeProcess {
 			break;
 		case node_selected: {
 			selected = node;
-			FormatBuilder position = new FormatBuilder().separator(" > ");
-			List<Node> selectionPath = node.asNodePath();
-			selectionPath.stream().
-			// skip root
-					skip(1)
-					//
-					.forEach(n -> {
-						IntPair pair = new IntPair(n.indexInLevel(),
-								levelSizes.get(n.depth()));
-						position.append(pair);
-					});
-			position.appendWithoutSeparator(" :: ");
-			selectionPath.stream().skip(1)
-					.forEach(n -> position.append(n.displayName()));
-			JobContext.setStatusMessage(position.toString());
+			String positionMessage = processContextProvider == null
+					? flatPosition(node)
+					: processContextProvider.flatPosition(node);
+			positionChangedMessage.publish(positionMessage);
 		}
 		}
 	}
@@ -93,6 +87,39 @@ public class TreeProcess {
 
 	public Node root() {
 		return root;
+	}
+
+	private String flatPosition(Node node) {
+		FormatBuilder position = new FormatBuilder().separator(" > ");
+		List<Node> selectionPath = node.asNodePath();
+		Node last = CommonUtils.last(selectionPath);
+		position.format("Generation: [%s/%s]", last.depth(), levelSizes.size());
+		IntPair pair = new IntPair(last.indexInLevel(),
+				levelSizes.get(last.depth()));
+		position.append(pair);
+		position.separator(" :: ");
+		position.append(last.displayName());
+		String positionMessage = position.toString();
+		return positionMessage;
+	}
+
+	String levlledPosition(Node node) {
+		FormatBuilder position = new FormatBuilder().separator(" > ");
+		List<Node> selectionPath = node.asNodePath();
+		selectionPath.stream().
+		// skip root
+				skip(1)
+				//
+				.forEach(n -> {
+					IntPair pair = new IntPair(n.indexInLevel(),
+							levelSizes.get(n.depth()));
+					position.append(pair);
+				});
+		position.appendWithoutSeparator(" :: ");
+		selectionPath.stream().skip(1)
+				.forEach(n -> position.append(n.displayName()));
+		String positionMessage = position.toString();
+		return positionMessage;
 	}
 
 	public class Cursor {
@@ -209,12 +236,20 @@ public class TreeProcess {
 			tree().logger.info(template, args);
 		}
 
+		default void onException(Exception exception) {
+			tree().onException(exception);
+		}
+
 		default Node root() {
 			Node cursor = this;
 			while (cursor.getParent() != null) {
 				cursor = cursor.getParent();
 			}
 			return cursor;
+		}
+
+		default void select(Object value) {
+			select(value, null);
 		}
 
 		/**
@@ -225,11 +260,12 @@ public class TreeProcess {
 		 *            null if 'select this', otherwise select the child with
 		 *            value equal to the value parameter
 		 */
-		default void select(Object value) {
+		default void select(Object value,
+				ProcessContextProvider processContextProvider) {
 			Node node = value == null ? this
 					: getChildren().stream().filter(c -> c.getValue() == value)
 							.findFirst().get();
-			tree().onEvent(Event.node_selected, node);
+			tree().onEvent(Event.node_selected, node, processContextProvider);
 		}
 
 		void setReleasedResources(boolean reachable);
@@ -256,6 +292,10 @@ public class TreeProcess {
 		public Node getSelected() {
 			return this.selected;
 		}
+	}
+
+	public interface ProcessContextProvider {
+		String flatPosition(Node node);
 	}
 
 	enum Event {
@@ -295,7 +335,7 @@ public class TreeProcess {
 			child.index = children.size();
 			child.levelIndex = tree().levelSize(child.depth());
 			children.add(child);
-			tree().onEvent(Event.node_added, child);
+			tree().onEvent(Event.node_added, child, null);
 			return child;
 		}
 

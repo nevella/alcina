@@ -1,8 +1,8 @@
-package cc.alcina.framework.servlet.traversal;
+package cc.alcina.framework.common.client.traversal;
 
 import cc.alcina.framework.common.client.dom.DomDocument;
+import cc.alcina.framework.common.client.traversal.DomSelection.Document;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.servlet.traversal.DomSelection.Document;
 
 public abstract class HttpUrlSelector<I extends UrlSelection, O extends Selection>
 		implements Selector<I, O> {

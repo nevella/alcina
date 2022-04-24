@@ -80,6 +80,10 @@ public class CollectionCreators {
 		public <K, V> Map<K, V> create() {
 			return new HashMap<>();
 		}
+
+		public <K, V> Map<K, V> create(int initialSize) {
+			return new HashMap<>();
+		}
 	}
 
 	public interface MapCreator<K, V> extends Supplier<Map<K, V>> {

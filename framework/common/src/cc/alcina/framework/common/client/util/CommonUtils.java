@@ -2044,6 +2044,48 @@ public class CommonUtils {
 		return false;
 	}
 
+	// assume slash-delineated
+	public static String combinePaths(String absPath, String relPath) {
+		if (relPath.contains("://")) {
+			return relPath;
+		}
+		if (relPath.startsWith("//")) {
+			return absPath.replaceFirst("(.+?:)//.+", "$1") + relPath;
+		}
+		if (relPath.startsWith("?")) {
+			return absPath + relPath;
+		}
+		if (relPath.startsWith("/")) {
+			if (absPath.contains("://")) {
+				int idx0 = absPath.indexOf("://") + 3;
+				int idx1 = absPath.indexOf("/", idx0);
+				return (idx1 == -1 ? absPath : absPath.substring(0, idx1))
+						+ relPath;
+			} else {
+				return relPath;
+			}
+		}
+		String parentSep = "../";
+		String voidSep = "./";
+		int x = 0;
+		x = absPath.lastIndexOf("/");
+		if (x != -1) {
+			absPath = absPath.substring(0, x);
+		}
+		while (relPath.startsWith(parentSep)) {
+			x = absPath.lastIndexOf("/");
+			absPath = absPath.substring(0, x);
+			relPath = relPath.substring(parentSep.length());
+		}
+		if (relPath.startsWith(voidSep)) {
+			relPath = relPath.substring(voidSep.length());
+		}
+		if (!absPath.endsWith("/")) {
+			absPath += "/";
+		}
+		return absPath + relPath;
+	}
+
 	public enum ComparatorResult {
 		BOTH_NON_NULL, BOTH_NULL, FIRST_NULL, SECOND_NULL;
 

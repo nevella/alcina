@@ -1,11 +1,11 @@
-package cc.alcina.framework.common.client.state;
+package cc.alcina.framework.common.client.consort;
 
 import java.util.Collection;
 import java.util.Collections;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
+import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
 
 public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 	private E from;

@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -20,13 +20,14 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.domain.DomainCollections;
 
 /**
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  * @param <K>
  * @param <V>
  */
@@ -69,6 +70,15 @@ public class Multiset<K, V extends Set> implements Serializable {
 			set.addAll(v);
 		}
 		return (V) set;
+	}
+
+	public Multimap<K, List<?>> asMultiMap() {
+		Multimap<K, List<?>> result = new Multimap<>();
+		entrySet().forEach(e -> {
+			result.put(e.getKey(),
+					(List) e.getValue().stream().collect(Collectors.toList()));
+		});
+		return result;
 	}
 
 	public void clear() {

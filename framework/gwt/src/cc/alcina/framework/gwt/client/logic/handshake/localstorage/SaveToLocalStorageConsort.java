@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.logic.handshake.localstorage;
 
-import cc.alcina.framework.common.client.state.AllStatesConsort;
+import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 import cc.alcina.framework.gwt.client.logic.handshake.localstorage.SaveToLocalStorageConsort.State;
 import cc.alcina.framework.gwt.persistence.client.ClientSession;

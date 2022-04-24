@@ -1036,10 +1036,10 @@ public abstract class DevConsoleCommand<C extends DevConsole> {
 			String homeDir = (System.getenv("USERPROFILE") != null)
 					? System.getenv("USERPROFILE")
 					: System.getProperty("user.home");
-			String localPath = SEUtilities.combinePaths(homeDir + "/", argv[1]);
+			String localPath = CommonUtils.combinePaths(homeDir + "/", argv[1]);
 			String remotePath = String.format("%s:%s", console.props.remoteSsh,
 					(argv[2].startsWith("'") ? argv[2]
-							: (SEUtilities.combinePaths(
+							: (CommonUtils.combinePaths(
 									console.props.remoteHomeDir + "/",
 									argv[2]))));
 			String remotePortStr = String.format(

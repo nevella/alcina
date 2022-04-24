@@ -375,16 +375,14 @@ public class ResourceUtilities {
 		return loadHtmlDocumentFromInputStream(is, null, true);
 	}
 
-	public static Document loadHtmlDocumentFromInputStream(InputStream is,
+	public static Document loadHtmlDocumentFromInputStream(InputStream stream,
 			String charset, boolean upperCaseTags) throws Exception {
-		byte[] bs = ResourceUtilities.readStreamToByteArray(is);
-		is.close();
+		stream = maybeWrapInBufferedStream(stream);
 		InputSource isrc = null;
 		if (charset == null) {
-			isrc = new InputSource(new ByteArrayInputStream(bs));
+			isrc = new InputSource(stream);
 		} else {
-			isrc = new InputSource(new InputStreamReader(
-					new ByteArrayInputStream(bs), charset));
+			isrc = new InputSource(new InputStreamReader(stream, charset));
 		}
 		DOMParser parser = createDOMParser(upperCaseTags);
 		parser.parse(isrc);
@@ -393,13 +391,9 @@ public class ResourceUtilities {
 
 	public static Document loadHtmlDocumentFromString(String s,
 			boolean upperCaseTags) throws Exception {
-		ByteArrayOutputStream baos = new ByteArrayOutputStream();
-		OutputStreamWriter osw = new OutputStreamWriter(baos, "UTF-8");
-		osw.write(s);
-		osw.close();
-		return loadHtmlDocumentFromInputStream(
-				new ByteArrayInputStream(baos.toByteArray()), "UTF-8",
-				upperCaseTags);
+		byte[] bytes = s.getBytes(StandardCharsets.UTF_16);
+		return loadHtmlDocumentFromInputStream(new ByteArrayInputStream(bytes),
+				"UTF-16", upperCaseTags);
 	}
 
 	public static Document loadHtmlDocumentFromUrl(String url) {
@@ -420,11 +414,22 @@ public class ResourceUtilities {
 		});
 	}
 
+	public static DomDocument loadXmlDocFromHtmlStream(InputStream stream,
+			int size, boolean upperCaseTags) {
+		try {
+			return new DomDocument(loadHtmlDocumentFromInputStream(stream, null,
+					upperCaseTags), size);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
 	public static DomDocument loadXmlDocFromHtmlString(String html,
 			boolean upperCaseTags) {
 		try {
 			return new DomDocument(
-					loadHtmlDocumentFromString(html, upperCaseTags));
+					loadHtmlDocumentFromString(html, upperCaseTags),
+					html.length());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -446,6 +451,14 @@ public class ResourceUtilities {
 			writeStringToFile(content, "/tmp/log/" + fileName);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static InputStream maybeWrapInBufferedStream(InputStream stream) {
+		if (stream instanceof FileInputStream) {
+			return new BufferedInputStream(stream, 64 * 1024);
+		} else {
+			return stream;
 		}
 	}
 
@@ -603,7 +616,8 @@ public class ResourceUtilities {
 	public static byte[] readStreamToByteArray(InputStream is)
 			throws IOException {
 		int bufLength = is.available() <= 1024 ? 1024 * 64 : is.available();
-		ByteArrayOutputStream baos = new ByteArrayOutputStream(bufLength);
+		ByteArrayOutputStream baos = new DisposableByteArrayOutputStream(
+				bufLength);
 		writeStreamToStream(is, baos);
 		return baos.toByteArray();
 	}
@@ -1019,5 +1033,23 @@ public class ResourceUtilities {
 			c = c.getSuperclass();
 		}
 		return result;
+	}
+
+	/*
+	 * Doesn't do a defensive copy of the internal byte array when calling
+	 * toByteArray (so toByteArray can only be used once, as the last operation
+	 * on the instance)
+	 */
+	static class DisposableByteArrayOutputStream extends ByteArrayOutputStream {
+		public DisposableByteArrayOutputStream(int size) {
+			super(size);
+		}
+
+		@Override
+		public synchronized byte[] toByteArray() {
+			byte[] ref = buf;
+			buf = null;
+			return ref;
+		}
 	}
 }

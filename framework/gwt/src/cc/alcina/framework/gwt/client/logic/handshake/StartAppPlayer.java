@@ -1,8 +1,8 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
+import cc.alcina.framework.common.client.consort.EndpointPlayer;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.state.EndpointPlayer;
 
 @Reflected
 @Registration.Singleton

@@ -21,10 +21,10 @@ import cc.alcina.extras.webdriver.WDUtils.TestCallback;
 import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.entity.SEUtilities;
 
 public class WdExec {
 	private WebDriver driver;
@@ -250,7 +250,7 @@ public class WdExec {
 
 	public String readRelativeUrl(String relativeUrl) {
 		try {
-			String url = SEUtilities.combinePaths(token.getConfiguration().uri,
+			String url = CommonUtils.combinePaths(token.getConfiguration().uri,
 					relativeUrl);
 			return ResourceUtilities.readUrlAsString(url);
 		} catch (Exception e) {

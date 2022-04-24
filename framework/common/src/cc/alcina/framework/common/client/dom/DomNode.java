@@ -30,6 +30,7 @@ import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
@@ -1450,13 +1451,34 @@ public class DomNode {
 					&& (query.immediateChild || DomNode.this == document);
 		}
 
+		private String normaliseTag(String tag) {
+			return tag.replace("xhtml:", "");
+		}
+
+		// yes, this could be optimised and made prettier. but works for 98% of
+		// cases I care about, with no real regex compilation performance issues
+		//
+		// Anything to avoid going to xalan...
 		DomNodeReadonlyLookupQuery parse(String xpath) {
 			DomNodeReadonlyLookupQuery query = new DomNodeReadonlyLookupQuery();
-			String xmlIdentifierChars = "[a-zA-Z\\-_0-9\\.]+";
+			String xmlIdentifierChars = "[a-zA-Z\\-_0-9\\.:]+";
 			String tagOnlyRegex = Ax.format("//(%s)", xmlIdentifierChars);
 			String tagAttrNodeRegex = Ax.format("//(%s)/@(%s)",
 					xmlIdentifierChars, xmlIdentifierChars);
-			String tagAttrValueRegex = Ax.format("//(%s)/\\[@(%s)='(%s)'\\]",
+			String tagIdNodeRegex = Ax.format("//(%s)\\[@id='(%s)'\\]",
+					xmlIdentifierChars, xmlIdentifierChars);
+			String tagIdsNodeRegex = Ax.format(
+					"//(%s)\\[@id='(%s)' or @id='(%s)'\\]", xmlIdentifierChars,
+					xmlIdentifierChars, xmlIdentifierChars);
+			String tagIdChildRegex = Ax.format(
+					"//(%s)\\[@id='(%s)'\\]/(%s)(?:\\[(%s)\\])?",
+					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars,
+					xmlIdentifierChars);
+			String tagIdDescendantRegex = Ax.format(
+					"//(%s)\\[@id='(%s)'\\]//(%s)(?:\\[(%s)\\])?",
+					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars,
+					xmlIdentifierChars);
+			String tagAttrValueRegex = Ax.format("//(%s)/?\\[@(%s)='(%s)'\\]",
 					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars);
 			String immediateChildRegex = xmlIdentifierChars;
 			if (xpath.matches(immediateChildRegex)) {
@@ -1479,6 +1501,37 @@ public class DomNode {
 				String attrValue = xpath.replaceFirst(tagAttrValueRegex, "$3");
 				query.predicate = node -> node.attrIs(attrName, attrValue);
 				query.valid = true;
+			} else if (xpath.matches(tagIdNodeRegex)) {
+				query.tag = xpath.replaceFirst(tagIdNodeRegex, "$1");
+				query.id = xpath.replaceFirst(tagIdNodeRegex, "$2");
+				query.predicate = node -> node.tagIs(query.tag);
+				query.valid = true;
+			} else if (xpath.matches(tagIdsNodeRegex)) {
+				query.tag = xpath.replaceFirst(tagIdsNodeRegex, "$1");
+				query.id = xpath.replaceFirst(tagIdsNodeRegex, "$2");
+				query.id2 = xpath.replaceFirst(tagIdsNodeRegex, "$3");
+				query.predicate = node -> node.tagIs(query.tag);
+				query.valid = true;
+			} else if (xpath.matches(tagIdChildRegex)) {
+				query.tag = xpath.replaceFirst(tagIdChildRegex, "$1");
+				query.id = xpath.replaceFirst(tagIdChildRegex, "$2");
+				query.predicate = node -> node.tagIs(query.tag);
+				query.map = new DescendantMap(
+						xpath.replaceFirst(tagIdChildRegex, "$3"),
+						xpath.replaceFirst(tagIdChildRegex, "$4"), true);
+				query.valid = true;
+			} else if (xpath.matches(tagIdDescendantRegex)) {
+				query.tag = xpath.replaceFirst(tagIdDescendantRegex, "$1");
+				query.id = xpath.replaceFirst(tagIdDescendantRegex, "$2");
+				query.predicate = node -> node.tagIs(query.tag);
+				query.map = new DescendantMap(
+						xpath.replaceFirst(tagIdDescendantRegex, "$3"),
+						xpath.replaceFirst(tagIdDescendantRegex, "$4"), false);
+				query.valid = true;
+			}
+			if (query.valid) {
+				query.tag = normaliseTag(query.tag);
+				Preconditions.checkState(!query.tag.contains(":"));
 			}
 			return query;
 		}
@@ -1489,12 +1542,51 @@ public class DomNode {
 				return children.byTag(query.tag).stream()
 						.filter(query.predicate).map(query.map);
 			} else {
-				return document.byTag().getAndEnsure(query.tag).stream()
-						.filter(query.predicate).map(query.map);
+				Stream<DomNode> stream = null;
+				if (Ax.notBlank(query.id2)) {
+					stream = Stream.concat(
+							document.byId().getAndEnsure(query.id).stream(),
+							document.byId().getAndEnsure(query.id2).stream());
+				} else if (Ax.notBlank(query.id2)) {
+					stream = document.byId().getAndEnsure(query.id).stream();
+				} else {
+					stream = document.byTag().getAndEnsure(query.tag).stream();
+				}
+				return stream.filter(query.predicate).map(query.map)
+						.filter(Objects::nonNull);
+			}
+		}
+
+		class DescendantMap implements Function<DomNode, DomNode> {
+			private String tag;
+
+			private int index;
+
+			private boolean immediateChildrenOnly;
+
+			public DescendantMap(String tag, String indexStr,
+					boolean immediateChildrenOnly) {
+				this.immediateChildrenOnly = immediateChildrenOnly;
+				this.tag = normaliseTag(tag);
+				this.index = Ax.isBlank(indexStr) ? 1
+						: Integer.parseInt(indexStr);
+			}
+
+			@Override
+			public DomNode apply(DomNode t) {
+				Stream<DomNode> stream = immediateChildrenOnly
+						? t.children.elements().stream()
+						: t.children.stream();
+				return stream.filter(n -> n.tagIs(tag)).skip(index - 1)
+						.findFirst().orElse(null);
 			}
 		}
 
 		class DomNodeReadonlyLookupQuery {
+			public String id2;
+
+			public String id;
+
 			boolean immediateChild;
 
 			String tag;

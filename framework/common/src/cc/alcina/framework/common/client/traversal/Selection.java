@@ -1,10 +1,14 @@
-package cc.alcina.framework.servlet.traversal;
+package cc.alcina.framework.common.client.traversal;
 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
+import cc.alcina.framework.common.client.log.TreeProcess.HasNode;
+import cc.alcina.framework.common.client.log.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.servlet.job.TreeProcess.HasNode;
-import cc.alcina.framework.servlet.job.TreeProcess.Node;
 
 /**
  * An example of "side composition" - selections form a tree, but the tree
@@ -53,6 +57,20 @@ public interface Selection<T> extends HasNode<Selection> {
 	}
 
 	default void exitContext() {
+	}
+
+	default String fullPath() {
+		Selection cursor = this;
+		List<String> segments = new ArrayList<>();
+		while (cursor != null) {
+			segments.add(0, cursor.getPathSegment());
+			cursor = cursor.parentSelection();
+		}
+		return segments.stream().collect(Collectors.joining("/"));
+	}
+
+	default List<String> getFilterableSegments() {
+		return Collections.singletonList(getPathSegment());
 	};
 
 	default Selection parentSelection() {
@@ -73,5 +91,15 @@ public interface Selection<T> extends HasNode<Selection> {
 	};
 
 	default void releaseResources() {
+	};
+
+	default List<Selection> selectionPath() {
+		Selection cursor = this;
+		List<Selection> selections = new ArrayList<>();
+		while (cursor != null) {
+			selections.add(0, cursor);
+			cursor = cursor.parentSelection();
+		}
+		return selections;
 	}
 }

@@ -345,7 +345,17 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	@SuppressWarnings("deprecation")
 	protected void initDevConsoleAndWebApp() {
+		topicConfigurationReloaded.add((k, v) -> {
+			/*
+			 * All optimised configuration property cache refreshing should go
+			 * here
+			 */
+			ThreadlocalTransformManager.ignoreAllTransformPermissions = ResourceUtilities
+					.is(ThreadlocalTransformManager.class,
+							"ignoreTransformPermissions");
+		});
 		ResourceUtilities.loadSystemPropertiesFromCustomProperties();
+		topicConfigurationReloaded.publish(null);
 		if (ResourceUtilities.is("allowAllHostnameVerifier")) {
 			try {
 				HttpsURLConnection.setDefaultHostnameVerifier(
