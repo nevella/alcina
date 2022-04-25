@@ -1307,8 +1307,15 @@ public class DomNode {
 			return node().ntc();
 		}
 
+		public String textNormalised(boolean required) {
+			DomNode node = node();
+			Optional<DomNode> optional = required ? Optional.of(node)
+					: Optional.ofNullable(node);
+			return optional.map(DomNode::ntc).orElse("");
+		}
+
 		public String textNormalisedOrEmpty() {
-			return Optional.ofNullable(node()).map(DomNode::ntc).orElse("");
+			return textNormalised(false);
 		}
 
 		public String textOrEmpty() {
