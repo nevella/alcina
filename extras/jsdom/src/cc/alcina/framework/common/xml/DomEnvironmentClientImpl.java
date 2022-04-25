@@ -20,6 +20,11 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	}
 
 	@Override
+	public DomDocument loadFromUrl(String url) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public Node loadFromXml(String xml) throws Exception {
 		throw new UnsupportedOperationException();
 	}
@@ -45,7 +50,8 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	}
 
 	@Override
-	public NamespaceResult restoreNamespaces(DomDocument xmlDoc, String firstTag) {
+	public NamespaceResult restoreNamespaces(DomDocument xmlDoc,
+			String firstTag) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -55,12 +61,12 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	}
 
 	@Override
-	public String toXml(Node node) {
+	public String toHtml(DomDocument doc) {
 		throw new UnsupportedOperationException();
 	}
 
 	@Override
-	public String toHtml(DomDocument doc) {
+	public String toXml(Node node) {
 		throw new UnsupportedOperationException();
 	}
 }

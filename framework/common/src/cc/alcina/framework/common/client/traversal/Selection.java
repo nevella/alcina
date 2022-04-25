@@ -9,6 +9,8 @@ import java.util.stream.Stream;
 import cc.alcina.framework.common.client.log.TreeProcess.HasNode;
 import cc.alcina.framework.common.client.log.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.traversal.SelectionTraversal.Generation;
+import cc.alcina.framework.common.client.util.Ax;
 
 /**
  * An example of "side composition" - selections form a tree, but the tree
@@ -24,7 +26,10 @@ public interface Selection<T> extends HasNode<Selection> {
 
 	/**
 	 * Describes the notional path segment of the selection (for debugging and
-	 * logging)
+	 * logging). This is also a uniquness/distinctness constraint - to prevent
+	 * multiple loads of the same logical selection reached by different paths.
+	 *
+	 * @see{#onDuplicatePathSelection}
 	 */
 	public String getPathSegment();
 
@@ -73,6 +78,13 @@ public interface Selection<T> extends HasNode<Selection> {
 		return Collections.singletonList(getPathSegment());
 	};
 
+	default void onDuplicatePathSelection(Generation generation,
+			Selection selection) {
+		throw new IllegalArgumentException(
+				Ax.format("Duplicate selection path: %s :: %s",
+						selection.getPathSegment(), generation));
+	};
+
 	default Selection parentSelection() {
 		Node parent = processNode().getParent();
 		if (parent == null) {
@@ -91,7 +103,7 @@ public interface Selection<T> extends HasNode<Selection> {
 	};
 
 	default void releaseResources() {
-	};
+	}
 
 	default List<Selection> selectionPath() {
 		Selection cursor = this;

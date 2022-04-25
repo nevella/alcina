@@ -138,7 +138,8 @@ public class TreeProcess {
 		default <V> V processAncestorValue(Class<V> clazz) {
 			Node cursor = processNode().getParent();
 			while (cursor != null) {
-				if (clazz.isAssignableFrom(cursor.getValue().getClass())) {
+				if (Reflections.isAssignableFrom(clazz,
+						cursor.getValue().getClass())) {
 					return (V) cursor.getValue();
 				}
 				cursor = cursor.getParent();

@@ -3,9 +3,9 @@ package cc.alcina.framework.common.client.traversal;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
@@ -42,6 +42,17 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
  * Current naive implementation requires produced selections be in generation
  * g+1 - that may be all that's needed
  *
+ * <h2>Notes</h2>
+ *
+ * <ul>
+ * <li>The selection ancestor chain (and assoc process node tree) is *different*
+ * to the generation levels - because selectors can assign selections to the
+ * current levels (or >1 lower), the ancestor chain is 'how did i get here' -
+ * wheras the generation is 'what stage of the process are we at/what selectors
+ * can be applied'
+ * </ul>
+ *
+ *
  */
 public class SelectionTraversal implements ProcessContextProvider {
 	public Topic<Selection> selectionAdded = Topic.local();
@@ -50,21 +61,15 @@ public class SelectionTraversal implements ProcessContextProvider {
 
 	Selection rootSelection;
 
-	Multimap<Generation, List<Selector>> selectors = new Multimap<>();
+	Map<Generation, GenerationTraversal> generations = new LinkedHashMap<>();
 
-	Multiset<Generation, Set<Selection>> selections = new Multiset<>();
-
-	Map<Selection, Integer> generationIndicies = new LinkedHashMap<>();
+	Map<Selection, Integer> generationIndicies = new ConcurrentHashMap<>();
 
 	Map<Selection, Exception> selectionExceptions = new ConcurrentHashMap<>();
-
-	Multiset<Generation, Set<Selection>> submitted = new Multiset<>();
 
 	private Generation currentGeneration;
 
 	private Generation nextGeneration;
-
-	private List<Generation> generations = new ArrayList<>();
 
 	private SelectionFilter filter;
 
@@ -74,7 +79,7 @@ public class SelectionTraversal implements ProcessContextProvider {
 	}
 
 	public void addSelector(Generation generation, Selector selector) {
-		selectors.add(generation, selector);
+		generations.get(generation).selectors.add(selector);
 	}
 
 	@Override
@@ -83,16 +88,17 @@ public class SelectionTraversal implements ProcessContextProvider {
 		List<Node> selectionPath = node.asNodePath();
 		Node last = CommonUtils.last(selectionPath);
 		Object value = last.getValue();
-		List<Generation> list = selections.keySet().stream()
+		List<Generation> list = generations.keySet().stream()
 				.collect(Collectors.toList());
 		for (int idx = 0; idx < list.size(); idx++) {
 			Generation generation = list.get(idx);
-			Set<Selection> set = selections.get(generation);
-			if (set.contains(value)) {
+			GenerationTraversal generationData = generations.get(generation);
+			Set<Selection> selections = generationData.selections;
+			if (selections.contains(value)) {
 				int level = idx;
 				position.format("Generation: [%s/%s]", idx + 1, list.size());
 				IntPair pair = new IntPair(generationIndicies.get(value),
-						set.size());
+						selections.size());
 				position.append(pair);
 				position.separator(" :: ");
 				position.append(generation);
@@ -113,23 +119,19 @@ public class SelectionTraversal implements ProcessContextProvider {
 		return this.filter;
 	}
 
-	public List<Generation> getGenerations() {
-		return this.generations;
-	}
-
 	public Selection getRootSelection() {
 		return this.rootSelection;
 	}
 
 	public Multiset<Generation, Set<Selection>> getSelections() {
-		return selections;
+		Multiset<Generation, Set<Selection>> result = new Multiset<>();
+		generations.forEach((k, v) -> result.put(k, v.selections));
+		return result;
 	}
 
 	public <G extends Generation> void populateGenerations(Class<G> clazz) {
-		Arrays.stream(clazz.getEnumConstants()).forEach(generations::add);
-		generations.forEach(selectors::getAndEnsure);
-		generations.forEach(selections::getAndEnsure);
-		generations.forEach(submitted::getAndEnsure);
+		Arrays.stream(clazz.getEnumConstants())
+				.forEach(g -> generations.put(g, new GenerationTraversal(g)));
 	}
 
 	public SelectionFilter provideExceptionSelectionFilter() {
@@ -147,7 +149,7 @@ public class SelectionTraversal implements ProcessContextProvider {
 		SelectionFilter filter = new SelectionFilter();
 		generationSegments.forEach((k, v) -> {
 			String pathSegmentRegex = Ax.format("^(%s)$",
-					v.stream().map(CommonUtils::escapeRegex)
+					v.stream().distinct().map(CommonUtils::escapeRegex)
 							.collect(Collectors.joining("|")));
 			filter.addGenerationFilter(k.toString(), pathSegmentRegex);
 		});
@@ -156,10 +158,14 @@ public class SelectionTraversal implements ProcessContextProvider {
 
 	public synchronized void select(Generation generation,
 			Selection selection) {
-		if (testFilter(generation, selection)) {
-			Set<Selection> set = selections.get(generation);
-			int index = set.size();
-			set.add(selection);
+		GenerationTraversal generationTraversal = generations.get(generation);
+		if (testFilter(generationTraversal, selection)) {
+			if (generationTraversal.checkSelectionPath(selection)) {
+				return;
+			}
+			Set<Selection> selections = generationTraversal.selections;
+			int index = selections.size();
+			selections.add(selection);
 			generationIndicies.put(selection, index);
 			selectionAdded.publish(selection);
 		}
@@ -185,23 +191,24 @@ public class SelectionTraversal implements ProcessContextProvider {
 	}
 
 	public void traverse() {
-		Objects.requireNonNull(selectors.firstKey());
+		Preconditions.checkState(generations.size() > 0);
+		GenerationTraversal firstGeneration = generations.values().iterator()
+				.next();
 		// prime the pump
-		select(selectors.firstKey(), rootSelection);
-		for (Generation generation : generations) {
-			currentGeneration = generation;
-			nextGeneration = Ax.next(generations, currentGeneration);
+		select(firstGeneration.generation, rootSelection);
+		for (GenerationTraversal generationTraversal : generations.values()) {
+			currentGeneration = generationTraversal.generation;
+			nextGeneration = Ax.next(generations.keySet(), currentGeneration);
 			// this logic (looping on the current generation until there's a
 			// pass with no submitted tasks) allows selectors to add to the
 			// current generation (as well as subsequent)
 			for (;;) {
-				Set<Selection> submittedGeneration = submitted.get(generation);
 				int submitted = 0;
-				for (Selection selection : selections.get(generation)) {
-					if (submittedGeneration.add(selection)) {
+				for (Selection selection : generationTraversal.selections) {
+					if (generationTraversal.submitted.add(selection)) {
 						submitted++;
-						executor.submit(
-								() -> processSelection(generation, selection));
+						executor.submit(() -> processSelection(
+								generationTraversal, selection));
 					}
 				}
 				if (submitted == 0) {
@@ -213,9 +220,9 @@ public class SelectionTraversal implements ProcessContextProvider {
 	}
 
 	private Generation computeSubmittedGeneration(Selection selection) {
-		return submitted.entrySet().stream()
-				.filter(e -> e.getValue().contains(selection)).findFirst().get()
-				.getKey();
+		return generations.values().stream()
+				.filter(generation -> generation.submitted.contains(selection))
+				.findFirst().get().generation;
 	}
 
 	private void enterSelectionContext(Selection<?> selection) {
@@ -226,17 +233,17 @@ public class SelectionTraversal implements ProcessContextProvider {
 		selection.ancestorSelections().forEach(Selection::exitContext);
 	}
 
-	private void processSelection(Generation generation, Selection selection) {
+	private void processSelection(GenerationTraversal generationTraversal,
+			Selection selection) {
 		try {
 			enterSelectionContext(selection);
 			selection.processNode().select(null, this);
-			if (!testFilter(generation, selection)) {
+			if (!testFilter(generationTraversal, selection)) {
 				// skip processing if, for instance, the traversal has hit max
 				// exceptions
 				return;
 			}
-			List<Selector> processors = selectors.get(generation);
-			for (Selector processor : processors) {
+			for (Selector processor : generationTraversal.selectors) {
 				if (processor.handles(selection)) {
 					try {
 						processor.process(this, selection);
@@ -272,7 +279,8 @@ public class SelectionTraversal implements ProcessContextProvider {
 		}
 	}
 
-	private boolean testFilter(Generation generation, Selection selection) {
+	private boolean testFilter(GenerationTraversal generationTraversal,
+			Selection selection) {
 		if (filter == null) {
 			return true;
 		}
@@ -280,8 +288,9 @@ public class SelectionTraversal implements ProcessContextProvider {
 				&& selectionExceptions.size() >= filter.getMaxExceptions()) {
 			return false;
 		}
-		if (filter.hasGenerationFilter(generation.toString())) {
-			if (filter.matchesGenerationFilter(generation.toString(),
+		String generationName = generationTraversal.generation.toString();
+		if (filter.hasGenerationFilter(generationName)) {
+			if (filter.matchesGenerationFilter(generationName,
 					selection.getFilterableSegments())) {
 				return true;
 			} else {
@@ -290,7 +299,8 @@ public class SelectionTraversal implements ProcessContextProvider {
 		} else {
 			int allGenerationsLimit = filter.getAllGenerationsLimit();
 			return allGenerationsLimit == 0
-					|| allGenerationsLimit > selections.get(generation).size();
+					|| allGenerationsLimit > generationTraversal.selections
+							.size();
 		}
 	}
 
@@ -341,5 +351,44 @@ public class SelectionTraversal implements ProcessContextProvider {
      *
      */
 	public interface Generation {
+	}
+
+	static class GenerationTraversal {
+		Generation generation;
+
+		List<Selector> selectors = new ArrayList<>();
+
+		Set<Selection> selections = new LinkedHashSet<>();
+
+		Set<Selection> submitted = new LinkedHashSet<>();
+
+		Map<String, Selection> selectionPaths = new LinkedHashMap<>();
+
+		public GenerationTraversal(Generation generation) {
+			this.generation = generation;
+		}
+
+		/**
+		 * Selection paths must be unique per generation - the traverser either
+		 * throws on a duplicate (default) or ignores (selection-specific
+		 * onDuplicatePathSelection override) -- an example of ignoreable
+		 * duplication would be if a pathsegment is reachable from multiple
+		 * ancestral routes/paths)
+		 *
+		 * @return Return true if selection should be ignored (duplicate)
+		 */
+		public boolean checkSelectionPath(Selection selection) {
+			synchronized (selectionPaths) {
+				Selection atPath = selectionPaths
+						.get(selection.getPathSegment());
+				if (atPath != null) {
+					atPath.onDuplicatePathSelection(generation, selection);
+					return true;
+				} else {
+					selectionPaths.put(selection.getPathSegment(), selection);
+					return false;
+				}
+			}
+		}
 	}
 }

@@ -37,6 +37,8 @@ public interface DomEnvironment {
 	public XpathEvaluator createXpathEvaluator(DomNode xmlNode,
 			XpathEvaluator xpathEvaluator);
 
+	public DomDocument loadFromUrl(String url);
+
 	public Node loadFromXml(String xml) throws Exception;
 
 	public String log(DomNode xmlNode, boolean pretty);
@@ -47,9 +49,12 @@ public interface DomEnvironment {
 
 	public NamespaceResult removeNamespaces(DomDocument xmlDoc);
 
-	public NamespaceResult restoreNamespaces(DomDocument xmlDoc, String firstTag);
+	public NamespaceResult restoreNamespaces(DomDocument xmlDoc,
+			String firstTag);
 
 	public String streamNCleanForBrowserHtmlFragment(Node node);
+
+	public String toHtml(DomDocument doc);
 
 	public String toXml(Node node);
 
@@ -107,6 +112,4 @@ public interface DomEnvironment {
 							|| n.name().equalsIgnoreCase("EMPH"));
 		}
 	}
-
-	public String toHtml(DomDocument doc);
 }

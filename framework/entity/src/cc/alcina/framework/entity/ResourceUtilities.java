@@ -1047,9 +1047,13 @@ public class ResourceUtilities {
 
 		@Override
 		public synchronized byte[] toByteArray() {
-			byte[] ref = buf;
-			buf = null;
-			return ref;
+			if (count == buf.length) {
+				byte[] ref = buf;
+				buf = null;
+				return ref;
+			} else {
+				return super.toByteArray();
+			}
 		}
 	}
 }

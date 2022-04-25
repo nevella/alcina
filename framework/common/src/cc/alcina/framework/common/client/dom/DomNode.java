@@ -1478,6 +1478,10 @@ public class DomNode {
 					"//(%s)\\[@id='(%s)'\\]//(%s)(?:\\[(%s)\\])?",
 					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars,
 					xmlIdentifierChars);
+			String tagIdDescendantAttrValueDescendantTagRegex = Ax.format(
+					"//(%s)\\[@id='(%s)'\\]//(%s)/?\\[@(%s)='(%s)'\\]/(%s)",
+					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars,
+					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars);
 			String tagAttrValueRegex = Ax.format("//(%s)/?\\[@(%s)='(%s)'\\]",
 					xmlIdentifierChars, xmlIdentifierChars, xmlIdentifierChars);
 			String immediateChildRegex = xmlIdentifierChars;
@@ -1528,6 +1532,24 @@ public class DomNode {
 						xpath.replaceFirst(tagIdDescendantRegex, "$3"),
 						xpath.replaceFirst(tagIdDescendantRegex, "$4"), false);
 				query.valid = true;
+			} else if (xpath
+					.matches(tagIdDescendantAttrValueDescendantTagRegex)) {
+				query.tag = xpath.replaceFirst(
+						tagIdDescendantAttrValueDescendantTagRegex, "$1");
+				query.id = xpath.replaceFirst(
+						tagIdDescendantAttrValueDescendantTagRegex, "$2");
+				query.map = new DescendantTagAttrTagMap(xpath.replaceFirst(
+						tagIdDescendantAttrValueDescendantTagRegex, "$3"),
+						xpath.replaceFirst(
+								tagIdDescendantAttrValueDescendantTagRegex,
+								"$4"),
+						xpath.replaceFirst(
+								tagIdDescendantAttrValueDescendantTagRegex,
+								"$5"),
+						xpath.replaceFirst(
+								tagIdDescendantAttrValueDescendantTagRegex,
+								"$6"));
+				query.valid = true;
 			}
 			if (query.valid) {
 				query.tag = normaliseTag(query.tag);
@@ -1547,7 +1569,7 @@ public class DomNode {
 					stream = Stream.concat(
 							document.byId().getAndEnsure(query.id).stream(),
 							document.byId().getAndEnsure(query.id2).stream());
-				} else if (Ax.notBlank(query.id2)) {
+				} else if (Ax.notBlank(query.id)) {
 					stream = document.byId().getAndEnsure(query.id).stream();
 				} else {
 					stream = document.byTag().getAndEnsure(query.tag).stream();
@@ -1579,6 +1601,33 @@ public class DomNode {
 						: t.children.stream();
 				return stream.filter(n -> n.tagIs(tag)).skip(index - 1)
 						.findFirst().orElse(null);
+			}
+		}
+
+		class DescendantTagAttrTagMap implements Function<DomNode, DomNode> {
+			private String tag;
+
+			private String attrName;
+
+			private String attrValue;
+
+			private String childTag;
+
+			public DescendantTagAttrTagMap(String tag, String attrName,
+					String attrValue, String childTag) {
+				this.tag = normaliseTag(tag);
+				this.attrName = attrName;
+				this.attrValue = attrValue;
+				this.childTag = normaliseTag(childTag);
+			}
+
+			@Override
+			public DomNode apply(DomNode t) {
+				return t.children.stream().filter(n -> n.tagIs(tag))
+						.filter(n -> n.attrIs(attrName, attrValue)).findFirst()
+						.flatMap(n -> n.children.byTag(childTag).stream()
+								.findFirst())
+						.orElse(null);
 			}
 		}
 

@@ -2,7 +2,9 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
@@ -124,6 +126,20 @@ public class Ax {
 
 	public static void newlineDump(Collection collection) {
 		System.out.println(CommonUtils.joinWithNewlines(collection));
+	}
+
+	public static <T> T next(Collection<T> collection, T element) {
+		Iterator<T> itr = collection.iterator();
+		boolean matched = false;
+		while (itr.hasNext()) {
+			T next = itr.next();
+			if (matched) {
+				return next;
+			} else {
+				matched = Objects.equals(next, element);
+			}
+		}
+		return null;
 	}
 
 	public static <T> T next(List<T> list, T element) {
