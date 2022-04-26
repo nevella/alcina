@@ -189,6 +189,48 @@ public class CommonUtils {
 		return Math.abs(d1.getTime() - d2.getTime()) < ms;
 	}
 
+	// assume slash-delineated
+	public static String combinePaths(String absPath, String relPath) {
+		if (relPath.contains("://")) {
+			return relPath;
+		}
+		if (relPath.startsWith("//")) {
+			return absPath.replaceFirst("(.+?:)//.+", "$1") + relPath;
+		}
+		if (relPath.startsWith("?")) {
+			return absPath + relPath;
+		}
+		if (relPath.startsWith("/")) {
+			if (absPath.contains("://")) {
+				int idx0 = absPath.indexOf("://") + 3;
+				int idx1 = absPath.indexOf("/", idx0);
+				return (idx1 == -1 ? absPath : absPath.substring(0, idx1))
+						+ relPath;
+			} else {
+				return relPath;
+			}
+		}
+		String parentSep = "../";
+		String voidSep = "./";
+		int x = 0;
+		x = absPath.lastIndexOf("/");
+		if (x != -1) {
+			absPath = absPath.substring(0, x);
+		}
+		while (relPath.startsWith(parentSep)) {
+			x = absPath.lastIndexOf("/");
+			absPath = absPath.substring(0, x);
+			relPath = relPath.substring(parentSep.length());
+		}
+		if (relPath.startsWith(voidSep)) {
+			relPath = relPath.substring(voidSep.length());
+		}
+		if (!absPath.endsWith("/")) {
+			absPath += "/";
+		}
+		return absPath + relPath;
+	}
+
 	public static int compareBoolean(Boolean o1, Boolean o2) {
 		int i = 0;
 		if (bv(o1)) {
@@ -407,6 +449,10 @@ public class CommonUtils {
 		// called only for dates which might be slightly before start of month
 		// because of tz offsets - i.e. mm/01 on server
 		return new Date(date.getTime() + TimeConstants.ONE_DAY_MS);
+	}
+
+	public static String ensureTrailingSlash(String path) {
+		return path.endsWith("/") ? path : path + "/";
 	}
 
 	public static String enumStringRep(Enum e) {
@@ -2042,48 +2088,6 @@ public class CommonUtils {
 			}
 		}
 		return false;
-	}
-
-	// assume slash-delineated
-	public static String combinePaths(String absPath, String relPath) {
-		if (relPath.contains("://")) {
-			return relPath;
-		}
-		if (relPath.startsWith("//")) {
-			return absPath.replaceFirst("(.+?:)//.+", "$1") + relPath;
-		}
-		if (relPath.startsWith("?")) {
-			return absPath + relPath;
-		}
-		if (relPath.startsWith("/")) {
-			if (absPath.contains("://")) {
-				int idx0 = absPath.indexOf("://") + 3;
-				int idx1 = absPath.indexOf("/", idx0);
-				return (idx1 == -1 ? absPath : absPath.substring(0, idx1))
-						+ relPath;
-			} else {
-				return relPath;
-			}
-		}
-		String parentSep = "../";
-		String voidSep = "./";
-		int x = 0;
-		x = absPath.lastIndexOf("/");
-		if (x != -1) {
-			absPath = absPath.substring(0, x);
-		}
-		while (relPath.startsWith(parentSep)) {
-			x = absPath.lastIndexOf("/");
-			absPath = absPath.substring(0, x);
-			relPath = relPath.substring(parentSep.length());
-		}
-		if (relPath.startsWith(voidSep)) {
-			relPath = relPath.substring(voidSep.length());
-		}
-		if (!absPath.endsWith("/")) {
-			absPath += "/";
-		}
-		return absPath + relPath;
 	}
 
 	public enum ComparatorResult {

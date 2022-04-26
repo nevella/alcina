@@ -55,9 +55,11 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
  *
  */
 public class SelectionTraversal implements ProcessContextProvider {
-	public Topic<Selection> selectionAdded = Topic.local();
+	public Topic<Selection> selectionAdded = Topic.local()
+			.withThrowExceptions();
 
-	public Topic<Selection> selectionProcessed = Topic.local();
+	public Topic<Selection> selectionProcessed = Topic.local()
+			.withThrowExceptions();
 
 	Selection rootSelection;
 
