@@ -955,8 +955,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			this.timer = new AtEndOfEventSeriesTimer<Job>(delay, () -> {
 				MethodContext.instance().withWrappingTransaction().run(() -> {
 					Job job = timer.getLastObject();
-					Ax.out("[Job progress :: %s] - %s", job,
-							job.getStatusMessage());
+					if (!job.provideIsComplete()) {
+						Ax.out("[Job progress :: %s] - %s", job,
+								job.getStatusMessage());
+					}
 				});
 			}).maxDelayFromFirstAction(delay);
 		}

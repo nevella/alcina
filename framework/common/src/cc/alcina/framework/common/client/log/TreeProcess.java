@@ -42,6 +42,7 @@ public class TreeProcess {
 		root = new NodeImpl(this, null, performer);
 		logger = LoggerFactory.getLogger(performer.getClass());
 		onEvent(Event.node_added, root, null);
+		onEvent(Event.node_selected, root, null);
 	}
 
 	public Cursor getCursor() {
