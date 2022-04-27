@@ -22,7 +22,9 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 
-// Helper class to make web requests of various kinds
+/**
+ * Helper class to make web requests of various kinds
+ */ 
 public class SimpleHttp {
 	// URL to request
 	private String strUrl;
@@ -60,6 +62,9 @@ public class SimpleHttp {
 	// Throw on response codes >= 400
 	private boolean throwOnResponseCode = true;
 
+	// Timeout for reading/connecting 
+	private int timeout = 0;
+
 	// Add a custom HostnameVerifier when making the request
 	private HostnameVerifier hostnameVerifier;
 
@@ -92,6 +97,11 @@ public class SimpleHttp {
 			connection.setDoOutput(true);
 			connection.setDoInput(true);
 			connection.setUseCaches(false);
+			// If there's a custom timeout, set it on the connection
+			if (timeout > 0) {
+				connection.setConnectTimeout(timeout);
+				connection.setReadTimeout(timeout);
+			}
 			// If custom HostnameVerifier present, set on connection
 			if (hostnameVerifier != null
 					&& connection instanceof HttpsURLConnection) {
@@ -312,6 +322,16 @@ public class SimpleHttp {
 	public SimpleHttp
 			withThrowOnResponseCode(boolean throwOnResponseCode) {
 		this.throwOnResponseCode = throwOnResponseCode;
+		return this;
+	}
+
+	/**
+	 * Set read/connect timeout for this request
+	 * @param timeout Timeout to set
+	 * @return this SimpleHttp object
+	 */
+	public SimpleHttp withTimeout(int timeout) {
+		this.timeout = timeout;
 		return this;
 	}
 
