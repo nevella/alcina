@@ -970,7 +970,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	}
 
 	@Override
-	public DomElement remote() {
+	protected DomElement remote() {
 		if (LocalDom.isDisableRemoteWrite()) {
 			return ElementNull.INSTANCE;
 		}
