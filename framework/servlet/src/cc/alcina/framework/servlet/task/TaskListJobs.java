@@ -5,6 +5,7 @@ import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
@@ -17,6 +18,7 @@ import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -44,6 +46,17 @@ public class TaskListJobs extends AbstractTaskPerformer
 
 	public void setFilter(String filter) {
 		this.filter = filter;
+	}
+
+	private void addConsistency(DomDocument doc) {
+		{
+			doc.html().body().builder().tag("h2")
+					.text("Active consistency jobs").append();
+			JobRegistry.get().getActiveConsistencyJobs().forEach(j -> {
+				doc.html().body().builder().tag("div").text(j.toString())
+						.append();
+			});
+		}
 	}
 
 	private DomNodeHtmlTableCellBuilder applyCompletedResultStyle(
@@ -118,7 +131,10 @@ public class TaskListJobs extends AbstractTaskPerformer
 					.cell("Finished").accept(Utils::date).cell("Performer")
 					.accept(Utils::instance).cell("Link").accept(Utils::links);
 			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
-					job.getTaskSerialized());
+					job.getTaskSerialized(),
+					Optional.ofNullable(job.getPerformer())
+							.map(ClientInstance::toString)
+							.orElse("--unmatched--"));
 			Predicate<? extends Job> topLevelAdditional = topLevel
 					? Job::provideIsFirstInSequence
 					: job -> true;
@@ -222,17 +238,6 @@ public class TaskListJobs extends AbstractTaskPerformer
 		addConsistency(doc);
 		JobContext.get().getJob().setLargeResult(doc.prettyToString());
 		logger.info("Log output to job.largeResult");
-	}
-
-	private void addConsistency(DomDocument doc) {
-		{
-			doc.html().body().builder().tag("h2")
-					.text("Active consistency jobs").append();
-			JobRegistry.get().getActiveConsistencyJobs().forEach(j -> {
-				doc.html().body().builder().tag("div").text(j.toString())
-						.append();
-			});
-		}
 	}
 
 	boolean filter(String... tests) {
