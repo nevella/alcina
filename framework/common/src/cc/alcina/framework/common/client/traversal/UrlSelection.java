@@ -15,4 +15,9 @@ public class UrlSelection extends AbstractSelection<String> {
 	public boolean referencesParentResources() {
 		return false;
 	}
+
+	@Override
+	public String toString() {
+		return get();
+	}
 }
