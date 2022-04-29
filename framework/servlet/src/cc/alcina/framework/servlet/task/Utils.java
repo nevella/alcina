@@ -47,4 +47,11 @@ class Utils {
 		lastNode.setClassName("numeric");
 		return builder;
 	}
+
+	static DomNodeHtmlTableCellBuilder
+			numericRight(DomNodeHtmlTableCellBuilder builder) {
+		DomNode lastNode = builder.previousElement();
+		lastNode.setClassName("numeric-right");
+		return builder;
+	}
 }

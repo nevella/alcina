@@ -3,6 +3,7 @@ package cc.alcina.framework.servlet.task;
 import java.util.Arrays;
 import java.util.Comparator;
 import java.util.Date;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,11 +18,14 @@ import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder.DomNodeHtmlTableCellBuilder;
 import cc.alcina.framework.common.client.job.Job;
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -49,14 +53,27 @@ public class TaskListJobs extends AbstractTaskPerformer
 	}
 
 	private void addConsistency(DomDocument doc) {
-		{
-			doc.html().body().builder().tag("h2")
-					.text("Active consistency jobs").append();
-			JobRegistry.get().getActiveConsistencyJobs().forEach(j -> {
-				doc.html().body().builder().tag("div").text(j.toString())
-						.append();
-			});
-		}
+		doc.html().body().builder().tag("h2")
+				.text("Active consistency jobs (this jvm)").append();
+		JobRegistry.get().getActiveConsistencyJobs().forEach(j -> {
+			doc.html().body().builder().tag("div").text(j.toString()).append();
+		});
+		doc.html().body().builder().tag("h2").text("Consistency job stats")
+				.append();
+		DomNodeHtmlTableBuilder builder = doc.html().body().html()
+				.tableBuilder();
+		Multimap<Class<? extends Task>, List<Job>> byTaskClass = JobDomain.get()
+				.getFutureConsistencyJobs()
+				.collect(AlcinaCollectors.toKeyMultimap(Job::provideTaskClass));
+		LinkedHashMap<Class<? extends Task>, Integer> counts = byTaskClass
+				.asCountingMap().toLinkedHashMap(true);
+		builder.row().cell("Task").cell("Count").accept(Utils::numericRight);
+		counts.forEach((taskClass, count) -> {
+			builder.row().cell(taskClass.getSimpleName()).cell(count)
+					.accept(Utils::numericRight);
+		});
+		builder.row().cell("Total").cell(byTaskClass.allValues().size())
+				.accept(Utils::numericRight);
 	}
 
 	private DomNodeHtmlTableCellBuilder applyCompletedResultStyle(
