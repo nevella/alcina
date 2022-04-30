@@ -6,10 +6,12 @@ import javax.persistence.Transient;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 
 @MappedSuperclass
-public abstract class DomainView extends VersionableEntity<DomainView> {
+public abstract class DomainView<V extends DomainView>
+		extends VersionableEntity<V> {
 	private ContentDefinition entityDefinition;
 
 	private String entityDefinitionSerialized;
@@ -88,5 +90,9 @@ public abstract class DomainView extends VersionableEntity<DomainView> {
 		String old_name = this.name;
 		this.name = name;
 		propertyChangeSupport().firePropertyChange("name", old_name, name);
+	}
+
+	public enum Property implements PropertyEnum {
+		entityDefinitionSerialized, entityTransformModelSerialized, name
 	}
 }
