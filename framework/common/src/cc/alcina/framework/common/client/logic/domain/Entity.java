@@ -361,6 +361,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return getId() == 0 && getLocalId() == 0;
 		}
 
+		public boolean notRemoved() {
+			return Domain.notRemoved(Entity.this);
+		}
+
 		public void persistSerializables() {
 			TransformManager.get().persistSerializables(Entity.this);
 		}
