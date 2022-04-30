@@ -35,6 +35,8 @@ public class ClusterDefinition {
 
 	public String testCommand;
 
+	public int maxTestAttempts = 3;
+
 	public ClusterMember memberByName(String hostName) {
 		Optional<ClusterMember> member = clusterMembers.stream()
 				.filter(m -> m.hostName.equals(hostName)).findFirst();
