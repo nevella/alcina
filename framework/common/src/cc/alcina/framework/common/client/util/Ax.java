@@ -10,6 +10,7 @@ import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
 public class Ax {
@@ -206,6 +207,10 @@ public class Ax {
 
 	public static String timestampYmd(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.TIMESTAMP);
+	}
+
+	public static String transforms() {
+		return TransformManager.get().getTransforms().toString();
 	}
 
 	public static String trim(String s, int maxChars) {
