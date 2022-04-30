@@ -1204,11 +1204,19 @@ public class ThreadlocalTransformManager extends TransformManager {
 					return t;
 				} else {
 					long f_id = id;
-					return MethodContext.instance().withContextTrue(
-							LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
-							.withContextTrue(
-									ThreadlocalTransformManager.CONTEXT_LOADING_FOR_TRANSFORM)
-							.call(() -> Domain.find(clazz, f_id));
+					if (DomainStore.writableStore().isCached(clazz)
+							&& DomainStore.writableStore().isCached(clazz,
+									id)) {
+						// optimisation
+						return DomainStore.writableStore().getCache().get(clazz,
+								id);
+					} else {
+						return MethodContext.instance().withContextTrue(
+								LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
+								.withContextTrue(
+										ThreadlocalTransformManager.CONTEXT_LOADING_FOR_TRANSFORM)
+								.call(() -> Domain.find(clazz, f_id));
+					}
 				}
 			}
 			return null;
