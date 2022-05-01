@@ -56,8 +56,8 @@ public class DomDocument extends DomNode {
 
 	private Multimap<String, List<DomNode>> byId;
 
-	public DomDocument(Document domDocument) {
-		this(domDocument, 0);
+	public DomDocument(Document w3cDocument) {
+		this(w3cDocument, 0);
 	}
 
 	public DomDocument(Document domDocument, int contentLength) {
