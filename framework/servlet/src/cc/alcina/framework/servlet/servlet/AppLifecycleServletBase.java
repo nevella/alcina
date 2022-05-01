@@ -90,6 +90,7 @@ import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
@@ -552,6 +553,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		if (usesJobs()) {
 			Transaction.begin();
 			JobRegistry.get().init();
+			JobLogTimer.get().init();
 			Transaction.end();
 		}
 	}
