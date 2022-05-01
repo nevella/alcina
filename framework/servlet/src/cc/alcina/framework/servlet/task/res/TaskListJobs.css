@@ -21,6 +21,12 @@ td.numeric {
 	min-width: 100px;
 }
 
+td.numeric-right {
+	text-align:right;
+	padding-left:2em;
+}
+
+
 td.date, td.links {
 	max-width: 150px;
 	min-width: 150px;

@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.common.client.util.CollectionCreators;
 import cc.alcina.framework.common.client.util.Multimap;
 
 public class DomDocument extends DomNode {
@@ -30,7 +30,8 @@ public class DomDocument extends DomNode {
 	}
 
 	public static DomNode createDocumentElement(String tag) {
-		return new DomDocument(Ax.format("<%s/>", tag)).getDocumentElementNode();
+		return new DomDocument(Ax.format("<%s/>", tag))
+				.getDocumentElementNode();
 	}
 
 	public static DomDocument documentFor(Document document) {
@@ -41,8 +42,7 @@ public class DomDocument extends DomNode {
 		return new DomDocument(xml);
 	}
 
-	private CachingMap<Node, DomNode> nodes = new CachingMap<Node, DomNode>(
-			n -> n == null ? null : new DomNode(n, this));
+	private Map<Node, DomNode> nodes;
 
 	private String firstTag;
 
@@ -54,8 +54,15 @@ public class DomDocument extends DomNode {
 
 	private Multimap<String, List<DomNode>> byTag;
 
-	public DomDocument(Document domDocument) {
+	private Multimap<String, List<DomNode>> byId;
+
+	public DomDocument(Document w3cDocument) {
+		this(w3cDocument, 0);
+	}
+
+	public DomDocument(Document domDocument, int contentLength) {
 		super(null, null);
+		initNodes(contentLength);
 		this.node = domDocument;
 		nodes.put(this.node, this);
 		this.document = this;
@@ -120,7 +127,8 @@ public class DomDocument extends DomNode {
 	}
 
 	public DomNode nodeFor(Node domNode) {
-		return nodes.get(domNode);
+		return nodes.computeIfAbsent(domNode,
+				dn -> dn == null ? null : new DomNode(domNode, this));
 	}
 
 	@Override
@@ -158,7 +166,25 @@ public class DomDocument extends DomNode {
 		return this;
 	}
 
+	private void ensureByLookups() {
+		if (byTag == null) {
+			byTag = new Multimap<>();
+			byId = new Multimap<>();
+			byTag = getDocumentElementNode().children.stream()
+					.collect(AlcinaCollectors.toKeyMultimap(DomNode::name));
+			byId = getDocumentElementNode().children.stream()
+					.filter(n -> n.has("id"))
+					.collect(AlcinaCollectors.toKeyMultimap(n -> n.attr("id")));
+		}
+	}
+
+	private void initNodes(int length) {
+		nodes = CollectionCreators.Bootstrap.getHashMapCreator()
+				.create(length / 20);
+	}
+
 	private void loadFromXml(String xml) {
+		initNodes(xml.length());
 		try {
 			this.node = DomEnvironment.get().loadFromXml(xml);
 			nodes.put(this.node, this);
@@ -168,11 +194,13 @@ public class DomDocument extends DomNode {
 		}
 	}
 
+	Multimap<String, List<DomNode>> byId() {
+		ensureByLookups();
+		return byId;
+	}
+
 	Multimap<String, List<DomNode>> byTag() {
-		if (byTag == null) {
-			byTag = getDocumentElementNode().children.stream()
-					.collect(AlcinaCollectors.toKeyMultimap(DomNode::name));
-		}
+		ensureByLookups();
 		return byTag;
 	}
 

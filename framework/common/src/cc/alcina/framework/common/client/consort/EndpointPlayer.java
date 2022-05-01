@@ -1,8 +1,8 @@
-package cc.alcina.framework.common.client.state;
+package cc.alcina.framework.common.client.consort;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
+import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
 
 public class EndpointPlayer<D> extends RunnablePlayer<D> {
 	private AsyncCallback completionCallback;

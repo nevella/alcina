@@ -7,12 +7,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 
@@ -21,19 +23,9 @@ public class JacksonUtils {
 		return defaultSerializer().createObjectMapper();
 	}
 
-	public static ObjectMapper wsGraphMapper() {
-		return wsSerializer().createObjectMapper();
-	}
-
 	public static JacksonJsonObjectSerializer defaultSerializer() {
 		return new JacksonJsonObjectSerializer().withIdRefs().withTypeInfo()
 				.withAllowUnknownProperties().withPrettyPrint();
-	}
-
-	// Special defaults for web services
-	// Should be closer to a plain JSON
-	public static JacksonJsonObjectSerializer wsSerializer() {
-		return new JacksonJsonObjectSerializer();
 	}
 
 	public static <T> T deserialize(InputStream stream, Class<T> clazz) {
@@ -62,6 +54,17 @@ public class JacksonUtils {
 		try {
 			return new JacksonJsonObjectSerializer().withIdRefs()
 					.withAllowUnknownProperties().deserialize(json, clazz);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static void prettyPrintJson(String json) {
+		try {
+			JsonNode tree = new ObjectMapper().readTree(json);
+			String pretty = new ObjectMapper().writerWithDefaultPrettyPrinter()
+					.writeValueAsString(tree);
+			Ax.out(pretty);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -102,12 +105,12 @@ public class JacksonUtils {
 				.serialize(object);
 	}
 
-	public static void serializeToFile(Object object, File file) {
-		ResourceUtilities.write(serialize(object), file);
-	}
-
 	public static byte[] serializeToByteArray(Object object) {
 		return serialize(object).getBytes(StandardCharsets.UTF_8);
+	}
+
+	public static void serializeToFile(Object object, File file) {
+		ResourceUtilities.write(serialize(object), file);
 	}
 
 	public static String serializeWithDefaultsAndTypes(Object object) {
@@ -143,5 +146,15 @@ public class JacksonUtils {
 		String json = new ObjectMapper().writerWithDefaultPrettyPrinter()
 				.writeValueAsString(root);
 		return json;
+	}
+
+	public static ObjectMapper wsGraphMapper() {
+		return wsSerializer().createObjectMapper();
+	}
+
+	// Special defaults for web services
+	// Should be closer to a plain JSON
+	public static JacksonJsonObjectSerializer wsSerializer() {
+		return new JacksonJsonObjectSerializer();
 	}
 }

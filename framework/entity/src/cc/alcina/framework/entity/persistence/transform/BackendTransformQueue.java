@@ -166,12 +166,17 @@ public class BackendTransformQueue {
 				try {
 					long delay = computeDelay();
 					if (delay <= 0) {
-						commit();
-						delay = computeDelay();
+						// only commit (flush) if the queue is empty
+						if (events.peek() == null) {
+							commit();
+							delay = computeDelay();
+						} else {
+							delay = 0;
+						}
 					}
 					Event event = events.poll(delay, TimeUnit.MILLISECONDS);
 					if (event != null) {
-						logger.info(
+						logger.debug(
 								"Backend transform queue - adding event:\n{}",
 								event);
 						event.transforms.forEach(pendingTransforms::add);

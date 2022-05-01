@@ -2,8 +2,8 @@ package cc.alcina.framework.gwt.persistence.client;
 
 import com.google.code.gwt.database.client.Database;
 
+import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.state.AllStatesConsort;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 
 public class PersistenceTransformSetupWebDbConsort

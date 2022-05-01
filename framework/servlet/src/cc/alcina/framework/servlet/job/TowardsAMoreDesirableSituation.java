@@ -25,8 +25,7 @@ import cc.alcina.framework.entity.persistence.domain.descriptor.JobDomain;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
 /**
- * FIXME - mvcc.cascade - add to listjobs report
- * 
+ *
  * <h2>Model consistency</h2>
  * <p>
  * The following may not be fully implemented
@@ -60,8 +59,23 @@ class TowardsAMoreDesirableSituation {
 		this.scheduler = scheduler;
 	}
 
+	public Stream<? extends Job> getActiveJobs() {
+		// thread-safe copy
+		synchronized (activeJobs) {
+			return activeJobs.stream().collect(Collectors.toList()).stream();
+		}
+	}
+
 	private void addSchedulerEvent() {
 		events.add(new Event(Type.SCHEDULER_EVENT));
+	}
+
+	private boolean canAllocate() {
+		return activeJobs.size() < JobRegistry.get().jobExecutors
+				.getMaxConsistencyJobCount()
+				&& JobRegistry.get().getActiveJobCount() < ResourceUtilities
+						.getInteger(TowardsAMoreDesirableSituation.class,
+								"maxVmActiveJobCount");
 	}
 
 	private void futureToPending(Optional<Job> next) {
@@ -139,14 +153,6 @@ class TowardsAMoreDesirableSituation {
 		}
 	}
 
-	private boolean canAllocate() {
-		return activeJobs.size() < JobRegistry.get().jobExecutors
-				.getMaxConsistencyJobCount()
-				&& JobRegistry.get().getActiveJobCount() < ResourceUtilities
-						.getInteger(TowardsAMoreDesirableSituation.class,
-								"maxVmActiveJobCount");
-	}
-
 	public class ProcessorThread extends Thread {
 		@Override
 		public void run() {
@@ -189,12 +195,5 @@ class TowardsAMoreDesirableSituation {
 
 	enum Type {
 		SCHEDULER_EVENT, SHUTDOWN;
-	}
-
-	public Stream<? extends Job> getActiveJobs() {
-		// thread-safe copy
-		synchronized (activeJobs) {
-			return activeJobs.stream().collect(Collectors.toList()).stream();
-		}
 	}
 }

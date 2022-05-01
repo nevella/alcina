@@ -2,10 +2,10 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 
 import com.google.gwt.user.client.History;
 
+import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.OnlineState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientNotificationsImpl;

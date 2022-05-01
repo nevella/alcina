@@ -11,6 +11,8 @@ public class AtEndOfEventSeriesTimer<T> {
 
 	private T firstObject;
 
+	private T lastObject;
+
 	private Runnable checkCallback = new Runnable() {
 		@Override
 		public void run() {
@@ -30,7 +32,12 @@ public class AtEndOfEventSeriesTimer<T> {
 				} catch (Throwable t) {
 					t.printStackTrace();
 				}
-				firstObject = null;
+				synchronized (this) {
+					if (firstEventOccurred == 0) {
+						firstObject = null;
+						lastObject = null;
+					}
+				}
 			}
 		}
 	};
@@ -68,6 +75,10 @@ public class AtEndOfEventSeriesTimer<T> {
 		return this.firstObject;
 	}
 
+	public T getLastObject() {
+		return this.lastObject;
+	}
+
 	public AtEndOfEventSeriesTimer
 			maxDelayFromFirstAction(long maxDelayFromFirstAction) {
 		this.maxDelayFromFirstAction = maxDelayFromFirstAction;
@@ -92,6 +103,7 @@ public class AtEndOfEventSeriesTimer<T> {
 			if (firstObject == null) {
 				firstObject = object;
 			}
+			lastObject = object;
 		}
 		triggerEventOccurred();
 	}

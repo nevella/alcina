@@ -6,9 +6,9 @@ import java.util.Optional;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.consort.AllStatesConsort;
+import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.state.AllStatesConsort;
-import cc.alcina.framework.common.client.state.Consort;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;

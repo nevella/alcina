@@ -608,6 +608,22 @@ public class DevConsoleCommandTransforms {
 			}
 		}
 
+		public static class CmdListTransformsFilterDtrRqId
+				extends CmdListTransformsFilter {
+			@Override
+			public String getFilter(String value) {
+				value = value.isEmpty() ? "-1" : value;
+				return String
+						.format(value.contains(",") ? "dtr.requestid in (%s)"
+								: "dtr.requestid=%s", value);
+			}
+
+			@Override
+			public String getKey() {
+				return "dtr.rqid";
+			}
+		}
+
 		public static class CmdListTransformsFilterMinDays
 				extends CmdListTransformsFilter {
 			@Override

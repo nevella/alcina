@@ -31,6 +31,11 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	}
 
 	@Override
+	public DomDocument loadFromUrl(String url) {
+		return ResourceUtilities.loadXmlDocFromUrl(url);
+	}
+
+	@Override
 	public Node loadFromXml(String xml) throws Exception {
 		return XmlUtils.loadDocument(xml, true);
 	}
@@ -88,7 +93,8 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	}
 
 	@Override
-	public NamespaceResult restoreNamespaces(DomDocument xmlDoc, String firstTag) {
+	public NamespaceResult restoreNamespaces(DomDocument xmlDoc,
+			String firstTag) {
 		NamespaceResult result = new NamespaceResult();
 		result.xml = xmlDoc.fullToString();
 		Pattern p = Pattern.compile("(?s)<[A-Za-z]\\S+>");
@@ -103,14 +109,14 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	}
 
 	@Override
-	public String toXml(Node node) {
-		return XmlUtils.streamXML(node);
-	}
-
-	@Override
 	public String toHtml(DomDocument doc) {
 		String xml = doc.prettyToString();
 		xml = XmlUtils.expandEmptyElements(xml);
 		return XmlUtils.fixStyleNodeContents(xml);
+	}
+
+	@Override
+	public String toXml(Node node) {
+		return XmlUtils.streamXML(node);
 	}
 }

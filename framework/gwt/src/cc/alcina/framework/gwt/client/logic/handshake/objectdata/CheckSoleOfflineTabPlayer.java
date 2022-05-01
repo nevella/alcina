@@ -1,9 +1,9 @@
 package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 
+import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.handshake.CheckSoleInstancePlayer.NotSoleInstanceException;
 import cc.alcina.framework.gwt.persistence.client.ClientSession;

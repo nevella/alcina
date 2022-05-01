@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCr
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.HashMapCreator;
 import cc.alcina.framework.common.client.util.CollectionCreators.UnsortedMapCreator;
+import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 
 public class CollectionCreatorsJvm {
@@ -45,6 +46,12 @@ public class CollectionCreatorsJvm {
 		@Override
 		public <K, V> Map<K, V> create() {
 			return new Object2ObjectLinkedOpenHashMap<>();
+		}
+
+		@Override
+		public <K, V> Map<K, V> create(int initialSize) {
+			return new Object2ObjectLinkedOpenHashMap<>(
+					Math.max(10, initialSize), Hash.FAST_LOAD_FACTOR);
 		}
 	}
 

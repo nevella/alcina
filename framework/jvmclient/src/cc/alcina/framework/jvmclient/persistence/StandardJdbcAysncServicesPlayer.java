@@ -1,7 +1,7 @@
 package cc.alcina.framework.jvmclient.persistence;
 
-import cc.alcina.framework.common.client.state.Consort;
-import cc.alcina.framework.common.client.state.ConsortPlayer;
+import cc.alcina.framework.common.client.consort.Consort;
+import cc.alcina.framework.common.client.consort.ConsortPlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.AsyncConfigConsort;
 import cc.alcina.framework.gwt.client.logic.handshake.InitAysncServicesPlayer;
 import cc.alcina.framework.gwt.persistence.client.RemoteLogPersister;

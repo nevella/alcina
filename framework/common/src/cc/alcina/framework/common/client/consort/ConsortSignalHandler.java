@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.state;
+package cc.alcina.framework.common.client.consort;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 

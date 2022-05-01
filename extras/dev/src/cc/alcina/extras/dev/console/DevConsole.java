@@ -81,6 +81,7 @@ import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.entity.util.ThreadlocalLooseContextProvider;
+import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
@@ -206,6 +207,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		new DevStats().parse(logProvider).dump(true);
 		logProvider.startRemote();
 		JobRegistry.get().init();
+		JobLogTimer.get().init();
 		AlcinaTopics.applicationRestart.add((k, v) -> getInstance().restart());
 	}
 

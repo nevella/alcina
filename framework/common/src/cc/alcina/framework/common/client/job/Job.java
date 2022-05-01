@@ -934,7 +934,15 @@ public abstract class Job extends VersionableEntity<Job>
 
 	public String toDisplayName() {
 		if (cachedDisplayName == null) {
-			cachedDisplayName = toDisplayName0();
+			try {
+				cachedDisplayName = toDisplayName0();
+			} catch (RuntimeException e) {
+				e.printStackTrace();
+				cachedDisplayName = Ax.format(
+						"Exception generating displayName: %s",
+						CommonUtils.toSimpleExceptionMessage(e));
+				throw e;
+			}
 		}
 		return cachedDisplayName;
 	}

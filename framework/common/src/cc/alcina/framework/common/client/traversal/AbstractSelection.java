@@ -1,6 +1,9 @@
-package cc.alcina.framework.servlet.traversal;
+package cc.alcina.framework.common.client.traversal;
 
-import cc.alcina.framework.servlet.job.TreeProcess.Node;
+import java.util.ArrayList;
+import java.util.List;
+
+import cc.alcina.framework.common.client.log.TreeProcess.Node;
 
 public abstract class AbstractSelection<T> implements Selection<T> {
 	private T value;
@@ -9,10 +12,13 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	private String pathSegment;
 
+	private List<String> filterableSegments = new ArrayList<>();
+
 	public AbstractSelection(Node parentNode, T value, String pathSegment) {
 		this.value = value;
 		this.pathSegment = pathSegment;
 		this.node = parentNode.add(this);
+		filterableSegments.add(pathSegment);
 	}
 
 	public AbstractSelection(Selection parent, T value, String pathSegment) {
@@ -22,6 +28,11 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 	@Override
 	public T get() {
 		return value;
+	}
+
+	@Override
+	public List<String> getFilterableSegments() {
+		return this.filterableSegments;
 	}
 
 	@Override

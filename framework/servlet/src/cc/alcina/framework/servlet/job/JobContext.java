@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.lock.JobResource;
+import cc.alcina.framework.common.client.log.TreeProcess;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -245,6 +246,8 @@ public class JobContext {
 		this.job = job;
 		this.performer = performer;
 		treeProcess = new TreeProcess(performer);
+		treeProcess.positionChangedMessage
+				.add((k, v) -> JobContext.setStatusMessage(v));
 		this.launcherThreadState = launcherThreadState;
 		this.allocator = allocator;
 		this.logger = LoggerFactory.getLogger(performer.getClass());

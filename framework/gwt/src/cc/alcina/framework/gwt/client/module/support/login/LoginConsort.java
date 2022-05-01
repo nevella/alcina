@@ -7,6 +7,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.consort.Consort;
+import cc.alcina.framework.common.client.consort.EnumPlayer;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.LoginResponseState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -14,8 +16,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
 import cc.alcina.framework.common.client.remote.ReflectiveLoginRemoteServiceAsync;
-import cc.alcina.framework.common.client.state.Consort;
-import cc.alcina.framework.common.client.state.EnumPlayer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;

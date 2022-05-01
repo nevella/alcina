@@ -167,6 +167,11 @@ public class PermissionsManager implements DomainTransformListener {
 		return permissionsExtension;
 	}
 
+	public static boolean hasAdminAccessLevel() {
+		return get().getMaxPropertyAccessLevel().ordinal() >= AccessLevel.ADMIN
+				.ordinal();
+	}
+
 	public static boolean hasDeletePermission(Object object) {
 		AnnotationLocation clazzLocation = new AnnotationLocation(
 				object.getClass(), null);

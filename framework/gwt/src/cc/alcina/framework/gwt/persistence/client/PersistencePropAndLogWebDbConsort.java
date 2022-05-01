@@ -3,9 +3,9 @@ package cc.alcina.framework.gwt.persistence.client;
 import com.google.code.gwt.database.client.Database;
 import com.google.code.gwt.database.client.DatabaseException;
 
-import cc.alcina.framework.common.client.state.Consort;
-import cc.alcina.framework.common.client.state.EnumPlayer;
-import cc.alcina.framework.common.client.state.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.consort.Consort;
+import cc.alcina.framework.common.client.consort.EnumPlayer;
+import cc.alcina.framework.common.client.consort.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 
 public class PersistencePropAndLogWebDbConsort
 		extends Consort<PersistencePropAndLogInitState> {

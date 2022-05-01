@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.state;
+package cc.alcina.framework.common.client.consort;
 
 /**
  * Marker to signify has successive self-async calls - for visualisation of

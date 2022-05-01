@@ -9,10 +9,15 @@ import com.fasterxml.jackson.databind.node.ObjectNode;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CachingMap;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.SimpleHttp;
 
 @Registration.Singleton(GeolocationResolver.class)
 public class GeolocationResolver_Ipstack implements GeolocationResolver {
+	// Timeout for requests to IpStack
+	private static int QUERY_TIMEOUT = 15 * 1000;
+
 	private CachingMap<String, String> ipToLocation = new CachingMap<>(
 			s -> getLocation0(s));
 
@@ -38,10 +43,15 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
 		try {
 			String apiKey = ResourceUtilities
 					.get(GeolocationResolver_Ipstack.class, "apiKey");
-			String url = Ax.format(
-					"http://api.ipstack.com/%s?access_key=%s&output=json",
-					ipAddress, apiKey);
-			String result = ResourceUtilities.readUrlAsString(url);
+			// Generate query
+			String url = Ax.format("http://api.ipstack.com/%s", ipAddress);
+			StringMap params = StringMap.properties(
+				"access_key", apiKey,
+				"output", "json");
+			SimpleHttp query = new SimpleHttp(url)
+				.withQueryStringParameters(params)
+				.withTimeout(QUERY_TIMEOUT);
+			String result = query.asString();
 			ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
 			if (node.has("success") && !node.get("success").asBoolean()) {
 				return "(unable to resolve ip adress)(probably usage limit)";

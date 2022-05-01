@@ -1,6 +1,6 @@
 package cc.alcina.framework.gwt.client.logic.handshake;
 
-import cc.alcina.framework.common.client.state.Player.RunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.consort.Player.RunnableAsyncCallbackPlayer;
 import cc.alcina.framework.gwt.persistence.client.ClientSession;
 
 public abstract class CheckSoleInstancePlayer

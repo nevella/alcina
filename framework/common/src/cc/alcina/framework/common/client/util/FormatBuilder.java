@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.util;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 public class FormatBuilder {
@@ -72,8 +73,21 @@ public class FormatBuilder {
 		}
 	}
 
+	public void appendPadLeft(int width, Object object) {
+		sb.append(CommonUtils.padStringLeft(object.toString(), width, " "));
+	}
+
+	public void appendPadRight(int width, Object object) {
+		sb.append(CommonUtils.padStringRight(object.toString(), width, ' '));
+	}
+
 	public void appendWithoutSeparator(String string) {
 		sb.append(string);
+	}
+
+	public void fill(int width, String fill) {
+		sb.append(CommonUtils.padStringLeft("", width, fill));
+		sb.append("\n");
 	}
 
 	public FormatBuilder format(String template, Object... args) {
@@ -89,6 +103,12 @@ public class FormatBuilder {
 
 	public void indent(int indent) {
 		this.indent = indent;
+	}
+
+	public FormatBuilder line(Object object) {
+		append(object);
+		newLine();
+		return this;
 	}
 
 	public FormatBuilder line(String template, Object... args) {
@@ -112,6 +132,13 @@ public class FormatBuilder {
 		return this;
 	}
 
+	public void title(String title) {
+		sb.append(title);
+		sb.append('\n');
+		IntStream.range(0, title.length()).forEach(i -> sb.append('-'));
+		sb.append('\n');
+	}
+
 	@Override
 	public String toString() {
 		return sb.toString();
@@ -130,18 +157,5 @@ public class FormatBuilder {
 			ensureIndent();
 			sb.append(separator);
 		}
-	}
-
-	public void appendPadLeft(int width, Object object) {
-		sb.append(CommonUtils.padStringLeft(object.toString(), width, " "));
-	}
-	public void appendPadRight(int width, Object object) {
-		sb.append(CommonUtils.padStringRight(object.toString(), width, ' '));
-	}
-
-	public void fill(int width, String fill) {
-		sb.append(CommonUtils.padStringLeft("", width, fill));
-		sb.append("\n");
-		
 	}
 }

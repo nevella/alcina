@@ -3,10 +3,10 @@ package cc.alcina.framework.gwt.client.logic.handshake.objectdata;
 import java.util.Arrays;
 import java.util.List;
 
+import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.state.Player.RunnablePlayer;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
 
 /**

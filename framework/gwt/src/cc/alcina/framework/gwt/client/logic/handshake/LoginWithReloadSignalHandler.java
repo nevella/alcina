@@ -3,8 +3,8 @@ package cc.alcina.framework.gwt.client.logic.handshake;
 import com.google.gwt.user.client.Window;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.state.Consort;
-import cc.alcina.framework.common.client.state.ConsortSignalHandler;
+import cc.alcina.framework.common.client.consort.Consort;
+import cc.alcina.framework.common.client.consort.ConsortSignalHandler;
 
 public class LoginWithReloadSignalHandler
 		implements ConsortSignalHandler<HandshakeSignal> {

@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -30,6 +31,12 @@ public class TopicPublisher {
 	public void clearListeners(String topic) {
 		Preconditions.checkState(GWT.isClient());
 		lookup.getAndEnsure(topic).clear();
+	}
+
+	public boolean hasListeners(String key) {
+		synchronized (lookup) {
+			return lookup.containsKey(key) && lookup.get(key).size() > 0;
+		}
 	}
 
 	public void listenerDelta(String key, TopicListener listener, boolean add) {
@@ -102,6 +109,8 @@ public class TopicPublisher {
 
 		private boolean wasPublished;
 
+		private boolean throwExceptions = false;
+
 		private Topic(String topic, boolean global) {
 			this.topic = topic;
 			topicPublisher = global ? GlobalTopicPublisher.get()
@@ -146,17 +155,31 @@ public class TopicPublisher {
 			topicPublisher.listenerDelta(topic, listener, add);
 		}
 
+		public boolean hasListeners() {
+			return topicPublisher.hasListeners(topic);
+		}
+
+		// FIXME - 2021 - remove try/catch
 		public void publish(T t) {
 			try {
 				topicPublisher.publishTopic(topic, t);
 				wasPublished = true;
 			} catch (Throwable e) {
-				e.printStackTrace();
+				if (throwExceptions) {
+					throw WrappedRuntimeException.wrapIfNotRuntime(e);
+				} else {
+					e.printStackTrace();
+				}
 			}
 		}
 
 		public void remove(TopicListener<T> listener) {
 			delta(listener, false);
+		}
+
+		public <S> Topic<S> withThrowExceptions() {
+			throwExceptions = true;
+			return (Topic<S>) this;
 		}
 	}
 

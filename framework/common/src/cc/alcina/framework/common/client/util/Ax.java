@@ -2,12 +2,15 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Collection;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 
 public class Ax {
@@ -126,6 +129,20 @@ public class Ax {
 		System.out.println(CommonUtils.joinWithNewlines(collection));
 	}
 
+	public static <T> T next(Collection<T> collection, T element) {
+		Iterator<T> itr = collection.iterator();
+		boolean matched = false;
+		while (itr.hasNext()) {
+			T next = itr.next();
+			if (matched) {
+				return next;
+			} else {
+				matched = Objects.equals(next, element);
+			}
+		}
+		return null;
+	}
+
 	public static <T> T next(List<T> list, T element) {
 		int index = list.indexOf(element);
 		if (index == -1 || index + 1 == list.size()) {
@@ -190,6 +207,10 @@ public class Ax {
 
 	public static String timestampYmd(Date date) {
 		return CommonUtils.formatDate(date, DateStyle.TIMESTAMP);
+	}
+
+	public static String transforms() {
+		return TransformManager.get().getTransforms().toString();
 	}
 
 	public static String trim(String s, int maxChars) {

@@ -80,7 +80,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.MetricLogging;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
@@ -142,6 +141,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public static Map<Long, String> setIgnoreTrace = new LinkedHashMap<>();
 
 	private static AtomicInteger removeListenerExceptionCounter = new AtomicInteger();
+
+	public static boolean ignoreAllTransformPermissions;
 
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
@@ -364,9 +365,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 	}
 
 	public boolean isIgnoreTransformPermissions() {
-		return this.ignoreTransformPermissions || ResourceUtilities.getBoolean(
-				ThreadlocalTransformManager.class,
-				"ignoreTransformPermissions");
+		return this.ignoreTransformPermissions || ignoreAllTransformPermissions;
 	}
 
 	@Override
@@ -1205,11 +1204,19 @@ public class ThreadlocalTransformManager extends TransformManager {
 					return t;
 				} else {
 					long f_id = id;
-					return MethodContext.instance().withContextTrue(
-							LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
-							.withContextTrue(
-									ThreadlocalTransformManager.CONTEXT_LOADING_FOR_TRANSFORM)
-							.call(() -> Domain.find(clazz, f_id));
+					if (DomainStore.writableStore().isCached(clazz)
+							&& DomainStore.writableStore().isCached(clazz,
+									id)) {
+						// optimisation
+						return DomainStore.writableStore().getCache().get(clazz,
+								id);
+					} else {
+						return MethodContext.instance().withContextTrue(
+								LazyLoadProvideTask.CONTEXT_LAZY_LOAD_DISABLED)
+								.withContextTrue(
+										ThreadlocalTransformManager.CONTEXT_LOADING_FOR_TRANSFORM)
+								.call(() -> Domain.find(clazz, f_id));
+					}
 				}
 			}
 			return null;
