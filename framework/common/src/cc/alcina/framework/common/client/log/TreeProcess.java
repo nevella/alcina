@@ -2,7 +2,9 @@ package cc.alcina.framework.common.client.log;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -38,11 +40,18 @@ public class TreeProcess {
 
 	Logger logger;
 
+	private boolean logAsLevelledPosition;
+
 	public TreeProcess(TaskPerformer performer) {
 		root = new NodeImpl(this, null, performer);
 		logger = LoggerFactory.getLogger(performer.getClass());
 		onEvent(Event.node_added, root, null);
 		onEvent(Event.node_selected, root, null);
+	}
+
+	public String getCurrentPositionMessage() {
+		return logAsLevelledPosition ? levlledPosition(getSelectedNode())
+				: flatPosition(getSelectedNode());
 	}
 
 	public Cursor getCursor() {
@@ -55,6 +64,10 @@ public class TreeProcess {
 
 	public Node getSelectedNode() {
 		return selected;
+	}
+
+	public boolean isLogAsLevelledPosition() {
+		return this.logAsLevelledPosition;
 	}
 
 	public int levelSize(int depth) {
@@ -74,9 +87,16 @@ public class TreeProcess {
 			break;
 		case node_selected: {
 			selected = node;
-			String positionMessage = processContextProvider == null
-					? flatPosition(node)
-					: processContextProvider.flatPosition(node);
+			String positionMessage = null;
+			if (processContextProvider == null || logAsLevelledPosition) {
+				if (logAsLevelledPosition) {
+					positionMessage = levlledPosition(node);
+				} else {
+					positionMessage = flatPosition(node);
+				}
+			} else {
+				positionMessage = processContextProvider.flatPosition(node);
+			}
 			positionChangedMessage.publish(positionMessage);
 		}
 		}
@@ -90,11 +110,25 @@ public class TreeProcess {
 		return root;
 	}
 
+	public void setLogAsLevelledPosition(boolean logAsLevelledPosition) {
+		this.logAsLevelledPosition = logAsLevelledPosition;
+	}
+
 	private String flatPosition(Node node) {
 		FormatBuilder position = new FormatBuilder().separator(" > ");
 		List<Node> selectionPath = node.asNodePath();
+		position.appendWithoutSeparator("Generation: ");
+		Node first = CommonUtils.first(selectionPath);
 		Node last = CommonUtils.last(selectionPath);
-		position.format("Generation: [%s/%s]", last.depth(), levelSizes.size());
+		if (first != last) {
+			position.appendWithoutSeparator("top: ");
+			IntPair pair = new IntPair(first.indexInLevel(),
+					levelSizes.get(first.depth()));
+			position.append(pair);
+			position.separator(" :: ");
+			position.append(first.displayName());
+		}
+		position.format("[%s/%s]", last.depth(), levelSizes.size());
 		IntPair pair = new IntPair(last.indexInLevel(),
 				levelSizes.get(last.depth()));
 		position.append(pair);
@@ -238,6 +272,11 @@ public class TreeProcess {
 			tree().logger.info(template, args);
 		}
 
+		default Node nodeForValue(Object value) {
+			return getChildren().stream().filter(c -> c.getValue() == value)
+					.findFirst().get();
+		}
+
 		default void onException(Exception exception) {
 			tree().onException(exception);
 		}
@@ -264,9 +303,7 @@ public class TreeProcess {
 		 */
 		default void select(Object value,
 				ProcessContextProvider processContextProvider) {
-			Node node = value == null ? this
-					: getChildren().stream().filter(c -> c.getValue() == value)
-							.findFirst().get();
+			Node node = value == null ? this : nodeForValue(value);
 			tree().onEvent(Event.node_selected, node, processContextProvider);
 		}
 
@@ -309,6 +346,8 @@ public class TreeProcess {
 
 		private List<Node> children = new ArrayList<>();
 
+		private Map<Object, Node> childrenByValue = new LinkedHashMap<>();
+
 		private TreeProcess tree;
 
 		private Object value;
@@ -337,6 +376,7 @@ public class TreeProcess {
 			child.index = children.size();
 			child.levelIndex = tree().levelSize(child.depth());
 			children.add(child);
+			childrenByValue.put(value, child);
 			tree().onEvent(Event.node_added, child, null);
 			return child;
 		}
@@ -374,6 +414,11 @@ public class TreeProcess {
 		@Override
 		public boolean isSelfComplete() {
 			return this.selfComplete;
+		}
+
+		@Override
+		public Node nodeForValue(Object value) {
+			return childrenByValue.get(value);
 		}
 
 		@Override

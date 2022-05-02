@@ -16,9 +16,19 @@ public interface HasDisplayName {
 		if (o == null) {
 			return placeholderText;
 		}
-		return (o instanceof HasDisplayName)
-				? ((HasDisplayName) o).displayName()
-				: (o instanceof Enum) ? Ax.friendly(o) : o.toString();
+		if (o instanceof HasDisplayName) {
+			return ((HasDisplayName) o).displayName();
+		}
+		if (o instanceof Enum) {
+			return Ax.friendly(o);
+		}
+		String toString = o.toString();
+		if (toString.contains("@")
+				&& toString.startsWith(o.getClass().getName())) {
+			return Ax.format("[%s]", o.getClass().getSimpleName());
+		} else {
+			return toString;
+		}
 	}
 
 	public String displayName();
