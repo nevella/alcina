@@ -70,7 +70,7 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 					tx1Latch2.countDown();
 				} catch (Exception e) {
 					notifyThreadException(e);
-					throw WrappedRuntimeException.wrapIfNotRuntime(e);
+					throw WrappedRuntimeException.wrap(e);
 				} finally {
 					Transaction.ensureEnded();
 					txLatch.countDown();
@@ -113,7 +113,7 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 					tx2Latch2.countDown();
 				} catch (Exception e) {
 					notifyThreadException(e);
-					throw WrappedRuntimeException.wrapIfNotRuntime(e);
+					throw WrappedRuntimeException.wrap(e);
 				} finally {
 					Transaction.ensureEnded();
 					txLatch.countDown();
@@ -155,7 +155,7 @@ public class MvccEntityMultipleTransactionalApplyTest<IU extends Entity & IUser,
 					// vacuum
 				} catch (Exception e) {
 					notifyThreadException(e);
-					throw WrappedRuntimeException.wrapIfNotRuntime(e);
+					throw WrappedRuntimeException.wrap(e);
 				} finally {
 					Transaction.ensureEnded();
 					txLatch.countDown();

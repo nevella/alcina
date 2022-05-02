@@ -63,7 +63,7 @@ public class MvccEntityTransactionalDeletionTest<IU extends Entity & IUser, IG e
 					tx1Latch2.countDown();
 				} catch (Exception e) {
 					notifyThreadException(e);
-					throw WrappedRuntimeException.wrapIfNotRuntime(e);
+					throw WrappedRuntimeException.wrap(e);
 				} finally {
 					Transaction.ensureEnded();
 					txLatch.countDown();
@@ -85,7 +85,7 @@ public class MvccEntityTransactionalDeletionTest<IU extends Entity & IUser, IG e
 					tx1Latch2.await();
 				} catch (Exception e) {
 					notifyThreadException(e);
-					throw WrappedRuntimeException.wrapIfNotRuntime(e);
+					throw WrappedRuntimeException.wrap(e);
 				} finally {
 					Transaction.ensureEnded();
 					txLatch.countDown();

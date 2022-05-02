@@ -598,7 +598,7 @@ public class TransformCommit {
 				asRoot, true);
 		if (layerWrapper.response != null
 				&& layerWrapper.response.getTransformExceptions().size() > 0) {
-			throw WrappedRuntimeException.wrapIfNotRuntime(
+			throw WrappedRuntimeException.wrap(
 					layerWrapper.response.getTransformExceptions().get(0));
 		}
 		return pendingTransformCount;
@@ -865,7 +865,7 @@ public class TransformCommit {
 			ThreadlocalTransformManager.cast().resetTltm(null);
 			Transaction.current().toDbAborted();
 			Transaction.endAndBeginNew();
-			throw WrappedRuntimeException.wrapIfNotRuntime(ex);
+			throw WrappedRuntimeException.wrap(ex);
 		} finally {
 			tpm.popUser();
 			Preconditions.checkState(

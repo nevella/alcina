@@ -30,7 +30,7 @@ public abstract class MvccEntityTransactionTest extends AbstractTaskPerformer {
 		} catch (Exception e) {
 			TransformManager.get().clearTransforms();
 			if (throwExceptions) {
-				throw WrappedRuntimeException.wrapIfNotRuntime(e);
+				throw WrappedRuntimeException.wrap(e);
 			} else {
 				e.printStackTrace();
 			}

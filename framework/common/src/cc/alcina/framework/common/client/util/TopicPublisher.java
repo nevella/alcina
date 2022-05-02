@@ -166,7 +166,7 @@ public class TopicPublisher {
 				wasPublished = true;
 			} catch (Throwable e) {
 				if (throwExceptions) {
-					throw WrappedRuntimeException.wrapIfNotRuntime(e);
+					throw WrappedRuntimeException.wrap(e);
 				} else {
 					e.printStackTrace();
 				}

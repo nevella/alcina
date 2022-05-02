@@ -80,7 +80,7 @@ public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG
 							"committed-tx1: userClass.count()!=initialSize+1");
 				} catch (Exception e) {
 					notifyThreadException(e);
-					throw WrappedRuntimeException.wrapIfNotRuntime(e);
+					throw WrappedRuntimeException.wrap(e);
 				} finally {
 					Transaction.ensureEnded();
 					txLatch.countDown();
@@ -127,7 +127,7 @@ public class MvccEntityTransactionalCollectionTest<IU extends Entity & IUser, IG
 							"committed-tx1: userClass.count()!=initialSize+1 thread tx2 (post-committed-tx1 tx)");
 				} catch (Exception e) {
 					notifyThreadException(e);
-					throw WrappedRuntimeException.wrapIfNotRuntime(e);
+					throw WrappedRuntimeException.wrap(e);
 				} finally {
 					Transaction.ensureEnded();
 					txLatch.countDown();
