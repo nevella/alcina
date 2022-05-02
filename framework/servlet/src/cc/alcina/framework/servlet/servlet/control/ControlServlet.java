@@ -14,6 +14,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDeliveryType;
@@ -30,6 +31,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.SimpleHttp;
 import cc.alcina.framework.entity.control.ClusterStateProvider;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
+import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -59,8 +61,14 @@ public class ControlServlet extends AlcinaServlet {
 	}
 
 	public static String invokeTask(Task task, String url, String apiKey) {
+		return invokeTask(task, url, apiKey, true);
+	}
+
+	public static String invokeTask(Task task, String url, String apiKey,
+			boolean wait) {
 		StringMap queryParameters = new StringMap();
-		queryParameters.put("cmd", "perform-task");
+		String verb = wait ? "perform-task" : "schedule-task";
+		queryParameters.put("cmd", verb);
 		queryParameters.put("apiKey", apiKey);
 		queryParameters.put("taskClassName", task.getClass().getName());
 		queryParameters.put("taskJson",
@@ -147,8 +155,13 @@ public class ControlServlet extends AlcinaServlet {
 			writeAndClose(message, response);
 			break;
 		}
+		case SCHEDULE_TASK: {
+			String jobId = invokeTask(req, false);
+			writeAndClose(jobId, response);
+			break;
+		}
 		case PERFORM_TASK: {
-			String message = performTask(req);
+			String message = invokeTask(req, true);
 			message = Ax.blankTo(message, "<No log>");
 			logger.info(message);
 			String regex = "(?s).*(<\\?xml|<html.*)";
@@ -162,6 +175,36 @@ public class ControlServlet extends AlcinaServlet {
 			break;
 		}
 		}
+	}
+
+	private String invokeTask(HttpServletRequest req, boolean wait) {
+		if (Ax.notBlank(req.getHeader("X-Forwarded-Server"))) {
+			throw new RuntimeException("Internal/non-proxied access only");
+		}
+		String taskClassName = req.getParameter("taskClassName");
+		String taskJson = req.getParameter("taskJson");
+		return MethodContext.instance()
+				// FIXME - instead, use a threaded topic listener (in the
+				// context)
+				.withContextTrue(
+						JobRegistry.CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET)
+				.withRootPermissions(true).call(() -> {
+					Task task = null;
+					if (taskJson == null) {
+						task = (Task) Reflections
+								.newInstance(Class.forName(taskClassName));
+					} else {
+						task = (Task) JacksonUtils.deserialize(taskJson,
+								Class.forName(taskClassName));
+					}
+					if (wait) {
+						return JobRegistry.get().perform(task).getLog();
+					} else {
+						Job job = task.schedule();
+						Transaction.commit();
+						return String.valueOf(job.getId());
+					}
+				});
 	}
 
 	private ControlServletRequest parseRequest(HttpServletRequest req,
@@ -193,35 +236,14 @@ public class ControlServlet extends AlcinaServlet {
 		} else if (cmd.equals("perform-task")) {
 			csr.setCommand(ControlServletRequestCommand.PERFORM_TASK);
 			return csr;
+		} else if (cmd.equals("schedule-task")) {
+			csr.setCommand(ControlServletRequestCommand.SCHEDULE_TASK);
+			return csr;
 		}
 		writeAndClose("Usage:\n" + "control.do?apiKey=xxx&"
 				+ "{json=yyy|cmd=[refresh-config|to-reader|to-writer|get-status|vm-health|test-sendmail|cluster-leader]}",
 				resp);
 		return null;
-	}
-
-	private String performTask(HttpServletRequest req) {
-		if (Ax.notBlank(req.getHeader("X-Forwarded-Server"))) {
-			throw new RuntimeException("Internal/non-proxied access only");
-		}
-		String taskClassName = req.getParameter("taskClassName");
-		String taskJson = req.getParameter("taskJson");
-		return MethodContext.instance()
-				// FIXME - instead, use a threaded topic listener (in the
-				// context)
-				.withContextTrue(
-						JobRegistry.CONTEXT_LAUNCHED_FROM_CONTROL_SERVLET)
-				.withRootPermissions(true).call(() -> {
-					Task task = null;
-					if (taskJson == null) {
-						task = (Task) Reflections
-								.newInstance(Class.forName(taskClassName));
-					} else {
-						task = (Task) JacksonUtils.deserialize(taskJson,
-								Class.forName(taskClassName));
-					}
-					return JobRegistry.get().perform(task).getLog();
-				});
 	}
 
 	private String testSendmail() throws Exception {
