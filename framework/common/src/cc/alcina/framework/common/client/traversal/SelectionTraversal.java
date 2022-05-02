@@ -61,6 +61,9 @@ public class SelectionTraversal implements ProcessContextProvider {
 	public Topic<Selection> selectionProcessed = Topic.local()
 			.withThrowExceptions();
 
+	public Topic<Selection> beforeSelectionProcessed = Topic.local()
+			.withThrowExceptions();
+
 	Selection rootSelection;
 
 	Map<Generation, GenerationTraversal> generations = new LinkedHashMap<>();
@@ -248,6 +251,7 @@ public class SelectionTraversal implements ProcessContextProvider {
 			for (Selector processor : generationTraversal.selectors) {
 				if (processor.handles(selection)) {
 					try {
+						beforeSelectionProcessed.publish(selection);
 						processor.process(this, selection);
 					} catch (Exception e) {
 						selectionExceptions.put(selection, e);
