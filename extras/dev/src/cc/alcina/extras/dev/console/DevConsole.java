@@ -144,6 +144,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		System.setOut(out.s1);
 	}
 
+	private boolean initialised;
+
 	public D devHelper;
 
 	Map<String, DevConsoleCommand> commandsById = new HashMap<String, DevConsoleCommand>();
@@ -391,6 +393,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	public boolean isHeadless() {
 		return this.headless;
+	}
+
+	public boolean isInitialised() {
+		return this.initialised;
 	}
 
 	public void loadConfig() throws Exception {
@@ -841,6 +847,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		BackendTransformQueue.get().start();
 		new InitPostObjectServices().emit(System.currentTimeMillis());
 		new InitConsole().emit(System.currentTimeMillis());
+		initialised = true;
 		if (!props.lastCommand.matches("|q|re|restart")) {
 			runningLastCommand = true;
 			performCommand(props.lastCommand);

@@ -11,6 +11,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.handler.AbstractHandler;
 
+import cc.alcina.extras.dev.console.DevConsole;
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleConsoleChanges;
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleRequest;
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleRequest.RemoteConsoleRequestType;
@@ -36,6 +37,12 @@ public class DevConsoleProtocolHandler extends AbstractHandler {
 	public void handle(String target, Request baseRequest,
 			HttpServletRequest request, HttpServletResponse response)
 			throws IOException, ServletException {
+		if (!DevConsole.getInstance().isInitialised()) {
+			response.getWriter().write("Warming up");
+			response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+			baseRequest.setHandled(true);
+			return;
+		}
 		try {
 			LooseContext.push();
 			response.setContentType("application/json");
