@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -123,13 +121,18 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	static final String ANN_IMPL = "__annImpl";
 
-	private static boolean alcinaCollectionsConfigured;
-
 	static final String DATA_FOLDER_CONFIGURATION_KEY = "ClientReflectionGenerator.ReachabilityData.folder";
 
 	static final String FILTER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.FilterPeer.className";
 
 	static final String LINKER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.LinkerPeer.className";
+
+	static void configureRegistry() {
+		if (Registry.optional(DomainCollections.class).isEmpty()) {
+			Registry.register().singleton(DomainCollections.class,
+					new DomainCollections());
+		}
+	}
 
 	static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {
@@ -341,11 +344,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	}
 
 	void setupEnvironment() {
-		if (!alcinaCollectionsConfigured) {
-			Registry.register().singleton(DomainCollections.class,
-					new DomainCollections());
-			alcinaCollectionsConfigured = true;
-		}
 		start = System.currentTimeMillis();
 		String superClassName = null;
 		generatingType = getType(typeName);

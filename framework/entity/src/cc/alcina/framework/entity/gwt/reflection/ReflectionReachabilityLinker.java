@@ -84,6 +84,10 @@ public class ReflectionReachabilityLinker extends Linker {
 	@Override
 	public ArtifactSet link(TreeLogger logger, LinkerContext context,
 			ArtifactSet artifacts, boolean onePermutation) {
+		if (ReachabilityData.dataFolder == null) {
+			// ClientReflectionGenerator not invoked, exit
+			return artifacts;
+		}
 		SortedSet<StandardCompilationResult> compilationResults = artifacts
 				.find(StandardCompilationResult.class);
 		// if obf, ignore for reachability filtering
