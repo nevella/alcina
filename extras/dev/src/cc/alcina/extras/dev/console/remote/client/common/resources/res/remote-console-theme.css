@@ -3,8 +3,8 @@ html {
 	-nav-bar-color: hsla(148, 67%, 39%, 0.8);
 	-nav-bar-color: hsl(199, 57%, 97%);
 	-caption-color: hsla(148, 67%, 39%, 0.8);
-	-jade-border: hsla(148, 80%, 34%, 1);
-	-jade-link-color: hsla(148, 80%, 34%, 1);
+	-jade-border: hsl(148deg 90% 24%);
+	-jade-link-color: hsl(148deg 90% 24%);
 	-jade-search-background: hsla(148, 37%, 97%, 1.0);
 	-nav-bar-top-margin: 7px;
 	-nav-bar-button-indent: 32px;

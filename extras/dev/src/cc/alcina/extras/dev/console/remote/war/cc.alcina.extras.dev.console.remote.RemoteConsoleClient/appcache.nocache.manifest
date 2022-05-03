@@ -1,19 +1,14 @@
 CACHE MANIFEST
-# Version: 88B011806E770FE7543CC5E4F8FCADBB
+# Version: 187E2E6691AF55A83FADC0E67D834514
 CACHE:
+/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/7EBF8BE64EEBDE9EC77C488CB6C7A5C4.cache.js
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/Alcina-dep.css
-/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/F462D3D1792ED32FF49FDE57F40D5AFD.cache.js
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/WebSocketTransport.js
-/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/calendar-icon.gif
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/cc.alcina.extras.dev.console.remote.RemoteConsoleClient.devmode.js
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/cc.alcina.extras.dev.console.remote.RemoteConsoleClient.nocache.js
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/clear.cache.gif
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/compilation-mappings.txt
-/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/deferredjs/F462D3D1792ED32FF49FDE57F40D5AFD/1.cache.js
-/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/deferredjs/F462D3D1792ED32FF49FDE57F40D5AFD/2.cache.js
-/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/deferredjs/F462D3D1792ED32FF49FDE57F40D5AFD/3.cache.js
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/empty.css
-/cc.alcina.extras.dev.console.remote.RemoteConsoleClient/flso.swf
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/readme.txt
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/cc.alcina.extras.dev.console.remote.RemoteConsoleClient.nocache.js?compiled
 /cc.alcina.extras.dev.console.remote.RemoteConsoleClient/cc.alcina.extras.dev.console.remote.RemoteConsoleClient.nocache.js

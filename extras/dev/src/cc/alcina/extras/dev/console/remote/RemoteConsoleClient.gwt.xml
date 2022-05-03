@@ -1,5 +1,5 @@
 <module>
-<inherits name='cc.alcina.framework.gwt.AlcinaGwtNoStyles' />
+	<inherits name='cc.alcina.framework.gwt.AlcinaGwtNoStyles' />
 	<inherits name='cc.alcina.framework.gwt.AlcinaGwtRpcIgnores' />
 	<inherits name='cc.alcina.extras.AlcinaExtrasCollections' />
 	<inherits name="com.google.gwt.i18n.I18N" />
@@ -14,5 +14,5 @@
 	<public path="public" />
 	<super-source path="jre" />
 	<public path="client/widgets/res" />
-	<entry-point class='cc.alcina.extras.dev.console.remote.client.RemoteConsoleClient' />
+	<set-configuration-property name="ClientReflectionGenerator.ReachabilityData.folder" value="/tmp" />
 </module>
