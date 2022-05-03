@@ -345,6 +345,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	void setupEnvironment() {
 		start = System.currentTimeMillis();
+		configureRegistry();
 		String superClassName = null;
 		generatingType = getType(typeName);
 		classReflectorType = getType(ClassReflector.class.getCanonicalName());
