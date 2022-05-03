@@ -73,6 +73,17 @@ public interface HasDisplayName {
 		}
 	}
 
+	@Reflected
+	public static class PreferDisplayNameRenderer
+			implements Renderer<Object, String> {
+		public static final PreferDisplayNameRenderer INSTANCE = new PreferDisplayNameRenderer();
+
+		@Override
+		public String render(Object o) {
+			return o == null ? "" : displayName(o);
+		}
+	}
+
 	public static interface Settable extends HasDisplayName {
 		default void putDisplayName(String name) {
 			throw new UnsupportedOperationException();
