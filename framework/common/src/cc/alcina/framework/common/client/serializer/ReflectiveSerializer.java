@@ -27,11 +27,17 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.GraphNode;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.JsonSerialNode;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.ReflectiveSerializable;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.ReflectiveTypeSerializer;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerialNode;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.ValueSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import elemental.json.Json;
 import elemental.json.JsonArray;
@@ -139,7 +145,11 @@ public class ReflectiveSerializer {
 		state.pending.add(node);
 		ReflectiveSerializer serializer = new ReflectiveSerializer(state);
 		serializer.serialize0();
-		return root.toJson();
+		SerialNode out = root;
+		if (!options.topLevelTypeInfo) {
+			out = root.getChild(1);
+		}
+		return out.toJson();
 	}
 
 	static TypeSerializer resolveSerializer(Class clazz, Class declaredType) {
@@ -338,8 +348,16 @@ public class ReflectiveSerializer {
 	public static class SerializerOptions {
 		boolean elideDefaults;
 
+		boolean topLevelTypeInfo = true;
+
 		public SerializerOptions withElideDefaults(boolean elideDefaults) {
 			this.elideDefaults = elideDefaults;
+			return this;
+		}
+
+		public SerializerOptions
+				withTopLevelTypeInfo(boolean topLevelTypeInfo) {
+			this.topLevelTypeInfo = topLevelTypeInfo;
 			return this;
 		}
 	}
