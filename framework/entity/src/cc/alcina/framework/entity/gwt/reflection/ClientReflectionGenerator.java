@@ -550,6 +550,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		boolean isAbstract;
 
+		boolean isFinal;
+
 		Pattern getterPattern = Pattern.compile("(?:is|get)([A-Z].*)");
 
 		Pattern setterPattern = Pattern.compile("(?:set)([A-Z].*)");
@@ -570,6 +572,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		@Override
 		protected void prepare() {
 			isAbstract = type.isAbstract();
+			isFinal = type.isFinal();
 			hasCallableNoArgsConstructor = !isAbstract
 					&& !type.getQualifiedSourceName().equals("java.lang.Class")
 					&& Arrays.stream(type.getConstructors())
@@ -665,8 +668,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			});
 			// will probably need to adjust
 			sourceWriter.println("boolean isAbstract = %s;", isAbstract);
+			sourceWriter.println("boolean isFinal = %s;", isFinal);
 			sourceWriter.println("init(clazz, properties, byName, provider,"
-					+ " supplier, assignableTo, interfaces,  isAbstract);");
+					+ " supplier, assignableTo, interfaces,  isAbstract, isFinal);");
 			sourceWriter.outdent();
 			sourceWriter.println("}");
 			closeClassBody();

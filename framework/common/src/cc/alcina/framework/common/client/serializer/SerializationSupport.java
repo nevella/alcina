@@ -53,6 +53,7 @@ class SerializationSupport {
 		Class<?> clazz = Domain.resolveEntityClass(type);
 		return solePossibleImplementation.computeIfAbsent(clazz, valueClass -> {
 			if (Reflections.isEffectivelyFinal(clazz)
+					|| Reflections.at(clazz).isFinal()
 					|| (Reflections.isAssignableFrom(Entity.class, clazz) &&
 			// FXIME - reflection - Modifiers.nonAbstract emul
 			// non-abstract entity classes have no serializable subclasses (but

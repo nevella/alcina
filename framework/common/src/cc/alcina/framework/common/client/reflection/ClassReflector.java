@@ -57,7 +57,7 @@ public class ClassReflector<T> {
 				Collections.emptyMap(), new AnnotationProvider.LookupProvider(),
 				null, t -> false, Collections.emptyList(),
 				// may in fact be true, but unused
-				false);
+				false, false);
 	}
 
 	private Class<T> reflectedClass;
@@ -76,6 +76,8 @@ public class ClassReflector<T> {
 
 	private boolean isAbstract;
 
+	private boolean isFinal;
+
 	private T templateInstance;
 
 	private List<Class> interfaces;
@@ -83,10 +85,10 @@ public class ClassReflector<T> {
 	public ClassReflector(Class<T> reflectedClass, List<Property> properties,
 			Map<String, Property> byName, AnnotationProvider annotationResolver,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
-			List<Class> interfaces, boolean isAbstract) {
+			List<Class> interfaces, boolean isAbstract, boolean isFinal) {
 		this();
 		init(reflectedClass, properties, byName, annotationResolver,
-				constructor, assignableTo, interfaces, isAbstract);
+				constructor, assignableTo, interfaces, isAbstract, isFinal);
 	}
 
 	protected ClassReflector() {
@@ -119,6 +121,10 @@ public class ClassReflector<T> {
 
 	public boolean isAssignableTo(Class to) {
 		return assignableTo.test(to);
+	}
+
+	public boolean isFinal() {
+		return isFinal;
 	}
 
 	public boolean isPrimitive() {
@@ -159,7 +165,7 @@ public class ClassReflector<T> {
 	protected void init(Class<T> reflectedClass, List<Property> properties,
 			Map<String, Property> byName, AnnotationProvider annotationProvider,
 			Supplier<T> constructor, Predicate<Class> assignableTo,
-			List<Class> interfaces, boolean isAbstract) {
+			List<Class> interfaces, boolean isAbstract, boolean isFinal) {
 		this.reflectedClass = reflectedClass;
 		this.properties = properties;
 		this.byName = byName;
@@ -168,6 +174,7 @@ public class ClassReflector<T> {
 		this.assignableTo = assignableTo;
 		this.isAbstract = isAbstract;
 		this.interfaces = interfaces;
+		this.isFinal = isFinal;
 		this.primitive = ClassReflector.primitives.contains(reflectedClass);
 	}
 

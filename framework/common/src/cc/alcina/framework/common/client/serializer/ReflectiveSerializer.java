@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
@@ -27,17 +28,11 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.GraphNode;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.JsonSerialNode;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.ReflectiveSerializable;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.ReflectiveTypeSerializer;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.SerialNode;
-import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.ValueSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import elemental.json.Json;
 import elemental.json.JsonArray;
@@ -350,8 +345,15 @@ public class ReflectiveSerializer {
 
 		boolean topLevelTypeInfo = true;
 
+		Set<Class> elideTypeInfo = Collections.emptySet();
+
 		public SerializerOptions withElideDefaults(boolean elideDefaults) {
 			this.elideDefaults = elideDefaults;
+			return this;
+		}
+
+		public SerializerOptions withElideTypeInfo(Set<Class> elideTypeInfo) {
+			this.elideTypeInfo = elideTypeInfo;
 			return this;
 		}
 
@@ -359,6 +361,10 @@ public class ReflectiveSerializer {
 				withTopLevelTypeInfo(boolean topLevelTypeInfo) {
 			this.topLevelTypeInfo = topLevelTypeInfo;
 			return this;
+		}
+
+		boolean elideTypeInfo(Class<? extends Object> clazz) {
+			return elideTypeInfo.contains(clazz);
 		}
 	}
 
@@ -558,7 +564,8 @@ public class ReflectiveSerializer {
 						return;
 					}
 				}
-				if (!hasFinalClass()) {
+				if (!hasFinalClass() && !state.serializerOptions
+						.elideTypeInfo(value.getClass())) {
 					serialNode = parent.serialNode
 							.writeClassValueContainer(name);
 					consumedName = true;
