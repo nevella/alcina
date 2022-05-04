@@ -102,7 +102,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 					.cell("Thread").accept(Utils::medium).cell("Performer")
 					.accept(Utils::instance).cell("Links").accept(Utils::links);
 			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
-					job.getTaskSerialized());
+					job.provideName(), job.getTaskSerialized());
 			Stream<? extends Job> stream = JobDomain.get().getActiveJobs()
 					.filter(textFilter).filter(sectionFilter);
 			ObjectWrapper<Stream<? extends Entity>> streamRef = ObjectWrapper
@@ -148,7 +148,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 					.cell("Finished").accept(Utils::date).cell("Performer")
 					.accept(Utils::instance).cell("Link").accept(Utils::links);
 			Predicate<Job> textFilter = job -> filter(job.getTaskClassName(),
-					job.getTaskSerialized(),
+					job.provideName(), job.getTaskSerialized(),
 					Optional.ofNullable(job.getPerformer())
 							.map(ClientInstance::toString)
 							.orElse("--unmatched--"));
@@ -265,7 +265,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 			filterPattern = Pattern.compile(filter);
 		}
 		return Arrays.stream(tests).filter(Objects::nonNull)
-				.anyMatch(test -> filterPattern.matcher(test).matches());
+				.anyMatch(test -> filterPattern.matcher(test).find());
 	}
 
 	String timestamp(Date date) {
