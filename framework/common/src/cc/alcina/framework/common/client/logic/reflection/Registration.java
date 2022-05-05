@@ -295,6 +295,7 @@ public @interface Registration {
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE })
+	// NOT @Inherited! Must be reapplied to subclasses
 	/**
 	 *
 	 * <p>

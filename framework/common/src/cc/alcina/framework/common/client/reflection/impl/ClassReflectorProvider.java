@@ -33,6 +33,7 @@ public class ClassReflectorProvider {
 				.collect(AlcinaCollectors.toKeyMap(Property::getName));
 		Supplier supplier = null;
 		boolean isAbstract = Modifier.isAbstract(clazz.getModifiers());
+		boolean isFinal = Modifier.isFinal(clazz.getModifiers());
 		if (!isAbstract && !CommonUtils.isStandardJavaClassOrEnum(clazz)
 				&& clazz != Class.class) {
 			try {
@@ -63,7 +64,7 @@ public class ClassReflectorProvider {
 				clazz);
 		List<Class> interfaces = Arrays.asList(clazz.getInterfaces());
 		return new ClassReflector(clazz, properties, byName, annotationResolver,
-				supplier, assignableTo, interfaces, isAbstract);
+				supplier, assignableTo, interfaces, isAbstract, isFinal);
 	}
 
 	private static Method createMethod(java.lang.reflect.Method reflectMethod) {

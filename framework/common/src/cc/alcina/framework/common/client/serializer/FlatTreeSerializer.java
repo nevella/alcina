@@ -934,7 +934,7 @@ public class FlatTreeSerializer {
 				throw new UnsupportedOperationException(Ax
 						.format("Cannot determine serialization of %s", type));
 			} else {
-				throw WrappedRuntimeException.wrapIfNotRuntime(e);
+				throw WrappedRuntimeException.wrap(e);
 			}
 		}
 		throw new UnsupportedOperationException();

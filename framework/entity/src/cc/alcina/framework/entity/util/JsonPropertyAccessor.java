@@ -119,7 +119,7 @@ public class JsonPropertyAccessor implements PathAccessor {
 					? null
 					: value;
 		} catch (Exception e) {
-			throw WrappedRuntimeException.wrapIfNotRuntime(e);
+			throw WrappedRuntimeException.wrap(e);
 		}
 	}
 

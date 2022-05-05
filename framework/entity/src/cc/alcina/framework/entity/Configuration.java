@@ -21,4 +21,11 @@ public class Configuration {
 				.getCallerClass(), key);
 		return Integer.parseInt(value);
 	}
+
+	public static boolean is(String key) {
+		String value = get(StackWalker
+				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+				.getCallerClass(), key);
+		return Boolean.valueOf(value);
+	}
 }

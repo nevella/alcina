@@ -8,11 +8,12 @@ import com.google.gwt.dom.client.ScriptElement;
 public class JavascriptInjector {
 	private static HeadElement head;
 
-	public static void inject(String javascript) {
+	public static ScriptElement inject(String javascript) {
 		HeadElement head = getHead();
 		ScriptElement element = createScriptElement();
 		element.setText(javascript);
 		head.appendChild(element);
+		return element;
 	}
 
 	public static void injectExternal(String sourceUrl) {

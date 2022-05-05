@@ -2,23 +2,29 @@ package cc.alcina.extras.dev.console;
 
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.servlet.servlet.control.ControlServlet;
 
 public class DevConsoleCommandsDeploy {
+	public static String getControlServletPath() {
+		return Configuration.get("targetContainerControlServletPath");
+	}
+
 	public static String invokeRemoteTask(Task task) {
-		String targetContainerControlServletPath = ResourceUtilities.get(
-				DevConsoleCommandsDeploy.class,
-				"targetContainerControlServletPath");
-		String targetContainerControlServletKey = ResourceUtilities.get(
-				DevConsoleCommandsDeploy.class,
-				"targetContainerControlServletKey");
+		return invokeRemoteTask(task, true);
+	}
+
+	public static String invokeRemoteTask(Task task, boolean wait) {
+		String targetContainerControlServletPath = getControlServletPath();
+		String targetContainerControlServletKey = Configuration
+				.get("targetContainerControlServletKey");
 		Ax.out("\n****************\n****************\n** Executing **\n****************\n****************\n\n");
 		String response = ControlServlet.invokeTask(task,
 				targetContainerControlServletPath,
-				targetContainerControlServletKey);
+				targetContainerControlServletKey, wait);
 		return response;
 	}
 
@@ -47,7 +53,7 @@ public class DevConsoleCommandsDeploy {
 		@Override
 		public String run(String[] argv) throws Exception {
 			String servletPackage = argv[0];
-			String servletPackageBase = ResourceUtilities
+			String servletPackageBase = Configuration
 					.get(DevConsoleCommandsDeploy.class, "servletPackageBase");
 			String targetContainerName = ResourceUtilities
 					.get(DevConsoleCommandsDeploy.class, "targetContainerName");

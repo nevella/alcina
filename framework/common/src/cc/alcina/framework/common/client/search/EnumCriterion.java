@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -22,14 +22,13 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.HasDisplayName.HasDisplayNameRenderer;
-import cc.alcina.framework.gwt.client.gwittir.renderer.FriendlyEnumRenderer;
+import cc.alcina.framework.common.client.util.HasDisplayName.PreferDisplayNameRenderer;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchSelector;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchable;
 import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
- * 
+ *
  * @author Nick Reddel
  *         <p>
  *         See JVM bugs, particularly
@@ -48,14 +47,14 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
  *         Also - there seems to be something dodgy wrt HasValue<E> in
  *         serialization - best to have an explicit serialverisionUID
  *         </p>
- * 
+ *
  *         JDK8+ - this seems to be resolved. Note that serialization will
  *         require type info, either by overriding get/setValue with covariant
  *         types, or via TypeSerialization/PropertySerialization annotations
- * 
+ *
  *         FIXME - dirndl 1.4 - revisit this javadoc (particularly in light of
  *         BaseEnumCriterion)
- * 
+ *
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		implements HasWithNull, HasValue<E> {
@@ -136,7 +135,7 @@ public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		@Override
 		public AbstractBoundWidget createEditor() {
 			return new FlatSearchSelector(enumClass, 1,
-					HasDisplayNameRenderer.INSTANCE,
+					PreferDisplayNameRenderer.INSTANCE,
 					() -> Arrays.asList(enumClass.getEnumConstants()));
 		}
 

@@ -19,7 +19,7 @@ package cc.alcina.framework.common.client;
  *
  */
 public class WrappedRuntimeException extends RuntimeException {
-	public static RuntimeException wrapIfNotRuntime(Throwable e) {
+	public static RuntimeException wrap(Throwable e) {
 		if (e instanceof RuntimeException) {
 			throw (RuntimeException) e;
 		} else {

@@ -397,6 +397,7 @@ public class CommonUtils {
 		return builder.toString();
 	}
 
+	// FIXME - 2022 - just use singletons
 	public static void doOnce(Class clazz, Runnable runnable) {
 		doOnce(clazz, null, runnable);
 	}

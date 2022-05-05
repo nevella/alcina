@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 
 import com.google.common.base.Preconditions;
@@ -139,7 +140,11 @@ public class ReflectiveSerializer {
 		state.pending.add(node);
 		ReflectiveSerializer serializer = new ReflectiveSerializer(state);
 		serializer.serialize0();
-		return root.toJson();
+		SerialNode out = root;
+		if (!options.topLevelTypeInfo) {
+			out = root.getChild(1);
+		}
+		return out.toJson();
 	}
 
 	static TypeSerializer resolveSerializer(Class clazz, Class declaredType) {
@@ -338,9 +343,28 @@ public class ReflectiveSerializer {
 	public static class SerializerOptions {
 		boolean elideDefaults;
 
+		boolean topLevelTypeInfo = true;
+
+		Set<Class> elideTypeInfo = Collections.emptySet();
+
 		public SerializerOptions withElideDefaults(boolean elideDefaults) {
 			this.elideDefaults = elideDefaults;
 			return this;
+		}
+
+		public SerializerOptions withElideTypeInfo(Set<Class> elideTypeInfo) {
+			this.elideTypeInfo = elideTypeInfo;
+			return this;
+		}
+
+		public SerializerOptions
+				withTopLevelTypeInfo(boolean topLevelTypeInfo) {
+			this.topLevelTypeInfo = topLevelTypeInfo;
+			return this;
+		}
+
+		boolean elideTypeInfo(Class<? extends Object> clazz) {
+			return elideTypeInfo.contains(clazz);
 		}
 	}
 
@@ -540,7 +564,8 @@ public class ReflectiveSerializer {
 						return;
 					}
 				}
-				if (!hasFinalClass()) {
+				if (!hasFinalClass() && !state.serializerOptions
+						.elideTypeInfo(value.getClass())) {
 					serialNode = parent.serialNode
 							.writeClassValueContainer(name);
 					consumedName = true;

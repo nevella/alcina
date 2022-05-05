@@ -414,7 +414,7 @@ public class JobRegistry {
 			return await(job);
 		} catch (Exception e) {
 			e.printStackTrace();
-			throw WrappedRuntimeException.wrapIfNotRuntime(e);
+			throw WrappedRuntimeException.wrap(e);
 		}
 	}
 

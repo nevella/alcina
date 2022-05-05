@@ -52,8 +52,8 @@ public abstract class Client {
 		return Registry.impl(Client.class);
 	}
 
-	public static void goTo(Place newPlace) {
-		Runnable runnable = () -> get().placeController.goTo(newPlace);
+	public static void goTo(Place place) {
+		Runnable runnable = () -> get().placeController.goTo(place);
 		CommitToStorageTransformListener.flushAndRun(runnable);
 	}
 

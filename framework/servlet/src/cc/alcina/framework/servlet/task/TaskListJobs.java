@@ -265,7 +265,7 @@ public class TaskListJobs extends AbstractTaskPerformer
 			filterPattern = Pattern.compile(filter);
 		}
 		return Arrays.stream(tests).filter(Objects::nonNull)
-				.anyMatch(test -> filterPattern.matcher(test).matches());
+				.anyMatch(test -> filterPattern.matcher(test).find());
 	}
 
 	String timestamp(Date date) {

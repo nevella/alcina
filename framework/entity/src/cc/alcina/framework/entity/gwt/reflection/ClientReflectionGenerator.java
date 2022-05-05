@@ -4,7 +4,6 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Array;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -18,7 +17,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.regex.Matcher;
@@ -123,13 +121,18 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	static final String ANN_IMPL = "__annImpl";
 
-	private static boolean alcinaCollectionsConfigured;
-
 	static final String DATA_FOLDER_CONFIGURATION_KEY = "ClientReflectionGenerator.ReachabilityData.folder";
 
 	static final String FILTER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.FilterPeer.className";
 
 	static final String LINKER_PEER_CONFIGURATION_KEY = "ClientReflectionGenerator.LinkerPeer.className";
+
+	static void configureRegistry() {
+		if (Registry.optional(DomainCollections.class).isEmpty()) {
+			Registry.register().singleton(DomainCollections.class,
+					new DomainCollections());
+		}
+	}
 
 	static JClassType erase(JClassType t) {
 		if (t.isParameterized() != null) {
@@ -341,12 +344,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 	}
 
 	void setupEnvironment() {
-		if (!alcinaCollectionsConfigured) {
-			Registry.register().singleton(DomainCollections.class,
-					new DomainCollections());
-			alcinaCollectionsConfigured = true;
-		}
 		start = System.currentTimeMillis();
+		configureRegistry();
 		String superClassName = null;
 		generatingType = getType(typeName);
 		classReflectorType = getType(ClassReflector.class.getCanonicalName());
@@ -551,6 +550,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		boolean isAbstract;
 
+		boolean isFinal;
+
 		Pattern getterPattern = Pattern.compile("(?:is|get)([A-Z].*)");
 
 		Pattern setterPattern = Pattern.compile("(?:set)([A-Z].*)");
@@ -571,6 +572,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		@Override
 		protected void prepare() {
 			isAbstract = type.isAbstract();
+			isFinal = type.isFinal();
 			hasCallableNoArgsConstructor = !isAbstract
 					&& !type.getQualifiedSourceName().equals("java.lang.Class")
 					&& Arrays.stream(type.getConstructors())
@@ -666,8 +668,9 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			});
 			// will probably need to adjust
 			sourceWriter.println("boolean isAbstract = %s;", isAbstract);
+			sourceWriter.println("boolean isFinal = %s;", isFinal);
 			sourceWriter.println("init(clazz, properties, byName, provider,"
-					+ " supplier, assignableTo, interfaces,  isAbstract);");
+					+ " supplier, assignableTo, interfaces,  isAbstract, isFinal);");
 			sourceWriter.outdent();
 			sourceWriter.println("}");
 			closeClassBody();
