@@ -382,6 +382,10 @@ public class TransformCollation {
 			return entityCollation.getEntity();
 		}
 
+		public List<DomainTransformEvent> getEvents() {
+			return this.events;
+		}
+
 		public boolean hasCreateTransform() {
 			return events.stream().anyMatch(
 					e -> e.getTransformType() == TransformType.CREATE_OBJECT);
