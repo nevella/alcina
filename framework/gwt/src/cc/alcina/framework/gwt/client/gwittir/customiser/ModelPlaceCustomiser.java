@@ -13,6 +13,10 @@
  */
 package cc.alcina.framework.gwt.client.gwittir.customiser;
 
+import java.util.Date;
+
+import com.google.gwt.i18n.client.DateTimeFormat;
+import com.google.gwt.i18n.client.DateTimeFormat.PredefinedFormat;
 import com.google.gwt.safehtml.shared.SafeHtmlUtils;
 import com.totsp.gwittir.client.ui.BoundWidget;
 import com.totsp.gwittir.client.ui.Renderer;
@@ -21,11 +25,13 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.Custom;
+import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.widget.RenderingHtml;
+import cc.alcina.framework.gwt.client.gwittir.widget.RenderingLabel;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
@@ -35,6 +41,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * @author Nick Reddel
  */
 public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
+
 	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
@@ -43,10 +50,10 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 
 	@Override
 	public BoundWidget get() {
-		RenderingHtml html = new RenderingHtml();
-		html.setRenderer(new ModelPlaceRenderer(html));
-		html.setStyleName("");
-		return html;
+			RenderingHtml html = new RenderingHtml();
+			html.setRenderer(new ModelPlaceRenderer(html));
+			html.setStyleName("");
+			return html;		
 	}
 
 	private static class ModelPlaceRenderer
@@ -64,6 +71,13 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 			}
 			BasePlace place = null;
 			Entity entity = null;
+			String displayName = CommonUtils.nullSafeToString(value);
+
+			 if (value instanceof Date) {
+					displayName =  value == null ? ""
+							: DateTimeFormat.getFormat(PredefinedFormat.ISO_8601)
+							.format((Date) value);
+				}
 			if (value instanceof Entity) {
 				entity = (Entity) value;
 			} else if (html.getModel() instanceof Entity) {
@@ -85,7 +99,6 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 			}
 			String template = "<a href='#%s'>%s</a>";
 			String token = place.toTokenString();
-			String displayName = CommonUtils.nullSafeToString(value);
 			if (value instanceof BasePlace && value instanceof HasDisplayName) {
 				displayName = ((HasDisplayName) value).displayName();
 			}
