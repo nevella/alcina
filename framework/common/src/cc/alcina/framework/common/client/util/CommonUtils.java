@@ -992,6 +992,23 @@ public class CommonUtils {
 		}
 	}
 
+	public static boolean hasIntersection(Set<?> set1, Set<?> set2) {
+		Set<?> s1 = set1;
+		Set<?> s2 = set2;
+		if (s1.size() > s2.size()) {
+			s2 = s1;
+			s1 = set2;
+		}
+		Iterator<?> itr = s1.iterator();
+		while (itr.hasNext()) {
+			Object next = itr.next();
+			if (s2.contains(next)) {
+				return true;
+			}
+		}
+		return false;
+	}
+
 	public static String highlightForLog(String template, Object... args) {
 		String inner = format(template, args);
 		String star = padStringLeft("", 40, "*");

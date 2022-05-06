@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.transform;
 
 import java.util.concurrent.Callable;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import com.google.common.base.Preconditions;
 
@@ -98,7 +99,7 @@ public class AdjunctTransformCollation extends TransformCollation {
 	public void ensureCurrent() {
 		if (token.addCascadedEvents()) {
 			refreshFromRequest();
-			removeCreateDeleteTransforms();
+			removeNonPersistentTransforms();
 		}
 	}
 
@@ -106,11 +107,23 @@ public class AdjunctTransformCollation extends TransformCollation {
 		refresh(token.getRequest().allTransforms());
 	}
 
-	public void removeCreateDeleteTransforms() {
+	public void removeNonPersistentTransforms() {
 		ensureLookups();
-		if (allEvents.stream().anyMatch(this::isCreatedAndDeleted)) {
-			allEvents.stream().filter(this::isCreatedAndDeleted)
-					.forEach(this::removeTransformFromRequest);
+		AtomicBoolean modified = new AtomicBoolean();
+		allEntityCollations().forEach(ec -> {
+			if (ec.isCreatedAndDeleted()) {
+				ec.getTransforms().forEach(this::removeTransformFromRequest);
+				modified.set(true);
+			} else {
+				ec.ensureByPropertyName().values().forEach(list -> {
+					for (int idx = 0; idx < list.size() - 1; idx++) {
+						removeTransformFromRequest(list.get(idx));
+						modified.set(true);
+					}
+				});
+			}
+		});
+		if (modified.get()) {
 			refreshFromRequest();
 		}
 	}

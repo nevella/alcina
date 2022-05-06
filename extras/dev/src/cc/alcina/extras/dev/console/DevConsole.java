@@ -208,6 +208,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		new StatCategory_Console().emit();
 		new DevStats().parse(logProvider).dump(true);
 		logProvider.startRemote();
+		BackendTransformQueue.get().start();
 		JobRegistry.get().init();
 		JobLogTimer.get().init();
 		AlcinaTopics.applicationRestart.add((k, v) -> getInstance().restart());
@@ -843,8 +844,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		new InitLightweightServices().emit(statEndInitLightweightServices);
 		new InitJaxbServices().emit(statEndInitJaxbServices);
 		devHelper.initPostObjectServices();
-		// FIXME - to consort
-		BackendTransformQueue.get().start();
 		new InitPostObjectServices().emit(System.currentTimeMillis());
 		new InitConsole().emit(System.currentTimeMillis());
 		initialised = true;
