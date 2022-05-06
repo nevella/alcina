@@ -769,8 +769,9 @@ public class TransformPersisterInPersistenceContext {
 						OneToMany oneToMany = Reflections.at(e.getObjectClass())
 								.property(e.getPropertyName())
 								.annotation(OneToMany.class);
-						// if null, manytomany and it *is* an update
-						return oneToMany != null;
+						// if null, manytomany and it *is* an update (so null
+						// value implies 'return true, was updated')
+						return oneToMany == null;
 					case DELETE_OBJECT:
 					default:
 						throw new UnsupportedOperationException();
