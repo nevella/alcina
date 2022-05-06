@@ -3,3 +3,5 @@ Jboss-logmanager (component of wildfly) has a code issue which plays havoc with 
 By default, the string-logger resolution is backed by weak maps, which means that configuring loggers before use (or per-instance logger usage) ignores programmatic configuration.
 
 Solution is attached patch and module jar
+
+# Correction - deprecated - retaining other (strong) references to the loggers is a *lot* cleaner, and has been implemented

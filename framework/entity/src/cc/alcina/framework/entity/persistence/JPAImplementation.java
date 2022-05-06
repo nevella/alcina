@@ -15,8 +15,10 @@ package cc.alcina.framework.entity.persistence;
 
 import java.beans.PropertyDescriptor;
 import java.io.File;
+import java.sql.PreparedStatement;
 import java.util.Collection;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import javax.persistence.EntityManager;
 import javax.persistence.Query;
@@ -61,6 +63,9 @@ public interface JPAImplementation {
 	public void interpretException(DomainTransformException exception);
 
 	public boolean isCacheDisabled();
+
+	public void registerBatchExceptionConsumer(
+			BiConsumer<RuntimeException, PreparedStatement> exceptionConsumer);
 
 	public void setCacheDisabled(boolean cacheDisabled);
 

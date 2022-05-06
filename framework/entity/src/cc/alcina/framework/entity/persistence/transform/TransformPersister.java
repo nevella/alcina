@@ -37,6 +37,8 @@ public class TransformPersister {
 		try {
 			LooseContext.pushWithTrue(
 					DTRProtocolSerializer.CONTEXT_EXCEPTION_DEBUG);
+			TransformPersisterInPersistenceContext.ThreadData.get()
+					.observingFlushData(true);
 			TransformPersisterPeer.get().setupCustomTransformContent();
 			TransformPersisterToken persisterToken = new TransformPersisterToken();
 			DomainTransformLayerWrapper wrapper = new DomainTransformLayerWrapper(
@@ -66,6 +68,8 @@ public class TransformPersister {
 										token, wrapper);
 					}
 				} catch (RuntimeException ex) {
+					// TransformPersisterInPersistenceContext.ThreadData.get()
+					// .logLastFlushData();
 					DeliberatelyThrownWrapperException dtwe = null;
 					if (ex instanceof DeliberatelyThrownWrapperException) {
 						dtwe = (DeliberatelyThrownWrapperException) ex;
@@ -104,6 +108,8 @@ public class TransformPersister {
 			}
 			return wrapper;
 		} finally {
+			TransformPersisterInPersistenceContext.ThreadData.get()
+					.observingFlushData(false);
 			LooseContext.pop();
 		}
 	}
