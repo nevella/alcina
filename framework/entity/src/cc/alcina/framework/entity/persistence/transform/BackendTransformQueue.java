@@ -3,9 +3,11 @@ package cc.alcina.framework.entity.persistence.transform;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -40,6 +42,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multiset;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -402,6 +405,23 @@ public class BackendTransformQueue {
 			}
 		}
 
+		// called from synchronized
+		private void checkTimedoutAffects() {
+			Iterator<Entry<String, PersistenceEventAffects>> itr = affects
+					.entrySet().iterator();
+			long now = System.currentTimeMillis();
+			while (itr.hasNext()) {
+				Entry<String, PersistenceEventAffects> next = itr.next();
+				if (next.getValue().isTimedOut(now)) {
+					logger.warn("Timed-out-waiting-for-backend-queue : {}",
+							next.getValue());
+					itr.remove();
+				} else {
+					break;
+				}
+			}
+		}
+
 		private PersistenceEventAffects createAffects(
 				DomainTransformPersistenceEvent event, boolean backend) {
 			Optional<String> firstUuid = event.getFirstUuid();
@@ -429,6 +449,7 @@ public class BackendTransformQueue {
 					}
 					return;
 				}
+				checkTimedoutAffects();
 				waited = true;
 				logger.info("Waiting to avoid transform conflicts: {}",
 						affects);
@@ -449,12 +470,20 @@ public class BackendTransformQueue {
 
 			private Thread thread;
 
+			private long creationTime;
+
 			PersistenceEventAffects(DomainTransformPersistenceEvent event,
 					boolean backend, int sequenceId) {
 				this.thread = Thread.currentThread();
 				this.event = event;
 				this.backend = backend;
 				this.sequenceId = sequenceId;
+				this.creationTime = System.currentTimeMillis();
+			}
+
+			public boolean isTimedOut(long currentTimeMillis) {
+				return currentTimeMillis - creationTime > 10
+						* TimeConstants.ONE_SECOND_MS;
 			}
 
 			@Override
@@ -463,6 +492,9 @@ public class BackendTransformQueue {
 				fb.format("Thread: %s", thread.getName());
 				fb.format("Backend: %s", backend);
 				fb.format("SequenceId: %s", sequenceId);
+				fb.format("Event: %s",
+						event.getFirstUuid().orElse("<no uuid>"));
+				fb.format("CreationTime: %s", creationTime);
 				fb.format("Conflicts: %s",
 						getConflictingLocators().collect(Collectors.toList()));
 				return fb.toString();
