@@ -67,7 +67,11 @@ public class TransformCollation {
 			} else {
 				ec.ensureByPropertyName().values().forEach(list -> {
 					for (int idx = 0; idx < list.size() - 1; idx++) {
-						events.remove(list.get(idx));
+						DomainTransformEvent transform = list.get(idx);
+						if (transform.getTransformType()
+								.isNotCollectionTransform()) {
+							events.remove(transform);
+						}
 					}
 				});
 			}

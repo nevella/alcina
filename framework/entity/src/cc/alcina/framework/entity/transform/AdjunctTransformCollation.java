@@ -117,8 +117,12 @@ public class AdjunctTransformCollation extends TransformCollation {
 			} else {
 				ec.ensureByPropertyName().values().forEach(list -> {
 					for (int idx = 0; idx < list.size() - 1; idx++) {
-						removeTransformFromRequest(list.get(idx));
-						modified.set(true);
+						DomainTransformEvent transform = list.get(idx);
+						if (transform.getTransformType()
+								.isNotCollectionTransform()) {
+							removeTransformFromRequest(transform);
+							modified.set(true);
+						}
 					}
 				});
 			}
