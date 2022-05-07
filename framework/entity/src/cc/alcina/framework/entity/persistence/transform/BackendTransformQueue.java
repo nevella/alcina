@@ -13,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.LinkedBlockingQueue;
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
@@ -367,7 +368,7 @@ public class BackendTransformQueue {
 			implements DomainTransformPersistenceListener {
 		private Map<String, PersistenceEventAffects> affects = new LinkedHashMap<>();
 
-		int sequenceIdCounter;
+		AtomicInteger sequenceIdCounter = new AtomicInteger();
 
 		@Override
 		public synchronized void onDomainTransformRequestPersistence(
@@ -408,7 +409,7 @@ public class BackendTransformQueue {
 				return null;
 			}
 			PersistenceEventAffects result = new PersistenceEventAffects(event,
-					backend, sequenceIdCounter++);
+					backend, sequenceIdCounter.incrementAndGet());
 			affects.put(firstUuid.get(), result);
 			return result;
 		}
@@ -432,7 +433,7 @@ public class BackendTransformQueue {
 				logger.info("Waiting to avoid transform conflicts: {}",
 						affects);
 				try {
-					wait();
+					wait(1000L);
 				} catch (InterruptedException e) {
 					throw WrappedRuntimeException.wrap(e);
 				}
@@ -461,6 +462,7 @@ public class BackendTransformQueue {
 				FormatBuilder fb = new FormatBuilder().separator(" - ");
 				fb.format("Thread: %s", thread.getName());
 				fb.format("Backend: %s", backend);
+				fb.format("SequenceId: %s", sequenceId);
 				fb.format("Conflicts: %s",
 						getConflictingLocators().collect(Collectors.toList()));
 				return fb.toString();
