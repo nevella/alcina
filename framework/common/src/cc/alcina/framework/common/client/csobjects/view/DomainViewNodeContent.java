@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public abstract class DomainViewNodeContent<E extends Entity> extends Model
-		implements Comparable<DomainViewNodeContent<E>>,HasEntity {
+		implements Comparable<DomainViewNodeContent<E>>, HasEntity {
 	private String name;
 
 	private String publicationText;
@@ -40,14 +40,14 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 		if (stringCmp != 0) {
 			return stringCmp;
 		}
+		int secondaryComparison = compareTo1(o);
+		if (secondaryComparison != 0) {
+			return secondaryComparison;
+		}
 		if (entity != null && o.entity != null) {
 			return EntityComparator.INSTANCE.compare(entity, o.getEntity());
 		}
 		return 0;
-	}
-	@Override
-	public E provideEntity() {
-		return  getEntity();
 	}
 
 	public abstract Class<E> entityClass();
@@ -82,6 +82,11 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 
 	public boolean isLeaf() {
 		return false;
+	}
+
+	@Override
+	public E provideEntity() {
+		return getEntity();
 	}
 
 	public void setEntity(E entity) {
@@ -138,6 +143,10 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 			return publicationText;
 		}
 		return null;
+	}
+
+	protected int compareTo1(DomainViewNodeContent o) {
+		return 0;
 	}
 
 	@Reflected
