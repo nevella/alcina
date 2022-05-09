@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -13,10 +13,7 @@
  */
 package cc.alcina.framework.common.client.search;
 
-import javax.xml.bind.annotation.XmlTransient;
-
 import cc.alcina.framework.common.client.logic.domain.HasValue;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.SearchDefinitionSerializationInfo;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -32,81 +29,69 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 @SearchDefinitionSerializationInfo("tx")
 @TypeSerialization("text")
 @Registration(SearchDefinitionSerializationInfo.class)
-public class TxtCriterion extends SearchCriterion implements HasValue<String> {
-	static final transient long serialVersionUID = -2L;
+public class TextCriterion extends SearchCriterion implements HasValue<String> {
+	private String value;
 
-	private String text;
+	private TextCriterionType textCriterionType = TextCriterionType.CONTAINS;
 
-	private TxtCriterionType txtCriterionType = TxtCriterionType.CONTAINS;
-
-	public TxtCriterion() {
+	public TextCriterion() {
 		setOperator(StandardSearchOperator.CONTAINS);
 	}
 
-	public TxtCriterion(String text) {
+	public TextCriterion(String text) {
 		this();
-		setText(text);
+		setValue(text);
 	}
 
 	@Override
 	public EqlWithParameters eql() {
 		EqlWithParameters result = new EqlWithParameters();
-		if (CommonUtils.isNullOrEmpty(text)) {
+		if (CommonUtils.isNullOrEmpty(value)) {
 			return result;
 		}
-		switch (txtCriterionType) {
+		switch (textCriterionType) {
 		case EQUALS:
 			result.eql = "lower(" + targetPropertyNameWithTable() + ") =  ? ";
-			result.parameters.add(text.toLowerCase());
+			result.parameters.add(value.toLowerCase());
 			break;
 		case CONTAINS:
 			result.eql = "lower(" + targetPropertyNameWithTable()
 					+ ") like  ? ";
-			result.parameters.add("%" + text.toLowerCase() + "%");
+			result.parameters.add("%" + value.toLowerCase() + "%");
 			break;
 		case EQUALS_OR_LIKE:
 			result.eql = "lower(" + targetPropertyNameWithTable() + ") "
-					+ (text.contains("%") ? "like" : "=") + "  ? ";
-			result.parameters.add(text.toLowerCase());
+					+ (value.contains("%") ? "like" : "=") + "  ? ";
+			result.parameters.add(value.toLowerCase());
 			break;
 		}
 		return result;
 	}
 
+	public TextCriterionType getTextCriterionType() {
+		return textCriterionType;
+	}
+
+	@Override
 	@PropertySerialization(defaultProperty = true)
-	public String getText() {
-		return text;
-	}
-
-	public TxtCriterionType getTxtCriterionType() {
-		return txtCriterionType;
-	}
-
-	@Override
-	@XmlTransient
-	@AlcinaTransient
 	public String getValue() {
-		return getText();
+		return value;
 	}
 
-	public void setText(String text) {
-		String old_text = this.text;
-		this.text = text;
-		propertyChangeSupport().firePropertyChange("text", old_text, text);
-	}
-
-	public void setTxtCriterionType(TxtCriterionType txtCriterionType) {
-		this.txtCriterionType = txtCriterionType;
+	public void setTextCriterionType(TextCriterionType textCriterionType) {
+		this.textCriterionType = textCriterionType;
 	}
 
 	@Override
-	public void setValue(String text) {
-		setText(text);
+	public void setValue(String value) {
+		String old_value = this.value;
+		this.value = value;
+		propertyChangeSupport().firePropertyChange("value", old_value, value);
 	}
 
 	@Override
 	public String toString() {
-		String string = CommonUtils.nullToEmpty(getText());
+		String string = CommonUtils.nullToEmpty(getValue());
 		if (string.length() > 0
 				&& getOperator() != StandardSearchOperator.CONTAINS) {
 			string = Ax.format("%s '%s'", Ax.friendly(getOperator()), string);
@@ -116,13 +101,13 @@ public class TxtCriterion extends SearchCriterion implements HasValue<String> {
 						: getDisplayName() + ": " + string;
 	}
 
-	public TxtCriterion withValue(String text) {
-		setText(text);
+	public TextCriterion withValue(String text) {
+		setValue(text);
 		return this;
 	}
 
 	@Reflected
-	public static enum TxtCriterionType {
+	public static enum TextCriterionType {
 		CONTAINS, EQUALS, EQUALS_OR_LIKE
 	}
 }

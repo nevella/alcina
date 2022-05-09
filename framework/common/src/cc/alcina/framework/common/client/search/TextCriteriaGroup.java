@@ -20,18 +20,18 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
  *
  * @author Nick Reddel
  */
-@PermissibleChildClasses({ TxtCriterion.class })
+@PermissibleChildClasses({ TextCriterion.class })
 @TypeSerialization(flatSerializable = false)
-public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
+public class TextCriteriaGroup extends CriteriaGroup<TextCriterion> {
 	private String displayName = "Text";
 
-	public TxtCriteriaGroup() {
+	public TextCriteriaGroup() {
 		super();
 	}
 
-	public TxtCriteriaGroup(String displayName) {
+	public TextCriteriaGroup(String displayName) {
 		this();
-		TxtCriterion tc = new TxtCriterion();
+		TextCriterion tc = new TextCriterion();
 		tc.setDisplayName(displayName);
 		setDisplayName(displayName);
 		getCriteria().add(tc);
@@ -57,22 +57,22 @@ public class TxtCriteriaGroup extends CriteriaGroup<TxtCriterion> {
 	 * @author nick@alcina.cc
 	 *
 	 */
-	public static class TxtCriteriaGroup2 extends TxtCriteriaGroup {
-		public TxtCriteriaGroup2() {
+	public static class TextCriteriaGroup2 extends TextCriteriaGroup {
+		public TextCriteriaGroup2() {
 			super();
 		}
 
-		public TxtCriteriaGroup2(String displayName) {
+		public TextCriteriaGroup2(String displayName) {
 			super(displayName);
 		}
 	}
 
-	public static class TxtCriteriaGroup3 extends TxtCriteriaGroup {
-		public TxtCriteriaGroup3() {
+	public static class TextCriteriaGroup3 extends TextCriteriaGroup {
+		public TextCriteriaGroup3() {
 			super();
 		}
 
-		public TxtCriteriaGroup3(String displayName) {
+		public TextCriteriaGroup3(String displayName) {
 			super(displayName);
 		}
 	}

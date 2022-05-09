@@ -11,7 +11,7 @@ import com.totsp.gwittir.client.ui.BoundWidget;
 
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.search.TxtCriterion;
+import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.gwt.client.gwittir.BasicBindingAction;
 
 public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
@@ -50,7 +50,7 @@ public class FlatSearchDefinitionEditor extends AbstractBoundWidget {
 			return false;
 		}
 		for (SearchCriterion sc : def.allCriteria()) {
-			if (sc.getClass() == TxtCriterion.class) {
+			if (sc.getClass() == TextCriterion.class) {
 				continue;
 			}
 			Optional<FlatSearchable> searchable = searchableForCriterion(sc);

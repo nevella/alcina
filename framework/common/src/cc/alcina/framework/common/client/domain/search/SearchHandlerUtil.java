@@ -14,7 +14,7 @@ public class SearchHandlerUtil {
 		if (date == null) {
 			return nullAsOk;
 		}
-		Date criterionDate = new Date(sc.getDate().getTime());
+		Date criterionDate = new Date(sc.getValue().getTime());
 		CommonUtils.roundDate(criterionDate,
 				sc.getDirection() == Direction.DESCENDING);
 		boolean eq = criterionDate.equals(date);

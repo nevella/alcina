@@ -36,6 +36,6 @@ public class DateCriterionSearchable<DC extends DateCriterion>
 
 	@Override
 	public boolean hasValue(DC sc) {
-		return sc.getDate() != null;
+		return sc.getValue() != null;
 	}
 }

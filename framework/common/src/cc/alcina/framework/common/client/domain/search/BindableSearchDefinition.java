@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.OrderGroup;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
-import cc.alcina.framework.common.client.search.TxtCriterion;
+import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -39,7 +39,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	}
 
 	public void addIdsCriterion(Collection<Long> ids) {
-		addCriterionToSoleCriteriaGroup(new TxtCriterion(
+		addCriterionToSoleCriteriaGroup(new TextCriterion(
 				Ax.format("ids: %s", ids.stream().map(String::valueOf)
 						.collect(Collectors.joining(", ")))));
 	}
@@ -69,7 +69,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 	}
 
 	public Optional<SearchOrders> provideIdSearchOrder() {
-		TxtCriterion tx = firstCriterion(TxtCriterion.class);
+		TextCriterion tx = firstCriterion(TextCriterion.class);
 		if (tx != null && Ax.blankToEmpty(tx.getValue())
 				.matches(SearchUtils.IDS_REGEX)) {
 			SearchOrders result = new SearchOrders<>();
@@ -85,8 +85,8 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		return provideSimpleTextSearchCriterion() != null;
 	}
 
-	public TxtCriterion provideSimpleTextSearchCriterion() {
-		TxtCriterion tx = firstCriterion(TxtCriterion.class);
+	public TextCriterion provideSimpleTextSearchCriterion() {
+		TextCriterion tx = firstCriterion(TextCriterion.class);
 		if (tx != null && Ax.notBlank(tx.getValue())) {
 			return tx;
 		} else {

@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -15,20 +15,17 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.Date;
 
-import javax.xml.bind.annotation.XmlTransient;
-
 import cc.alcina.framework.common.client.logic.domain.HasValue;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class AbstractDateCriterion extends SearchCriterion
 		implements HasValue<Date> {
-	private Date date;
+	private Date value;
 
 	private Direction direction = Direction.ASCENDING;
 
@@ -37,7 +34,7 @@ public class AbstractDateCriterion extends SearchCriterion
 	}
 
 	public AbstractDateCriterion(Date date) {
-		setDate(date);
+		setValue(date);
 	}
 
 	public AbstractDateCriterion(String displayName) {
@@ -46,27 +43,7 @@ public class AbstractDateCriterion extends SearchCriterion
 
 	public AbstractDateCriterion(String displayName, Date date) {
 		this(displayName);
-		setDate(date);
-	}
-
-	@SuppressWarnings("deprecation")
-	@AlcinaTransient
-	public Date getDate() {
-		if (date != null) {
-			try {
-				int year = date.getYear();
-				if (year < -10000) {
-					date = new Date(date.getTime());
-					date.setYear(-10000);
-				} else if (year > 10000) {
-					date = new Date(date.getTime());
-					date.setYear(10000);
-				}
-			} catch (NullPointerException e) {
-				// parallel call issues?
-			}
-		}
-		return date;
+		setValue(date);
 	}
 
 	@PropertySerialization(path = "dir")
@@ -74,17 +51,25 @@ public class AbstractDateCriterion extends SearchCriterion
 		return this.direction;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
-	@XmlTransient
 	@PropertySerialization(defaultProperty = true)
 	public Date getValue() {
-		return getDate();
-	}
-
-	public void setDate(Date date) {
-		Date old_date = this.date;
-		this.date = date;
-		propertyChangeSupport().firePropertyChange("date", old_date, date);
+		if (value != null) {
+			try {
+				int year = value.getYear();
+				if (year < -10000) {
+					value = new Date(value.getTime());
+					value.setYear(-10000);
+				} else if (year > 10000) {
+					value = new Date(value.getTime());
+					value.setYear(10000);
+				}
+			} catch (NullPointerException e) {
+				// parallel call issues?
+			}
+		}
+		return value;
 	}
 
 	public void setDirection(Direction direction) {
@@ -94,16 +79,15 @@ public class AbstractDateCriterion extends SearchCriterion
 				direction);
 	}
 
-	/**
-	 * add property change firing to the subclass implementation, if you care
-	 */
 	@Override
 	public void setValue(Date value) {
-		setDate(value);
+		Date old_value = this.value;
+		this.value = value;
+		propertyChangeSupport().firePropertyChange("value", old_value, value);
 	}
 
 	public AbstractDateCriterion withDate(int year, int month, int dayOfMonth) {
-		setDate(CommonUtils.oldDate(year, month, dayOfMonth));
+		setValue(CommonUtils.oldDate(year, month, dayOfMonth));
 		return this;
 	}
 
@@ -113,7 +97,7 @@ public class AbstractDateCriterion extends SearchCriterion
 	}
 
 	public AbstractDateCriterion withValue(Date date) {
-		setDate(date);
+		setValue(date);
 		return this;
 	}
 }
