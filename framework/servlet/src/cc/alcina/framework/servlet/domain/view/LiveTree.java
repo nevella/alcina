@@ -188,6 +188,8 @@ public class LiveTree {
 		}
 	}
 
+	// FIXME - livetree - generated exceptions should go in client, be at least
+	// warned
 	public Response generateResponse(
 			Request<? extends DomainViewSearchDefinition> request) {
 		TransformFilter transformFilter = rootGenerator
