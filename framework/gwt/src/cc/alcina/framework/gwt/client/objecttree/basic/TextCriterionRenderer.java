@@ -21,10 +21,10 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
  * @author Nick Reddel
  */
 @Registration({ TreeRenderer.class, TextCriterion.class })
-public class TxtCriterionRenderer
+public class TextCriterionRenderer
 		extends SearchCriterionRenderer<TextCriterion> {
 	@Override
 	public String renderablePropertyName() {
-		return "text";
+		return "value";
 	}
 }
