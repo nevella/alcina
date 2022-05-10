@@ -27,14 +27,17 @@ public class JacksonUtils {
 
 	public static JacksonJsonObjectSerializer defaultSerializer() {
 		return new JacksonJsonObjectSerializer().withIdRefs().withTypeInfo()
-				.withAllowUnknownProperties()
-				.withPrettyPrint();
+				.withAllowUnknownProperties().withPrettyPrint();
 	}
 
 	// Special defaults for web services
 	// Should be closer to a plain JSON
 	public static JacksonJsonObjectSerializer wsSerializer() {
 		return new JacksonJsonObjectSerializer();
+	}
+
+	public static byte[] serializeToByteArray(Object object) {
+		return serialize(object).getBytes(StandardCharsets.UTF_8);
 	}
 
 	public static <T> T deserialize(InputStream stream, Class<T> clazz) {
@@ -73,7 +76,7 @@ public class JacksonUtils {
 	}
 
 	@SuppressWarnings("deprecation")
-	//just informative, not intended for deserialization
+	// just informative, not intended for deserialization
 	public static String serializeForLogging(Object object) {
 		try {
 			return defaultSerializer().withDefaults(false).serialize(object);
@@ -96,10 +99,11 @@ public class JacksonUtils {
 		return new JacksonJsonObjectSerializer().withIdRefs()
 				.withAllowUnknownProperties().serialize(object);
 	}
-	
+
 	public static String serializeNoTypesInterchange(Object object) {
-		return new JacksonJsonObjectSerializer().withPrettyPrint().withWrapRootValue()
-				.withAllowUnknownProperties().serialize(object);
+		return new JacksonJsonObjectSerializer().withPrettyPrint()
+				.withWrapRootValue().withAllowUnknownProperties()
+				.serialize(object);
 	}
 
 	public static void serializeToFile(Object object, File file) {
