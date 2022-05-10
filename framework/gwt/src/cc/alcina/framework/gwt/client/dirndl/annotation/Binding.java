@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.ClientInstantiable;
 import cc.alcina.framework.common.client.logic.reflection.ClientVisible;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -30,5 +31,13 @@ public @interface Binding {
 	public enum Type {
 		PROPERTY, INNER_HTML, INNER_TEXT, CSS_CLASS, STYLE_ATTRIBUTE,
 		SWITCH_CSS_CLASS;
+	}
+
+	@ClientInstantiable
+	public static class DisplayFalseTrue implements ToStringFunction<Boolean> {
+		@Override
+		public String apply(Boolean t) {
+			return CommonUtils.bv(t) ? "block" : "none";
+		}
 	}
 }
