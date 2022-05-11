@@ -22,7 +22,9 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
+import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
+import com.google.gwt.user.client.ui.InsertPanel;
 import com.google.gwt.user.client.ui.Panel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
@@ -549,7 +551,7 @@ public class DirectedLayout {
 			}
 
 			public int getChildIndex(Widget childWidget) {
-				FlowPanel panel = verifyContainer();
+				ComplexPanel panel = verifyContainer();
 				return panel.getWidgetIndex(childWidget);
 			}
 
@@ -572,7 +574,7 @@ public class DirectedLayout {
 				// FIXME - dirndl 1.4 - this isn't optimal, but swapping
 				// probably needs a larger structure to optimise anyway. A
 				// class...?
-				FlowPanel container = verifyContainer();
+				ComplexPanel container = verifyContainer();
 				for (Widget oldChild : oldChildWidgets) {
 					if (insertAfterChildWidget.isPresent()
 							&& insertAfterChildWidget.get() == oldChild) {
@@ -589,7 +591,8 @@ public class DirectedLayout {
 				for (int idx = newChildWidgets.size() - 1; idx >= 0; idx--) {
 					int index = insertAfterChildWidget.map(this::getChildIndex)
 							.orElse(-1) + 1;
-					container.insert(newChildWidgets.get(idx), index);
+					((InsertPanel) container).insert(newChildWidgets.get(idx),
+							index);
 				}
 			}
 
@@ -598,9 +601,15 @@ public class DirectedLayout {
 				return widgets.get(0);
 			}
 
-			private FlowPanel verifyContainer() {
+			private ComplexPanel verifyContainer() {
 				if (renderer instanceof RendersToParentContainer) {
-					return parent.rendered.verifyContainer();
+					if (parent == null) {
+						// swapping top, delegating @Directed
+						return (ComplexPanel) rendered.widgets.get(0)
+								.getParent();
+					} else {
+						return parent.rendered.verifyContainer();
+					}
 				}
 				return (FlowPanel) verifySingleWidget();
 			}

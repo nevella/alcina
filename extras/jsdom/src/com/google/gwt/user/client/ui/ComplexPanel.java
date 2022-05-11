@@ -1,12 +1,12 @@
 /*
  * Copyright 2007 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -87,7 +87,7 @@ public abstract class ComplexPanel extends Panel
 	/**
 	 * Adds a new child widget to the panel, attaching its Element to the
 	 * specified container Element.
-	 * 
+	 *
 	 * @param child
 	 *            the child widget to be added
 	 * @param container
@@ -107,7 +107,7 @@ public abstract class ComplexPanel extends Panel
 	/**
 	 * Adjusts beforeIndex to account for the possibility that the given widget
 	 * is already a child of this panel.
-	 * 
+	 *
 	 * @param child
 	 *            the widget that might be an existing child
 	 * @param beforeIndex
@@ -132,7 +132,7 @@ public abstract class ComplexPanel extends Panel
 	/**
 	 * Checks that <code>index</code> is in the range [0, getWidgetCount()),
 	 * which is the valid range on accessible indexes.
-	 * 
+	 *
 	 * @param index
 	 *            the index being accessed
 	 */
@@ -145,7 +145,7 @@ public abstract class ComplexPanel extends Panel
 	/**
 	 * Checks that <code>index</code> is in the range [0, getWidgetCount()],
 	 * which is the valid range for indexes on an insertion.
-	 * 
+	 *
 	 * @param index
 	 *            the index where insertion will occur
 	 */
@@ -157,7 +157,7 @@ public abstract class ComplexPanel extends Panel
 
 	/**
 	 * Gets the list of children contained in this panel.
-	 * 
+	 *
 	 * @return a collection of child widgets
 	 */
 	protected WidgetCollection getChildren() {
@@ -169,7 +169,7 @@ public abstract class ComplexPanel extends Panel
 	 * its Element to the specified container Element. The child Element will
 	 * either be attached to the container at the same index, or simply appended
 	 * to the container, depending on the value of <code>domInsert</code>.
-	 * 
+	 *
 	 * @param child
 	 *            the child Widget to be added
 	 * @param container
