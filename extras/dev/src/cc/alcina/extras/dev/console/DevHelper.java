@@ -34,12 +34,12 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
 import org.apache.log4j.WriterAppender;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.GWTBridge;
 import com.google.gwt.user.client.ui.Button;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.extras.dev.console.DevHelper.ConsolePrompter;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -369,9 +369,9 @@ public abstract class DevHelper {
 		if (configLoaded) {
 			return;
 		}
-		if(prompter instanceof ConsolePrompter && getPropertyFilePath()!=null){
-		((ConsolePrompter) prompter).setDefaultValue(
-				getPropertyFilePath());
+		if (prompter instanceof ConsolePrompter
+				&& getPropertyFilePath() != null) {
+			((ConsolePrompter) prompter).setDefaultValue(getPropertyFilePath());
 		}
 		Preferences prefs = Preferences.userNodeForPackage(getClass());
 		configPath = null;
@@ -467,53 +467,6 @@ public abstract class DevHelper {
 		initLightweightServices();
 	}
 
-	protected void copyTemplates() {
-		{
-			String nonTemplatePath = getPropertyFilePath();
-			if (nonTemplatePath == null) {
-				// not yet configured
-				return;
-			}
-			File nonTemplateFile = new File(nonTemplatePath);
-			if (!nonTemplateFile.exists()) {
-				try {
-					Ax.out("Copying template %s", nonTemplateFile.getName());
-					SEUtilities.copyFile(
-							new File(nonTemplatePath + ".template"),
-							nonTemplateFile);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-		{
-			String nonTemplatePath = getNonVcsJavaTaskFilePath();
-			if (nonTemplatePath == null) {
-				// not yet configured
-				return;
-			}
-			File nonTemplateFile = new File(nonTemplatePath);
-			if (!nonTemplateFile.exists()) {
-				try {
-					Ax.out("Copying template %s", nonTemplateFile.getName());
-					SEUtilities.copyFile(
-							new File(nonTemplatePath + ".template"),
-							nonTemplateFile);
-				} catch (Exception e) {
-					throw new WrappedRuntimeException(e);
-				}
-			}
-		}
-	}
-
-	protected String getNonVcsJavaTaskFilePath() {
-		return null;
-	}
-
-	protected String getPropertyFilePath() {
-		return null;
-	}
-
 	public abstract DevHelper solidTestEnvSecondHalf();
 
 	public void useMountSshfsFs() {
@@ -561,6 +514,47 @@ public abstract class DevHelper {
 		return cacheFile;
 	}
 
+	protected void copyTemplates() {
+		{
+			String nonTemplatePath = getPropertyFilePath();
+			if (nonTemplatePath == null) {
+				// not yet configured
+				return;
+			}
+			Preconditions.checkState(nonTemplatePath.endsWith(".local"));
+			File nonTemplateFile = new File(nonTemplatePath);
+			if (!nonTemplateFile.exists()) {
+				try {
+					Ax.out("Copying template %s", nonTemplateFile.getName());
+					SEUtilities.copyFile(
+							new File(nonTemplatePath.replaceFirst(
+									"(.+)\\.local$", "$1.template")),
+							nonTemplateFile);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+		{
+			String nonTemplatePath = getNonVcsJavaTaskFilePath();
+			if (nonTemplatePath == null) {
+				// not yet configured
+				return;
+			}
+			File nonTemplateFile = new File(nonTemplatePath);
+			if (!nonTemplateFile.exists()) {
+				try {
+					Ax.out("Copying template %s", nonTemplateFile.getName());
+					SEUtilities.copyFile(
+							new File(nonTemplatePath + ".template"),
+							nonTemplateFile);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+	}
+
 	protected TransformManager createTransformManager() {
 		return TransformCommit.isTestTransformCascade()
 				? new ThreadlocalTransformManager()
@@ -573,6 +567,14 @@ public abstract class DevHelper {
 
 	protected abstract String getJbossConfigPrompt(String path);
 
+	protected String getNonVcsJavaTaskFilePath() {
+		return null;
+	}
+
+	protected String getPropertyFilePath() {
+		return null;
+	}
+
 	protected abstract void initCustomServicesFirstHalf();
 
 	protected abstract void registerNames(AlcinaWebappConfig config);
@@ -584,10 +586,6 @@ public abstract class DevHelper {
 			return this.defaultValue;
 		}
 
-		public void setDefaultValue(String defaultValue) {
-			this.defaultValue = defaultValue;
-		}
-
 		@Override
 		public String getValue(String prompt) {
 			return defaultValue == null
@@ -595,8 +593,11 @@ public abstract class DevHelper {
 							.consoleReadline(String.format("%s\n> ", prompt))
 					: defaultValue;
 		}
-	}
 
+		public void setDefaultValue(String defaultValue) {
+			this.defaultValue = defaultValue;
+		}
+	}
 
 	public static class MessagingWriter extends PrintWriter {
 		private static boolean written;
