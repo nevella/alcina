@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -37,7 +38,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
-import cc.alcina.framework.gwt.client.dirndl.model.TableModel.SearchTableColumnClickHandler;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ModelPlaceCustomiser;
@@ -73,7 +73,8 @@ public class TableModel extends Model {
 			TableModel model = new TableModel();
 			BoundWidgetTypeFactory factory = Registry
 					.impl(TableTypeFactory.class);
-			node.pushChildResolver(ModalResolver.multiple(node.getResolver(), true));
+			node.pushChildResolver(
+					ModalResolver.multiple(node.getResolver(), true));
 			List<CategoryNamePlace> places = activity.getPlace()
 					.getNamedPlaces();
 			places.removeIf(p -> !isPermitted(p));
@@ -138,7 +139,8 @@ public class TableModel extends Model {
 			if (activity.getSearchResults() == null) {
 				return model;
 			}
-			ModalResolver childResolver = ModalResolver.multiple(node.getResolver(), true);
+			ModalResolver childResolver = ModalResolver
+					.multiple(node.getResolver(), true);
 			node.pushChildResolver(childResolver);
 			BindableSearchDefinition def = activity.getSearchResults().getDef();
 			String sortFieldName = def.getSearchOrders()
@@ -148,21 +150,37 @@ public class TableModel extends Model {
 							: SortDirection.DESCENDING;
 			Class<? extends Bindable> resultClass = activity.getSearchResults()
 					.resultClass();
-			GwittirBridge.get()
+			List<Field> fields = GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 							Reflections.classLookup()
 									.getTemplateInstance(resultClass),
-							factory, false, true, childResolver)
-					.stream().map(field -> {
-						SortDirection fieldDirection = field.getPropertyName()
-								.equals(sortFieldName) ? sortDirection : null;
-						return new TableColumn(field, fieldDirection);
-					}).forEach(model.header.columns::add);
-			activity.getSearchResults().getQueriedResultObjects().stream()
-					.map(bindable -> new TableRow(model, bindable))
-					.forEach(model.rows::add);
+							factory, false, true, childResolver);
+			fields.stream().map(field -> {
+				SortDirection fieldDirection = field.getPropertyName()
+						.equals(sortFieldName) ? sortDirection : null;
+				return new TableColumn(field, fieldDirection);
+			}).forEach(model.header.columns::add);
+			List<? extends Bindable> rowObjects = activity.getSearchResults()
+					.getQueriedResultObjects();
+			if (rowObjects.size() == 0) {
+				Registry.impl(EmptyResultHandler.class)
+						.getEmptyResultPlaceholder(fields)
+						.forEach(model.rows::add);
+			} else {
+				rowObjects.stream()
+						.map(bindable -> new TableRow(model, bindable))
+						.forEach(model.rows::add);
+			}
 			// add actions if editable and adjunct
 			return model;
+		}
+	}
+
+	@RegistryLocation(registryPoint = EmptyResultHandler.class, implementationType = ImplementationType.INSTANCE)
+	@ClientInstantiable
+	public static class EmptyResultHandler {
+		public List<TableRow> getEmptyResultPlaceholder(List<Field> fields) {
+			return Collections.emptyList();
 		}
 	}
 
@@ -221,7 +239,8 @@ public class TableModel extends Model {
 		}
 	}
 
-	public static class TableColumn extends Model implements DomEvents.Click.Handler{
+	public static class TableColumn extends Model
+			implements DomEvents.Click.Handler {
 		private Field field;
 
 		private SortDirection sortDirection;
@@ -260,10 +279,11 @@ public class TableModel extends Model {
 		public void setSortDirection(SortDirection sortDirection) {
 			this.sortDirection = sortDirection;
 		}
-		 @Override
-	        public void onClick(Click event) {
-	            new SearchTableColumnClickHandler(this).onClick(event);
-	        }
+
+		@Override
+		public void onClick(Click event) {
+			new SearchTableColumnClickHandler(this).onClick(event);
+		}
 	}
 
 	public static class TableColumnClicked
