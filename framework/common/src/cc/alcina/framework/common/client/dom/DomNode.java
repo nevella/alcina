@@ -1199,6 +1199,11 @@ public class DomNode {
 			}
 		}
 
+		public DomNode previousLogicalNode() {
+			Node previous = tw.previousNode();
+			return document.nodeFor(previous);
+		}
+
 		public String previousNonWhitespaceText() {
 			return previousNonWhitespaceTextNode().map(DomNode::ntc)
 					.orElse(null);
@@ -1216,6 +1221,10 @@ public class DomNode {
 					return Optional.of(xPrevious);
 				}
 			}
+		}
+
+		public void setCurrentNode(DomNode cursor) {
+			tw.setCurrentNode(cursor.node);
 		}
 	}
 
