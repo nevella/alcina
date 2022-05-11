@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.HasValue;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.search.TxtCriterion;
+import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
@@ -40,7 +40,7 @@ public class DefFilter extends Composite implements
 
 	private FlatSearchDefinitionEditor flatEditor = null;
 
-	private TxtCriterion ignoreCriterion;
+	private TextCriterion ignoreCriterion;
 
 	TopicListener<Boolean> toggleListener = new TopicListener<Boolean>() {
 		@Override
@@ -74,7 +74,7 @@ public class DefFilter extends Composite implements
 		return this.simpleFilter;
 	}
 
-	public void ignoreCriterion(TxtCriterion ignoreCriterion) {
+	public void ignoreCriterion(TextCriterion ignoreCriterion) {
 		this.ignoreCriterion = ignoreCriterion;
 	}
 
@@ -193,11 +193,11 @@ public class DefFilter extends Composite implements
 	}
 
 	protected void populateFilterFromSearch() {
-		TxtCriterion txtCriterion = searchDefinition
-				.firstCriterion(TxtCriterion.class);
+		TextCriterion txtCriterion = searchDefinition
+				.firstCriterion(TextCriterion.class);
 		if (txtCriterion != null
 				&& !txtCriterion.equivalentTo(ignoreCriterion)) {
-			simpleFilter.setValue(txtCriterion.getText());
+			simpleFilter.setValue(txtCriterion.getValue());
 		}
 	}
 }

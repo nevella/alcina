@@ -14,17 +14,17 @@
 package cc.alcina.framework.gwt.client.objecttree.basic;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.search.TxtCriterion;
+import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
  * @author Nick Reddel
  */
-@Registration({ TreeRenderer.class, TxtCriterion.class })
-public class TxtCriterionRenderer
-		extends SearchCriterionRenderer<TxtCriterion> {
+@Registration({ TreeRenderer.class, TextCriterion.class })
+public class TextCriterionRenderer
+		extends SearchCriterionRenderer<TextCriterion> {
 	@Override
 	public String renderablePropertyName() {
-		return "text";
+		return "value";
 	}
 }

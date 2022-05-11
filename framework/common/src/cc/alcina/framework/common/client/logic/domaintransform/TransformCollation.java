@@ -2,7 +2,9 @@ package cc.alcina.framework.common.client.logic.domaintransform;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -18,6 +20,7 @@ import cc.alcina.framework.common.client.logic.domain.UserPropertyPersistable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
@@ -31,7 +34,7 @@ public class TransformCollation {
 
 	protected List<DomainTransformEvent> allEvents;
 
-	private Map<EntityLocator, EntityCollation> perLocator;
+	protected Map<EntityLocator, EntityCollation> perLocator;
 
 	public TransformCollation(List<? extends DomainTransformEvent> allEvents) {
 		refresh(allEvents);
@@ -46,7 +49,15 @@ public class TransformCollation {
 		return perLocator.values().stream();
 	}
 
-	public void filterNonpersistentPropertyTransforms() {
+	public boolean conflictsWith(TransformCollation otherCollation) {
+		ensureLookups();
+		Set<EntityLocator> set1 = perLocator.keySet();
+		otherCollation.ensureLookups();
+		Set<EntityLocator> set2 = otherCollation.perLocator.keySet();
+		return CommonUtils.hasIntersection(set1, set2);
+	}
+
+	public void filterNonpersistentTransforms() {
 		ensureLookups();
 		Set<DomainTransformEvent> events = allEvents.stream()
 				.collect(AlcinaCollectors.toLinkedHashSet());
@@ -56,7 +67,11 @@ public class TransformCollation {
 			} else {
 				ec.ensureByPropertyName().values().forEach(list -> {
 					for (int idx = 0; idx < list.size() - 1; idx++) {
-						events.remove(list.get(idx));
+						DomainTransformEvent transform = list.get(idx);
+						if (transform.getTransformType()
+								.isNotCollectionTransform()) {
+							events.remove(transform);
+						}
 					}
 				});
 			}
@@ -71,6 +86,16 @@ public class TransformCollation {
 
 	public List<DomainTransformEvent> getAllEvents() {
 		return this.allEvents;
+	}
+
+	public Stream<EntityCollation>
+			getConflictingCollations(TransformCollation conflictingWith) {
+		ensureLookups();
+		conflictingWith.ensureLookups();
+		Set<EntityLocator> set2 = conflictingWith.perLocator.keySet();
+		Stream<EntityCollation> conflicting = allEntityCollations()
+				.filter(ec -> set2.contains(ec.getLocator()));
+		return conflicting;
 	}
 
 	public Set<EntityLocator> getCreatedAndDeleted() {
@@ -148,6 +173,17 @@ public class TransformCollation {
 		return new Query(entity);
 	}
 
+	public Set<DomainTransformEvent>
+			removeConflictingTransforms(TransformCollation conflictingWith) {
+		Set<DomainTransformEvent> result = new LinkedHashSet<>();
+		Stream<EntityCollation> conflicting = getConflictingCollations(
+				conflictingWith);
+		conflicting.map(EntityCollation::getTransforms)
+				.flatMap(Collection::stream).forEach(result::add);
+		allEvents.removeIf(result::contains);
+		return result;
+	}
+
 	public void removeTransformFromRequest(DomainTransformEvent event) {
 		throw new UnsupportedOperationException();
 	}
@@ -211,6 +247,17 @@ public class TransformCollation {
 					.noneMatch(transformedPropertyNames::contains);
 		}
 
+		public Multimap<String, List<DomainTransformEvent>>
+				ensureByPropertyName() {
+			if (transformsByPropertyName == null) {
+				transformsByPropertyName = transforms.stream()
+						.filter(dte -> dte.getPropertyName() != null)
+						.collect(AlcinaCollectors.toKeyMultimap(
+								DomainTransformEvent::getPropertyName));
+			}
+			return transformsByPropertyName;
+		}
+
 		public DomainTransformEvent first() {
 			return Ax.first(transforms);
 		}
@@ -252,6 +299,10 @@ public class TransformCollation {
 			return first().getTransformType() == TransformType.CREATE_OBJECT;
 		}
 
+		public boolean isCreatedAndDeleted() {
+			return isCreated() && isDeleted();
+		}
+
 		public boolean isDeleted() {
 			return last().getTransformType() == TransformType.DELETE_OBJECT;
 		}
@@ -281,21 +332,6 @@ public class TransformCollation {
 		@Override
 		public String toString() {
 			return locator.toParseableString();
-		}
-
-		protected Multimap<String, List<DomainTransformEvent>>
-				ensureByPropertyName() {
-			if (transformsByPropertyName == null) {
-				transformsByPropertyName = transforms.stream()
-						.filter(dte -> dte.getPropertyName() != null)
-						.collect(AlcinaCollectors.toKeyMultimap(
-								DomainTransformEvent::getPropertyName));
-			}
-			return transformsByPropertyName;
-		}
-
-		boolean isCreatedAndDeleted() {
-			return isCreated() && isDeleted();
 		}
 	}
 

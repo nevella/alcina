@@ -1086,6 +1086,18 @@ public class FlatTreeSerializer {
 		private transient static Logger logger = LoggerFactory
 				.getLogger(SerializerFlat.class);
 
+		public static String transformRefactored(String serialized) {
+			if (serialized == null) {
+				return serialized;
+			}
+			if (serialized.contains("TxtCriterion")) {
+				serialized = serialized.replace(
+						"cc.alcina.framework.common.client.search.TxtCriterion",
+						"cc.alcina.framework.common.client.search.TextCriterion");
+			}
+			return serialized;
+		}
+
 		public String beanSerialize(Object object,
 				boolean hasClassNameProperty) {
 			return super.serialize(object, hasClassNameProperty);

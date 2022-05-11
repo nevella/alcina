@@ -1,13 +1,20 @@
 package cc.alcina.framework.entity.persistence.transform;
 
+import java.io.Serializable;
+import java.lang.reflect.Field;
+import java.sql.PreparedStatement;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 import javax.persistence.EntityManager;
@@ -17,6 +24,7 @@ import javax.persistence.OptimisticLockException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
@@ -39,8 +47,10 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.CommonPersistenceBase;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -115,6 +125,38 @@ public class TransformPersisterInPersistenceContext {
 
 	public EntityManager getEntityManager() {
 		return this.entityManager;
+	}
+
+	public boolean removeProcessedRequests(
+			CommonPersistenceBase commonPersistenceBase,
+			TransformPersistenceToken token) {
+		if (token.isRequestorExternalToThisJvm()) {
+			Integer highestPersistedRequestId = commonPersistenceBase
+					.getHighestPersistedRequestIdForClientInstance(
+							token.getRequest().getClientInstance().getId());
+			if (highestPersistedRequestId == null) {
+				return true;
+			}
+			if (token.getRequest()
+					.getRequestId() <= highestPersistedRequestId) {
+				return false;
+			}
+			List<DomainTransformRequest> toRemove = token.getRequest()
+					.getPriorRequestsWithoutResponse().stream()
+					.filter(request -> request
+							.getRequestId() <= highestPersistedRequestId)
+					.collect(Collectors.toList());
+			toRemove.forEach(request -> logger.info(
+					"transformpersister - removing already processed "
+							+ "request :: {}/{}",
+					request.getClientInstance().getId(),
+					request.getRequestId()));
+			token.getRequest().getPriorRequestsWithoutResponse()
+					.removeAll(toRemove);
+			return true;
+		} else {
+			return true;
+		}
 	}
 
 	public void transformInPersistenceContext(
@@ -551,6 +593,148 @@ public class TransformPersisterInPersistenceContext {
 		}
 	}
 
+	@Registration.Singleton
+	/*
+	 * Because 'onFlushDirty' is called well before batch exceptions occur, the
+	 * correct approach was a small change to hibernate and insertion of the
+	 * exceptionConsumer. So 'lastFlushData' etc is unused.
+	 *
+	 * Buuttt...even more optimal would be
+	 */
+	public static class ThreadData {
+		public static ThreadData get() {
+			return Registry.impl(ThreadData.class);
+		}
+
+		BiConsumer<RuntimeException, PreparedStatement> exceptionConsumer = (re,
+				ps) -> this.consumeException(re, ps);
+
+		private ConcurrentMap<Thread, FlushData> lastFlushData = new ConcurrentHashMap<>();
+
+		private ConcurrentMap<Thread, Boolean> observingFlushData = new ConcurrentHashMap<>();
+
+		Logger logger = LoggerFactory.getLogger(getClass());
+
+		private Class logFlushDataOfClass;
+
+		public ThreadData() {
+			// reflection-based
+			if (!Ax.isTest()) {
+				Registry.impl(JPAImplementation.class)
+						.registerBatchExceptionConsumer(exceptionConsumer);
+			}
+		}
+
+		public void afterTransactionCompletion() {
+			//
+			// because we may only learn about the exception (in client code)
+			// after tx completion, use client observing call to evict rather
+			// than here
+		}
+
+		public void logFlushDataOfClass(Class logFlushDataOfClass) {
+			this.logFlushDataOfClass = logFlushDataOfClass;
+		}
+
+		public void logLastFlushData() {
+			Thread currentThread = Thread.currentThread();
+			FlushData flushData = lastFlushData.get(currentThread);
+			if (flushData != null) {
+				logger.info("Last entity flush data");
+				logger.info(flushData.toString());
+			}
+		}
+
+		public void onFlushDirty(Object entity, Serializable id,
+				Object[] currentState, Object[] previousState,
+				String[] propertyNames, Object[] types) {
+			Thread currentThread = Thread.currentThread();
+			if (!observingFlushData.containsKey(currentThread)) {
+				return;
+			}
+			FlushData flushData = new FlushData(entity, id, currentState,
+					previousState, propertyNames, types);
+			if (entity.getClass() == logFlushDataOfClass) {
+				logger.info("Logging flush data: {} - {}/{}\n{}", entity,
+						entity.getClass().getSimpleName(), id,
+						flushData.toDelta());
+			}
+			lastFlushData.put(currentThread, flushData);
+		}
+
+		void consumeException(RuntimeException re, PreparedStatement ps) {
+			try {
+				if (ps.getClass().getName().equals(
+						"org.jboss.jca.adapters.jdbc.jdk8.WrappedPreparedStatementJDK8")) {
+					Field wrappedField = SEUtilities
+							.getFieldByName(ps.getClass(), "s");
+					wrappedField.setAccessible(true);
+					ps = (PreparedStatement) wrappedField.get(ps);
+				}
+				logger.warn("(Prepared) statement causing issue");
+				logger.warn(ps.toString());
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		void observingFlushData(boolean observing) {
+			Thread currentThread = Thread.currentThread();
+			if (observing) {
+				observingFlushData.put(currentThread, true);
+			} else {
+				observingFlushData.remove(currentThread);
+			}
+		}
+
+		@SuppressWarnings("unused")
+		static class FlushData {
+			private Object entity;
+
+			private Serializable id;
+
+			private Object[] currentState;
+
+			private Object[] previousState;
+
+			private String[] propertyNames;
+
+			private Object[] types;
+
+			FlushData(Object entity, Serializable id, Object[] currentState,
+					Object[] previousState, String[] propertyNames,
+					Object[] types) {
+				this.entity = entity;
+				this.id = id;
+				this.currentState = currentState;
+				this.previousState = previousState;
+				this.propertyNames = propertyNames;
+				this.types = types;
+			}
+
+			public String toDelta() {
+				FormatBuilder fb = new FormatBuilder();
+				for (int idx = 0; idx < currentState.length; idx++) {
+					Object p = previousState[idx];
+					Object c = currentState[idx];
+					Object n = propertyNames[idx];
+					if (!Objects.equals(p, c)) {
+						fb.line("%s :: %s => %s", n, p, c);
+					}
+				}
+				return fb.toString();
+			}
+
+			@Override
+			public String toString() {
+				FormatBuilder fb = new FormatBuilder();
+				fb.line("Entity: %s", entity);
+				fb.line("Id: %s", id);
+				return fb.toString();
+			}
+		}
+	}
+
 	private class DelayedEntityPersister {
 		DomainTransformEvent lastCreationEvent = null;
 
@@ -571,7 +755,7 @@ public class TransformPersisterInPersistenceContext {
 					.forLocator(event.toObjectLocator());
 			if (event == entityCollation.last()) {
 				/*
-				 * 
+				 *
 				 */
 				if (entityCollation.getTransforms().stream().anyMatch(e -> {
 					switch (e.getTransformType()) {
@@ -585,8 +769,9 @@ public class TransformPersisterInPersistenceContext {
 						OneToMany oneToMany = Reflections.at(e.getObjectClass())
 								.property(e.getPropertyName())
 								.annotation(OneToMany.class);
-						// if null, manytomany and it *is* an update
-						return oneToMany != null;
+						// if null, manytomany and it *is* an update (so null
+						// value implies 'return true, was updated')
+						return oneToMany == null;
 					case DELETE_OBJECT:
 					default:
 						throw new UnsupportedOperationException();
@@ -645,37 +830,5 @@ public class TransformPersisterInPersistenceContext {
 	}
 
 	static class DeliberatelyThrownWrapperException extends RuntimeException {
-	}
-
-	public boolean removeProcessedRequests(
-			CommonPersistenceBase commonPersistenceBase,
-			TransformPersistenceToken token) {
-		if (token.isRequestorExternalToThisJvm()) {
-			Integer highestPersistedRequestId = commonPersistenceBase
-					.getHighestPersistedRequestIdForClientInstance(
-							token.getRequest().getClientInstance().getId());
-			if (highestPersistedRequestId == null) {
-				return true;
-			}
-			if (token.getRequest()
-					.getRequestId() <= highestPersistedRequestId) {
-				return false;
-			}
-			List<DomainTransformRequest> toRemove = token.getRequest()
-					.getPriorRequestsWithoutResponse().stream()
-					.filter(request -> request
-							.getRequestId() <= highestPersistedRequestId)
-					.collect(Collectors.toList());
-			toRemove.forEach(request -> logger.info(
-					"transformpersister - removing already processed "
-							+ "request :: {}/{}",
-					request.getClientInstance().getId(),
-					request.getRequestId()));
-			token.getRequest().getPriorRequestsWithoutResponse()
-					.removeAll(toRemove);
-			return true;
-		} else {
-			return true;
-		}
 	}
 }

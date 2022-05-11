@@ -47,7 +47,7 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import cc.alcina.framework.common.client.util.Ax;
 
 /**
- * 
+ *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a> Modified by Nick to handle some updateonkeypress edgecases
  */
@@ -97,8 +97,7 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 								.scheduleDeferred(new ScheduledCommand() {
 									@Override
 									public void execute() {
-										changes.firePropertyChange("value", old,
-												getValue());
+										fireChangeFromOld();
 										old = (String) getValue();
 										scheduled = false;
 									}
@@ -120,6 +119,7 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 					if (keyCode == KeyCodes.KEY_ENTER) {
 						setFocus(false);
 						setFocus(true);
+						setValue(getValue());
 					}
 				}
 
@@ -132,16 +132,14 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 		this.base.addChangeListener(new ChangeListener() {
 			@Override
 			public void onChange(Widget sender) {
-				changes.firePropertyChange("value", old, getValue());
-				old = (String) getValue();
+				fireChangeFromOld();
 				changeListeners.fireChange(instance);
 			}
 		});
 		this.base.addValueChangeHandler(new ValueChangeHandler<String>() {
 			@Override
 			public void onValueChange(ValueChangeEvent<String> event) {
-				changes.firePropertyChange("value", old, getValue());
-				old = (String) getValue();
+				fireChangeFromOld();
 				changeListeners.fireChange(instance);
 			}
 		});
@@ -152,9 +150,8 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 					// don't want a non-change change fired here (invalid
 					// validation)
 				} else {
-					changes.firePropertyChange("value", old, getValue());
+					fireChangeFromOld();
 				}
-				old = (String) getValue();
 				changeListeners.fireChange(instance);
 			}
 		});
@@ -412,9 +409,8 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 		// the above doesn't fire a change on the case new==null, old!=null
 		if (this.getValue() != old && (this.getValue() == null
 				|| (this.getValue() != null && !this.getValue().equals(old)))) {
-			this.changes.firePropertyChange("value", old, this.getValue());
+			fireChangeFromOld();
 		}
-		old = this.getValue();
 	}
 
 	public void setVisibleLength(int length) {
@@ -434,5 +430,10 @@ public class TextBox extends AbstractBoundWidget<String> implements HasFocus,
 	@Override
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
+	}
+
+	private void fireChangeFromOld() {
+		changes.firePropertyChange("value", old, getValue());
+		old = (String) getValue();
 	}
 }

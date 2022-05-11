@@ -188,6 +188,8 @@ public class LiveTree {
 		}
 	}
 
+	// FIXME - livetree - generated exceptions should go in client, be at least
+	// warned
 	public Response generateResponse(
 			Request<? extends DomainViewSearchDefinition> request) {
 		TransformFilter transformFilter = rootGenerator
@@ -483,7 +485,17 @@ public class LiveTree {
 				// order. need to fix navigation server-side
 				t = t.copy();
 				t.setBeforePath(null);
-				TreePath<LiveNode> path = root.getPath(t.getTreePath()).get();
+				Optional<TreePath<LiveNode>> pathOfTransform = root
+						.getPath(t.getTreePath());
+				// patch for filtered export. drop (return transform of type
+				// REMOVE) if pathOfTransform is empty. Note that this may make
+				// sense (null path in root) - really need to document the
+				// invariants
+				if (pathOfTransform.isEmpty()) {
+					t.setOperation(Operation.REMOVE);
+					return t;
+				}
+				TreePath<LiveNode> path = pathOfTransform.get();
 				Walker<LiveNode> walker = path.walker();
 				while (true) {
 					TreePath<LiveNode> previous = walker.previous();

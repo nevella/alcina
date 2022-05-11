@@ -19,6 +19,7 @@ import java.io.PrintWriter;
 import java.io.Serializable;
 import java.io.StringWriter;
 import java.lang.reflect.Field;
+import java.sql.PreparedStatement;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashSet;
@@ -26,6 +27,7 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiConsumer;
 
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -40,11 +42,14 @@ import org.hibernate.engine.spi.IdentifierValue;
 import org.hibernate.engine.spi.PersistenceContext;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.id.IdentifierGenerator;
+import org.hibernate.jdbc.Expectations;
 import org.hibernate.persister.entity.EntityPersister;
 import org.hibernate.persister.entity.SingleTableEntityPersister;
 import org.hibernate.proxy.HibernateProxy;
 import org.hibernate.proxy.LazyInitializer;
 import org.hibernate.tuple.IdentifierProperty;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -84,6 +89,8 @@ public class JPAHibernateImpl implements JPAImplementation {
 					|| IGroup.class.isAssignableFrom(persistentClass);
 		}
 	};
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	private boolean cacheDisabled;
 
@@ -306,6 +313,24 @@ public class JPAHibernateImpl implements JPAImplementation {
 	@Override
 	public boolean isProxy(Entity entity) {
 		return entity instanceof HibernateProxy;
+	}
+
+	@Override
+	public void registerBatchExceptionConsumer(
+			BiConsumer<RuntimeException, PreparedStatement> exceptionConsumer) {
+		try {
+			Class<Expectations> clazz = org.hibernate.jdbc.Expectations.class;
+			Field field = clazz.getField("exceptionConsumer");
+			if (field == null) {
+				logger.warn("No exception consumer field (see alcina doc)");
+			} else {
+				field.setAccessible(true);
+				field.set(null, exceptionConsumer);
+			}
+		} catch (Exception e) {
+			logger.warn("register consumer issue", e);
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	@Override

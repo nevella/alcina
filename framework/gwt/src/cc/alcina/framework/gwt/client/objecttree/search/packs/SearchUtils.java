@@ -20,8 +20,8 @@ import cc.alcina.framework.common.client.search.DateCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchCriterion.Direction;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.search.TxtCriterion;
-import cc.alcina.framework.common.client.search.TxtCriterion.TxtCriterionType;
+import cc.alcina.framework.common.client.search.TextCriterion;
+import cc.alcina.framework.common.client.search.TextCriterion.TextCriterionType;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -131,18 +131,18 @@ public class SearchUtils {
 					if (dateCriterion.getDirection() == Direction.ASCENDING) {
 						Date d2 = new Date(date.getTime());
 						CalendarUtil.addDaysToDate(d2, -2);
-						dateCriterion.setDate(d2);
+						dateCriterion.setValue(d2);
 					} else {
 						Date d2 = new Date(date.getTime());
 						CalendarUtil.addDaysToDate(d2, +2);
-						dateCriterion.setDate(d2);
+						dateCriterion.setValue(d2);
 					}
 				}
 			}
 		} else {
-			TxtCriterion txtCriterion = new TxtCriterion();
-			txtCriterion.setText(text);
-			txtCriterion.setTxtCriterionType(TxtCriterionType.CONTAINS);
+			TextCriterion txtCriterion = new TextCriterion();
+			txtCriterion.setValue(text);
+			txtCriterion.setTextCriterionType(TextCriterionType.CONTAINS);
 			def.addCriterionToSoleCriteriaGroup(txtCriterion);
 		}
 	}

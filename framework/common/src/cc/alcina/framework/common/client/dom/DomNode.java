@@ -401,7 +401,8 @@ public class DomNode {
 		if (isText()) {
 			((Text) node).setData(text);
 		} else {
-			if (children.noElements()) {
+			if (children.noElements() && children.stream()
+					.noneMatch(DomNode::isProcessingInstruction)) {
 				node.setTextContent(text);
 			} else {
 				throw new RuntimeException("node has child elements");
@@ -1198,6 +1199,11 @@ public class DomNode {
 			}
 		}
 
+		public DomNode previousLogicalNode() {
+			Node previous = tw.previousNode();
+			return document.nodeFor(previous);
+		}
+
 		public String previousNonWhitespaceText() {
 			return previousNonWhitespaceTextNode().map(DomNode::ntc)
 					.orElse(null);
@@ -1215,6 +1221,10 @@ public class DomNode {
 					return Optional.of(xPrevious);
 				}
 			}
+		}
+
+		public void setCurrentNode(DomNode cursor) {
+			tw.setCurrentNode(cursor.node);
 		}
 	}
 

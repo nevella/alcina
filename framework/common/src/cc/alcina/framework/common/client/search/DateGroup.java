@@ -34,10 +34,10 @@ public class DateGroup extends CriteriaGroup<AbstractDateCriterion> {
 		CommonUtils.roundDate(toDate, true);
 		AbstractDateCriterion dc = new DateCriterion("From",
 				Direction.ASCENDING);
-		dc.setDate(fromDate);
+		dc.setValue(fromDate);
 		addCriterion(dc);
 		dc = new DateCriterion("To", Direction.DESCENDING);
-		dc.setDate(toDate);
+		dc.setValue(toDate);
 		addCriterion(dc);
 	}
 

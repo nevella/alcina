@@ -212,6 +212,17 @@ public abstract class TransformManager
 		return new LinkedHashSet<>(idListToLongs(str));
 	}
 
+	public static void ignoreChanges(Runnable runnable) {
+		boolean ignorePropertyChanges = get().isIgnorePropertyChanges();
+		try {
+			TransformManager.get().setIgnorePropertyChanges(true);
+			runnable.run();
+		} finally {
+			TransformManager.get()
+					.setIgnorePropertyChanges(ignorePropertyChanges);
+		}
+	}
+
 	public static String
 			logTransformStats(Set<DomainTransformEvent> transforms) {
 		// group by obj class, property, type
@@ -587,18 +598,6 @@ public abstract class TransformManager
 		currentEvent = null;
 	}
 
-	protected void set(Property property, Entity object, Object value) {
-		property.set(object, value);
-	}
-
-	protected <E extends Entity> E newInstance(Class<E> entityClass, long id,
-			long localId) {
-		E entity = Reflections.newInstance(entityClass);
-		entity.setId(id);
-		entity.setLocalId(localId);
-		return entity;
-	}
-
 	public void appShutdown() {
 		factoryInstance = null;
 	}
@@ -827,10 +826,6 @@ public abstract class TransformManager
 		return getObjectStore().getCollection(clazz);
 	}
 
-	public ObjectStore getObjectStore() {
-		return this.objectStore;
-	}
-
 	/**
 	 * useful support in TLTM, ThreadedClientTM
 	 */
@@ -872,6 +867,10 @@ public abstract class TransformManager
 
 	public <T extends Entity> T getObject(T entity) {
 		return getObjectStore().getObject(entity);
+	}
+
+	public ObjectStore getObjectStore() {
+		return this.objectStore;
 	}
 
 	public TransformManager getT() {
@@ -1640,11 +1639,6 @@ public abstract class TransformManager
 			throws DomainTransformException {
 	}
 
-	protected void initObjectStore() {
-		// FIXME - 2022 - to client tm
-		setObjectStore(new StandaloneObjectStoreClient(this));
-	}
-
 	// underlying set must be ordered
 	protected Set<DomainTransformEvent> createTransformSet() {
 		return new LinkedHashSet<>();
@@ -1797,6 +1791,11 @@ public abstract class TransformManager
 		provisionalObjects = new IdentityHashMap<>();
 	}
 
+	protected void initObjectStore() {
+		// FIXME - 2022 - to client tm
+		setObjectStore(new StandaloneObjectStoreClient(this));
+	}
+
 	protected boolean isAddToDomainObjects() {
 		return true;
 	}
@@ -1824,6 +1823,14 @@ public abstract class TransformManager
 	protected void maybeFireCollectionModificationEvent(
 			Class<? extends Object> collectionClass,
 			boolean fromPropertyChange) {
+	}
+
+	protected <E extends Entity> E newInstance(Class<E> entityClass, long id,
+			long localId) {
+		E entity = Reflections.newInstance(entityClass);
+		entity.setId(id);
+		entity.setLocalId(localId);
+		return entity;
 	}
 
 	/**
@@ -1948,6 +1955,10 @@ public abstract class TransformManager
 	 * Overridden by threaded subclasses
 	 */
 	protected void removePerThreadContext0() {
+	}
+
+	protected void set(Property property, Entity object, Object value) {
+		property.set(object, value);
 	}
 
 	protected void setObjectStore(ObjectStore domainObjects) {
@@ -2091,8 +2102,14 @@ public abstract class TransformManager
 	@Reflected
 	@Registration.Singleton
 	public static class Serializer {
+		// must be stateless
+		private static Serializer instance;
+
 		public static TransformManager.Serializer get() {
-			return Registry.impl(TransformManager.Serializer.class);
+			if (instance == null) {
+				instance = Registry.impl(TransformManager.Serializer.class);
+			}
+			return instance;
 		}
 
 		public <T> T copy(T object) {
@@ -2112,6 +2129,12 @@ public abstract class TransformManager
 			} else {
 				return ReflectiveSerializer.deserialize(serialized);
 			}
+		}
+
+		// subclass support for refactoring, would require calls from
+		// FlatTreeSerializer, ReflectiveSerializer, AlcinaBeanSerializer
+		public String mapMissingPropertyName(Class type, String propertyName) {
+			return null;
 		}
 
 		public String serialize(Object object, boolean hasClassNameProperty) {
@@ -2190,25 +2213,14 @@ public abstract class TransformManager
 			}
 		}
 
-		Property property() {
-			return Reflections.at(object.entityClass())
-					.property(event.getPropertyName());
-		}
-
 		Property domainSerializableProperty() {
 			return Reflections.at(object.entityClass())
 					.property(domainSerializablePropertyName);
 		}
-	}
 
-	public static void ignoreChanges(Runnable runnable) {
-		boolean ignorePropertyChanges = get().isIgnorePropertyChanges();
-		try {
-			TransformManager.get().setIgnorePropertyChanges(true);
-			runnable.run();
-		} finally {
-			TransformManager.get()
-					.setIgnorePropertyChanges(ignorePropertyChanges);
+		Property property() {
+			return Reflections.at(object.entityClass())
+					.property(event.getPropertyName());
 		}
 	}
 }

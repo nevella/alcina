@@ -663,7 +663,7 @@ public class TransformCommit {
 
 	public void setBackendTransformQueueMaxDelay(String queueName,
 			long delayMs) {
-		BackendTransformQueue.get().setBackendTransformQueueMaxDelay(queueName,
+		BackendTransformQueue.get().createBackendQueue(queueName,
 				delayMs);
 	}
 
@@ -934,7 +934,7 @@ public class TransformCommit {
 			}
 			persistenceToken.getTransformCollation().refreshFromRequest();
 			persistenceToken.getTransformCollation()
-					.removeCreateDeleteTransforms();
+					.removeNonPersistentTransforms();
 			DomainStore.stores().writableStore().getPersistenceEvents()
 					.fireDomainTransformPersistenceEvent(
 							new DomainTransformPersistenceEvent(
@@ -943,7 +943,7 @@ public class TransformCommit {
 									true));
 			persistenceToken.getTransformCollation().refreshFromRequest();
 			persistenceToken.getTransformCollation()
-					.removeCreateDeleteTransforms();
+					.removeNonPersistentTransforms();
 			MetricLogging.get().start("transform-commit");
 			Transaction.current().toDbPersisting();
 			DomainTransformLayerWrapper wrapper = Registry
