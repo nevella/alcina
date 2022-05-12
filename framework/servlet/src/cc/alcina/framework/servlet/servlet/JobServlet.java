@@ -35,6 +35,7 @@ import cc.alcina.framework.entity.logic.EntityLayerObjects;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 import cc.alcina.framework.servlet.job.JobRegistry;
+import cc.alcina.framework.servlet.task.ServletAwaitTask;
 import cc.alcina.framework.servlet.task.TaskCancelJob;
 import cc.alcina.framework.servlet.task.TaskListJobs;
 import cc.alcina.framework.servlet.task.TaskLogJobDetails;
@@ -151,23 +152,28 @@ public class JobServlet extends AlcinaServlet {
 				task = TransformManager.Serializer.get()
 						.deserialize(serialized);
 			}
-			job = task.schedule();
-			Transaction.commit();
-			if (returnJobId) {
-				response.setContentType("text/plain");
-				response.getWriter().write(String.valueOf(job.getId()));
-				response.flushBuffer();
+			if (task instanceof ServletAwaitTask
+					&& ((ServletAwaitTask) task).isAwaitJobCompletion()) {
+				job = task.perform();
 			} else {
-				String href = createTaskUrl(new TaskLogJobDetails()
-						.withValue(String.valueOf(job.getId())));
-				response.setContentType(
-						task instanceof TaskWithHtmlResult ? "text/html"
-								: "text/plain");
-				response.getWriter()
-						.write(Ax.format("Job started:\n%s\n", href));
-				response.flushBuffer();
+				job = task.schedule();
+				Transaction.commit();
+				if (returnJobId) {
+					response.setContentType("text/plain");
+					response.getWriter().write(String.valueOf(job.getId()));
+					response.flushBuffer();
+				} else {
+					String href = createTaskUrl(new TaskLogJobDetails()
+							.withValue(String.valueOf(job.getId())));
+					response.setContentType(
+							task instanceof TaskWithHtmlResult ? "text/html"
+									: "text/plain");
+					response.getWriter()
+							.write(Ax.format("Job started:\n%s\n", href));
+					response.flushBuffer();
+				}
+				JobRegistry.get().await(job);
 			}
-			JobRegistry.get().await(job);
 			break;
 		}
 		job = job.domain().ensurePopulated();
