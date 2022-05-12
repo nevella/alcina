@@ -11,8 +11,13 @@ import cc.alcina.framework.servlet.schedule.ServerTask;
 import cc.alcina.framework.servlet.servlet.PublicationRequestHandler;
 
 @TypeSerialization(flatSerializable = false)
-public class TaskPublish extends ServerTask<TaskPublish> {
+public class TaskPublish extends ServerTask<TaskPublish>
+		implements ServletAwaitTask {
 	private ContentRequestBase publicationRequest;
+
+	private boolean copyContentToLargeResult;
+
+	private boolean awaitJobCompletion;
 
 	public TaskPublish() {
 	}
@@ -30,11 +35,28 @@ public class TaskPublish extends ServerTask<TaskPublish> {
 		return this.publicationRequest;
 	}
 
+	@Override
+	public boolean isAwaitJobCompletion() {
+		return this.awaitJobCompletion;
+	}
+
+	public boolean isCopyContentToLargeResult() {
+		return this.copyContentToLargeResult;
+	}
+
+	public void setAwaitJobCompletion(boolean awaitJobCompletion) {
+		this.awaitJobCompletion = awaitJobCompletion;
+	}
+
+	public void setCopyContentToLargeResult(boolean copyContentToLargeResult) {
+		this.copyContentToLargeResult = copyContentToLargeResult;
+	}
+
 	public void setPublicationRequest(ContentRequestBase publicationRequest) {
 		this.publicationRequest = publicationRequest;
 	}
 
-	public TaskPublish withRequest(ContentRequestBase publicationRequest) {
+	public ServletAwaitTask withRequest(ContentRequestBase publicationRequest) {
 		setPublicationRequest(publicationRequest);
 		return this;
 	}
@@ -44,6 +66,9 @@ public class TaskPublish extends ServerTask<TaskPublish> {
 		PublicationResult result = Registry
 				.impl(PublicationRequestHandler.class)
 				.publish(getPublicationRequest());
+		if (copyContentToLargeResult) {
+			JobContext.get().getJob().setLargeResult(result.getContent());
+		}
 		if (!Ax.isTest()) {
 			result.ensureMinimal();
 		}

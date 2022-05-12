@@ -45,6 +45,7 @@ public class GenericExceptionMapper implements ExceptionMapper<Exception> {
 					|| e instanceof NotSupportedException) {
 				LOGGER.warn("Bad request type/body {uri={}, ip={}}", requestURI,
 						requestorIp);
+				e.printStackTrace();
 				// Invalid request type/body
 				return Response.status(Status.BAD_REQUEST).build();
 			} else {
