@@ -75,7 +75,7 @@ public class BaseTextCriterionPack {
 
 		@Override
 		public String getCriterionPropertyName() {
-			return "text";
+			return "value";
 		}
 
 		@Override

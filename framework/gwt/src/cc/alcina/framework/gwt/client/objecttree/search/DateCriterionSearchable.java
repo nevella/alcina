@@ -26,7 +26,7 @@ public class DateCriterionSearchable<DC extends DateCriterion>
 
 	@Override
 	public String getCriterionPropertyName() {
-		return "date";
+		return "value";
 	}
 
 	@Override
