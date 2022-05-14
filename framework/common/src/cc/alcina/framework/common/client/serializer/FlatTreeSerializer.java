@@ -119,9 +119,6 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 public class FlatTreeSerializer {
 	private static final String CLASS = "class$";
 
-	public static final String CONTEXT_DESERIALIZING = FlatTreeSerializer.class
-			.getName() + ".CONTEXT_DESERIALIZING";
-
 	public static final String CONTEXT_THROW_ON_SERIALIZATION_FAILURE = FlatTreeSerializer.class
 			.getName() + ".CONTEXT_THROW_ON_SERIALIZATION_FAILURE";
 
@@ -151,7 +148,7 @@ public class FlatTreeSerializer {
 	public static <T extends TreeSerializable> T deserialize(Class<T> clazz,
 			String value, DeserializerOptions options) {
 		try {
-			LooseContext.pushWithTrue(CONTEXT_DESERIALIZING);
+			LooseContext.pushWithTrue(Serializers.CONTEXT_DESERIALIZING);
 			if (value == null) {
 				return null;
 			}
@@ -187,16 +184,91 @@ public class FlatTreeSerializer {
 		return deserialize(null, value);
 	}
 
-	public static boolean isDeserializing() {
-		return LooseContext.is(CONTEXT_DESERIALIZING);
-	}
-
 	public static String serialize(TreeSerializable object) {
 		return serialize(object, new SerializerOptions()
 				.withTopLevelTypeInfo(true).withShortPaths(true));
 	}
 
 	public static String serialize(TreeSerializable object,
+			SerializerOptions options) {
+		try {
+			LooseContext.pushWithTrue(Serializers.CONTEXT_SERIALIZING);
+			return serialize0(object, options);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
+	public static String serializeElided(TreeSerializable object) {
+		return serialize(object,
+				new SerializerOptions().withTopLevelTypeInfo(true)
+						.withShortPaths(true).withElideDefaults(true));
+	}
+
+	public static String serializeSingleLine(TreeSerializable object) {
+		return serialize(object,
+				new SerializerOptions().withTopLevelTypeInfo(false)
+						.withShortPaths(true).withElideDefaults(true)
+						.withSingleLine(true));
+	}
+
+	private static boolean isCollection(Class clazz) {
+		return Reflections.isAssignableFrom(Collection.class, clazz);
+	}
+
+	private static boolean isIntermediateType(Class clazz) {
+		return isCollection(clazz)
+				|| Reflections.isAssignableFrom(TreeSerializable.class, clazz);
+	}
+
+	private static boolean isLeafValue(Object value) {
+		if (value == null) {
+			return true;
+		}
+		return isValueType(value.getClass());
+	}
+
+	private static boolean
+			isTreeSerializableWithInstantiationChecks(Class clazz) {
+		if (clazz == TreeSerializable.class) {
+			return true;
+		}
+		if (ClassReflector.stdAndPrimitives.contains(clazz)) {
+			return false;
+		}
+		if (isCollection(clazz)) {
+			return false;
+		}
+		return Reflections.isAssignableFrom(TreeSerializable.class, clazz);
+	}
+
+	private static boolean isValueType(Class clazz) {
+		if (clazz == Class.class) {
+			return true;
+		}
+		if (ClassReflector.stdAndPrimitives.contains(clazz)) {
+			return true;
+		}
+		if (clazz.isEnum() || (clazz.getSuperclass() != null
+				&& clazz.getSuperclass().isEnum())) {
+			return true;
+		}
+		if (clazz.isArray() && clazz.getComponentType() == byte.class) {
+			return true;
+		}
+		if (isIntermediateType(clazz)) {
+			return false;
+		}
+		if (Reflections.isAssignableFrom(Entity.class, clazz)) {
+			return true;
+		}
+		if (Reflections.isAssignableFrom(BasePlace.class, clazz)) {
+			return true;
+		}
+		return false;
+	}
+
+	private static String serialize0(TreeSerializable object,
 			SerializerOptions options) {
 		if (object == null) {
 			return null;
@@ -270,75 +342,6 @@ public class FlatTreeSerializer {
 			// FIXME - mvcc.5 - implement once reflectiveserializer up
 		}
 		return serialized;
-	}
-
-	public static String serializeElided(TreeSerializable object) {
-		return serialize(object,
-				new SerializerOptions().withTopLevelTypeInfo(true)
-						.withShortPaths(true).withElideDefaults(true));
-	}
-
-	public static String serializeSingleLine(TreeSerializable object) {
-		return serialize(object,
-				new SerializerOptions().withTopLevelTypeInfo(false)
-						.withShortPaths(true).withElideDefaults(true)
-						.withSingleLine(true));
-	}
-
-	private static boolean isCollection(Class clazz) {
-		return Reflections.isAssignableFrom(Collection.class, clazz);
-	}
-
-	private static boolean isIntermediateType(Class clazz) {
-		return isCollection(clazz)
-				|| Reflections.isAssignableFrom(TreeSerializable.class, clazz);
-	}
-
-	private static boolean isLeafValue(Object value) {
-		if (value == null) {
-			return true;
-		}
-		return isValueType(value.getClass());
-	}
-
-	private static boolean
-			isTreeSerializableWithInstantiationChecks(Class clazz) {
-		if (clazz == TreeSerializable.class) {
-			return true;
-		}
-		if (ClassReflector.stdAndPrimitives.contains(clazz)) {
-			return false;
-		}
-		if (isCollection(clazz)) {
-			return false;
-		}
-		return Reflections.isAssignableFrom(TreeSerializable.class, clazz);
-	}
-
-	private static boolean isValueType(Class clazz) {
-		if (clazz == Class.class) {
-			return true;
-		}
-		if (ClassReflector.stdAndPrimitives.contains(clazz)) {
-			return true;
-		}
-		if (clazz.isEnum() || (clazz.getSuperclass() != null
-				&& clazz.getSuperclass().isEnum())) {
-			return true;
-		}
-		if (clazz.isArray() && clazz.getComponentType() == byte.class) {
-			return true;
-		}
-		if (isIntermediateType(clazz)) {
-			return false;
-		}
-		if (Reflections.isAssignableFrom(Entity.class, clazz)) {
-			return true;
-		}
-		if (Reflections.isAssignableFrom(BasePlace.class, clazz)) {
-			return true;
-		}
-		return false;
 	}
 
 	State state;

@@ -95,7 +95,7 @@ public class ReflectiveSerializer {
 
 	public static <T> T deserialize(String value, DeserializerOptions options) {
 		try {
-			LooseContext.pushWithTrue(FlatTreeSerializer.CONTEXT_DESERIALIZING);
+			LooseContext.pushWithTrue(Serializers.CONTEXT_DESERIALIZING);
 			if (value == null) {
 				return null;
 			}
@@ -122,6 +122,15 @@ public class ReflectiveSerializer {
 	}
 
 	public static String serialize(Object object, SerializerOptions options) {
+		try {
+			LooseContext.pushWithTrue(Serializers.CONTEXT_SERIALIZING);
+			return serialize0(object, options);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
+	private static String serialize0(Object object, SerializerOptions options) {
 		if (object == null) {
 			return null;
 		}
@@ -173,6 +182,7 @@ public class ReflectiveSerializer {
 							.handlesDeclaredTypeSubclasses()) {
 						if (serializerType != Enum.class
 								&& serializerType != Entity.class
+						// i.e. declaredtype is a supertype of serializertype
 								&& !Reflections.isAssignableFrom(declaredType,
 										serializerType)) {
 							throw new IllegalStateException(Ax.format(

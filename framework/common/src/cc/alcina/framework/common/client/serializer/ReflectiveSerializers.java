@@ -32,6 +32,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
+import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import elemental.json.Json;
@@ -240,6 +241,18 @@ public class ReflectiveSerializers {
 			boolean hasKey = false;
 
 			Object key;
+		}
+	}
+
+	public static class TypeSerializer_Multimap extends TypeSerializer_Map {
+		@Override
+		public List<Class> handlesTypes() {
+			return Arrays.asList(Multimap.class);
+		}
+
+		@Override
+		public Class serializeAs(Class incoming) {
+			return Multimap.class;
 		}
 	}
 
