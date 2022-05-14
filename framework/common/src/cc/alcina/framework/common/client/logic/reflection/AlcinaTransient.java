@@ -9,6 +9,8 @@ import java.lang.annotation.Target;
 import java.util.Arrays;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.util.LooseContext;
 
@@ -18,25 +20,18 @@ import cc.alcina.framework.common.client.util.LooseContext;
 @Target({ ElementType.METHOD })
 @ClientVisible
 public @interface AlcinaTransient {
+	TransienceContext[] unless() default {};
+
 	// empty implies 'transient in all contexts' - non empty restricts
 	// transience to the selected contexts
 	TransienceContext[] value() default {};
-
-	public enum TransienceContext {
-		ALL, CLIENT, RPC, JOB, SERVER
-	}
 
 	public static class Support {
 		private static final String CONTEXT_TRANSIENCE_CONTEXTS = AlcinaTransient.Support.class
 				.getName() + ".CONTEXT_TRANSIENCE_CONTEXTS";
 
-		public static void
-				setTransienceContexts(TransienceContext... contexts) {
-			if (contexts == null) {
-				LooseContext.remove(CONTEXT_TRANSIENCE_CONTEXTS);
-			} else {
-				LooseContext.set(CONTEXT_TRANSIENCE_CONTEXTS, contexts);
-			}
+		public static void clearTransienceContext() {
+			setTransienceContexts((TransienceContext[]) null);
 		}
 
 		public static TransienceContext[] getTransienceContexts() {
@@ -54,25 +49,44 @@ public @interface AlcinaTransient {
 			return types;
 		}
 
+		public static boolean isContextTransient(AlcinaTransient annotation) {
+			return isTransient(annotation, getTransienceContexts());
+		}
+
 		public static boolean isTransient(AlcinaTransient annotation,
 				TransienceContext... types) {
 			if (annotation == null) {
 				return false;
 			}
-			List<TransienceContext> list = Arrays.asList(annotation.value());
-			if (list.isEmpty()) {
-				return true;
+			List<TransienceContext> ifPresent = Arrays
+					.asList(annotation.value());
+			if (ifPresent.isEmpty()) {
+				List<TransienceContext> unless = Arrays
+						.asList(annotation.unless());
+				if (unless.isEmpty()) {
+					return true;
+				} else {
+					return types != null
+							&& Arrays.stream(types).noneMatch(unless::contains);
+				}
+			} else {
+				Preconditions.checkState(annotation.unless().length == 0);
+				return types != null
+						&& Arrays.stream(types).anyMatch(ifPresent::contains);
 			}
-			return types != null
-					&& Arrays.stream(types).anyMatch(list::contains);
 		}
 
-		public static boolean isContextTransient(AlcinaTransient annotation) {
-			return isTransient(annotation, getTransienceContexts());
+		public static void
+				setTransienceContexts(TransienceContext... contexts) {
+			if (contexts == null) {
+				LooseContext.remove(CONTEXT_TRANSIENCE_CONTEXTS);
+			} else {
+				LooseContext.set(CONTEXT_TRANSIENCE_CONTEXTS, contexts);
+			}
 		}
+	}
 
-		public static void clearTransienceContext() {
-			setTransienceContexts((TransienceContext[]) null);
-		}
+	public enum TransienceContext {
+		ALL, CLIENT, RPC, JOB, SERVER
 	}
 }
