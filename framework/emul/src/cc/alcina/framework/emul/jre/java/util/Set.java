@@ -40,8 +40,8 @@ public interface Set<E> extends Collection<E> {
 	/*
 	 * non-performant, but for JDK compatibility only
 	 */
-	static <E> Set<E> of(E e1) {
-		List<E> list = Arrays.asList(e1);
+	static <E> Set<E> of(E... elements) {
+		List<E> list = Arrays.asList(elements);
 		return toSet(list);
 	}
 
