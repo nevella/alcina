@@ -86,7 +86,10 @@ public class GeneralProperties extends Bindable
 	}
 
 	@Override
-	@AlcinaTransient
+	/*
+	 * Serialize when sending to client, otherwise not
+	 */
+	@AlcinaTransient(unless = AlcinaTransient.TransienceContext.CLIENT)
 	@XmlTransient
 	public UserPropertyPersistable.Support getUserPropertySupport() {
 		if (this.userPropertySupport != null) {
