@@ -54,9 +54,7 @@ public abstract class EntitySubPlaceTokenizer<E extends Enum, ENT extends Entity
 			if (place.id != 0) {
 				addTokenPart(place.id);
 			}
-		} else {
-			initOutParams();
-			setParameter(P_DEF,
+		} else {			setParameter(P_DEF,
 					searchDefinitionSerializer().serialize(place.def));
 		}
 		if (place.action != null && place.action != EntityAction.VIEW) {

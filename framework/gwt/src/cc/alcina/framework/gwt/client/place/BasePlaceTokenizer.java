@@ -22,11 +22,18 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 @Registration(BasePlaceTokenizer.class)
 public abstract class BasePlaceTokenizer<P extends Place>
 		implements PlaceTokenizer<P>, Registration.Ensure {
+	/**
+	 * If true, the token will be a combined path (slash-separated) and
+	 * querystring (?) string, with path mapping to parts and querystring to
+	 * params
+	 */
+	public static boolean pathQuerystring;
+
 	protected StringBuilder tokenBuilder;
 
 	protected String[] parts;
 
-	protected StringMap params;
+	protected StringMap params = new StringMap();
 
 	public P copyPlace(P place) {
 		String token = getToken(place);
@@ -82,10 +89,9 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	@Override
 	public String getToken(P place) {
 		tokenBuilder = new StringBuilder();
-		params = null;
 		addTokenPart(getPrefix());
 		getToken0(place);
-		if (params != null && !params.isEmpty()) {
+		if (!params.isEmpty()) {
 			addTokenPart(AlcinaHistory.toHash(params, encodedValues()));
 		}
 		return tokenBuilder.toString();
@@ -130,7 +136,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		addTokenPart(part.toString().toLowerCase());
 	}
 
-	protected void addTokenPart(long l) {
+	protected void addTokenPart(Long l) {
+		if (l == null) {
+			return;
+		}
 		addTokenPart(String.valueOf(l));
 	}
 
@@ -160,10 +169,6 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	protected abstract P getPlace0(String token);
 
 	protected abstract void getToken0(P place);
-
-	protected void initOutParams() {
-		params = new StringMap();
-	}
 
 	protected void parseMap(String s) {
 		params = AlcinaHistory.fromHash(s);

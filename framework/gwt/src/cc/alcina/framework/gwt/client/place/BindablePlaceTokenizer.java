@@ -52,9 +52,7 @@ public abstract class BindablePlaceTokenizer<HL extends Bindable, SD extends Bin
 	@Override
 	protected void getToken0(P place) {
 		if (place.provideIsDefaultDefs()) {
-		} else {
-			initOutParams();
-			setParameter(P_DEF,
+		} else {			setParameter(P_DEF,
 					searchDefinitionSerializer().serialize(place.def));
 		}
 	}
