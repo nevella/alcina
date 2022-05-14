@@ -184,13 +184,10 @@ public abstract class UserProperty<T extends UserProperty>
 		if (!Objects.equals(old_value, value) && Ax.notBlank(value)) {
 			if (userPropertySupport != null
 					&& userPropertySupport.getPersistable() != null) {
-				if (userPropertySupport != null
-						&& userPropertySupport.getPersistable() != null) {
-					TransformManager.ignoreChanges(() -> new CloneHelper()
-							.copyBeanProperties(deserialize(),
-									userPropertySupport.getPersistable(),
-									DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING));
-				}
+				TransformManager.ignoreChanges(() -> new CloneHelper()
+						.copyBeanProperties(deserialize(),
+								userPropertySupport.getPersistable(),
+								DomainObjectCloner.IGNORE_FOR_DOMAIN_OBJECT_CLONING));
 			}
 		}
 	}

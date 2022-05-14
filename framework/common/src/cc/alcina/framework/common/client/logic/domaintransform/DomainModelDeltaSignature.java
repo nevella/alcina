@@ -172,6 +172,10 @@ public class DomainModelDeltaSignature implements Serializable {
 		this.rpcSignature = rpcSignature;
 	}
 
+	public void setSid(String sid) {
+		this.sid = sid;
+	}
+
 	public void setUserId(long userId) {
 		this.userId = userId;
 	}

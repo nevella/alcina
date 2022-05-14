@@ -8,18 +8,23 @@ import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
+import cc.alcina.framework.common.client.serializer.Serializers;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 
 public interface UserPropertyPersistable
 		extends Serializable, SourcesPropertyChangeEvents, TreeSerializable {
-	@AlcinaTransient
 	/*
-	 * repeat the annotation in the implementation method
+	 * Serialize when sending to client, otherwise not
+	 *
+	 * Must currently be copied to implementors - FIXME - reflection
 	 */
+	@AlcinaTransient(unless = AlcinaTransient.TransienceContext.CLIENT)
 	public UserPropertyPersistable.Support getUserPropertySupport();
 
 	public void setUserPropertySupport(UserPropertyPersistable.Support support);
 
+	@Bean
 	public static class Support
 			implements Serializable, PropertyChangeListener {
 		private UserPropertyPersistable persistable;
@@ -43,7 +48,7 @@ public interface UserPropertyPersistable
 		}
 
 		public synchronized UserPropertyPersistable getPersistable() {
-			if (persistable == null) {
+			if (persistable == null && !Serializers.isSerializing()) {
 				persistable = (UserPropertyPersistable) property.deserialize();
 				ensureListeners();
 			}
@@ -62,8 +67,14 @@ public interface UserPropertyPersistable
 		public void setPersistable(UserPropertyPersistable persistable) {
 			Preconditions.checkState(this.persistable == null);
 			this.persistable = persistable;
-			property.serializeObject(persistable);
+			if (!Serializers.isDeserializing()) {
+				property.serializeObject(persistable);
+			}
 			ensureListeners();
+		}
+
+		public void setProperty(UserProperty property) {
+			this.property = property;
 		}
 	}
 }
