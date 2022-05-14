@@ -6,7 +6,9 @@ import java.util.Map;
 import java.util.NoSuchElementException;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 
+import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 
 public class ClientReflections {
@@ -17,6 +19,9 @@ public class ClientReflections {
 
 	static Map<Class, Map<Class, Boolean>> assignableTo = CollectionCreators.Bootstrap
 			.createConcurrentClassMap();
+
+	public static Set<Class> emptyReflectorClasses = new JsUniqueSet(
+			Class.class);
 
 	public static Class<?> forName(String fqn) {
 		Optional<Class> optional = moduleReflectors.stream()
@@ -33,7 +38,8 @@ public class ClientReflections {
 				.map(mr -> mr.getClassReflector(clazz)).filter(Objects::nonNull)
 				.findFirst();
 		if (optional.isEmpty()) {
-			if (clazz.getName().startsWith("java.") || clazz.isPrimitive()) {
+			if (clazz.getName().startsWith("java.") || clazz.isPrimitive()
+					|| emptyReflectorClasses.contains(clazz)) {
 				// non-public internal class, either GWT or JDK, e.g.
 				// Arrays$ArrayList - or primitive
 				return ClassReflector.emptyReflector(clazz);
