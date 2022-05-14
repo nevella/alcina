@@ -1,7 +1,10 @@
 package cc.alcina.framework.common.client.util;
 
+import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -21,6 +24,8 @@ public class TopicPublisher {
 	// use a list - the listener may be added/removed multiple times (although
 	// that's probably not what's wanted)
 	private Multimap<String, List<TopicListener>> lookup = new Multimap<>();
+
+	private Set<TopicListener> removeOnFire = null;
 
 	public void addTopicListener(String key, TopicListener listener) {
 		synchronized (lookup) {
@@ -56,7 +61,16 @@ public class TopicPublisher {
 				lookup.getAndEnsure(null).stream().forEach(listeners::add);
 			}
 		}
+		Set<TopicListener> removeOnFire = this.removeOnFire;
 		for (TopicListener listener : listeners) {
+			if (removeOnFire != null) {
+				Preconditions.checkArgument(key == null);
+				if (removeOnFire.remove(listener)) {
+					synchronized (lookup) {
+						lookup.get(null).remove(listener);
+					}
+				}
+			}
 			listener.topicPublished(key, message);
 		}
 	}
@@ -65,6 +79,13 @@ public class TopicPublisher {
 		synchronized (lookup) {
 			lookup.subtract(key, listener);
 		}
+	}
+
+	private synchronized Set<TopicListener> ensureRemoveOnFire() {
+		if (removeOnFire == null) {
+			removeOnFire = Collections.synchronizedSet(new LinkedHashSet<>());
+		}
+		return removeOnFire;
 	}
 
 	@Registration(ClearStaticFieldsOnAppShutdown.class)
@@ -159,6 +180,10 @@ public class TopicPublisher {
 			return topicPublisher.hasListeners(topic);
 		}
 
+		public void publish() {
+			publish(null);
+		}
+
 		// FIXME - 2021 - remove try/catch
 		public void publish(T t) {
 			try {
@@ -177,6 +202,10 @@ public class TopicPublisher {
 			delta(listener, false);
 		}
 
+		public void removeOnFire(TopicListener listener) {
+			topicPublisher.ensureRemoveOnFire().add(listener);
+		}
+
 		public <S> Topic<S> withThrowExceptions() {
 			throwExceptions = true;
 			return (Topic<S>) this;
@@ -193,6 +222,8 @@ public class TopicPublisher {
 
 		private Topic topic;
 
+		private boolean removeOnFire;
+
 		public TopicListenerReference(Topic topic, TopicListener listener) {
 			this.topic = topic;
 			this.listener = listener;
@@ -200,6 +231,10 @@ public class TopicPublisher {
 
 		public void remove() {
 			topic.remove(listener);
+		}
+
+		public void removeOnFire() {
+			topic.removeOnFire(listener);
 		}
 	}
 }
