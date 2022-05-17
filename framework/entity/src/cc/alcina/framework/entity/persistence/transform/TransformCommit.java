@@ -181,8 +181,8 @@ public class TransformCommit {
 								"clientInstance.id", clientInstanceId,
 								"requestId", requestId);
 				if (alreadyWritten != null) {
-					logger.warn(Ax.format("Request [{}/{}] already written",
-							requestId, clientInstanceId));
+					logger.warn("Request [{}/{}] already written",
+							requestId, clientInstanceId);
 					continue;
 				}
 				DomainTransformRequest request = DomainTransformRequest
