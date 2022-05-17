@@ -521,7 +521,8 @@ public abstract class DevHelper {
 				// not yet configured
 				return;
 			}
-			Preconditions.checkState(nonTemplatePath.endsWith(".local"));
+			// TODO: Disabled check because not all dev consoles properly implement this solution
+			// Preconditions.checkState(nonTemplatePath.endsWith(".local"));
 			File nonTemplateFile = new File(nonTemplatePath);
 			if (!nonTemplateFile.exists()) {
 				try {
