@@ -22,6 +22,11 @@ public class Configuration {
 		return Integer.parseInt(value);
 	}
 
+	public static boolean is(Class clazz, String key) {
+		String value = get(clazz, key);
+		return Boolean.valueOf(value);
+	}
+
 	public static boolean is(String key) {
 		String value = get(StackWalker
 				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
