@@ -13,6 +13,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.Bean;
 import cc.alcina.framework.common.client.search.grouping.GroupedResult;
+import cc.alcina.framework.common.client.util.Ax;
 
 @Bean
 public class ModelSearchResults<B extends IsBindable & SearchResult>
@@ -128,5 +129,11 @@ public class ModelSearchResults<B extends IsBindable & SearchResult>
 	public void setTransformLogPosition(
 			DomainTransformCommitPosition transformLogPosition) {
 		this.transformLogPosition = transformLogPosition;
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("Search: %s\n%s results", def,
+				queriedResultObjects.size());
 	}
 }

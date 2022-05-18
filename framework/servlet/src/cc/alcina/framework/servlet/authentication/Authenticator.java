@@ -68,8 +68,8 @@ public abstract class Authenticator<U extends Entity & IUser> {
 	}
 
 	public U createUser(String userName, String password) {
-		U user = (U) Domain.create((Class) PersistentImpl
-				.getImplementation(IUser.class));
+		U user = (U) Domain
+				.create((Class) PersistentImpl.getImplementation(IUser.class));
 		user.setUserName(userName);
 		setPassword(user, password);
 		return user;
@@ -140,16 +140,17 @@ public abstract class Authenticator<U extends Entity & IUser> {
 			// Programmatic password bypass - allow
 			return true;
 		}
-		if (AppPersistenceBase.isTestServer() && 
-				ResourceUtilities.is(Authenticator.class, "bypassPasswordCheck")) {
+		if (AppPersistenceBase.isTestServer() && ResourceUtilities
+				.is(Authenticator.class, "bypassPasswordCheck")) {
 			// App server/dev instance bypass - allow
-			// Extra AppPersistenceBase.isTestServer() check to make sure we don't engage this
-			//  even by accident in prod
+			// Extra AppPersistenceBase.isTestServer() check to make sure we
+			// don't engage this
+			// even by accident in prod
 			return true;
 		}
 		if (!PasswordEncryptionSupport.get().check(
-						loginModel.loginBean.getPassword(), user.getSalt(),
-						user.getPasswordHash())) {
+				loginModel.loginBean.getPassword(), user.getSalt(),
+				user.getPasswordHash())) {
 			// Failed password check - deny
 			loginModel.loginResponse.setErrorMsg("Password incorrect");
 			return false;
@@ -257,6 +258,5 @@ public abstract class Authenticator<U extends Entity & IUser> {
 	}
 
 	public void checkExternalExpiration(AuthenticationSession session) {
-		
 	}
 }
