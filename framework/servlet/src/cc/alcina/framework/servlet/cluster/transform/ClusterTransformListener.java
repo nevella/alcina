@@ -4,12 +4,14 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 import org.apache.kafka.clients.producer.RecordMetadata;
 import org.slf4j.Logger;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.registry.ClassLoaderAwareRegistryProvider;
@@ -22,9 +24,13 @@ import cc.alcina.framework.servlet.cluster.transform.ClusterTransformRequest.Sta
 
 /**
  * Each server publishes the current max rq id to a node with its hostname
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
+ *
+ * @see https://github.com/nevella/alcina/issues/13,
+ *      https://github.com/nevella/alcina/issues/20
+ *
  */
 public class ClusterTransformListener
 		implements ExternalTransformPersistenceListener {
@@ -84,10 +90,18 @@ public class ClusterTransformListener
 				publishRequests(requests, State.PRE_COMMIT);
 				try {
 					long start = System.currentTimeMillis();
-					latch.await();
-					logger.info("Pre-commit await: request {} : {} ms",
-							event.getMaxPersistedRequestId(),
-							System.currentTimeMillis() - start);
+					boolean countedDown = latch.await(
+							5 * TimeConstants.ONE_MINUTE_MS,
+							TimeUnit.MILLISECONDS);
+					if (countedDown) {
+						logger.info("Pre-commit await: request {} : {} ms",
+								event.getMaxPersistedRequestId(),
+								System.currentTimeMillis() - start);
+					} else {
+						logger.info("Pre-commit timeout: request {} : {} ms",
+								event.getMaxPersistedRequestId(),
+								System.currentTimeMillis() - start);
+					}
 				} catch (InterruptedException e) {
 					throw new WrappedRuntimeException(e);
 				}

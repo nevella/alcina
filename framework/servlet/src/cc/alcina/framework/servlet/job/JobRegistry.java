@@ -681,10 +681,10 @@ public class JobRegistry {
 			LauncherThreadState launcherThreadState) {
 		try {
 			if (Transaction.isInTransaction()) {
-				logger.warn(Ax.format(
+				logger.warn(
 						"DEVEX::0 - JobRegistry.performJobInTx - begin with open transaction "
 								+ " - {}\nuncommitted transforms:\n{}",
-						job), TransformManager.get().getTransforms());
+						job, TransformManager.get().getTransforms());
 				try {
 					Transaction.commit();
 				} catch (Exception e) {

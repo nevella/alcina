@@ -73,6 +73,15 @@ import elemental.json.JsonValue;
  * deserialization/serialization
  * <li>Look at cost of long serialization/deser (and box/unbox) in gwt -
  * possibly optimise
+ * <li>Optionally (for rpc - where not concerned about in-process refactoring -
+ * or for people who want clean json), add the following elision options:
+ * <ul>
+ * <li>Elide default implementation types (so type java.util.List,
+ * implementation java.util.ArrayList not written)
+ * <li>Elide exact type (so if property type is nick.foo, implementation is of
+ * type nick.foo, don't write, only write if implementation is
+ * nick.foo_subclass)
+ * </ul>
  * </ul>
  * </ul>
  *
