@@ -140,7 +140,9 @@ public class DomainStoreLookupDescriptor<T extends Entity>
 	@Override
 	public String toString() {
 		return Ax.format("Lookup descriptor - %s :: %s :: (id) %s", clazz,
-				propertyPath, idDescriptor);
+				(propertyPath != null ? propertyPath
+						: relevanceFilter.getClass().getSimpleName()),
+				idDescriptor);
 	}
 
 	public static class IdLookupDescriptor<T extends Entity>
