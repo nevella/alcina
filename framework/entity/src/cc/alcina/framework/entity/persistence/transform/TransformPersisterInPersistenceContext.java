@@ -753,6 +753,11 @@ public class TransformPersisterInPersistenceContext {
 			}
 			EntityCollation entityCollation = token.getTransformCollation()
 					.forLocator(event.toObjectLocator());
+			if (entityCollation == null) {
+				// FIXME - mvcc.5
+				logger.warn("Missing collation :: {}", event.toObjectLocator());
+				return;
+			}
 			if (event == entityCollation.last()) {
 				/*
 				 *
