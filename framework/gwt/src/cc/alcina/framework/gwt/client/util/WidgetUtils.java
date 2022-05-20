@@ -762,6 +762,10 @@ public class WidgetUtils {
 							null);
 				}
 				LayoutInfo info = ((HasLayoutInfo) widget).getLayoutInfo();
+				// Null LayoutInfo means we shouldn't modify this widget
+				if (info == null) {
+					continue;
+				}
 				info.beforeLayout();
 				if (info.to100percentOfAvailableHeight()
 						|| info.to100percentOfAvailableWidth()) {
