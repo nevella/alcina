@@ -6,6 +6,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -104,13 +105,37 @@ public class TreePath<T> extends Model
 		return depth;
 	}
 
-	public void dump(int depth, int maxDepth) {
+	public void dump(int depth, int maxDepth, Predicate<TreePath> treePredicate,
+			DumpStyle style) {
 		FormatBuilder fb = new FormatBuilder();
 		fb.indent(depth * 2);
-		fb.append(toString());
+		switch (style) {
+		case NON_LEAF_SIZES: {
+			if (hasChildren()) {
+				fb.format("%s [%s,%s]", segment,
+						children.stream().filter(treePredicate::test).count(),
+						subtreeSize(treePredicate));
+			} else {
+				return;
+			}
+		}
+		case STRUCTURE: {
+			fb.append(toString());
+			break;
+		}
+		case STRUCTURE_AND_VALUE: {
+			fb.append("");
+			fb.appendPadRight(40, toString());
+			fb.append(getValue());
+			break;
+		}
+		default:
+			throw new UnsupportedOperationException();
+		}
 		Ax.out(fb.toString());
 		if (depth < maxDepth) {
-			getChildren().forEach(n -> n.dump(depth + 1, maxDepth));
+			getChildren().forEach(
+					n -> n.dump(depth + 1, maxDepth, treePredicate, style));
 		}
 	}
 
@@ -213,6 +238,10 @@ public class TreePath<T> extends Model
 
 	public boolean provideIsEmpty() {
 		return toString().isEmpty();
+	}
+
+	public boolean provideIsLeaf() {
+		return !hasChildren();
 	}
 
 	@Override
@@ -358,6 +387,23 @@ public class TreePath<T> extends Model
 		return Long.parseLong(getSegment());
 	}
 
+	private int subtreeSize(Predicate<TreePath> treePredicate) {
+		int size = 0;
+		Stack<TreePath<?>> stack = new Stack<>();
+		stack.add(this);
+		while (stack.size() > 0) {
+			TreePath<?> path = stack.pop();
+			if (!treePredicate.test(path)) {
+				continue;
+			}
+			size++;
+			if (hasChildren()) {
+				path.getChildren().forEach(stack::add);
+			}
+		}
+		return size;
+	}
+
 	protected void recalculateCount() {
 		/*
 		 * inefficient (generally at worst n logn, unless we have a non-leaf
@@ -411,6 +457,10 @@ public class TreePath<T> extends Model
 			int segmentComparison = SegmentComparator.INSTANCE.compare(c1, c2);
 			return segmentComparison * (reverseIfSameSegment ? -1 : 1);
 		}
+	}
+
+	public enum DumpStyle {
+		STRUCTURE, STRUCTURE_AND_VALUE, NON_LEAF_SIZES
 	}
 
 	@Reflected
