@@ -13,6 +13,7 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.fasterxml.jackson.databind.node.JsonNodeFactory;
@@ -31,7 +32,9 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -44,12 +47,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 public class UserStories {
-	public static final String TOPIC_USER_STORIES_EVENT_OCCURRED = UserStories.class
-			.getName() + "." + "TOPIC_USER_STORIES_EVENT_OCCURRED";
-
-	public static Topic<ObjectNode> topicUserStoriesEvents() {
-		return Topic.global(TOPIC_USER_STORIES_EVENT_OCCURRED);
-	}
+	public static Topic<UserStoryDelta> topicUserStoriesEvents = Topic.local();
 
 	private String html;
 
@@ -217,12 +215,12 @@ public class UserStories {
 				body.builder().tag("h3").text("Cart...").append();
 				ObjectMapper mapper = new ObjectMapper();
 				try {
-					ObjectNode node = (ObjectNode) mapper
+					JsonNode node = (JsonNode) mapper
 							.readTree(userStory.getCart());
-					if (node.get("items") != null) {
-						((ArrayNode) node.get("items")).forEach(
-								n -> ((ObjectNode) n).remove("additional"));
-					}
+					// if (node.get("items") != null) {
+					// ((ArrayNode) node.get("items")).forEach(
+					// n -> ((ObjectNode) n).remove("additional"));
+					// }
 					String pretty = mapper.writerWithDefaultPrettyPrinter()
 							.writeValueAsString(node);
 					body.builder().tag("pre").text(pretty).append();
@@ -262,7 +260,14 @@ public class UserStories {
 		long storyId = creationId == 0 ? story.getId() : creationId;
 		logger.info("published user story - {}", storyId);
 		build(storyId, delta);
-		topicUserStoriesEvents().publish(storyNode);
+		IUser user = clientInstance == null ? null
+				: clientInstance.provideUser();
+		IUser anonymousUser = UserlandProvider.get().getAnonymousUser();
+		user = user == null ? anonymousUser : user;
+		boolean anonymous = user == anonymousUser;
+		String userName = user.getUserName();
+		topicUserStoriesEvents.publish(new UserStoryDelta(delta, storyNode,
+				anonymous, userName, story));
 	}
 
 	private String getDelta(IUserStory incoming, IUserStory story) {
@@ -346,6 +351,33 @@ public class UserStories {
 	protected void postCreateStory(IUserStory story,
 			ClientInstance clientInstance) {
 		story.setDate(new Date());
+	}
+
+	public static class UserStoryDelta {
+		public String delta;
+
+		public ObjectNode storyNode;
+
+		public boolean anonymous;
+
+		public String userName;
+
+		public long storyId;
+
+		public String trigger;
+
+		public UserStoryDelta() {
+		}
+
+		public UserStoryDelta(String delta, ObjectNode storyNode,
+				boolean anonymous, String userName, IUserStory story) {
+			this.delta = delta;
+			this.storyNode = storyNode;
+			this.anonymous = anonymous;
+			this.userName = userName;
+			this.storyId = ((Entity) story).getId();
+			this.trigger = story.getTrigger();
+		}
 	}
 
 	static class Message {
