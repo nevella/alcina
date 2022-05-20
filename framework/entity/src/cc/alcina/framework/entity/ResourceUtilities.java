@@ -76,6 +76,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalCollection;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
@@ -93,6 +94,8 @@ public class ResourceUtilities {
 	private static boolean clientWithJvmProperties;
 
 	private static Map<String, String> cache = new ConcurrentHashMap<>();
+
+	public static Topic<Void> propertiesInvalidated = Topic.local();
 
 	public static void appShutdown() {
 	}
@@ -753,8 +756,8 @@ public class ResourceUtilities {
 				continue;
 			}
 			customProperties.put((String) key, (String) value);
-			cache.clear();
 		}
+		clearCacheAndFireChange();
 	}
 
 	public static void registerCustomProperties(String path) {
@@ -819,7 +822,7 @@ public class ResourceUtilities {
 	public static String set(String key, String value) {
 		String existing = customProperties.get(key);
 		customProperties.put(key, value);
-		cache.clear();
+		clearCacheAndFireChange();
 		return existing;
 	}
 
@@ -956,6 +959,11 @@ public class ResourceUtilities {
 		BufferedWriter bw = new BufferedWriter(fw);
 		bw.write(s);
 		bw.close();
+	}
+
+	private static void clearCacheAndFireChange() {
+		cache.clear();
+		propertiesInvalidated.publish(null);
 	}
 
 	private static DOMParser createDOMParser(boolean elementNamesToUpperCase) {

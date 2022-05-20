@@ -604,6 +604,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 							"Task signature generation failed: cancelling startup");
 				}
 			}
+			ResourceUtilities.propertiesInvalidated
+					.add((k, v) -> topicConfigurationReloaded.publish(null));
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
 			Transaction.end();
