@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -21,16 +21,15 @@ import java.util.Map;
 
 import com.google.gwt.core.shared.GwtIncompatible;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PublicCloneable;
 import cc.alcina.framework.common.client.util.CollectionCreators.DelegateMapCreator;
 
 /**
  * chains of lookups - depth does not include the looked-up object: e.g.
  * class/id/instance would be depth 2
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 		implements PublicCloneable<UnsortedMultikeyMap> {
@@ -62,14 +61,12 @@ public class UnsortedMultikeyMap<V> extends MultikeyMapBase<V>
 
 	@Override
 	public UnsortedMultikeyMap clone() {
-		try {
-			UnsortedMultikeyMap clone = new UnsortedMultikeyMap();
-			clone.delegate = createDelegateMap();
-			clone.delegate.putAll(delegate);
-			return clone;
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
-		}
+		UnsortedMultikeyMap clone = new UnsortedMultikeyMap();
+		asTuples(depth).forEach(tuple -> {
+			Object[] array = (Object[]) tuple.toArray(new Object[tuple.size()]);
+			clone.put(array);
+		});
+		return clone;
 	}
 
 	@Override
