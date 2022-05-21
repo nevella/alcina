@@ -1093,6 +1093,20 @@ public class LiveTree {
 
 		public boolean isIndexer();
 
+		/**
+		 * This should wrap child addition in a try/catch - so:
+		 * 
+		 * <code>
+		 * rootGenerator.getCitableStream().forEach(citable -> {
+			try {
+				this.delta(context, citable, true);
+			} catch (Exception e) {
+				liveNode.addExceptionChild(citable, e);
+				e.printStackTrace();
+			}
+		});
+		 * </code>
+		 */
 		public void onTreeAddition(GeneratorContext context, LiveNode liveNode);
 
 		default void generationComplete() {
