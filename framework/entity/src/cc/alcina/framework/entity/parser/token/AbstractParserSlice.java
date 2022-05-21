@@ -28,7 +28,7 @@ public class AbstractParserSlice<T extends ParserToken> {
 	/*
 	 * Used to find the best slice (with the lowest start offset in the 'run' -
 	 * i.e. the visible substring)
-	 * 
+	 *
 	 * When matched, the startOffset of the context is moved to after the *end*
 	 * of the match
 	 */
@@ -177,8 +177,11 @@ public class AbstractParserSlice<T extends ParserToken> {
 		itr.setCurrentNode(getFirstText());
 		StringBuilder content = new StringBuilder();
 		Node n;
+		int fromOffset = start.characterOffset;
 		while ((n = itr.getCurrentNode()) != null) {
-			content.append(n.getNodeValue());
+			content.append(n.getNodeValue().substring(fromOffset));
+			// reset after first node
+			fromOffset = 0;
 			if (content.length() >= length) {
 				end = new DOMLocation(n, start.characterOffset
 						+ n.getNodeValue().length() + length - content.length(),
