@@ -498,6 +498,11 @@ public class DomNode {
 				.replace(CommonUtils.XML_PI, ""), 255, true);
 	}
 
+	public String toTagClassName() {
+		return has("class") ? Ax.format("%s.%s", name(), attr("class"))
+				: name();
+	}
+
 	public String toXml() {
 		return DomEnvironment.get().toXml(node);
 	}
