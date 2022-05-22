@@ -86,12 +86,16 @@ public class RemoteInvocation {
 			// .getBundledString(DevRemoter.class, "username");
 			params.asRoot = PermissionsManager.get().isRoot();
 			params.methodName = methodName;
+			params.args = args == null ? new Object[0] : args;
 			boolean transformMethod = methodName
 					.equals("transformInPersistenceContext");
 			ClientInstance clientInstance = PermissionsManager.get()
 					.getClientInstance();
+			EntityLocatorMap thisJvmLocatorMap = null;
 			if (transformMethod) {
 				TransformPersistenceToken token = (TransformPersistenceToken) args[1];
+				thisJvmLocatorMap = token.getLocatorMap();
+				token.setLocatorMap(thisJvmLocatorMap.copy());
 				if (LooseContext.is(
 						TransformPersisterInPersistenceContext.CONTEXT_REPLAYING_FOR_LOGS)) {
 					// force usage of the remote client instance (and remove all
@@ -109,7 +113,6 @@ public class RemoteInvocation {
 				params.clientInstanceId = clientInstance.getId();
 				params.clientInstanceAuth = clientInstance.getAuth();
 			}
-			params.args = args == null ? new Object[0] : args;
 			params.context = new LinkedHashMap<>();
 			LooseContext.getContext().properties.forEach((k, v) -> {
 				if (v == null || GraphProjection
@@ -141,9 +144,7 @@ public class RemoteInvocation {
 						TransformPersisterInPersistenceContext.CONTEXT_REPLAYING_FOR_LOGS)) {
 					EntityLocatorMap returned = ((DomainTransformLayerWrapper) container
 							.get(0)).locatorMap;
-					EntityLocatorMap sent = ((TransformPersistenceToken) params.args[1])
-							.getLocatorMap();
-					sent.merge(returned);
+					thisJvmLocatorMap.merge(returned);
 				}
 			}
 			customiseResult(object);

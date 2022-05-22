@@ -104,6 +104,9 @@ import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
  *
  */
 public class LiveTree {
+	public static final transient String CONTEXT_LIVE_NODE_JUST_VALUE = LiveTree.class
+			.getName() + ".CONTEXT_LIVE_NODE_JUST_VALUE";
+
 	private DomainTransformCommitPosition earliestPosition;
 
 	private DomainTransformCommitPosition currentPosition;
@@ -905,11 +908,16 @@ public class LiveTree {
 
 		@Override
 		public String toString() {
-			if (viewNode == null) {
-				return Ax.format("%s - %s - %s", path, operations, dirty);
+			if (LooseContext.is(CONTEXT_LIVE_NODE_JUST_VALUE)) {
+				return viewNode == null ? "(No view node)"
+						: viewNode.toString();
 			} else {
-				return Ax.format("%s - %s - %s\n\t%s", path, operations, dirty,
-						viewNode);
+				if (viewNode == null) {
+					return Ax.format("%s - %s - %s", path, operations, dirty);
+				} else {
+					return Ax.format("%s - %s - %s\n\t%s", path, operations,
+							dirty, viewNode);
+				}
 			}
 		}
 
@@ -1085,6 +1093,20 @@ public class LiveTree {
 
 		public boolean isIndexer();
 
+		/**
+		 * This should wrap child addition in a try/catch - so:
+		 * 
+		 * <code>
+		 * rootGenerator.getCitableStream().forEach(citable -> {
+			try {
+				this.delta(context, citable, true);
+			} catch (Exception e) {
+				liveNode.addExceptionChild(citable, e);
+				e.printStackTrace();
+			}
+		});
+		 * </code>
+		 */
 		public void onTreeAddition(GeneratorContext context, LiveNode liveNode);
 
 		default void generationComplete() {

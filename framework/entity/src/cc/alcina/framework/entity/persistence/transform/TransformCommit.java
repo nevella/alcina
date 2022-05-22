@@ -53,6 +53,7 @@ import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -181,13 +182,13 @@ public class TransformCommit {
 								"clientInstance.id", clientInstanceId,
 								"requestId", requestId);
 				if (alreadyWritten != null) {
-					logger.warn("Request [{}/{}] already written",
-							requestId, clientInstanceId);
+					logger.warn("Request [{}/{}] already written", requestId,
+							clientInstanceId);
 					continue;
 				}
+				String chunkUuidString = deltaRecord.getChunkUuidString();
 				DomainTransformRequest request = DomainTransformRequest
-						.fromString(deltaRecord.getText(),
-								deltaRecord.getChunkUuidString());
+						.fromString(deltaRecord.getText(), chunkUuidString);
 				ClientInstance clientInstance = null;
 				if (deltaRecord.getClientInstanceId() == ClientInstance.self()
 						.getId()) {
@@ -199,6 +200,15 @@ public class TransformCommit {
 					clientInstance.setId(deltaRecord.getClientInstanceId());
 				}
 				request.setClientInstance(clientInstance);
+				if (chunkUuidString == null) {
+					// incoming 'submit transforms' - create uuid here
+					DomainTransformRequest persistableRequest = DomainTransformRequest
+							.createPersistableRequest(requestId,
+									request.getClientInstance().getId());
+					// just hijack the uuid
+					request.setChunkUuidString(
+							persistableRequest.getChunkUuidString());
+				}
 				boolean committingUserIsAdministrator = UserlandProvider.get()
 						.getGroupByName(
 								PermissionsManager.ADMINISTRATORS_GROUP_NAME)
@@ -663,8 +673,7 @@ public class TransformCommit {
 
 	public void setBackendTransformQueueMaxDelay(String queueName,
 			long delayMs) {
-		BackendTransformQueue.get().createBackendQueue(queueName,
-				delayMs);
+		BackendTransformQueue.get().createBackendQueue(queueName, delayMs);
 	}
 
 	/**
@@ -730,6 +739,9 @@ public class TransformCommit {
 		DomainTransformRequest request = DomainTransformRequest
 				.createPersistableRequest(requestId, clientInstance.getId());
 		request.setClientInstance(clientInstance);
+		if (tag == null && Configuration.is("tagTransformsWithThreadName")) {
+			tag = Thread.currentThread().getName();
+		}
 		request.setTag(tag);
 		request.setRequestId(requestId);
 		for (DomainTransformEvent dte : transforms) {

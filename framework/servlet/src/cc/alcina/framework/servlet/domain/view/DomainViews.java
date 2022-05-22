@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -168,6 +169,29 @@ public abstract class DomainViews {
 		}
 	}
 
+	public void submitLambda(Runnable withViewsModelLambda) {
+		ViewsTask task = new ViewsTask();
+		task.type = Type.HANDLE_LAMBDA;
+		task.handlerData.lambda = tree -> {
+			withViewsModelLambda.run();
+			return null;
+		};
+		queueTask(task);
+		task.await();
+		if (task.handlerData.exception == null) {
+			return;
+		} else {
+			throw task.handlerData.exception;
+		}
+	}
+
+	public <V extends DomainView> List<V> viewsContaining(Entity e) {
+		// Concurrency - only allowed from event queue thread
+		Preconditions.checkState(Thread.currentThread() == thread);
+		return (List) trees.values().stream().filter(t -> t.containsEntity(e))
+				.map(t -> t.rootEntity).collect(Collectors.toList());
+	}
+
 	public void waitForEmptyQueue() {
 		try {
 			Thread.sleep(30);
@@ -257,8 +281,9 @@ public abstract class DomainViews {
 
 	protected boolean
 			isIndexableTransformRequest(DomainTransformPersistenceEvent event) {
-		return event.getTransformPersistenceToken().getTransformCollation()
-				.has((Class[]) getIndexableEntityClasses());
+		return Configuration.is("indexTransformRequests")
+				&& event.getTransformPersistenceToken().getTransformCollation()
+						.has((Class[]) getIndexableEntityClasses());
 	}
 
 	protected void onViewModified(DomainView view) {
@@ -286,13 +311,13 @@ public abstract class DomainViews {
 			/*
 			 * Ordering - we have to invalidate trees *first* - so they fire a
 			 * full invalidation event rather than partial
-			 * 
+			 *
 			 * In particular, the client relies on dtr position to know if it
 			 * should refresh - but the dtr pos of freshly generated,
 			 * invalidated tree will be the same as that of transforms affecting
 			 * the 'old' tree. So the client can't use logic 'my dtrpos is
 			 * earlier than the earliest of the new tree' - because it isn't.
-			 * 
+			 *
 			 * It could use 'my tree first dtr pos is earlier than the server
 			 * tree earliest pos' - but that would require sending two over the
 			 * wire. So this way is better (invalidate trees first).
@@ -500,29 +525,6 @@ public abstract class DomainViews {
 
 		static enum Type {
 			MODEL_CHANGE, HANDLE_PATH_REQUEST, HANDLE_LAMBDA, EVICT_LISTENERS
-		}
-	}
-
-	public <V extends DomainView> List<V> viewsContaining(Entity e) {
-		// Concurrency - only allowed from event queue thread
-		Preconditions.checkState(Thread.currentThread() == thread);
-		return (List) trees.values().stream().filter(t -> t.containsEntity(e))
-				.map(t -> t.rootEntity).collect(Collectors.toList());
-	}
-
-	public void submitLambda(Runnable withViewsModelLambda) {
-		ViewsTask task = new ViewsTask();
-		task.type = Type.HANDLE_LAMBDA;
-		task.handlerData.lambda = tree -> {
-			withViewsModelLambda.run();
-			return null;
-		};
-		queueTask(task);
-		task.await();
-		if (task.handlerData.exception == null) {
-			return;
-		} else {
-			throw task.handlerData.exception;
 		}
 	}
 }

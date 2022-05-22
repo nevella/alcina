@@ -381,8 +381,8 @@ public class DevConsoleCommandTransforms {
 					+ " dte.valueid,"
 					+ " dte.servercommitdate as servercommitdate,"
 					+ " dte.valueclassref_id, "
-					+ "dte.utcDate as utcdate, dte.objectlocalid " + "from "
-					+ authClause
+					+ "dte.utcDate as utcdate, dte.objectlocalid,dtr.tag as tag "
+					+ "from " + authClause
 					+ " inner join %s dtr on dtr.clientinstance_id=ci.id "
 					+ " inner join %s dte on dte.domaintransformrequestpersistent_id = dtr.id"
 					+ " where %s %s limit %s";
