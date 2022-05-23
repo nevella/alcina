@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -25,11 +25,13 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /**
- * 
+ *
  * @author Nick Reddel
- * 
+ *
  *         FIXME - dirndl.2 - all these UI properties (just make them transient
  *         getters)
+ *
+ *         Actually, some client-only subclasses use them...
  */
 @TypeSerialization(properties = {
 		@PropertySerialization(ignore = true, name = "actionName"),
@@ -66,6 +68,10 @@ public class PermissibleAction implements Permissible {
 	}
 
 	// FIXME - dirndl.2 - remove
+	// Nope - actually (because these are passed around a bunch), allowing class
+	// to be specified is a *good idea*. See DirndlDir, 'how close to the UI
+	// layer is the model'. This is not to say cssClassName should be a field -
+	// but it *should* be a property
 	public String getCssClassName() {
 		return cssClassName;
 	}

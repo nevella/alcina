@@ -876,7 +876,8 @@ public class DirectedLayout {
 					String propertyName = binding.to().isEmpty()
 							? binding.from()
 							: binding.to();
-					if (value == null) {
+					if (value == null || (value instanceof Boolean
+							&& !((Boolean) value).booleanValue())) {
 						element.removeAttribute(propertyName);
 					} else {
 						element.setAttribute(propertyName, stringValue);

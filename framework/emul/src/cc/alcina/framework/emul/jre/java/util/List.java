@@ -84,4 +84,11 @@ public interface List<E> extends Collection<E> {
   }
 
   @JsNonNull List<E> subList(int fromIndex, int toIndex);
+  
+  /*
+	 * non-performant, but for JDK compatibility only
+	 */
+	static <E> List<E> of(E... elements) {
+		return Arrays.asList(elements);
+	}
 }

@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -30,13 +31,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableTypeFactory;
 
 public class TextNodeRenderer extends LeafNodeRenderer {
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target(ElementType.TYPE)
-	@ClientVisible
-	public static @interface FieldNamesAsTags {
-	}
-
 	@Override
 	public Widget render(Node node) {
 		Widget rendered = super.render(node);
@@ -52,7 +46,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 	protected String getTag(Node node) {
 		if (node.parent != null && node.parent.has(FieldNamesAsTags.class)
 				&& node.property.getName() != null) {
-			return node.property.getName();
+			return CommonUtils.deInfixCss(node.property.getName());
 		}
 		return Ax.blankTo(super.getTag(node), "span");
 	}
@@ -65,14 +59,6 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 	 * just some simple text...
 	 */
 
-	@Registration({ DirectedNodeRenderer.class, Entity.class })
-	public static class EntityNodeRenderer extends TextNodeRenderer {
-		@Override
-		protected String getModelText(Object model) {
-			return "";
-		}
-	}
-
 	@Registration({ DirectedNodeRenderer.class, Date.class })
 	public static class DateNodeRenderer extends TextNodeRenderer {
 		@Override
@@ -81,8 +67,23 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
+	@Registration({ DirectedNodeRenderer.class, Entity.class })
+	public static class EntityNodeRenderer extends TextNodeRenderer {
+		@Override
+		protected String getModelText(Object model) {
+			return "";
+		}
+	}
+
 	@Registration({ DirectedNodeRenderer.class, Enum.class })
 	public static class EnumNodeRenderer extends HasDisplayNameRenderer {
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.TYPE)
+	@ClientVisible
+	public static @interface FieldNamesAsTags {
 	}
 
 	public static class HasDisplayNameRenderer extends TextNodeRenderer {
@@ -96,53 +97,28 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	@Registration({ DirectedNodeRenderer.class, String.class })
-	public static class StringNodeRenderer extends TextNodeRenderer {
-	}
-
 	@Registration({ DirectedNodeRenderer.class, Number.class })
 	public static class NumberNodeRenderer extends TextNodeRenderer {
 	}
 
-	@Directed(tag = "div", bindings = @Binding(from = "text", type = Type.INNER_TEXT))
-	public static class TextString extends Model {
-		private String text;
+	@Directed
+	public static class StringListModel extends Model {
+		private List<String> strings;
 
-		public TextString() {
+		public StringListModel() {
 		}
 
-		public TextString(String text) {
-			setText(text);
+		public StringListModel(List<String> strings) {
+			this.strings = strings;
 		}
 
-		public String getText() {
-			return this.text;
+		@Directed
+		public List<String> getString() {
+			return this.strings;
 		}
 
-		public void setText(String text) {
-			this.text = text;
-		}
-	}
-
-	public static class TableHeaders extends TextNodeRenderer.StringListModel {
-		public TableHeaders() {
-			super();
-		}
-
-		public TableHeaders(List<String> strings) {
-			super(strings);
-		}
-
-		public TableHeaders(Class<? extends Bindable> clazz,
-				DirectedLayout.Node node) {
-			BoundWidgetTypeFactory factory = Registry
-					.impl(TableTypeFactory.class);
-			List<String> strings = Reflections.at(clazz).properties().stream()
-					.map(p -> Annotations.resolve(p, Directed.Property.class,
-							node.getResolver()))
-					.filter(Objects::nonNull).map(Directed.Property::name)
-					.collect(Collectors.toList());
-			setList(strings);
+		public void setList(List<String> strings) {
+			this.strings = strings;
 		}
 	}
 
@@ -167,24 +143,49 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	@Directed
-	public static class StringListModel extends Model {
-		private List<String> strings;
+	@Registration({ DirectedNodeRenderer.class, String.class })
+	public static class StringNodeRenderer extends TextNodeRenderer {
+	}
 
-		public StringListModel() {
+	public static class TableHeaders extends TextNodeRenderer.StringListModel {
+		public TableHeaders() {
+			super();
 		}
 
-		public StringListModel(List<String> strings) {
-			this.strings = strings;
+		public TableHeaders(Class<? extends Bindable> clazz,
+				DirectedLayout.Node node) {
+			BoundWidgetTypeFactory factory = Registry
+					.impl(TableTypeFactory.class);
+			List<String> strings = Reflections.at(clazz).properties().stream()
+					.map(p -> Annotations.resolve(p, Directed.Property.class,
+							node.getResolver()))
+					.filter(Objects::nonNull).map(Directed.Property::name)
+					.collect(Collectors.toList());
+			setList(strings);
 		}
 
-		@Directed
-		public List<String> getString() {
-			return this.strings;
+		public TableHeaders(List<String> strings) {
+			super(strings);
+		}
+	}
+
+	@Directed(tag = "div", bindings = @Binding(from = "text", type = Type.INNER_TEXT))
+	public static class TextString extends Model {
+		private String text;
+
+		public TextString() {
 		}
 
-		public void setList(List<String> strings) {
-			this.strings = strings;
+		public TextString(String text) {
+			setText(text);
+		}
+
+		public String getText() {
+			return this.text;
+		}
+
+		public void setText(String text) {
+			this.text = text;
 		}
 	}
 }

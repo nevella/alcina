@@ -282,7 +282,7 @@ public @interface Registration {
 	}
 
 	public enum Priority {
-		// Do not register this class
+		// Do not register this class (may be registered by code)
 		REMOVE,
 		// Default priority
 		_DEFAULT,

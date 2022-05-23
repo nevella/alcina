@@ -23,10 +23,11 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
- * 
+ *
  * Transforms an input model to a renderable model, and renders. Note that the
- * renderable model class must be annotated with @Directed
- * 
+ * renderable model class must be annotated with @Directed (or have a default
+ * renderer - which classes such as String, Collection etc do)
+ *
  * @author nick@alcina.cc
  *
  */

@@ -130,12 +130,16 @@ public class TopicPublisher {
 
 		private boolean wasPublished;
 
-		private boolean throwExceptions = false;
+		private boolean throwExceptions = GWT.isClient();
 
 		private Topic(String topic, boolean global) {
 			this.topic = topic;
 			topicPublisher = global ? GlobalTopicPublisher.get()
 					: new TopicPublisher();
+		}
+
+		public TopicListenerReference add(Runnable runnable) {
+			return add(new RunnableAdapter(runnable), false);
 		}
 
 		public TopicListenerReference add(TopicListener<T> listener) {
@@ -180,10 +184,6 @@ public class TopicPublisher {
 			return topicPublisher.hasListeners(topic);
 		}
 
-		public void publish() {
-			publish(null);
-		}
-
 		// FIXME - 2021 - remove try/catch
 		public void publish(T t) {
 			try {
@@ -206,9 +206,27 @@ public class TopicPublisher {
 			topicPublisher.ensureRemoveOnFire().add(listener);
 		}
 
+		public void signal() {
+			publish(null);
+		}
+
 		public <S> Topic<S> withThrowExceptions() {
 			throwExceptions = true;
 			return (Topic<S>) this;
+		}
+
+		public static class RunnableAdapter implements TopicListener {
+			private Runnable runnable;
+
+			public RunnableAdapter(Runnable runnable) {
+				this.runnable = runnable;
+			}
+
+			@Override
+			public void topicPublished(String key, Object message) {
+				// ignore the message - this will normally be a void topic
+				runnable.run();
+			}
 		}
 	}
 

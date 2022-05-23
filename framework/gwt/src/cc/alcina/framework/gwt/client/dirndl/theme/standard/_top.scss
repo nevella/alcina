@@ -24,27 +24,27 @@ page {
     background-color: theme.$header-background-color;
     padding: 0 theme.$header-side-padding;
     flex-shrink: 0;
-    > h3 {
+    > title-area {
       text-align: center;
       margin: auto 0;
       padding-bottom: theme.$header-title-bottom-adjust;
       height: theme.$header-font-size;
-      font-family: theme.$serif-font-stack;
+      font-family: theme.$header-font-stack;
       flex-grow: 1;
     }
-    > div.left,
-    > div.right {
+    > left,
+    > right {
       min-width: theme.$header-side-cmp-min-width;
       > *:not(:first-child) {
         padding-left: 1rem;
       }
     }
-    > div.right {
+    > right {
       display: flex;
       justify-content: flex-end;
     }
     button,
-    > h3,
+    > title-area,
     div.ol-dropdown.-ol-open > :nth-child(2) {
       color: theme.$header-title-color;
     }

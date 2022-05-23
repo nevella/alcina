@@ -92,7 +92,9 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		addTokenPart(getPrefix());
 		getToken0(place);
 		if (!params.isEmpty()) {
-			addTokenPart(AlcinaHistory.toHash(params, encodedValues()));
+			String hash = AlcinaHistory.toHash(params, encodedValues());
+			hash = getParameterPartPrefix() + hash;
+			addTokenPart(hash);
 		}
 		return tokenBuilder.toString();
 	}
@@ -164,6 +166,11 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	protected <E extends Enum> E enumValue(Class<E> clazz, String value,
 			E defaultValue) {
 		return CommonUtils.getEnumValueOrNull(clazz, value, true, defaultValue);
+	}
+
+	// for subclasses, to e.g. add a ? before the params string map
+	protected String getParameterPartPrefix() {
+		return "";
 	}
 
 	protected abstract P getPlace0(String token);

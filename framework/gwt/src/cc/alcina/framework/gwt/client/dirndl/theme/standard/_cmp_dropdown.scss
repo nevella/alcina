@@ -46,11 +46,11 @@ div.ol-dropdown.-ol-open {
       }
     }
     #{base.$a-tags} {
-      color: theme.$dark-bkg-link-color;
+      color: theme.$dropdown-link-color;
       text-decoration: none;
     }
     a:hover {
-      color: theme.$dark-bkg-link-hover-color;
+      color: theme.$dropdown-link-hover-color;
     }
   }
 }
