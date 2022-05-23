@@ -5,6 +5,9 @@ import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.ThreadInfo;
 import java.lang.management.ThreadMXBean;
+import java.sql.Connection;
+import java.sql.ResultSet;
+import java.sql.Statement;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -47,6 +50,7 @@ import cc.alcina.framework.entity.persistence.mvcc.Transactions;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
+import cc.alcina.framework.entity.util.SqlUtils;
 
 @Registration.Singleton
 public class InternalMetrics {
@@ -139,12 +143,24 @@ public class InternalMetrics {
 		}
 	}
 
-	public InternalMetric getMetric(long clientInstanceId, String callName) {
-		return CommonPersistenceProvider.get().getCommonPersistence()
-				.getItemByKeyValueKeyValue(
-						PersistentImpl.getImplementation(InternalMetric.class),
-						"clientInstanceId", clientInstanceId, "callName",
-						callName);
+	public InternalMetric getMetric(long clientInstanceId, Connection conn,
+			String callName) {
+		try {
+			Statement statement = conn.createStatement();
+			InternalMetric metric = PersistentImpl
+					.getNewImplementationInstance(InternalMetric.class);
+			ResultSet rs = SqlUtils.executeQuery(statement, Ax.format(
+					"select * from  internalmetric where callname='%s' and clientinstanceid=%s;",
+					callName, clientInstanceId));
+			rs.next();
+			metric.setId(rs.getLong("id"));
+			metric.setBlackboxData(rs.getString("blackboxData"));
+			metric.setObfuscatedArgs(rs.getString("obfuscatedArgs"));
+			metric.setSliceJson(rs.getString("sliceJson"));
+			return metric;
+		} catch (Exception e) {
+			throw WrappedRuntimeException.wrap(e);
+		}
 	}
 
 	public boolean isHighFrequencyProfiling() {
