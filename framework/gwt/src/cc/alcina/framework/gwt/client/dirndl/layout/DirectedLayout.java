@@ -313,9 +313,14 @@ public class DirectedLayout {
 		}
 
 		private void bindProperties() {
-			if (directed == null || directed.bindings().length == 0
-					|| model == null) {
+			if (directed == null || model == null) {
 				return;
+			}
+			if (directed.bindings().length == 0) {
+				// FIXME - hasBind
+				if (model instanceof Model) {
+					((Model) model).bind();
+				}
 			}
 			/*
 			 * TODO - can probably relax this (just apply to outermost widget)
@@ -333,6 +338,10 @@ public class DirectedLayout {
 			Preconditions.checkState(rendered.widgets.size() == 1);
 			rendered.bindings = Arrays.stream(directed.bindings())
 					.map(PropertyBinding::new).collect(Collectors.toList());
+			// FIXME - hasBind
+			if (model instanceof Model) {
+				((Model) model).bind();
+			}
 		}
 
 		private void populateWidgets(boolean intermediateChild) {

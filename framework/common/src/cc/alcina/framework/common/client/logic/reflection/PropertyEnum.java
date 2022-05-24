@@ -6,6 +6,18 @@ import java.util.function.Predicate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 
 public interface PropertyEnum {
+	public static String asPropertyName(Object name) {
+		if (name == null) {
+			return null;
+		} else if (name instanceof String) {
+			return (String) name;
+		} else if (name instanceof PropertyEnum) {
+			return ((PropertyEnum) name).name();
+		} else {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	String name();
 
 	default Predicate<? super DomainTransformEvent> transformFilter() {

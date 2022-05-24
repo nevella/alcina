@@ -7,6 +7,8 @@ import java.util.function.Consumer;
 import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+
 public class RemovablePropertyChangeListener implements PropertyChangeListener {
 	private SourcesPropertyChangeEvents bound;
 
@@ -15,23 +17,16 @@ public class RemovablePropertyChangeListener implements PropertyChangeListener {
 	private Consumer<PropertyChangeEvent> handler;
 
 	public RemovablePropertyChangeListener(SourcesPropertyChangeEvents bound,
-			String propertyName) {
+			Object propertyName) {
 		this(bound, propertyName, null);
 	}
 
 	public RemovablePropertyChangeListener(SourcesPropertyChangeEvents bound,
-			String propertyName, Consumer<PropertyChangeEvent> handler) {
+			Object propertyName, Consumer<PropertyChangeEvent> handler) {
 		this.bound = bound;
-		this.propertyName = propertyName;
+		this.propertyName = PropertyEnum.asPropertyName(propertyName);
 		this.handler = handler;
 		bind();
-	}
-
-	@Override
-	public void propertyChange(PropertyChangeEvent evt) {
-		// either handler is non-null or this is over-ridden
-		Preconditions.checkNotNull(handler);
-		handler.accept(evt);
 	}
 
 	public void bind() {
@@ -40,6 +35,13 @@ public class RemovablePropertyChangeListener implements PropertyChangeListener {
 		} else {
 			bound.addPropertyChangeListener(propertyName, this);
 		}
+	}
+
+	@Override
+	public void propertyChange(PropertyChangeEvent evt) {
+		// either handler is non-null or this is over-ridden
+		Preconditions.checkNotNull(handler);
+		handler.accept(evt);
 	}
 
 	public void unbind() {
