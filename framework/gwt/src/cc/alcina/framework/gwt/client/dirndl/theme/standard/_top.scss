@@ -46,6 +46,7 @@ page {
     button,
     > title-area,
     div.ol-dropdown.-ol-open > :nth-child(2) {
+      font-family: theme.$header-font-stack;
       color: theme.$header-title-color;
     }
     div.ol-dropdown.-ol-open > :nth-child(2) {

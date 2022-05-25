@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -406,31 +406,6 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 		}
 	}
 
-	private void updateHeight() {
-		if (ensureAllLinesVisible) {
-			Scheduler.get().scheduleDeferred(() -> {
-				Element element = this.base.getElement();
-				element.getStyle().setProperty("height", "auto");
-				String paddingTop = WidgetUtils.getComputedStyle(element,
-						"paddingTop");
-				String paddingBottom = WidgetUtils.getComputedStyle(element,
-						"paddingBottom");
-				int paddingTopPx = paddingTop.endsWith("px")
-						? Integer.parseInt(paddingTop.replace("px", ""))
-						: 0;
-				int paddingBottomPx = paddingBottom.endsWith("px")
-						? Integer.parseInt(paddingBottom.replace("px", ""))
-						: 0;
-				int scrollHeight = element.getScrollHeight();
-				if (scrollHeight != 0) {
-					element.getStyle().setHeight(scrollHeight,
-							// - paddingTopPx - paddingBottomPx,
-							Unit.PX);
-				}
-			});
-		}
-	}
-
 	public void setVisibleLines(int lines) {
 		this.base.setVisibleLines(lines);
 	}
@@ -448,5 +423,40 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 	@Override
 	public void unsinkEvents(int eventBitsToRemove) {
 		this.base.unsinkEvents(eventBitsToRemove);
+	}
+
+	private void updateHeight() {
+		if (ensureAllLinesVisible) {
+			Scheduler.get().scheduleDeferred(() -> {
+				Element element = this.base.getElement();
+				element.getStyle().setProperty("height", "auto");
+				String paddingTop = WidgetUtils.getComputedStyle(element,
+						"paddingTop");
+				String paddingBottom = WidgetUtils.getComputedStyle(element,
+						"paddingBottom");
+				String computedHeight = WidgetUtils.getComputedStyle(element,
+						"height");
+				int paddingTopPx = paddingTop.endsWith("px")
+						? Integer.parseInt(paddingTop.replace("px", ""))
+						: 0;
+				int paddingBottomPx = paddingBottom.endsWith("px")
+						? Integer.parseInt(paddingBottom.replace("px", ""))
+						: 0;
+				int computedHeightPx = computedHeight.endsWith("px")
+						? Integer.parseInt(computedHeight.replace("px", ""))
+						: 0;
+				int scrollHeight = element.getScrollHeight();
+				if (scrollHeight != 0) {
+					if (scrollHeight == computedHeightPx + paddingBottomPx
+							+ paddingTopPx) {
+						// no need to change
+					} else {
+						element.getStyle().setHeight(scrollHeight,
+								// - paddingTopPx - paddingBottomPx,
+								Unit.PX);
+					}
+				}
+			});
+		}
 	}
 }
