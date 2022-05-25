@@ -28,13 +28,13 @@ public interface PersistentObjectCache<T> {
 
 	T get(String path);
 
+	Optional<Long> lastModified(String path);
+
 	default Map<String, Optional<Long>>
 			lastModifiedMultiple(List<String> paths) {
 		return paths.stream()
 				.collect(AlcinaCollectors.toValueMap(this::lastModified));
 	}
-
-	Optional<Long> lastModified(String path);
 
 	List<String> listChildPaths(String path);
 
@@ -48,6 +48,10 @@ public interface PersistentObjectCache<T> {
 
 	PersistentObjectCache<T>
 			withCreateIfNonExistent(boolean createIfNonExistent);
+
+	default PersistentObjectCache<T> withGzip(boolean gzip) {
+		throw new UnsupportedOperationException();
+	}
 
 	PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory);
 
