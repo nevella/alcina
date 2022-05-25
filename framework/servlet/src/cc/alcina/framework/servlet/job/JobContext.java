@@ -94,8 +94,8 @@ public class JobContext {
 
 	public static void debug(String template, Object... args) {
 		if (get() == null) {
-			Ax.out("Called JobContext.debug() outside job - %s %s", template,
-					Arrays.asList(args));
+			Ax.out("Called JobContext.debug() outside job - %s ",
+					Ax.format(template, Arrays.asList(args)));
 		} else {
 			get().getLogger().debug(template, args);
 		}
