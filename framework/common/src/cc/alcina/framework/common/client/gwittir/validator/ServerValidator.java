@@ -24,16 +24,18 @@ import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
 import cc.alcina.framework.gwt.client.Client;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 /**
  * 
  * @author Nick Reddel
  */
-public class ServerValidator implements ParameterisedValidator, Serializable {
+public class ServerValidator extends Model implements ParameterisedValidator, Serializable {
 	private static final transient String TOPIC_SERVER_VALIDATION_RESULT = ServerValidator.class
 			.getName() + ".TOPIC_SERVER_VALIDATION_RESULT";
 
@@ -80,15 +82,16 @@ public class ServerValidator implements ParameterisedValidator, Serializable {
 	public ServerValidationResult getServerValidationResult() {
 		return this.serverValidationResult;
 	}
+@AlcinaTransient
 
 	public String getValidatingMessage() {
 		return " validating";
 	}
-
+@AlcinaTransient
 	public boolean isValidated() {
 		return this.validated;
 	}
-
+@AlcinaTransient
 	public boolean isValidating() {
 		return this.validating;
 	}

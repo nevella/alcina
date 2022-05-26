@@ -36,6 +36,16 @@ public class DomainTransformResponse implements Serializable {
 
 	private List<DomainTransformEvent> eventsToUseForClientUpdate = new ArrayList<DomainTransformEvent>();
 
+	public void setEventsToUseForClientUpdate(
+			List<DomainTransformEvent> eventsToUseForClientUpdate) {
+		this.eventsToUseForClientUpdate = eventsToUseForClientUpdate;
+	}
+
+	public void setTransformExceptions(
+			List<DomainTransformException> transformExceptions) {
+		this.transformExceptions = transformExceptions;
+	}
+
 	private List<DomainTransformException> transformExceptions = new ArrayList<DomainTransformException>();
 
 	private String logOffset;
