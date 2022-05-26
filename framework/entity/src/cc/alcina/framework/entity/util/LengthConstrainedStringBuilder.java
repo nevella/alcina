@@ -22,7 +22,7 @@ public class LengthConstrainedStringBuilder {
 	}
 
 	public boolean isEmpty() {
-		return this.builder.isEmpty();
+		return this.builder.length()==0;
 	}
 
 	public int length() {
