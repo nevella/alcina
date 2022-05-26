@@ -59,15 +59,19 @@ public class JacksonUtils {
 		}
 	}
 
-	public static void prettyPrintJson(String json) {
+	public static String prettyJson(String json) {
 		try {
 			JsonNode tree = new ObjectMapper().readTree(json);
 			String pretty = new ObjectMapper().writerWithDefaultPrettyPrinter()
 					.writeValueAsString(tree);
-			Ax.out(pretty);
+			return pretty;
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public static void prettyPrintJson(String json) {
+		Ax.out(prettyJson(json));
 	}
 
 	public static String serialize(Object object) {
