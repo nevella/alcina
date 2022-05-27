@@ -57,7 +57,7 @@ public class LengthConstrainedStringBuilder {
 			List<StackTraceElement> topOfTrace = frames.subList(fromIndex,
 					frames.size());
 			throw new OverflowException(Ax.format(
-					"Limited writer overflow - %s bytes ::\n (0-1000): \n%s\n(last 1000)"
+					"Limited-writer-overflow - %s bytes ::\n (0-1000): \n%s\n(last 1000)"
 							+ ":\n%s\n\ntop of stack:\n%s",
 					maxLength, first, last,
 					CommonUtils.joinWithNewlines(topOfTrace)));
