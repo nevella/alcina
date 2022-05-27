@@ -16,6 +16,7 @@ package cc.alcina.framework.servlet.servlet;
 import java.io.File;
 import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.util.regex.Pattern;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,7 +27,11 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 /**
- *
+ * <p>
+ * <b>2022-05-27</b> TailServlet supports a regex filter as a querystring
+ * parameter, so /tail?foo will only emit lines containing 'foo'
+ * </p>
+ * 
  * @author Nick Reddel
  */
 public class TailServlet extends AlcinaServlet {
@@ -50,6 +55,9 @@ public class TailServlet extends AlcinaServlet {
 		}
 		File logFile = new File(ResourceUtilities.get(getClass(), "file"));
 		String message = Ax.format("Starting tail servlet - %s", logFile);
+		String filterString = request.getQueryString();
+		Pattern filter = Ax.isBlank(filterString) ? null
+				: Pattern.compile(filterString);
 		try (RandomAccessFile raf = new RandomAccessFile(logFile, "r")) {
 			raf.seek(raf.length());
 			response.setContentType("text/html");
@@ -63,7 +71,14 @@ public class TailServlet extends AlcinaServlet {
 					if (length > 0) {
 						byte[] buf = new byte[length];
 						raf.readFully(buf);
-						response.getOutputStream().write(buf);
+						String s = new String(buf, StandardCharsets.UTF_8);
+						String[] lines = s.split("\n");
+						for (String line : lines) {
+							if (filter == null || filter.matcher(line).find()) {
+								response.getOutputStream()
+										.write((line + "\n").getBytes());
+							}
+						}
 						response.getOutputStream().flush();
 					}
 					Thread.sleep(1000);
