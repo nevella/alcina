@@ -227,14 +227,17 @@ public class Transaction implements Comparable<Transaction> {
 	/*
 	 * Note that this means the same transaction graph is visible to multiple
 	 * threads. Either make the tx read-only or do all writes on the originating
-	 * thread after all worker threads have 'split' from this 'join'
+	 * thread after all worker threads have 'split' from this 'join'.
+	 * 
 	 */
 	public static void join(Transaction transaction) {
 		logger.debug("Joining tx - {} {} {}", transaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
 		Preconditions.checkState(!isInTransaction());
-		transaction.threadCount.incrementAndGet();
+		synchronized (transaction.resolvedMostRecentVisibleTransactions) {
+			transaction.threadCount++;
+		}
 		setThreadLocalTransaction(transaction);
 	}
 
@@ -253,7 +256,9 @@ public class Transaction implements Comparable<Transaction> {
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
 		removeThreadLocalTransaction();
-		transaction.threadCount.decrementAndGet();
+		synchronized (transaction.resolvedMostRecentVisibleTransactions) {
+			transaction.threadCount--;
+		}
 	}
 
 	private static Transaction getPerThreadTransaction() {
@@ -311,7 +316,9 @@ public class Transaction implements Comparable<Transaction> {
 		transaction.originatingThread = Thread.currentThread();
 		setThreadLocalTransaction(transaction);
 		transaction.originatingThreadName = Thread.currentThread().getName();
-		transaction.threadCount.incrementAndGet();
+		synchronized (transaction.resolvedMostRecentVisibleTransactions) {
+			transaction.threadCount++;
+		}
 		if (retainStartEndTraces()) {
 			transaction.transactionStartTrace = SEUtilities
 					.getCurrentThreadStacktraceSlice();
@@ -322,12 +329,15 @@ public class Transaction implements Comparable<Transaction> {
 		perThreadTransaction.keySet().removeIf(t -> !t.isAlive());
 	}
 
+	// used as a monitor for threadCount modification (not access)
 	private Map<MvccObjectVersions, Transaction> resolvedMostRecentVisibleTransactions = new Object2ObjectOpenHashMap<>(
 			Hash.DEFAULT_INITIAL_SIZE, Hash.FAST_LOAD_FACTOR);
 
 	Thread originatingThread;
 
-	private AtomicInteger threadCount = new AtomicInteger();
+	// a volatile int rather than AtomicInteger to try and fix incorrect sync in
+	// mostRecentVisibleCommittedTransaction
+	private volatile int threadCount;
 
 	private long transformRequestId;
 
@@ -402,8 +412,8 @@ public class Transaction implements Comparable<Transaction> {
 		 * MvccObjectVersions.ensureEntity since this is a newly created object
 		 */
 		if (!isBaseTransaction()) {
-			MvccObjectVersions<T> versions = MvccObjectVersions.createEntityVersions(t,
-					this, true);
+			MvccObjectVersions<T> versions = MvccObjectVersions
+					.createEntityVersions(t, this, true);
 		}
 		return t;
 	}
@@ -673,7 +683,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	boolean isReadonly() {
-		return threadCount.get() != 1 || phase == TransactionPhase.READ_ONLY;
+		return threadCount!= 1 || phase == TransactionPhase.READ_ONLY;
 	}
 
 	/*
@@ -682,7 +692,7 @@ public class Transaction implements Comparable<Transaction> {
 	 */
 	Transaction
 			mostRecentVisibleCommittedTransaction(MvccObjectVersions versions) {
-		if (threadCount.get() == 1) {
+		if (threadCount == 1) {
 			return resolvedMostRecentVisibleTransactions
 					.computeIfAbsent(versions,
 							v -> TransactionVersions.mostRecentCommonVisible(
