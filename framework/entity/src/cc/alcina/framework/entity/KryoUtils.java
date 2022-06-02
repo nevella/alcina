@@ -316,6 +316,7 @@ public class KryoUtils {
 
 		public EntitySerializer(Kryo kryo, Class<?> type) {
 			super(kryo, type);
+			config.setCopyTransient(false);
 		}
 
 		@Override

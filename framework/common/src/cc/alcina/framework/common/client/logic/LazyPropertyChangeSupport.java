@@ -17,6 +17,8 @@ import java.beans.PropertyChangeEvent;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+
 /**
  * @author nick@alcina.cc
  *
@@ -32,16 +34,16 @@ public class LazyPropertyChangeSupport {
 		this.sourceBean = sourceBean;
 	}
 
-	public synchronized void addPropertyChangeListener(Enum propertyName,
-			PropertyChangeListener listener) {
-		ensureDelegate();
-		delegate.addPropertyChangeListener(propertyName.name(), listener);
-	}
-
 	public synchronized void
 			addPropertyChangeListener(PropertyChangeListener listener) {
 		ensureDelegate();
 		delegate.addPropertyChangeListener(listener);
+	}
+
+	public synchronized void addPropertyChangeListener(
+			PropertyEnum propertyName, PropertyChangeListener listener) {
+		ensureDelegate();
+		delegate.addPropertyChangeListener(propertyName.name(), listener);
 	}
 
 	public synchronized void addPropertyChangeListener(String propertyName,
@@ -55,6 +57,11 @@ public class LazyPropertyChangeSupport {
 			return;
 		}
 		this.delegate.firePropertyChange(evt);
+	}
+
+	public void firePropertyChange(PropertyEnum propertyName, Object oldValue,
+			Object newValue) {
+		firePropertyChange(propertyName.name(), oldValue, newValue);
 	}
 
 	public void firePropertyChange(String propertyName, Object oldValue,

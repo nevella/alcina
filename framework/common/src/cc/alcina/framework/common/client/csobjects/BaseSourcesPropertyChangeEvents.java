@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -24,11 +24,12 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
 import cc.alcina.framework.common.client.logic.LazyPropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class BaseSourcesPropertyChangeEvents
@@ -58,28 +59,17 @@ public class BaseSourcesPropertyChangeEvents
 		this.propertyChangeSupport().addPropertyChangeListener(listener);
 	}
 
+	public synchronized void addPropertyChangeListener(
+			PropertyEnum propertyName, PropertyChangeListener listener) {
+		this.propertyChangeSupport().addPropertyChangeListener(propertyName,
+				listener);
+	}
+
 	@Override
 	public void addPropertyChangeListener(String propertyName,
 			PropertyChangeListener listener) {
 		this.propertyChangeSupport().addPropertyChangeListener(propertyName,
 				listener);
-	}
-
-	/**
-	 * Useful for collection listeners - a "check the kids" thing
-	 */
-	public void fireUnspecifiedPropertyChange(String name) {
-		((LazyPropertyChangeSupport) this.propertyChangeSupport())
-				.fireUnspecifiedPropertyChange(name);
-	}
-
-	/**
-	 * Indicates that the object has changed. May be interpreted as "re-render
-	 * the whole object"
-	 */
-	public void fireUnspecifiedPropertyChange(Object propagationId) {
-		((LazyPropertyChangeSupport) this.propertyChangeSupport())
-				.fireUnspecifiedPropertyChange(propagationId);
 	}
 
 	public void firePropertyChange(PropertyChangeEvent evt) {
@@ -104,6 +94,23 @@ public class BaseSourcesPropertyChangeEvents
 				newValue);
 	}
 
+	/**
+	 * Indicates that the object has changed. May be interpreted as "re-render
+	 * the whole object"
+	 */
+	public void fireUnspecifiedPropertyChange(Object propagationId) {
+		((LazyPropertyChangeSupport) this.propertyChangeSupport())
+				.fireUnspecifiedPropertyChange(propagationId);
+	}
+
+	/**
+	 * Useful for collection listeners - a "check the kids" thing
+	 */
+	public void fireUnspecifiedPropertyChange(String name) {
+		((LazyPropertyChangeSupport) this.propertyChangeSupport())
+				.fireUnspecifiedPropertyChange(name);
+	}
+
 	@Override
 	@Transient
 	@XmlTransient
@@ -111,6 +118,23 @@ public class BaseSourcesPropertyChangeEvents
 	@Omit
 	public PropertyChangeListener[] getPropertyChangeListeners() {
 		return this.propertyChangeSupport().getPropertyChangeListeners();
+	}
+
+	/*
+	 * Given all the ways the transient deserialization mix can go wrong, this
+	 * is best.
+	 *
+	 * I'd imagine any decent JS engine will optimise the null check fairly well
+	 *
+	 * MVCC access - 'this' correctly refers to the version, *not*
+	 * domainIdentity()
+	 */
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+	public LazyPropertyChangeSupport propertyChangeSupport() {
+		if (propertyChangeSupport == null) {
+			propertyChangeSupport = new LazyPropertyChangeSupport(this);
+		}
+		return propertyChangeSupport;
 	}
 
 	@Override
@@ -123,22 +147,5 @@ public class BaseSourcesPropertyChangeEvents
 			PropertyChangeListener listener) {
 		this.propertyChangeSupport().removePropertyChangeListener(propertyName,
 				listener);
-	}
-
-	/*
-	 * Given all the ways the transient deserialization mix can go wrong, this
-	 * is best.
-	 * 
-	 * I'd imagine any decent JS engine will optimise the null check fairly well
-	 * 
-	 * MVCC access - 'this' correctly refers to the version, *not*
-	 * domainIdentity()
-	 */
-	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
-	public LazyPropertyChangeSupport propertyChangeSupport() {
-		if (propertyChangeSupport == null) {
-			propertyChangeSupport = new LazyPropertyChangeSupport(this);
-		}
-		return propertyChangeSupport;
 	}
 }

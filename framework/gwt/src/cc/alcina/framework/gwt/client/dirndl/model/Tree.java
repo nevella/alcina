@@ -225,7 +225,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 							NodeLabelClicked.class,
 							NodeToggleButtonClicked.class })
 	public static class TreeNode<NM extends TreeNode> extends Model {
-		public boolean populated;
+		public transient boolean populated;
 
 		private boolean open;
 
@@ -336,6 +336,13 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		@Directed(tag = "label", bindings = @Binding(from = "text", type = Type.INNER_TEXT))
 		public static class NodeLabelText extends Model {
 			private String text;
+
+			public NodeLabelText() {
+			}
+
+			public NodeLabelText(String text) {
+				this.text = text;
+			}
 
 			public String getText() {
 				return this.text;

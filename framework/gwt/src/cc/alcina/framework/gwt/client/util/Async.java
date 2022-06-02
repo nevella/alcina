@@ -20,6 +20,11 @@ public class Async {
 		return new RunAsyncBuilder();
 	}
 
+	public static AsyncCallback<Void> voidCallback(Runnable runnable) {
+		return Async.<Void> callbackBuilder().success(v -> runnable.run())
+				.build();
+	}
+
 	public static class AsyncCallbackBuilder<T> {
 		private Consumer<T> successConsumer = t -> {
 		};

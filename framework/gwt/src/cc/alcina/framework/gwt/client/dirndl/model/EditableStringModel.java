@@ -41,8 +41,34 @@ public class EditableStringModel extends Model {
 	}
 
 	public static class SingleLine extends EditableStringModel {
+		public SingleLine() {
+		}
+
+		public SingleLine(String string) {
+			super(string);
+		}
+
+		@Override
 		@Display(name = "String")
 		@Validator(validator = NotBlankValidator.class)
+		public String getString() {
+			return super.getString();
+		}
+	}
+
+	public static class SingleLineArea extends EditableStringModel {
+		public SingleLineArea() {
+		}
+
+		public SingleLineArea(String string) {
+			super(string);
+		}
+
+		@Override
+		@Display(name = "String")
+		@Custom(customiserClass = TextAreaCustomiser.class, parameters = {
+				@NamedParameter(name = TextAreaCustomiser.ENSURE_ALL_LINES_VISIBLE, booleanValue = false),
+				@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 1) })
 		public String getString() {
 			return super.getString();
 		}

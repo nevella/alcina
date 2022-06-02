@@ -2,14 +2,20 @@ package cc.alcina.framework.common.client.csobjects.view;
 
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -556,6 +562,39 @@ public class TreePath<T> extends Model
 							current = current.getParent();
 						}
 					}
+				}
+			}
+		}
+
+		public Stream<T> stream() {
+			return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+					new IteratorImpl(), Spliterator.ORDERED), false);
+		}
+
+		private class IteratorImpl implements Iterator<T> {
+			boolean returnedCurrent = false;
+
+			boolean finished = false;
+
+			@Override
+			public boolean hasNext() {
+				checkCurrent();
+				return !finished;
+			}
+
+			@Override
+			public T next() {
+				if (!hasNext()) {
+					throw new NoSuchElementException();
+				}
+				returnedCurrent = true;
+				return current();
+			}
+
+			private void checkCurrent() {
+				if (returnedCurrent) {
+					finished = Walker.this.next() == null;
+					returnedCurrent = false;
 				}
 			}
 		}

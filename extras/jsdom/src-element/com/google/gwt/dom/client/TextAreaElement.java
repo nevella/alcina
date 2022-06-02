@@ -131,6 +131,16 @@ public class TextAreaElement extends Element {
 		return this.getPropertyString("name");
 	}
 
+	public int getSelectionStart() {
+		ensureRemoteCheck();
+		return this.getPropertyInt("selectionStart");
+	}
+
+	public int getSelectionEnd() {
+		ensureRemoteCheck();
+		return this.getPropertyInt("selectionEnd");
+	}
+
 	@Override
 	public String getPropertyString(String name) {
 		ensureRemoteCheck();
@@ -229,6 +239,14 @@ public class TextAreaElement extends Element {
 		this.setPropertyInt("cols", cols);
 	}
 
+	public void setSelectionStart(int selectionStart) {
+		this.setPropertyInt("selectionStart", selectionStart);
+	}
+
+	public void setSelectionEnd(int selectionEnd) {
+		this.setPropertyInt("selectionEnd", selectionEnd);
+	}
+
 	/**
 	 * Represents the contents of the element. The value of this attribute does
 	 * not change if the contents of the corresponding form control, in an
@@ -319,6 +337,6 @@ public class TextAreaElement extends Element {
 	 * Select the contents of the TEXTAREA.
 	 */
 	native void select0(ElementRemote elt) /*-{
-											this.select();
-											}-*/;
+    this.select();
+	}-*/;
 }

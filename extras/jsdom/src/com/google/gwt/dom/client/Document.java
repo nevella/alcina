@@ -25,14 +25,19 @@ import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.EntityReference;
 import org.w3c.dom.ProcessingInstruction;
+import org.w3c.dom.traversal.NodeFilter;
+import org.w3c.dom.traversal.NodeIterator;
+import org.w3c.dom.traversal.TreeWalker;
+
+import com.google.gwt.core.client.JavascriptObjectEquivalent;
 
 /**
  * A Document is the root of the HTML hierarchy and holds the entire content.
  * Besides providing access to the hierarchy, it also provides some convenience
  * methods for accessing certain sets of information from the document.
  */
-public class Document extends Node
-		implements DomDocument, org.w3c.dom.Document {
+public class Document extends Node implements DomDocument, org.w3c.dom.Document,
+		org.w3c.dom.traversal.DocumentTraversal {
 	private static Document doc;
 
 	public static Document create(DocumentLocal local) {
@@ -479,6 +484,13 @@ public class Document extends Node
 	}
 
 	@Override
+	public NodeIterator createNodeIterator(org.w3c.dom.Node root,
+			int whatToShow, NodeFilter filter, boolean entityReferenceExpansion)
+			throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public ObjectElement createObjectElement() {
 		return local.createObjectElement();
 	}
@@ -647,6 +659,13 @@ public class Document extends Node
 	@Override
 	public TitleElement createTitleElement() {
 		return local.createTitleElement();
+	}
+
+	@Override
+	public TreeWalker createTreeWalker(org.w3c.dom.Node root, int whatToShow,
+			NodeFilter filter, boolean entityReferenceExpansion)
+			throws DOMException {
+		return new TreeWalkerImpl(root);
 	}
 
 	@Override
@@ -1022,5 +1041,112 @@ public class Document extends Node
 	@Override
 	protected void resetRemote0() {
 		throw new UnsupportedOperationException();
+	}
+
+	class TreeWalkerImpl implements TreeWalker {
+		private org.w3c.dom.Node root;
+
+		org.w3c.dom.Node currentNode;
+
+		public TreeWalkerImpl(org.w3c.dom.Node root) {
+			this.root = root;
+			currentNode = root;
+		}
+
+		@Override
+		public org.w3c.dom.Node firstChild() {
+			return currentNode = currentNode.getFirstChild();
+		}
+
+		@Override
+		public org.w3c.dom.Node getCurrentNode() {
+			return currentNode;
+		}
+
+		@Override
+		public boolean getExpandEntityReferences() {
+			return false;
+		}
+
+		@Override
+		public NodeFilter getFilter() {
+			return null;
+		}
+
+		@Override
+		public org.w3c.dom.Node getRoot() {
+			return Document.this;
+		}
+
+		@Override
+		public int getWhatToShow() {
+			return NodeFilter.SHOW_ALL;
+		}
+
+		@Override
+		public org.w3c.dom.Node lastChild() {
+			return currentNode = currentNode.getLastChild();
+		}
+
+		@Override
+		public org.w3c.dom.Node nextNode() {
+			if (currentNode.getFirstChild() != null) {
+				return  firstChild();
+			}
+			while (currentNode != root) {
+				org.w3c.dom.Node nextSibling = currentNode.getNextSibling();
+				if (nextSibling != null) {
+					return nextSibling();
+				}
+				currentNode = currentNode.getParentNode();
+			}
+			return null;
+		}
+
+		@Override
+		public org.w3c.dom.Node nextSibling() {
+			return currentNode = currentNode.getNextSibling();
+		}
+
+		@Override
+		public org.w3c.dom.Node parentNode() {
+			return this.currentNode == null ? null
+					: this.currentNode.getParentNode();
+		}
+
+		@Override
+		public org.w3c.dom.Node previousNode() {
+			if (currentNode == root) {
+				return null;
+			}
+			if (currentNode.getPreviousSibling() != null) {
+				return currentNode = lastChildBreadthFirst(previousSibling());
+			}
+			return currentNode = getParentNode();
+		}
+
+		@Override
+		public org.w3c.dom.Node previousSibling() {
+			return  currentNode=currentNode.getPreviousSibling();
+		}
+
+		@Override
+		public void setCurrentNode(org.w3c.dom.Node currentNode)
+				throws DOMException {
+			this.currentNode = currentNode;
+		}
+
+		private org.w3c.dom.Node lastChildBreadthFirst(org.w3c.dom.Node node) {
+			org.w3c.dom.Node cursor = node;
+			while (true) {
+				org.w3c.dom.Node lastChild = cursor.getLastChild();
+				if (lastChild != null) {
+					cursor = lastChild;
+				} else {
+					break;
+				}
+			}
+			return cursor;
+		}
 	}
 }

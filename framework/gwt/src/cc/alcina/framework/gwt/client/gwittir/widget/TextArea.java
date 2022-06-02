@@ -436,14 +436,14 @@ public class TextArea<B> extends AbstractBoundWidget<String>
 						"paddingBottom");
 				String computedHeight = WidgetUtils.getComputedStyle(element,
 						"height");
-				int paddingTopPx = paddingTop.endsWith("px")
-						? Integer.parseInt(paddingTop.replace("px", ""))
+				double paddingTopPx = paddingTop.endsWith("px")
+						? Double.parseDouble(paddingTop.replace("px", ""))
 						: 0;
-				int paddingBottomPx = paddingBottom.endsWith("px")
-						? Integer.parseInt(paddingBottom.replace("px", ""))
+				double paddingBottomPx = paddingBottom.endsWith("px")
+						? Double.parseDouble(paddingBottom.replace("px", ""))
 						: 0;
-				int computedHeightPx = computedHeight.endsWith("px")
-						? Integer.parseInt(computedHeight.replace("px", ""))
+				double computedHeightPx = computedHeight.endsWith("px")
+						? Double.parseDouble(computedHeight.replace("px", ""))
 						: 0;
 				int scrollHeight = element.getScrollHeight();
 				if (scrollHeight != 0) {
