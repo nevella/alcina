@@ -65,11 +65,6 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	private boolean createIfNonExistent;
 
-	public FsObjectCache<T> withNoExistsCache() {
-		existsCache = null;
-		return this;
-	}
-
 	public FsObjectCache(File root, Class<T> clazz,
 			ThrowingFunction<String, T> pathToValue) {
 		this.root = root;
@@ -113,13 +108,6 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		return checkExists(path)
 				? Optional.of(getCacheFile(path)).map(File::lastModified)
 				: Optional.empty();
-	}
-
-	private boolean checkExists(String path) {
-		if (existsCache != null && !existsCache.contains(path)) {
-			return false;
-		}
-		return getCacheFile(path).exists();
 	}
 
 	@Override
@@ -200,10 +188,22 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		return this;
 	}
 
+	public FsObjectCache<T> withNoExistsCache() {
+		existsCache = null;
+		return this;
+	}
+
 	@Override
 	public PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory) {
 		this.retainInMemory = retainInMemory;
 		return this;
+	}
+
+	private boolean checkExists(String path) {
+		if (existsCache != null && !existsCache.contains(path)) {
+			return false;
+		}
+		return getCacheFile(path).exists();
 	}
 
 	private void checkInvalidation() {

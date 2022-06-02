@@ -130,7 +130,8 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	@Override
 	public void validateOnServer(List<ServerValidator> validators,
 			AsyncCallback<List<ServerValidator>> callback) {
-		throw new UnsupportedOperationException();
+		call("validateOnServer", new Class[] { List.class },
+				callback, validators);
 	}
 
 	@Override
