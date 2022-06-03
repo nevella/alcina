@@ -25,7 +25,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 @Reflected
 @Registration(DirectedActivity.class)
 public class DirectedActivity<P extends BasePlace> extends Model
-		implements Activity {
+		implements Activity, HasPlace<P> {
 	private static Topic<DirectedActivity> topicActivityStarted = Topic.local();
 
 	public static Activity forPlace(Place place) {
@@ -89,6 +89,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	public DirectedActivity() {
 	}
 
+	@Override
 	public P getPlace() {
 		return this.place;
 	}
@@ -107,6 +108,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 		// could publish for cleanup, but don't see any use case
 	}
 
+	@Override
 	public void setPlace(P place) {
 		this.place = place;
 	}

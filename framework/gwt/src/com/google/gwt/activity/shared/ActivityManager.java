@@ -1,12 +1,12 @@
 /*
  * Copyright 2010 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -26,6 +26,8 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 import com.google.gwt.user.client.ui.IsWidget;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
+
+import cc.alcina.framework.gwt.client.dirndl.activity.HasPlace;
 
 /**
  * Manages {@link Activity} objects that should be kicked off in response to
@@ -61,7 +63,7 @@ public class ActivityManager
 
 	/**
 	 * Create an ActivityManager. Next call {@link #setDisplay}.
-	 * 
+	 *
 	 * @param mapper
 	 *            finds the {@link Activity} for a given
 	 *            {@link com.google.gwt.place.shared.Place}
@@ -110,8 +112,22 @@ public class ActivityManager
 		if (nextActivity == null) {
 			nextActivity = NULL_ACTIVITY;
 		}
-		if (currentActivity.equals(nextActivity)) {
-			return;
+		if (currentActivity != null) {
+			if (currentActivity.equals(nextActivity)) {
+				return;
+			}
+			if (currentActivity instanceof HasSameWidgetActivity
+					&& nextActivity instanceof HasSameWidgetActivity) {
+				HasSameWidgetActivity activity1 = (HasSameWidgetActivity) currentActivity;
+				HasSameWidgetActivity activity2 = (HasSameWidgetActivity) nextActivity;
+				if (activity1.isSameWigetAs(activity2)) {
+					if (activity1 instanceof HasPlace) {
+						((HasPlace) activity1)
+								.setPlace(((HasPlace) activity2).getPlace());
+						return;
+					}
+				}
+			}
 		}
 		if (startingNext) {
 			// The place changed again before the new current activity showed
@@ -166,7 +182,7 @@ public class ActivityManager
 
 	/**
 	 * Reject the place change if the current activity is not willing to stop.
-	 * 
+	 *
 	 * @see com.google.gwt.place.shared.PlaceChangeRequestEvent.Handler#onPlaceChangeRequest(PlaceChangeRequestEvent)
 	 */
 	@Override
@@ -181,7 +197,7 @@ public class ActivityManager
 	 * If you are disposing of an ActivityManager, it is important to call
 	 * setDisplay(null) to get it to deregister from the event bus, so that it
 	 * can be garbage collected.
-	 * 
+	 *
 	 * @param display
 	 *            an instance of AcceptsOneWidget
 	 */
