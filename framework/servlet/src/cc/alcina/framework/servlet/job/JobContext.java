@@ -333,9 +333,11 @@ public class JobContext {
 		this.itemsCompleted = itemsCompleted;
 	}
 
-	public void setResultMessage(String resultMessage) {
+	public static void setResultMessage(String resultMessage) {
 		info(resultMessage);
-		get().getJob().setResultMessage(resultMessage);
+		if (has()) {
+			get().getJob().setResultMessage(resultMessage);
+		}
 	}
 
 	public void toAwaitingChildren() {

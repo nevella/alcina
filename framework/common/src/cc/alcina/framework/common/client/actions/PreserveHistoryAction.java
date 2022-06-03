@@ -11,19 +11,13 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  */
-package cc.alcina.framework.common.client.logic.permissions;
-
-import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
+package cc.alcina.framework.common.client.actions;
 
 /**
+ * Marker interface, asks the client to have log history be additive rather than replaced
+ * 
+ * @author nick@alcina.cc
  *
- * @author Nick Reddel
  */
-public interface Permissible {
-	public AccessLevel accessLevel();
-
-	default String rule() {
-		return "";
-	}
-	
+public interface PreserveHistoryAction {
 }

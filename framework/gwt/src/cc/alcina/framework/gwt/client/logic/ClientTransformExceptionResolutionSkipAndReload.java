@@ -63,12 +63,30 @@ public class ClientTransformExceptionResolutionSkipAndReload
 
 	private ClientTransformExceptionResolutionToken token = new ClientTransformExceptionResolutionToken();
 
+	private boolean muted;
+
+	public boolean isMuted() {
+		return this.muted;
+	}
+
+	public void setMuted(boolean muted) {
+		this.muted = muted;
+	}
+
 	public ClientTransformExceptionResolutionSkipAndReload() {
+	}
+
+	public static ClientTransformExceptionResolutionSkipAndReload cast() {
+		return (ClientTransformExceptionResolutionSkipAndReload) Registry
+				.impl(ClientTransformExceptionResolver.class);
 	}
 
 	@Override
 	public void resolve(DomainTransformRequestException dtre,
 			Callback<ClientTransformExceptionResolutionToken> callback) {
+		if (isMuted()) {
+			return;
+		}
 		final CommitToStorageTransformListener storage = Registry
 				.impl(CommitToStorageTransformListener.class);
 		if (dialog != null) {

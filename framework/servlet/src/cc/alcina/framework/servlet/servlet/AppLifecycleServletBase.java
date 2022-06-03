@@ -90,6 +90,7 @@ import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
@@ -239,6 +240,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initBootstrapRegistry();
 			initNames();
 			loadCustomProperties();
+			addImmutableSecurityProperties();
 			initDevConsoleAndWebApp();
 			initContainerBridge();
 			initServices();
@@ -277,6 +279,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	public void setStartupTime(Date startupTime) {
 		this.startupTime = startupTime;
+	}
+
+	protected void addImmutableSecurityProperties() {
+		ResourceUtilities.addImmutableCustomPropertyKey(
+				RemoteDebugHandler.immutableSecurityProperty());
 	}
 
 	protected void createServletTransformClientInstance() {

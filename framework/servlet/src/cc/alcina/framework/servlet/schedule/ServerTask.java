@@ -53,7 +53,7 @@ public abstract class ServerTask<T extends Task> implements SelfPerformer<T> {
 	}
 
 	protected void jobOk(String message) {
-		JobContext.get().setResultMessage(message);
+		JobContext.setResultMessage(message);
 	}
 
 	protected abstract void performAction0(T task) throws Exception;

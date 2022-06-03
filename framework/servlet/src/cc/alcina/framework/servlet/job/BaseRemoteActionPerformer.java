@@ -50,7 +50,7 @@ public abstract class BaseRemoteActionPerformer<R extends RemoteAction>
 
 	protected void jobOk(String message) {
 		if (JobContext.has()) {
-			JobContext.get().setResultMessage(message);
+			JobContext.setResultMessage(message);
 		} else {
 			logger.info("Job OK: {} {}", message);
 		}

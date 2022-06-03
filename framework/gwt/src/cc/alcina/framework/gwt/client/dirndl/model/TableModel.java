@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -49,11 +50,11 @@ public class TableModel extends Model {
 
 	protected List<Link> actions = new ArrayList<>();
 
-	public List<Link> getActions() {
-		return this.actions;
+	public TableModel() {
 	}
 
-	public TableModel() {
+	public List<Link> getActions() {
+		return this.actions;
 	}
 
 	public TableHeader getHeader() {
@@ -147,20 +148,37 @@ public class TableModel extends Model {
 							: SortDirection.DESCENDING;
 			Class<? extends Bindable> resultClass = activity.getSearchResults()
 					.resultClass();
-			GwittirBridge.get()
+			List<Field> fields = GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 							Reflections.at(resultClass).templateInstance(),
-							factory, false, true, childResolver)
+							factory, false, true, childResolver);
+			fields
 					.stream().map(field -> {
 						SortDirection fieldDirection = field.getPropertyName()
 								.equals(sortFieldName) ? sortDirection : null;
 						return new TableColumn(field, fieldDirection);
 					}).forEach(model.header.columns::add);
-			activity.getSearchResults().getQueriedResultObjects().stream()
-					.map(bindable -> new TableRow(model, bindable))
-					.forEach(model.rows::add);
+			List<? extends Bindable> rowObjects = activity.getSearchResults()
+					.getQueriedResultObjects();
+			if (rowObjects.size() == 0) {
+				Registry.impl(EmptyResultHandler.class)
+						.getEmptyResultPlaceholder(fields)
+						.forEach(model.rows::add);
+			} else {
+				rowObjects.stream()
+						.map(bindable -> new TableRow(model, bindable))
+						.forEach(model.rows::add);
+			}
 			// add actions if editable and adjunct
 			return model;
+		}
+	}
+
+	@Registration(EmptyResultHandler.class)
+	@Reflected
+	public static class EmptyResultHandler {
+		public List<TableRow> getEmptyResultPlaceholder(List<Field> fields) {
+			return Collections.emptyList();
 		}
 	}
 
@@ -252,17 +270,17 @@ public class TableModel extends Model {
 			return this.sortDirection;
 		}
 
+		@Override
+		public void onClick(Click event) {
+			new SearchTableColumnClickHandler(this).onClick(event);
+		}
+
 		public void setField(Field field) {
 			this.field = field;
 		}
 
 		public void setSortDirection(SortDirection sortDirection) {
 			this.sortDirection = sortDirection;
-		}
-
-		@Override
-		public void onClick(Click event) {
-			new SearchTableColumnClickHandler(this).onClick(event);
 		}
 	}
 

@@ -59,13 +59,13 @@ public interface IUser extends IVersionable, HasDisplayName.Settable {
 		return Ax.blankTo(getUserName(), "(null)");
 	}
 
-	default boolean provideIsMemberOf(IGroup otherGroup) {
+	default boolean provideIsMemberOf(IGroup group) {
 		Set<IGroup> queued = new HashSet<>();
 		Stack<IGroup> toTraverse = new Stack<>();
 		toTraverse.addAll(getSecondaryGroups());
 		while (toTraverse.size() > 0) {
 			IGroup cursor = toTraverse.pop();
-			if (Objects.equals(cursor, otherGroup)) {
+			if (Objects.equals(cursor, group)) {
 				return true;
 			}
 			cursor.getMemberOfGroups().stream().filter(queued::add)

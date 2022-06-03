@@ -209,4 +209,8 @@ public class CsvCols
 			return -1;
 		}
 	}
+
+	public void write(String path) {
+		ResourceUtilities.write(toCsv(), path);
+	}
 }
