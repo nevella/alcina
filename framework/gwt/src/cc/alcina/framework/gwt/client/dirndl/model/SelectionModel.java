@@ -51,8 +51,7 @@ public class SelectionModel<T> extends Model
 		T value = choice == null ? null : (T) choice.getValue();
 		valueSelected.publish(value);
 		if (changeOnSelectionEvent) {
-			selectionChanged
-					.publish(choice == null ? null : (T) choice.getValue());
+			setSelectedValue(value);
 		}
 	}
 
