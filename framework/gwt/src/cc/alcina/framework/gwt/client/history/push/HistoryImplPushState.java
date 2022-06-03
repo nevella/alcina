@@ -21,6 +21,7 @@ import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
@@ -39,6 +40,9 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
  * @author <a href="mailto:jb@barop.de">Johannes Barop</a>
  */
 public class HistoryImplPushState extends HistoryImpl {
+	public static final String CONTEXT_IN_POP_STATE = HistoryImplPushState.class
+			.getName() + ".HistoryImplPushState";
+
 	/**
 	 * Add the given token to the history using pushState.
 	 */
@@ -101,7 +105,8 @@ public class HistoryImplPushState extends HistoryImpl {
 			newPushStateToken = "/" + newPushStateToken;
 		}
 		if (!Objects.equals(newPushStateToken, lastPushed)
-				&& !Objects.equals(historyToken, lastPushed)) {
+				&& !Objects.equals(historyToken, lastPushed)
+				&& !LooseContext.is(CONTEXT_IN_POP_STATE)) {
 			pushState(newPushStateToken);
 			lastPushed = newPushStateToken;
 		}
@@ -129,7 +134,12 @@ public class HistoryImplPushState extends HistoryImpl {
 	private void onPopState(final String historyToken) {
 		lastPushed = null;
 		updateHistoryToken(historyToken);
-		fireHistoryChangedImpl(getToken());
+		try {
+			LooseContext.pushWithTrue(CONTEXT_IN_POP_STATE);
+			fireHistoryChangedImpl(getToken());
+		} finally {
+			LooseContext.pop();
+		}
 	}
 
 	/**
