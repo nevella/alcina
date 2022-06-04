@@ -197,16 +197,31 @@ public class TransformCollation {
 			perClass = new UnsortedMultikeyMap<>(2);
 			perLocator = new HashMap<>();
 			allEvents.forEach(event -> {
-				EntityLocator locator = event.toObjectLocator();
-				if (locator.provideIsZeroIdAndLocalId()) {
-					// FIXME - mvcc.5 - DEVEX (probably on transform creation)
-					return;
+				{
+					EntityLocator locator = event.toObjectLocator();
+					if (locator.provideIsZeroIdAndLocalId()) {
+						// FIXME - mvcc.5 - DEVEX (probably on transform
+						// creation)
+					} else {
+						EntityCollation collation = perClass.ensure(
+								() -> new EntityCollation(locator),
+								locator.clazz, locator);
+						collation.transforms.add(event);
+						perLocator.put(locator, collation);
+					}
 				}
-				EntityCollation collation = perClass.ensure(
-						() -> new EntityCollation(locator), locator.clazz,
-						locator);
-				collation.transforms.add(event);
-				perLocator.put(locator, collation);
+				{
+					EntityLocator locator = event.toValueLocator();
+					if (locator == null
+							|| locator.provideIsZeroIdAndLocalId()) {
+					} else {
+						EntityCollation collation = perClass.ensure(
+								() -> new EntityCollation(locator),
+								locator.clazz, locator);
+						collation.valueTransforms.add(event);
+						perLocator.put(locator, collation);
+					}
+				}
 			});
 		}
 	}
@@ -226,6 +241,8 @@ public class TransformCollation {
 		private EntityLocator locator;
 
 		private List<DomainTransformEvent> transforms = new ArrayList<>();
+
+		private List<DomainTransformEvent> valueTransforms = new ArrayList<>();
 
 		Multimap<String, List<DomainTransformEvent>> transformsByPropertyName;
 
@@ -275,12 +292,12 @@ public class TransformCollation {
 		}
 
 		public Class<? extends Entity> getEntityClass() {
-			return first().getObjectClass();
+			return locator.getClazz();
 		}
 
 		@Override
 		public long getId() {
-			return first().getObjectId();
+			return locator.getId();
 		}
 
 		public EntityLocator getLocator() {
@@ -295,8 +312,13 @@ public class TransformCollation {
 			return this.transforms;
 		}
 
+		public List<DomainTransformEvent> getValueTransforms() {
+			return this.valueTransforms;
+		}
+
 		public boolean isCreated() {
-			return first().getTransformType() == TransformType.CREATE_OBJECT;
+			return transforms.size() > 0 && first()
+					.getTransformType() == TransformType.CREATE_OBJECT;
 		}
 
 		public boolean isCreatedAndDeleted() {
@@ -304,7 +326,8 @@ public class TransformCollation {
 		}
 
 		public boolean isDeleted() {
-			return last().getTransformType() == TransformType.DELETE_OBJECT;
+			return transforms.size() > 0
+					&& last().getTransformType() == TransformType.DELETE_OBJECT;
 		}
 
 		public boolean isPropertyOnly() {

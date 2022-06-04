@@ -113,6 +113,8 @@ public class AdjunctTransformCollation extends TransformCollation {
 		allEntityCollations().forEach(ec -> {
 			if (ec.isCreatedAndDeleted()) {
 				ec.getTransforms().forEach(this::removeTransformFromRequest);
+				ec.getValueTransforms()
+						.forEach(this::removeTransformFromRequest);
 				modified.set(true);
 			} else {
 				ec.ensureByPropertyName().values().forEach(list -> {
