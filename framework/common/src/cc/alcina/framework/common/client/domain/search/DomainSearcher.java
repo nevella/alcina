@@ -10,13 +10,12 @@ import cc.alcina.framework.common.client.domain.DomainFilter;
 import cc.alcina.framework.common.client.domain.DomainQuery;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation.ImplementationType;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
-@RegistryLocation(registryPoint = ClearStaticFieldsOnAppShutdown.class)
+@Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DomainSearcher<T extends Entity> {
 	public static final String CONTEXT_HINT = DomainSearcher.class.getName()
 			+ ".CONTEXT_HINT";
@@ -47,7 +46,7 @@ public class DomainSearcher<T extends Entity> {
 		query.filter(filter);
 	}
 
-	@RegistryLocation(registryPoint = DomainSearcherAppFilter.class, implementationType = ImplementationType.INSTANCE)
+	@Registration(DomainSearcherAppFilter.class)
 	public static abstract class DomainSearcherAppFilter {
 		public abstract <T extends Entity> Predicate<T>
 				filter(SearchDefinition def);
