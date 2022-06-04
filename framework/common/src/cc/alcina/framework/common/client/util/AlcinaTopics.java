@@ -49,6 +49,8 @@ public class AlcinaTopics {
 
 	public static Topic<Boolean> TOPIC_APP_READONLY = Topic.local();
 
+	public static Topic<Boolean> applicationRestart = Topic.local();
+
 	public static void jobComplete(JobTracker info) {
 		GlobalTopicPublisher.get().publishTopic(TOPIC_JOB_COMPLETE, info);
 	}
@@ -113,6 +115,4 @@ public class AlcinaTopics {
 		GlobalTopicPublisher.get().listenerDelta(TOPIC_DEV_WARNING, listener,
 				add);
 	}
-
-	public static Topic<Boolean> applicationRestart = Topic.local();
 }
