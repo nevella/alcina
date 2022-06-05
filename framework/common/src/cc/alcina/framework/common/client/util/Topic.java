@@ -36,6 +36,9 @@ public class Topic<T> {
 	public TopicListener.Reference add(TopicListener<T> listener) {
 		return add(listener, false);
 	}
+	public TopicListener.Reference add(Runnable runnable) {
+		return addRunnable(runnable, false);
+	}
 
 	public TopicListener.Reference add(TopicListener<T> listener,
 			boolean fireIfWasPublished) {
@@ -50,12 +53,12 @@ public class Topic<T> {
 		return new TopicListener.Reference(this, listener);
 	}
 
-	public void addRunnable(Runnable runnable) {
-		addRunnable(runnable, false);
+	public TopicListener.Reference addRunnable(Runnable runnable) {
+		return addRunnable(runnable, false);
 	}
 
-	public void addRunnable(Runnable runnable, boolean fireIfWasPublished) {
-		add(new TopicListener() {
+	public TopicListener.Reference addRunnable(Runnable runnable, boolean fireIfWasPublished) {
+		return add(new TopicListener() {
 			@Override
 			public void topicPublished(Object message) {
 				runnable.run();

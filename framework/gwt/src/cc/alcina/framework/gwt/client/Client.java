@@ -66,6 +66,14 @@ public abstract class Client {
 				|| PermissionsManager.get().isDeveloper();
 	}
 
+	public static void refreshOrGoTo(Place place) {
+		if (isCurrentPlace(place)) {
+			refreshCurrentPlace();
+		} else {
+			goTo(place);
+		}
+	}
+
 	public static void refreshCurrentPlace() {
 		BasePlace place = (BasePlace) currentPlace();
 		place.setRefreshed(true);

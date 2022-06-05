@@ -4,7 +4,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -17,9 +17,9 @@ public class SelectionModel<T> extends Model
 		implements NodeEvents.Selected.Handler {
 	private List<SelectionModel.Choice> choices;
 
-	public Topic<T> valueSelected = Topic.local();
+	public Topic<T> valueSelected = Topic.create();
 
-	public Topic<T> selectionChanged = Topic.local();
+	public Topic<T> selectionChanged = Topic.create();
 
 	/*
 	 * set to false to allow more complex selection logic
