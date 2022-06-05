@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.StringPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.DevCSSHelper;
 import cc.alcina.framework.gwt.client.logic.handshake.SetupAfterObjectsPlayer;
@@ -26,8 +26,8 @@ public abstract class StandardWithPersistenceSetupAfterObjectsPlayer
 	protected AsyncCallback reportListener = new AsyncCallbackStd() {
 		@Override
 		public void onSuccess(Object result) {
-			AlcinaTopics.logCategorisedMessage(
-					new StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE,
+			AlcinaTopics.categorisedLogMessage
+					.publish(new StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE,
 							"After object serialization:\n"
 									+ statsObserver.getReport()));
 			statsObserver.installPersistenceListeners();
@@ -36,9 +36,10 @@ public abstract class StandardWithPersistenceSetupAfterObjectsPlayer
 
 	private TopicListener finishedListener = new TopicListener() {
 		@Override
-		public void topicPublished(String key, Object message) {
+		public void topicPublished(Object message) {
 			statsObserver.recalcWithListener(reportListener);
-			saveConsort.deferredRemove(Arrays.asList(Consort.FINISHED),
+			saveConsort.deferredRemove(
+					Arrays.asList(Consort.TopicChannel.FINISHED),
 					finishedListener);
 		}
 	};
@@ -57,7 +58,8 @@ public abstract class StandardWithPersistenceSetupAfterObjectsPlayer
 		if (PermissionsManager.isOnline()) {
 			saveConsort = new SaveToLocalStorageConsort();
 			saveConsort.start();
-			saveConsort.listenerDelta(Consort.FINISHED, finishedListener, true);
+			saveConsort.listenerDelta(Consort.TopicChannel.FINISHED,
+					finishedListener, true);
 		}
 	}
 }

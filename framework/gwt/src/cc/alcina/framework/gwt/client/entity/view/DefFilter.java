@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 import cc.alcina.framework.common.client.search.TextCriterion;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.objecttree.ObjectTreeGridRenderer;
 import cc.alcina.framework.gwt.client.objecttree.search.FlatSearchDefinitionEditor;
@@ -42,12 +42,7 @@ public class DefFilter extends Composite implements
 
 	private TextCriterion ignoreCriterion;
 
-	TopicListener<Boolean> toggleListener = new TopicListener<Boolean>() {
-		@Override
-		public void topicPublished(String key, Boolean message) {
-			setVisible(!isVisible());
-		}
-	};
+	TopicListener<Boolean> toggleListener = b -> setVisible(!isVisible());
 
 	public DefFilter() {
 		this.fp = new FlowPanel();
@@ -164,7 +159,7 @@ public class DefFilter extends Composite implements
 			searchDefinition.globalPropertyChangeListener(this, attached);
 			attachedDef = null;
 		}
-		EntityClientUtils.topicToggleFilter().delta(toggleListener, attached);
+		EntityClientUtils.topicToggleFilter.delta(toggleListener, attached);
 	}
 
 	private void maybeRender() {

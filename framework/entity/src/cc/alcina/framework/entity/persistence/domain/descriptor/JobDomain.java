@@ -48,7 +48,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreDescriptor;
@@ -151,11 +151,11 @@ public class JobDomain {
 	 */
 	private Map<Job, AllocationQueue> queues = new ConcurrentHashMap<>();
 
-	public Topic<AllocationQueue.Event> queueEvents = Topic.local();
+	public Topic<AllocationQueue.Event> queueEvents = Topic.create();
 
-	public Topic<Void> futureConsistencyEvents = Topic.local();
+	public Topic<Void> futureConsistencyEvents = Topic.create();
 
-	public Topic<List<JobStateMessage>> stateMessageEvents = Topic.local();
+	public Topic<List<JobStateMessage>> stateMessageEvents = Topic.create();
 
 	private Class<? extends JobRelation> jobRelationImplClass;
 
@@ -367,7 +367,7 @@ public class JobDomain {
 	public class AllocationQueue {
 		public Job job;
 
-		public Topic<Event> events = Topic.local();
+		public Topic<Event> events = Topic.create();
 
 		SubqueueProjection subqueues = new SubqueueProjection();
 

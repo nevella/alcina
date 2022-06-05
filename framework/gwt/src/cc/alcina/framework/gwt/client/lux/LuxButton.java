@@ -8,8 +8,8 @@ import com.google.gwt.user.client.ui.Composite;
 import com.google.gwt.user.client.ui.InlineLabel;
 import com.google.gwt.user.client.ui.SimplePanel;
 
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.widget.APanel;
 
@@ -64,7 +64,7 @@ public class LuxButton extends Composite implements HasClickHandlers {
 	}
 
 	public LuxButton withAsyncTopic(Topic<Boolean> topicAsync) {
-		TopicListener<Boolean> asyncListener = (k, v) -> setPerformingAsync(v);
+		TopicListener<Boolean> asyncListener = this::setPerformingAsync;
 		addAttachHandler(e -> topicAsync.delta(asyncListener, e.isAttached()));
 		return this;
 	}

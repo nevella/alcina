@@ -35,7 +35,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Callback;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ClassSimpleNameCustomiser;
@@ -53,6 +53,11 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		implements ClientTransformExceptionResolver,
 		TopicListener<CommitToStorageTransformListener.State>,
 		PermissibleActionListener {
+	public static ClientTransformExceptionResolutionSkipAndReload cast() {
+		return (ClientTransformExceptionResolutionSkipAndReload) Registry
+				.impl(ClientTransformExceptionResolver.class);
+	}
+
 	private FlowPanel fp;
 
 	private StatusWidget status;
@@ -65,20 +70,11 @@ public class ClientTransformExceptionResolutionSkipAndReload
 
 	private boolean muted;
 
-	public boolean isMuted() {
-		return this.muted;
-	}
-
-	public void setMuted(boolean muted) {
-		this.muted = muted;
-	}
-
 	public ClientTransformExceptionResolutionSkipAndReload() {
 	}
 
-	public static ClientTransformExceptionResolutionSkipAndReload cast() {
-		return (ClientTransformExceptionResolutionSkipAndReload) Registry
-				.impl(ClientTransformExceptionResolver.class);
+	public boolean isMuted() {
+		return this.muted;
 	}
 
 	@Override
@@ -87,8 +83,6 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		if (isMuted()) {
 			return;
 		}
-		final CommitToStorageTransformListener storage = Registry
-				.impl(CommitToStorageTransformListener.class);
 		if (dialog != null) {
 			dialog.hide();
 		}
@@ -96,13 +90,13 @@ public class ClientTransformExceptionResolutionSkipAndReload
 			@Override
 			protected void onAttach() {
 				super.onAttach();
-				storage.topicStateChanged().add(
+				CommitToStorageTransformListener.topicStateChanged.add(
 						ClientTransformExceptionResolutionSkipAndReload.this);
 			}
 
 			@Override
 			protected void onDetach() {
-				storage.topicStateChanged().remove(
+				CommitToStorageTransformListener.topicStateChanged.remove(
 						ClientTransformExceptionResolutionSkipAndReload.this);
 				super.onDetach();
 			}
@@ -191,8 +185,12 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		};
 	}
 
+	public void setMuted(boolean muted) {
+		this.muted = muted;
+	}
+
 	@Override
-	public void topicPublished(String key, State newState) {
+	public void topicPublished(State newState) {
 		switch (newState) {
 		case RELOAD:
 			status.reloading();
@@ -225,7 +223,7 @@ public class ClientTransformExceptionResolutionSkipAndReload
 		}
 	}
 
-		public static class DTEView extends Bindable {
+	public static class DTEView extends Bindable {
 		boolean reloadRequired = false;
 
 		RecommendedAction recommendedAction;

@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -53,7 +53,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.logic.OkCallback;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
@@ -84,12 +84,9 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	private Set<String> enqueuedOncePerInstanceNotificationBodies = new LinkedHashSet<>();
 
-	private TopicListener<String> logListener = new TopicListener<String>() {
-		@Override
-		public void topicPublished(String key, String message) {
-			log(message);
-			System.out.println(message);
-		}
+	private TopicListener<String> logListener = message -> {
+		log(message);
+		System.out.println(message);
 	};
 
 	private List<Notification> notificationQueue = new ArrayList<>();
@@ -99,7 +96,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	NonCancellableRemoteDialog notifier = null;
 
 	public ClientNotificationsImpl() {
-		AlcinaTopics.logListenerDelta(logListener, true);
+		AlcinaTopics.logMessage.add(logListener);
 	}
 
 	@Override
@@ -188,7 +185,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		if (logToSysOut) {
 			System.out.println(s);
 		}
-		AlcinaTopics.logCategorisedMessage(new StringPair(category, s));
+		AlcinaTopics.categorisedLogMessage.publish(new StringPair(category, s));
 	}
 
 	@Override

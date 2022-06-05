@@ -10,8 +10,8 @@ import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.tour.StepPopupView.Action;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
@@ -28,13 +28,13 @@ public abstract class TourManager {
 
 	protected Tour.Step step;
 
-	public Topic<Step> stepRendered = Topic.local();
+	public Topic<Step> stepRendered = Topic.create();
 
 	boolean exit;
 
 	public TopicListener<StepPopupView.Action> stepListener = new TopicListener<StepPopupView.Action>() {
 		@Override
-		public void topicPublished(String key, Action message) {
+		public void topicPublished(Action message) {
 			switch (message) {
 			case CLOSE:
 				if (consort != null) {
@@ -161,8 +161,9 @@ public abstract class TourManager {
 	class DisplayStepConsort extends AllStatesConsort<DisplayStepPhase> {
 		private TopicListener exitListener = new TopicListener() {
 			@Override
-			public void topicPublished(String key, Object message) {
-				if (!Consort.FINISHED.equals(key)) {
+			public void topicPublished(Object message) {
+				if (!Consort.TopicChannel.FINISHED
+						.equals(getFiringTopicChannel())) {
 					UIRenderer.get().clearPopups(step.getDelay());
 				}
 			}
@@ -228,7 +229,7 @@ public abstract class TourManager {
 				if (checkIgnore()) {
 					finished();
 					if (currentTour.hasNext()) {
-						stepListener.topicPublished(null, Action.NEXT);
+						stepListener.topicPublished(Action.NEXT);
 					}
 				} else {
 					wasPlayed(player);

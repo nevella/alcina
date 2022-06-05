@@ -43,7 +43,7 @@ public class LoginView extends AbstractViewModelView<LoginViewModel> {
 		}
 		this.loginConsort = Registry.impl(LoginConsort.class);
 		this.loginConsort.init(panel, model);
-		loginConsort.exitListenerDelta((k, v) -> {
+		loginConsort.exitListenerDelta(v -> {
 			if (v instanceof Throwable) {
 			} else {
 				Registry.impl(HandshakeConsort.class)

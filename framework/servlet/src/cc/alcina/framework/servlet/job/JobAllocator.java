@@ -74,7 +74,7 @@ class JobAllocator {
 	JobAllocator(AllocationQueue queue, ExecutorService allocatorService) {
 		this.queue = queue;
 		this.allocatorService = allocatorService;
-		queue.events.add((k, e) -> enqueueEvent(e));
+		queue.events.add(this::enqueueEvent);
 		lastStatus = new StatusMessage();
 		/*
 		 * Allocator threads are started for top-level jobs iff visible:

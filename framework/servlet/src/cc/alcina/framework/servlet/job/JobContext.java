@@ -247,7 +247,7 @@ public class JobContext {
 		this.performer = performer;
 		treeProcess = new TreeProcess(performer);
 		treeProcess.positionChangedMessage
-				.add((k, v) -> JobContext.setStatusMessage(v));
+				.add(v -> JobContext.setStatusMessage(v));
 		this.launcherThreadState = launcherThreadState;
 		this.allocator = allocator;
 		this.logger = LoggerFactory.getLogger(performer.getClass());

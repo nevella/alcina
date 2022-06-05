@@ -52,7 +52,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -94,9 +94,6 @@ public class TransformCommit {
 
 	private static final String DTR_EXCEPTION = "dtr-exception";
 
-	private static final String TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION = TransformCommit.class
-			.getName() + ".TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION";
-
 	public static final transient String CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH = TransformCommit.class
 			.getName() + ".CONTEXT_TEST_KEEP_TRANSFORMS_ON_PUSH";
 
@@ -126,6 +123,9 @@ public class TransformCommit {
 			.getName() + ".CONTEXT_COMMITTING";
 
 	static Logger logger = LoggerFactory.getLogger(TransformCommit.class);
+
+	public static final Topic<TransformPersistenceToken> topicUnexpectedExceptionBeforePostTransform = Topic
+			.create();
 
 	public static int commitBulkTransforms(List<DeltaApplicationRecord> records,
 			Boolean useWrapperUser, boolean throwPersistenceExceptions)
@@ -585,11 +585,6 @@ public class TransformCommit {
 				.collect(Collectors.toList());
 	}
 
-	public static Topic<TransformPersistenceToken>
-			topicUnexpectedExceptionBeforePostTransform() {
-		return Topic.global(TOPIC_UNEXPECTED_TRANSFORM_PERSISTENCE_EXCEPTION);
-	}
-
 	private static int commitTransforms(boolean asRoot) {
 		int pendingTransformCount = TransformManager.get()
 				.getTransformsByCommitType(CommitType.TO_LOCAL_BEAN).size();
@@ -998,7 +993,7 @@ public class TransformCommit {
 		} finally {
 			if (unexpectedException) {
 				try {
-					topicUnexpectedExceptionBeforePostTransform()
+					topicUnexpectedExceptionBeforePostTransform
 							.publish(persistenceToken);
 				} catch (Throwable t) {
 					// make sure we get out alive

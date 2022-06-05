@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -48,9 +48,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.ClientState;
@@ -60,9 +59,9 @@ import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
- * 
+ *
  * @author Nick Reddel
- * 
+ *
  *         <h2>Thread-safety notes (applicable to JVM variant
  *         CommitToStorageTransformListenerJvm)</h2>
  *         <ul>
@@ -70,7 +69,7 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
  *         <li>QueueingFinished timer only accessed in synchronized methods,
  *         ditto localRequestId ditto committingRequest
  *         </ul>
- * 
+ *
  *         FIXME - mvcc.5 - flush() and friends shouldn't return (call
  *         callbacks) until all inflight dtrs are committed
  */
@@ -84,11 +83,27 @@ public class CommitToStorageTransformListener
 	public static final transient String CONTEXT_COMMITTING_REQUEST = CommitToStorageTransformListener.class
 			.getName() + ".CONTEXT_COMMITTING_REQUEST";
 
-	private static final String TOPIC_DOMAIN_EXCEPTION = CommitToStorageTransformListener.class
-			.getName() + ".TOPIC_DOMAIN_EXCEPTION";
+	public static final Topic<Throwable> topicCommitDomainException = Topic.create();
 
-	private static final String TOPIC_TRANSFORMS_COMMITTED = CommitToStorageTransformListener.class
-			.getName() + ".TOPIC_TRANSFORMS_COMMITTED";
+	public static final Topic<DomainTransformResponse> topicTransformsCommitted = Topic
+			.create();
+
+	public static final Topic<State> topicStateChanged = Topic.create();
+
+	public static final Topic<DomainTransformEvent> topicTransformAdded = Topic
+			.create();
+
+	public static TransformCollation committingCollation() {
+		List<DomainTransformEvent> events = committingRequest().getEvents();
+		// during pre-commit, request will have zero transforms
+		return new TransformCollation(
+				events.isEmpty() ? get().transformQueue : events);
+	}
+
+	public static DomainTransformRequest committingRequest() {
+		return (DomainTransformRequest) LooseContext.get(
+				CommitToStorageTransformListener.CONTEXT_COMMITTING_REQUEST);
+	}
 
 	public static void flushAndRun(Runnable runnable) {
 		Registry.impl(CommitToStorageTransformListener.class)
@@ -114,29 +129,6 @@ public class CommitToStorageTransformListener
 
 	public static CommitToStorageTransformListener get() {
 		return Registry.impl(CommitToStorageTransformListener.class);
-	}
-
-	public static void notifyCommitDomainExceptionListenerDelta(
-			TopicListener<Throwable> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_DOMAIN_EXCEPTION,
-				listener, add);
-	}
-
-	public static Topic<DomainTransformResponse> topicTransformsCommitted() {
-		return Topic.global(TOPIC_TRANSFORMS_COMMITTED);
-	}
-
-	static void notifyCommitDomainException(Throwable message) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_DOMAIN_EXCEPTION,
-				message);
-	}
-
-	private Topic<State> topicStateChanged = Topic.local();
-
-	private Topic<DomainTransformEvent> topicTransformAdded = Topic.local();
-
-	public Topic<DomainTransformEvent> getTopicTransformAdded() {
-		return this.topicTransformAdded;
 	}
 
 	protected Object collectionsMonitor = new Object();
@@ -175,7 +167,7 @@ public class CommitToStorageTransformListener
 
 	private Object commitMonitor = new Object();
 
-	private TopicListener<State> stateListener = (k, v) -> currentState = v;
+	private TopicListener<State> stateListener = v -> currentState = v;
 
 	public CommitToStorageTransformListener() {
 		if (GWT.isClient()) {
@@ -241,7 +233,7 @@ public class CommitToStorageTransformListener
 			callback.onSuccess(null);
 			return;
 		}
-		topicStateChanged().add(new OneoffListenerWrapper(callback));
+		topicStateChanged.add(new OneoffListenerWrapper(callback));
 		flush();
 	}
 
@@ -326,10 +318,6 @@ public class CommitToStorageTransformListener
 		this.suppressErrors = suppressErrors;
 	}
 
-	public Topic<State> topicStateChanged() {
-		return this.topicStateChanged;
-	}
-
 	protected boolean canTransitionToOnline() {
 		return true;
 	}
@@ -364,7 +352,7 @@ public class CommitToStorageTransformListener
 			 */
 			try {
 				LooseContext.pushWithKey(CONTEXT_COMMITTING_REQUEST, request);
-				topicStateChanged().publish(State.PRE_COMMIT);
+				topicStateChanged.publish(State.PRE_COMMIT);
 			} finally {
 				LooseContext.pop();
 			}
@@ -379,7 +367,7 @@ public class CommitToStorageTransformListener
 			transformQueue.clear();
 		}
 		if (request.getEvents().isEmpty()) {
-			topicStateChanged().publish(State.COMMITTED);
+			topicStateChanged.publish(State.COMMITTED);
 			return;
 		}
 		final AsyncCallback<DomainTransformResponse> commitRemoteCallback = new ResponseCallback(
@@ -400,7 +388,7 @@ public class CommitToStorageTransformListener
 		}
 		try {
 			LooseContext.pushWithKey(CONTEXT_COMMITTING_REQUEST, request);
-			topicStateChanged().publish(State.COMMITTING);
+			topicStateChanged.publish(State.COMMITTING);
 		} finally {
 			LooseContext.pop();
 		}
@@ -408,7 +396,7 @@ public class CommitToStorageTransformListener
 			priorRequestsWithoutResponse.add(request);
 		}
 		if (isLocalStorageOnly()) {
-			topicStateChanged().publish(State.OFFLINE);
+			topicStateChanged.publish(State.OFFLINE);
 			return;
 		}
 		if (PermissionsManager.get().getOnlineState() == OnlineState.OFFLINE) {
@@ -418,7 +406,7 @@ public class CommitToStorageTransformListener
 					// ignore - expected(ish) behaviour - if it's a
 					// non-'offline' error, it's more graceful to ignore
 					// here than not
-					topicStateChanged().publish(State.OFFLINE);
+					topicStateChanged.publish(State.OFFLINE);
 				}
 
 				@Override
@@ -431,18 +419,6 @@ public class CommitToStorageTransformListener
 		} else {
 			commitRemote(request, commitRemoteCallback);
 		}
-	}
-
-	public static TransformCollation committingCollation() {
-		List<DomainTransformEvent> events = committingRequest().getEvents();
-		// during pre-commit, request will have zero transforms
-		return new TransformCollation(
-				events.isEmpty() ? get().transformQueue : events);
-	}
-
-	public static DomainTransformRequest committingRequest() {
-		return (DomainTransformRequest) LooseContext.get(
-				CommitToStorageTransformListener.CONTEXT_COMMITTING_REQUEST);
 	}
 
 	protected void commitRemote(DomainTransformRequest request,
@@ -530,12 +506,12 @@ public class CommitToStorageTransformListener
 					return;
 				}
 				if (ClientUtils.maybeOffline(caught)) {
-					topicStateChanged().publish(State.OFFLINE);
+					topicStateChanged.publish(State.OFFLINE);
 				}
 				throw new UnknownTransformFailedException(caught);
 			}
-			notifyCommitDomainException(caught);
-			topicStateChanged().publish(State.ERROR);
+			topicCommitDomainException.publish(caught);
+			topicStateChanged.publish(State.ERROR);
 		}
 
 		@Override
@@ -566,7 +542,7 @@ public class CommitToStorageTransformListener
 					 * seem a bit hacky but...a client's interpretation of what
 					 * is the canonical event (e.g. createObject on the server)
 					 * is more its business than the TLTM's
-					 * 
+					 *
 					 * so...leave here. for now
 					 */
 					for (DomainTransformEvent dte : response
@@ -668,10 +644,10 @@ public class CommitToStorageTransformListener
 				} finally {
 					tm.setReplayingRemoteEvent(false);
 					if (reloadRequired) {
-						topicStateChanged().publish(State.RELOAD);
+						topicStateChanged.publish(State.RELOAD);
 					} else {
-						topicStateChanged().publish(State.COMMITTED);
-						topicTransformsCommitted().publish(response);
+						topicStateChanged.publish(State.COMMITTED);
+						topicTransformsCommitted.publish(response);
 					}
 				}
 			}
@@ -710,14 +686,14 @@ public class CommitToStorageTransformListener
 		}
 
 		@Override
-		public void topicPublished(String key, State state) {
+		public void topicPublished(State state) {
 			switch (state) {
 			case PRE_COMMIT:
 			case COMMITTING:
 				return;
 			case COMMITTED:
 			case OFFLINE:
-				topicStateChanged().remove(this);
+				topicStateChanged.remove(this);
 				if (!reloadRequired) {
 					callback.onSuccess(null);
 				}
@@ -725,7 +701,7 @@ public class CommitToStorageTransformListener
 			default:
 				throw new UnsupportedOperationException();
 			}
-			topicStateChanged().remove(this);
+			topicStateChanged.remove(this);
 			if (reloadRequired) {
 				callback.onFailure(new Exception("flush failed on server"));
 			}

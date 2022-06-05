@@ -102,7 +102,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.common.client.util.ObjectWrapper;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -151,9 +151,6 @@ import cc.alcina.framework.entity.util.OffThreadLogger;
 public class DomainStore implements IDomainStore {
 	private static volatile QueryPool queryPool;
 
-	private static final String TOPIC_UPDATE_EXCEPTION = DomainStore.class
-			.getName() + ".TOPIC_UPDATE_EXCEPTION";
-
 	public static final String CONTEXT_DEBUG_QUERY_METRICS = DomainStore.class
 			.getName() + ".CONTEXT_DEBUG_QUERY_METRICS";
 
@@ -183,6 +180,9 @@ public class DomainStore implements IDomainStore {
 
 	static final int LONG_POST_PROCESS_TRACE_LENGTH = 99999;
 
+	public static final Topic<DomainStoreUpdateException> topicUpdateException = Topic
+			.create();
+
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -205,10 +205,6 @@ public class DomainStore implements IDomainStore {
 		return domainStores;
 	}
 
-	public static Topic<DomainStoreUpdateException> topicUpdateException() {
-		return Topic.global(TOPIC_UPDATE_EXCEPTION);
-	}
-
 	public static void waitUntilCurrentRequestsProcessed() {
 		Transaction.ensureBegun();
 		writableStore().getPersistenceEvents().getQueue()
@@ -227,10 +223,10 @@ public class DomainStore implements IDomainStore {
 	}
 
 	Topic<DomainTransformPersistenceEvent> topicBeforeDomainCommitted = Topic
-			.local();
+			.create();
 
 	Topic<DomainTransformPersistenceEvent> topicAfterDomainCommitted = Topic
-			.local();
+			.create();
 
 	private DomainTransformPersistenceEvents persistenceEvents;
 
@@ -996,14 +992,14 @@ public class DomainStore implements IDomainStore {
 					Exception warn = new Exception(warnBuilder.toString());
 					System.out.println(warn);
 					warn.printStackTrace();
-					AlcinaTopics.notifyDevWarning(warn);
+					AlcinaTopics.devWarning.publish(warn);
 				}
 				if (!causes.isEmpty()) {
 					UmbrellaException umby = new UmbrellaException(causes);
 					causes.iterator().next().printStackTrace();
 					DomainStoreUpdateException updateException = new DomainStoreUpdateException(
 							umby);
-					topicUpdateException().publish(updateException);
+					topicUpdateException.publish(updateException);
 					if (updateException.ignoreForDomainStoreExceptionCount) {
 						logger.warn("Domain store update warning [non-fatal]",
 								updateException);

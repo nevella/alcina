@@ -4,16 +4,11 @@ import java.util.regex.Pattern;
 
 import org.w3c.dom.Node;
 
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.XmlUtils;
 
 public interface ParserToken<C extends ParserContext, S extends AbstractParserSlice> {
-	public static final String TOPIC_RESET_TOKEN_PATTERNS = ParserToken.class
-			.getName() + ".TOPIC_RESET_TOKEN_PATTERNS";
-
-	public static Topic<Void> topicResetTokenPatterns() {
-		return Topic.global(TOPIC_RESET_TOKEN_PATTERNS);
-	}
+	public static final Topic<Void> topicResetTokenPatterns = Topic.create();
 
 	public S createSlice(C context, XmlUtils.DOMLocation start,
 			XmlUtils.DOMLocation end, int startOffsetInRun);

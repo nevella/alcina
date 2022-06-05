@@ -16,7 +16,7 @@ package cc.alcina.framework.gwt.client.logic;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.Topic;
 
 /**
  *
@@ -24,51 +24,40 @@ import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublishe
  */
 @Registration.Singleton
 public class MessageManager {
-	public static final String TOPIC_MESSAGE_PUBLISHED = MessageManager.class
-			.getName() + ".TOPIC_MESSAGE_PUBLISHED";
+	public static final Topic<String> topicMessagePublished = Topic.create();
 
-	public static final String TOPIC_ICY_MESSAGE_PUBLISHED = MessageManager.class
-			.getName() + ".TOPIC_ICY_MESSAGE_PUBLISHED";
+	public static final Topic<String> topicCenterMessagePublished = Topic.create();
 
-	public static final String TOPIC_ICY_CENTER_MESSAGE_PUBLISHED = MessageManager.class
-			.getName() + ".TOPIC_ICY_CENTER_MESSAGE_PUBLISHED";
+	public static final Topic<String> topicIcyMessagePublished = Topic.create();
 
-	public static final String TOPIC_CENTER_MESSAGE_PUBLISHED = MessageManager.class
-			.getName() + ".TOPIC_CENTER_MESSAGE_PUBLISHED";
+	public static final Topic<String> topicIcyCenterMessagePublished = Topic.create();
 
-	public static final String TOPIC_EXCEPTION_MESSAGE_PUBLISHED = MessageManager.class
-			.getName() + ".TOPIC_EXCEPTION_MESSAGE_PUBLISHED";
+	public static final Topic<String> topicExceptionMessagePublished = Topic.create();
 
-	public static final String TOPIC_APP_MESSAGE_PUBLISHED = MessageManager.class
-			.getName() + ".TOPIC_APP_MESSAGE_PUBLISHED";
+	public static final Topic<String> topicAppMessagePublished = Topic.create();
 
 	public static MessageManager get() {
 		return Registry.impl(MessageManager.class);
 	}
 
 	public void centerMessage(String message) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_CENTER_MESSAGE_PUBLISHED,
-				message);
+		topicCenterMessagePublished.publish(message);
 	}
 
 	public void exceptionMessage(String messageHtml) {
-		GlobalTopicPublisher.get()
-				.publishTopic(TOPIC_EXCEPTION_MESSAGE_PUBLISHED, messageHtml);
+		topicExceptionMessagePublished.publish(messageHtml);
 	}
 
 	public void icyCenterMessage(String message) {
-		GlobalTopicPublisher.get()
-				.publishTopic(TOPIC_ICY_CENTER_MESSAGE_PUBLISHED, message);
+		topicIcyCenterMessagePublished.publish(message);
 	}
 
 	public void icyMessage(String message) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_ICY_MESSAGE_PUBLISHED,
-				message);
+		topicIcyMessagePublished.publish(message);
 	}
 
 	public void showMessage(String message) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_MESSAGE_PUBLISHED,
-				message);
+		topicMessagePublished.publish(message);
 	}
 
 	public void showMessage(String string, Object... args) {

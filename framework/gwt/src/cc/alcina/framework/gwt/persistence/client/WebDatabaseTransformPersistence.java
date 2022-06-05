@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -47,7 +47,7 @@ import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDel
 
 /**
  * refactor-consort (init method)
- * 
+ *
  * @author Nick Reddel
  */
 public class WebDatabaseTransformPersistence
@@ -85,7 +85,7 @@ public class WebDatabaseTransformPersistence
 		Exception exception = isStorageQuotaError(error)
 				? new StorageQuotaException(message)
 				: new Exception(message);
-		AlcinaTopics.localPersistenceException(exception);
+		AlcinaTopics.localPersistenceException.publish(exception);
 		callback.onFailure(exception);
 	}
 
@@ -152,7 +152,7 @@ public class WebDatabaseTransformPersistence
 
 				@Override
 				public void onSuccess(Object result) {
-					getCommitToStorageTransformListener().topicStateChanged()
+					CommitToStorageTransformListener.topicStateChanged
 							.add(listener);
 					ClientTransformManager.cast()
 							.setPersistableTransformListener(listener);
@@ -258,11 +258,12 @@ public class WebDatabaseTransformPersistence
 	@Override
 	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper,
 			final AsyncCallback callback) {
-		notifyPersisting(new LocalPersistenceTuple(wrapper.getType().toString(),
-				wrapper.getText().length(), wrapper.getText()));
+		topicPersisting
+				.publish(new LocalPersistenceTuple(wrapper.getType().toString(),
+						wrapper.getText().length(), wrapper.getText()));
 		if (wrapper
 				.getType() == DeltaApplicationRecordType.LOCAL_TRANSFORMS_APPLIED) {
-			AlcinaTopics.logCategorisedMessage(new StringPair(
+			AlcinaTopics.categorisedLogMessage.publish(new StringPair(
 					AlcinaTopics.LOG_CATEGORY_TRANSFORM, wrapper.getText()));
 		}
 		maybeCompressWrapper(wrapper);

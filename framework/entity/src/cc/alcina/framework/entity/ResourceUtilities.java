@@ -79,7 +79,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalCollection;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
@@ -98,7 +98,7 @@ public class ResourceUtilities {
 
 	private static Map<String, String> cache = new ConcurrentHashMap<>();
 
-	public static Topic<Void> propertiesInvalidated = Topic.local();
+	public static final Topic<Void> propertiesInvalidated = Topic.create();
 
 	private static Set<String> immutableCustomProperties = new LinkedHashSet<>();
 

@@ -7,13 +7,12 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
 
 public class ConsortWithSignals<D, S> extends Consort<D> {
 	Map<S, ConsortSignalHandler<S>> signalHandlers = new LinkedHashMap<S, ConsortSignalHandler<S>>();
 
-	private TopicPublisher signalTopicPublisher = new TopicPublisher();
+	public final Topic<S> topicSignal = Topic.create();
 
 	public void addSignalHandler(ConsortSignalHandler<S> signal) {
 		if (signalHandlers.containsKey(signal.handlesSignal())) {
@@ -31,12 +30,7 @@ public class ConsortWithSignals<D, S> extends Consort<D> {
 		logger.info(Ax.format("%s%s%s -> %s", "[SG] ",
 				CommonUtils.padStringLeft("", depth(), "    "),
 				CommonUtils.simpleClassName(getClass()), signal));
-		signalTopicPublisher.publishTopic(signal.toString(), signal);
+		topicSignal.publish(signal);
 		signalHandlers.get(signal).signal(this, finishedCallback);
-	}
-
-	public void signalListenerDelta(String key, TopicListener listener,
-			boolean add) {
-		signalTopicPublisher.listenerDelta(key, listener, add);
 	}
 }

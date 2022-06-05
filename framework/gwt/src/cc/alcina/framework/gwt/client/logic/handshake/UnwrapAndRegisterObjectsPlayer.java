@@ -22,33 +22,21 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasSize;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.persistence.client.DteReplayWorker;
 import cc.alcina.framework.gwt.persistence.client.DtrWrapperBackedDomainModelDelta;
 
 /**
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public class UnwrapAndRegisterObjectsPlayer
 		extends RunnableAsyncCallbackPlayer<Void, HandshakeState>
 		implements LoopingPlayer {
-	public static final String TOPIC_DELTA_PROGRESS = UnwrapAndRegisterObjectsPlayer.class
-			.getName() + ".TOPIC_DELTA_PROGRESS";
-
-	public static void deltaProgress(IntPair intPair) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_DELTA_PROGRESS, intPair);
-	}
-
-	public static void deltaProgressListenerDelta(
-			TopicListener<IntPair> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_DELTA_PROGRESS, listener,
-				add);
-	}
+	public static final Topic<IntPair> topicDeltaProgress = Topic.create();
 
 	protected DomainModelDelta currentDelta = null;
 
@@ -118,10 +106,6 @@ public class UnwrapAndRegisterObjectsPlayer
 		loop();
 	}
 
-	protected boolean isBypassInitialObjectsRegistration() {
-		return false;
-	}
-
 	private void loop0() {
 		if (phase == null || phase == Phase.REPLAYING_TRANSFORMS) {
 			currentDelta = null;
@@ -137,7 +121,7 @@ public class UnwrapAndRegisterObjectsPlayer
 				deltaOrdinal++;
 				Iterator<DomainModelDelta> itr = deltasToApply.getItr();
 				if (itr instanceof HasSize) {
-					deltaProgress(new IntPair(deltaOrdinal,
+					topicDeltaProgress.publish(new IntPair(deltaOrdinal,
 							((HasSize) itr).getSize()));
 				}
 				phase = Phase.UNWRAPPING;
@@ -194,6 +178,10 @@ public class UnwrapAndRegisterObjectsPlayer
 	private void registerUnlinked() {
 		TransformManager.get().registerDomainObjectsAsync(
 				(Collection) currentDelta.getUnlinkedObjects(), this);
+	}
+
+	protected boolean isBypassInitialObjectsRegistration() {
+		return false;
 	}
 
 	protected boolean maybeRegisterDomainModelHolder() {

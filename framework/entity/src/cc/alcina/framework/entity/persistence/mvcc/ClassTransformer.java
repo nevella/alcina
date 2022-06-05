@@ -77,8 +77,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListenerReference;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener.Reference;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
@@ -99,14 +100,14 @@ import javassist.bytecode.LocalVariableAttribute;
 import javassist.bytecode.MethodInfo;
 
 /*
- * 
+ *
  * VERSIONS:
- * 
+ *
  * (just historical interest)
  * 17 - model READ_INVALID resolvedVersionState
  * 16 - disallow covariant return types
- * 
- * 
+ *
+ *
  */
 class ClassTransformer {
 	static {
@@ -130,6 +131,8 @@ class ClassTransformer {
 	private List<Runnable> compilationRunnables = new ArrayList<>();
 
 	Logger logger = LoggerFactory.getLogger(getClass());
+
+	private boolean generated = false;
 
 	public ClassTransformer(Mvcc mvcc) {
 		this.mvcc = mvcc;
@@ -157,8 +160,6 @@ class ClassTransformer {
 			throw new WrappedRuntimeException(e);
 		}
 	}
-
-	private boolean generated = false;
 
 	public void generateTransformedClasses() {
 		if (generated) {
@@ -225,8 +226,8 @@ class ClassTransformer {
 
 	boolean testClassTransform(Class clazz, MvccCorrectnessToken token) {
 		ClassTransform<? extends Entity> transform = classTransforms.get(clazz);
-		TopicListenerReference ref = transform.correctnessIssueTopic
-				.add((k, issue) -> {
+		TopicListener.Reference ref = transform.correctnessIssueTopic
+				.add(issue -> {
 					Ax.err("Correctness issue: %s %s", issue.type,
 							issue.message);
 				});
@@ -242,7 +243,7 @@ class ClassTransformer {
 			MvccCorrectnessIssueType issueType, MvccCorrectnessToken token) {
 		ClassTransform<? extends Entity> ct = new ClassTransform<>(clazz);
 		StringBuilder logBuilder = new StringBuilder();
-		ct.correctnessIssueTopic.add((k, issue) -> {
+		ct.correctnessIssueTopic.add(issue -> {
 			if (issue.type == issueType) {
 				logBuilder.append(issue.message);
 			}
@@ -323,7 +324,7 @@ class ClassTransformer {
 		private static final transient int VERSION = 18;
 
 		transient Topic<MvccCorrectnessIssue> correctnessIssueTopic = Topic
-				.local();
+				.create();
 
 		private int version;
 
@@ -585,38 +586,38 @@ class ClassTransformer {
 			// be without a this.xxx form)
 			//
 			/*
-			 * 
-			 * 
+			 *
+			 *
 			 * Transactional access::
-			 * 
+			 *
 			 * Two main issues: field access and object identity
-			 * 
+			 *
 			 * Identity: for objects created or registered in the domain
 			 * store transaction manager, there is only *one instance* of
 			 * the object used for equality. This applies to all objects
 			 * objects created in tx phase 'TO_DOMAIN_COMMITTING' - i.e.
 			 * with a non-zero id field - and also objects
-			 * objects created with an initial non-zero localid in tx phase 
+			 * objects created with an initial non-zero localid in tx phase
 			 * TO_DB_PREPARING. All references between
 			 * graph objects use that 'domain identity' object.
-			 * 
+			 *
 			 * The effect of that constraint on the class rewriter is quite
 			 * profound - we can't allow any reference to 'this' from
 			 * transactional object versions to escape from code - and that
 			 * includes inner classes. Consequent constraints are:
-			 * 
+			 *
 			 * @formatter:off
-			 * - inner class creation must be in dedicated public/protected methods in the entity class which 
-			 * *only* return the inner class (and are hooked through 'domainIdentity().xxx' by the programmer) 
+			 * - inner class creation must be in dedicated public/protected methods in the entity class which
+			 * *only* return the inner class (and are hooked through 'domainIdentity().xxx' by the programmer)
 			 * - entity field access can only occur in the main class. no inner class can access entity class fields
 			 * - 'this' can't be assigned or returned
-			 * 
+			 *
 			 * @formatter:on
-			 * 
+			 *
 			 * TODO: rewrite rewriter to go getXX->resolveTx.__super__getXX (which calls super.getXX)
-			 * 
-			 * 
-			 * 
+			 *
+			 *
+			 *
 			 */
 			public void visit(FieldAccessExpr expr, Void arg) {
 				super.visit(expr, arg);
@@ -1022,7 +1023,7 @@ class ClassTransformer {
 		 * <li>non-private methods are rewritten to apply call to transactional
 		 * version of object
 		 * </ul>
-		 * 
+		 *
 		 * @author nick@alcina.cc
 		 *
 		 */
@@ -1077,7 +1078,7 @@ class ClassTransformer {
 					});
 					/*
 					 * override Entity
-					 * 
+					 *
 					 */
 					tasks.add(() -> {
 						String body = Ax.format("{\n\treturn %s.class;}",
@@ -1147,7 +1148,7 @@ class ClassTransformer {
 						 * the Entity definitions - and those are safe across
 						 * versions (i.e. different versions of the same object
 						 * will have the same hashcode and will be equal())
-						 * 
+						 *
 						 * so it doesn't matter which version we test against,
 						 * hence no need to reroute
 						 */
@@ -1239,12 +1240,12 @@ class ClassTransformer {
 							/*
 							 * This may result in two calls to resolve() - but
 							 * there's no other way to do it with javassist
-							 * 
+							 *
 							 * If we were to make a new method, (a) possibly not
 							 * inlined and (b) need an instance variable of the
 							 * new type (so we can call the method) which
 							 * javassist don't like
-							 * 
+							 *
 							 * We could write another super_call method - but
 							 * remember, 99.9% of the time we don't reach this
 							 * point...

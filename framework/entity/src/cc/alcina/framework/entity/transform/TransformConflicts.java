@@ -19,8 +19,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.CommonPersistenceLocal;
@@ -28,9 +28,9 @@ import cc.alcina.framework.entity.persistence.CommonPersistenceProvider;
 
 /**
  * Can be plugged into TLTM to check for versioning conflicts
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public class TransformConflicts {
 	private static final String CHECK_TRANSFORM_CONFLICTS_QUERY = "check transform conflicts query";
@@ -41,8 +41,8 @@ public class TransformConflicts {
 	public static final String CONTEXT_IGNORE_TRANSFORM_CONFLICTS = TransformConflicts.class
 			.getName() + ".CONTEXT_IGNORE_TRANSFORM_CONFLICTS";
 
-	public static final String TOPIC_CONFLICT_EVENT = TransformConflicts.class
-			.getName() + ".TOPIC_CONFLICT_EVENT";
+	public static final Topic<TransformConflictEvent> topicConflictEvent = Topic
+			.create();
 
 	private boolean ignoreConflicts;
 
@@ -122,8 +122,7 @@ public class TransformConflicts {
 				conflictEvent.members.add(new TransformConflictEventMember(dtep,
 						dtep.getDomainTransformRequestPersistent()));
 			}
-			GlobalTopicPublisher.get().publishTopic(
-					TransformConflicts.TOPIC_CONFLICT_EVENT, conflictEvent);
+			topicConflictEvent.publish(conflictEvent);
 		}
 	}
 
@@ -147,7 +146,7 @@ public class TransformConflicts {
 		StringBuilder builder = new StringBuilder();
 
 		@Override
-		public void topicPublished(String key, TransformConflictEvent event) {
+		public void topicPublished(TransformConflictEvent event) {
 			builder.append(
 					">>> Transform conflict <<<\n\nThe transforms below (first is most recent) "
 							+ " have conflicts - same object and field, but changes were made "

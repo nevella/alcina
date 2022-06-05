@@ -4,7 +4,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage;
 import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
@@ -19,8 +19,7 @@ public class ReadonlySupportServletLayer {
 
 	private String notPerformedBecauseReadonlyMessage;
 
-	private TopicListener<List<OutOfBandMessage>> appendMessageListener = (k,
-			list) -> {
+	private TopicListener<List<OutOfBandMessage>> appendMessageListener = list -> {
 		if (AppPersistenceBase.isInstanceReadOnly()) {
 			{
 				OutOfBandMessage.ClientInstanceMessage message = new OutOfBandMessage.ClientInstanceMessage();

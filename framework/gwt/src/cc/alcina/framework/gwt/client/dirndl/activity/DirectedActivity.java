@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.action.PlaceAction;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
@@ -26,7 +26,8 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 @Registration(DirectedActivity.class)
 public class DirectedActivity<P extends BasePlace> extends Model
 		implements Activity {
-	private static Topic<DirectedActivity> topicActivityStarted = Topic.local();
+	public static final Topic<DirectedActivity> topicActivityStarted = Topic
+			.create();
 
 	public static Activity forPlace(Place place) {
 		if (!(place instanceof BasePlace)) {
@@ -80,10 +81,6 @@ public class DirectedActivity<P extends BasePlace> extends Model
 		return directedActivity;
 	}
 
-	public static Topic<DirectedActivity> topicActivityStarted() {
-		return topicActivityStarted;
-	}
-
 	protected P place;
 
 	public DirectedActivity() {
@@ -114,7 +111,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	@Override
 	public void start(AcceptsOneWidget panel, EventBus eventBus) {
 		// ask the framework to render this activity
-		topicActivityStarted().publish(this);
+		topicActivityStarted.publish(this);
 	}
 
 	public <DA extends DirectedActivity> DA withPlace(P place) {

@@ -12,11 +12,9 @@ import com.google.gwt.user.client.ui.Label;
 import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.SimplePanel;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.logic.CallManager;
 import cc.alcina.framework.gwt.client.logic.MessageManager;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
@@ -33,30 +31,17 @@ public class StatusDisplayer {
 		}
 	};
 
-	private TopicListener topicListener = new TopicListener<String>() {
-		@Override
-		public void topicPublished(String key, String message) {
-			showMessage(message, key);
-		}
-	};
-
 	private FaderTuple appTuple;
 
 	private FaderTuple exceptionTuple;
-
-	private StringMap stylePrefixes;
 
 	FaderTuple statusTuple;
 
 	FaderTuple centerTuple;
 
+	boolean detached = false;
+
 	public StatusDisplayer() {
-		stylePrefixes = new StringMap();
-		stylePrefixes.put(MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, "icy");
-		stylePrefixes.put(MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED,
-				"icy-center");
-		stylePrefixes.put(MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED,
-				"sd-center-notification");
 	}
 
 	public void attach() {
@@ -70,22 +55,23 @@ public class StatusDisplayer {
 		HTML exceptionLabel = new HTML();
 		exceptionTuple = new FaderTuple(exceptionLabel,
 				"alcina-Status-Exception");
-		GlobalTopicPublisher.get().addTopicListener(CallManager.TOPIC_CALL_MADE,
-				topicListener);
-		GlobalTopicPublisher.get().addTopicListener(
-				MessageManager.TOPIC_MESSAGE_PUBLISHED, topicListener);
-		GlobalTopicPublisher.get().addTopicListener(
-				MessageManager.TOPIC_APP_MESSAGE_PUBLISHED, topicListener);
-		GlobalTopicPublisher.get().addTopicListener(
-				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
-		GlobalTopicPublisher.get().addTopicListener(
-				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
-		GlobalTopicPublisher.get().addTopicListener(
-				MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED,
-				topicListener);
-		GlobalTopicPublisher.get().addTopicListener(
-				MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED,
-				topicListener);
+		CallManager.topicCallMade
+				.add(message -> showMessage(message, Channel.CALL_MADE));
+		MessageManager.topicMessagePublished.add(
+				message -> showMessage(message, Channel.MESSAGE_PUBLISHED));
+		MessageManager.topicAppMessagePublished.add(
+				message -> showMessage(message, Channel.APP_MESSAGE_PUBLISHED));
+		MessageManager.topicIcyMessagePublished.add(
+				message -> showMessage(message, Channel.ICY_MESSAGE_PUBLISHED));
+		MessageManager.topicCenterMessagePublished
+				.add(message -> showMessage(message,
+						Channel.CENTER_MESSAGE_PUBLISHED));
+		MessageManager.topicIcyCenterMessagePublished
+				.add(message -> showMessage(message,
+						Channel.ICY_CENTER_MESSAGE_PUBLISHED));
+		MessageManager.topicExceptionMessagePublished
+				.add(message -> showMessage(message,
+						Channel.EXCEPTION_MESSAGE_PUBLISHED));
 		RootPanel.get().add(appTuple.holder);
 		RootPanel.get().add(statusTuple.holder);
 		RootPanel.get().add(centerTuple.holder);
@@ -93,22 +79,7 @@ public class StatusDisplayer {
 	}
 
 	public void detach() {
-		GlobalTopicPublisher.get().removeTopicListener(
-				CallManager.TOPIC_CALL_MADE, topicListener);
-		GlobalTopicPublisher.get().removeTopicListener(
-				MessageManager.TOPIC_MESSAGE_PUBLISHED, topicListener);
-		GlobalTopicPublisher.get().removeTopicListener(
-				MessageManager.TOPIC_APP_MESSAGE_PUBLISHED, topicListener);
-		GlobalTopicPublisher.get().removeTopicListener(
-				MessageManager.TOPIC_ICY_MESSAGE_PUBLISHED, topicListener);
-		GlobalTopicPublisher.get().removeTopicListener(
-				MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED,
-				topicListener);
-		GlobalTopicPublisher.get().removeTopicListener(
-				MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED, topicListener);
-		GlobalTopicPublisher.get().removeTopicListener(
-				MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED,
-				topicListener);
+		detached = true;
 	}
 
 	public void removeWidget() {
@@ -118,24 +89,27 @@ public class StatusDisplayer {
 		exceptionTuple.label.removeFromParent();
 	}
 
-	private void showMessage(String message, String channel) {
+	private void showMessage(String message, Channel channel) {
+		if (detached) {
+			return;
+		}
 		boolean center = false;
 		int duration = FADER_DURATION;
 		FaderTuple ft = statusTuple;
 		boolean withFade = true;
-		if (channel == MessageManager.TOPIC_CENTER_MESSAGE_PUBLISHED
-				|| channel == MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED) {
-			if (channel == MessageManager.TOPIC_ICY_CENTER_MESSAGE_PUBLISHED) {
+		if (channel == Channel.CENTER_MESSAGE_PUBLISHED
+				|| channel == Channel.ICY_CENTER_MESSAGE_PUBLISHED) {
+			if (channel == Channel.ICY_CENTER_MESSAGE_PUBLISHED) {
 				duration = (int) TimeConstants.ONE_MINUTE_MS;
 			}
 			center = true;
 			ft = centerTuple;
-		} else if (channel == CallManager.TOPIC_CALL_MADE) {
+		} else if (channel == Channel.CALL_MADE) {
 			withFade = false;
-		} else if (channel == MessageManager.TOPIC_APP_MESSAGE_PUBLISHED) {
+		} else if (channel == Channel.APP_MESSAGE_PUBLISHED) {
 			withFade = false;
 			ft = appTuple;
-		} else if (channel == MessageManager.TOPIC_EXCEPTION_MESSAGE_PUBLISHED) {
+		} else if (channel == Channel.EXCEPTION_MESSAGE_PUBLISHED) {
 			duration = 8000;
 			ft = exceptionTuple;
 		}
@@ -146,9 +120,10 @@ public class StatusDisplayer {
 			fader.cancel();
 		}
 		SimplePanelWClick holder = ft.holder;
-		if (stylePrefixes.containsKey(channel)) {
-			label.addStyleName(stylePrefixes.get(channel));
-			holder.addStyleName(stylePrefixes.get(channel));
+		String cssClassName = channel.getCssClassName();
+		if (Ax.notBlank(cssClassName)) {
+			label.addStyleName(cssClassName);
+			holder.addStyleName(cssClassName);
 		}
 		WidgetUtils.setOpacity(holder, 0);
 		message = CommonUtils.nullToEmpty(message);
@@ -198,6 +173,25 @@ public class StatusDisplayer {
 		}
 	}
 
+	enum Channel {
+		CALL_MADE, CENTER_MESSAGE_PUBLISHED, MESSAGE_PUBLISHED,
+		ICY_MESSAGE_PUBLISHED, ICY_CENTER_MESSAGE_PUBLISHED,
+		EXCEPTION_MESSAGE_PUBLISHED, APP_MESSAGE_PUBLISHED;
+
+		String getCssClassName() {
+			switch (this) {
+			case ICY_MESSAGE_PUBLISHED:
+				return "icy";
+			case ICY_CENTER_MESSAGE_PUBLISHED:
+				return "icy-center";
+			case CENTER_MESSAGE_PUBLISHED:
+				return "sd-center-notification";
+			default:
+				return null;
+			}
+		}
+	}
+
 	class FaderTuple {
 		final String defaultStyle;
 
@@ -227,14 +221,14 @@ public class StatusDisplayer {
 			}
 		};
 
-		@Override
-		protected void onDetach() {
-			super.onDetach();
-		}
-
 		public SimplePanelWClick(Label label) {
 			super(label);
 			addDomHandler(hideHandler, ClickEvent.getType());
+		}
+
+		@Override
+		protected void onDetach() {
+			super.onDetach();
 		}
 	}
 }

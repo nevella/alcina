@@ -44,7 +44,7 @@ public class UIRendererClient extends UIRenderer
 		if (event.getType().equals(BrowserEvents.KEYDOWN)) {
 			char c = (char) event.getKeyCode();
 			if (c == KeyCodes.KEY_ESCAPE) {
-				tourManager.stepListener.topicPublished(null, Action.CLOSE);
+				tourManager.stepListener.topicPublished(Action.CLOSE);
 			}
 		}
 	}
@@ -67,8 +67,7 @@ public class UIRendererClient extends UIRenderer
 		}
 		for (DecoratedRelativePopupPanel popupPanel : popups) {
 			StepPopupView stepView = (StepPopupView) popupPanel.getWidget();
-			stepView.topicPublisher.removeTopicListener(null,
-					tourManager.stepListener);
+			stepView.topicAction.remove(tourManager.stepListener);
 			popupPanel.hide();
 		}
 		popups.clear();
@@ -125,7 +124,7 @@ public class UIRendererClient extends UIRenderer
 		new Timer() {
 			@Override
 			public void run() {
-				tourManager.stepListener.topicPublished(null, Action.NEXT);
+				tourManager.stepListener.topicPublished(Action.NEXT);
 			}
 		}.schedule(1000);
 	}
@@ -157,8 +156,7 @@ public class UIRendererClient extends UIRenderer
 			}
 			StepPopupView stepPopupView = new StepPopupView(popupInfo,
 					tourManager.currentTour, idx++ == 0);
-			stepPopupView.topicPublisher.addTopicListener(null,
-					tourManager.stepListener);
+			stepPopupView.topicAction.add(tourManager.stepListener);
 			popup.setWidget(stepPopupView);
 			int pointerRightMargin = popupInfo.getRelativeTo()
 					.getPointerRightMargin();

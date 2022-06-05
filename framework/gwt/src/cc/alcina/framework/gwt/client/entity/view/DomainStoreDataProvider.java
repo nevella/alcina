@@ -41,7 +41,7 @@ import cc.alcina.framework.common.client.search.grouping.GroupedResult;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder.SortableColumn;
@@ -56,15 +56,10 @@ public class DomainStoreDataProvider<T extends Entity>
 	public static final String CONTEXT_NO_SEARCH = DomainStoreDataProvider.class
 			.getName() + ".CONTEXT_NO_SEARCH";
 
-	public static final String TOPIC_INVALIDATE_ALL = DomainStoreDataProvider.class
-			.getName() + ".TOPIC_INVALIDATE_ALL";
+	public static final Topic<Void> topicInvalidateAll = Topic.create();
 
 	public static void invalidateAll() {
-		topicInvalidateAll().publish(null);
-	}
-
-	public static Topic<Void> topicInvalidateAll() {
-		return Topic.global(TOPIC_INVALIDATE_ALL);
+		topicInvalidateAll.publish(null);
 	}
 
 	private EntitySearchDefinition searchDefinition;
@@ -109,9 +104,9 @@ public class DomainStoreDataProvider<T extends Entity>
 
 	public DomainStoreDataProvider(Class<T> clazz) {
 		this.clazz = clazz;
-		CommitToStorageTransformListener.topicTransformsCommitted()
-				.add((k, m) -> lastSearchDefinition = null);
-		topicInvalidateAll().add((k, m) -> lastSearchDefinition = null);
+		CommitToStorageTransformListener.topicTransformsCommitted
+				.add(m -> lastSearchDefinition = null);
+		topicInvalidateAll.add(m -> lastSearchDefinition = null);
 	}
 
 	@Override

@@ -68,7 +68,7 @@ import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -370,7 +370,7 @@ public class JobRegistry {
 			}
 		});
 		scheduler = new JobScheduler(this);
-		JobDomain.get().stateMessageEvents.add((k, messages) -> {
+		JobDomain.get().stateMessageEvents.add(messages -> {
 			for (JobStateMessage message : messages) {
 				if (message == null) {
 					// FIXME - mvcc.5 - should not be
@@ -1092,8 +1092,7 @@ public class JobRegistry {
 
 		private CountDownLatch latch;
 
-		private TopicListener<List<JobStateMessage>> listener = (k,
-				messages) -> {
+		private TopicListener<List<JobStateMessage>> listener = messages -> {
 			for (JobStateMessage message : messages) {
 				if (message.getProcessState() != null
 						&& queriedJobs.contains(message.getJob())) {

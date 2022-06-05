@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -26,23 +26,24 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
-public class ServerValidator extends Model implements ParameterisedValidator, Serializable {
-	private static final transient String TOPIC_SERVER_VALIDATION_RESULT = ServerValidator.class
-			.getName() + ".TOPIC_SERVER_VALIDATION_RESULT";
-
-	private static final String TOPIC_SERVER_VALIDATION_BEFORE_SEND = ServerValidator.class
-			.getName() + ".TOPIC_SERVER_VALIDATION_BEFORE_SEND";
-
+public class ServerValidator extends Model
+		implements ParameterisedValidator, Serializable {
 	public static boolean performingBeanValidation = false;
+
+	public static final Topic<ServerValidator> topicBeforeServerValidationSend = Topic
+			.create();
+
+	public static final Topic<ServerValidator> topicServerValidationResult = Topic
+			.create();
 
 	public static boolean listIsValid(List<ServerValidator> svs) {
 		for (ServerValidator sv : svs) {
@@ -51,14 +52,6 @@ public class ServerValidator extends Model implements ParameterisedValidator, Se
 			}
 		}
 		return true;
-	}
-
-	public static Topic<ServerValidator> topicBeforeServerValidationSend() {
-		return Topic.global(TOPIC_SERVER_VALIDATION_BEFORE_SEND);
-	}
-
-	public static Topic<ServerValidator> topicServerValidationResult() {
-		return Topic.global(TOPIC_SERVER_VALIDATION_RESULT);
 	}
 
 	private String message;
@@ -82,16 +75,18 @@ public class ServerValidator extends Model implements ParameterisedValidator, Se
 	public ServerValidationResult getServerValidationResult() {
 		return this.serverValidationResult;
 	}
-@AlcinaTransient
 
+	@AlcinaTransient
 	public String getValidatingMessage() {
 		return " validating";
 	}
-@AlcinaTransient
+
+	@AlcinaTransient
 	public boolean isValidated() {
 		return this.validated;
 	}
-@AlcinaTransient
+
+	@AlcinaTransient
 	public boolean isValidating() {
 		return this.validating;
 	}
@@ -164,7 +159,7 @@ public class ServerValidator extends Model implements ParameterisedValidator, Se
 							lastValidatorWithException = sv;
 							handleServerValidationException(sv);
 						}
-						topicServerValidationResult().publish(sv);
+						topicServerValidationResult.publish(sv);
 					}
 					resolveFeedback(lastValidatorWithException);
 					cleanUp();
@@ -217,7 +212,7 @@ public class ServerValidator extends Model implements ParameterisedValidator, Se
 					}
 				}
 			};
-			topicBeforeServerValidationSend().publish(this);
+			topicBeforeServerValidationSend.publish(this);
 			validateWithCallback(callback);
 			throw psve;
 		}

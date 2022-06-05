@@ -11,11 +11,11 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.collections.PathAccessor;
 import cc.alcina.framework.common.client.collections.PathMapper.NoSuchVariantPropertyException;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.Topic;
 
 public class JsonPropertyAccessor implements PathAccessor {
-	public static final String TOPIC_NOTIFICATION_MULTIPLE_JSON_SINGLE_JAVA = JsonPropertyAccessor.class
-			.getName() + ".TOPIC_NOTIFICATION_MULTIPLE_JSON_SINGLE_JAVA";
+	public static final Topic<Object[]> topicNotificationMultipleJsonSingleJava = Topic
+			.create();
 
 	public static final String CONTEXT_IGNORE_MISSING_JSON_VALUES = JsonPropertyAccessor.class
 			.getName() + ".CONTEXT_IGNORE_MISSING_JSON_VALUES";
@@ -106,8 +106,7 @@ public class JsonPropertyAccessor implements PathAccessor {
 				} else if (((JSONArray) value).length() == 0) {
 					return null;
 				} else {
-					GlobalTopicPublisher.get().publishTopic(
-							TOPIC_NOTIFICATION_MULTIPLE_JSON_SINGLE_JAVA,
+					topicNotificationMultipleJsonSingleJava.publish(
 							new Object[] { jsonObject, bean, propertyName });
 					return ((JSONArray) value).get(0);
 				}

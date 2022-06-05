@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.DataFolderProvider;
@@ -15,8 +15,8 @@ import cc.alcina.framework.entity.util.LengthConstrainedStringWriter.OverflowExc
 import cc.alcina.framework.servlet.LifecycleService;
 
 public class AlcinaServletTopics {
-	public static Topic<LengthConstrainedStringWriter.OverflowException> serializationOverflow = Topic
-			.local();
+	public static final Topic<LengthConstrainedStringWriter.OverflowException> serializationOverflow = Topic
+			.create();
 
 	@Registration.Singleton
 	public static class Handlers extends LifecycleService {
@@ -26,7 +26,7 @@ public class AlcinaServletTopics {
 
 		@Override
 		public void onApplicationStartup() {
-			serializationOverflow.add((k, v) -> onSerializationOverflow(v));
+			serializationOverflow.add(v -> onSerializationOverflow(v));
 		}
 
 		private synchronized void onSerializationOverflow(OverflowException v) {

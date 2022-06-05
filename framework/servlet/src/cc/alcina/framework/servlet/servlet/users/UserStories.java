@@ -38,7 +38,7 @@ import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
@@ -47,7 +47,7 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 public class UserStories {
-	public static Topic<UserStoryDelta> topicUserStoriesEvents = Topic.local();
+	public static final Topic<UserStoryDelta> topicUserStoriesEvents = Topic.create();
 
 	private String html;
 

@@ -39,8 +39,8 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Regi
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
@@ -80,14 +80,13 @@ public class JobScheduler {
 
 	private BlockingQueue<ScheduleEvent> events = new LinkedBlockingQueue<>();
 
-	public Topic<Void> eventOcurred = Topic.local();
+	public Topic<Void> eventOcurred = Topic.create();
 
-	private TopicListener<Event> queueEventListener = (k,
-			v) -> enqueueEvent(new ScheduleEvent(v));
+	private TopicListener<Event> queueEventListener = v -> enqueueEvent(
+			new ScheduleEvent(v));
 
-	private TopicListener<Void> futureConsistencyEventListener = (k,
-			v) -> enqueueEvent(
-					new ScheduleEvent(Type.FUTURE_CONSISTENCY_EVENT));
+	private TopicListener<Void> futureConsistencyEventListener = v -> enqueueEvent(
+			new ScheduleEvent(Type.FUTURE_CONSISTENCY_EVENT));
 
 	Map<Job, JobAllocator> allocators = new ConcurrentHashMap<>();
 

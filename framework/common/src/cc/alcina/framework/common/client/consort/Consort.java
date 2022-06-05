@@ -24,42 +24,32 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
-import cc.alcina.framework.common.client.util.TopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
  * Manages an ecology of players - a sort of organic state machine.
- * 
- * 
+ *
+ *
  * The usage as per: noun noun: consort; plural noun: consorts a small group of
  * musicians performing together, typically playing instrumental music of the
  * Renaissance period. "a consort of viols"
- * 
+ *
+ * Note re topics - the refectoring of Topic into non-keyed caused a reworking
+ * of topics here (since there's a lot of commonality in the treatment of the
+ * different messages)
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public class Consort<D> {
 	private static final String PLAYERS_WITH_EQUAL_DEPS_ERR = "Players with equal"
 			+ " dependencies and priorities: \n%s\n%s\n  - deps: %s";
 
-	public static final transient String BEFORE_PLAY = "BEFORE_PLAY";
-
-	public static final transient String AFTER_PLAY = "AFTER_PLAY";
-
-	public static final transient String STATES = "STATES";
-
-	public static final transient String ERROR = "ERROR";
-
-	public static final transient String FINISHED = "FINISHED";
-
-	public static final transient String CANCELLED = "CANCELLED";
-
-	public static final transient String NO_ACTIVE_PLAYERS = "NO_ACTIVE_PLAYERS";
-
 	protected static final String IGNORE_PLAYED_STATES_IF_NOT_CONTAINED = Consort.class
 			.getName() + ".IGNORE_PLAYED_STATES_IF_NOT_CONTAINED";
 
-	private TopicPublisher topicPublisher = new TopicPublisher();
+	private Topic.MultichannelTopics<TopicChannel> topics = new Topic.MultichannelTopics<>();
 
 	protected LinkedList<Player<D>> players = new LinkedList<Player<D>>();
 
@@ -144,7 +134,7 @@ public class Consort<D> {
 			D state) {
 		StateListenerWrapper wrapper = new StateListenerWrapper(listener,
 				state);
-		topicPublisher.listenerDelta(STATES, wrapper, true);
+		topics.listenerDelta(TopicChannel.STATES, wrapper, true);
 		wrapper.fireIfExisting();
 		return wrapper;
 	}
@@ -181,14 +171,14 @@ public class Consort<D> {
 		return reachedStates.contains(state);
 	}
 
-	public void deferredRemove(final List<String> keys,
+	public void deferredRemove(List<TopicChannel> channels,
 			final TopicListener listener) {
 		Registry.impl(TimerWrapperProvider.class)
 				.scheduleDeferred(new Runnable() {
 					@Override
 					public void run() {
-						for (String key : keys) {
-							listenerDelta(key, listener, false);
+						for (TopicChannel channel : channels) {
+							listenerDelta(channel, listener, false);
 						}
 					}
 				});
@@ -196,7 +186,7 @@ public class Consort<D> {
 
 	public void doOrDefer(TopicListener topicListener, D state) {
 		if (containsState(state)) {
-			topicListener.topicPublished(null, state);
+			topicListener.topicPublished(state);
 		} else {
 			addStateListener(topicListener, state);
 		}
@@ -205,17 +195,17 @@ public class Consort<D> {
 	public void exitListenerDelta(TopicListener listener,
 			boolean includeNoActivePlayers, boolean add) {
 		if (add) {
-			listenerDelta(Consort.CANCELLED, listener, true);
-			listenerDelta(Consort.ERROR, listener, true);
-			listenerDelta(Consort.FINISHED, listener, true);
+			listenerDelta(Consort.TopicChannel.CANCELLED, listener, true);
+			listenerDelta(Consort.TopicChannel.ERROR, listener, true);
+			listenerDelta(Consort.TopicChannel.FINISHED, listener, true);
 			if (includeNoActivePlayers) {
-				listenerDelta(Consort.NO_ACTIVE_PLAYERS, listener, true);
+				listenerDelta(Consort.TopicChannel.NO_ACTIVE_PLAYERS, listener,
+						true);
 			}
 		} else {
-			deferredRemove(
-					Arrays.asList(Consort.CANCELLED, Consort.ERROR,
-							Consort.FINISHED, Consort.NO_ACTIVE_PLAYERS),
-					listener);
+			deferredRemove(Arrays.asList(Consort.TopicChannel.CANCELLED,
+					Consort.TopicChannel.ERROR, Consort.TopicChannel.FINISHED,
+					Consort.TopicChannel.NO_ACTIVE_PLAYERS), listener);
 		}
 	}
 
@@ -224,7 +214,11 @@ public class Consort<D> {
 		logger.info(Ax.format("%s     [%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				"----CONSORT FINISHED"));
-		topicPublisher.publishTopic(FINISHED, null);
+		topics.publish(TopicChannel.FINISHED, null);
+	}
+
+	public TopicChannel getFiringTopicChannel() {
+		return topics.getFiringChannel();
 	}
 
 	public Consort getParentConsort() {
@@ -252,8 +246,9 @@ public class Consort<D> {
 		return this.throwOnUnableToResolveDependencies;
 	}
 
-	public void listenerDelta(String key, TopicListener listener, boolean add) {
-		topicPublisher.listenerDelta(key, listener, add);
+	public void listenerDelta(TopicChannel cancelled, TopicListener listener,
+			boolean add) {
+		topics.listenerDelta(cancelled, listener, add);
 	}
 
 	public void nudge() {
@@ -264,7 +259,7 @@ public class Consort<D> {
 	public void onFailure(Throwable throwable) {
 		running = false;
 		Ax.simpleExceptionOut(throwable);
-		topicPublisher.publishTopic(ERROR, throwable);
+		topics.publish(TopicChannel.ERROR, throwable);
 		throw new WrappedRuntimeException(throwable);
 	}
 
@@ -335,7 +330,7 @@ public class Consort<D> {
 	// note - listener must be actually TopicListener<StatesDelta> - but GWT
 	// doesn't like that for Consort subclasses
 	public void statesListenerDelta(TopicListener listener, boolean add) {
-		topicPublisher.listenerDelta(STATES, listener, add);
+		topics.listenerDelta(TopicChannel.STATES, listener, add);
 	}
 
 	public void wasPlayed(Player<D> player) {
@@ -372,7 +367,7 @@ public class Consort<D> {
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				player.shortName(),
 				System.currentTimeMillis() - player.getStart()));
-		publishTopicWithBubble(AFTER_PLAY, player);
+		publishTopicWithBubble(TopicChannel.AFTER_PLAY, player);
 		if (keepGoing) {
 			consumeQueue();
 		}
@@ -403,7 +398,7 @@ public class Consort<D> {
 		}
 		consumingQueue = false;
 		if (playing.isEmpty() && running) {
-			topicPublisher.publishTopic(NO_ACTIVE_PLAYERS, null);
+			topics.publish(TopicChannel.NO_ACTIVE_PLAYERS, null);
 		}
 	}
 
@@ -431,7 +426,7 @@ public class Consort<D> {
 		boolean mod = add ? reachedStates.addAll(states)
 				: reachedStates.removeAll(states);
 		if (mod) {
-			publishTopicWithBubble(STATES,
+			publishTopicWithBubble(TopicChannel.STATES,
 					new StatesDelta(reachedCopy, reachedStates));
 			logger.debug(Ax.format("%s     [%s]",
 					CommonUtils.padStringLeft("", depth(), '\t'),
@@ -527,7 +522,7 @@ public class Consort<D> {
 	/*
 	 * In first pass, just go for immediately satisfied, non-state-provider
 	 * players
-	 * 
+	 *
 	 * In the second, we look for state-providers in an expanding loop, (for
 	 * dependency chains), looking for any path forward
 	 */
@@ -608,7 +603,7 @@ public class Consort<D> {
 			}
 			wasPlayed(player);
 		} else {
-			publishTopicWithBubble(BEFORE_PLAY, player);
+			publishTopicWithBubble(TopicChannel.BEFORE_PLAY, player);
 			player.play(replaying);
 		}
 	}
@@ -621,10 +616,11 @@ public class Consort<D> {
 		return player1.getPriority() - player2.getPriority();
 	}
 
-	protected void publishTopicWithBubble(String key, Object message) {
-		topicPublisher.publishTopic(key, message);
+	protected void publishTopicWithBubble(TopicChannel channel,
+			Object message) {
+		topics.publish(channel, message);
 		if (parentConsort != null) {
-			parentConsort.publishTopicWithBubble(key, message);
+			parentConsort.publishTopicWithBubble(channel, message);
 		}
 	}
 
@@ -646,25 +642,27 @@ public class Consort<D> {
 				D state) {
 			this(callback);
 			this.state = state;
-			listenerDelta(STATES, this, true);
+			listenerDelta(TopicChannel.STATES, this, true);
 		}
 
 		@Override
-		public void topicPublished(String key, Object message) {
+		public void topicPublished(Object message) {
 			boolean remove = false;
+			TopicChannel channel = topics.getFiringChannel();
 			try {
-				if (key == ERROR) {
+				if (channel == TopicChannel.ERROR) {
 					remove = true;
 					callback.onFailure((Throwable) message);
 				} else {
-					if (key == FINISHED || key == NO_ACTIVE_PLAYERS
-							|| key == CANCELLED) {
+					if (channel == TopicChannel.FINISHED
+							|| channel == TopicChannel.NO_ACTIVE_PLAYERS
+							|| channel == TopicChannel.CANCELLED) {
 						if (state == null) {
 							remove = true;
 							callback.onSuccess(message);
 						}
 					} else {
-						if (key == STATES) {
+						if (channel == TopicChannel.STATES) {
 							StatesDelta statesDelta = (StatesDelta) message;
 							if (statesDelta.wasStateAdded(state)) {
 								remove = true;
@@ -676,7 +674,7 @@ public class Consort<D> {
 			} finally {
 				if (remove) {
 					exitListenerDelta(this, true, false);
-					deferredRemove(Arrays.asList(STATES), this);
+					deferredRemove(Arrays.asList(TopicChannel.STATES), this);
 				}
 			}
 		}
@@ -701,6 +699,11 @@ public class Consort<D> {
 		}
 	}
 
+	public enum TopicChannel {
+		BEFORE_PLAY, AFTER_PLAY, STATES, ERROR, FINISHED, CANCELLED,
+		NO_ACTIVE_PLAYERS
+	}
+
 	class StateListenerWrapper implements TopicListener<StatesDelta> {
 		private TopicListener delegate;
 
@@ -718,15 +721,15 @@ public class Consort<D> {
 						public void run() {
 							StatesDelta delta = new StatesDelta(
 									Collections.EMPTY_SET, reachedStates);
-							topicPublished(null, delta);
+							topicPublished(delta);
 						}
 					});
 		}
 
 		@Override
-		public void topicPublished(String key, StatesDelta message) {
+		public void topicPublished(StatesDelta message) {
 			if (message.wasStateAdded(state)) {
-				delegate.topicPublished(STATES, state);
+				delegate.topicPublished(state);
 			}
 		}
 	}

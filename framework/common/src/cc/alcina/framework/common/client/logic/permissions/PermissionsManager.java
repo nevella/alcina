@@ -46,7 +46,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StackDebug;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 
 /**
  * <h2>Notes</h2>
@@ -116,11 +116,11 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public static StackDebug stackDebug = new StackDebug("PermissionsManager");
 
-	private static Topic<ClientInstance> topicClientInstance = Topic.local();
+	private static Topic<ClientInstance> topicClientInstance = Topic.create();
 
-	private static Topic<LoginState> topicLoginState = Topic.local();
+	private static Topic<LoginState> topicLoginState = Topic.create();
 
-	private static Topic<OnlineState> topicOnlineState = Topic.local();
+	private static Topic<OnlineState> topicOnlineState = Topic.create();
 
 	public static void confirmDepth(int depth) {
 		Preconditions.checkState(get().depth0() == depth);
@@ -262,15 +262,15 @@ public class PermissionsManager implements DomainTransformListener {
 		PermissionsManager.permissionsExtension = permissionsExtension;
 	}
 
-	public static Topic<ClientInstance> topicClientInstance() {
+	public static final Topic<ClientInstance> topicClientInstance() {
 		return topicClientInstance;
 	}
 
-	public static Topic<LoginState> topicLoginState() {
+	public static final Topic<LoginState> topicLoginState() {
 		return topicLoginState;
 	}
 
-	public static Topic<OnlineState> topicOnlineState() {
+	public static final Topic<OnlineState> topicOnlineState() {
 		return topicOnlineState;
 	}
 

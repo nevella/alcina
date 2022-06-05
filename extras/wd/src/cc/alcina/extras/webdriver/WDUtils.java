@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.Shell;
 
@@ -62,7 +62,7 @@ public class WDUtils {
 
 	private static boolean forceTimeout;
 
-	public static Topic<Boolean> timeoutForced = Topic.local();
+	public static final Topic<Boolean> timeoutForced = Topic.create();
 
 	public static void activateOsxChrome() {
 		try {

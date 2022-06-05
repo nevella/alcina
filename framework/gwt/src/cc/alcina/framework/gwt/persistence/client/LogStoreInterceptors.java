@@ -27,7 +27,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TextUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.util.ClientNodeIterator;
 
@@ -35,19 +35,16 @@ public class LogStoreInterceptors {
 	private ValueChangeHandler<String> historyListener = new ValueChangeHandler<String>() {
 		@Override
 		public void onValueChange(ValueChangeEvent<String> event) {
-			AlcinaTopics.logCategorisedMessage(new StringPair(
+			AlcinaTopics.categorisedLogMessage.publish(new StringPair(
 					AlcinaTopics.LOG_CATEGORY_HISTORY, event.getValue()));
 		}
 	};
 
 	private int statsMuteCounter = 0;
 
-	private TopicListener<Boolean> muteListener = new TopicListener<Boolean>() {
-		@Override
-		public void topicPublished(String key, Boolean message) {
-			statsMuteCounter += message ? 1 : -1;
-		}
-	};
+	private TopicListener<Boolean> muteListener = message -> statsMuteCounter += message
+			? 1
+			: -1;
 
 	private HandlerRegistration historyHandlerRegistration;
 
@@ -154,7 +151,7 @@ public class LogStoreInterceptors {
 					}
 				}
 			}
-			AlcinaTopics.logCategorisedMessage(new StringPair(
+			AlcinaTopics.categorisedLogMessage.publish(new StringPair(
 					click ? AlcinaTopics.LOG_CATEGORY_CLICK
 							: AlcinaTopics.LOG_CATEGORY_CHANGE,
 					ReplayInstruction.createReplayBody(path, text,
@@ -163,13 +160,13 @@ public class LogStoreInterceptors {
 	}
 
 	public void installStats() {
-		AlcinaTopics.muteStatisticsLoggingListenerDelta(muteListener, true);
+		AlcinaTopics.muteStatisticsLogging.add(muteListener);
 		installStats0();
 	}
 
 	public void interceptClientLog() {
-		AlcinaTopics.logCategorisedMessageListenerDelta(
-				LogStore.get().getStringPairListener(), true);
+		AlcinaTopics.categorisedLogMessage
+				.add(LogStore.get().getStringPairListener());
 	}
 
 	public boolean isLogStatPaused() {
@@ -183,6 +180,7 @@ public class LogStoreInterceptors {
 	public void logClicksAndChanges() {
 		nativePreviewHandlerRegistration = Event
 				.addNativePreviewHandler(new NativePreviewHandler() {
+					@Override
 					public void onPreviewNativeEvent(NativePreviewEvent event) {
 						previewNativeEvent(event);
 					}
@@ -193,8 +191,9 @@ public class LogStoreInterceptors {
 		this.historyHandlerRegistration = History
 				.addValueChangeHandler(historyListener);
 		windowClosingHandlerRegistration = Window.addWindowClosingHandler(
-				evt -> AlcinaTopics.logCategorisedMessage(new StringPair(
-						AlcinaTopics.LOG_CATEGORY_HISTORY, "window closing")));
+				evt -> AlcinaTopics.categorisedLogMessage.publish(
+						new StringPair(AlcinaTopics.LOG_CATEGORY_HISTORY,
+								"window closing")));
 	}
 
 	public void logStat(String stat) {
@@ -203,8 +202,8 @@ public class LogStoreInterceptors {
 			return;
 		}
 		ClientNotifications.get().log(stat);
-		AlcinaTopics.logCategorisedMessage(
-				new StringPair(AlcinaTopics.LOG_CATEGORY_STAT, stat));
+		AlcinaTopics.categorisedLogMessage
+				.publish(new StringPair(AlcinaTopics.LOG_CATEGORY_STAT, stat));
 	}
 
 	public void setLogStatPaused(boolean logStatPaused) {
@@ -220,9 +219,9 @@ public class LogStoreInterceptors {
 	}
 
 	public void unload() {
-		AlcinaTopics.logCategorisedMessageListenerDelta(
-				LogStore.get().getStringPairListener(), false);
-		AlcinaTopics.muteStatisticsLoggingListenerDelta(muteListener, false);
+		AlcinaTopics.categorisedLogMessage
+				.remove(LogStore.get().getStringPairListener());
+		AlcinaTopics.muteStatisticsLogging.remove(muteListener);
 		if (historyHandlerRegistration != null) {
 			historyHandlerRegistration.removeHandler();
 		}
@@ -258,73 +257,73 @@ public class LogStoreInterceptors {
 	}
 
 	native void installStats0()/*-{
-								function format(out) {
-								var idx = 0;
-								var j = 1;
-								
-								while (true) {
-								idx = out.indexOf("%s", idx);
-								if (idx == -1) {
-								break;
-								}
-								var ins = arguments[j++];
-								if (ins === null) {
-								ins = "null";
-								} else if (ins === undefined) {
-								ins = "undefined";
-								} else {
-								ins = ins.toString();
-								}
-								out = out.substring(0, idx) + ins + out.substring(idx + 2);
-								idx += ins.length;
-								}
-								return out;
-								}
-								function pad0(s, len) {
-								return pad(s, "0", len);
-								}
-								function pad(s, sup, len) {
-								s = "" + s;
-								while (s.length < len) {
-								s = sup + s;
-								}
-								return s;
-								}
-								var lsi = this;
-								var running = [];
-								function eventToString(event) {
-								// return some string representation of this event
-								var d = new Date(event.millis);
-								var timeStr = format("%s:%s:%s,%s", pad0(d.getHours(), 2), pad0(d
-								.getMinutes(), 2), pad0(d.getSeconds(), 2), pad0(d
-								.getMilliseconds(), 3));
-								return event.evtGroup + " | " + event.moduleName + " | "
-								+ event.subSystem + " | " + event.method + " | "
-								+ pad(event.type, " ", 25) + " | " + timeStr;
-								}
-								window.$stats = function(evt) {
-								var muted = lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::areStatsMuted()();
-								if (!muted) {
-								var e2s = eventToString(evt);
-								lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(e2s);
-								}
-								return true;
-								};
-								//if there were stats collected prior to this install, flush 'em
-								if (window["stats_pre"]) {
-								for ( var k in window.stats_pre) {
-								var pre = window.stats_pre[k];
-								lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
-								}
-								window.$stats_pre = [];
-								}
-								if ($wnd["stats_pre"]) {
-								for ( var k in $wnd.stats_pre) {
-								var pre = $wnd.stats_pre[k];
-								lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
-								}
-								$wnd.$stats_pre = [];
-								}
-								
-								}-*/;
+    function format(out) {
+      var idx = 0;
+      var j = 1;
+
+      while (true) {
+        idx = out.indexOf("%s", idx);
+        if (idx == -1) {
+          break;
+        }
+        var ins = arguments[j++];
+        if (ins === null) {
+          ins = "null";
+        } else if (ins === undefined) {
+          ins = "undefined";
+        } else {
+          ins = ins.toString();
+        }
+        out = out.substring(0, idx) + ins + out.substring(idx + 2);
+        idx += ins.length;
+      }
+      return out;
+    }
+    function pad0(s, len) {
+      return pad(s, "0", len);
+    }
+    function pad(s, sup, len) {
+      s = "" + s;
+      while (s.length < len) {
+        s = sup + s;
+      }
+      return s;
+    }
+    var lsi = this;
+    var running = [];
+    function eventToString(event) {
+      // return some string representation of this event
+      var d = new Date(event.millis);
+      var timeStr = format("%s:%s:%s,%s", pad0(d.getHours(), 2), pad0(d
+          .getMinutes(), 2), pad0(d.getSeconds(), 2), pad0(d.getMilliseconds(),
+          3));
+      return event.evtGroup + " | " + event.moduleName + " | "
+          + event.subSystem + " | " + event.method + " | "
+          + pad(event.type, " ", 25) + " | " + timeStr;
+    }
+    window.$stats = function(evt) {
+      var muted = lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::areStatsMuted()();
+      if (!muted) {
+        var e2s = eventToString(evt);
+        lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(e2s);
+      }
+      return true;
+    };
+    //if there were stats collected prior to this install, flush 'em
+    if (window["stats_pre"]) {
+      for ( var k in window.stats_pre) {
+        var pre = window.stats_pre[k];
+        lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
+      }
+      window.$stats_pre = [];
+    }
+    if ($wnd["stats_pre"]) {
+      for ( var k in $wnd.stats_pre) {
+        var pre = $wnd.stats_pre[k];
+        lsi.@cc.alcina.framework.gwt.persistence.client.LogStoreInterceptors::logStat(Ljava/lang/String;)(pre);
+      }
+      $wnd.$stats_pre = [];
+    }
+
+	}-*/;
 }

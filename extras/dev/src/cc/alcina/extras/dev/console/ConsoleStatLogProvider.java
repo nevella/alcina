@@ -37,7 +37,7 @@ public class ConsoleStatLogProvider implements LogProvider {
 
 	public ConsoleStatLogProvider() {
 		pushRemote.setDaemon(true);
-		DevStats.topicEmitStat().add((k, v) -> {
+		DevStats.topicEmitStat().add(v -> {
 			stats.add(v);
 			publishRemote.add(v);
 		});

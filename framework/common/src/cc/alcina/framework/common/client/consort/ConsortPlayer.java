@@ -3,7 +3,7 @@ package cc.alcina.framework.common.client.consort;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 
 public interface ConsortPlayer {
 	public Consort getStateConsort();
@@ -11,9 +11,10 @@ public interface ConsortPlayer {
 	public static class SubconsortSupport {
 		TopicListener listener = new TopicListener() {
 			@Override
-			public void topicPublished(final String key, final Object message) {
+			public void topicPublished(final Object message) {
+				Object channel = subConsort.getFiringTopicChannel();
 				subConsort.exitListenerDelta(listener, false, false);
-				if (key == Consort.ERROR) {
+				if (channel == Consort.TopicChannel.ERROR) {
 					player.onFailure((Throwable) message);
 				} else {
 					if (fireEndState) {

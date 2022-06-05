@@ -5,18 +5,20 @@ import java.util.TimerTask;
 
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 
 /**
  * XP (JVM/GWT) timer functionality
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 /*
  * will always be a singleton
  */
 public class TimerWrapperProviderJvm implements TimerWrapperProvider {
+	public static final Topic<Throwable> topicWrapperException = Topic.create();
+
 	private Timer timer = new Timer(true);
 
 	@Override
@@ -35,13 +37,6 @@ public class TimerWrapperProviderJvm implements TimerWrapperProvider {
 		runnable.run();
 	}
 
-	public static final String TOPIC_TIMER_EXCEPTION_EVENT_OCCURRED = TimerWrapperProviderJvm.class
-			.getName() + "." + "TOPIC_TIMER_EXCEPTION_EVENT_OCCURRED";
-
-	public static Topic<Throwable> topicWrapperException() {
-		return Topic.global(TOPIC_TIMER_EXCEPTION_EVENT_OCCURRED);
-	}
-
 	public class TimerWrapperJvm implements TimerWrapper {
 		private TimerTask task;
 
@@ -53,7 +48,7 @@ public class TimerWrapperProviderJvm implements TimerWrapperProvider {
 						runnable.run();
 					} catch (Throwable e) {
 						e.printStackTrace();
-						topicWrapperException().publish(e);
+						topicWrapperException.publish(e);
 					}
 				}
 			};

@@ -68,7 +68,7 @@ public class RemoteConsoleInit {
 						WidgetUtils.squelchCurrentEvent();
 					}
 					if (keyCode == (int) 'J') {
-						RemoteConsoleLayout.get().fire(
+						RemoteConsoleLayout.get().topicLayoutMessage.publish(
 								RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR);
 						event.cancel();
 						WidgetUtils.squelchCurrentEvent();

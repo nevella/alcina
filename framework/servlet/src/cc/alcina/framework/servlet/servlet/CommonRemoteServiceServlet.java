@@ -91,7 +91,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -864,8 +864,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		public static final String ATTR = OutOfBandMessages.class.getName()
 				+ ".ATTR";
 
-		public static Topic<List<OutOfBandMessage>> topicAppendMessages = Topic
-				.local();
+		public static final Topic<List<OutOfBandMessage>> topicAppendMessages = Topic
+				.create();
 
 		public static CommonRemoteServiceServlet.OutOfBandMessages get() {
 			return Registry

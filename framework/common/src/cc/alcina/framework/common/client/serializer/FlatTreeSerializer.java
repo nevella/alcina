@@ -48,7 +48,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.StringPair;
 import cc.alcina.framework.common.client.util.TextUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
@@ -133,7 +133,7 @@ public class FlatTreeSerializer {
 	private static Map<RootClassPropertyKey, Map<String, Class>> deSerializationPropertyAliasClass = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
-	public static Topic<StringPair> unequalSerialized = Topic.local();
+	public static final Topic<StringPair> unequalSerialized = Topic.create();
 
 	static int unknownPropertyWarningCount = 20;
 

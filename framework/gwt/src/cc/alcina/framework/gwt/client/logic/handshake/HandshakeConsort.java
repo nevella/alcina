@@ -9,8 +9,7 @@ import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
 
 /**
  * <h3>Per-session handshake persistence</h3>
@@ -43,19 +42,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 @Registration.Singleton
 public class HandshakeConsort
 		extends ConsortWithSignals<HandshakeState, HandshakeSignal> {
-	public static final String TOPIC_STARTUP_PROGRESS = HandshakeConsort.class
-			.getName() + ".TOPIC_STARTUP_PROGRESS";
-
-	public static void startupProgress(String message) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_STARTUP_PROGRESS,
-				message);
-	}
-
-	public static void startupProgressListenerDelta(
-			TopicListener<String> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_STARTUP_PROGRESS,
-				listener, add);
-	}
+	public static final Topic<String> topicStartupProgress = Topic.create();
 
 	public HandshakeConsort() {
 	}

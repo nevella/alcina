@@ -512,7 +512,7 @@ public class ClientUtils {
 					.getElementsByTagName(HEAD);
 			if (headList == null || headList.getLength() == 0) {
 				// something wrong with the client here -- bail
-				AlcinaTopics.notifyDevWarning(
+				AlcinaTopics.devWarning.publish(
 						new Exception("headList - " + headList == null ? "null"
 								: "length 0"));
 				return null;

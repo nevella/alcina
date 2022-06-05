@@ -13,16 +13,11 @@ import org.apache.log4j.Logger;
 
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.servlet.sync.SyncMerger.FirstAndAllLookup;
 
 public class KeyMatchStrategy<T> implements MatchStrategy<T> {
-	public static final String TOPIC_MERGE_ISSUE = MergeHandler.class.getName()
-			+ "." + "TOPIC_MERGE_ISSUE";
-
-	public static Topic<KeyMatchIssue> topicMatchIssue() {
-		return Topic.global(TOPIC_MERGE_ISSUE);
-	}
+	public static final Topic<KeyMatchIssue> topicMatchIssue = Topic.create();
 
 	private StringKeyProvider<T> keyProvider;
 
@@ -67,7 +62,7 @@ public class KeyMatchStrategy<T> implements MatchStrategy<T> {
 			ambiguous.add(message);
 			Collection ambiguousMatched = new ArrayList(
 					rightLookup.allKeyLookup.getForKeys(allKeys));
-			topicMatchIssue().publish(
+			topicMatchIssue.publish(
 					new KeyMatchIssue(left, ambiguousMatched, message));
 		}
 		if (ambiguous.isEmpty()) {

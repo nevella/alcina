@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.ClientState;
  * Will be delivered in http header of RPC request
  */
 public interface OutOfBandMessage {
-		public static class ClientInstanceMessage extends Bindable
+	public static class ClientInstanceMessage extends Bindable
 			implements OutOfBandMessage {
 		private String messageHtml;
 
@@ -45,7 +45,7 @@ public interface OutOfBandMessage {
 		}
 	}
 
-		public static class ExceptionMessage extends Bindable
+	public static class ExceptionMessage extends Bindable
 			implements OutOfBandMessage {
 		private String messageHtml;
 
@@ -73,7 +73,7 @@ public interface OutOfBandMessage {
 		void handle(T outOfBandMessage);
 	}
 
-		public static class ReadonlyInstanceMessage extends Bindable
+	public static class ReadonlyInstanceMessage extends Bindable
 			implements OutOfBandMessage {
 		private boolean readonly;
 
@@ -93,7 +93,7 @@ public interface OutOfBandMessage {
 			implements OutOfBandMessageHandler<ReadonlyInstanceMessage> {
 		@Override
 		public void handle(ReadonlyInstanceMessage outOfBandMessage) {
-			AlcinaTopics.TOPIC_APP_READONLY
+			AlcinaTopics.applicationReadonly
 					.publish(outOfBandMessage.isReadonly());
 			ClientState.get().setAppReadOnly(outOfBandMessage.isReadonly());
 		}

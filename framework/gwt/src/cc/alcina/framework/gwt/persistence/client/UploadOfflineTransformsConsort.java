@@ -14,8 +14,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationR
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsortModel;
@@ -25,19 +24,8 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.UploadOfflineTransformsConsort.State;
 
 public class UploadOfflineTransformsConsort extends Consort<State> {
-	public static final String TOPIC_PERSIST_TRANSFORMS_FAILURE = UploadOfflineTransformsConsort.class
-			.getName() + ".PERSIST_TRANSFORMS_FAILURE";
-
-	public static void notifyPersistTransformsFailure(Throwable ex) {
-		GlobalTopicPublisher.get()
-				.publishTopic(TOPIC_PERSIST_TRANSFORMS_FAILURE, ex);
-	}
-
-	public static void notifyPersistTransformsFailureListenerDelta(
-			TopicListener<Throwable> listener, boolean add) {
-		GlobalTopicPublisher.get()
-				.listenerDelta(TOPIC_PERSIST_TRANSFORMS_FAILURE, listener, add);
-	}
+	public static final Topic<Throwable> topicPersistTransformsFailure = Topic
+			.create();
 
 	String dbPrefix;
 
@@ -169,7 +157,7 @@ public class UploadOfflineTransformsConsort extends Consort<State> {
 
 		@Override
 		public void run() {
-			notifyPersistTransformsFailure(remotePersistenceException);
+			topicPersistTransformsFailure.publish(remotePersistenceException);
 			Registry.impl(FromOfflineConflictResolver.class).resolve(
 					transformsToPersistOnServer, remotePersistenceException,
 					LocalTransformPersistence.get(), this);

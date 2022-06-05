@@ -117,7 +117,7 @@ class TowardsAMoreDesirableSituation {
 	void start() {
 		thread = new ProcessorThread();
 		thread.start();
-		scheduler.eventOcurred.add((k, v) -> addSchedulerEvent());
+		scheduler.eventOcurred.add(v -> addSchedulerEvent());
 	}
 
 	void stopService() {
