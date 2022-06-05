@@ -8,6 +8,7 @@ import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 
 @Retention(RetentionPolicy.RUNTIME)
@@ -25,6 +26,14 @@ public @interface Binding {
 	Class<? extends ToStringFunction> transform() default ToStringFunction.Identity.class;
 
 	Type type();
+
+	@Reflected
+	public static class DisplayFalseTrue implements ToStringFunction<Boolean> {
+		@Override
+		public String apply(Boolean t) {
+			return CommonUtils.bv(t) ? "block" : "none";
+		}
+	}
 
 	@Reflected
 	public enum Type {

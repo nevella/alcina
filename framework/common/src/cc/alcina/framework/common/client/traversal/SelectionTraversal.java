@@ -20,7 +20,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 
 /**
  * A generalised engine for rule-based transformation.
@@ -55,13 +55,13 @@ import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
  *
  */
 public class SelectionTraversal implements ProcessContextProvider {
-	public Topic<Selection> selectionAdded = Topic.local()
+	public Topic<Selection> selectionAdded = Topic.create()
 			.withThrowExceptions();
 
-	public Topic<Selection> selectionProcessed = Topic.local()
+	public Topic<Selection> selectionProcessed = Topic.create()
 			.withThrowExceptions();
 
-	public Topic<Selection> beforeSelectionProcessed = Topic.local()
+	public Topic<Selection> beforeSelectionProcessed = Topic.create()
 			.withThrowExceptions();
 
 	Selection rootSelection;

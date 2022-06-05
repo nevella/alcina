@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.module.login.LoginRequest;
 import cc.alcina.framework.common.client.remote.ReflectiveLoginRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.module.support.login.LoginConsort.State;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
 
@@ -32,9 +32,9 @@ public abstract class LoginConsort extends Consort<State> {
 	@SuppressWarnings("unused")
 	private LoginViewModel viewModel;
 
-	Topic<Boolean> topicCallingRemote = Topic.local();
+	Topic<Boolean> topicCallingRemote = Topic.create();
 
-	Topic<String> topicMessage = Topic.local();
+	Topic<String> topicMessage = Topic.create();
 
 	protected LoginResponse lastResponse;
 

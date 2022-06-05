@@ -78,7 +78,7 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -118,9 +118,6 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public static final String CONTEXT_LOADING_FOR_TRANSFORM = ThreadlocalTransformManager.class
 			.getName() + ".CONTEXT_LOADING_FOR_TRANSFORM";
 
-	private static final String TOPIC_RESET_THREAD_TRANSFORM_MANAGER = ThreadlocalTransformManager.class
-			.getName() + ".TOPIC_RESET_THREAD_TRANSFORM_MANAGER";
-
 	private static ThreadLocal threadLocalInstance = new ThreadLocal() {
 		@Override
 		protected synchronized Object initialValue() {
@@ -143,6 +140,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 	private static AtomicInteger removeListenerExceptionCounter = new AtomicInteger();
 
 	public static boolean ignoreAllTransformPermissions;
+
+	public static final Topic<Thread> topicTransformManagerWasReset = Topic
+			.create();
 
 	public static void addThreadLocalDomainTransformListener(
 			DomainTransformListener listener) {
@@ -186,10 +186,6 @@ public class ThreadlocalTransformManager extends TransformManager {
 	public static void registerPerThreadTransformManager(
 			TransformManager perThreadTransformManager) {
 		threadLocalInstance.set(perThreadTransformManager);
-	}
-
-	public static Topic<Thread> topicTransformManagerWasReset() {
-		return Topic.global(TOPIC_RESET_THREAD_TRANSFORM_MANAGER);
 	}
 
 	public static ThreadlocalTransformManager ttmInstance() {
@@ -805,8 +801,8 @@ public class ThreadlocalTransformManager extends TransformManager {
 					pendingTransforms.size(), pendingTransforms.stream()
 							.limit(1000).collect(Collectors.toList()));
 			try {
-				AlcinaTopics
-						.notifyDevWarning(new UncomittedTransformsException());
+				AlcinaTopics.devWarning
+						.publish(new UncomittedTransformsException());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}
@@ -820,7 +816,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 		}
 		if (initialised) {
 			try {
-				topicTransformManagerWasReset().publish(Thread.currentThread());
+				topicTransformManagerWasReset.publish(Thread.currentThread());
 			} catch (Exception e) {
 				e.printStackTrace();
 			}

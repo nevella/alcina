@@ -24,19 +24,19 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.Javascript
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
 /**
  * FIXME - directedlayout.2 - Refactoring needs - there's a lot of
  * semi-duplication in the 'link remote to localdom' models - i.e. puts to
  * remoteLookup
- * 
+ *
  * Probably need just one true path
- * 
+ *
  * Notes re gc => we mainatin a map of remote (browser dom) nodes to local
  * nodes, but that's weak. Strong refs are via node.remote fields
- * 
+ *
  * Does not support IE<11
  */
 public class LocalDom {
@@ -56,13 +56,11 @@ public class LocalDom {
 
 	static boolean emitCommentPisAsText;
 
-	private static final String TOPIC_EXCEPTION = LocalDom.class.getName() + "."
-			+ "TOPIC_EXCEPTION";
-
-	static final String TOPIC_UNABLE_TO_PARSE = LocalDom.class.getName()
-			+ ".TOPIC_UNABLE_TO_PARSE";
-
 	public static LocalDomMutations mutations;
+
+	public static final Topic<Exception> topicException = Topic.create();
+
+	public static final Topic<String> topicUnableToParse = Topic.create();
 
 	public static void debug(ElementRemote elementRemote) {
 		get().debug0(elementRemote);
@@ -140,14 +138,6 @@ public class LocalDom {
 	public static void syncToRemote(Element element) {
 		get().parseAndMarkResolved(element.typedRemote(),
 				element.typedRemote().getOuterHtml(), element);
-	}
-
-	public static Topic<Exception> topicException() {
-		return Topic.global(TOPIC_EXCEPTION);
-	}
-
-	public static Topic<String> unableToParseTopic() {
-		return Topic.global(LocalDom.TOPIC_UNABLE_TO_PARSE);
 	}
 
 	public static String validateHtml(String html) {
@@ -548,7 +538,7 @@ public class LocalDom {
 		try {
 			return nodeFor1(remote, postReparse);
 		} catch (RuntimeException re) {
-			topicException().publish(re);
+			topicException.publish(re);
 			throw re;
 		}
 	}
@@ -576,7 +566,7 @@ public class LocalDom {
 				return (T) childNode;
 			} else {
 				if (postReparse) {
-					unableToParseTopic().publish(Ax.format(
+					topicUnableToParse.publish(Ax.format(
 							"Text node reparse - remote:\n%s\n\nlocal:\n%s\n",
 							parentRemote.getOuterHtml(),
 							((Element) parent).getOuterHtml()));
@@ -654,7 +644,7 @@ public class LocalDom {
 		if (parsed != null) {
 			wasResolved0(parsed);
 		} else {
-			unableToParseTopic().publish(outerHtml);
+			topicUnableToParse.publish(outerHtml);
 		}
 		return parsed;
 	}
@@ -688,11 +678,11 @@ public class LocalDom {
 			if (invalid) {
 				/*
 				 * REVISIT - directedlayout.2. Optimised?
-				 * 
+				 *
 				 * check we have no widgets in the tree - if we do,
 				 * we're...not..good. Also remove and remote refs below (albeit
 				 * unlikely)
-				 * 
+				 *
 				 */
 				int localIndex = (cursor.getParentElement() == null ? cursor
 						: cursor.getParentElement()).getChildIndexLocal(cursor);
@@ -739,7 +729,7 @@ public class LocalDom {
 					String message = Ax.format(
 							"%s\n(Built outer html):\n%s\n\n(Remote outer html):\n%s",
 							preface, builtOuterHtml, remoteOuterHtml);
-					unableToParseTopic().publish(message);
+					topicUnableToParse.publish(message);
 					Ax.out("Reparse unsuccessful");
 					return;
 				}
@@ -793,7 +783,7 @@ public class LocalDom {
 				return typedRemote.getInnerHTML0();
 			}
 		} catch (Exception e) {
-			topicException().publish(e);
+			topicException.publish(e);
 			return html;
 		}
 	}
@@ -851,7 +841,7 @@ public class LocalDom {
 				resolutionEventId++;
 			}
 		} catch (RuntimeException re) {
-			topicException().publish(re);
+			topicException.publish(re);
 			throw re;
 		} finally {
 			resolutionEventIdDirty = false;

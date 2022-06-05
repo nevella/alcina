@@ -6,11 +6,9 @@ import com.google.gwt.user.client.Window;
 import com.google.web.bindery.event.shared.EventBus;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
@@ -32,12 +30,8 @@ public class WindowTitleManager {
 		this.defaultPlaceName = defaultPlaceName;
 		this.appName = appName;
 		setup();
-		DetailView.topicDetailModelObjectSet().add(new TopicListener<Entity>() {
-			@Override
-			public void topicPublished(String key, Entity message) {
-				updateTitle(Client.currentPlace());
-			}
-		});
+		DetailView.topicDetailModelObjectSet
+				.add(e -> updateTitle(Client.currentPlace()));
 	}
 
 	protected String getTitlePartFromPlace(Place place,

@@ -18,13 +18,13 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DevStats {
-	static Topic<String> topicEmitStat = Topic.local();
+	static Topic<String> topicEmitStat = Topic.create();
 
-	public static Topic<String> topicEmitStat() {
+	public static final Topic<String> topicEmitStat() {
 		return topicEmitStat;
 	}
 

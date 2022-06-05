@@ -1,15 +1,11 @@
 package cc.alcina.extras.dev.console.remote.client.common.logic;
 
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleStartupModel;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 
 public class RemoteConsoleModels {
-	public static final String TOPIC_REMOTE_CONSOLE_STARTUP_MODEL_LOADED = RemoteConsoleModels.class
-			.getName() + "." + "TOPIC_REMOTE_CONSOLE_STARTUP_MODEL_LOADED";
-
-	public static Topic<RemoteConsoleStartupModel> topicStartupModelLoaded() {
-		return Topic.global(TOPIC_REMOTE_CONSOLE_STARTUP_MODEL_LOADED);
-	}
+	public static final Topic<RemoteConsoleStartupModel> topicStartupModelLoaded = Topic
+			.create();
 
 	private RemoteConsoleStartupModel startupModel;
 
@@ -19,6 +15,6 @@ public class RemoteConsoleModels {
 
 	public void setStartupModel(RemoteConsoleStartupModel startupModel) {
 		this.startupModel = startupModel;
-		topicStartupModelLoaded().publish(startupModel);
+		topicStartupModelLoaded.publish(startupModel);
 	}
 }

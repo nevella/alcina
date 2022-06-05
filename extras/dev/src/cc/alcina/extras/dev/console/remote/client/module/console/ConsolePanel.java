@@ -156,17 +156,12 @@ public class ConsolePanel extends Composite {
 		protected void onAttach() {
 			super.onAttach();
 			box.setFocus(true);
-			RemoteConsoleLayout.get().subscribe((key, payload) -> {
-				if (WidgetUtils.isVisibleAncestorChain(this)) {
+			RemoteConsoleLayout.get().topicLayoutMessage.add(m -> {
+				if (m == RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR
+						&& WidgetUtils.isVisibleAncestorChain(this)) {
 					box.setFocus(true);
 				}
-			}, RemoteConsoleLayoutMessage.FOCUS_COMMAND_BAR, true);
-			// new Timer() {
-			// @Override
-			// public void run() {
-			// box.setText(box.getText() + "h");
-			// }
-			// }.scheduleRepeating(100);
+			});
 		}
 
 		void focus() {

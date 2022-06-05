@@ -8,13 +8,13 @@ import com.google.gwt.user.client.ui.Label;
 
 import cc.alcina.framework.common.client.actions.InlineButtonHandler;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.util.TopicPublisher;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
 
 public class StepPopupView extends Composite {
 	private FlowPanel fp;
 
-	TopicPublisher topicPublisher = new TopicPublisher();
+	Topic<Action> topicAction = Topic.create();
 
 	Tour.PopupInfo popupInfo;
 
@@ -63,7 +63,7 @@ public class StepPopupView extends Composite {
 
 		@Override
 		public void onClick(ClickEvent event) {
-			topicPublisher.publishTopic(null, Action.BACK);
+			topicAction.publish(Action.BACK);
 		}
 	}
 
@@ -76,7 +76,7 @@ public class StepPopupView extends Composite {
 
 		@Override
 		public void onClick(ClickEvent event) {
-			topicPublisher.publishTopic(null, Action.CLOSE);
+			topicAction.publish(Action.CLOSE);
 		}
 	}
 
@@ -89,7 +89,7 @@ public class StepPopupView extends Composite {
 
 		@Override
 		public void onClick(ClickEvent event) {
-			topicPublisher.publishTopic(null, Action.CLOSE);
+			topicAction.publish(Action.CLOSE);
 		}
 	}
 
@@ -102,7 +102,7 @@ public class StepPopupView extends Composite {
 
 		@Override
 		public void onClick(ClickEvent event) {
-			topicPublisher.publishTopic(null, Action.NEXT);
+			topicAction.publish(Action.NEXT);
 		}
 	}
 }

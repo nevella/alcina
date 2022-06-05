@@ -18,7 +18,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 
 /**
  * Models an operation which can be modelled as a tree structure. Particularly
@@ -34,7 +34,7 @@ public class TreeProcess {
 
 	private List<NodeException> processExceptions = new ArrayList<>();
 
-	public Topic<String> positionChangedMessage = Topic.local();
+	public Topic<String> positionChangedMessage = Topic.create();
 
 	private Node selected;
 

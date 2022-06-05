@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -45,14 +45,14 @@ import javax.swing.ImageIcon;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.Topic;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class ImgUtilities {
-	public static final String CONTEXT_PDF2HTML_TOPIC_MONOCHROME_IMAGES = ImgUtilities.class
-			.getName() + "." + "pdf2html-monochrome-images";
+	public static final Topic<Boolean> topicMonochromeImages = Topic.create();
 
 	public static final String CONTEXT_JPEG_COMPRESSION_RATIO = ImgUtilities.class
 			.getName() + "." + "CONTEXT_PDF_JPEG_COMPRESSION_RATIO";
@@ -66,8 +66,7 @@ public class ImgUtilities {
 				}
 			}
 		}
-		LooseContext.getContext().publishTopic(
-				ImgUtilities.CONTEXT_PDF2HTML_TOPIC_MONOCHROME_IMAGES, true);
+		topicMonochromeImages.publish(true);
 	}
 
 	public static void compressJpeg(BufferedImage img, File outfile,

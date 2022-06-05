@@ -149,7 +149,7 @@ public class ReflectiveSearchDefinitionSerializer
 		} catch (Exception e) {
 			GWT.log("Exception in reflective search", e);
 			e.printStackTrace();
-			AlcinaTopics.notifyDevWarning(e);
+			AlcinaTopics.devWarning.publish(e);
 			return null;
 		}
 	}

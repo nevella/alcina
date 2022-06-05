@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -26,9 +26,9 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMet
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public abstract class AlcinaServlet extends HttpServlet {
-	private static Topic<Throwable> topicApplicationThrowables = Topic.local();
+	private static Topic<Throwable> topicApplicationThrowables = Topic.create();
 
-	public static Topic<Throwable> topicApplicationThrowables() {
+	public static final Topic<Throwable> topicApplicationThrowables() {
 		return topicApplicationThrowables;
 	}
 

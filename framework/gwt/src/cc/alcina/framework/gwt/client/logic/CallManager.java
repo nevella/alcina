@@ -21,9 +21,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.TopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
  *
@@ -31,8 +30,7 @@ import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
  */
 @Registration.Singleton
 public class CallManager {
-	public static final String TOPIC_CALL_MADE = CallManager.class.getName()
-			+ ".TOPIC_CALL_MADE";
+	public static final Topic<String> topicCallMade = Topic.create();
 
 	public static CallManager get() {
 		return Registry.impl(CallManager.class);
@@ -49,7 +47,7 @@ public class CallManager {
 	public CallManager() {
 		cancelled = new ArrayList<AsyncCallback>();
 		displayTexts = new HashMap<AsyncCallback, String>();
-		topicListeners = new HashMap<AsyncCallback, TopicPublisher.TopicListener>();
+		topicListeners = new HashMap<AsyncCallback, TopicListener>();
 		running = new ArrayList<AsyncCallback>();
 	}
 
@@ -108,9 +106,9 @@ public class CallManager {
 			topicListener = topicListeners.get(topRunning);
 		}
 		if (topicListener != null) {
-			topicListener.topicPublished(TOPIC_CALL_MADE, message);
+			topicListener.topicPublished(message);
 		} else {
-			GlobalTopicPublisher.get().publishTopic(TOPIC_CALL_MADE, message);
+			topicCallMade.publish(message);
 		}
 	}
 }

@@ -24,9 +24,8 @@ import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.StringPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.res.AlcinaProperties;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
@@ -54,40 +53,15 @@ public class LogStore {
 
 	public static final String DEFAULT_TABLE_NAME = "LogStore";
 
-	public static final String TOPIC_PERSISTED = LogStore.class.getName() + "."
-			+ "TOPIC_PERSISTED";
+	public static final Topic<Void> topicDeleted = Topic.create();
 
-	public static final String TOPIC_EVENT_OCCURRED = LogStore.class.getName()
-			+ "." + "TOPIC_EVENT_OCCURRED";
+	public static final Topic<IntPair> topicPersisted = Topic.create();
 
-	public static final String TOPIC_DELETED = LogStore.class.getName() + "."
-			+ "TOPIC_DELETED";
+	public static final Topic<ClientLogRecord> topicEventOccurred = Topic
+			.create();
 
 	public static LogStore get() {
 		return Registry.impl(LogStore.class);
-	}
-
-	public static void notifyDeleted(Object nup) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_DELETED, null);
-	}
-
-	public static void notifyDeletedListenerDelta(TopicListener<Void> listener,
-			boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_DELETED, listener, add);
-	}
-
-	public static void notifyPersisted(IntPair idSize) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTED, idSize);
-	}
-
-	public static void notifyPersistedListenerDelta(
-			TopicListener<IntPair> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTED, listener,
-				add);
-	}
-
-	public static Topic<ClientLogRecord> topicLogEvent() {
-		return Topic.global(TOPIC_EVENT_OCCURRED);
 	}
 
 	private RemoteLogPersister remoteLogPersister;
@@ -119,14 +93,14 @@ public class LogStore {
 	private AsyncCallback<Integer> afterLocalPersistence = new AsyncCallback<Integer>() {
 		@Override
 		public void onFailure(Throwable caught) {
-			AlcinaTopics.muteStatisticsLogging(false);
-			AlcinaTopics.localPersistenceException(caught);
+			AlcinaTopics.muteStatisticsLogging.publish(false);
+			AlcinaTopics.localPersistenceException.publish(caught);
 			// in general, squelch
 		}
 
 		@Override
 		public void onSuccess(Integer result) {
-			AlcinaTopics.muteStatisticsLogging(false);
+			AlcinaTopics.muteStatisticsLogging.publish(false);
 			remotePersistenceTimer.triggerEventOccurred();
 		}
 	};
@@ -137,12 +111,8 @@ public class LogStore {
 
 	private boolean muted;
 
-	private TopicListener<StringPair> stringPairListener = new TopicListener<StringPair>() {
-		@Override
-		public void topicPublished(String key, StringPair message) {
-			log(message.s1, message.s2);
-		}
-	};
+	private TopicListener<StringPair> stringPairListener = message -> log(
+			message.s1, message.s2);
 
 	private String lastMessage;
 
@@ -180,7 +150,7 @@ public class LogStore {
 
 			@Override
 			public void onSuccess(Integer result) {
-				notifyPersisted(new IntPair(result, value.length()));
+				topicPersisted.publish(new IntPair(result, value.length()));
 				idCallback.onSuccess(result);
 			}
 		});
@@ -263,7 +233,7 @@ public class LogStore {
 		if (useCookieMsgBackup && lastCookieId == localSeriesIdCounter) {
 			Cookies.removeCookie(STORAGE_COOKIE_KEY);
 		}
-		AlcinaTopics.muteStatisticsLogging(true);
+		AlcinaTopics.muteStatisticsLogging.publish(true);
 		add(lastTopic, serialized, afterLocalPersistence);
 	}
 
@@ -302,7 +272,7 @@ public class LogStore {
 
 			@Override
 			public void onSuccess(Void result) {
-				notifyDeleted(null);
+				topicDeleted.signal();
 				completedCallback.onSuccess(result);
 			}
 		});
@@ -366,7 +336,7 @@ public class LogStore {
 		} else {
 			localPersistenceTimer.triggerEventOccurred();
 		}
-		topicLogEvent().publish(logRecord);
+		topicEventOccurred.publish(logRecord);
 	}
 
 	int getLocalSeriesIdCounter() {

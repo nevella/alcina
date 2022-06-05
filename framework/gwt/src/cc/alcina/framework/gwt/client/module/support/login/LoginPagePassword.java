@@ -20,7 +20,7 @@ public class LoginPagePassword extends LoginPage {
 		super(loginConsort);
 		this.model = new LoginPagePasswordModel(loginConsort.request);
 		render();
-		loginConsort.topicCallingRemote.add((k, calling) -> {
+		loginConsort.topicCallingRemote.add(calling -> {
 			if (!calling && isAttached()) {
 				buttonsPanel.removeOptionalButtons();
 				if (loginConsort.lastResponse.getStates()

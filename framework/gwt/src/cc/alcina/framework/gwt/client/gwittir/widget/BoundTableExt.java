@@ -92,7 +92,7 @@ import cc.alcina.framework.gwt.client.widget.SpanPanel;
 /**
  * This is an option-rich table for use with objects implementing the
  * SourcesPropertyChangeEvents interfaces.
- * 
+ *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  * @see com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents
@@ -134,7 +134,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Renderer the table inside a scroll panel.
-	 * 
+	 *
 	 * <p>
 	 * If the table has a DataProvider, it will use the "Google Reader"
 	 * get-next-chunk-on-max-scroll operation.
@@ -181,7 +181,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Enables sorting on the table when a header row is clicked.
-	 * 
+	 *
 	 * If this table has a DataProvider, it must be a SortableDataProvider for
 	 * this to work.
 	 */
@@ -190,7 +190,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	/**
 	 * Enables the click in widget insertion. Note: This will use the default
 	 * widget type for the model object from the BoundWidgetTypeFactory
-	 * 
+	 *
 	 * @see com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory
 	 */
 	public static final int INSERT_WIDGET_MASK = 512;
@@ -324,7 +324,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Creates a new instance of Bound table with the indicated options value.
-	 * 
+	 *
 	 * @param masks
 	 *            int value containing the sum of the *_MASK options for the
 	 *            table.
@@ -336,7 +336,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Creates a new instance of Bound table with the indicated options value.
-	 * 
+	 *
 	 * @param typeFactory
 	 *            A BoundWidget type factory used to create the widgets that
 	 *            appear in the table.
@@ -352,7 +352,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Creates a new instance of a table using a Collection as a data set.
-	 * 
+	 *
 	 * @param typeFactory
 	 *            A BoundWidget type factory used to create the widgets that
 	 *            appear in the table.
@@ -372,7 +372,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Creates a new instance of a table using a Collection as a data set.
-	 * 
+	 *
 	 * @param typeFactory
 	 *            A BoundWidget type factory used to create the widgets that
 	 *            appear in the table.
@@ -396,7 +396,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Creates a new instance of BoundTable
-	 * 
+	 *
 	 * @param typeFactory
 	 *            A BoundWidget type factory used to create the widgets that
 	 *            appear in the table.
@@ -419,7 +419,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Creates a new instance of a table using a Collection as a data set.
-	 * 
+	 *
 	 * @param masks
 	 *            int value containing the sum of the *_MASK options for the
 	 *            table.
@@ -434,7 +434,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Creates a new instance of a table using a Collection as a data set.
-	 * 
+	 *
 	 * @param masks
 	 *            int value containing the sum of the *_MASK options for the
 	 *            table.
@@ -453,7 +453,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Creates a new instance of BoundTable
-	 * 
+	 *
 	 * @param masks
 	 *            int value containing the sum of the *_MASK options for the
 	 *            table.
@@ -471,7 +471,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Adds a colleciton of Bindables to the table
-	 * 
+	 *
 	 * @param c
 	 *            A collection containing SourcesPropertyChangeEvents objects.
 	 */
@@ -483,7 +483,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Adds a new SourcesPropertyChangeEvents object to the table.
-	 * 
+	 *
 	 * @param o
 	 *            An object of type SourcesPropertyChangeEvents.
 	 */
@@ -577,7 +577,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Returns the Binding object used by this table.
-	 * 
+	 *
 	 * @return The Binding object for this table.
 	 */
 	@Override
@@ -607,7 +607,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Returns the Columns used in this table.
-	 * 
+	 *
 	 * @return Column[] used for rendering this table.
 	 */
 	public Field[] getColumns() {
@@ -620,7 +620,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Returns the current fetched chunk from the data provider.
-	 * 
+	 *
 	 * @return int index of the current chunk.
 	 */
 	public int getCurrentChunk() {
@@ -641,7 +641,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Returns the number of available chunks (passed in from the DataProvider)
-	 * 
+	 *
 	 * @return int number of chunks available from the DataProvider
 	 */
 	public int getNumberOfChunks() {
@@ -675,7 +675,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Returns a List containing the current selected row objects.
-	 * 
+	 *
 	 * @return List of Bindables from the selected rows.
 	 */
 	public List getSelected() {
@@ -751,7 +751,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	/**
 	 * Method called by the DataProvider to initialize the first chunk and pass
 	 * in the to total number of chunks available.
-	 * 
+	 *
 	 * @param c
 	 *            Data for Chunk index 0
 	 * @param numberOfChunks
@@ -915,7 +915,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	/**
 	 * Called by the DataProvider to pass in a requested chunk of data. THIS
 	 * METHOD MUST BE CALLED ASYNCRONOUSLY.
-	 * 
+	 *
 	 * @param c
 	 *            The next requested chunk of SourcesPropertyChangeEvents
 	 *            objects.
@@ -943,7 +943,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	/**
 	 * Sets Column[] object for use on the table. Note, this will foce a re-init
 	 * of the table.
-	 * 
+	 *
 	 * @param columns
 	 *            Column[] to use to render the table.
 	 */
@@ -981,7 +981,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 
 	/**
 	 * Sets the indicated items in the list to "selected" state.
-	 * 
+	 *
 	 * @param selected
 	 *            A List of Bindables to set as the Selected value.
 	 */
@@ -1043,10 +1043,10 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 	/**
 	 * Sorts the table based on the value of the property in the specified
 	 * column index.
-	 * 
+	 *
 	 * If using a SortableDataProvider, this will throw a runtime exception if
 	 * the column denoted by the index is not a supported sortable column.
-	 * 
+	 *
 	 * @param index
 	 *            index of the column to sort the table on.
 	 */
@@ -1077,7 +1077,7 @@ public class BoundTableExt extends AbstractTableWidget implements HasChunks,
 				}
 			}
 			if (!canSort) {
-				AlcinaTopics.notifyDevWarning(new RuntimeException(Ax.format(
+				AlcinaTopics.devWarning.publish(new RuntimeException(Ax.format(
 						"Field %s is not a"
 								+ " sortable field from data provider %s.",
 						this.columns[index].getPropertyName(),

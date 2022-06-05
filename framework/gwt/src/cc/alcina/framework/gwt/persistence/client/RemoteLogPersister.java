@@ -8,16 +8,16 @@ import com.google.gwt.core.client.Scheduler.ScheduledCommand;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.consort.Consort;
+import cc.alcina.framework.common.client.consort.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.consort.LoopingPlayer;
 import cc.alcina.framework.common.client.consort.Player;
-import cc.alcina.framework.common.client.consort.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.remote.CommonRemoteServiceAsync;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.TimerWrapper;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.util.Base64Utils;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 import cc.alcina.framework.gwt.client.util.Lzw;
@@ -26,9 +26,9 @@ import cc.alcina.framework.gwt.client.util.Lzw;
  * This class deliberately doesn't listen for other classes
  * (committoremotetransform...) offline/online events - if we go online for some
  * reason, that's probably going to be logged and cause a push anyway
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public class RemoteLogPersister {
 	public static int PREFERRED_MAX_PUSH_SIZE = 30000;// bytes
@@ -41,7 +41,7 @@ public class RemoteLogPersister {
 
 	private TopicListener consortFinishedListener = new TopicListener() {
 		@Override
-		public void topicPublished(String key, Object message) {
+		public void topicPublished(Object message) {
 			boolean pushAgain = consort.lastAddedThisBuffer < consort.logRecordRange.i2;
 			long waitTime = (System.currentTimeMillis() - consortStart) / 2;
 			consort.clear();
@@ -68,8 +68,8 @@ public class RemoteLogPersister {
 			pushCount = 0;
 			consort = new RemoteLogPersisterConsort();
 			consortStart = System.currentTimeMillis();
-			consort.listenerDelta(Consort.FINISHED, consortFinishedListener,
-					true);
+			consort.listenerDelta(Consort.TopicChannel.FINISHED,
+					consortFinishedListener, true);
 			consort.start();
 		}
 	}
@@ -104,7 +104,7 @@ public class RemoteLogPersister {
 			Scheduler.get().scheduleDeferred(new ScheduledCommand() {
 				@Override
 				public void execute() {
-					AlcinaTopics.muteStatisticsLogging(false);
+					AlcinaTopics.muteStatisticsLogging.publish(false);
 				}
 			});
 		}
@@ -222,7 +222,7 @@ public class RemoteLogPersister {
 					CommonRemoteServiceAsync async = Registry
 							.impl(CommonRemoteServiceAsync.class);
 					rqRun = true;
-					AlcinaTopics.muteStatisticsLogging(true);
+					AlcinaTopics.muteStatisticsLogging.publish(true);
 					async.ping(this);
 				}
 			}
@@ -298,7 +298,7 @@ public class RemoteLogPersister {
 					CommonRemoteServiceAsync async = Registry
 							.impl(CommonRemoteServiceAsync.class);
 					rqRun = true;
-					AlcinaTopics.muteStatisticsLogging(true);
+					AlcinaTopics.muteStatisticsLogging.publish(true);
 					async.logClientRecords(buffer.toString(), this);
 				}
 			}

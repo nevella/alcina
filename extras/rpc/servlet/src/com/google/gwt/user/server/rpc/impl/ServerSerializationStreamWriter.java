@@ -890,7 +890,7 @@ public final class ServerSerializationStreamWriter
 		@Override
 		public String toString() {
 			if (totalCount > 100000) {
-				AlcinaTopics.notifyDevWarning(
+				AlcinaTopics.devWarning.publish(
 						new Exception("IE - writing large blob"));
 			}
 			if (buffers.size() > 1) {

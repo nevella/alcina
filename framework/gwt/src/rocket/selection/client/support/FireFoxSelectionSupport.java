@@ -30,7 +30,7 @@ import rocket.util.client.JavaScript;
 /**
  * A specialised SelectionSupport class that is adapted to handle FireFox
  * differences from the standard implementation.
- * 
+ *
  * @author Miroslav Pokorny (mP)
  */
 public class FireFoxSelectionSupport extends SelectionSupport {
@@ -78,15 +78,15 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 			}
 			return end;
 		} catch (Exception e) {
-			SelectionSupport.selectionDebugTopic().publish(debugInfo);
+			SelectionSupport.topicSelectionDebug.publish(debugInfo);
 			return null;
 		}
 	}
 
 	@Override
 	native public Selection getSelection(final JavaScriptObject window)/*-{
-																		return window.getSelection();
-																		}-*/;
+    return window.getSelection();
+	}-*/;
 
 	@Override
 	public SelectionEndPoint getStart(final Selection selection) {
@@ -129,7 +129,7 @@ public class FireFoxSelectionSupport extends SelectionSupport {
 			}
 			return start;
 		} catch (Exception e) {
-			SelectionSupport.selectionDebugTopic().publish(debugInfo);
+			SelectionSupport.topicSelectionDebug.publish(debugInfo);
 			return null;
 		}
 	}

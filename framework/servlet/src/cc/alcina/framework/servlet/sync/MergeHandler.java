@@ -12,24 +12,19 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.sync.SyncInterchangeModel;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 
 /**
  * Handle merge - run the mergers (generally per-interchange-model member class)
  * persist the generated delta model
- * 
+ *
  * @author nick@alcina.cc
  *
  * @param <I>
  * @param <D>
  */
 public abstract class MergeHandler<I extends SyncInterchangeModel, D extends SyncDeltaModel> {
-	private static final String TOPIC_MERGE_COMPLETED = MergeHandler.class
-			.getName() + "." + "TOPIC_MERGE_COMPLETED";
-
-	public static Topic<SyncMerger> topicMergeCompleted() {
-		return Topic.global(TOPIC_MERGE_COMPLETED);
-	}
+	public static final Topic<SyncMerger> topicMergeCompleted = Topic.create();
 
 	protected I leftInterchangeModel;
 
@@ -59,7 +54,7 @@ public abstract class MergeHandler<I extends SyncInterchangeModel, D extends Syn
 				return;
 			}
 			merger.merge(leftCollection, rightCollection, deltaModel, logger);
-			topicMergeCompleted().publish(merger);
+			topicMergeCompleted.publish(merger);
 			if (merger.wasIncomplete() || mergeIncomplete.size() > 0) {
 				logger.info(Ax.format("Merger incomplete:\n\t%s",
 						merger.getClass().getSimpleName()));

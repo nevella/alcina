@@ -46,6 +46,7 @@ import java.util.ArrayList;
 import java.util.Base64;
 import java.util.Collection;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -62,6 +63,8 @@ import javax.swing.ImageIcon;
 
 import org.apache.xerces.parsers.DOMParser;
 import org.cyberneko.html.HTMLConfiguration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.xml.sax.InputSource;
 
@@ -76,7 +79,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.persistence.mvcc.TransactionalCollection;
 import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
@@ -95,7 +98,18 @@ public class ResourceUtilities {
 
 	private static Map<String, String> cache = new ConcurrentHashMap<>();
 
-	public static Topic<Void> propertiesInvalidated = Topic.local();
+	public static final Topic<Void> propertiesInvalidated = Topic.create();
+
+	private static Set<String> immutableCustomProperties = new LinkedHashSet<>();
+
+	static Logger logger = LoggerFactory.getLogger(ResourceUtilities.class);
+
+	/*
+	 * Security-related properties that should not be settable post-startup
+	 */
+	public static void addImmutableCustomPropertyKey(String key) {
+		immutableCustomProperties.add(key);
+	}
 
 	public static void appShutdown() {
 	}
@@ -755,7 +769,7 @@ public class ResourceUtilities {
 			if (!(key instanceof String) || !(value instanceof String)) {
 				continue;
 			}
-			customProperties.put((String) key, (String) value);
+			set((String) key, (String) value);
 		}
 		clearCacheAndFireChange();
 	}
@@ -820,6 +834,10 @@ public class ResourceUtilities {
 	}
 
 	public static String set(String key, String value) {
+		if (immutableCustomProperties.contains(key)) {
+			logger.info("Not updating immutable property: {}", key);
+			return null;
+		}
 		String existing = customProperties.get(key);
 		customProperties.put(key, value);
 		clearCacheAndFireChange();

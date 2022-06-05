@@ -25,4 +25,5 @@ public interface Permissible {
 	default String rule() {
 		return "";
 	}
+	
 }

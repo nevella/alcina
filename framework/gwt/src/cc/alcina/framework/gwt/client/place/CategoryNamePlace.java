@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 
 public abstract class CategoryNamePlace<CNP extends CategoryNamePlace>
 		extends BasePlace implements HasDisplayName {
-	protected static <CNP extends CategoryNamePlace> CNP
+	public static <CNP extends CategoryNamePlace> CNP
 			namedPlaceForAction(Class<CNP> clazz, PermissibleAction action) {
 		CNP place = Reflections.newInstance(clazz);
 		place.action = action;

@@ -3,27 +3,24 @@ package cc.alcina.framework.gwt.persistence.client;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.consort.Consort;
-import cc.alcina.framework.common.client.consort.LoopingPlayer;
 import cc.alcina.framework.common.client.consort.EnumPlayer.EnumRunnableAsyncCallbackPlayer;
+import cc.alcina.framework.common.client.consort.LoopingPlayer;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecordIsNonCriticalFilter;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecordKeepNonCriticalPrecedingContextFilter;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.persistence.client.LogStoreCompactor.Phase;
 
 public class LogStoreCompactor extends Consort<Phase> {
 	private int minNonCompactedLogRecordId = -1;
 
-	private TopicListener<IntPair> logPersistedListener = new TopicListener<IntPair>() {
-		@Override
-		public void topicPublished(String key, IntPair message) {
-			if (PermissionsManager.isOffline() && !isRunning()) {
-				LogStore.get().setLocalPersistencePaused(true);
-				restart();
-			}
+	private TopicListener<IntPair> logPersistedListener = message -> {
+		if (PermissionsManager.isOffline() && !isRunning()) {
+			LogStore.get().setLocalPersistencePaused(true);
+			restart();
 		}
 	};
 
@@ -39,12 +36,8 @@ public class LogStoreCompactor extends Consort<Phase> {
 
 	public int mergeCheckId;
 
-	private TopicListener consortEndListener = new TopicListener() {
-		@Override
-		public void topicPublished(String key, Object message) {
-			LogStore.get().setLocalPersistencePaused(false);
-		}
-	};
+	private TopicListener consortEndListener = message -> LogStore.get()
+			.setLocalPersistencePaused(false);
 
 	public LogStoreCompactor() {
 		addPlayer(new Compactor_GET_ID_RANGE());
@@ -55,12 +48,12 @@ public class LogStoreCompactor extends Consort<Phase> {
 		addPlayer(new Compactor_MERGE_AND_PERSIST_FROM());
 		addPlayer(new Compactor_MERGE_AND_PERSIST_TO());
 		addEndpointPlayer();
-		listenerDelta(FINISHED, consortEndListener, true);
-		listenerDelta(ERROR, consortEndListener, true);
+		listenerDelta(TopicChannel.FINISHED, consortEndListener, true);
+		listenerDelta(TopicChannel.ERROR, consortEndListener, true);
 	}
 
 	public void install() {
-		LogStore.notifyPersistedListenerDelta(logPersistedListener, true);
+		LogStore.topicPersisted.add(logPersistedListener);
 	}
 
 	public boolean isCompacted(ClientLogRecords records) {

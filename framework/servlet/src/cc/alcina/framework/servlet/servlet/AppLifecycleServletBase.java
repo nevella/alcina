@@ -54,7 +54,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -90,6 +90,7 @@ import cc.alcina.framework.entity.util.TimerWrapperProviderJvm;
 import cc.alcina.framework.servlet.LifecycleService;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import cc.alcina.framework.servlet.ServletLayerUtils;
+import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
 import cc.alcina.framework.servlet.job.JobLogTimer;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
@@ -100,7 +101,7 @@ import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener
 
 @Registration.Singleton
 public abstract class AppLifecycleServletBase extends GenericServlet {
-	private static Topic<Void> topicConfigurationReloaded = Topic.local();
+	private static Topic<Void> topicConfigurationReloaded = Topic.create();
 
 	public static AppLifecycleServletBase get() {
 		return Registry.impl(AppLifecycleServletBase.class);
@@ -120,7 +121,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		CollectionCreators.Bootstrap.setHashMapCreator(new HashMapCreatorJvm());
 	}
 
-	public static Topic<Void> topicConfigurationReloaded() {
+	public static final Topic<Void> topicConfigurationReloaded() {
 		return topicConfigurationReloaded;
 	}
 
@@ -239,6 +240,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 			initBootstrapRegistry();
 			initNames();
 			loadCustomProperties();
+			addImmutableSecurityProperties();
 			initDevConsoleAndWebApp();
 			initContainerBridge();
 			initServices();
@@ -277,6 +279,11 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	public void setStartupTime(Date startupTime) {
 		this.startupTime = startupTime;
+	}
+
+	protected void addImmutableSecurityProperties() {
+		ResourceUtilities.addImmutableCustomPropertyKey(
+				RemoteDebugHandler.immutableSecurityProperty());
 	}
 
 	protected void createServletTransformClientInstance() {
@@ -346,7 +353,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	@SuppressWarnings("deprecation")
 	protected void initDevConsoleAndWebApp() {
-		topicConfigurationReloaded.add((k, v) -> {
+		topicConfigurationReloaded.add(v -> {
 			/*
 			 * All optimised configuration property cache refreshing should go
 			 * here
@@ -605,7 +612,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				}
 			}
 			ResourceUtilities.propertiesInvalidated
-					.add((k, v) -> topicConfigurationReloaded.publish(null));
+					.add(v -> topicConfigurationReloaded.publish(null));
 		} finally {
 			ThreadedPermissionsManager.cast().popSystemUser();
 			Transaction.end();

@@ -12,8 +12,7 @@ import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.widget.dialog.DecoratedRelativePopupPanel;
@@ -42,8 +41,8 @@ public class RelativePopupPositioning {
 					AxisCoordinate.V_CENTER, AxisCoordinate.V_BOTTOM },
 			AxisCoordinate.H_LEFT);
 
-	public static final transient String TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED = RelativePopupPanel.class
-			.getName() + ".TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED";
+	public static final Topic<PopupWrapper> topicRelativePopupPanelDisplayed = Topic
+			.create();
 
 	public static void ensurePopupWithin(RelativePopupPanel rpp,
 			Widget boundingWidget) {
@@ -104,17 +103,6 @@ public class RelativePopupPositioning {
 		int scrollTop = target.getScrollTop();
 		int scrollTop2 = target.getOwnerDocument().getScrollTop();
 		return clientY - absoluteTop + scrollTop + scrollTop2;
-	}
-
-	public static void notifyPopupDisplayed(PopupWrapper rpp) {
-		GlobalTopicPublisher.get()
-				.publishTopic(TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED, rpp);
-	}
-
-	public static void notifyPopupDisplayedListenerDelta(
-			TopicListener<PopupWrapper> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(
-				TOPIC_RELATIVE_POPUP_PANEL_DISPLAYED, listener, add);
 	}
 
 	public static void setCurrentBoundingParent(Widget boundingParent) {
@@ -664,7 +652,7 @@ public class RelativePopupPositioning {
 					break;
 				}
 			}
-			notifyPopupDisplayed(new PopupWrapper(rpp));
+			topicRelativePopupPanelDisplayed.publish(new PopupWrapper(rpp));
 		}
 	}
 }

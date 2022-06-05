@@ -57,7 +57,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationL
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -117,18 +117,11 @@ public abstract class DevHelper {
 
 	private Connection connProduction;
 
-	private TopicListener<JobTracker> jobCompletionLister = new TopicListener<JobTracker>() {
-		@Override
-		public void topicPublished(String key, JobTracker message) {
-			System.out.format("Job complete:\n%s\n", message);
-		}
-	};
+	private TopicListener<JobTracker> jobCompletionLister = message -> System.out
+			.format("Job complete:\n%s\n", message);
 
-	private TopicListener<Exception> devWarningListener = new TopicListener<Exception>() {
-		@Override
-		public void topicPublished(String key, Exception ex) {
-			// System.err.println(ex.getMessage());
-		}
+	private TopicListener<Exception> devWarningListener = ex -> {
+		// System.err.println(ex.getMessage());
 	};
 
 	private Logger logger = null;
@@ -343,7 +336,7 @@ public abstract class DevHelper {
 		setupJobsToSysout();
 		XmlUtils.noTransformerCaching = true;
 		EntityLayerObjects.get().setPersistentLogger(getTestLogger());
-		AlcinaTopics.notifyDevWarningListenerDelta(devWarningListener, true);
+		AlcinaTopics.devWarning.add(devWarningListener);
 		Registry.register().singleton(TimerWrapperProvider.class,
 				new TimerWrapperProviderJvm());
 		PermissionsManager.register(new ThreadedPermissionsManager());
@@ -452,7 +445,7 @@ public abstract class DevHelper {
 	}
 
 	public void setupJobsToSysout() {
-		AlcinaTopics.jobCompletionListenerDelta(jobCompletionLister, true);
+		AlcinaTopics.jobCompletion.add(jobCompletionLister);
 	}
 
 	public DevHelper solidTestEnv() {

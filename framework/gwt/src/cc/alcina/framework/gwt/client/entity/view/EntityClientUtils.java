@@ -12,13 +12,12 @@ import com.google.gwt.view.client.SingleSelectionModel;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.entity.view.res.DataClientResources;
 
 public class EntityClientUtils {
-	public static final String TOPIC_TOGGLE_FILTER = EntityClientUtils.class
-			.getName() + "." + "TOPIC_TOGGLE_FILTER";
+	public static final Topic<Boolean> topicToggleFilter = Topic.create();
 
 	public static void clearSelection(AbstractCellTable table) {
 		if (table == null) {
@@ -60,9 +59,5 @@ public class EntityClientUtils {
 		table.setKeyboardPagingPolicy(KeyboardPagingPolicy.INCREASE_RANGE);
 		table.setKeyboardSelectionPolicy(KeyboardSelectionPolicy.ENABLED);
 		table.setStyleName("data-grid");
-	}
-
-	public static Topic<Boolean> topicToggleFilter() {
-		return Topic.global(TOPIC_TOGGLE_FILTER);
 	}
 }

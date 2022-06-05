@@ -76,7 +76,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.NullWrappingMap;
 import cc.alcina.framework.common.client.util.SortedMultikeyMap;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
@@ -145,8 +145,7 @@ public class GraphProjection {
 	public static final String CONTEXT_MAX_REACHED = GraphProjection.class
 			.getName() + ".CONTEXT_MAX_REACHED";
 
-	public static final String TOPIC_PROJECTION_COUNT_DELTA = GraphProjection.class
-			.getName() + ".TOPIC_PROJECTION_COUNT_DELTA";
+	public static final Topic<Integer> topicProjectCountDelta = Topic.create();
 
 	protected static final Object NULL_MARKER = new Object();
 
@@ -631,13 +630,11 @@ public class GraphProjection {
 				}
 				LooseContext.pushWithKey(CONTEXT_PROJECTION_CONTEXT,
 						new LinkedHashMap<>());
-				GlobalTopicPublisher.get()
-						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, 1);
+				topicProjectCountDelta.publish(1);
 				start = System.nanoTime();
 				return project(source, null, context);
 			} finally {
-				GlobalTopicPublisher.get()
-						.publishTopic(TOPIC_PROJECTION_COUNT_DELTA, -1);
+				topicProjectCountDelta.publish(-1);
 				LooseContext.pop();
 				if (last != null) {
 					LooseContext.set(CONTEXT_LAST_CONTEXT_LOOKUPS, this);

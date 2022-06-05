@@ -211,7 +211,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		BackendTransformQueue.get().start();
 		JobRegistry.get().init();
 		JobLogTimer.get().init();
-		AlcinaTopics.applicationRestart.add((k, v) -> getInstance().restart());
+		AlcinaTopics.applicationRestart.add(v -> getInstance().restart());
 	}
 
 	public String breakAndPad(int tabCount, int width, String text,

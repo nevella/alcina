@@ -38,7 +38,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.TimeConstants;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.logic.EntityLayerUtils;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
@@ -73,8 +73,7 @@ public abstract class DomainViews {
 	boolean addTaskLockLockedByDomainCommit;
 
 	// runs on the DTR eventqueue thread
-	private TopicListener<DomainTransformPersistenceEvent> beforeDomainCommittedListener = (
-			k, e) -> {
+	private TopicListener<DomainTransformPersistenceEvent> beforeDomainCommittedListener = e -> {
 		if (isIndexableTransformRequest(e)) {
 			ViewsTask task = new ViewsTask();
 			addTaskLock.lock();
@@ -86,8 +85,7 @@ public abstract class DomainViews {
 		}
 	};
 
-	private TopicListener<DomainTransformPersistenceEvent> afterDomainCommittedListener = (
-			k, e) -> {
+	private TopicListener<DomainTransformPersistenceEvent> afterDomainCommittedListener = e -> {
 		Transaction preCommit = preCommitTransactions.remove(e);
 		boolean indexableTransformRequest = isIndexableTransformRequest(e);
 		if (indexableTransformRequest

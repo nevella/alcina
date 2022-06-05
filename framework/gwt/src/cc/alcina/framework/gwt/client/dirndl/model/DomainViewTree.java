@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Wa
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
 
 public abstract class DomainViewTree extends Tree<DomainViewNode> {
@@ -29,9 +29,9 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 
 	private DomainViewNodeContent.Response lastResponse;
 
-	public Topic<BeforeNodeRemovalEvent> beforeNodeRemoval = Topic.local();
+	public Topic<BeforeNodeRemovalEvent> beforeNodeRemoval = Topic.create();
 
-	public Topic<NodeChangeEvent> afterNodeChange = Topic.local();
+	public Topic<NodeChangeEvent> afterNodeChange = Topic.create();
 
 	private boolean saveResponses;
 

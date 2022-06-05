@@ -1259,7 +1259,7 @@ public abstract class TransformManager
 			}
 		} catch (RuntimeException e) {
 			if (GWT.isClient()) {
-				AlcinaTopics.TOPIC_TRANSFORM_CASCADE_EXCEPTION.publish(e);
+				AlcinaTopics.transformCascadeException.publish(e);
 			}
 			throw e;
 		}

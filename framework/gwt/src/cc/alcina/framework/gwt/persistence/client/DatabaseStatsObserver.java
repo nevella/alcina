@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.IntPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.util.AsyncCallbackStd;
 import cc.alcina.framework.gwt.client.util.OnetimeWrappingAsyncCallback;
 import cc.alcina.framework.gwt.client.util.WrappingAsyncCallback;
@@ -29,33 +29,23 @@ public class DatabaseStatsObserver {
 
 	DatabaseStatsInfo current = new DatabaseStatsInfo();
 
-	protected TopicListener<LocalPersistenceTuple> transformDeltaListener = new TopicListener<LocalTransformPersistence.LocalPersistenceTuple>() {
-		@Override
-		public void topicPublished(String key, LocalPersistenceTuple message) {
-			if (current != null) {
-				current.getTransformCounts().add(message.type);
-				current.getTransformTexts().add(message.type, message.size);
-				checkMax();
-			}
+	protected TopicListener<LocalPersistenceTuple> transformDeltaListener = message -> {
+		if (current != null) {
+			current.getTransformCounts().add(message.type);
+			current.getTransformTexts().add(message.type, message.size);
+			checkMax();
 		}
 	};
 
-	protected TopicListener<IntPair> logStorePersistedListener = new TopicListener<IntPair>() {
-		@Override
-		public void topicPublished(String key, IntPair idSize) {
-			if (current != null) {
-				current.getLogSizes().add(idSize.i1, idSize.i2);
-				checkMax();
-			}
+	protected TopicListener<IntPair> logStorePersistedListener = idSize -> {
+		if (current != null) {
+			current.getLogSizes().add(idSize.i1, idSize.i2);
+			checkMax();
 		}
 	};
 
-	protected TopicListener<Void> logStoreDeletedListener = new TopicListener<Void>() {
-		@Override
-		public void topicPublished(String key, Void message) {
-			refreshCurrent();
-		}
-	};
+	protected TopicListener<Void> logStoreDeletedListener = m -> this
+			.refreshCurrent();
 
 	WrappingAsyncCallback<String> initCallback = new OnetimeWrappingAsyncCallback<String>() {
 		@Override
@@ -72,6 +62,7 @@ public class DatabaseStatsObserver {
 	};
 
 	private WrappingAsyncCallback<DatabaseStatsInfo> currentCallback = new OnetimeWrappingAsyncCallback<DatabaseStatsInfo>() {
+		@Override
 		public void onFailure(Throwable caught) {
 			refreshing = false;
 			super.onFailure(caught);
@@ -111,10 +102,9 @@ public class DatabaseStatsObserver {
 	}
 
 	public void installPersistenceListeners() {
-		LocalTransformPersistence
-				.notifyPersistingListenerDelta(transformDeltaListener, true);
-		LogStore.notifyPersistedListenerDelta(logStorePersistedListener, true);
-		LogStore.notifyDeletedListenerDelta(logStoreDeletedListener, true);
+		LocalTransformPersistence.topicPersisting.add(transformDeltaListener);
+		LogStore.topicPersisted.add(logStorePersistedListener);
+		LogStore.topicDeleted.add(logStoreDeletedListener);
 	}
 
 	public void recalcWithListener(AsyncCallback postRecalcCallback) {

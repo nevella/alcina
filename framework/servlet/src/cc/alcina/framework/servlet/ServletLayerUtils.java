@@ -105,6 +105,37 @@ public class ServletLayerUtils {
 		return Ax.format("%s://%s/", protocol, host);
 	}
 
+	public static String
+			robustGetRequestHostProtocolPort(HttpServletRequest request) {
+		if (request == null) {
+			return null;
+		}
+		String protocol = Optional
+				.ofNullable(request.getHeader("X-Forwarded-Proto"))
+				.orElse(request.getScheme());
+		String host = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
+				.orElse(request.getServerName());
+		String port = Optional.ofNullable(request.getHeader("X-Forwarded-Port"))
+				.orElse(String.valueOf(request.getServerPort()));
+		int iPort = Integer.parseInt(port);
+		String portString = "";
+		switch (protocol) {
+		case "http":
+			if (iPort != 80) {
+				portString = ":" + iPort;
+			}
+			break;
+		case "https":
+			if (iPort != 443) {
+				portString = ":" + iPort;
+			}
+			break;
+			default:
+				throw new UnsupportedOperationException();
+		}
+		return Ax.format("%s://%s%s/", protocol, host,portString);
+	}
+
 	public static void setAppServletInitialised(boolean appServletInitialised) {
 		ServletLayerUtils.appServletInitialised = appServletInitialised;
 	}

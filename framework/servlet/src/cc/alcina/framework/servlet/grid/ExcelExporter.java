@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -43,7 +43,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.XmlUtils;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class ExcelExporter {
@@ -51,11 +51,11 @@ public class ExcelExporter {
 
 	public static final String CONTEXT_DATES_AS_DATE_TIME = ExcelExporter.class
 			.getName() + ".CONTEXT_DATES_AS_DATE_TIME";
+
 	public static final String CONTEXT_USE_FIELD_ORDER = ExcelExporter.class
 			.getName() + ".CONTEXT_USE_FIELD_ORDE";
 
 	private static final String DOC_TEMPLATE_XML = "docTemplate.xml";
-	
 
 	private Element sheetTemplate = null;
 
@@ -137,15 +137,21 @@ public class ExcelExporter {
 
 	public void addCollectionToBook(Collection coll, Document book,
 			String sheetName) throws Exception {
+		addCollectionToBook(coll, book, sheetName, false);
+	}
+
+	public void addCollectionToBook(Collection coll, Document book,
+			String sheetName, boolean sortColumnsByFieldName) throws Exception {
 		if (!coll.iterator().hasNext()) {
 			coll = new ArrayList();
 			coll.add(new ExcelEmptyBean());
 		}
 		Object o = coll.iterator().next();
 		Class clazz = o.getClass();
-		List<PropertyDescriptor> pds = LooseContext.is(CONTEXT_USE_FIELD_ORDER)?SEUtilities
-				.getPropertyDescriptorsSortedByField(clazz):SEUtilities
-				.getPropertyDescriptorsSortedByName(clazz);
+		List<PropertyDescriptor> pds = sortColumnsByFieldName
+				|| LooseContext.is(CONTEXT_USE_FIELD_ORDER)
+						? SEUtilities.getPropertyDescriptorsSortedByField(clazz)
+						: SEUtilities.getPropertyDescriptorsSortedByName(clazz);
 		List<PdMultiplexer> pdMultis = pds.stream().filter(pd -> !ignorePd(pd))
 				.map(PdMultiplexer::new).sorted().collect(Collectors.toList());
 		addCollectionToBook(coll, book, sheetName, pdMultis);

@@ -45,6 +45,10 @@ public class AuthenticationManager {
 		return Registry.impl(AuthenticationManager.class);
 	}
 
+	public static boolean hasContext() {
+		return LooseContext.has(CONTEXT_AUTHENTICATION_CONTEXT);
+	}
+
 	public static Long provideAuthenticatedClientInstanceId() {
 		return get().getContextClientInstance().map(ClientInstance::getId)
 				.orElse(null);
@@ -58,10 +62,6 @@ public class AuthenticationManager {
 		this.persistence = AuthenticationPersistence.get();
 	}
 
-	public static boolean hasContext() {
-		return LooseContext.has(CONTEXT_AUTHENTICATION_CONTEXT);
-	}
-
 	/**
 	 * 'createClientInstance' is used when the request needs a new
 	 * clientInstance immediately - basically any time except during the
@@ -72,12 +72,11 @@ public class AuthenticationManager {
 			boolean createClientInstance) {
 		AuthenticationContext context = ensureContext();
 		if (context.session != null) {
-			context.session.setEndTime(new Date());
-			context.session.setEndReason("Replaced by new session");
 			logger.warn(
 					"Expired session :: id: {} reason: {} old_user: {} current_user: {}",
 					context.session.getId(), context.session.getEndReason(),
 					context.session.getUser(), user);
+			invalidateSession(context.session, "Replaced by new session");
 		}
 		String sessionId = SEUtilities.generateId();
 		AuthenticationSession session = persistence.createAuthenticationSession(
@@ -137,6 +136,12 @@ public class AuthenticationManager {
 		}
 		// all auth objects persisted as root
 		Transaction.commit();
+	}
+
+	public void invalidateSession(AuthenticationSession session,
+			String reason) {
+		session.markInvalid(reason);
+		ensureContext().localAuthenticator.invalidateSession(session);
 	}
 
 	private void createClientInstance(AuthenticationContext context) {
@@ -213,6 +218,7 @@ public class AuthenticationManager {
 	}
 
 	private boolean isExpired(AuthenticationSession session) {
+		ensureContext().localAuthenticator.checkExternalExpiration(session);
 		boolean result = session.provideIsExpired();
 		if (result && session.getEndTime() == null) {
 			logger.warn(

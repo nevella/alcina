@@ -247,7 +247,7 @@ public class JobContext {
 		this.performer = performer;
 		treeProcess = new TreeProcess(performer);
 		treeProcess.positionChangedMessage
-				.add((k, v) -> JobContext.setStatusMessage(v));
+				.add(v -> JobContext.setStatusMessage(v));
 		this.launcherThreadState = launcherThreadState;
 		this.allocator = allocator;
 		this.logger = LoggerFactory.getLogger(performer.getClass());
@@ -333,9 +333,11 @@ public class JobContext {
 		this.itemsCompleted = itemsCompleted;
 	}
 
-	public void setResultMessage(String resultMessage) {
+	public static void setResultMessage(String resultMessage) {
 		info(resultMessage);
-		get().getJob().setResultMessage(resultMessage);
+		if (has()) {
+			get().getJob().setResultMessage(resultMessage);
+		}
 	}
 
 	public void toAwaitingChildren() {

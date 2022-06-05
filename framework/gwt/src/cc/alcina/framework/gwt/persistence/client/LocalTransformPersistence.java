@@ -34,8 +34,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
-import cc.alcina.framework.common.client.util.TopicPublisher.GlobalTopicPublisher;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.gwittir.renderer.ToStringConverter;
@@ -70,9 +70,9 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
  * </blockquote>
  * <p>
  * This ensures that offline load is in the correct order
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public abstract class LocalTransformPersistence
 		implements ClientTransformManager.PersistableTransformListener,
@@ -84,8 +84,8 @@ public abstract class LocalTransformPersistence
 			.getName() + "."
 			+ "CONTEXT_OFFLINE_TRANSFORM_UPLOAD_SUCCEEDED_CLIENT_IDS";
 
-	public static final String TOPIC_PERSISTING = LocalTransformPersistence.class
-			.getName() + "." + "TOPIC_PERSISTING";
+	public static final Topic<LocalPersistenceTuple> topicPersisting = Topic
+			.create();
 
 	private static LocalTransformPersistence localTransformPersistence;
 
@@ -97,16 +97,6 @@ public abstract class LocalTransformPersistence
 
 	public static boolean isLocalStorageInstalled() {
 		return get() != null && get().localStorageInstalled;
-	}
-
-	public static void notifyPersisting(LocalPersistenceTuple size) {
-		GlobalTopicPublisher.get().publishTopic(TOPIC_PERSISTING, size);
-	}
-
-	public static void notifyPersistingListenerDelta(
-			TopicListener<LocalPersistenceTuple> listener, boolean add) {
-		GlobalTopicPublisher.get().listenerDelta(TOPIC_PERSISTING, listener,
-				add);
 	}
 
 	public static void registerLocalTransformPersistence(
@@ -299,8 +289,8 @@ public abstract class LocalTransformPersistence
 	 * Access check - only called by synchronized blocks in
 	 * CommitToStorageTransformListener
 	 */
-	public void topicPublished(String key,
-			CommitToStorageTransformListener.State newState) {
+	public void
+			topicPublished(CommitToStorageTransformListener.State newState) {
 		switch (newState) {
 		case COMMITTING: {
 			DomainTransformRequest rq = LooseContext.get(

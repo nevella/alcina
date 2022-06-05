@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -35,16 +35,16 @@ import cc.alcina.framework.common.client.logic.permissions.LoginStateVisibleWith
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.widget.BaseTab;
 import cc.alcina.framework.gwt.client.widget.SpanPanel;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
 
 /**
- * 
+ *
  * @author Nick Reddel Note - this class is closely coupled to DockPanel - so
  *         ignoring deprecation warnings.
- * 
+ *
  *         It works...and a rewrite would be painful (and probably require a
  *         complete reimplementation)
  */
@@ -55,12 +55,7 @@ public class MainTabPanel extends TabPanel {
 
 	private SimplePanel noTabContentHolder = new SimplePanel();
 
-	private TopicListener<LoginState> visListener = new TopicListener<LoginState>() {
-		@Override
-		public void topicPublished(String key, LoginState message) {
-			refreshButtonPanelVis();
-		}
-	};
+	private TopicListener<LoginState> visListener = state -> refreshButtonPanelVis();
 
 	private List<IsWidget> buttons;
 

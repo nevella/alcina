@@ -1,28 +1,18 @@
 package cc.alcina.framework.common.client.util;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.Stack;
 
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
-
 public class LooseContextInstance {
-	private static final String TOPIC_PROPERTY_NAME = LooseContextInstance.class
-			.getName() + ".Topics";
-
 	public static StackDebug stackDebug = new StackDebug("LooseContext");
 
 	public Map<String, Object> properties = CollectionCreators.Bootstrap
 			.getHashMapCreator().create();
 
-	private Multimap<TopicListener, List<String>> addedListeners = new Multimap<TopicPublisher.TopicListener, List<String>>();
-
 	private Stack<Map<String, Object>> stack = new Stack<Map<String, Object>>();
-
-	private Stack<Multimap<TopicListener, List<String>>> listenerStack = new Stack<Multimap<TopicListener, List<String>>>();
 
 	public LooseContextInstance() {
 		super();
@@ -43,10 +33,8 @@ public class LooseContextInstance {
 		addProperties(sm);
 	}
 
-	public void addTopicListener(String key, TopicListener listener) {
-		addedListeners.add(listener, key);
-		TopicPublisher publisher = ensureTopicPublisher();
-		publisher.addTopicListener(key, listener);
+	public void clearProperties() {
+		properties.clear();
 	}
 
 	public boolean containsKey(String key) {
@@ -95,25 +83,12 @@ public class LooseContextInstance {
 
 	public void pop() {
 		stackDebug.maybeDebugStack(stack, false);
-		TopicPublisher publisher = ensureTopicPublisher();
-		for (TopicListener listener : addedListeners.keySet()) {
-			for (String key : addedListeners.get(listener)) {
-				publisher.removeTopicListener(key, listener);
-			}
-		}
 		properties = stack.pop();
-		addedListeners = listenerStack.pop();
-	}
-
-	public void publishTopic(String key, Object message) {
-		ensureTopicPublisher().publishTopic(key, message);
 	}
 
 	public void push() {
 		stackDebug.maybeDebugStack(stack, true);
 		stack.push(properties);
-		listenerStack.push(addedListeners);
-		addedListeners = new Multimap<TopicListener, List<String>>();
 		properties = CollectionCreators.Bootstrap.getHashMapCreator()
 				.copy(properties);
 	}
@@ -123,15 +98,6 @@ public class LooseContextInstance {
 	 */
 	public void pushContext(LooseContextInstance renderContext) {
 		stack.push(properties);
-		listenerStack.push(addedListeners);
-		addedListeners = new Multimap<TopicListener, List<String>>();
-		addedListeners.addAll(renderContext.addedListeners);
-		TopicPublisher publisher = ensureTopicPublisher();
-		for (TopicListener listener : addedListeners.keySet()) {
-			for (String key : addedListeners.get(listener)) {
-				publisher.addTopicListener(key, listener);
-			}
-		}
 		properties = new HashMap<String, Object>(properties);
 		properties.putAll(renderContext.properties);
 	}
@@ -151,12 +117,6 @@ public class LooseContextInstance {
 
 	public <T> T remove(String key) {
 		return (T) properties.remove(key);
-	}
-
-	public void removeTopicListener(String key, TopicListener listener) {
-		TopicPublisher publisher = ensureTopicPublisher();
-		publisher.removeTopicListener(key, listener);
-		addedListeners.subtract(listener, key);
 	}
 
 	public void set(String key, Object value) {
@@ -190,11 +150,8 @@ public class LooseContextInstance {
 		return sm.toPropertyString();
 	}
 
-	private TopicPublisher ensureTopicPublisher() {
-		if (!containsKey(TOPIC_PROPERTY_NAME)) {
-			set(TOPIC_PROPERTY_NAME, new TopicPublisher());
-		}
-		return get(TOPIC_PROPERTY_NAME);
+	protected void allowUnbalancedFrameRemoval(Class clazz,
+			String pushMethodName) {
 	}
 
 	protected void cloneToSnapshot(LooseContextInstance cloned) {
@@ -205,13 +162,5 @@ public class LooseContextInstance {
 		while (!stack.isEmpty()) {
 			pop();
 		}
-	}
-
-	public void clearProperties() {
-		properties.clear();
-	}
-
-	protected void allowUnbalancedFrameRemoval(Class clazz,
-			String pushMethodName) {
 	}
 }

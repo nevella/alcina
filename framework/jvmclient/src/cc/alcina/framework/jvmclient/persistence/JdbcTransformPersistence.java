@@ -157,7 +157,7 @@ public abstract class JdbcTransformPersistence
 
 			@Override
 			public void onSuccess(Object result) {
-				getCommitToStorageTransformListener().topicStateChanged()
+				CommitToStorageTransformListener.topicStateChanged
 						.add(listener);
 				ClientTransformManager.cast()
 						.setPersistableTransformListener(listener);
@@ -335,8 +335,9 @@ public abstract class JdbcTransformPersistence
 	@Override
 	protected void persistFromFrontOfQueue(final DeltaApplicationRecord wrapper,
 			final AsyncCallback callback) {
-		notifyPersisting(new LocalPersistenceTuple(wrapper.getType().toString(),
-				wrapper.getText().length(), wrapper.getText()));
+		topicPersisting
+				.publish(new LocalPersistenceTuple(wrapper.getType().toString(),
+						wrapper.getText().length(), wrapper.getText()));
 		CleanupTuple tuple = new CleanupTuple();
 		try {
 			PreparedStatement pstmt = tuple.prepareStatement(

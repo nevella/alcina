@@ -66,12 +66,18 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		validateAccount(loginModel.loginResponse, loginBean.getUserName());
 	}
 
+	public void checkExternalExpiration(AuthenticationSession session) {
+	}
+
 	public U createUser(String userName, String password) {
 		U user = (U) Domain
 				.create((Class) PersistentImpl.getImplementation(IUser.class));
 		user.setUserName(userName);
 		setPassword(user, password);
 		return user;
+	}
+
+	public void invalidateSession(AuthenticationSession asi) {
 	}
 
 	public void logOut() {

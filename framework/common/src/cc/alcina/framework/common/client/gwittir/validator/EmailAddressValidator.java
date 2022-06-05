@@ -32,17 +32,17 @@ import cc.alcina.framework.common.client.util.TextUtils;
  * @author Nick Reddel
  */
 public class EmailAddressValidator implements ParameterisedValidator {
-	public static final String STANDARD_MULTIPLE_SEPARATOR = "(;|,| )+";
+	public static final transient String STANDARD_MULTIPLE_SEPARATOR = "(;|,| )+";
 
-	private static final String EMAIL_REGEX = "([a-zA-Z0-9_'+*$%\\^&!\\.\\-])+\\@(([a-zA-Z0-9\\-])+\\.)+([a-zA-Z0-9:]{2,8})+";
+	public static final transient String EMAIL_REGEX = "([a-zA-Z0-9_'+*$%\\^&!\\.\\-])+\\@(([a-zA-Z0-9\\-])+\\.)+([a-zA-Z0-9:]{2,8})+";
 
-	private static final String EMAIL_REGEX_REPLACE = "234@@@IBBDA";
+	private static final transient String EMAIL_REGEX_REPLACE = "234@@@IBBDA";
 
-	public static final String PARAM_MULTIPLE_SEPARATOR = "multiple-separator";
+	public static final transient String PARAM_MULTIPLE_SEPARATOR = "multiple-separator";
 
-	public static final String PARAM_IGNORE_EMPTIES = "ignore-empties";
+	public static final transient String PARAM_IGNORE_EMPTIES = "ignore-empties";
 
-	public static List<String>
+	public static  List<String>
 			provideAddressesForDefaultSeparator(String addresses) {
 		addresses = TextUtils.normalizeWhitespaceAndTrim(addresses);
 		return Arrays.asList(addresses.split(STANDARD_MULTIPLE_SEPARATOR))

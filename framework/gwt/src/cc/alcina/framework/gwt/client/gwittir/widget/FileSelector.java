@@ -20,7 +20,7 @@ import com.google.gwt.user.client.ui.HasEnabled;
 import com.totsp.gwittir.client.ui.AbstractBoundWidget;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
  * A very, very, very simple, rapid implementation. Very.
@@ -35,7 +35,7 @@ public class FileSelector extends AbstractBoundWidget<FileSelectorInfo>
 
 	private String accept;
 
-	private TopicListener<FileSelectorInfo> clearListener = (k, v) -> base
+	private TopicListener<FileSelectorInfo> clearListener = v -> base
 			.clear();
 
 	public FileSelector() {

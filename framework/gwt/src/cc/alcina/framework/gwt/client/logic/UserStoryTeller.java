@@ -10,7 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringPair;
-import cc.alcina.framework.common.client.util.TopicPublisher.TopicListener;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 import cc.alcina.framework.gwt.persistence.client.LogStore;
 
@@ -53,10 +53,10 @@ public abstract class UserStoryTeller
 	public void ensureListening() {
 		if (!listening) {
 			listening = true;
-			LogStore.topicLogEvent().add(this);
+			LogStore.topicEventOccurred.add(this);
 			this.story = createUserStory();
-			AlcinaTopics.logCategorisedMessage(
-					new StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE,
+			AlcinaTopics.categorisedLogMessage
+					.publish(new StringPair(AlcinaTopics.LOG_CATEGORY_MESSAGE,
 							Ax.format("Started logging - url: %s",
 									Window.Location.getHref())));
 		}
@@ -74,7 +74,7 @@ public abstract class UserStoryTeller
 	}
 
 	@Override
-	public void topicPublished(String key, ClientLogRecord message) {
+	public void topicPublished(ClientLogRecord message) {
 		persistLocal();
 		seriesTimer.triggerEventOccurred(message);
 	}

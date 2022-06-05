@@ -3,19 +3,14 @@ package cc.alcina.framework.common.client.log;
 import java.util.Date;
 
 import cc.alcina.framework.common.client.logic.domain.HasId;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 
 public interface ILogRecord extends HasId {
-	public static final String COMPONENT_KEY = "componentKey";
+	String COMPONENT_KEY = "componentKey";
 
-	public static final String USER_ID = "userId";
+	String USER_ID = "userId";
 
-	public static final String TOPIC_PERSISTENT_LOG_EVENT_OCCURRED = ILogRecord.class
-			.getName() + "." + "TOPIC_PERSISTENT_LOG_EVENT_OCCURRED";
-
-	public static Topic<ILogRecord> topicPersistentLog() {
-		return Topic.global(TOPIC_PERSISTENT_LOG_EVENT_OCCURRED);
-	}
+	Topic<ILogRecord> topicPersistentLog = Topic.create();
 
 	Long getClientInstanceId();
 

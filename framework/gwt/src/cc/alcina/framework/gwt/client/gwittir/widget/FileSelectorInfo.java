@@ -5,7 +5,7 @@ import java.io.Serializable;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
-import cc.alcina.framework.common.client.util.TopicPublisher.Topic;
+import cc.alcina.framework.common.client.util.Topic;
 
 @Reflected
 public class FileSelectorInfo extends Bindable
@@ -14,7 +14,7 @@ public class FileSelectorInfo extends Bindable
 
 	private byte[] bytes;
 
-	private transient Topic<FileSelectorInfo> clearTopic = Topic.local();
+	private transient Topic<FileSelectorInfo> clearTopic = Topic.create();
 
 	public void clear() {
 		setBytes(null);
