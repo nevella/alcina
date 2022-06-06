@@ -48,6 +48,32 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
+ * 
+ * <p>
+ * A generative, expressive algorithm that transforms an arbitrary object into a
+ * live layout tree of {@link DirectedLayout.Node} objects which encapsulate a
+ * render tree (currently implemented only for HTML DOM, but easily extended to
+ * arbitrary native widgets)
+ * 
+ * <p>
+ * Dirndl bears some resemblance to xslt - they both use annotations to
+ * transform an object tree into markup, but extends it:
+ * 
+ * <ul>
+ * <li><b>generative</b>: the intermediate transform (ModelTransform) generates
+ * objects rather than result nodes, leading to much richer output structures
+ * from a given initial object tree
+ * <li><b>expressive</b>: transforms, which are controlled by @Directed
+ * annotations, can be customised in many ways by code since the annotations
+ * themselves can be transformed by the {@link ContextRenderer} applicable to
+ * the layout node
+ * <li><b>live</b>: the DirectedLayout.Node objects are aware of changes to
+ * their source model objects and mutate accordingly
+ * <li><b>events</b>: UI events are transformed into NodeEvent objects, which
+ * provide a generally truer-to-the-model-logic way of modelling and handling
+ * interface events than dealing directly with native (DOM) events
+ * </ul>
+ * 
  * FIXME - dirndl.perf
  *
  * Minimise annotation resolution by caching an intermediate renderer object
@@ -63,6 +89,32 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * @author nick@alcina.cc
  *
  */
+/*
+ * 
+ * @formatter:off
+ * 
+ * Implementation: Dirndl 1.1
+ * 
+ * [Transform model object to renderer input]
+ * - For model M, PropertyLocation PL, ContextResolver CR, parent DirectedLayout.Node PN, 
+ * retrieve the @Directed[]  annotations DL[] (most often only 1) applicable to the M at PL.
+ * - Construct a RendererInput model from M, PL, CR, PN, DL[]
+ * 
+ * [Algorithm]
+ * - Transform the initial object I to RendererInput RI, push onto RI stack
+ * - Pop RI from stack
+ * - While RI.DL[] is non-empty, compute renderer R from DL0 (popped from RI.DL[])
+ * - Apply R to RI, which (decidedly non-functional): 
+ * -- generates Node n which will be added to PN
+ * -- optionally generates Widget W which will be added as a child to the nearest parent Widget in the Node tree
+ * -- optionally modifies RI.DL (TODO - examples) 
+ * -- can emit RI[] - the primary example of that is: 
+ * --- applying the '[Transform model object]' algo above to the children (properties, 
+ * collection elements)of M, applicable only to the last @Directed in RI.DL[]
+ * (Repeat until no RI stack is empty)
+ * 
+ *  @formatter:on
+ */
 public class DirectedLayout {
 	private static Logger logger = LoggerFactory
 			.getLogger(DirectedLayout.class);
@@ -74,6 +126,10 @@ public class DirectedLayout {
 
 	Widget parent;
 
+	/**
+	 * Render a model object and add top-level output widgets to the parent
+	 * widget
+	 */
 	public Widget render(ContextResolver resolver, Widget parent,
 			Object model) {
 		this.parent = parent;
@@ -83,6 +139,12 @@ public class DirectedLayout {
 		return rendered.get(0);
 	}
 
+	/**
+	 * An interface that supports lazy model population before render
+	 * 
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public interface Lifecycle {
 		public void beforeRender();
 	}
@@ -104,6 +166,9 @@ public class DirectedLayout {
 	 * <p>
 	 * ...shades of the DOM render tree...
 	 * </p>
+	 * 
+	 * <p>
+	 * FIXME - dirndl 1.1 - change documentation (since
 	 */
 	public static class Node {
 		private ContextResolver resolver;
