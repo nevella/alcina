@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
@@ -9,6 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolver;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 @Reflected
@@ -77,4 +79,21 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	}
 
 	Map<Class, Class<? extends DirectedNodeRenderer>> modelRenderers = new LinkedHashMap<>();
+
+	// CACHE!
+	public List<Directed> resolveDirecteds(AnnotationLocation location) {
+		// TODO Auto-generated method stub
+		return null;
+	}
+
+	// CACHE! (stateful vs non for renderer)
+	public DirectedRenderer getRenderer(Directed directed) {
+		Class<? extends DirectedNodeRenderer> rendererClass = directed
+				.renderer();
+		if (rendererClass == ModelClassNodeRenderer.class) {
+			rendererClass = resolveModelRenderer(model);
+		}
+		DirectedNodeRenderer renderer = Reflections.newInstance(rendererClass);
+		return null;
+	}
 }

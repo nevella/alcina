@@ -11,6 +11,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Stack;
 import java.util.function.Predicate;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
@@ -96,19 +97,20 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * Implementation: Dirndl 1.1
  * 
  * [Transform model object to renderer input]
- * - For model M, PropertyLocation PL, ContextResolver CR, parent DirectedLayout.Node PN, 
- * retrieve the @Directed[]  annotations DL[] (most often only 1) applicable to the M at PL.
- * - Construct a RendererInput model from M, PL, CR, PN, DL[]
+ * - For ContextResolver CR, model M, AnnotationLocation AL, parent DirectedLayout.Node PN, 
+ * retrieve the @Directed[]  annotations DL[] (most often only 1) applicable to the M at AL.
+ * - Construct a RendererInput model from M, AL, CR, PN, DL[]
  * 
  * [Algorithm]
  * - Transform the initial object I to RendererInput RI, push onto RI stack
  * - Pop RI from stack
- * - While RI.DL[] is non-empty, compute renderer R from DL0 (popped from RI.DL[])
- * - Apply R to RI, which (decidedly non-functional): 
- * -- generates Node n which will be added to PN
+ * - While RI.DL[] is non-empty, compute renderer R from DL0 (first element of RI.DL[])
+ * - Apply R to RI via [DL0,CR], which (decidedly non-functional): 
+ * -- generates Node n which will be added to the children of PN
  * -- optionally generates Widget W which will be added as a child to the nearest parent Widget in the Node tree
  * -- optionally modifies RI.DL (TODO - examples) 
- * -- can emit RI[] - the primary example of that is: 
+ * -- can emit RI[] - the primary examples of that are: 
+ * --- if RI.DL[].length>1, emit a copy of RI with first element of RI.DL[] removed
  * --- applying the '[Transform model object]' algo above to the children (properties, 
  * collection elements)of M, applicable only to the last @Directed in RI.DL[]
  * (Repeat until no RI stack is empty)
@@ -122,21 +124,38 @@ public class DirectedLayout {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.OFF);
 	}
 
+	// FIXME - remove
 	public static Node current = null;
 
-	Widget parent;
+	private Node root = null;
 
 	/**
 	 * Render a model object and add top-level output widgets to the parent
 	 * widget
 	 */
-	public Widget render(ContextResolver resolver, Widget parent,
-			Object model) {
-		this.parent = parent;
-		Node root = new Node(resolver, model);
-		List<Widget> rendered = root.render().widgets;
-		Preconditions.checkState(rendered.size() == 1);
-		return rendered.get(0);
+	public Widget render(ContextResolver resolver, Object model) {
+		AnnotationLocation location = new AnnotationLocation(model.getClass(),
+				null);
+		RendererInput rootInput = createInput(resolver, model, location, null);
+		rendererInputs.add(rootInput);
+		layout();
+		return root.provideTopmostWidget();
+	}
+
+	private void layout() {
+		do {
+			// depth-first
+			RendererInput input = rendererInputs.lastElement();
+			DirectedRenderer renderer = input.provideRenderer();
+			Node node=renderer.render(input);
+			input.onRendered(rendererInputs,node);
+		} while (rendererInputs.size() > 0);
+	}
+
+	private RendererInput createInput(ContextResolver resolver, Object model,
+			AnnotationLocation location, Node parentNode) {
+		List<Directed> directeds = resolver.resolveDirecteds(location);
+		return new RendererInput(resolver, model, location, directeds,parentNode);
 	}
 
 	/**
@@ -147,6 +166,54 @@ public class DirectedLayout {
 	 */
 	public interface Lifecycle {
 		public void beforeRender();
+	}
+
+	static class NodeContext {
+		ContextResolver resolver;
+
+		DirectedNodeRenderer renderer;
+
+		Directed directed;
+	}
+
+	Stack<RendererInput> rendererInputs = new Stack();
+
+	static class RendererInput {
+		ContextResolver resolver;
+
+		Object model;
+
+		AnnotationLocation location;
+
+		List<Directed> directeds = new ArrayList<>();
+
+		 Node parentNode;
+
+		 RendererInput(ContextResolver resolver, Object model,
+				AnnotationLocation location, List<Directed> directeds, Node parentNode) {
+			this.resolver = resolver;
+			this.model = model;
+			this.location = location;
+			this.directeds = directeds;
+			this.parentNode = parentNode;
+		}
+
+		 void onRendered(Stack<RendererInput> rendererInputs, Node node) {
+			if(directeds.size()>1){
+				RendererInput continuation = new RendererInput(resolver, rendererInputs, location, directeds.subList(1, directeds.size()),node);
+				rendererInputs.add(continuation);
+			}
+		}
+
+		public DirectedRenderer provideRenderer() {
+			Directed directed=firstDirected();
+			
+			return resolver.getRenderer(directed);
+		}
+
+		private Directed firstDirected() {
+			return directeds.get(0);
+		}
 	}
 
 	/**
@@ -201,6 +268,11 @@ public class DirectedLayout {
 			this.resolver = resolver;
 			this.model = resolver.resolveModel(model);
 			current = this;
+		}
+
+		public Widget provideTopmostWidget() {
+			// TODO Auto-generated method stub
+			return null;
 		}
 
 		public <T> T ancestorModel(Class<T> clazz) {
@@ -707,6 +779,12 @@ public class DirectedLayout {
 			}
 		}
 
+		/**
+		 * Replaces a child node following a property change
+		 * 
+		 * @author nick@alcina.cc
+		 *
+		 */
 		private class ChildReplacer extends RemovablePropertyChangeListener {
 			private Node child;
 

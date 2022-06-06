@@ -30,7 +30,7 @@ public class DirndlRenderer {
 	}
 
 	public DomDocument render() {
-		Widget widget = new DirectedLayout().render(new ContextResolver(), null,
+		Widget widget = new DirectedLayout().render(new ContextResolver(), 
 				renderable);
 		String outerHtml = widget.getElement().getOuterHtml();
 		DomDocument doc = DomDocument.basicHtmlDoc();
