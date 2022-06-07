@@ -19,6 +19,7 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	protected ContextResolver parent;
 
+	//FIXME - dirndl 1.1 - hopefully remove
 	private Object model;
 
 	public <T> T getModel() {
@@ -81,19 +82,18 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	Map<Class, Class<? extends DirectedNodeRenderer>> modelRenderers = new LinkedHashMap<>();
 
 	// CACHE!
+	// FIXME - dirndl 1.1 - since caching, can afford to validate logic (no renderer except for last directed, e.g.)
 	public List<Directed> resolveDirecteds(AnnotationLocation location) {
-		// TODO Auto-generated method stub
-		return null;
+		return location.getAnnotations(Directed.class);
 	}
 
 	// CACHE! (stateful vs non for renderer)
-	public DirectedRenderer getRenderer(Directed directed) {
+	public DirectedRenderer getRenderer(Directed directed, Object model) {
 		Class<? extends DirectedNodeRenderer> rendererClass = directed
 				.renderer();
 		if (rendererClass == ModelClassNodeRenderer.class) {
 			rendererClass = resolveModelRenderer(model);
 		}
-		DirectedNodeRenderer renderer = Reflections.newInstance(rendererClass);
-		return null;
+		return Registry.query(DirectedRenderer.class).addKeys(rendererClass).impl();
 	}
 }

@@ -6,6 +6,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Deque;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -136,26 +137,31 @@ public class DirectedLayout {
 	public Widget render(ContextResolver resolver, Object model) {
 		AnnotationLocation location = new AnnotationLocation(model.getClass(),
 				null);
-		RendererInput rootInput = createInput(resolver, model, location, null);
-		rendererInputs.add(rootInput);
+		enqueueInput(resolver, model, location, null, null);
 		layout();
-		return root.provideTopmostWidget();
+		return root.firstDescendantWidget().orElse(null);
 	}
 
+	// The algorithm. Gosh.
 	private void layout() {
 		do {
 			// depth-first
-			RendererInput input = rendererInputs.lastElement();
+			RendererInput input = rendererInputs.removeLast();
+			if (root == null) {
+				root = input.node;
+			}
 			DirectedRenderer renderer = input.provideRenderer();
-			Node node=renderer.render(input);
-			input.onRendered(rendererInputs,node);
+			renderer.render(input);
+			input.onRendered();
 		} while (rendererInputs.size() > 0);
 	}
 
-	private RendererInput createInput(ContextResolver resolver, Object model,
-			AnnotationLocation location, Node parentNode) {
-		List<Directed> directeds = resolver.resolveDirecteds(location);
-		return new RendererInput(resolver, model, location, directeds,parentNode);
+	void enqueueInput(ContextResolver resolver, Object model,
+			AnnotationLocation location, List<Directed> directeds,
+			Node parentNode) {
+		RendererInput input = new RendererInput(resolver, model, location,
+				directeds, parentNode);
+		rendererInputs.add(input);
 	}
 
 	/**
@@ -176,39 +182,68 @@ public class DirectedLayout {
 		Directed directed;
 	}
 
-	Stack<RendererInput> rendererInputs = new Stack();
+	Deque<RendererInput> rendererInputs = new LinkedList();
 
-	static class RendererInput {
-		ContextResolver resolver;
+	class RendererInput {
+		final ContextResolver resolver;
 
-		Object model;
+		final Object model;
 
-		AnnotationLocation location;
+		final AnnotationLocation location;
 
-		List<Directed> directeds = new ArrayList<>();
+		final List<Directed> directeds;
 
-		 Node parentNode;
+		final Node parentNode;
 
-		 RendererInput(ContextResolver resolver, Object model,
-				AnnotationLocation location, List<Directed> directeds, Node parentNode) {
+		final Node node;
+
+		Node replace;
+
+		RendererInput(ContextResolver resolver, Object model,
+				AnnotationLocation location, List<Directed> directeds,
+				Node parentNode) {
 			this.resolver = resolver;
 			this.model = model;
 			this.location = location;
-			this.directeds = directeds;
+			this.directeds = directeds != null ? directeds
+					: resolver.resolveDirecteds(location);
 			this.parentNode = parentNode;
+			// generate the node (1-1 with input)
+			node = new Node(resolver, model);
+			node.directed = firstDirected();
 		}
 
-		 void onRendered(Stack<RendererInput> rendererInputs, Node node) {
-			if(directeds.size()>1){
-				RendererInput continuation = new RendererInput(resolver, rendererInputs, location, directeds.subList(1, directeds.size()),node);
-				rendererInputs.add(continuation);
+		void enqueueInput(ContextResolver resolver, Object model,
+				AnnotationLocation location, List<Directed> directeds,
+				Node parentNode) {
+			DirectedLayout.this.enqueueInput(resolver, model, location,
+					directeds, parentNode);
+		}
+
+		Optional<Widget> firstAncestorWidget() {
+			return parentNode == null ? Optional.empty()
+					: parentNode.firstAncestorWidget();
+		}
+
+		void onRendered() {
+			// FIXME
+			Preconditions.checkState(replace == null);
+			if (node.rendered.widget != null) {
+				Optional<Widget> firstAncestorWidget = firstAncestorWidget();
+				if (firstAncestorWidget.isPresent()) {
+					ComplexPanel panel = (ComplexPanel) firstAncestorWidget
+							.get();
+					panel.add(node.rendered.widget);
+				}
+			}
+			if (directeds.size() > 1) {
+				enqueueInput(resolver, rendererInputs, location,
+						directeds.subList(1, directeds.size()), node);
 			}
 		}
 
 		public DirectedRenderer provideRenderer() {
-			Directed directed=firstDirected();
-			
-			return resolver.getRenderer(directed);
+			return resolver.getRenderer(node.directed, model);
 		}
 
 		private Directed firstDirected() {
@@ -270,9 +305,33 @@ public class DirectedLayout {
 			current = this;
 		}
 
-		public Widget provideTopmostWidget() {
-			// TODO Auto-generated method stub
-			return null;
+		public Optional<Widget> firstAncestorWidget() {
+			Node cursor = this;
+			do {
+				Widget widget = cursor.rendered.widget;
+				if (widget != null) {
+					return Optional.of(widget);
+				} else {
+					cursor = cursor.parent;
+				}
+			} while (cursor != null);
+			return Optional.empty();
+		}
+
+		public Optional<Widget> firstDescendantWidget() {
+			Node cursor = this;
+			for (;;) {
+				Widget widget = cursor.rendered.widget;
+				if (widget != null) {
+					return Optional.of(widget);
+				} else {
+					if (cursor.children.size() == 1) {
+						cursor = cursor.children.get(0);
+					} else {
+						return Optional.empty();
+					}
+				}
+			}
 		}
 
 		public <T> T ancestorModel(Class<T> clazz) {
@@ -668,6 +727,8 @@ public class DirectedLayout {
 		}
 
 		public class Rendered {
+			Widget widget;
+
 			List<Widget> widgets = new ArrayList<>();
 
 			public List<NodeEventBinding> eventBindings;
