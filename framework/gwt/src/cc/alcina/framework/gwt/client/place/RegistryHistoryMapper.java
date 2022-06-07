@@ -28,6 +28,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return Registry.impl(RegistryHistoryMapper.class);
 	}
 
+	/*
+	 * All tokenizers are really templates, the instances in the maps should not
+	 * be used to serialize/deserialize
+	 */
 	Multimap<String, List<BasePlaceTokenizer>> tokenizersByPrefix = new Multimap<>();
 
 	Map<Class, BasePlaceTokenizer> tokenizersByPlace = new LinkedHashMap<>();
@@ -79,7 +83,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		if (place == null || tokenizersByPlace.isEmpty()) {
 			return "";
 		}
-		String token = tokenizersByPlace.get(place.getClass()).getToken(place);
+		String token = tokenizersByPlace.get(place.getClass()).mutableInstance().getToken(place);
 		return getAppPrefix().isEmpty() ? token : getAppPrefix() + "/" + token;
 	}
 
@@ -87,7 +91,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		if (place == null || tokenizersByPlace.isEmpty()) {
 			return null;
 		}
-		return tokenizersByPlace.get(place.getClass());
+		return tokenizersByPlace.get(place.getClass()).mutableInstance();
 	}
 
 	public String removeAppPrefixAndLeadingSlashes(String tokenString) {
@@ -167,7 +171,7 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 					.filter(tokenizer -> tokenizer.handles(token)).findFirst();
 		}
 		Place place = o_tokenizer.isPresent()
-				? o_tokenizer.get().getPlace(token)
+				? o_tokenizer.get().mutableInstance().getPlace(token)
 				: null;
 		if (place == null) {
 			if (GWT.isClient()) {

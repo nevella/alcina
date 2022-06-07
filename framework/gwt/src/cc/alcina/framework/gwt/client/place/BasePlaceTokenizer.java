@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceTokenizer;
@@ -35,6 +36,8 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	protected StringMap params = new StringMap();
 
+	 boolean mutable;
+
 	public P copyPlace(P place) {
 		String token = getToken(place);
 		return getPlace(token);
@@ -62,6 +65,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	@Override
 	public P getPlace(String token) {
+		Preconditions.checkState(mutable);
 		parts = token.split("/");
 		try {
 			return getPlace0(token);
@@ -88,6 +92,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	@Override
 	public String getToken(P place) {
+		Preconditions.checkState(mutable);
 		tokenBuilder = new StringBuilder();
 		addTokenPart(getPrefix());
 		getToken0(place);
@@ -183,5 +188,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	protected SearchDefinitionSerializer searchDefinitionSerializer() {
 		return Registry.impl(SearchDefinitionSerializer.class);
+	}
+	 BasePlaceTokenizer mutableInstance() {
+		 BasePlaceTokenizer instance = Reflections.newInstance(getClass());
+		 instance.mutable=true;
+		 return instance;
 	}
 }
