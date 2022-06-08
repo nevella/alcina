@@ -40,8 +40,6 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 
 	Map<Enum, BasePlace> placesBySubPlace = new LinkedHashMap<>();
 
-	private Place lastPlace;
-
 	boolean initialised = false;
 
 	public RegistryHistoryMapper() {
@@ -83,7 +81,8 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		if (place == null || tokenizersByPlace.isEmpty()) {
 			return "";
 		}
-		String token = tokenizersByPlace.get(place.getClass()).mutableInstance().getToken(place);
+		String token = tokenizersByPlace.get(place.getClass()).mutableInstance()
+				.getToken(place);
 		return getAppPrefix().isEmpty() ? token : getAppPrefix() + "/" + token;
 	}
 
@@ -150,9 +149,8 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return "";
 	}
 
-	protected synchronized Place getPlace(String i_token, boolean copy) {
-		i_token = removeAppPrefixAndLeadingSlashes(i_token);
-		String token = i_token;
+	protected synchronized Place getPlace(String o_token, boolean copy) {
+		String token =removeAppPrefixAndLeadingSlashes(o_token);
 		if (!copy) {
 			// System.out.println("get place:" + token);
 		}
@@ -173,13 +171,16 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		Place place = o_tokenizer.isPresent()
 				? o_tokenizer.get().mutableInstance().getPlace(token)
 				: null;
-		if (place == null) {
-			if (GWT.isClient()) {
-				// handle doc internal hrefs
-				place = lastPlace;
-			}
-		}
-		lastPlace = place;
+		 if (place == null ) {
+			 throw new UnparseablePlaceException(o_token);
+		// nope - client must handle null
+		// if (GWT.isClient()) {
+		// // handle doc internal hrefs
+		// place = lastPlace;
+		// }
+		// }
+		// lastPlace = place;
+		 }
 		return place;
 	}
 
