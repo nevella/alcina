@@ -34,6 +34,13 @@ public @interface Binding {
 			return CommonUtils.bv(t) ? "block" : "none";
 		}
 	}
+	@Reflected
+	public static class UnitPx implements ToStringFunction<Integer> {
+		@Override
+		public String apply(Integer px) {
+			return px+"px";
+		}
+	}
 
 	@Reflected
 	public enum Type {

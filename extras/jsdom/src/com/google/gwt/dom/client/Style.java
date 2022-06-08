@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.LocalDomDebug;
 
 /**
@@ -825,6 +826,7 @@ public class Style implements DomStyle {
 
 	@Override
 	public void setProperty(String name, String value) {
+		Preconditions.checkArgument(name.length()>0);
 		if (name.equals("display") && element.linkedToRemote()) {
 			LocalDom.log(LocalDomDebug.STYLE, "%s %s : %s", element,
 					Optional.ofNullable(element.uiObject).map(
