@@ -62,6 +62,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		String value = params.get(key);
 		return value == null ? 0 : CommonUtils.friendlyParseLong(value);
 	}
+	public long getLongWrapperParameter(String key) {
+		String value = params.get(key);
+		return value == null ? null : CommonUtils.friendlyParseLong(value);
+	}
 
 	@Override
 	public P getPlace(String token) {
