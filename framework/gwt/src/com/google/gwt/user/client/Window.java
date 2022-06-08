@@ -389,6 +389,12 @@ public class Window {
 	public static native void scrollTo(int left, int top) /*-{
     $wnd.scrollTo(left, top);
 	}-*/;
+	
+	public static native void scrollTo(int left, int top, boolean smooth) /*-{
+		var args={'left':left, 'top':top, 'behavior':smooth? 'smooth':'auto'};
+		console.log(args);
+    $wnd.scrollTo(args);
+	}-*/;
 
 	/**
 	 * Sets the size of the margins used within the window's client area. It is
