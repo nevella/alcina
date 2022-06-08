@@ -11,5 +11,8 @@ import java.lang.annotation.Target;
 @Inherited
 @Documented
 @Target({ ElementType.TYPE })
+/*
+ * Omit from client registry (if a registration key)
+ */
 public @interface NonClientRegistryPointType {
 }
