@@ -2194,4 +2194,8 @@ public class CommonUtils {
 	public static interface YearResolver {
 		int getYear(Date d);
 	}
+
+	public static Long zeroToNull(Long id) {
+		return id!=null&&id==0?null:id;
+	}
 }

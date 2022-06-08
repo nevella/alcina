@@ -580,4 +580,15 @@ public class ClientUtils {
 			this.gdb = gdb;
 		}
 	}
+
+	public static String removeHostProtocolPort(String href) {
+		if (href.startsWith("http")) {
+			String locationHref = Window.Location.getHref();
+			String origin = locationHref.replaceFirst("^(https?://.+?)(/.+|$)",
+					"$1");
+			return href.replace(origin, "");
+		} else {
+			return href;
+		}
+	}
 }
