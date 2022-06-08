@@ -825,7 +825,6 @@ public class DirectedLayout {
 							.receives().length == directed.reemits().length);
 					Class<? extends TopicEvent> emitTopic = (Class<? extends TopicEvent>) directed
 							.reemits()[receiverIndex];
-					TopicEvent event = Reflections.newInstance(emitTopic);
 					TopicEvent.fire(eventContext, emitTopic,
 							Node.this.getModel());
 					return;
@@ -981,7 +980,10 @@ public class DirectedLayout {
 				}
 					break;
 				case STYLE_ATTRIBUTE:
-					element.getStyle().setProperty(binding.to(), stringValue);
+					String attributeName = binding.to().isEmpty()
+					? binding.from()
+					: binding.to();
+					element.getStyle().setProperty(attributeName, stringValue);
 					break;
 				default:
 					throw new UnsupportedOperationException();
