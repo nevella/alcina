@@ -176,7 +176,7 @@ public class CsvCols
 			return map;
 		}
 
-		public void set(Enum e, String value) {
+		public void set(Enum e, Object value) {
 			set(Ax.friendly(e), value);
 		}
 
