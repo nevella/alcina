@@ -149,8 +149,16 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return "";
 	}
 
+	/**
+	 * On startup, apps should catch the UnparseablePlaceException and sub null.
+	 * But generally it's better to force the app to explicitly handle
+	 * unparseable places than just 'null'
+	 * 
+	 * FIXME - 2023 - throw checked exception (this is one place where they
+	 * actually make total sense since there's generally a clear recovery path)
+	 */
 	protected synchronized Place getPlace(String o_token, boolean copy) {
-		String token =removeAppPrefixAndLeadingSlashes(o_token);
+		String token = removeAppPrefixAndLeadingSlashes(o_token);
 		if (!copy) {
 			// System.out.println("get place:" + token);
 		}
@@ -171,16 +179,16 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		Place place = o_tokenizer.isPresent()
 				? o_tokenizer.get().mutableInstance().getPlace(token)
 				: null;
-		 if (place == null ) {
-			 throw new UnparseablePlaceException(o_token);
-		// nope - client must handle null
-		// if (GWT.isClient()) {
-		// // handle doc internal hrefs
-		// place = lastPlace;
-		// }
-		// }
-		// lastPlace = place;
-		 }
+		if (place == null) {
+			throw new UnparseablePlaceException(o_token);
+			// nope - client must handle null
+			// if (GWT.isClient()) {
+			// // handle doc internal hrefs
+			// place = lastPlace;
+			// }
+			// }
+			// lastPlace = place;
+		}
 		return place;
 	}
 
