@@ -88,7 +88,11 @@ public class AnnotationLocation {
 
 	public AnnotationLocation parent() {
 		if (property != null) {
-			return new AnnotationLocation(classLocation, null, resolver);
+			if (classLocation != null) {
+				return new AnnotationLocation(classLocation, null, resolver);
+			} else {
+				return null;
+			}
 		}
 		if (classLocation.getSuperclass() != null) {
 			return new AnnotationLocation(classLocation.getSuperclass(), null,

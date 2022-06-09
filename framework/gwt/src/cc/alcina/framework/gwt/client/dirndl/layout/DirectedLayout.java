@@ -219,9 +219,28 @@ public class DirectedLayout {
 		}
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
-			AnnotationLocation location = new AnnotationLocation(
-					model == null ? null : model.getClass(), property,
-					resolver);
+			Class locationClass = model == null ? null : model.getClass();
+			// FIXME - dirndl 1.1 - check this behaviour. Note this
+			// implementation 'incorrectly' skips resolution - because it
+			// happens potentially before we resolve the @Directed. Possible
+			// (probable)
+			// solution is to have @DirectedContentResolver be resolved normally
+			// (i.e. via the ContextResolver)
+			//
+			// (in 1.1 we get @Directeds earlier so probably already solved)
+			// - all this and more in 1.1
+			if ((directed != null
+					&& directed.renderer() == ModelTransformNodeRenderer.class)
+					|| (property != null && property.has(Directed.class)
+							&& property.annotation(Directed.class)
+									.renderer() == ModelTransformNodeRenderer.class)) {
+				// *don't* resolve against the model if it will be transformed
+				// (resolution against the transform result, with dirndl 1.1,
+				// will be resolution against the child node)
+				locationClass = null;
+			}
+			AnnotationLocation location = new AnnotationLocation(locationClass,
+					property, resolver);
 			A annotation = location.getAnnotation(clazz);
 			if (annotation != null) {
 				return annotation;
@@ -309,9 +328,20 @@ public class DirectedLayout {
 		public DirectedNodeRenderer resolveRenderer() {
 			DirectedNodeRenderer renderer = null;
 			if (directed == null) {
-				Class clazz = model.getClass();
+				Class locationClass = model.getClass();
+				//see annotation() above, goes away in 1.1
+				if ((directed != null
+	                    && directed.renderer() == ModelTransformNodeRenderer.class)
+	                    || (property != null && property.has(Directed.class)
+	                            && property.annotation(Directed.class)
+	                                    .renderer() == ModelTransformNodeRenderer.class)) {
+	                // *don't* resolve against the model if it will be transformed
+	                // (resolution against the transform result, with dirndl 1.1,
+	                // will be resolution against the child node)
+	                locationClass = null;
+	            }
 				AnnotationLocation annotationLocation = new AnnotationLocation(
-						clazz, property, resolver);
+						locationClass, property, resolver);
 				directed = new DirectedResolver(
 						getResolver().getTreeResolver(Directed.class),
 						annotationLocation);
@@ -981,8 +1011,8 @@ public class DirectedLayout {
 					break;
 				case STYLE_ATTRIBUTE:
 					String attributeName = binding.to().isEmpty()
-					? binding.from()
-					: binding.to();
+							? binding.from()
+							: binding.to();
 					element.getStyle().setProperty(attributeName, stringValue);
 					break;
 				default:
