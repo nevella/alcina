@@ -679,7 +679,11 @@ public class JobScheduler {
 					|| job.resolveState() == JobState.ABORTED) {
 				return days <= 3;
 			}
-			return days < 7;
+			return days < getRetentionDays();
+		}
+
+		protected int getRetentionDays() {
+			return 7;
 		}
 
 		protected Logger logger() {
