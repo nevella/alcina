@@ -46,6 +46,7 @@ public class StreamBuffer implements Runnable {
 			int in = -1;
 			while ((in = isr.read()) != -1) {
 				char c = (char) in;
+				buf.append(c);
 				line.append(c);
 				if (c == '\n') {
 					outputCallback.accept(line.toString());
