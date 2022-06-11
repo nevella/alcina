@@ -6,6 +6,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.domain.search.SearchOrders.ColumnSearchOrder;
+import cc.alcina.framework.common.client.logic.reflection.Display;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.search.ReflectCloneable;
@@ -14,7 +15,7 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
 @Registration(JaxbContextRegistration.class)
-public class GroupingParameters<GP extends GroupingParameters> extends Bindable
+public abstract class GroupingParameters<GP extends GroupingParameters> extends Bindable
 		implements Serializable, HasReflectiveEquivalence<GP>,
 		ReflectCloneable<GP>, TreeSerializable {
 	private List<ColumnSearchOrder> columnOrders = new ArrayList<>();
@@ -26,5 +27,23 @@ public class GroupingParameters<GP extends GroupingParameters> extends Bindable
 
 	public void setColumnOrders(List<ColumnSearchOrder> columnOrders) {
 		this.columnOrders = columnOrders;
+	}
+
+	public abstract static class GroupingEnum<GP extends GroupingEnum, E extends Enum>
+			extends GroupingParameters<GP> {
+		private E grouping;
+
+		@Display(name = "Group by category", orderingHint = 10)
+		@PropertySerialization(serializeDefaultValue = true)
+		public E getGrouping() {
+			return this.grouping;
+		}
+
+		public void setGrouping(E grouping) {
+			var old_grouping = this.grouping;
+			this.grouping = grouping;
+			propertyChangeSupport().firePropertyChange("grouping", old_grouping,
+					grouping);
+		}
 	}
 }

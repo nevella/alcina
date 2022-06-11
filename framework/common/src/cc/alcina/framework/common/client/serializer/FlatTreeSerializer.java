@@ -26,6 +26,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.domain.search.GroupingParameters;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -103,6 +104,17 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * citationsearchdefinition/criteriagroup(single criterion)/x where x is default
  * and has type list(searchcriterion). Note that it's ok for a collection of
  * value types
+ * </ul>
+ * 
+ * <h2>Gotchas</h2>
+ * <ul>
+ * <li>Object presence is denoted by serialization of one of its fields, so
+ * default field values are dangerous. E.g. :
+ * BindableSearchDefinition.groupingParameters.grouping - if grouping is a
+ * default enum value, serialization is currently incorrect. TODO: serialization
+ * should fail with an unspecified type exception if a potentially polymorphic
+ * type lacks constraints (NR - note: 2021 ContactSearcDefinition.groupingParameters
+ * 
  * </ul>
  *
  *
@@ -771,7 +783,9 @@ public class FlatTreeSerializer {
 			if (isLeafValue(value)) {
 				if (!Objects.equals(value, cursor.defaultValue)
 						|| !state.serializerOptions.elideDefaults
-						|| cursor.isPutDefaultValue()) {
+						|| cursor.isPutDefaultValue()
+						
+						) {
 					cursor.putValue(state);
 				}
 				state.mergeableNode = cursor;
@@ -1338,8 +1352,7 @@ public class FlatTreeSerializer {
 		}
 
 		public boolean isPutDefaultValue() {
-			return path.serializer != null
-					&& !path.serializer.elideDefaultValues(value);
+			return path.isPutDefaultValue(value);
 		}
 
 		@Override
@@ -1533,6 +1546,17 @@ public class FlatTreeSerializer {
 
 		Path(Path parent) {
 			this.parent = parent;
+		}
+
+		public boolean isPutDefaultValue(Object value) {
+			if(serializer != null
+					&& !serializer.elideDefaultValues(value)){
+				return true;
+			}
+			if(propertySerialization!=null&&propertySerialization.serializeDefaultValue()){
+				return true;
+			}
+			return false;
 		}
 
 		public boolean canMergeTo(Path other) {

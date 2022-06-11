@@ -77,6 +77,12 @@ public @interface PropertySerialization {
 	 */
 	Class[] types() default {};
 
+	/*
+	 * Forces serialization of the value even if normally elided, which
+	 * indicates object presence/absence to the property's object's parent
+	 */
+	boolean serializeDefaultValue() default false;
+
 	public static interface Serializer<T> {
 		T deserializeValue(String value);
 
