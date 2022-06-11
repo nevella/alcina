@@ -39,7 +39,11 @@
 	<classpathentry kind="lib" path="lib/framework/servlet/activation.jar"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/mail-1.4.4.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/javax.ejb-api-3.2.jar"/>
-	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER">
+		<attributes>
+			<attribute name="module" value="true"/>
+		</attributes>
+	</classpathentry>
 	<classpathentry kind="lib" path="lib/framework/gwt/requestfactory-server.jar"/>
 	<classpathentry kind="lib" path="lib/framework/impl/jboss-hibernate/jboss-vfs-3.2.5.Final.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/fastutil-7.0.6.jar" sourcepath="/g/minor/fastutil"/>
@@ -69,5 +73,6 @@
 	<classpathentry kind="lib" path="lib/framework/entity/slf4j-api-1.7.25.jar" sourcepath="/private/var/local/git/minor/jars/slf4j-api-1.7.2.jbossorg-1-sources.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/commons-pool2-2.6.0.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-elemental.jar"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-1.8"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
