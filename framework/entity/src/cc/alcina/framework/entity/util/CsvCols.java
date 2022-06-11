@@ -25,6 +25,10 @@ public class CsvCols
 	public static CsvCols parseCsv(String csv) {
 		return new CsvCols(csv);
 	}
+	
+	public static CsvCols parse(String xsv,boolean tsv) {
+		return new CsvCols(CsvUtils.parseCsv(xsv, tsv));
+	}
 
 	public static CsvCols parseTsv(String tsv) {
 		return new CsvCols(CsvUtils.parseCsv(tsv, true));
