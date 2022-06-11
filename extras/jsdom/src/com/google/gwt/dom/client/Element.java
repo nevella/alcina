@@ -1110,4 +1110,19 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 			return Element.this.wasResolved();
 		}
 	}
+
+	public boolean provideIsAncestorOf(Element potentialChild,
+			boolean includeSelf) {
+		if (potentialChild == this) {
+			return includeSelf;
+		}
+		Element cursor = potentialChild;
+		while (cursor != null) {
+			if (cursor == this) {
+				return true;
+			}
+			cursor = cursor.getParentElement();
+		}
+		return false;
+	}
 }
