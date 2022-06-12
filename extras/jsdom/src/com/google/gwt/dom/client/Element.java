@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -240,6 +240,10 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	@Override
 	public NamedNodeMap getAttributes() {
 		throw new UnsupportedOperationException();
+	}
+
+	public DOMRect getBoundingClientRect() {
+		return ensureRemote().getBoundingClientRect();
 	}
 
 	@Override
@@ -530,6 +534,21 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	@Override
 	public Element node() {
 		return this;
+	}
+
+	public boolean provideIsAncestorOf(Element potentialChild,
+			boolean includeSelf) {
+		if (potentialChild == this) {
+			return includeSelf;
+		}
+		Element cursor = potentialChild;
+		while (cursor != null) {
+			if (cursor == this) {
+				return true;
+			}
+			cursor = cursor.getParentElement();
+		}
+		return false;
 	}
 
 	@Override
@@ -1109,20 +1128,5 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		public boolean wasResolved() {
 			return Element.this.wasResolved();
 		}
-	}
-
-	public boolean provideIsAncestorOf(Element potentialChild,
-			boolean includeSelf) {
-		if (potentialChild == this) {
-			return includeSelf;
-		}
-		Element cursor = potentialChild;
-		while (cursor != null) {
-			if (cursor == this) {
-				return true;
-			}
-			cursor = cursor.getParentElement();
-		}
-		return false;
 	}
 }

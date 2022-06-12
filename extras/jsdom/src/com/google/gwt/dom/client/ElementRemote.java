@@ -134,14 +134,14 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 * Dispatched the given event with this element as its target. The event
 	 * will go through all phases of the browser's normal event dispatch
 	 * mechanism.
-	 * 
+	 *
 	 * Note: Because the browser's normal dispatch mechanism is used, exceptions
 	 * thrown from within handlers triggered by this method cannot be caught by
 	 * wrapping this method in a try/catch block. Such exceptions will be caught
 	 * by the
 	 * {@link com.google.gwt.core.client.GWT#setUncaughtExceptionHandler(com.google.gwt.core.client.GWT.UncaughtExceptionHandler)
 	 * uncaught exception handler} as usual.
-	 * 
+	 *
 	 * @param evt
 	 *            the event to be dispatched
 	 */
@@ -209,7 +209,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 * inconsistent across various browsers. Consider using the accessors in
 	 * {@link Element} and its specific subclasses to retrieve attributes and
 	 * properties.
-	 * 
+	 *
 	 * @param name
 	 *            The name of the attribute to retrieve
 	 * @return The Attr value as a string, or the empty string if that attribute
@@ -230,10 +230,14 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		return result;
 	}
 
+	public final native DOMRect getBoundingClientRect()/*-{
+    return this.getBoundingClientRect();
+	}-*/;
+
 	/**
 	 * The class attribute of the element. This attribute has been renamed due
 	 * to conflicts with the "class" keyword exposed by many languages.
-	 * 
+	 *
 	 * @see <a href=
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-class">
 	 *      W3C HTML Specification</a>
@@ -246,7 +250,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	/**
 	 * Returns the inner height of an element in pixels, including padding but
 	 * not the horizontal scrollbar height, border, or margin.
-	 * 
+	 *
 	 * @return the element's client height
 	 */
 	@Override
@@ -257,7 +261,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	/**
 	 * Returns the inner width of an element in pixels, including padding but
 	 * not the vertical scrollbar width, border, or margin.
-	 * 
+	 *
 	 * @return the element's client width
 	 */
 	@Override
@@ -276,7 +280,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * Returns the draggable attribute of this element.
-	 * 
+	 *
 	 * @return one of {@link #DRAGGABLE_AUTO}, {@link #DRAGGABLE_FALSE}, or
 	 *         {@link #DRAGGABLE_TRUE}
 	 */
@@ -297,7 +301,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * The element's identifier.
-	 * 
+	 *
 	 * @see <a href=
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-id">
 	 *      W3C HTML Specification</a>
@@ -387,7 +391,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * Gets a boolean property from this element.
-	 * 
+	 *
 	 * @param name
 	 *            the name of the property to be retrieved
 	 * @return the property value
@@ -399,7 +403,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * Gets a double property from this element.
-	 * 
+	 *
 	 * @param name
 	 *            the name of the property to be retrieved
 	 * @return the property value
@@ -411,7 +415,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * Gets an integer property from this element.
-	 * 
+	 *
 	 * @param name
 	 *            the name of the property to be retrieved
 	 * @return the property value
@@ -447,7 +451,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * Gets a property from this element.
-	 * 
+	 *
 	 * @param name
 	 *            the name of the property to be retrieved
 	 * @return the property value
@@ -572,7 +576,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	/**
 	 * Adds a new attribute. If an attribute with that name is already present
 	 * in the element, its value is changed to be that of the value parameter.
-	 * 
+	 *
 	 * @param name
 	 *            The name of the attribute to create or alter
 	 * @param value
@@ -586,7 +590,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	/**
 	 * The class attribute of the element. This attribute has been renamed due
 	 * to conflicts with the "class" keyword exposed by many languages.
-	 * 
+	 *
 	 * @see <a href=
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-class">
 	 *      W3C HTML Specification</a>
@@ -612,7 +616,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * The element's identifier.
-	 * 
+	 *
 	 * @see <a href=
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/struct/global.html#adef-id">
 	 *      W3C HTML Specification</a>
@@ -651,7 +655,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * Sets a boolean property on this element.
-	 * 
+	 *
 	 * @param name
 	 *            the name of the property to be set
 	 * @param value
@@ -664,7 +668,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * Sets a double property on this element.
-	 * 
+	 *
 	 * @param name
 	 *            the name of the property to be set
 	 * @param value
@@ -677,7 +681,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * Sets an integer property on this element.
-	 * 
+	 *
 	 * @param name
 	 *            the name of the property to be set
 	 * @param value
@@ -716,7 +720,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * Sets a property on this element.
-	 * 
+	 *
 	 * @param name
 	 *            the name of the property to be set
 	 * @param value
@@ -742,7 +746,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 
 	/**
 	 * The index that represents the element's position in the tabbing order.
-	 * 
+	 *
 	 * @see <a href=
 	 *      "http://www.w3.org/TR/1999/REC-html401-19991224/interact/forms.html#adef-tabindex">
 	 *      W3C HTML Specification</a>
@@ -791,7 +795,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 	 * Returns a NodeList of all descendant Elements with a given tag name, in
 	 * the order in which they are encountered in a preorder traversal of this
 	 * Element tree.
-	 * 
+	 *
 	 * @param name
 	 *            The name of the tag to match on. The special value "*" matches
 	 *            all tags
@@ -1082,19 +1086,6 @@ public class ElementRemote extends NodeRemote implements DomElement {
     this.parentElement.removeChild(this);
 	}-*/;
 
-	/**
-	 * Determines whether the given {@link JavaScriptObject} can be cast to an
-	 * {@link Element}. A <code>null</code> object will cause this method to
-	 * return <code>false</code>.
-	 * 
-	 * 
-	 */
-	static class RemoteCache {
-		boolean lastIsResult;
-
-		JavaScriptObject lastIs;
-	}
-
 	static class ElementRemoteIndex extends JavaScriptObject {
 		protected ElementRemoteIndex() {
 		}
@@ -1170,5 +1161,18 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		final native String stringSizes()/*-{
       return this.sizes.join(",");
 		}-*/;
+	}
+
+	/**
+	 * Determines whether the given {@link JavaScriptObject} can be cast to an
+	 * {@link Element}. A <code>null</code> object will cause this method to
+	 * return <code>false</code>.
+	 *
+	 *
+	 */
+	static class RemoteCache {
+		boolean lastIsResult;
+
+		JavaScriptObject lastIs;
 	}
 }
