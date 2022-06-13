@@ -38,6 +38,9 @@ import com.google.gwt.http.client.URL;
 import com.google.gwt.http.client.UrlBuilder;
 import com.google.gwt.user.client.impl.WindowImpl;
 
+import cc.alcina.framework.common.client.util.IntPair;
+import cc.alcina.framework.common.client.util.Topic;
+
 /**
  * This class provides access to the browser window's methods, properties, and
  * events.
@@ -57,6 +60,8 @@ public class Window {
 	private static int lastResizeHeight;
 
 	private static final WindowImpl impl = GWT.create(WindowImpl.class);
+
+	public static final Topic<IntPair> topicScrollTo = Topic.create();
 
 	/**
 	 * Adds a {@link CloseEvent} handler.
@@ -386,15 +391,14 @@ public class Window {
 	 * @param top
 	 *            the top scroll position
 	 */
-	public static native void scrollTo(int left, int top) /*-{
-    $wnd.scrollTo(left, top);
-	}-*/;
-	
-	public static native void scrollTo(int left, int top, boolean smooth) /*-{
-		var args={'left':left, 'top':top, 'behavior':smooth? 'smooth':'auto'};
-		console.log(args);
-    $wnd.scrollTo(args);
-	}-*/;
+	public static void scrollTo(int left, int top) {
+		scrollTo(left, top, false);
+	}
+
+	public static void scrollTo(int left, int top, boolean smooth) {
+		topicScrollTo.publish(new IntPair(left, top));
+		scrollTo0(left, top, smooth);
+	}
 
 	/**
 	 * Sets the size of the margins used within the window's client area. It is
@@ -485,6 +489,15 @@ public class Window {
 			scrollHandlersInitialized = true;
 		}
 	}
+
+	private static native void scrollTo0(int left, int top, boolean smooth) /*-{
+    var args = {
+      'left' : left,
+      'top' : top,
+      'behavior' : smooth ? 'smooth' : 'auto'
+    };
+    $wnd.scrollTo(args);
+	}-*/;
 
 	static void onClosed() {
 		if (closeHandlersInitialized) {
