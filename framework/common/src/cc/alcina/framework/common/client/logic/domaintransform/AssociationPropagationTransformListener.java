@@ -41,7 +41,7 @@ public class AssociationPropagationTransformListener
 			return;
 		}
 		{
-			//early exit
+			// early exit
 			switch (event.getTransformType()) {
 			case CREATE_OBJECT:
 				return;
@@ -64,7 +64,9 @@ public class AssociationPropagationTransformListener
 			Association association = Reflections.propertyAccessor()
 					.getAnnotationForProperty(entity.entityClass(),
 							Association.class, event.getPropertyName());
-			if (!Reflections.classLookup()
+			// association will be null if the collection is non-domain (say, a
+			// set of enum values)
+			if (association == null || !Reflections.classLookup()
 					.handlesClass(association.implementationClass())) {
 				return;
 			}
