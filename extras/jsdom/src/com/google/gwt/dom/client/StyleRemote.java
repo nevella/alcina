@@ -330,6 +330,11 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 	}
 
 	@Override
+	public final Style.Display getDisplayTyped() {
+		return DomStyleStatic.getDisplayTyped(this);
+	}
+
+	@Override
 	public final String getFontSize() {
 		return DomStyleStatic.getFontSize(this);
 	}
@@ -440,6 +445,11 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 	}
 
 	@Override
+	public final Style.Position getPositionTyped() {
+		return DomStyleStatic.getPositionTyped(this);
+	}
+
+	@Override
 	public Map<String, String> getProperties() {
 		throw new UnsupportedOperationException();
 	}
@@ -450,10 +460,10 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 	}
 
 	@Override
-	// LD2 - never called
-	public final String getPropertyImpl(String name) {
-		throw new UnsupportedOperationException();
-	}
+	// called for direct StyleRemote (computedStyle e.g.) access
+	public final native String getPropertyImpl(String name) /*-{
+    return this[name];
+	}-*/;
 
 	@Override
 	public final String getRight() {
@@ -720,8 +730,8 @@ public final class StyleRemote extends JavaScriptObject implements DomStyle {
 	 */
 	@Override
 	public final native void setPropertyImpl(String name, String value) /*-{
-																		this[name] = value;
-																		}-*/;
+    this[name] = value;
+	}-*/;
 
 	@Override
 	public final void setPropertyPx(String name, int value) {

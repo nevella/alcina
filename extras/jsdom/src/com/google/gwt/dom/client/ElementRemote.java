@@ -269,6 +269,10 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		return toInt32(getSubPixelClientWidth());
 	}
 
+	public final native StyleRemote getComputedStyle() /*-{
+    return $wnd.getComputedStyle(this);
+	}-*/;
+
 	/**
 	 * Specifies the base direction of directionally neutral text and the
 	 * directionality of tables.

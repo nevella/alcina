@@ -18,6 +18,8 @@ package com.google.gwt.dom.client;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -46,6 +48,10 @@ import cc.alcina.framework.common.client.util.TextUtils;
  */
 public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public static final String REMOTE_DEFINED = "__localdom-remote-defined";
+
+	public static final Predicate<Element> DISPLAY_NONE = e -> e.implAccess()
+			.ensureRemote().getComputedStyle()
+			.getDisplayTyped() == Style.Display.NONE;
 
 	/**
 	 * Constant returned from {@link #getDraggable()}.
@@ -184,6 +190,17 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		if (!linkedToRemote()) {
 			local().ensureId();
 		}
+	}
+
+	public Optional<Element> firstInAncestry(Predicate<Element> predicate) {
+		Element cursor = this;
+		do {
+			if (predicate.test(cursor)) {
+				return Optional.of(cursor);
+			}
+			cursor = cursor.getParentElement();
+		} while (cursor != null);
+		return Optional.empty();
 	}
 
 	@Override
@@ -538,17 +555,10 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 
 	public boolean provideIsAncestorOf(Element potentialChild,
 			boolean includeSelf) {
-		if (potentialChild == this) {
-			return includeSelf;
-		}
-		Element cursor = potentialChild;
-		while (cursor != null) {
-			if (cursor == this) {
-				return true;
-			}
-			cursor = cursor.getParentElement();
-		}
-		return false;
+		return potentialChild
+				.firstInAncestry(
+						e -> e == this && (e != potentialChild || includeSelf))
+				.isPresent();
 	}
 
 	@Override

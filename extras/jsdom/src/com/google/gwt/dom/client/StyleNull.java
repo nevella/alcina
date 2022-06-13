@@ -281,6 +281,11 @@ public class StyleNull implements DomStyle {
 	}
 
 	@Override
+	public Display getDisplayTyped() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public String getFontSize() {
 		throw new UnsupportedOperationException();
 	}
@@ -387,6 +392,11 @@ public class StyleNull implements DomStyle {
 
 	@Override
 	public String getPosition() {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
+	public Position getPositionTyped() {
 		throw new UnsupportedOperationException();
 	}
 

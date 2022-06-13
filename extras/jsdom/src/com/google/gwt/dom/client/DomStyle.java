@@ -327,6 +327,8 @@ public interface DomStyle {
 	 */
 	String getDisplay();
 
+	Display getDisplayTyped();
+
 	/**
 	 * Get the font-size css property.
 	 */
@@ -436,6 +438,8 @@ public interface DomStyle {
 	 * Gets the position CSS property.
 	 */
 	String getPosition();
+
+	Position getPositionTyped();
 
 	Map<String, String> getProperties();
 
@@ -714,7 +718,7 @@ public interface DomStyle {
 
 	/**
 	 * Sets the value of a named property, in pixels.
-	 * 
+	 *
 	 * This is shorthand for <code>value + "px"</code>.
 	 */
 	void setPropertyPx(String name, int value);
