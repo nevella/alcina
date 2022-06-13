@@ -42,6 +42,11 @@ public abstract class Model extends Bindable {
 						.unbind());
 	}
 
+	/*
+	 * There's a bit of an overuse of "binding" here - the superclass binds
+	 * properties to the rendered object (generally dom element), this binds
+	 * bean properties using Gwittir bindings
+	 */
 	public static class WithBinding extends Model {
 		Binding binding = new Binding();
 

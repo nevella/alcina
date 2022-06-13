@@ -48,17 +48,17 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
- * 
+ *
  * <p>
  * A generative, expressive algorithm that transforms an arbitrary object into a
  * live layout tree of {@link DirectedLayout.Node} objects which encapsulate a
  * render tree (currently implemented only for HTML DOM, but easily extended to
  * arbitrary native widgets)
- * 
+ *
  * <p>
  * Dirndl bears some resemblance to xslt - they both use annotations to
  * transform an object tree into markup, but extends it:
- * 
+ *
  * <ul>
  * <li><b>generative</b>: the intermediate transform (ModelTransform) generates
  * objects rather than result nodes, leading to much richer output structures
@@ -73,7 +73,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * provide a generally truer-to-the-model-logic way of modelling and handling
  * interface events than dealing directly with native (DOM) events
  * </ul>
- * 
+ *
  * FIXME - dirndl.perf
  *
  * Minimise annotation resolution by caching an intermediate renderer object
@@ -90,29 +90,29 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *
  */
 /*
- * 
+ *
  * @formatter:off
- * 
+ *
  * Implementation: Dirndl 1.1
- * 
+ *
  * [Transform model object to renderer input]
- * - For model M, PropertyLocation PL, ContextResolver CR, parent DirectedLayout.Node PN, 
+ * - For model M, PropertyLocation PL, ContextResolver CR, parent DirectedLayout.Node PN,
  * retrieve the @Directed[]  annotations DL[] (most often only 1) applicable to the M at PL.
  * - Construct a RendererInput model from M, PL, CR, PN, DL[]
- * 
+ *
  * [Algorithm]
  * - Transform the initial object I to RendererInput RI, push onto RI stack
  * - Pop RI from stack
  * - While RI.DL[] is non-empty, compute renderer R from DL0 (popped from RI.DL[])
- * - Apply R to RI, which (decidedly non-functional): 
+ * - Apply R to RI, which (decidedly non-functional):
  * -- generates Node n which will be added to PN
  * -- optionally generates Widget W which will be added as a child to the nearest parent Widget in the Node tree
- * -- optionally modifies RI.DL (TODO - examples) 
- * -- can emit RI[] - the primary example of that is: 
- * --- applying the '[Transform model object]' algo above to the children (properties, 
+ * -- optionally modifies RI.DL (TODO - examples)
+ * -- can emit RI[] - the primary example of that is:
+ * --- applying the '[Transform model object]' algo above to the children (properties,
  * collection elements)of M, applicable only to the last @Directed in RI.DL[]
  * (Repeat until no RI stack is empty)
- * 
+ *
  *  @formatter:on
  */
 public class DirectedLayout {
@@ -141,7 +141,7 @@ public class DirectedLayout {
 
 	/**
 	 * An interface that supports lazy model population before render
-	 * 
+	 *
 	 * @author nick@alcina.cc
 	 *
 	 */
@@ -166,7 +166,7 @@ public class DirectedLayout {
 	 * <p>
 	 * ...shades of the DOM render tree...
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * FIXME - dirndl 1.1 - change documentation (since
 	 */
@@ -271,6 +271,10 @@ public class DirectedLayout {
 			return null;
 		}
 
+		public Element element() {
+			return getWidget().getElement();
+		}
+
 		public void fireEvent(TopicEvent topicEvent) {
 			if (rendered.eventBindings != null) {
 				rendered.eventBindings
@@ -329,17 +333,19 @@ public class DirectedLayout {
 			DirectedNodeRenderer renderer = null;
 			if (directed == null) {
 				Class locationClass = model.getClass();
-				//see annotation() above, goes away in 1.1
-				if ((directed != null
-	                    && directed.renderer() == ModelTransformNodeRenderer.class)
-	                    || (property != null && property.has(Directed.class)
-	                            && property.annotation(Directed.class)
-	                                    .renderer() == ModelTransformNodeRenderer.class)) {
-	                // *don't* resolve against the model if it will be transformed
-	                // (resolution against the transform result, with dirndl 1.1,
-	                // will be resolution against the child node)
-	                locationClass = null;
-	            }
+				// see annotation() above, goes away in 1.1
+				if ((directed != null && directed
+						.renderer() == ModelTransformNodeRenderer.class)
+						|| (property != null && property.has(Directed.class)
+								&& property.annotation(Directed.class)
+										.renderer() == ModelTransformNodeRenderer.class)) {
+					// *don't* resolve against the model if it will be
+					// transformed
+					// (resolution against the transform result, with dirndl
+					// 1.1,
+					// will be resolution against the child node)
+					locationClass = null;
+				}
 				AnnotationLocation annotationLocation = new AnnotationLocation(
 						locationClass, property, resolver);
 				directed = new DirectedResolver(
@@ -427,6 +433,7 @@ public class DirectedLayout {
 			 *
 			 */
 			if (rendered.widgets.size() != 1) {
+				// ?que?
 				directed.bindings();
 				return;
 			}
