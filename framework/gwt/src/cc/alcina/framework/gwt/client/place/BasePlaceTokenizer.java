@@ -36,7 +36,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 
 	protected StringMap params = new StringMap();
 
-	 boolean mutable;
+	boolean mutable;
 
 	public P copyPlace(P place) {
 		String token = getToken(place);
@@ -62,6 +62,7 @@ public abstract class BasePlaceTokenizer<P extends Place>
 		String value = params.get(key);
 		return value == null ? 0 : CommonUtils.friendlyParseLong(value);
 	}
+
 	public long getLongWrapperParameter(String key) {
 		String value = params.get(key);
 		return value == null ? null : CommonUtils.friendlyParseLong(value);
@@ -133,7 +134,11 @@ public abstract class BasePlaceTokenizer<P extends Place>
 				value = null;
 			}
 		}
-		params.put(key, value == null ? null : value.toString());
+		if (value == null) {
+			params.remove(key);
+		} else {
+			params.put(key, value.toString());
+		}
 	}
 
 	public void setParameter(String key, Object value, boolean explicitBlanks) {
@@ -193,9 +198,10 @@ public abstract class BasePlaceTokenizer<P extends Place>
 	protected SearchDefinitionSerializer searchDefinitionSerializer() {
 		return Registry.impl(SearchDefinitionSerializer.class);
 	}
-	 BasePlaceTokenizer mutableInstance() {
-		 BasePlaceTokenizer instance = Reflections.newInstance(getClass());
-		 instance.mutable=true;
-		 return instance;
+
+	BasePlaceTokenizer mutableInstance() {
+		BasePlaceTokenizer instance = Reflections.newInstance(getClass());
+		instance.mutable = true;
+		return instance;
 	}
 }
