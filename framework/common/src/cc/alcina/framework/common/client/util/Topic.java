@@ -19,6 +19,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
  * instantiation and generally final)
  */
 public class Topic<T> {
+	public static boolean THROW_EXCEPTIONS = false;
+
 	public static <T> Topic<T> create() {
 		return new Topic<>();
 	}
@@ -27,17 +29,18 @@ public class Topic<T> {
 
 	private boolean wasPublished;
 
-	private boolean throwExceptions = false;
+	private boolean throwExceptions = THROW_EXCEPTIONS;
 
 	private Topic() {
 		publisher = new Publisher();
 	}
 
-	public TopicListener.Reference add(TopicListener<T> listener) {
-		return add(listener, false);
-	}
 	public TopicListener.Reference add(Runnable runnable) {
 		return addRunnable(runnable, false);
+	}
+
+	public TopicListener.Reference add(TopicListener<T> listener) {
+		return add(listener, false);
 	}
 
 	public TopicListener.Reference add(TopicListener<T> listener,
@@ -57,7 +60,8 @@ public class Topic<T> {
 		return addRunnable(runnable, false);
 	}
 
-	public TopicListener.Reference addRunnable(Runnable runnable, boolean fireIfWasPublished) {
+	public TopicListener.Reference addRunnable(Runnable runnable,
+			boolean fireIfWasPublished) {
 		return add(new TopicListener() {
 			@Override
 			public void topicPublished(Object message) {

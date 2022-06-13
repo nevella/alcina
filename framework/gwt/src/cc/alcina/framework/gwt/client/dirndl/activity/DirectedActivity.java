@@ -27,7 +27,7 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 public class DirectedActivity<P extends BasePlace> extends Model
 		implements Activity, HasPlace<P> {
 	public static final Topic<DirectedActivity> topicActivityStarted = Topic
-			.create();
+			.create().withThrowExceptions();
 
 	public static Activity forPlace(Place place) {
 		if (!(place instanceof BasePlace)) {

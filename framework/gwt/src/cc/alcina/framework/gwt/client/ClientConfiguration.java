@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client;
 
 import java.util.Collections;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.StyleInjector;
 
 import cc.alcina.framework.common.client.domain.Domain;
@@ -17,6 +18,7 @@ import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.LooseContext.ClientLooseContextProvider;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
@@ -72,6 +74,7 @@ public class ClientConfiguration {
 				Collections.singletonList(AlcinaBeanSerializer.class.getName()),
 				Registration.Implementation.INSTANCE,
 				Registration.Priority._DEFAULT);
+		Topic.THROW_EXCEPTIONS = !GWT.isScript();
 	}
 
 	protected void initContentProvider() {
