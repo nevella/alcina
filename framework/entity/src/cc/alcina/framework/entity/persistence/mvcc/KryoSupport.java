@@ -19,6 +19,9 @@ public class KryoSupport {
 	public static final String CONTEXT_DESERIALIZING_PRODUCTION_GRAPH = KryoSupport.class
 			.getName() + ".CONTEXT_DESERIALIZING_PRODUCTION_GRAPH";
 
+	public static final String CONTEXT_FORCE_ENTITY_SERIALIZER = KryoSupport.class
+			.getName() + ".CONTEXT_FORCE_ENTITY_SERIALIZER";
+
 	@Registration.Singleton(SerializerFactory.class)
 	public static class MvccInterceptorSerializer implements SerializerFactory {
 		@Override
@@ -26,10 +29,7 @@ public class KryoSupport {
 			if (MvccObject.class.isAssignableFrom(type)) {
 				return new MvccObjectSerializer(kryo, type);
 			}
-			if (Entity.class.isAssignableFrom(type)
-					&& (Ax.isTest() || AppPersistenceBase.isTestServer())
-					&& !LooseContext
-							.is(CONTEXT_DESERIALIZING_PRODUCTION_GRAPH)) {
+			if (Entity.class.isAssignableFrom(type)) {
 				// this could go to production, but it's mostly needed for
 				// console/webapp comms - since they have circular graphs where
 				// id/localid affects the hash
@@ -38,7 +38,17 @@ public class KryoSupport {
 				//
 				// in the meantime, set the context variable if deserializing a
 				// production graph
-				return new EntitySerializer(kryo, type);
+				boolean useEntitySerializer = (Ax.isTest()
+						|| AppPersistenceBase.isTestServer())
+						&& !LooseContext
+								.is(CONTEXT_DESERIALIZING_PRODUCTION_GRAPH);
+				// allow production code to force this serializer (to, for
+				// instance, not copy transient fields)
+				useEntitySerializer |= LooseContext
+						.is(CONTEXT_FORCE_ENTITY_SERIALIZER);
+				if (useEntitySerializer) {
+					return new EntitySerializer(kryo, type);
+				}
 			}
 			return new FieldSerializer<>(kryo, type);
 		}
