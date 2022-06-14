@@ -196,6 +196,36 @@ public class InferredDomEvents {
 		}
 	}
 
+	public static class RequestAnimationFrameGate {
+		private boolean scheduled;
+
+		public void schedule(Runnable runnable) {
+			if (!scheduled) {
+				scheduled = true;
+				runInRequestAnimationFrame(runnable);
+			}
+		}
+
+		private final native void runInRequestAnimationFrame(Runnable runnable) /*-{
+      $wnd
+          .requestAnimationFrame(function() {
+            try {
+              runnable.@java.lang.Runnable::run()();
+            } finally {
+              this.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.RequestAnimationFrameGate::scheduled = false;
+            }
+          });
+
+		}-*/;
+	}
+
+	/**
+	 * Unless it's guaranteed that the callback will be inexpensive, use the
+	 * RequestAnimation subclass, which ensures smoothness
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public static class ResizeObserved
 			extends NodeEvent<ResizeObserved.Handler> {
 		private ResizeObserver resizeObserver;
@@ -230,6 +260,15 @@ public class InferredDomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onResizeObserved(ResizeObserved event);
+		}
+
+		public static class RequestAnimation extends ResizeObserved {
+			private RequestAnimationFrameGate gate = new RequestAnimationFrameGate();
+
+			@Override
+			public void fireEvent() {
+				gate.schedule(super::fireEvent);
+			}
 		}
 
 		public static final class ResizeObserver extends JavaScriptObject {
