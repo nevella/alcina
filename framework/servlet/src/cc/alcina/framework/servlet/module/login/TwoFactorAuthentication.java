@@ -3,7 +3,9 @@ package cc.alcina.framework.servlet.module.login;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -55,6 +57,24 @@ public class TwoFactorAuthentication {
 		byte[] bEncodedKey = codec.encode(secretKey);
 		String encodedKey = new String(bEncodedKey);
 		return encodedKey;
+	}
+
+	/**
+	 * Generate a TOTP code to authenticate with 2FA on a remote application
+	 * @param secret 2FA secret
+	 * @return TOTP code
+	 * @throws NoSuchAlgorithmException
+	 * @throws InvalidKeyException
+	 */
+	public long generateTOTPCode(String secret) 
+			throws InvalidKeyException, NoSuchAlgorithmException {
+		// Get `t` value for the current point in time
+		long t = new Date().getTime() / TimeUnit.SECONDS.toMillis(30);
+		// Decode secret string from a base 32 string 
+		Base32 codec = new Base32();
+		byte[] decodedKey = codec.decode(secret);
+		// Generate the TOTP code
+		return verifyCode(decodedKey, t);
 	}
 
 	public String getQRBarcodeURL(String user, String host,
