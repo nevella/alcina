@@ -134,8 +134,8 @@ class ResourceAccumulator {
 		if (watchService != null) {
 			// Start watching the directory.
 			String relativeParent = getRelativePath(directory.getParent());
-			if (!FsUtils.supportsTreeNotifications()
-					|| !getPathPrefixSet().includesDirectory(relativeParent)) {
+			if (!FsUtils.supportsTreeNotifications() || !childPathsByParentPath
+					.containsKey(directory.getParent())) {
 				FsUtils.toWatchablePath(directory).register(watchService,
 						ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
 			}
