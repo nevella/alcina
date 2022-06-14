@@ -35,15 +35,15 @@ public class Topic<T> {
 		publisher = new Publisher();
 	}
 
-	public TopicListener.Reference add(Runnable runnable) {
+	public ListenerReference add(Runnable runnable) {
 		return addRunnable(runnable, false);
 	}
 
-	public TopicListener.Reference add(TopicListener<T> listener) {
+	public ListenerReference add(TopicListener<T> listener) {
 		return add(listener, false);
 	}
 
-	public TopicListener.Reference add(TopicListener<T> listener,
+	public ListenerReference add(TopicListener<T> listener,
 			boolean fireIfWasPublished) {
 		delta(listener, true);
 		if (wasPublished && fireIfWasPublished) {
@@ -53,14 +53,14 @@ public class Topic<T> {
 			// already occurred
 			listener.topicPublished(null);
 		}
-		return new TopicListener.Reference(this, listener);
+		return new Topic.Reference(this, listener);
 	}
 
-	public TopicListener.Reference addRunnable(Runnable runnable) {
+	public ListenerReference addRunnable(Runnable runnable) {
 		return addRunnable(runnable, false);
 	}
 
-	public TopicListener.Reference addRunnable(Runnable runnable,
+	public ListenerReference addRunnable(Runnable runnable,
 			boolean fireIfWasPublished) {
 		return add(new TopicListener() {
 			@Override
@@ -187,6 +187,35 @@ public class Topic<T> {
 			synchronized (lookup) {
 				lookup.remove(listener);
 			}
+		}
+	}
+
+	static class Reference implements ListenerReference {
+		private TopicListener listener;
+
+		private Topic topic;
+
+		public Reference(Topic topic, TopicListener listener) {
+			this.topic = topic;
+			this.listener = listener;
+		}
+
+		@Override
+		public void remove() {
+			topic.remove(listener);
+		}
+
+		@Override
+		public void removeOnFire() {
+			topic.remove(listener);
+			TopicListener wrapper = new TopicListener() {
+				@Override
+				public void topicPublished(Object o) {
+					listener.topicPublished(o);
+					topic.remove(this);
+				}
+			};
+			topic.add(wrapper);
 		}
 	}
 }

@@ -8,13 +8,15 @@ import com.google.common.base.Preconditions;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.TopicListener;
 
 public class RemovablePropertyChangeListener implements PropertyChangeListener {
 	private SourcesPropertyChangeEvents bound;
 
 	protected String propertyName;
 
-	private Consumer<PropertyChangeEvent> handler;
+	protected Consumer<PropertyChangeEvent> handler;
 
 	public RemovablePropertyChangeListener(SourcesPropertyChangeEvents bound,
 			Object propertyName) {
@@ -53,5 +55,33 @@ public class RemovablePropertyChangeListener implements PropertyChangeListener {
 			}
 		}
 		bound = null;
+	}
+
+	public static class Typed<T> extends RemovablePropertyChangeListener
+			implements ListenerReference {
+		private TopicListener<T> typedHandler;
+
+		public Typed(SourcesPropertyChangeEvents bound, Object propertyName,
+				TopicListener<T> typedHandler) {
+			super(bound, propertyName);
+			this.typedHandler = typedHandler;
+		}
+
+		@Override
+		public void propertyChange(PropertyChangeEvent evt) {
+			// either typedHandler is non-null or this is over-ridden
+			Preconditions.checkNotNull(typedHandler);
+			typedHandler.topicPublished((T) evt.getNewValue());
+		}
+
+		@Override
+		public void remove() {
+			unbind();
+		}
+
+		@Override
+		public void removeOnFire() {
+			throw new UnsupportedOperationException();
+		}
 	}
 }
