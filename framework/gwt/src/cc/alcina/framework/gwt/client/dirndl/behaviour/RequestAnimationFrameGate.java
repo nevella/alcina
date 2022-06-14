@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
 import java.util.Map;
 
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 
 public class RequestAnimationFrameGate {
@@ -13,6 +14,8 @@ public class RequestAnimationFrameGate {
 		if (!scheduled.containsKey(clazz)) {
 			scheduled.put(clazz, true);
 			runInRequestAnimationFrame(runnable);
+		} else {
+			Ax.out("dropped %s", clazz.getName());
 		}
 	}
 
@@ -22,14 +25,15 @@ public class RequestAnimationFrameGate {
 	}
 
 	private final native void runInRequestAnimationFrame(Runnable runnable) /*-{
+    var $ctx = this;
     $wnd
-        .requestAnimationFrame(function() {
+        .requestAnimationFrame($entry(function() {
           try {
             runnable.@java.lang.Runnable::run()();
           } finally {
-            this.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.RequestAnimationFrameGate::clearScheduled(Ljava/lang/Runnable;)(runnable);
+            $ctx.@cc.alcina.framework.gwt.client.dirndl.behaviour.RequestAnimationFrameGate::clearScheduled(Ljava/lang/Runnable;)(runnable);
           }
-        });
+        }));
 
 	}-*/;
 }

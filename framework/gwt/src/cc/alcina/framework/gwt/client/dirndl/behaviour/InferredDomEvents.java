@@ -165,11 +165,11 @@ public class InferredDomEvents {
 			public static final native IntersectionObserver observerFor(
 					IntersectionObserved intersectionObserved,
 					ElementRemote elt) /*-{
-        var callback = function(entries, observer) {
+        var callback = $entry(function(entries, observer) {
           for ( var k in entries) {
             intersectionObserved.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.IntersectionObserved::fireEvent(Z)(entries[k].isIntersecting);
           }
-        };
+        });
         var scrollCursor = elt;
         while (scrollCursor != document.body) {
           var style = $wnd.getComputedStyle(scrollCursor);
@@ -251,12 +251,12 @@ public class InferredDomEvents {
 		public static final class ResizeObserver extends JavaScriptObject {
 			public static final native ResizeObserver observerFor(
 					ResizeObserved resizeObserved, ElementRemote elt) /*-{
-        var callback = function(entries, observer) {
+        var callback = $entry(function(entries, observer) {
           for ( var k in entries) {
             //there's info in the entry (a contentBox or contentRect, browser-dependent) - but not interested
             resizeObserved.@cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.ResizeObserved::fireEvent()();
           }
-        };
+        });
         var observer = new ResizeObserver(callback);
         observer.observe(elt);
         return observer;
