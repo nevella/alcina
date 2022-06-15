@@ -86,8 +86,8 @@ public class PermissionsManager implements DomainTransformListener {
 	private static PermissionsManager factoryInstance;
 
 	private static PermissionsExtension permissionsExtension;
-	
-	private static boolean enabled=true;
+
+	private static boolean enabled = true;
 
 	public static boolean isEnabled() {
 		return enabled;
@@ -625,8 +625,7 @@ public class PermissionsManager implements DomainTransformListener {
 			Permissible p, boolean permitted) {
 		Boolean b = null;
 		if (assigningTo != null) {
-			b = getPermissionsExtension().isPermitted(o, assigningTo,
-					p);
+			b = getPermissionsExtension().isPermitted(o, assigningTo, p);
 		} else {
 			b = getPermissionsExtension().isPermitted(o, p);
 		}
@@ -638,6 +637,21 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public boolean isPermitted(Object o, Permissible p) {
 		return isPermitted(o, p, false);
+	}
+
+	public static boolean isPermitted(Object o, String ruleName) {
+		Permissible p = new Permissible() {
+			@Override
+			public String rule() {
+				return ruleName;
+			}
+
+			@Override
+			public AccessLevel accessLevel() {
+				return AccessLevel.ROOT;
+			}
+		};
+		return get().isPermitted(o, p, false);
 	}
 
 	public boolean isPermitted(Object o, Permissible p,
