@@ -66,6 +66,8 @@ public class AssociationPropagationTransformListener
 							Association.class, event.getPropertyName());
 			// association will be null if the collection is non-domain (say, a
 			// set of enum values)
+			// TODO - test implementation type is not, in fact, an Entity
+			// subclass
 			if (association == null || !Reflections.classLookup()
 					.handlesClass(association.implementationClass())) {
 				return;
