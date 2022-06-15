@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
 import java.util.Map;
 
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 
 public class RequestAnimationFrameGate {
@@ -15,7 +14,6 @@ public class RequestAnimationFrameGate {
 			scheduled.put(clazz, true);
 			runInRequestAnimationFrame(runnable);
 		} else {
-			Ax.out("dropped %s", clazz.getName());
 		}
 	}
 

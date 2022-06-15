@@ -42,12 +42,16 @@ import cc.alcina.framework.gwt.client.util.GwtDomUtils;
  * Child bindings. For more information, see
  * <a href="http://code.google.com/p/gwittir/wiki/Binding">Binding</a> in the
  * Wiki.
- * 
+ *
  * @see com.totsp.gwittir.client.beans.BindingBuilder
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
  *         Cooper</a>
  */
 public class Binding {
+	// when this converter is used as the transform in O1->[C]->O2, no change in
+	// [O1] will change [O2]
+	public static final Converter IGNORE_CHANGE = o -> o;
+
 	static Logger logger = LoggerFactory.getLogger(Binding.class);
 
 	BindingInstance left;
@@ -73,7 +77,7 @@ public class Binding {
 
 	/**
 	 * Creates a Binding with two populated binding instances.
-	 * 
+	 *
 	 * @param left
 	 *            The left binding instance.
 	 * @param right
@@ -90,7 +94,7 @@ public class Binding {
 	 * binding, and the "value" property of the bound widget will be bound to
 	 * the property specified by modelProperty of the object on the
 	 * BoundWidget's "model" property.
-	 * 
+	 *
 	 * @param widget
 	 *            BoundWidget containing the model.
 	 * @param validator
@@ -108,7 +112,7 @@ public class Binding {
 	}
 
 	/**
-	 * 
+	 *
 	 * @param left
 	 * @param leftProperty
 	 * @param leftConverter
@@ -131,7 +135,7 @@ public class Binding {
 
 	/**
 	 * Creates a new instance of Binding
-	 * 
+	 *
 	 * @param left
 	 *            The left hand object.
 	 * @param leftProperty
@@ -160,7 +164,7 @@ public class Binding {
 
 	/**
 	 * Creates a new Binding instance.
-	 * 
+	 *
 	 * @param left
 	 *            The left hand object.
 	 * @param leftProperty
@@ -242,7 +246,7 @@ public class Binding {
 
 	/**
 	 * Returns a list of child Bindings.
-	 * 
+	 *
 	 * @return List of child bindings.
 	 */
 	public List<Binding> getChildren() {
@@ -252,7 +256,7 @@ public class Binding {
 
 	/**
 	 * Returns the left hand BindingInstance.
-	 * 
+	 *
 	 * @return Returns the left hand BindingInstance.
 	 */
 	public BindingInstance getLeft() {
@@ -261,7 +265,7 @@ public class Binding {
 
 	/**
 	 * Returns the right hand BindingInstance.
-	 * 
+	 *
 	 * @return Returns the left hand BindingInstance.
 	 */
 	public BindingInstance getRight() {
@@ -269,7 +273,7 @@ public class Binding {
 	}
 
 	/**
-	 * 
+	 *
 	 * @return int based on hash of the two objects being bound.
 	 */
 	@Override
@@ -286,7 +290,7 @@ public class Binding {
 
 	/**
 	 * Performs a quick validation on the Binding to determine if it is valid.
-	 * 
+	 *
 	 * @return boolean indicating all values are valid.
 	 */
 	public boolean isValid() {
@@ -662,6 +666,9 @@ public class Binding {
 
 		@Override
 		public void propertyChange(PropertyChangeEvent propertyChangeEvent) {
+			if (instance.converter == IGNORE_CHANGE) {
+				return;
+			}
 			Object value = propertyChangeEvent.getNewValue();
 			if (instance.validator != null) {
 				try {

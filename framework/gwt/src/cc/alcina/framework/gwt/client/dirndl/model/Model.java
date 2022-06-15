@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.BindingBuilder;
+import com.totsp.gwittir.client.beans.Converter;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -50,16 +51,25 @@ public abstract class Model extends Bindable {
 	public static class WithBinding extends Model {
 		Binding binding = new Binding();
 
-		public void addBinding(Object fromPropertyName,
-				SourcesPropertyChangeEvents to, Object toPropertyName) {
-			String fromPropertyNameString = PropertyEnum
-					.asPropertyName(fromPropertyName);
-			String toPropertyNameString = PropertyEnum
-					.asPropertyName(toPropertyName);
+		public void addBinding(Object leftPropertyName,
+				Converter leftToRightConverter,
+				SourcesPropertyChangeEvents right, Object rightPropertyName,
+				Converter rightToLeftConverter) {
+			String leftPropertyNameString = PropertyEnum
+					.asPropertyName(leftPropertyName);
+			String rightPropertyNameString = PropertyEnum
+					.asPropertyName(rightPropertyName);
 			Binding child = BindingBuilder.bind(this)
-					.onLeftProperty(fromPropertyNameString).toRight(to)
-					.onRightProperty(toPropertyNameString).toBinding();
+					.onLeftProperty(leftPropertyNameString)
+					.convertLeftWith(leftToRightConverter).toRight(right)
+					.onRightProperty(rightPropertyNameString)
+					.convertRightWith(rightToLeftConverter).toBinding();
 			binding.getChildren().add(child);
+		}
+
+		public void addBinding(Object leftPropertyName,
+				SourcesPropertyChangeEvents right, Object rightPropertyName) {
+			addBinding(leftPropertyName, null, right, rightPropertyName, null);
 		}
 
 		@Override
