@@ -15,8 +15,8 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
 @Registration(JaxbContextRegistration.class)
-public abstract class GroupingParameters<GP extends GroupingParameters> extends Bindable
-		implements Serializable, HasReflectiveEquivalence<GP>,
+public abstract class GroupingParameters<GP extends GroupingParameters>
+		extends Bindable implements Serializable, HasReflectiveEquivalence<GP>,
 		ReflectCloneable<GP>, TreeSerializable {
 	private List<ColumnSearchOrder> columnOrders = new ArrayList<>();
 
@@ -27,6 +27,17 @@ public abstract class GroupingParameters<GP extends GroupingParameters> extends 
 
 	public void setColumnOrders(List<ColumnSearchOrder> columnOrders) {
 		this.columnOrders = columnOrders;
+	}
+
+	// to satisfy GWT serialization constraint
+	// FIXME - reflective.serialization - explain why this isn't a constraint
+	// (essentially 'if an API facet is unused, don't force the creation a Noop
+	// object like this one just to make serialization happy'). Allow downstream
+	// consumers to handle this (by never using the serialized field)
+	//
+	//
+	public static class NoopGroupingParameters
+			extends GroupingParameters<NoopGroupingParameters> {
 	}
 
 	public abstract static class GroupingEnum<GP extends GroupingEnum, E extends Enum>
