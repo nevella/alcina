@@ -10,16 +10,19 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 public class StandardModels {
-	@Directed(tag = "page", bindings = @Binding(from = "pageClassName", type = Type.CSS_CLASS, transform = ToStringFunction.ExplicitIdentity.class))
+	@Directed(tag = "page", bindings = @Binding(from = "className", type = Type.CSS_CLASS, transform = ToStringFunction.ExplicitIdentity.class))
 	public static class HeaderContentModel extends Model.WithBinding {
 		private Object headerModel;
 
 		private Object contentModel;
 
-		private String pageClassName;
+		private String className;
 
 		public HeaderContentModel() {
-			addBinding("pageClassName", PageCssClass.get(), "pageClassName");
+		}
+
+		public String getClassName() {
+			return this.className;
 		}
 
 		@Directed
@@ -32,8 +35,11 @@ public class StandardModels {
 			return this.headerModel;
 		}
 
-		public String getPageClassName() {
-			return this.pageClassName;
+		public void setClassName(String className) {
+			String old_className = this.className;
+			this.className = className;
+			propertyChangeSupport().firePropertyChange("className",
+					old_className, className);
 		}
 
 		public void setContentModel(Object contentModel) {
@@ -50,11 +56,18 @@ public class StandardModels {
 					old_headerModel, headerModel);
 		}
 
-		public void setPageClassName(String pageClassName) {
-			var old_pageClassName = this.pageClassName;
-			this.pageClassName = pageClassName;
-			propertyChangeSupport().firePropertyChange("pageClassName",
-					old_pageClassName, pageClassName);
+		/**
+		 * <p>
+		 * This is a WIP and may well be reverted - it's really the
+		 * responsibility of the HeaderContentModel subclass (or a subcomponent)
+		 * to track ModelEvents and adjust its style accordingly.
+		 *
+		 * </p>
+		 */
+		public static class BoundToPageCssClass extends HeaderContentModel {
+			public BoundToPageCssClass() {
+				addBinding("className", PageCssClass.get(), "pageClassName");
+			}
 		}
 
 		public enum Property implements PropertyEnum {
@@ -68,17 +81,17 @@ public class StandardModels {
 			return Registry.impl(StandardModels.PageCssClass.class);
 		}
 
-		private String pageClassName;
+		private String className;
 
-		public String getPageClassName() {
-			return this.pageClassName;
+		public String getClassName() {
+			return this.className;
 		}
 
-		public void setPageClassName(String pageClassName) {
-			String old_pageClassName = this.pageClassName;
-			this.pageClassName = pageClassName;
-			propertyChangeSupport().firePropertyChange("pageClassName",
-					old_pageClassName, pageClassName);
+		public void setClassName(String className) {
+			String old_className = this.className;
+			this.className = className;
+			propertyChangeSupport().firePropertyChange("className",
+					old_className, className);
 		}
 	}
 }
