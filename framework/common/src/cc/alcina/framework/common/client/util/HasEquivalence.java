@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Set;
@@ -13,6 +14,8 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -419,6 +422,55 @@ public interface HasEquivalence<T> {
 		public HasEquivalenceTuple(T left, T right) {
 			this.left = left;
 			this.right = right;
+		}
+	}
+
+	public static class PairwiseEquivalenceString<T extends HasEquivalenceString>
+			implements HasEquivalenceString<T> {
+		public static <T extends HasEquivalenceString>
+				ThreeWaySetResult<PairwiseEquivalenceString<T>>
+				split(Collection<T> left, Collection<T> right) {
+			Map<String, T> leftMap = left.stream().collect(AlcinaCollectors
+					.toKeyMap(HasEquivalenceString::equivalenceString));
+			Map<String, T> rightMap = right.stream().collect(AlcinaCollectors
+					.toKeyMap(HasEquivalenceString::equivalenceString));
+			Preconditions.checkArgument(
+					leftMap.size() == left.size()
+							&& rightMap.size() == right.size(),
+					"Non-unique keys");
+			ThreeWaySetResult<PairwiseEquivalenceString<T>> result = new ThreeWaySetResult<>();
+			ThreeWaySetResult<String> keySplit = CommonUtils
+					.threeWaySplit(leftMap.keySet(), rightMap.keySet());
+			result.firstOnly = keySplit.firstOnly.stream()
+					.map(k -> new PairwiseEquivalenceString<>(k, leftMap.get(k),
+							rightMap.get(k)))
+					.collect(AlcinaCollectors.toLinkedHashSet());
+			result.intersection = keySplit.intersection.stream()
+					.map(k -> new PairwiseEquivalenceString<>(k, leftMap.get(k),
+							rightMap.get(k)))
+					.collect(AlcinaCollectors.toLinkedHashSet());
+			result.secondOnly = keySplit.secondOnly.stream()
+					.map(k -> new PairwiseEquivalenceString<>(k, leftMap.get(k),
+							rightMap.get(k)))
+					.collect(AlcinaCollectors.toLinkedHashSet());
+			return result;
+		}
+
+		public String key;
+
+		public T left;
+
+		public T right;
+
+		private PairwiseEquivalenceString(String key, T left, T right) {
+			this.key = key;
+			this.left = left;
+			this.right = right;
+		}
+
+		@Override
+		public String equivalenceString() {
+			return key;
 		}
 	}
 }
