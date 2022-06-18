@@ -26,6 +26,8 @@ public class SelectionModel<T> extends Model
 	 */
 	private boolean changeOnSelectionEvent = true;
 
+	private boolean deselectIfSelectedClicked = false;
+
 	public SelectionModel(List<T> values) {
 		this.choices = values.stream().map(SelectionModel.Choice::new)
 				.collect(Collectors.toList());
@@ -45,10 +47,17 @@ public class SelectionModel<T> extends Model
 		return this.changeOnSelectionEvent;
 	}
 
+	public boolean isDeselectIfSelectedClicked() {
+		return this.deselectIfSelectedClicked;
+	}
+
 	@Override
 	public void onSelected(Selected event) {
 		SelectionModel.Choice choice = event == null ? null : event.getModel();
 		T value = choice == null ? null : (T) choice.getValue();
+		if (deselectIfSelectedClicked && value == getSelectedValue()) {
+			value = null;
+		}
 		valueSelected.publish(value);
 		if (changeOnSelectionEvent) {
 			setSelectedValue(value);
@@ -57,6 +66,11 @@ public class SelectionModel<T> extends Model
 
 	public void setChangeOnSelectionEvent(boolean changeOnSelectionEvent) {
 		this.changeOnSelectionEvent = changeOnSelectionEvent;
+	}
+
+	public void
+			setDeselectIfSelectedClicked(boolean deselectIfSelectedClicked) {
+		this.deselectIfSelectedClicked = deselectIfSelectedClicked;
 	}
 
 	public void setSelectedValue(T value) {

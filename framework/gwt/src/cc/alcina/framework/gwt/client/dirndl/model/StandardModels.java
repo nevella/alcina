@@ -71,7 +71,7 @@ public class StandardModels {
 		}
 
 		public enum Property implements PropertyEnum {
-			pageClassName
+			className
 		}
 	}
 
