@@ -89,7 +89,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 		System.out.println(message);
 	};
 
-	private List<Notification> notificationQueue = new ArrayList<>();
+	private List<ClientNotification> notificationQueue = new ArrayList<>();
 
 	private PropertyChangeListener uiStateListener = null;
 
@@ -113,7 +113,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 	}
 
 	@Override
-	public void enqueue(Notification notification) {
+	public void enqueue(ClientNotification notification) {
 		if (notification.isOncePerClientInstance()
 				&& !enqueuedOncePerInstanceNotificationBodies
 						.add(notification.getBody())) {

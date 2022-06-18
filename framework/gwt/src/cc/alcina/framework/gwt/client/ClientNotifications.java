@@ -21,8 +21,8 @@ public interface ClientNotifications extends LogWriter {
 	public static final String CONTEXT_AUTOSHOW_DIALOG_DETAIL = ClientNotifications.class
 			.getName() + ".CONTEXT_AUTOSHOW_DIALOG_DETAIL";
 
-	public static Notification builder() {
-		return new Notification();
+	public static ClientNotification builder() {
+		return new ClientNotification();
 	}
 
 	static ClientNotifications get() {
@@ -72,7 +72,7 @@ public interface ClientNotifications extends LogWriter {
 
 	public abstract void showWarning(String msg, String detail);
 
-	default void enqueue(Notification notification) {
+	default void enqueue(ClientNotification notification) {
 		throw new UnsupportedOperationException();
 	}
 
@@ -102,7 +102,7 @@ public interface ClientNotifications extends LogWriter {
 		LOG, INFO, WARNING, EXCEPTION
 	}
 
-	public static class Notification {
+	public static class ClientNotification {
 		private boolean showBeforeUiInitComplete;
 
 		private String body;
@@ -149,38 +149,38 @@ public interface ClientNotifications extends LogWriter {
 			return this.showBeforeUiInitComplete;
 		}
 
-		public Notification withAutoHideMs(long autoHideMs) {
+		public ClientNotification withAutoHideMs(long autoHideMs) {
 			this.autoHideMs = autoHideMs;
 			return this;
 		}
 
-		public Notification withBody(String body) {
+		public ClientNotification withBody(String body) {
 			this.body = body;
 			return this;
 		}
 
-		public Notification withBodyIsHtml(boolean bodyIsHtml) {
+		public ClientNotification withBodyIsHtml(boolean bodyIsHtml) {
 			this.bodyIsHtml = bodyIsHtml;
 			return this;
 		}
 
-		public Notification withCaption(String caption) {
+		public ClientNotification withCaption(String caption) {
 			this.caption = caption;
 			return this;
 		}
 
-		public Notification withLevel(Level level) {
+		public ClientNotification withLevel(Level level) {
 			this.level = level;
 			return this;
 		}
 
-		public Notification
+		public ClientNotification
 				withOncePerClientInstance(boolean oncePerClientInstance) {
 			this.oncePerClientInstance = oncePerClientInstance;
 			return this;
 		}
 
-		public Notification
+		public ClientNotification
 				withShowBeforeUiInitComplete(boolean showBeforeUiInitComplete) {
 			this.showBeforeUiInitComplete = showBeforeUiInitComplete;
 			return this;
