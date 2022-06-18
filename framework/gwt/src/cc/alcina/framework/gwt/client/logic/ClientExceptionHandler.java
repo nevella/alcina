@@ -73,9 +73,7 @@ public class ClientExceptionHandler implements UncaughtExceptionHandler {
 	@Override
 	public void onUncaughtException(Throwable e) {
 		GWT.log("Uncaught exception escaped", e);
-		if (GWT.isScript()) {
-			Registry.impl(ClientNotifications.class).showError(e);
-		}
+		Registry.impl(ClientNotifications.class).showError(e);
 	}
 
 	public void pop() {
