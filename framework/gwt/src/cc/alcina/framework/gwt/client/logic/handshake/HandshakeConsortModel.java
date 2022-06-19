@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
+import cc.alcina.framework.gwt.client.logic.ClientProperties;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.gwt.persistence.client.DeltaStore;
@@ -180,7 +181,7 @@ public class HandshakeConsortModel {
 	}
 
 	public void registerInitialObjects(GeneralProperties generalProperties,
-			IUser currentUser) {
+			IUser currentUser, String configurationPropertiesSerialized) {
 		if (generalProperties != null) {
 			Registry.impl(GeneralProperties.Holder.class)
 					.setInstance(generalProperties);
@@ -191,6 +192,10 @@ public class HandshakeConsortModel {
 					.setLoginState(HandshakeConsortModel.get().getLoginState());
 			Registry.impl(ClientNotifications.class).log(Ax.format("User: %s",
 					currentUser == null ? null : currentUser.getUserName()));
+		}
+		if (Ax.notBlank(configurationPropertiesSerialized)) {
+			ClientProperties.registerConfigurationProperties(
+					configurationPropertiesSerialized);
 		}
 	}
 
