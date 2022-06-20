@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.persistence;
 
 import java.util.Base64;
+import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
@@ -27,6 +28,7 @@ import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
+import cc.alcina.framework.entity.util.PersistentObjectCache.CacheMetadata;
 
 @MappedSuperclass
 @ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
@@ -76,15 +78,32 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 	}
 
 	public static void persist(String key, String value) {
+		persist(key, value, null);
+	}
+
+	public static void persist(String key, String value,
+			CacheMetadata metadata) {
 		KeyValuePersistent writeable = (KeyValuePersistent) Domain
 				.ensure(implementation(), "key", keyMapper.apply(key));
 		writeable.setParentKey(SEUtilities.getParentPath(key));
 		writeable.setValue(value);
+		if (metadata != null) {
+			writeable.setExceptionTrace(metadata.exceptionTrace);
+			writeable.setSize(metadata.size);
+			writeable.setContentVersionNumber(metadata.versionNumber);
+			writeable.setLastModified(metadata.lastModified);
+		} else {
+			writeable.setExceptionTrace(null);
+			writeable.setSize(0);
+			writeable.setContentVersionNumber(0);
+			writeable.setLastModified(null);
+		}
 		persist();
 	}
 
-	public static void persistObject(String key, Object value) {
-		persist(key, KeyValuePersistent.toSerializableForm(value));
+	public static void persistObject(String key, Object value,
+			CacheMetadata metadata) {
+		persist(key, KeyValuePersistent.toSerializableForm(value), metadata);
 	}
 
 	public static void remove(String key) {
@@ -117,6 +136,14 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 
 	private String parentKey;
 
+	private String exceptionTrace;
+
+	private int contentVersionNumber;
+
+	private Date lastModified;
+
+	private int size;
+
 	public <V> V deserializeObject(Class<V> knownType) {
 		byte[] zipped = Base64.getDecoder().decode(getValue());
 		byte[] bytes = ResourceUtilities.gunzipBytes(zipped);
@@ -128,16 +155,34 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 		return Base64.getDecoder().decode(getValue());
 	}
 
+	public int getContentVersionNumber() {
+		return this.contentVersionNumber;
+	}
+
+	@Lob
+	@Transient
+	public String getExceptionTrace() {
+		return this.exceptionTrace;
+	}
+
 	@Lob
 	@Transient
 	public String getKey() {
 		return this.key;
 	}
 
+	public Date getLastModified() {
+		return this.lastModified;
+	}
+
 	@Lob
 	@Transient
 	public String getParentKey() {
 		return this.parentKey;
+	}
+
+	public int getSize() {
+		return this.size;
 	}
 
 	@Lob
@@ -148,6 +193,20 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 
 	public void setBytes(byte[] bytes) {
 		setValue(Base64.getEncoder().encodeToString(bytes));
+	}
+
+	public void setContentVersionNumber(int contentVersionNumber) {
+		int old_contentVersionNumber = this.contentVersionNumber;
+		this.contentVersionNumber = contentVersionNumber;
+		propertyChangeSupport().firePropertyChange("contentVersionNumber",
+				old_contentVersionNumber, contentVersionNumber);
+	}
+
+	public void setExceptionTrace(String exceptionTrace) {
+		String old_exceptionTrace = this.exceptionTrace;
+		this.exceptionTrace = exceptionTrace;
+		propertyChangeSupport().firePropertyChange("exceptionTrace",
+				old_exceptionTrace, exceptionTrace);
 	}
 
 	@Override
@@ -161,11 +220,24 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 		propertyChangeSupport().firePropertyChange("key", old_key, key);
 	}
 
+	public void setLastModified(Date lastModified) {
+		Date old_lastModified = this.lastModified;
+		this.lastModified = lastModified;
+		propertyChangeSupport().firePropertyChange("lastModified",
+				old_lastModified, lastModified);
+	}
+
 	public void setParentKey(String parentKey) {
 		String old_parentKey = this.parentKey;
 		this.parentKey = parentKey;
 		propertyChangeSupport().firePropertyChange("parentKey", old_parentKey,
 				parentKey);
+	}
+
+	public void setSize(int size) {
+		int old_size = this.size;
+		this.size = size;
+		propertyChangeSupport().firePropertyChange("size", old_size, size);
 	}
 
 	public void setValue(String value) {

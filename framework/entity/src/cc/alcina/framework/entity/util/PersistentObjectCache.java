@@ -1,5 +1,6 @@
 package cc.alcina.framework.entity.util;
 
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,6 +45,10 @@ public interface PersistentObjectCache<T> {
 
 	void persist(String path, T value);
 
+	default void persist(String path, T value, CacheMetadata metadata) {
+		persist(path, value);
+	}
+
 	void remove(String path);
 
 	PersistentObjectCache<T>
@@ -54,6 +59,16 @@ public interface PersistentObjectCache<T> {
 	}
 
 	PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory);
+
+	class CacheMetadata {
+		public int versionNumber;
+
+		public String exceptionTrace;
+
+		public Date lastModified;
+
+		public int size;
+	}
 
 	public interface ClusteredPersistentObjectCacheProvider {
 		public static
