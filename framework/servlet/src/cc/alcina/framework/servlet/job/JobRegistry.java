@@ -401,7 +401,7 @@ public class JobRegistry {
 				if (!JobContext.get().getPerformer()
 						.checkCanPerformConcurrently(task)) {
 					throw Ax.runtimeException(
-							"(Deadlock prevention) Task {} cannot be performed from Job {}",
+							"(Deadlock prevention) Task %s cannot be performed from Job %s",
 							task, JobContext.get().getJob());
 				}
 			}
