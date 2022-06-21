@@ -13,9 +13,6 @@
  */
 package cc.alcina.framework.gwt.client.entity;
 
-import java.util.Collections;
-import java.util.Map;
-
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -33,7 +30,6 @@ import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegist
 import cc.alcina.framework.common.client.logic.reflection.misc.PerUserProperties;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 
 @Bean
@@ -63,26 +59,24 @@ public class GeneralProperties extends Bindable
 
 	private String persistentCss = "";
 
-	private String keyValuePropertiesSerialized;
-
-	private transient Map<String, String> keyValueProperties;
+	private String clientProperties;
 
 	private boolean allowAdminInvalidObjectWrite = true;
 
 	public GeneralProperties() {
 	}
 
+	@Display(helpText = "User configuration flags (xxx=yyy, newline separated)", name = "Configuration")
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
+	@Custom(customiserClass = TextAreaCustomiser.class)
+	public String getClientProperties() {
+		return this.clientProperties;
+	}
+
 	@Display(name = "ui.filterComponentActuationDelay")
 	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
 	public int getFilterDelayMs() {
 		return filterDelayMs;
-	}
-
-	@Display(helpText = "User configuration flags (xxx=yyy, newline separated)", name = "Configuration")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
-	@Custom(customiserClass = TextAreaCustomiser.class)
-	public String getKeyValuePropertiesSerialized() {
-		return this.keyValuePropertiesSerialized;
 	}
 
 	@Display(helpText = "CSS which will be saved on the server, and reapplied each time you log in", name = "designer.persistentCss")
@@ -125,15 +119,6 @@ public class GeneralProperties extends Bindable
 		return autoSave;
 	}
 
-	public Map<String, String> keyValueProperties() {
-		if (keyValueProperties == null) {
-			StringMap map = StringMap
-					.fromPropertyString(keyValuePropertiesSerialized);
-			keyValueProperties = Collections.unmodifiableMap(map);
-		}
-		return keyValueProperties;
-	}
-
 	public void setAllowAdminInvalidObjectWrite(
 			boolean allowAdminInvalidObjectWrite) {
 		boolean old_allowAdminInvalidObjectWrite = this.allowAdminInvalidObjectWrite;
@@ -150,21 +135,18 @@ public class GeneralProperties extends Bindable
 				autoSave);
 	}
 
+	public void setClientProperties(String clientProperties) {
+		String old_clientProperties = this.clientProperties;
+		this.clientProperties = clientProperties;
+		propertyChangeSupport().firePropertyChange("clientProperties",
+				old_clientProperties, clientProperties);
+	}
+
 	public void setFilterDelayMs(int filterDelayMs) {
 		int old_filterDelayMs = this.filterDelayMs;
 		this.filterDelayMs = filterDelayMs;
 		propertyChangeSupport().firePropertyChange("filterDelayMs",
 				old_filterDelayMs, filterDelayMs);
-	}
-
-	public void setKeyValuePropertiesSerialized(
-			String keyValuePropertiesSerialized) {
-		String old_keyValuePropertiesSerialized = this.keyValuePropertiesSerialized;
-		this.keyValuePropertiesSerialized = keyValuePropertiesSerialized;
-		propertyChangeSupport().firePropertyChange(
-				"keyValuePropertiesSerialized",
-				old_keyValuePropertiesSerialized, keyValuePropertiesSerialized);
-		keyValueProperties = null;
 	}
 
 	public void setPersistentCss(String persistentCss) {

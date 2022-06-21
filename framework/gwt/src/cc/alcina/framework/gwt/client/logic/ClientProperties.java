@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 
 /**
@@ -105,13 +106,14 @@ public class ClientProperties {
 		if (GWT.isClient()) {
 			String cookie = Cookies.getCookie(ClientProperties.class.getName());
 			if (Ax.notBlank(cookie)) {
+				cookie = UrlComponentEncoder.get().decode(cookie);
 				cookieMap = StringMap.fromPropertyString(cookie);
 			}
 			GeneralProperties generalProperties = GeneralProperties.get();
-			if (generalProperties != null && generalProperties
-					.getKeyValuePropertiesSerialized() != null) {
+			if (generalProperties != null
+					&& generalProperties.getClientProperties() != null) {
 				userPropertiesMap = StringMap.fromPropertyString(
-						generalProperties.getKeyValuePropertiesSerialized());
+						generalProperties.getClientProperties());
 			}
 		}
 	}
