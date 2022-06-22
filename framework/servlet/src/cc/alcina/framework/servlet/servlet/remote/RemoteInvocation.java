@@ -1,5 +1,6 @@
 package cc.alcina.framework.servlet.servlet.remote;
 
+import java.io.ByteArrayInputStream;
 import java.io.InputStream;
 import java.lang.reflect.Method;
 import java.net.URI;
@@ -18,6 +19,7 @@ import org.apache.http.message.BasicNameValuePair;
 import org.apache.http.params.BasicHttpParams;
 import org.apache.http.params.HttpParams;
 
+import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -75,8 +77,8 @@ public class RemoteInvocation {
 	public Object invoke(String methodName, Object[] args,
 			RemoteInvocationParameters params) throws Exception {
 		try {
-			LooseContext.pushWithTrue(
-					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER);
+			LooseContext.pushWithBoolean(
+					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER,false);
 			LooseContext.setTrue(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
 			LooseContext.setTrue(KryoUtils.CONTEXT_BYPASS_POOL);
 			LooseContext.setTrue(KryoSupport.CONTEXT_FORCE_ENTITY_SERIALIZER);
