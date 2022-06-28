@@ -59,9 +59,18 @@ public class GeneralProperties extends Bindable
 
 	private String persistentCss = "";
 
+	private String clientProperties;
+
 	private boolean allowAdminInvalidObjectWrite = true;
 
 	public GeneralProperties() {
+	}
+
+	@Display(helpText = "User configuration flags (xxx=yyy, newline separated)", name = "Configuration")
+	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
+	@Custom(customiserClass = TextAreaCustomiser.class)
+	public String getClientProperties() {
+		return this.clientProperties;
 	}
 
 	@Display(name = "ui.filterComponentActuationDelay")
@@ -124,6 +133,13 @@ public class GeneralProperties extends Bindable
 		this.autoSave = autoSave;
 		propertyChangeSupport().firePropertyChange("autoSave", old_autoSave,
 				autoSave);
+	}
+
+	public void setClientProperties(String clientProperties) {
+		String old_clientProperties = this.clientProperties;
+		this.clientProperties = clientProperties;
+		propertyChangeSupport().firePropertyChange("clientProperties",
+				old_clientProperties, clientProperties);
 	}
 
 	public void setFilterDelayMs(int filterDelayMs) {

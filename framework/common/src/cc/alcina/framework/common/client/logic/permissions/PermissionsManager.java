@@ -225,6 +225,21 @@ public class PermissionsManager implements DomainTransformListener {
 		return !isOffline();
 	}
 
+	public static boolean isPermitted(Object o, String ruleName) {
+		Permissible p = new Permissible() {
+			@Override
+			public AccessLevel accessLevel() {
+				return AccessLevel.ROOT;
+			}
+
+			@Override
+			public String rule() {
+				return ruleName;
+			}
+		};
+		return get().isPermitted(o, p, false);
+	}
+
 	public static boolean isSystemUser() {
 		return Objects.equals(get().getSystemUser(), get().getUser());
 	}

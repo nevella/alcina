@@ -33,6 +33,7 @@ import cc.alcina.framework.entity.persistence.domain.DomainLinker;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
+import cc.alcina.framework.entity.persistence.mvcc.KryoSupport;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.persistence.transform.TransformPersisterInPersistenceContext;
@@ -66,6 +67,8 @@ public abstract class RemoteInvocationServlet extends HttpServlet {
 					true);
 			LooseContext.setTrue(
 					TransformPersisterInPersistenceContext.CONTEXT_NOT_REALLY_SERIALIZING_ON_THIS_VM);
+			LooseContext.setTrue(KryoUtils.CONTEXT_BYPASS_POOL);
+			LooseContext.setTrue(KryoSupport.CONTEXT_FORCE_ENTITY_SERIALIZER);
 			Transaction.begin();
 			maybeToReadonlyTransaction();
 			LooseContext

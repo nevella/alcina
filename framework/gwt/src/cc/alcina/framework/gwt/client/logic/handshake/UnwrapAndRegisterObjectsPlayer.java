@@ -209,7 +209,8 @@ public class UnwrapAndRegisterObjectsPlayer
 				.getGeneralProperties();
 		HandshakeConsortModel.get().registerInitialObjects(
 				domainModelHolder.getGeneralProperties(),
-				domainModelHolder.getCurrentUser());
+				domainModelHolder.getCurrentUser(),
+				domainModelHolder.getConfigurationPropertiesSerialized());
 		TransformManager.get()
 				.registerDomainObjectsInHolderAsync(domainModelHolder, this);
 	}
