@@ -177,20 +177,23 @@ public class AbstractParserSlice<T extends ParserToken> {
 		itr.setCurrentNode(getFirstText());
 		StringBuilder content = new StringBuilder();
 		Node n;
-		int fromOffset = start.characterOffset;
+		// Initial offset for the node, which is the starting
+		//  offset for the first node, but 0 for the rest
+		int initialOffset = start.characterOffset;
 		while ((n = itr.getCurrentNode()) != null) {
-			content.append(n.getNodeValue().substring(fromOffset));
-			// reset after first node
-			fromOffset = 0;
+			content.append(n.getNodeValue().substring(initialOffset));
 			if (content.length() >= length) {
-				end = new DOMLocation(n, start.characterOffset
-						+ n.getNodeValue().length() + length - content.length(),
+				// The end location calculation the length of the current node,
+				//  subtracting how much over the desired length we've gone
+				end = new DOMLocation(n, n.getNodeValue().length() - (content.length() - length),
 						end.nodeIndex);
 				// note - looks like DOMLocation.nodeIndex ain't that crucial
 				// (since that info's implicit in the node)
 				// may want to drop it?
 				break;
 			}
+			// Only the first node should have an offset
+			initialOffset = 0;
 			itr.nextNode();
 		}
 	}
