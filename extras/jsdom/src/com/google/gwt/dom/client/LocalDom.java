@@ -722,14 +722,16 @@ public class LocalDom {
 								"Exception getting remoteIndex:\n%s\n",
 								e.toString());
 					}
-					preface += Ax.format("Local dom tree:\n%s\n",
-							hasNode.local().provideLocalDomTree());
-					preface += Ax.format("(Local outer html):\n%s\n",
-							hasNode.local().getOuterHtml());
-					String message = Ax.format(
-							"%s\n(Built outer html):\n%s\n\n(Remote outer html):\n%s",
-							preface, builtOuterHtml, remoteOuterHtml);
-					topicUnableToParse.publish(message);
+					// FIXME: Exception logging in this fashion can cause very large strings and cause an OOM on the server
+					// preface += Ax.format("Local dom tree:\n%s\n",
+					// 		hasNode.local().provideLocalDomTree());
+					// preface += Ax.format("(Local outer html):\n%s\n",
+					// 		hasNode.local().getOuterHtml());
+					// String message = Ax.format(
+					// 		"%s\n(Built outer html):\n%s\n\n(Remote outer html):\n%s",
+					// 		preface, builtOuterHtml, remoteOuterHtml);
+					// topicUnableToParse.publish(message);
+					topicUnableToParse.publish(preface);
 					Ax.out("Reparse unsuccessful");
 					return;
 				}

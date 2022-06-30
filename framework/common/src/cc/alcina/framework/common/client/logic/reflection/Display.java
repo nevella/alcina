@@ -96,7 +96,7 @@ public @interface Display {
 	@Target({ ElementType.TYPE })
 	/**
 	 *
-	 * Marks that all properties should be displayed, irresepective of @Display
+	 * Marks that all properties should be displayed, irresepective of {@link Display}
 	 * annotation presence
 	 */
 	public @interface AllProperties {
