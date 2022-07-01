@@ -689,6 +689,10 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 							propertyGenerator.addMethod(m);
 						});
 			}
+			propertyGenerators.entrySet()
+					.removeIf(e -> e.getValue().getter != null
+							&& e.getValue().getter.method
+									.getAnnotation(Omit.class) != null);
 			propertyGenerators.values().stream().sorted()
 					.forEach(PropertyGenerator::prepare);
 		}
@@ -718,9 +722,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		PropertyMethod toPropertyMethod(JMethod method) {
-			if (method.getAnnotation(Omit.class) != null) {
-				return null;
-			}
 			if (method.getName().equals("getClass")) {
 				return null;
 			}
