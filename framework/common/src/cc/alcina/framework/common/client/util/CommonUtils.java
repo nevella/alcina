@@ -2070,6 +2070,10 @@ public class CommonUtils {
 		return d;
 	}
 
+	public static Long zeroToNull(Long id) {
+		return id != null && id == 0 ? null : id;
+	}
+
 	private static String getNumericSubstring(String toParse) {
 		if (toParse == null) {
 			return null;
@@ -2173,6 +2177,10 @@ public class CommonUtils {
 					&& intersection.isEmpty();
 		}
 
+		public boolean isIntersectionOnly() {
+			return firstOnly.isEmpty() && secondOnly.isEmpty();
+		}
+
 		public String toSizes() {
 			return format("First: %s\tBoth: %s\tSecond: %s", firstOnly.size(),
 					intersection.size(), secondOnly.size());
@@ -2193,9 +2201,5 @@ public class CommonUtils {
 
 	public static interface YearResolver {
 		int getYear(Date d);
-	}
-
-	public static Long zeroToNull(Long id) {
-		return id!=null&&id==0?null:id;
 	}
 }
