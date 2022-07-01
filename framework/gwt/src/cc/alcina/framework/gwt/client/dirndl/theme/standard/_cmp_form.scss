@@ -186,10 +186,21 @@ ol-editor {
       }
     }
   }
+  &.tight180 {
+    padding: 0.5rem 1rem;
+    .ol-form-field {
+      line-height: 1.3em;
+      > label.ol-label {
+        display: inline-block;
+        white-space: nowrap;
+        width: 180px;
+      }
+    }
+  }
 /*
 FIXME - index - 
 */
-  &.tight2 {
+  &.tight230 {
     padding: 0.25rem 0.5rem;
     .ol-form-field {
       line-height: 1.3em;
