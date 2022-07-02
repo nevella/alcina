@@ -5,6 +5,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.util.LengthConstrainedStringWriter.OverflowException;
 
 /**
@@ -14,11 +15,18 @@ import cc.alcina.framework.entity.util.LengthConstrainedStringWriter.OverflowExc
  *
  */
 public class LengthConstrainedStringBuilder {
+	public static final transient String CONTEXT_MAX_LENGTH = LengthConstrainedStringBuilder.class
+			.getName() + ".CONTEXT_MAX_LENGTH";
+
 	private StringBuilder builder = new StringBuilder();
 
 	int maxLength = 10000000;
 
 	public LengthConstrainedStringBuilder() {
+		Integer maxLength = LooseContext.get(CONTEXT_MAX_LENGTH);
+		if (maxLength != null) {
+			this.maxLength = maxLength.intValue();
+		}
 	}
 
 	public StringBuilder append(boolean b) {
