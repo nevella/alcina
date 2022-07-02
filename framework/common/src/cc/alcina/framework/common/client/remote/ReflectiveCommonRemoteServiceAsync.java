@@ -30,6 +30,11 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	}
 
 	@Override
+	public void getJobLog(long jobId, AsyncCallback<String> callback) {
+		call("getJobLog", new Class[] { long.class }, callback, jobId);
+	}
+
+	@Override
 	public void getLogsForAction(RemoteAction action, Integer count,
 			AsyncCallback<List<ActionLogItem>> callback) {
 		throw new UnsupportedOperationException();
@@ -130,8 +135,8 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	@Override
 	public void validateOnServer(List<ServerValidator> validators,
 			AsyncCallback<List<ServerValidator>> callback) {
-		call("validateOnServer", new Class[] { List.class },
-				callback, validators);
+		call("validateOnServer", new Class[] { List.class }, callback,
+				validators);
 	}
 
 	@Override
