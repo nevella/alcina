@@ -215,6 +215,22 @@ public class NodeEvents {
 		}
 	}
 
+	public static class Show extends TopicEvent<Object, Show.Handler> {
+		@Override
+		public void dispatch(Show.Handler handler) {
+			handler.onShow(this);
+		}
+
+		@Override
+		public Class<Show.Handler> getHandlerClass() {
+			return Show.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onShow(Show event);
+		}
+	}
+
 	// FIXME - to 'submit'
 	public static class Submitted
 			extends TopicEvent<Object, Submitted.Handler> {
