@@ -2,21 +2,19 @@ package cc.alcina.extras.dev.console.remote.client;
 
 import com.google.gwt.core.client.EntryPoint;
 import com.google.gwt.core.client.Scheduler;
-import com.google.gwt.dom.client.Document;
-import com.google.gwt.dom.client.LocalDom;
 
 import cc.alcina.extras.dev.console.remote.client.common.logic.RemoteConsoleInit;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
+import cc.alcina.framework.gwt.client.Client;
 
 //@formatter:off
 /*
  * Nits:
- * 
+ *
  * up arrow and enter key  should populate command box
  * show status up top
  * autoshow on start?
- * navigation to eclipse file/line  
- * 
+ * navigation to eclipse file/line
+ *
  * @author nick@alcina.cc
  *
  */
@@ -24,10 +22,8 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 public class RemoteConsoleClient implements EntryPoint {
 	@Override
 	public void onModuleLoad() {
-		// force init
-		LiSet liSet = new LiSet();
-		LocalDom.mutations.setDisabled(true);
-		Document.get().getDocumentElement();
+		Client.Init.preRegistry();
+		Client.Init.registry();
 		Scheduler.get().scheduleDeferred(() -> init0());
 	}
 

@@ -17,6 +17,7 @@
 				<pathelement path="${project.gwt.classpath.src}" />
 				<pathelement path="${framework.jscodeserver.src.dir}" />
 				<pathelement path="${framework.gwt.classpath.src}" />
+				<pathelement path="${project.gwt.classpath.build}" />
 				<pathelement path="${project.gwt.classpath.lib}" />
 				<pathelement path="${framework.gwt.classpath.build}" />
 				<pathelement path="${framework.gwt.classpath.lib}" />

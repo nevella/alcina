@@ -33,3 +33,7 @@ a {
 a:hover {
 	text-decoration: underline;
 }
+div.nav-module div.bar{
+	background-color:hsl(225deg 27% 85%);
+	border-bottom-color:hsl(225deg 60% 34%);
+}
