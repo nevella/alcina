@@ -49,6 +49,7 @@ public class ContentDeliveryMultiple implements ContentDelivery {
 			if (entry.getFileName() != null) {
 				mutableDeliveryModel.setSuggestedFileName(entry.getFileName());
 			}
+			mutableDeliveryModel.setMimeType(entry.getMimeType());
 			if (entry.getTransformerClassName() != null) {
 				MultipleDeliveryEntry.Transformer transformer = Reflections
 						.newInstance(Reflections
