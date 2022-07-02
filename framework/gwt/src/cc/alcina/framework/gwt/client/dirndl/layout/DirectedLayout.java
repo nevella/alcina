@@ -239,11 +239,13 @@ public class DirectedLayout {
 				// will be resolution against the child node)
 				locationClass = null;
 			}
-			AnnotationLocation location = new AnnotationLocation(locationClass,
-					property, resolver);
-			A annotation = location.getAnnotation(clazz);
-			if (annotation != null) {
-				return annotation;
+			if (locationClass != null || property != null) {
+				AnnotationLocation location = new AnnotationLocation(
+						locationClass, property, resolver);
+				A annotation = location.getAnnotation(clazz);
+				if (annotation != null) {
+					return annotation;
+				}
 			}
 			if (parent != null
 					&& parent.renderer instanceof CollectionNodeRenderer) {
