@@ -1,10 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -16,7 +11,6 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -77,13 +71,6 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 	@Registration({ DirectedNodeRenderer.class, Enum.class })
 	public static class EnumNodeRenderer extends HasDisplayNameRenderer {
-	}
-
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target(ElementType.TYPE)
-	@ClientVisible
-	public static @interface FieldNamesAsTags {
 	}
 
 	public static class HasDisplayNameRenderer extends TextNodeRenderer {
