@@ -26,8 +26,9 @@ import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 public class SearchOrders<T> implements Comparator<T>, Serializable,
 		HasEquivalence<SearchOrders<T>>, TreeSerializable {
 	/*
-	 * Don't access directly - even when altering (call refreshSerializable when
-	 * altering). The boolean value is true ascending; false descending
+	 * Don't access directly (use _getCmps) - even when altering (call
+	 * refreshSerializable when altering). The boolean value is true ascending;
+	 * false descending
 	 */
 	private transient Map<SearchOrder<T, ?>, Boolean> cmps = new LinkedHashMap<>();
 
@@ -90,11 +91,11 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	}
 
 	public boolean provideIsAscending() {
-		return cmps.values().stream().findFirst().orElse(true);
+		return _getCmps().values().stream().findFirst().orElse(true);
 	}
 
 	public String provideSearchOrderFieldName() {
-		return cmps.keySet().stream()
+		return _getCmps().keySet().stream()
 				.filter(so -> so instanceof DisplaySearchOrder).findFirst()
 				.map(so -> ((DisplaySearchOrder) so).getFieldName())
 				.orElse(null);
@@ -262,5 +263,15 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		public Integer apply(H t) {
 			return sorted.indexOf(Long.valueOf(t.getId()));
 		}
+	}
+
+	public boolean provideIsIdAscOrder() {
+		return _getCmps().size() == 1 && startsWith(new IdOrder())
+				&& _getCmps().values().iterator().next();
+	}
+
+	public void clear() {
+		_getCmps().clear();
+		refreshSerializable();
 	}
 }

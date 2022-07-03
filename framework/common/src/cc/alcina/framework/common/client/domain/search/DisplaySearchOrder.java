@@ -16,6 +16,13 @@ public class DisplaySearchOrder extends SearchOrder {
 		return this.fieldName;
 	}
 
+	public DisplaySearchOrder() {
+	}
+
+	public DisplaySearchOrder(String fieldName) {
+		this.fieldName = fieldName;
+	}
+
 	public void setFieldName(String fieldName) {
 		this.fieldName = fieldName;
 	}
