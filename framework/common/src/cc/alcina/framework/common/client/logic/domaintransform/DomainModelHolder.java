@@ -27,6 +27,7 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 public interface DomainModelHolder extends Serializable {
 	public Set<ClassRef> getClassRefs();
 
+	// server-provided client configuration properties used by ClientProperties
 	public String getConfigurationPropertiesSerialized();
 
 	public IUser getCurrentUser();
