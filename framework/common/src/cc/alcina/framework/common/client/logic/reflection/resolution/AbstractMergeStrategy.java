@@ -123,5 +123,22 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			Preconditions.checkState(higher.size() == 1);
 			return higher;
 		}
+
+		public static abstract class PropertyOnly<A extends Annotation>
+				extends AbstractMergeStrategy.SingleResultMergeStrategy<A> {
+			@Override
+			protected List<A> atClass(Class<A> annotationClass,
+					ClassReflector<?> reflector) {
+				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			protected List<A> atProperty(Class<A> annotationClass,
+					Property property) {
+				A annotation = property.annotation(annotationClass);
+				return annotation == null ? Collections.emptyList()
+						: Collections.singletonList(annotation);
+			}
+		}
 	}
 }

@@ -19,8 +19,6 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.util.Collections;
-import java.util.List;
 
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
@@ -28,7 +26,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
-import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -96,8 +93,8 @@ public @interface Display {
 	@Target({ ElementType.TYPE })
 	/**
 	 *
-	 * Marks that all properties should be displayed, irresepective of {@link Display}
-	 * annotation presence
+	 * Marks that all properties should be displayed, irresepective of
+	 * {@link Display} annotation presence
 	 */
 	public @interface AllProperties {
 	}
@@ -118,20 +115,7 @@ public @interface Display {
 	}
 
 	@Reflected
-	public static class MergeStrategy
-			extends AbstractMergeStrategy.SingleResultMergeStrategy<Display> {
-		@Override
-		protected List<Display> atClass(Class<Display> annotationClass,
-				ClassReflector<?> reflector) {
-			throw new UnsupportedOperationException();
-		}
-
-		@Override
-		protected List<Display> atProperty(Class<Display> annotationClass,
-				Property property) {
-			Display annotation = property.annotation(annotationClass);
-			return annotation == null ? Collections.emptyList()
-					: Collections.singletonList(annotation);
-		}
+	public static class MergeStrategy extends
+			AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOnly<Display> {
 	}
 }

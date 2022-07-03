@@ -2,8 +2,10 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.lang.annotation.Annotation;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
@@ -30,6 +32,9 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	public ContextResolver() {
 		this(null);
 	}
+
+	DefaultAnnotationResolver annotationResolver = (DefaultAnnotationResolver) AnnotationLocation.Resolver
+			.get();
 
 	public ContextResolver(ContextResolver parent) {
 		this.parent = parent;
@@ -59,6 +64,15 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	public <T> T resolveRenderContextProperty(String key) {
 		return null;
+	}
+
+	@Override
+	protected <A extends Annotation> List<A> resolveAnnotations0(
+			Class<A> annotationClass, AnnotationLocation location) {
+		// route via default (strategy-based) resolver, not superclass (which
+		// does not use merge strategies)
+		return annotationResolver.resolveAnnotations0(annotationClass,
+				location);
 	}
 
 	protected void init() {
