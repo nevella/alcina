@@ -12,12 +12,14 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
+@Reflected
 public abstract class AbstractMergeStrategy<A extends Annotation>
 		implements MergeStrategy<A> {
 	@Override
@@ -53,7 +55,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	@Override
 	public List<A> resolveProperty(Class<A> annotationClass, Property property,
 			List<Inheritance> inheritance) {
-		if (!inheritance.contains(Inheritance.PROPERTY)) {
+		if (!inheritance.contains(Inheritance.PROPERTY) || property == null) {
 			return Collections.emptyList();
 		}
 		List<A> result = new ArrayList<>();
@@ -130,6 +132,25 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			protected List<A> atClass(Class<A> annotationClass,
 					ClassReflector<?> reflector) {
 				throw new UnsupportedOperationException();
+			}
+
+			@Override
+			protected List<A> atProperty(Class<A> annotationClass,
+					Property property) {
+				A annotation = property.annotation(annotationClass);
+				return annotation == null ? Collections.emptyList()
+						: Collections.singletonList(annotation);
+			}
+		}
+
+		public static abstract class PropertyOrClass<A extends Annotation>
+				extends AbstractMergeStrategy.SingleResultMergeStrategy<A> {
+			@Override
+			protected List<A> atClass(Class<A> annotationClass,
+					ClassReflector<?> reflector) {
+				A annotation = reflector.annotation(annotationClass);
+				return annotation == null ? Collections.emptyList()
+						: Collections.singletonList(annotation);
 			}
 
 			@Override
