@@ -14,5 +14,9 @@
 	<public path="public" />
 	<super-source path="jre" />
 	<public path="client/widgets/res" />
+	<set-configuration-property name="ClientReflectionGenerator.ReachabilityData.folder" value="/tmp/remote-console-client" />
+	<set-configuration-property name="alcina.SimpleCssResourceGenerator.ignoreMissingResourceUrls" value="_pix/.*|images/.*"/>
+	<set-configuration-property name="ClientReflectionGenerator.FilterPeer.className" value="cc.alcina.extras.dev.console.remote.rebind.RemoteConsoleReflectionFilterPeer" />
+	<set-configuration-property name="ClientReflectionGenerator.LinkerPeer.className" value="cc.alcina.extras.dev.console.remote.rebind.RemoteConsoleReflectionLinkerPeer" />
 	<entry-point class='cc.alcina.extras.dev.console.remote.client.RemoteConsoleClient' />
 </module>

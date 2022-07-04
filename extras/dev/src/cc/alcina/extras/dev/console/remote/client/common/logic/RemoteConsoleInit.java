@@ -1,6 +1,7 @@
 package cc.alcina.extras.dev.console.remote.client.common.logic;
 
-import com.google.gwt.core.shared.GWT;
+import java.util.Collections;
+
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
@@ -14,24 +15,29 @@ import cc.alcina.extras.dev.console.remote.client.module.dev.DevModule;
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleRequest;
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleRequest.RemoteConsoleRequestType;
 import cc.alcina.extras.dev.console.remote.protocol.RemoteConsoleResponse;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JavascriptKeyableLookup;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsRegistryDelegateCreator;
-import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializer;
+import cc.alcina.framework.common.client.util.AlcinaBeanSerializerC;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
+import cc.alcina.framework.gwt.client.ClientNotifications;
+import cc.alcina.framework.gwt.client.ClientNotificationsImpl;
+import cc.alcina.framework.gwt.client.util.TimerWrapperGwt.TimerWrapperProviderGwt;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class RemoteConsoleInit {
 	public void init() {
+		Registry.register().singleton(TimerWrapperProvider.class,
+				new TimerWrapperProviderGwt());
+		Registry.register().singleton(ClientNotifications.class,
+				new ClientNotificationsImpl());
+		Registry.register().add(AlcinaBeanSerializerC.class.getName(),
+				Collections.singletonList(AlcinaBeanSerializer.class.getName()),
+				Registration.Implementation.INSTANCE,
+				Registration.Priority.APP);
 		loadCss();
 		addDevCssListener();
-		CommonUtils.setSupplier = () -> new LightSet();
-		if (GWT.isScript()) {
-			Registry.Internals
-					.setDelegateCreator(new JsRegistryDelegateCreator());
-		}
-		JavascriptKeyableLookup.initJs();
 		RemoteConsoleModule.get();
 		RemoteConsoleRequest request = RemoteConsoleRequest.create();
 		request.setType(RemoteConsoleRequestType.STARTUP);
