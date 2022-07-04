@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.Publication;
 import cc.alcina.framework.common.client.publication.PublicationContent;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
@@ -80,17 +81,18 @@ public class PublicationContext {
 	public Publication publication;
 
 	public String getContextInfoForPublicationException() {
-		String xmlForm = "Unable to serialize publication request";
-		String modelString = xmlForm;
+		String jsonForm = "Unable to serialize publication request";
+		String modelString = jsonForm;
 		try {
 			String contentDefSerialized = "(no xmlrootelement annotation)";
-			contentDefSerialized = JaxbUtils.xmlSerialize(contentDefinition);
-			xmlForm = Ax.format(
+			contentDefSerialized = ReflectiveSerializer
+					.serialize(contentDefinition);
+			jsonForm = Ax.format(
 					"Content definition:\n%s\n\n" + "Delivery model:\n%s",
 					contentDefSerialized,
-					JaxbUtils.xmlSerialize(deliveryModel));
-			if (xmlForm.length() > 5000) {
-				xmlForm = Ax.format(
+					ReflectiveSerializer.serialize(deliveryModel));
+			if (jsonForm.length() > 5000) {
+				jsonForm = Ax.format(
 						"(Large definition/model)\n"
 								+ "Content definition: %s (%s chars)\n"
 								+ "Delivery model: %s (%s chars)",
@@ -104,7 +106,7 @@ public class PublicationContext {
 			e2.printStackTrace();
 		}
 		String message = String.format("Publication exception: %s %s\n%s",
-				PermissionsManager.get().getUserName(), modelString, xmlForm);
+				PermissionsManager.get().getUserName(), modelString, jsonForm);
 		return message;
 	}
 
