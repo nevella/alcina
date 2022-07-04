@@ -265,8 +265,9 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		}
 	}
 
-	public boolean provideIsIdAscOrder() {
-		return _getCmps().size() == 1 && startsWith(new IdOrder())
+	public boolean provideIsIdAscDisplayOrder() {
+		return _getCmps().size() == 1
+				&& startsWith(new DisplaySearchOrder("id"))
 				&& _getCmps().values().iterator().next();
 	}
 
