@@ -15,7 +15,10 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 
@@ -23,7 +26,14 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 @Documented
 @ClientVisible
 @Target({ ElementType.METHOD })
+@Resolution(inheritance = {
+		Inheritance.PROPERTY }, mergeStrategy = ModalDisplay.MergeStrategy.class)
 public @interface ModalDisplay {
+	@Reflected
+	public static class MergeStrategy extends
+			AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOnly<ModalDisplay> {
+	}
+
 	Modal[] value();
 
 	@Retention(RetentionPolicy.RUNTIME)

@@ -44,6 +44,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolve
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransformNodeRendererArgs;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -237,7 +238,9 @@ public class DirectedLayout {
 				// *don't* resolve against the model if it will be transformed
 				// (resolution against the transform result, with dirndl 1.1,
 				// will be resolution against the child node)
-				locationClass = null;
+				if (clazz != ModelTransformNodeRendererArgs.class) {
+					locationClass = null;
+				}
 			}
 			if (locationClass != null || property != null) {
 				AnnotationLocation location = new AnnotationLocation(

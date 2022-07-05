@@ -12,6 +12,9 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
@@ -72,18 +75,30 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Resolution(inheritance = { Inheritance.PROPERTY,
+			Inheritance.CLASS }, mergeStrategy = MultipleNodeRendererArgs.MergeStrategy.class)
 	public @interface MultipleNodeRendererArgs {
 		String[] cssClasses() default {};
 
 		String[] tags();
+
+		public static class MergeStrategy extends
+				AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOrClass<MultipleNodeRendererArgs> {
+		}
 	}
 
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@Resolution(inheritance = { Inheritance.PROPERTY,
+			Inheritance.CLASS }, mergeStrategy = MultipleNodeRendererArgs.MergeStrategy.class)
 	public @interface MultipleNodeRendererLeaf {
 		Directed value();
+
+		public static class MergeStrategy extends
+				AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOrClass<MultipleNodeRendererArgs> {
+		}
 	}
 
 	/*

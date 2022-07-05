@@ -63,6 +63,11 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 	}
 
 	@Override
+	protected boolean hasExplicitTypePermission(Type type) {
+		return getMatch(type).isPresent();
+	}
+
+	@Override
 	protected void init(AppReflectableTypes reflectableTypes) {
 		this.reflectableTypes = reflectableTypes;
 		populateRulesList();

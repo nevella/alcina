@@ -21,12 +21,18 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Inherited
 @Documented
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @ClientVisible
+@Resolution(inheritance = {
+		Inheritance.PROPERTY }, mergeStrategy = Validator.MergeStrategy.class)
 /**
  *
  * @author Nick Reddel
@@ -39,4 +45,9 @@ public @interface Validator {
 	boolean validateBeanOnly() default false;
 
 	Class<? extends com.totsp.gwittir.client.validator.Validator> validator();
+
+	@Reflected
+	public static class MergeStrategy extends
+			AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOnly<Validator> {
+	}
 }

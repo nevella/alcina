@@ -127,7 +127,8 @@ public abstract class TruncatedObjectCriterion<E extends HasId>
 
 	@Override
 	public String toString() {
-		return getDisplayText();
+		return Ax.blankTo(getDisplayText(),
+				() -> Ax.format("(id:%s)", getId()));
 	}
 
 	public <T extends TruncatedObjectCriterion<E>> T withObject(E withValue) {

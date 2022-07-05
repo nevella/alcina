@@ -251,11 +251,11 @@ public class GwittirBridge {
 	private Map<Class, Validator> validatorMap = new HashMap<Class, Validator>();
 	{
 		validatorMap.put(Integer.class, IntegerValidator.INSTANCE);
-		validatorMap.put(int.class, IntegerValidator.INSTANCE);
+		validatorMap.put(int.class, new IntegerValidator.Primitive());
 		validatorMap.put(Long.class, LongValidator.INSTANCE);
-		validatorMap.put(long.class, LongValidator.INSTANCE);
+		validatorMap.put(long.class, new LongValidator.Primitive());
 		validatorMap.put(Double.class, DoubleValidator.INSTANCE);
-		validatorMap.put(double.class, DoubleValidator.INSTANCE);
+		validatorMap.put(double.class, new DoubleValidator.Primitive());
 		validatorMap.put(Date.class, ShortDateValidator.INSTANCE);
 	}
 

@@ -64,9 +64,11 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.HasId;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.ClassRef;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
+import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
@@ -677,13 +679,19 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					.getDeclaredConstructor().newInstance();
 			request.setId(requestId);
 			Statement statement = conn.createStatement();
+			String requestTableName = request.getClass()
+					.getAnnotation(Table.class).name();
 			request.setTransactionCommitTime(SqlUtils.getValue(statement,
 					Ax.format(
 							"select transactioncommittime from %s where id=%s",
+							requestTableName, requestId),
+					Timestamp.class));
+			request.setClientInstance(PersistentImpl.find(ClientInstance.class,
+					SqlUtils.getValue(statement, Ax.format(
+							"select clientInstance_id from %s where id=%s",
 							request.getClass().getAnnotation(Table.class)
 									.name(),
-							requestId),
-					Timestamp.class));
+							requestId), Long.class)));
 			statement.close();
 			Class<? extends DomainTransformEvent> transformEventImplClass = domainDescriptor
 					.getShadowDomainTransformEventPersistentClass();
@@ -740,9 +748,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							&& event.getValueClassRef().notInVm()));
 			TransformCollation collation = new TransformCollation(transforms);
 			Multimap<Class, List<EntityCollation>> toLoad = collation
-					.allEntityCollations()
-					.filter(ec -> !ec.isDeleted()
+					.allEntityCollations().filter(ec -> !ec.isDeleted()
 							&& store.isCached(ec.getEntityClass())
+							// collation may have zero transforms (if entity is
+							// only the target of a transform)
+							&& ec.getTransforms().size() > 0
 							&& IVersionable.class
 									.isAssignableFrom(ec.getEntityClass()))
 					.collect(AlcinaCollectors

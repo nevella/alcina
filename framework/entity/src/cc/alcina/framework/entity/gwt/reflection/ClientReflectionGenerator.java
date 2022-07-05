@@ -698,10 +698,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 		}
 
 		void prepareRegistrations() {
-			if (type.getQualifiedSourceName().equals(
-					"au.com.barnet.jade.client.renderers.ArticleSearchDefinitionRenderer")) {
-				int debug = 3;
-			}
 			List<Registration> annotations = new AnnotationLocationTypeInfo(
 					type, annotationResolver)
 							.getAnnotations(Registration.class);

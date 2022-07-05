@@ -19,7 +19,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 @Registration.Singleton(Resolver.class)
 public class DefaultAnnotationResolver extends Resolver {
 	@Override
-	protected <A extends Annotation> List<A> resolveAnnotations0(
+	public <A extends Annotation> List<A> resolveAnnotations0(
 			Class<A> annotationClass, AnnotationLocation location) {
 		Resolution resolution = Reflections.at(annotationClass)
 				.annotation(Resolution.class);

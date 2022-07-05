@@ -73,7 +73,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypesReasons;
  * - in order, most important restriction is;
  *   - preloader
  *   - initial module (minimal reflection, maximal rendered server-side)
- *   - align non-base inclusions by  
+ *   - align non-base inclusions by
  * </pre>
  */
 @LinkerOrder(Order.POST)
@@ -158,228 +158,6 @@ public class ReflectionReachabilityLinker extends Linker {
 		return artifacts;
 	}
 
-	protected void recordChangesAndCheckNextPass() {
-		int maxPass = Integer.getInteger("reachability.pass", 25);
-		if (maxPass > 0) {
-			ReachabilityData.serializeReachabilityFile(logger, moduleTypes,
-					typesFile);
-		}
-		if (!Boolean.getBoolean("reachability.production")) {
-			typesReasons.sort();
-			ReachabilityData.serializeReachabilityFile(logger, typesReasons,
-					typesReasonsFile);
-			if (pass++ < maxPass) {
-				logger.log(TreeLogger.Type.INFO, Ax.format(
-						"Recompile - reflection changes - pass %s", pass));
-				com.google.gwt.dev.Compiler.recompile = true;
-			}
-		}
-	}
-
-	class ModuleReachabilityComputation {
-		// reflected types contained in the code module
-		private TypeList typeList;
-
-		String moduleName;
-
-		// types reflected by modules the current module being analysed depends
-		// on (so not to be included in this module)
-		private Set<Type> dependencyModuleTypes;
-
-		// types reflected by this module in the previous pass. Constructed from
-		// reachability.json, immutable
-		private Set<Type> previousPassReflectedTypes;
-
-		// types reflected by this module.
-		private Set<Type> reflectedTypes = new LinkedHashSet<>();
-
-		// all types (reflected or not) contained in current module
-		private Set<Type> visibleTypes;
-
-		private Set<String> typesVisibleFromSymbolNames;
-
-		public ModuleReachabilityComputation(String moduleName,
-				Set<String> typesVisibleFromSymbolNames) {
-			this.moduleName = moduleName;
-			this.typesVisibleFromSymbolNames = typesVisibleFromSymbolNames;
-			typeList = moduleTypes.ensureTypeList(moduleName);
-			dependencyModuleTypes = moduleTypes
-					.typesFor(idToName.computeDepdendencyNames(moduleName));
-			previousPassReflectedTypes = Collections
-					.unmodifiableSet(typeList.types.stream()
-							.collect(AlcinaCollectors.toLinkedHashSet()));
-			visibleTypes = typesVisibleFromSymbolNames.stream().map(Type::get)
-					.collect(Collectors.toSet());
-		}
-
-		boolean computeReachability() {
-			/*
-			 * Realising the goal - 10 or so years on - a type is reachable (for
-			 * reflection) if:
-			 * 
-			 * 1. contained in reached types
-			 * 
-			 * 2. if all registration keys are visible
-			 * 
-			 * 3. if contained (including subtypes) in types reachable from
-			 * reflective rpc requests/responses
-			 * 
-			 * 4. if a supertype of [1-3]
-			 *
-			 */
-			addFromVisibleModuleTypes();
-			if (legacyModuleAssignments.hasAssignments()
-					&& !Boolean.getBoolean("reachability.nonLegacy")) {
-				addFromLegacyAssignments();
-			} else {
-				addFromReachedKeyRegistrations();
-				addAsyncReachableTypes();
-			}
-			addSupertypes();
-			if (pass > 0) {
-				/*
-				 * after first pass, don't remove from reachability unless
-				 * reached by previous dependencies
-				 * 
-				 * REVISIT - this prevents some weird unstable looping -
-				 * hopefully remove
-				 *
-				 */
-//				previousPassReflectedTypes.stream()
-//						.forEach(reflectedTypes::add);
-			}
-			boolean delta = logAndComputeDelta();
-			return delta;
-		}
-
-		private boolean logAndComputeDelta() {
-			ThreeWaySetResult<Type> split = CommonUtils
-					.threeWaySplit(previousPassReflectedTypes, reflectedTypes);
-			typeList.types = reflectedTypes.stream().sorted()
-					.collect(Collectors.toList());
-			logger.log(TreeLogger.Type.INFO, Ax.format(
-					"Reachability [%s] - :: %s", moduleName, split.toSizes()));
-			/*
-			 * Reasoning for addition to reflective/reachable set is recorded in
-			 * the generated reachability-snapshot...reasons.json file. End goal
-			 * is to justify those inclusions via declarative rules so that code
-			 * size is minimised.
-			 */
-			boolean unknownAssignmentChanged = moduleTypes
-					.unknownToNotReached();
-			boolean delta = split.firstOnly.size() > 0
-					|| split.secondOnly.size() > 0 || unknownAssignmentChanged;
-			return delta;
-		}
-
-		protected void addSupertypes() {
-			reflectedTypes.
-			// copy to avoid cme
-					stream().collect(Collectors.toList()).stream()
-					.filter(reflectableTypes::contains)
-					.map(reflectableTypes::typeHierarchy)
-					.map(t -> t.typeAndSuperTypes).flatMap(Collection::stream)
-					.forEach(type -> {
-						addWithReason(Category.HIERARCHY, type,
-								// no rules used, since these are required
-								"required by subtype", true);
-					});
-		}
-
-		/*
-		 * Only add the return value hierarchy - arguments we pass must be
-		 * directly reachable from code, so will have reflection data injected
-		 * by addFromVisibleModuleTypes()
-		 */
-		protected void addAsyncReachableTypes() {
-			int passDelta = 0;
-			Set<Type> initialAsyncReachableTypes = visibleTypes.stream()
-					.filter(reflectableTypes::contains)
-					.map(reflectableTypes::typeHierarchy)
-					.flatMap(th -> th.rpcSerializableTypes.stream())
-					.collect(AlcinaCollectors.toLinkedHashSet());
-			Set<Type> asyncReachableTypes = initialAsyncReachableTypes;
-			/*
-			 * For each reachable async type, add settabletypes and subtypes.
-			 * Loop until all added
-			 */
-			do {
-				Set<Type> passTypes = asyncReachableTypes.stream()
-						.collect(AlcinaCollectors.toLinkedHashSet());
-				asyncReachableTypes.stream().filter(reflectableTypes::contains)
-						.map(reflectableTypes::typeHierarchy)
-						.flatMap(h -> Stream.concat(h.settableTypes.stream(),
-								h.subtypes.stream()))
-						.forEach(passTypes::add);
-				passDelta = passTypes.size() - asyncReachableTypes.size();
-				asyncReachableTypes = passTypes;
-			} while (passDelta > 0);
-			/*
-			 * we've computed potential incoming types from deserialization, now
-			 * add them to outgoing reachables
-			 */
-			asyncReachableTypes.stream().filter(reflectableTypes::contains)
-					.forEach(type -> {
-						addWithReason(Reason.Category.RPC, type);
-					});
-		}
-
-		protected void addFromReachedKeyRegistrations() {
-			appRegistrations.entries.stream()
-					.filter(e -> e.isVisible(visibleTypes)).forEach(e -> {
-						addWithReason(Reason.Category.REGISTRY, e.registered);
-					});
-		}
-
-		private void addWithReason(Category category, Type type) {
-			addWithReason(category, type, peer.explain(type).orElse(null),
-					false);
-		}
-
-		private void addWithReason(Category category, Type type,
-				String reasonMessage, boolean required) {
-			if (dependencyModuleTypes.contains(type)) {
-				// already in a loaded module
-				return;
-			}
-			if (reflectedTypes.contains(type)) {
-				return;
-			}
-			boolean permit = peer.permit(type);
-			if (!permit && required) {
-				logger.log(TreeLogger.Type.WARN, Ax.format(
-						"Should be explicitly permitted (excluded but required): %s",
-						type));
-			}
-			String assignToModuleName = permit ? moduleName
-					: ReflectionModule.EXCLUDED;
-			Reason reason = new Reason(idToName.fragmentId(assignToModuleName),
-					assignToModuleName, category, reasonMessage);
-			if (permit) {
-				reflectedTypes.add(type);
-			}
-			typesReasons.add(reason, type);
-		}
-
-		protected void addFromLegacyAssignments() {
-			/*
-			 * transitional - add (and only add) all types in the legacy module
-			 */
-			reflectedTypes.clear();
-			reflectableTypes.byType
-					.keySet().stream().filter(t -> legacyModuleAssignments
-							.isAssignedToModule(t, moduleName))
-					.forEach(reflectedTypes::add);
-		}
-
-		protected void addFromVisibleModuleTypes() {
-			typesVisibleFromSymbolNames.stream().map(Type::get)
-					.filter(reflectableTypes::contains).forEach(t -> {
-						addWithReason(Reason.Category.CODE, t);
-					});
-		}
-	}
-
 	/**
 	 * @param typeReasons
 	 *
@@ -448,6 +226,24 @@ public class ReflectionReachabilityLinker extends Linker {
 			}
 		}
 		return reachedClassOrConstantNames;
+	}
+
+	protected void recordChangesAndCheckNextPass() {
+		int maxPass = Integer.getInteger("reachability.pass", 25);
+		if (maxPass > 0) {
+			ReachabilityData.serializeReachabilityFile(logger, moduleTypes,
+					typesFile);
+		}
+		if (!Boolean.getBoolean("reachability.production")) {
+			typesReasons.sort();
+			ReachabilityData.serializeReachabilityFile(logger, typesReasons,
+					typesReasonsFile);
+			if (pass++ < maxPass) {
+				logger.log(TreeLogger.Type.INFO, Ax.format(
+						"Recompile - reflection changes - pass %s", pass));
+				com.google.gwt.dev.Compiler.recompile = true;
+			}
+		}
 	}
 
 	public static class ReachabilityArtifact extends SyntheticArtifact {
@@ -540,6 +336,227 @@ public class ReflectionReachabilityLinker extends Linker {
 					throw new UnsupportedOperationException();
 				}
 			}
+		}
+	}
+
+	class ModuleReachabilityComputation {
+		// reflected types contained in the code module
+		private TypeList typeList;
+
+		String moduleName;
+
+		// types reflected by modules the current module being analysed depends
+		// on (so not to be included in this module)
+		private Set<Type> dependencyModuleTypes;
+
+		// types reflected by this module in the previous pass. Constructed from
+		// reachability.json, immutable
+		private Set<Type> previousPassReflectedTypes;
+
+		// types reflected by this module.
+		private Set<Type> reflectedTypes = new LinkedHashSet<>();
+
+		// all types (reflected or not) contained in current module
+		private Set<Type> visibleTypes;
+
+		private Set<String> typesVisibleFromSymbolNames;
+
+		public ModuleReachabilityComputation(String moduleName,
+				Set<String> typesVisibleFromSymbolNames) {
+			this.moduleName = moduleName;
+			this.typesVisibleFromSymbolNames = typesVisibleFromSymbolNames;
+			typeList = moduleTypes.ensureTypeList(moduleName);
+			dependencyModuleTypes = moduleTypes
+					.typesFor(idToName.computeDepdendencyNames(moduleName));
+			previousPassReflectedTypes = Collections
+					.unmodifiableSet(typeList.types.stream()
+							.collect(AlcinaCollectors.toLinkedHashSet()));
+			visibleTypes = typesVisibleFromSymbolNames.stream().map(Type::get)
+					.collect(Collectors.toSet());
+		}
+
+		private void addWithReason(Category category, Type type) {
+			addWithReason(category, type, peer.explain(type).orElse(null),
+					false);
+		}
+
+		private void addWithReason(Category category, Type type,
+				String reasonMessage, boolean required) {
+			if (dependencyModuleTypes.contains(type)) {
+				// already in a loaded module
+				return;
+			}
+			if (reflectedTypes.contains(type)) {
+				return;
+			}
+			boolean permit = peer.permit(type);
+			if (!permit && required) {
+				logger.log(TreeLogger.Type.WARN, Ax.format(
+						"Should be explicitly permitted (excluded but required): %s",
+						type));
+			}
+			String assignToModuleName = permit ? moduleName
+					: ReflectionModule.EXCLUDED;
+			Reason reason = new Reason(idToName.fragmentId(assignToModuleName),
+					assignToModuleName, category, reasonMessage);
+			if (permit) {
+				reflectedTypes.add(type);
+			}
+			typesReasons.add(reason, type);
+		}
+
+		private boolean logAndComputeDelta() {
+			ThreeWaySetResult<Type> split = CommonUtils
+					.threeWaySplit(previousPassReflectedTypes, reflectedTypes);
+			typeList.types = reflectedTypes.stream().sorted()
+					.collect(Collectors.toList());
+			logger.log(TreeLogger.Type.INFO, Ax.format(
+					"Reachability [%s] - :: %s", moduleName, split.toSizes()));
+			/*
+			 * Reasoning for addition to reflective/reachable set is recorded in
+			 * the generated reachability-snapshot...reasons.json file. End goal
+			 * is to justify those inclusions via declarative rules so that code
+			 * size is minimised.
+			 */
+			boolean unknownAssignmentChanged = moduleTypes
+					.unknownToNotReached();
+			boolean delta = split.firstOnly.size() > 0
+					|| split.secondOnly.size() > 0 || unknownAssignmentChanged;
+			return delta;
+		}
+
+		/*
+		 * Only add the return value hierarchy - arguments we pass must be
+		 * directly reachable from code, so will have reflection data injected
+		 * by addFromVisibleModuleTypes()
+		 */
+		protected void addAsyncReachableTypes() {
+			int passDelta = 0;
+			Set<Type> initialAsyncReachableTypes = visibleTypes.stream()
+					.filter(reflectableTypes::contains)
+					.map(reflectableTypes::typeHierarchy)
+					.flatMap(th -> th.rpcSerializableTypes.stream())
+					.collect(AlcinaCollectors.toLinkedHashSet());
+			Set<Type> asyncReachableTypes = initialAsyncReachableTypes;
+			/*
+			 * For each reachable async type, add settabletypes and subtypes.
+			 * Loop until all added
+			 */
+			do {
+				Set<Type> passTypes = asyncReachableTypes.stream()
+						.collect(AlcinaCollectors.toLinkedHashSet());
+				asyncReachableTypes.stream().filter(reflectableTypes::contains)
+						.map(reflectableTypes::typeHierarchy)
+						.flatMap(h -> Stream.concat(h.settableTypes.stream(),
+								h.subtypes.stream()))
+						.forEach(passTypes::add);
+				passDelta = passTypes.size() - asyncReachableTypes.size();
+				asyncReachableTypes = passTypes;
+			} while (passDelta > 0);
+			/*
+			 * we've computed potential incoming types from deserialization, now
+			 * add them to outgoing reachables
+			 */
+			asyncReachableTypes.stream().filter(reflectableTypes::contains)
+					.forEach(type -> {
+						addWithReason(Reason.Category.RPC, type);
+					});
+		}
+
+		protected void addExplicitlyRequiredTypes() {
+			reflectableTypes.byType.keySet().stream()
+					.filter(t -> !typesVisibleFromSymbolNames
+							.contains(t.qualifiedSourceName))
+					.filter(peer::hasExplicitTypePermission)
+					.filter(peer::permit).forEach(t -> {
+						logger.log(TreeLogger.Type.INFO,
+								Ax.format("Explicit addition: %s",
+										t.qualifiedSourceName));
+						addWithReason(Reason.Category.EXPLICIT_PERMISSION, t);
+					});
+		}
+
+		protected void addFromLegacyAssignments() {
+			/*
+			 * transitional - add (and only add) all types in the legacy module
+			 */
+			reflectedTypes.clear();
+			reflectableTypes.byType
+					.keySet().stream().filter(t -> legacyModuleAssignments
+							.isAssignedToModule(t, moduleName))
+					.forEach(reflectedTypes::add);
+		}
+
+		protected void addFromReachedKeyRegistrations() {
+			appRegistrations.entries.stream()
+					.filter(e -> e.isVisible(visibleTypes)).forEach(e -> {
+						addWithReason(Reason.Category.REGISTRY, e.registered);
+					});
+		}
+
+		protected void addFromVisibleModuleTypes() {
+			typesVisibleFromSymbolNames.stream().map(Type::get)
+					.filter(reflectableTypes::contains).forEach(t -> {
+						addWithReason(Reason.Category.CODE, t);
+					});
+		}
+
+		protected void addSupertypes() {
+			reflectedTypes.
+			// copy to avoid cme
+					stream().collect(Collectors.toList()).stream()
+					.filter(reflectableTypes::contains)
+					.map(reflectableTypes::typeHierarchy)
+					.map(t -> t.typeAndSuperTypes).flatMap(Collection::stream)
+					.forEach(type -> {
+						addWithReason(Category.HIERARCHY, type,
+								// no rules used, since these are required
+								"required by subtype", true);
+					});
+		}
+
+		boolean computeReachability() {
+			/*
+			 * Realising the goal - 10 or so years on - a type is reachable (for
+			 * reflection) if:
+			 * 
+			 * 1. contained in reached types
+			 * 
+			 * 2. if all registration keys are visible
+			 * 
+			 * 3. if contained (including subtypes) in types reachable from
+			 * reflective rpc requests/responses
+			 * 
+			 * 4. If explicitly defined (due to issues with reachability
+			 * algorithm)
+			 * 
+			 * 5. if a supertype of [1-5]
+			 *
+			 */
+			addFromVisibleModuleTypes();
+			if (legacyModuleAssignments.hasAssignments()
+					&& !Boolean.getBoolean("reachability.nonLegacy")) {
+				addFromLegacyAssignments();
+			} else {
+				addFromReachedKeyRegistrations();
+				addAsyncReachableTypes();
+				addExplicitlyRequiredTypes();
+			}
+			addSupertypes();
+			if (pass > 0) {
+				/*
+				 * after first pass, don't remove from reachability unless
+				 * reached by previous dependencies
+				 * 
+				 * REVISIT - this prevents some weird unstable looping -
+				 * hopefully remove
+				 *
+				 */
+				// previousPassReflectedTypes.stream()
+				// .forEach(reflectedTypes::add);
+			}
+			boolean delta = logAndComputeDelta();
+			return delta;
 		}
 	}
 }
