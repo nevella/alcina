@@ -19,6 +19,8 @@
  */
 package com.totsp.gwittir.client.validator;
 
+import cc.alcina.framework.common.client.gwittir.validator.DoubleValidator;
+
 /**
  *
  * @author <a href="mailto:cooper@screaming-penguin.com">Robert "kebernet"
@@ -28,12 +30,30 @@ public class IntegerValidator implements Validator {
 	public static final IntegerValidator INSTANCE = new IntegerValidator();
 
 	/** Creates a new instance of IntegerValidator */
-	private IntegerValidator() {
+	protected IntegerValidator() {
+	}
+
+	protected boolean allowNull() {
+		return true;
+	}
+
+	public static class Primitive extends IntegerValidator {
+		@Override
+		protected boolean allowNull() {
+			return false;
+		}
 	}
 
 	@Override
 	public Object validate(Object value) throws ValidationException {
-		if (value == null || value instanceof Integer) {
+		if (value == null) {
+			if (!allowNull()) {
+				throw new ValidationException("Value is required",
+						DoubleValidator.class);
+			}
+			return value;
+		}
+		if (value instanceof Integer) {
 			return value;
 		}
 		Integer i;

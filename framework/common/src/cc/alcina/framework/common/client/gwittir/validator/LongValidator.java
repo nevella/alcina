@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.common.client.gwittir.validator;
 
+import com.totsp.gwittir.client.validator.DoubleValidator;
 import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
@@ -29,9 +30,27 @@ public class LongValidator implements Validator {
 	public LongValidator() {
 	}
 
+	protected boolean allowNull() {
+		return true;
+	}
+
+	public static class Primitive extends LongValidator {
+		@Override
+		protected boolean allowNull() {
+			return false;
+		}
+	}
+
 	@Override
 	public Object validate(Object value) throws ValidationException {
-		if (value == null || value instanceof Long) {
+		if (value == null) {
+			if (!allowNull()) {
+				throw new ValidationException("Value is required",
+						DoubleValidator.class);
+			}
+			return value;
+		}
+		if (value instanceof Long) {
 			return value;
 		}
 		Long l;
