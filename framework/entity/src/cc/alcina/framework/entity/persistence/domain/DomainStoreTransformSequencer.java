@@ -23,6 +23,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.ThrowingFunction;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
@@ -173,6 +174,14 @@ public class DomainStoreTransformSequencer
 			long ignoreIfSeenRequestId) throws SQLException {
 		if (publishedIds.containsKey(ignoreIfSeenRequestId)) {
 			return 0;
+		}
+		if (!Configuration.is("receivesPrecommitMessages")
+				&& ignoreIfSeenRequestId != 0) {
+			// FIXME - remove once we use pg listener ordering (if not removing
+			// whole class) (this is for non-kafka systems
+			// :: devconsole)
+			pendingRequestIds.put(ignoreIfSeenRequestId,
+					System.currentTimeMillis());
 		}
 		long start = System.nanoTime();
 		long queryStart = 0;

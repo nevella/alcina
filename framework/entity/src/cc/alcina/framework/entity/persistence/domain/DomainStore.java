@@ -940,9 +940,11 @@ public class DomainStore implements IDomainStore {
 				}
 				if (transform
 						.getTransformType() == TransformType.CREATE_OBJECT) {
+					ClientInstance requestInstance = persistenceEvent
+							.getPersistedRequests().iterator().next()
+							.getClientInstance();
 					transformManager.registerClusterLocalObjectPromotion(
-							transform, persistenceEvent.getPersistedRequests()
-									.iterator().next().getClientInstance());
+							transform, requestInstance);
 				}
 				if (transform.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == transform) {
