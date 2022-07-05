@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.Action;
@@ -14,7 +13,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reachabil
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.Rule;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.RuleSet;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.Rules;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.Type;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
@@ -87,6 +85,11 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 		}
 		// default to true
 		return true;
+	}
+
+	@Override
+	protected boolean hasExplicitTypePermission(Type type) {
+		return getMatch(type).isPresent();
 	}
 
 	private Optional<Rule> getMatch(Type type) {

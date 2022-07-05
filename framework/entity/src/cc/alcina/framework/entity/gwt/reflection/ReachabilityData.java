@@ -8,7 +8,6 @@ import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -51,7 +50,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflectio
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -65,8 +63,6 @@ class ReachabilityData {
 	static Class<? extends ClientReflectionFilterPeer> filterPeerClass;
 
 	static Class<? extends ReachabilityLinkerPeer> linkerPeerClass;
-
-	
 
 	private static Set<JClassType> computeImplementations(
 			JTypeParameter typeParameter,
@@ -486,7 +482,7 @@ class ReachabilityData {
 		Category category;
 
 		enum Category {
-			CODE, REGISTRY, RPC, HIERARCHY
+			CODE, REGISTRY, RPC, HIERARCHY, EXPLICIT_PERMISSION
 		}
 
 		@Override
@@ -742,7 +738,7 @@ class ReachabilityData {
 
 		public void sort() {
 			Collections.sort(typesReasons);
-			typesReasons.forEach(tr->Collections.sort(tr.types));
+			typesReasons.forEach(tr -> Collections.sort(tr.types));
 		}
 	}
 
