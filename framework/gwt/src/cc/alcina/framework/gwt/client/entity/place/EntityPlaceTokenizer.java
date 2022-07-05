@@ -44,7 +44,10 @@ public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySe
 			}
 			if (parts.length >= 4 + offset) {
 				String action = parts[3 + offset];
-				place.action = enumValue(EntityAction.class, action);
+				EntityAction actionEnum = enumValue(EntityAction.class, action);
+				if (actionEnum != null) {
+					place.action = actionEnum;
+				}
 			}
 		}
 		return place;
@@ -56,7 +59,8 @@ public abstract class EntityPlaceTokenizer<E extends Entity, SD extends EntitySe
 			if (place.id != 0) {
 				addTokenPart(place.id);
 			}
-		} else {			setParameter(P_DEF,
+		} else {
+			setParameter(P_DEF,
 					searchDefinitionSerializer().serialize(place.def));
 		}
 		if (place.action != null && place.action != EntityAction.VIEW) {
