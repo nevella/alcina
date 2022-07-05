@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.Stack;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.Action;
@@ -14,19 +13,60 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reachabil
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.Rule;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.RuleSet;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.Rules;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.Type;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
 
 /**
- * 
  *
- * @author nreddel@barnet.com.au
+ *
+ * @author nick@alcina.cc
  *
  */
 public class RulesFilter extends ReachabilityLinkerPeer {
 	List<RuleFilter> rules = new ArrayList<>();
+
+	public RulesFilter() {
+	}
+
+	@Override
+	public Optional<String> explain(Type type) {
+		Optional<Rule> match = getMatch(type);
+		return match.map(Rule::reason);
+	}
+
+	@Override
+	public boolean permit(Type type) {
+		Optional<Rule> match = getMatch(type);
+		if (match.isPresent()) {
+			return match.get().action() == Action.INCLUDE;
+		}
+		// default to true
+		return true;
+	}
+
+	private Optional<Rule> getMatch(Type type) {
+		TypeHierarchy hierarchy = reflectableTypes.byType.get(type);
+		for (RuleFilter filter : rules) {
+			Optional<Rule> match = filter.match(type);
+			if (match.isPresent()) {
+				return match;
+			}
+		}
+		return Optional.empty();
+	}
+
+	private void populateRulesList() {
+		Rules rules = getClass().getAnnotation(Rules.class);
+		Arrays.stream(rules.value()).map(RuleFilter::new)
+				.forEach(this.rules::add);
+	}
+
+	@Override
+	protected void init(AppReflectableTypes reflectableTypes) {
+		this.reflectableTypes = reflectableTypes;
+		populateRulesList();
+	}
 
 	class RuleFilter {
 		private Rule rule;
@@ -68,47 +108,5 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 			}
 			return Optional.empty();
 		}
-	}
-
-	public RulesFilter() {
-	}
-
-	private void populateRulesList() {
-		Rules rules = getClass().getAnnotation(Rules.class);
-		Arrays.stream(rules.value()).map(RuleFilter::new)
-				.forEach(this.rules::add);
-	}
-
-	@Override
-	public boolean permit(Type type) {
-		Optional<Rule> match = getMatch(type);
-		if (match.isPresent()) {
-			return match.get().action() == Action.INCLUDE;
-		}
-		// default to true
-		return true;
-	}
-
-	private Optional<Rule> getMatch(Type type) {
-		TypeHierarchy hierarchy = reflectableTypes.byType.get(type);
-		for (RuleFilter filter : rules) {
-			Optional<Rule> match = filter.match(type);
-			if (match.isPresent()) {
-				return match;
-			}
-		}
-		return Optional.empty();
-	}
-
-	@Override
-	public Optional<String> explain(Type type) {
-		Optional<Rule> match = getMatch(type);
-		return match.map(Rule::reason);
-	}
-
-	@Override
-	protected void init(AppReflectableTypes reflectableTypes) {
-		this.reflectableTypes = reflectableTypes;
-		populateRulesList();
 	}
 }
