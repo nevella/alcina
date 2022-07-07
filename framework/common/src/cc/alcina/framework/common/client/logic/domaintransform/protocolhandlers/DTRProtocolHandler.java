@@ -5,7 +5,7 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 
 /**
- * implementing classes must be @clientinstantiable
+ * implementing classes must be @Reflected
  * 
  * @author nick@alcina.cc
  *
