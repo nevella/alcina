@@ -933,6 +933,11 @@ public abstract class Job extends VersionableEntity<Job>
 	}
 
 	public String toDisplayName() {
+		if (cachedDisplayName != null && id != 0
+				&& cachedDisplayName.contains("/")) {
+			// crumby invalidation to avoid yet another field (since id may
+			cachedDisplayName = null;
+		}
 		if (cachedDisplayName == null) {
 			try {
 				cachedDisplayName = toDisplayName0();
