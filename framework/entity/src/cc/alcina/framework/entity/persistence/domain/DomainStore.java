@@ -1254,6 +1254,10 @@ public class DomainStore implements IDomainStore {
 			return new DomainStoreQuery(clazz, storeFor(clazz));
 		}
 
+		public synchronized void deregister(DomainStore store) {
+			descriptorMap.remove(store.domainDescriptor);
+		}
+
 		public synchronized void register(DomainStore store,
 				boolean registerDescriptorClasses) {
 			descriptorMap.put(store.domainDescriptor, store);
