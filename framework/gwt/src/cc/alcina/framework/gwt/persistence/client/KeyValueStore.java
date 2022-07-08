@@ -22,7 +22,7 @@ public class KeyValueStore {
 
 	protected PersistenceObjectStore objectStore;
 
-	protected KeyValueStore() {
+	public KeyValueStore() {
 		super();
 	}
 
