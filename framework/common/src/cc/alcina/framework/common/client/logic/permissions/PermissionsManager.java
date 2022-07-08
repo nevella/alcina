@@ -54,7 +54,8 @@ import cc.alcina.framework.common.client.util.Topic;
  * Permissions type ADMIN_OR_OWNER pretty much mandates that the object
  * implement HasOwner
  * </p>
- * TODO - 2022 - make most methods static, call through to content instance
+ * TODO - 2022 - make most methods static, call through to content instance.
+ * Note that topics should be client only (and static)
  *
  * @author Nick Reddel
  */
