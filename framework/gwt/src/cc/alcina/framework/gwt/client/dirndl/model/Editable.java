@@ -17,20 +17,25 @@ public class Editable {
 
 		private boolean focusOnAttach;
 
-		public void setFocusOnAttach(boolean focusOnAttach) {
-			this.focusOnAttach = focusOnAttach;
-		}
-
 		public String getPlaceholder() {
 			return this.placeholder;
 		}
 
-		public void setPlaceholder(String placeholder) {
-			this.placeholder = placeholder;
-		}
-
 		public String getValue() {
 			return this.value;
+		}
+
+		@Override
+		public boolean isFocusOnAttach() {
+			return focusOnAttach;
+		}
+
+		public void setFocusOnAttach(boolean focusOnAttach) {
+			this.focusOnAttach = focusOnAttach;
+		}
+
+		public void setPlaceholder(String placeholder) {
+			this.placeholder = placeholder;
 		}
 
 		public void setValue(String value) {
@@ -38,11 +43,6 @@ public class Editable {
 			this.value = value;
 			propertyChangeSupport().firePropertyChange("value", old_value,
 					value);
-		}
-
-		@Override
-		public boolean isFocusOnAttach() {
-			return focusOnAttach;
 		}
 	}
 }

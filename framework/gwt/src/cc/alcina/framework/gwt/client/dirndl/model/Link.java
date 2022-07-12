@@ -20,6 +20,9 @@ import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
@@ -314,5 +317,39 @@ public class Link extends Model {
 	@Target({ ElementType.TYPE, ElementType.METHOD })
 	public @interface LinkRendererPrimaryClassName {
 		String value();
+	}
+
+	@Directed(tag = "a", bindings = {
+			@Binding(from = "href", type = Type.PROPERTY),
+			@Binding(from = "target", type = Type.PROPERTY) })
+	public static class Wrapper extends Model {
+		private String href;
+
+		private String target;
+
+		private Model inner;
+
+		public Wrapper(String href, Model inner) {
+			this(href, inner, null);
+		}
+
+		public Wrapper(String href, Model inner, String target) {
+			this.href = href;
+			this.inner = inner;
+			this.target = target;
+		}
+
+		public String getHref() {
+			return this.href;
+		}
+
+		@Directed
+		public Model getInner() {
+			return this.inner;
+		}
+
+		public String getTarget() {
+			return this.target;
+		}
 	}
 }

@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -38,11 +37,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 	@Override
 	protected String getTag(Node node) {
-		if (node.parent != null && node.parent.has(FieldNamesAsTags.class)
-				&& node.property.getName() != null) {
-			return CommonUtils.deInfixCss(node.property.getName());
-		}
-		return Ax.blankTo(super.getTag(node), "span");
+		return getTagPossiblyFromFieldName(node, "span");
 	}
 
 	protected String getText(Node node) {

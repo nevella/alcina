@@ -12,5 +12,5 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVis
 @Documented
 @Target(ElementType.TYPE)
 @ClientVisible
-public @interface FieldNamesAsTags {
+public @interface PropertyNameTags {
 }

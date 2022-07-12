@@ -135,6 +135,22 @@ public class NodeEvents {
 		}
 	}
 
+	public static class Find extends TopicEvent<Object, Find.Handler> {
+		@Override
+		public void dispatch(Find.Handler handler) {
+			handler.onFind(this);
+		}
+
+		@Override
+		public Class<Find.Handler> getHandlerClass() {
+			return Find.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFind(Find event);
+		}
+	}
+
 	public static class Forward extends TopicEvent<Object, Forward.Handler> {
 		@Override
 		public void dispatch(Forward.Handler handler) {
