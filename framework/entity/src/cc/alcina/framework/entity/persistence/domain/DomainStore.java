@@ -1376,6 +1376,9 @@ public class DomainStore implements IDomainStore {
 				return domainStore.handler;
 			}
 		}
+		public synchronized void deregister(DomainStore store) {
+			descriptorMap.remove(store.domainDescriptor);
+		}
 	}
 
 	public static class DomainStoreUpdateException extends Exception {
