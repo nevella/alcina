@@ -342,6 +342,10 @@ public class WDUtils {
 		return uri.replaceFirst(regex, "$1" + replace + "$3");
 	}
 
+	public static ElementQuery query() {
+		return new ElementQuery();
+	}
+
 	public static void scrollIntoView(WebDriver driver, WebElement elt) {
 		executeScript(driver, elt, "arguments[0].scrollIntoView()");
 	}
@@ -474,47 +478,9 @@ public class WDUtils {
 	}
 
 	public static WebElement waitForElement(SearchContext context, By by,
-			double timeout, TestCallback cb, boolean required) {
-		timeout = maybeOverrideTimeout(timeout);
-		int j = 0;
-		long start = System.currentTimeMillis();
-		Exception lastException = null;
-		while (System.currentTimeMillis() - start < timeout * 1000
-				|| timeout == 0.0) {
-			if (forceTimeout) {
-				throw new TimedOutException("forced timeout");
-			}
-			try {
-				WebElement element = context.findElement(by);
-				if (element != null) {
-					if (cb == null || cb.ok(element)) {
-						return element;
-					}
-				}
-			} catch (Exception e) {
-				lastException = e;
-				if (e instanceof InvalidSelectorException) {
-					throw e;
-				}
-			}
-			if (timeout == 0.0) {
-				break;
-			}
-			try {
-				Thread.sleep(100);
-			} catch (InterruptedException e) {
-			}
-		}
-		if (required) {
-			if (!LooseContext.is(CONTEXT_DONT_LOG_EXCEPTION)) {
-				throwAfterTimeout(logException(context, by));
-				return null;
-			} else {
-				throw logException(context, by);
-			}
-		} else {
-			return null;
-		}
+			double timeout, TestCallback callback, boolean required) {
+		return Ax.first(
+				waitForElements(context, by, timeout, callback, required));
 	}
 
 	public static WebElement waitForElement(SearchContext context, By by,
@@ -544,6 +510,12 @@ public class WDUtils {
 	}
 
 	public static List<WebElement> waitForElements(SearchContext context, By by,
+			double timeout, TestCallback callback, boolean required) {
+		return query().withBy(by).withCallback(callback).withContext(context)
+				.withRequired(required).withTimeout(timeout).getElements();
+	}
+
+	public static List<WebElement> waitForElements(SearchContext context, By by,
 			int timeout) {
 		return waitForElements(context, by, timeout, true);
 	}
@@ -553,10 +525,6 @@ public class WDUtils {
 		int j = 0;
 		timeout = maybeOverrideTimeout(timeout);
 		long start = System.currentTimeMillis();
-		try {
-			Thread.sleep(50);
-		} catch (InterruptedException e) {
-		}
 		;// always ...just in case there are stale elements arround
 		while (System.currentTimeMillis() - start < timeout * 1000) {
 			if (forceTimeout) {
@@ -663,6 +631,90 @@ public class WDUtils {
 		boolean tryAgain = false;
 		if (!tryAgain) {
 			throw e;
+		}
+	}
+
+	public static class ElementQuery {
+		private SearchContext context;
+
+		private By by;
+
+		private double timeout;
+
+		private TestCallback callback;
+
+		private boolean required;
+
+		public WebElement getElement() {
+			return Ax.first(getElements());
+		}
+
+		public List<WebElement> getElements() {
+			timeout = maybeOverrideTimeout(timeout);
+			int j = 0;
+			long start = System.currentTimeMillis();
+			Exception lastException = null;
+			while (System.currentTimeMillis() - start < timeout * 1000
+					|| timeout == 0.0) {
+				if (forceTimeout) {
+					throw new TimedOutException("forced timeout");
+				}
+				try {
+					List<WebElement> elements = context.findElements(by);
+					if (!CommonUtils.isNullOrEmpty(elements)) {
+						if (callback == null || callback.ok(elements.get(0))) {
+							return elements;
+						}
+					}
+				} catch (Exception e) {
+					lastException = e;
+					if (e instanceof InvalidSelectorException) {
+						throw e;
+					}
+				}
+				if (timeout == 0.0) {
+					break;
+				}
+				try {
+					Thread.sleep(100);
+				} catch (InterruptedException e) {
+				}
+			}
+			if (required) {
+				if (!LooseContext.is(CONTEXT_DONT_LOG_EXCEPTION)) {
+					throwAfterTimeout(logException(context, by));
+					return null;
+				} else {
+					throw logException(context, by);
+				}
+			} else {
+				return null;
+			}
+		}
+
+		public ElementQuery withBy(By by) {
+			this.by = by;
+			return this;
+		}
+
+		public ElementQuery withCallback(TestCallback callback) {
+			this.callback = callback;
+			return this;
+		}
+
+		public ElementQuery withContext(SearchContext context) {
+			this.context = context;
+			return this;
+		}
+
+		public ElementQuery withRequired(boolean required) {
+			this.required = required;
+			return this;
+		}
+
+		public ElementQuery withTimeout(double timeout) {
+			this.timeout = timeout;
+			return this;
 		}
 	}
 
