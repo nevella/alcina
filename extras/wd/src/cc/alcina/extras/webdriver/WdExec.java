@@ -45,6 +45,10 @@ public class WdExec {
 
 	private TestCallback testCallback;
 
+	public void assertElementExists(WebElement webElement) {
+		assert(webElement != null);
+	}
+	
 	public void clear() {
 		getElement().clear();
 	}
