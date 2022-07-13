@@ -49,7 +49,7 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
  * <p>
  * To show the feature in the current browser/cookie-store:
  * </p>
- * <code>https://myserver:port/set-client-property/com.foo.Feature/showFeature/true
+ * <code>https://myserver:port/set-client-property/Feature/showFeature/true
  * </code>
  *
  * <p>
