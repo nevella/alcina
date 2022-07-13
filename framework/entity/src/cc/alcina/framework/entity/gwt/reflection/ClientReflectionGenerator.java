@@ -84,6 +84,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
  * -- can probably do caching *better* - at the moment any change to files should cause initial full recalc
  * - document the evils of generics (in serializable types) when pruning reachability
  * - document why this (alignment of reflection with async modules) is needed
+ * - note reachability wrinkles caused by exclusion of equal priority classes from registration (see listImplementationRegistrations)
  *
  */
 public class ClientReflectionGenerator extends IncrementalGenerator {
@@ -1111,7 +1112,12 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 		/*
 		 * Not all registrations! Only those for which Registry.impl() or
-		 * Registry.Query.forEnum() could return the registration
+		 * Registry.Query.forEnum() could return the registration.
+		 *
+		 * Note that where multiple classes have equal priority in the registry,
+		 * registration data for those classes will *not* be added to the
+		 * registry unless the class impelements Registration.EnumDiscriminator
+		 * or Registration.Ensure
 		 */
 		public AppImplRegistrations listImplementationRegistrations() {
 			AppImplRegistrations implRegistrations = new AppImplRegistrations();

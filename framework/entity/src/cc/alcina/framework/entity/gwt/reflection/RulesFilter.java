@@ -73,6 +73,20 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 		populateRulesList();
 	}
 
+	/**
+	 * Annotations which are themselves on annotations, so not included in the
+	 * current reachability algorithm
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Condition(classes = {
+			cc.alcina.framework.common.client.logic.reflection.Registration.MergeStrategy.class,
+			cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy.class,
+			cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf.MergeStrategy.class, })
+	public static class IncludedAlcinaMergeStrategies implements RuleSet {
+	}
+
 	class RuleFilter {
 		private Rule rule;
 
