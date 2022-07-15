@@ -693,7 +693,9 @@ public class DirectedLayout {
 				ComplexPanel container = verifyContainer();
 				for (Widget oldChild : oldChildWidgets) {
 					if (insertAfterChildWidget.isPresent()
-							&& insertAfterChildWidget.get() == oldChild) {
+							&& insertAfterChildWidget.get() == oldChild
+							// FIXME - ui2 1.1 (remove null check)
+							&& container != null) {
 						int oldChildIndex = container.getWidgetIndex(oldChild);
 						if (oldChildIndex > 0) {
 							insertAfterChildWidget = Optional
