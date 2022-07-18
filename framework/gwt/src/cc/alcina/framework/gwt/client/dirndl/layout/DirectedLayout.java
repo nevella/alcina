@@ -26,6 +26,7 @@ import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.InsertPanel;
 import com.google.gwt.user.client.ui.Panel;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -691,11 +692,14 @@ public class DirectedLayout {
 				// probably needs a larger structure to optimise anyway. A
 				// class...?
 				ComplexPanel container = verifyContainer();
+				// FIXME - ui2 1.1 (remove null check? better representation of
+				// insertion context?)
+				if (container == null) {
+					container = RootPanel.get();
+				}
 				for (Widget oldChild : oldChildWidgets) {
 					if (insertAfterChildWidget.isPresent()
-							&& insertAfterChildWidget.get() == oldChild
-							// FIXME - ui2 1.1 (remove null check)
-							&& container != null) {
+							&& insertAfterChildWidget.get() == oldChild) {
 						int oldChildIndex = container.getWidgetIndex(oldChild);
 						if (oldChildIndex > 0) {
 							insertAfterChildWidget = Optional

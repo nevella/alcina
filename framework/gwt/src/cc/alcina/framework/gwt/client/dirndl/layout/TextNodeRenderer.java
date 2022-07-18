@@ -79,6 +79,37 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
+	@Directed(bindings = @Binding(from = "string", type = Type.INNER_HTML))
+	public static class HtmlTagModel extends Model {
+		private String string;
+
+		private String tag;
+
+		public HtmlTagModel() {
+		}
+
+		public HtmlTagModel(String string, String tag) {
+			this.string = string;
+		}
+
+		@Directed
+		public String getString() {
+			return this.string;
+		}
+
+		public String getTag() {
+			return this.tag;
+		}
+
+		public void setString(String string) {
+			this.string = string;
+		}
+
+		public void setTag(String tag) {
+			this.tag = tag;
+		}
+	}
+
 	@Registration({ DirectedNodeRenderer.class, Number.class })
 	public static class NumberNodeRenderer extends TextNodeRenderer {
 	}
@@ -127,6 +158,37 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 	@Registration({ DirectedNodeRenderer.class, String.class })
 	public static class StringNodeRenderer extends TextNodeRenderer {
+	}
+
+	@Directed(bindings = @Binding(from = "string", type = Type.INNER_TEXT))
+	public static class StringTagModel extends Model {
+		private String string;
+
+		private String tag;
+
+		public StringTagModel() {
+		}
+
+		public StringTagModel(String string, String tag) {
+			this.string = string;
+		}
+
+		@Directed
+		public String getString() {
+			return this.string;
+		}
+
+		public String getTag() {
+			return this.tag;
+		}
+
+		public void setString(String string) {
+			this.string = string;
+		}
+
+		public void setTag(String tag) {
+			this.tag = tag;
+		}
 	}
 
 	public static class TableHeaders extends TextNodeRenderer.StringListModel {

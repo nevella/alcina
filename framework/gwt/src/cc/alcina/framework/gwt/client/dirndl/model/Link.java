@@ -24,6 +24,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -33,12 +35,16 @@ import cc.alcina.framework.gwt.client.dirndl.model.Link.LinkRendererPrimaryClass
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.place.BasePlace;
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 // FIXME - dirndl.2 - baseplace should implement a  'link provider' interface
 // and various subtypes should be subclasses...
 /**
  * Also, this class was a very early Dirndl member - can possibly be simplified
  * to 'ideal dirndl' (no transformer, just bindings and resolvers)
+ *
+ * In fact, that's underway - see Link.Wrapped (which will probably just become
+ * Link)
  */
 @LinkRendererPrimaryClassName("-ol-primary")
 public class Link extends Model {
@@ -61,6 +67,8 @@ public class Link extends Model {
 	private boolean newTab;
 
 	private String title;
+
+	private Runnable runnable;
 
 	public Link() {
 	}
@@ -88,6 +96,10 @@ public class Link extends Model {
 
 	public BasePlace getPlace() {
 		return this.place;
+	}
+
+	public Runnable getRunnable() {
+		return this.runnable;
 	}
 
 	public String getText() {
@@ -138,6 +150,10 @@ public class Link extends Model {
 		this.primaryAction = primaryAction;
 	}
 
+	public void setRunnable(Runnable runnable) {
+		this.runnable = runnable;
+	}
+
 	public void setText(String text) {
 		this.text = text;
 	}
@@ -182,6 +198,11 @@ public class Link extends Model {
 
 	public Link withPrimaryAction(boolean primaryAction) {
 		this.primaryAction = primaryAction;
+		return this;
+	}
+
+	public Link withRunnable(Runnable runnable) {
+		this.runnable = runnable;
 		return this;
 	}
 
@@ -240,6 +261,11 @@ public class Link extends Model {
 						Context context = NodeEvent.Context
 								.newTopicContext(event, node);
 						TopicEvent.fire(context, model.getTopicClass(), null);
+					}, ClickEvent.getType());
+				}
+				if (model.getRunnable() != null) {
+					rendered.addDomHandler(event -> {
+						model.getRunnable().run();
 					}, ClickEvent.getType());
 				}
 			} else {
@@ -319,24 +345,36 @@ public class Link extends Model {
 		String value();
 	}
 
-	@Directed(tag = "a", bindings = {
+	@Directed(tag = "a", receives = DomEvents.Click.class, emits = DomEvents.Click.class, bindings = {
 			@Binding(from = "href", type = Type.PROPERTY),
+			@Binding(from = "className", to = "class", type = Type.PROPERTY),
+			@Binding(from = "innerHtml", type = Type.INNER_HTML),
+			@Binding(from = "text", type = Type.INNER_TEXT),
 			@Binding(from = "target", type = Type.PROPERTY) })
-	public static class Wrapper extends Model {
-		private String href;
+	// TODO - check conflicting properties pre-render (e.g. inner, innterHtml)
+	// also document why this is a "non-standard" dirndl component (and merge
+	// with link)
+	public static class Wrapper extends Model
+			implements DomEvents.Click.Handler {
+		private String href = "#";
 
 		private String target;
 
 		private Model inner;
 
-		public Wrapper(String href, Model inner) {
-			this(href, inner, null);
+		private String innerHtml;
+
+		private String className;
+
+		private String text;
+
+		private transient Runnable runnable;
+
+		public Wrapper() {
 		}
 
-		public Wrapper(String href, Model inner, String target) {
-			this.href = href;
-			this.inner = inner;
-			this.target = target;
+		public String getClassName() {
+			return this.className;
 		}
 
 		public String getHref() {
@@ -348,8 +386,95 @@ public class Link extends Model {
 			return this.inner;
 		}
 
+		public String getInnerHtml() {
+			return this.innerHtml;
+		}
+
+		public Runnable getRunnable() {
+			return this.runnable;
+		}
+
 		public String getTarget() {
 			return this.target;
+		}
+
+		public String getText() {
+			return this.text;
+		}
+
+		@Override
+		public void onClick(Click event) {
+			if (runnable != null) {
+				runnable.run();
+				WidgetUtils.squelchCurrentEvent();
+			} else {
+				// propagate href
+				event.getContext().markCauseTopicAsNotHandled();
+			}
+		}
+
+		public void setClassName(String className) {
+			this.className = className;
+		}
+
+		public void setHref(String href) {
+			this.href = href;
+		}
+
+		public void setInner(Model inner) {
+			this.inner = inner;
+		}
+
+		public void setInnerHtml(String innerHtml) {
+			this.innerHtml = innerHtml;
+		}
+
+		public void setTarget(String target) {
+			this.target = target;
+		}
+
+		public void setText(String text) {
+			this.text = text;
+		}
+
+		public Wrapper withClassName(String className) {
+			this.className = className;
+			return this;
+		}
+
+		public Wrapper withHref(String href) {
+			this.href = href;
+			return this;
+		}
+
+		public Wrapper withInner(Model inner) {
+			this.inner = inner;
+			return this;
+		}
+
+		public Wrapper withInnerHtml(String innerHtml) {
+			this.innerHtml = innerHtml;
+			return this;
+		}
+
+		public Wrapper withPlace(BasePlace place) {
+			this.href = place.toHrefString();
+			return this;
+		}
+
+		public Wrapper withRunnable(Runnable runnable) {
+			this.runnable = runnable;
+			return this;
+		}
+
+		public Wrapper withTarget(String target) {
+			this.target = target;
+			return this;
+		}
+
+		public Wrapper withText(String text) {
+			this.text = text;
+			return this;
 		}
 	}
 }

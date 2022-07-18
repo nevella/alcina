@@ -6,6 +6,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.model.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
 
 public class LeafNodeRenderer extends DirectedNodeRenderer {
@@ -19,6 +20,9 @@ public class LeafNodeRenderer extends DirectedNodeRenderer {
 	}
 
 	protected String getTag(Node node) {
+		if (node.model instanceof HasTag) {
+			return ((HasTag) node.model).provideTag();
+		}
 		return node.directed.tag();
 	}
 
@@ -27,6 +31,9 @@ public class LeafNodeRenderer extends DirectedNodeRenderer {
 		if (node.parent != null && node.parent.has(PropertyNameTags.class)
 				&& node.property.getName() != null) {
 			return CommonUtils.deInfixCss(node.property.getName());
+		}
+		if (node.model instanceof HasTag) {
+			return ((HasTag) node.model).provideTag();
 		}
 		return Ax.blankTo(node.directed.tag(), defaultValue);
 	}
