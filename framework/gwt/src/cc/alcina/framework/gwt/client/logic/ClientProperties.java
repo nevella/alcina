@@ -107,6 +107,14 @@ public class ClientProperties {
 	}
 
 	/**
+	 * Register properties from cookie.
+	 * @param cookie ClientProperties cookie value from request
+	 */
+	public static void registerCookieProperties(String cookie) {
+		get().registerCookieProperties0(cookie);
+	}
+
+	/**
 	 * Fetch singleton instance
 	 * @return Singleton instance
 	 */
@@ -147,7 +155,18 @@ public class ClientProperties {
 	 */
 	public static String setOnCookie(Class propertyLocation, String propertyName, String value) {
 		String key = key(propertyLocation, propertyName);
-		return get().setOnCookie(key, value);
+		return setOnCookie(key, value);
+	}
+
+	/**
+	 * <li>Set the value of a property on a cookie.
+	 * <li>Cookie must be set on a response to the client in order to persist the property.
+	 * @param key Property key
+	 * @param value Value to set on the property
+	 * @return New cookie value
+	 */
+	public static String setOnCookie(String key, String value) {
+		return get().setOnCookie0(key, value);
 	}
 
 	/** Properties stored on the cookies */
@@ -159,6 +178,9 @@ public class ClientProperties {
 	/** Properties stored on the server-level properties */
 	private Map<String, String> serverConfigurationMap = new StringMap();
 
+	/**
+	 * Initialise ClientProperties from GWT client stores
+	 */
 	public ClientProperties() {
 		if (GWT.isClient()) {
 			// Get properties stored on the ClientProperties cookie
@@ -185,6 +207,17 @@ public class ClientProperties {
 			String configurationPropertiesSerialized) {
 		serverConfigurationMap = StringMap
 				.fromPropertyString(configurationPropertiesSerialized);
+	}
+
+	/**
+	 * Register properties from cookie.
+	 * @param cookie ClientProperties cookie string from request
+	 */
+	public void registerCookieProperties0(String cookie) {
+		if (Ax.notBlank(cookie)) {
+			String decoded = UrlComponentEncoder.get().decode(cookie);
+			cookieMap = StringMap.fromPropertyString(decoded);
+		}
 	}
 
 	/**
@@ -216,7 +249,7 @@ public class ClientProperties {
 	 * @param value Value to set on the property
 	 * @return New cookie value
 	 */
-	private String setOnCookie(String key, String value) {
+	private String setOnCookie0(String key, String value) {
 		// Add cookie to the current map
 		cookieMap.put(key, value);
 		// Convert the current map back to a cookie value
