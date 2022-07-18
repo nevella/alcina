@@ -55,6 +55,11 @@ public class WdExec {
 		assert (getElement().getText().length() > 0);
 	}
 
+	public void assertContainsText(String text) {
+		String elementText = getElement().getText();
+		assert(elementText.contains(text));
+	}
+
 	public void clear() {
 		getElement().clear();
 	}
