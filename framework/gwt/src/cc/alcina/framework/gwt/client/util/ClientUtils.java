@@ -32,7 +32,9 @@ import com.google.gwt.dom.client.Style;
 import com.google.gwt.dom.client.Style.Display;
 import com.google.gwt.dom.client.Style.Position;
 import com.google.gwt.dom.client.Style.Unit;
+import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.http.client.UrlBuilder;
+import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.Window;
@@ -76,6 +78,8 @@ public class ClientUtils {
 	private static final String HEAD = "head";
 
 	private static final String CSS_TEXT_PROPERTY = "cssText";
+
+	private static HandlerRegistration uiActionInterceptorRegistration;
 
 	public static EditContentViewWidgets createEditContentViewWidgets(
 			final PermissibleActionListener pal, String caption,
@@ -356,6 +360,17 @@ public class ClientUtils {
 		// do nothing if we've moved on
 	}
 
+	public static String removeHostProtocolPort(String href) {
+		if (href.startsWith("http")) {
+			String locationHref = Window.Location.getHref();
+			String origin = locationHref.replaceFirst("^(https?://.+?)(/.+|$)",
+					"$1");
+			return href.replace(origin, "");
+		} else {
+			return href;
+		}
+	}
+
 	public static void runWithDelay(Runnable runnable, int delayMillis) {
 		new Timer() {
 			@Override
@@ -382,6 +397,16 @@ public class ClientUtils {
 			setElementStyle0(eltMulti, css);
 		} else {
 			eltMulti.setAttribute("style", css);
+		}
+	}
+
+	public static void setUiActionsEnabled(boolean enabled) {
+		if (enabled) {
+			uiActionInterceptorRegistration.removeHandler();
+			uiActionInterceptorRegistration = null;
+		} else {
+			uiActionInterceptorRegistration = Event
+					.addNativePreviewHandler(evt -> evt.cancel());
 		}
 	}
 
@@ -578,17 +603,6 @@ public class ClientUtils {
 				GlassDialogBox gdb) {
 			this.wrapper = wrapper;
 			this.gdb = gdb;
-		}
-	}
-
-	public static String removeHostProtocolPort(String href) {
-		if (href.startsWith("http")) {
-			String locationHref = Window.Location.getHref();
-			String origin = locationHref.replaceFirst("^(https?://.+?)(/.+|$)",
-					"$1");
-			return href.replace(origin, "");
-		} else {
-			return href;
 		}
 	}
 }
