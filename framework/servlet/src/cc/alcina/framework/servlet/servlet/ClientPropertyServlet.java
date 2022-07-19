@@ -48,15 +48,25 @@ public class ClientPropertyServlet extends HttpServlet {
 		String[] parts = request.getPathInfo().substring(1).split("/");
 		String cookieName = ClientProperties.class.getName();
 		String existing = CookieUtils.getCookieValueByName(request, cookieName);
-		ClientProperties.registerCookieProperties(existing);
+		StringMap map = new StringMap();
+		try {
+			if (Ax.notBlank(existing)) {
+				map = StringMap.fromPropertyString(
+						UrlComponentEncoder.get().decode(existing));
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		String key = Ax.format("%s.%s", parts[0], parts[1]);
-		String newCookie = ClientProperties.setOnCookie(key, parts[2]);
-		Cookie cookie = new Cookie(cookieName, newCookie);
+		map.put(key, parts[2]);
+		Cookie cookie = new Cookie(cookieName,
+				UrlComponentEncoder.get().encode(map.toPropertyString()));
 		cookie.setPath("/");
 		cookie.setMaxAge(86400 * 365 * 10);
 		cookie.setSecure(ResourceUtilities.is(HttpContext.class, "secure"));
 		CookieUtils.addToRequestAndResponse(request, response, cookie);
-		String message = Ax.format("Added %s => %s", key, parts[2]);
+		String message = Ax.format("Map :: =>\n%s", map.entrySet().stream()
+				.map(Object::toString).collect(Collectors.joining("\n")));
 		logger.info(message);
 		response.setContentType("text/plain");
 		response.getWriter().write(message);

@@ -107,14 +107,6 @@ public class ClientProperties {
 	}
 
 	/**
-	 * Register properties from cookie.
-	 * @param cookie ClientProperties cookie value from request
-	 */
-	public static void registerCookieProperties(String cookie) {
-		get().registerCookieProperties0(cookie);
-	}
-
-	/**
 	 * Fetch singleton instance
 	 * @return Singleton instance
 	 */
@@ -130,43 +122,6 @@ public class ClientProperties {
 	 */
 	private static String key(Class propertyLocation, String propertyName) {
 		return propertyLocation.getSimpleName() + "." + propertyName;
-	}
-
-	/**
-	 * <li>Set the boolean value of a property on a cookie.
-	 * <li>Cookie must be set on a response to the client in order to persist the property.
-	 * @param propertyLocation Class marker on which the property should be registered
-	 * @param propertyName Property name
-	 * @param value Boolean value to set on the property
-	 * @return New cookie value
-	 */
-	public static String setOnCookie(Class propertyLocation, String propertyName, boolean value) {
-		String boolVal = Boolean.toString(value);
-		return setOnCookie(propertyLocation, propertyName, boolVal);
-	}
-
-	/**
-	 * <li>Set the value of a property on a cookie.
-	 * <li>Cookie must be set on a response to the client in order to persist the property.
-	 * @param propertyLocation Class marker on which the property should be registered
-	 * @param propertyName Property name
-	 * @param value Value to set on the property
-	 * @return New cookie value
-	 */
-	public static String setOnCookie(Class propertyLocation, String propertyName, String value) {
-		String key = key(propertyLocation, propertyName);
-		return setOnCookie(key, value);
-	}
-
-	/**
-	 * <li>Set the value of a property on a cookie.
-	 * <li>Cookie must be set on a response to the client in order to persist the property.
-	 * @param key Property key
-	 * @param value Value to set on the property
-	 * @return New cookie value
-	 */
-	public static String setOnCookie(String key, String value) {
-		return get().setOnCookie0(key, value);
 	}
 
 	/** Properties stored on the cookies */
@@ -210,17 +165,6 @@ public class ClientProperties {
 	}
 
 	/**
-	 * Register properties from cookie.
-	 * @param cookie ClientProperties cookie string from request
-	 */
-	public void registerCookieProperties0(String cookie) {
-		if (Ax.notBlank(cookie)) {
-			String decoded = UrlComponentEncoder.get().decode(cookie);
-			cookieMap = StringMap.fromPropertyString(decoded);
-		}
-	}
-
-	/**
 	 * Fetch the value from property stores. Returns the first found in order of priortiy.
 	 * @param key Property key 
 	 * @return Value stored, null if not present
@@ -240,21 +184,6 @@ public class ClientProperties {
 		}
 		// If nothing else, return null
 		return null;
-	}
-
-	/**
-	 * <li>Set the value of a property on a cookie.
-	 * <li>Cookie must be set on a response to the client in order to persist the property.
-	 * @param key Property key
-	 * @param value Value to set on the property
-	 * @return New cookie value
-	 */
-	private String setOnCookie0(String key, String value) {
-		// Add cookie to the current map
-		cookieMap.put(key, value);
-		// Convert the current map back to a cookie value
-		StringMap map = new StringMap(cookieMap);
-		return UrlComponentEncoder.get().encode(map.toPropertyString());
 	}
 
 	public interface Has {
