@@ -7,7 +7,7 @@
   padding: 0.5rem;
 }
 .dl-tree {
-  &.hide-root > .dl-tree-node {
+  &.root-hidden > .dl-tree-node {
     > label {
       display: none;
     }
@@ -20,7 +20,7 @@
       position: relative;
       display: block;
       margin-bottom: 5px;
-      > span {
+      > span:first-child {
         display: inline-block;
         width: 12px;
         border: solid 1px #ccc;

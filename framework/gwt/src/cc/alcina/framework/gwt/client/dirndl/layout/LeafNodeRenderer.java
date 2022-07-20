@@ -6,7 +6,6 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.model.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
 
 public class LeafNodeRenderer extends DirectedNodeRenderer {

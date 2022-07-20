@@ -80,7 +80,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 	}
 
 	@Directed(bindings = @Binding(from = "string", type = Type.INNER_HTML))
-	public static class HtmlTagModel extends Model {
+	public static class HtmlTagModel extends Model implements HasTag {
 		private String string;
 
 		private String tag;
@@ -90,6 +90,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 		public HtmlTagModel(String string, String tag) {
 			this.string = string;
+			this.tag = tag;
 		}
 
 		@Directed
@@ -99,6 +100,11 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 		public String getTag() {
 			return this.tag;
+		}
+
+		@Override
+		public String provideTag() {
+			return getTag();
 		}
 
 		public void setString(String string) {
@@ -161,7 +167,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 	}
 
 	@Directed(bindings = @Binding(from = "string", type = Type.INNER_TEXT))
-	public static class StringTagModel extends Model {
+	public static class StringTagModel extends Model implements HasTag {
 		private String string;
 
 		private String tag;
@@ -171,15 +177,20 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 		public StringTagModel(String string, String tag) {
 			this.string = string;
+			this.tag = tag;
 		}
 
-		@Directed
 		public String getString() {
 			return this.string;
 		}
 
 		public String getTag() {
 			return this.tag;
+		}
+
+		@Override
+		public String provideTag() {
+			return getTag();
 		}
 
 		public void setString(String string) {

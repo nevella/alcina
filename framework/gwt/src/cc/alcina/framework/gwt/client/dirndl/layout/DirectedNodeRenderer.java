@@ -9,6 +9,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 @Reflected
+// FIXME - dirndl 1.1 - unify getTag
 public abstract class DirectedNodeRenderer {
 	public abstract Widget render(Node node);
 

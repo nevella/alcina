@@ -22,6 +22,14 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
 
 public interface HasEquivalence<T> {
+	public static boolean areEquivalent(HasEquivalence o1, HasEquivalence o2) {
+		if (o1 == null) {
+			return o2 == null;
+		} else {
+			return o1.equivalentTo(o2);
+		}
+	}
+
 	public boolean equivalentTo(T other);
 
 	public abstract static class HasEquivalenceAdapter<T, E extends HasEquivalenceAdapter>
