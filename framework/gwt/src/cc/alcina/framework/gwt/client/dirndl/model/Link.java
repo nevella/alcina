@@ -7,9 +7,11 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
@@ -17,6 +19,7 @@ import cc.alcina.framework.common.client.actions.instances.NonstandardObjectActi
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.provider.TextProvider;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
@@ -29,6 +32,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Link.LinkRendererPrimaryClassName;
@@ -345,7 +349,7 @@ public class Link extends Model {
 		String value();
 	}
 
-	@Directed(tag = "a", receives = DomEvents.Click.class, emits = DomEvents.Click.class, bindings = {
+	@Directed(receives = DomEvents.Click.class, emits = DomEvents.Click.class, bindings = {
 			@Binding(from = "href", type = Type.PROPERTY),
 			@Binding(from = "className", to = "class", type = Type.PROPERTY),
 			@Binding(from = "innerHtml", type = Type.INNER_HTML),
@@ -355,12 +359,12 @@ public class Link extends Model {
 	// also document why this is a "non-standard" dirndl component (and merge
 	// with link)
 	public static class Wrapper extends Model
-			implements DomEvents.Click.Handler {
+			implements DomEvents.Click.Handler, HasTag {
 		private String href = "#";
 
 		private String target;
 
-		private Model inner;
+		private Object inner;
 
 		private String innerHtml;
 
@@ -369,6 +373,10 @@ public class Link extends Model {
 		private String text;
 
 		private transient Runnable runnable;
+
+		private BasePlace place;
+
+		private String tag = "a";
 
 		public Wrapper() {
 		}
@@ -382,12 +390,17 @@ public class Link extends Model {
 		}
 
 		@Directed
-		public Model getInner() {
+		public Object getInner() {
 			return this.inner;
 		}
 
 		public String getInnerHtml() {
 			return this.innerHtml;
+		}
+
+		// only rendered via href, but useful for equivalence testing
+		public BasePlace getPlace() {
+			return this.place;
 		}
 
 		public Runnable getRunnable() {
@@ -409,8 +422,15 @@ public class Link extends Model {
 				WidgetUtils.squelchCurrentEvent();
 			} else {
 				// propagate href
-				event.getContext().markCauseTopicAsNotHandled();
+				if (!Objects.equals(tag, "a") && Ax.notBlank(href)) {
+					History.newItem(href);
+				}
 			}
+		}
+
+		@Override
+		public String provideTag() {
+			return tag;
 		}
 
 		public void setClassName(String className) {
@@ -427,6 +447,10 @@ public class Link extends Model {
 
 		public void setInnerHtml(String innerHtml) {
 			this.innerHtml = innerHtml;
+		}
+
+		public void setPlace(BasePlace place) {
+			this.place = place;
 		}
 
 		public void setTarget(String target) {
@@ -447,7 +471,7 @@ public class Link extends Model {
 			return this;
 		}
 
-		public Wrapper withInner(Model inner) {
+		public Wrapper withInner(Object inner) {
 			this.inner = inner;
 			return this;
 		}
@@ -458,12 +482,18 @@ public class Link extends Model {
 		}
 
 		public Wrapper withPlace(BasePlace place) {
+			this.place = place;
 			this.href = place.toHrefString();
 			return this;
 		}
 
 		public Wrapper withRunnable(Runnable runnable) {
 			this.runnable = runnable;
+			return this;
+		}
+
+		public Wrapper withTag(String tag) {
+			this.tag = tag;
 			return this;
 		}
 
