@@ -588,8 +588,8 @@ public class DirectedLayout {
 			}
 		}
 
-		Node addChild(Object childModel, Property definingReflector,
-				Property changeSource) {
+		protected Node createChild(Object childModel,
+				Property definingReflector, Property changeSource) {
 			Node child = new Node(
 					childResolver != null ? childResolver : resolver,
 					childModel);
@@ -597,8 +597,15 @@ public class DirectedLayout {
 			child.changeSource = changeSource;
 			child.resolver = resolver;
 			child.parent = this;
-			child.index = children.size();
 			addListeners(child);
+			return child;
+		}
+
+		Node addChild(Object childModel, Property definingReflector,
+				Property changeSource) {
+			Node child = createChild(childModel, definingReflector,
+					changeSource);
+			child.index = children.size();
 			children.add(child);
 			return child;
 		}
@@ -727,8 +734,9 @@ public class DirectedLayout {
 				if (renderer instanceof RendersToParentContainer) {
 					if (parent == null) {
 						// swapping top, delegating @Directed
-						return (ComplexPanel) rendered.widgets.get(0)
-								.getParent();
+						ComplexPanel viaWidget = (ComplexPanel) rendered.widgets
+								.get(0).getParent();
+						return viaWidget == null ? RootPanel.get() : viaWidget;
 					} else {
 						return parent.rendered.verifyContainer();
 					}
@@ -786,19 +794,23 @@ public class DirectedLayout {
 				}
 				logger.info("removed listener :: {} :: {}  :: {}",
 						child.pathSegment(), child.hashCode(), this.hashCode());
-				Node newChild = addChild(
+				Node newChild = createChild(
 						child.property == null ? evt.getNewValue()
 								: child.property.get(getModel()),
 						child.property, child.changeSource);
 				newChild.render();
-				List<Widget> oldChildWidgets = this.child.rendered.widgets;
-				Optional<Widget> insertBeforeChildWidget = this.child.rendered
+				Node oldChild = this.child;
+				List<Widget> oldChildWidgets = oldChild.rendered.widgets;
+				Optional<Widget> insertBeforeChildWidget = oldChild.rendered
 						.lastWidgetOrPredecessorLastWidget();
 				List<Widget> newChildWidgets = newChild.rendered.widgets;
 				rendered.swapChildWidgets(insertBeforeChildWidget,
 						oldChildWidgets, newChildWidgets);
-				newChild.index = child.index;
-				removeChild(this.child);
+				newChild.index = oldChild.index;
+				removeChild(oldChild);
+				// FIXME - dirndl1.1 - delegating/delegating tuples don't
+				// correctly clear widgets (since the swap algorithm doesn't
+				// descend)
 				children.add(newChild.index, newChild);
 				this.child = newChild;
 				// unbind();
