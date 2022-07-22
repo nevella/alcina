@@ -399,10 +399,20 @@ function gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePro
   }
 
   var topWin = window.top;
+  try{
+      var test = !topWin.__gwt_SessionID;
+      if(test){
+        //force non-elision
+        var test = window.name;
+      }
+  }catch(e){
+      //top may not be accessible from this window/frame
+      topWin = window.parent
+  }
+
   if (!topWin.__gwt_SessionID) {
     topWin.__gwt_SessionID = generateSessionId();
   }
-
   var plugin = tryConnectingToPlugin(topWin.__gwt_SessionID, topWin.location.href);
   if (plugin == null) {
     loadIframe("http://www.gwtproject.org/missing-plugin/");
