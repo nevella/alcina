@@ -45,6 +45,21 @@ public class WdExec {
 
 	private TestCallback testCallback;
 
+	private WebElement fromElement;
+
+	public void assertExists() {
+		assert (getElement() != null);
+	}
+
+	public void assertHasText() {
+		assert (getElement().getText().length() > 0);
+	}
+
+	public void assertContainsText(String text) {
+		String elementText = getElement().getText();
+		assert(elementText.contains(text));
+	}
+
 	public void clear() {
 		getElement().clear();
 	}
@@ -104,6 +119,15 @@ public class WdExec {
 		}
 	}
 
+	/**
+	 * Change the search context to be from the specified element (or the
+	 * document element if fromElement is null)
+	 */
+	public WdExec from(WebElement fromElement) {
+		this.fromElement = fromElement;
+		return this;
+	}
+
 	public WebDriver getDriver() {
 		return driver;
 	}
@@ -115,13 +139,7 @@ public class WdExec {
 		}
 		int oIndex = index;
 		index = 0;
-		if (oIndex == 0) {
-			return WDUtils.waitForElement(driver, by, timeoutSecs,
-					testCallback);
-		} else {
-			return WDUtils.waitForElements(driver, by, timeoutSecs, true)
-					.get(oIndex);
-		}
+		return getElements().get(oIndex);
 	}
 
 	public List<WebElement> getElements() {
@@ -129,7 +147,9 @@ public class WdExec {
 		if (by == null) {
 			return null;
 		}
-		return WDUtils.waitForElements(driver, by, timeoutSecs, true);
+		return WDUtils.query().withBy(by).withCallback(testCallback)
+				.withContext(fromElement != null ? fromElement : driver)
+				.withRequired(true).withTimeout(timeoutSecs).getElements();
 	}
 
 	public String getOuterHtml() {

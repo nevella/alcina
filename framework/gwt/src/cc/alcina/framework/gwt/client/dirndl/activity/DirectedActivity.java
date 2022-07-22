@@ -29,6 +29,9 @@ public class DirectedActivity<P extends BasePlace> extends Model
 	public static final Topic<DirectedActivity> topicActivityStarted = Topic
 			.create().withThrowExceptions();
 
+	public static final Topic<DirectedActivity> topicActivityStopped = Topic
+			.create().withThrowExceptions();
+
 	public static Activity forPlace(Place place) {
 		if (!(place instanceof BasePlace)) {
 			return null;
@@ -102,7 +105,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 
 	@Override
 	public void onStop() {
-		// could publish for cleanup, but don't see any use case
+		topicActivityStopped.publish(this);
 	}
 
 	@Override

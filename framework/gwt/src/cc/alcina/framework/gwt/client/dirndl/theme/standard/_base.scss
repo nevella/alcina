@@ -15,7 +15,7 @@
 }
 
 $a-tags: 'a, a:active, a:hover, a:visited';
-$a-tags-hover: 'a:active, a:hover';
+$a-tags-hover: 'a, a:active, a:hover, a:visited, a:hover';
 
 body {
   margin: 0;

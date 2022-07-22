@@ -113,7 +113,7 @@ public class SelectionTraversal implements ProcessContextProvider {
 			}
 		}
 		// unsupported?
-		return "[Unkknown position]";
+		return "[Unknown position]";
 	}
 
 	public Executor getExecutor() {

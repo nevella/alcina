@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -38,11 +37,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 	@Override
 	protected String getTag(Node node) {
-		if (node.parent != null && node.parent.has(FieldNamesAsTags.class)
-				&& node.property.getName() != null) {
-			return CommonUtils.deInfixCss(node.property.getName());
-		}
-		return Ax.blankTo(super.getTag(node), "span");
+		return getTagPossiblyFromFieldName(node, "span");
 	}
 
 	protected String getText(Node node) {
@@ -81,6 +76,43 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 			} else {
 				return super.getModelText(model);
 			}
+		}
+	}
+
+	@Directed(bindings = @Binding(from = "string", type = Type.INNER_HTML))
+	public static class HtmlTagModel extends Model implements HasTag {
+		private String string;
+
+		private String tag;
+
+		public HtmlTagModel() {
+		}
+
+		public HtmlTagModel(String string, String tag) {
+			this.string = string;
+			this.tag = tag;
+		}
+
+		@Directed
+		public String getString() {
+			return this.string;
+		}
+
+		public String getTag() {
+			return this.tag;
+		}
+
+		@Override
+		public String provideTag() {
+			return getTag();
+		}
+
+		public void setString(String string) {
+			this.string = string;
+		}
+
+		public void setTag(String tag) {
+			this.tag = tag;
 		}
 	}
 
@@ -132,6 +164,42 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 
 	@Registration({ DirectedNodeRenderer.class, String.class })
 	public static class StringNodeRenderer extends TextNodeRenderer {
+	}
+
+	@Directed(bindings = @Binding(from = "string", type = Type.INNER_TEXT))
+	public static class StringTagModel extends Model implements HasTag {
+		private String string;
+
+		private String tag;
+
+		public StringTagModel() {
+		}
+
+		public StringTagModel(String string, String tag) {
+			this.string = string;
+			this.tag = tag;
+		}
+
+		public String getString() {
+			return this.string;
+		}
+
+		public String getTag() {
+			return this.tag;
+		}
+
+		@Override
+		public String provideTag() {
+			return getTag();
+		}
+
+		public void setString(String string) {
+			this.string = string;
+		}
+
+		public void setTag(String tag) {
+			this.tag = tag;
+		}
 	}
 
 	public static class TableHeaders extends TextNodeRenderer.StringListModel {

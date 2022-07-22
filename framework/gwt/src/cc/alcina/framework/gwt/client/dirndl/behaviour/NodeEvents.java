@@ -119,6 +119,22 @@ public class NodeEvents {
 		}
 	}
 
+	public static class Download extends TopicEvent<Object, Download.Handler> {
+		@Override
+		public void dispatch(Download.Handler handler) {
+			handler.onDownload(this);
+		}
+
+		@Override
+		public Class<Download.Handler> getHandlerClass() {
+			return Download.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onDownload(Download event);
+		}
+	}
+
 	public static class Filter extends TopicEvent<Object, Filter.Handler> {
 		@Override
 		public void dispatch(Filter.Handler handler) {
@@ -132,6 +148,22 @@ public class NodeEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onFilter(Filter event);
+		}
+	}
+
+	public static class Find extends TopicEvent<Object, Find.Handler> {
+		@Override
+		public void dispatch(Find.Handler handler) {
+			handler.onFind(this);
+		}
+
+		@Override
+		public Class<Find.Handler> getHandlerClass() {
+			return Find.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFind(Find event);
 		}
 	}
 

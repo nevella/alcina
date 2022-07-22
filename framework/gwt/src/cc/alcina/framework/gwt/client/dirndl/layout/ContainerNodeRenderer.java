@@ -8,10 +8,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public class ContainerNodeRenderer extends DirectedNodeRenderer {
-	protected String getTag(Node node) {
-		return node.directed.tag();
-	}
-
 	@Override
 	public Widget render(Node node) {
 		String tag = getTag(node);
@@ -21,5 +17,15 @@ public class ContainerNodeRenderer extends DirectedNodeRenderer {
 			child.render().widgets.forEach(panel::add);
 		}
 		return panel;
+	}
+
+	protected String getTag(Node node) {
+		if (node.model instanceof HasTag) {
+			String tag = ((HasTag) node.model).provideTag();
+			if (Ax.notBlank(tag)) {
+				return tag;
+			}
+		}
+		return node.directed.tag();
 	}
 }

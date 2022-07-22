@@ -19,7 +19,7 @@ public class HtmlNodeRenderer extends LeafNodeRenderer {
 
 	@Override
 	protected String getTag(Node node) {
-		return Ax.blankTo(super.getTag(node), "div");
+		return getTagPossiblyFromFieldName(node, "div");
 	}
 
 	protected String getText(Node node) {

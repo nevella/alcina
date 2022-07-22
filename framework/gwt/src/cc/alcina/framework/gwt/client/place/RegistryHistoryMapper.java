@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
@@ -118,6 +117,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 				.forEach(l -> l.removeIf(tokenizer -> matcher.test(tokenizer)));
 	}
 
+	private String cleanGwtCodesvr(String token) {
+		return token.replaceFirst("[?&]gwt.codesvr=127.0.0.1:\\d+$", "");
+	}
+
 	private synchronized void ensurePlaceLookup() {
 		if (initialised) {
 			return;
@@ -153,15 +156,13 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	 * On startup, apps should catch the UnparseablePlaceException and sub null.
 	 * But generally it's better to force the app to explicitly handle
 	 * unparseable places than just 'null'
-	 * 
+	 *
 	 * FIXME - 2023 - throw checked exception (this is one place where they
 	 * actually make total sense since there's generally a clear recovery path)
 	 */
 	protected synchronized Place getPlace(String o_token, boolean copy) {
-		String token = removeAppPrefixAndLeadingSlashes(o_token);
-		if (!copy) {
-			// System.out.println("get place:" + token);
-		}
+		String token = cleanGwtCodesvr(
+				removeAppPrefixAndLeadingSlashes(o_token));
 		String[] split = token.split("/");
 		String top = split[0];
 		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix
