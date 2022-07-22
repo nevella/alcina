@@ -683,12 +683,12 @@ public class WDUtils {
 			if (required) {
 				if (!LooseContext.is(CONTEXT_DONT_LOG_EXCEPTION)) {
 					throwAfterTimeout(logException(context, by));
-					return null;
+					return new ArrayList<>();
 				} else {
 					throw logException(context, by);
 				}
 			} else {
-				return null;
+				return new ArrayList<>();
 			}
 		}
 
