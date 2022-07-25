@@ -17,6 +17,7 @@ import java.util.stream.Stream;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -70,6 +71,35 @@ public abstract class DomainQuery<E extends Entity> {
 
 	public DomainQuery<E> filter(Predicate<E> p) {
 		return filter(new DomainFilter(p));
+	}
+
+	public DomainQuery<E> filter(PropertyEnum property, Object value) {
+		return filter(new PropertyEnum[]{ property }, value, FilterOperator.EQ);
+	}
+
+	public DomainQuery<E> filter(PropertyEnum[] properties, Object value) {
+		return filter(properties, value, FilterOperator.EQ);
+	}
+
+	public DomainQuery<E> filter(PropertyEnum property, Object value,
+			FilterOperator operator) {
+		return filter(new PropertyEnum[]{ property }, value, operator);
+	}
+
+	public DomainQuery<E> filter(PropertyEnum[] properties, Object value,
+			FilterOperator operator) {
+		// Generate the key from the properties array
+		StringBuilder key = new StringBuilder();
+		for (int i = 0; i < properties.length; i++) {
+			// For all but the first property, append the dot operator
+			if (i != 0) {
+				key.append(".");
+			}
+			// Append property name
+			key.append(properties[i].name());
+		}
+
+		return filter(new DomainFilter(key.toString(), value, operator));
 	}
 
 	public DomainQuery<E> filter(String key, Object value) {
