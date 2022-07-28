@@ -46,4 +46,8 @@ public interface PersistentImpl {
 		return Registry.query().addKeys(PersistentImpl.class, clazz)
 				.untypedRegistrations().count() > 0;
 	}
+
+	static <A> Class<? extends A> getImplementationOrSelf(Class<A> clazz) {
+		return hasImplementation(clazz) ? getImplementation(clazz) : clazz;
+	}
 }
