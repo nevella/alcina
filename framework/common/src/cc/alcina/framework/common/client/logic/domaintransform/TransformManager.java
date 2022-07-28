@@ -1095,7 +1095,7 @@ public abstract class TransformManager
 				defaultValues.put(propertyName, defaultValue);
 				if (CommonUtils.isOrHasSuperClass(propertyType, Entity.class)) {
 					Class implementation = PersistentImpl
-							.getImplementation(propertyType);
+							.getImplementationOrSelf(propertyType);
 					entityImplementations.put(propertyType,
 							implementation != null
 									&& implementation != void.class
