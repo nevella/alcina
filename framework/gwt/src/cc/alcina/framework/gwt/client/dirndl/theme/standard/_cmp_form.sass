@@ -1,0 +1,178 @@
+@use '../_theme'
+@use '_base'
+
+@mixin subtle-form 
+  input,
+  select,
+  textarea 
+    line-height: 1.4em
+    padding-left: 0.5em
+    padding-top: 4px
+    border: solid 1px #ddd
+    font-size: 15px
+    font-family: theme.$font-stack
+    &:focus 
+      border-color: transparent
+      box-shadow: #5299e3 0 0 3px
+  select 
+    height: 24px
+    padding-top: 2px
+    box-sizing: content-box
+    padding-left: 2px
+  textarea 
+    padding-top: 1px
+
+@mixin over-only 
+  input,
+  select,
+  textarea 
+    &:not(:hover):not(:focus),
+    &[readonly] 
+      background: none
+      border: solid 1px transparent
+      //padding-left: 0.5em
+      -webkit-appearance: none
+      &[type='checkbox'] 
+        background: initial
+        border: initial
+        -webkit-appearance: auto
+        width: initial
+  input,
+  select,
+  textarea 
+    &[type='checkbox'] 
+      width: initial
+  select 
+    &:not(:hover):not(:focus) 
+     // padding-right: 15px
+
+@mixin full-width 
+  input,
+  select,
+  textarea 
+    width: calc(100% - 2px)
+        /*
+        //FIXME - use flex to max the container width
+        max-width: 30em
+        */
+
+ol-editor 
+  padding: 1em 2em
+  line-height: 2.0em
+  padding-bottom: 1px
+  display: block
+  > header 
+    font-weight: 500
+    padding-bottom: 0.2em
+    padding-left: 3px
+  
+  &.bordered 
+    margin: 1em 0
+    border-top: solid 1px #ccc
+    border: none
+    background-color: #f9f9f9
+  &:empty 
+    display: none
+  &.not-first 
+    padding-top: 0
+  &.no-labels 
+    form.ol-form 
+      label 
+        display: none
+  &.single-line 
+    display: inline-block
+    flex: 1
+    min-width: auto
+    width: 100%
+    form 
+      display: flex
+      section 
+        display: inline-block
+        flex: 1
+        .ol-form-field,
+        .ol-select 
+          display: inline-block
+        .ol-form-field 
+          padding-right: 1rem
+      .ol-toolbar 
+        display: inline-block
+        margin: 0
+  &.wide 
+    .ol-form 
+      @include subtle-form
+      input,
+      select,
+      textarea 
+        width: 20em
+      div.ol-select 
+        display: inline-block
+  &.grid 
+    > .ol-form 
+      display: block
+      > section 
+        display: grid
+        grid-template-columns: min-content 1fr
+        > div 
+          display: contents
+          > label 
+            white-space: nowrap
+            padding-right: 2em
+  .ol-toolbar 
+    margin: 1em
+    > ul 
+      display: flex
+      justify-content: center
+      list-style: none
+      margin: 0
+      padding: 0
+      > li 
+        display: inline-block
+        line-height: theme.$list-element-height
+        padding: 0 0.5em
+      &.ol-right 
+        justify-content: flex-end
+  &.over-only .ol-form 
+    @include over-only
+    @include subtle-form
+  &.tight 
+    padding: 0.5rem 1rem
+    .ol-form-field 
+      line-height: 1.3em
+      > label.ol-label 
+        display: inline-block
+        white-space: nowrap
+        width: 100px
+  &.tight180 
+    padding: 0.5rem 1rem
+    .ol-form-field 
+      line-height: 1.3em
+      > label.ol-label 
+        display: inline-block
+        white-space: nowrap
+        width: 180px
+
+/*
+FIXME - 2022 - either move to per-app style of theme - 
+*/
+  &.tight230 
+    padding: 0.25rem 0.5rem
+    .ol-form-field 
+      line-height: 1.3em
+      > label.ol-label 
+        display: inline-block
+        white-space: nowrap
+        width: 230px
+
+/*
+will always have single-line ol-editor, pad label until we work out baseline alignment
+*/
+edit-value 
+  > label  padding-top: 2.0px 
+  &:not(.dirty) .ol-toolbar 
+    visibility: hidden
+  section > div 
+    width: 100%
+  input,
+  textarea 
+    width: 100%
+
