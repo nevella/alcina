@@ -477,7 +477,7 @@ public class PermissionsManager implements DomainTransformListener {
 		return onlineState;
 	}
 
-	public Set<IGroup> getReachableGroups(IUser user) {
+	public static Set<IGroup> getReachableGroups(IUser user) {
 		Set<IGroup> groups = new LinkedHashSet<IGroup>();
 		if (user != null) {
 			if (user.getPrimaryGroup() != null) {
