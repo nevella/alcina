@@ -91,7 +91,8 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 			AppReflectableTypes reflectableTypes,
 			Stream<JClassType> compilationTypes, String emitMessage)
 			throws UnableToCompleteException {
-		ReachabilityData.serializeReachabilityFile(logger, moduleTypes, typesFile);
+		ReachabilityData.serializeReachabilityFile(logger, moduleTypes,
+				typesFile);
 		if (isInitial()) {
 			LegacyModuleAssignments legacyModuleAssignments = getLegacyModuleAssignments(
 					compilationTypes);
@@ -99,7 +100,7 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 			context.commitArtifact(logger, reflectableTypes.serialize());
 			context.commitArtifact(logger, legacyModuleAssignments.serialize());
 		}
-		System.out.println(emitMessage);
+		logger.log(Type.INFO, emitMessage);
 	}
 
 	@Override
@@ -110,9 +111,11 @@ public class ModuleReflectionFilter implements ClientReflectionFilter {
 		types.stream().filter(moduleTypes::doesNotContain)
 				.forEach(unknownList::add);
 		if (unknownList.types.size() > 0) {
-			logger.log(Type.INFO,
-					Ax.format("%s classes with unknown reachability",
-							unknownList.types.size()));
+			if (Objects.equals(moduleName, ReflectionModule.INITIAL)) {
+				logger.log(Type.INFO,
+						Ax.format("%s classes with unknown reachability",
+								unknownList.types.size()));
+			}
 		}
 		moduleTypes.generateLookup();
 	}
