@@ -74,11 +74,12 @@ public abstract class DomainQuery<E extends Entity> {
 	}
 
 	public DomainQuery<E> filter(PropertyEnum property, Object value) {
-	return filter(property, value, FilterOperator.EQ);
+		return filter(property, value, FilterOperator.EQ);
 	}
-	
-	public DomainQuery<E> filter(PropertyEnum properties, Object value, FilterOperator operator) {
-		return filter(new DomainFilter(properties.name(), value, operator));
+
+	public DomainQuery<E> filter(PropertyEnum property, Object value,
+			FilterOperator operator) {
+		return filter(new DomainFilter(property.name(), value, operator));
 	}
 
 	public DomainQuery<E> filter(String key, Object value) {
@@ -90,8 +91,8 @@ public abstract class DomainQuery<E extends Entity> {
 		return filter(new DomainFilter(key, value, operator));
 	}
 
-	public FilterBuilder<E> filterBuilder() {
-		return new FilterBuilder<E>(this);
+	public FilterBuilder filterBuilder() {
+		return new FilterBuilder(this);
 	}
 
 	public DomainQuery<E> filterById(long id) {
@@ -190,10 +191,13 @@ public abstract class DomainQuery<E extends Entity> {
 		public Object queryToken;
 	}
 
+	public static class DomainIdFilter {
+	}
+
 	/**
 	 * Helper class to generate filters from PropertyEnum path segments
 	 */
-	public static class FilterBuilder<E extends Entity> {
+	public class FilterBuilder {
 		FilterOperator operator = FilterOperator.EQ;
 
 		List<PropertyEnum> pathSegments = new ArrayList<>();
@@ -204,7 +208,7 @@ public abstract class DomainQuery<E extends Entity> {
 
 		/**
 		 * Construct a new FilterBuilder from a DomainQuery
-		 * 
+		 *
 		 * @param query
 		 */
 		private FilterBuilder(DomainQuery<E> query) {
@@ -213,32 +217,23 @@ public abstract class DomainQuery<E extends Entity> {
 
 		/**
 		 * Build a DomainFilter from stored parameters and append to DomainQuery
-		 * 
+		 *
 		 * @return Associated DomainQuery
 		 */
 		public DomainQuery<E> build() {
-			// Generate the key from the properties array
-			StringBuilder key = new StringBuilder();
-			for (int i = 0; i < pathSegments.size(); i++) {
-				// For all but the first property, append the dot operator
-				if (i != 0) {
-					key.append(".");
-				}
-				// Append property name
-				key.append(pathSegments.get(i).name());
-			}
+			String path = pathSegments.stream().map(PropertyEnum::name)
+					.collect(Collectors.joining("."));
 			// Return the original query
-			return query
-					.filter(new DomainFilter(key.toString(), value, operator));
+			return query.filter(new DomainFilter(path, value, operator));
 		}
 
 		/**
 		 * Set the operator to add to the built DomainFilter
-		 * 
+		 *
 		 * @param operator
 		 * @return This FilterBuilder
 		 */
-		public FilterBuilder<E> operator(FilterOperator operator) {
+		public FilterBuilder operator(FilterOperator operator) {
 			this.operator = operator;
 			return this;
 		}
@@ -246,28 +241,25 @@ public abstract class DomainQuery<E extends Entity> {
 		/**
 		 * Add the PropertyEnum to the path segments to compile to a property
 		 * path
-		 * 
+		 *
 		 * @param segment
 		 * @return This FilterBuilder
 		 */
-		public FilterBuilder<E> pathSegment(PropertyEnum segment) {
+		public FilterBuilder pathSegment(PropertyEnum segment) {
 			pathSegments.add(segment);
 			return this;
 		}
 
 		/**
 		 * Set the value to add to the built DomainFilter
-		 * 
+		 *
 		 * @param value
 		 * @return This FilterBuilder
 		 */
-		public FilterBuilder<E> value(Object value) {
+		public FilterBuilder value(Object value) {
 			this.value = value;
 			return this;
 		}
-	}
-
-	public static class DomainIdFilter {
 	}
 
 	/*
