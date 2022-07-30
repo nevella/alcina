@@ -71,8 +71,16 @@ public class Registry {
 		return get().query0(type).impl();
 	}
 
+	public static <V> V impl(Class<V> type, Class... keys) {
+		return get().query0(type).addKeys(keys).impl();
+	}
+
 	public static Internals internals() {
 		return get().instanceInternals();
+	}
+
+	public static <V> Optional<V> optional(Class<V> type) {
+		return get().query0(type).optional();
 	}
 
 	public static <V> Optional<V> optional(Class<V> type, Class... keys) {

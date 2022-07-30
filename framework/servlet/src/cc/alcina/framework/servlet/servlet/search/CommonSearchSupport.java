@@ -179,10 +179,7 @@ public class CommonSearchSupport {
 						searchContext.queried, (EntitySearchDefinition) def);
 			} else {
 				searchContext.modelSearchResults = new ModelSearchResults();
-				GroupingHandler groupingHandler = Registry
-						.query(GroupingHandler.class)
-						.addKeys(searchContext.groupingParameters.getClass())
-						.impl();
+				GroupingHandler groupingHandler = Registry.impl(GroupingHandler.class,searchContext.groupingParameters.getClass());
 				searchContext.modelSearchResults.setGroupedResult(
 						groupingHandler.process(searchContext.queried,
 								searchContext.groupingParameters, def));

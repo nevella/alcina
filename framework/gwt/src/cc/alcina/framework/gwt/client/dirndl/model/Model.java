@@ -94,6 +94,22 @@ public abstract class Model extends Bindable {
 	}
 
 	@Directed(receives = GwtEvents.Attach.class)
+	// No mixins
+	public static class WithBindingAndNode extends Model.WithBinding
+			implements GwtEvents.Attach.Handler {
+		protected DirectedLayout.Node node;
+
+		@Override
+		public void onAttach(Attach event) {
+			if (event.isAttached()) {
+				node = event.getContext().node;
+			} else {
+				node = null;
+			}
+		}
+	}
+
+	@Directed(receives = GwtEvents.Attach.class)
 	public static class WithNode extends Model
 			implements GwtEvents.Attach.Handler {
 		protected DirectedLayout.Node node;

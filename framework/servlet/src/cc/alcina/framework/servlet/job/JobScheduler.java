@@ -502,8 +502,7 @@ public class JobScheduler {
 		private static AdHocExecutorServiceProvider AD_HOC_INSTANCE = new AdHocExecutorServiceProvider();
 
 		public static ExecutionConstraints forQueue(AllocationQueue queue) {
-			return Registry.query(ExecutionConstraints.class)
-					.addKeys(queue.job.provideTaskClass()).impl()
+			return Registry.impl(ExecutionConstraints.class,queue.job.provideTaskClass())
 					.withQueue(queue);
 		}
 
@@ -619,8 +618,7 @@ public class JobScheduler {
 
 	public abstract static class ResubmitPolicy<T extends Task> {
 		public static ResubmitPolicy forJob(Job job) {
-			return Registry.query(ResubmitPolicy.class)
-					.addKeys(job.provideTaskClass()).impl();
+			return Registry.impl(ResubmitPolicy.class,job.provideTaskClass());
 		}
 
 		public static ResubmitPolicy retryNTimes(int nTimes) {
@@ -697,7 +695,7 @@ public class JobScheduler {
 	 */
 	public static class Schedule {
 		public static Schedule forTaskClass(Class<? extends Task> clazz) {
-			return Registry.query(Schedule.class).addKeys(clazz).impl();
+			return Registry.impl(Schedule.class,clazz);
 		}
 
 		private LocalDateTime next;

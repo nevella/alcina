@@ -42,19 +42,19 @@ public interface AbstractTypedLocalDomainLocatable<T extends TypedLocalDomainLoc
 		if (GWT.isClient() && this instanceof Entity) {
 			((Entity) this).delete();
 		} else {
-			Registry.query(TypedLocalDomainPersistence.class)
-					.addKeys(getClass()).impl().deleteLocalEquivalent(this);
+			Registry.impl(TypedLocalDomainPersistence.class, getClass())
+					.deleteLocalEquivalent(this);
 		}
 	}
 
 	default T ensureLocalEquivalent() {
-		return (T) Registry.query(TypedLocalDomainPersistence.class)
-				.addKeys(getClass()).impl().ensureLocalEquivalent(this);
+		return (T) Registry.impl(TypedLocalDomainPersistence.class, getClass())
+				.ensureLocalEquivalent(this);
 	}
 
 	default T findLocalEquivalent() {
-		return (T) Registry.query(TypedLocalDomainPersistence.class)
-				.addKeys(getClass()).impl().findLocalEquivalent(this);
+		return (T) Registry.impl(TypedLocalDomainPersistence.class, getClass())
+				.findLocalEquivalent(this);
 	}
 
 	default T localEquivalentOrSelf() {
@@ -70,8 +70,8 @@ public interface AbstractTypedLocalDomainLocatable<T extends TypedLocalDomainLoc
 	default T updateLocalEquivalent() {
 		try {
 			LooseContext.pushWithKey(CONTEXT_HINT_ALLOW_CACHED_FIND, true);
-			Registry.query(TypedLocalDomainPersistence.class)
-					.addKeys(getClass()).impl().adjustUpdateContext();
+			Registry.impl(TypedLocalDomainPersistence.class, getClass())
+					.adjustUpdateContext();
 			T local = findLocalEquivalent();
 			if (local != null && local.equivalentTo(this)) {
 				if (local == this) {
@@ -84,8 +84,8 @@ public interface AbstractTypedLocalDomainLocatable<T extends TypedLocalDomainLoc
 		}
 		try {
 			LooseContext.push();
-			Registry.query(TypedLocalDomainPersistence.class)
-					.addKeys(getClass()).impl().adjustUpdateContext();
+			Registry.impl(TypedLocalDomainPersistence.class, getClass())
+					.adjustUpdateContext();
 			return ensureLocalEquivalent();
 		} finally {
 			LooseContext.pop();

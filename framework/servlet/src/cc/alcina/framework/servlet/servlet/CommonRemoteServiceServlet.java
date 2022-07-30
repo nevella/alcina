@@ -214,9 +214,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			ReflectiveRemoteServicePayload payload = ReflectiveSerializer
 					.deserialize(encodedRpcPayload);
-			ReflectiveRemoteServiceHandler handler = Registry
-					.query(ReflectiveRemoteServiceHandler.class)
-					.addKeys(payload.getAsyncInterfaceClass()).impl();
+			ReflectiveRemoteServiceHandler handler = Registry.impl(
+					ReflectiveRemoteServiceHandler.class,
+					payload.getAsyncInterfaceClass());
 			Class[] methodArgumentTypes = (Class[]) payload
 					.getMethodArgumentTypes().toArray(
 							new Class[payload.getMethodArgumentTypes().size()]);
@@ -576,8 +576,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			LooseContext.set(DomainSearcher.CONTEXT_HINT, request.getHint());
 			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
 					.forName(request.getTargetClassName());
-			return Registry.query(BoundSuggestOracleRequestHandler.class)
-					.addKeys(clazz).impl()
+			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
 					.handleRequest(clazz, request, request.getHint());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -624,8 +623,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		List<ServerValidator> results = new ArrayList<ServerValidator>();
 		for (ServerValidator validator : validators) {
 			ServerValidatorHandler handler = Registry
-					.query(ServerValidatorHandler.class)
-					.addKeys(validator.getClass()).impl();
+					.impl(ServerValidatorHandler.class, validator.getClass());
 			handler.handle(validator);
 			results.add(validator);
 		}
