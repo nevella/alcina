@@ -42,6 +42,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.ComplexFilter;
 import cc.alcina.framework.common.client.domain.ComplexFilter.ComplexFilterContext;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -525,6 +526,7 @@ public class DomainStore implements IDomainStore {
 		if (isDebug()) {
 			token.lastFilterString = filter.toString();
 		}
+		filter = maybeConvertEntityToIdFilter(clazz, filter);
 		IndexedValueProvider<E> valueProvider = getValueProviderFor(clazz,
 				filter.getPropertyPath());
 		if (valueProvider != null) {
@@ -594,6 +596,18 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 		return getLookupFor(clazz, propertyPath);
+	}
+
+	private DomainFilter maybeConvertEntityToIdFilter(Class clazz,
+			DomainFilter filter) {
+		if (!filter.getPropertyPath().contains(".")
+				&& filter.getFilterOperator() == FilterOperator.EQ
+				&& filter.getPropertyValue() instanceof Entity) {
+			return new DomainFilter(filter.getPropertyPath() + ".id",
+					((Entity) filter.getPropertyValue()).getId());
+		} else {
+			return filter;
+		}
 	}
 
 	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
@@ -1240,6 +1254,10 @@ public class DomainStore implements IDomainStore {
 			descriptorMap.values().forEach(DomainStore::appShutdown);
 		}
 
+		public synchronized void deregister(DomainStore store) {
+			descriptorMap.remove(store.domainDescriptor);
+		}
+
 		public synchronized boolean hasInitialisedDatabaseStore() {
 			return writableStore0() != null && writableStore0().initialised;
 		}
@@ -1252,10 +1270,6 @@ public class DomainStore implements IDomainStore {
 
 		public <V extends Entity> DomainStoreQuery<V> query(Class<V> clazz) {
 			return new DomainStoreQuery(clazz, storeFor(clazz));
-		}
-
-		public synchronized void deregister(DomainStore store) {
-			descriptorMap.remove(store.domainDescriptor);
 		}
 
 		public synchronized void register(DomainStore store,
