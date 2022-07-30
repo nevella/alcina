@@ -600,7 +600,8 @@ public class DomainStore implements IDomainStore {
 
 	private DomainFilter maybeConvertEntityToIdFilter(Class clazz,
 			DomainFilter filter) {
-		if (!filter.getPropertyPath().contains(".")
+		if (filter.getPropertyPath() != null
+				&& !filter.getPropertyPath().contains(".")
 				&& filter.getFilterOperator() == FilterOperator.EQ
 				&& filter.getPropertyValue() instanceof Entity) {
 			return new DomainFilter(filter.getPropertyPath() + ".id",
