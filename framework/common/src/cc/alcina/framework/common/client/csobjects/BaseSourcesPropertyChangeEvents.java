@@ -165,4 +165,9 @@ public class BaseSourcesPropertyChangeEvents
 		this.propertyChangeSupport().removePropertyChangeListener(propertyName,
 				listener);
 	}
+
+	// optimisation for non-mutating callers
+	protected boolean hasPropertyChangeSupport() {
+		return propertyChangeSupport != null;
+	}
 }

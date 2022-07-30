@@ -8,7 +8,6 @@ import java.util.NavigableSet;
 import java.util.SortedSet;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 import org.slf4j.Logger;
@@ -89,7 +88,7 @@ public class Transaction implements Comparable<Transaction> {
 		Transaction preSnapshot = current();
 		Preconditions.checkNotNull(preSnapshot);
 		removeThreadLocalTransaction();
-		begin();
+		begin(TransactionPhase.TO_DB_PREPARING, preSnapshot);
 		current().toReadonly(true);
 		T t = callable.call();
 		end();
@@ -228,7 +227,7 @@ public class Transaction implements Comparable<Transaction> {
 	 * Note that this means the same transaction graph is visible to multiple
 	 * threads. Either make the tx read-only or do all writes on the originating
 	 * thread after all worker threads have 'split' from this 'join'.
-	 * 
+	 *
 	 */
 	public static void join(Transaction transaction) {
 		logger.debug("Joining tx - {} {} {}", transaction,
@@ -294,6 +293,11 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	static void begin(TransactionPhase initialPhase) {
+		begin(initialPhase, null);
+	}
+
+	static void begin(TransactionPhase initialPhase,
+			Transaction copyVisibleTransactionsFrom) {
 		if (!Transactions.isInitialised()) {
 			return;
 		}
@@ -309,7 +313,8 @@ public class Transaction implements Comparable<Transaction> {
 		default:
 			throw new UnsupportedOperationException();
 		}
-		Transaction transaction = new Transaction(initialPhase);
+		Transaction transaction = new Transaction(initialPhase,
+				copyVisibleTransactionsFrom);
 		logger.debug("Joining tx - {} {} {}", transaction,
 				Thread.currentThread().getName(),
 				Thread.currentThread().getId());
@@ -376,11 +381,13 @@ public class Transaction implements Comparable<Transaction> {
 
 	private DomainTransformCommitPosition commitPosition;
 
-	public Transaction(TransactionPhase initialPhase) {
+	private Transaction(TransactionPhase initialPhase,
+			Transaction copyVisibleTransactionsFrom) {
 		DomainStore.stores().stream().forEach(store -> storeTransactions
 				.put(store, new StoreTransaction(store)));
 		this.phase = initialPhase;
-		Transactions.get().initialiseTransaction(this);
+		Transactions.get().initialiseTransaction(this,
+				copyVisibleTransactionsFrom);
 		logger.debug("Created tx: {}", this);
 	}
 
@@ -683,7 +690,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	boolean isReadonly() {
-		return threadCount!= 1 || phase == TransactionPhase.READ_ONLY;
+		return threadCount != 1 || phase == TransactionPhase.READ_ONLY;
 	}
 
 	/*

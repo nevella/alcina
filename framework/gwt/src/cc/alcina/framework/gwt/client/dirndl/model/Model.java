@@ -13,6 +13,10 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents.Attach;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 
 /**
  * Thoughts on binding :: particularly in the case of UI bindings, a.b->c.d is
@@ -37,6 +41,9 @@ public abstract class Model extends Bindable {
 	}
 
 	public void unbind() {
+		if (!hasPropertyChangeSupport()) {
+			return;
+		}
 		Arrays.stream(propertyChangeSupport().getPropertyChangeListeners())
 				.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
 				.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)
@@ -49,7 +56,7 @@ public abstract class Model extends Bindable {
 	 * bean properties using Gwittir bindings
 	 */
 	public static class WithBinding extends Model {
-		Binding binding = new Binding();
+		private Binding binding = new Binding();
 
 		public void addBinding(Object leftPropertyName,
 				Converter leftToRightConverter,
@@ -83,6 +90,21 @@ public abstract class Model extends Bindable {
 		public void unbind() {
 			binding.unbind();
 			super.unbind();
+		}
+	}
+
+	@Directed(receives = GwtEvents.Attach.class)
+	public static class WithNode extends Model
+			implements GwtEvents.Attach.Handler {
+		protected DirectedLayout.Node node;
+
+		@Override
+		public void onAttach(Attach event) {
+			if (event.isAttached()) {
+				node = event.getContext().node;
+			} else {
+				node = null;
+			}
 		}
 	}
 }

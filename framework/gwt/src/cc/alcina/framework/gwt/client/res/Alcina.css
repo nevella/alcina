@@ -1996,9 +1996,3 @@ chrome patches
 .alcina-MainMenuRight,div.alcina-MainContent .alcina-ContentLeft,div.toolbar,table.mainTabPanel,div.gwt-TabPanel{
 	position:relative;
 }
-/*
-Cloudflare, you ... people
-*/
-iframe[height='1'] {
-    display: none;
-}

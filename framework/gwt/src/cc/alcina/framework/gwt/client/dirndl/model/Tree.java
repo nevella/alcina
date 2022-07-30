@@ -113,11 +113,19 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 
 		public AbstractPathNode(PN parent, String path) {
+			this(parent, path, true);
+		}
+
+		public AbstractPathNode(PN parent, String path,
+				boolean addToParentChildren) {
 			setParent(parent);
 			if (parent == null) {
 				treePath = TreePath.absolutePath(path);
 			} else {
 				treePath = parent.treePath.ensurePath(path);
+				if (addToParentChildren) {
+					parent.getChildren().add(this);
+				}
 			}
 			treePath.setValue((PN) this);
 		}

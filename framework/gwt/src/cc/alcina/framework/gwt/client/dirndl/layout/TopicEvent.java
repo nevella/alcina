@@ -14,6 +14,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEven
 //FIXME - dirndl 1.2 - can TopicEvent be combined with ModelEvent? Why rendered.preRenderListeners?
 public abstract class TopicEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent.ModelEvent<T, H> {
+	// FIXME - dirndl 1.1 - fire on GWT/Scheduler event pump
 	public static void fire(Context context, Class<? extends TopicEvent> type,
 			Object model) {
 		TopicEvent topicEvent = Reflections.newInstance(type);
