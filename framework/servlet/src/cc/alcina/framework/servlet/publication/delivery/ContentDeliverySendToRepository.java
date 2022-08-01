@@ -22,9 +22,7 @@ public class ContentDeliverySendToRepository implements ContentDelivery {
 				.get(RepositoryDelivery.PUBLICATION_PROPERTY_REPOSITORY_CLASS);
 		Class<? extends RepositoryDelivery> deliveryClass = (Class<? extends RepositoryDelivery>) Class
 				.forName(repositoryMarkerClassName);
-		ContentDeliveryRepositoryHandler repositoryHandler = Registry
-				.query(ContentDeliveryRepositoryHandler.class)
-				.addKeys(deliveryClass).impl();
+		ContentDeliveryRepositoryHandler repositoryHandler = Registry.impl(ContentDeliveryRepositoryHandler.class,deliveryClass);
 		return repositoryHandler.deliver(ctx, convertedContent, deliveryModel,
 				hfc);
 	}

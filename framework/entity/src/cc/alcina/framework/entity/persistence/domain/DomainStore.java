@@ -42,6 +42,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.event.shared.UmbrellaException;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
+import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.domain.ComplexFilter;
 import cc.alcina.framework.common.client.domain.ComplexFilter.ComplexFilterContext;
 import cc.alcina.framework.common.client.domain.Domain;
@@ -525,6 +526,7 @@ public class DomainStore implements IDomainStore {
 		if (isDebug()) {
 			token.lastFilterString = filter.toString();
 		}
+		filter = maybeConvertEntityToIdFilter(clazz, filter);
 		IndexedValueProvider<E> valueProvider = getValueProviderFor(clazz,
 				filter.getPropertyPath());
 		if (valueProvider != null) {
@@ -594,6 +596,19 @@ public class DomainStore implements IDomainStore {
 			}
 		}
 		return getLookupFor(clazz, propertyPath);
+	}
+
+	private DomainFilter maybeConvertEntityToIdFilter(Class clazz,
+			DomainFilter filter) {
+		if (filter.getPropertyPath() != null
+				&& !filter.getPropertyPath().contains(".")
+				&& filter.getFilterOperator() == FilterOperator.EQ
+				&& filter.getPropertyValue() instanceof Entity) {
+			return new DomainFilter(filter.getPropertyPath() + ".id",
+					((Entity) filter.getPropertyValue()).getId());
+		} else {
+			return filter;
+		}
 	}
 
 	private void prepareClassDescriptor(DomainClassDescriptor classDescriptor) {
@@ -940,9 +955,11 @@ public class DomainStore implements IDomainStore {
 				}
 				if (transform
 						.getTransformType() == TransformType.CREATE_OBJECT) {
+					ClientInstance requestInstance = persistenceEvent
+							.getPersistedRequests().iterator().next()
+							.getClientInstance();
 					transformManager.registerClusterLocalObjectPromotion(
-							transform, persistenceEvent.getPersistedRequests()
-									.iterator().next().getClientInstance());
+							transform, requestInstance);
 				}
 				if (transform.getTransformType() != TransformType.DELETE_OBJECT
 						&& last == transform) {
@@ -1236,6 +1253,10 @@ public class DomainStore implements IDomainStore {
 
 		public void appShutdown() {
 			descriptorMap.values().forEach(DomainStore::appShutdown);
+		}
+
+		public synchronized void deregister(DomainStore store) {
+			descriptorMap.remove(store.domainDescriptor);
 		}
 
 		public synchronized boolean hasInitialisedDatabaseStore() {

@@ -21,7 +21,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
  */
-@XmlAccessorType(XmlAccessType.PROPERTY)
+@XmlAccessorType(XmlAccessType.FIELD)
 @Bean
 public class EntityLocator implements Serializable, TreeSerializable {
 	static final transient long serialVersionUID = 1L;
@@ -90,18 +90,15 @@ public class EntityLocator implements Serializable, TreeSerializable {
 	@JsonIgnore
 	public Class<? extends Entity> clazz;
 
-	@JsonIgnore
 	public long id;
 
-	@JsonIgnore
 	public long localId;
 
-	@JsonIgnore
 	public long clientInstanceId;
 
-	@JsonIgnore
 	private String entityClassName;
 
+	@JsonIgnore
 	private transient int hash;
 
 	public EntityLocator() {
@@ -186,7 +183,7 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		return hash;
 	}
 
-	public boolean isLocal() {
+	public boolean provideIsLocal() {
 		return localId != 0;
 	}
 

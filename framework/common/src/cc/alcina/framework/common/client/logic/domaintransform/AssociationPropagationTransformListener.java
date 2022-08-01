@@ -64,8 +64,11 @@ public class AssociationPropagationTransformListener
 			Association association = Reflections.at(entity.entityClass())
 					.property(event.getPropertyName())
 					.annotation(Association.class);
-			if (!Reflections.at(association.implementationClass())
-					.provideIsReflective()) {
+			// association will be null if the collection is non-domain (say, a
+			// set of enum values)
+			if (association == null
+					|| !Reflections.at(association.implementationClass())
+							.provideIsReflective()) {
 				return;
 			}
 		}

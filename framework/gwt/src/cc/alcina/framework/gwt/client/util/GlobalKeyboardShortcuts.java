@@ -56,6 +56,7 @@ public class GlobalKeyboardShortcuts implements NativePreviewHandler {
 		switch (type) {
 		case "keypress":
 		case "keydown":
+		case "keyup":
 			break;
 		default:
 			return;

@@ -54,7 +54,8 @@ import cc.alcina.framework.common.client.util.Topic;
  * Permissions type ADMIN_OR_OWNER pretty much mandates that the object
  * implement HasOwner
  * </p>
- * TODO - 2022 - make most methods static, call through to content instance
+ * TODO - 2022 - make most methods static, call through to content instance.
+ * Note that topics should be client only (and static)
  *
  * @author Nick Reddel
  */
@@ -223,6 +224,21 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public static boolean isOnline() {
 		return !isOffline();
+	}
+
+	public static boolean isPermitted(Object o, String ruleName) {
+		Permissible p = new Permissible() {
+			@Override
+			public AccessLevel accessLevel() {
+				return AccessLevel.ROOT;
+			}
+
+			@Override
+			public String rule() {
+				return ruleName;
+			}
+		};
+		return get().isPermitted(o, p, false);
 	}
 
 	public static boolean isSystemUser() {
@@ -461,7 +477,7 @@ public class PermissionsManager implements DomainTransformListener {
 		return onlineState;
 	}
 
-	public Set<IGroup> getReachableGroups(IUser user) {
+	public static Set<IGroup> getReachableGroups(IUser user) {
 		Set<IGroup> groups = new LinkedHashSet<IGroup>();
 		if (user != null) {
 			if (user.getPrimaryGroup() != null) {

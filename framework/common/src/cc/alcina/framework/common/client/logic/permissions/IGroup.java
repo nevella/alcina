@@ -56,6 +56,10 @@ public interface IGroup extends IVersionable, HasDisplayName.Settable {
 		((Entity) this).domain().addToProperty("memberUsers", user);
 	}
 
+	default <IG extends Entity & IGroup> void addMemberGroup(IG group) {
+		((Entity) this).domain().addToProperty("memberGroups", group);
+	}
+
 	default <IU extends IUser> boolean containsCurrentUser() {
 		return getMemberUsers().contains(PermissionsManager.get().getUser());
 	}

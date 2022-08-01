@@ -202,8 +202,7 @@ public class UmbrellaCollectionProviderMultiplexer<T>
 			}
 			TextProvider tp = TextProvider.get();
 			for (Object object : objects) {
-				if (Registry.query(HasSatisfiesFilter.class)
-						.addKeys(object.getClass()).impl()
+				if (Registry.impl(HasSatisfiesFilter.class,object.getClass())
 						.satisfiesFilter(object, filterText)) {
 					filteredCollection.add(object);
 				}

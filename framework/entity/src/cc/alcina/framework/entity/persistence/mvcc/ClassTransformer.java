@@ -75,11 +75,10 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.common.client.util.Topic;
-import cc.alcina.framework.common.client.util.TopicListener;
-import cc.alcina.framework.common.client.util.TopicListener.Reference;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
@@ -226,11 +225,9 @@ class ClassTransformer {
 
 	boolean testClassTransform(Class clazz, MvccCorrectnessToken token) {
 		ClassTransform<? extends Entity> transform = classTransforms.get(clazz);
-		TopicListener.Reference ref = transform.correctnessIssueTopic
-				.add(issue -> {
-					Ax.err("Correctness issue: %s %s", issue.type,
-							issue.message);
-				});
+		ListenerReference ref = transform.correctnessIssueTopic.add(issue -> {
+			Ax.err("Correctness issue: %s %s", issue.type, issue.message);
+		});
 		try {
 			transform.checkFieldAndMethodAccess(true, true, token);
 			return !transform.invalid;

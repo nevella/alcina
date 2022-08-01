@@ -285,10 +285,10 @@ public class OophmSessionHandler extends SessionHandlerServer {
 					"Unload request without a module loaded", null);
 			return;
 		}
-		moduleHandle.getLogger()
-				.log(TreeLogger.INFO, "Unloading module "
-						+ moduleSpace.getModuleName() + " (" + moduleName + ")",
-						null);
+		moduleHandle.getLogger().log(TreeLogger.INFO, "Unloading module "
+				+ moduleSpace.getModuleName() + " (" + moduleName
+				+ ")\n\n\n------------------------------------------------------\n\n",
+				null);
 		moduleSpace.dispose();
 		moduleHandle.unload();
 		moduleMap.remove(channel);

@@ -2070,6 +2070,10 @@ public class CommonUtils {
 		return d;
 	}
 
+	public static Long zeroToNull(Long id) {
+		return id != null && id == 0 ? null : id;
+	}
+
 	private static String getNumericSubstring(String toParse) {
 		if (toParse == null) {
 			return null;
@@ -2171,6 +2175,10 @@ public class CommonUtils {
 		public boolean isEmpty() {
 			return firstOnly.isEmpty() && secondOnly.isEmpty()
 					&& intersection.isEmpty();
+		}
+
+		public boolean isIntersectionOnly() {
+			return firstOnly.isEmpty() && secondOnly.isEmpty();
 		}
 
 		public String toSizes() {

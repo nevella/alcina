@@ -28,12 +28,27 @@ public class DoubleValidator implements Validator {
 	public static final DoubleValidator INSTANCE = new DoubleValidator();
 
 	/** Creates a new instance of DoubleValidator */
-	private DoubleValidator() {
+	protected DoubleValidator() {
+	}
+
+	protected boolean allowNull() {
+		return true;
+	}
+
+	public static class Primitive extends DoubleValidator {
+		@Override
+		protected boolean allowNull() {
+			return false;
+		}
 	}
 
 	@Override
 	public Object validate(Object value) throws ValidationException {
 		if (value == null) {
+			if (!allowNull()) {
+				throw new ValidationException("Value is required",
+						DoubleValidator.class);
+			}
 			return value;
 		}
 		Double i;

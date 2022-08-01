@@ -93,6 +93,10 @@ public interface DomStyleConstants {
 
 	static final String DISPLAY_INLINE_FLEX = "inline-flex";
 
+	static final String DISPLAY_GRID = "grid";
+
+	static final String DISPLAY_INLINE_GRID = "inline-grid";
+
 	static final String FLOAT_LEFT = "left";
 
 	static final String FLOAT_RIGHT = "right";
@@ -164,6 +168,8 @@ public interface DomStyleConstants {
 	static final String POSITION_RELATIVE = "relative";
 
 	static final String POSITION_STATIC = "static";
+
+	static final String POSITION_STICKY = "sticky";
 
 	static final String STYLE_Z_INDEX = "zIndex";
 

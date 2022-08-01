@@ -84,7 +84,12 @@ public class KeyValuePersistentCache<T> implements PersistentObjectCache<T> {
 
 	@Override
 	public void persist(String path, T value) {
-		KeyValuePersistent.persistObject(joinPath(path), value);
+		persist(path, value, null);
+	}
+
+	@Override
+	public void persist(String path, T value, CacheMetadata metadata) {
+		KeyValuePersistent.persistObject(joinPath(path), value, metadata);
 	}
 
 	@Override

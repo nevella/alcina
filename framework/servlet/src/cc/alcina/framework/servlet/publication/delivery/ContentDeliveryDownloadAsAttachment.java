@@ -42,8 +42,12 @@ public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {
 		file.deleteOnExit();
 		ResourceUtilities.writeStreamToStream(stream,
 				new FileOutputStream(file));
+		String fileTypeSuffix= "." + suffix;
+		if(!suggestedFileName.endsWith(fileTypeSuffix)){
+			suggestedFileName+=fileTypeSuffix;
+		}
 		DownloadItem item = new DownloadServlet.DownloadItem(mimeType,
-				suggestedFileName + "." + suffix, file.getPath());
+				suggestedFileName , file.getPath());
 		return DownloadServlet.add(item);
 	}
 

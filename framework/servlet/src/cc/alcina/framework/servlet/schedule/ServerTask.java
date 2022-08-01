@@ -39,7 +39,7 @@ public abstract class ServerTask<T extends Task> implements SelfPerformer<T> {
 			throw e;
 		}
 	}
-
+	
 	public void setValue(String value) {
 		this.value = value;
 	}

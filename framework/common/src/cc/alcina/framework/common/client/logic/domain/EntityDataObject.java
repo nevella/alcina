@@ -5,6 +5,7 @@ import java.util.Collection;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -38,6 +39,7 @@ public interface EntityDataObject {
 				ContextProjector projector);
 	}
 
+	@Reflected
 	public static class OneToManyMultipleSummary implements Serializable {
 		private int size;
 
@@ -57,9 +59,7 @@ public interface EntityDataObject {
 			size = collection.size();
 			place = (EntityPlace) RegistryHistoryMapper.get()
 					.getPlaceByModelClass(entityClass);
-			TruncatedObjectCriterion objectCriterion = Registry
-					.query(TruncatedObjectCriterion.class)
-					.addKeys(source.entityClass()).impl();
+			TruncatedObjectCriterion objectCriterion = Registry.impl(TruncatedObjectCriterion.class,source.entityClass());
 			objectCriterion.withObject(source);
 			place.def.addCriterionToSoleCriteriaGroup(objectCriterion);
 		}

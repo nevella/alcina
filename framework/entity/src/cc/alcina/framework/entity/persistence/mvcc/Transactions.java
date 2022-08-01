@@ -91,6 +91,10 @@ public class Transactions {
 		get().vacuum.paused = paused;
 	}
 
+	public static Map<String, String> primitiveFieldValues(Object object) {
+		return ResourceUtilities.primitiveFieldValues(object);
+	}
+
 	/*
 	 * The 'domainIdentity' parameter is used by ClassTransformer rewritten
 	 * classes (to obtain the domainIdentity version of the object)
@@ -495,23 +499,29 @@ public class Transactions {
 		}
 	}
 
-	void initialiseTransaction(Transaction transaction) {
+	void initialiseTransaction(Transaction transaction,
+			Transaction copyVisibleTransactionsFrom) {
 		synchronized (transactionMetadataLock) {
 			TransactionId transactionId = new TransactionId(
 					this.transactionIdCounter.getAndIncrement());
 			transaction.setId(transactionId);
-			/*
-			 * Oooh, a cunning optimisation. This 'subset view' of committed
-			 * transactions will be valid for the lifetime of the transaction,
-			 * since it's exactly the set that's preventing those transactions
-			 * from being vacuumed
-			 */
-			transaction.committedTransactions = committedTransactions.isEmpty()
-					? new ObjectAVLTreeSet<>()
-					: committedTransactions
-							.tailSet(committedTransactions.first());
 			transaction.startTime = System.currentTimeMillis();
-			transaction.highestVisibleCommittedTransactionId = highestVisibleCommittedTransactionId;
+			if (copyVisibleTransactionsFrom == null) {
+				/*
+				 * Oooh, a cunning optimisation. This 'subset view' of committed
+				 * transactions will be valid for the lifetime of the
+				 * transaction, since it's exactly the set that's preventing
+				 * those transactions from being vacuumed
+				 */
+				transaction.committedTransactions = committedTransactions
+						.isEmpty() ? new ObjectAVLTreeSet<>()
+								: committedTransactions
+										.tailSet(committedTransactions.first());
+				transaction.highestVisibleCommittedTransactionId = highestVisibleCommittedTransactionId;
+			} else {
+				transaction.committedTransactions = copyVisibleTransactionsFrom.committedTransactions;
+				transaction.highestVisibleCommittedTransactionId = copyVisibleTransactionsFrom.highestVisibleCommittedTransactionId;
+			}
 			activeTransactions.put(transactionId, transaction);
 		}
 	}
@@ -581,9 +591,5 @@ public class Transactions {
 		public Thread getVacuumThread() {
 			return vacuum.getVacuumThread();
 		}
-	}
-
-	public static Map<String, String> primitiveFieldValues(Object object) {
-		return ResourceUtilities.primitiveFieldValues(object);
 	}
 }

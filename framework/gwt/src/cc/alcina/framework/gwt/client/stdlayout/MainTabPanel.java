@@ -151,16 +151,21 @@ public class MainTabPanel extends TabPanel {
 
 	public SimplePanel getNoTabContentHolder() {
 		return this.noTabContentHolder;
-	};
+	}
 
 	public int getTabBarHeight() {
 		VerticalPanel vp = (VerticalPanel) getWidget();
 		Widget w = vp.getWidget(0);
 		return w.getOffsetHeight();
-	}
+	};
 
 	public FlowPanel getToolbarHolder() {
 		return this.toolbarHolder;
+	}
+
+	@Override
+	public Widget getWidget() {
+		return super.getWidget();
 	}
 
 	public SimplePanel setNotabContent(Widget w) {

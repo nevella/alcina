@@ -91,12 +91,15 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
         callback();
         return;
       }
-      function onBodyDone(){
+      function checkBodyDone(){
         if (!bodyDone) {
+          if (!isBodyLoaded()) {
+            return;
+          }
           bodyDone = true;
           callback();
           if ($doc_0.removeEventListener) {
-            $doc_0.removeEventListener('DOMContentLoaded', onBodyDone, false);
+            $doc_0.removeEventListener('readystatechange', checkBodyDone, false);
           }
           if (onBodyDoneTimerId) {
             clearInterval(onBodyDoneTimerId);
@@ -105,14 +108,12 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
       }
 
       if ($doc_0.addEventListener) {
-        $doc_0.addEventListener('DOMContentLoaded', onBodyDone, false);
+        $doc_0.addEventListener('readystatechange', checkBodyDone, false);
       }
       var onBodyDoneTimerId = setInterval(function(){
-        if (isBodyLoaded()) {
-          onBodyDone();
-        }
+        checkBodyDone();
       }
-      , 50);
+      , 10);
     }
 
     function installCode(code_0){
@@ -333,7 +334,7 @@ function cc_alcina_extras_dev_console_remote_RemoteConsoleClient(){
     }
     var strongName;
     try {
-      strongName = 'F462D3D1792ED32FF49FDE57F40D5AFD';
+      strongName = '7393390DDA3C89302B278A43FEE646EB';
       var idx = strongName.indexOf(':');
       if (idx != -1) {
         softPermutationId = parseInt(strongName.substring(idx + 1), 10);

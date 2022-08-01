@@ -2,6 +2,8 @@ package com.google.gwt.dom.client;
 
 import static com.google.gwt.dom.client.DomStyleConstants.*;
 
+import java.util.Arrays;
+
 import com.google.gwt.dom.client.Style.BorderStyle;
 import com.google.gwt.dom.client.Style.Clear;
 import com.google.gwt.dom.client.Style.Cursor;
@@ -25,6 +27,8 @@ import com.google.gwt.dom.client.Style.Visibility;
 import com.google.gwt.dom.client.Style.WhiteSpace;
 import com.google.gwt.safehtml.shared.annotations.IsSafeUri;
 
+import cc.alcina.framework.common.client.util.Ax;
+
 class DomStyleStatic {
 	public static void clearProperty(DomStyle domStyle, String name) {
 		domStyle.setProperty(name, "");
@@ -32,7 +36,7 @@ class DomStyleStatic {
 
 	/**
 	 * Assert that the specified property does not contain a hyphen.
-	 * 
+	 *
 	 * @param name
 	 *            the property name
 	 */
@@ -43,7 +47,7 @@ class DomStyleStatic {
 
 	/**
 	 * Assert that the specified property does not contain a hyphen.
-	 * 
+	 *
 	 * @param name
 	 *            the property name
 	 */
@@ -395,6 +399,17 @@ class DomStyleStatic {
 		domStyle.clearProperty(STYLE_Z_INDEX);
 	}
 
+	static <E extends Enum> E enumeratedValue(Class<E> enumClass,
+			String value) {
+		if (Ax.isBlank(value)) {
+			return null;
+		} else {
+			String test = value.toUpperCase();
+			return Arrays.stream(enumClass.getEnumConstants())
+					.filter(e -> e.toString().equals(test)).findFirst().get();
+		}
+	}
+
 	/**
 	 * Get the background-color css property.
 	 */
@@ -463,6 +478,10 @@ class DomStyleStatic {
 	 */
 	static String getDisplay(DomStyle domStyle) {
 		return domStyle.getProperty(STYLE_DISPLAY);
+	}
+
+	static Display getDisplayTyped(DomStyle domStyle) {
+		return enumeratedValue(Display.class, getDisplay(domStyle));
 	}
 
 	/**
@@ -617,6 +636,10 @@ class DomStyleStatic {
 	 */
 	static String getPosition(DomStyle domStyle) {
 		return domStyle.getProperty(STYLE_POSITION);
+	}
+
+	static Position getPositionTyped(DomStyle domStyle) {
+		return enumeratedValue(Position.class, getDisplay(domStyle));
 	}
 
 	static String getProperty(DomStyle domStyle, String name) {
@@ -996,7 +1019,7 @@ class DomStyleStatic {
 
 	/**
 	 * Sets the value of a named property, in pixels.
-	 * 
+	 *
 	 * This is shorthand for <code>value + "px"</code>.
 	 */
 	static void setPropertyPx(DomStyle domStyle, String name, int value) {

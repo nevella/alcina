@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -18,6 +18,8 @@ package com.google.gwt.dom.client;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
@@ -46,6 +48,10 @@ import cc.alcina.framework.common.client.util.TextUtils;
  */
 public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	public static final String REMOTE_DEFINED = "__localdom-remote-defined";
+
+	public static final Predicate<Element> DISPLAY_NONE = e -> e.implAccess()
+			.ensureRemote().getComputedStyle()
+			.getDisplayTyped() == Style.Display.NONE;
 
 	/**
 	 * Constant returned from {@link #getDraggable()}.
@@ -186,6 +192,17 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		}
 	}
 
+	public Optional<Element> firstInAncestry(Predicate<Element> predicate) {
+		Element cursor = this;
+		do {
+			if (predicate.test(cursor)) {
+				return Optional.of(cursor);
+			}
+			cursor = cursor.getParentElement();
+		} while (cursor != null);
+		return Optional.empty();
+	}
+
 	@Override
 	public void focus() {
 		ensureRemote().focus();
@@ -240,6 +257,10 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	@Override
 	public NamedNodeMap getAttributes() {
 		throw new UnsupportedOperationException();
+	}
+
+	public DOMRect getBoundingClientRect() {
+		return ensureRemote().getBoundingClientRect();
 	}
 
 	@Override
@@ -530,6 +551,14 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	@Override
 	public Element node() {
 		return this;
+	}
+
+	public boolean provideIsAncestorOf(Element potentialChild,
+			boolean includeSelf) {
+		return potentialChild
+				.firstInAncestry(
+						e -> e == this && (e != potentialChild || includeSelf))
+				.isPresent();
 	}
 
 	@Override

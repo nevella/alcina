@@ -7,7 +7,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceHistoryMapper;
 
@@ -39,8 +38,6 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 	Map<Class<? extends Bindable>, BasePlaceTokenizer> tokenizersByModelClass = new LinkedHashMap<>();
 
 	Map<Enum, BasePlace> placesBySubPlace = new LinkedHashMap<>();
-
-	private Place lastPlace;
 
 	boolean initialised = false;
 
@@ -83,7 +80,8 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		if (place == null || tokenizersByPlace.isEmpty()) {
 			return "";
 		}
-		String token = tokenizersByPlace.get(place.getClass()).mutableInstance().getToken(place);
+		String token = tokenizersByPlace.get(place.getClass()).mutableInstance()
+				.getToken(place);
 		return getAppPrefix().isEmpty() ? token : getAppPrefix() + "/" + token;
 	}
 
@@ -119,6 +117,10 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 				.forEach(l -> l.removeIf(tokenizer -> matcher.test(tokenizer)));
 	}
 
+	private String cleanGwtCodesvr(String token) {
+		return token.replaceFirst("[?&]gwt.codesvr=127.0.0.1:\\d+$", "");
+	}
+
 	private synchronized void ensurePlaceLookup() {
 		if (initialised) {
 			return;
@@ -150,12 +152,17 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 		return "";
 	}
 
-	protected synchronized Place getPlace(String i_token, boolean copy) {
-		i_token = removeAppPrefixAndLeadingSlashes(i_token);
-		String token = i_token;
-		if (!copy) {
-			// System.out.println("get place:" + token);
-		}
+	/**
+	 * On startup, apps should catch the UnparseablePlaceException and sub null.
+	 * But generally it's better to force the app to explicitly handle
+	 * unparseable places than just 'null'
+	 *
+	 * FIXME - 2023 - throw checked exception (this is one place where they
+	 * actually make total sense since there's generally a clear recovery path)
+	 */
+	protected synchronized Place getPlace(String o_token, boolean copy) {
+		String token = cleanGwtCodesvr(
+				removeAppPrefixAndLeadingSlashes(o_token));
 		String[] split = token.split("/");
 		String top = split[0];
 		Optional<BasePlaceTokenizer> o_tokenizer = tokenizersByPrefix
@@ -174,12 +181,15 @@ public class RegistryHistoryMapper implements PlaceHistoryMapper {
 				? o_tokenizer.get().mutableInstance().getPlace(token)
 				: null;
 		if (place == null) {
-			if (GWT.isClient()) {
-				// handle doc internal hrefs
-				place = lastPlace;
-			}
+			throw new UnparseablePlaceException(o_token);
+			// nope - client must handle null
+			// if (GWT.isClient()) {
+			// // handle doc internal hrefs
+			// place = lastPlace;
+			// }
+			// }
+			// lastPlace = place;
 		}
-		lastPlace = place;
 		return place;
 	}
 

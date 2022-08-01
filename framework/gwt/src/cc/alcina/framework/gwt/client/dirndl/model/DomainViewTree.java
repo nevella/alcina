@@ -278,7 +278,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 
 		public DomainViewNode(LabelGenerator labelGenerator,
 				DomainViewNode parent, String path) {
-			super(parent, path);
+			super(parent, path, false);
 			this.labelGenerator = labelGenerator == null ? new TextGenerator()
 					: labelGenerator;
 		}
@@ -293,8 +293,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 		public DomainViewNode ensureNode(DomainViewNodeContent nodeContent,
 				String path, String beforePath,
 				boolean fireCollectionModificationEvents) {
-			TreePath<DomainViewNode> otherTreePath = treePath
-					.ensurePath(path);
+			TreePath<DomainViewNode> otherTreePath = treePath.ensurePath(path);
 			if (otherTreePath.getValue() == null) {
 				DomainViewNode parent = otherTreePath.getParent() == null ? null
 						: otherTreePath.getParent().getValue();

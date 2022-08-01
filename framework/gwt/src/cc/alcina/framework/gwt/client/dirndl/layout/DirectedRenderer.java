@@ -17,7 +17,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
-import cc.alcina.framework.gwt.client.dirndl.layout.TextNodeRenderer.FieldNamesAsTags;
 import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
 
 public abstract class DirectedRenderer {
@@ -29,55 +28,13 @@ public abstract class DirectedRenderer {
 		}
 	}
 
-	@Registration({ DirectedRenderer.class, TextNodeRenderer.class })
-	public static class Text extends Leaf {
-		@Override
-		protected void render(RendererInput input) {
-			super.render(input);
-			Node node = input.node;
-			node.rendered.widget.getElement().setInnerText(getText(node));
-		}
-
-		protected String getModelText(Object model) {
-			return model.toString();
-		}
-
-		@Override
-		protected String getTag(Node node) {
-			if (node.parent != null && node.parent.has(FieldNamesAsTags.class)
-					&& node.property.getName() != null) {
-				return CommonUtils.deInfixCss(node.property.getName());
-			}
-			return Ax.blankTo(super.getTag(node), "span");
-		}
-
-		protected String getText(Node node) {
-			return node.model == null ? "<null text>"
-					: getModelText(node.model);
-		}
-	}
-
-	static abstract class Leaf extends DirectedRenderer {
-		protected String getTag(Node node) {
-			return node.directed.tag();
-		}
-
-		@Override
-		protected void render(RendererInput input) {
-			Node node = input.node;
-			String tag = getTag(node);
-			Preconditions.checkArgument(Ax.notBlank(tag));
-			node.rendered.widget = new SimpleWidget(tag);
-		}
-	}
-
-	@Registration({ DirectedRenderer.class, DelegatingNodeRenderer.class })
-	public static class Delegating extends DirectedRenderer
+	@Registration({ DirectedRenderer.class, BindableNodeRenderer.class })
+	public static class BindableRenderer extends DirectedRenderer
 			implements GeneratesPropertyInputs {
 		@Override
 		protected void render(RendererInput input) {
-			Preconditions.checkArgument(input.model instanceof Bindable);
-			// NOOP, no container widget/node
+			// could subclass container - but we're going for composition
+			new Container().render(input);
 			generatePropertyInputs(input);
 		}
 	}
@@ -98,6 +55,45 @@ public abstract class DirectedRenderer {
 				FlowPanel widget = new FlowPanel(getTag(node));
 				node.rendered.widget = widget;
 			}
+		}
+	}
+
+	@Registration({ DirectedRenderer.class, DelegatingNodeRenderer.class })
+	public static class Delegating extends DirectedRenderer
+			implements GeneratesPropertyInputs {
+		@Override
+		protected void render(RendererInput input) {
+			Preconditions.checkArgument(input.model instanceof Bindable);
+			// NOOP, no container widget/node
+			generatePropertyInputs(input);
+		}
+	}
+
+	@Registration({ DirectedRenderer.class, TextNodeRenderer.class })
+	public static class Text extends Leaf {
+		protected String getModelText(Object model) {
+			return model.toString();
+		}
+
+		@Override
+		protected String getTag(Node node) {
+			if (node.parent != null && node.parent.has(PropertyNameTags.class)
+					&& node.property.getName() != null) {
+				return CommonUtils.deInfixCss(node.property.getName());
+			}
+			return Ax.blankTo(super.getTag(node), "span");
+		}
+
+		protected String getText(Node node) {
+			return node.model == null ? "<null text>"
+					: getModelText(node.model);
+		}
+
+		@Override
+		protected void render(RendererInput input) {
+			super.render(input);
+			Node node = input.node;
+			node.rendered.widget.getElement().setInnerText(getText(node));
 		}
 	}
 
@@ -125,14 +121,17 @@ public abstract class DirectedRenderer {
 		}
 	}
 
-	@Registration({ DirectedRenderer.class, BindableNodeRenderer.class })
-	public static class BindableRenderer extends DirectedRenderer
-			implements GeneratesPropertyInputs {
+	static abstract class Leaf extends DirectedRenderer {
+		protected String getTag(Node node) {
+			return node.directed.tag();
+		}
+
 		@Override
 		protected void render(RendererInput input) {
-			// could subclass container - but we're going for composition
-			new Container().render(input);
-			generatePropertyInputs(input);
+			Node node = input.node;
+			String tag = getTag(node);
+			Preconditions.checkArgument(Ax.notBlank(tag));
+			node.rendered.widget = new SimpleWidget(tag);
 		}
 	}
 }

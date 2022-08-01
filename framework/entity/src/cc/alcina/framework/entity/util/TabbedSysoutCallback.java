@@ -11,6 +11,10 @@ public class TabbedSysoutCallback implements Callback<String> {
 
 	@Override
 	public void accept(String value) {
-		System.out.println(prompt + value);
+		System.out.print(prompt + value);
+		if(!value.endsWith("\n")){
+			System.out.print('\n');	
+		}
+		
 	}
 }

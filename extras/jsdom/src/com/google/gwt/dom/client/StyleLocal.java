@@ -336,6 +336,11 @@ public class StyleLocal implements DomStyle {
 	}
 
 	@Override
+	public final Style.Display getDisplayTyped() {
+		return DomStyleStatic.getDisplayTyped(this);
+	}
+
+	@Override
 	public String getFontSize() {
 		return DomStyleStatic.getFontSize(this);
 	}
@@ -443,6 +448,11 @@ public class StyleLocal implements DomStyle {
 	@Override
 	public String getPosition() {
 		return DomStyleStatic.getPosition(this);
+	}
+
+	@Override
+	public final Style.Position getPositionTyped() {
+		return DomStyleStatic.getPositionTyped(this);
 	}
 
 	@Override

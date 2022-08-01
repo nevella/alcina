@@ -40,4 +40,20 @@ public @interface Binding {
 		PROPERTY, INNER_HTML, INNER_TEXT, CSS_CLASS, STYLE_ATTRIBUTE,
 		SWITCH_CSS_CLASS;
 	}
+
+	@Reflected
+	public static class UnitPx implements ToStringFunction<Integer> {
+		@Override
+		public String apply(Integer px) {
+			return px + "px";
+		}
+	}
+
+	@Reflected
+	public static class UnitRem implements ToStringFunction<Integer> {
+		@Override
+		public String apply(Integer rem) {
+			return rem + "rem";
+		}
+	}
 }

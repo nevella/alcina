@@ -41,26 +41,7 @@ public class Async {
 			if (cancelledBecauseExistingInflight) {
 				return new CancelledCallback();
 			}
-			return new AsyncCallback<T>() {
-				@Override
-				public void onFailure(Throwable caught) {
-					onComplete();
-					failureConsumer.accept(caught);
-				}
-
-				@Override
-				public void onSuccess(T result) {
-					onComplete();
-					successConsumer.accept(result);
-				}
-
-				private void onComplete() {
-					if (completionCallback != null) {
-						completionCallback.run();
-					}
-					inflight.remove(inflightMarker);
-				}
-			};
+			return new BuilderCallback();
 		}
 
 		public AsyncCallbackBuilder<T>
@@ -71,6 +52,14 @@ public class Async {
 
 		public AsyncCallbackBuilder<T> success(Consumer<T> successConsumer) {
 			this.successConsumer = successConsumer;
+			return this;
+		}
+
+		public AsyncCallbackBuilder<T>
+				withCancelInflight(AsyncCallback<T> runningCallback) {
+			if (runningCallback != null) {
+				((BuilderCallback) runningCallback).setCancelled(true);
+			}
 			return this;
 		}
 
@@ -87,6 +76,43 @@ public class Async {
 
 		private void onFailure(Throwable caught) {
 			throw new WrappedRuntimeException(caught);
+		}
+
+		public final class BuilderCallback implements AsyncCallback<T> {
+			private boolean cancelled;
+
+			public boolean isCancelled() {
+				return this.cancelled;
+			}
+
+			@Override
+			public void onFailure(Throwable caught) {
+				if (isCancelled()) {
+					return;
+				}
+				onComplete();
+				failureConsumer.accept(caught);
+			}
+
+			@Override
+			public void onSuccess(T result) {
+				if (isCancelled()) {
+					return;
+				}
+				onComplete();
+				successConsumer.accept(result);
+			}
+
+			public void setCancelled(boolean cancelled) {
+				this.cancelled = cancelled;
+			}
+
+			private void onComplete() {
+				if (completionCallback != null) {
+					completionCallback.run();
+				}
+				inflight.remove(inflightMarker);
+			}
 		}
 	}
 

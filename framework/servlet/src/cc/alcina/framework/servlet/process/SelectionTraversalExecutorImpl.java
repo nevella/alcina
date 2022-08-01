@@ -29,9 +29,8 @@ public class SelectionTraversalExecutorImpl
 		executor = (ThreadPoolExecutor) Executors.newFixedThreadPool(
 				ResourceUtilities.getInteger(
 						SelectionTraversalExecutorImpl.class, "threadCount"),
-				new NamedThreadFactory("SiteTraversal-ExecutorImpl"));
-		serial = ResourceUtilities.is(SelectionTraversalExecutorImpl.class,
-				"serial");
+				new NamedThreadFactory("SelectionTraversal-ExecutorImpl"));
+		resetSerial();
 	}
 
 	@Override
@@ -39,11 +38,16 @@ public class SelectionTraversalExecutorImpl
 		List<Runnable> runnables = this.runnables;
 		this.runnables = new ArrayList<>();
 		AlcinaParallel.builder().withExecutor(executor).withTransaction()
-				.withSerial(serial).withRunnables(runnables).run();
+				.withSerial(isSerial()).withRunnables(runnables).run();
 	}
 
 	public boolean isSerial() {
 		return this.serial;
+	}
+
+	public void resetSerial() {
+		serial = ResourceUtilities.is(SelectionTraversalExecutorImpl.class,
+				"serial");
 	}
 
 	public void setSerial(boolean serial) {

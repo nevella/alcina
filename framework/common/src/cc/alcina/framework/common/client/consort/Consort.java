@@ -246,9 +246,9 @@ public class Consort<D> {
 		return this.throwOnUnableToResolveDependencies;
 	}
 
-	public void listenerDelta(TopicChannel cancelled, TopicListener listener,
+	public void listenerDelta(TopicChannel channel, TopicListener listener,
 			boolean add) {
-		topics.listenerDelta(cancelled, listener, add);
+		topics.listenerDelta(channel, listener, add);
 	}
 
 	public void nudge() {

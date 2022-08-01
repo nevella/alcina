@@ -28,9 +28,9 @@
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/reload4j-1.2.21.jar" />
+	<classpathentry kind="lib" path="lib/framework/entity/reload4j-1.2.21.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
-	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar" sourcepath="/g/minor/httpclient"/>
+	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar" sourcepath="/g/gwt"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-html5-database.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA-sources.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/validation-api-1.0.0.GA.jar"/>
@@ -92,5 +92,6 @@
 	<classpathentry kind="lib" path="lib/extras/webdriver/commonmark-ext-gfm-tables-0.18.1-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/javax.ws.rs-api-2.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jol-core-0.17-SNAPSHOT.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/slf4j-reload4j-1.7.36.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

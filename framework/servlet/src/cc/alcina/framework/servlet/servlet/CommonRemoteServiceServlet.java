@@ -31,6 +31,7 @@ import javax.servlet.http.HttpSession;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.IncompatibleRemoteServiceException;
 import com.google.gwt.user.client.rpc.SerializationException;
 import com.google.gwt.user.client.ui.SuggestOracle.Response;
@@ -70,6 +71,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.Doma
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
+import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.ReadOnlyException;
@@ -212,9 +214,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		try {
 			ReflectiveRemoteServicePayload payload = ReflectiveSerializer
 					.deserialize(encodedRpcPayload);
-			ReflectiveRemoteServiceHandler handler = Registry
-					.query(ReflectiveRemoteServiceHandler.class)
-					.addKeys(payload.getAsyncInterfaceClass()).impl();
+			ReflectiveRemoteServiceHandler handler = Registry.impl(
+					ReflectiveRemoteServiceHandler.class,
+					payload.getAsyncInterfaceClass());
 			Class[] methodArgumentTypes = (Class[]) payload
 					.getMethodArgumentTypes().toArray(
 							new Class[payload.getMethodArgumentTypes().size()]);
@@ -239,6 +241,17 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	@Override
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	public String getJobLog(long jobId) {
+		Job job = Job.byId(jobId).domain().ensurePopulated();
+		Preconditions.checkState(
+				PermissionsManager.get().isAdmin()
+						|| IUser.current() == job.getUser(),
+				"Illegal access to job " + jobId);
+		return job.getLog();
 	}
 
 	@Override
@@ -563,8 +576,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			LooseContext.set(DomainSearcher.CONTEXT_HINT, request.getHint());
 			Class<? extends BoundSuggestOracleResponseType> clazz = (Class<? extends BoundSuggestOracleResponseType>) Class
 					.forName(request.getTargetClassName());
-			return Registry.query(BoundSuggestOracleRequestHandler.class)
-					.addKeys(clazz).impl()
+			return Registry.impl(BoundSuggestOracleRequestHandler.class, clazz)
 					.handleRequest(clazz, request, request.getHint());
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
@@ -611,8 +623,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		List<ServerValidator> results = new ArrayList<ServerValidator>();
 		for (ServerValidator validator : validators) {
 			ServerValidatorHandler handler = Registry
-					.query(ServerValidatorHandler.class)
-					.addKeys(validator.getClass()).impl();
+					.impl(ServerValidatorHandler.class, validator.getClass());
 			handler.handle(validator);
 			results.add(validator);
 		}

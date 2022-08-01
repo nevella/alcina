@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -21,17 +21,18 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.LocalDomDebug;
 
 /**
  * Provides programmatic access to properties of the style object.
- * 
+ *
  * <p>
  * Note that if a property or value is not explicitly enumerated in this class,
  * you can still access it via {@link #getProperty(String)}, and
  * {@link #setProperty(String, String)}.
  * </p>
- * 
+ *
  * @see Element#getStyle()
  */
 public class Style implements DomStyle {
@@ -402,6 +403,11 @@ public class Style implements DomStyle {
 	}
 
 	@Override
+	public final Style.Display getDisplayTyped() {
+		return local().getDisplayTyped();
+	}
+
+	@Override
 	public String getFontSize() {
 		return local().getFontSize();
 	}
@@ -509,6 +515,11 @@ public class Style implements DomStyle {
 	@Override
 	public String getPosition() {
 		return local().getPosition();
+	}
+
+	@Override
+	public final Style.Position getPositionTyped() {
+		return local().getPositionTyped();
 	}
 
 	@Override
@@ -825,6 +836,7 @@ public class Style implements DomStyle {
 
 	@Override
 	public void setProperty(String name, String value) {
+		Preconditions.checkArgument(name.length() > 0);
 		if (name.equals("display") && element.linkedToRemote()) {
 			LocalDom.log(LocalDomDebug.STYLE, "%s %s : %s", element,
 					Optional.ofNullable(element.uiObject).map(
@@ -1288,6 +1300,18 @@ public class Style implements DomStyle {
 			public String getCssName() {
 				return DISPLAY_INLINE_FLEX;
 			}
+		},
+		GRID {
+			@Override
+			public String getCssName() {
+				return DISPLAY_GRID;
+			}
+		},
+		INLINE_GRID {
+			@Override
+			public String getCssName() {
+				return DISPLAY_INLINE_GRID;
+			}
 		};
 
 		@Override
@@ -1576,6 +1600,12 @@ public class Style implements DomStyle {
 			@Override
 			public String getCssName() {
 				return POSITION_FIXED;
+			}
+		},
+		STICKY {
+			@Override
+			public String getCssName() {
+				return POSITION_STICKY;
 			}
 		};
 

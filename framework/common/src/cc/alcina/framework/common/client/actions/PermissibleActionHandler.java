@@ -27,9 +27,7 @@ public interface PermissibleActionHandler<A extends PermissibleAction> {
 	public static class DefaultPermissibleActionHandler {
 		public static void handleAction(Widget sourceWidget,
 				PermissibleAction action, Object target) {
-			PermissibleActionHandler handler = Registry
-					.query(PermissibleActionHandler.class)
-					.addKeys(action.getClass()).impl();
+			PermissibleActionHandler handler = Registry.impl(PermissibleActionHandler.class,action.getClass());
 			handler.handleAction(sourceWidget, action, target);
 		}
 	}

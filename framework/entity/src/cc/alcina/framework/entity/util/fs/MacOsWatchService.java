@@ -19,6 +19,9 @@ import com.barbarysoftware.watchservice.WatchableFile;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
+/*
+ * TODO - 2023 - could probably just have one thread for the whole app - how nice would that be?
+ */
 class MacOsWatchService extends AbstractNonSunWatchService {
 	static <T> WatchEvent<T> cast(WatchEvent<?> event) {
 		return (WatchEvent<T>) event;

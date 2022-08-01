@@ -24,7 +24,10 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import com.totsp.gwittir.client.beans.annotations.Omit;
 
 import cc.alcina.framework.common.client.logic.LazyPropertyChangeSupport;
+import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
+import cc.alcina.framework.common.client.util.ListenerReference;
+import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
@@ -70,6 +73,20 @@ public class BaseSourcesPropertyChangeEvents
 			PropertyChangeListener listener) {
 		this.propertyChangeSupport().addPropertyChangeListener(propertyName,
 				listener);
+	}
+
+	/*
+	 * MVCC access - 'this' correctly refers to the version, *not*
+	 * domainIdentity()
+	 */
+	@MvccAccess(type = MvccAccessType.VERIFIED_CORRECT)
+	public synchronized ListenerReference addTypedPropertyChangeListener(
+			PropertyEnum propertyName, TopicListener typedListener) {
+		RemovablePropertyChangeListener.Typed changeListener = new RemovablePropertyChangeListener.Typed(
+				this, propertyName, typedListener);
+		this.propertyChangeSupport().addPropertyChangeListener(propertyName,
+				changeListener);
+		return changeListener;
 	}
 
 	public void firePropertyChange(PropertyChangeEvent evt) {
@@ -147,5 +164,10 @@ public class BaseSourcesPropertyChangeEvents
 			PropertyChangeListener listener) {
 		this.propertyChangeSupport().removePropertyChangeListener(propertyName,
 				listener);
+	}
+
+	// optimisation for non-mutating callers
+	protected boolean hasPropertyChangeSupport() {
+		return propertyChangeSupport != null;
 	}
 }

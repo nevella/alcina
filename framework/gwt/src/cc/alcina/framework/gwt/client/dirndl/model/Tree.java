@@ -24,14 +24,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeToggleButtonCl
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.PaginatorVisible;
 
 @Directed(tag = "div", cssClass = "dl-tree", bindings = {
-		@Binding(from = "hideRoot", type = Type.CSS_CLASS) }, receives = {
+		@Binding(from = "rootHidden", type = Type.CSS_CLASS) }, receives = {
 				TreeEvents.NodeLabelClicked.class,
 				TreeEvents.NodeToggleButtonClicked.class,
 				TreeEvents.PaginatorVisible.class }, emits = SelectionChanged.class)
 public class Tree<TN extends TreeNode<TN>> extends Model
 		implements NodeLabelClicked.Handler, NodeToggleButtonClicked.Handler,
 		PaginatorVisible.Handler {
-	private boolean hideRoot;
+	private boolean rootHidden;
 
 	private TN root;
 
@@ -49,8 +49,8 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		return this.root;
 	}
 
-	public boolean isHideRoot() {
-		return this.hideRoot;
+	public boolean isRootHidden() {
+		return this.rootHidden;
 	}
 
 	@Override
@@ -81,10 +81,6 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		throw new UnsupportedOperationException();
 	}
 
-	public void setHideRoot(boolean hideRoot) {
-		this.hideRoot = hideRoot;
-	}
-
 	public void setPaginator(Paginator paginator) {
 		Paginator old_paginator = this.paginator;
 		this.paginator = paginator;
@@ -96,6 +92,10 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		TN old_root = this.root;
 		this.root = root;
 		propertyChangeSupport().firePropertyChange("root", old_root, root);
+	}
+
+	public void setRootHidden(boolean rootHidden) {
+		this.rootHidden = rootHidden;
 	}
 
 	protected void loadChildren(TN model) {
@@ -113,11 +113,19 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 
 		public AbstractPathNode(PN parent, String path) {
+			this(parent, path, true);
+		}
+
+		public AbstractPathNode(PN parent, String path,
+				boolean addToParentChildren) {
 			setParent(parent);
 			if (parent == null) {
 				treePath = TreePath.absolutePath(path);
 			} else {
 				treePath = parent.treePath.ensurePath(path);
+				if (addToParentChildren) {
+					parent.getChildren().add(this);
+				}
 			}
 			treePath.setValue((PN) this);
 		}

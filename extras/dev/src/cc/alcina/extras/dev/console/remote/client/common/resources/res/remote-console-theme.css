@@ -1,14 +1,14 @@
 html {
 	-jade-classic: #227e4d;
 	-nav-bar-color: hsla(148, 67%, 39%, 0.8);
-	-nav-bar-color: hsl(199, 57%, 97%);
+	-nav-bar-color: hsl(225deg 27% 85%);
 	-caption-color: hsla(148, 67%, 39%, 0.8);
 	-jade-border: hsla(148, 80%, 34%, 1);
 	-jade-link-color: hsla(148, 80%, 34%, 1);
 	-jade-search-background: hsla(148, 37%, 97%, 1.0);
 	-nav-bar-top-margin: 7px;
 	-nav-bar-button-indent: 32px;
-	-nav-bar-button-color: hsla(86.3, 27%, 56%,0.5);
+	-nav-bar-button-color: hsl(244deg 27% 56% / 50%);
 	-nav-bar-button-background: hsla(148, 42%, 47%, 1.0);
 	-nav-bar-button-background-hover: hsla(148, 37%, 57%, 1.0);
 	-nav-bar-input-glow: hsla(148, 37%, 57%, 0.5);

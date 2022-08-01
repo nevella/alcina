@@ -19,14 +19,18 @@ public abstract class ReachabilityLinkerPeer {
 
 		@Override
 		protected void init(AppReflectableTypes reflectableTypes2) {
-			
 		}
 	}
 
 	protected AppReflectableTypes reflectableTypes;
+
 	public abstract boolean permit(Type type);
-	
+
 	public abstract Optional<String> explain(Type type);
 
 	protected abstract void init(AppReflectableTypes reflectableTypes2);
+
+	protected boolean hasExplicitTypePermission(Type type) {
+		return false;
+	}
 }

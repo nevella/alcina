@@ -18,6 +18,11 @@ public class DomainModelObjectsPlaceholders {
 		}
 
 		@Override
+		public String getConfigurationPropertiesSerialized() {
+			return null;
+		}
+
+		@Override
 		public IUser getCurrentUser() {
 			return null;
 		}

@@ -305,37 +305,38 @@ public abstract class Entity<T extends Entity> extends Bindable
 			return (V) rule.checkPermission(Entity.this);
 		}
 
+		/*
+		 * Copies properties from 'this' (detached/projected copy of the entity)
+		 * to the domain graph entity
+		 */
 		public T detachedToDomain() {
 			return (T) Domain.detachedToDomain(Entity.this);
 		}
 
-		public boolean detachedToDomainHasDelta() {
-			int before = TransformManager.get().getTransforms().size();
-			detachedToDomain();
-			return TransformManager.get().getTransforms().size() != before;
-		}
-
 		/*
 		 * A disconnected projection of an entity. Useful for things like
-		 * speculative writes and serialization
+		 * speculative writes and serialization. Normally generated using
+		 * projection
 		 *
 		 */
 		public T detachedVersion() {
 			return (T) Domain.detachedVersion(Entity.this);
 		}
 
+		/*
+		 * Remove transform manager listeners - this is appropriate when using a
+		 * 'faux' object (negative id), or when simply muting transforms for a
+		 * given object/mvcc objectversion
+		 */
 		public void detachFromDomain() {
 			TransformManager.get().deregisterDomainObject(Entity.this);
 		}
 
 		/*
-		 * Basically server-side, connected version from a DomainStore
 		 *
-		 * //FIXME - apdm - remove...ahhh...but this populatees lazy fields.
-		 * Maybe not, eh? Also there's the possibility of needing to access the
-		 * domain version from a non-domain (say de-serialized) instance. Fixme
-		 * is to check codebase, remove if unnecessary, rename to populate() if
-		 * that's what it is
+		 * No-op if client-side, returns the domain store *lazy fields
+		 * populated* version if server-side
+		 *
 		 */
 		public T domainVersion() {
 			return ensurePopulated();

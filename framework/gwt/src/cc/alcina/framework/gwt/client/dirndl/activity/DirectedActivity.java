@@ -27,7 +27,10 @@ import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 public class DirectedActivity<P extends BasePlace> extends Model
 		implements Activity, HasPlace<P> {
 	public static final Topic<DirectedActivity> topicActivityStarted = Topic
-			.create();
+			.create().withThrowExceptions();
+
+	public static final Topic<DirectedActivity> topicActivityStopped = Topic
+			.create().withThrowExceptions();
 
 	public static Activity forPlace(Place place) {
 		if (!(place instanceof BasePlace)) {
@@ -43,18 +46,12 @@ public class DirectedActivity<P extends BasePlace> extends Model
 				EntityPlace entityPlace = (EntityPlace) place;
 				if (entityPlace.id != 0
 						|| entityPlace.action == EntityAction.CREATE) {
-					directedActivity = Registry
-							.query(DirectedEntityActivity.class)
-							.addKeys(place.getClass()).impl();
+					directedActivity = Registry.impl(DirectedEntityActivity.class,place.getClass());
 				} else {
-					directedActivity = Registry
-							.query(DirectedBindableSearchActivity.class)
-							.addKeys(place.getClass()).impl();
+					directedActivity = Registry.impl(DirectedBindableSearchActivity.class,place.getClass());
 				}
 			} else if (place instanceof BindablePlace) {
-				directedActivity = Registry
-						.query(DirectedBindableSearchActivity.class)
-						.addKeys(place.getClass()).impl();
+				directedActivity = Registry.impl(DirectedBindableSearchActivity.class,place.getClass());
 			} else if (place instanceof CategoryNamePlace) {
 				CategoryNamePlace categoryPlace = (CategoryNamePlace) place;
 				PermissibleAction action = categoryPlace.ensureAction();
@@ -64,17 +61,12 @@ public class DirectedActivity<P extends BasePlace> extends Model
 					return ActivityManager.NULL_ACTIVITY;
 				}
 				if (categoryPlace.nodeName == null) {
-					directedActivity = Registry
-							.query(DirectedCategoriesActivity.class)
-							.addKeys(place.getClass()).impl();
+					directedActivity = Registry.impl(DirectedCategoriesActivity.class,place.getClass());
 				} else {
-					directedActivity = Registry
-							.query(DirectedCategoryActivity.class)
-							.addKeys(place.getClass()).impl();
+					directedActivity = Registry.impl(DirectedCategoryActivity.class,place.getClass());
 				}
 			} else {
-				directedActivity = Registry.query(DirectedActivity.class)
-						.addKeys(place.getClass()).impl();
+				directedActivity = Registry.impl(DirectedActivity.class,place.getClass());
 			}
 		}
 		directedActivity.setPlace((BasePlace) place);
@@ -102,7 +94,7 @@ public class DirectedActivity<P extends BasePlace> extends Model
 
 	@Override
 	public void onStop() {
-		// could publish for cleanup, but don't see any use case
+		topicActivityStopped.publish(this);
 	}
 
 	@Override

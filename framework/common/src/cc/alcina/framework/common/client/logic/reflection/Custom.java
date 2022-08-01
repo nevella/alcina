@@ -21,6 +21,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 
 /**
@@ -34,9 +38,16 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 @Documented
 @Target({ ElementType.METHOD, ElementType.FIELD })
 @ClientVisible
+@Resolution(inheritance = {
+		Inheritance.PROPERTY }, mergeStrategy = Custom.MergeStrategy.class)
 public @interface Custom {
 	// FIXME - dirndl 1.2 - directed??
 	Class<? extends Customiser> customiserClass();
 
 	NamedParameter[] parameters() default {};
+
+	@Reflected
+	public static class MergeStrategy extends
+			AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOnly<Custom> {
+	}
 }

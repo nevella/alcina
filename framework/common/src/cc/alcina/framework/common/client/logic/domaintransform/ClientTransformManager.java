@@ -120,6 +120,9 @@ public abstract class ClientTransformManager extends TransformManager {
 					pp, domainObject, false)) {
 				continue;
 			}
+			if (property.isReadOnly() || property.isWriteOnly()) {
+				continue;
+			}
 			String propertyName = property.getName();
 			Object currentValue = property.get(domainObject);
 			boolean create = instructions != null
