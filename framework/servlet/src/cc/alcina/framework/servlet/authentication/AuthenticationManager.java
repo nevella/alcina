@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.AuthenticationPersistence;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -218,6 +219,9 @@ public class AuthenticationManager {
 	}
 
 	private boolean isExpired(AuthenticationSession session) {
+		if (!Configuration.is("sessionExpirationEnabled")) {
+			return false;
+		}
 		ensureContext().localAuthenticator.checkExternalExpiration(session);
 		boolean result = session.provideIsExpired();
 		if (result && session.getEndTime() == null) {
