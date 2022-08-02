@@ -133,6 +133,10 @@ public class ClassMetadata<CM extends ClassMetadata> implements Serializable {
 
 	public URL url() {
 		if (url == null && urlString != null) {
+			if (urlString.startsWith("file://")
+					&& !urlString.startsWith("file:///")) {
+				urlString = urlString.replaceFirst("^file://", "file:///");
+			}
 			try {
 				url = new URL(urlString);
 			} catch (Exception e) {
