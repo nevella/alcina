@@ -10,6 +10,8 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
@@ -21,8 +23,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 // Not inherited - annotation resolution uses merging algorithm which would
 // conflict
 // @Inherited
-// TODO - dirndl - add @Directed.FieldNamesAsTags (for data fields i.e. string,
-// int)
+@Resolution(inheritance = { Inheritance.CLASS, Inheritance.INTERFACE,
+		Inheritance.ERASED_PROPERTY,
+		Inheritance.PROPERTY }, mergeStrategy = DirectedMergeStrategy.class)
 @ClientVisible
 public @interface Directed {
 	/**
@@ -125,6 +128,19 @@ public @interface Directed {
 		}
 	}
 
+	/**
+	 * Sugar for @Directed(renderer=DelegatingNodeRenderer.class)
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.METHOD)
+	@ClientVisible
+	public static @interface Delegating {
+	}
+
 	public static class DirectedResolver extends Directed.Default {
 		private TreeResolver<Directed> treeResolver;
 
@@ -199,6 +215,36 @@ public @interface Directed {
 		}
 	}
 
+	/**
+	 * <p>
+	 * Render the model to multiple nodes - most common use case is to output 2+
+	 * nested tags for a model element
+	 *
+	 * <p>
+	 * e.g.
+	 * <code>@Directed.Multiple({@Directed(tag="wrapper"),@Directed})</code>
+	 *
+	 * <p>
+	 * Notes:
+	 * <ul>
+	 * <li>Non-last array @Directed annotations will default to renderer
+	 * ContainerNodeRenderer.class, not ModelClassNodeRenderer.class
+	 * <li>Only the last element will attempt to merge parent @Directed
+	 * annotations
+	 * </ul>
+	 *
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.METHOD)
+	@ClientVisible
+	public static @interface Multiple {
+		Directed[] value();
+	}
+
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
 	@Target(ElementType.METHOD)
@@ -206,4 +252,6 @@ public @interface Directed {
 	public static @interface Property {
 		String name();
 	}
+	//
+	//
 }

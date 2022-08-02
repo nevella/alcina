@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 /*
  * TODO - caching annotation facade? Or cache on the resolver (possibly latter)
  */
-public class ClassReflector<T> {
+public class ClassReflector<T> implements HasAnnotations {
 	// FIXME - reflection 1.1 - use optimised collections, probably remove the
 	// string/class maps (use 'isPrimitiveWrapper; isJdkValueClass'
 	public static final Map<String, Class> stdClassMap = new HashMap<String, Class>();
@@ -95,6 +95,7 @@ public class ClassReflector<T> {
 		init0();
 	}
 
+	@Override
 	public <A extends Annotation> A annotation(Class<A> annotationClass) {
 		return annotationProvider.getAnnotation(annotationClass);
 	}

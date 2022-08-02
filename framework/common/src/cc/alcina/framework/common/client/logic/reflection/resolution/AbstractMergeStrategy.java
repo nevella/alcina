@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 

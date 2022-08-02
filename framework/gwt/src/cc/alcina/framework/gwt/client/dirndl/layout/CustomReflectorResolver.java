@@ -6,6 +6,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
+//FIXME - dirndl1.1 - remove
 class CustomReflectorResolver extends TreeResolver<Directed> {
 	public static Directed forParentAndValue(Class discriminator, Node node,
 			Class locationResolutionClass, Directed reflectorValue) {

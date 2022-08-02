@@ -14,19 +14,19 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 /**
  * A key part of dirndl - how annotations (declarative domain knowledge) are
  * modified by their context.
- * 
+ *
  * See com.fasterxml.jackson.databind.ObjectMapper.addMixIn(Class<?>, Class<?>)
  * for a good alternative solution for straight-forward cases.
- * 
+ *
  * Bit of an a-Ha moment - does this remind anyone of DNA transcription?
  * (particularly in the generative context of dirndl)?
- * 
+ *
  * Strategy is:
- * 
+ *
  * - most-specific class can simply return an imperative value
- * 
+ *
  * - if not, pass to parent
- * 
+ *
  * - if no overrides (resolution is null), resolve via annotation merge
  */
 public class TreeResolver<A extends Annotation> {
@@ -97,7 +97,7 @@ public class TreeResolver<A extends Annotation> {
 					/*
 					 * replace resolved value with parent value iff resolved
 					 * value is default and non-array
-					 * 
+					 *
 					 * merge arrays if merge non-default
 					 */
 					boolean valueEqualsDefault = areEqual(value, defaultValue);

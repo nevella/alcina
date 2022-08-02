@@ -53,6 +53,7 @@ import com.totsp.gwittir.client.ui.table.Field;
 import com.totsp.gwittir.client.ui.util.BoundWidgetProvider;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
+import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -462,7 +463,7 @@ public class FastROBoundTable extends BoundTableExt {
 				((RequiresContextBindable) wp).setBindable(target);
 			}
 			final BoundWidget editableWidget = wp.get();
-			Property p = Reflections.at(target.getClass())
+			HasAnnotations p = Reflections.at(target.getClass())
 					.property(field.getPropertyName());
 			try {
 				editableWidget.setModel(target);

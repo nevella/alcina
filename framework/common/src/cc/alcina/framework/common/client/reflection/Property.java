@@ -6,7 +6,7 @@ import java.util.Objects;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public class Property {
+public class Property implements HasAnnotations {
 	private String name;
 
 	private Method getter;
@@ -30,6 +30,7 @@ public class Property {
 		this.annotationResolver = annotationResolver;
 	}
 
+	@Override
 	public <A extends Annotation> A annotation(Class<A> annotationClass) {
 		return annotationResolver.getAnnotation(annotationClass);
 	}

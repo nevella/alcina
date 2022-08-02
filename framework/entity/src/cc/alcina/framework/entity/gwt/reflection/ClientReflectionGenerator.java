@@ -364,13 +364,18 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				|| Boolean.getBoolean("reachability.production");
 	}
 
-	String stringLiteral(String value) {
-		return String.format("\"%s\"",
-				value.replace("\\", "\\\\").replace("\n", "\\n"));
+	String stringLiteral(String value, boolean quoted) {
+		String escaped = value.replace("\\", "\\\\").replace("\n", "\\n");
+		return quoted ? escaped : String.format("\"%s\"", escaped);
 	}
 
 	void writeAnnotationValue(SourceWriter sourceWriter, Object value,
 			Class declaredType) {
+		writeAnnotationValue(sourceWriter, value, declaredType, false);
+	}
+
+	void writeAnnotationValue(SourceWriter sourceWriter, Object value,
+			Class declaredType, boolean quoted) {
 		// FIXME
 		if (value == null) {
 			sourceWriter.print("null");
@@ -382,23 +387,33 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			String componentImplementationName = annotationImplFqn.containsKey(
 					componentType) ? annotationImplFqn.get(componentType)
 							: componentType.getCanonicalName();
-			sourceWriter.print("new %s[]{", componentImplementationName);
+			if (quoted) {
+				sourceWriter.print("{");
+			} else {
+				sourceWriter.print("new %s[]{", componentImplementationName);
+			}
 			int length = Array.getLength(value);
 			for (int i = 0; i < length; i++) {
 				if (i != 0) {
 					sourceWriter.print(", ");
 				}
 				Object element = Array.get(value, i);
-				writeAnnotationValue(sourceWriter, element, componentType);
+				writeAnnotationValue(sourceWriter, element, componentType,
+						quoted);
 			}
 			sourceWriter.print("}");
 		} else if (declaredType.isAnnotation()) {
 			new AnnotationExpressionWriter((Annotation) value)
 					.writeExpression(sourceWriter);
 		} else if (clazz.equals(Class.class)) {
-			sourceWriter.print(((Class) value).getCanonicalName() + ".class");
+			if (quoted) {
+				sourceWriter.print(((Class) value).getSimpleName() + ".class");
+			} else {
+				sourceWriter
+						.print(((Class) value).getCanonicalName() + ".class");
+			}
 		} else if (clazz.equals(String.class)) {
-			sourceWriter.print(stringLiteral(value.toString()));
+			sourceWriter.print(stringLiteral(value.toString(), quoted));
 		} else if (Enum.class.isAssignableFrom(clazz)) {
 			sourceWriter.print("%s.%s", clazz.getCanonicalName(),
 					value.toString());
@@ -531,6 +546,30 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					"public Class<? extends Annotation> annotationType() {");
 			sourceWriter.indentln("return %s.class;",
 					annotationClass.getCanonicalName());
+			sourceWriter.println("}");
+			sourceWriter.println();
+			sourceWriter.println("public String toString() {");
+			sourceWriter.indent();
+			sourceWriter.println(
+					"StringBuilder stringBuilder = new StringBuilder();");
+			int methodIndex = 0;
+			for (Method method : declaredMethods) {
+				if (methodIndex++ > 0) {
+					sourceWriter.print("stringBuilder.append(\", \");");
+				}
+				String methodName = method.getName();
+				Class returnType = method.getReturnType();
+				sourceWriter.println("stringBuilder.append(\"%s\"); ",
+						methodName);
+				sourceWriter.println("stringBuilder.append(\"=\"); ");
+				sourceWriter.print("stringBuilder.append(\"");
+				writeAnnotationValue(sourceWriter, method.getDefaultValue(),
+						returnType, true);
+				sourceWriter.print("\");");
+				sourceWriter.println();
+			}
+			sourceWriter.println("return stringBuilder.toString();");
+			sourceWriter.outdent();
 			sourceWriter.println("}");
 			closeClassBody();
 			return true;
@@ -834,7 +873,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				annotationExpressionWriters
 						.forEach(expressionWriter -> expressionWriter
 								.write(sourceWriter));
-				sourceWriter.println("String name = %s;", stringLiteral(name));
+				sourceWriter.println("String name = %s;",
+						stringLiteral(name, false));
 				sourceWriter.print("Method getter = ");
 				printMethodRef(getter);
 				sourceWriter.print("Method setter = ");

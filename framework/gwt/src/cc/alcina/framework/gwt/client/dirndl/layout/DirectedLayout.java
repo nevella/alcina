@@ -107,7 +107,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * - Transform the initial object I to RendererInput RI, push onto RI stack
  * - Pop RI from stack
  * - While RI.DL[] is non-empty, compute renderer R from DL0 (first element of RI.DL[])
- * - Apply R to RI via [DL0,CR], which (decidedly non-functional):
+ * - Apply R to RI via [DL0,CR], which (decidedly non-functional - i.e. results in multiple changes):
  * -- generates Node n which will be added to the children of PN
  * -- optionally generates Widget W which will be added as a child to the nearest parent Widget in the Node tree
  * -- optionally modifies RI.DL (TODO - examples)
@@ -196,7 +196,8 @@ public class DirectedLayout {
 	 * </p>
 	 *
 	 * <p>
-	 * FIXME - dirndl 1.1 - change documentation (since
+	 * FIXME - dirndl 1.1 - change documentation (since there's less
+	 * correspondence, but also fewer renderers)
 	 */
 	public static class Node {
 		private ContextResolver resolver;
@@ -409,6 +410,7 @@ public class DirectedLayout {
 				}
 				AnnotationLocation annotationLocation = new AnnotationLocation(
 						locationClass, property, resolver);
+				// FIXME - dirndl1.1 - remove (switched to a strategy)
 				directed = new DirectedResolver(
 						getResolver().getTreeResolver(Directed.class),
 						annotationLocation);
@@ -987,6 +989,8 @@ public class DirectedLayout {
 				// }
 			}
 
+			// FIXME - dirndl 1.1 - only required if Dom (or Gwt/InferredDom)
+			// event, *not* ModelEvent
 			Widget getBindingWidget() {
 				return rendered.verifySingleWidget();
 			}
@@ -1133,6 +1137,21 @@ public class DirectedLayout {
 		Directed directed;
 	}
 
+	/**
+	 * <p>
+	 * Input for the renderer, which transforms a model found at an
+	 * annotationlocation and a list of (usually a singleton) directed
+	 * annotations into (0,1) widgets and (0,n) RendererInputs
+	 *
+	 * <p>
+	 * When a node is removed, if a widget was generated during rendering, that
+	 * widget is removed from its parent, otherwise (recursively) its child
+	 * nodes' widgets are removed (TODO - explain with reasoning/motivation)
+	 *
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	class RendererInput {
 		final ContextResolver resolver;
 
@@ -1155,7 +1174,7 @@ public class DirectedLayout {
 			this.model = model;
 			this.location = location;
 			this.directeds = directeds != null ? directeds
-					: resolver.resolveDirecteds(location);
+					: location.getAnnotations(Directed.class);
 			this.parentNode = parentNode;
 			// generate the node (1-1 with input)
 			node = new Node(resolver, model);
@@ -1164,6 +1183,11 @@ public class DirectedLayout {
 
 		public DirectedRenderer provideRenderer() {
 			return resolver.getRenderer(node.directed, model);
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("Renderer [%s]", location.toString());
 		}
 
 		private Directed firstDirected() {

@@ -11,6 +11,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -108,7 +109,7 @@ public abstract class DirectedRenderer {
 			Collections.reverse(properties);
 			for (Property property : properties) {
 				// FIXME - can probably get a location rather than property
-				Property directedProperty = input.resolver
+				HasAnnotations directedProperty = input.resolver
 						.resolveDirectedProperty(property);
 				if (directedProperty != null) {
 					Object childModel = property.get(input.model);

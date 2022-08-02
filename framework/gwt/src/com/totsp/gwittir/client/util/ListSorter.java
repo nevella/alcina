@@ -22,6 +22,7 @@ package com.totsp.gwittir.client.util;
 import java.util.HashMap;
 import java.util.List;
 
+import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -41,7 +42,7 @@ public class ListSorter {
 	 */
 	public static void sortOnProperty(List list, String propertyName,
 			boolean ascending) throws Exception {
-		Property p = null;
+		HasAnnotations p = null;
 		HashMap<Class, Property> cache = new HashMap<Class, Property>();
 		for (int i = 0; i < (list.size() - 1); i++) {
 			for (int j = i + 1; j < list.size(); j++) {
