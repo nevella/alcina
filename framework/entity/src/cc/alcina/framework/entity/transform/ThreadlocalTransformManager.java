@@ -1231,7 +1231,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 		@Override
 		public void mapObject(Entity obj) {
-			throw new UnsupportedOperationException();
+			// noop
 		}
 
 		@Override
