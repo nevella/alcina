@@ -1,6 +1,7 @@
 package cc.alcina.framework.common.client.reflection;
 
 import java.lang.annotation.Annotation;
+import java.util.Comparator;
 import java.util.Objects;
 
 import cc.alcina.framework.common.client.util.Ax;
@@ -118,5 +119,12 @@ public class Property {
 	protected Method resolveSetter(Object bean) {
 		return bean.getClass() == definingType ? setter
 				: Reflections.at(bean.getClass()).property(name).setter;
+	}
+
+	public static class NameComparator implements Comparator<Property> {
+		@Override
+		public int compare(Property o1, Property o2) {
+			return o1.name.compareTo(o2.name);
+		}
 	}
 }
