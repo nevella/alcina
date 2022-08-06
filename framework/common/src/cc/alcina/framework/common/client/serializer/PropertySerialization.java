@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -23,7 +23,7 @@ import java.lang.annotation.Target;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 
 /**
- * 
+ *
  * @author nick@alcina.cc
  *
  */
@@ -64,24 +64,24 @@ public @interface PropertySerialization {
 	 */
 	String path() default "";
 
-	Class<? extends Serializer> serializer() default Serializer.None.class;
-
-	/*
-	 * Usages:
-	 * 
-	 * -- types are a {1,n} list of TreeSerializable subclasses. Property type
-	 * can be either assignable from those subclasses or a collection
-	 * 
-	 * -- types is a single value leaftype. Property type can be either
-	 * assignable from that subclass or a collection
-	 */
-	Class[] types() default {};
-
 	/*
 	 * Forces serialization of the value even if normally elided, which
 	 * indicates object presence/absence to the property's object's parent
 	 */
 	boolean serializeDefaultValue() default false;
+
+	Class<? extends Serializer> serializer() default Serializer.None.class;
+
+	/**
+	 *
+	 * -- elements of types() be flat serializable as per
+	 * {@link FlatTreeSerializer} javadoc
+	 *
+	 * -- property type can be either assignable from an element of types() or a
+	 * collection (in which case the elements are assignable from the elements
+	 * of types())
+	 */
+	Class[] types() default {};
 
 	public static interface Serializer<T> {
 		T deserializeValue(String value);
