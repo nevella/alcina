@@ -10,6 +10,7 @@ import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
 
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
@@ -19,10 +20,10 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class TaskDomainQuery extends AbstractTaskPerformer {
-	private List<String> resultPaths;
+public class TaskDomainQuery extends ServerTask {
+	private List<String> resultPaths = new ArrayList<>();
 
 	private EntityLocator from;
 
@@ -67,6 +68,22 @@ public class TaskDomainQuery extends AbstractTaskPerformer {
 		this.resultPaths = resultPaths;
 	}
 
+	public TaskDomainQuery withFrom(Class clazz, long id) {
+		setFrom(new EntityLocator(clazz, id, 0L));
+		return this;
+	}
+
+	public TaskDomainQuery withFrom(Entity entity) {
+		setFrom(entity.toLocator());
+		return this;
+	}
+
+	public TaskDomainQuery withResultPaths(String... resultPaths) {
+		this.resultPaths = Arrays.stream(resultPaths)
+				.collect(Collectors.toList());
+		return this;
+	}
+
 	private List<Entity> getPropertyEntities(Entity entity, Property p) {
 		Object value = p.get(entity);
 		List<Entity> result = new ArrayList<>();
@@ -97,15 +114,22 @@ public class TaskDomainQuery extends AbstractTaskPerformer {
 		}
 		if (object instanceof Collection) {
 			Collection collection = (Collection) object;
-			FormatBuilder collectionBuilder = new FormatBuilder()
-					.separator(",");
-			int limit = Math.min(collection.size(), maxElementsPerCollection);
-			collectionBuilder.appendWithoutSeparator(
-					Ax.format("[(%s/%s elts):", limit, collection.size()));
-			collection.stream().limit(limit).forEach(o -> collectionBuilder
-					.append(this.getStringRepresentation(o)));
-			collectionBuilder.appendWithoutSeparator("]");
-			return collectionBuilder.toString();
+			if (collection.isEmpty()) {
+				return "[]";
+			} else {
+				FormatBuilder collectionWrapperBuilder = new FormatBuilder();
+				FormatBuilder collectionBuilder = new FormatBuilder()
+						.separator(",");
+				int limit = Math.min(collection.size(),
+						maxElementsPerCollection);
+				collectionWrapperBuilder.append(
+						Ax.format("[(%s/%s):", limit, collection.size()));
+				collection.stream().limit(limit).forEach(o -> collectionBuilder
+						.append(this.getStringRepresentation(o)));
+				collectionWrapperBuilder.append(collectionBuilder);
+				collectionWrapperBuilder.append("]");
+				return collectionWrapperBuilder.toString();
+			}
 		}
 		if (object instanceof String) {
 			maxChars = 200;
@@ -140,7 +164,7 @@ public class TaskDomainQuery extends AbstractTaskPerformer {
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	protected void performAction0(Task task) throws Exception {
 		Entity entity = from.find();
 		if (resultPaths == null) {
 			resultPaths = List.of("*");
