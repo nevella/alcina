@@ -14,6 +14,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
+import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -33,10 +34,9 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.projection.GraphTraversal;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.MethodContext;
-import cc.alcina.framework.servlet.actionhandlers.AbstractTaskPerformer;
+import cc.alcina.framework.servlet.schedule.ServerTask;
 
-public class TaskGenerateTreeSerializableSignatures
-		extends AbstractTaskPerformer {
+public class TaskGenerateTreeSerializableSignatures extends ServerTask {
 	public transient TreeSerializableSignatures signatures = new TreeSerializableSignatures();
 
 	private transient List<Field> missingPropertyDescriptors = new ArrayList<>();
@@ -125,7 +125,7 @@ public class TaskGenerateTreeSerializableSignatures
 	}
 
 	@Override
-	protected void run0() throws Exception {
+	protected void performAction0(Task task) throws Exception {
 		List<TreeSerializable> serializables = Registry
 				.query(TreeSerializable.class).implementations()
 				.sorted(Comparator.comparing(c -> c.getClass().getName()))
