@@ -167,6 +167,22 @@ public class StandardSchedules {
 		}
 	}
 
+	public static class TwoMinutesSchedule extends Schedule {
+		public TwoMinutesSchedule() {
+			LocalDateTime now = LocalDateTime.now();
+			withNext(now.truncatedTo(ChronoUnit.MINUTES)
+					.withMinute(now.getMinute() / 2 * 2).plusMinutes(2));
+		}
+	}
+
+	public static class TwoMinutesScheduleFactory
+			implements RegistryFactory<Schedule> {
+		@Override
+		public Schedule impl() {
+			return new StandardSchedules.TwoMinutesSchedule();
+		}
+	}
+
 	public static class WeeklySchedule extends Schedule {
 		public WeeklySchedule() {
 			withNext(LocalDateTime.now().truncatedTo(ChronoUnit.DAYS)
