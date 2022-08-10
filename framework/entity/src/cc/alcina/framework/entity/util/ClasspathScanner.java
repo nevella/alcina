@@ -295,8 +295,10 @@ public class ClasspathScanner {
 					if (attr.isRegularFile() && pathString.endsWith(".class")) {
 						String classPath = pathString
 								.substring(root.length() + 1);
+						String prefix = pathString.startsWith("/") ? "file://"
+								: "file:///";
 						add(classPath, attr.lastModifiedTime().toMillis(),
-								new URL("file://" + pathString), null);
+								new URL(prefix + pathString), null);
 					}
 					return FileVisitResult.CONTINUE;
 				} catch (Exception e) {

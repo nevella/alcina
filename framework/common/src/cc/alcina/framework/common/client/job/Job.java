@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -431,7 +432,9 @@ public abstract class Job extends VersionableEntity<Job>
 			Objects.requireNonNull(getTask());
 			return true;
 		} catch (Exception e) {
-			if (throwOnDeserializationException) {
+			if (throwOnDeserializationException || Objects.equals(
+					PermissionsManager.get().getClientInstance(),
+					getCreator())) {
 				throw new RuntimeException(e);
 			} else {
 				// Invalid class/serialized form

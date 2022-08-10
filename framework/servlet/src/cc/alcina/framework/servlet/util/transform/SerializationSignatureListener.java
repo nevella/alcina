@@ -28,13 +28,15 @@ import cc.alcina.framework.servlet.task.TaskGenerateTreeSerializableSignatures;
  * signature property name (xxxSignature) exists. There won't be a deadlock
  * issue with ensureSignature() because calling run() on that task doesn't
  * result in any transforms which would trigger ensureSignature().
- * 
+ *
  */
 public class SerializationSignatureListener
 		implements DomainTransformPersistenceListener {
 	private String signature;
 
 	private boolean ensureFailed = false;
+
+	Logger logger = LoggerFactory.getLogger(getClass());
 
 	public synchronized String ensureSignature() {
 		if (signature == null) {
@@ -54,7 +56,7 @@ public class SerializationSignatureListener
 							/*
 							 * NOT perform()
 							 */
-							task.run();
+							task.performSelf();
 						} catch (Exception e) {
 							e.printStackTrace();
 						} finally {
@@ -141,6 +143,4 @@ public class SerializationSignatureListener
 			}
 		}
 	}
-
-	Logger logger = LoggerFactory.getLogger(getClass());
 }

@@ -147,8 +147,8 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 	public String serialize(Object object) {
 		return runWithObjectMapper(mapper -> {
 			try {
-				StringWriter writer = new LengthConstrainedStringWriter(maxLength,
-						truncateAtMaxLength);
+				StringWriter writer = new LengthConstrainedStringWriter(
+						maxLength, truncateAtMaxLength);
 				if (withPrettyPrint) {
 					SerializationConfig config = mapper
 							.getSerializationConfig();
@@ -212,6 +212,12 @@ public class JacksonJsonObjectSerializer implements JsonObjectSerializer {
 			 * deserialization havoc (if used as a true serialization format)
 			 */
 	JacksonJsonObjectSerializer withDefaults(boolean withDefaults) {
+		this.withDefaults = withDefaults;
+		return this;
+	}
+
+	public JacksonJsonObjectSerializer
+			withDefaultsIgnoreDeserializationAmbiguity(boolean withDefaults) {
 		this.withDefaults = withDefaults;
 		return this;
 	}

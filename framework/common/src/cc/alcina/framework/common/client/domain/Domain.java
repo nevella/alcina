@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -43,6 +44,11 @@ public class Domain {
 	public static <T extends Entity> void async(Class<T> clazz, long objectId,
 			boolean create, Consumer<T> resultConsumer) {
 		handler.async(clazz, objectId, create, resultConsumer);
+	}
+
+	public static <V extends Entity> V by(Class<V> clazz,
+			PropertyEnum propertyName, Object value) {
+		return by(clazz, propertyName.name(), value);
 	}
 
 	public static <V extends Entity> V by(Class<V> clazz, String propertyName,
@@ -138,6 +144,10 @@ public class Domain {
 		return handler.listByProperty(clazz, propertyName, value);
 	}
 
+	public static boolean notRemoved(Entity entity) {
+		return !wasRemoved(entity);
+	}
+
 	public static <V extends Entity> Optional<V> optionalByProperty(
 			Class<V> clazz, String propertyName, Object value) {
 		return Optional.ofNullable(by(clazz, propertyName, value));
@@ -177,10 +187,6 @@ public class Domain {
 
 	public static boolean wasRemoved(Entity entity) {
 		return handler.wasRemoved(entity);
-	}
-
-	public static boolean notRemoved(Entity entity) {
-		return !wasRemoved(entity);
 	}
 
 	public interface DomainHandler {

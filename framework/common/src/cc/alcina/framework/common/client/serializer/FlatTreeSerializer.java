@@ -26,7 +26,6 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.domain.search.GroupingParameters;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -62,9 +61,10 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * human-friendly) the key names. The notional algorithm is:
  * </p>
  * <ul>
- * <li>Generate the non-compressed list, producing a list of path (parallel with
- * variations to jsonptr)/value pairs
- * <li>Remove where identical to default
+ * <li>Generate the non-compressed list, producing a list of path/value pairs.
+ * The paths are similar to jsonptr paths.
+ * <li>Optionally remove pairs derived from field values equal to the object
+ * defaults
  * <li>Compress using class/field annotations:
  * <ul>
  * <li>Remove path segment if default
@@ -73,17 +73,17 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * polymporhpic collection
  * </ul>
  * </ul>
- * <p>
- * Polymporhpic collections must either define the complete list of allowable
+ * <h2>Constraints:</h2>
+ *
+ * <ul>
+ * <li>Collection properties cannot contain nulls, and cannot *be* nulls. If a
+ * default property has no type constraints, it must be populated by the
+ * constructor
+ * <li>Collection properties must either define the complete list of allowable
  * members, to ensure alias uniqueness, or use any-type (unspecified - types()
  * annotation length==0) serialization - in the latter case the path compression
  * use the full classname as typeinfo.
- *
- * </p>
- * <p>
- * Constraints: Collections cannot contain nulls. If a default property has no
- * type constraints, it must be populated by the constructor
- * </p>
+ * </ul>
  *
  * <h2>Verification and safety:</h2>
  * <ul>
@@ -93,6 +93,24 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * <li>If with testing option, adds reachable TreeSerializable types to the
  * testing queue
  * </ul>
+ *
+ * <h2>Serializable types:</h2>
+ * <ul>
+ * <li>Primitives and primitive wrappers
+ * <li>Null (if not a collection property/element)
+ * <li>cc.alcina.framework.common.client.serializer.TreeSerializable
+ * <li>java.util.Date
+ * <li>java.lang.Enum
+ * <li>java.lang.String
+ * <li>java.lang.Class
+ * <li>byte[]
+ * <li>java.util.Collection
+ * <li>cc.alcina.framework.common.client.logic.domain.Entity
+ * <li>cc.alcina.framework.gwt.client.place.BasePlace
+ * <li>(Any type if a custom propertyserializer is provided via
+ * PropertySerialization.serializer)
+ * </ul>
+ *
  *
  * <h2>TODO:</h2>
  * <ul>
@@ -105,7 +123,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * and has type list(searchcriterion). Note that it's ok for a collection of
  * value types
  * </ul>
- * 
+ *
  * <h2>Gotchas</h2>
  * <ul>
  * <li>Object presence is denoted by serialization of one of its fields, so
@@ -113,8 +131,9 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * BindableSearchDefinition.groupingParameters.grouping - if grouping is a
  * default enum value, serialization is currently incorrect. TODO: serialization
  * should fail with an unspecified type exception if a potentially polymorphic
- * type lacks constraints (NR - note: 2021 ContactSearcDefinition.groupingParameters
- * 
+ * type lacks constraints (NR - note: 2021
+ * ContactSearcDefinition.groupingParameters
+ *
  * </ul>
  *
  *
@@ -134,6 +153,9 @@ public class FlatTreeSerializer {
 	public static final String CONTEXT_THROW_ON_SERIALIZATION_FAILURE = FlatTreeSerializer.class
 			.getName() + ".CONTEXT_THROW_ON_SERIALIZATION_FAILURE";
 
+	// FIXME - 2023 - this would collide with the string __fts_NULL__ - right?
+	// Check if there's an escape sequence that would be impossible for a
+	// serialized string
 	private static String NULL_MARKER = "__fts_NULL__";
 
 	private static Map<Class, Map<String, Property>> deSerializationClassAliasProperty = Registry
@@ -783,9 +805,7 @@ public class FlatTreeSerializer {
 			if (isLeafValue(value)) {
 				if (!Objects.equals(value, cursor.defaultValue)
 						|| !state.serializerOptions.elideDefaults
-						|| cursor.isPutDefaultValue()
-						
-						) {
+						|| cursor.isPutDefaultValue()) {
 					cursor.putValue(state);
 				}
 				state.mergeableNode = cursor;
@@ -1445,24 +1465,28 @@ public class FlatTreeSerializer {
 
 		void putToObject(String stringValue) {
 			Property property = path.property;
-			Class leafType = NULL_MARKER.equals(stringValue) ? void.class
-					: path.soleType();
+			boolean isNull = NULL_MARKER.equals(stringValue);
+			Class leafType = isNull ? void.class : path.soleType();
 			// always leaf (primitiveish) values
 			if (isCollection()) {
-				Collection collection = (Collection) value;
-				/*
-				 * Always clear any defaults for the leaf collection before
-				 * first add
-				 */
-				if (!leafCollectionCleared) {
-					collection.clear();
-					leafCollectionCleared = true;
-				}
-				for (String leafStringValue : stringValue
-						.split(VALUE_SEPARATOR)) {
-					Object leafValue = parseStringValue(leafType,
-							leafStringValue);
-					collection.add(leafValue);
+				if (isNull) {
+					property.set(parent.value, null);
+				} else {
+					Collection collection = (Collection) value;
+					/*
+					 * Always clear any defaults for the leaf collection before
+					 * first add
+					 */
+					if (!leafCollectionCleared) {
+						collection.clear();
+						leafCollectionCleared = true;
+					}
+					for (String leafStringValue : stringValue
+							.split(VALUE_SEPARATOR)) {
+						Object leafValue = parseStringValue(leafType,
+								leafStringValue);
+						collection.add(leafValue);
+					}
 				}
 			} else {
 				Object leafValue = parseStringValue(leafType, stringValue);
@@ -1491,6 +1515,10 @@ public class FlatTreeSerializer {
 
 		String toStringValue() {
 			if (value == null) {
+				if (FlatTreeSerializer.isCollection(path.property.getType())) {
+					throw new IllegalArgumentException(Ax
+							.format("Null collection type property: %s", path));
+				}
 				return NULL_MARKER;
 			}
 			if (path.serializer != null) {
@@ -1548,19 +1576,19 @@ public class FlatTreeSerializer {
 			this.parent = parent;
 		}
 
+		public boolean canMergeTo(Path other) {
+			return toStringShort(true).equals(other.toStringShort(true));
+		}
+
 		public boolean isPutDefaultValue(Object value) {
-			if(serializer != null
-					&& !serializer.elideDefaultValues(value)){
+			if (serializer != null && !serializer.elideDefaultValues(value)) {
 				return true;
 			}
-			if(propertySerialization!=null&&propertySerialization.serializeDefaultValue()){
+			if (propertySerialization != null
+					&& propertySerialization.serializeDefaultValue()) {
 				return true;
 			}
 			return false;
-		}
-
-		public boolean canMergeTo(Path other) {
-			return toStringShort(true).equals(other.toStringShort(true));
 		}
 
 		public void setPropertySerialization(

@@ -10,9 +10,14 @@ import cc.alcina.framework.common.client.util.StringMap;
 
 /**
  *
+ * <p>
  * That is used by app server code to generate the serialization signature of
  * the reachable serializables at startup time, and to validate the serializable
  * classes (most importantly that any non-property fields are transient)
+ *
+ * <p>
+ * Note that - as per {@link FlatTreeSerializer}, Collection properties cannot
+ * contain nulls, and cannot *be* nulls.
  *
  * @author nick@alcina.cc
  *

@@ -1,14 +1,16 @@
 package cc.alcina.extras.dev.console.code;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import cc.alcina.framework.common.client.job.Task;
+import cc.alcina.framework.common.client.serializer.PropertySerialization;
 
 /**
  * Analyse source, look for entrypoint accesses from accessing code (either
  * static calls or constructor calls)
- * 
- * 
+ *
+ *
  */
 public class TaskConvertToProxies implements Task {
 	String importMatcherRegex;
@@ -17,7 +19,7 @@ public class TaskConvertToProxies implements Task {
 
 	String outputPackagePath;
 
-	List<String> pathsToScan;
+	List<String> pathsToScan = new ArrayList<>();
 
 	Class<?> classProxyImpl;
 
@@ -56,6 +58,7 @@ public class TaskConvertToProxies implements Task {
 		return this.outputPackagePath;
 	}
 
+	@PropertySerialization(types = String.class)
 	public List<String> getPathsToScan() {
 		return this.pathsToScan;
 	}
