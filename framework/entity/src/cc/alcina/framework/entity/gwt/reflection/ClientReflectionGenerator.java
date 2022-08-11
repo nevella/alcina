@@ -548,6 +548,17 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 					annotationClass.getCanonicalName());
 			sourceWriter.println("}");
 			sourceWriter.println();
+			// o will be non-null
+			sourceWriter.println("private String __stringValue(Object o) {");
+			sourceWriter.indent();
+			sourceWriter.println(
+					"if(o instanceof Class){return ((Class)o).getSimpleName()+\".class\";}");
+			sourceWriter.println(
+					"if(o.getClass().isArray()){return \"[\"+java.util.Arrays.stream"
+							+ "((Object[])o).map(this::__stringValue).collect(java.util.stream.Collectors.joining(\",\"))+\"]\";}");
+			sourceWriter.println("return o.toString();");
+			sourceWriter.outdent();
+			sourceWriter.println("}");
 			sourceWriter.println("public String toString() {");
 			sourceWriter.indent();
 			sourceWriter.println(
@@ -562,10 +573,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				sourceWriter.println("stringBuilder.append(\"%s\"); ",
 						methodName);
 				sourceWriter.println("stringBuilder.append(\"=\"); ");
-				sourceWriter.print("stringBuilder.append(\"");
-				writeAnnotationValue(sourceWriter, method.getDefaultValue(),
-						returnType, true);
-				sourceWriter.print("\");");
+				sourceWriter.print("stringBuilder.append(__stringValue(%s));",
+						method.getName());
 				sourceWriter.println();
 			}
 			sourceWriter.println("return stringBuilder.toString();");
