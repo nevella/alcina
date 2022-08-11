@@ -21,7 +21,10 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Make type info available to the GWT client
+ * Make type info available to the GWT client.
+ *
+ * FIXME - dirndl 1x2 - use a strategy (and resolve in callers) to make this
+ * annotation inheritable from interfaces
  *
  * @author nick@alcina.cc
  *

@@ -20,7 +20,9 @@ import java.lang.annotation.Inherited;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Arrays;
 import java.util.List;
+import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -64,9 +66,58 @@ public @interface Resolution {
 	}
 
 	public interface MergeStrategy<A extends Annotation> {
+		public static <O, V> V mergeValues(O lessSpecific, O moreSpecific,
+				O defaultsInstance, Function<O, V> mapping) {
+			V defaultValue = mapping.apply(defaultsInstance);
+			V moreSpecificValue = mapping.apply(moreSpecific);
+			V lessSpecificValue = mapping.apply(lessSpecific);
+			/*
+			 * replace resolved value with parent value iff resolved value is
+			 * default and non-array
+			 *
+			 * merge arrays if merge non-default
+			 */
+			boolean moreSpecificEqualsDefault = areEqual(moreSpecificValue,
+					defaultValue);
+			boolean lessSpecificEqualsDefault = areEqual(lessSpecificValue,
+					defaultValue);
+			if (moreSpecificEqualsDefault) {
+				return lessSpecificValue;
+			} else {
+				if (lessSpecificEqualsDefault
+						|| !defaultValue.getClass().isArray()) {
+					// value does not change (from lower/morespecific)
+					return moreSpecificValue;
+				} else {
+					Object[] moreSpecificArray = (Object[]) moreSpecificValue;
+					Object[] lessSpecificArray = (Object[]) lessSpecificValue;
+					Object[] result = Arrays.copyOf(moreSpecificArray,
+							moreSpecificArray.length
+									+ lessSpecificArray.length);
+					System.arraycopy(lessSpecificArray, 0, result,
+							moreSpecificArray.length, lessSpecificArray.length);
+					return (V) result;
+				}
+			}
+		}
+
+		// will be annotation values so guaranteed non-null
+		private static boolean areEqual(Object o1, Object o2) {
+			if (o1.getClass().isArray()) {
+				return Arrays.equals((Object[]) o1, (Object[]) o2);
+			} else {
+				return o1.equals(o2);
+			}
+		}
+
 		default void finish(List<A> merged) {
 		}
 
+		/**
+		 * Because resolution is an ascending process (from lower, more specific
+		 * tree node to higher, less specific), algorithms should prefer the
+		 * "lower" node
+		 */
 		List<A> merge(List<A> higher, List<A> lower);
 
 		List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,

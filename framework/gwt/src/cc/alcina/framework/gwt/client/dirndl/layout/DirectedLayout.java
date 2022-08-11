@@ -226,17 +226,24 @@ public class DirectedLayout {
 
 		private ContextResolver childResolver;
 
-		protected Node(ContextResolver resolver, Object model) {
+		private AnnotationLocation annotationLocation;
+
+		protected Node(ContextResolver resolver, Node parent,
+				AnnotationLocation annotationLocation, Object model) {
 			this.resolver = resolver;
+			this.parent = parent;
+			this.annotationLocation = annotationLocation;
 			this.model = resolver.resolveModel(model);
 			current = this;
 		}
 
+		// FIXME - dirndl1x11 - remove
 		public <T> T ancestorModel(Class<T> clazz) {
 			return ancestorModel(model -> Reflections.isAssignableFrom(clazz,
 					model.getClass()));
 		}
 
+		// FIXME - dirndl1x11 - remove
 		public <T> T ancestorModel(Predicate predicate) {
 			if (predicate.test(model)) {
 				return (T) model;
@@ -647,13 +654,13 @@ public class DirectedLayout {
 
 		protected Node createChild(Object childModel,
 				Property definingReflector, Property changeSource) {
+			// FIXME - this should probably be via rendererinputs
 			Node child = new Node(
-					childResolver != null ? childResolver : resolver,
-					childModel);
+					childResolver != null ? childResolver : resolver, this,
+					null, childModel);
 			child.property = definingReflector;
 			child.changeSource = changeSource;
 			child.resolver = resolver;
-			child.parent = this;
 			addListeners(child);
 			return child;
 		}
@@ -679,8 +686,9 @@ public class DirectedLayout {
 		String pathSegment() {
 			String thisLoc = Ax.format("{%s}", model == null ? "null model"
 					: model.getClass().getSimpleName());
-			if (property != null) {
-				thisLoc = property.getName() + "." + thisLoc;
+			if (annotationLocation != null
+					&& annotationLocation.property != null) {
+				thisLoc = annotationLocation.property.getName() + "." + thisLoc;
 			} else {
 				if (parent != null && renderer != null) {
 					thisLoc = Ax.format("(%s).%s",
@@ -1177,12 +1185,13 @@ public class DirectedLayout {
 					: location.getAnnotations(Directed.class);
 			this.parentNode = parentNode;
 			// generate the node (1-1 with input)
-			node = new Node(resolver, model);
+			node = new Node(resolver, parentNode, location, model);
 			node.directed = firstDirected();
 		}
 
 		public DirectedRenderer provideRenderer() {
-			return resolver.getRenderer(node.directed, model);
+			return directeds.size() > 1 ? new DirectedRenderer.Container()
+					: resolver.getRenderer(node.directed, model);
 		}
 
 		@Override
@@ -1218,9 +1227,14 @@ public class DirectedLayout {
 				}
 			}
 			if (directeds.size() > 1) {
-				enqueueInput(resolver, rendererInputs, location,
+				enqueueInput(resolver, model, location,
 						directeds.subList(1, directeds.size()), node);
 			}
+		}
+
+		Directed soleDirected() {
+			Preconditions.checkState(directeds.size() == 1);
+			return directeds.get(0);
 		}
 	}
 }

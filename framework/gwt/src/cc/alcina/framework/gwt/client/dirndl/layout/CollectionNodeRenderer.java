@@ -52,7 +52,7 @@ public class CollectionNodeRenderer extends DirectedNodeRenderer {
 			} else {
 				child.directed = CustomReflectorResolver.forParentAndValue(
 						CollectionNodeRendererArgs.class, node, modelClass,
-						Directed.Default.INSTANCE);
+						Directed.Impl.DEFAULT_INSTANCE);
 			}
 			result.addAll(child.render().widgets);
 		}

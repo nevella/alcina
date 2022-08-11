@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -18,16 +19,19 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ContextSensitiveTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransformNodeRendererArgs;
 import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
 
 public abstract class DirectedRenderer {
-	protected abstract void render(DirectedLayout.RendererInput input);
-
-	protected void renderDefaults(Node node, Widget widget) {
+	protected void applyCssClass(Node node, Widget widget) {
 		if (node.directed.cssClass().length() > 0) {
 			widget.addStyleName(node.directed.cssClass());
 		}
 	}
+
+	protected abstract void render(DirectedLayout.RendererInput input);
 
 	@Registration({ DirectedRenderer.class, BindableNodeRenderer.class })
 	public static class BindableRenderer extends DirectedRenderer
@@ -37,6 +41,33 @@ public abstract class DirectedRenderer {
 			// could subclass container - but we're going for composition
 			new Container().render(input);
 			generatePropertyInputs(input);
+		}
+	}
+
+	/**
+	 * The most-specific @Directed at the initiating AnnotationLocation will be
+	 * applied to each CollectionItem
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Registration({ DirectedRenderer.class, CollectionNodeRenderer.class })
+	public static class Collection extends DirectedRenderer
+			implements GeneratesTransformModel {
+		@Override
+		protected void render(RendererInput input) {
+			Preconditions
+					.checkArgument(input.model instanceof java.util.Collection);
+			// zero widgets for the container, generates input per child
+			List list = (List) ((java.util.Collection) input.model).stream()
+					.collect(Collectors.toList());
+			Collections.reverse(list);
+			list.forEach(model -> {
+				Object transformedModel = transformModel(input, model);
+				input.enqueueInput(input.resolver, transformedModel,
+						input.location, Arrays.asList(input.soleDirected()),
+						input.node);
+			});
 		}
 	}
 
@@ -55,6 +86,7 @@ public abstract class DirectedRenderer {
 			if (tag.length() > 0) {
 				FlowPanel widget = new FlowPanel(getTag(node));
 				node.rendered.widget = widget;
+				applyCssClass(node, widget);
 			}
 		}
 	}
@@ -98,17 +130,33 @@ public abstract class DirectedRenderer {
 		}
 	}
 
+	/**
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Registration({ DirectedRenderer.class, ModelTransformNodeRenderer.class })
+	public static class Transform extends DirectedRenderer
+			implements GeneratesTransformModel {
+		@Override
+		protected void render(RendererInput input) {
+			Object transformedModel = transformModel(input, input.model);
+			input.enqueueInput(input.resolver, transformedModel, input.location,
+					Arrays.asList(input.soleDirected()), input.node);
+		}
+	}
+
 	interface GeneratesPropertyInputs {
 		default void generatePropertyInputs(RendererInput input) {
 			// Enqueue in reverse order because processed (added to parent) in
 			// last-first order
-			// FIXME - 1.1 - cache this reversed order
+			// FIXME - 1.1 - cache this reversed order (actually, use a
+			// different structure, add to start and use 'add first'
 			List<Property> properties = Reflections.at((input.model.getClass()))
 					.properties();
 			properties = properties.stream().collect(Collectors.toList());
 			Collections.reverse(properties);
 			for (Property property : properties) {
-				// FIXME - can probably get a location rather than property
 				HasAnnotations directedProperty = input.resolver
 						.resolveDirectedProperty(property);
 				if (directedProperty != null) {
@@ -122,6 +170,30 @@ public abstract class DirectedRenderer {
 		}
 	}
 
+	interface GeneratesTransformModel {
+		default Object transformModel(RendererInput input, Object model) {
+			ModelTransformNodeRendererArgs args = input.location
+					.getAnnotation(ModelTransformNodeRendererArgs.class);
+			if (args == null) {
+				return model;
+			}
+			if (model == null && !args.transformsNull()) {
+				// no output
+				return null;
+			}
+			ModelTransform transform = (ModelTransform) Reflections
+					.newInstance(args.value());
+			// FIXME - dirndl 1x1 - can this be slimmed down? Since it allows
+			// access to parent
+			if (transform instanceof ContextSensitiveTransform) {
+				((ContextSensitiveTransform) transform)
+						.withContextNode(input.node);
+			}
+			Object transformedModel = transform.apply(model);
+			return transformedModel;
+		}
+	}
+
 	static abstract class Leaf extends DirectedRenderer {
 		protected String getTag(Node node) {
 			return node.directed.tag();
@@ -132,7 +204,9 @@ public abstract class DirectedRenderer {
 			Node node = input.node;
 			String tag = getTag(node);
 			Preconditions.checkArgument(Ax.notBlank(tag));
+			Widget widget = node.rendered.widget;
 			node.rendered.widget = new SimpleWidget(tag);
+			applyCssClass(node, widget);
 		}
 	}
 }

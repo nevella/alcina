@@ -104,7 +104,7 @@ public class MultipleNodeRenderer extends DirectedNodeRenderer
 	/*
 	 * Fabricates a 'directed' out of the supplied tag & css class
 	 */
-	private final class IntermediateDirected extends Directed.Default {
+	private final class IntermediateDirected extends Directed.Impl {
 		private final int idx;
 
 		private final MultipleNodeRendererArgs args;

@@ -10,6 +10,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 @Reflected
 // FIXME - dirndl 1.1 - unify getTag
+// actually, going away (replaced by DirectedRenderer.xxx)
 public abstract class DirectedNodeRenderer {
 	public abstract Widget render(Node node);
 

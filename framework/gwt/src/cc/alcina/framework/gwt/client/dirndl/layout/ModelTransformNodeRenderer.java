@@ -111,15 +111,25 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 
 		protected abstract B mapElement(A a);
 	}
-
 	/*
 	 * Note that this *must* return a result with an @Directed annotation - if
 	 * transforming to (say) a list, use DelegatingNodeRenderer.SimpleDelegate
 	 * to wrap
 	 */
+
 	public interface ModelTransform<A, B> extends Function<A, B> {
 	}
 
+	/**
+	 * FIXME - dirndl1x1 - at least two use cases: if renderer is Transform,
+	 * transforms the input model -- if renderer is Collection, transform the
+	 * elements (there's no real virtue in having x -> Collection<A> ->
+	 * Collection <B>, so this flattening makes sense). Need to doc this with
+	 * examples (and rename/move)
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented

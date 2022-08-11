@@ -3,10 +3,15 @@ package cc.alcina.framework.gwt.client.dirndl.annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 
@@ -16,14 +21,29 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 		// if lower.length >1, require higher.length max 1 (merge multiple up)
 		// and only merge last
 		// merge via Directed.Default
-		throw new UnsupportedOperationException();
-		// return Shared.merge(higher, lower,
-		// (t1, t2) -> Reflections.isAssignableFrom(t1, t2));
+		if (lower == null || lower.isEmpty()) {
+			return higher;
+		}
+		if (higher == null || higher.isEmpty()) {
+			return lower;
+		}
+		Preconditions.checkArgument(higher.size() == 1);
+		Directed lowest = Ax.last(lower);
+		Directed.Impl lowestImpl = Directed.Impl.wrap(lowest);
+		List<Directed> result = lower.stream().limit(lower.size() - 1)
+				.collect(Collectors.toList());
+		lowestImpl.mergeParent(higher.get(0));
+		result.add(lowestImpl);
+		return result;
 	}
 
 	@Override
 	protected List<Directed> atClass(Class<Directed> annotationClass,
 			ClassReflector<?> reflector) {
+		return atHasAnnotations(reflector);
+	}
+
+	protected List<Directed> atHasAnnotations(HasAnnotations reflector) {
 		List<Directed> result = new ArrayList<>();
 		Directed directed = reflector.annotation(Directed.class);
 		Directed.Multiple multiple = reflector
@@ -45,11 +65,10 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 	@Override
 	protected List<Directed> atProperty(Class<Directed> annotationClass,
 			Property property) {
-		// TODO Auto-generated method stub
-		return null;
+		return atHasAnnotations(property);
 	}
 
-	public static class Delegating extends Directed.Default {
+	public static class Delegating extends Directed.Impl {
 		@Override
 		public Class<? extends DirectedNodeRenderer> renderer() {
 			return DelegatingNodeRenderer.class;

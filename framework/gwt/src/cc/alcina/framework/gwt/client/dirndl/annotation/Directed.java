@@ -71,63 +71,6 @@ public @interface Directed {
 
 	public String tag() default "";
 
-	public static class Default implements Directed {
-		public static final Directed INSTANCE = new Directed.Default();
-
-		private Binding[] bindings = new Binding[0];
-
-		private Class[] emits = new Class[0];
-
-		private Class[] receives = new Class[0];
-
-		private Class[] reemits = new Class[0];
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return Directed.class;
-		}
-
-		@Override
-		public Binding[] bindings() {
-			return bindings;
-		}
-
-		@Override
-		public String cssClass() {
-			return "";
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] emits() {
-			return emits;
-		}
-
-		@Override
-		public boolean merge() {
-			return true;
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] receives() {
-			return receives;
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] reemits() {
-			return reemits;
-		}
-
-		@Override
-		public Class<? extends DirectedNodeRenderer> renderer() {
-			return ModelClassNodeRenderer.class;
-		}
-
-		@Override
-		public String tag() {
-			return "";
-		}
-	}
-
 	/**
 	 * Sugar for @Directed(renderer=DelegatingNodeRenderer.class)
 	 *
@@ -141,7 +84,7 @@ public @interface Directed {
 	public static @interface Delegating {
 	}
 
-	public static class DirectedResolver extends Directed.Default {
+	public static class DirectedResolver extends Directed.Impl {
 		private TreeResolver<Directed> treeResolver;
 
 		private AnnotationLocation location;
@@ -212,6 +155,161 @@ public @interface Directed {
 		public String tag() {
 			Function<Directed, String> function = Directed::tag;
 			return treeResolver.resolve(location, function, "tag", super.tag());
+		}
+	}
+
+	public static class Impl implements Directed {
+		public static final Directed DEFAULT_INSTANCE = new Directed.Impl();
+
+		public static Impl wrap(Directed directed) {
+			if (directed instanceof Impl) {
+				return (Impl) directed;
+			} else {
+				return new Impl(directed);
+			}
+		}
+
+		private Binding[] bindings = new Binding[0];
+
+		private Class[] emits = new Class[0];
+
+		private Class[] receives = new Class[0];
+
+		private Class[] reemits = new Class[0];
+
+		private boolean merge = true;
+
+		private String cssClass = "";
+
+		private String tag = "";
+
+		private Class<? extends DirectedNodeRenderer> renderer = ModelClassNodeRenderer.class;
+
+		public Impl() {
+		}
+
+		public Impl(Directed directed) {
+			bindings = directed.bindings();
+			emits = directed.emits();
+			receives = directed.receives();
+			reemits = directed.reemits();
+			merge = directed.merge();
+			cssClass = directed.cssClass();
+			tag = directed.tag();
+			renderer = directed.renderer();
+		}
+
+		@Override
+		public Class<? extends Annotation> annotationType() {
+			return Directed.class;
+		}
+
+		@Override
+		public Binding[] bindings() {
+			return bindings;
+		}
+
+		@Override
+		public String cssClass() {
+			return cssClass;
+		}
+
+		@Override
+		public Class<? extends NodeEvent>[] emits() {
+			return emits;
+		}
+
+		@Override
+		public boolean merge() {
+			return merge;
+		}
+
+		public void mergeParent(Directed parent) {
+			Impl merged = new Impl();
+			merged.bindings = mergeAttribute(parent, Directed::bindings);
+			merged.cssClass = mergeAttribute(parent, Directed::cssClass);
+			merged.emits = mergeAttribute(parent, Directed::emits);
+			merged.merge = mergeAttribute(parent, Directed::merge);
+			merged.receives = mergeAttribute(parent, Directed::receives);
+			merged.reemits = mergeAttribute(parent, Directed::reemits);
+			merged.renderer = mergeAttribute(parent, Directed::renderer);
+			merged.tag = mergeAttribute(parent, Directed::tag);
+		}
+
+		@Override
+		public Class<? extends NodeEvent>[] receives() {
+			return receives;
+		}
+
+		@Override
+		public Class<? extends NodeEvent>[] reemits() {
+			return reemits;
+		}
+
+		@Override
+		public Class<? extends DirectedNodeRenderer> renderer() {
+			return renderer;
+		}
+
+		@Override
+		public String tag() {
+			return tag;
+		}
+
+		@Override
+		public String toString() {
+			StringBuilder stringBuilder = new StringBuilder();
+			stringBuilder.append("bindings");
+			stringBuilder.append("=");
+			stringBuilder.append(__stringValue(bindings));
+			stringBuilder.append(", ");
+			stringBuilder.append("cssClass");
+			stringBuilder.append("=");
+			stringBuilder.append(__stringValue(cssClass));
+			stringBuilder.append(", ");
+			stringBuilder.append("emits");
+			stringBuilder.append("=");
+			stringBuilder.append(__stringValue(emits));
+			stringBuilder.append(", ");
+			stringBuilder.append("merge");
+			stringBuilder.append("=");
+			stringBuilder.append(__stringValue(merge));
+			stringBuilder.append(", ");
+			stringBuilder.append("receives");
+			stringBuilder.append("=");
+			stringBuilder.append(__stringValue(receives));
+			stringBuilder.append(", ");
+			stringBuilder.append("reemits");
+			stringBuilder.append("=");
+			stringBuilder.append(__stringValue(reemits));
+			stringBuilder.append(", ");
+			stringBuilder.append("renderer");
+			stringBuilder.append("=");
+			stringBuilder.append(__stringValue(renderer));
+			stringBuilder.append(", ");
+			stringBuilder.append("tag");
+			stringBuilder.append("=");
+			stringBuilder.append(__stringValue(tag));
+			return stringBuilder.toString();
+		}
+
+		private String __stringValue(Object o) {
+			if (o instanceof Class) {
+				return ((Class) o).getSimpleName() + ".class";
+			}
+			if (o.getClass().isArray()) {
+				return "[" + java.util.Arrays.stream((Object[]) o)
+						.map(this::__stringValue).collect(
+								java.util.stream.Collectors.joining(","))
+						+ "]";
+			}
+			return o.toString();
+		}
+
+		private <V> V mergeAttribute(Directed parent,
+				Function<Directed, V> function) {
+			return Resolution.MergeStrategy.mergeValues(parent, this,
+					DEFAULT_INSTANCE, function);
 		}
 	}
 
