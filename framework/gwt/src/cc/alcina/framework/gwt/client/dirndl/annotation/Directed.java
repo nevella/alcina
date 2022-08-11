@@ -16,6 +16,8 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolve
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransform;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -352,4 +354,34 @@ public @interface Directed {
 	}
 	//
 	//
+
+	/**
+	 * <p>
+	 * FIXME - dirndl1x1 - at least two use cases: if renderer is Transform,
+	 * transforms the input model -- if renderer is Collection, transform the
+	 * elements (there's no real virtue in having x -> Collection<A> ->
+	 * Collection <B>, so this flattening makes sense). Need to doc this with
+	 * examples (and rename/move)
+	 * 
+	 * <p>
+	 * Also - determine renderer strategy should use the presence of this
+	 * annotation to determine renderer as follows:
+	 * <ul>
+	 * <li>Type: collection - Present: true - use DirectedRenderer.Collection,
+	 * apply to elements
+	 * <li>Type: non-collection - Present: true - use
+	 * DirectedRenderer.Transform, apply to model
+	 * 
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@ClientVisible
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD }) @interface Transform {
+		boolean transformsNull() default false;
+	
+		Class<? extends ModelTransformNodeRenderer.ModelTransform> value();
+	}
 }

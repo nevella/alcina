@@ -17,11 +17,11 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ContextSensitiveTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransformNodeRendererArgs;
 import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
 
 public abstract class DirectedRenderer {
@@ -136,13 +136,15 @@ public abstract class DirectedRenderer {
 	 *
 	 */
 	@Registration({ DirectedRenderer.class, ModelTransformNodeRenderer.class })
-	public static class Transform extends DirectedRenderer
+	public static class TransformRenderer extends DirectedRenderer
 			implements GeneratesTransformModel {
 		@Override
 		protected void render(RendererInput input) {
 			Object transformedModel = transformModel(input, input.model);
-			input.enqueueInput(input.resolver, transformedModel, input.location,
+			RendererInput enqueued = input.enqueueInput(input.resolver,
+					transformedModel, input.location,
 					Arrays.asList(input.soleDirected()), input.node);
+			enqueued.fromTransform = true;
 		}
 	}
 
@@ -172,8 +174,8 @@ public abstract class DirectedRenderer {
 
 	interface GeneratesTransformModel {
 		default Object transformModel(RendererInput input, Object model) {
-			ModelTransformNodeRendererArgs args = input.location
-					.getAnnotation(ModelTransformNodeRendererArgs.class);
+			Directed.Transform args = input.location
+					.getAnnotation(Directed.Transform.class);
 			if (args == null) {
 				return model;
 			}

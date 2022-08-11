@@ -1,10 +1,5 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import java.lang.annotation.Documented;
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -14,7 +9,6 @@ import java.util.stream.Collectors;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
-import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -35,8 +29,8 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 		HasDirectedModel, HandlesModelBinding, RendersToParentContainer {
 	@Override
 	public Object getDirectedModel(Node node) {
-		ModelTransformNodeRendererArgs args = node
-				.annotation(ModelTransformNodeRendererArgs.class);
+		Directed.Transform args = node
+				.annotation(Directed.Transform.class);
 		if (node.model == null && !args.transformsNull()) {
 			return null;
 		}
@@ -118,26 +112,6 @@ public class ModelTransformNodeRenderer extends DirectedNodeRenderer implements
 	 */
 
 	public interface ModelTransform<A, B> extends Function<A, B> {
-	}
-
-	/**
-	 * FIXME - dirndl1x1 - at least two use cases: if renderer is Transform,
-	 * transforms the input model -- if renderer is Collection, transform the
-	 * elements (there's no real virtue in having x -> Collection<A> ->
-	 * Collection <B>, so this flattening makes sense). Need to doc this with
-	 * examples (and rename/move)
-	 *
-	 * @author nick@alcina.cc
-	 *
-	 */
-	@ClientVisible
-	@Retention(RetentionPolicy.RUNTIME)
-	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD })
-	public @interface ModelTransformNodeRendererArgs {
-		boolean transformsNull() default false;
-
-		Class<? extends ModelTransform> value();
 	}
 
 	@Directed(renderer = DelegatingNodeRenderer.class)

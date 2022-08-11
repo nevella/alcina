@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.lang.annotation.Annotation;
+import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -48,10 +49,27 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	}
 
 	// CACHE! (stateful vs non for renderer)
-	public DirectedRenderer getRenderer(Directed directed, Object model) {
+	public DirectedRenderer getRenderer(Directed directed,
+			AnnotationLocation location, Object model,
+			boolean parentWasTransform) {
 		Class<? extends DirectedNodeRenderer> rendererClass = directed
 				.renderer();
 		if (rendererClass == ModelClassNodeRenderer.class) {
+			// default - see Directed.Transform
+			boolean transform = location
+					.hasAnnotation(Directed.Transform.class);
+			if (transform && !(model instanceof Collection)) {
+				rendererClass = ModelTransformNodeRenderer.class;
+			} else {
+				rendererClass = resolveModelRenderer(model);
+			}
+		}
+		/*
+		 * This doesn't allow for transform -> transform, the algorithm should
+		 * really be "don't repeat a transform" - but it'll do for now
+		 */
+		if (parentWasTransform
+				&& rendererClass == ModelTransformNodeRenderer.class) {
 			rendererClass = resolveModelRenderer(model);
 		}
 		return Registry.query(DirectedRenderer.class).addKeys(rendererClass)

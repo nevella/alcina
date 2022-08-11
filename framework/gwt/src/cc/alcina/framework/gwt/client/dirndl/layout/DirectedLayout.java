@@ -46,7 +46,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolve
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransformNodeRendererArgs;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -159,12 +158,13 @@ public class DirectedLayout {
 		} while (rendererInputs.size() > 0);
 	}
 
-	void enqueueInput(ContextResolver resolver, Object model,
+	RendererInput enqueueInput(ContextResolver resolver, Object model,
 			AnnotationLocation location, List<Directed> directeds,
 			Node parentNode) {
 		RendererInput input = new RendererInput(resolver, model, location,
 				directeds, parentNode);
 		rendererInputs.add(input);
+		return input;
 	}
 
 	/**
@@ -273,7 +273,7 @@ public class DirectedLayout {
 				// *don't* resolve against the model if it will be transformed
 				// (resolution against the transform result, with dirndl 1.1,
 				// will be resolution against the child node)
-				if (clazz != ModelTransformNodeRendererArgs.class) {
+				if (clazz != Directed.Transform.class) {
 					locationClass = null;
 				}
 			}
@@ -1175,6 +1175,8 @@ public class DirectedLayout {
 
 		Node replace;
 
+		boolean fromTransform;
+
 		RendererInput(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
 				Node parentNode) {
@@ -1191,7 +1193,8 @@ public class DirectedLayout {
 
 		public DirectedRenderer provideRenderer() {
 			return directeds.size() > 1 ? new DirectedRenderer.Container()
-					: resolver.getRenderer(node.directed, model);
+					: resolver.getRenderer(node.directed, location, model,
+							fromTransform);
 		}
 
 		@Override
@@ -1203,10 +1206,10 @@ public class DirectedLayout {
 			return directeds.get(0);
 		}
 
-		void enqueueInput(ContextResolver resolver, Object model,
+		RendererInput enqueueInput(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
 				Node parentNode) {
-			DirectedLayout.this.enqueueInput(resolver, model, location,
+			return DirectedLayout.this.enqueueInput(resolver, model, location,
 					directeds, parentNode);
 		}
 
