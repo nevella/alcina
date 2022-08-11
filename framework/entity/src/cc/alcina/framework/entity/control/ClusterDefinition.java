@@ -79,10 +79,10 @@ public class ClusterDefinition {
 		}
 
 		public String getBpxPropertiesFilePath() {
-			String suffix = containerName.contains("portal") ? ".template" : "";
+			// String suffix = containerName.contains("portal") ? ".template" : "";
 			return Ax.format(
-					"/g/barpub/provisioning/dk/container/%s/%s.properties%s",
-					containerName.replace(".", "/"), containerName, suffix);
+					"/g/barpub/provisioning/dk/container/%s/%s.properties",
+					containerName.replace(".", "/"), containerName);
 		}
 
 		@Override
