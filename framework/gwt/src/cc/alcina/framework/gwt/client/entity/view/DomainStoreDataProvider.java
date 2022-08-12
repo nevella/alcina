@@ -277,6 +277,7 @@ public class DomainStoreDataProvider<T extends Entity>
 			if (allResults == null) {
 				allResults = new ArrayList<>();
 			}
+			lastSearchDefinition = searchDefinition;
 			resultsDelta(allResults.size(), 0, true);
 			return;
 		}
