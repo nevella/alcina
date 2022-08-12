@@ -6,6 +6,7 @@ import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.collections.FilterOperator;
 import cc.alcina.framework.common.client.collections.PropertyPathFilter;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class DomainFilter {
@@ -29,12 +30,18 @@ public class DomainFilter {
 		this.predicate = predicate;
 	}
 
+	public DomainFilter(PropertyEnum propertyPath, Object value,
+			FilterOperator operator) {
+		this(propertyPath.name(), value, operator);
+	}
+
 	public DomainFilter(String propertyPath, Object propertyValue) {
 		this(propertyPath, propertyValue, FilterOperator.EQ);
 	}
 
-	public DomainFilter(String key, Object value, FilterOperator operator) {
-		this.propertyPath = key;
+	public DomainFilter(String propertyPath, Object value,
+			FilterOperator operator) {
+		this.propertyPath = propertyPath;
 		this.propertyValue = value;
 		this.filterOperator = operator;
 	}
