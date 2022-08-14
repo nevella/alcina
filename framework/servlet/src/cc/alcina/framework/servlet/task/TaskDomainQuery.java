@@ -23,7 +23,8 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.servlet.schedule.ServerTask;
 
 public class TaskDomainQuery extends ServerTask {
-	private List<String> resultPaths = new ArrayList<>();
+	private List<String> resultPaths = List.of("*").stream()
+			.collect(Collectors.toList());
 
 	private EntityLocator from;
 
