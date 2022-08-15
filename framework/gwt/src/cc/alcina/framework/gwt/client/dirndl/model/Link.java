@@ -451,6 +451,9 @@ public class Link extends Model {
 
 		public void setPlace(BasePlace place) {
 			this.place = place;
+			if (place != null) {
+				setHref(place.toHrefString());
+			}
 		}
 
 		public void setTarget(String target) {
@@ -482,8 +485,7 @@ public class Link extends Model {
 		}
 
 		public Wrapper withPlace(BasePlace place) {
-			this.place = place;
-			this.href = place.toHrefString();
+			setPlace(place);
 			return this;
 		}
 
