@@ -526,7 +526,7 @@ public class DomainStore implements IDomainStore {
 		if (isDebug()) {
 			token.lastFilterString = filter.toString();
 		}
-		filter = maybeConvertEntityToIdFilter(clazz, filter);
+		// filter = maybeConvertEntityToIdFilter(clazz, filter);
 		IndexedValueProvider<E> valueProvider = getValueProviderFor(clazz,
 				filter.getPropertyPath());
 		if (valueProvider != null) {
