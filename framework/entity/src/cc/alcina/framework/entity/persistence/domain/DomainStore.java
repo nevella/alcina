@@ -526,16 +526,9 @@ public class DomainStore implements IDomainStore {
 		if (isDebug()) {
 			token.lastFilterString = filter.toString();
 		}
-		// Try and see if there is a lookup for the current query
+		filter = maybeConvertEntityToIdFilter(clazz, filter);
 		IndexedValueProvider<E> valueProvider = getValueProviderFor(clazz,
 				filter.getPropertyPath());
-		// If one doesn't exist, try converting to an idFilter and checking
-		// again
-		if (valueProvider == null) {
-			filter = maybeConvertEntityToIdFilter(clazz, filter);
-			valueProvider = getValueProviderFor(clazz,
-					filter.getPropertyPath());
-		}
 		if (valueProvider != null) {
 			switch (filter.getFilterOperator()) {
 			case EQ:
