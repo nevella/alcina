@@ -1,5 +1,9 @@
 package cc.alcina.framework.servlet.task;
 
+import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
+import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
@@ -63,9 +67,20 @@ public class TaskPublish extends ServerTask<TaskPublish>
 
 	@Override
 	protected void performAction0(TaskPublish task) throws Exception {
-		PublicationResult result = Registry
-				.impl(PublicationRequestHandler.class)
-				.publish(getPublicationRequest());
+		PublicationResult result = null;
+		IUser user = JobContext.get().getJob().getUser();
+		if (user == UserlandProvider.get().getSystemUser()) {
+			result = Registry.impl(PublicationRequestHandler.class)
+					.publish(getPublicationRequest());
+		} else {
+			try {
+				PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
+				result = Registry.impl(PublicationRequestHandler.class)
+						.publish(getPublicationRequest());
+			} finally {
+				PermissionsManager.get().popUser();
+			}
+		}
 		if (copyContentToLargeResult) {
 			JobContext.get().getJob().setLargeResult(result.getContent());
 		}
