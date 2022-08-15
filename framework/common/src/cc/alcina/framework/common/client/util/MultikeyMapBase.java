@@ -79,12 +79,12 @@ public abstract class MultikeyMapBase<V>
 	}
 
 	@Override
-	public MultikeyMap asMap(Object... objects) {
+	public MultikeyMap<V> asMap(Object... objects) {
 		return asMap(true, objects);
 	}
 
 	@Override
-	public MultikeyMap asMapEnsure(boolean ensure, Object... objects) {
+	public MultikeyMap<V> asMapEnsure(boolean ensure, Object... objects) {
 		return asMap(ensure, objects);
 	}
 
@@ -346,7 +346,7 @@ public abstract class MultikeyMapBase<V>
 
 	protected abstract DelegateMapCreator ensureDelegateMapCreator();
 
-	MultikeyMap asMap(boolean ensure, Object... objects) {
+	MultikeyMap<V> asMap(boolean ensure, Object... objects) {
 		MultikeyMap m = (MultikeyMap) getWithKeys(ensure, 0, objects);
 		return m;
 	}
