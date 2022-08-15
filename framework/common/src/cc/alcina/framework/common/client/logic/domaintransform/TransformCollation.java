@@ -135,9 +135,13 @@ public class TransformCollation {
 				userPropertyPersistableImpl).stream()
 						.filter(QueryResult::hasNoDeleteTransform)
 						.<UserProperty> map(QueryResult::getEntity)
-						.map(UserProperty::providePersistable)
+						.map(up -> up.ensureUserPropertySupport()
+								.getPersistable())
 						.filter(Objects::nonNull).map(Object::getClass)
 						.collect(Collectors.toSet());
+		List<UserProperty> list = (List) query(userPropertyPersistableImpl)
+				.stream().map(QueryResult::getEntity)
+				.collect(Collectors.toList());
 		for (Class clazz : userPropertyPersistableClasses) {
 			if (modifiedPersistableClasses.contains(clazz)) {
 				return true;
