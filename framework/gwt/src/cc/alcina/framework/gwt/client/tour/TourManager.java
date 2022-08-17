@@ -102,6 +102,7 @@ public abstract class TourManager {
 		}
 		this.tourJson = tourJson.replaceFirst("var sample = ", "");
 		currentTour = TourState.fromJson(this.tourJson);
+		UIRenderer.get().startTour(this);
 		refreshTourView();
 	}
 
