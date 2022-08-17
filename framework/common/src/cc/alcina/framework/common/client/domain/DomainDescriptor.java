@@ -12,6 +12,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
+import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolver;
 import cc.alcina.framework.common.client.util.CachingMap;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -43,6 +44,15 @@ public abstract class DomainDescriptor {
 				indexProperties);
 		addClassDescriptor(classDescriptor);
 		return classDescriptor;
+	}
+
+	public <T extends Entity> DomainClassDescriptor<T>
+			addClassDescriptor(Class<T> clazz, PropertyEnum... indexProperties) {
+		String[] strProperties = new String[indexProperties.length];
+		for (int i = 0; i < indexProperties.length; i++) {
+			strProperties[i] = indexProperties[i].name();
+		}
+		return addClassDescriptor(clazz, strProperties);
 	}
 
 	public void addClassDescriptor(DomainClassDescriptor classDescriptor) {
