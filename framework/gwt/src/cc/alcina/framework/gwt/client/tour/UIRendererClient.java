@@ -20,6 +20,7 @@ import com.google.gwt.user.client.Timer;
 import com.google.gwt.user.client.ui.RootPanel;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.tour.StepPopupView.Action;
 import cc.alcina.framework.gwt.client.tour.Tour.RelativeTo;
@@ -37,6 +38,8 @@ public class UIRendererClient extends UIRenderer
 
 	public HandlerRegistration nativePreviewHandlerRegistration;
 
+	private StepPopupView stepPopupView;
+
 	@Override
 	public void onPreviewNativeEvent(NativePreviewEvent npe) {
 		Event event = Event.as(npe.getNativeEvent());
@@ -46,7 +49,53 @@ public class UIRendererClient extends UIRenderer
 			if (c == KeyCodes.KEY_ESCAPE) {
 				tourManager.stepListener.topicPublished(Action.CLOSE);
 			}
+			if (c == KeyCodes.KEY_RIGHT) {
+				stepPopupView.topicAction.publish(Action.NEXT);
+			}
 		}
+	}
+
+	private boolean performAction(Step step, int delay) {
+		Tour.Condition targetCondition = step.provideTarget();
+		if (targetCondition == null) {
+			return true;
+		}
+		final Element target = getElement(targetCondition.getSelectors());
+		if (target == null) {
+			return false;
+		}
+		int stepDelay = step.getActionDelay();
+		if (delay == 0 && stepDelay != 0) {
+			new Timer() {
+				@Override
+				public void run() {
+					performAction(step, stepDelay);
+				}
+			}.schedule(stepDelay);
+			return true;
+		}
+		tourManager.log("Performing action %s on %s", step.getAction(),
+				CommonUtils.trimToWsChars(target.getOuterHtml(), 300));
+		switch (step.getAction()) {
+		case NONE:
+			break;
+		case CLICK:
+			setPopupsModal(false);
+			WidgetUtils.click(target);
+			setPopupsModal(true);
+			break;
+		case SET_TEXT:
+			setPopupsModal(false);
+			WidgetUtils.click(target);
+			target.setPropertyString("value", step.getActionValue());
+			Scheduler.get().scheduleDeferred(() -> {
+				setPopupsModal(false);
+				WidgetUtils.click(target);
+				setPopupsModal(true);
+			});
+			break;
+		}
+		return true;
 	}
 
 	@Override
@@ -89,34 +138,7 @@ public class UIRendererClient extends UIRenderer
 
 	@Override
 	protected boolean performAction(Step step) {
-		Tour.Condition targetCondition = step.provideTarget();
-		if (targetCondition == null) {
-			return true;
-		}
-		final Element target = getElement(targetCondition.getSelectors());
-		if (target == null) {
-			return false;
-		}
-		switch (step.getAction()) {
-		case NONE:
-			break;
-		case CLICK:
-			setPopupsModal(false);
-			WidgetUtils.click(target);
-			setPopupsModal(true);
-			break;
-		case SET_TEXT:
-			setPopupsModal(false);
-			WidgetUtils.click(target);
-			target.setPropertyString("value", step.getActionValue());
-			Scheduler.get().scheduleDeferred(() -> {
-				setPopupsModal(false);
-				WidgetUtils.click(target);
-				setPopupsModal(true);
-			});
-			break;
-		}
-		return true;
+		return performAction(step, 0);
 	}
 
 	@Override
@@ -131,9 +153,24 @@ public class UIRendererClient extends UIRenderer
 
 	@Override
 	protected void render(Step step) {
-		clearPopups(step.getDelay());
+		int delay = step.getDelay();
+		clearPopups(delay);
+		if (delay == 0) {
+			render0(step);
+		} else {
+			new Timer() {
+				@Override
+				public void run() {
+					render0(step);
+				}
+			}.schedule(delay);
+		}
+	}
+
+	protected void render0(Step step) {
 		int idx = 0;
 		for (Tour.PopupInfo popupInfo : step.providePopups()) {
+			tourManager.log("Render tour popup: %s", popupInfo.getCaption());
 			DecoratedRelativePopupPanel popup = new DecoratedRelativePopupPanel(
 					false, idx == 0);
 			popup.setStyleName("dropdown-popup tour");
@@ -154,7 +191,7 @@ public class UIRendererClient extends UIRenderer
 				popup.arrowCenterDown();
 				break;
 			}
-			StepPopupView stepPopupView = new StepPopupView(popupInfo,
+			stepPopupView = new StepPopupView(popupInfo,
 					tourManager.currentTour, idx++ == 0);
 			stepPopupView.topicAction.add(tourManager.stepListener);
 			popup.setWidget(stepPopupView);

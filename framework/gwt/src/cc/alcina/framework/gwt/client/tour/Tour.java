@@ -101,7 +101,11 @@ public interface Tour {
 
 	// @JsonDeserialize(as = StepImpl.class)
 	interface Step {
+		public String asString();
+
 		public Action getAction();
+
+		public int getActionDelay();
 
 		public String getActionValue();
 

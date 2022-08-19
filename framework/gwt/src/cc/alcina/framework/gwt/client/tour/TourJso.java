@@ -164,6 +164,7 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		protected StepJso() {
 		}
 
+		@Override
 		final public native String asString()
 		/*-{
       return JSON.stringify(this);
@@ -174,6 +175,11 @@ public final class TourJso extends JavaScriptObject implements Tour {
 			return CommonUtils.getEnumValueOrNull(Tour.Action.class,
 					getActionString(), true, Tour.Action.NONE);
 		}
+
+		@Override
+		final public native int getActionDelay()/*-{
+      return this.actionDelay || 0;
+		}-*/;
 
 		@Override
 		final public native String getActionValue()/*-{
