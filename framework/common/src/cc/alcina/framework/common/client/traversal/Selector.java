@@ -1,5 +1,7 @@
 package cc.alcina.framework.common.client.traversal;
 
+import cc.alcina.framework.common.client.traversal.SelectionTraversal.GenerationTraversal;
+
 /**
  *
  * Transforms I into List<O> - note that O is not used in the API, it's simply a
@@ -15,6 +17,12 @@ package cc.alcina.framework.common.client.traversal;
  *
  */
 public interface Selector<I extends Selection, O extends Selection> {
+	// allows the selector to perform more complex processing of the generation
+	// (e.g. combining multiple prior generations). If used, process should be a
+	// noop
+	default void beforeTraversal(GenerationTraversal generationTraversal) {
+	}
+
 	default boolean handles(Selection selection) {
 		return true;
 	}

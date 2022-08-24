@@ -186,7 +186,9 @@ public class TreeProcess {
 			return (T) this;
 		}
 
-		boolean referencesParentResources();
+		default boolean referencesParentResources() {
+			return false;
+		}
 	}
 
 	public interface Node extends HasDisplayName {
