@@ -19,12 +19,12 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.CommonUtils.NestedNameProvider;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
+import cc.alcina.framework.common.client.util.NestedNameProvider;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
@@ -528,7 +528,7 @@ public class SelectionTraversal implements ProcessContextProvider {
 			}
 
 			public Object getKey() {
-				NestedNameProvider nestedNameProvider = CommonUtils.NestedNameProvider
+				NestedNameProvider nestedNameProvider = NestedNameProvider
 						.get();
 				if (rootSelection != null) {
 					return Ax.format("[%s]", nestedNameProvider

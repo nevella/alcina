@@ -96,10 +96,10 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
-import cc.alcina.framework.common.client.util.CommonUtils.NestedNameProvider;
 import cc.alcina.framework.common.client.util.CommonUtils.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.NestedNameProvider;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TextUtils;
 
@@ -1753,8 +1753,8 @@ public class SEUtilities {
 
 	@Registration.Singleton(value = NestedNameProvider.class, priority = Priority.PREFERRED_LIBRARY)
 	public static class NestedNameProviderJvm extends NestedNameProvider {
-		public static CommonUtils.NestedNameProvider get() {
-			return Registry.impl(CommonUtils.NestedNameProvider.class);
+		public static NestedNameProvider get() {
+			return Registry.impl(NestedNameProvider.class);
 		}
 
 		@Override
