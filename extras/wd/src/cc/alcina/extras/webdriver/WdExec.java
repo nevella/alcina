@@ -33,7 +33,7 @@ public class WdExec {
 
 	private String cssSelector;
 
-	private int timeoutSecs;
+	private int timeoutSecs = 5;
 
 	private int index;
 
@@ -47,17 +47,17 @@ public class WdExec {
 
 	private WebElement fromElement;
 
+	public void assertContainsText(String text) {
+		String elementText = getElement().getText();
+		assert (elementText.contains(text));
+	}
+
 	public void assertExists() {
 		assert (getElement() != null);
 	}
 
 	public void assertHasText() {
 		assert (getElement().getText().length() > 0);
-	}
-
-	public void assertContainsText(String text) {
-		String elementText = getElement().getText();
-		assert(elementText.contains(text));
 	}
 
 	public void clear() {
