@@ -70,6 +70,8 @@ public class HtmlConstants {
 
 	public static final String HEAD = "HEAD";
 
+	public static final String HTML = "HTML";
+
 	public static final String LINK = "LINK";
 
 	public static final String CONTENT_EDITABLE = "contentEditable";

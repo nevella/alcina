@@ -31,6 +31,11 @@ public class DomEnvironmentJvmImpl implements DomEnvironment {
 	}
 
 	@Override
+	public boolean isEarlierThan(Node o1, Node o2) {
+		return XmlUtils.isEarlierThan(o1, o2);
+	}
+
+	@Override
 	public DomDocument loadFromUrl(String url) {
 		return ResourceUtilities.loadXmlDocFromUrl(url);
 	}

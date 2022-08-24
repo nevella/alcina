@@ -63,6 +63,7 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CancelledException;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -237,6 +238,8 @@ public class JobRegistry {
 	Map<Job, ContextAwaiter> contextAwaiters = new ConcurrentHashMap<>();
 
 	private Job launchedFromControlServlet;
+
+	private AtomicInteger consoleJobIdCounter = new AtomicInteger();
 
 	public JobRegistry() {
 	}
@@ -423,6 +426,18 @@ public class JobRegistry {
 		// server/consoles
 		Preconditions.checkState(Ax.isTest());
 		scheduler.processOrphans();
+	}
+
+	// for tooling
+	public void startNonPersistentJobContext(Task task) {
+		Job job = Reflections
+				.newInstance(PersistentImpl.getImplementation(Job.class));
+		job.setId(consoleJobIdCounter.decrementAndGet());
+		job.setState(JobState.PENDING);
+		job.setTask(task);
+		TaskPerformer performer = getTaskPerformer(job);
+		JobContext jobContext = new JobContext(job, performer, null, null);
+		jobContext.start();
 	}
 
 	public void stopService() {

@@ -883,7 +883,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				} else {
 					Class joinEntityType = getTargetEntityType(rm);
 					if (!domainDescriptor.joinPropertyCached(joinEntityType)) {
-						System.out.format("  not loading: %s.%s -- %s\n",
+						logger.debug("  not loading: {}.{} -- {}",
 								clazz.getSimpleName(), pd.getName(),
 								pd.getPropertyType().getSimpleName());
 						continue;

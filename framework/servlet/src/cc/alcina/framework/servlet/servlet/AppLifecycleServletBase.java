@@ -452,8 +452,8 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				metricLogger.setAdditivity(false);
 			} else {
 				metricLogger.setAdditivity(true);
+				metricLogger.setLevel(Level.DEBUG);
 			}
-			metricLogger.setLevel(Level.DEBUG);
 			ServletLayerObjects.get().setMetricLogger(metricLogger);
 			EntityLayerObjects.get().setMetricLogger(metricLogger);
 		}

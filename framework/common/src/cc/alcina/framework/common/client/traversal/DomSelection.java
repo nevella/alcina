@@ -9,20 +9,10 @@ public abstract class DomSelection<D extends DomNode>
 		super(parent, value, pathSegment);
 	}
 
-	@Override
-	public boolean referencesParentResources() {
-		return true;
-	}
-
 	public static class Document<DC extends DomDocument>
 			extends DomSelection<DC> {
 		public Document(Selection parent, DC document, String pathSegment) {
 			super(parent, document, pathSegment);
-		}
-
-		@Override
-		public boolean referencesParentResources() {
-			return false;
 		}
 	}
 }

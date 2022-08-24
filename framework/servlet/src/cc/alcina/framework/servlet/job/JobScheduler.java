@@ -368,7 +368,7 @@ public class JobScheduler {
 						fireWakeup();
 					}
 				}, SEUtilities.toOldDate(wakeup));
-				logger.info("Scheduled wakeup for {}", wakeup);
+				logger.debug("Scheduled wakeup for {}", wakeup);
 			}
 			nextScheduledWakeup = wakeup;
 		}
@@ -502,8 +502,8 @@ public class JobScheduler {
 		private static AdHocExecutorServiceProvider AD_HOC_INSTANCE = new AdHocExecutorServiceProvider();
 
 		public static ExecutionConstraints forQueue(AllocationQueue queue) {
-			return Registry.impl(ExecutionConstraints.class,queue.job.provideTaskClass())
-					.withQueue(queue);
+			return Registry.impl(ExecutionConstraints.class,
+					queue.job.provideTaskClass()).withQueue(queue);
 		}
 
 		protected AllocationQueue queue;
@@ -618,7 +618,7 @@ public class JobScheduler {
 
 	public abstract static class ResubmitPolicy<T extends Task> {
 		public static ResubmitPolicy forJob(Job job) {
-			return Registry.impl(ResubmitPolicy.class,job.provideTaskClass());
+			return Registry.impl(ResubmitPolicy.class, job.provideTaskClass());
 		}
 
 		public static ResubmitPolicy retryNTimes(int nTimes) {
@@ -695,7 +695,7 @@ public class JobScheduler {
 	 */
 	public static class Schedule {
 		public static Schedule forTaskClass(Class<? extends Task> clazz) {
-			return Registry.impl(Schedule.class,clazz);
+			return Registry.impl(Schedule.class, clazz);
 		}
 
 		private LocalDateTime next;
