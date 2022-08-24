@@ -121,7 +121,7 @@ public class DevConsoleRemote {
 
 	private void run0() throws Exception {
 		int port = Integer.parseInt(ResourceUtilities.get("port"));
-		Ax.out("Serving on port %s", port);
+		Ax.out("Dev console: serving on port %s", port);
 		Server server = new Server();
 		ServerConnector connector = new ServerConnector(server);
 		connector.setPort(port);
@@ -134,7 +134,6 @@ public class DevConsoleRemote {
 		}
 		// Resolve file to directory
 		URI webRootUri = gwtHtmlFile.toURI().resolve("./").normalize();
-		System.err.println("WebRoot is " + webRootUri);
 		HandlerCollection handlers = new HandlerCollection();
 		{
 			ContextHandler protocolHandler = new ContextHandler(handlers,
