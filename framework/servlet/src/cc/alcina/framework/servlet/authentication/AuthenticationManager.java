@@ -73,7 +73,7 @@ public class AuthenticationManager {
 			boolean createClientInstance) {
 		AuthenticationContext context = ensureContext();
 		if (context.session != null) {
-			logger.warn(
+			logger.info(
 					"Expired session :: id: {} reason: {} old_user: {} current_user: {}",
 					context.session.getId(), context.session.getEndReason(),
 					context.session.getUser(), user);

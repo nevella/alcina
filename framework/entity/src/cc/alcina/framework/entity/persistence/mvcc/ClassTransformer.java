@@ -204,9 +204,15 @@ class ClassTransformer {
 				.withThreadCount(8).withCancelOnException(true).withSerial(true)
 				.withThreadName("ClassTransformer-compilation").run()
 				.throwOnException();
-		logger.info("Generated {} new mvcc classes, loaded {} existing",
-				compilationRunnables.size(),
-				classTransforms.size() - compilationRunnables.size());
+		if (compilationRunnables.size() > 0) {
+			logger.info("Generated {} new mvcc classes, loaded {} existing",
+					compilationRunnables.size(),
+					classTransforms.size() - compilationRunnables.size());
+		} else {
+			logger.debug("Generated {} new mvcc classes, loaded {} existing",
+					compilationRunnables.size(),
+					classTransforms.size() - compilationRunnables.size());
+		}
 		if (ResourceUtilities.is(ClassTransformer.class,
 				"checkClassCorrectness")) {
 			for (ClassTransform ct : classTransforms.values()) {

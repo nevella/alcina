@@ -190,6 +190,13 @@ public class JobContext {
 		}
 	}
 
+	public static void setResultMessage(String resultMessage) {
+		info(resultMessage);
+		if (has()) {
+			get().getJob().setResultMessage(resultMessage);
+		}
+	}
+
 	public static void setStatusMessage(String template, Object... args) {
 		if (has()) {
 			get().maybeEnqueue(() -> get().getJob()
@@ -331,13 +338,6 @@ public class JobContext {
 
 	public void setItemsCompleted(int itemsCompleted) {
 		this.itemsCompleted = itemsCompleted;
-	}
-
-	public static void setResultMessage(String resultMessage) {
-		info(resultMessage);
-		if (has()) {
-			get().getJob().setResultMessage(resultMessage);
-		}
 	}
 
 	public void toAwaitingChildren() {
