@@ -9,6 +9,12 @@ import com.google.gwt.regexp.shared.RegExp;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 
 public class TextUtils {
+	public static final String MONTHS = "January|February|March|April|May|June|"
+			+ "July|August|September|October|November|December";
+
+	public static final String DATE_REGEX_FULL = Ax
+			.format("(\\d{1,2}) (%s) (\\d{4})\\s*", MONTHS);
+
 	public static final String WS_PATTERN_STR = "(?:[\\u0009\\u000A\\u000B\\u000C\\u000D\\u0020\\u00A0\\u0085\\u2000\\u2001\\u2002\\u2003])";
 
 	public static final RegExp WS_PATTERN = RegExp.compile(WS_PATTERN_STR + "+",
@@ -32,6 +38,10 @@ public class TextUtils {
 	public static int getWordCount(String data) {
 		String normalised = normalizeWhitespaceAndTrim(data);
 		return normalised.length() == 0 ? 0 : normalised.split(" ").length;
+	}
+
+	public static boolean isDateEn(String string) {
+		return string != null && string.matches(DATE_REGEX_FULL);
 	}
 
 	public static boolean isWhitespaceOrEmpty(String text) {

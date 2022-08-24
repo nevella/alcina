@@ -85,18 +85,18 @@ import javax.swing.JTree;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
-import cc.alcina.framework.common.client.logic.reflection.PropertyOrder.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.IidGenerator;
+import cc.alcina.framework.common.client.util.CommonUtils.NestedNameProvider;
 import cc.alcina.framework.common.client.util.CommonUtils.YearResolver;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Multimap;
@@ -683,12 +683,6 @@ public class SEUtilities {
 		return generateId(32);
 	}
 
-	public static String generateId(int length) {
-		char[][] ranges = { { 'a', 'z' }, { 'A', 'Z' }, { '0', '9' },
-				{ '_', '_' } };
-		return generateId(ranges, length);
-	}
-
 	public static String generateId(char[][] ranges, int length) {
 		StringBuffer sb = new StringBuffer();
 		Random r = new Random();
@@ -726,6 +720,12 @@ public class SEUtilities {
 		int pre = length / 2;
 		return string.substring(0, pre)
 				+ string.substring(string.length() - length + pre);
+	}
+
+	public static String generateId(int length) {
+		char[][] ranges = { { 'a', 'z' }, { 'A', 'Z' }, { '0', '9' },
+				{ '_', '_' } };
+		return generateId(ranges, length);
 	}
 
 	public static String generatePrettyUuid() {
@@ -1748,6 +1748,18 @@ public class SEUtilities {
 				return Number.class;
 			}
 			return c1;
+		}
+	}
+
+	@Registration.Singleton(value = NestedNameProvider.class, priority = Priority.PREFERRED_LIBRARY)
+	public static class NestedNameProviderJvm extends NestedNameProvider {
+		public static CommonUtils.NestedNameProvider get() {
+			return Registry.impl(CommonUtils.NestedNameProvider.class);
+		}
+
+		@Override
+		public String getNestedSimpleName(Class clazz) {
+			return SEUtilities.getNestedSimpleName(clazz);
 		}
 	}
 

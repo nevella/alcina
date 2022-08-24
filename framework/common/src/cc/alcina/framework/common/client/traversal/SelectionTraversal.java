@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.NestedNameProvider;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.MultikeyMap;
@@ -25,7 +27,6 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
-import cc.alcina.framework.entity.SEUtilities;
 
 /**
  * A generalised engine for rule-based transformation.
@@ -139,12 +140,6 @@ public class SelectionTraversal implements ProcessContextProvider {
 		return this.rootSelection;
 	}
 
-	public Multiset<Generation, Set<Selection>> getSelections() {
-		Multiset<Generation, Set<Selection>> result = new Multiset<>();
-		generations.forEach((k, v) -> result.put(k, v.selections));
-		return result;
-	}
-
 	public void logTraversalStats() {
 		new StatsLogger(this).execute();
 	}
@@ -229,18 +224,24 @@ public class SelectionTraversal implements ProcessContextProvider {
 			for (;;) {
 				int submitted = 0;
 				for (Selector selector : generationTraversal.selectors) {
-					this.currentSelector = selector;
-					selector.beforeTraversal(generationTraversal);
-					generationTraversal.beforeSelectorTraversal(selector);
-					for (Selection selection : generationTraversal.selections) {
-						if (generationTraversal.submitted.add(selector,
-								selection)) {
-							submitted++;
-							executor.submit(() -> processSelection(
-									generationTraversal, selector, selection));
+					try {
+						this.currentSelector = selector;
+						selector.beforeTraversal(generationTraversal);
+						generationTraversal.beforeSelectorTraversal(selector);
+						for (Selection selection : generationTraversal
+								.selectionIterator()) {
+							if (generationTraversal.submitted.add(selector,
+									selection)) {
+								submitted++;
+								executor.submit(() -> processSelection(
+										generationTraversal, selector,
+										selection));
+							}
 						}
+						executor.awaitCompletion();
+					} finally {
+						selector.afterTraversal(generationTraversal);
 					}
-					executor.awaitCompletion();
 				}
 				if (submitted == 0) {
 					break;
@@ -383,9 +384,31 @@ public class SelectionTraversal implements ProcessContextProvider {
 			selectionsBySelector.getAndEnsure(selector);
 		}
 
+		public SelectionTraversal getSelectionTraversal() {
+			return SelectionTraversal.this;
+		}
+
 		public boolean hasSelections(Class<? extends Selection> clazz,
 				Object value) {
 			return selectionsByClassValue.containsKey(clazz, value);
+		}
+
+		public boolean isForwards() {
+			return currentSelector.isForwards();
+		}
+
+		public Iterable<Selection> selectionIterator() {
+			if (isForwards()) {
+				return selections;
+			} else {
+				// TODO - make selections a class which combines (to a degree)
+				// List & Set - see JEP for SequencedCollection - and has a
+				// non-copying reverse iterator. Probably plenty in FastUtil
+				List<Selection> list = selections.stream()
+						.collect(Collectors.toList());
+				Collections.reverse(list);
+				return list;
+			}
 		}
 
 		public boolean wasSubmitted(Selection selection) {
@@ -505,13 +528,15 @@ public class SelectionTraversal implements ProcessContextProvider {
 			}
 
 			public Object getKey() {
+				NestedNameProvider nestedNameProvider = CommonUtils.NestedNameProvider
+						.get();
 				if (rootSelection != null) {
-					return Ax.format("[%s]", SEUtilities
+					return Ax.format("[%s]", nestedNameProvider
 							.getNestedSimpleName(rootSelection.getClass()));
 				} else if (selector == null) {
 					return traversal.generation;
 				} else {
-					return "  " + SEUtilities
+					return "  " + nestedNameProvider
 							.getNestedSimpleName(selector.getClass());
 				}
 			}

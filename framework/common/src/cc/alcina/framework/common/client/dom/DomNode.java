@@ -41,7 +41,6 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TextUtils;
-import cc.alcina.framework.entity.XmlUtils;
 
 public class DomNode {
 	public static final transient String CONTEXT_DEBUG_SUPPORT = DomNode.class
@@ -551,12 +550,15 @@ public class DomNode {
 	}
 
 	public static class DocumentOrderComparator implements Comparator<DomNode> {
+		DomEnvironment domEnvironment = DomEnvironment.get();
+
 		@Override
 		public int compare(DomNode o1, DomNode o2) {
 			if (o1 == o2) {
 				return 0;
 			}
-			return XmlUtils.isEarlierThan(o1.domNode(), o2.domNode()) ? -1 : 1;
+			return domEnvironment.isEarlierThan(o1.domNode(), o2.domNode()) ? -1
+					: 1;
 		}
 	}
 

@@ -2165,6 +2165,17 @@ public class CommonUtils {
 		String generate();
 	}
 
+	@Registration.Singleton
+	public static class NestedNameProvider {
+		public static CommonUtils.NestedNameProvider get() {
+			return Registry.impl(CommonUtils.NestedNameProvider.class);
+		}
+
+		public String getNestedSimpleName(Class clazz) {
+			throw new UnsupportedOperationException();
+		}
+	}
+
 	public static class ThreeWaySetResult<T> {
 		public Set<T> firstOnly;
 

@@ -37,6 +37,8 @@ public interface DomEnvironment {
 	public XpathEvaluator createXpathEvaluator(DomNode xmlNode,
 			XpathEvaluator xpathEvaluator);
 
+	public boolean isEarlierThan(Node o1, Node o2);
+
 	public DomDocument loadFromUrl(String url);
 
 	public Node loadFromXml(String xml) throws Exception;
