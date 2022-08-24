@@ -41,6 +41,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TextUtils;
+import cc.alcina.framework.entity.XmlUtils;
 
 public class DomNode {
 	public static final transient String CONTEXT_DEBUG_SUPPORT = DomNode.class
@@ -426,6 +427,16 @@ public class DomNode {
 		}
 	}
 
+	/**
+	 * Returns a stream of nodes, in depth-first order, rooted at this node
+	 */
+	public Stream<DomNode> stream() {
+		DomTokenStream domTokenStream = new DomTokenStream(DomNode.this);
+		domTokenStream.next();
+		Iterable<DomNode> iterable = () -> domTokenStream;
+		return StreamSupport.stream(iterable.spliterator(), false);
+	}
+
 	public String streamNCleanForBrowserHtmlFragment() {
 		return DomEnvironment.get().streamNCleanForBrowserHtmlFragment(node);
 	}
@@ -537,6 +548,16 @@ public class DomNode {
 	protected Document domDoc() {
 		return node.getNodeType() == Node.DOCUMENT_NODE ? (Document) node
 				: node.getOwnerDocument();
+	}
+
+	public static class DocumentOrderComparator implements Comparator<DomNode> {
+		@Override
+		public int compare(DomNode o1, DomNode o2) {
+			if (o1 == o2) {
+				return 0;
+			}
+			return XmlUtils.isEarlierThan(o1.domNode(), o2.domNode()) ? -1 : 1;
+		}
 	}
 
 	public class DomNodeAncestors {
@@ -721,7 +742,9 @@ public class DomNode {
 
 		public Stream<DomNode> flatten(String... tags) {
 			List<String> tagArray = Arrays.asList(tags);
-			Iterable<DomNode> iterable = () -> new DomTokenStream(DomNode.this);
+			DomTokenStream domTokenStream = new DomTokenStream(DomNode.this);
+			domTokenStream.next();
+			Iterable<DomNode> iterable = () -> domTokenStream;
 			Stream<DomNode> targetStream = StreamSupport
 					.stream(iterable.spliterator(), false);
 			return targetStream.filter(t -> t.isText() || tagArray.isEmpty()

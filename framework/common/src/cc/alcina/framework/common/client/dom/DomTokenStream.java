@@ -26,7 +26,8 @@ public class DomTokenStream implements Iterator<DomNode> {
 
 	public DomTokenStream(DomNode node) {
 		this.doc = node.document;
-		this.tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(node.node,
+		current = node.node;
+		this.tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(current,
 				NodeFilter.SHOW_ALL, null, true);
 		next();
 	}
