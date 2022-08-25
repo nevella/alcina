@@ -1,5 +1,11 @@
 @use '../../theme/theme'
 
+//@file-doc misc mixins and macros
+
+$a-tags: 'a, a:active, a:hover, a:visited'
+$a-tags-hover: 'a, a:active, a:hover, a:visited, a:hover'
+$reset-font-tags: 'body, button, td'
+
 @mixin horizontal-list($separator:'')
   padding: 0
   text-align: center
@@ -11,30 +17,41 @@
   
   li:not(:last-child):after 
     content: $separator
+
+@mixin grey-link() 
+  #{$a-tags}
+    color: theme.$grey-link-color
   
-body 
-  margin: 0
-
-button 
-  background: transparent
-  border: none
-  padding: 0
-  color: theme.$primary-color
-  cursor: pointer
-  &:hover 
-    color: theme.$primary-hover-color
+  a:hover 
+    color: theme.$grey-link-hover-color
   
-$a-tags: 'a, a:active, a:hover, a:visited'
-$a-tags-hover: 'a, a:active, a:hover, a:visited, a:hover'
 
-#{$a-tags}
-  color: theme.$link-color
-  text-decoration: none
+@mixin standard-elements()   
+  body 
+    margin: 0
+  
+  button 
+    background: transparent
+    border: none
+    padding: 0
+    color: theme.$primary-color
+    cursor: pointer
+    &:hover 
+      color: theme.$primary-hover-color
+      
+  a:hover 
+    color: theme.$link-hover-color
+  
+  spacer 
+    display: inline-block
+    height: 1px
+    flex-shrink: 0
+   
+  #{$a-tags}
+    color: theme.$link-color
+    text-decoration: none
 
-a:hover 
-  color: theme.$link-hover-color
 
-spacer 
-  display: inline-block
-  height: 1px
-  flex-shrink: 0
+  
+
+

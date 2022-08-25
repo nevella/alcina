@@ -1,5 +1,5 @@
 @use '../../theme/theme'
-@use 'common'
+@use 'base'
 
 body 
   font-family: theme.$font-stack
@@ -63,7 +63,7 @@ page
     > nav ul,
     > ul 
       @include base.horizontal-list("-")
-      @include common.grey-link()
+      @include base.grey-link()
       a 
         padding: 0 10px
 
