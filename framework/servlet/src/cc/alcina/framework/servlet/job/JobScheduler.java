@@ -395,7 +395,8 @@ public class JobScheduler {
 		}
 		List<ClientInstance> activeInstances = jobRegistry.jobExecutors
 				.getActiveServers();
-		logger.info("Process orphans - visible instances: {}", activeInstances);
+		logger.debug("Process orphans - visible instances: {}",
+				activeInstances);
 		/*
 		 * handle flaky health/instances
 		 */
