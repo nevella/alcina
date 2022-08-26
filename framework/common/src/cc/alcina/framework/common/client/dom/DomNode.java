@@ -431,7 +431,6 @@ public class DomNode {
 	 */
 	public Stream<DomNode> stream() {
 		DomTokenStream domTokenStream = new DomTokenStream(DomNode.this);
-		domTokenStream.next();
 		Iterable<DomNode> iterable = () -> domTokenStream;
 		return StreamSupport.stream(iterable.spliterator(), false);
 	}
