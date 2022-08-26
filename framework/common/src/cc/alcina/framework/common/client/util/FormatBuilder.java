@@ -260,6 +260,14 @@ public class FormatBuilder {
 	}
 
 	/**
+	 * Return the length of the current string
+	 * @return Length of the current string
+	 */
+	public int length() {
+		return this.sb.length();
+	}
+
+	/**
 	 * Append object as string and insert a new line after
 	 *
 	 * @param object
