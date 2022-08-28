@@ -30,9 +30,10 @@ public interface Selector<I extends Selection, O extends Selection> {
 		return true;
 	}
 
-	default boolean isForwards() {
-		return true;
-	}
-
 	void process(SelectionTraversal traversal, I selection) throws Exception;
+
+	default Iterable<? extends Selection>
+			selectionIterator(GenerationTraversal generationTraversal) {
+		return generationTraversal.getSelections();
+	}
 }

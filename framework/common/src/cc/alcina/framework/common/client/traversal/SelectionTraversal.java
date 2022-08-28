@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.log.TreeProcess.Node;
 import cc.alcina.framework.common.client.log.TreeProcess.ProcessContextProvider;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -126,6 +127,10 @@ public class SelectionTraversal implements ProcessContextProvider {
 		}
 		// unsupported?
 		return "[Unknown position]";
+	}
+
+	public Selector getCurrentSelector() {
+		return this.currentSelector;
 	}
 
 	public Executor getExecutor() {
@@ -384,6 +389,14 @@ public class SelectionTraversal implements ProcessContextProvider {
 			selectionsBySelector.getAndEnsure(selector);
 		}
 
+		public PriorGenerationSelections getPriorGenerationSelections() {
+			return new PriorGenerationSelections(this);
+		}
+
+		public Set<Selection> getSelections() {
+			return this.selections;
+		}
+
 		public SelectionTraversal getSelectionTraversal() {
 			return SelectionTraversal.this;
 		}
@@ -393,22 +406,12 @@ public class SelectionTraversal implements ProcessContextProvider {
 			return selectionsByClassValue.containsKey(clazz, value);
 		}
 
-		public boolean isForwards() {
-			return currentSelector.isForwards();
+		public Stream<Selection> provideEmittedSelections() {
+			return selectionsBySelector.allValues().stream();
 		}
 
 		public Iterable<Selection> selectionIterator() {
-			if (isForwards()) {
-				return selections;
-			} else {
-				// TODO - make selections a class which combines (to a degree)
-				// List & Set - see JEP for SequencedCollection - and has a
-				// non-copying reverse iterator. Probably plenty in FastUtil
-				List<Selection> list = selections.stream()
-						.collect(Collectors.toList());
-				Collections.reverse(list);
-				return list;
-			}
+			return currentSelector.selectionIterator(this);
 		}
 
 		public boolean wasSubmitted(Selection selection) {
@@ -480,6 +483,36 @@ public class SelectionTraversal implements ProcessContextProvider {
 					return false;
 				}
 			}
+		}
+	}
+
+	public class PriorGenerationSelections {
+		public List<TypeAndSelections> data = new ArrayList<>();
+
+		public PriorGenerationSelections(GenerationTraversal stop) {
+			for (GenerationTraversal traversal : generations.values()) {
+				if (traversal == stop) {
+					break;
+				}
+				Multimap<Class<? extends Selection>, List<Selection>> byClass = traversal.selectionsBySelector
+						.allValues().stream().collect(AlcinaCollectors
+								.toKeyMultimap(Selection::getClass));
+				byClass.entrySet().stream().map(e -> {
+					TypeAndSelections element = new TypeAndSelections();
+					element.generation = traversal.generation;
+					element.type = e.getKey();
+					element.selections = e.getValue();
+					return element;
+				}).forEach(data::add);
+			}
+		}
+
+		public class TypeAndSelections {
+			public Generation generation;
+
+			public Class<? extends Selection> type;
+
+			public List<Selection> selections;
 		}
 	}
 
