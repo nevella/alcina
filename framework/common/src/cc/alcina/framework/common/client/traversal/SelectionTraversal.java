@@ -229,6 +229,7 @@ public class SelectionTraversal implements ProcessContextProvider {
 			for (;;) {
 				int submitted = 0;
 				for (Selector selector : generationTraversal.selectors) {
+					int submittedBySelector = 0;
 					try {
 						this.currentSelector = selector;
 						selector.beforeTraversal(generationTraversal);
@@ -238,6 +239,7 @@ public class SelectionTraversal implements ProcessContextProvider {
 							if (generationTraversal.submitted.add(selector,
 									selection)) {
 								submitted++;
+								submittedBySelector++;
 								executor.submit(() -> processSelection(
 										generationTraversal, selector,
 										selection));
@@ -245,7 +247,8 @@ public class SelectionTraversal implements ProcessContextProvider {
 						}
 						executor.awaitCompletion();
 					} finally {
-						selector.afterTraversal(generationTraversal);
+						selector.afterTraversal(generationTraversal,
+								submittedBySelector != 0);
 					}
 				}
 				if (submitted == 0) {

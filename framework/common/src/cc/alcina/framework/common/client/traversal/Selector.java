@@ -17,7 +17,8 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal.Generation
  *
  */
 public interface Selector<I extends Selection, O extends Selection> {
-	default void afterTraversal(GenerationTraversal generationTraversal) {
+	default void afterTraversal(GenerationTraversal generationTraversal,
+			boolean selectionsSubmitted) {
 	}
 
 	// allows the selector to perform more complex processing of the generation
