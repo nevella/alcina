@@ -24,7 +24,8 @@ public interface Selector<I extends Selection, O extends Selection> {
 	// allows the selector to perform more complex processing of the generation
 	// (e.g. combining multiple prior generations). If used, process should be a
 	// noop
-	default void beforeTraversal(GenerationTraversal generationTraversal) {
+	default void beforeTraversal(GenerationTraversal generationTraversal,
+			boolean firstPass) {
 	}
 
 	default boolean handles(Selection selection) {

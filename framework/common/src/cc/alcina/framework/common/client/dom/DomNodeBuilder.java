@@ -84,7 +84,11 @@ public class DomNodeBuilder {
 				}
 			}
 			Node f_node = node;
-			attrs.forEach((k, v) -> ((Element) f_node).setAttribute(k, v));
+			attrs.forEach((k, v) -> {
+				if (Ax.notBlank(v)) {
+					((Element) f_node).setAttribute(k, v);
+				}
+			});
 		} else {
 			node = doc().domDoc().createTextNode(text);
 		}

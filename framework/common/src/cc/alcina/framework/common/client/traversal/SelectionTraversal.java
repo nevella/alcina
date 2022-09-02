@@ -68,6 +68,9 @@ public class SelectionTraversal implements ProcessContextProvider {
 	public Topic<Selection> selectionProcessed = Topic.create()
 			.withThrowExceptions();
 
+	public Topic<SelectionException> selectionException = Topic.create()
+			.withThrowExceptions();
+
 	public Topic<Selection> beforeSelectionProcessed = Topic.create()
 			.withThrowExceptions();
 
@@ -226,13 +229,15 @@ public class SelectionTraversal implements ProcessContextProvider {
 			// this logic (looping on the current generation until there's a
 			// pass with no submitted tasks) allows selectors to add to the
 			// current generation (as well as subsequent)
+			int selectorPass = 0;
 			for (;;) {
 				int submitted = 0;
 				for (Selector selector : generationTraversal.selectors) {
 					int submittedBySelector = 0;
 					try {
 						this.currentSelector = selector;
-						selector.beforeTraversal(generationTraversal);
+						selector.beforeTraversal(generationTraversal,
+								selectorPass == 0);
 						generationTraversal.beforeSelectorTraversal(selector);
 						for (Selection selection : generationTraversal
 								.selectionIterator()) {
@@ -254,6 +259,7 @@ public class SelectionTraversal implements ProcessContextProvider {
 				if (submitted == 0) {
 					break;
 				}
+				selectorPass++;
 			}
 		}
 	}
@@ -289,6 +295,8 @@ public class SelectionTraversal implements ProcessContextProvider {
 				} catch (Exception e) {
 					selectionExceptions.put(selection, e);
 					selection.processNode().onException(e);
+					selectionException
+							.publish(new SelectionException(selection, e));
 					// TODO blah blah
 					e.printStackTrace();
 				}
@@ -392,8 +400,10 @@ public class SelectionTraversal implements ProcessContextProvider {
 			selectionsBySelector.getAndEnsure(selector);
 		}
 
-		public PriorGenerationSelections getPriorGenerationSelections() {
-			return new PriorGenerationSelections(this);
+		public PriorGenerationSelections
+				getPriorGenerationSelections(boolean includeCurrentGeneration) {
+			return new PriorGenerationSelections(
+					includeCurrentGeneration ? null : this);
 		}
 
 		public Set<Selection> getSelections() {
@@ -516,6 +526,17 @@ public class SelectionTraversal implements ProcessContextProvider {
 			public Class<? extends Selection> type;
 
 			public List<Selection> selections;
+		}
+	}
+
+	public static class SelectionException extends Exception {
+		public Selection selection;
+
+		public Exception exception;
+
+		public SelectionException(Selection selection, Exception exception) {
+			this.selection = selection;
+			this.exception = exception;
 		}
 	}
 
