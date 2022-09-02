@@ -342,7 +342,9 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			}
 		}
 
-		@Directed(tag = "label", bindings = @Binding(from = "text", type = Type.INNER_TEXT))
+		@Directed(tag = "label", bindings = {
+				@Binding(from = "text", type = Type.INNER_TEXT),
+				@Binding(from = "text", to = "title", type = Type.PROPERTY) })
 		public static class NodeLabelText extends Model {
 			private String text;
 

@@ -2,7 +2,6 @@ package cc.alcina.framework.common.client.traversal;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -10,6 +9,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.log.TreeProcess.Node;
 import cc.alcina.framework.common.client.log.TreeProcess.ProcessContextProvider;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -65,6 +66,9 @@ public class SelectionTraversal implements ProcessContextProvider {
 			.withThrowExceptions();
 
 	public Topic<Selection> selectionProcessed = Topic.create()
+			.withThrowExceptions();
+
+	public Topic<SelectionException> selectionException = Topic.create()
 			.withThrowExceptions();
 
 	public Topic<Selection> beforeSelectionProcessed = Topic.create()
@@ -126,6 +130,10 @@ public class SelectionTraversal implements ProcessContextProvider {
 		}
 		// unsupported?
 		return "[Unknown position]";
+	}
+
+	public Selector getCurrentSelector() {
+		return this.currentSelector;
 	}
 
 	public Executor getExecutor() {
@@ -221,18 +229,22 @@ public class SelectionTraversal implements ProcessContextProvider {
 			// this logic (looping on the current generation until there's a
 			// pass with no submitted tasks) allows selectors to add to the
 			// current generation (as well as subsequent)
+			int selectorPass = 0;
 			for (;;) {
 				int submitted = 0;
 				for (Selector selector : generationTraversal.selectors) {
+					int submittedBySelector = 0;
 					try {
 						this.currentSelector = selector;
-						selector.beforeTraversal(generationTraversal);
+						selector.beforeTraversal(generationTraversal,
+								selectorPass == 0);
 						generationTraversal.beforeSelectorTraversal(selector);
 						for (Selection selection : generationTraversal
 								.selectionIterator()) {
 							if (generationTraversal.submitted.add(selector,
 									selection)) {
 								submitted++;
+								submittedBySelector++;
 								executor.submit(() -> processSelection(
 										generationTraversal, selector,
 										selection));
@@ -240,12 +252,14 @@ public class SelectionTraversal implements ProcessContextProvider {
 						}
 						executor.awaitCompletion();
 					} finally {
-						selector.afterTraversal(generationTraversal);
+						selector.afterTraversal(generationTraversal,
+								submittedBySelector != 0);
 					}
 				}
 				if (submitted == 0) {
 					break;
 				}
+				selectorPass++;
 			}
 		}
 	}
@@ -281,6 +295,8 @@ public class SelectionTraversal implements ProcessContextProvider {
 				} catch (Exception e) {
 					selectionExceptions.put(selection, e);
 					selection.processNode().onException(e);
+					selectionException
+							.publish(new SelectionException(selection, e));
 					// TODO blah blah
 					e.printStackTrace();
 				}
@@ -384,6 +400,16 @@ public class SelectionTraversal implements ProcessContextProvider {
 			selectionsBySelector.getAndEnsure(selector);
 		}
 
+		public PriorGenerationSelections
+				getPriorGenerationSelections(boolean includeCurrentGeneration) {
+			return new PriorGenerationSelections(
+					includeCurrentGeneration ? null : this);
+		}
+
+		public Set<Selection> getSelections() {
+			return this.selections;
+		}
+
 		public SelectionTraversal getSelectionTraversal() {
 			return SelectionTraversal.this;
 		}
@@ -393,22 +419,12 @@ public class SelectionTraversal implements ProcessContextProvider {
 			return selectionsByClassValue.containsKey(clazz, value);
 		}
 
-		public boolean isForwards() {
-			return currentSelector.isForwards();
+		public Stream<Selection> provideEmittedSelections() {
+			return selectionsBySelector.allValues().stream();
 		}
 
 		public Iterable<Selection> selectionIterator() {
-			if (isForwards()) {
-				return selections;
-			} else {
-				// TODO - make selections a class which combines (to a degree)
-				// List & Set - see JEP for SequencedCollection - and has a
-				// non-copying reverse iterator. Probably plenty in FastUtil
-				List<Selection> list = selections.stream()
-						.collect(Collectors.toList());
-				Collections.reverse(list);
-				return list;
-			}
+			return currentSelector.selectionIterator(this);
 		}
 
 		public boolean wasSubmitted(Selection selection) {
@@ -480,6 +496,47 @@ public class SelectionTraversal implements ProcessContextProvider {
 					return false;
 				}
 			}
+		}
+	}
+
+	public class PriorGenerationSelections {
+		public List<TypeAndSelections> data = new ArrayList<>();
+
+		public PriorGenerationSelections(GenerationTraversal stop) {
+			for (GenerationTraversal traversal : generations.values()) {
+				if (traversal == stop) {
+					break;
+				}
+				Multimap<Class<? extends Selection>, List<Selection>> byClass = traversal.selectionsBySelector
+						.allValues().stream().collect(AlcinaCollectors
+								.toKeyMultimap(Selection::getClass));
+				byClass.entrySet().stream().map(e -> {
+					TypeAndSelections element = new TypeAndSelections();
+					element.generation = traversal.generation;
+					element.type = e.getKey();
+					element.selections = e.getValue();
+					return element;
+				}).forEach(data::add);
+			}
+		}
+
+		public class TypeAndSelections {
+			public Generation generation;
+
+			public Class<? extends Selection> type;
+
+			public List<Selection> selections;
+		}
+	}
+
+	public static class SelectionException extends Exception {
+		public Selection selection;
+
+		public Exception exception;
+
+		public SelectionException(Selection selection, Exception exception) {
+			this.selection = selection;
+			this.exception = exception;
 		}
 	}
 

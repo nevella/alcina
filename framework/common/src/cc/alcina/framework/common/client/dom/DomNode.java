@@ -431,7 +431,6 @@ public class DomNode {
 	 */
 	public Stream<DomNode> stream() {
 		DomTokenStream domTokenStream = new DomTokenStream(DomNode.this);
-		domTokenStream.next();
 		Iterable<DomNode> iterable = () -> domTokenStream;
 		return StreamSupport.stream(iterable.spliterator(), false);
 	}
@@ -754,14 +753,22 @@ public class DomNode {
 		}
 
 		public DomNode importAsFirstChild(DomNode n) {
-			Node importNode = document.domDoc().importNode(n.node, true);
+			return importAsFirstChild(n, true);
+		}
+
+		public DomNode importAsFirstChild(DomNode n, boolean deep) {
+			Node importNode = document.domDoc().importNode(n.node, deep);
 			DomNode imported = document.nodeFor(importNode);
 			insertAsFirstChild(imported);
 			return imported;
 		}
 
 		public DomNode importFrom(DomNode n) {
-			Node importNode = document.domDoc().importNode(n.node, true);
+			return importFrom(n, true);
+		}
+
+		public DomNode importFrom(DomNode n, boolean deep) {
+			Node importNode = document.domDoc().importNode(n.node, deep);
 			DomNode imported = document.nodeFor(importNode);
 			append(imported);
 			return imported;

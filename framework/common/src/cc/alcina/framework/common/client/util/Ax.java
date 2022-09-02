@@ -4,11 +4,16 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
+import java.util.ListIterator;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.BinaryOperator;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -184,6 +189,19 @@ public class Ax {
 		System.out.println(format(template, args));
 	}
 
+	public static <E> Iterator<E> reversedIterator(List<E> list) {
+		ListIterator<E> itr = list.listIterator();
+		while (itr.hasNext()) {
+			itr.next();
+		}
+		return new ReversedListIterator(itr);
+	}
+
+	public static <E> Stream<E> reversedStream(List<E> list) {
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+				reversedIterator(list), Spliterator.ORDERED), false);
+	}
+
 	public static RuntimeException runtimeException(String template,
 			Object... args) {
 		return new RuntimeException(format(template, args));
@@ -219,5 +237,28 @@ public class Ax {
 
 	public static double twoPlaces(double d) {
 		return CommonUtils.roundNumeric(d, 2);
+	}
+
+	private static class ReversedListIterator<E> implements Iterator<E> {
+		private ListIterator<E> listIterator;
+
+		public ReversedListIterator(ListIterator<E> listIterator) {
+			this.listIterator = listIterator;
+		}
+
+		@Override
+		public boolean hasNext() {
+			return listIterator.hasPrevious();
+		}
+
+		@Override
+		public E next() {
+			return listIterator.previous();
+		}
+
+		@Override
+		public void remove() {
+			listIterator.remove();
+		}
 	}
 }

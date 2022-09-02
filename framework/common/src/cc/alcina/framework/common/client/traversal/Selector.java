@@ -17,22 +17,25 @@ import cc.alcina.framework.common.client.traversal.SelectionTraversal.Generation
  *
  */
 public interface Selector<I extends Selection, O extends Selection> {
-	default void afterTraversal(GenerationTraversal generationTraversal) {
+	default void afterTraversal(GenerationTraversal generationTraversal,
+			boolean selectionsSubmitted) {
 	}
 
 	// allows the selector to perform more complex processing of the generation
 	// (e.g. combining multiple prior generations). If used, process should be a
 	// noop
-	default void beforeTraversal(GenerationTraversal generationTraversal) {
+	default void beforeTraversal(GenerationTraversal generationTraversal,
+			boolean firstPass) {
 	}
 
 	default boolean handles(Selection selection) {
 		return true;
 	}
 
-	default boolean isForwards() {
-		return true;
-	}
-
 	void process(SelectionTraversal traversal, I selection) throws Exception;
+
+	default Iterable<? extends Selection>
+			selectionIterator(GenerationTraversal generationTraversal) {
+		return generationTraversal.getSelections();
+	}
 }

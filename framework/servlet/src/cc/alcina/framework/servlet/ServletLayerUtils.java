@@ -7,6 +7,9 @@ import java.util.Optional;
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -16,6 +19,8 @@ public class ServletLayerUtils {
 	private static boolean appServletInitialised;
 
 	public static String defaultTag;
+
+	static Logger logger = LoggerFactory.getLogger(ServletLayerUtils.class);
 
 	public static boolean checkForBrokenClientPipe(Exception e) {
 		return SEUtilities.getFullExceptionMessage(e).contains("Broken pipe");
@@ -63,8 +68,7 @@ public class ServletLayerUtils {
 	}
 
 	public static void logRequest(HttpServletRequest req, String remoteAddr) {
-		System.out.format(
-				"\nRequest: %s\t Querystring: %s\t Referer: %s\t Ip: %s\n",
+		logger.info("Request: {}\t Querystring: {}\t Referer: {}\t Ip: {}\n",
 				req.getRequestURI(), req.getQueryString(),
 				req.getHeader("referer"), remoteAddr);
 	}
@@ -130,10 +134,10 @@ public class ServletLayerUtils {
 				portString = ":" + iPort;
 			}
 			break;
-			default:
-				throw new UnsupportedOperationException();
+		default:
+			throw new UnsupportedOperationException();
 		}
-		return Ax.format("%s://%s%s/", protocol, host,portString);
+		return Ax.format("%s://%s%s/", protocol, host, portString);
 	}
 
 	public static void setAppServletInitialised(boolean appServletInitialised) {
