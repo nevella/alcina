@@ -935,9 +935,6 @@ public class SEUtilities {
 							Class descendant = o1.isAssignableFrom(o2) ? o2
 									: o1;
 							if (descendant.getSuperclass() == ancestor) {
-								// possible annotation re-ordering
-								PropertyOrder propertyOrder = (PropertyOrder) ancestor
-										.getAnnotation(PropertyOrder.class);
 								return o1 == ancestor ? -1 : 1;
 							} else {
 								return o1 == ancestor ? -1 : 1;
