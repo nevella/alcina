@@ -41,6 +41,10 @@ public abstract class LoginConsort extends Consort<State> {
 	public LoginConsort() {
 	}
 
+	public String getSubtitleText() {
+		return "Enter your email to log in";
+	}
+
 	public void init(SimplePanel container, LoginViewModel model) {
 		this.container = container;
 		this.viewModel = model;
