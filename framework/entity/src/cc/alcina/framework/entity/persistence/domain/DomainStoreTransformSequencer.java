@@ -31,21 +31,21 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceQueu
 import cc.alcina.framework.entity.util.OffThreadLogger;
 
 /**
- * 
- * 
+ *
+ *
  * A postgres-specific class to order applications of transformrequests to the
  * domain by db transactionCommitTime. It uses pg_xact_commit_timestamp(xmin) to
  * order these correctly.
- * 
+ *
  * FIXME - mvcc:
- * 
+ *
  * As it now is, COMMIT_ERRROR dtr events are fired (and ignored) on
  * non-originating servers - remove?
- * 
- * 
- * 
+ *
+ *
+ *
  * @author nick@alcina.cc
- * 
+ *
  *
  */
 public class DomainStoreTransformSequencer
@@ -62,7 +62,7 @@ public class DomainStoreTransformSequencer
 	 * Synchronization - this is iterated over in refreshPositions0, but a
 	 * concurrent add will not cause problems (since the ultimate concurrency
 	 * control is the db-tx visibility of the dtr id)
-	 * 
+	 *
 	 * Value is precommit receipt time, used for invalidation of requests from
 	 * restarted servers
 	 */
@@ -80,6 +80,8 @@ public class DomainStoreTransformSequencer
 
 	private long commitTimeout = 10 * TimeConstants.ONE_MINUTE_MS;
 
+	private Statement xminStatement;
+
 	DomainStoreTransformSequencer(DomainStoreLoaderDatabase loaderDatabase) {
 		this.loaderDatabase = loaderDatabase;
 		highestVisiblePosition = new DomainTransformCommitPosition(0,
@@ -91,18 +93,18 @@ public class DomainStoreTransformSequencer
 	}
 
 	@Override
+	public void onPersistedRequestAborted(long requestId) {
+		pendingRequestIds.remove(requestId);
+		logger.info("Received aborted request id: {}", requestId);
+		abortedRequestIds.put(requestId, true);
+	}
+
+	@Override
 	public void onPersistedRequestCommitted(long requestId) {
 		if (highestVisiblePosition == null) {
 			return;
 		}
 		refreshPositions(requestId, System.currentTimeMillis());
-	}
-
-	@Override
-	public void onPersistedRequestAborted(long requestId) {
-		pendingRequestIds.remove(requestId);
-		logger.info("Received aborted request id: {}", requestId);
-		abortedRequestIds.put(requestId, true);
 	}
 
 	@Override
@@ -138,7 +140,9 @@ public class DomainStoreTransformSequencer
 		return connection;
 	}
 
-	private Statement xminStatement;
+	private boolean isEnabled() {
+		return loaderDatabase.domainDescriptor.isUsesCommitSequencer();
+	}
 
 	private synchronized void publishUnpublishedPositions(
 			List<DomainTransformCommitPosition> positions) {
@@ -303,30 +307,6 @@ public class DomainStoreTransformSequencer
 		return 0;
 	}
 
-	void markHighestVisibleTransformList(Connection conn) throws SQLException {
-		if (!isEnabled()) {
-			highestVisiblePosition = new DomainTransformCommitPosition(0L,
-					new Timestamp(0L));
-			return;
-		}
-		refreshPositions0(conn, -1);
-		logger.info("Marked highest visible position - {}",
-				highestVisiblePosition);
-		unpublishedPositions.clear();
-	}
-
-	private boolean isEnabled() {
-		return loaderDatabase.domainDescriptor.isUsesCommitSequencer();
-	}
-
-	void waitForWritableTransactionsToTerminate() throws SQLException {
-		if (!isEnabled()) {
-			return;
-		}
-		runWithConnection("ensureTimestamps",
-				this::waitForWritableTransactionsToTerminate0);
-	}
-
 	private long waitForWritableTransactionsToTerminate0(Connection conn)
 			throws SQLException, InterruptedException {
 		//@formatter:off
@@ -370,5 +350,25 @@ public class DomainStoreTransformSequencer
 			Thread.sleep(1000);
 		}
 		return System.currentTimeMillis() - start;
+	}
+
+	void markHighestVisibleTransformList(Connection conn) throws SQLException {
+		if (!isEnabled()) {
+			highestVisiblePosition = new DomainTransformCommitPosition(0L,
+					new Timestamp(0L));
+			return;
+		}
+		refreshPositions0(conn, -1);
+		logger.debug("Marked highest visible position - {}",
+				highestVisiblePosition);
+		unpublishedPositions.clear();
+	}
+
+	void waitForWritableTransactionsToTerminate() throws SQLException {
+		if (!isEnabled()) {
+			return;
+		}
+		runWithConnection("ensureTimestamps",
+				this::waitForWritableTransactionsToTerminate0);
 	}
 }

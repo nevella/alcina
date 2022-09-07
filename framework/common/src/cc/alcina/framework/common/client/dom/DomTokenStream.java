@@ -2,40 +2,45 @@ package cc.alcina.framework.common.client.dom;
 
 import java.util.Iterator;
 import java.util.LinkedHashSet;
+import java.util.NoSuchElementException;
 import java.util.Set;
 import java.util.function.Predicate;
-import java.util.stream.Collectors;
 
 import org.w3c.dom.Node;
 import org.w3c.dom.traversal.DocumentTraversal;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.TreeWalker;
 
+/**
+ * <p>
+ * Ideally the treewalker would be positioned before 'current' - since it isn't,
+ * we treat the first (root) node specially.
+ *
+ * <p>
+ * Implementation is optimised to have only one TreeWalker.next() per next()
+ * (excluding skips) and to avoid DomDocument.nodeFor() calls
+ */
 public class DomTokenStream implements Iterator<DomNode> {
 	private TreeWalker tw;
 
 	private DomDocument doc;
 
-	Node next = null;
+	private Set<Node> skip = new LinkedHashSet<>();
 
-	private Set<DomNode> skip = new LinkedHashSet<>();
+	private Node hasNextFor;
 
-	private Node current;
+	private Node next;
 
-	private Node last;
+	private boolean rootIterated;
 
 	public DomTokenStream(DomNode node) {
 		this.doc = node.document;
-		this.tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(node.node,
-				NodeFilter.SHOW_ALL, null, true);
-		next();
+		this.tw = ((DocumentTraversal) doc.domDoc()).createTreeWalker(
+				node.domNode(), NodeFilter.SHOW_ALL, null, true);
 	}
 
 	public void afterModification() {
-		if (last != null) {
-			tw.setCurrentNode(last);
-			next = tw.nextNode();
-		}
+		hasNextFor = null;
 	}
 
 	public void dumpAround() {
@@ -57,38 +62,66 @@ public class DomTokenStream implements Iterator<DomNode> {
 
 	@Override
 	public boolean hasNext() {
+		Node currentNode = tw.getCurrentNode();
+		if (currentNode != hasNextFor) {
+			hasNextFor = currentNode;
+			next = nextWithSkip();
+			if (next != null) {
+				tw.setCurrentNode(currentNode);
+			} else {
+			}
+		}
 		return next != null;
 	}
 
 	@Override
 	public DomNode next() {
-		while (true) {
-			last = current;
-			current = next;
-			next = tw.nextNode();
-			DomNode xmlNode = doc.nodeFor(current);
-			if (skip.contains(xmlNode)) {
-			} else {
-				return xmlNode;
+		if (!hasNext()) {
+			throw new NoSuchElementException();
+		} else {
+			if (!rootIterated) {
+				rootIterated = true;
+				// clear, since this will equal root, and we need to recalc next
+				hasNextFor = null;
 			}
+			tw.setCurrentNode(next);
+			return doc.nodeFor(tw.getCurrentNode());
 		}
 	}
 
 	public void skip(DomNode node) {
-		skip.add(node);
-		skip.addAll(node.children.flatten().collect(Collectors.toList()));
+		node.stream().map(DomNode::domNode).forEach(skip::add);
 	}
 
 	public void skipChildren() {
-		if (current == null) {
-			return;
-		}
-		skip(doc.nodeFor(current));
+		DomNode currentDomNode = doc.nodeFor(tw.getCurrentNode());
+		currentDomNode.children.stream().map(DomNode::domNode)
+				.forEach(skip::add);
 	}
 
 	public void skipChildren(Predicate<DomNode> predicate) {
-		DomNode node = doc.nodeFor(current);
-		skip.addAll(node.children.flatten().filter(predicate)
-				.collect(Collectors.toList()));
+		DomNode currentDomNode = doc.nodeFor(tw.getCurrentNode());
+		currentDomNode.children.stream().filter(predicate).map(DomNode::domNode)
+				.forEach(skip::add);
+	}
+
+	private Node nextWithSkip() {
+		if (!rootIterated) {
+			Node currentNode = tw.getCurrentNode();
+			if (skip.contains(currentNode)) {
+				return null;
+			} else {
+				return currentNode;
+			}
+		}
+		while (true) {
+			// will be null at the end of the traversal
+			Node next = tw.nextNode();
+			if (skip.contains(next)) {
+				// never true at the end of the traversal
+			} else {
+				return next;
+			}
+		}
 	}
 }

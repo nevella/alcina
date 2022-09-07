@@ -18,6 +18,8 @@ public class RangeFooter extends Header<String> {
 	// unused for the mo (since always false)
 	boolean neverLoading = false;
 
+	private boolean noSearchRun = false;
+
 	public RangeFooter(AbstractCellTable table) {
 		super(new TextCell());
 		this.table = table;
@@ -29,6 +31,9 @@ public class RangeFooter extends Header<String> {
 	public String getValue() {
 		boolean empty = table.getRowCount() == 0;
 		if (empty) {
+			if (noSearchRun) {
+				return "No search run";
+			}
 			String message = loading || neverLoading ? "Loading"
 					: "No records match";
 			return message;
@@ -48,8 +53,16 @@ public class RangeFooter extends Header<String> {
 		}
 	}
 
+	public boolean isNoSearchRun() {
+		return this.noSearchRun;
+	}
+
 	public boolean isSearchReturnsLastResults() {
 		return this.searchReturnsLastResults;
+	}
+
+	public void setNoSearchRun(boolean noSearchRun) {
+		this.noSearchRun = noSearchRun;
 	}
 
 	public void setSearchReturnsLastResults(boolean searchReturnsLastResults) {

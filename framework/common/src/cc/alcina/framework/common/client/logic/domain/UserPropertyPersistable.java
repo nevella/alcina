@@ -49,8 +49,21 @@ public interface UserPropertyPersistable
 
 		public synchronized UserPropertyPersistable getPersistable() {
 			if (persistable == null && !Serializers.isSerializing()) {
-				persistable = (UserPropertyPersistable) property.deserialize();
-				ensureListeners();
+				// properties may be simple strings, not objects, in which case
+				// return null
+				try {
+					persistable = (UserPropertyPersistable) property
+							.deserialize();
+					if (persistable != null) {
+						ensureListeners();
+					} else {
+						return null;
+					}
+				} catch (Exception e) {
+					// FIXME - mvcc.5 - devex
+					e.printStackTrace();
+					return null;
+				}
 			}
 			return this.persistable;
 		}

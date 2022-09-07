@@ -3,12 +3,15 @@ package cc.alcina.framework.common.client.traversal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class SelectionFilter extends Model implements TreeSerializable {
@@ -18,13 +21,14 @@ public class SelectionFilter extends Model implements TreeSerializable {
 
 	private List<SelectionFilter.GenerationEntry> generations = new ArrayList<>();
 
-	private transient Map<String, RegExp> entriesByGeneration;
+	private transient Map<String, SelectionFilter.GenerationEntry> entriesByGeneration;
 
-	public void addGenerationFilter(Object generation,
+	public GenerationEntry addGenerationFilter(Object generation,
 			String pathSegmentRegex) {
 		SelectionFilter.GenerationEntry entry = new GenerationEntry(generation,
 				pathSegmentRegex);
 		generations.add(entry);
+		return entry;
 	}
 
 	public int getAllGenerationsLimit() {
@@ -46,14 +50,13 @@ public class SelectionFilter extends Model implements TreeSerializable {
 
 	public boolean matchesGenerationFilter(String generation,
 			List<String> list) {
-		return list.stream().anyMatch(filterable -> entriesByGeneration
-				.get(generation).exec(filterable) != null);
+		return entriesByGeneration.get(generation).matches(list);
 	}
 
 	public void prepareToFilter() {
-		entriesByGeneration = generations.stream()
-				.collect(Collectors.toMap(GenerationEntry::getGeneration,
-						e -> RegExp.compile(e.getPathSegmentRegex())));
+		generations.forEach(SelectionFilter.GenerationEntry::prepareToFilter);
+		entriesByGeneration = generations.stream().collect(AlcinaCollectors
+				.toKeyMap(SelectionFilter.GenerationEntry::getGeneration));
 	}
 
 	public boolean provideNotEmpty() {
@@ -78,30 +81,63 @@ public class SelectionFilter extends Model implements TreeSerializable {
 			implements TreeSerializable {
 		private String generation;
 
-		private String pathSegmentRegex;
+		private String filterRegex;
+
+		private transient RegExp regexp;
+
+		private transient Logger logger = LoggerFactory.getLogger(getClass());
+
+		private boolean log;
 
 		public GenerationEntry() {
 		}
 
-		public GenerationEntry(Object generation, String pathSegmentRegex) {
+		public GenerationEntry(Object generation, String filterRegex) {
 			this.generation = generation.toString();
-			this.pathSegmentRegex = pathSegmentRegex;
+			this.filterRegex = filterRegex;
+		}
+
+		public String getFilterRegex() {
+			return this.filterRegex;
 		}
 
 		public String getGeneration() {
 			return this.generation;
 		}
 
-		public String getPathSegmentRegex() {
-			return this.pathSegmentRegex;
+		public boolean isLog() {
+			return this.log;
+		}
+
+		public boolean matches(List<String> list) {
+			boolean result = false;
+			for (String string : list) {
+				if (regexp.test(string)) {
+					result = true;
+					break;
+				}
+			}
+			if (log) {
+				logger.info("Generation filter: {} : {} : {}", generation, list,
+						result);
+			}
+			return result;
+		}
+
+		public void setFilterRegex(String filterRegex) {
+			this.filterRegex = filterRegex;
 		}
 
 		public void setGeneration(String generation) {
 			this.generation = generation;
 		}
 
-		public void setPathSegmentRegex(String pathSegmentRegex) {
-			this.pathSegmentRegex = pathSegmentRegex;
+		public void setLog(boolean log) {
+			this.log = log;
+		}
+
+		void prepareToFilter() {
+			this.regexp = RegExp.compile(filterRegex);
 		}
 	}
 }

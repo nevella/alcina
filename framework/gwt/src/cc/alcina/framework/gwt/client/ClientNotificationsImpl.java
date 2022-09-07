@@ -179,9 +179,7 @@ public class ClientNotificationsImpl implements ClientNotifications {
 			logString += CommonUtils.formatDate(new Date(),
 					DateStyle.AU_DATE_TIME_MS) + ": " + s + "\n";
 		}
-		if (GWT.isScript()) {
-			consoleLog(s);
-		}
+		consoleLog(s);
 		if (logToSysOut) {
 			System.out.println(s);
 		}

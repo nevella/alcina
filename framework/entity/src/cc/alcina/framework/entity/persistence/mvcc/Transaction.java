@@ -505,7 +505,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	public void setTimeout(long timeout) {
-		logger.info("{} :: Setting timeout to {}", this, timeout);
+		logger.debug("{} :: Setting timeout to {}", this, timeout);
 		this.timeout = timeout;
 	}
 

@@ -68,6 +68,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.AnnotatedPermissible;
@@ -122,6 +123,7 @@ import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
+import cc.alcina.framework.servlet.task.TaskPublish;
 
 /**
  * Tests (todo) for transform persistence: invalid clientauth multiple
@@ -568,6 +570,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public SearchResultsBase search(SearchDefinition def) {
 		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().search(def);
+	}
+
+	public EntityLocator submitPublication(
+			ContentRequestBase<? extends ContentDefinition> publicationRequest)
+			throws WebException {
+		TaskPublish task = new TaskPublish();
+		task.setPublicationRequest(publicationRequest);
+		Job job = task.schedule();
+		Transaction.commit();
+		return job.toLocator();
 	}
 
 	@Override

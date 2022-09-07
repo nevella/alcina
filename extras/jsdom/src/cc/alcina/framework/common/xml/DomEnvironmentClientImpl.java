@@ -20,6 +20,11 @@ public class DomEnvironmentClientImpl implements DomEnvironment {
 	}
 
 	@Override
+	public boolean isEarlierThan(Node o1, Node o2) {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public DomDocument loadFromUrl(String url) {
 		throw new UnsupportedOperationException();
 	}

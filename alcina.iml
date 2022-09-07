@@ -1,0 +1,783 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<module type="JAVA_MODULE" version="4">
+  <component name="EclipseModuleManager">
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/nekohtml.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/extras/cluster/ant.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/common/persistence-api.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/common/jaxb-api.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/reload4j-1.2.21.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/gwt/gwtx-1.5.2.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/gwt/gwt-dev.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/gwt/gwt-html5-database.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/gwt/validation-api-1.0.0.GA-sources.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/gwt/validation-api-1.0.0.GA.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-4.0.4.Final.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/impl/jboss-hibernate/hibernate-core-4.3.7.Final.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/gwt/gwt-user.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.3.7.Final.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/servlet/jakarta.activation-1.2.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/servlet/jakarta.mail-1.6.7.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/javax.ejb-api-3.2.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/gwt/requestfactory-server.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/impl/jboss-hibernate/jboss-vfs-3.2.5.Final.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/fastutil-7.0.6.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/kryo/kryo-4.0.0-javadoc.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/kryo/kryo-4.0.0-sources.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/kryo/kryo-4.0.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/kryo/minlog-1.3.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/kryo/objenesis-2.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/kryo/reflectasm-1.10.1-shaded.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/common/jackson-annotations-2.7.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/jackson-core-2.7.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/jackson-databind-2.7.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/gwt/gwt-dev-patch.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-core-3.20.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-core-generators-3.20.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-symbol-solver-core-3.20.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/barbary-watchservice-2.1-SNAPSHOT.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/jna-5.10.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/jna-platform-5.10.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/extras/dev/httpclient-4.5.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/extras/dev/httpcore-4.4.3.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/slf4j-api-1.7.36.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/commons-pool2-2.6.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/gwt/gwt-elemental.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/extras/webdriver/selenium-server-standalone-3.7.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/javax.transaction-api-1.3.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/tools.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-core-metamodel-generator-3.20.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-core-serialization-3.20.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/classmeta/javassist-3.18.1-GA.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/servlet/scrypt-1.4.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-api-client-1.25.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-api-client-jackson2-1.25.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-api-client-java6-1.25.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-api-services-sheets-v4-rev565-1.25.0-sources.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-api-services-sheets-v4-rev565-1.25.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-http-client-1.25.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-http-client-jackson2-1.25.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-oauth-client-1.25.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-oauth-client-java6-1.25.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-oauth-client-jetty-1.25.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/gson-2.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/protobuf-java-2.4.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/google/google-api-services-drive-v3-rev161-1.25.0.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/servlet/cluster/kafka-clients-2.7.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/xercesImpl-2.12.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/commons-lang-2.5.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/extras/webdriver/commonmark-0.18.1-SNAPSHOT.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/extras/webdriver/commonmark-ext-gfm-tables-0.18.1-SNAPSHOT.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/javax.ws.rs-api-2.1.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/jol-core-0.17-SNAPSHOT.jar!/" />
+    <libelement value="jar://$MODULE_DIR$/lib/framework/entity/slf4j-reload4j-1.7.36.jar!/" />
+    <src_description expected_position="0">
+      <src_folder value="file://$MODULE_DIR$/framework/common/src" expected_position="0" />
+      <src_folder value="file://$MODULE_DIR$/framework/jscodeserver/src" expected_position="1" />
+      <src_folder value="file://$MODULE_DIR$/framework/classmeta/src" expected_position="2" />
+      <src_folder value="file://$MODULE_DIR$/extras/jsdom/src-regex" expected_position="3" />
+      <src_folder value="file://$MODULE_DIR$/framework/clientreflectorjvm/src" expected_position="4" />
+      <src_folder value="file://$MODULE_DIR$/framework/jvmclient/src" expected_position="5" />
+      <src_folder value="file://$MODULE_DIR$/extras/collections/src" expected_position="6" />
+      <src_folder value="file://$MODULE_DIR$/framework/entity/src" expected_position="7" />
+      <src_folder value="file://$MODULE_DIR$/framework/impl/jboss-hibernate/src" expected_position="8" />
+      <src_folder value="file://$MODULE_DIR$/framework/gwt/src" expected_position="9" />
+      <src_folder value="file://$MODULE_DIR$/framework/servlet/src" expected_position="10" />
+      <src_folder value="file://$MODULE_DIR$/extras/cluster/tasks-src" expected_position="11" />
+      <src_folder value="file://$MODULE_DIR$/extras/dev/src" expected_position="12" />
+      <src_folder value="file://$MODULE_DIR$/extras/misc/src" expected_position="13" />
+      <src_folder value="file://$MODULE_DIR$/extras/ios6/src" expected_position="14" />
+      <src_folder value="file://$MODULE_DIR$/extras/jsdom/src" expected_position="15" />
+      <src_folder value="file://$MODULE_DIR$/extras/jsdom/src-element" expected_position="16" />
+      <src_folder value="file://$MODULE_DIR$/extras/wd/src" expected_position="17" />
+      <src_folder value="file://$MODULE_DIR$/extras/patches/nekohtml/src" expected_position="18" />
+    </src_description>
+  </component>
+  <component name="NewModuleRootManager">
+    <output url="file://$MODULE_DIR$/bin" />
+    <exclude-output />
+    <content url="file://$MODULE_DIR$">
+      <sourceFolder url="file://$MODULE_DIR$/extras/cluster/tasks-src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/collections/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/dev/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/ios6/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/jsdom/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/jsdom/src-element" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/jsdom/src-regex" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/misc/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/patches/nekohtml/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/extras/wd/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/classmeta/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/clientreflectorjvm/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/common/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/entity/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/gwt/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/impl/jboss-hibernate/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/jscodeserver/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/jvmclient/src" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/framework/servlet/src" isTestSource="false" />
+    </content>
+    <orderEntry type="sourceFolder" forTests="false" />
+    <orderEntry type="inheritedJdk" />
+    <orderEntry type="module-library">
+      <library name="nekohtml.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/nekohtml.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="ant.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/extras/cluster/ant.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$USER_HOME$/Documents/programmin/java/apache-ant-1.9.5/src/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="persistence-api.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/common/persistence-api.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jaxb-api.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/common/jaxb-api.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="reload4j-1.2.21.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/reload4j-1.2.21.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/reload4j" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="gwtx-1.5.2.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/gwt/gwtx-1.5.2.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="gwt-dev.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/gwt/gwt-dev.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/gwt" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="gwt-html5-database.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/gwt/gwt-html5-database.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="validation-api-1.0.0.GA-sources.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/gwt/validation-api-1.0.0.GA-sources.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="validation-api-1.0.0.GA.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/gwt/validation-api-1.0.0.GA.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="hibernate-commons-annotations-4.0.4.Final.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/impl/jboss-hibernate/hibernate-commons-annotations-4.0.4.Final.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="hibernate-core-4.3.7.Final.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/impl/jboss-hibernate/hibernate-core-4.3.7.Final.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/hibernate-orm" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="gwt-user.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/gwt/gwt-user.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="hibernate-entitymanager-4.3.7.Final.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/impl/jboss-hibernate/hibernate-entitymanager-4.3.7.Final.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///jboss-hibernate-orm" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jakarta.activation-1.2.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/servlet/jakarta.activation-1.2.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jakarta.mail-1.6.7.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/servlet/jakarta.mail-1.6.7.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///jakarta-mail" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javax.ejb-api-3.2.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/javax.ejb-api-3.2.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="requestfactory-server.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/gwt/requestfactory-server.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jboss-vfs-3.2.5.Final.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/impl/jboss-hibernate/jboss-vfs-3.2.5.Final.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="fastutil-7.0.6.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/fastutil-7.0.6.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/fastutil" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="kryo-4.0.0-javadoc.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/kryo/kryo-4.0.0-javadoc.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="kryo-4.0.0-sources.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/kryo/kryo-4.0.0-sources.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="kryo-4.0.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/kryo/kryo-4.0.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/kryo/kryo-4.0.0-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="minlog-1.3.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/kryo/minlog-1.3.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="objenesis-2.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/kryo/objenesis-2.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="reflectasm-1.10.1-shaded.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/kryo/reflectasm-1.10.1-shaded.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jackson-annotations-2.7.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/common/jackson-annotations-2.7.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jackson-core-2.7.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/jackson-core-2.7.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/jackson-core" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jackson-databind-2.7.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/jackson-databind-2.7.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/jackson-databind" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="gwt-dev-patch.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/gwt/gwt-dev-patch.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javaparser-core-3.20.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-core-3.20.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/javaparser/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javaparser-core-generators-3.20.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-core-generators-3.20.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javaparser-symbol-solver-core-3.20.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-symbol-solver-core-3.20.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/javaparser" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="barbary-watchservice-2.1-SNAPSHOT.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/classmeta/barbary-watchservice-2.1-SNAPSHOT.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file://$MODULE_DIR$/../minor/BarbaryWatchService" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jna-5.10.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/classmeta/jna-5.10.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/jna" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jna-platform-5.10.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/classmeta/jna-platform-5.10.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="httpclient-4.5.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/extras/dev/httpclient-4.5.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="httpcore-4.4.3.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/extras/dev/httpcore-4.4.3.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="slf4j-api-1.7.36.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/slf4j-api-1.7.36.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/../minor/jars/slf4j-api-1.7.2.jbossorg-1-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-pool2-2.6.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/commons-pool2-2.6.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="gwt-elemental.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/gwt/gwt-elemental.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="selenium-server-standalone-3.7.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/extras/webdriver/selenium-server-standalone-3.7.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javax.transaction-api-1.3.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/javax.transaction-api-1.3.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="tools.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/classmeta/tools.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/jdk" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javaparser-core-metamodel-generator-3.20.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-core-metamodel-generator-3.20.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javaparser-core-serialization-3.20.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/classmeta/javaparser-core-serialization-3.20.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javassist-3.18.1-GA.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/classmeta/javassist-3.18.1-GA.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/javassist" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="scrypt-1.4.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/servlet/scrypt-1.4.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-api-client-1.25.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-api-client-1.25.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/google-api-java-client" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-api-client-jackson2-1.25.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-api-client-jackson2-1.25.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-api-client-java6-1.25.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-api-client-java6-1.25.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-api-services-sheets-v4-rev565-1.25.0-sources.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-api-services-sheets-v4-rev565-1.25.0-sources.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-api-services-sheets-v4-rev565-1.25.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-api-services-sheets-v4-rev565-1.25.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-api-services-sheets-v4-rev565-1.25.0-sources.jar!/" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-http-client-1.25.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-http-client-1.25.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-http-client-jackson2-1.25.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-http-client-jackson2-1.25.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-oauth-client-1.25.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-oauth-client-1.25.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-oauth-client-java6-1.25.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-oauth-client-java6-1.25.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-oauth-client-jetty-1.25.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-oauth-client-jetty-1.25.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="gson-2.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/gson-2.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="protobuf-java-2.4.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/protobuf-java-2.4.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="google-api-services-drive-v3-rev161-1.25.0.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/google/google-api-services-drive-v3-rev161-1.25.0.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="kafka-clients-2.7.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/servlet/cluster/kafka-clients-2.7.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES>
+          <root url="file:///g/minor/kafka" />
+        </SOURCES>
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="xercesImpl-2.12.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/xercesImpl-2.12.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commons-lang-2.5.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/commons-lang-2.5.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commonmark-0.18.1-SNAPSHOT.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/extras/webdriver/commonmark-0.18.1-SNAPSHOT.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="commonmark-ext-gfm-tables-0.18.1-SNAPSHOT.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/extras/webdriver/commonmark-ext-gfm-tables-0.18.1-SNAPSHOT.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="javax.ws.rs-api-2.1.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/javax.ws.rs-api-2.1.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="jol-core-0.17-SNAPSHOT.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/jol-core-0.17-SNAPSHOT.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+    <orderEntry type="module-library">
+      <library name="slf4j-reload4j-1.7.36.jar">
+        <CLASSES>
+          <root url="jar://$MODULE_DIR$/lib/framework/entity/slf4j-reload4j-1.7.36.jar!/" />
+        </CLASSES>
+        <JAVADOC />
+        <SOURCES />
+      </library>
+    </orderEntry>
+  </component>
+</module>

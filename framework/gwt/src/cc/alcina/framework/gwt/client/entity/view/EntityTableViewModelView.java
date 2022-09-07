@@ -77,6 +77,8 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 
 	private HandlerRegistration groupedDataHandlerRegistration;
 
+	protected RangeFooter rangeFooter;
+
 	public AbstractCellTable<Row> groupedCellTable() {
 		return this.groupedTable;
 	}
@@ -226,8 +228,13 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 		customSetupToolbar(linksPanel);
 	}
 
+	protected void addInitialDataDisplay() {
+		model.dataProvider.addDataDisplay(table);
+	}
+
 	protected RangeFooter createRangeFooter() {
-		return new RangeFooter(table);
+		rangeFooter = new RangeFooter(table);
+		return rangeFooter;
 	}
 
 	protected abstract List<FlatSearchable> createSearchables();
@@ -250,7 +257,7 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 		List<T> selectedList = multiSelectionSupport.multipleSelectionModel
 				.getSelectedList();
 		AppController.get().deleteMultiple(selectedList);
-		model.dataProvider.search();
+		searchProvider();
 	}
 
 	protected abstract String getFilterHint();
@@ -313,6 +320,10 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 		AppController.get().doSearch(getRowClass(), text);
 	}
 
+	protected void searchProvider() {
+		model.dataProvider.search();
+	}
+
 	protected void showFilterPanel(boolean show) {
 		defFilter.setVisible(show);
 	}
@@ -353,9 +364,9 @@ public abstract class EntityTableViewModelView<VM extends ViewModelWithDataProvi
 			}
 		}
 		if (!model.dataProvider.getDataDisplays().contains(table)) {
-			model.dataProvider.addDataDisplay(table);
+			addInitialDataDisplay();
 		} else {
-			model.dataProvider.search();
+			searchProvider();
 		}
 		EntityClientUtils.clearSelection(table);
 	}

@@ -15,6 +15,8 @@ import org.hibernate.loader.criteria.CriteriaLoader;
 import org.hibernate.loader.criteria.CriteriaQueryTranslator;
 import org.hibernate.persister.entity.OuterJoinLoadable;
 
+import cc.alcina.framework.common.client.logic.domain.Entity;
+
 public class HibernateCriteriaToSql {
 	public static String toSql(Criteria criteria) {
 		String sql = "";
@@ -72,6 +74,8 @@ public class HibernateCriteriaToSql {
 						value = "'" + sdf.format((Date) val) + "'";
 					} else if (val instanceof Enum) {
 						value = "" + ((Enum) val).ordinal();
+					} else if (val instanceof Entity) {
+						value = "" + ((Entity) val).getId();
 					} else {
 						value = val.toString();
 					}

@@ -3,6 +3,8 @@ package cc.alcina.framework.common.client.traversal;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.log.TreeProcess.Node;
 
 public abstract class AbstractSelection<T> implements Selection<T> {
@@ -16,9 +18,8 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	public AbstractSelection(Node parentNode, T value, String pathSegment) {
 		this.value = value;
-		this.pathSegment = pathSegment;
 		this.node = parentNode.add(this);
-		filterableSegments.add(pathSegment);
+		setPathSegment(pathSegment);
 	}
 
 	public AbstractSelection(Selection parent, T value, String pathSegment) {
@@ -47,6 +48,14 @@ public abstract class AbstractSelection<T> implements Selection<T> {
 
 	public void set(T value) {
 		this.value = value;
+	}
+
+	public void setPathSegment(String pathSegment) {
+		Preconditions.checkState(this.pathSegment == null);
+		this.pathSegment = pathSegment;
+		if (pathSegment != null) {
+			filterableSegments.add(pathSegment);
+		}
 	}
 
 	@Override

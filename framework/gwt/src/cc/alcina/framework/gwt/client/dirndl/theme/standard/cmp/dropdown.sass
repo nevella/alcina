@@ -1,0 +1,57 @@
+@use '../multi/base'
+
+@mixin dropdown($background-color,$border,$border-radius,$color,$link-color,$link-hover-color,$font-size: 0)
+  position: relative
+
+  @if $font-size != 0
+    font-size: $font-size
+
+  > button > label 
+    cursor: pointer
+  > *:nth-child(2) 
+    display: none
+    padding: 0
+  li 
+    list-style-type: none
+
+  &.open 
+    > :nth-child(2) 
+      display: inline-block
+      height: auto
+      left: 0
+      margin: 0
+      position: absolute
+      right: auto
+      max-height: 48rem
+      top: calc(100% + 2.5px)
+      width: auto
+      z-index: 899
+      background-color: $background-color
+      border: $border
+      border-radius: $border-radius
+      color: $color
+      padding: 0.8rem 0
+      li 
+        a, >span 
+          white-space: nowrap
+          text-overflow: ellipsis
+          overflow: hidden
+          display: block
+          min-height: 1.2rem
+          padding: .2rem 1.1rem
+          width: calc(100% - 2rem)
+          min-width: 7rem
+          max-width: 30vw
+      
+      #{base.$a-tags}
+        color: $link-color
+        text-decoration: none
+      
+      a:hover 
+        color: $link-hover-color
+
+    &.right 
+      > :nth-child(2) 
+        left: auto
+        right: 0
+  

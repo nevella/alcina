@@ -1,5 +1,4 @@
-@use '../_theme'
-@use '_base'
+@use '../../theme/theme'
 
 @mixin subtle-form 
   input,
@@ -51,10 +50,10 @@
   select,
   textarea 
     width: calc(100% - 2px)
-        /*
+    /*
         //FIXME - use flex to max the container width
         max-width: 30em
-        */
+      */
 
 ol-editor 
   padding: 1em 2em
@@ -151,9 +150,9 @@ ol-editor
         white-space: nowrap
         width: 180px
 
-/*
-FIXME - 2022 - either move to per-app style of theme - 
-*/
+  /*
+  FIXME - 2022 - either move to per-app style of theme - 
+   */
   &.tight230 
     padding: 0.25rem 0.5rem
     .ol-form-field 
@@ -165,9 +164,10 @@ FIXME - 2022 - either move to per-app style of theme -
 
 /*
 will always have single-line ol-editor, pad label until we work out baseline alignment
-*/
+  */
 edit-value 
-  > label  padding-top: 2.0px 
+  > label  
+    padding-top: 2.0px 
   &:not(.dirty) .ol-toolbar 
     visibility: hidden
   section > div 

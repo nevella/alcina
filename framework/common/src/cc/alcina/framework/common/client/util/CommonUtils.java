@@ -107,7 +107,9 @@ public class CommonUtils {
 					LinkedHashSet.class, TreeSet.class, HashMap.class,
 					LinkedHashMap.class, TreeMap.class, LightSet.class,
 					LiSet.class, LightMap.class, CountingMap.class,
-					IdentityArrayList.class, Multimap.class, Multiset.class)
+					IdentityArrayList.class, Multimap.class, Multiset.class,
+					MultikeyMap.class, UnsortedMultikeyMap.class,
+					SortedMultikeyMap.class)
 			.stream().map(Class::getCanonicalName).collect(Collectors.toSet());
 
 	public static final Set<String> CORE_CLASS_NAMES = Arrays

@@ -16,9 +16,12 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainUpdate.DomainTransformCommitPosition;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.publication.ContentDefinition;
+import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
 @Reflected
@@ -123,6 +126,13 @@ public class ReflectiveCommonRemoteServiceAsync extends
 	public void search(SearchDefinition def,
 			AsyncCallback<SearchResultsBase> callback) {
 		throw new UnsupportedOperationException();
+	}
+
+	public void submitPublication(
+			ContentRequestBase<? extends ContentDefinition> publicationRequest,
+			AsyncCallback<EntityLocator> callback) {
+		call("submitPublication", new Class[] { ContentRequestBase.class },
+				callback, publicationRequest);
 	}
 
 	@Override

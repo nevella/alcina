@@ -4,6 +4,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.AllStatesConsort;
@@ -12,6 +13,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.tour.StepPopupView.Action;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
@@ -44,6 +46,8 @@ public abstract class TourManager {
 				break;
 			case NEXT:
 				currentTour.gotoStep(currentTour.getCurrentStepIndex() + 1);
+				log("Moved to tour step %s :: %s",
+						currentTour.getCurrentStepIndex(), step.asString());
 				onNext();
 				refreshTourView();
 				break;
@@ -102,11 +106,18 @@ public abstract class TourManager {
 		}
 		this.tourJson = tourJson.replaceFirst("var sample = ", "");
 		currentTour = TourState.fromJson(this.tourJson);
+		UIRenderer.get().startTour(this);
 		refreshTourView();
 	}
 
 	protected void exitTour(String message) {
 		UIRenderer.get().exitTour(message);
+	}
+
+	protected void log(String template, Object... args) {
+		if (GWT.isClient() && !GWT.isScript()) {
+			ClientNotifications.get().log(template, args);
+		}
 	}
 
 	protected void onNext() {
@@ -238,6 +249,9 @@ public abstract class TourManager {
 			case PERFORM_ACTION:
 				if (checkIgnoreAction() || performAction()) {
 					wasPlayed(player);
+					if (step.provideTarget() == null && currentTour.hasNext()) {
+						stepListener.topicPublished(Action.NEXT);
+					}
 				} else {
 					retry(player, next, 200);
 				}

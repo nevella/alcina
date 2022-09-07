@@ -4,119 +4,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reachabil
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reachability.RuleSet;
 
 public class StandardRulesets {
-	@Condition( classes = {
-			//@formatter:off
-			java.lang.Boolean.class,
-	        java.lang.Byte.class,
-	        java.lang.CharSequence.class,
-	        java.lang.Character.class,
-	        java.lang.Class.class,
-	        java.lang.Comparable.class,
-	        java.lang.Double.class,
-	        java.lang.Enum.class,
-	        java.lang.Exception.class,
-	        java.lang.Float.class,
-	        java.lang.Integer.class,
-	        java.lang.Iterable.class,
-	        java.lang.Long.class,
-	        java.lang.Number.class,
-	        java.lang.Runnable.class,
-	        java.lang.Short.class,
-	        java.lang.String.class,
-	        java.lang.Throwable.class,
-	        java.lang.Void.class,
-	        java.sql.Timestamp.class,
-	        java.util.AbstractCollection.class,
-	        java.util.AbstractList.class,
-	        java.util.AbstractMap.class,
-	        java.util.AbstractSequentialList.class,
-	        java.util.AbstractSet.class,
-	        java.util.ArrayList.class,
-	        java.util.Collection.class,
-	        java.util.Comparator.class,
-	        java.util.Date.class,
-	        java.util.HashMap.class,
-	        java.util.HashSet.class,
-	        java.util.LinkedHashMap.class,
-	        java.util.LinkedHashSet.class,
-	        java.util.LinkedList.class,
-	        java.util.List.class,
-	        java.util.Map.class,
-	        java.util.NavigableMap.class,
-	        java.util.Set.class,
-	        java.util.SortedSet.class,
-	        java.util.TreeMap.class,
-	        java.util.TreeSet.class,
-	        java.util.function.Function.class,
-	        java.util.function.Predicate.class,
-	        java.util.function.Supplier.class,
-	        java.beans.PropertyChangeListener.class,
-	        java.io.Serializable.class,
-	        java.lang.Cloneable.class,
-	        java.lang.reflect.Type.class,
-	        java.util.Deque.class,
-	        java.util.NavigableSet.class,
-	        java.util.Queue.class,
-	        java.util.RandomAccess.class,
-	        java.util.SortedMap.class,
-	        java.lang.annotation.Annotation.class,
-	        java.util.EventListener.class
-	        //@formatter:on
-	})
-	public static class BaseJava implements RuleSet {
-	}
-
-	@SuppressWarnings("deprecation")
-	@Condition( classes = {
-	//@formatter:off
-			com.google.gwt.activity.shared.ActivityMapper.class,
-	        com.google.gwt.event.logical.shared.AttachEvent.Handler.class,
-	        com.google.gwt.event.logical.shared.HasAttachHandlers.class,
-	        com.google.gwt.event.logical.shared.HasValueChangeHandlers.class,
-	        com.google.gwt.event.logical.shared.ValueChangeHandler.class,
-	        com.google.gwt.event.shared.EventHandler.class,
-	        com.google.gwt.event.shared.GwtEvent.class,
-	        com.google.gwt.event.shared.HasHandlers.class,
-	        com.google.gwt.place.shared.Place.class,
-	        com.google.gwt.user.client.Event.NativePreviewHandler.class,
-	        com.google.gwt.user.client.EventListener.class,
-	        com.google.gwt.user.client.Window.ClosingHandler.class,
-	        com.google.gwt.user.client.rpc.AsyncCallback.class,
-	        com.google.gwt.user.client.rpc.RpcRequestBuilder.class,
-	        com.google.gwt.user.client.ui.Composite.class,
-	        com.google.gwt.user.client.ui.UIObject.class,
-	        com.google.gwt.user.client.ui.Widget.class,
-	        com.google.web.bindery.event.shared.Event.class,
-	        com.google.gwt.activity.shared.Activity.class,
-	        com.google.gwt.event.dom.client.ClickHandler.class,
-	        com.google.gwt.event.dom.client.HasAllFocusHandlers.class,
-	        com.google.gwt.event.dom.client.KeyPressHandler.class,
-	        com.google.gwt.place.shared.PlaceHistoryMapper.class,
-	        com.google.gwt.user.client.ui.Focusable.class,
-	        com.google.gwt.user.client.ui.HasVisibility.class,
-	        com.google.gwt.user.client.ui.IsRenderable.class,
-	        com.google.gwt.user.client.ui.IsWidget.class,
-	        com.google.gwt.event.dom.client.HasBlurHandlers.class,
-	        com.google.gwt.event.dom.client.HasFocusHandlers.class,
-	        com.google.gwt.place.shared.PlaceTokenizer.class,
-	        com.google.gwt.user.client.ui.HasEnabled.class,
-	        com.google.gwt.user.client.ui.HasFocus.class,
-	        com.google.gwt.user.client.ui.SourcesChangeEvents.class,
-	        com.google.gwt.user.client.ui.SourcesClickEvents.class,
-	        com.google.gwt.user.client.ui.SourcesFocusEvents.class,
-	        com.google.gwt.user.client.ui.SourcesKeyboardEvents.class,
-	        com.google.gwt.user.client.ui.SuggestOracle.Request.class,
-	        com.google.gwt.user.client.ui.SuggestOracle.Response.class,
-	        com.google.gwt.user.client.ui.SuggestOracle.Suggestion.class,
-	        com.google.gwt.event.dom.client.HasClickHandlers.class,
-	        com.google.gwt.event.logical.shared.SelectionHandler.class,
-	        com.google.gwt.user.client.rpc.IsSerializable.class
-	        //@formatter:on
-	})
-	public static class BaseGwt implements RuleSet {
-	}
-
-	@Condition( classes = {
+	@Condition(classes = {
 			//@formatter:off
 			cc.alcina.framework.common.client.actions.PermissibleAction.class,
 			cc.alcina.framework.common.client.actions.PermissibleActionListener.class,
@@ -273,13 +161,129 @@ public class StandardRulesets {
 			cc.alcina.framework.gwt.persistence.client.LogStore.class,
 			com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents.class,
 			com.totsp.gwittir.client.validator.Validator.class,
+			cc.alcina.framework.common.client.util.MultikeyMap.class,
+			cc.alcina.framework.common.client.util.UnsortedMultikeyMap.class,
+			cc.alcina.framework.common.client.util.SortedMultikeyMap.class,
 	        //@formatter:on
 	})
 	public static class BaseAlcina implements RuleSet {
 	}
-	@Condition( classes = {
+
+	@SuppressWarnings("deprecation")
+	@Condition(classes = {
+	//@formatter:off
+			com.google.gwt.activity.shared.ActivityMapper.class,
+	        com.google.gwt.event.logical.shared.AttachEvent.Handler.class,
+	        com.google.gwt.event.logical.shared.HasAttachHandlers.class,
+	        com.google.gwt.event.logical.shared.HasValueChangeHandlers.class,
+	        com.google.gwt.event.logical.shared.ValueChangeHandler.class,
+	        com.google.gwt.event.shared.EventHandler.class,
+	        com.google.gwt.event.shared.GwtEvent.class,
+	        com.google.gwt.event.shared.HasHandlers.class,
+	        com.google.gwt.place.shared.Place.class,
+	        com.google.gwt.user.client.Event.NativePreviewHandler.class,
+	        com.google.gwt.user.client.EventListener.class,
+	        com.google.gwt.user.client.Window.ClosingHandler.class,
+	        com.google.gwt.user.client.rpc.AsyncCallback.class,
+	        com.google.gwt.user.client.rpc.RpcRequestBuilder.class,
+	        com.google.gwt.user.client.ui.Composite.class,
+	        com.google.gwt.user.client.ui.UIObject.class,
+	        com.google.gwt.user.client.ui.Widget.class,
+	        com.google.web.bindery.event.shared.Event.class,
+	        com.google.gwt.activity.shared.Activity.class,
+	        com.google.gwt.event.dom.client.ClickHandler.class,
+	        com.google.gwt.event.dom.client.HasAllFocusHandlers.class,
+	        com.google.gwt.event.dom.client.KeyPressHandler.class,
+	        com.google.gwt.place.shared.PlaceHistoryMapper.class,
+	        com.google.gwt.user.client.ui.Focusable.class,
+	        com.google.gwt.user.client.ui.HasVisibility.class,
+	        com.google.gwt.user.client.ui.IsRenderable.class,
+	        com.google.gwt.user.client.ui.IsWidget.class,
+	        com.google.gwt.event.dom.client.HasBlurHandlers.class,
+	        com.google.gwt.event.dom.client.HasFocusHandlers.class,
+	        com.google.gwt.place.shared.PlaceTokenizer.class,
+	        com.google.gwt.user.client.ui.HasEnabled.class,
+	        com.google.gwt.user.client.ui.HasFocus.class,
+	        com.google.gwt.user.client.ui.SourcesChangeEvents.class,
+	        com.google.gwt.user.client.ui.SourcesClickEvents.class,
+	        com.google.gwt.user.client.ui.SourcesFocusEvents.class,
+	        com.google.gwt.user.client.ui.SourcesKeyboardEvents.class,
+	        com.google.gwt.user.client.ui.SuggestOracle.Request.class,
+	        com.google.gwt.user.client.ui.SuggestOracle.Response.class,
+	        com.google.gwt.user.client.ui.SuggestOracle.Suggestion.class,
+	        com.google.gwt.event.dom.client.HasClickHandlers.class,
+	        com.google.gwt.event.logical.shared.SelectionHandler.class,
+	        com.google.gwt.user.client.rpc.IsSerializable.class
+	        //@formatter:on
+	})
+	public static class BaseGwt implements RuleSet {
+	}
+
+	@Condition(classes = {
 			//@formatter:off
-			
+			java.lang.Boolean.class,
+	        java.lang.Byte.class,
+	        java.lang.CharSequence.class,
+	        java.lang.Character.class,
+	        java.lang.Class.class,
+	        java.lang.Comparable.class,
+	        java.lang.Double.class,
+	        java.lang.Enum.class,
+	        java.lang.Exception.class,
+	        java.lang.Float.class,
+	        java.lang.Integer.class,
+	        java.lang.Iterable.class,
+	        java.lang.Long.class,
+	        java.lang.Number.class,
+	        java.lang.Runnable.class,
+	        java.lang.Short.class,
+	        java.lang.String.class,
+	        java.lang.Throwable.class,
+	        java.lang.Void.class,
+	        java.sql.Timestamp.class,
+	        java.util.AbstractCollection.class,
+	        java.util.AbstractList.class,
+	        java.util.AbstractMap.class,
+	        java.util.AbstractSequentialList.class,
+	        java.util.AbstractSet.class,
+	        java.util.ArrayList.class,
+	        java.util.Collection.class,
+	        java.util.Comparator.class,
+	        java.util.Date.class,
+	        java.util.HashMap.class,
+	        java.util.HashSet.class,
+	        java.util.LinkedHashMap.class,
+	        java.util.LinkedHashSet.class,
+	        java.util.LinkedList.class,
+	        java.util.List.class,
+	        java.util.Map.class,
+	        java.util.NavigableMap.class,
+	        java.util.Set.class,
+	        java.util.SortedSet.class,
+	        java.util.TreeMap.class,
+	        java.util.TreeSet.class,
+	        java.util.function.Function.class,
+	        java.util.function.Predicate.class,
+	        java.util.function.Supplier.class,
+	        java.beans.PropertyChangeListener.class,
+	        java.io.Serializable.class,
+	        java.lang.Cloneable.class,
+	        java.lang.reflect.Type.class,
+	        java.util.Deque.class,
+	        java.util.NavigableSet.class,
+	        java.util.Queue.class,
+	        java.util.RandomAccess.class,
+	        java.util.SortedMap.class,
+	        java.lang.annotation.Annotation.class,
+	        java.util.EventListener.class
+	        //@formatter:on
+	})
+	public static class BaseJava implements RuleSet {
+	}
+
+	@Condition(classes = {
+			//@formatter:off
+
 			cc.alcina.framework.gwt.client.gwittir.GwittirBridge.DomainListProvider.class,
 			cc.alcina.framework.gwt.client.gwittir.HasBinding.class,
 			cc.alcina.framework.gwt.client.gwittir.customiser.Customiser.class,
@@ -334,5 +338,4 @@ public class StandardRulesets {
 	})
 	public static class BaseV1Widgets implements RuleSet {
 	}
-	
 }

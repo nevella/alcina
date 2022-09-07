@@ -242,6 +242,8 @@ public class TourImpl implements Tour {
 
 		private int delay;
 
+		private int actionDelay;
+
 		private RelativeTo relativeTo;
 
 		private String style;
@@ -249,8 +251,18 @@ public class TourImpl implements Tour {
 		private String comment;
 
 		@Override
+		public String asString() {
+			return toString();
+		}
+
+		@Override
 		public Action getAction() {
 			return this.action;
+		}
+
+		@Override
+		public int getActionDelay() {
+			return this.actionDelay;
 		}
 
 		@Override
@@ -327,6 +339,10 @@ public class TourImpl implements Tour {
 
 		public void setAction(Action action) {
 			this.action = action;
+		}
+
+		public void setActionDelay(int actionDelay) {
+			this.actionDelay = actionDelay;
 		}
 
 		public void setActionValue(String actionValue) {

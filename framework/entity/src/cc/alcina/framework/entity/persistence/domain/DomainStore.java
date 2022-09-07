@@ -604,8 +604,13 @@ public class DomainStore implements IDomainStore {
 				&& !filter.getPropertyPath().contains(".")
 				&& filter.getFilterOperator() == FilterOperator.EQ
 				&& filter.getPropertyValue() instanceof Entity) {
-			return new DomainFilter(filter.getPropertyPath() + ".id",
-					((Entity) filter.getPropertyValue()).getId());
+			String idPath = filter.getPropertyPath() + ".id";
+			if (getValueProviderFor(clazz, idPath) != null) {
+				return new DomainFilter(idPath,
+						((Entity) filter.getPropertyValue()).getId());
+			} else {
+				return filter;
+			}
 		} else {
 			return filter;
 		}

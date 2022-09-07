@@ -54,12 +54,14 @@ public class OptimizingXpathEvaluator implements XpathEvaluator {
 				});
 	}
 
+	@Override
 	public Node getNodeByXpath(String xpathStr, Node node) {
 		return (Node) evaluate(xpathStr, node, XPathConstants.NODE, n -> {
 			return (Node) n;
 		});
 	}
 
+	@Override
 	public List<Node> getNodesByXpath(String xpathStr, Node node) {
 		return (List<Node>) evaluate(xpathStr, node, XPathConstants.NODESET,
 				o -> {
@@ -122,6 +124,9 @@ public class OptimizingXpathEvaluator implements XpathEvaluator {
 				&& node.getParentNode() != null) {
 			if (xpathStr.contains("sibling")) {
 				node = node.getParentNode();
+			}
+			if (node.getParentNode() == null) {
+				return xpathStr;
 			}
 			if (node.getParentNode().getNodeType() != Node.ELEMENT_NODE) {
 				return xpathStr;

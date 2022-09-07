@@ -32,7 +32,9 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CountingMap;
+import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
+import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 import elemental.json.Json;
@@ -182,7 +184,7 @@ public class ReflectiveSerializers {
 		public void childDeserializationComplete(GraphNode graphNode,
 				GraphNode child) {
 			Map map = (Map) graphNode.value;
-			MapDeserState state = (MapDeserState) ((ArrayIterator) graphNode.iterator).deserializationState;
+			DeserState state = (DeserState) ((ArrayIterator) graphNode.iterator).deserializationState;
 			Object o = child.value;
 			if (state.hasKey) {
 				map.put(state.key, o);
@@ -199,7 +201,7 @@ public class ReflectiveSerializers {
 
 		@Override
 		public Iterator<GraphNode> readIterator(GraphNode node) {
-			MapDeserState state = new MapDeserState();
+			DeserState state = new DeserState();
 			ArrayIterator itr = new ArrayIterator(node);
 			itr.deserializationState = state;
 			return itr;
@@ -237,10 +239,84 @@ public class ReflectiveSerializers {
 			node.serialNode = container;
 		}
 
-		static class MapDeserState {
+		static class DeserState {
 			boolean hasKey = false;
 
 			Object key;
+		}
+	}
+
+	public static class TypeSerializer_MultikeyMap
+			extends ReflectiveSerializer.TypeSerializer {
+		@Override
+		public void childDeserializationComplete(GraphNode graphNode,
+				GraphNode child) {
+			MultikeyMap map = (MultikeyMap) graphNode.value;
+			DeserState state = (DeserState) ((ArrayIterator) graphNode.iterator).deserializationState;
+			Object o = child.value;
+			if (state.depth == -1) {
+				state.depth = (int) o;
+				map.setDepth(state.depth);
+			} else {
+				state.values.add(o);
+				if (state.values.size() == state.depth + 1) {
+					map.put((Object[]) state.values
+							.toArray(new Object[state.values.size()]));
+					state.values.clear();
+				}
+			}
+		}
+
+		@Override
+		public List<Class> handlesTypes() {
+			return Arrays.asList(MultikeyMap.class);
+		}
+
+		@Override
+		public Iterator<GraphNode> readIterator(GraphNode node) {
+			DeserState state = new DeserState();
+			ArrayIterator itr = new ArrayIterator(node);
+			itr.deserializationState = state;
+			return itr;
+		}
+
+		@Override
+		public Object readValue(GraphNode graphNode) {
+			return Reflections.newInstance(graphNode.type);
+		}
+
+		@Override
+		public Class serializeAs(Class incoming) {
+			return UnsortedMultikeyMap.class;
+		}
+
+		@Override
+		public Iterator<ReflectiveSerializer.GraphNode>
+				writeIterator(ReflectiveSerializer.GraphNode node) {
+			List list = new ArrayList<>();
+			MultikeyMap map = (MultikeyMap) node.value;
+			list.add(map.getDepth());
+			map.asTuples(map.getDepth()).forEach(row -> {
+				list.addAll((List) row);
+			});
+			Iterator iterator = list.iterator();
+			return new MappingIterator<>(iterator,
+					new ReflectiveSerializer.GraphNodeMappingCollection(node));
+		}
+
+		@Override
+		public void writeValueOrContainer(ReflectiveSerializer.GraphNode node,
+				ReflectiveSerializer.SerialNode serialNode) {
+			ReflectiveSerializer.SerialNode container = serialNode
+					.createArrayContainer();
+			serialNode.write(node, container);
+			node.serialNode = container;
+		}
+
+		static class DeserState {
+			int depth = -1;
+
+			List values = new ArrayList<>();
 		}
 	}
 

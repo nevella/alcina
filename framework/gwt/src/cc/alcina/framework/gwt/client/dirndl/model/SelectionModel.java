@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
@@ -19,14 +20,36 @@ public abstract class SelectionModel<T> extends Model
 		implements NodeEvents.Selected.Handler {
 	protected List<SelectionModel.Choice<T>> choices;
 
+	private List<T> values;
+
+	public SelectionModel() {
+		this(new ArrayList<>());
+	}
+
 	public SelectionModel(List<T> values) {
-		this.choices = values.stream().map(SelectionModel.Choice::new)
-				.collect(Collectors.toList());
+		setValues(values);
 	}
 
 	@Directed
 	public List<SelectionModel.Choice<T>> getChoices() {
 		return this.choices;
+	}
+
+	public List<T> getValues() {
+		return this.values;
+	}
+
+	public void setChoices(List<SelectionModel.Choice<T>> choices) {
+		var old_choices = this.choices;
+		this.choices = choices;
+		propertyChangeSupport().firePropertyChange("choices", old_choices,
+				choices);
+	}
+
+	public void setValues(List<T> values) {
+		this.values = values;
+		setChoices(values.stream().map(SelectionModel.Choice::new)
+				.collect(Collectors.toList()));
 	}
 
 	/*
@@ -62,6 +85,9 @@ public abstract class SelectionModel<T> extends Model
 
 	public static class Multiple<T> extends SelectionModel<T> {
 		public Topic<List<T>> selectionChanged = Topic.create();
+
+		public Multiple() {
+		}
 
 		public Multiple(List<T> values) {
 			super(values);
@@ -111,6 +137,9 @@ public abstract class SelectionModel<T> extends Model
 		 * set to false to allow more complex selection logic
 		 */
 		protected boolean changeOnSelectionEvent = true;
+
+		public Single() {
+		}
 
 		public Single(List<T> values) {
 			super(values);

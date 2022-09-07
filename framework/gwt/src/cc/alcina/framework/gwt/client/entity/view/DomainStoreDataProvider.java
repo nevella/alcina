@@ -62,6 +62,8 @@ public class DomainStoreDataProvider<T extends Entity>
 		topicInvalidateAll.publish(null);
 	}
 
+	public final Topic<ColumnSortEvent> topicColumnSort = Topic.create();
+
 	private EntitySearchDefinition searchDefinition;
 
 	private ColumnsBuilder groupedColumnsBuilder;
@@ -239,6 +241,7 @@ public class DomainStoreDataProvider<T extends Entity>
 	@Override
 	public void onColumnSort(ColumnSortEvent event) {
 		lastSearchDefinition = null;
+		topicColumnSort.publish(event);
 		search();
 	}
 
@@ -271,6 +274,10 @@ public class DomainStoreDataProvider<T extends Entity>
 				results = new ArrayList<>();
 				allResults = new ArrayList<>();
 			}
+			if (allResults == null) {
+				allResults = new ArrayList<>();
+			}
+			lastSearchDefinition = searchDefinition;
 			resultsDelta(allResults.size(), 0, true);
 			return;
 		}

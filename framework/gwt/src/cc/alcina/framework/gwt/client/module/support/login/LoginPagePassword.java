@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.module.support.login;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.validator.CompositeValidationFeedback;
 
-import cc.alcina.framework.common.client.csobjects.LoginResponseState;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.ide.ContentViewSections;
@@ -23,10 +22,7 @@ public class LoginPagePassword extends LoginPage {
 		loginConsort.topicCallingRemote.add(calling -> {
 			if (!calling && isAttached()) {
 				buttonsPanel.removeOptionalButtons();
-				if (loginConsort.lastResponse.getStates()
-						.contains(LoginResponseState.Invalid_credentials)
-						|| loginConsort.lastResponse.getStates().contains(
-								LoginResponseState.Password_incorrect)) {
+				if (!loginConsort.lastResponse.isOk()) {
 					buttonsPanel.addOptionalButton(
 							new LuxButton().withText("Back").withHandler(e -> {
 								loginConsort.request.setPassword(null);

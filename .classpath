@@ -28,7 +28,7 @@
 	<classpathentry kind="lib" path="lib/extras/cluster/ant.jar" sourcepath="/Users/ouiji/Documents/programmin/java/apache-ant-1.9.5/src/"/>
 	<classpathentry kind="lib" path="lib/framework/common/persistence-api.jar"/>
 	<classpathentry kind="lib" path="lib/framework/common/jaxb-api.jar"/>
-	<classpathentry kind="lib" path="lib/framework/entity/reload4j-1.2.21.jar"/>
+	<classpathentry kind="lib" path="lib/framework/entity/reload4j-1.2.21.jar" sourcepath="/g/minor/reload4j"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwtx-1.5.2.jar"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev.jar" sourcepath="/g/gwt"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-html5-database.jar"/>

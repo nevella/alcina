@@ -30,7 +30,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import org.apache.commons.lang.StringEscapeUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
 
 import cc.alcina.extras.dev.console.DevConsoleProperties.SetPropInfo;
 import cc.alcina.extras.dev.console.DevConsoleStrings.DevConsoleString;

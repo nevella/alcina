@@ -25,7 +25,8 @@ import java.util.Set;
 import java.util.Stack;
 import java.util.stream.Collectors;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -66,7 +67,6 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
-import cc.alcina.framework.entity.stat.DevStats;
 import cc.alcina.framework.entity.stat.StatCategory;
 import cc.alcina.framework.entity.stat.StatCategory_Console;
 import cc.alcina.framework.entity.stat.StatCategory_Console.InitConsole;
@@ -178,8 +178,6 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	List<DevConsoleCommand> runningJobs = new ArrayList<DevConsoleCommand>();
 
-	public Logger logger;
-
 	ByteArrayOutputStream recordOut;
 
 	PrintStream oldS2;
@@ -198,6 +196,8 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	private Set<StatCategory> emitted = new LinkedHashSet<>();
 
+	protected Logger logger = LoggerFactory.getLogger(getClass());
+
 	public DevConsole() {
 		shells.push(DevConsoleCommand.class);
 		DevConsoleRunnable.console = this;
@@ -206,7 +206,9 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 	public void atEndOfDomainStoreLoad() {
 		new StatCategory_Console.PostDomainStore().emit();
 		new StatCategory_Console().emit();
-		new DevStats().parse(logProvider).dump(true);
+		// new DevStats().parse(logProvider).dump(true);
+		logger.info("Domain stores loaded - time from launch {} ms",
+				System.currentTimeMillis() - startupTime);
 		logProvider.startRemote();
 		BackendTransformQueue.get().start();
 		JobRegistry.get().init();
@@ -797,7 +799,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		devHelper.loadJbossConfig(new ConsolePrompter());
 		devHelper.initLightweightServices();
 		long statEndInitLightweightServices = System.currentTimeMillis();
-		logger = devHelper.getTestLogger();
+		devHelper.getTestLogger();
 		loadCommandMap();
 		System.setProperty("awt.useSystemAAFontSettings", "gasp");
 		System.setProperty("swing.aatext", "true");

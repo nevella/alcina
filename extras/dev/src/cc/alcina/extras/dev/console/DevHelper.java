@@ -299,7 +299,7 @@ public abstract class DevHelper {
 			logger.setAdditivity(false);
 			Logger metricLogger = Logger.getLogger(MetricLogging.class);
 			metricLogger.removeAllAppenders();
-			metricLogger.setLevel(Level.DEBUG);
+			// metricLogger.setLevel(Level.DEBUG);
 			Layout layout2 = new PatternLayout("%m%n");
 			SafeConsoleAppender aappender2 = new SafeConsoleAppender(layout2);
 			aappender2.setWriter(messagingWriter);

@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.util;
 
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -83,6 +84,14 @@ public class CollectionCreators {
 
 		public <K, V> Map<K, V> create(int initialSize) {
 			return new HashMap<>();
+		}
+	}
+
+	@Reflected
+	@Registration.Singleton(CollectionCreators.HashSetCreator.class)
+	public static class HashSetCreator {
+		public <T> Set<T> create() {
+			return new HashSet<>();
 		}
 	}
 

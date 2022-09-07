@@ -426,6 +426,15 @@ public class DomNode {
 		}
 	}
 
+	/**
+	 * Returns a stream of nodes, in depth-first order, rooted at this node
+	 */
+	public Stream<DomNode> stream() {
+		DomTokenStream domTokenStream = new DomTokenStream(DomNode.this);
+		Iterable<DomNode> iterable = () -> domTokenStream;
+		return StreamSupport.stream(iterable.spliterator(), false);
+	}
+
 	public String streamNCleanForBrowserHtmlFragment() {
 		return DomEnvironment.get().streamNCleanForBrowserHtmlFragment(node);
 	}
@@ -537,6 +546,19 @@ public class DomNode {
 	protected Document domDoc() {
 		return node.getNodeType() == Node.DOCUMENT_NODE ? (Document) node
 				: node.getOwnerDocument();
+	}
+
+	public static class DocumentOrderComparator implements Comparator<DomNode> {
+		DomEnvironment domEnvironment = DomEnvironment.get();
+
+		@Override
+		public int compare(DomNode o1, DomNode o2) {
+			if (o1 == o2) {
+				return 0;
+			}
+			return domEnvironment.isEarlierThan(o1.domNode(), o2.domNode()) ? -1
+					: 1;
+		}
 	}
 
 	public class DomNodeAncestors {
@@ -721,7 +743,9 @@ public class DomNode {
 
 		public Stream<DomNode> flatten(String... tags) {
 			List<String> tagArray = Arrays.asList(tags);
-			Iterable<DomNode> iterable = () -> new DomTokenStream(DomNode.this);
+			DomTokenStream domTokenStream = new DomTokenStream(DomNode.this);
+			domTokenStream.next();
+			Iterable<DomNode> iterable = () -> domTokenStream;
 			Stream<DomNode> targetStream = StreamSupport
 					.stream(iterable.spliterator(), false);
 			return targetStream.filter(t -> t.isText() || tagArray.isEmpty()
@@ -729,14 +753,22 @@ public class DomNode {
 		}
 
 		public DomNode importAsFirstChild(DomNode n) {
-			Node importNode = document.domDoc().importNode(n.node, true);
+			return importAsFirstChild(n, true);
+		}
+
+		public DomNode importAsFirstChild(DomNode n, boolean deep) {
+			Node importNode = document.domDoc().importNode(n.node, deep);
 			DomNode imported = document.nodeFor(importNode);
 			insertAsFirstChild(imported);
 			return imported;
 		}
 
 		public DomNode importFrom(DomNode n) {
-			Node importNode = document.domDoc().importNode(n.node, true);
+			return importFrom(n, true);
+		}
+
+		public DomNode importFrom(DomNode n, boolean deep) {
+			Node importNode = document.domDoc().importNode(n.node, deep);
 			DomNode imported = document.nodeFor(importNode);
 			append(imported);
 			return imported;

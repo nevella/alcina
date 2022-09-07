@@ -243,7 +243,7 @@ public abstract class BaseProjection<T> implements DomainProjection<T> {
 
 	protected void logDuplicateMapping(Object[] values, T existing) {
 		logger.warn(Ax.format(
-				"Warning - duplicate mapping of an unique projection - %s: %s : %s\n",
+				"Warning - duplicate mapping of a unique projection - %s: %s : %s",
 				this, Arrays.asList(values), existing));
 	}
 
