@@ -27,8 +27,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Implementation;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.Registrations;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocation;
-import cc.alcina.framework.common.client.logic.reflection.RegistryLocations;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.SEUtilities;
@@ -120,19 +118,20 @@ public class TaskRefactorRegistrations
 
 	boolean hasRegistryLocationAnnotations(
 			ClassOrInterfaceDeclarationWrapper wrapper) {
-		boolean hasOld = wrapper.getDeclaration()
-				.getAnnotationByClass(RegistryLocation.class).isPresent()
-				|| wrapper.getDeclaration()
-						.getAnnotationByClass(RegistryLocations.class)
-						.isPresent();
-		boolean hasNew = wrapper.getDeclaration()
-				.getAnnotationByClass(Registration.class).isPresent()
-				|| wrapper.getDeclaration()
-						.getAnnotationByClass(Registrations.class).isPresent()
-				|| wrapper.getDeclaration()
-						.getAnnotationByClass(Registration.Singleton.class)
-						.isPresent();
-		return hasOld && !hasNew;
+		// boolean hasOld = wrapper.getDeclaration()
+		// .getAnnotationByClass(RegistryLocation.class).isPresent()
+		// || wrapper.getDeclaration()
+		// .getAnnotationByClass(RegistryLocations.class)
+		// .isPresent();
+		// boolean hasNew = wrapper.getDeclaration()
+		// .getAnnotationByClass(Registration.class).isPresent()
+		// || wrapper.getDeclaration()
+		// .getAnnotationByClass(Registrations.class).isPresent()
+		// || wrapper.getDeclaration()
+		// .getAnnotationByClass(Registration.Singleton.class)
+		// .isPresent();
+		// return hasOld && !hasNew;
+		throw new UnsupportedOperationException();
 	}
 
 	public enum Action {
@@ -229,19 +228,20 @@ public class TaskRefactorRegistrations
 
 		@Override
 		protected void modify0() {
-			declaration.getAnnotationByClass(Registration.class)
-					.ifPresent(AnnotationExpr::remove);
-			declaration.getAnnotationByClass(Registration.Singleton.class)
-					.ifPresent(AnnotationExpr::remove);
-			declaration.getAnnotationByClass(Registrations.class)
-					.ifPresent(AnnotationExpr::remove);
-			declaration.getAnnotationByClass(RegistryLocation.class)
-					.map(this::translateLocation)
-					.ifPresent(declarationWrapper::addAnnotation);
-			declaration.getAnnotationByClass(RegistryLocations.class)
-					.map(this::translateLocations)
-					.ifPresent(declarationWrapper::addAnnotation);
-			declarationWrapper.ensureImport(Registration.class);
+			// declaration.getAnnotationByClass(Registration.class)
+			// .ifPresent(AnnotationExpr::remove);
+			// declaration.getAnnotationByClass(Registration.Singleton.class)
+			// .ifPresent(AnnotationExpr::remove);
+			// declaration.getAnnotationByClass(Registrations.class)
+			// .ifPresent(AnnotationExpr::remove);
+			// declaration.getAnnotationByClass(RegistryLocation.class)
+			// .map(this::translateLocation)
+			// .ifPresent(declarationWrapper::addAnnotation);
+			// declaration.getAnnotationByClass(RegistryLocations.class)
+			// .map(this::translateLocations)
+			// .ifPresent(declarationWrapper::addAnnotation);
+			// declarationWrapper.ensureImport(Registration.class);
+			throw new UnsupportedOperationException();
 		}
 
 		AnnotationExpr translateLocation(AnnotationExpr location) {
