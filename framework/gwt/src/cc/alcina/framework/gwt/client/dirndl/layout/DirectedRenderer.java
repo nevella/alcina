@@ -24,6 +24,20 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.C
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
 
+/**
+ * <p>
+ * Processes a {@link DirectedLayout.RendererInput} - it:
+ * <ul>
+ * <li>Generates [0,1] widgets, adds to nearest ancestor in the
+ * {@code RendererInput.node} ancestry chain
+ * <li>Enqueues [0,n] renderinput children
+ * </ul>
+ *
+ * <p>
+ * These replace DirectedNodeRenderer, the transition uses a registry lookup to
+ * translate from DirectedNodeRenderer
+ *
+ */
 public abstract class DirectedRenderer {
 	protected void applyCssClass(Node node, Widget widget) {
 		if (node.directed.cssClass().length() > 0) {
@@ -46,7 +60,7 @@ public abstract class DirectedRenderer {
 
 	/**
 	 * The most-specific @Directed at the initiating AnnotationLocation will be
-	 * applied to each CollectionItem
+	 * applied to each Collection element
 	 *
 	 * @author nick@alcina.cc
 	 *
@@ -61,6 +75,7 @@ public abstract class DirectedRenderer {
 			// zero widgets for the container, generates input per child
 			List list = (List) ((java.util.Collection) input.model).stream()
 					.collect(Collectors.toList());
+			// reverse for traversal order (see DirectedLayout.layout())
 			Collections.reverse(list);
 			list.forEach(model -> {
 				Object transformedModel = transformModel(input, model);

@@ -29,8 +29,10 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
  *
- * @author Nick Reddel //FIXME - dirndl.1 - delegate to DirectedContext (if
- *         there is one), and eventually remove
+ * @author Nick Reddel
+ *
+ *         //FIXME - dirndl.1 - delegate to DirectedContext (if there is one),
+ *         and eventually remove
  */
 @Registration.Singleton
 public class RenderContext extends LooseContextInstance {
