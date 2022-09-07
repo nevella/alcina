@@ -48,10 +48,15 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 		Directed directed = reflector.annotation(Directed.class);
 		Directed.Multiple multiple = reflector
 				.annotation(Directed.Multiple.class);
+		Directed.Wrap wrap = reflector.annotation(Directed.Wrap.class);
 		Directed.Delegating delegating = reflector
 				.annotation(Directed.Delegating.class);
 		if (directed != null) {
 			result.add(directed);
+		}
+		if (wrap != null) {
+			result.add(new Directed.Impl().withTag(wrap.value()));
+			result.add(new Directed.Impl());
 		}
 		if (multiple != null) {
 			Arrays.stream(multiple.value()).forEach(result::add);

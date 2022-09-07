@@ -25,7 +25,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * @author nick@alcina.cc
  *
  */
-public class MultipleNodeRenderer extends DirectedNodeRenderer
+public class MultipleNodeRenderer2 extends DirectedNodeRenderer
 		implements HasWrappingDirecteds {
 	@Override
 	public List<Directed> getWrappingDirecteds(Node node) {

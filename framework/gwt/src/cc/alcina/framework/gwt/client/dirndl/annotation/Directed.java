@@ -17,7 +17,6 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransform;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -81,7 +80,7 @@ public @interface Directed {
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target(ElementType.METHOD)
+	@Target({ ElementType.TYPE, ElementType.METHOD })
 	@ClientVisible
 	public static @interface Delegating {
 	}
@@ -295,6 +294,11 @@ public @interface Directed {
 			return stringBuilder.toString();
 		}
 
+		public Impl withTag(String tag) {
+			this.tag = tag;
+			return this;
+		}
+
 		private String __stringValue(Object o) {
 			if (o instanceof Class) {
 				return ((Class) o).getSimpleName() + ".class";
@@ -317,12 +321,7 @@ public @interface Directed {
 
 	/**
 	 * <p>
-	 * Render the model to multiple nodes - most common use case is to output 2+
-	 * nested tags for a model element
-	 *
-	 * <p>
-	 * e.g.
-	 * <code>@Directed.Multiple({@Directed(tag="wrapper"),@Directed})</code>
+	 * Render the model to multiple nodes
 	 *
 	 * <p>
 	 * Notes:
@@ -339,7 +338,7 @@ public @interface Directed {
 	 */
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target(ElementType.METHOD)
+	@Target({ ElementType.TYPE, ElementType.METHOD })
 	@ClientVisible
 	public static @interface Multiple {
 		Directed[] value();
@@ -362,7 +361,7 @@ public @interface Directed {
 	 * elements (there's no real virtue in having x -> Collection<A> ->
 	 * Collection <B>, so this flattening makes sense). Need to doc this with
 	 * examples (and rename/move)
-	 * 
+	 *
 	 * <p>
 	 * Also - determine renderer strategy should use the presence of this
 	 * annotation to determine renderer as follows:
@@ -371,7 +370,7 @@ public @interface Directed {
 	 * apply to elements
 	 * <li>Type: non-collection - Present: true - use
 	 * DirectedRenderer.Transform, apply to model
-	 * 
+	 *
 	 *
 	 * @author nick@alcina.cc
 	 *
@@ -379,9 +378,28 @@ public @interface Directed {
 	@ClientVisible
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
-	@Target({ ElementType.TYPE, ElementType.METHOD }) @interface Transform {
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@interface Transform {
 		boolean transformsNull() default false;
-	
+
 		Class<? extends ModelTransformNodeRenderer.ModelTransform> value();
+	}
+
+	/**
+	 * <p>
+	 * Renders the model as two nodes, the first having tag value() - i.e. sugar
+	 * for: <code>@Directed.Multiple({@Directed(tag="value"),@Directed})</code>
+	 *
+	 * Sugar for
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	@ClientVisible
+	public static @interface Wrap {
+		String value();
 	}
 }

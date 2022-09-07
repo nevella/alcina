@@ -117,20 +117,26 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * - Ensure collection, model transform work as expected (/)
  * - Test in a large application
  * - Remove current layout algorithm
- * - Review renderers. Mark for removal (e.g. Link -> LinkDeprecated -> Remove)
+ * - Review renderers. Mark for removal (e.g. Link -> LinkDeprecated -> Remove)(actually that's a mooel but... yup)
+ * - Remove renderers
  * - Review propertychange handling in this class
  * - Remove uses of TreeResolver (but not the code) (explain why -
  *   at least for directed trees, simpler & better to have lowest-imperative win)
  * - Plan a ContextResolver cleanup
  * - Plan Registry.Context
  * - Implement the ContextResolver cleanup
- * -
+ *
  *
  * - Goals:
  *   - Is ContextResolver clear?
  *   - Is event propagation clear?
  *   - Justify eventpump (or not eventpump) for node, transformed node events
  *   - Document dirndl 1x2 - widget removal
+ *
+ * - Phases:
+ * 	 a. Implement TODO above to 'remove renderers'
+ *   b. rest of TODO
+ *   c. FIXMEs marked as 'c'
  *
  *
  *
