@@ -34,4 +34,9 @@ public class DevUtils {
 			throw WrappedRuntimeException.wrap(e);
 		}
 	}
+
+	public static void stringToBase64(String string) {
+		String encoded = Base64.getEncoder().encodeToString(string.getBytes());
+		DevConsole.getInstance().setClipboardContents(encoded);
+	}
 }
