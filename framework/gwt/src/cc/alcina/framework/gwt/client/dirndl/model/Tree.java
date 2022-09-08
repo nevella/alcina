@@ -12,10 +12,6 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.IntersectionObserved;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererArgs;
-import cc.alcina.framework.gwt.client.dirndl.layout.MultipleNodeRenderer.MultipleNodeRendererLeaf;
 import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode;
@@ -248,9 +244,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 		private boolean selected;
 
-		@Directed(renderer = MultipleNodeRenderer.class)
-		@MultipleNodeRendererArgs(tags = { "div" }, cssClasses = { "" })
-		@MultipleNodeRendererLeaf(@Directed(renderer = CollectionNodeRenderer.class))
+		@Directed.Wrap("div")
 		public List<TreeNode<NM>> getChildren() {
 			return this.children;
 		}
