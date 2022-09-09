@@ -306,6 +306,7 @@ public class TaskRefactorRegistrations
 			}
 		}
 
+		@SuppressWarnings("unused")
 		AnnotationExpr translateLocations(AnnotationExpr location) {
 			declarationWrapper.ensureImport(Registrations.class);
 			ArrayInitializerExpr inArray = null;

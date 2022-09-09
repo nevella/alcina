@@ -162,6 +162,8 @@ public class DirectedLayout {
 
 	private Node root = null;
 
+	private Node replace = null;
+
 	// TODO - to preserve transformation order, collection elements and
 	// properties are added in reverse order. Make a structure that removes the
 	// need for a reverse()
@@ -174,7 +176,7 @@ public class DirectedLayout {
 	public Widget render(ContextResolver resolver, Object model) {
 		AnnotationLocation location = new AnnotationLocation(model.getClass(),
 				null);
-		enqueueInput(resolver, model, location, null, null);
+		enqueueInput(resolver, model, location, null, null, false);
 		layout();
 		return root.firstDescendantWidget().orElse(null);
 	}
@@ -194,13 +196,19 @@ public class DirectedLayout {
 		} while (rendererInputs.size() > 0);
 	}
 
-	RendererInput enqueueInput(ContextResolver resolver, Object model,
+	void enqueueInput(ContextResolver resolver, Object model,
 			AnnotationLocation location, List<Directed> directeds,
-			Node parentNode) {
+			Node parentNode, boolean fromTransform) {
+		if (model == null) {
+			return;
+		}
 		RendererInput input = new RendererInput(resolver, model, location,
-				directeds, parentNode);
+				directeds, parentNode, fromTransform);
+		if (replace != null) {
+			input.replace = replace;
+			replace = null;
+		}
 		rendererInputs.add(input);
-		return input;
 	}
 
 	/**
@@ -604,28 +612,6 @@ public class DirectedLayout {
 			current = null;
 		}
 
-		private Node resolveNodeSegment(String segment) {
-			switch (segment) {
-			case ".":
-				return this;
-			case "..":
-				return parent;
-			default:
-				List<Property> properties = Reflections.at((model.getClass()))
-						.properties();
-				int idx = 0;
-				for (Property property : properties) {
-					if (property.getName().equals(segment)) {
-						return children.get(idx);
-					}
-					idx++;
-				}
-				break;
-			}
-			// error/missing/unresolved
-			return null;
-		}
-
 		private void unbind() {
 			if (model instanceof Model) {
 				((Model) model).unbind();
@@ -637,6 +623,7 @@ public class DirectedLayout {
 			}
 		}
 
+		// FIXME - will go
 		protected Node createChild(Object childModel,
 				Property definingReflector, Property changeSource) {
 			// FIXME - this should probably be via rendererinputs
@@ -1185,15 +1172,19 @@ public class DirectedLayout {
 
 		RendererInput(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
-				Node parentNode) {
+				Node parentNode, boolean fromTransform) {
 			this.resolver = resolver;
 			this.model = model;
 			this.location = location;
+			this.fromTransform = fromTransform;
 			this.directeds = directeds != null ? directeds
 					: location.getAnnotations(Directed.class);
 			this.parentNode = parentNode;
 			// generate the node (1-1 with input)
 			node = new Node(resolver, parentNode, location, model);
+			if (parentNode != null) {
+				parentNode.children.add(node);
+			}
 			node.directed = firstDirected();
 		}
 
@@ -1212,11 +1203,11 @@ public class DirectedLayout {
 			return directeds.get(0);
 		}
 
-		RendererInput enqueueInput(ContextResolver resolver, Object model,
+		void enqueueInput(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
-				Node parentNode) {
-			return DirectedLayout.this.enqueueInput(resolver, model, location,
-					directeds, parentNode);
+				Node parentNode, boolean fromTransform) {
+			DirectedLayout.this.enqueueInput(resolver, model, location,
+					directeds, parentNode, fromTransform);
 		}
 
 		Optional<Widget> firstAncestorWidget() {
@@ -1225,7 +1216,12 @@ public class DirectedLayout {
 		}
 
 		void onRendered() {
-			// FIXME
+			// FIXME - dirndl 1.1 - this is *probably* a point guard, will need
+			// to handle replace early
+			//
+			// replace will cause panel.insert (probably want an
+			// InsertionLocation abstraction) and will possibly cause >1
+			// removals (if this is a delegating widget)
 			Preconditions.checkState(replace == null);
 			if (node.rendered.widget != null) {
 				Optional<Widget> firstAncestorWidget = firstAncestorWidget();
@@ -1237,7 +1233,7 @@ public class DirectedLayout {
 			}
 			if (directeds.size() > 1) {
 				enqueueInput(resolver, model, location,
-						directeds.subList(1, directeds.size()), node);
+						directeds.subList(1, directeds.size()), node, false);
 			}
 		}
 

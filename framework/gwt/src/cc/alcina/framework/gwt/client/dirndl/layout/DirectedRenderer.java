@@ -81,7 +81,7 @@ public abstract class DirectedRenderer {
 				Object transformedModel = transformModel(input, model);
 				input.enqueueInput(input.resolver, transformedModel,
 						input.location, Arrays.asList(input.soleDirected()),
-						input.node);
+						input.node, false);
 			});
 		}
 	}
@@ -156,10 +156,8 @@ public abstract class DirectedRenderer {
 		@Override
 		protected void render(RendererInput input) {
 			Object transformedModel = transformModel(input, input.model);
-			RendererInput enqueued = input.enqueueInput(input.resolver,
-					transformedModel, input.location,
-					Arrays.asList(input.soleDirected()), input.node);
-			enqueued.fromTransform = true;
+			input.enqueueInput(input.resolver, transformedModel, input.location,
+					Arrays.asList(input.soleDirected()), input.node, true);
 		}
 	}
 
@@ -181,7 +179,7 @@ public abstract class DirectedRenderer {
 					input.enqueueInput(input.resolver, childModel,
 							new AnnotationLocation(input.model.getClass(),
 									property, input.resolver),
-							null, input.node);
+							null, input.node, false);
 				}
 			}
 		}
