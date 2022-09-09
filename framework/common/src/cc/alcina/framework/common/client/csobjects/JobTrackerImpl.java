@@ -22,6 +22,7 @@ import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.Status.StatusReason;
 
 /**
  *
@@ -211,5 +212,20 @@ public class JobTrackerImpl extends Model
 	public String toString() {
 		return Ax.format("JobTracker: %s\n%s %s", getId(), getJobName(),
 				CommonUtils.nullToEmpty(getJobResult()));
+	}
+
+	public StatusReason asResultStatusReason() {
+		switch (jobResultType) {
+		case DID_NOT_COMPLETE:
+		case EXCEPTION:
+		case FAIL:
+			return StatusReason.error(log, jobResult);
+		case WARN:
+			return StatusReason.warn(log, jobResult);
+		case OK:
+			return StatusReason.ok(jobResult);
+		default:
+			throw new UnsupportedOperationException();
+		}
 	}
 }

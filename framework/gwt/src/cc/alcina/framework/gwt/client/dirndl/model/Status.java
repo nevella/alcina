@@ -15,6 +15,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 @Reflected
+// Obviously similar to JobStatus - but broader applicability
 public enum Status {
 	OK, WARN, ERROR;
 
@@ -66,7 +67,7 @@ public enum Status {
 			return new StatusReason(Status.WARN, reason, value);
 		}
 
-		Status status;
+		private Status status;
 
 		private String reason;
 
@@ -100,6 +101,11 @@ public enum Status {
 		@Override
 		public String toString() {
 			return value.toString();
+		}
+
+		public static StatusReason missing() {
+			return new StatusReason(Status.ERROR, "Empty/null data",
+					"Empty/null data");
 		}
 	}
 
