@@ -120,6 +120,10 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 	public static class NumberNodeRenderer extends TextNodeRenderer {
 	}
 
+	@Registration({ DirectedNodeRenderer.class, Boolean.class })
+	public static class BooleanNodeRenderer extends TextNodeRenderer {
+	}
+
 	@Directed
 	public static class StringListModel extends Model {
 		private List<String> strings;
