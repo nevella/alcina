@@ -350,10 +350,6 @@ public class ActionProgress extends Composite
 		}
 		times.setHTML(time);
 		String msg = info.getProgressMessage();
-		if (CommonUtils.isNotNullOrEmpty(info.getSubProgressMessage())
-				&& info.getEndTime() == null) {
-			msg += " - " + info.getSubProgressMessage();
-		}
 		if (info.getJobResultType() == JobResultType.FAIL) {
 			msg = info.getJobResult();
 			message.addStyleName("error");

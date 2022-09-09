@@ -13,70 +13,44 @@
  */
 package cc.alcina.framework.common.client.csobjects;
 
-import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
-import cc.alcina.framework.gwt.client.logic.LogLevel;
 
 /**
  *
  * @author Nick Reddel
  */
 public class JobTrackerImpl extends Model
-		implements Serializable, Cloneable, JobTracker {
-	static final transient long serialVersionUID = -3L;
+		implements JobTracker, TreeSerializable {
+	private boolean cancelled;
 
-	private Date startTime;
+	private boolean complete;
 
 	private Date endTime;
 
-	private String progressMessage = "...pending";
-
-	private String subProgressMessage = "";
+	private String id;
 
 	private String jobName;
 
 	private String jobResult;
 
-	private String id;
-
-	private String jobLauncher;
-
-	private boolean complete;
-
 	private JobResultType jobResultType;
-
-	private List<JobTracker> children = new ArrayList<JobTracker>();
-
-	private JobTracker parent;
 
 	private double percentComplete;
 
-	private transient Exception jobException;
+	private String progressMessage;
 
-	private boolean cancelled;
-
-	private long itemCount;
-
-	private transient Object jobResultObject;
-
-	private long itemsCompleted;
+	private Date startTime;
 
 	@GwtTransient
 	private String log = "";
-
-	private transient Object logger;
-
-	@GwtTransient
-	private LogLevel logLevel = LogLevel.DEBUG;
 
 	private String serializedResult;
 
@@ -85,23 +59,6 @@ public class JobTrackerImpl extends Model
 
 	public JobTrackerImpl(String id) {
 		this.id = id;
-	}
-
-	@Override
-	public void childComplete(JobTracker tracker) {
-		if (parent != null) {
-			parent.childComplete(tracker);
-		}
-	}
-
-	@Override
-	public JobTracker exportableForm() {
-		return this;
-	}
-
-	@Override
-	public List<JobTracker> getChildren() {
-		return this.children;
 	}
 
 	@Override
@@ -115,34 +72,6 @@ public class JobTrackerImpl extends Model
 	}
 
 	@Override
-	public long getItemCount() {
-		return this.itemCount;
-	}
-
-	@Override
-	public long getItemsCompleted() {
-		return this.itemsCompleted;
-	}
-
-	@Override
-	public double getJobDuration() {
-		if (startTime == null || endTime == null) {
-			return 0;
-		}
-		return (double) getEndTime().getTime() - getStartTime().getTime();
-	}
-
-	@Override
-	public Exception getJobException() {
-		return this.jobException;
-	}
-
-	@Override
-	public String getJobLauncher() {
-		return this.jobLauncher;
-	}
-
-	@Override
 	public String getJobName() {
 		return this.jobName;
 	}
@@ -150,11 +79,6 @@ public class JobTrackerImpl extends Model
 	@Override
 	public String getJobResult() {
 		return this.jobResult;
-	}
-
-	@Override
-	public Object getJobResultObject() {
-		return this.jobResultObject;
 	}
 
 	@Override
@@ -166,21 +90,6 @@ public class JobTrackerImpl extends Model
 	@AlcinaTransient
 	public String getLog() {
 		return this.log;
-	}
-
-	@Override
-	public Object getLogger() {
-		return this.logger;
-	}
-
-	@Override
-	public LogLevel getLogLevel() {
-		return this.logLevel;
-	}
-
-	@Override
-	public JobTracker getParent() {
-		return this.parent;
 	}
 
 	@Override
@@ -204,13 +113,8 @@ public class JobTrackerImpl extends Model
 	}
 
 	@Override
-	public String getSubProgressMessage() {
-		return this.subProgressMessage;
-	}
-
-	@Override
 	public boolean isCancelled() {
-		return provideIsRoot() ? cancelled : root().isCancelled();
+		return cancelled;
 	}
 
 	@Override
@@ -219,34 +123,11 @@ public class JobTrackerImpl extends Model
 	}
 
 	@Override
-	public boolean provideIsRoot() {
-		return parent == null;
-	}
-
-	@Override
-	public JobTracker root() {
-		if (getParent() == null) {
-			return this;
-		}
-		return getParent().root();
-	}
-
-	@Override
 	public void setCancelled(boolean cancelled) {
-		if (provideIsRoot()) {
-			boolean old_cancelled = this.cancelled;
-			this.cancelled = cancelled;
-			propertyChangeSupport().firePropertyChange("cancelled",
-					old_cancelled, cancelled);
-		} else {
-			root().setCancelled(cancelled);
-		}
-	}
-
-	@Override
-	public void setChildren(List<JobTracker> children) {
-		this.children = children;
-		// not bound
+		boolean old_cancelled = this.cancelled;
+		this.cancelled = cancelled;
+		propertyChangeSupport().firePropertyChange("cancelled", old_cancelled,
+				cancelled);
 	}
 
 	@Override
@@ -271,33 +152,6 @@ public class JobTrackerImpl extends Model
 	}
 
 	@Override
-	public void setItemCount(long itemCount) {
-		long old_itemCount = this.itemCount;
-		this.itemCount = itemCount;
-		propertyChangeSupport().firePropertyChange("itemCount", old_itemCount,
-				itemCount);
-	}
-
-	@Override
-	public void setItemsCompleted(long itemsCompleted) {
-		long old_itemsCompleted = this.itemsCompleted;
-		this.itemsCompleted = itemsCompleted;
-		propertyChangeSupport().firePropertyChange("itemsCompleted",
-				old_itemsCompleted, itemsCompleted);
-		updatePercent();
-	}
-
-	@Override
-	public void setJobException(Exception jobException) {
-		this.jobException = jobException;
-	}
-
-	@Override
-	public void setJobLauncher(String jobLauncher) {
-		this.jobLauncher = jobLauncher;
-	}
-
-	@Override
 	public void setJobName(String jobName) {
 		this.jobName = jobName;
 	}
@@ -308,11 +162,6 @@ public class JobTrackerImpl extends Model
 		this.jobResult = jobResult;
 		propertyChangeSupport().firePropertyChange("jobResult", old_jobResult,
 				jobResult);
-	}
-
-	@Override
-	public void setJobResultObject(Object jobResultObject) {
-		this.jobResultObject = jobResultObject;
 	}
 
 	@Override
@@ -328,24 +177,6 @@ public class JobTrackerImpl extends Model
 		String old_log = this.log;
 		this.log = log;
 		propertyChangeSupport().firePropertyChange("log", old_log, log);
-	}
-
-	@Override
-	public void setLogger(Object logger) {
-		this.logger = logger;
-	}
-
-	@Override
-	public void setLogLevel(LogLevel logLevel) {
-		this.logLevel = logLevel;
-	}
-
-	@Override
-	public void setParent(JobTracker parent) {
-		// System.out.format("setpt: %s %s %s\n",
-		// Thread.currentThread().getId(),
-		// id, parent == null ? "null" : parent.getId());
-		this.parent = parent;
 	}
 
 	@Override
@@ -377,19 +208,8 @@ public class JobTrackerImpl extends Model
 	}
 
 	@Override
-	public void setSubProgressMessage(String subProgressMessage) {
-		this.subProgressMessage = subProgressMessage;
-	}
-
-	@Override
 	public String toString() {
 		return Ax.format("JobTracker: %s\n%s %s", getId(), getJobName(),
 				CommonUtils.nullToEmpty(getJobResult()));
-	}
-
-	@Override
-	public void updateJob(int completedDelta) {
-		itemsCompleted += completedDelta;
-		updatePercent();
 	}
 }
