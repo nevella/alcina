@@ -92,7 +92,8 @@ public class SimpleTable {
 				}
 
 				public Row(Property property, Bindable model) {
-					key = CommonUtils.titleCase(property.getName());
+					key = CommonUtils
+							.titleCase(CommonUtils.deInfix(property.getName()));
 					Object propertyValue = property.get(model);
 					if (propertyValue == null) {
 					} else if (propertyValue instanceof Enum) {

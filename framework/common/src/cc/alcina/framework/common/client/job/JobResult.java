@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.job;
 
 import cc.alcina.framework.common.client.actions.ActionLogItem;
 
+//FIXME - dirndl 1.1c - clean up - this can go, actionlog can go, jobtracker -> single impl (no interface)
 public class JobResult {
 	private Object producedObject;
 
