@@ -47,7 +47,8 @@ import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 public class UserStories {
-	public static final Topic<UserStoryDelta> topicUserStoriesEvents = Topic.create();
+	public static final Topic<UserStoryDelta> topicUserStoriesEvents = Topic
+			.create();
 
 	private String html;
 
@@ -241,6 +242,9 @@ public class UserStories {
 		}
 		ClientInstance clientInstance = AuthenticationManager.get()
 				.getContextClientInstance().orElse(null);
+		if (clientInstance == null) {
+			return;
+		}
 		Optional<? extends IUserStory> o_story = getUserStory(clientInstance,
 				incoming.getClientInstanceUid());
 		IUserStory story = null;
