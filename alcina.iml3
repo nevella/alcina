@@ -115,9 +115,6 @@
       <sourceFolder url="file://$MODULE_DIR$/framework/jscodeserver/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/framework/jvmclient/src" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/framework/servlet/src" isTestSource="false" />
-      <excludeFolder url="file://$MODULE_DIR$/framework/clientreflectorjvm/src/cc/alcina/framework/common/translatable/cc/alcina/framework/common/client/logic/reflection" />
-      <excludeFolder url="file://$MODULE_DIR$/framework/common/src/org/w3c" />
-      <excludeFolder url="file://$MODULE_DIR$/framework/common/src/cc/alcina/framework/common/translatable/cc/alcina/framework/common/client/reflection/impl" />
     </content>
     <orderEntry type="sourceFolder" forTests="false" />
     <orderEntry type="inheritedJdk" />
