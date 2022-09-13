@@ -60,6 +60,9 @@ public enum Status {
 		}
 
 		public static StatusReason ok(Object value) {
+			if (value == null) {
+				value = "OK";
+			}
 			return new StatusReason(Status.OK, null, value);
 		}
 
