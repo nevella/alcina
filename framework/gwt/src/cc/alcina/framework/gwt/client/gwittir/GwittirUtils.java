@@ -193,7 +193,7 @@ public class GwittirUtils {
 		List<Binding> allBindings = binding.provideAllBindings(null);
 		List<FormFieldTypeForRefresh> lTypes = Arrays.asList(types);
 		try {
-			if (muteTransformManager) {
+			if (muteTransformManager && TransformManager.hasInstance()) {
 				TransformManager.get().setIgnorePropertyChanges(true);
 			}
 			for (Binding b : allBindings) {
@@ -267,7 +267,7 @@ public class GwittirUtils {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		} finally {
-			if (muteTransformManager) {
+			if (muteTransformManager && TransformManager.hasInstance()) {
 				TransformManager.get().setIgnorePropertyChanges(false);
 			}
 		}
