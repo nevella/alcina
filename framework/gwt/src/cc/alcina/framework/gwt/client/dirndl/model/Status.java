@@ -48,7 +48,7 @@ public enum Status {
 
 		public static StatusReason forDate(Date date, String issueReason,
 				long maxAge) {
-			if (TimeConstants.within(date.getTime(), maxAge)) {
+			if (date != null && TimeConstants.within(date.getTime(), maxAge)) {
 				return ok(date);
 			} else {
 				return error(date, issueReason);
@@ -100,7 +100,7 @@ public enum Status {
 
 		@Override
 		public String toString() {
-			return value.toString();
+			return value == null ? "(null)" : value.toString();
 		}
 
 		public static StatusReason missing() {
