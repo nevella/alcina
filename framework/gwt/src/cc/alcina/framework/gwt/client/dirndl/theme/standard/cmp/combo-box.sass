@@ -1,0 +1,64 @@
+@use '../../theme/theme'
+
+$editor-width: 30rem
+$editor-height: 39px
+//FIXME - move to dirndl, parameterise
+@mixin combo-box($editor-width, $editor-height, $border-color: theme.$primary-color, $color: theme.$primary-color, $hover-color)
+  cursor: pointer
+  position: relative
+  display: flex
+  >editor
+    padding: 7px 2rem
+    padding: 5px 2rem
+    width: $editor-width
+    max-width: $editor-width
+    overflow: clip
+    text-overflow: ellipsis
+    white-space: nowrap
+    font-size: 24px
+    font-size: 18px
+    display: inline-block
+    border: solid 1px $border-color
+    background-color: white
+  >arrow
+    background-color: $border-color
+    width: $editor-height
+    height:$editor-height
+    width: 39px
+    height: 39px
+    box-sizing: border-box
+    border: solid 1px $border-color
+    display: inline-block
+    position: relative
+    border-left-color: transparent
+    &:hover
+      background-color: theme.$aba-navy-D0
+      //
+    &:after
+      content: ''
+      background-image: url("data:image/svg+xml;base64,PHN2ZyAgdmlld0JveD0iMCAwIDE3IDkiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxwYXRoIGQ9Ik04LjY3Nzc0IDlMMC43ODY4ODMgNC4zOTE1ZS0wN0wxNi41Njg2IDEuODAxOTRlLTA2TDguNjc3NzQgOVoiIGZpbGw9IndoaXRlIi8+Cjwvc3ZnPg==")
+      background-repeat: no-repeat
+      background-position-y: 7px
+      display: inline-block
+      position: absolute
+      right: 17px
+      width: 16px
+      height: 16px
+      top: 15px
+      right: 12px
+      width: 13px
+      height: 14px
+      top: 9px
+  >dropdown
+    position: absolute
+    width: $editor-width
+    top: $editor-height
+    min-height: 6rem
+    max-height: 50vh
+    overflow: scroll
+    box-sizing: border-box
+    background: white
+    border: solid 1px theme.$aba-navy
+    z-index: 1
+    left: 0
+    border-top: none

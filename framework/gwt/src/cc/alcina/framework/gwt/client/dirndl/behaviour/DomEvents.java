@@ -19,6 +19,27 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
 public class DomEvents {
+	public static class Blur extends NodeEvent<Blur.Handler> {
+		@Override
+		public void dispatch(Blur.Handler handler) {
+			handler.onBlur(this);
+		}
+
+		@Override
+		public Class<Blur.Handler> getHandlerClass() {
+			return Blur.Handler.class;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::fireEvent, BlurEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onBlur(Blur event);
+		}
+	}
+
 	public static class Change extends NodeEvent<Change.Handler> {
 		@Override
 		public void dispatch(Change.Handler handler) {
@@ -40,6 +61,13 @@ public class DomEvents {
 		}
 	}
 
+	/**
+	 * Note that this fires on any (not just left) click. For just leftclick,
+	 * use InferredDomEvents.LeftClick
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public static class Click extends NodeEvent<Click.Handler> {
 		@Override
 		public void dispatch(Click.Handler handler) {
@@ -61,14 +89,75 @@ public class DomEvents {
 		}
 	}
 
+	public static class Focus extends NodeEvent<Focus.Handler> {
+		@Override
+		public void dispatch(Focus.Handler handler) {
+			handler.onFocus(this);
+		}
+
+		@Override
+		public Class<Focus.Handler> getHandlerClass() {
+			return Focus.Handler.class;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::fireEvent, FocusEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFocus(Focus event);
+		}
+	}
+
+	public static class Focusin extends NodeEvent<Focusin.Handler> {
+		@Override
+		public void dispatch(Focusin.Handler handler) {
+			handler.onFocusin(this);
+		}
+
+		@Override
+		public Class<Focusin.Handler> getHandlerClass() {
+			return Focusin.Handler.class;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::fireEvent,
+					FocusinEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFocusin(Focusin event);
+		}
+	}
+
+	public static class Focusout extends NodeEvent<Focusout.Handler> {
+		@Override
+		public void dispatch(Focusout.Handler handler) {
+			handler.onFocusout(this);
+		}
+
+		@Override
+		public Class<Focusout.Handler> getHandlerClass() {
+			return Focusout.Handler.class;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::fireEvent,
+					FocusoutEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onFocusout(Focusout event);
+		}
+	}
+
 	public static class Input extends NodeEvent<Input.Handler> {
 		private boolean populated = false;
 
 		private String value;
-
-		public String getValue() {
-			return this.value;
-		}
 
 		@Override
 		public void dispatch(Input.Handler handler) {
@@ -89,6 +178,10 @@ public class DomEvents {
 		@Override
 		public Class<Input.Handler> getHandlerClass() {
 			return Input.Handler.class;
+		}
+
+		public String getValue() {
+			return this.value;
 		}
 
 		@Override
@@ -141,92 +234,6 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onKeyUp(KeyUp event);
-		}
-	}
-
-	public static class Focus extends NodeEvent<Focus.Handler> {
-		@Override
-		public void dispatch(Focus.Handler handler) {
-			handler.onFocus(this);
-		}
-
-		@Override
-		public Class<Focus.Handler> getHandlerClass() {
-			return Focus.Handler.class;
-		}
-
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent, FocusEvent.getType());
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onFocus(Focus event);
-		}
-	}
-
-	public static class Focusout extends NodeEvent<Focusout.Handler> {
-		@Override
-		public void dispatch(Focusout.Handler handler) {
-			handler.onFocusout(this);
-		}
-
-		@Override
-		public Class<Focusout.Handler> getHandlerClass() {
-			return Focusout.Handler.class;
-		}
-
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent,
-					FocusoutEvent.getType());
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onFocusout(Focusout event);
-		}
-	}
-
-	public static class Focusin extends NodeEvent<Focusin.Handler> {
-		@Override
-		public void dispatch(Focusin.Handler handler) {
-			handler.onFocusin(this);
-		}
-
-		@Override
-		public Class<Focusin.Handler> getHandlerClass() {
-			return Focusin.Handler.class;
-		}
-
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent,
-					FocusinEvent.getType());
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onFocusin(Focusin event);
-		}
-	}
-
-	public static class Blur extends NodeEvent<Blur.Handler> {
-		@Override
-		public void dispatch(Blur.Handler handler) {
-			handler.onBlur(this);
-		}
-
-		@Override
-		public Class<Blur.Handler> getHandlerClass() {
-			return Blur.Handler.class;
-		}
-
-		@Override
-		protected HandlerRegistration bind0(Widget widget) {
-			return widget.addDomHandler(this::fireEvent, BlurEvent.getType());
-		}
-
-		public interface Handler extends NodeEvent.Handler {
-			void onBlur(Blur event);
 		}
 	}
 
