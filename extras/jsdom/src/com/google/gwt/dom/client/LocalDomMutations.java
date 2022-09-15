@@ -25,6 +25,8 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class LocalDomMutations {
+	public static LogLevel logLevel = LogLevel.NONE;
+
 	private static ElementRemote
 			findNonExternalJsAncestor(ElementRemote cursor) {
 		while (!cursor.getClassName().contains("__localdom-remote-container")) {
@@ -149,10 +151,18 @@ public class LocalDomMutations {
 	}-*/;
 
 	private void log(Supplier<String> messageSupplier) {
-		if (!GWT.isScript()) {
+		// no slf4j for performance
+		switch (logLevel) {
+		case NONE:
+			return;
+		case DEV_MODE:
 			System.out.println(messageSupplier.get());
+			break;
+		case ALL:
+			System.out.println(messageSupplier.get());
+			LocalDom.consoleLog(messageSupplier.get());
+			break;
 		}
-		// LocalDom.consoleLog(messageSupplier);
 	}
 
 	private native void setupObserver() /*-{
@@ -399,6 +409,10 @@ public class LocalDomMutations {
 			}
 			log(() -> "...mutation mirrored to localdom");
 		}
+	}
+
+	public static enum LogLevel {
+		NONE, DEV_MODE, ALL;
 	}
 
 	static class ChildModificationHistory {
