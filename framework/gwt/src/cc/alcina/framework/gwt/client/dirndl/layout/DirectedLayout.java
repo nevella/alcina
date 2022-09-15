@@ -423,10 +423,12 @@ public class DirectedLayout {
 			if (directed == null || model == null) {
 				return;
 			}
+			boolean boundModel = false;
 			if (directed.bindings().length == 0) {
 				// FIXME - hasBind
 				if (model instanceof Model) {
 					((Model) model).bind();
+					boundModel = true;
 				}
 			}
 			/*
@@ -436,6 +438,8 @@ public class DirectedLayout {
 			 * FIXME - index - actions.{ArrayList}. actions.{ArrayList}(div).
 			 * actions.{ArrayList}(ul). actions.{ArrayList} - child annotation
 			 * being applied to parent?
+			 *
+			 * Note - this is probably all fixed with dndl1.1
 			 *
 			 */
 			if (rendered.widgets.size() != 1) {
@@ -447,7 +451,7 @@ public class DirectedLayout {
 			rendered.bindings = Arrays.stream(directed.bindings())
 					.map(PropertyBinding::new).collect(Collectors.toList());
 			// FIXME - hasBind
-			if (model instanceof Model) {
+			if (model instanceof Model && !boundModel) {
 				((Model) model).bind();
 			}
 		}
