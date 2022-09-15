@@ -42,6 +42,40 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.common.client.util.TextUtils;
 
+/**
+ * <p>
+ * This class and supporting classes in the package are a fluent wrapper around
+ * the standard JDK org.w3c.dom XML model, with optimised xpath support.
+ *
+ * <p>
+ * Many operations can be performed as streams, and the {@link DomNode} class
+ * can be converted to or from the standard org.w3c.dom.Node
+ *
+ * <p>
+ * As an example:
+ *
+ *
+ * <code>
+ * <pre>
+DomDocument.from(
+"&lt;html>&lt;head/><body>&lt;div class=
+'class-1'>haggle&lt;/div>&lt;/body>&lt;/html>")
+.xpath("//div[@class='class-1']").stream()
+.filter(node -> node.textMatches("hag.*")).map(DomNode::ntc)
+.forEach(System.out::println);
+
+ (output: haggle)
+ </pre>
+
+</code>
+ *
+ * is a significant ease-of-use improvement on a similar operation with the w3c
+ * DOM classes. There's also a fluent node builder - DomNode.builder() - and
+ * other manipulation commands such as DomNode.strip()
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public class DomNode {
 	public static final transient String CONTEXT_DEBUG_SUPPORT = DomNode.class
 			.getName() + ".CONTEXT_DEBUG_SUPPORT";
