@@ -176,10 +176,12 @@ public abstract class DirectedRenderer {
 						.resolveDirectedProperty(property);
 				if (directedProperty != null) {
 					Object childModel = property.get(input.model);
-					input.enqueueInput(input.resolver, childModel,
-							new AnnotationLocation(input.model.getClass(),
-									property, input.resolver),
-							null, input.node, false);
+					if (childModel != null) {
+						input.enqueueInput(input.resolver, childModel,
+								new AnnotationLocation(childModel.getClass(),
+										property, input.resolver),
+								null, input.node, false);
+					}
 				}
 			}
 		}

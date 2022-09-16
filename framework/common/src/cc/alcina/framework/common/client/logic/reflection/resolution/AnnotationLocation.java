@@ -104,10 +104,10 @@ public class AnnotationLocation {
 	@Override
 	public String toString() {
 		if (property != null) {
-			String declaringPrefix = property.getDefiningType() == classLocation
+			String declaringSuffix = property.getDefiningType() == classLocation
 					? ""
-					: Ax.format("(%s)", classLocation.getSimpleName());
-			return Ax.format("%s%s", declaringPrefix, property.toString());
+					: Ax.format(" :: [%s]", classLocation.getSimpleName());
+			return Ax.format("%s%s", property.toString(), declaringSuffix);
 		} else {
 			return classLocation.getSimpleName();
 		}

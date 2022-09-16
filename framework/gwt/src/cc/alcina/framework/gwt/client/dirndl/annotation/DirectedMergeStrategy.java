@@ -12,6 +12,7 @@ import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 
@@ -20,7 +21,7 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 	public List<Directed> merge(List<Directed> higher, List<Directed> lower) {
 		// if lower.length >1, require higher.length max 1 (merge multiple up)
 		// and only merge last
-		// merge via Directed.Default
+		// merge via Directed.Impl
 		if (lower == null || lower.isEmpty()) {
 			return higher;
 		}
@@ -32,8 +33,8 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 		Directed.Impl lowestImpl = Directed.Impl.wrap(lowest);
 		List<Directed> result = lower.stream().limit(lower.size() - 1)
 				.collect(Collectors.toList());
-		lowestImpl.mergeParent(higher.get(0));
-		result.add(lowestImpl);
+		Impl merged = lowestImpl.mergeParent(higher.get(0));
+		result.add(merged);
 		return result;
 	}
 

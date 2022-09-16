@@ -225,7 +225,7 @@ public @interface Directed {
 			return merge;
 		}
 
-		public void mergeParent(Directed parent) {
+		public Impl mergeParent(Directed parent) {
 			Impl merged = new Impl();
 			merged.bindings = mergeAttribute(parent, Directed::bindings);
 			merged.cssClass = mergeAttribute(parent, Directed::cssClass);
@@ -235,6 +235,7 @@ public @interface Directed {
 			merged.reemits = mergeAttribute(parent, Directed::reemits);
 			merged.renderer = mergeAttribute(parent, Directed::renderer);
 			merged.tag = mergeAttribute(parent, Directed::tag);
+			return merged;
 		}
 
 		@Override

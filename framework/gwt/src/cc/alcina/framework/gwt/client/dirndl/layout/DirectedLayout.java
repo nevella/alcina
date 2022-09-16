@@ -595,6 +595,7 @@ public class DirectedLayout {
 			if (model == null) {
 				return;
 			}
+			// FIXME - dndl1x1a - move to 1.1
 			if (model instanceof DirectedLayout.Lifecycle) {
 				// FIXME - dirndl 1.0 - lifecycle -> abstract class,
 				// HasLifecycle, yadda
