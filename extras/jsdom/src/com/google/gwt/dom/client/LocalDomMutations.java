@@ -13,6 +13,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.core.client.JavaScriptObject;
 import com.google.gwt.core.client.JsArray;
 
@@ -24,6 +25,8 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 public class LocalDomMutations {
+	public static LogLevel logLevel = LogLevel.NONE;
+
 	private static ElementRemote
 			findNonExternalJsAncestor(ElementRemote cursor) {
 		while (!cursor.getClassName().contains("__localdom-remote-container")) {
@@ -127,7 +130,7 @@ public class LocalDomMutations {
 
     var config = {
       childList : true,
-      //FIXME - directedlayout.2 - also monitor attribute changes...maybe? wouldn't hurt for conpleteness n pretty darn easy 
+      //FIXME - directedlayout.2 - also monitor attribute changes...maybe? wouldn't hurt for conpleteness n pretty darn easy
       subtree : true
     };
     this.@LocalDomMutations::observer.observe(
@@ -148,10 +151,18 @@ public class LocalDomMutations {
 	}-*/;
 
 	private void log(Supplier<String> messageSupplier) {
-		// if (!GWT.isScript()) {
-		// System.out.println(messageSupplier.get());
-		// }
-		// LocalDom.consoleLog(messageSupplier);
+		// no slf4j for performance
+		switch (logLevel) {
+		case NONE:
+			return;
+		case DEV_MODE:
+			System.out.println(messageSupplier.get());
+			break;
+		case ALL:
+			System.out.println(messageSupplier.get());
+			LocalDom.consoleLog(messageSupplier.get());
+			break;
+		}
 	}
 
 	private native void setupObserver() /*-{
@@ -181,7 +192,8 @@ public class LocalDomMutations {
 		try {
 			handleMutations0(records);
 			// LocalDom.consoleLog(Document.get().getDocumentElement().dump(true));
-		} catch (RuntimeException e) {
+		} catch (Throwable e) {
+			GWT.log("Exception in handleMutations", e);
 			e.printStackTrace();
 			throw e;
 		}
@@ -193,14 +205,14 @@ public class LocalDomMutations {
 				.getOuterHtml();
 		/*
 		 * (phase 1) - ignore attr, cdata modifications
-		 * 
+		 *
 		 * Find all parents with modified subtrees : modifiedContainers
-		 * 
+		 *
 		 * Normalise modifiedContainers so that no element of modifiedContainers
 		 * is contained by another
-		 * 
+		 *
 		 * Run the localdom deltas against these modfified containers
-		 * 
+		 *
 		 */
 		Multimap<NodeRemote, List<MutationRecord>> modifiedContainers = new Multimap<>();
 		List<MutationRecord> typedRecords = ClientUtils
@@ -271,7 +283,7 @@ public class LocalDomMutations {
 			 * issue with conflicting google recaptcha and dialog insertion - if
 			 * elt exists in local children, has no removes - remove adds from
 			 * mutation list
-			 * 
+			 *
 			 * FIXME - directedlayout.1 - probably issue because recaptcha
 			 * called during gwt event cycle. formalise the
 			 * "shouldn't modify dom during event cycle outside of localdom" -
@@ -397,6 +409,10 @@ public class LocalDomMutations {
 			}
 			log(() -> "...mutation mirrored to localdom");
 		}
+	}
+
+	public static enum LogLevel {
+		NONE, DEV_MODE, ALL;
 	}
 
 	static class ChildModificationHistory {

@@ -682,7 +682,8 @@ public class JobScheduler {
 		}
 
 		protected int getRetentionDays() {
-			return 7;
+			return ResourceUtilities.getInteger(JobScheduler.class,
+					"defaultRetentionDays");
 		}
 
 		protected Logger logger() {

@@ -24,15 +24,15 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
 /*
  * FIXME - dirndl 1.3 - don't like the interplay between NodeEvent,
  * BehaviourBinding and NodeEventReceiver...
- * 
+ *
  * but...maybe...it's right? It's an event fired on a node, so as long as
  * there's one nodeevent per logical 'event', per node, maybe it's right...?
  * weird...
- * 
+ *
  * Actually (TODO: document better) - this is totally correct - and feature, not
  * bug - dirndl node events always only have one receiver (the node) -
  * topic/message passing generates new events at the receiver node
- * 
+ *
  * Implementation - extend nodeevent (to future-proof against using the gwt
  * event bus) but, because our propagation model is differnt, don't implement
  * the dispatch/TYPE mechanism
@@ -129,6 +129,17 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			context.topicListeners = new TopicListeners();
 			return context;
 		}
+
+		public static Context newTopicContext(String hint, Node node) {
+			Context context = new Context();
+			context.hint = hint;
+			context.node = node;
+			context.topicListeners = new TopicListeners();
+			return context;
+		}
+
+		// informational/debugging
+		String hint;
 
 		public Context previous;
 

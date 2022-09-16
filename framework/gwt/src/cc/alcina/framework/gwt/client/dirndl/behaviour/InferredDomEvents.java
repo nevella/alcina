@@ -5,6 +5,9 @@ import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.EventTarget;
+import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.event.dom.client.ClickEvent;
+import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
 import com.google.gwt.event.dom.client.KeyEvent;
 import com.google.gwt.event.dom.client.KeyPressEvent;
@@ -193,6 +196,47 @@ public class InferredDomEvents {
 			final native void disconnect() /*-{
         this.disconnect();
 			}-*/;
+		}
+	}
+
+	public static class LeftClick extends NodeEvent<LeftClick.Handler>
+			implements ClickHandler {
+		@Override
+		public void dispatch(LeftClick.Handler handler) {
+			handler.onLeftClick(this);
+		}
+
+		@Override
+		public Class<LeftClick.Handler> getHandlerClass() {
+			return LeftClick.Handler.class;
+		}
+
+		@Override
+		public void onClick(ClickEvent event) {
+			handleEvent(event);
+		}
+
+		private void handleEvent(ClickEvent event) {
+			int nativeButton = event.getNativeButton();
+			switch (nativeButton) {
+			case NativeEvent.BUTTON_MIDDLE:
+			case NativeEvent.BUTTON_RIGHT:
+				break;
+			default:
+				// fire on touch as well
+				fireEvent(event);
+				break;
+			}
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::handleEvent,
+					ClickEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onLeftClick(LeftClick event);
 		}
 	}
 

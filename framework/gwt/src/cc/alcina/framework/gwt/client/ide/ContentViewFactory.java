@@ -1169,6 +1169,10 @@ public class ContentViewFactory {
 			this.provisionalObjects = promote;
 		}
 
+		/*
+		 * FIXME - dirndl 1.1c - should always be async, should always
+		 * re-validate server validators
+		 */
 		public boolean validateAndCommit(final Widget sender,
 				final AsyncCallback<Void> serverValidationCallback) {
 			try {
