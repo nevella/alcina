@@ -86,7 +86,7 @@ public class SimpleTable {
 			public static class Row extends Model {
 				private String key;
 
-				private String value;
+				private Object value;
 
 				public Row() {
 				}
@@ -96,6 +96,8 @@ public class SimpleTable {
 							.titleCase(CommonUtils.deInfix(property.getName()));
 					Object propertyValue = property.get(model);
 					if (propertyValue == null) {
+					} else if (propertyValue instanceof Model) {
+						value = propertyValue;
 					} else if (propertyValue instanceof Enum) {
 						value = Ax.friendly(propertyValue);
 					} else if (propertyValue instanceof HasDisplayName) {
@@ -118,7 +120,7 @@ public class SimpleTable {
 				}
 
 				@Directed(tag = "td")
-				public String getValue() {
+				public Object getValue() {
 					return this.value;
 				}
 			}
