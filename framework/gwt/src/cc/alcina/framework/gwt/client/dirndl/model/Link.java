@@ -10,6 +10,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 
+import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Widget;
@@ -349,7 +350,7 @@ public class Link extends Model {
 		String value();
 	}
 
-	@Directed(receives = DomEvents.Click.class, emits = DomEvents.Click.class, bindings = {
+	@Directed(receives = DomEvents.Click.class, bindings = {
 			@Binding(from = "href", type = Type.PROPERTY),
 			@Binding(from = "className", to = "class", type = Type.PROPERTY),
 			@Binding(from = "innerHtml", type = Type.INNER_HTML),
@@ -417,13 +418,16 @@ public class Link extends Model {
 
 		@Override
 		public void onClick(Click event) {
-			if (runnable != null) {
-				runnable.run();
-				WidgetUtils.squelchCurrentEvent();
-			} else {
-				// propagate href
-				if (!Objects.equals(tag, "a") && Ax.notBlank(href)) {
-					History.newItem(href);
+			ClickEvent gwtEvent = (ClickEvent) event.getContext().gwtEvent;
+			if (gwtEvent.getNativeButton() == NativeEvent.BUTTON_LEFT) {
+				if (runnable != null) {
+					runnable.run();
+					WidgetUtils.squelchCurrentEvent();
+				} else {
+					// propagate href
+					if (!Objects.equals(tag, "a") && Ax.notBlank(href)) {
+						History.newItem(href);
+					}
 				}
 			}
 		}
