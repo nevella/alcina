@@ -15,6 +15,30 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.search.SearchCriterion;
 import cc.alcina.framework.common.client.search.SearchDefinition;
 
+/**
+ * 
+ * <p>
+ * This class takes a SearchDefinition def and a Comparator Order and returns a
+ * Stream of entities.
+ * 
+ * <p>
+ * It sets up a DomainStore query, looks up reflectively registered
+ * DomainDefinitionHandler classes for the SearchDefinition (rarely used, since
+ * these operate on the whole definition), and then looks up the criterion
+ * handler classes for the [SearchDefinition, SearchCriterion] combinations.
+ * Those criterion handler classes generate filters which are applied to the
+ * DomainStore query.
+ * 
+ * <p>
+ * The reason handlers are registered for [SearchDefinition, SearchCriterion]
+ * tuples is that it improves code reuse, since SearchCriterion classes can be
+ * used in multiple SearchDefinition types.
+ * 
+ * @author nick@alcina.cc
+ *
+ * @param <T>
+ *            The entity type being searched
+ */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class DomainSearcher<T extends Entity> {
 	public static final String CONTEXT_HINT = DomainSearcher.class.getName()

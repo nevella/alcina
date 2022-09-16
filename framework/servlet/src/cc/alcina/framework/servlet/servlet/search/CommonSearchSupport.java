@@ -38,6 +38,16 @@ import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionCont
 import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 
+/**
+ * <p>
+ * The environment handler for in-memory search. This class sets up a search
+ * context (including custom entity sources if the search criteria require),
+ * calls the query executor {@link DomainSearcher}, projects the results and
+ * calls any grouping handlers
+ * 
+ * @author nick@alcina.cc
+ *
+ */
 @Registration.Singleton
 public class CommonSearchSupport {
 	public static final transient String CONTEXT_DO_NOT_PROJECT_SEARCH = CommonSearchSupport.class

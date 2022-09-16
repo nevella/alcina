@@ -17,8 +17,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.search.OrderGroup;
 import cc.alcina.framework.common.client.search.SearchDefinition;
-import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.search.TextCriterion;
+import cc.alcina.framework.common.client.search.TruncatedObjectCriterion;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -26,7 +26,8 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.objecttree.search.packs.SearchUtils;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 
-/*
+/**
+ * 
  * Uses 'searchorders' rather than 'order groups'
  */
 public abstract class BindableSearchDefinition extends SearchDefinition {
@@ -48,6 +49,7 @@ public abstract class BindableSearchDefinition extends SearchDefinition {
 		return (EntityCriteriaGroup) getCriteriaGroups().iterator().next();
 	}
 
+	@Override
 	@PropertySerialization(ignore = true)
 	public Set<OrderGroup> getOrderGroups() {
 		return super.getOrderGroups();
