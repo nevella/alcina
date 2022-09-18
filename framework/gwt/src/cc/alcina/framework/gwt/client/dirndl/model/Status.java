@@ -8,6 +8,8 @@ import com.google.gwt.dom.client.DomStyleConstants;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -31,6 +33,7 @@ public enum Status {
 
 	@Directed(tag = "div", bindings = {
 			@Binding(from = "reason", to = "title", type = Type.PROPERTY),
+			@Binding(from = "displayText", type = Type.INNER_TEXT),
 			@Binding(from = "status", to = DomStyleConstants.STYLE_BACKGROUND_COLOR, type = Type.STYLE_ATTRIBUTE, transform = StatusTransform.class) })
 	public static class StatusReason extends Model implements ProvidesStatus {
 		public static StatusReason check(boolean condition,
@@ -48,18 +51,36 @@ public enum Status {
 
 		public static StatusReason forDate(Date date, String issueReason,
 				long maxAge) {
-			if (TimeConstants.within(date.getTime(), maxAge)) {
+			if (maxAge == Long.MAX_VALUE || (date != null
+					&& TimeConstants.within(date.getTime(), maxAge))) {
 				return ok(date);
 			} else {
 				return error(date, issueReason);
 			}
 		}
 
+		public static StatusReason forDateMissingWithStatus(Date date,
+				Status status) {
+			return date == null ? missingWithStatus(status) : ok(date);
+		}
+
 		public static StatusReason fromChildStatus(Status status) {
 			return new StatusReason(status, "From children", status);
 		}
 
+		public static StatusReason missing() {
+			return missingWithStatus(ERROR);
+		}
+
+		public static StatusReason missingWithStatus(Status status) {
+			return new StatusReason(status, "Empty/null data",
+					"Empty/null data");
+		}
+
 		public static StatusReason ok(Object value) {
+			if (value == null) {
+				value = "OK";
+			}
 			return new StatusReason(Status.OK, null, value);
 		}
 
@@ -78,6 +99,11 @@ public enum Status {
 			this.status = status;
 			this.reason = reason;
 			this.value = value;
+		}
+
+		public Object getDisplayText() {
+			return CommonUtils.trimToWsChars(
+					value == null ? "(null)" : value.toString(), 60, true);
 		}
 
 		public String getReason() {
@@ -100,12 +126,7 @@ public enum Status {
 
 		@Override
 		public String toString() {
-			return value.toString();
-		}
-
-		public static StatusReason missing() {
-			return new StatusReason(Status.ERROR, "Empty/null data",
-					"Empty/null data");
+			return Ax.format("%s :: %s", status, getDisplayText());
 		}
 	}
 

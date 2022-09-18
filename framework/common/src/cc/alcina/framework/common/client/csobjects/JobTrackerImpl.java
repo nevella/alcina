@@ -219,9 +219,9 @@ public class JobTrackerImpl extends Model
 		case DID_NOT_COMPLETE:
 		case EXCEPTION:
 		case FAIL:
-			return StatusReason.error(log, jobResult);
+			return StatusReason.error(jobResult, jobResult);
 		case WARN:
-			return StatusReason.warn(log, jobResult);
+			return StatusReason.warn(jobResult, jobResult);
 		case OK:
 			return StatusReason.ok(jobResult);
 		default:

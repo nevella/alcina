@@ -36,6 +36,7 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -1070,7 +1071,7 @@ public class DirectedLayout {
 				boolean hasTransform = (Class) binding
 						.transform() != ToStringFunction.Identity.class;
 				if (hasTransform) {
-					value = Reflections.newInstance(binding.transform())
+					value = Registry.newInstanceOrImpl(binding.transform())
 							.apply(value);
 				}
 				String stringValue = value == null ? "null" : value.toString();

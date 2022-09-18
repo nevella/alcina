@@ -26,6 +26,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Implementation;
 import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Registrations.RegistrationData;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
@@ -778,6 +779,15 @@ public class Registry {
 				}
 				byClass.put(clazz, implementation);
 			}
+		}
+	}
+
+	public static <T> T newInstanceOrImpl(Class<T> clazz) {
+		ClassReflector<T> classReflector = Reflections.at(clazz);
+		if (classReflector.isAbstract()) {
+			return impl(clazz);
+		} else {
+			return classReflector.newInstance();
 		}
 	}
 }
