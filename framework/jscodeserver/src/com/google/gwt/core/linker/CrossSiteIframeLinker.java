@@ -640,9 +640,6 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
 			LinkerContext context, ArtifactSet artifacts,
 			CompilationResult result) throws UnableToCompleteException {
 		String filename = getHostedFilename();
-		if ("".equals(filename)) {
-			return;
-		}
 		// when we're including bootstrap in the primary fragment, we should be
 		// generating devmode files for each permutation. Otherwise, we generate
 		// it
@@ -655,39 +652,31 @@ public class CrossSiteIframeLinker extends SelectionScriptLinker {
 		long lastModified = System.currentTimeMillis();
 		StringBuffer buffer = readFileToStringBuffer(
 				"com/google/gwt/core/ext/linker/impl/" + filename, logger);
-		boolean injectJsCodeServerFiles = true;
-		if (injectJsCodeServerFiles) {
-			String[] scriptNames = { "GwtJsPlugin.js", "common/Message.js",
-					"common/BrowserChannel.js", "impl/JavaObject.js",
-					"impl/ScriptableInstance.js", "impl/LocalObjectTable.js",
-					"common/ieee754.js", "common/Platform.js",
-					"common/HashMap.js", "common/FatalErrorMessage.js",
-					"common/HostChannel.js", "common/InvokeMessage.js",
-					"common/LoadModuleMessage.js",
-					"common/InvokeSpecialMessage.js",
-					"common/AllowedConnections.js", "common/DebugLevel.js",
-					"common/Socket.js", "common/Debug.js",
-					"common/QuitMessage.js", "common/SwitchTransportMessage.js",
-					"common/ProtocolVersionMessage.js",
-					"common/ChooseTransportMessage.js",
-					"common/SessionHandler.js", "common/ByteOrder.js",
-					"common/ReturnMessage.js", "common/ServerMethods.js",
-					"common/LoadJsniMessage.js", "common/Value.js",
-					"common/CheckVersionsMessage.js",
-					"common/FreeValueMessage.js",
-					"common/WebSocketTransport.js",
-					"common/WebSocketTransportClient.js" };
-			for (String fn : scriptNames) {
-				String scriptContents = ResourceUtilities
-						.readClassPathResourceAsString(
-								CrossSiteIframeLinker.class,
-								Ax.format(
-										"/cc/alcina/framework/jscodeserver/js/%s",
-										fn));
-				buffer.append("\n");
-				buffer.append(scriptContents);
-				buffer.append("\n");
-			}
+		String[] scriptNames = { "GwtJsPlugin.js", "common/Message.js",
+				"common/BrowserChannel.js", "impl/JavaObject.js",
+				"impl/ScriptableInstance.js", "impl/LocalObjectTable.js",
+				"common/ieee754.js", "common/Platform.js", "common/HashMap.js",
+				"common/FatalErrorMessage.js", "common/HostChannel.js",
+				"common/InvokeMessage.js", "common/LoadModuleMessage.js",
+				"common/InvokeSpecialMessage.js",
+				"common/AllowedConnections.js", "common/DebugLevel.js",
+				"common/Socket.js", "common/Debug.js", "common/QuitMessage.js",
+				"common/SwitchTransportMessage.js",
+				"common/ProtocolVersionMessage.js",
+				"common/ChooseTransportMessage.js", "common/SessionHandler.js",
+				"common/ByteOrder.js", "common/ReturnMessage.js",
+				"common/ServerMethods.js", "common/LoadJsniMessage.js",
+				"common/Value.js", "common/CheckVersionsMessage.js",
+				"common/FreeValueMessage.js", "common/WebSocketTransport.js",
+				"common/WebSocketTransportClient.js" };
+		for (String fn : scriptNames) {
+			String scriptContents = ResourceUtilities
+					.readClassPathResourceAsString(CrossSiteIframeLinker.class,
+							Ax.format("/cc/alcina/framework/jscodeserver/js/%s",
+									fn));
+			buffer.append("\n");
+			buffer.append(scriptContents);
+			buffer.append("\n");
 		}
 		/*
 		 * Add the WebSocketTransport.js to the root
