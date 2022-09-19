@@ -34,8 +34,8 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -48,12 +48,12 @@ public class TableModel extends Model {
 
 	protected List<TableRow> rows = new ArrayList<>();
 
-	protected List<Link> actions = new ArrayList<>();
+	protected List<LinkOld> actions = new ArrayList<>();
 
 	public TableModel() {
 	}
 
-	public List<Link> getActions() {
+	public List<LinkOld> getActions() {
 		return this.actions;
 	}
 
@@ -285,7 +285,7 @@ public class TableModel extends Model {
 	}
 
 	public static class TableColumnClicked
-			extends TopicEvent<TableColumn, TableColumnClicked.Handler> {
+			extends ModelEvent<TableColumn, TableColumnClicked.Handler> {
 		@Override
 		public void dispatch(TableColumnClicked.Handler handler) {
 			handler.onTableColumnClicked(this);

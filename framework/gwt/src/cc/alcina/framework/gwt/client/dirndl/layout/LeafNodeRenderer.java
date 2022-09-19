@@ -28,8 +28,8 @@ public class LeafNodeRenderer extends DirectedNodeRenderer {
 	protected String getTagPossiblyFromFieldName(Node node,
 			String defaultValue) {
 		if (node.parent != null && node.parent.has(PropertyNameTags.class)
-				&& node.property.getName() != null) {
-			return CommonUtils.deInfixCss(node.property.getName());
+				&& node.getProperty().getName() != null) {
+			return CommonUtils.deInfixCss(node.getProperty().getName());
 		}
 		if (node.model instanceof HasTag) {
 			return ((HasTag) node.model).provideTag();

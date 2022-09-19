@@ -126,8 +126,8 @@ public abstract class DirectedRenderer {
 		@Override
 		protected String getTag(Node node) {
 			if (node.parent != null && node.parent.has(PropertyNameTags.class)
-					&& node.property.getName() != null) {
-				return CommonUtils.deInfixCss(node.property.getName());
+					&& node.getProperty().getName() != null) {
+				return CommonUtils.deInfixCss(node.getProperty().getName());
 			}
 			return Ax.blankTo(super.getTag(node), "span");
 		}
@@ -176,12 +176,13 @@ public abstract class DirectedRenderer {
 						.resolveDirectedProperty(property);
 				if (directedProperty != null) {
 					Object childModel = property.get(input.model);
-					if (childModel != null) {
-						input.enqueueInput(input.resolver, childModel,
-								new AnnotationLocation(childModel.getClass(),
-										property, input.resolver),
-								null, input.node, false);
-					}
+					// add input even if childModel==null
+					Class locationType = childModel == null ? void.class
+							: childModel.getClass();
+					input.enqueueInput(input.resolver, childModel,
+							new AnnotationLocation(locationType, property,
+									input.resolver),
+							null, input.node, false);
 				}
 			}
 		}
@@ -221,9 +222,8 @@ public abstract class DirectedRenderer {
 			Node node = input.node;
 			String tag = getTag(node);
 			Preconditions.checkArgument(Ax.notBlank(tag));
-			Widget widget = node.rendered.widget;
 			node.rendered.widget = new SimpleWidget(tag);
-			applyCssClass(node, widget);
+			applyCssClass(node, node.rendered.widget);
 		}
 	}
 }

@@ -11,14 +11,14 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 public class StandardModels {
 	@Directed(tag = "page", bindings = @Binding(from = "className", type = Type.CSS_CLASS, transform = ToStringFunction.ExplicitIdentity.class))
-	public static class HeaderContentModel extends Model.WithBinding {
-		private Object headerModel;
+	public static class HeaderContent extends Model.WithBinding {
+		private Object header;
 
-		private Object contentModel;
+		private Object content;
 
 		private String className;
 
-		public HeaderContentModel() {
+		public HeaderContent() {
 		}
 
 		public String getClassName() {
@@ -26,13 +26,13 @@ public class StandardModels {
 		}
 
 		@Directed
-		public Object getContentModel() {
-			return this.contentModel;
+		public Object getContent() {
+			return this.content;
 		}
 
 		@Directed
-		public Object getHeaderModel() {
-			return this.headerModel;
+		public Object getHeader() {
+			return this.header;
 		}
 
 		public void setClassName(String className) {
@@ -42,18 +42,18 @@ public class StandardModels {
 					old_className, className);
 		}
 
-		public void setContentModel(Object contentModel) {
-			Object old_contentModel = this.contentModel;
-			this.contentModel = contentModel;
-			propertyChangeSupport().firePropertyChange("contentModel",
-					old_contentModel, contentModel);
+		public void setContent(Object content) {
+			var old_content = this.content;
+			this.content = content;
+			propertyChangeSupport().firePropertyChange("content", old_content,
+					content);
 		}
 
-		public void setHeaderModel(Object headerModel) {
-			Object old_headerModel = this.headerModel;
-			this.headerModel = headerModel;
-			propertyChangeSupport().firePropertyChange("headerModel",
-					old_headerModel, headerModel);
+		public void setHeader(Object header) {
+			var old_header = this.header;
+			this.header = header;
+			propertyChangeSupport().firePropertyChange("header", old_header,
+					header);
 		}
 
 		/**
@@ -64,7 +64,7 @@ public class StandardModels {
 		 *
 		 * </p>
 		 */
-		public static class BoundToPageCssClass extends HeaderContentModel {
+		public static class BoundToPageCssClass extends HeaderContent {
 			public BoundToPageCssClass() {
 				addBinding("className", PageCssClass.get(), "pageClassName");
 			}

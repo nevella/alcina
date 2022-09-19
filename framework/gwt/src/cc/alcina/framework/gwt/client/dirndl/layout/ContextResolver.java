@@ -22,6 +22,8 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	protected ContextResolver parent;
 
+	protected DirectedLayout layout;
+
 	// FIXME - dirndl 1.1 - hopefully remove
 	private Object model;
 
@@ -118,6 +120,14 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	public void setModel(Object model) {
 		this.model = model;
+	}
+
+	private ContextResolver root() {
+		return parent != null ? parent : this;
+	}
+
+	protected DirectedLayout getLayout() {
+		return root().layout;
 	}
 
 	protected void init() {

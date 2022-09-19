@@ -3,7 +3,6 @@ package cc.alcina.framework.gwt.client.dirndl.annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 
@@ -17,24 +16,35 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 
 public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
+	/*
+	 * as per implemented method, 'lower' is lower in the resolution stack,
+	 * higher precedence
+	 */
 	@Override
 	public List<Directed> merge(List<Directed> higher, List<Directed> lower) {
-		// if lower.length >1, require higher.length max 1 (merge multiple up)
-		// and only merge last
-		// merge via Directed.Impl
 		if (lower == null || lower.isEmpty()) {
 			return higher;
 		}
 		if (higher == null || higher.isEmpty()) {
 			return lower;
 		}
-		Preconditions.checkArgument(higher.size() == 1);
+		// require lower.length==1 || higher.length ==1
+		//
+		// if lower.length==1, merge lower[0] with higher[0], then add remaining
+		// higher
+		//
+		// if higher.length==1, add lower[0..last-1], merge lower[last] with
+		// higher[0]
+		//
+		// merge via Directed.Impl
+		Preconditions.checkArgument(higher.size() == 1 || lower.size() == 1);
 		Directed lowest = Ax.last(lower);
 		Directed.Impl lowestImpl = Directed.Impl.wrap(lowest);
-		List<Directed> result = lower.stream().limit(lower.size() - 1)
-				.collect(Collectors.toList());
+		List<Directed> result = new ArrayList<>();
+		lower.stream().limit(lower.size() - 1).forEach(result::add);
 		Impl merged = lowestImpl.mergeParent(higher.get(0));
 		result.add(merged);
+		higher.stream().skip(1).forEach(result::add);
 		return result;
 	}
 

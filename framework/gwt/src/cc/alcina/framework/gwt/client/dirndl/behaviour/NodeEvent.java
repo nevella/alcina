@@ -17,8 +17,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.NodeEventReceiver;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
 
 @Reflected
 /*
@@ -36,6 +36,25 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent.TopicListeners;
  * Implementation - extend nodeevent (to future-proof against using the gwt
  * event bus) but, because our propagation model is differnt, don't implement
  * the dispatch/TYPE mechanism
+ *
+ * 20220918 - Yes, correct. Although the ancestor propagation of NodeEvents
+ * doesn't (and shouldn't) use the GWT event bus, events with no GWT event bus
+ * root cause *may* want to be scheduled on that bus - but possibly just
+ * schedule() on that bus is enough
+ *
+ * TODO: document the nodeevent bind/fire/unbind lifecycle. Definitely rename
+ * 'topiclistener', possibly remove (since there's only ever one eventbinding,
+ * not a list)
+ *
+ * @formatter:off
+ *
+ * Sketch of current sequence:
+ * ===========================
+ *
+ * - rendering algorithm in DirectedLayout renders Node
+ *
+ * @formatter:on
+ *
  */
 public abstract class NodeEvent<H extends NodeEvent.Handler>
 		extends GwtEvent<H> {
@@ -177,7 +196,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		 * TopicEvent->ModelEvent
 		 */
 		public void markCauseTopicAsNotHandled() {
-			((TopicEvent) previous.getNodeEvent()).setHandled(false);
+			((ModelEvent) previous.getNodeEvent()).setHandled(false);
 		}
 
 		public void setNodeEvent(NodeEvent nodeEvent) {
@@ -187,13 +206,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	}
 
 	public interface Handler extends EventHandler {
-	}
-
-	public static abstract class ModelEvent<T, H extends NodeEvent.Handler>
-			extends NodeEvent<H> {
-		public <T0 extends T> T0 getModel() {
-			return (T0) this.model;
-		}
 	}
 
 	public static class Type<H extends EventHandler> extends GwtEvent.Type<H> {

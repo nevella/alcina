@@ -7,7 +7,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -16,5 +16,5 @@ import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 public @interface EmitsTopic {
 	boolean hasValidation() default false;
 
-	Class<? extends TopicEvent<?, ?>> value();
+	Class<? extends ModelEvent<?, ?>> value();
 }

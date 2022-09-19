@@ -1,12 +1,12 @@
 package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 
 /*
  * A collection of standard logical events
  */
-public class NodeEvents {
-	public static class Add extends TopicEvent<Object, Add.Handler> {
+public class ModelEvents {
+	public static class Add extends ModelEvent<Object, Add.Handler> {
 		@Override
 		public void dispatch(Add.Handler handler) {
 			handler.onAdd(this);
@@ -22,7 +22,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Back extends TopicEvent<Object, Back.Handler> {
+	public static class Back extends ModelEvent<Object, Back.Handler> {
 		@Override
 		public void dispatch(Back.Handler handler) {
 			handler.onBack(this);
@@ -39,7 +39,7 @@ public class NodeEvents {
 	}
 
 	public static class Cancelled
-			extends TopicEvent<Object, Cancelled.Handler> {
+			extends ModelEvent<Object, Cancelled.Handler> {
 		@Override
 		public void dispatch(Cancelled.Handler handler) {
 			handler.onCancelled(this);
@@ -55,7 +55,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Change extends TopicEvent<Object, Change.Handler> {
+	public static class Change extends ModelEvent<Object, Change.Handler> {
 		@Override
 		public void dispatch(Change.Handler handler) {
 			handler.onChange(this);
@@ -71,7 +71,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Clear extends TopicEvent<Object, Clear.Handler> {
+	public static class Clear extends ModelEvent<Object, Clear.Handler> {
 		@Override
 		public void dispatch(Clear.Handler handler) {
 			handler.onClear(this);
@@ -87,7 +87,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Close extends TopicEvent<Object, Close.Handler> {
+	public static class Close extends ModelEvent<Object, Close.Handler> {
 		@Override
 		public void dispatch(Close.Handler handler) {
 			handler.onClose(this);
@@ -103,7 +103,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Delete extends TopicEvent<Object, Delete.Handler> {
+	public static class Delete extends ModelEvent<Object, Delete.Handler> {
 		@Override
 		public void dispatch(Delete.Handler handler) {
 			handler.onDelete(this);
@@ -119,7 +119,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Download extends TopicEvent<Object, Download.Handler> {
+	public static class Download extends ModelEvent<Object, Download.Handler> {
 		@Override
 		public void dispatch(Download.Handler handler) {
 			handler.onDownload(this);
@@ -135,7 +135,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Filter extends TopicEvent<Object, Filter.Handler> {
+	public static class Filter extends ModelEvent<Object, Filter.Handler> {
 		@Override
 		public void dispatch(Filter.Handler handler) {
 			handler.onFilter(this);
@@ -151,7 +151,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Find extends TopicEvent<Object, Find.Handler> {
+	public static class Find extends ModelEvent<Object, Find.Handler> {
 		@Override
 		public void dispatch(Find.Handler handler) {
 			handler.onFind(this);
@@ -167,7 +167,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Forward extends TopicEvent<Object, Forward.Handler> {
+	public static class Forward extends ModelEvent<Object, Forward.Handler> {
 		@Override
 		public void dispatch(Forward.Handler handler) {
 			handler.onForward(this);
@@ -183,7 +183,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Insert extends TopicEvent<Object, Insert.Handler> {
+	public static class Insert extends ModelEvent<Object, Insert.Handler> {
 		@Override
 		public void dispatch(Insert.Handler handler) {
 			handler.onInsert(this);
@@ -199,7 +199,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Options extends TopicEvent<Object, Options.Handler> {
+	public static class Options extends ModelEvent<Object, Options.Handler> {
 		@Override
 		public void dispatch(Options.Handler handler) {
 			handler.onOptions(this);
@@ -215,7 +215,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Remove extends TopicEvent<Object, Remove.Handler> {
+	public static class Remove extends ModelEvent<Object, Remove.Handler> {
 		@Override
 		public void dispatch(Remove.Handler handler) {
 			handler.onRemove(this);
@@ -231,7 +231,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Selected extends TopicEvent<Object, Selected.Handler> {
+	public static class Selected extends ModelEvent<Object, Selected.Handler> {
 		@Override
 		public void dispatch(Selected.Handler handler) {
 			handler.onSelected(this);
@@ -247,7 +247,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Show extends TopicEvent<Object, Show.Handler> {
+	public static class Show extends ModelEvent<Object, Show.Handler> {
 		@Override
 		public void dispatch(Show.Handler handler) {
 			handler.onShow(this);
@@ -265,7 +265,7 @@ public class NodeEvents {
 
 	// FIXME - to 'submit'
 	public static class Submitted
-			extends TopicEvent<Object, Submitted.Handler> {
+			extends ModelEvent<Object, Submitted.Handler> {
 		@Override
 		public void dispatch(Submitted.Handler handler) {
 			handler.onSubmitted(this);
@@ -281,7 +281,7 @@ public class NodeEvents {
 		}
 	}
 
-	public static class Toggle extends TopicEvent<Object, Toggle.Handler> {
+	public static class Toggle extends ModelEvent<Object, Toggle.Handler> {
 		@Override
 		public void dispatch(Toggle.Handler handler) {
 			handler.onToggle(this);

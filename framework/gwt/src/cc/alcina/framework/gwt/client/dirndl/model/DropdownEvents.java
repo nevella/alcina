@@ -1,11 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 
 public class DropdownEvents {
 	public static class DropdownButtonClicked
-			extends TopicEvent<Object, DropdownButtonClicked.Handler> {
+			extends ModelEvent<Object, DropdownButtonClicked.Handler> {
 		@Override
 		public void dispatch(DropdownButtonClicked.Handler handler) {
 			handler.onDropdownButtonClicked(this);
@@ -22,7 +22,7 @@ public class DropdownEvents {
 	}
 
 	public static class InsideDropdownClicked
-			extends TopicEvent<Object, InsideDropdownClicked.Handler> {
+			extends ModelEvent<Object, InsideDropdownClicked.Handler> {
 		@Override
 		public void dispatch(InsideDropdownClicked.Handler handler) {
 			handler.onInsideDropdownClicked(this);
@@ -39,7 +39,7 @@ public class DropdownEvents {
 	}
 
 	public static class OutsideDropdownClicked
-			extends TopicEvent<Object, OutsideDropdownClicked.Handler> {
+			extends ModelEvent<Object, OutsideDropdownClicked.Handler> {
 		@Override
 		public void dispatch(OutsideDropdownClicked.Handler handler) {
 			handler.onOutsideDropdownClicked(this);

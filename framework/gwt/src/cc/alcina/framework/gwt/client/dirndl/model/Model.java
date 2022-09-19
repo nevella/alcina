@@ -19,20 +19,28 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents.Attach;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 
 /**
+ * <p>
  * Thoughts on binding :: particularly in the case of UI bindings, a.b->c.d is
  * _sometimes_ better handled via "listen to major updates on a" - this
  * simplifies the handling of "a changed" vs "a.b changed".
  *
+ * <p>
  * This is the motivation for the fireUpdated() method, see particularly
  * DirectedSingleEntityActivity
+ *
+ * <p>
+ * Note - above comments were early dirndl days - almost certainly that
+ * mechanism can be replaced by a ModelEvent (possibly causing Model
+ * replacement) - at which point remove
  *
  * @author nick@alcina.cc
  *
  */
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
-public abstract class Model extends Bindable {
+public abstract class Model extends Bindable implements HasBind {
 	public static final transient Object MODEL_UPDATED = new Object();
 
+	@Override
 	public void bind() {
 	}
 
@@ -40,6 +48,7 @@ public abstract class Model extends Bindable {
 		fireUnspecifiedPropertyChange(MODEL_UPDATED);
 	}
 
+	@Override
 	public void unbind() {
 		if (!hasPropertyChangeSupport()) {
 			return;

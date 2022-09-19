@@ -1,11 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 
 public class TreeEvents {
 	public static class NodeLabelClicked
-			extends TopicEvent<Object, NodeLabelClicked.Handler> {
+			extends ModelEvent<Object, NodeLabelClicked.Handler> {
 		@Override
 		public void dispatch(NodeLabelClicked.Handler handler) {
 			handler.onNodeLabelClicked(this);
@@ -22,7 +22,7 @@ public class TreeEvents {
 	}
 
 	public static class NodeToggleButtonClicked
-			extends TopicEvent<Tree.TreeNode, NodeToggleButtonClicked.Handler> {
+			extends ModelEvent<Tree.TreeNode, NodeToggleButtonClicked.Handler> {
 		@Override
 		public void dispatch(NodeToggleButtonClicked.Handler handler) {
 			handler.onNodeToggleButtonClicked(this);
@@ -39,7 +39,7 @@ public class TreeEvents {
 	}
 
 	public static class PaginatorVisible
-			extends TopicEvent<Tree.TreeNode, PaginatorVisible.Handler> {
+			extends ModelEvent<Tree.TreeNode, PaginatorVisible.Handler> {
 		@Override
 		public void dispatch(PaginatorVisible.Handler handler) {
 			handler.onPaginatorVisible(this);

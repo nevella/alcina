@@ -12,12 +12,12 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvents.Selected;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Selected;
 
-@Directed(tag = "selection-model", receives = NodeEvents.Selected.class)
+@Directed(tag = "selection-model", receives = ModelEvents.Selected.class)
 public abstract class SelectionModel<T> extends Model
-		implements NodeEvents.Selected.Handler {
+		implements ModelEvents.Selected.Handler {
 	protected List<SelectionModel.Choice<T>> choices;
 
 	private List<T> values;
@@ -56,7 +56,7 @@ public abstract class SelectionModel<T> extends Model
 	 * TODO - dirndl1.1 - is it possible to bind just to isSelected here? in
 	 * which case no need to wrap wdiget/elements
 	 */
-	@Directed(bindings = @Binding(type = Type.PROPERTY, from = "selected", to = "_selected"), receives = DomEvents.Click.class, reemits = NodeEvents.Selected.class)
+	@Directed(bindings = @Binding(type = Type.PROPERTY, from = "selected", to = "_selected"), receives = DomEvents.Click.class, reemits = ModelEvents.Selected.class)
 	public static class Choice<T> extends Model {
 		private boolean selected;
 

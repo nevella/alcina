@@ -12,7 +12,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.IntersectionObserved;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.SelectionChanged;
 import cc.alcina.framework.gwt.client.dirndl.model.Tree.TreeNode;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeLabelClicked;
@@ -59,7 +59,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		selectedNodeModel.setSelected(true);
 		Context context = NodeEvent.Context.newTopicContext(event.getContext(),
 				null);
-		TopicEvent.fire(context, SelectionChanged.class, model);
+		ModelEvent.fire(context, SelectionChanged.class, model);
 	}
 
 	@Override
@@ -137,7 +137,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	}
 
 	public static class LabelClicked
-			extends TopicEvent<Object, LabelClicked.Handler> {
+			extends ModelEvent<Object, LabelClicked.Handler> {
 		@Override
 		public void dispatch(LabelClicked.Handler handler) {
 			handler.onLabelClicked(this);
@@ -170,7 +170,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 				fired = true;
 				Context context = NodeEvent.Context
 						.newTopicContext(event.getContext(), null);
-				TopicEvent.fire(context, PaginatorVisible.class, null);
+				ModelEvent.fire(context, PaginatorVisible.class, null);
 			}
 		}
 
@@ -189,7 +189,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	}
 
 	public static class SelectionChanged
-			extends TopicEvent<TreeNode, SelectionChanged.Handler> {
+			extends ModelEvent<TreeNode, SelectionChanged.Handler> {
 		@Override
 		public void dispatch(SelectionChanged.Handler handler) {
 			handler.onSelectionChanged(this);
@@ -206,7 +206,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	}
 
 	public static class ToggleButtonClicked
-			extends TopicEvent<Object, ToggleButtonClicked.Handler> {
+			extends ModelEvent<Object, ToggleButtonClicked.Handler> {
 		@Override
 		public void dispatch(ToggleButtonClicked.Handler handler) {
 			handler.onToggleButtonClicked(this);

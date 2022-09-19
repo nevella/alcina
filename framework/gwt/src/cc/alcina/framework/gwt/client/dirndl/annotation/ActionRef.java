@@ -15,6 +15,17 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 
 @Registration(ActionRef.class)
+/**
+ * FIXME - dirndl1x1a - remove (and
+ * cc.alcina.framework.gwt.client.dirndl.annotation.Reference), just use
+ * ModelEvent, and Link.withDefaultEventHandler() - which is looked up by the
+ * root node
+ *
+ * Also optionally add a handler to the link
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public abstract class ActionRef extends Reference {
 	public static Class<? extends ActionRef> forId(String token) {
 		return Reference.forId(ActionRef.class, token);

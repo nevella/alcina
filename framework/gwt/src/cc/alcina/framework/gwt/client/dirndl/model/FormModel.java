@@ -63,10 +63,10 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents.Attach;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.layout.TopicEvent;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -84,7 +84,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 
 	protected List<FormElement> elements = new ArrayList<>();
 
-	protected List<Link> actions = new ArrayList<>();
+	protected List<LinkOld> actions = new ArrayList<>();
 
 	private FormModelState state;
 
@@ -104,7 +104,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 	public FormModel() {
 	}
 
-	public List<Link> getActions() {
+	public List<LinkOld> getActions() {
 		return this.actions;
 	}
 
@@ -264,7 +264,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 
 	@Ref("cancel")
 	@ActionRefHandler(CancelHandler.class)
-	@EmitsTopic(NodeEvents.Cancelled.class)
+	@EmitsTopic(ModelEvents.Cancelled.class)
 	public static class CancelRef extends ActionRef {
 	}
 
@@ -403,10 +403,10 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 						}).forEach(model.elements::add);
 			}
 			if (state.adjunct) {
-				model.actions.add(new Link()
+				model.actions.add(new LinkOld()
 						.withPlace(new ActionRefPlace(SubmitRef.class))
 						.withPrimaryAction(true));
-				model.actions.add(new Link()
+				model.actions.add(new LinkOld()
 						.withPlace(new ActionRefPlace(CancelRef.class)));
 			} else {
 				if (state.presentationModel != null) {
@@ -420,7 +420,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 								.filter(a -> a instanceof NonstandardObjectAction)
 								.map(a -> (NonstandardObjectAction) a)
 								.forEach(action -> {
-									model.actions.add(new Link()
+									model.actions.add(new LinkOld()
 											.withNonstandardObjectAction(
 													action));
 								});
@@ -428,7 +428,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 				}
 			}
 			model.actions.removeIf(actionsModulator::isRemoveAction);
-			for (Link link : model.actions) {
+			for (LinkOld link : model.actions) {
 				String overrideLinkText = actionsModulator
 						.getOverrideLinkText(link);
 				if (overrideLinkText != null) {
@@ -440,11 +440,11 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 
 		@Reflected
 		public static class ActionsModulator {
-			public String getOverrideLinkText(Link linkModel) {
+			public String getOverrideLinkText(LinkOld linkModel) {
 				return null;
 			}
 
-			public boolean isRemoveAction(Link linkModel) {
+			public boolean isRemoveAction(LinkOld linkModel) {
 				return false;
 			}
 		}
@@ -575,17 +575,17 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 					.ancestorModel(m -> m instanceof FormModel);
 			if (formModel.submit(node)) {
 				Optional<EmitsTopic> emitsTopic = place.emitsTopic();
-				Class<? extends TopicEvent> type = emitsTopic.get().value();
+				Class<? extends ModelEvent> type = emitsTopic.get().value();
 				Context context = NodeEvent.Context.newTopicContext(event,
 						node);
-				TopicEvent.fire(context, type, formModel);
+				ModelEvent.fire(context, type, formModel);
 			}
 		}
 	}
 
 	@Ref("submit")
 	@ActionRefHandler(SubmitHandler.class)
-	@EmitsTopic(value = NodeEvents.Submitted.class, hasValidation = true)
+	@EmitsTopic(value = ModelEvents.Submitted.class, hasValidation = true)
 	public static class SubmitRef extends ActionRef {
 	}
 

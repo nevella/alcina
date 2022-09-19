@@ -12,12 +12,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEventBinding;
 
 //FIXME - dirndl 1.2 - can TopicEvent be combined with ModelEvent? Why rendered.preRenderListeners?
-public abstract class TopicEvent<T, H extends NodeEvent.Handler>
-		extends NodeEvent.ModelEvent<T, H> {
-	// FIXME - dirndl 1.1 - fire on GWT/Scheduler event pump
-	public static void fire(Context context, Class<? extends TopicEvent> type,
+public abstract class ModelEvent<T, H extends NodeEvent.Handler>
+		extends NodeEvent<H> {
+	// FIXME - dirndl 1.1 - fire on GWT/Scheduler event pump? or explain why not
+	public static void fire(Context context, Class<? extends ModelEvent> type,
 			Object model) {
-		TopicEvent topicEvent = Reflections.newInstance(type);
+		ModelEvent topicEvent = Reflections.newInstance(type);
 		context.setNodeEvent(topicEvent);
 		topicEvent.setModel(model);
 		context.topicListeners.eventBindings
@@ -34,7 +34,11 @@ public abstract class TopicEvent<T, H extends NodeEvent.Handler>
 
 	private boolean handled;
 
-	public TopicEvent() {
+	public ModelEvent() {
+	}
+
+	public <T0 extends T> T0 getModel() {
+		return (T0) this.model;
 	}
 
 	public boolean isHandled() {
