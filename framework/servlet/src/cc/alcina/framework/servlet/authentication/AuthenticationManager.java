@@ -97,6 +97,10 @@ public class AuthenticationManager {
 		return null;
 	}
 
+	public Optional<AuthenticationSession> getAuthenticationSession() {
+		return Optional.ofNullable(ensureContext().session);
+	}
+
 	public Optional<ClientInstance> getContextClientInstance() {
 		return Optional.ofNullable(ensureContext().clientInstance);
 	}
