@@ -152,6 +152,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 
 	@Override
 	public V get(long key) {
+		// this optimisation means that during app startup, get() calls don't
+		// cause boxing. Once app is started up (well, the map has been changed
+		// outside the startup transaction), boxing is required
 		if (concurrent != null) {
 			return get((Object) key);
 		} else {
@@ -450,7 +453,17 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		@Override
 		public Iterator<V> iterator() {
 			return new MappingIterator<Entry<K, V>, V>(entrySet.iterator(),
-					e -> e.getValue());
+					e -> {
+						V value = e.getValue();
+						if (value instanceof Entity) {
+							if (((Entity) value).getId() < 0) {
+								logger.warn(
+										"Entity with negative id in iterated tx map:: {}",
+										value);
+							}
+						}
+						return value;
+					});
 		}
 
 		@Override
@@ -507,8 +520,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 								}
 							},
 					iteratorArray);
+			boolean debugNegativeIds = TransactionalMap.this instanceof EntityIdMap;
 			Predicate<Entry<K, V>> notVisibleFilter = e -> {
 				Object key = wrapTransactionalKey(e.getKey());
+				if (debugNegativeIds && key instanceof Long) {
+					if (((Long) key).longValue() < 0) {
+						logger.warn("Negative key :: {}", key);
+					}
+				}
 				TransactionalValue transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 						.get(key);
 				boolean inTransactionalIteratorPhase = layerIterator
@@ -742,7 +761,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				return (V) baseObject.get();
 			}
 			Optional<ObjectVersion<ObjectWrapper>> version = versions().values()
-					.stream().filter(objectVersion -> notRemovedValueMarker(objectVersion.object))
+					.stream().filter(objectVersion -> notRemovedValueMarker(
+							objectVersion.object))
 					.findFirst();
 			if (version.isEmpty()) {
 				throw new IllegalStateException(Ax.format(
