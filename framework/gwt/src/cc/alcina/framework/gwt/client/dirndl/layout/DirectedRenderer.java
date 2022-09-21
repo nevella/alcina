@@ -18,6 +18,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ContextSensitiveTransform;
@@ -79,9 +80,32 @@ public abstract class DirectedRenderer {
 			Collections.reverse(list);
 			list.forEach(model -> {
 				Object transformedModel = transformModel(input, model);
-				input.enqueueInput(input.resolver, transformedModel,
-						input.location, Arrays.asList(input.soleDirected()),
-						input.node, false);
+				// the @Directed for the collection element is merge (the input
+				// @Directed :: the element's merged hierarchy @Directed)
+				AnnotationLocation location = input.location
+						.copyWithClassLocationOf(transformedModel);
+				// FIXME - *definitely* optimise. Possibly Directed.Impl should
+				// be only one instance per attribute permutation
+				//
+				// what we really want is to pass a consumed/modified arg here
+				//
+				// note that input.soleDirected() is really merge
+				// (last(location.propertyDirected),
+				// last(collectionClass.classDirected))
+				//
+				// but for a collection its class annotations (listeners etc)
+				// should
+				// be on the wrapper - in fact, probably just disallow @Directed
+				// on Collection subclasses
+				//
+				// actually no - but we'll need Directed.transformPhase
+				//
+				// probably get it working, step back and fix
+				location.resolvedPropertyAnnotations = Arrays
+						.asList(input.soleDirected());
+				input.enqueueInput(input.resolver, transformedModel, location,
+						// force resolution
+						null, input.node);
 			});
 		}
 	}
@@ -147,7 +171,24 @@ public abstract class DirectedRenderer {
 
 	/**
 	 *
+	 *
 	 * @author nick@alcina.cc
+	 *
+	 */
+	/*
+	 * Note the difference to cDirectedRenderer.Collection is really that by
+	 * default the @Directed generated for each collection element is *all* of
+	 * the incoming directed (tag, class, bindings, evetns), wheras for
+	 * TransformRenderer:
+	 *
+	 * tag, cssClass are passed down
+	 *
+	 * bindings[] must be empty
+	 *
+	 * renderer is ModelClassNodeRenderer
+	 *
+	 * events (emits(), receives(), reemits()) are not passed down (are
+	 * registered on the non-transformed node)
 	 *
 	 */
 	@Registration({ DirectedRenderer.class, ModelTransformNodeRenderer.class })
@@ -156,8 +197,44 @@ public abstract class DirectedRenderer {
 		@Override
 		protected void render(RendererInput input) {
 			Object transformedModel = transformModel(input, input.model);
-			input.enqueueInput(input.resolver, transformedModel, input.location,
-					Arrays.asList(input.soleDirected()), input.node, true);
+			AnnotationLocation location = input.location
+					.copyWithClassLocationOf(transformedModel);
+			// FIXME - *definitely* optimise. Possibly Directed.Impl should
+			// be only one instance per attribute permutation
+			//
+			// what we really want is to pass a consumed/modified arg here
+			//
+			// probably get it working, step back and fix
+			//
+			// note that input.soleDirected() is really merge
+			// (last(location.propertyDirected),
+			// last(collectionClass.classDirected))
+			//
+			// but for a collection its class annotations (listeners etc) should
+			// be on the wrapper - in fact, probably just disallow @Directed on
+			// Collection subclasses
+			//
+			// actually no - but we'll need Directed.transformPhase
+			//
+			// will merge to transformed
+			Impl descendantResolvedPropertyAnnotation = Directed.Impl
+					.wrap(input.soleDirected());
+			Preconditions.checkArgument(descendantResolvedPropertyAnnotation
+					.bindings().length == 0);
+			descendantResolvedPropertyAnnotation
+					.setRenderer(ModelClassNodeRenderer.class);
+			descendantResolvedPropertyAnnotation
+					.setEmits(Impl.EMPTY_CLASS_ARRAY);
+			descendantResolvedPropertyAnnotation
+					.setReceives(Impl.EMPTY_CLASS_ARRAY);
+			descendantResolvedPropertyAnnotation
+					.setReemits(Impl.EMPTY_CLASS_ARRAY);
+			location.resolvedPropertyAnnotations = Arrays
+					.asList(descendantResolvedPropertyAnnotation);
+			location.addConsumed(
+					input.location.getAnnotation(Directed.Transform.class));
+			input.enqueueInput(input.resolver, transformedModel, location, null,
+					input.node);
 		}
 	}
 
@@ -182,7 +259,7 @@ public abstract class DirectedRenderer {
 					input.enqueueInput(input.resolver, childModel,
 							new AnnotationLocation(locationType, property,
 									input.resolver),
-							null, input.node, false);
+							null, input.node);
 				}
 			}
 		}
@@ -190,24 +267,24 @@ public abstract class DirectedRenderer {
 
 	interface GeneratesTransformModel {
 		default Object transformModel(RendererInput input, Object model) {
-			Directed.Transform args = input.location
+			Directed.Transform transform = input.location
 					.getAnnotation(Directed.Transform.class);
-			if (args == null) {
+			if (transform == null) {
 				return model;
 			}
-			if (model == null && !args.transformsNull()) {
-				// no output
+			if (model == null && !transform.transformsNull()) {
+				// null output
 				return null;
 			}
-			ModelTransform transform = (ModelTransform) Reflections
-					.newInstance(args.value());
-			// FIXME - dirndl 1x1 - can this be slimmed down? Since it allows
-			// access to parent
-			if (transform instanceof ContextSensitiveTransform) {
-				((ContextSensitiveTransform) transform)
+			ModelTransform modelTransform = (ModelTransform) Reflections
+					.newInstance(transform.value());
+			// FIXME - dirndl 1x1b - can this be slimmed down? Since it allows
+			// access to the whole parent chain, not just the parent
+			if (modelTransform instanceof ContextSensitiveTransform) {
+				((ContextSensitiveTransform) modelTransform)
 						.withContextNode(input.node);
 			}
-			Object transformedModel = transform.apply(model);
+			Object transformedModel = modelTransform.apply(model);
 			return transformedModel;
 		}
 	}

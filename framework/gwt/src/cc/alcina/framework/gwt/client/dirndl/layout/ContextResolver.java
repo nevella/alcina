@@ -52,8 +52,7 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	// CACHE! (stateful vs non for renderer)
 	public DirectedRenderer getRenderer(Directed directed,
-			AnnotationLocation location, Object model,
-			boolean parentWasTransform) {
+			AnnotationLocation location, Object model) {
 		Class<? extends DirectedNodeRenderer> rendererClass = directed
 				.renderer();
 		if (rendererClass == ModelClassNodeRenderer.class) {
@@ -65,14 +64,6 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 			} else {
 				rendererClass = resolveModelRenderer(model);
 			}
-		}
-		/*
-		 * This doesn't allow for transform -> transform, the algorithm should
-		 * really be "don't repeat a transform" - but it'll do for now
-		 */
-		if (parentWasTransform
-				&& rendererClass == ModelTransformNodeRenderer.class) {
-			rendererClass = resolveModelRenderer(model);
 		}
 		return Registry.query(DirectedRenderer.class).addKeys(rendererClass)
 				.impl();

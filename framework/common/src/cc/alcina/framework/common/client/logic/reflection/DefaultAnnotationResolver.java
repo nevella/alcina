@@ -31,8 +31,10 @@ public class DefaultAnnotationResolver extends Resolver {
 		MergeStrategy mergeStrategy = Reflections
 				.newInstance(resolution.mergeStrategy());
 		List<Inheritance> inheritance = Arrays.asList(resolution.inheritance());
-		List<A> propertyAnnotations = mergeStrategy.resolveProperty(
-				annotationClass, location.property, inheritance);
+		List<A> propertyAnnotations = location.resolvedPropertyAnnotations != null
+				? (List<A>) location.resolvedPropertyAnnotations
+				: mergeStrategy.resolveProperty(annotationClass,
+						location.property, inheritance);
 		List<A> classAnnotations = mergeStrategy.resolveClass(annotationClass,
 				location.classLocation, inheritance);
 		List<A> merged = mergeStrategy.merge(classAnnotations,

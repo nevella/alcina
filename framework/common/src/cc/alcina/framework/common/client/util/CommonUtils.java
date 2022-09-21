@@ -176,6 +176,7 @@ public class CommonUtils {
 		return s.substring(0, 1).toUpperCase() + s.substring(1);
 	}
 
+	// FIXME - 2023 - remove (GWT Class has this)
 	public static String classSimpleName(Class c) {
 		return c.getName().substring(c.getName().lastIndexOf('.') + 1);
 	}
@@ -1670,6 +1671,10 @@ public class CommonUtils {
 	public static String simpleClassName(Class c) {
 		String s = c.getName();
 		return s.substring(s.lastIndexOf('.') + 1);
+	}
+
+	public static String simpleClassName(Object o) {
+		return o == null ? "(null)" : o.getClass().getSimpleName();
 	}
 
 	public static int sizeOrZero(Collection collection) {

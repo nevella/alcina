@@ -14,10 +14,27 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer;
 
+/**
+ * <p>
+ * An annotation describing how a model should be rendered by the
+ * {@link DirectedLayout} algorithm
+ *
+ *
+ *
+ * @author nick@alcina.cc
+ *
+ */
+/*
+ * FIXME - dirndl1x1a - add Phase
+ * [DEFAULT,COLLECTION,ELEMENT,PRE_TRANSFORM,POST_TRANSFORM] - which defaults to
+ * DEFAULT but allows finer control over DirectedRenderer.Transform and
+ * DirectedRenderer.Collection transformations
+ */
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @Target({ ElementType.TYPE, ElementType.METHOD })
@@ -160,6 +177,10 @@ public @interface Directed {
 	}
 
 	public static class Impl implements Directed {
+		public static final Binding[] EMPTY_BINDINGS_ARRAY = new Binding[0];
+
+		public static final Class[] EMPTY_CLASS_ARRAY = new Class[0];
+
 		public static final Directed DEFAULT_INSTANCE = new Directed.Impl();
 
 		public static Impl wrap(Directed directed) {
@@ -170,13 +191,13 @@ public @interface Directed {
 			}
 		}
 
-		private Binding[] bindings = new Binding[0];
+		private Binding[] bindings = EMPTY_BINDINGS_ARRAY;
 
-		private Class[] emits = new Class[0];
+		private Class[] emits = EMPTY_CLASS_ARRAY;
 
-		private Class[] receives = new Class[0];
+		private Class[] receives = EMPTY_CLASS_ARRAY;
 
-		private Class[] reemits = new Class[0];
+		private Class[] reemits = EMPTY_CLASS_ARRAY;
 
 		private boolean merge = true;
 
@@ -253,6 +274,39 @@ public @interface Directed {
 			return renderer;
 		}
 
+		public void setBindings(Binding[] bindings) {
+			this.bindings = bindings;
+		}
+
+		public void setCssClass(String cssClass) {
+			this.cssClass = cssClass;
+		}
+
+		public void setEmits(Class[] emits) {
+			this.emits = emits;
+		}
+
+		public void setMerge(boolean merge) {
+			this.merge = merge;
+		}
+
+		public void setReceives(Class[] receives) {
+			this.receives = receives;
+		}
+
+		public void setReemits(Class[] reemits) {
+			this.reemits = reemits;
+		}
+
+		public void
+				setRenderer(Class<? extends DirectedNodeRenderer> renderer) {
+			this.renderer = renderer;
+		}
+
+		public void setTag(String tag) {
+			this.tag = tag;
+		}
+
 		@Override
 		public String tag() {
 			return tag;
@@ -293,11 +347,6 @@ public @interface Directed {
 			stringBuilder.append("=");
 			stringBuilder.append(__stringValue(tag));
 			return stringBuilder.toString();
-		}
-
-		public Impl withTag(String tag) {
-			this.tag = tag;
-			return this;
 		}
 
 		private String __stringValue(Object o) {

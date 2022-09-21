@@ -177,21 +177,21 @@ public class DirectedLayout {
 		resolver.layout = this;
 		AnnotationLocation location = new AnnotationLocation(model.getClass(),
 				null);
-		enqueueInput(resolver, model, location, null, null, false);
+		enqueueInput(resolver, model, location, null, null);
 		layout();
 		return root.firstDescendantWidget().orElse(null);
 	}
 
 	RendererInput enqueueInput(ContextResolver resolver, Object model,
 			AnnotationLocation location, List<Directed> directeds,
-			Node parentNode, boolean fromTransform) {
+			Node parentNode) {
 		// Even if model == null (so no widget will be emitted), nodes must be
 		// added to the structure for a later change to non-null
 		// if (model == null) {
 		// return;
 		// }
 		RendererInput input = new RendererInput(resolver, model, location,
-				directeds, parentNode, fromTransform);
+				directeds, parentNode);
 		rendererInputs.add(input);
 		return input;
 	}
@@ -896,6 +896,9 @@ public class DirectedLayout {
 		/**
 		 * Replaces a child node following a property change
 		 *
+		 * Note that this is only added to the topmost Node corresponding to a
+		 * given source/property
+		 *
 		 * @author nick@alcina.cc
 		 *
 		 */
@@ -907,11 +910,13 @@ public class DirectedLayout {
 
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
-				// the input can mostly be constructed from this node (only the
+				// The input can mostly be constructed from this node (only the
 				// model differs)
+				Object newValue = evt.getNewValue();
 				RendererInput input = resolver.getLayout().enqueueInput(
-						resolver, evt.getNewValue(), annotationLocation, null,
-						parent, false);
+						resolver, newValue,
+						annotationLocation.copyWithClassLocationOf(newValue),
+						null, parent);
 				input.replace = Node.this;
 				resolver.getLayout().layout();
 			}
@@ -1190,17 +1195,14 @@ public class DirectedLayout {
 
 		Node replace;
 
-		boolean fromTransform;
-
 		private Widget insertAfter;
 
 		RendererInput(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
-				Node parentNode, boolean fromTransform) {
+				Node parentNode) {
 			this.resolver = resolver;
 			this.model = model;
 			this.location = location;
-			this.fromTransform = fromTransform;
 			this.directeds = directeds != null ? directeds
 					: location.getAnnotations(Directed.class);
 			this.parentNode = parentNode;
@@ -1214,8 +1216,7 @@ public class DirectedLayout {
 
 		public DirectedRenderer provideRenderer() {
 			return directeds.size() > 1 ? new DirectedRenderer.Container()
-					: resolver.getRenderer(node.directed, location, model,
-							fromTransform);
+					: resolver.getRenderer(node.directed, location, model);
 		}
 
 		@Override
@@ -1230,9 +1231,9 @@ public class DirectedLayout {
 
 		void enqueueInput(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
-				Node parentNode, boolean fromTransform) {
+				Node parentNode) {
 			DirectedLayout.this.enqueueInput(resolver, model, location,
-					directeds, parentNode, fromTransform);
+					directeds, parentNode);
 		}
 
 		Optional<Widget> firstAncestorWidget() {
@@ -1270,7 +1271,7 @@ public class DirectedLayout {
 			}
 			if (directeds.size() > 1) {
 				enqueueInput(resolver, model, location,
-						directeds.subList(1, directeds.size()), node, false);
+						directeds.subList(1, directeds.size()), node);
 			}
 		}
 

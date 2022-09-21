@@ -66,7 +66,11 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 			result.add(directed);
 		}
 		if (wrap != null) {
-			result.add(new Directed.Impl().withTag(wrap.value()));
+			Directed.Impl impl = new Directed.Impl();
+			impl.setTag(wrap.value());
+			// no need to set renderer, if not last, it will always be resolved
+			// to DirectedRenderer.Container
+			result.add(impl);
 			result.add(new Directed.Impl());
 		}
 		if (multiple != null) {
