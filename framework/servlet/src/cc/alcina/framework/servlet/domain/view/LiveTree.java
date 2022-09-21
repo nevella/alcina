@@ -56,6 +56,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
@@ -1095,7 +1096,7 @@ public class LiveTree {
 
 		/**
 		 * This should wrap child addition in a try/catch - so:
-		 * 
+		 *
 		 * <code>
 		 * rootGenerator.getCitableStream().forEach(citable -> {
 			try {
@@ -1131,10 +1132,22 @@ public class LiveTree {
 		}
 	}
 
+	/**
+	 * This class should normally be turned off, since it's essentially a
+	 * walking talking memory leak. But it *will* give you lots of data about
+	 * incremental server-side tree updates, if that's in fact what you need.
+	 *
+	 * Enable by setting LiveTree.processLoggerEnabled to true
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public static class ProcessLoggerImpl extends ProcessLogger<LiveTree> {
 		public static ProcessLoggerImpl context() {
 			return LooseContext.get(ProcessLoggerImpl.class.getName());
 		}
+
+		boolean enabled = Configuration.is("eanbled");
 
 		Map<Long, PersistenceEventPayload> persistenceEventPayloads = new LinkedHashMap<>();
 
@@ -1148,11 +1161,14 @@ public class LiveTree {
 
 		public void logGenerationException(String pathInfo, Exception e,
 				Entity entity) {
+			if (!enabled) {
+				return;
+			}
 			ExceptionEvent exceptionEvent = new ExceptionEvent(
 					CommonUtils.toSimpleExceptionMessage(e),
 					SEUtilities.getFullExceptionMessage(e), pathInfo,
 					entity == null ? null : entity.toLocator());
-			events.add(exceptionEvent);
+			addEvent(exceptionEvent);
 			if (!loggedFirstException) {
 				loggedFirstException = true;
 				persist();
@@ -1161,23 +1177,33 @@ public class LiveTree {
 
 		public void logIndexPersistenceEvent(
 				DomainTransformPersistenceEvent event, boolean add) {
+			if (!enabled) {
+				return;
+			}
 			PersistenceEventPayload payload = persistenceEventPayloads
 					.computeIfAbsent(event.getMaxPersistedRequestId(),
 							key -> new PersistenceEventPayload(event));
 			PersistenceEvent persistenceEvent = new PersistenceEvent(payload,
 					add);
-			events.add(persistenceEvent);
+			addEvent(persistenceEvent);
 		}
 
 		public void logProcessEvents(LiveTree liveTree) {
+			if (!enabled) {
+				return;
+			}
 			ProcessEvent event = new ProcessEvent(liveTree);
-			events.add(event);
+			addEvent(event);
 		}
 
 		@Override
 		public String toString() {
 			return events.stream().map(Object::toString)
 					.collect(Collectors.joining("\n"));
+		}
+
+		protected void addEvent(Event event) {
+			events.add(event);
 		}
 
 		public abstract static class Event {
