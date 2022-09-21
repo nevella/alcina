@@ -65,7 +65,8 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	public MemoryStat addMemoryStats(MemoryStat parent) {
 		MemoryStat self = new MemoryStat(this);
 		parent.addChild(self);
-		domain.keySet().stream().map(key -> new DomainClassStatWrapper(key,domain.get(key),local.get(key)))
+		domain.keySet().stream().map(key -> new DomainClassStatWrapper(key,
+				domain.get(key), local.get(key)))
 				.forEach(w -> w.addMemoryStats(self));
 		self.objectMemory.walkStats(this, self.counter, o -> o == this
 				|| !self.objectMemory.isMemoryStatProvider(o.getClass()));
@@ -281,6 +282,9 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		return perClass.get(clazz);
 	}
 
+	protected void checkNegativeIdPut(Entity entity) {
+	}
+
 	protected Map<Class, Map<Long, Entity>> createClientInstanceClassMap() {
 		return new LinkedHashMap<>();
 	}
@@ -326,11 +330,9 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 		if (id == 0 && localId == 0) {
 			throw new RuntimeException("indexing entity with zero id/localid");
 		}
-		// these will not be put in to-domain phase transactions, so are
-		// harmless
-		// if (id < 0) {
-		// throw new RuntimeException("indexing entity with negative id");
-		// }
+		if (id < 0) {
+			checkNegativeIdPut(entity);
+		}
 		if (id != 0) {
 			if (throwOnExisting) {
 				if (domain.get(clazz).containsKey(id)) {
@@ -370,16 +372,17 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 	}
 
 	static class DomainClassStatWrapper implements MemoryStatProvider {
-
 		private Class key;
+
 		private Map<Long, Entity> domain;
+
 		private Map<Long, Entity> local;
 
 		public DomainClassStatWrapper(Class key, Map<Long, Entity> domain,
 				Map<Long, Entity> local) {
-					this.key = key;
-					this.domain = domain;
-					this.local = local;
+			this.key = key;
+			this.domain = domain;
+			this.local = local;
 		}
 
 		@Override
@@ -387,11 +390,11 @@ public class DetachedEntityCache implements Serializable, MemoryStatProvider {
 			MemoryStat self = new MemoryStat(this);
 			parent.addChild(self);
 			Stream.concat(domain.values().stream(), local.values().stream())
-			.forEach(e -> {
-				self.objectMemory.walkStats(e, self.counter,
-						o -> o == e || !Reflections
-								.isAssignableFrom(Entity.class, o.getClass()));
-			});
+					.forEach(e -> {
+						self.objectMemory.walkStats(e, self.counter, o -> o == e
+								|| !Reflections.isAssignableFrom(Entity.class,
+										o.getClass()));
+					});
 			return self;
 		}
 

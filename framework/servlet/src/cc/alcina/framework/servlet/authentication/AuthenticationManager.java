@@ -100,6 +100,9 @@ public class AuthenticationManager {
 	public Optional<ClientInstance> getContextClientInstance() {
 		return Optional.ofNullable(ensureContext().clientInstance);
 	}
+	public Optional<AuthenticationSession> getAuthenticationSession() {
+		return Optional.ofNullable(ensureContext().session);
+	}
 
 	public Long getContextClientInstanceId() {
 		return getContextClientInstance().map(ClientInstance::getId)
