@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -23,6 +23,7 @@ import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -332,6 +333,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		return images;
 	}
 
+	public String provideJobName() {
+		return getClass().getSimpleName();
+	}
+
 	@Override
 	public String providePropertyValue(String key) {
 		return properties.get(key);
@@ -346,6 +351,10 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	public FormatConversionTarget provideTargetFormat() {
 		return ExtensibleEnum.valueOf(FormatConversionTarget.class,
 				outputFormat);
+	}
+
+	public PublicationResult publish() throws WebException {
+		return PublicationRequestHandler.get().publish(this);
 	}
 
 	public void putContentDeliveryType(ContentDeliveryType type) {
@@ -616,9 +625,5 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 						.onBeforeTreeSerialize();
 			}
 		}
-	}
-
-	public String provideJobName() {
-		return getClass().getSimpleName();
 	}
 }
