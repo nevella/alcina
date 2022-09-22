@@ -45,6 +45,9 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  *
  * transitions through 1-1 :-> baseLayer :-> transactional
  *
+ * Note: this class currently has a few debugging blocks to track
+ * incorrect insertion of entities with negative ids - can be removed once fixed
+ *
  */
 public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		implements TransactionalCollection, UnboxedLongMap<V> {
@@ -323,6 +326,13 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
+	/*
+	 * Allow single-valued txsets to degenerate to txmaps
+	 */
+	protected void putInBaseLayer(Transaction baseTransaction, K key, V value) {
+		nonConcurrent.put(key, value);
+	}
+
 	protected Object wrapTransactionalKey(Object key) {
 		return key == null ? NULL_KEY_MARKER : key;
 	}
@@ -351,13 +361,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		}
 	}
 
-	/*
-	 * Allow single-valued txsets to degenerate to txmaps
-	 */
-	void putInBaseLayer(Transaction baseTransaction, K key, V value) {
-		nonConcurrent.put(key, value);
-	}
-
 	public static class EntityIdMap extends TransactionalMap<Long, Entity> {
 		public EntityIdMap(Class<Long> keyClass, Class<Entity> valueClass) {
 			super(keyClass, valueClass);
@@ -382,6 +385,31 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				}
 			}
 			return nonConcurrent.get(key);
+		}
+
+		@Override
+		public Entity put(Long key, Entity value) {
+			checkLegal(key, value);
+			return super.put(key, value);
+		}
+
+		private void checkLegal(Long key, Entity value) {
+			boolean illegal = value.getId() != 0
+					&& (key.longValue() != value.getId());
+			illegal |= value.getId() == 0
+					&& (key.longValue() != value.getLocalId());
+			if (illegal) {
+				throw new IllegalArgumentException(
+						Ax.format("Inserting with incorrect id: %s %s", key,
+								value.toLocator()));
+			}
+		}
+
+		@Override
+		protected void putInBaseLayer(Transaction baseTransaction, Long key,
+				Entity value) {
+			checkLegal(key, value);
+			super.putInBaseLayer(baseTransaction, key, value);
 		}
 	}
 
