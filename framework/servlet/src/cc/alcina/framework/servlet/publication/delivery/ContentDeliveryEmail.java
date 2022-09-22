@@ -33,6 +33,8 @@ import javax.mail.util.ByteArrayDataSource;
 
 import org.apache.commons.io.output.CountingOutputStream;
 import org.apache.commons.io.output.NullOutputStream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -362,11 +364,15 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			PublicationContext.get().mimeMessageId = msg.getMessageID();
 		}
 		transport.close();
+		logger.info("Sent email to {} - subject: {}",
+				Arrays.asList(msg.getAllRecipients()), msg.getSubject());
 		if (pdfAttachment != null) {
 			deliveryModel.removeAttachment(pdfAttachment);
 		}
 		return "OK";
 	}
+
+	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static class MessageSizeUndeterminedException extends Exception {
 		public MessageSizeUndeterminedException(Throwable cause) {
