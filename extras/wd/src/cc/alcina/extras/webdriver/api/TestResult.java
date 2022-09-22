@@ -23,23 +23,15 @@ public class TestResult {
 
 	private boolean noTimePayload;
 
-	public long getStartTime() {
-		return this.startTime;
-	}
+	private TestResultType resultType = TestResultType.OK;
 
-	public void setStartTime(long startTime) {
-		this.startTime = startTime;
+	public void addResult(TestResult result) {
+		results.add(result);
 	}
 
 	public long getEndTime() {
 		return this.endTime;
 	}
-
-	public void setEndTime(long endTime) {
-		this.endTime = endTime;
-	}
-
-	private TestResultType resultType = TestResultType.OK;
 
 	public String getMessage() {
 		StringBuffer sb = new StringBuffer();
@@ -50,8 +42,12 @@ public class TestResult {
 		return sb.toString();
 	}
 
-	public void setMessage(String message) {
-		this.message = message;
+	public String getName() {
+		return name;
+	}
+
+	public List<TestResult> getResults() {
+		return results;
 	}
 
 	public TestResultType getResultType() {
@@ -65,16 +61,66 @@ public class TestResult {
 		return rt;
 	}
 
+	public long getStartTime() {
+		return this.startTime;
+	}
+
+	public long getStartTimeExcludingDependent() {
+		return startTimeExcludingDependent;
+	}
+
+	public boolean isNoTimePayload() {
+		return noTimePayload;
+	}
+
+	public boolean isRootResult() {
+		return rootResult;
+	}
+
+	public void setEndTime(long endTime) {
+		this.endTime = endTime;
+	}
+
+	public void setMessage(String message) {
+		this.message = message;
+	}
+
+	public void setName(String name) {
+		this.name = name;
+	}
+
+	public void setNoTimePayload(boolean noTimePayload) {
+		this.noTimePayload = noTimePayload;
+	}
+
+	public void setResults(List<TestResult> results) {
+		this.results = results;
+	}
+
 	public void setResultType(TestResultType resultType) {
 		this.resultType = resultType;
 	}
 
-	long getAdminTime() {
-		long result = noTimePayload ? endTime - startTime : 0;
-		for (TestResult tr : getResults()) {
-			result += tr.getAdminTime();
-		}
-		return result;
+	public void setRootResult(boolean rootResult) {
+		this.rootResult = rootResult;
+	}
+
+	public void setStartTime(long startTime) {
+		this.startTime = startTime;
+	}
+
+	public void
+			setStartTimeExcludingDependent(long startTimeExcludingDependent) {
+		this.startTimeExcludingDependent = startTimeExcludingDependent;
+	}
+
+	public long testDuration(boolean justThisTest) {
+		return endTime
+				- (justThisTest ? startTimeExcludingDependent : startTime);
+	}
+
+	public long testDurationExcludingAdmin() {
+		return endTime - startTime - getAdminTime();
 	}
 
 	@Override
@@ -90,57 +136,11 @@ public class TestResult {
 		return s + "\n";
 	}
 
-	public long testDuration(boolean justThisTest) {
-		return endTime
-				- (justThisTest ? startTimeExcludingDependent : startTime);
-	}
-
-	public long testDurationExcludingAdmin() {
-		return endTime - startTime - getAdminTime();
-	}
-
-	public void setNoTimePayload(boolean noTimePayload) {
-		this.noTimePayload = noTimePayload;
-	}
-
-	public boolean isNoTimePayload() {
-		return noTimePayload;
-	}
-
-	public void setResults(List<TestResult> results) {
-		this.results = results;
-	}
-
-	public List<TestResult> getResults() {
-		return results;
-	}
-
-	public void addResult(TestResult result) {
-		results.add(result);
-	}
-
-	public void setName(String name) {
-		this.name = name;
-	}
-
-	public String getName() {
-		return name;
-	}
-
-	public void
-			setStartTimeExcludingDependent(long startTimeExcludingDependent) {
-		this.startTimeExcludingDependent = startTimeExcludingDependent;
-	}
-
-	public long getStartTimeExcludingDependent() {
-		return startTimeExcludingDependent;
-	}
-
-	public void setRootResult(boolean rootResult) {
-		this.rootResult = rootResult;
-	}
-
-	public boolean isRootResult() {
-		return rootResult;
+	long getAdminTime() {
+		long result = noTimePayload ? endTime - startTime : 0;
+		for (TestResult tr : getResults()) {
+			result += tr.getAdminTime();
+		}
+		return result;
 	}
 }
