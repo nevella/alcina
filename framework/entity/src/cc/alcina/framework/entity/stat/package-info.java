@@ -1,9 +1,9 @@
 /**
- * <h2>Process metrics to help optimisation</h2>
+ * <h2>Process metrics to assist optimisation (works for client-server too)</h2>
  *
  * <p>
  * This package provides support for structured metrics - generation, collation
- * and logging
+ * and reporting
  *
  * <p>
  * An example:
@@ -26,7 +26,8 @@
  * </code>
  * </pre>
  *
- * <h3>Emit some events:</h3>
+ * <h3>Make some stats (start, end events):</h3>
+ *
  *
  * <p>
  * Note, there might be some easier way to do this - but not a huge amount
@@ -49,7 +50,7 @@
  * </code>
  * </pre>
  *
- * <h3>Make some stats (start, end events):</h3>
+ * <h3>Emit some events:</h3>
  *
  * <code><pre>
  * new StatCategory_DomainStore().emit();
@@ -63,6 +64,21 @@
  * <h3>Collate and output:</h3>
  * <p>
  * See {@link TaskReportDevMetrics}
+ *
+ *
+ * <code><pre>
+ *  TaskReportDevMetrics task = new TaskReportDevMetrics();
+  task.setMostRecent(true);
+  task.setFrom(SEUtilities.toOldDate(LocalDate.now().minusDays(5)));
+  task.setKeyedStatClassName(ConsoleStatAll.class.getName());
+  task.setWithMissed(true);
+  Job performed = task.perform();
+  performed.domain().ensurePopulated();
+  ResourceUtilities.logToFile(performed.getLargeResult().toString());
+</code>
+ * </pre>
+ *
+ * j
  *
  */
 package cc.alcina.framework.entity.stat;
