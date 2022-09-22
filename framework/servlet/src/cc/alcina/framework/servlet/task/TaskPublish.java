@@ -6,13 +6,13 @@ import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.Lo
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
+import cc.alcina.framework.common.client.publication.request.PublicationRequestHandler;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.servlet.job.JobContext;
 import cc.alcina.framework.servlet.schedule.ServerTask;
-import cc.alcina.framework.servlet.servlet.PublicationRequestHandler;
 
 @TypeSerialization(flatSerializable = false)
 public class TaskPublish extends ServerTask<TaskPublish>
