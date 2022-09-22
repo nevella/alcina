@@ -23,6 +23,7 @@ import javax.persistence.Transient;
 import javax.xml.bind.annotation.XmlTransient;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.csobjects.WebException;
 import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -620,5 +621,9 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 
 	public String provideJobName() {
 		return getClass().getSimpleName();
+	}
+
+	public void publish() throws WebException {
+		PublicationRequestHandler.get().publish(this);
 	}
 }
