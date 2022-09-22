@@ -82,7 +82,6 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
-import cc.alcina.framework.common.client.publication.request.PublicationRequestHandler;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.remote.CommonRemoteService;
 import cc.alcina.framework.common.client.remote.ReflectiveRemoteServiceAsync.ReflectiveRemoteServicePayload;
@@ -564,7 +563,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public PublicationResult
 			publish(ContentRequestBase<? extends ContentDefinition> cr)
 					throws WebException {
-		return PublicationRequestHandler.get().publish(cr);
+		return cr.publish();
 	}
 
 	@Override

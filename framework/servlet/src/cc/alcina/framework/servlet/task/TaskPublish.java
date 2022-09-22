@@ -4,9 +4,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
-import cc.alcina.framework.common.client.publication.request.PublicationRequestHandler;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
@@ -70,13 +68,11 @@ public class TaskPublish extends ServerTask<TaskPublish>
 		PublicationResult result = null;
 		IUser user = JobContext.get().getJob().getUser();
 		if (user == UserlandProvider.get().getSystemUser()) {
-			result = Registry.impl(PublicationRequestHandler.class)
-					.publish(getPublicationRequest());
+			result = publicationRequest.publish();
 		} else {
 			try {
 				PermissionsManager.get().pushUser(user, LoginState.LOGGED_IN);
-				result = Registry.impl(PublicationRequestHandler.class)
-						.publish(getPublicationRequest());
+				result = publicationRequest.publish();
 			} finally {
 				PermissionsManager.get().popUser();
 			}
