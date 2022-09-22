@@ -7,6 +7,7 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.History;
 
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -165,6 +166,16 @@ public class Link extends Model.WithNode
 
 	public void setTitle(String title) {
 		this.title = title;
+	}
+
+	@Override
+	public String toString() {
+		FormatBuilder fb = new FormatBuilder().separator("\n");
+		fb.appendIfNotBlankKv("tag", tag);
+		fb.appendIfNotBlankKv("className", className);
+		fb.appendIfNotBlankKv("href", href);
+		fb.appendIfNotBlankKv("place ", place);
+		return fb.toString();
 	}
 
 	public Link withClassName(String className) {

@@ -46,6 +46,32 @@ public abstract class DirectedRenderer {
 		}
 	}
 
+	protected String getTag(Node node, boolean respectPropertyNameTags,
+			String defaultTag) {
+		String tag = null;
+		if (node.model instanceof HasTag) {
+			tag = ((HasTag) node.model).provideTag();
+		}
+		if (Ax.notBlank(tag)) {
+			return tag;
+		}
+		tag = node.directed.tag();
+		if (Ax.notBlank(tag)) {
+			return tag;
+		}
+		if (respectPropertyNameTags) {
+			if (node.parent != null && node.parent.has(PropertyNameTags.class)
+					&& node.getProperty().getName() != null) {
+				return CommonUtils.deInfixCss(node.getProperty().getName());
+			}
+		}
+		if (Ax.notBlank(defaultTag)) {
+			return defaultTag;
+		}
+		return Ax.blankTo(tag,
+				CommonUtils.deInfixCss(node.model.getClass().getSimpleName()));
+	}
+
 	protected abstract void render(DirectedLayout.RendererInput input);
 
 	@Registration({ DirectedRenderer.class, BindableNodeRenderer.class })
@@ -112,21 +138,13 @@ public abstract class DirectedRenderer {
 
 	@Registration({ DirectedRenderer.class, ContainerNodeRenderer.class })
 	public static class Container extends DirectedRenderer {
-		protected String getTag(Node node) {
-			String tag = node.directed.tag();
-			return Ax.blankTo(tag, CommonUtils
-					.deInfixCss(node.model.getClass().getSimpleName()));
-		}
-
 		@Override
 		protected void render(RendererInput input) {
 			Node node = input.node;
-			String tag = getTag(node);
-			if (tag.length() > 0) {
-				FlowPanel widget = new FlowPanel(getTag(node));
-				node.rendered.widget = widget;
-				applyCssClass(node, widget);
-			}
+			String tag = getTag(node, false, null);
+			FlowPanel widget = new FlowPanel(tag);
+			node.rendered.widget = widget;
+			applyCssClass(node, widget);
 		}
 	}
 
@@ -145,15 +163,6 @@ public abstract class DirectedRenderer {
 	public static class Text extends Leaf {
 		protected String getModelText(Object model) {
 			return model.toString();
-		}
-
-		@Override
-		protected String getTag(Node node) {
-			if (node.parent != null && node.parent.has(PropertyNameTags.class)
-					&& node.getProperty().getName() != null) {
-				return CommonUtils.deInfixCss(node.getProperty().getName());
-			}
-			return Ax.blankTo(super.getTag(node), "span");
 		}
 
 		protected String getText(Node node) {
@@ -290,14 +299,10 @@ public abstract class DirectedRenderer {
 	}
 
 	static abstract class Leaf extends DirectedRenderer {
-		protected String getTag(Node node) {
-			return node.directed.tag();
-		}
-
 		@Override
 		protected void render(RendererInput input) {
 			Node node = input.node;
-			String tag = getTag(node);
+			String tag = getTag(node, true, "span");
 			Preconditions.checkArgument(Ax.notBlank(tag));
 			node.rendered.widget = new SimpleWidget(tag);
 			applyCssClass(node, node.rendered.widget);

@@ -159,6 +159,19 @@ public class FormatBuilder {
 	}
 
 	/**
+	 * If value is not blank, append a simple key-value representation
+	 */
+	public FormatBuilder appendIfNotBlankKv(String key, Object value) {
+		String toString = value == null ? null : value.toString();
+		if (Ax.notBlank(toString)) {
+			append(key);
+			sb.append(": ");
+			sb.append(toString);
+		}
+		return this;
+	}
+
+	/**
 	 * Append object as string with a left pad of `width` spaces
 	 *
 	 * @param width
@@ -261,6 +274,7 @@ public class FormatBuilder {
 
 	/**
 	 * Return the length of the current string
+	 *
 	 * @return Length of the current string
 	 */
 	public int length() {
