@@ -1147,7 +1147,7 @@ public class LiveTree {
 			return LooseContext.get(ProcessLoggerImpl.class.getName());
 		}
 
-		boolean enabled = Configuration.is("eanbled");
+		boolean enabled = Configuration.is("enabled");
 
 		Map<Long, PersistenceEventPayload> persistenceEventPayloads = new LinkedHashMap<>();
 
