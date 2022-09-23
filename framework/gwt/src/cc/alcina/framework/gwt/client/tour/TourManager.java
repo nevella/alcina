@@ -32,9 +32,11 @@ public abstract class TourManager {
 
 	public Topic<Step> stepRendered = Topic.create();
 
+	public Topic<Void> getElementException = Topic.create();
+
 	boolean exit;
 
-	public TopicListener<StepPopupView.Action> stepListener = new TopicListener<StepPopupView.Action>() {
+	TopicListener<StepPopupView.Action> stepListener = new TopicListener<StepPopupView.Action>() {
 		@Override
 		public void topicPublished(Action message) {
 			switch (message) {

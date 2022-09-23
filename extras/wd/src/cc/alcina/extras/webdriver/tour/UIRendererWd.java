@@ -47,6 +47,10 @@ public class UIRendererWd extends UIRenderer {
 		return CommonUtils.friendlyConstant(e, "-");
 	}
 
+	public void onTourInit() {
+		exec.executeScript("document.body.className+=' webdriver'");
+	}
+
 	public long timeout() {
 		return System.currentTimeMillis()
 				+ ResourceUtilities.getInteger(UIRendererWd.class, "timeout");
@@ -102,7 +106,7 @@ public class UIRendererWd extends UIRenderer {
 				}
 			}
 		}
-		int debug = 4;
+		tourManager.getElementException.signal();
 		throw new TimedOutException(selectors.size() == 1 ? selectors.get(0)
 				: selectors.toString());
 	}
@@ -168,11 +172,10 @@ public class UIRendererWd extends UIRenderer {
 	@Override
 	protected boolean showStepPopups() {
 		popups.forEach(popup -> {
+			managerWd().beforePopup.publish(popup);
 			popup.waitForSelector();
 			popup.render();
-			if (popup.textMatches(ResourceUtilities.get("debugPopupRegex"))) {
-				int debug = 4;
-			}
+			managerWd().afterPopup.publish(popup);
 		});
 		tourManager.stepRendered.publish(tourManager.getStep());
 		return true;
@@ -234,8 +237,9 @@ public class UIRendererWd extends UIRenderer {
 
 		@Override
 		public String toString() {
-			return Ax.format("%s :: %s", popupInfo.getCaption(),
-					popupInfo.getRelativeTo().getElement());
+			return Ax.format("%s :: %s\n\n%s", popupInfo.getCaption(),
+					popupInfo.getRelativeTo().getElement(),
+					popupInfo.getDescription());
 		}
 
 		public void waitForSelector() {
@@ -290,9 +294,5 @@ public class UIRendererWd extends UIRenderer {
 					JacksonUtils.serializeNoTypes(popupInfo),
 					root.fullToString());
 		}
-	}
-
-	public void onTourInit() {
-		exec.executeScript("document.body.className+=' webdriver'");
 	}
 }

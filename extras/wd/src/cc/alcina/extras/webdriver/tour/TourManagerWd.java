@@ -18,9 +18,12 @@ import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 
 import cc.alcina.extras.webdriver.WDToken;
 import cc.alcina.extras.webdriver.WdExec;
+import cc.alcina.extras.webdriver.tour.UIRendererWd.RenderedPopup;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.gwt.client.tour.Tour;
@@ -63,6 +66,10 @@ public class TourManagerWd extends TourManager {
 
 	private WdExec exec;
 
+	public Topic<RenderedPopup> beforePopup = Topic.create();
+
+	public Topic<RenderedPopup> afterPopup = Topic.create();
+
 	public TourManagerWd(WdExec exec, WDToken token) {
 		this.exec = exec;
 		UIRendererWd.get().exec = exec;
@@ -74,6 +81,24 @@ public class TourManagerWd extends TourManager {
 	@Override
 	public ConditionEvaluationContext createConditionEvaluationContext() {
 		return new ConditionEvaluationContextWd(currentTour);
+	}
+
+	public void registerDebugHandler(Runnable runnable) {
+		getElementException.add(runnable);
+		beforePopup.add(e -> {
+			String regex = "(?s)"
+					+ Configuration.get("beforePopupRenderedDebugFilter");
+			if (e.toString().matches(regex)) {
+				runnable.run();
+			}
+		});
+		afterPopup.add(e -> {
+			String regex = "(?s)"
+					+ Configuration.get("afterPopupRenderedDebugFilter");
+			if (e.toString().matches(regex)) {
+				runnable.run();
+			}
+		});
 	}
 
 	@Override
