@@ -9,7 +9,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.logging.Level;
 import java.util.stream.Collectors;
 
@@ -17,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
-import com.google.gwt.core.client.GWT;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
@@ -138,7 +136,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *  @formatter:on
  */
 public class DirectedLayout {
-	private static Logger logger = LoggerFactory
+	private static Logger logger2 = LoggerFactory
 			.getLogger(DirectedLayout.class);
 	static {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.OFF);
@@ -148,12 +146,6 @@ public class DirectedLayout {
 
 	// FIXME - remove
 	public static Node current = null;
-
-	static void trace(Supplier<String> messageSupplier) {
-		if (!GWT.isScript() && trace) {
-			logger.trace(messageSupplier.get());
-		}
-	}
 
 	private Node root = null;
 
@@ -395,13 +387,23 @@ public class DirectedLayout {
 
 		private void bindParentProperty() {
 			Property property = getProperty();
-			if (property == null || property.isReadOnly()) {
+			if (property == null || property.isReadOnly() || parent == null
+					|| parent.model == null) {
 				return;
 			}
-			// only listen on changes to the topmost Node corresponding to a
-			// property. property != null guarantees parent != null, and
-			// parent.model instanceof Bindable
-			if (parent.getProperty() == property) {
+			// The property (and annotationlocation) may not refer to the parent
+			// model, rather a more distant ancestor (if there is an intervening
+			// transformation). In which case do not listen.
+			//
+			if (property.getOwningType() != parent.model.getClass()) {
+				return;
+			}
+			// Also, in the case of wrapping, the parent and grandparent models
+			// (and annotation locations) are the same, so do not listen on the
+			// parent model (since an ancestor listens)
+			//
+			if (parent.parent != null && parent.model == parent.parent.model
+					&& parent.getProperty() == parent.parent.getProperty()) {
 				return;
 			}
 			// even though the parent handles changes,
@@ -438,19 +440,6 @@ public class DirectedLayout {
 			}
 		}
 
-		Optional<Widget> firstAncestorWidget() {
-			Node cursor = this;
-			do {
-				Widget widget = cursor.widget;
-				if (widget != null) {
-					return Optional.of(widget);
-				} else {
-					cursor = cursor.parent;
-				}
-			} while (cursor != null);
-			return Optional.empty();
-		}
-
 		Optional<Widget> firstDescendantWidget() {
 			Node cursor = this;
 			for (;;) {
@@ -465,6 +454,18 @@ public class DirectedLayout {
 					}
 				}
 			}
+		}
+
+		Optional<Widget> firstSelfOrAncestorWidget(boolean includeSelf) {
+			Node cursor = this;
+			do {
+				if ((includeSelf || cursor != this) && cursor.widget != null) {
+					return Optional.of(cursor.widget);
+				} else {
+					cursor = cursor.parent;
+				}
+			} while (cursor != null);
+			return Optional.empty();
 		}
 
 		Property getProperty() {
@@ -514,7 +515,7 @@ public class DirectedLayout {
 		// TODO - optimise use of index/indexOf
 		Widget resolveInsertAfter() {
 			Node cursor = this;
-			Widget ancestorWidget = firstAncestorWidget().get();
+			Widget ancestorWidget = firstSelfOrAncestorWidget(false).get();
 			while (true) {
 				if (cursor != this) {
 					if (cursor.hasWidget()) {
@@ -640,10 +641,6 @@ public class DirectedLayout {
 				if (Reflections.isAssignableFrom(handlerClass,
 						context.node.model.getClass())) {
 					handler = (NodeEvent.Handler) context.node.model;
-					trace(() -> Ax.format("Firing behaviour {} on {} to {}",
-							eventTemplate.getClass().getSimpleName(),
-							Node.this.pathSegment(),
-							handlerClass.getSimpleName()));
 					nodeEvent.dispatch(handler);
 				} else {
 					// fire a logical topic event, based on correspondence
@@ -853,14 +850,14 @@ public class DirectedLayout {
 		}
 
 		public DirectedRenderer provideRenderer() {
-			return directeds.size() > 1 ? new DirectedRenderer.Container()
-					: resolver.getRenderer(node.directed, location, model);
+			return resolver.getRenderer(node.directed, location, model);
 		}
 
 		@Override
 		public String toString() {
-			return Ax.format("Node:\n%s\n\nRenderer: %s", node,
-					location.toString());
+			return Ax.format("Node:\n%s\n\nLocation: %s\n\nRenderer: %s", node,
+					location.toString(),
+					provideRenderer().getClass().getSimpleName());
 		}
 
 		private Directed firstDirected() {
@@ -868,12 +865,6 @@ public class DirectedLayout {
 		}
 
 		void afterRender() {
-			// FIXME - dirndl 1.1 - this is *probably* a point guard, will need
-			// to handle replace early
-			//
-			// replace will cause panel.insert (probably want an
-			// InsertionLocation abstraction) and will possibly cause >1
-			// removals (if this is a delegating widget)
 			node.postRender();
 			resolver.postRender();
 			if (node.hasWidget()) {
@@ -890,7 +881,6 @@ public class DirectedLayout {
 						} else {
 							panel.add(node.widget);
 						}
-						// panel;
 					} else {
 						panel.add(node.widget);
 					}
@@ -932,7 +922,7 @@ public class DirectedLayout {
 
 		Optional<Widget> firstAncestorWidget() {
 			return parentNode == null ? Optional.empty()
-					: parentNode.firstAncestorWidget();
+					: parentNode.firstSelfOrAncestorWidget(true);
 		}
 
 		void render() {

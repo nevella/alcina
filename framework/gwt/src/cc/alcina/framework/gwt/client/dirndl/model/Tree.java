@@ -270,6 +270,12 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			return this.selected;
 		}
 
+		// FIXME - dirndl 1x1a - classic incremental collection modification,
+		// have ChildReplacer (DirectedLayout) preserve the list (change the
+		// model, keep the node) and just handle the element delta
+		//
+		// also - directedlayout buffer changes - child replacer doesn't fire
+		// immediately, rather adds to queue
 		public void setChildren(List<TreeNode<NM>> children) {
 			List<TreeNode<NM>> old_children = this.children;
 			this.children = children;

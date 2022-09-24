@@ -13,6 +13,9 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.Registration.Priority;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.util.CachingMap;
 
 public abstract class DomainDescriptor {
@@ -119,6 +122,7 @@ public abstract class DomainDescriptor {
 		Stream<T> wrap(Stream<T> stream);
 	}
 
+	@Registration(value = AnnotationLocation.Resolver.class, priority = Priority.REMOVE)
 	public static class StorePropertyResolver
 			extends DefaultAnnotationResolver {
 	}

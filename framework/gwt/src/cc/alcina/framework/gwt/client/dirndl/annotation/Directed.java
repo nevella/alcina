@@ -332,7 +332,7 @@ public @interface Directed {
 	 * transforms the input model -- if renderer is Collection, transform the
 	 * elements (there's no real virtue in having x -> Collection<A> ->
 	 * Collection <B>, so this flattening makes sense). Need to doc this with
-	 * examples (and rename/move)
+	 * examples.
 	 *
 	 * <p>
 	 * Also - determine renderer strategy should use the presence of this
@@ -343,6 +343,9 @@ public @interface Directed {
 	 * <li>Type: non-collection - Present: true - use
 	 * DirectedRenderer.Transform, apply to model
 	 *
+	 * <p>
+	 * If the annotated element has no other annotation which resolve
+	 * to @Directed annotations, a default @Directed annotation will be added
 	 *
 	 * @author nick@alcina.cc
 	 *

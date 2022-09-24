@@ -1,7 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.annotation;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import com.google.common.base.Preconditions;
@@ -50,6 +49,10 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 	@Override
 	protected List<Directed> atClass(Class<Directed> annotationClass,
 			ClassReflector<?> reflector) {
+		if (reflector != null
+				&& reflector.getClass().getName().contains("Pane2")) {
+			int debug = 3;
+		}
 		return atHasAnnotations(reflector);
 	}
 
@@ -61,22 +64,46 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 		Directed.Wrap wrap = reflector.annotation(Directed.Wrap.class);
 		Directed.Delegating delegating = reflector
 				.annotation(Directed.Delegating.class);
+		Directed.Transform transform = reflector
+				.annotation(Directed.Transform.class);
 		if (directed != null) {
+			Preconditions.checkState(
+					wrap == null && multiple == null && delegating == null);
 			result.add(directed);
 		}
 		if (wrap != null) {
+			Preconditions.checkState(multiple == null && delegating == null);
 			Directed.Impl impl = new Directed.Impl();
 			impl.setTag(wrap.value());
-			// no need to set renderer, if not last, it will always be resolved
-			// to DirectedRenderer.Container
+			// Only Container is permitted (or logical) for wrapping
+			impl.setRenderer(DirectedRenderer.Container.class);
 			result.add(impl);
 			result.add(new Directed.Impl());
 		}
 		if (multiple != null) {
-			Arrays.stream(multiple.value()).forEach(result::add);
+			Preconditions.checkState(delegating == null);
+			int length = multiple.value().length;
+			for (int idx = 0; idx < length; idx++) {
+				Directed element = multiple.value()[idx];
+				if (idx < length - 1) {
+					Preconditions.checkArgument(element
+							.renderer() == DirectedRenderer.Container.class
+							|| element
+									.renderer() == DirectedRenderer.ModelClass.class);
+					Directed.Impl impl = Directed.Impl.wrap(element);
+					// Only Container is permitted (or logical) for wrapping
+					impl.setRenderer(DirectedRenderer.Container.class);
+					result.add(impl);
+				} else {
+					result.add(element);
+				}
+			}
 		}
 		if (delegating != null) {
 			result.add(new Delegating());
+		}
+		if (transform != null && result.isEmpty()) {
+			result.add(new Directed.Impl());
 		}
 		return result;
 	}

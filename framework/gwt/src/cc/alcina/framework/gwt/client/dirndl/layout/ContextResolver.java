@@ -84,7 +84,8 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		return property.has(Directed.class)
 				|| property.has(Directed.Multiple.class)
 				|| property.has(Directed.Wrap.class)
-				|| property.has(Directed.Delegating.class) ? property : null;
+				|| property.has(Directed.Delegating.class)
+				|| property.has(Directed.Transform.class) ? property : null;
 	}
 
 	// CACHE!

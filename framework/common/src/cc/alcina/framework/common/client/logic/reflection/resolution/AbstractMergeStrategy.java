@@ -25,7 +25,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	@Override
 	public List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
 			List<Inheritance> inheritance) {
-		if (!inheritance.contains(Inheritance.CLASS)) {
+		if (!inheritance.contains(Inheritance.CLASS) || clazz == null) {
 			return Collections.emptyList();
 		}
 		List<A> result = new ArrayList<>();
@@ -43,7 +43,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 			visited.add(cursor);
 			ClassReflector<?> reflector = Reflections.at(cursor);
 			List<A> atClass = atClass(annotationClass, reflector);
-			result = merge(result, atClass);
+			result = merge(atClass, result);
 			if (inheritance.contains(Inheritance.INTERFACE)) {
 				reflector.getInterfaces().stream().filter(this::permitPackages)
 						.filter(visited::add).forEach(stack::add);
@@ -81,7 +81,7 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 				if (cursorProperty != null) {
 					List<A> atProperty = atProperty(annotationClass,
 							cursorProperty);
-					result = merge(result, atProperty);
+					result = merge(atProperty, result);
 				}
 			}
 			cursor = cursor.getSuperclass();
