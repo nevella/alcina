@@ -12,7 +12,6 @@ import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyResolver;
 import cc.alcina.framework.common.client.domain.MemoryStat.MemoryStatProvider;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
@@ -188,10 +187,9 @@ public class DomainClassDescriptor<T extends Entity>
 
 	public DomainStoreProperty
 			resolveDomainStoreProperty(AnnotationLocation propertyLocation) {
-		DomainStorePropertyResolver resolver = new DomainStorePropertyResolver(
-				domainDescriptor.domainStorePropertyTreeResolver(),
-				propertyLocation);
-		return resolver.hasValue() ? resolver : null;
+		propertyLocation
+				.setResolver(domainDescriptor.getStorePropertyResolver());
+		return propertyLocation.getAnnotation(DomainStoreProperty.class);
 	}
 
 	public void setDomainDescriptor(DomainDescriptor domainDescriptor) {

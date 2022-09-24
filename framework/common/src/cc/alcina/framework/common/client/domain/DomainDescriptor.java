@@ -12,9 +12,8 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
-import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolver;
+import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
 import cc.alcina.framework.common.client.util.CachingMap;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 public abstract class DomainDescriptor {
 	public Map<Class, DomainClassDescriptor<?>> perClass = new LinkedHashMap<>();
@@ -30,11 +29,14 @@ public abstract class DomainDescriptor {
 					task -> task.forClazz() == null || task.forClazz() == clazz)
 					.collect(Collectors.toList()));
 
-	protected TreeResolver<DomainStoreProperty> domainStorePropertyTreeResolver;
+	protected final StorePropertyResolver storePropertyResolver;
 
 	public DomainDescriptor() {
-		domainStorePropertyTreeResolver = new TreeResolver<>(
-				DomainStoreProperty.class, CommonUtils.predicateFalse());
+		this(new StorePropertyResolver());
+	}
+
+	public DomainDescriptor(StorePropertyResolver storePropertyResolver) {
+		this.storePropertyResolver = storePropertyResolver;
 	}
 
 	public <T extends Entity> DomainClassDescriptor<T>
@@ -66,13 +68,13 @@ public abstract class DomainDescriptor {
 		return perClass.containsKey(clazz);
 	}
 
-	public TreeResolver<DomainStoreProperty> domainStorePropertyTreeResolver() {
-		return domainStorePropertyTreeResolver;
-	}
-
 	public synchronized <T> List<PreProvideTask<T>>
 			getPreProvideTasks(Class<T> clazz) {
 		return (List) perClassTasks.get(clazz);
+	}
+
+	public StorePropertyResolver getStorePropertyResolver() {
+		return this.storePropertyResolver;
 	}
 
 	public void initialise() {
@@ -115,5 +117,9 @@ public abstract class DomainDescriptor {
 		}
 
 		Stream<T> wrap(Stream<T> stream);
+	}
+
+	public static class StorePropertyResolver
+			extends DefaultAnnotationResolver {
 	}
 }

@@ -52,6 +52,14 @@ public abstract class DomainStoreDescriptor extends DomainDescriptor
 		implements MemoryStatProvider {
 	protected DomainSegmentLoader domainSegmentLoader;
 
+	public DomainStoreDescriptor() {
+		super();
+	}
+
+	public DomainStoreDescriptor(StorePropertyResolver storePropertyResolver) {
+		super(storePropertyResolver);
+	}
+
 	@Override
 	public MemoryStat addMemoryStats(MemoryStat parent) {
 		MemoryStat self = new MemoryStat(this);
