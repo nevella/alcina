@@ -3,9 +3,12 @@ package cc.alcina.framework.common.client.dom;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -36,6 +39,7 @@ import com.google.gwt.regexp.shared.RegExp;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomEnvironment.StyleResolver;
+import cc.alcina.framework.common.client.dom.DomNode.DomNodeReadonlyLookup.DomNodeReadonlyLookupQuery;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -79,6 +83,9 @@ DomDocument.from(
 public class DomNode {
 	public static final transient String CONTEXT_DEBUG_SUPPORT = DomNode.class
 			.getName() + ".CONTEXT_DEBUG_SUPPORT";
+
+	private static Map<String, DomNodeReadonlyLookupQuery> queryLookup = Collections
+			.synchronizedMap(new LinkedHashMap<>());
 
 	public static DomNode from(Node node) {
 		Document document = null;
@@ -1547,7 +1554,7 @@ public class DomNode {
 		// cases I care about, with no real regex compilation performance issues
 		//
 		// Anything to avoid going to xalan...
-		DomNodeReadonlyLookupQuery parse(String xpath) {
+		private DomNodeReadonlyLookupQuery parse0(String xpath) {
 			DomNodeReadonlyLookupQuery query = new DomNodeReadonlyLookupQuery();
 			String xmlIdentifierChars = "[a-zA-Z\\-_0-9\\.:]+";
 			String tagOnlyRegex = Ax.format("//(%s)", xmlIdentifierChars);
@@ -1644,6 +1651,10 @@ public class DomNode {
 				Preconditions.checkState(!query.tag.contains(":"));
 			}
 			return query;
+		}
+
+		DomNodeReadonlyLookupQuery parse(String xpath) {
+			return queryLookup.computeIfAbsent(xpath, this::parse0);
 		}
 
 		Stream<DomNode> stream(String xpath) {
