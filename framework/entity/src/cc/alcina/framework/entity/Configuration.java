@@ -2,6 +2,10 @@ package cc.alcina.framework.entity;
 
 /*
  * Replacement for system configuration portion of ResourceUtilities
+ * 
+ * TODO - clazz name -> property path segment[s] should change from Class.simpleClassName to SeUtilities.getNestedSimpleName
+ * 
+ * ... with a regression test
  */
 public class Configuration {
 	public static String get(Class clazz, String key) {

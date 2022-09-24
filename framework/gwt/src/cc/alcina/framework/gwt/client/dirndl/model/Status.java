@@ -18,17 +18,13 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 @Reflected
 // Obviously similar to JobStatus - but broader applicability
-public enum Status {
+public enum Status implements ProvidesStatus {
 	OK, WARN, ERROR;
 
 	public static Status
 			provideMultiple(List<? extends ProvidesStatus> children) {
 		return children.stream().map(ProvidesStatus::provideStatus)
 				.max(Comparator.naturalOrder()).orElse(OK);
-	}
-
-	public interface ProvidesStatus {
-		Status provideStatus();
 	}
 
 	@Directed(tag = "div", bindings = {
@@ -147,5 +143,10 @@ public enum Status {
 				}
 			}
 		}
+	}
+
+	@Override
+	public Status provideStatus() {
+		return this;
 	}
 }
