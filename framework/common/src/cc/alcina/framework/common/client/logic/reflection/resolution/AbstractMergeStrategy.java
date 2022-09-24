@@ -16,7 +16,6 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.MergeStrategy;
 import cc.alcina.framework.common.client.reflection.ClassReflector;
-import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -54,29 +53,36 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	}
 
 	@Override
+	/*
+	 * This resolves annotations on inherited interface methods, by design.
+	 */
 	public List<A> resolveProperty(Class<A> annotationClass, Property property,
 			List<Inheritance> inheritance) {
 		if (!inheritance.contains(Inheritance.PROPERTY) || property == null) {
 			return Collections.emptyList();
 		}
 		List<A> result = new ArrayList<>();
-		Class cursor = property.getDefiningType();
+		Class cursor = property.getOwningType();
 		boolean includeErased = inheritance
 				.contains(Inheritance.ERASED_PROPERTY);
 		while (cursor != null) {
 			Property cursorProperty = Reflections.at(cursor)
 					.property(property.getName());
-			if (cursorProperty != null) {
+			// For A.P, B.P - B is a subclass of A, P (property) is unchanged by
+			// B, P should be ignored for B (and only applied for A) to avoid
+			// duplication
+			if (cursorProperty != null && cursorProperty
+					.getOwningType() == cursorProperty.getDeclaringType()) {
 				if (!includeErased) {
 					if (cursorProperty.getType() != property.getType()) {
 						cursorProperty = null;
 					}
 				}
-			}
-			if (cursorProperty != null) {
-				List<A> atProperty = atProperty(annotationClass,
-						cursorProperty);
-				result = merge(result, atProperty);
+				if (cursorProperty != null) {
+					List<A> atProperty = atProperty(annotationClass,
+							cursorProperty);
+					result = merge(result, atProperty);
+				}
 			}
 			cursor = cursor.getSuperclass();
 		}

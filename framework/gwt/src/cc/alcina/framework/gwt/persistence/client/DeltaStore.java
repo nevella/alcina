@@ -16,8 +16,8 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.consort.AllStatesConsort;
-import cc.alcina.framework.common.client.consort.Player;
 import cc.alcina.framework.common.client.consort.ConsortPlayer.SubconsortSupport;
+import cc.alcina.framework.common.client.consort.Player;
 import cc.alcina.framework.common.client.csobjects.LoadObjectsResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDelta;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainModelDeltaLookup;

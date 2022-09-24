@@ -4,8 +4,6 @@ import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
-import java.util.Collections;
 import java.util.Deque;
 import java.util.LinkedList;
 import java.util.List;
@@ -24,11 +22,7 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.user.client.ui.ComplexPanel;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.InsertPanel;
 import com.google.gwt.user.client.ui.InsertPanel.ForIsWidget;
-import com.google.gwt.user.client.ui.Panel;
-import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -45,7 +39,6 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.DirectedResolver;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
@@ -254,31 +247,22 @@ public class DirectedLayout {
 
 		final Object model;
 
-		Rendered rendered = new Rendered();
-
-		DirectedNodeRenderer renderer;
-
 		Directed directed;
 
 		List<Node> children = new ArrayList<>();
 
 		Node parent;
 
-		List<RemovablePropertyChangeListener> listeners = new ArrayList<>();
-
-		public Property changeSource;
-
-		private boolean intermediate;
-
-		// FIXME - remove
-		private ContextResolver childResolver;
-
 		// FIXME - dirndl 1x1b - ensure no null checks (guaranteed non null)
 		final AnnotationLocation annotationLocation;
 
 		public List<NodeEventBinding> eventBindings;
 
-		public List<PropertyBinding> bindings;
+		public List<PropertyBinding> propertyBindings;
+
+		private ChildReplacer replacementListener;
+
+		Widget widget;
 
 		protected Node(ContextResolver resolver, Node parent,
 				AnnotationLocation annotationLocation, Object model) {
@@ -306,45 +290,8 @@ public class DirectedLayout {
 			return null;
 		}
 
-		// FIXME - dirndlx1a - should just be annotationLocation.get(clazz)
 		public <A extends Annotation> A annotation(Class<A> clazz) {
-			Class locationClass = model == null ? null : model.getClass();
-			// FIXME - dirndl 1.1 - check this behaviour. Note this
-			// implementation 'incorrectly' skips resolution - because it
-			// happens potentially before we resolve the @Directed. Possible
-			// (probable)
-			// solution is to have @DirectedContentResolver be resolved normally
-			// (i.e. via the ContextResolver)
-			//
-			// (in 1.1 we get @Directeds earlier so probably already solved)
-			// - all this and more in 1.1
-			if ((directed != null
-					&& directed.renderer() == ModelTransformNodeRenderer.class)
-					|| (getProperty() != null
-							&& getProperty().has(Directed.class)
-							&& getProperty().annotation(Directed.class)
-									.renderer() == ModelTransformNodeRenderer.class)) {
-				// *don't* resolve against the model if it will be transformed
-				// (resolution against the transform result, with dirndl 1.1,
-				// will be resolution against the child node)
-				if (clazz != Directed.Transform.class) {
-					locationClass = null;
-				}
-			}
-			if (locationClass != null || getProperty() != null) {
-				AnnotationLocation location = new AnnotationLocation(
-						locationClass, getProperty(), resolver);
-				A annotation = location.getAnnotation(clazz);
-				if (annotation != null) {
-					return annotation;
-				}
-			}
-			if (parent != null
-					&& parent.renderer instanceof CollectionNodeRenderer) {
-				return parent.annotation(clazz);
-			} else {
-				return null;
-			}
+			return annotationLocation.getAnnotation(clazz);
 		}
 
 		public Node childBefore(Node child) {
@@ -368,9 +315,8 @@ public class DirectedLayout {
 		}
 
 		public void fireEvent(ModelEvent topicEvent) {
-			if (rendered.eventBindings != null) {
-				rendered.eventBindings
-						.forEach(bb -> bb.onTopicEvent(topicEvent));
+			if (eventBindings != null) {
+				eventBindings.forEach(bb -> bb.onTopicEvent(topicEvent));
 			}
 		}
 
@@ -383,7 +329,7 @@ public class DirectedLayout {
 		}
 
 		public Widget getWidget() {
-			return rendered.verifySingleWidget();
+			return widget;
 		}
 
 		public <A extends Annotation> boolean has(Class<A> clazz) {
@@ -391,7 +337,7 @@ public class DirectedLayout {
 		}
 
 		public boolean hasWidget() {
-			return rendered.widget != null;
+			return widget != null;
 		}
 
 		public <A extends Annotation> Optional<A> optional(Class<A> clazz) {
@@ -401,10 +347,12 @@ public class DirectedLayout {
 		// FIXME - dirndl1x1 - check this (whether a resolver should apply to
 		// *this* input or just child inputs)
 		public void pushChildResolver(ContextResolver resolver) {
-			this.childResolver = resolver;
+			// this.childResolver = resolver;
+			throw new UnsupportedOperationException();
 		}
 
 		public void remove() {
+			resolveRenderedWidgets().forEach(Widget::removeFromParent);
 			if (parent != null) {
 				parent.children.remove(this);
 			}
@@ -415,72 +363,9 @@ public class DirectedLayout {
 			return resolver.resolveRenderContextProperty(key);
 		}
 
-		public DirectedNodeRenderer resolveRenderer() {
-			DirectedNodeRenderer renderer = null;
-			if (directed == null) {
-				Class locationClass = model.getClass();
-				// see annotation() above, goes away in 1.1
-				if ((directed != null && directed
-						.renderer() == ModelTransformNodeRenderer.class)
-						|| (getProperty() != null
-								&& getProperty().has(Directed.class)
-								&& getProperty().annotation(Directed.class)
-										.renderer() == ModelTransformNodeRenderer.class)) {
-					// *don't* resolve against the model if it will be
-					// transformed
-					// (resolution against the transform result, with dirndl
-					// 1.1,
-					// will be resolution against the child node)
-					locationClass = null;
-				}
-				AnnotationLocation annotationLocation = new AnnotationLocation(
-						locationClass, getProperty(), resolver);
-				// FIXME - dirndl1.1 - remove (switched to a strategy)
-				directed = new DirectedResolver(
-						getResolver().getTreeResolver(Directed.class),
-						annotationLocation);
-			}
-			// TODO - distinguish between stateful and non-stateful
-			Class<? extends DirectedNodeRenderer> rendererClass = directed
-					.renderer();
-			if (rendererClass == ModelClassNodeRenderer.class) {
-				rendererClass = resolver.resolveModelRenderer(model);
-			}
-			renderer = Reflections.newInstance(rendererClass);
-			return renderer;
-		}
-
 		@Override
 		public String toString() {
 			return path();
-		}
-
-		private void addListeners(Node child) {
-			if (child.changeSource == null) {
-				return;
-			}
-			// Object childModel = child.model;
-			// // even though this (the parent) handles changes,
-			// // binding/unbinding on node removal is the responsibility of the
-			// // child, so we add to the child's listeners list
-			// if (!child.changeSource.isReadOnly() && model instanceof
-			// Bindable) {
-			// // FIXME - dirndl.1 - don't add this to form/table cells
-			// ChildReplacer listener = new ChildReplacer((Bindable) model,
-			// child.changeSource.getName(), );
-			// trace(() -> Ax.format("added listener :: {} :: {} :: {} :: {}",
-			// child.pathSegment(), child.hashCode(),
-			// child.changeSource.getName(), listener.hashCode()));
-			// child.listeners.add(listener);
-			// }
-			// if (childModel instanceof Model) {
-			// ChildReplacer listener = new ChildReplacer(
-			// (Bindable) childModel, null, child);
-			// trace(() -> Ax.format("added listener :: {} :: {} :: {} :: {}",
-			// child.pathSegment(), child.hashCode(), "(fireUpdate)",
-			// listener.hashCode()));
-			// child.listeners.add(listener);
-			// }
 		}
 
 		private void bindBehaviours() {
@@ -499,8 +384,10 @@ public class DirectedLayout {
 			if (model == null) {
 				return;
 			}
-			bindings = Arrays.stream(directed.bindings())
-					.map(PropertyBinding::new).collect(Collectors.toList());
+			if (hasWidget()) {
+				propertyBindings = Arrays.stream(directed.bindings())
+						.map(PropertyBinding::new).collect(Collectors.toList());
+			}
 			if (model instanceof HasBind) {
 				((HasBind) model).bind();
 			}
@@ -511,126 +398,20 @@ public class DirectedLayout {
 			if (property == null || property.isReadOnly()) {
 				return;
 			}
-			if (property.getName().equals("activity")) {
-				int debug = 3;
-			}
 			// only listen on changes to the topmost Node corresponding to a
 			// property. property != null guarantees parent != null, and
 			// parent.model instanceof Bindable
 			if (parent.getProperty() == property) {
 				return;
 			}
-			// FIXME - dirndl.1 - don't add this to form/table cells
-			ChildReplacer listener = new ChildReplacer((Bindable) parent.model,
-					property.getName());
 			// even though the parent handles changes,
 			// binding/unbinding on node removal is the responsibility of the
-			// child, so we add to the child's listeners list
-			listeners.add(listener);
-		}
-
-		private void populateWidgets(boolean intermediateChild) {
-			if (model == null) {
-				return;
-			}
-			renderer = resolveRenderer();
-			/*
-			 * allow insertion of multiple nodes for one model object - loop
-			 * without adding model children until the final Directed
-			 */
-			if (renderer instanceof HasWrappingDirecteds) {
-				List<Directed> wrappers = ((HasWrappingDirecteds) renderer)
-						.getWrappingDirecteds(this);
-				Widget rootResult = null;
-				Widget cursor = null;
-				Node nodeCursor = this;
-				List<Widget> widgets = null;
-				intermediate = true;
-				for (Directed directed : wrappers) {
-					// for the moment, wrapped nodes have no listeners
-					// (including the leaf).
-					Node wrapperChild = nodeCursor.addChild(model,
-							getProperty(), null);
-					wrapperChild.directed = directed;
-					wrapperChild.intermediate = directed != Ax.last(wrappers);
-					wrapperChild.render(wrapperChild.intermediate);
-					widgets = wrapperChild.rendered.widgets;
-					if (directed == Ax.last(wrappers) && widgets.size() != 1) {
-						if (cursor != null) {
-							widgets.forEach(((Panel) cursor)::add);
-						}
-					} else {
-						Preconditions.checkState(widgets.size() == 1);
-						Widget widget = widgets.get(0);
-						if (rootResult == null) {
-							rootResult = widget;
-						}
-						if (cursor != null) {
-							((Panel) cursor).add(widget);
-						}
-						cursor = widget;
-						nodeCursor = wrapperChild;
-					}
-				}
-				rendered.widgets = Collections.singletonList(rootResult);
-				return;
-			}
-			if (intermediateChild) {
-				// will be handled by the calling loop
-				rendered.widgets = renderer.renderWithDefaults(this);
-				return;
-			}
-			if (model instanceof Bindable
-					&& !(renderer instanceof HandlesModelBinding)) {
-				Collection<Property> properties = Reflections
-						.at((model.getClass())).properties();
-				for (Property property : properties) {
-					Property directedProperty = resolver
-							.resolveDirectedProperty(property);
-					if (directedProperty != null) {
-						Object childModel = property.get(model);
-						addChild(childModel, directedProperty, property);
-					}
-				}
-			}
-			current = this;// after leaving child traverse
-			rendered.widgets = renderer.renderWithDefaults(this);
-			return;
-		}
-
-		/*
-		 * don't remove widgets (handled by swap, and no need to descend widget
-		 * removal)
-		 */
-		private void removeChild(Node child) {
-			child.unbind();
-			children.remove(child);
-		}
-
-		private void render(boolean intermediateChild) {
-			if (model == null) {
-				return;
-			}
-			// FIXME - dndl1x1a - move to 1.1
-			if (model instanceof DirectedLayout.Lifecycle) {
-				// FIXME - dirndl 1.0 - lifecycle -> abstract class,
-				// HasLifecycle, yadda
-				// beforeRRender -> (maybe) first time render
-				((DirectedLayout.Lifecycle) model).beforeRender();
-			}
-			resolver.beforeRender();
-			current = this;
-			DirectedContextResolver directedContextResolver = annotation(
-					DirectedContextResolver.class);
-			if (directedContextResolver != null) {
-				resolver = Reflections
-						.newInstance(directedContextResolver.value());
-				resolver.setModel(model);
-			}
-			populateWidgets(intermediateChild);
-			bindBehaviours();
-			bindModel();
-			current = null;
+			// created child node corresponding to the property, so we track on
+			// the child
+			//
+			// FIXME - dirndl.1 - don't add this to form/table cells
+			replacementListener = new ChildReplacer((Bindable) parent.model,
+					property.getName());
 		}
 
 		private void resolveRenderedWidgets0(List<Widget> list) {
@@ -648,39 +429,19 @@ public class DirectedLayout {
 				((Model) model).unbind();
 			}
 			children.forEach(Node::unbind);
-			listeners.forEach(RemovablePropertyChangeListener::unbind);
-			if (rendered.bindings != null) {
-				rendered.bindings.forEach(PropertyBinding::unbind);
+			if (replacementListener != null) {
+				replacementListener.unbind();
+				replacementListener = null;
 			}
-		}
-
-		// FIXME - will go
-		protected Node createChild(Object childModel,
-				Property definingReflector, Property changeSource) {
-			// FIXME - this should probably be via rendererinputs
-			Node child = new Node(
-					childResolver != null ? childResolver : resolver, this,
-					null, childModel);
-			// child.property = definingReflector;
-			child.changeSource = changeSource;
-			child.resolver = resolver;
-			addListeners(child);
-			return child;
-		}
-
-		Node addChild(Object childModel, Property definingReflector,
-				Property changeSource) {
-			Node child = createChild(childModel, definingReflector,
-					changeSource);
-			// child.index = children.size();
-			children.add(child);
-			return child;
+			if (propertyBindings != null) {
+				propertyBindings.forEach(PropertyBinding::unbind);
+			}
 		}
 
 		Optional<Widget> firstAncestorWidget() {
 			Node cursor = this;
 			do {
-				Widget widget = cursor.rendered.widget;
+				Widget widget = cursor.widget;
 				if (widget != null) {
 					return Optional.of(widget);
 				} else {
@@ -693,7 +454,7 @@ public class DirectedLayout {
 		Optional<Widget> firstDescendantWidget() {
 			Node cursor = this;
 			for (;;) {
-				Widget widget = cursor.rendered.widget;
+				Widget widget = cursor.widget;
 				if (widget != null) {
 					return Optional.of(widget);
 				} else {
@@ -740,11 +501,6 @@ public class DirectedLayout {
 			bindBehaviours();
 			bindModel();
 			bindParentProperty();
-		}
-
-		Rendered render() {
-			render(false);
-			return rendered;
 		}
 
 		// this node will disappear, so refer to predecessor nodes
@@ -794,103 +550,10 @@ public class DirectedLayout {
 			return list;
 		}
 
-		public class Rendered {
-			Widget widget;
-
-			List<Widget> widgets = new ArrayList<>();
-
-			public List<NodeEventBinding> eventBindings;
-
-			public List<PropertyBinding> bindings;
-
-			public NodeEventBinding
-					eventBindingFor(Class<? extends NodeEvent> eventType) {
-				return eventBindings.stream().filter(bb -> bb.type == eventType)
-						.findFirst().get();
-			}
-
-			public int getChildIndex(Widget childWidget) {
-				ComplexPanel panel = verifyContainer();
-				return panel.getWidgetIndex(childWidget);
-			}
-
-			public Optional<Widget> lastWidgetOrPredecessorLastWidget() {
-				Node cursor = Node.this;
-				while (cursor != null) {
-					Widget last = Ax.last(cursor.rendered.widgets);
-					if (last != null) {
-						return Optional.of(last);
-					}
-					cursor = parent.childBefore(cursor);
-				}
-				return Optional.empty();
-			}
-
-			public void swapChildWidgets(
-					Optional<Widget> insertAfterChildWidget,
-					List<Widget> oldChildWidgets,
-					List<Widget> newChildWidgets) {
-				// FIXME - dirndl 1.4 - this isn't optimal, but swapping
-				// probably needs a larger structure to optimise anyway. A
-				// class...?
-				ComplexPanel container = verifyContainer();
-				// FIXME - ui2 1.1 (remove null check? better representation of
-				// insertion context?)
-				if (container == null) {
-					container = RootPanel.get();
-				}
-				for (Widget oldChild : oldChildWidgets) {
-					if (insertAfterChildWidget.isPresent()
-							&& insertAfterChildWidget.get() == oldChild) {
-						int oldChildIndex = container.getWidgetIndex(oldChild);
-						if (oldChildIndex > 0) {
-							insertAfterChildWidget = Optional
-									.of(container.getWidget(oldChildIndex - 1));
-						} else {
-							insertAfterChildWidget = Optional.empty();
-						}
-					}
-					oldChild.removeFromParent();
-				}
-				for (int idx = newChildWidgets.size() - 1; idx >= 0; idx--) {
-					int index = insertAfterChildWidget.map(this::getChildIndex)
-							.orElse(-1) + 1;
-					((InsertPanel) container).insert(newChildWidgets.get(idx),
-							index);
-				}
-			}
-
-			public Widget verifySingleWidget() {
-				if (widget != null) {
-					return widget;
-				}
-				Preconditions.checkState(widgets.size() == 1);
-				return widgets.get(0);
-			}
-
-			private ComplexPanel verifyContainer() {
-				if (renderer instanceof RendersToParentContainer) {
-					if (parent == null) {
-						// swapping top, delegating @Directed
-						ComplexPanel viaWidget = (ComplexPanel) rendered.widgets
-								.get(0).getParent();
-						return viaWidget == null ? RootPanel.get() : viaWidget;
-					} else {
-						return parent.rendered.verifyContainer();
-					}
-				}
-				return (FlowPanel) verifySingleWidget();
-			}
-
-			void bindBehaviours() {
-				Preconditions.checkState(widgets.size() == 1);
-				eventBindings = new ArrayList<>();
-				for (int idx = 0; idx < directed.receives().length; idx++) {
-					Class<? extends NodeEvent> clazz = directed.receives()[idx];
-					eventBindings.add(new NodeEventBinding(clazz, idx));
-				}
-				eventBindings.forEach(NodeEventBinding::bind);
-			}
+		// i.e. that the node doesn't correspond to @Directed.Delegating
+		Widget verifySingleWidget() {
+			Preconditions.checkState(widget != null);
+			return widget;
 		}
 
 		/**
@@ -998,37 +661,12 @@ public class DirectedLayout {
 
 			void bind() {
 				bindEvent(true);
-				// FIXME - dirndl.emit
-				/// go up the node tree until we find an emitter
-				//
-				// but - is this even used? maybe for search/form filters - but
-				// not sure it's needed/wanted
-				// for (TopicBehaviour topicBehaviour : type.topics()) {
-				// if (Behaviour.Util.isListenerTopic(topicBehaviour)) {
-				// Node cursor = Node.this;
-				// while (cursor != null) {
-				// Behaviour behaviour = Behaviour.Util.getEmitter(
-				// cursor.directed, topicBehaviour.topic());
-				// if (behaviour != null) {
-				// cursor.rendered.addBehaviourBinding(behaviour,
-				// this);
-				// logger.warn(
-				// "Binding topic behaviour {} on {} to {}\n",
-				// topicBehaviour.topic().getSimpleName(),
-				// Node.this.pathSegment(),
-				// cursor.pathSegment());
-				// break;
-				// }
-				// cursor = cursor.parent;
-				// }
-				// }
-				// }
 			}
 
 			// FIXME - dirndl 1.1 - only required if Dom (or Gwt/InferredDom)
-			// event, *not* ModelEvent
+			// event, *not* ModelEvent.
 			Widget getBindingWidget() {
-				return rendered.verifySingleWidget();
+				return verifySingleWidget();
 			}
 
 			void onTopicEvent(ModelEvent topicEvent) {
@@ -1096,7 +734,7 @@ public class DirectedLayout {
 							.apply(value);
 				}
 				String stringValue = value == null ? "null" : value.toString();
-				Element element = rendered.verifySingleWidget().getElement();
+				Element element = verifySingleWidget().getElement();
 				switch (binding.type()) {
 				case INNER_HTML:
 					if (value != null) {
@@ -1203,9 +841,9 @@ public class DirectedLayout {
 			this.resolver = resolver;
 			this.model = model;
 			this.location = location;
+			this.parentNode = parentNode;
 			this.directeds = directeds != null ? directeds
 					: location.getAnnotations(Directed.class);
-			this.parentNode = parentNode;
 			// generate the node (1-1 with input)
 			node = new Node(resolver, parentNode, location, model);
 			if (parentNode != null) {
@@ -1229,6 +867,62 @@ public class DirectedLayout {
 			return directeds.get(0);
 		}
 
+		void afterRender() {
+			// FIXME - dirndl 1.1 - this is *probably* a point guard, will need
+			// to handle replace early
+			//
+			// replace will cause panel.insert (probably want an
+			// InsertionLocation abstraction) and will possibly cause >1
+			// removals (if this is a delegating widget)
+			node.postRender();
+			resolver.postRender();
+			if (node.hasWidget()) {
+				Optional<Widget> firstAncestorWidget = firstAncestorWidget();
+				if (firstAncestorWidget.isPresent()) {
+					ComplexPanel panel = (ComplexPanel) firstAncestorWidget
+							.get();
+					if (insertAfter != null) {
+						int insertAfterIndex = panel
+								.getWidgetIndex(insertAfter);
+						if (insertAfterIndex < panel.getWidgetCount() - 1) {
+							((ForIsWidget) panel).insert(node.widget,
+									insertAfterIndex + 1);
+						} else {
+							panel.add(node.widget);
+						}
+						// panel;
+					} else {
+						panel.add(node.widget);
+					}
+				}
+			}
+			if (directeds.size() > 1) {
+				enqueueInput(resolver, model, location,
+						directeds.subList(1, directeds.size()), node);
+			}
+		}
+
+		void beforeRender() {
+			DirectedContextResolver directedContextResolver = location
+					.getAnnotation(DirectedContextResolver.class);
+			if (directedContextResolver != null) {
+				resolver = ContextResolver.create(
+						directedContextResolver.value(), resolver,
+						resolver.layout);
+				resolver.setRootModel(model);
+				// legal! note that new resolver will have an empty resolution
+				// cache
+				location.setResolver(resolver);
+			}
+			if (model instanceof DirectedLayout.Lifecycle) {
+				// FIXME - dirndl 1.0 - lifecycle -> abstract class,
+				// HasLifecycle, yadda
+				// beforeRRender -> (maybe) first time render
+				((DirectedLayout.Lifecycle) model).beforeRender();
+			}
+			resolver.beforeRender(model);
+		}
+
 		void enqueueInput(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
 				Node parentNode) {
@@ -1241,68 +935,17 @@ public class DirectedLayout {
 					: parentNode.firstAncestorWidget();
 		}
 
-		void postRender() {
-			// FIXME - dirndl 1.1 - this is *probably* a point guard, will need
-			// to handle replace early
-			//
-			// replace will cause panel.insert (probably want an
-			// InsertionLocation abstraction) and will possibly cause >1
-			// removals (if this is a delegating widget)
-			node.postRender();
-			if (node.rendered.widget != null) {
-				Optional<Widget> firstAncestorWidget = firstAncestorWidget();
-				if (firstAncestorWidget.isPresent()) {
-					ComplexPanel panel = (ComplexPanel) firstAncestorWidget
-							.get();
-					if (insertAfter != null) {
-						int insertAfterIndex = panel
-								.getWidgetIndex(insertAfter);
-						if (insertAfterIndex < panel.getWidgetCount() - 1) {
-							((ForIsWidget) panel).insert(node.rendered.widget,
-									insertAfterIndex + 1);
-						} else {
-							panel.add(node.rendered.widget);
-						}
-						// panel;
-					} else {
-						panel.add(node.rendered.widget);
-					}
-				}
-			}
-			if (directeds.size() > 1) {
-				enqueueInput(resolver, model, location,
-						directeds.subList(1, directeds.size()), node);
-			}
-		}
-
-		void preRender() {
-			if (model instanceof DirectedLayout.Lifecycle) {
-				// FIXME - dirndl 1.0 - lifecycle -> abstract class,
-				// HasLifecycle, yadda
-				// beforeRRender -> (maybe) first time render
-				((DirectedLayout.Lifecycle) model).beforeRender();
-			}
-			resolver.beforeRender();
-			DirectedContextResolver directedContextResolver = location
-					.getAnnotation(DirectedContextResolver.class);
-			if (directedContextResolver != null) {
-				resolver = Reflections
-						.newInstance(directedContextResolver.value());
-				resolver.setModel(model);
-			}
-		}
-
 		void render() {
 			if (replace != null) {
 				insertAfter = replace.resolveInsertAfter();
 				replace.remove();
 			}
-			preRender();
+			beforeRender();
 			if (model != null) {
 				DirectedRenderer renderer = provideRenderer();
 				renderer.render(this);
 			}
-			postRender();
+			afterRender();
 		}
 
 		Directed soleDirected() {

@@ -13,7 +13,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.layout.SimpleTable.Transform.LModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 

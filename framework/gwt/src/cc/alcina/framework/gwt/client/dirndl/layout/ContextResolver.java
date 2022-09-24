@@ -10,71 +10,74 @@ import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResol
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
-import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolver;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 //FIXME - dirndl 1.1 - document (and document annotationresolver in general, top & bottom)
 @Reflected
 public class ContextResolver extends AnnotationLocation.Resolver {
-	// FIXME - dirndl1.1 - remove, use strategy
-	protected TreeResolver<Directed> directedResolver;
+	public static <T extends ContextResolver> T create(Class<T> clazz,
+			ContextResolver parent, DirectedLayout layout) {
+		T instance = Reflections.newInstance(clazz);
+		instance.parent = parent;
+		instance.layout = layout;
+		return instance;
+	}
 
 	protected ContextResolver parent;
 
 	protected DirectedLayout layout;
 
 	// FIXME - dirndl 1.1 - hopefully remove
-	private Object model;
+	private Object rootModel;
 
 	DefaultAnnotationResolver annotationResolver = (DefaultAnnotationResolver) AnnotationLocation.Resolver
 			.get();
 
-	Map<Class, Class<? extends DirectedNodeRenderer>> modelRenderers = new LinkedHashMap<>();
+	Map<Class, Class<? extends DirectedRenderer>> modelRenderers = new LinkedHashMap<>();
 
+	protected Object inputModel;
+
+	/**
+	 *
+	 */
 	public ContextResolver() {
-		this(null);
 	}
 
-	public ContextResolver(ContextResolver parent) {
-		this.parent = parent;
-		init();
-	}
-
-	public void beforeRender() {
-		// FIXME - dirndl 1.0 - Registry.get.push(this)
-		// TODO Auto-generated method stub
-	}
-
-	public <T> T getModel() {
-		return (T) this.model;
+	public void beforeRender(Object inputModel) {
+		// FIXME - dirndl 1.0 - Registry.get.push(this)(registry checks if
+		// distinct to last)
+		this.inputModel = inputModel;
 	}
 
 	// CACHE! (stateful vs non for renderer)
 	public DirectedRenderer getRenderer(Directed directed,
 			AnnotationLocation location, Object model) {
-		Class<? extends DirectedNodeRenderer> rendererClass = directed
-				.renderer();
-		if (rendererClass == ModelClassNodeRenderer.class) {
+		Class<? extends DirectedRenderer> rendererClass = directed.renderer();
+		if (rendererClass == DirectedRenderer.ModelClass.class) {
 			// default - see Directed.Transform
 			boolean transform = location
 					.hasAnnotation(Directed.Transform.class);
 			if (transform && !(model instanceof Collection)) {
-				rendererClass = ModelTransformNodeRenderer.class;
+				rendererClass = DirectedRenderer.TransformRenderer.class;
 			} else {
-				rendererClass = resolveModelRenderer(model);
+				if (model.getClass() == Object.class) {
+					rendererClass = DirectedRenderer.Container.class;
+				} else {
+					rendererClass = resolveModelRenderer(model);
+				}
 			}
 		}
-		return Registry.query(DirectedRenderer.class).addKeys(rendererClass)
-				.impl();
+		return Reflections.newInstance(rendererClass);
 	}
 
-	public <A extends Annotation> TreeResolver<A>
-			getTreeResolver(Class<A> clazz) {
-		if (clazz == Directed.class) {
-			return (TreeResolver<A>) directedResolver;
-		}
-		throw new UnsupportedOperationException();
+	public <T> T getRootModel() {
+		return (T) this.rootModel;
+	}
+
+	public void postRender() {
+		inputModel = null;
 	}
 
 	public Property resolveDirectedProperty(Property property) {
@@ -98,19 +101,19 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	/*
 	 * very simple caching, but lowers allocation *a lot*
 	 */
-	public Class<? extends DirectedNodeRenderer>
+	public Class<? extends DirectedRenderer>
 			resolveModelRenderer(Object model) {
 		return modelRenderers.computeIfAbsent(model.getClass(),
-				clazz -> Registry.query(DirectedNodeRenderer.class)
-						.addKeys(clazz).registration());
+				clazz -> Registry.query(DirectedRenderer.class).addKeys(clazz)
+						.registration());
 	}
 
 	public <T> T resolveRenderContextProperty(String key) {
 		return null;
 	}
 
-	public void setModel(Object model) {
-		this.model = model;
+	public void setRootModel(Object model) {
+		this.rootModel = model;
 	}
 
 	private ContextResolver root() {
@@ -119,11 +122,6 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	protected DirectedLayout getLayout() {
 		return root().layout;
-	}
-
-	protected void init() {
-		directedResolver = parent != null ? parent.directedResolver
-				: new TreeResolver<>(Directed.class, Directed::merge);
 	}
 
 	@Override

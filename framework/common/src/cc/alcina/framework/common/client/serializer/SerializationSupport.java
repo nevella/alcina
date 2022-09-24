@@ -26,7 +26,7 @@ class SerializationSupport {
 		public int compare(Property f1, Property f2) {
 			if (f1.isReadable()) {
 				boolean entityType = Reflections.isAssignableFrom(Entity.class,
-						f1.getDefiningType());
+						f1.getOwningType());
 				if (entityType) {
 					/*
 					 * serialize id, localid, other - to ensure population

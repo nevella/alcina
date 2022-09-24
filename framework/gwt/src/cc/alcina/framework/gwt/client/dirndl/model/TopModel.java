@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
 
 /**
  * Contains either a standard layout model (such as HeaderContent) (for normal
@@ -10,7 +9,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
  *
  * Renders by delegating to the model field
  */
-@Directed(renderer = DelegatingNodeRenderer.class)
+@Directed.Delegating
 public class TopModel extends Bindable {
 	private Object model;
 

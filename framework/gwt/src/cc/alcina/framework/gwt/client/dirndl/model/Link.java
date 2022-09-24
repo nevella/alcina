@@ -1,13 +1,18 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import java.util.Collection;
 import java.util.Objects;
 
 import com.google.gwt.dom.client.NativeEvent;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.History;
+import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
+import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -17,6 +22,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
@@ -26,12 +32,15 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 		@Binding(from = "innerHtml", type = Type.INNER_HTML),
 		@Binding(from = "text", type = Type.INNER_TEXT),
 		@Binding(from = "target", type = Type.PROPERTY),
-		@Binding(from = "title", type = Type.PROPERTY) })
+		@Binding(from = "title", type = Type.PROPERTY),
+		@Binding(from = "id", type = Type.PROPERTY) })
 // TODO - check conflicting properties pre-render (e.g. inner, innterHtml)
 // also document why this is a "non-standard" dirndl component (and merge
 // with link)
 public class Link extends Model.WithNode
 		implements DomEvents.Click.Handler, HasTag {
+	public static final transient String PRIMARY_ACTION = "primary-action";
+
 	private String href = "#";
 
 	private String target;
@@ -54,7 +63,15 @@ public class Link extends Model.WithNode
 
 	private String title;
 
+	private String id;
+
+	private NonstandardObjectAction nonStandardObjectAction;
+
 	public Link() {
+	}
+
+	public void addTo(Collection<Link> hasLinks) {
+		hasLinks.add(this);
 	}
 
 	public void addTo(HasLinks hasLinks) {
@@ -69,6 +86,10 @@ public class Link extends Model.WithNode
 		return this.href;
 	}
 
+	public String getId() {
+		return this.id;
+	}
+
 	@Directed
 	public Object getInner() {
 		return this.inner;
@@ -80,6 +101,10 @@ public class Link extends Model.WithNode
 
 	public Class<? extends ModelEvent> getModelEvent() {
 		return this.modelEvent;
+	}
+
+	public NonstandardObjectAction getNonStandardObjectAction() {
+		return this.nonStandardObjectAction;
 	}
 
 	// only rendered via href, but useful for equivalence testing
@@ -115,6 +140,11 @@ public class Link extends Model.WithNode
 			} else if (runnable != null) {
 				WidgetUtils.squelchCurrentEvent();
 				runnable.run();
+			} else if (nonStandardObjectAction != null) {
+				WidgetUtils.squelchCurrentEvent();
+				DefaultPermissibleActionHandler.handleAction(
+						(Widget) event.getSource(), nonStandardObjectAction,
+						Client.currentPlace());
 			} else {
 				// propagate href
 				if (!Objects.equals(tag, "a") && Ax.notBlank(href)) {
@@ -137,6 +167,10 @@ public class Link extends Model.WithNode
 		this.href = href;
 	}
 
+	public void setId(String id) {
+		this.id = id;
+	}
+
 	public void setInner(Model inner) {
 		this.inner = inner;
 	}
@@ -147,6 +181,11 @@ public class Link extends Model.WithNode
 
 	public void setModelEvent(Class<? extends ModelEvent> modelEvent) {
 		this.modelEvent = modelEvent;
+	}
+
+	public void setNonStandardObjectAction(
+			NonstandardObjectAction nonStandardObjectAction) {
+		this.nonStandardObjectAction = nonStandardObjectAction;
 	}
 
 	public void setPlace(BasePlace place) {
@@ -188,6 +227,11 @@ public class Link extends Model.WithNode
 		return this;
 	}
 
+	public Link withId(String id) {
+		this.id = id;
+		return this;
+	}
+
 	public Link withInner(Object inner) {
 		this.inner = inner;
 		return this;
@@ -207,6 +251,12 @@ public class Link extends Model.WithNode
 		if (newTab) {
 			setTarget("_blank");
 		}
+		return this;
+	}
+
+	public Link withNonstandardObjectAction(
+			NonstandardObjectAction nonStandardObjectAction) {
+		this.nonStandardObjectAction = nonStandardObjectAction;
 		return this;
 	}
 
@@ -245,5 +295,13 @@ public class Link extends Model.WithNode
 			setHref("");
 		}
 		return this;
+	}
+
+	public static class AnchorTransform
+			implements ModelTransform<Object, Link> {
+		@Override
+		public Link apply(Object t) {
+			return new Link().withId(t.toString());
+		}
 	}
 }

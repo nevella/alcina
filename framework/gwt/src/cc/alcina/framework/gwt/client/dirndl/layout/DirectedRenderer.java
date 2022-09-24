@@ -1,5 +1,6 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.util.AbstractCollection;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -11,6 +12,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
@@ -21,9 +23,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ContextSensitiveTransform;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.ModelTransform;
-import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensitiveTransform;
 
 /**
  * <p>
@@ -39,6 +39,7 @@ import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
  * translate from DirectedNodeRenderer
  *
  */
+@Reflected
 public abstract class DirectedRenderer {
 	protected void applyCssClass(Node node, Widget widget) {
 		if (node.directed.cssClass().length() > 0) {
@@ -74,7 +75,7 @@ public abstract class DirectedRenderer {
 
 	protected abstract void render(DirectedLayout.RendererInput input);
 
-	@Registration({ DirectedRenderer.class, BindableNodeRenderer.class })
+	@Registration({ DirectedRenderer.class, Bindable.class })
 	public static class BindableRenderer extends DirectedRenderer
 			implements GeneratesPropertyInputs {
 		@Override
@@ -92,7 +93,7 @@ public abstract class DirectedRenderer {
 	 * @author nick@alcina.cc
 	 *
 	 */
-	@Registration({ DirectedRenderer.class, CollectionNodeRenderer.class })
+	@Registration({ DirectedRenderer.class, AbstractCollection.class })
 	public static class Collection extends DirectedRenderer
 			implements GeneratesTransformModel {
 		@Override
@@ -136,19 +137,17 @@ public abstract class DirectedRenderer {
 		}
 	}
 
-	@Registration({ DirectedRenderer.class, ContainerNodeRenderer.class })
 	public static class Container extends DirectedRenderer {
 		@Override
 		protected void render(RendererInput input) {
 			Node node = input.node;
 			String tag = getTag(node, false, null);
 			FlowPanel widget = new FlowPanel(tag);
-			node.rendered.widget = widget;
+			node.widget = widget;
 			applyCssClass(node, widget);
 		}
 	}
 
-	@Registration({ DirectedRenderer.class, DelegatingNodeRenderer.class })
 	public static class Delegating extends DirectedRenderer
 			implements GeneratesPropertyInputs {
 		@Override
@@ -159,22 +158,14 @@ public abstract class DirectedRenderer {
 		}
 	}
 
-	@Registration({ DirectedRenderer.class, TextNodeRenderer.class })
-	public static class Text extends Leaf {
-		protected String getModelText(Object model) {
-			return model.toString();
-		}
-
-		protected String getText(Node node) {
-			return node.model == null ? "<null text>"
-					: getModelText(node.model);
-		}
-
+	/*
+	 * Indicates that the annotation/resolution chain does not define a
+	 * renderer. Fall back on the model class
+	 */
+	public static class ModelClass extends DirectedRenderer {
 		@Override
 		protected void render(RendererInput input) {
-			super.render(input);
-			Node node = input.node;
-			node.rendered.widget.getElement().setInnerText(getText(node));
+			throw new UnsupportedOperationException();
 		}
 	}
 
@@ -200,7 +191,6 @@ public abstract class DirectedRenderer {
 	 * registered on the non-transformed node)
 	 *
 	 */
-	@Registration({ DirectedRenderer.class, ModelTransformNodeRenderer.class })
 	public static class TransformRenderer extends DirectedRenderer
 			implements GeneratesTransformModel {
 		@Override
@@ -226,24 +216,44 @@ public abstract class DirectedRenderer {
 			// actually no - but we'll need Directed.transformPhase
 			//
 			// will merge to transformed
+			//
+			// note the special case when input.model == transformedModel
 			Impl descendantResolvedPropertyAnnotation = Directed.Impl
 					.wrap(input.soleDirected());
-			Preconditions.checkArgument(descendantResolvedPropertyAnnotation
-					.bindings().length == 0);
-			descendantResolvedPropertyAnnotation
-					.setRenderer(ModelClassNodeRenderer.class);
-			descendantResolvedPropertyAnnotation
-					.setEmits(Impl.EMPTY_CLASS_ARRAY);
-			descendantResolvedPropertyAnnotation
-					.setReceives(Impl.EMPTY_CLASS_ARRAY);
-			descendantResolvedPropertyAnnotation
-					.setReemits(Impl.EMPTY_CLASS_ARRAY);
+			descendantResolvedPropertyAnnotation.setRenderer(ModelClass.class);
+			if (transformedModel == input.model) {
+				// preserve all other attributes
+			} else {
+				Preconditions.checkArgument(descendantResolvedPropertyAnnotation
+						.bindings().length == 0);
+				descendantResolvedPropertyAnnotation
+						.setEmits(Impl.EMPTY_CLASS_ARRAY);
+				descendantResolvedPropertyAnnotation
+						.setReceives(Impl.EMPTY_CLASS_ARRAY);
+				descendantResolvedPropertyAnnotation
+						.setReemits(Impl.EMPTY_CLASS_ARRAY);
+			}
 			location.resolvedPropertyAnnotations = Arrays
 					.asList(descendantResolvedPropertyAnnotation);
 			location.addConsumed(
 					input.location.getAnnotation(Directed.Transform.class));
 			input.enqueueInput(input.resolver, transformedModel, location, null,
 					input.node);
+		}
+	}
+
+	/**
+	 * Transitional. Allows the model/directedlayout system access to (to wrap)
+	 * a widget
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Registration({ DirectedRenderer.class, Widget.class })
+	public static class WidgetRenderer extends DirectedRenderer {
+		@Override
+		protected void render(RendererInput input) {
+			input.node.widget = (Widget) input.model;
 		}
 	}
 
@@ -295,17 +305,6 @@ public abstract class DirectedRenderer {
 			}
 			Object transformedModel = modelTransform.apply(model);
 			return transformedModel;
-		}
-	}
-
-	static abstract class Leaf extends DirectedRenderer {
-		@Override
-		protected void render(RendererInput input) {
-			Node node = input.node;
-			String tag = getTag(node, true, "span");
-			Preconditions.checkArgument(Ax.notBlank(tag));
-			node.rendered.widget = new SimpleWidget(tag);
-			applyCssClass(node, node.rendered.widget);
 		}
 	}
 }

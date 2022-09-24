@@ -79,11 +79,19 @@ public class ClassReflectorProvider {
 		return new MethodAnnotationProvider(clazz, readMethod);
 	}
 
+	private static Class definingType(PropertyDescriptor descriptor) {
+		if (descriptor.getReadMethod() != null) {
+			return descriptor.getReadMethod().getDeclaringClass();
+		} else {
+			return descriptor.getWriteMethod().getDeclaringClass();
+		}
+	}
+
 	static Property createProperty(Class clazz, PropertyDescriptor descriptor) {
 		return new Property(descriptor.getName(),
 				createMethod(descriptor.getReadMethod()),
 				createMethod(descriptor.getWriteMethod()),
-				descriptor.getPropertyType(), clazz,
+				descriptor.getPropertyType(), clazz, definingType(descriptor),
 				createProvider(clazz, descriptor.getReadMethod()));
 	}
 

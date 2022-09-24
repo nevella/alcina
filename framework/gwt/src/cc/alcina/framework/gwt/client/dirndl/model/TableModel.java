@@ -33,9 +33,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.CollectionNodeRenderer;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.FormModel.ValueModel;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
 import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
@@ -48,12 +47,12 @@ public class TableModel extends Model {
 
 	protected List<TableRow> rows = new ArrayList<>();
 
-	protected List<LinkOld> actions = new ArrayList<>();
+	protected List<Link> actions = new ArrayList<>();
 
 	public TableModel() {
 	}
 
-	public List<LinkOld> getActions() {
+	public List<Link> getActions() {
 		return this.actions;
 	}
 
@@ -152,12 +151,11 @@ public class TableModel extends Model {
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 							Reflections.at(resultClass).templateInstance(),
 							factory, false, true, childResolver);
-			fields
-					.stream().map(field -> {
-						SortDirection fieldDirection = field.getPropertyName()
-								.equals(sortFieldName) ? sortDirection : null;
-						return new TableColumn(field, fieldDirection);
-					}).forEach(model.header.columns::add);
+			fields.stream().map(field -> {
+				SortDirection fieldDirection = field.getPropertyName()
+						.equals(sortFieldName) ? sortDirection : null;
+				return new TableColumn(field, fieldDirection);
+			}).forEach(model.header.columns::add);
 			List<? extends Bindable> rowObjects = activity.getSearchResults()
 					.getQueriedResultObjects();
 			if (rowObjects.size() == 0) {
@@ -328,7 +326,7 @@ public class TableModel extends Model {
 					.forEach(cells::add);
 		}
 
-		@Directed(renderer = CollectionNodeRenderer.class)
+		@Directed
 		public List<TableCell> getCells() {
 			return this.cells;
 		}

@@ -5,7 +5,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import com.google.gwt.user.client.ui.Widget;
+import com.google.common.base.Preconditions;
+import com.google.gwt.dom.client.Element;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -20,55 +21,62 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.RendererInput;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableTypeFactory;
+import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
 
-public class TextNodeRenderer extends LeafNodeRenderer {
+/**
+ * Renderers that emit no new inputs, only a widget
+ *
+ * @author nick@alcina.cc
+ *
+ */
+public abstract class LeafRenderer extends DirectedRenderer {
+	// for dirndl, mostly
+	public static final Object OBJECT_INSTANCE = new Object();
+
 	@Override
-	public Widget render(Node node) {
-		Widget rendered = super.render(node);
-		rendered.getElement().setInnerText(getText(node));
-		return rendered;
+	protected void render(RendererInput input) {
+		Node node = input.node;
+		renderWidget(node);
+		renderNode(node);
 	}
 
-	protected String getModelText(Object model) {
-		return model.toString();
+	protected abstract void renderNode(Node node);
+
+	protected void renderWidget(Node node) {
+		String tag = getTag(node, true, "span");
+		Preconditions.checkArgument(Ax.notBlank(tag));
+		node.widget = new SimpleWidget(tag);
+		applyCssClass(node, node.widget);
 	}
 
-	@Override
-	protected String getTag(Node node) {
-		return getTagPossiblyFromFieldName(node, "span");
+	@Registration({ DirectedRenderer.class, Boolean.class })
+	public static class BooleanRenderer extends Text {
 	}
 
-	protected String getText(Node node) {
-		return node.model == null ? "<null text>" : getModelText(node.model);
-	}
-	/*
-	 * Normally entities, if directly rendered, are the models for actions - so
-	 * just some simple text...
-	 */
-
-	@Registration({ DirectedNodeRenderer.class, Date.class })
-	public static class DateNodeRenderer extends TextNodeRenderer {
+	@Registration({ DirectedRenderer.class, Date.class })
+	public static class DateRenderer extends Text {
 		@Override
 		protected String getModelText(Object model) {
 			return Ax.dateTimeSlash((Date) model);
 		}
 	}
 
-	@Registration({ DirectedNodeRenderer.class, Entity.class })
-	public static class EntityNodeRenderer extends TextNodeRenderer {
+	@Registration({ DirectedRenderer.class, Entity.class })
+	public static class EntityRenderer extends Text {
 		@Override
 		protected String getModelText(Object model) {
 			return "";
 		}
 	}
 
-	@Registration({ DirectedNodeRenderer.class, Enum.class })
-	public static class EnumNodeRenderer extends HasDisplayNameRenderer {
+	@Registration({ DirectedRenderer.class, Enum.class })
+	public static class EnumRenderer extends HasDisplayNameRenderer {
 	}
 
-	public static class HasDisplayNameRenderer extends TextNodeRenderer {
+	public static class HasDisplayNameRenderer extends Text {
 		@Override
 		protected String getModelText(Object model) {
 			if (model instanceof HasDisplayName) {
@@ -76,6 +84,41 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 			} else {
 				return super.getModelText(model);
 			}
+		}
+	}
+
+	public static class Html extends LeafRenderer {
+		protected String getText(Node node) {
+			return node.model == null ? "" : node.model.toString();
+		}
+
+		@Override
+		protected void renderNode(Node node) {
+			node.widget.getElement().setInnerHTML(getText(node));
+		}
+	}
+
+	@Directed(tag = "div", bindings = @Binding(from = "html", type = Type.INNER_HTML))
+	public static class HtmlString extends Model {
+		private String html;
+
+		public HtmlString() {
+		}
+
+		public HtmlString(String html) {
+			setHtml(html);
+		}
+
+		public HtmlString(String template, Object... args) {
+			this(Ax.format(template, args));
+		}
+
+		public String getHtml() {
+			return this.html;
+		}
+
+		public void setHtml(String html) {
+			this.html = html;
 		}
 	}
 
@@ -116,12 +159,26 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	@Registration({ DirectedNodeRenderer.class, Number.class })
-	public static class NumberNodeRenderer extends TextNodeRenderer {
+	@Registration({ DirectedRenderer.class, Number.class })
+	public static class NumberNodeRenderer extends Text {
 	}
 
-	@Registration({ DirectedNodeRenderer.class, Boolean.class })
-	public static class BooleanNodeRenderer extends TextNodeRenderer {
+	public static class SafeHtml extends LeafRenderer {
+		@Override
+		protected String getTag(Node node, boolean respectPropertyNameTags,
+				String defaultTag) {
+			return super.getTag(node, respectPropertyNameTags, "span");
+		}
+
+		@Override
+		protected void renderNode(Node node) {
+			Element element = node.widget.getElement();
+			element.setInnerSafeHtml(
+					(com.google.gwt.safehtml.shared.SafeHtml) node.model);
+			if (element.hasTagName("a")) {
+				element.setAttribute("href", "#");
+			}
+		}
 	}
 
 	@Directed
@@ -166,8 +223,8 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	@Registration({ DirectedNodeRenderer.class, String.class })
-	public static class StringNodeRenderer extends TextNodeRenderer {
+	@Registration({ DirectedRenderer.class, String.class })
+	public static class StringNodeRenderer extends Text {
 	}
 
 	@Directed(bindings = @Binding(from = "string", type = Type.INNER_TEXT))
@@ -206,7 +263,7 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 		}
 	}
 
-	public static class TableHeaders extends TextNodeRenderer.StringListModel {
+	public static class TableHeaders extends StringListModel {
 		public TableHeaders() {
 			super();
 		}
@@ -227,6 +284,26 @@ public class TextNodeRenderer extends LeafNodeRenderer {
 			super(strings);
 		}
 	}
+
+	public static class Text extends LeafRenderer {
+		protected String getModelText(Object model) {
+			return model.toString();
+		}
+
+		protected String getText(Node node) {
+			return node.model == null ? "<null text>"
+					: getModelText(node.model);
+		}
+
+		@Override
+		protected void renderNode(Node node) {
+			node.widget.getElement().setInnerText(getText(node));
+		}
+	}
+	/*
+	 * Normally entities, if directly rendered, are the models for actions - so
+	 * just some simple text...
+	 */
 
 	@Directed(tag = "div", bindings = @Binding(from = "text", type = Type.INNER_TEXT))
 	public static class TextString extends Model {

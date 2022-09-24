@@ -32,7 +32,7 @@ public class Annotations {
 
 	public static <A extends Annotation> A resolve(Property property,
 			Class<A> annotationClass, AnnotationLocation.Resolver resolver) {
-		return new AnnotationLocation(property.getDefiningType(), property,
+		return new AnnotationLocation(property.getOwningType(), property,
 				resolver).getAnnotation(annotationClass);
 	}
 

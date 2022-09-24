@@ -20,7 +20,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.entity.persistence.mvcc.Mvcc;
 
 public class TransformHistory {
 	private static ThreadLocal<Map<EntityLocator, TransformHistory>> cache = new ThreadLocal<Map<EntityLocator, TransformHistory>>() {

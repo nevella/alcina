@@ -28,7 +28,7 @@ public class AnnotationLocation {
 	 */
 	public Class<?> classLocation;
 
-	public Resolver resolver;
+	protected Resolver resolver;
 
 	public List<? extends Annotation> resolvedPropertyAnnotations = null;
 
@@ -101,6 +101,10 @@ public class AnnotationLocation {
 		return resolver.resolveAnnotations(annotationClass, this);
 	}
 
+	public Resolver getResolver() {
+		return this.resolver;
+	}
+
 	public <A extends Annotation> boolean
 			hasAnnotation(Class<A> annotationClass) {
 		return getAnnotation(annotationClass) != null;
@@ -113,7 +117,7 @@ public class AnnotationLocation {
 	}
 
 	public boolean isDefiningType(Class<?> clazz) {
-		return property != null && property.getDefiningType() == clazz;
+		return property != null && property.getOwningType() == clazz;
 	}
 
 	public boolean isPropertyName(String propertyName) {
@@ -139,10 +143,14 @@ public class AnnotationLocation {
 		return null;
 	}
 
+	public void setResolver(Resolver resolver) {
+		this.resolver = resolver;
+	}
+
 	@Override
 	public String toString() {
 		if (property != null) {
-			String declaringSuffix = property.getDefiningType() == classLocation
+			String declaringSuffix = property.getOwningType() == classLocation
 					? ""
 					: Ax.format(" :: [%s]", classLocation.getSimpleName());
 			return Ax.format("%s%s", property.toString(), declaringSuffix);

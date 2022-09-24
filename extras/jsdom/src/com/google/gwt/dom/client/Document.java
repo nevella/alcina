@@ -29,8 +29,6 @@ import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
 import org.w3c.dom.traversal.TreeWalker;
 
-import com.google.gwt.core.client.JavascriptObjectEquivalent;
-
 /**
  * A Document is the root of the HTML hierarchy and holds the entire content.
  * Besides providing access to the hierarchy, it also provides some convenience

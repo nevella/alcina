@@ -28,6 +28,9 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  * - if not, pass to parent
  *
  * - if no overrides (resolution is null), resolve via annotation merge
+ *
+ * FIXME - dirndl1x1a - remove, but keep for historical reasons (replaced by
+ * MergeStrategy, really)
  */
 public class TreeResolver<A extends Annotation> {
 	private TreeResolver<A> parent;

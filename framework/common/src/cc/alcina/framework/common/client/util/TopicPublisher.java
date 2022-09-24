@@ -7,10 +7,6 @@ import java.util.stream.Collectors;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-
 /*
  *
  * Thread-safe (accesses to lookup are synchronized - defensive copy made for publishTopic)

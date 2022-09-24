@@ -24,7 +24,6 @@ import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.reflection.Reflections;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented

@@ -12,8 +12,7 @@ import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
-import cc.alcina.framework.gwt.client.dirndl.layout.DelegatingNodeRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
 
 public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 	/*
@@ -90,8 +89,8 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 
 	public static class Delegating extends Directed.Impl {
 		@Override
-		public Class<? extends DirectedNodeRenderer> renderer() {
-			return DelegatingNodeRenderer.class;
+		public Class<? extends DirectedRenderer> renderer() {
+			return DirectedRenderer.Delegating.class;
 		}
 	}
 }

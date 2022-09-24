@@ -75,8 +75,6 @@ import com.google.gwt.thirdparty.guava.common.collect.Queues;
 import com.google.gwt.thirdparty.guava.common.collect.Sets;
 import com.google.gwt.thirdparty.guava.common.util.concurrent.ThreadFactoryBuilder;
 
-import cc.alcina.framework.common.client.util.Ax;
-
 /**
  * Builds or rebuilds a {@link com.google.gwt.core.ext.typeinfo.TypeOracle} from
  * a set of compilation units.

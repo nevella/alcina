@@ -8,26 +8,29 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class Property implements HasAnnotations {
-	private String name;
+	private final String name;
 
-	private Method getter;
+	private final Method getter;
 
-	private Method setter;
+	private final Method setter;
 
-	private Class type;
+	private final Class type;
 
-	private Class definingType;
+	private final Class owningType;
 
-	private AnnotationProvider annotationResolver;
+	private final AnnotationProvider annotationResolver;
+
+	private final Class declaringType;
 
 	public Property(String name, Method getter, Method setter,
-			Class propertyType, Class definingType,
+			Class propertyType, Class owningType, Class declaringType,
 			AnnotationProvider annotationResolver) {
 		this.name = name;
 		this.getter = getter;
 		this.setter = setter;
 		this.type = propertyType;
-		this.definingType = definingType;
+		this.owningType = owningType;
+		this.declaringType = declaringType;
 		this.annotationResolver = annotationResolver;
 	}
 
@@ -44,12 +47,23 @@ public class Property implements HasAnnotations {
 		return resolveGetter(bean).invoke(bean, CommonUtils.EMPTY_OBJECT_ARRAY);
 	}
 
-	public Class getDefiningType() {
-		return definingType;
+	/**
+	 * The declarer (location of explicit get/set/is method) (ClassReflector
+	 * type) of this property
+	 */
+	public Class getDeclaringType() {
+		return this.declaringType;
 	}
 
 	public String getName() {
 		return this.name;
+	}
+
+	/**
+	 * The owner (ClassReflector type) of this property
+	 */
+	public Class getOwningType() {
+		return owningType;
 	}
 
 	public Class getType() {
@@ -65,7 +79,7 @@ public class Property implements HasAnnotations {
 	}
 
 	public boolean isDefiningType(Class type) {
-		return type == definingType;
+		return type == owningType;
 	}
 
 	public boolean isPropertyName(String name) {
@@ -108,17 +122,17 @@ public class Property implements HasAnnotations {
 
 	@Override
 	public String toString() {
-		return Ax.format("%s.%s : %s", definingType.getSimpleName(), name,
+		return Ax.format("%s.%s : %s", owningType.getSimpleName(), name,
 				type.getSimpleName());
 	}
 
 	protected Method resolveGetter(Object bean) {
-		return bean.getClass() == definingType ? getter
+		return bean.getClass() == owningType ? getter
 				: Reflections.at(bean.getClass()).property(name).getter;
 	}
 
 	protected Method resolveSetter(Object bean) {
-		return bean.getClass() == definingType ? setter
+		return bean.getClass() == owningType ? setter
 				: Reflections.at(bean.getClass()).property(name).setter;
 	}
 

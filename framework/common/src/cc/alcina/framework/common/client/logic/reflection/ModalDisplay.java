@@ -29,12 +29,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 @Resolution(inheritance = {
 		Inheritance.PROPERTY }, mergeStrategy = ModalDisplay.MergeStrategy.class)
 public @interface ModalDisplay {
+	Modal[] value();
+
 	@Reflected
 	public static class MergeStrategy extends
 			AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOnly<ModalDisplay> {
 	}
-
-	Modal[] value();
 
 	@Retention(RetentionPolicy.RUNTIME)
 	@Documented
@@ -66,8 +66,9 @@ public @interface ModalDisplay {
 		private final Mode mode;
 
 		private ModalResolver(ContextResolver parentResolver, Mode mode) {
-			super(parentResolver);
+			super();
 			this.mode = Registry.impl(ModeTransformer.class).apply(mode);
+			this.parent = parentResolver;
 		}
 
 		@Override

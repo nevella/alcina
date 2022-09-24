@@ -61,12 +61,12 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Submit;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents.Attach;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer.AbstractContextSensitiveModelTransform;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.entity.EntityAction;
 import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
@@ -84,7 +84,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 
 	protected List<FormElement> elements = new ArrayList<>();
 
-	protected List<LinkOld> actions = new ArrayList<>();
+	protected List<Link> actions = new ArrayList<>();
 
 	private FormModelState state;
 
@@ -104,7 +104,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 	public FormModel() {
 	}
 
-	public List<LinkOld> getActions() {
+	public List<Link> getActions() {
 		return this.actions;
 	}
 
@@ -403,11 +403,11 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 						}).forEach(model.elements::add);
 			}
 			if (state.adjunct) {
-				model.actions.add(new LinkOld()
-						.withPlace(new ActionRefPlace(SubmitRef.class))
-						.withPrimaryAction(true));
-				model.actions.add(new LinkOld()
-						.withPlace(new ActionRefPlace(CancelRef.class)));
+				new Link().withPlace(new ActionRefPlace(SubmitRef.class))
+						.withClassName(Link.PRIMARY_ACTION)
+						.addTo(model.actions);
+				new Link().withPlace(new ActionRefPlace(CancelRef.class))
+						.addTo(model.actions);
 			} else {
 				if (state.presentationModel != null) {
 					ObjectActions actions = Reflections
@@ -420,15 +420,15 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 								.filter(a -> a instanceof NonstandardObjectAction)
 								.map(a -> (NonstandardObjectAction) a)
 								.forEach(action -> {
-									model.actions.add(new LinkOld()
-											.withNonstandardObjectAction(
-													action));
+									new Link()
+											.withNonstandardObjectAction(action)
+											.addTo(model.actions);
 								});
 					}
 				}
 			}
 			model.actions.removeIf(actionsModulator::isRemoveAction);
-			for (LinkOld link : model.actions) {
+			for (Link link : model.actions) {
 				String overrideLinkText = actionsModulator
 						.getOverrideLinkText(link);
 				if (overrideLinkText != null) {
@@ -440,11 +440,11 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 
 		@Reflected
 		public static class ActionsModulator {
-			public String getOverrideLinkText(LinkOld linkModel) {
+			public String getOverrideLinkText(Link linkModel) {
 				return null;
 			}
 
-			public boolean isRemoveAction(LinkOld linkModel) {
+			public boolean isRemoveAction(Link linkModel) {
 				return false;
 			}
 		}

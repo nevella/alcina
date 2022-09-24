@@ -13,17 +13,10 @@
  */
 package cc.alcina.framework.servlet.servlet;
 
-import java.io.File;
-import java.io.RandomAccessFile;
-import java.nio.charset.StandardCharsets;
-
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
 
 /**

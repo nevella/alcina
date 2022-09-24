@@ -3,7 +3,6 @@ package cc.alcina.framework.common.client.actions;
 import java.io.Serializable;
 
 import cc.alcina.framework.common.client.csobjects.RemoteDebugParams;
-import cc.alcina.framework.common.client.csobjects.ServerControlParams;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 
 public class RemoteDebugAction

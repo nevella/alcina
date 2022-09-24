@@ -888,13 +888,18 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				printMethodRef(getter);
 				sourceWriter.print("Method setter = ");
 				printMethodRef(setter);
+				JClassType declaringType = getter != null
+						? getter.method.getEnclosingType()
+						: setter.method.getEnclosingType();
 				sourceWriter.println("Class propertyType = %s.class;",
 						propertyType.getQualifiedSourceName());
-				sourceWriter.println("Class definingType = %s.class;",
+				sourceWriter.println("Class owningType = %s.class;",
 						ClassReflectorGenerator.this.type
 								.getQualifiedSourceName());
+				sourceWriter.println("Class declaringType = %s.class;",
+						declaringType.getQualifiedSourceName());
 				sourceWriter.print(
-						"Property property = new Property(name, getter, setter, propertyType, definingType, provider)");
+						"Property property = new Property(name, getter, setter, propertyType, owningType, declaringType, provider)");
 				sourceWriter.println("{");
 				sourceWriter.indent();
 				printMethodHoist(getter);

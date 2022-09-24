@@ -9,15 +9,12 @@ import java.lang.annotation.Target;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
-import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
-import cc.alcina.framework.common.client.logic.reflection.resolution.TreeResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedNodeRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelClassNodeRenderer;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransformNodeRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 
 /**
  * <p>
@@ -82,10 +79,10 @@ public @interface Directed {
 	/**
 	 * The class responsible for rendering a view (DOM subtree) from a model
 	 * object. It's normally better style to register a renderer for a model
-	 * class (see e.g. CollectionNodeRenderer), rather than assign via
+	 * class (see e.g. DirectedRenderer.Collection), rather than assign via
 	 * annotation, when using @Directed on a class.
 	 */
-	public Class<? extends DirectedNodeRenderer> renderer() default ModelClassNodeRenderer.class;
+	public Class<? extends DirectedRenderer> renderer() default DirectedRenderer.ModelClass.class;
 
 	public String tag() default "";
 
@@ -100,80 +97,6 @@ public @interface Directed {
 	@Target({ ElementType.TYPE, ElementType.METHOD })
 	@ClientVisible
 	public static @interface Delegating {
-	}
-
-	public static class DirectedResolver extends Directed.Impl {
-		private TreeResolver<Directed> treeResolver;
-
-		private AnnotationLocation location;
-
-		public DirectedResolver(TreeResolver<Directed> treeResolver,
-				AnnotationLocation location) {
-			this.treeResolver = treeResolver;
-			this.location = location;
-		}
-
-		@Override
-		public Class<? extends Annotation> annotationType() {
-			return Directed.class;
-		}
-
-		@Override
-		public Binding[] bindings() {
-			Function<Directed, Binding[]> function = Directed::bindings;
-			return treeResolver.resolve(location, function, "bindings",
-					super.bindings());
-		}
-
-		@Override
-		public String cssClass() {
-			Function<Directed, String> function = Directed::cssClass;
-			return treeResolver.resolve(location, function, "cssClass",
-					super.cssClass());
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] emits() {
-			Function<Directed, Class<? extends NodeEvent>[]> function = Directed::emits;
-			return treeResolver.resolve(location, function, "emits",
-					super.emits());
-		}
-
-		public AnnotationLocation getLocation() {
-			return this.location;
-		}
-
-		@Override
-		public boolean merge() {
-			return false;
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] receives() {
-			Function<Directed, Class<? extends NodeEvent>[]> function = Directed::receives;
-			return treeResolver.resolve(location, function, "receives",
-					super.receives());
-		}
-
-		@Override
-		public Class<? extends NodeEvent>[] reemits() {
-			Function<Directed, Class<? extends NodeEvent>[]> function = Directed::reemits;
-			return treeResolver.resolve(location, function, "reemits",
-					super.reemits());
-		}
-
-		@Override
-		public Class<? extends DirectedNodeRenderer> renderer() {
-			Function<Directed, Class<? extends DirectedNodeRenderer>> function = Directed::renderer;
-			return treeResolver.resolve(location, function, "renderer",
-					super.renderer());
-		}
-
-		@Override
-		public String tag() {
-			Function<Directed, String> function = Directed::tag;
-			return treeResolver.resolve(location, function, "tag", super.tag());
-		}
 	}
 
 	public static class Impl implements Directed {
@@ -205,7 +128,7 @@ public @interface Directed {
 
 		private String tag = "";
 
-		private Class<? extends DirectedNodeRenderer> renderer = ModelClassNodeRenderer.class;
+		private Class<? extends DirectedRenderer> renderer = DirectedRenderer.ModelClass.class;
 
 		public Impl() {
 		}
@@ -270,7 +193,7 @@ public @interface Directed {
 		}
 
 		@Override
-		public Class<? extends DirectedNodeRenderer> renderer() {
+		public Class<? extends DirectedRenderer> renderer() {
 			return renderer;
 		}
 
@@ -298,8 +221,7 @@ public @interface Directed {
 			this.reemits = reemits;
 		}
 
-		public void
-				setRenderer(Class<? extends DirectedNodeRenderer> renderer) {
+		public void setRenderer(Class<? extends DirectedRenderer> renderer) {
 			this.renderer = renderer;
 		}
 
@@ -432,7 +354,7 @@ public @interface Directed {
 	@interface Transform {
 		boolean transformsNull() default false;
 
-		Class<? extends ModelTransformNodeRenderer.ModelTransform> value();
+		Class<? extends ModelTransform> value();
 	}
 
 	/**
