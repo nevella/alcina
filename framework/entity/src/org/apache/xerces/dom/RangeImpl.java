@@ -5,9 +5,9 @@
  * The ASF licenses this file to You under the Apache License, Version 2.0
  * (the "License"); you may not use this file except in compliance with
  * the License.  You may obtain a copy of the License at
- * 
+ *
  *      http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
@@ -17,10 +17,8 @@
 package org.apache.xerces.dom;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.WeakHashMap;
 
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.DOMException;
@@ -29,12 +27,14 @@ import org.w3c.dom.Node;
 import org.w3c.dom.ranges.Range;
 import org.w3c.dom.ranges.RangeException;
 
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+
 /**
  * The RangeImpl class implements the org.w3c.dom.range.Range interface.
  * <p>
  * Please see the API documentation for the interface classes and use the
  * interfaces in your client programs.
- * 
+ *
  * @xerces.internal
  *
  * @version $Id: RangeImpl.java 515302 2007-03-06 21:07:10Z mrglavas $
@@ -48,15 +48,15 @@ public class RangeImpl implements Range {
 
 	static final int DELETE_CONTENTS = 3;
 
-	public static ThreadLocal<Boolean> useIndexLookup = new ThreadLocal<Boolean>() {
-		@Override
-		protected Boolean initialValue() {
-			return false;
-		};
-	};
+	private static ThreadLocal<Map<Node, IndexLookup>> indexLookup = new ThreadLocal<Map<Node, IndexLookup>>();
 
-	private static Map<Node, IndexLookup> indexLookup = Collections
-			.synchronizedMap(new WeakHashMap<>());
+	public static void useIndexLookup(boolean use) {
+		if (use) {
+			indexLookup.set(new Object2ObjectOpenHashMap<>());
+		} else {
+			indexLookup = null;
+		}
+	}
 
 	//
 	// Constants
@@ -947,16 +947,16 @@ public class RangeImpl implements Range {
 	 * caller is trying to find out which node is selected by the given index.
 	 * Note that if the index is greater than the number of children, this
 	 * implies that the first node selected is the parent node itself.
-	 * 
+	 *
 	 * @param container
 	 *            A container node
-	 * 
+	 *
 	 * @param offset
 	 *            An offset within the container for which a selected node
 	 *            should be computed. If the offset is less than zero, or if the
 	 *            offset is greater than the number of children, the container
 	 *            is returned.
-	 * 
+	 *
 	 * @return Returns either a child node of the container or the container
 	 *         itself.
 	 */
@@ -1038,30 +1038,30 @@ public class RangeImpl implements Range {
 	 * a-priori to be on a left or right boundary of the range. This method does
 	 * not properly handle text nodes that contain both the start and end points
 	 * of the range.
-	 * 
+	 *
 	 * @param n
 	 *            The node to be traversed.
-	 * 
+	 *
 	 * @param isLeft
 	 *            Is true if we are traversing the node as part of navigating
 	 *            the "left boundary" of the range. If this value is false, it
 	 *            implies we are navigating the "right boundary" of the range.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will simply return the
 	 *            original node.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but will return a cloned node.
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete the node from
 	 *            it's parent, but will return null.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a node that is the result of visiting the node. If the
 	 *         traversal operation is <code>DELETE_CONTENTS</code> the return
 	 *         value is null.
@@ -1093,34 +1093,34 @@ public class RangeImpl implements Range {
 	 * start and end containers are not the same, and we also know that neither
 	 * the start nor end container is an ancestor of the other. This method is
 	 * invoked by the generic <code>traverse</code> method.
-	 * 
+	 *
 	 * @param startAncestor
 	 *            Given a common ancestor of the start and end containers, this
 	 *            parameter is the ancestor (or self) of the start container
 	 *            that is a direct child of the common ancestor.
-	 * 
+	 *
 	 * @param endAncestor
 	 *            Given a common ancestor of the start and end containers, this
 	 *            parameter is the ancestor (or self) of the end container that
 	 *            is a direct child of the common ancestor.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will produce a document
 	 *            fragment containing the range's content. Partially selected
 	 *            nodes are copied, but fully selected nodes are moved.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but sill produced cloned content in
 	 *            a document fragment
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete from the
 	 *            context tree of the range, all fully selected nodes.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a document fragment containing any copied or extracted
 	 *         nodes. If the <code>how</code> parameter was
 	 *         <code>DELETE_CONTENTS</code>, the return value is null.
@@ -1162,28 +1162,28 @@ public class RangeImpl implements Range {
 	 * start and end containers are not the same, but the end container is an
 	 * ancestor of the start container. This method is invoked by the generic
 	 * <code>traverse</code> method.
-	 * 
+	 *
 	 * @param startAncestor
 	 *            The ancestor of the start container that is a direct child of
 	 *            the end container.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will produce a document
 	 *            fragment containing the range's content. Partially selected
 	 *            nodes are copied, but fully selected nodes are moved.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but sill produced cloned content in
 	 *            a document fragment
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete from the
 	 *            context tree of the range, all fully selected nodes.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a document fragment containing any copied or extracted
 	 *         nodes. If the <code>how</code> parameter was
 	 *         <code>DELETE_CONTENTS</code>, the return value is null.
@@ -1220,28 +1220,28 @@ public class RangeImpl implements Range {
 	 * start and end containers are not the same, but the start container is an
 	 * ancestor of the end container. This method is invoked by the generic
 	 * <code>traverse</code> method.
-	 * 
+	 *
 	 * @param endAncestor
 	 *            The ancestor of the end container that is a direct child of
 	 *            the start container.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will produce a document
 	 *            fragment containing the range's content. Partially selected
 	 *            nodes are copied, but fully selected nodes are moved.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but sill produced cloned content in
 	 *            a document fragment
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete from the
 	 *            context tree of the range, all fully selected nodes.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a document fragment containing any copied or extracted
 	 *         nodes. If the <code>how</code> parameter was
 	 *         <code>DELETE_CONTENTS</code>, the return value is null.
@@ -1287,35 +1287,35 @@ public class RangeImpl implements Range {
 	 * This is the master routine invoked to visit the nodes selected by this
 	 * range. For each such node, different actions are taken depending on the
 	 * value of the <code>how</code> argument.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will produce a document
 	 *            fragment containing the range's content. Partially selected
 	 *            nodes are copied, but fully selected nodes are moved.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but sill produced cloned content in
 	 *            a document fragment
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete from the
 	 *            context tree of the range, all fully selected nodes.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a document fragment containing any copied or extracted
 	 *         nodes. If the <code>how</code> parameter was
 	 *         <code>DELETE_CONTENTS</code>, the return value is null.
 	 */
 	private DocumentFragment traverseContents(int how) throws DOMException {
-		boolean use = useIndexLookup.get();
+		Map<Node, IndexLookup> map = indexLookup.get();
 		try {
-			useIndexLookup.set(false);
+			indexLookup.set(null);
 			return traverseContents0(how);
 		} finally {
-			useIndexLookup.set(use);
+			indexLookup.set(map);
 		}
 	}
 
@@ -1386,25 +1386,25 @@ public class RangeImpl implements Range {
 	/**
 	 * Utility method for traversing a single node when we know a-priori that
 	 * the node if fully selected.
-	 * 
+	 *
 	 * @param n
 	 *            The node to be traversed.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will simply return the
 	 *            original node.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but will return a cloned node.
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete the node from
 	 *            it's parent, but will return null.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a node that is the result of visiting the node. If the
 	 *         traversal operation is <code>DELETE_CONTENTS</code> the return
 	 *         value is null.
@@ -1436,9 +1436,9 @@ public class RangeImpl implements Range {
 	 * the range's end container.
 	 * <p>
 	 * A "left boundary" is best visualized by thinking of a sample tree:
-	 * 
+	 *
 	 * <pre>
-	 * 
+	 *
 	 *                 A
 	 *                /|\
 	 *               / | \
@@ -1447,7 +1447,7 @@ public class RangeImpl implements Range {
 	 *            /|\     /|\
 	 *           E F G   H I J
 	 * </pre>
-	 * 
+	 *
 	 * Imagine first a range that begins between the "E" and "F" nodes and ends
 	 * between the "I" and "J" nodes. The start container is "B" and the end
 	 * container is "D". Given this setup, the following applies:
@@ -1461,27 +1461,27 @@ public class RangeImpl implements Range {
 	 * <p>
 	 * In this example, the nodes that are traversed as "left boundary" nodes
 	 * are: F, G, and B.
-	 * 
+	 *
 	 * @param root
 	 *            The node that is the root of the "left boundary" subtree.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will produce a node
 	 *            containing the boundaries content. Partially selected nodes
 	 *            are copied, but fully selected nodes are moved.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but will produced cloned content.
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete from the
 	 *            context tree of the range, all fully selected nodes within the
 	 *            boundary.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a node that is the result of visiting nodes. If the
 	 *         traversal operation is <code>DELETE_CONTENTS</code> the return
 	 *         value is null.
@@ -1521,37 +1521,37 @@ public class RangeImpl implements Range {
 	 * text node containing both the start and end offsets. Such nodes should
 	 * have been previously detected and been routed to
 	 * traverseCharacterDataNode.
-	 * 
+	 *
 	 * @param n
 	 *            The node to be traversed.
-	 * 
+	 *
 	 * @param isFullySelected
 	 *            Set to true if the node is fully selected. Should be false
 	 *            otherwise. Note that although the DOM 2 specification says
 	 *            that a text node that is boththe start and end container is
 	 *            not selected, we treat it here as if it were partially
 	 *            selected.
-	 * 
+	 *
 	 * @param isLeft
 	 *            Is true if we are traversing the node as part of navigating
 	 *            the "left boundary" of the range. If this value is false, it
 	 *            implies we are navigating the "right boundary" of the range.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will simply return the
 	 *            original node.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but will return a cloned node.
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete the node from
 	 *            it's parent, but will return null.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a node that is the result of visiting the node. If the
 	 *         traversal operation is <code>DELETE_CONTENTS</code> the return
 	 *         value is null.
@@ -1573,25 +1573,25 @@ public class RangeImpl implements Range {
 	/**
 	 * Utility method for traversing a single node when we know a-priori that
 	 * the node if partially selected and is not a text node.
-	 * 
+	 *
 	 * @param n
 	 *            The node to be traversed.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will simply return the
 	 *            original node.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but will return a cloned node.
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete the node from
 	 *            it's parent, but will return null.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a node that is the result of visiting the node. If the
 	 *         traversal operation is <code>DELETE_CONTENTS</code> the return
 	 *         value is null.
@@ -1614,7 +1614,7 @@ public class RangeImpl implements Range {
 	 * the range's start container.
 	 * <p>
 	 * A "right boundary" is best visualized by thinking of a sample tree:
-	 * 
+	 *
 	 * <pre>
 	 *                 A
 	 *                /|\
@@ -1624,7 +1624,7 @@ public class RangeImpl implements Range {
 	 *            /|\     /|\
 	 *           E F G   H I J
 	 * </pre>
-	 * 
+	 *
 	 * Imagine first a range that begins between the "E" and "F" nodes and ends
 	 * between the "I" and "J" nodes. The start container is "B" and the end
 	 * container is "D". Given this setup, the following applies:
@@ -1637,27 +1637,27 @@ public class RangeImpl implements Range {
 	 * <p>
 	 * In this example, the nodes that are traversed as "right boundary" nodes
 	 * are: H, I, and D.
-	 * 
+	 *
 	 * @param root
 	 *            The node that is the root of the "right boundary" subtree.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will produce a node
 	 *            containing the boundaries content. Partially selected nodes
 	 *            are copied, but fully selected nodes are moved.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but will produced cloned content.
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete from the
 	 *            context tree of the range, all fully selected nodes within the
 	 *            boundary.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a node that is the result of visiting nodes. If the
 	 *         traversal operation is <code>DELETE_CONTENTS</code> the return
 	 *         value is null.
@@ -1698,24 +1698,24 @@ public class RangeImpl implements Range {
 	 * Visits the nodes selected by this range when we know a-priori that the
 	 * start and end containers are the same. This method is invoked by the
 	 * generic <code>traverse</code> method.
-	 * 
+	 *
 	 * @param how
 	 *            Specifies what type of traversal is being requested (extract,
 	 *            clone, or delete). Legal values for this argument are:
-	 * 
+	 *
 	 *            <ol>
 	 *            <li><code>EXTRACT_CONTENTS</code> - will produce a document
 	 *            fragment containing the range's content. Partially selected
 	 *            nodes are copied, but fully selected nodes are moved.
-	 * 
+	 *
 	 *            <li><code>CLONE_CONTENTS</code> - will leave the context tree
 	 *            of the range undisturbed, but sill produced cloned content in
 	 *            a document fragment
-	 * 
+	 *
 	 *            <li><code>DELETE_CONTENTS</code> - will delete from the
 	 *            context tree of the range, all fully selected nodes.
 	 *            </ol>
-	 * 
+	 *
 	 * @return Returns a document fragment containing any copied or extracted
 	 *         nodes. If the <code>how</code> parameter was
 	 *         <code>DELETE_CONTENTS</code>, the return value is null.
@@ -1824,11 +1824,12 @@ public class RangeImpl implements Range {
 		if (child.getParentNode() != parent)
 			return -1;
 		int i = 0;
-		if (useIndexLookup.get() && parent.getChildNodes().getLength() > 100) {
-			if (!indexLookup.containsKey(parent)) {
-				indexLookup.put(parent, new IndexLookup());
+		Map<Node, IndexLookup> map = indexLookup.get();
+		if (map != null && parent.getChildNodes().getLength() > 100) {
+			if (!map.containsKey(parent)) {
+				map.put(parent, new IndexLookup());
 			}
-			return indexLookup.get(parent).getIndex(child);
+			return map.get(parent).getIndex(child);
 		}
 		for (Node node = parent.getFirstChild(); node != child; node = node
 				.getNextSibling()) {
