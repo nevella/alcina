@@ -150,7 +150,7 @@ public class InternalMetrics {
 			InternalMetric metric = PersistentImpl
 					.getNewImplementationInstance(InternalMetric.class);
 			ResultSet rs = SqlUtils.executeQuery(statement, Ax.format(
-					"select * from  internalmetric where callname='%s' and clientinstanceid=%s;",
+					"select * from  internalmetric where callname='%s' and clientinstanceid=%s order by id desc limit 1;",
 					callName, clientInstanceId));
 			rs.next();
 			metric.setId(rs.getLong("id"));

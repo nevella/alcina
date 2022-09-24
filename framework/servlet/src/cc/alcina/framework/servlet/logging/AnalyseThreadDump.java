@@ -108,11 +108,19 @@ public class AnalyseThreadDump {
 
 	public static class TdModel {
 		public static TdModel parse(String dump) {
+			return parse(dump, true);
+		}
+
+		public static TdModel parse(String dump, boolean jStack) {
 			TdModel model = new TdModel();
 			TdModelThread currentThread = null;
 			State state = State.outside_thread;
 			Pattern firstLinePattern = Pattern
 					.compile("\"(.+?)\".+?os_prio=\\d+.+?(?: in (\\S+).+)?");
+			if (!jStack) {
+				firstLinePattern = Pattern
+						.compile("^Thread\\[(.+),(\\d+),(.+)\\]");
+			}
 			Pattern synchronizersPattern = Pattern
 					.compile("Locked ownable synchronizers:");
 			Pattern statePattern = Pattern

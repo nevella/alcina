@@ -467,7 +467,7 @@ public class ResourceUtilities {
 			new File("/tmp/log").mkdirs();
 			String path = "/tmp/log/" + fileName;
 			writeStringToFile(content, path);
-			Ax.out("Logged to: %s", path);
+			Ax.out("Logged to: %s ", path);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
