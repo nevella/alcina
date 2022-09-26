@@ -54,7 +54,7 @@ public class RangeImpl implements Range {
 		if (use) {
 			indexLookup.set(new Object2ObjectOpenHashMap<>());
 		} else {
-			indexLookup = null;
+			indexLookup.set(null);
 		}
 	}
 
