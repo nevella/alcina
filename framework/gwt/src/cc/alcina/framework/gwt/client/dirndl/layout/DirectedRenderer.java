@@ -2,7 +2,6 @@ package cc.alcina.framework.gwt.client.dirndl.layout;
 
 import java.util.AbstractCollection;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -103,8 +102,6 @@ public abstract class DirectedRenderer {
 			// zero widgets for the container, generates input per child
 			List list = (List) ((java.util.Collection) input.model).stream()
 					.collect(Collectors.toList());
-			// reverse for traversal order (see DirectedLayout.layout())
-			Collections.reverse(list);
 			list.forEach(model -> {
 				Object transformedModel = transformModel(input, model);
 				// the @Directed for the collection element is merge (the input
@@ -259,14 +256,9 @@ public abstract class DirectedRenderer {
 
 	interface GeneratesPropertyInputs {
 		default void generatePropertyInputs(RendererInput input) {
-			// Enqueue in reverse order because processed (added to parent) in
-			// last-first order
-			// FIXME - 1.1 - cache this reversed order (actually, use a
-			// different structure, add to start and use 'add first'
 			List<Property> properties = Reflections.at((input.model.getClass()))
 					.properties();
 			properties = properties.stream().collect(Collectors.toList());
-			Collections.reverse(properties);
 			for (Property property : properties) {
 				HasAnnotations directedProperty = input.resolver
 						.resolveDirectedProperty(property);

@@ -4,8 +4,6 @@ import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Deque;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Predicate;
@@ -33,6 +31,7 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.DepthFirstTraversal;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -40,6 +39,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
 import cc.alcina.framework.gwt.client.dirndl.model.HasBind;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -136,10 +136,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  *  @formatter:on
  */
 public class DirectedLayout {
-	private static Logger logger2 = LoggerFactory
-			.getLogger(DirectedLayout.class);
+	static Logger logger = LoggerFactory.getLogger(DirectedLayout.class);
 	static {
-		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.OFF);
+		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.INFO);
 	}
 
 	public static boolean trace = false;
@@ -147,12 +146,26 @@ public class DirectedLayout {
 	// FIXME - remove
 	public static Node current = null;
 
+	/**
+	 * <p>
+	 * Input for the renderer, which transforms a model found at an
+	 * annotationlocation and a list of (usually a singleton) directed
+	 * annotations into (0,1) widgets and (0,n) RendererInputs
+	 *
+	 * <p>
+	 * When a node is removed, if a widget was generated during rendering, that
+	 * widget is removed from its parent, otherwise (recursively) its child
+	 * nodes' widgets are removed (TODO - explain with reasoning/motivation)
+	 *
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	private Node root = null;
 
-	// TODO - to preserve transformation order, collection elements and
-	// properties are added in reverse order. Make a structure that removes the
-	// need for a reverse()
-	Deque<RendererInput> rendererInputs = new LinkedList();
+	DepthFirstTraversal<RendererInput> rendererInputs;
+
+	boolean inLayout = false;
 
 	/**
 	 * Render a model object and add top-level output widgets to the parent
@@ -164,7 +177,7 @@ public class DirectedLayout {
 				null);
 		enqueueInput(resolver, model, location, null, null);
 		layout();
-		return root.firstDescendantWidget().orElse(null);
+		return root.firstDescendantWidget();
 	}
 
 	RendererInput enqueueInput(ContextResolver resolver, Object model,
@@ -177,21 +190,31 @@ public class DirectedLayout {
 		// }
 		RendererInput input = new RendererInput(resolver, model, location,
 				directeds, parentNode);
-		rendererInputs.add(input);
+		// beginning of a layout
+		if (rendererInputs == null) {
+			rendererInputs = new DepthFirstTraversal<>(input, o -> null, false);
+		} else {
+			rendererInputs.add(input);
+		}
 		return input;
 	}
 
 	// The algorithm. Gosh.
 	void layout() {
-		do {
-			// Inputs are added to the end of the deque, so removeLast() is a
-			// depth-first traversal
-			RendererInput input = rendererInputs.removeLast();
-			if (root == null) {
-				root = input.node;
-			}
-			input.render();
-		} while (rendererInputs.size() > 0);
+		try {
+			inLayout = true;
+			do {
+				// depth-first traversal
+				RendererInput input = rendererInputs.next();
+				if (root == null) {
+					root = input.node;
+				}
+				input.render();
+			} while (rendererInputs.hasNext());
+		} finally {
+			inLayout = false;
+			rendererInputs = null;
+		}
 	}
 
 	/**
@@ -255,6 +278,8 @@ public class DirectedLayout {
 		private ChildReplacer replacementListener;
 
 		Widget widget;
+
+		private InsertionPoint insertionPoint;
 
 		protected Node(ContextResolver resolver, Node parent,
 				AnnotationLocation annotationLocation, Object model) {
@@ -343,21 +368,17 @@ public class DirectedLayout {
 			throw new UnsupportedOperationException();
 		}
 
-		public void remove() {
-			resolveRenderedWidgets().forEach(Widget::removeFromParent);
-			if (parent != null) {
-				parent.children.remove(this);
-			}
-			unbind();
-		}
-
 		public <T> T resolveRenderContextProperty(String key) {
 			return resolver.resolveRenderContextProperty(key);
 		}
 
+		public String toParentStack() {
+			return path();
+		}
+
 		@Override
 		public String toString() {
-			return path();
+			return pathSegment();
 		}
 
 		private void bindBehaviours() {
@@ -416,6 +437,25 @@ public class DirectedLayout {
 					property.getName());
 		}
 
+		private Widget provideWidgetOrLastDescendantChildWidget() {
+			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
+					this, node -> node.children, true);
+			for (Node node : traversal) {
+				if (node.widget != null) {
+					return node.widget;
+				}
+			}
+			return null;
+		}
+
+		private void remove() {
+			resolveRenderedWidgets().forEach(Widget::removeFromParent);
+			if (parent != null) {
+				parent.children.remove(this);
+			}
+			unbind();
+		}
+
 		private void resolveRenderedWidgets0(List<Widget> list) {
 			if (hasWidget()) {
 				list.add(getWidget());
@@ -440,20 +480,15 @@ public class DirectedLayout {
 			}
 		}
 
-		Optional<Widget> firstDescendantWidget() {
-			Node cursor = this;
-			for (;;) {
-				Widget widget = cursor.widget;
-				if (widget != null) {
-					return Optional.of(widget);
-				} else {
-					if (cursor.children.size() == 1) {
-						cursor = cursor.children.get(0);
-					} else {
-						return Optional.empty();
-					}
+		Widget firstDescendantWidget() {
+			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
+					this, node -> node.children, false);
+			for (Node node : traversal) {
+				if (node.widget != null) {
+					return node.widget;
 				}
 			}
+			return null;
 		}
 
 		Optional<Widget> firstSelfOrAncestorWidget(boolean includeSelf) {
@@ -512,18 +547,27 @@ public class DirectedLayout {
 		// no
 		// previous sibling widget (so return null)
 		//
+		// but...
+		//
 		// TODO - optimise use of index/indexOf
-		Widget resolveInsertAfter() {
+		InsertionPoint resolveInsertionPoint() {
+			InsertionPoint result = new InsertionPoint();
+			result.point = Point.FIRST;
+			result.pending = true;
 			Node cursor = this;
-			Widget ancestorWidget = firstSelfOrAncestorWidget(false).get();
+			result.container = firstSelfOrAncestorWidget(false).get();
 			while (true) {
 				if (cursor != this) {
-					if (cursor.hasWidget()) {
-						Widget widget = cursor.getWidget();
-						if (widget == ancestorWidget) {
-							return null;
+					Widget widget = cursor
+							.provideWidgetOrLastDescendantChildWidget();
+					if (widget != null) {
+						if (widget == result.container) {
+							// no preceding widget, insert first
+							return result;
 						} else {
-							return widget;
+							result.point = Point.AFTER;
+							result.after = widget;
+							return result;
 						}
 					}
 				}
@@ -574,6 +618,7 @@ public class DirectedLayout {
 
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
+				Preconditions.checkState(!resolver.getLayout().inLayout);
 				// The input can mostly be constructed from this node (only the
 				// model differs)
 				Object newValue = evt.getNewValue();
@@ -800,21 +845,26 @@ public class DirectedLayout {
 		public void onEvent(GwtEvent event);
 	}
 
-	/**
-	 * <p>
-	 * Input for the renderer, which transforms a model found at an
-	 * annotationlocation and a list of (usually a singleton) directed
-	 * annotations into (0,1) widgets and (0,n) RendererInputs
-	 *
-	 * <p>
-	 * When a node is removed, if a widget was generated during rendering, that
-	 * widget is removed from its parent, otherwise (recursively) its child
-	 * nodes' widgets are removed (TODO - explain with reasoning/motivation)
-	 *
-	 *
-	 * @author nick@alcina.cc
-	 *
-	 */
+	static class InsertionPoint {
+		Point point = Point.LAST;
+
+		Widget after;
+
+		Widget container;
+
+		boolean pending = false;
+
+		public void consume() {
+			after = null;
+			container = null;
+			pending = false;
+		}
+
+		enum Point {
+			FIRST, AFTER, LAST
+		}
+	}
+
 	class RendererInput {
 		ContextResolver resolver;
 
@@ -830,8 +880,6 @@ public class DirectedLayout {
 
 		Node replace;
 
-		private Widget insertAfter;
-
 		RendererInput(ContextResolver resolver, Object model,
 				AnnotationLocation location, List<Directed> directeds,
 				Node parentNode) {
@@ -843,9 +891,11 @@ public class DirectedLayout {
 					: location.getAnnotations(Directed.class);
 			// generate the node (1-1 with input)
 			node = new Node(resolver, parentNode, location, model);
-			if (parentNode != null) {
-				parentNode.children.add(node);
-			}
+			// don't add to parents yet (out of order) - but once we have a
+			// better queue, do
+			// if (parentNode != null) {
+			// parentNode.children.add(node);
+			// }
 			node.directed = firstDirected();
 		}
 
@@ -855,8 +905,8 @@ public class DirectedLayout {
 
 		@Override
 		public String toString() {
-			return Ax.format("Node:\n%s\n\nLocation: %s\n\nRenderer: %s", node,
-					location.toString(),
+			return Ax.format("Node:\n%s\n\nLocation: %s\n\nRenderer: %s",
+					node.toParentStack(), location.toString(),
 					provideRenderer().getClass().getSimpleName());
 		}
 
@@ -872,18 +922,31 @@ public class DirectedLayout {
 				if (firstAncestorWidget.isPresent()) {
 					ComplexPanel panel = (ComplexPanel) firstAncestorWidget
 							.get();
-					if (insertAfter != null) {
+					// in most cases, insertionPoint will be the default (LAST),
+					// so don't set the field in that case . But use here to
+					// make the logic clearer
+					InsertionPoint insertionPoint = node.insertionPoint != null
+							? node.insertionPoint
+							: new InsertionPoint();
+					switch (insertionPoint.point) {
+					case FIRST:
+						((ForIsWidget) panel).insert(node.widget, 0);
+						break;
+					case AFTER:
 						int insertAfterIndex = panel
-								.getWidgetIndex(insertAfter);
+								.getWidgetIndex(insertionPoint.after);
 						if (insertAfterIndex < panel.getWidgetCount() - 1) {
 							((ForIsWidget) panel).insert(node.widget,
 									insertAfterIndex + 1);
 						} else {
 							panel.add(node.widget);
 						}
-					} else {
+						break;
+					case LAST:
 						panel.add(node.widget);
+						break;
 					}
+					insertionPoint.consume();
 				}
 			}
 			if (directeds.size() > 1) {
@@ -905,9 +968,6 @@ public class DirectedLayout {
 				location.setResolver(resolver);
 			}
 			if (model instanceof DirectedLayout.Lifecycle) {
-				// FIXME - dirndl 1.0 - lifecycle -> abstract class,
-				// HasLifecycle, yadda
-				// beforeRRender -> (maybe) first time render
 				((DirectedLayout.Lifecycle) model).beforeRender();
 			}
 			resolver.beforeRender(model);
@@ -927,8 +987,21 @@ public class DirectedLayout {
 
 		void render() {
 			if (replace != null) {
-				insertAfter = replace.resolveInsertAfter();
+				node.insertionPoint = replace.resolveInsertionPoint();
+				int indexInParentChildren = parentNode.children
+						.indexOf(replace);
 				replace.remove();
+				parentNode.children.add(indexInParentChildren, node);
+			} else {
+				if (parentNode != null) {
+					// add fairly late, to ensure we're in insertion order
+					parentNode.children.add(node);
+					// complexities of delegation and child replacement
+					if (parentNode.insertionPoint != null
+							&& parentNode.insertionPoint.pending) {
+						node.insertionPoint = parentNode.insertionPoint;
+					}
+				}
 			}
 			beforeRender();
 			if (model != null) {
