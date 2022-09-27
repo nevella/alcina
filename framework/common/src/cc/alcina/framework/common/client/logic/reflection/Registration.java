@@ -145,14 +145,14 @@ public @interface Registration {
 		}
 
 		public static class Shared {
-			public static List<Registration> merge(List<Registration> higher,
-					List<Registration> lower,
+			public static List<Registration> merge(List<Registration> lessSpecific,
+					List<Registration> moreSpecific,
 					BiPredicate<Class, Class> assignableFrom) {
-				if (higher.isEmpty()) {
-					return lower;
+				if (lessSpecific.isEmpty()) {
+					return moreSpecific;
 				}
-				if (lower.isEmpty()) {
-					return higher;
+				if (moreSpecific.isEmpty()) {
+					return lessSpecific;
 				}
 				// Remove any registrations with identical 'descendant' keys
 				// (more
@@ -183,44 +183,44 @@ public @interface Registration {
 				// key keys[a][n>0] by the more specific
 				// subtype
 				//
-				List<Registration> merged = lower.stream()
+				List<Registration> merged = moreSpecific.stream()
 						.collect(Collectors.toList());
-				higher.stream().filter(
-						k -> !containsDescendant(lower, k, assignableFrom))
+				lessSpecific.stream().filter(
+						k -> !containsDescendant(moreSpecific, k, assignableFrom))
 						.forEach(merged::add);
 				return merged;
 			}
 
 			private static boolean containsDescendant(
-					List<Registration> higherList,
-					Registration lowerRegistration,
+					List<Registration> lessSpecificList,
+					Registration moreSpecificRegistration,
 					BiPredicate<Class, Class> assignableFrom) {
-				return higherList.stream().anyMatch(higherRegistration -> {
-					Class[] higher = higherRegistration.value();
-					Class[] lower = lowerRegistration.value();
-					if (higher[0] != lower[0]) {
+				return lessSpecificList.stream().anyMatch(lessSpecificRegistration -> {
+					Class[] lessSpecific = lessSpecificRegistration.value();
+					Class[] moreSpecific = moreSpecificRegistration.value();
+					if (lessSpecific[0] != moreSpecific[0]) {
 						return false;
 					}
-					if (higher.length < lower.length) {
+					if (lessSpecific.length < moreSpecific.length) {
 						throw new IllegalArgumentException(
 								"Registrations with the same initial key must have >= length (in a subtype chain)");
 					}
-					if (higher.length == 1) {
+					if (lessSpecific.length == 1) {
 						return true;
 					}
-					for (int idx = 1; idx < higher.length - 1; idx++) {
-						if (idx == lower.length) {
+					for (int idx = 1; idx < lessSpecific.length - 1; idx++) {
+						if (idx == moreSpecific.length) {
 							return true;
 						}
-						if (higher[idx] != lower[idx]) {
+						if (lessSpecific[idx] != moreSpecific[idx]) {
 							return false;
 						}
 					}
-					if (higher.length > lower.length) {
+					if (lessSpecific.length > moreSpecific.length) {
 						return true;
 					}
-					return assignableFrom.test(lower[higher.length - 1],
-							higher[higher.length - 1]);
+					return assignableFrom.test(moreSpecific[lessSpecific.length - 1],
+							lessSpecific[lessSpecific.length - 1]);
 				});
 			}
 		}

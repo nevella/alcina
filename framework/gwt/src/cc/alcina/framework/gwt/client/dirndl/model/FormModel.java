@@ -372,9 +372,9 @@ public class FormModel extends Model
 					? Reflections.newInstance(args.fieldModulator())
 					: new FieldModulator();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			ModalResolver childResolver = ModalResolver
-					.single(node.getResolver(), !state.editable);
-			node.pushChildResolver(childResolver);
+			ModalResolver childResolver = ModalResolver.single(node,
+					!state.editable);
+			node.setResolver(childResolver);
 			if (state.model != null) {
 				if (state.model instanceof UserProperty) {
 					state.presentationModel = (Bindable) ((UserProperty) state.model)

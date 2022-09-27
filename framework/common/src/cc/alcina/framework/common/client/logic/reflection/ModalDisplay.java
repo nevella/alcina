@@ -21,6 +21,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
@@ -50,25 +51,32 @@ public @interface ModalDisplay {
 		Validator[] validator() default {};
 	}
 
+	/**
+	 * Applies only to the children of the node on which this is set (Form,
+	 * Table)
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public static class ModalResolver extends ContextResolver {
-		public static ModalResolver multiple(ContextResolver parentResolver,
-				boolean readOnly) {
-			return new ModalResolver(parentResolver,
+		public static ModalResolver multiple(Node node, boolean readOnly) {
+			return new ModalResolver(node,
 					readOnly ? Mode.MULTIPLE_READ : Mode.MULTIPLE_WRITE);
 		}
 
-		public static ModalResolver single(ContextResolver parentResolver,
-				boolean readOnly) {
-			return new ModalResolver(parentResolver,
+		public static ModalResolver single(Node node, boolean readOnly) {
+			return new ModalResolver(node,
 					readOnly ? Mode.SINGLE_READ : Mode.SINGLE_WRITE);
 		}
 
 		private final Mode mode;
 
-		private ModalResolver(ContextResolver parentResolver, Mode mode) {
-			super();
+		private Node node;
+
+		private ModalResolver(Node node, Mode mode) {
+			super(node.getResolver());
+			this.node = node;
 			this.mode = Registry.impl(ModeTransformer.class).apply(mode);
-			this.parent = parentResolver;
 		}
 
 		@Override
@@ -85,6 +93,9 @@ public @interface ModalDisplay {
 		@Override
 		public <A extends Annotation> A resolveAnnotation(
 				Class<A> annotationClass, AnnotationLocation location) {
+			if (location == node.getAnnotationLocation()) {
+				return parent.resolveAnnotation(annotationClass, location);
+			}
 			boolean customResolution = annotationClass == Display.class
 					|| annotationClass == Custom.class
 					|| annotationClass == Validator.class;

@@ -247,6 +247,8 @@ public class DirectedLayout {
 	 * are heavyweight, and leaves need not be so much so)
 	 */
 	public static class Node {
+		// not necessarily unchanged during the Node's lifetime - the renderer
+		// can change it if required
 		private ContextResolver resolver;
 
 		final Object model;
@@ -326,6 +328,10 @@ public class DirectedLayout {
 			}
 		}
 
+		public AnnotationLocation getAnnotationLocation() {
+			return this.annotationLocation;
+		}
+
 		public <T> T getModel() {
 			return (T) this.model;
 		}
@@ -350,15 +356,15 @@ public class DirectedLayout {
 			return Optional.ofNullable(annotation(clazz));
 		}
 
-		// FIXME - dirndl1x1 - check this (whether a resolver should apply to
-		// *this* input or just child inputs)
-		public void pushChildResolver(ContextResolver resolver) {
-			// this.childResolver = resolver;
-			throw new UnsupportedOperationException();
-		}
-
 		public <T> T resolveRenderContextProperty(String key) {
 			return resolver.resolveRenderContextProperty(key);
+		}
+
+		// Rare - but crucial - called by a DirectedRenderer
+		// (DirectedRenderer.Transform transform ), imperatively setup a child
+		// renderer
+		public void setResolver(ContextResolver resolver) {
+			this.resolver = resolver;
 		}
 
 		public String toParentStack() {

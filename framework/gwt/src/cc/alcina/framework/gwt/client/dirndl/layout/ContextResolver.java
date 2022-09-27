@@ -40,9 +40,14 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	protected Object inputModel;
 
 	/**
-	 *
+	 * Prefer the call to
 	 */
 	public ContextResolver() {
+	}
+
+	public ContextResolver(ContextResolver parent) {
+		this.parent = parent;
+		this.layout = parent.layout;
 	}
 
 	public void beforeRender(Object inputModel) {

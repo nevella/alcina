@@ -107,14 +107,14 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	public static abstract class AdditiveMergeStrategy<A extends Annotation>
 			extends AbstractMergeStrategy<A> {
 		@Override
-		public List<A> merge(List<A> higher, List<A> lower) {
-			if (higher.isEmpty()) {
-				return lower;
+		public List<A> merge(List<A> lessSpecific, List<A> moreSpecific) {
+			if (lessSpecific.isEmpty()) {
+				return moreSpecific;
 			}
-			if (lower.isEmpty()) {
-				return higher;
+			if (moreSpecific.isEmpty()) {
+				return lessSpecific;
 			}
-			return Stream.concat(higher.stream(), lower.stream())
+			return Stream.concat(lessSpecific.stream(), moreSpecific.stream())
 					.collect(Collectors.toList());
 		}
 	}
@@ -122,15 +122,15 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	public static abstract class SingleResultMergeStrategy<A extends Annotation>
 			extends AbstractMergeStrategy<A> {
 		@Override
-		public List<A> merge(List<A> higher, List<A> lower) {
-			if (higher.isEmpty()) {
-				return lower;
+		public List<A> merge(List<A> lessSpecific, List<A> moreSpecific) {
+			if (lessSpecific.isEmpty()) {
+				return moreSpecific;
 			}
-			if (lower.isEmpty()) {
-				return higher;
+			if (moreSpecific.isEmpty()) {
+				return lessSpecific;
 			}
-			Preconditions.checkState(higher.size() == 1);
-			return higher;
+			Preconditions.checkState(moreSpecific.size() == 1);
+			return moreSpecific;
 		}
 
 		public static abstract class PropertyOnly<A extends Annotation>

@@ -116,9 +116,9 @@ public @interface Resolution {
 		/**
 		 * Because resolution is an ascending process (from lower, more specific
 		 * tree node to higher, less specific), algorithms should prefer the
-		 * "lower" node
+		 * "lower", moreSepcific node
 		 */
-		List<A> merge(List<A> higher, List<A> lower);
+		List<A> merge(List<A> lessSpecific, List<A> moreSepcific);
 
 		List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
 				List<Inheritance> inheritance);

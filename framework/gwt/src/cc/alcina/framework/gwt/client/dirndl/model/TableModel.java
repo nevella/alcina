@@ -71,8 +71,7 @@ public class TableModel extends Model {
 			TableModel model = new TableModel();
 			BoundWidgetTypeFactory factory = Registry
 					.impl(TableTypeFactory.class);
-			node.pushChildResolver(
-					ModalResolver.multiple(node.getResolver(), true));
+			node.setResolver(ModalResolver.multiple(node, true));
 			List<CategoryNamePlace> places = activity.getPlace()
 					.getNamedPlaces();
 			places.removeIf(p -> !isPermitted(p));
@@ -136,9 +135,8 @@ public class TableModel extends Model {
 			if (activity.getSearchResults() == null) {
 				return model;
 			}
-			ModalResolver childResolver = ModalResolver
-					.multiple(node.getResolver(), true);
-			node.pushChildResolver(childResolver);
+			ModalResolver childResolver = ModalResolver.multiple(node, true);
+			node.setResolver(childResolver);
 			BindableSearchDefinition def = activity.getSearchResults().getDef();
 			String sortFieldName = def.getSearchOrders()
 					.provideSearchOrderFieldName();

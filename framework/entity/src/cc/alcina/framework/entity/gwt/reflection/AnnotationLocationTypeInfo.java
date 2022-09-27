@@ -87,7 +87,7 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 				itr.remove();
 				visited.add(cursor);
 				List<A> atClass = atClass(annotationClass, cursor);
-				result = merge(result, atClass);
+				result = merge(atClass, result);
 				if (inheritance.contains(Inheritance.INTERFACE)) {
 					Arrays.stream(cursor.getImplementedInterfaces())
 							.filter(this::permitPackages).filter(visited::add)
@@ -112,14 +112,15 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		public static abstract class AdditiveMergeStrategy<A extends Annotation>
 				extends AbstractMergeStrategy<A> {
 			@Override
-			public List<A> merge(List<A> higher, List<A> lower) {
-				if (higher.isEmpty()) {
-					return lower;
+			public List<A> merge(List<A> lessSpecific, List<A> moreSpecific) {
+				if (lessSpecific.isEmpty()) {
+					return moreSpecific;
 				}
-				if (lower.isEmpty()) {
-					return higher;
+				if (moreSpecific.isEmpty()) {
+					return lessSpecific;
 				}
-				return Stream.concat(higher.stream(), lower.stream())
+				return Stream
+						.concat(lessSpecific.stream(), moreSpecific.stream())
 						.collect(Collectors.toList());
 			}
 		}
@@ -133,10 +134,10 @@ public class AnnotationLocationTypeInfo extends AnnotationLocation {
 		}
 
 		@Override
-		public List<Registration> merge(List<Registration> higher,
-				List<Registration> lower) {
-			return Registration.MergeStrategy.Shared.merge(higher, lower,
-					(t1, t2) -> t1.isAssignableFrom(t2));
+		public List<Registration> merge(List<Registration> lessSpecific,
+				List<Registration> moreSpecific) {
+			return Registration.MergeStrategy.Shared.merge(lessSpecific,
+					moreSpecific, (t1, t2) -> t1.isAssignableFrom(t2));
 		}
 
 		@Override
