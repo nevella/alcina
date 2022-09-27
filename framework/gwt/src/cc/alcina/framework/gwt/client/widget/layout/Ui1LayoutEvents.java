@@ -27,9 +27,9 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
  * @author Nick Reddel
  */
 @Registration.Singleton
-public class LayoutEvents {
-	public static LayoutEvents get() {
-		return Registry.impl(LayoutEvents.class);
+public class Ui1LayoutEvents {
+	public static Ui1LayoutEvents get() {
+		return Registry.impl(Ui1LayoutEvents.class);
 	}
 
 	ArrayList<LayoutEventListener> listeners;
@@ -38,7 +38,7 @@ public class LayoutEvents {
 
 	private int globalRelayoutQueuedCount;
 
-	public LayoutEvents() {
+	public Ui1LayoutEvents() {
 		listeners = new ArrayList<LayoutEventListener>();
 	}
 

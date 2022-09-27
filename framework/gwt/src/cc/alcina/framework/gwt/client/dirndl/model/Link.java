@@ -134,7 +134,7 @@ public class Link extends Model.WithNode
 		if (gwtEvent.getNativeButton() == NativeEvent.BUTTON_LEFT) {
 			if (modelEvent != null) {
 				WidgetUtils.squelchCurrentEvent();
-				Context context = NodeEvent.Context.newTopicContext(event,
+				Context context = NodeEvent.Context.newModelContext(event,
 						node);
 				ModelEvent.fire(context, modelEvent, null);
 			} else if (runnable != null) {

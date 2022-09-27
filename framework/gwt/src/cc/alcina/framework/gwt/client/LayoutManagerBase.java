@@ -5,9 +5,9 @@ import com.google.gwt.event.logical.shared.ResizeHandler;
 import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventListener;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents.LayoutEvent;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents.LayoutEventListener;
 
 public abstract class LayoutManagerBase
 		implements LayoutEventListener, ResizeHandler {
@@ -17,7 +17,7 @@ public abstract class LayoutManagerBase
 
 	public LayoutManagerBase() {
 		Window.addResizeHandler(this);
-		LayoutEvents.get().addLayoutEventListener(this);
+		Ui1LayoutEvents.get().addLayoutEventListener(this);
 		Registry.register().singleton(LayoutManagerBase.class, this);
 	}
 

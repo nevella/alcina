@@ -34,9 +34,9 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo;
 import cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImages;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents.LayoutEvent;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents.LayoutEventType;
 
 /**
  * 
@@ -201,7 +201,7 @@ public class BreadcrumbBar extends Composite {
 				WidgetUtils.maximiseWidget(widgetToMaximise);
 			} else {
 				WidgetUtils.restoreFromMaximise();
-				LayoutEvents.get().fireLayoutEvent(new LayoutEvent(
+				Ui1LayoutEvents.get().fireLayoutEvent(new LayoutEvent(
 						LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 			}
 		}
@@ -274,7 +274,7 @@ public class BreadcrumbBar extends Composite {
 				WidgetUtils.maximiseWidget(widgetToMaximise);
 			} else {
 				WidgetUtils.restoreFromMaximise();
-				LayoutEvents.get().fireLayoutEvent(new LayoutEvent(
+				Ui1LayoutEvents.get().fireLayoutEvent(new LayoutEvent(
 						LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 				new Timer() {
 					@Override

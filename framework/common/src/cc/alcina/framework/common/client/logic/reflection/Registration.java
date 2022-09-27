@@ -25,6 +25,7 @@ import java.util.List;
 import java.util.function.BiPredicate;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.Inheritance;
@@ -182,10 +183,10 @@ public @interface Registration {
 				// key keys[a][n>0] by the more specific
 				// subtype
 				//
-				List<Registration> merged = higher.stream()
+				List<Registration> merged = lower.stream()
 						.collect(Collectors.toList());
-				lower.stream().filter(
-						k -> !containsDescendant(higher, k, assignableFrom))
+				higher.stream().filter(
+						k -> !containsDescendant(lower, k, assignableFrom))
 						.forEach(merged::add);
 				return merged;
 			}

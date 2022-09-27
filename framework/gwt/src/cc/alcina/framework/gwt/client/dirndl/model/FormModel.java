@@ -59,8 +59,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.KeyDown;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Submit;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents.Attach;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
@@ -76,10 +75,10 @@ import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 import cc.alcina.framework.gwt.client.util.Async;
 
-@Directed(receives = { GwtEvents.Attach.class, DomEvents.KeyDown.class })
+@Directed(receives = { DomEvents.KeyDown.class })
 @Registration(FormModel.class)
-public class FormModel extends Model implements DomEvents.Submit.Handler,
-		GwtEvents.Attach.Handler, DomEvents.KeyDown.Handler {
+public class FormModel extends Model
+		implements DomEvents.Submit.Handler, DomEvents.KeyDown.Handler {
 	private static Map<Model, HandlerRegistration> registrations = new LinkedHashMap<>();
 
 	protected List<FormElement> elements = new ArrayList<>();
@@ -117,10 +116,11 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 	}
 
 	@Override
-	public void onAttach(Attach event) {
+	public void onBind(Bind event) {
 		bind(event);
 		focus(event);
 		checkDirty(event);
+		super.onBind(event);
 	}
 
 	@Override
@@ -168,16 +168,16 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 		return new FormValidation().validate(onValid, getState().formBinding);
 	}
 
-	private void bind(Attach event) {
-		if (event.isAttached()) {
+	private void bind(Bind event) {
+		if (event.isBound()) {
 			getState().formBinding.bind();
 		} else {
 			getState().formBinding.unbind();
 		}
 	}
 
-	private void checkDirty(Attach event) {
-		if (event.isAttached()) {
+	private void checkDirty(Bind event) {
+		if (event.isBound()) {
 			registrations.put(this, Client.get().getEventBus()
 					.addHandler(PlaceChangeRequestEvent.TYPE, dirtyChecker));
 		} else {
@@ -192,7 +192,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 		}
 	}
 
-	private void focus(Attach event) {
+	private void focus(Bind event) {
 		Optional<FormElement> focus = getElements().stream()
 				.filter(FormElement::isFocusOnAttach).findFirst();
 		if (focus.isPresent()) {
@@ -576,7 +576,7 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 			if (formModel.submit(node)) {
 				Optional<EmitsTopic> emitsTopic = place.emitsTopic();
 				Class<? extends ModelEvent> type = emitsTopic.get().value();
-				Context context = NodeEvent.Context.newTopicContext(event,
+				Context context = NodeEvent.Context.newModelContext(event,
 						node);
 				ModelEvent.fire(context, type, formModel);
 			}

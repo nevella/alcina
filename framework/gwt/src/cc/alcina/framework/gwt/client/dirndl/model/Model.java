@@ -13,9 +13,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
-import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.GwtEvents.Attach;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents.BeforeRender;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents.Bind;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 
 /**
@@ -37,26 +37,25 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
  *
  */
 @ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
-public abstract class Model extends Bindable implements HasBind {
+public abstract class Model extends Bindable
+		implements LayoutEvents.Bind.Handler {
 	public static final transient Object MODEL_UPDATED = new Object();
-
-	@Override
-	public void bind() {
-	}
 
 	public void fireUpdated() {
 		fireUnspecifiedPropertyChange(MODEL_UPDATED);
 	}
 
 	@Override
-	public void unbind() {
-		if (!hasPropertyChangeSupport()) {
-			return;
+	public void onBind(Bind event) {
+		if (!event.isBound()) {
+			if (!hasPropertyChangeSupport()) {
+				return;
+			}
+			Arrays.stream(propertyChangeSupport().getPropertyChangeListeners())
+					.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
+					.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)
+							.unbind());
 		}
-		Arrays.stream(propertyChangeSupport().getPropertyChangeListeners())
-				.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
-				.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)
-						.unbind());
 	}
 
 	/*
@@ -64,7 +63,8 @@ public abstract class Model extends Bindable implements HasBind {
 	 * properties to the rendered object (generally dom element), this binds
 	 * bean properties using Gwittir bindings
 	 */
-	public static class WithBinding extends Model {
+	public static class WithBinding extends Model
+			implements LayoutEvents.BeforeRender.Handler {
 		private Binding binding = new Binding();
 
 		public void addBinding(Object leftPropertyName,
@@ -89,47 +89,47 @@ public abstract class Model extends Bindable implements HasBind {
 		}
 
 		@Override
-		public void bind() {
-			binding.bind();
+		public void onBeforeRender(BeforeRender event) {
 			binding.setLeft();
-			super.bind();
 		}
 
 		@Override
-		public void unbind() {
-			binding.unbind();
-			super.unbind();
+		public void onBind(Bind event) {
+			if (event.isBound()) {
+				binding.bind();
+			} else {
+				binding.unbind();
+			}
+			super.onBind(event);
 		}
 	}
 
-	@Directed(receives = GwtEvents.Attach.class)
-	// No mixins
-	public static class WithBindingAndNode extends Model.WithBinding
-			implements GwtEvents.Attach.Handler {
+	// No mixins (although this effectively mixes WithNode + WithBinding)
+	public static class WithBindingAndNode extends Model.WithBinding {
 		protected DirectedLayout.Node node;
 
 		@Override
-		public void onAttach(Attach event) {
-			if (event.isAttached()) {
+		public void onBind(Bind event) {
+			if (event.isBound()) {
 				node = event.getContext().node;
 			} else {
 				node = null;
 			}
+			super.onBind(event);
 		}
 	}
 
-	@Directed(receives = GwtEvents.Attach.class)
-	public static class WithNode extends Model
-			implements GwtEvents.Attach.Handler {
+	public static class WithNode extends Model {
 		protected DirectedLayout.Node node;
 
 		@Override
-		public void onAttach(Attach event) {
-			if (event.isAttached()) {
+		public void onBind(Bind event) {
+			if (event.isBound()) {
 				node = event.getContext().node;
 			} else {
 				node = null;
 			}
+			super.onBind(event);
 		}
 	}
 }

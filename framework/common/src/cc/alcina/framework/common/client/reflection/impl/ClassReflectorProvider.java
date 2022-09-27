@@ -26,7 +26,8 @@ public class ClassReflectorProvider {
 	public static ClassReflector getClassReflector(Class clazz) {
 		List<PropertyDescriptor> descriptors = SEUtilities
 				.getPropertyDescriptorsSortedByField(clazz);
-		List<Property> properties = descriptors.stream()
+		List<Property> properties = descriptors.stream().filter(
+				d -> d.getReadMethod() != null || d.getWriteMethod() != null)
 				.map(d -> ClassReflectorProvider.createProperty(clazz, d))
 				.collect(Collectors.toList());
 		Map<String, Property> byName = properties.stream()

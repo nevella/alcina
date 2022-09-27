@@ -57,7 +57,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 		selectedNodeModel = model;
 		selectedNodeModel.setSelected(true);
-		Context context = NodeEvent.Context.newTopicContext(event.getContext(),
+		Context context = NodeEvent.Context.newModelContext(event.getContext(),
 				null);
 		ModelEvent.fire(context, SelectionChanged.class, model);
 	}
@@ -169,7 +169,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			if (event.isIntersecting() && !fired) {
 				fired = true;
 				Context context = NodeEvent.Context
-						.newTopicContext(event.getContext(), null);
+						.newModelContext(event.getContext(), null);
 				ModelEvent.fire(context, PaginatorVisible.class, null);
 			}
 		}

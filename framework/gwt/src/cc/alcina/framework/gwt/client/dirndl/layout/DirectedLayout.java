@@ -37,12 +37,11 @@ import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
-import cc.alcina.framework.gwt.client.dirndl.model.HasBind;
-import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
  *
@@ -218,16 +217,6 @@ public class DirectedLayout {
 	}
 
 	/**
-	 * An interface that supports lazy model population before render
-	 *
-	 * @author nick@alcina.cc
-	 *
-	 */
-	public interface Lifecycle {
-		public void beforeRender();
-	}
-
-	/**
 	 * <p>
 	 * In most cases, there is a 1-1 correspondence between a node and a widget
 	 * level (a {1,n} group of widgets with the same parent) - there are three
@@ -331,9 +320,9 @@ public class DirectedLayout {
 			return null;
 		}
 
-		public void fireEvent(ModelEvent topicEvent) {
+		public void fireEvent(ModelEvent modelEvent) {
 			if (eventBindings != null) {
-				eventBindings.forEach(bb -> bb.onTopicEvent(topicEvent));
+				eventBindings.forEach(bb -> bb.onModelEvent(modelEvent));
 			}
 		}
 
@@ -401,8 +390,9 @@ public class DirectedLayout {
 				propertyBindings = Arrays.stream(directed.bindings())
 						.map(PropertyBinding::new).collect(Collectors.toList());
 			}
-			if (model instanceof HasBind) {
-				((HasBind) model).bind();
+			if (model instanceof LayoutEvents.Bind.Handler) {
+				((LayoutEvents.Bind.Handler) model)
+						.onBind(new LayoutEvents.Bind(this, true));
 			}
 		}
 
@@ -467,8 +457,9 @@ public class DirectedLayout {
 		}
 
 		private void unbind() {
-			if (model instanceof Model) {
-				((Model) model).unbind();
+			if (model instanceof LayoutEvents.Bind.Handler) {
+				((LayoutEvents.Bind.Handler) model)
+						.onBind(new LayoutEvents.Bind(this, false));
 			}
 			children.forEach(Node::unbind);
 			if (replacementListener != null) {
@@ -691,7 +682,7 @@ public class DirectedLayout {
 					// fire a logical topic event, based on correspondence
 					// between Directed.reemits and receives
 					Context eventContext = NodeEvent.Context
-							.newTopicContext(context, Node.this);
+							.newModelContext(context, Node.this);
 					Preconditions.checkState(directed
 							.receives().length == directed.reemits().length);
 					Class<? extends ModelEvent> emitTopic = (Class<? extends ModelEvent>) directed
@@ -711,9 +702,9 @@ public class DirectedLayout {
 				return verifySingleWidget();
 			}
 
-			void onTopicEvent(ModelEvent topicEvent) {
+			void onModelEvent(ModelEvent topicEvent) {
 				if (topicEvent.getClass() == type) {
-					Context context = NodeEvent.Context.newTopicContext(
+					Context context = NodeEvent.Context.newModelContext(
 							topicEvent.getContext(), Node.this);
 					// set before we dispatch to the handler, so the handler can
 					// unset
@@ -967,10 +958,11 @@ public class DirectedLayout {
 				// cache
 				location.setResolver(resolver);
 			}
-			if (model instanceof DirectedLayout.Lifecycle) {
-				((DirectedLayout.Lifecycle) model).beforeRender();
-			}
 			resolver.beforeRender(model);
+			if (model instanceof LayoutEvents.BeforeRender.Handler) {
+				((LayoutEvents.BeforeRender.Handler) model)
+						.onBeforeRender(new LayoutEvents.BeforeRender(node));
+			}
 		}
 
 		void enqueueInput(ContextResolver resolver, Object model,

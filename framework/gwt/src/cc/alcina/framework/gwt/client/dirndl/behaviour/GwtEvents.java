@@ -6,6 +6,17 @@ import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
 public class GwtEvents {
+	/**
+	 * This event should not be listened for, since it occurs in a point in the
+	 * model rendering sequence where changes to the model should not occur (so
+	 * is incorrect as a 'populate me now' signal). Use
+	 * LayoutEvents.BeforeRender instead, or LayoutEvents.Bind for symmetric
+	 * change binding
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Deprecated
 	public static class Attach extends NodeEvent<Attach.Handler> {
 		@Override
 		public void dispatch(Attach.Handler handler) {

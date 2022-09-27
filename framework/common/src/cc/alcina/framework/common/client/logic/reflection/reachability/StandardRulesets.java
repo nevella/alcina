@@ -157,7 +157,7 @@ public class StandardRulesets {
 			cc.alcina.framework.gwt.client.res.AlcinaProperties.class,
 			cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilderLight.class,
 			cc.alcina.framework.gwt.client.stdlayout.image.StandardDataImageProvider.class,
-			cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.class,
+			cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents.class,
 			cc.alcina.framework.gwt.persistence.client.LogStore.class,
 			com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents.class,
 			com.totsp.gwittir.client.validator.Validator.class,

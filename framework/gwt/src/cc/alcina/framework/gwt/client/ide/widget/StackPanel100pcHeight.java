@@ -6,7 +6,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.gwt.client.widget.DivStackPanel;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
 
 public class StackPanel100pcHeight extends DivStackPanel
 		implements HasLayoutInfo {
@@ -44,7 +44,7 @@ public class StackPanel100pcHeight extends DivStackPanel
 		int oldIndex = getSelectedIndex();
 		super.showStack(index);
 		if (oldIndex != index) {
-			LayoutEvents.get().fireDeferredGlobalRelayoutIfNoneQueued();
+			Ui1LayoutEvents.get().fireDeferredGlobalRelayoutIfNoneQueued();
 		}
 	}
 }

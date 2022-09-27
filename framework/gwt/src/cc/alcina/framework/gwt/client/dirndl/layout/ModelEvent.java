@@ -11,23 +11,22 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEventBinding;
 
-//FIXME - dirndl 1.2 - can TopicEvent be combined with ModelEvent? Why rendered.preRenderListeners?
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent<H> {
 	// FIXME - dirndl 1.1 - fire on GWT/Scheduler event pump? or explain why not
 	public static void fire(Context context, Class<? extends ModelEvent> type,
 			Object model) {
-		ModelEvent topicEvent = Reflections.newInstance(type);
-		context.setNodeEvent(topicEvent);
-		topicEvent.setModel(model);
+		ModelEvent modelEvent = Reflections.newInstance(type);
+		context.setNodeEvent(modelEvent);
+		modelEvent.setModel(model);
 		context.topicListeners.eventBindings
-				.forEach(bb -> bb.onTopicEvent(topicEvent));
+				.forEach(bb -> bb.onModelEvent(modelEvent));
 		/*
 		 * Bubble
 		 */
 		Node cursor = context.node;
-		while (cursor != null && !topicEvent.handled) {
-			cursor.fireEvent(topicEvent);
+		while (cursor != null && !modelEvent.handled) {
+			cursor.fireEvent(modelEvent);
 			cursor = cursor.parent;
 		}
 	}
@@ -50,6 +49,11 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 	}
 
 	@Override
+	// FIXME - dirndl 1x1b - model vs widget bindings. Look at the guarantees of
+	// model binding, but I *think* we can move this into layout events. Also
+	// pretty sure bind/unbind is a noop for model events - in fact,
+	//
+	// FIXME - dirndl 1x1a verify
 	protected HandlerRegistration bind0(Widget widget) {
 		return widget.addAttachHandler(evt -> {
 			if (!evt.isAttached()) {
@@ -58,6 +62,9 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		});
 	}
 
+	/*
+	 * FIXME - dirndl 1x1a - pretty sure this can go,
+	 */
 	public static class TopicListeners {
 		List<NodeEventBinding> eventBindings = new ArrayList<>();
 

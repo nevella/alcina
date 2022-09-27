@@ -14,7 +14,7 @@ import cc.alcina.framework.common.client.logic.FilterCombinator;
 import cc.alcina.framework.common.client.search.CriteriaGroup;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSelectorMinimal;
 import cc.alcina.framework.gwt.client.gwittir.widget.RadioButtonList;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
 
 /**
  * We're not obeying all bound widget stuff here...
@@ -106,7 +106,7 @@ public class CriteriaGroupSelectorCustomiserWrapper<C extends CriteriaGroup>
 		boolean oldVis = filterRbl.isVisible();
 		filterRbl.setVisible(newVis);
 		if (oldVis != newVis) {
-			LayoutEvents.get().fireRequiresGlobalRelayout();
+			Ui1LayoutEvents.get().fireRequiresGlobalRelayout();
 		}
 	}
 }

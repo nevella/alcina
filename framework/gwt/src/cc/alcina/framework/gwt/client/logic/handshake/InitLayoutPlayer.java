@@ -13,7 +13,7 @@ import cc.alcina.framework.gwt.client.ClientState;
 import cc.alcina.framework.gwt.client.LayoutManagerBase;
 import cc.alcina.framework.gwt.client.logic.AlcinaHistory;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
 
 public class InitLayoutPlayer extends RunnablePlayer {
 	public InitLayoutPlayer() {
@@ -45,8 +45,8 @@ public class InitLayoutPlayer extends RunnablePlayer {
 			nImpl.setLogToSysOut(false);
 		}
 		ClientState.get().setUiInitialised(true);
-		LayoutEvents.get().fireRequiresGlobalRelayout();
-		LayoutEvents.get().fireDeferredGlobalRelayout();
+		Ui1LayoutEvents.get().fireRequiresGlobalRelayout();
+		Ui1LayoutEvents.get().fireDeferredGlobalRelayout();
 	}
 
 	protected void fireCurrentHistoryState() {

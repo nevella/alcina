@@ -6,9 +6,9 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.gwt.client.widget.DivStackPanel.CollapsableDivStackPanel;
 import cc.alcina.framework.gwt.client.widget.layout.HasLayoutInfo;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEvent;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents.LayoutEventType;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents.LayoutEvent;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents.LayoutEventType;
 
 public class CollapsableStackPanel100pcHeight extends CollapsableDivStackPanel
 		implements HasLayoutInfo {
@@ -46,7 +46,7 @@ public class CollapsableStackPanel100pcHeight extends CollapsableDivStackPanel
 		int oldIndex = getSelectedIndex();
 		super.showStack(index);
 		if (oldIndex != index) {
-			LayoutEvents.get().fireLayoutEvent(
+			Ui1LayoutEvents.get().fireLayoutEvent(
 					new LayoutEvent(LayoutEventType.REQUIRES_GLOBAL_RELAYOUT));
 		}
 	}

@@ -21,6 +21,24 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
 
 @Reflected
+/**
+ * <p>
+ * Event system notes
+ *
+ * <ul>
+ * <li>Events do not bubble by design - once handled, unless explicitly
+ * instructed to continue up the Node ancestor tree by
+ * markCauseEventAsNotHandled(), they stop.
+ * <li>Events are a 'recasting' of an existing point-in-time event, so an
+ * EventBus is not used. This seems to be a better choice - LayoutEvents events
+ * certainly *must* be handled immediately, since they can affect the layout
+ * itself.
+ *
+ *
+ * @author nick@alcina.cc
+ *
+ * @param <H>
+ */
 /*
  * FIXME - dirndl 1.3 - don't like the interplay between NodeEvent,
  * BehaviourBinding and NodeEventReceiver...
@@ -133,7 +151,14 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	}
 
 	public static class Context {
-		public static Context newTopicContext(Context previous, Node node) {
+		public static Context newNodeContext(Node node) {
+			Context context = new Context();
+			context.node = node;
+			context.topicListeners = new TopicListeners();
+			return context;
+		}
+
+		public static Context newModelContext(Context previous, Node node) {
 			Context context = new Context();
 			context.previous = previous;
 			context.node = node == null ? previous.node : node;
@@ -141,7 +166,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return context;
 		}
 
-		public static Context newTopicContext(GwtEvent event, Node node) {
+		public static Context newModelContext(GwtEvent event, Node node) {
 			Context context = new Context();
 			context.gwtEvent = event;
 			context.node = node;
@@ -149,7 +174,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return context;
 		}
 
-		public static Context newTopicContext(String hint, Node node) {
+		public static Context newModelContext(String hint, Node node) {
 			Context context = new Context();
 			context.hint = hint;
 			context.node = node;
@@ -191,11 +216,7 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return previous.hasPrevious(eventClass);
 		}
 
-		/*
-		 * FIXME - dirndl 1.1 - nodeevents should bubble by default, and
-		 * TopicEvent->ModelEvent
-		 */
-		public void markCauseTopicAsNotHandled() {
+		public void markCauseEventAsNotHandled() {
 			((ModelEvent) previous.getNodeEvent()).setHandled(false);
 		}
 

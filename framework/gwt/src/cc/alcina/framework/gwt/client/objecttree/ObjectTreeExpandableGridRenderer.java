@@ -30,7 +30,7 @@ import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.gwt.client.dirndl.RenderContext;
 import cc.alcina.framework.gwt.client.widget.ToggleLink;
 import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
-import cc.alcina.framework.gwt.client.widget.layout.LayoutEvents;
+import cc.alcina.framework.gwt.client.widget.layout.Ui1LayoutEvents;
 
 /**
  * 
@@ -78,7 +78,7 @@ public class ObjectTreeExpandableGridRenderer extends ObjectTreeGridRenderer {
 											expandableWidgetWrapper
 													.showExpanded(event
 															.getSelectedItem() == 0);
-											LayoutEvents.get()
+											Ui1LayoutEvents.get()
 													.fireDeferredGlobalRelayout();
 										}
 									}));
