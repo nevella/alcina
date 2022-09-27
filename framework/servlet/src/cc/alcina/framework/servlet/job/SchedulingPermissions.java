@@ -72,7 +72,11 @@ class SchedulingPermissions {
 		if (AppPersistenceBase.isInstanceReadOnly()) {
 			return false;
 		}
-		if (Schedule.forTaskClass(job.provideTaskClass()).isVmLocal()) {
+		Schedule schedule = Schedule.forTaskClass(job.provideTaskClass());
+		if (schedule == null) {
+			return false;
+		}
+		if (schedule.isVmLocal()) {
 			return job.getCreator() == ClientInstance.self();
 		} else {
 			return isCurrentScheduledJobExecutor();
