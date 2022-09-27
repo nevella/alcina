@@ -462,7 +462,7 @@ public class AlcinaCollectors {
 		@Override
 		public Function<UnsortedMultikeyMap<V>, UnsortedMultikeyMap<V>>
 				finisher() {
-			return null;
+			return castingIdentity();
 		}
 
 		@Override

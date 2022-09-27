@@ -79,6 +79,10 @@ public class Property {
 		return setter == null;
 	}
 
+	public boolean isReadWrite() {
+		return getter != null && setter != null;
+	}
+
 	public boolean isWriteable() {
 		return setter != null;
 	}
@@ -97,8 +101,8 @@ public class Property {
 		}
 	}
 
-	public boolean provideWriteableNonTransient() {
-		return !isReadOnly() && !name.equals("propertyChangeListeners");
+	public boolean provideReadWriteNonTransient() {
+		return isReadWrite() && !name.equals("propertyChangeListeners");
 	}
 
 	public void set(Object bean, Object newValue) {
