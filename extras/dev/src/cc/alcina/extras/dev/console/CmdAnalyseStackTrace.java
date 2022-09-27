@@ -5,7 +5,7 @@ import java.io.File;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.ResourceUtilities;
-import cc.alcina.framework.servlet.logging.AnalyseThreadDump;
+import cc.alcina.framework.entity.util.AnalyseThreadDump;
 
 public class CmdAnalyseStackTrace extends DevConsoleCommand {
 	public static final String CONTEXT_FILTER = CmdAnalyseStackTrace.class

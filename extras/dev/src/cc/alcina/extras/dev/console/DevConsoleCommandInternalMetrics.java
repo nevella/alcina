@@ -34,10 +34,10 @@ import cc.alcina.framework.entity.persistence.metric.ThreadHistory;
 import cc.alcina.framework.entity.persistence.metric.ThreadInfoSer;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.entity.util.AnalyseThreadDump;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.SqlUtils.ColumnFormatter;
 import cc.alcina.framework.entity.util.SynchronizedSimpleDateFormat;
-import cc.alcina.framework.servlet.logging.AnalyseThreadDump;
 
 public class DevConsoleCommandInternalMetrics {
 	public static class CmdDrillMetric extends DevConsoleCommand {
