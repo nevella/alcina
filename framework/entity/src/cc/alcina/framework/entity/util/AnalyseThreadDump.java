@@ -1,4 +1,4 @@
-package cc.alcina.framework.servlet.logging;
+package cc.alcina.framework.entity.util;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -11,7 +11,7 @@ import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Multimap;
-import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.SEUtilities;
 
 public class AnalyseThreadDump {
@@ -53,8 +53,8 @@ public class AnalyseThreadDump {
 		if (lines.length < 2) {
 			return false;
 		} else {
-			if (lines[0].matches(".*at java.lang.Object.wait.*")) {
-				if (lines[1].matches(".*at java.util.TimerThread.mainLoop.*")) {
+			if (lines[0].matches(".*java.lang.Object.wait.*")) {
+				if (lines[1].matches(".*java.util.TimerThread.mainLoop.*")) {
 					return true;
 				}
 				if (joined.contains(
@@ -62,13 +62,13 @@ public class AnalyseThreadDump {
 					return true;
 				}
 				if (lines[1].matches(
-						".*at com.arjuna.ats.internal.arjuna.coordinator.ReaperThread.run.*")) {
+						".*com.arjuna.ats.internal.arjuna.coordinator.ReaperThread.run.*")) {
 					return true;
 				}
 				if (lines.length > 2) {
-					if (lines[1].matches(".*at java.lang.Object.wait.*")) {
-						if (lines[2].matches(
-								".*at java.util.TimerThread.mainLoop.*")) {
+					if (lines[1].matches(".*java.lang.Object.wait.*")) {
+						if (lines[2]
+								.matches(".*ava.util.TimerThread.mainLoop.*")) {
 							return true;
 						}
 					}
@@ -80,20 +80,19 @@ public class AnalyseThreadDump {
 					return true;
 				}
 			}
-			if (lines[0].matches(".*at sun.nio.fs.LinuxWatchService.poll.*")) {
+			if (lines[0].matches(".*sun.nio.fs.LinuxWatchService.poll.*")) {
 				return true;
 			}
-			if (lines[0].matches(".*at java.lang.Thread.sleep.*")) {
+			if (lines[0].matches(".*java.lang.Thread.sleep.*")) {
 				if (joined.contains(
 						"cc.alcina.framework.entity.persistence.metric.InternalMetrics.profile")) {
 					return true;
 				}
 			}
-			if (lines[0].matches(".*at sun.nio.ch.EPoll.wait.*")) {
+			if (lines[0].matches(".*.EPoll.wait.*")) {
 				return true;
 			}
-			if (lines[0]
-					.matches(".*at java.net.SocketInputStream.socketRead0.*")) {
+			if (lines[0].matches(".*.SocketInputStream.socketRead0.*")) {
 				if (joined.contains("com.sun.mail.iap.ResponseInputStream")) {
 					return true;
 				}
@@ -188,12 +187,26 @@ public class AnalyseThreadDump {
 			return distinctWaits;
 		}
 
+		public enum Flavour {
+			JSTACK, PRINT_STACK_TRACE, MBEAN
+		}
+
 		enum State {
 			outside_thread, first_thread_line, post_first_thread_line,
 			synchronizers
 		}
 
 		static class TdModelThread {
+			static final Pattern IGNOREABLE_PATTERN = Pattern.compile(Ax.format(
+					"(%s|VM Periodic Task Thread|C2 CompilerThread\\d+"
+							+ "|Reference Handler|C1 CompilerThread\\d+|pool-shell-io.*|Keep-Alive-Timer"
+							+ "|cluster1-timeouter-0|threadDeathWatcher-.*"
+							+ "|Signal Dispatcher|Service Thread|Monitor Deflation Thread|Sweeper thread"
+							+ "|DeploymentScanner-threads.*"
+							+ "|kafka-coordinator-heartbeat-thread|Keep-Alive-SocketCleaner)",
+					Configuration.get(AnalyseThreadDump.class,
+							"ignoreableThreadNamePattern")));
+
 			public String stateLine;
 
 			public List<String> lines = new ArrayList<>();
@@ -208,16 +221,7 @@ public class AnalyseThreadDump {
 				String joined = lines.stream()
 						.collect(Collectors.joining("\n"));
 				return ignoreableStackTrace(joined)
-						|| name.matches(
-								ResourceUtilities.get(AnalyseThreadDump.class,
-										"ignoreableThreadNamePattern"))
-						|| name.matches(
-								"(VM Periodic Task Thread|C2 CompilerThread\\d+"
-										+ "|Reference Handler|C1 CompilerThread\\d+|pool-shell-io.*|Keep-Alive-Timer"
-										+ "|cluster1-timeouter-0|threadDeathWatcher-.*"
-										+ "|Signal Dispatcher|Service Thread|Monitor Deflation Thread|Sweeper thread"
-										+ "|DeploymentScanner-threads.*"
-										+ "|kafka-coordinator-heartbeat-thread|Keep-Alive-SocketCleaner)");
+						|| IGNOREABLE_PATTERN.matcher(name).matches();
 			}
 
 			String toStringForDump() {

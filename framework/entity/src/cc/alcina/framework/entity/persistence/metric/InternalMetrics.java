@@ -14,6 +14,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
@@ -47,12 +48,14 @@ import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLockState;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreWaitStats;
 import cc.alcina.framework.entity.persistence.mvcc.Transactions;
+import cc.alcina.framework.entity.util.AnalyseThreadDump;
 import cc.alcina.framework.entity.util.JacksonUtils;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.entity.util.SqlUtils;
 
 @Registration.Singleton
+// TODO - move this (and AnalyseThreadDump) to servlet, abstract the db access
 public class InternalMetrics {
 	private static final int PERSIST_PERIOD = 1000;
 
@@ -358,13 +361,29 @@ public class InternalMetrics {
 				logger.info("Internal health metrics monitoring:\n\t{}",
 						getMemoryStats());
 				long[] allIds = threadMxBean.getAllThreadIds();
-				ThreadInfo[] threadInfos2 = threadMxBean.getThreadInfo(allIds,
+				ThreadInfo[] threadInfos = threadMxBean.getThreadInfo(allIds,
 						debugMonitors, debugMonitors);
 				imd.threadHistory.clearElements();
 				Map<Thread, StackTraceElement[]> allStackTraces = Thread
 						.getAllStackTraces();
-				for (ThreadInfo threadInfo : threadInfos2) {
+				StringBuilder allThreadBuilder = new StringBuilder();
+				for (Entry<Thread, StackTraceElement[]> entry : allStackTraces
+						.entrySet()) {
+					allThreadBuilder.append(entry.getKey());
+					allThreadBuilder.append("\n");
+					StackTraceElement[] value = entry.getValue();
+					for (StackTraceElement stackTraceElement : value) {
+						allThreadBuilder.append("\t");
+						allThreadBuilder.append(stackTraceElement);
+						allThreadBuilder.append("\n");
+					}
+				}
+				for (ThreadInfo threadInfo : threadInfos) {
 					if (threadInfo == null) {
+						continue;
+					}
+					if (threadInfo.getThreadId() == Thread.currentThread()
+							.getId()) {
 						continue;
 					}
 					StackTraceElement[] stackTrace = allStackTraces.entrySet()
@@ -376,6 +395,20 @@ public class InternalMetrics {
 					imd.addSlice(threadInfo, stackTrace, 0, 0,
 							DomainStoreLockState.NO_LOCK,
 							new DomainStoreWaitStats());
+				}
+				AnalyseThreadDump.TdModel model = AnalyseThreadDump.TdModel
+						.parse(allThreadBuilder.toString(), false);
+				String dumpDistinct = model.dumpDistinct();
+				if (Ax.notBlank(dumpDistinct)) {
+					logger.info("Internal health metrics monitoring"
+							+ "\n\n----------------------------------------------------------------"
+							+ " Start health metric traces "
+							+ "----------------------------------------------------------------\n"
+							+ "{}"
+							+ "\n----------------------------------------------------------------"
+							+ " End health metric traces "
+							+ "----------------------------------------------------------------\n",
+							dumpDistinct);
 				}
 				return;
 			}
