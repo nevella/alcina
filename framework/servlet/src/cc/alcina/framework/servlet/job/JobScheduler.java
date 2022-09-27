@@ -310,6 +310,9 @@ public class JobScheduler {
 				.collect(Collectors.toList());
 		for (Class<? extends Task> key : taskClasses) {
 			Schedule schedule = Schedule.forTaskClass(key);
+			if (schedule == null) {
+				continue;
+			}
 			LocalDateTime nextForTaskClass = schedule
 					.getNext(event.type == Type.APPLICATION_STARTUP);
 			if (nextForTaskClass == null) {
