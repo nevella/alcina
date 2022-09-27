@@ -2,6 +2,7 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.Arrays;
 
+import com.google.gwt.dom.client.Element;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.BindingBuilder;
 import com.totsp.gwittir.client.beans.Converter;
@@ -46,6 +47,10 @@ public abstract class Model extends Bindable
 	}
 
 	@Override
+	/**
+	 * Note that subclasses must call super.onBind(Bind) if overriding this
+	 * event
+	 */
 	public void onBind(Bind event) {
 		if (!event.isBound()) {
 			if (!hasPropertyChangeSupport()) {
@@ -130,6 +135,10 @@ public abstract class Model extends Bindable
 				node = null;
 			}
 			super.onBind(event);
+		}
+
+		public Element provideElement() {
+			return node.getWidget().getElement();
 		}
 	}
 }
