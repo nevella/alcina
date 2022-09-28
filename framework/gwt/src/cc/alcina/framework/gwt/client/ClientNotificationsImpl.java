@@ -46,6 +46,7 @@ import com.google.gwt.user.client.ui.Widget;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.instances.OkAction;
+import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.provider.TextProvider;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
 import cc.alcina.framework.common.client.util.Ax;
@@ -328,13 +329,16 @@ public class ClientNotificationsImpl implements ClientNotifications {
 
 	@Override
 	public void showError(String msg, Throwable throwable) {
-		log("error: " + msg.replace("<br>", "\n") + "\n"
-				+ throwable.toString());
+		String exceptionTrace = throwable.toString();
+		log("error: " + msg.replace("<br>", "\n") + "\n" + exceptionTrace);
 		msg += CommonUtils.isNullOrEmpty(msg) ? "" : "<br><br>";
 		msg += getStandardErrorText();
 		msg = "<div class='errorOops'>Ooops - an error has occurred</div>"
 				+ "<div class='errorSub'>" + msg + "</div>";
-		showDialog(msg, null, throwable.toString(), MessageType.ERROR,
+		if (!PermissionsManager.isDeveloper()) {
+			exceptionTrace = "";
+		}
+		showDialog(msg, null, exceptionTrace, MessageType.ERROR,
 				new ArrayList<Button>());
 	}
 

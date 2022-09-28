@@ -168,6 +168,18 @@ public class PermissionsManager implements DomainTransformListener {
 		return permissionsExtension;
 	}
 
+	public static Set<IGroup> getReachableGroups(IUser user) {
+		Set<IGroup> groups = new LinkedHashSet<IGroup>();
+		if (user != null) {
+			if (user.getPrimaryGroup() != null) {
+				groups.add(user.getPrimaryGroup());
+			}
+			groups.addAll(user.getSecondaryGroups());
+			recursivePopulateGroupMemberships(groups, new HashSet<IGroup>());
+		}
+		return groups;
+	}
+
 	public static boolean hasAdminAccessLevel() {
 		return get().getMaxPropertyAccessLevel().ordinal() >= AccessLevel.ADMIN
 				.ordinal();
@@ -211,6 +223,14 @@ public class PermissionsManager implements DomainTransformListener {
 		} else {
 			return PermissionsManager.get().checkEffectivePropertyPermission(op,
 					null, object, true);
+		}
+	}
+
+	public static boolean isDeveloper() {
+		if (getAdministratorGroupName() == null || !get().isLoggedIn()) {
+			return false;
+		} else {
+			return get().isMemberOfGroup(getDeveloperGroupName());
 		}
 	}
 
@@ -477,18 +497,6 @@ public class PermissionsManager implements DomainTransformListener {
 		return onlineState;
 	}
 
-	public static Set<IGroup> getReachableGroups(IUser user) {
-		Set<IGroup> groups = new LinkedHashSet<IGroup>();
-		if (user != null) {
-			if (user.getPrimaryGroup() != null) {
-				groups.add(user.getPrimaryGroup());
-			}
-			groups.addAll(user.getSecondaryGroups());
-			recursivePopulateGroupMemberships(groups, new HashSet<IGroup>());
-		}
-		return groups;
-	}
-
 	public String getSystemUserName() {
 		// TODO Auto-generated method stub
 		return null;
@@ -555,14 +563,6 @@ public class PermissionsManager implements DomainTransformListener {
 
 	public boolean isAnonymousUser() {
 		return getAnonymousUserName().equals(getUserName());
-	}
-
-	public boolean isDeveloper() {
-		if (getAdministratorGroupName() == null || !isLoggedIn()) {
-			return false;
-		} else {
-			return isMemberOfGroup(getDeveloperGroupName());
-		}
 	}
 
 	public boolean isLoggedIn() {

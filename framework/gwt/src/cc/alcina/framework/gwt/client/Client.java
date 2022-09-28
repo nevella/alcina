@@ -63,7 +63,7 @@ public abstract class Client {
 
 	public static boolean isDeveloper() {
 		return EntityClientUtils.isTestServer()
-				|| PermissionsManager.get().isDeveloper();
+				|| PermissionsManager.isDeveloper();
 	}
 
 	public static void refreshOrGoTo(Place place) {
