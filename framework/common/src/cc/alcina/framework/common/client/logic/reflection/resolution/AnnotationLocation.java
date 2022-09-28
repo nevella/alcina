@@ -30,7 +30,7 @@ public class AnnotationLocation {
 
 	protected Resolver resolver;
 
-	public List<? extends Annotation> resolvedPropertyAnnotations = null;
+	public List<Annotation> resolvedPropertyAnnotations = null;
 
 	private List<Annotation> consumed;
 
@@ -58,10 +58,17 @@ public class AnnotationLocation {
 	// FIXME - dirndl.1x1a - this should be applied during resolution, not
 	// getAnnotation() - probably works, but disallows Transform -> Transform
 	public void addConsumed(Annotation annotation) {
+		if (annotation == null) {
+			return;
+		}
 		if (consumed == null) {
 			consumed = new ArrayList<>();
 		}
 		consumed.add(annotation);
+	}
+
+	public AnnotationLocation copyWithClassLocation(Class<?> clazz) {
+		return new AnnotationLocation(clazz, property, resolver);
 	}
 
 	public AnnotationLocation copyWithClassLocationOf(Object object) {

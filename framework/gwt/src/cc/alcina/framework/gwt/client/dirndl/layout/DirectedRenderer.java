@@ -127,6 +127,9 @@ public abstract class DirectedRenderer {
 				// probably get it working, step back and fix
 				location.resolvedPropertyAnnotations = Arrays
 						.asList(input.soleDirected());
+				// inelegant, but works to avoid double-transform
+				location.addConsumed(
+						input.location.getAnnotation(Directed.Transform.class));
 				input.enqueueInput(input.resolver, transformedModel, location,
 						// force resolution
 						null, input.node);

@@ -19,6 +19,7 @@ import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.user.client.ui.ComplexPanel;
 import com.google.gwt.user.client.ui.InsertPanel.ForIsWidget;
+import com.google.gwt.user.client.ui.RootPanel;
 import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
@@ -277,7 +278,7 @@ public class DirectedLayout {
 			this.resolver = resolver;
 			this.parent = parent;
 			this.annotationLocation = annotationLocation;
-			this.model = resolver.resolveModel(model);
+			this.model = model;
 			current = this;
 		}
 
@@ -417,10 +418,12 @@ public class DirectedLayout {
 			}
 			// Also, in the case of wrapping, the parent and grandparent models
 			// (and annotation locations) are the same, so do not listen on the
-			// parent model (since an ancestor listens)
+			// parent model at getProperty() for replacement changes (since the
+			// parent, or a more remote
+			// ancestor listens on that modelproperty for precisely that)
 			//
 			if (parent.parent != null && parent.model == parent.parent.model
-					&& parent.getProperty() == parent.parent.getProperty()) {
+					&& getProperty() == parent.getProperty()) {
 				return;
 			}
 			// even though the parent handles changes,
@@ -549,10 +552,15 @@ public class DirectedLayout {
 		// TODO - optimise use of index/indexOf
 		InsertionPoint resolveInsertionPoint() {
 			InsertionPoint result = new InsertionPoint();
+			Optional<Widget> firstSelfOrAncestorWidget = firstSelfOrAncestorWidget(
+					false);
+			if (firstSelfOrAncestorWidget.isEmpty()) {
+				return result;// default, append
+			}
 			result.point = Point.FIRST;
 			result.pending = true;
 			Node cursor = this;
-			result.container = firstSelfOrAncestorWidget(false).get();
+			result.container = firstSelfOrAncestorWidget.get();
 			while (true) {
 				if (cursor != this) {
 					Widget widget = cursor
@@ -913,7 +921,6 @@ public class DirectedLayout {
 
 		void afterRender() {
 			node.postRender();
-			resolver.postRender();
 			if (node.hasWidget()) {
 				Optional<Widget> firstAncestorWidget = firstAncestorWidget();
 				if (firstAncestorWidget.isPresent()) {
@@ -944,6 +951,11 @@ public class DirectedLayout {
 						break;
 					}
 					insertionPoint.consume();
+				} else {
+					// root - if this is a replace, append to root panel
+					if (replace != null) {
+						RootPanel.get().add(node.widget);
+					}
 				}
 			}
 			if (directeds.size() > 1) {
@@ -964,7 +976,6 @@ public class DirectedLayout {
 				// cache
 				location.setResolver(resolver);
 			}
-			resolver.beforeRender(model);
 			if (model instanceof LayoutEvents.BeforeRender.Handler) {
 				((LayoutEvents.BeforeRender.Handler) model)
 						.onBeforeRender(new LayoutEvents.BeforeRender(node));

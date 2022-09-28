@@ -29,7 +29,6 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	protected DirectedLayout layout;
 
-	// FIXME - dirndl 1.1 - hopefully remove
 	private Object rootModel;
 
 	DefaultAnnotationResolver annotationResolver = (DefaultAnnotationResolver) AnnotationLocation.Resolver
@@ -37,10 +36,8 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 
 	Map<Class, Class<? extends DirectedRenderer>> modelRenderers = new LinkedHashMap<>();
 
-	protected Object inputModel;
-
 	/**
-	 * Prefer the call to
+	 * For descendant resolvers, use the second constructor or the create() call
 	 */
 	public ContextResolver() {
 	}
@@ -48,12 +45,6 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	public ContextResolver(ContextResolver parent) {
 		this.parent = parent;
 		this.layout = parent.layout;
-	}
-
-	public void beforeRender(Object inputModel) {
-		// FIXME - dirndl 1.0 - Registry.get.push(this)(registry checks if
-		// distinct to last)
-		this.inputModel = inputModel;
 	}
 
 	// CACHE! (stateful vs non for renderer)
@@ -81,10 +72,6 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		return (T) this.rootModel;
 	}
 
-	public void postRender() {
-		inputModel = null;
-	}
-
 	public Property resolveDirectedProperty(Property property) {
 		return property.has(Directed.class)
 				|| property.has(Directed.Multiple.class)
@@ -100,10 +87,6 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		return location.getAnnotations(Directed.class);
 	}
 
-	public Object resolveModel(Object model) {
-		return model;
-	}
-
 	/*
 	 * very simple caching, but lowers allocation *a lot*
 	 */
@@ -114,6 +97,7 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 						.registration());
 	}
 
+	// FIXME - dirndl 1x2 - remove
 	public <T> T resolveRenderContextProperty(String key) {
 		return null;
 	}

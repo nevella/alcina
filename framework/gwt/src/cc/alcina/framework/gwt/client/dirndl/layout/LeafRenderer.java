@@ -7,6 +7,7 @@ import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.user.client.ui.Widget;
 import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
@@ -48,8 +49,13 @@ public abstract class LeafRenderer extends DirectedRenderer {
 	protected void renderWidget(Node node) {
 		String tag = getTag(node, true, "span");
 		Preconditions.checkArgument(Ax.notBlank(tag));
-		node.widget = new SimpleWidget(tag);
-		applyCssClass(node, node.widget);
+		Widget widget = new SimpleWidget(tag);
+		applyCssClass(node, widget);
+		setWidget(node, widget);
+	}
+
+	protected void setWidget(Node node, Widget widget) {
+		node.widget = widget;
 	}
 
 	@Registration({ DirectedRenderer.class, Boolean.class })
