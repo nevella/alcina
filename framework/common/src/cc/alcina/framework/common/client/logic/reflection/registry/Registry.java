@@ -80,6 +80,15 @@ public class Registry {
 		return get().instanceInternals();
 	}
 
+	public static <T> T newInstanceOrImpl(Class<T> clazz) {
+		ClassReflector<T> classReflector = Reflections.at(clazz);
+		if (classReflector.isAbstract()) {
+			return impl(clazz);
+		} else {
+			return classReflector.newInstance();
+		}
+	}
+
 	public static <V> Optional<V> optional(Class<V> type) {
 		return get().query0(type).optional();
 	}
@@ -779,15 +788,6 @@ public class Registry {
 				}
 				byClass.put(clazz, implementation);
 			}
-		}
-	}
-
-	public static <T> T newInstanceOrImpl(Class<T> clazz) {
-		ClassReflector<T> classReflector = Reflections.at(clazz);
-		if (classReflector.isAbstract()) {
-			return impl(clazz);
-		} else {
-			return classReflector.newInstance();
 		}
 	}
 }
