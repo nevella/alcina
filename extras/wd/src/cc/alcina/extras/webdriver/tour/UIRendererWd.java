@@ -52,8 +52,8 @@ public class UIRendererWd extends UIRenderer {
 	}
 
 	public long timeout() {
-		return System.currentTimeMillis()
-				+ ResourceUtilities.getInteger(UIRendererWd.class, "timeout");
+		return System.currentTimeMillis() + (TourManager.isImmediateGet() ? 1
+				: ResourceUtilities.getInteger(UIRendererWd.class, "timeout"));
 	}
 
 	private WebElement getElement(String selector) {

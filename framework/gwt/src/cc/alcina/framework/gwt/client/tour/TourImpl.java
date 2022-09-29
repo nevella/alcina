@@ -395,7 +395,12 @@ public class TourImpl implements Tour {
 
 		@Override
 		public String toString() {
-			return Ax.format("%s : %s", getCaption(), getRelativeTo());
+			if (Ax.isBlank(getCaption())) {
+				return Ax.format("Non-UI: %s : %s : %s", getComment(),
+						getAction(), getTarget());
+			} else {
+				return Ax.format("%s : %s", getCaption(), getRelativeTo());
+			}
 		}
 	}
 }

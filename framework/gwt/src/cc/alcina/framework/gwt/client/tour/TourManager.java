@@ -7,19 +7,29 @@ import java.util.Optional;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.extras.webdriver.tour.UIRendererWd;
 import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.tour.StepPopupView.Action;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
+import cc.alcina.framework.gwt.client.tour.Tour.Operator;
 import cc.alcina.framework.gwt.client.tour.Tour.Step;
 
 public abstract class TourManager {
+	private static final transient String CONTEXT_IMMEDIATE_GET = UIRendererWd.class
+			.getName() + ".CONTEXT_IMMEDIATE_GET";
+
+	public static boolean isImmediateGet() {
+		return LooseContext.is(CONTEXT_IMMEDIATE_GET);
+	}
+
 	protected TourState currentTour;
 
 	String tourJson = "";
@@ -299,12 +309,23 @@ public abstract class TourManager {
 			int passCount = 0;
 			for (String selector : condition.getSelectors()) {
 				conditionCount++;
-				passCount += UIRenderer.get().hasElement(
-						Collections.singletonList(selector)) ? 1 : 0;
+				try {
+					LooseContext.pushWithTrue(CONTEXT_IMMEDIATE_GET);
+					passCount += UIRenderer.get().hasElement(
+							Collections.singletonList(selector)) ? 1 : 0;
+				} catch (Exception e) {
+					// condition not met, but do not throw
+					//
+				} finally {
+					LooseContext.pop();
+				}
 			}
 			for (Tour.Condition child : condition.getConditions()) {
 				conditionCount++;
 				passCount += evaluateCondition(child) ? 1 : 0;
+			}
+			if (operator == null) {
+				operator = Operator.AND;
 			}
 			switch (operator) {
 			case AND:
