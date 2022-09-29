@@ -7,7 +7,6 @@ import java.util.Optional;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.extras.webdriver.tour.UIRendererWd;
 import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -23,7 +22,7 @@ import cc.alcina.framework.gwt.client.tour.Tour.Operator;
 import cc.alcina.framework.gwt.client.tour.Tour.Step;
 
 public abstract class TourManager {
-	private static final transient String CONTEXT_IMMEDIATE_GET = UIRendererWd.class
+	private static final transient String CONTEXT_IMMEDIATE_GET = TourManager.class
 			.getName() + ".CONTEXT_IMMEDIATE_GET";
 
 	public static boolean isImmediateGet() {
