@@ -54,7 +54,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
+import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.KeyDown;
@@ -264,7 +264,7 @@ public class FormModel extends Model
 
 	@Ref("cancel")
 	@ActionRefHandler(CancelHandler.class)
-	@EmitsTopic(ModelEvents.Cancelled.class)
+	@EmitsModelEvent(ModelEvents.Cancelled.class)
 	public static class CancelRef extends ActionRef {
 	}
 
@@ -574,8 +574,8 @@ public class FormModel extends Model
 			FormModel formModel = (FormModel) node
 					.ancestorModel(m -> m instanceof FormModel);
 			if (formModel.submit(node)) {
-				Optional<EmitsTopic> emitsTopic = place.emitsTopic();
-				Class<? extends ModelEvent> type = emitsTopic.get().value();
+				Optional<EmitsModelEvent> emitsType = place.emitsModelEvent();
+				Class<? extends ModelEvent> type = emitsType.get().value();
 				Context context = NodeEvent.Context.newModelContext(event,
 						node);
 				ModelEvent.fire(context, type, formModel);
@@ -585,7 +585,7 @@ public class FormModel extends Model
 
 	@Ref("submit")
 	@ActionRefHandler(SubmitHandler.class)
-	@EmitsTopic(value = ModelEvents.Submitted.class, hasValidation = true)
+	@EmitsModelEvent(value = ModelEvents.Submitted.class, hasValidation = true)
 	public static class SubmitRef extends ActionRef {
 	}
 

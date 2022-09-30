@@ -1,15 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
-import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node.NodeEventBinding;
 
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent<H> {
@@ -19,8 +15,6 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		ModelEvent modelEvent = Reflections.newInstance(type);
 		context.setNodeEvent(modelEvent);
 		modelEvent.setModel(model);
-		context.topicListeners.eventBindings
-				.forEach(bb -> bb.onModelEvent(modelEvent));
 		/*
 		 * Bubble
 		 */
@@ -60,21 +54,5 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 				unbind();
 			}
 		});
-	}
-
-	/*
-	 * FIXME - dirndl 1x1a - pretty sure this can go,
-	 */
-	public static class TopicListeners {
-		List<NodeEventBinding> eventBindings = new ArrayList<>();
-
-		public void addListener(NodeEventBinding binding) {
-			eventBindings.add(binding);
-			binding.getBindingWidget().addAttachHandler(evt -> {
-				if (!evt.isAttached()) {
-					eventBindings.remove(binding);
-				}
-			});
-		}
 	}
 }

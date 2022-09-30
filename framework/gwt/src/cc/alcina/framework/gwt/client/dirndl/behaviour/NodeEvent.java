@@ -18,7 +18,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.NodeEventReceiver;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
 
 @Reflected
 /**
@@ -49,7 +48,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
  *
  * Actually (TODO: document better) - this is totally correct - and feature, not
  * bug - dirndl node events always only have one receiver (the node) -
- * topic/message passing generates new events at the receiver node
+ * event bubbling generates new events at the receiver node
  *
  * Implementation - extend nodeevent (to future-proof against using the gwt
  * event bus) but, because our propagation model is differnt, don't implement
@@ -60,9 +59,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
  * root cause *may* want to be scheduled on that bus - but possibly just
  * schedule() on that bus is enough
  *
- * TODO: document the nodeevent bind/fire/unbind lifecycle. Definitely rename
- * 'topiclistener', possibly remove (since there's only ever one eventbinding,
- * not a list)
+ * TODO: document the nodeevent bind/fire/unbind lifecycle.
  *
  * @formatter:off
  *
@@ -151,18 +148,10 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	}
 
 	public static class Context {
-		public static Context newNodeContext(Node node) {
-			Context context = new Context();
-			context.node = node;
-			context.topicListeners = new TopicListeners();
-			return context;
-		}
-
 		public static Context newModelContext(Context previous, Node node) {
 			Context context = new Context();
 			context.previous = previous;
 			context.node = node == null ? previous.node : node;
-			context.topicListeners = new TopicListeners();
 			return context;
 		}
 
@@ -170,7 +159,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			Context context = new Context();
 			context.gwtEvent = event;
 			context.node = node;
-			context.topicListeners = new TopicListeners();
 			return context;
 		}
 
@@ -178,7 +166,12 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			Context context = new Context();
 			context.hint = hint;
 			context.node = node;
-			context.topicListeners = new TopicListeners();
+			return context;
+		}
+
+		public static Context newNodeContext(Node node) {
+			Context context = new Context();
+			context.node = node;
 			return context;
 		}
 
@@ -192,8 +185,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 		private NodeEvent nodeEvent;
 
 		public GwtEvent gwtEvent;
-
-		public TopicListeners topicListeners;
 
 		public Context() {
 		}

@@ -13,7 +13,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 @Documented
 @Target(ElementType.TYPE)
 @ClientVisible
-public @interface EmitsTopic {
+public @interface EmitsModelEvent {
 	boolean hasValidation() default false;
 
 	Class<? extends ModelEvent<?, ?>> value();

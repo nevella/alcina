@@ -12,7 +12,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionHandler;
 import cc.alcina.framework.gwt.client.dirndl.annotation.ActionRef.ActionRefHandler;
-import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsTopic;
+import cc.alcina.framework.gwt.client.dirndl.annotation.EmitsModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Ref;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Reference;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -31,9 +31,9 @@ public class ActionRefPlace extends BasePlace {
 		this.ref = ref;
 	}
 
-	public Optional<EmitsTopic> emitsTopic() {
+	public Optional<EmitsModelEvent> emitsModelEvent() {
 		return Optional
-				.ofNullable(Reflections.at(ref).annotation(EmitsTopic.class));
+				.ofNullable(Reflections.at(ref).annotation(EmitsModelEvent.class));
 	}
 
 	public Optional<ActionHandler> getActionHandler() {

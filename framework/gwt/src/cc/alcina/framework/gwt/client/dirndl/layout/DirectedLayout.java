@@ -45,7 +45,6 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoint.Point;
-import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
 
 /**
  *
@@ -673,8 +672,6 @@ public class DirectedLayout {
 			// use type? or call it 'template'?
 			NodeEvent<? extends EventHandler> eventTemplate;
 
-			TopicListeners topicListeners = new TopicListeners();
-
 			private int receiverIndex;
 
 			public NodeEventBinding(Class<? extends NodeEvent> type, int idx) {
@@ -712,8 +709,6 @@ public class DirectedLayout {
 				context.setNodeEvent(nodeEvent);
 				nodeEvent.setModel(model);
 				context.node = Node.this;
-				// FIXME - dirndl 1.3 - do we still need to pass topicListeners?
-				context.topicListeners = topicListeners;
 				Class<? extends EventHandler> handlerClass = eventTemplate
 						.getHandlerClass();
 				NodeEvent.Handler handler = null;
@@ -722,15 +717,15 @@ public class DirectedLayout {
 					handler = (NodeEvent.Handler) context.node.model;
 					nodeEvent.dispatch(handler);
 				} else {
-					// fire a logical topic event, based on correspondence
+					// fire a ModelEvent, based on correspondence
 					// between Directed.reemits and receives
 					Context eventContext = NodeEvent.Context
 							.newModelContext(context, Node.this);
 					Preconditions.checkState(directed
 							.receives().length == directed.reemits().length);
-					Class<? extends ModelEvent> emitTopic = (Class<? extends ModelEvent>) directed
+					Class<? extends ModelEvent> emitType = (Class<? extends ModelEvent>) directed
 							.reemits()[receiverIndex];
-					ModelEvent.fire(eventContext, emitTopic,
+					ModelEvent.fire(eventContext, emitType,
 							Node.this.getModel());
 				}
 			}
