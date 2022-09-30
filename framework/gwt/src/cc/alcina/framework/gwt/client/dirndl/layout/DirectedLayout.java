@@ -4,7 +4,10 @@ import java.beans.PropertyChangeEvent;
 import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Level;
@@ -107,13 +110,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
  *
  * Dirndl 1.1 TODO
  *
- * - Ensure collection, model transform work as expected (/)
- * - Test in a large application
- * - Remove current layout algorithm
- * - Review renderers. Mark for removal (e.g. Link -> LinkDeprecated -> Remove)(actually that's a mooel but... yup)
- * - Remove renderers
- * - Review propertychange handling in this class
- * - Remove uses of TreeResolver (but not the code) (explain why -
  *   at least for directed trees, simpler & better to have lowest-imperative win)
  * - Plan a ContextResolver cleanup
  * - Plan Registry.Context
@@ -167,6 +163,8 @@ public class DirectedLayout {
 
 	boolean inLayout = false;
 
+	Map<Class, Class<? extends DirectedRenderer>> modelRenderers = new LinkedHashMap<>();
+
 	/**
 	 * Render a model object and add top-level output widgets to the parent
 	 * widget
@@ -178,6 +176,16 @@ public class DirectedLayout {
 		enqueueInput(resolver, model, location, null, null);
 		layout();
 		return root.firstDescendantWidget();
+	}
+
+	/*
+	 * very simple caching, but lowers allocation *a lot*
+	 */
+	private Class<? extends DirectedRenderer>
+			resolveModelRenderer(Object model) {
+		return modelRenderers.computeIfAbsent(model.getClass(),
+				clazz -> Registry.query(DirectedRenderer.class).addKeys(clazz)
+						.registration());
 	}
 
 	RendererInput enqueueInput(ContextResolver resolver, Object model,
@@ -217,6 +225,26 @@ public class DirectedLayout {
 		}
 	}
 
+	DirectedRenderer resolveRenderer(Directed directed,
+			AnnotationLocation location, Object model) {
+		Class<? extends DirectedRenderer> rendererClass = directed.renderer();
+		if (rendererClass == DirectedRenderer.ModelClass.class) {
+			// default - see Directed.Transform
+			boolean transform = location
+					.hasAnnotation(Directed.Transform.class);
+			if (transform && !(model instanceof Collection)) {
+				rendererClass = DirectedRenderer.TransformRenderer.class;
+			} else {
+				if (model.getClass() == Object.class) {
+					rendererClass = DirectedRenderer.Container.class;
+				} else {
+					rendererClass = resolveModelRenderer(model);
+				}
+			}
+		}
+		return Reflections.newInstance(rendererClass);
+	}
+
 	/**
 	 * <p>
 	 * In most cases, there is a 1-1 correspondence between a node and a widget
@@ -250,7 +278,7 @@ public class DirectedLayout {
 	public static class Node {
 		// not necessarily unchanged during the Node's lifetime - the renderer
 		// can change it if required
-		private ContextResolver resolver;
+		ContextResolver resolver;
 
 		final Object model;
 
@@ -337,10 +365,6 @@ public class DirectedLayout {
 			return (T) this.model;
 		}
 
-		public ContextResolver getResolver() {
-			return this.resolver;
-		}
-
 		public Widget getWidget() {
 			return widget;
 		}
@@ -358,7 +382,7 @@ public class DirectedLayout {
 		}
 
 		public <T> T resolveRenderContextProperty(String key) {
-			return resolver.resolveRenderContextProperty(key);
+			return getResolver().resolveRenderContextProperty(key);
 		}
 
 		// Rare - but crucial - called by a DirectedRenderer
@@ -606,6 +630,10 @@ public class DirectedLayout {
 			return widget;
 		}
 
+		public ContextResolver getResolver() {
+			return resolver;
+		}
+
 		/**
 		 * Replaces a child node following a property change
 		 *
@@ -623,16 +651,16 @@ public class DirectedLayout {
 
 			@Override
 			public void propertyChange(PropertyChangeEvent evt) {
-				Preconditions.checkState(!resolver.getLayout().inLayout);
+				Preconditions.checkState(!getResolver().layout.inLayout);
 				// The input can mostly be constructed from this node (only the
 				// model differs)
 				Object newValue = evt.getNewValue();
-				RendererInput input = resolver.getLayout().enqueueInput(
-						resolver, newValue,
+				RendererInput input = getResolver().layout.enqueueInput(getResolver(),
+						newValue,
 						annotationLocation.copyWithClassLocationOf(newValue),
 						null, parent);
 				input.replace = Node.this;
-				resolver.getLayout().layout();
+				getResolver().layout.layout();
 			}
 		}
 
@@ -904,15 +932,11 @@ public class DirectedLayout {
 			node.directed = firstDirected();
 		}
 
-		public DirectedRenderer provideRenderer() {
-			return resolver.getRenderer(node.directed, location, model);
-		}
-
 		@Override
 		public String toString() {
 			return Ax.format("Node:\n%s\n\nLocation: %s\n\nRenderer: %s",
 					node.toParentStack(), location.toString(),
-					provideRenderer().getClass().getSimpleName());
+					resolveRenderer().getClass().getSimpleName());
 		}
 
 		private Directed firstDirected() {
@@ -968,10 +992,10 @@ public class DirectedLayout {
 			DirectedContextResolver directedContextResolver = location
 					.getAnnotation(DirectedContextResolver.class);
 			if (directedContextResolver != null) {
-				resolver = ContextResolver.create(
-						directedContextResolver.value(), resolver,
-						resolver.layout);
-				resolver.setRootModel(model);
+				ContextResolver resolver = Reflections
+						.newInstance(directedContextResolver.value());
+				resolver.fromLayoutNode(node);
+				this.resolver = resolver;
 				// legal! note that new resolver will have an empty resolution
 				// cache
 				location.setResolver(resolver);
@@ -1014,10 +1038,15 @@ public class DirectedLayout {
 			}
 			beforeRender();
 			if (model != null) {
-				DirectedRenderer renderer = provideRenderer();
+				DirectedRenderer renderer = resolveRenderer();
 				renderer.render(this);
 			}
 			afterRender();
+		}
+
+		DirectedRenderer resolveRenderer() {
+			return DirectedLayout.this.resolveRenderer(node.directed, location,
+					model);
 		}
 
 		Directed soleDirected() {

@@ -74,7 +74,8 @@ public @interface ModalDisplay {
 		private Node node;
 
 		private ModalResolver(Node node, Mode mode) {
-			super(node.getResolver());
+			super();
+			fromLayoutNode(node);
 			this.node = node;
 			this.mode = Registry.impl(ModeTransformer.class).apply(mode);
 		}
