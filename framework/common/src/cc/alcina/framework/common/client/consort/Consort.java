@@ -28,16 +28,26 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 
 /**
+ * <p>
  * Manages an ecology of players - a sort of organic state machine.
  *
  *
+ * <p>
  * The usage as per: noun noun: consort; plural noun: consorts a small group of
  * musicians performing together, typically playing instrumental music of the
  * Renaissance period. "a consort of viols"
  *
+ * <p>
  * Note re topics - the refectoring of Topic into non-keyed caused a reworking
  * of topics here (since there's a lot of commonality in the treatment of the
  * different messages)
+ *
+ * <p>
+ * In graph parlance, a consort traverses a graph where the nodes correspond to
+ * the states (type &lt;D&gt;) and the edges are Player instances. The states
+ * are typically named as the past participle of the Player verb - i.e. for
+ * HanshakeConsort, SetupAfterObjectsPlayer handles the change from state
+ * OBJECTS_UNWRAPPED_AND_REGISTERED to SETUP_AFTER_OBJECTS_LOADED.
  *
  * @author nick@alcina.cc
  *
