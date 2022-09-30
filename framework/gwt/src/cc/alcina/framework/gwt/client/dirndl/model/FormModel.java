@@ -201,7 +201,7 @@ public class FormModel extends Model
 							&& m == focus.get().getValue());
 			((Focusable) childWithModel.getWidget()).setFocus(true);
 		}
-		// FIXME - dirndl 1.3 - this should be an annotation on the field,
+		// FIXME - dirndl 1x2 - this should be an annotation on the field,
 		//
 	}
 

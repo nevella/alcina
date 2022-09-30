@@ -111,9 +111,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
  * Dirndl 1.1 TODO
  *
  *   at least for directed trees, simpler & better to have lowest-imperative win)
- * - Plan a ContextResolver cleanup
- * - Plan Registry.Context
- * - Implement the ContextResolver cleanup
+ * - Plan Registry.Context (in fact, no, discuss why not)
  *
  *
  * - Goals:
@@ -124,8 +122,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent.TopicListeners;
  *
  * - Phases:
  * 	 a. Implement TODO above to 'remove renderers'
- *   b. rest of TODO
- *   c. FIXMEs marked as 'c'
+ *   b. rest of TODO (/)
+ *   c. categorise FIXMEs, then a -> b -> c
+ *   d. 1x2 switch table/form rendering to pure model
+ *   e. 1x3 consider removing widget entirely (localdom)
  *
  *
  *
@@ -137,9 +137,8 @@ public class DirectedLayout {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.INFO);
 	}
 
-	public static boolean trace = false;
-
-	// FIXME - remove
+	// FIXME - dirndl 1x2 - remove (required until decoupling from
+	// RnederContext)
 	public static Node current = null;
 
 	/**
@@ -210,6 +209,7 @@ public class DirectedLayout {
 	// The algorithm. Gosh.
 	void layout() {
 		try {
+			Preconditions.checkState(!inLayout);
 			inLayout = true;
 			do {
 				// depth-first traversal
@@ -288,7 +288,6 @@ public class DirectedLayout {
 
 		Node parent;
 
-		// FIXME - dirndl 1x1b - ensure no null checks (guaranteed non null)
 		final AnnotationLocation annotationLocation;
 
 		public List<NodeEventBinding> eventBindings;
@@ -310,13 +309,15 @@ public class DirectedLayout {
 			current = this;
 		}
 
-		// FIXME - dirndl1x1 - remove
+		// FIXME - dirndl 1x1a - remove - switch to
+		// ContextResolver.ancestorResolver (which controls say access to
+		// editable state)
 		public <T> T ancestorModel(Class<T> clazz) {
 			return ancestorModel(model -> Reflections.isAssignableFrom(clazz,
 					model.getClass()));
 		}
 
-		// FIXME - dirndl1x1 - remove
+		// FIXME - dirndl 1x1a - remove
 		public <T> T ancestorModel(Predicate predicate) {
 			if (predicate.test(model)) {
 				return (T) model;
@@ -363,6 +364,10 @@ public class DirectedLayout {
 
 		public <T> T getModel() {
 			return (T) this.model;
+		}
+
+		public ContextResolver getResolver() {
+			return resolver;
 		}
 
 		public Widget getWidget() {
@@ -630,10 +635,6 @@ public class DirectedLayout {
 			return widget;
 		}
 
-		public ContextResolver getResolver() {
-			return resolver;
-		}
-
 		/**
 		 * Replaces a child node following a property change
 		 *
@@ -655,8 +656,8 @@ public class DirectedLayout {
 				// The input can mostly be constructed from this node (only the
 				// model differs)
 				Object newValue = evt.getNewValue();
-				RendererInput input = getResolver().layout.enqueueInput(getResolver(),
-						newValue,
+				RendererInput input = getResolver().layout.enqueueInput(
+						getResolver(), newValue,
 						annotationLocation.copyWithClassLocationOf(newValue),
 						null, parent);
 				input.replace = Node.this;
@@ -744,14 +745,14 @@ public class DirectedLayout {
 				return verifySingleWidget();
 			}
 
-			void onModelEvent(ModelEvent topicEvent) {
-				if (topicEvent.getClass() == type) {
-					Context context = NodeEvent.Context.newModelContext(
-							topicEvent.getContext(), Node.this);
+			void onModelEvent(ModelEvent event) {
+				if (event.getClass() == type) {
+					Context context = NodeEvent.Context
+							.newModelContext(event.getContext(), Node.this);
 					// set before we dispatch to the handler, so the handler can
 					// unset
-					topicEvent.setHandled(true);
-					fireEvent(context, topicEvent.getModel());
+					event.setHandled(true);
+					fireEvent(context, event.getModel());
 				}
 			}
 		}
