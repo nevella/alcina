@@ -47,12 +47,12 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionContext;
 
 public class StatsFilter extends CollectionProjectionFilter {
-	public static void dumpGraphStats(Object resultObject,Class...pathStats) {
+	public static void dumpGraphStats(Object resultObject, Class... pathStats) {
 		try {
 			StatsFilter statsFilter = new StatsFilter().dumpPaths();
 			// statsFilter.bypassGwtTransient();
-			statsFilter.getGraphStats(resultObject, new Class[] {},
-					pathStats, StatsFilterSortKey.CLASSNAME, true);
+			statsFilter.getGraphStats(resultObject, new Class[] {}, pathStats,
+					StatsFilterSortKey.CLASSNAME, true);
 			ByteArrayOutputStream out = new ByteArrayOutputStream();
 			MetricLogging.get().start("serialize-jvm");
 			ObjectOutputStream oos = new ObjectOutputStream(out);
@@ -112,7 +112,7 @@ public class StatsFilter extends CollectionProjectionFilter {
 
 	private boolean noPathToString;
 
-	private boolean noPath;
+	private boolean noPath = true;
 
 	public StatsFilter() {
 	}
