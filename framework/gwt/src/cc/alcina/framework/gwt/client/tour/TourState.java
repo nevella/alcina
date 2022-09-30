@@ -20,16 +20,16 @@ public class TourState {
 		this.tour = tour;
 	}
 
+	public Tour.Step getCurrentStep() {
+		return getSteps().get(stepIdx);
+	}
+
 	public int getCurrentStepIndex() {
 		return stepIdx;
 	}
 
 	public List<? extends Tour.Step> getSteps() {
 		return tour.getSteps();
-	}
-
-	Tour.Step getCurrentStep() {
-		return getSteps().get(stepIdx);
 	}
 
 	String getName() {

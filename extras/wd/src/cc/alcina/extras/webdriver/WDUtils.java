@@ -603,7 +603,7 @@ public class WDUtils {
 		try {
 			File dataFile = File.createTempFile("webdriver-err-", ".png");
 			ResourceUtilities.writeBytesToFile(bytes, dataFile);
-			WDToken token = LooseContext.get(WDManager.CONTEXT_TOKEN);
+			WDToken token = WDManager.contextToken();
 			if (token != null) {
 				token.getWriter().write(
 						String.format("Screenshot:\n%s\n", dataFile.getPath()),

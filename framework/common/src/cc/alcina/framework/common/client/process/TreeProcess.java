@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.log;
+package cc.alcina.framework.common.client.process;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -21,8 +21,9 @@ import cc.alcina.framework.common.client.util.IntPair;
 import cc.alcina.framework.common.client.util.Topic;
 
 /**
- * Models an operation which can be modelled as a tree structure. Particularly
- * useful for progress logging
+ * <p>
+ * Models the stages, elements and status of an operation which can be modelled
+ * as a tree structure. Particularly useful for progress logging
  *
  * @author nick@alcina.cc
  *
@@ -333,10 +334,6 @@ public class TreeProcess {
 		public Node getSelected() {
 			return this.selected;
 		}
-	}
-
-	public interface ProcessContextProvider {
-		String flatPosition(Node node);
 	}
 
 	enum Event {

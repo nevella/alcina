@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.RemovablePropertyChangeListener;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -130,7 +131,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *
  *  @formatter:on
  */
-public class DirectedLayout {
+public class DirectedLayout implements AlcinaProcess {
 	static Logger logger = LoggerFactory.getLogger(DirectedLayout.class);
 	static {
 		AlcinaLogUtils.sysLogClient(DirectedLayout.class, Level.INFO);

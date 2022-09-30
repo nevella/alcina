@@ -9,10 +9,14 @@ class UIRendererWd {
 		style.innerText = css;
 		document.head.appendChild(style);
 	}
-	renderRelative(popupInfoJson, html) {
+	
+	getSelector(relativeTo,soleSelector){
+			return relativeTo.element?relativeTo.element:soleSelector;
+	}
+	renderRelative(popupInfoJson,soleSelector, html) {
 
 		let popupInfo = JSON.parse(popupInfoJson);
-		let relativeTo = this.evalSelector(popupInfo.relativeTo.element);
+		let relativeTo = this.evalSelector(this.getSelector(popupInfo.relativeTo,soleSelector));
 		let div = document.createElement("div");
 		div.innerHTML = html;
 		let content = div.firstElementChild;

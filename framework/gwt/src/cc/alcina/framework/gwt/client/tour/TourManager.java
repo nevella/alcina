@@ -178,6 +178,10 @@ public abstract class TourManager {
 		protected abstract boolean showStepPopups();
 
 		protected abstract void startTour(TourManager tourManager);
+
+		protected Step currentStep() {
+			return tourManager.currentTour.getCurrentStep();
+		}
 	}
 
 	class DisplayStepConsort extends AllStatesConsort<DisplayStepPhase> {

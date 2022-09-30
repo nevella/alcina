@@ -1,15 +1,21 @@
 # Welcome to Alcina
 
 Named for an opera by the baroque composer Georg Friederich Händel, Alcina is an integrated set of 
-software components that collectively implement a "semi-declarative" client/server programming idiom 
+software components that collectively implement a generative-process, semi-declarative client/server programming idiom 
 which guides application design towards processing streams .
 
-Semi-declarative code is an attempt to reconcile the virtues of declarative and imperative programming - 
+*Generative-process* - several complex-ish application problems are tackled by Alcina with "generative" algorithms - algorithms 
+that generate later stages of the algorithm during algorithm processing, rather than with up-front (imperative) specification. 
+The problems are: UI modelling (Dirndl), rich website modelling (Selection Traversal), document transformation (Selection Traversal) and dependency resolution (Consort).
+
+*Semi-declarative* code is an attempt to reconcile the virtues of declarative and imperative programming - 
 the basic philosophy being "declarative for composition" - say, composing a UI from an annotated object tree 
 rather than widget.add methods - "imperative for logic" - falling back on imperative code to resolve more
  complex logical decisions. This encourages granular programming in certain key areas
 of the client/server software stack, and helps to minimise code replication, reuse domain 
 logic and maximise (within limits) performance.
+
+
 
 The main components of Alcina are (in no particular order):
 
@@ -44,6 +50,10 @@ to generate a UI from an arbitrary model with minimal imperative code.
 
 Best shown by examples:
 (TBD - show a collection rendering, show event handling, show an app skeleton)
+
+## Domain Store
+An in-memory, transactional, clustered, memory- and performance- optimised entity cache, where entities do not require 
+hydration/dehydration, but can be accessed using standard java semantics - e.g. `Group group = User.byId(1).getPrimaryGroup();`
 
 ---
 

@@ -3,6 +3,8 @@ package cc.alcina.framework.gwt.client.tour;
 import java.util.List;
 import java.util.Optional;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
@@ -13,7 +15,7 @@ public interface Tour {
 
 	@Reflected
 	enum Action {
-		CLICK, SET_TEXT, NONE, SCRIPT, SELECT, EVAL
+		CLICK, SET_TEXT, NONE, SCRIPT, SELECT, EVAL, TEST
 	}
 
 	interface Condition {
@@ -34,6 +36,11 @@ public interface Tour {
 				return Optional.of(Reflections.newInstance(evaluatorClass));
 			}
 		}
+
+		default String soleSelector() {
+			Preconditions.checkState(getSelectors().size() == 1);
+			return getSelectors().get(0);
+		}
 	}
 
 	public static class ConditionEvaluationContext {
@@ -53,6 +60,7 @@ public interface Tour {
 	}
 
 	public interface ConditionEvaluator {
+		// return true if the condition is met
 		boolean evaluate(ConditionEvaluationContext context);
 	}
 
@@ -84,6 +92,7 @@ public interface Tour {
 	interface RelativeTo {
 		public PositioningDirection getDirection();
 
+		// FIXME - to 'selector';
 		public String getElement();
 
 		public int getOffsetHorizontal();
@@ -97,6 +106,16 @@ public interface Tour {
 		public int getPopupFromBottom();
 
 		public boolean isBubble();
+
+		public boolean isStepTarget();
+
+		default String provideElement(Step currentStep) {
+			if (isStepTarget()) {
+				return currentStep.provideTarget().soleSelector();
+			} else {
+				return getElement();
+			}
+		}
 	}
 
 	// @JsonDeserialize(as = StepImpl.class)

@@ -152,6 +152,9 @@ public class UIRendererWd extends UIRenderer {
 		case SET_TEXT:
 			exec.clearAndSetText(step.getActionValue());
 			break;
+		case TEST:
+			// a noop, but forces evaluation/popup in wd mode
+			break;
 		}
 		return true;
 	}
@@ -238,13 +241,13 @@ public class UIRendererWd extends UIRenderer {
 		@Override
 		public String toString() {
 			return Ax.format("%s :: %s\n\n%s", popupInfo.getCaption(),
-					popupInfo.getRelativeTo().getElement(),
+					popupInfo.getRelativeTo().provideElement(currentStep()),
 					popupInfo.getDescription());
 		}
 
 		public void waitForSelector() {
-			getElement(Collections
-					.singletonList(popupInfo.getRelativeTo().getElement()));
+			getElement(Collections.singletonList(
+					popupInfo.getRelativeTo().provideElement(currentStep())));
 		}
 
 		void remove() {
@@ -290,8 +293,11 @@ public class UIRendererWd extends UIRenderer {
 			}
 			root.setAttr("style", Ax.blankToEmpty(popupInfo.getStyle()));
 			root.setAttr("id", id);
-			wdJsInvoke("renderRelative('%s','%s')",
-					JacksonUtils.serializeNoTypes(popupInfo),
+			String soleSelector = popupInfo.getRelativeTo().isStepTarget()
+					? currentStep().provideTarget().soleSelector()
+					: "";
+			wdJsInvoke("renderRelative('%s','%s', '%s')",
+					JacksonUtils.serializeNoTypes(popupInfo), soleSelector,
 					root.fullToString());
 		}
 	}

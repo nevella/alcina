@@ -143,6 +143,8 @@ public class TourImpl implements Tour {
 
 		private boolean bubble = true;
 
+		private boolean stepTarget;
+
 		@Override
 		public PositioningDirection getDirection() {
 			return this.direction;
@@ -183,6 +185,11 @@ public class TourImpl implements Tour {
 			return this.bubble;
 		}
 
+		@Override
+		public boolean isStepTarget() {
+			return this.stepTarget;
+		}
+
 		public void setBubble(boolean bubble) {
 			this.bubble = bubble;
 		}
@@ -213,6 +220,10 @@ public class TourImpl implements Tour {
 
 		public void setPopupFromBottom(int popupFromBottom) {
 			this.popupFromBottom = popupFromBottom;
+		}
+
+		public void setStepTarget(boolean stepTarget) {
+			this.stepTarget = stepTarget;
 		}
 
 		@Override

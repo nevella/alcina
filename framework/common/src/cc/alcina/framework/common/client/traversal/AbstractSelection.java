@@ -5,7 +5,7 @@ import java.util.List;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.log.TreeProcess.Node;
+import cc.alcina.framework.common.client.process.TreeProcess.Node;
 
 public abstract class AbstractSelection<T> implements Selection<T> {
 	private T value;

@@ -19,6 +19,7 @@ import cc.alcina.framework.common.client.collections.IsClassFilter;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
@@ -52,7 +53,7 @@ import cc.alcina.framework.common.client.util.TopicListener;
  * @author nick@alcina.cc
  *
  */
-public class Consort<D> {
+public class Consort<D> implements AlcinaProcess {
 	private static final String PLAYERS_WITH_EQUAL_DEPS_ERR = "Players with equal"
 			+ " dependencies and priorities: \n%s\n%s\n  - deps: %s";
 

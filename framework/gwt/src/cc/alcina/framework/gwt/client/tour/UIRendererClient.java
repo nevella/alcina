@@ -226,7 +226,7 @@ public class UIRendererClient extends UIRenderer
 			RelativeTo relativeTo = popupInfo.getRelativeTo();
 			params.relativeToElement = WidgetUtils.getElementForSelector(
 					Document.get().getDocumentElement(),
-					relativeTo.getElement());
+					relativeTo.provideElement(currentStep()));
 			if (params.relativeToElement != null) {
 				params.boundingWidget = RootPanel.get();
 				params.relativeContainer = RootPanel.get();

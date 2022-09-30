@@ -13,9 +13,10 @@ import java.util.stream.Stream;
 
 import com.google.common.base.Preconditions;
 
-import cc.alcina.framework.common.client.log.TreeProcess.Node;
-import cc.alcina.framework.common.client.log.TreeProcess.ProcessContextProvider;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
+import cc.alcina.framework.common.client.process.AlcinaProcess;
+import cc.alcina.framework.common.client.process.ProcessContextProvider;
+import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.ReflectionUtils;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
@@ -61,7 +62,8 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  *
  *
  */
-public class SelectionTraversal implements ProcessContextProvider {
+public class SelectionTraversal
+		implements ProcessContextProvider, AlcinaProcess {
 	public Topic<Selection> selectionAdded = Topic.create()
 			.withThrowExceptions();
 

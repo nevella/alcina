@@ -19,7 +19,7 @@ import cc.alcina.framework.entity.ResourceUtilities;
 public class WDManager {
 	private static Map<String, WDToken> resultCache = new HashMap<String, WDToken>();
 
-	public static final String CONTEXT_TOKEN = WDManager.class.getName()
+	private static final String CONTEXT_TOKEN = WDManager.class.getName()
 			+ ".CONTEXT_TOKEN";
 
 	final static Logger logger = LoggerFactory
@@ -27,6 +27,10 @@ public class WDManager {
 
 	public static final String CONTEXT_REQUEST = WDManager.class.getName()
 			+ ".CONTEXT_REQUEST";
+
+	public static WDToken contextToken() {
+		return LooseContext.get(CONTEXT_TOKEN);
+	}
 
 	// private WDToken checkCache(WDConfigurationItem config) {
 	// WDToken token = resultCache.get(config.topLevelClassName);

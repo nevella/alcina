@@ -6,8 +6,8 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-import cc.alcina.framework.common.client.log.TreeProcess.HasNode;
-import cc.alcina.framework.common.client.log.TreeProcess.Node;
+import cc.alcina.framework.common.client.process.TreeProcess.HasNode;
+import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.traversal.SelectionTraversal.Generation;
 import cc.alcina.framework.common.client.util.Ax;

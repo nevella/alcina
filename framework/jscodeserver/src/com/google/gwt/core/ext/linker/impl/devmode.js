@@ -345,7 +345,8 @@ function simpleEscape(originalString) {
 
 function tryConnectingToPlugin(sessionId, url) {
   // Note that the order is important
-  var pluginFinders = [findPluginXPCOM, findPluginObject, findPluginEmbed, findPluginJsCodeServer];
+  //var pluginFinders = [findPluginXPCOM, findPluginObject, findPluginEmbed, findPluginJsCodeServer];
+  var pluginFinders = [ findPluginJsCodeServer];
   var codeServer = getCodeServer();
   var plugin = null;
   for (var i = 0; i < pluginFinders.length; ++i) {
@@ -394,9 +395,11 @@ function gwtOnLoad0(errFn, moduleName, moduleBase, softPermutationId, computePro
   
   doBrowserSpecificFixes();
 
+/*
   if (!findPluginXPCOM()) {
     embedPlugin();
   }
+*/
 
   var topWin = window.top;
   try{

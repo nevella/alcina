@@ -151,6 +151,11 @@ public final class TourJso extends JavaScriptObject implements Tour {
       return !!this.bubble;
 		}-*/;
 
+		@Override
+		final public native boolean isStepTarget()/*-{
+      return !!this.stepTarget;
+		}-*/;
+
 		private final native String getDirectionString()/*-{
       return this.direction;
 		}-*/;
