@@ -13,6 +13,7 @@ import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -28,7 +29,25 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableTypeFactory;
 import cc.alcina.framework.gwt.client.dirndl.widget.SimpleWidget;
 
 /**
+ * <p>
  * Renderers that emit no new inputs, only a widget
+ *
+ * <p>
+ * A quick note re the HtmlXxx classes:
+ *
+ * <ul>
+ * <li>Use <code>@Directed(renderer=LeafRenderer.Html.class)</code> to render a
+ * String property as an element containing html (by default a
+ * <code>&lt;span&gt;</code> element)
+ * <li>Use a property of type <code>LeafRenderer.HtmlBlock</code>, with a
+ * default <code>@Directed</code> annotation to have a property whose value
+ * property as an element containing html (by default a <code>&lt;div&gt;</code>
+ * element)
+ * <li>Use a transform of type <code>LeafRenderer.HtmlModel.Transform</code>,
+ * with a default <code>@Directed</code> annotation to have a list of String
+ * instances be rendered as a list of non-escaped html elements
+ *
+ * </ul>
  *
  * @author nick@alcina.cc
  *
@@ -105,17 +124,17 @@ public abstract class LeafRenderer extends DirectedRenderer {
 	}
 
 	@Directed(tag = "div", bindings = @Binding(from = "html", type = Type.INNER_HTML))
-	public static class HtmlString extends Model {
+	public static class HtmlBlock extends Model {
 		private String html;
 
-		public HtmlString() {
+		public HtmlBlock() {
 		}
 
-		public HtmlString(String html) {
+		public HtmlBlock(String html) {
 			setHtml(html);
 		}
 
-		public HtmlString(String template, Object... args) {
+		public HtmlBlock(String template, Object... args) {
 			this(Ax.format(template, args));
 		}
 
@@ -125,6 +144,35 @@ public abstract class LeafRenderer extends DirectedRenderer {
 
 		public void setHtml(String html) {
 			this.html = html;
+		}
+	}
+
+	@Directed(bindings = @Binding(from = "html", type = Type.INNER_HTML))
+	public static class HtmlModel extends Model {
+		private String html;
+
+		public HtmlModel() {
+		}
+
+		public HtmlModel(String html) {
+			setHtml(html);
+		}
+
+		public String getHtml() {
+			return this.html;
+		}
+
+		public void setHtml(String html) {
+			this.html = html;
+		}
+
+		@Reflected
+		public static class Transform
+				implements ModelTransform<String, HtmlModel> {
+			@Override
+			public HtmlModel apply(String t) {
+				return new HtmlModel(t);
+			}
 		}
 	}
 
