@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.dom.DomNodeBuilder;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -156,6 +157,8 @@ public class UIRendererWd extends UIRenderer {
 			// a noop, but forces evaluation/popup in wd mode
 			break;
 		}
+		ProcessObservers.publish(TourManager.AfterActionPerformed.class,
+				() -> new TourManager.AfterActionPerformed(step));
 		return true;
 	}
 
@@ -174,13 +177,18 @@ public class UIRendererWd extends UIRenderer {
 
 	@Override
 	protected boolean showStepPopups() {
+		Step step = tourManager.getStep();
+		ProcessObservers.publish(TourManager.BeforeStepRendered.class,
+				() -> new TourManager.BeforeStepRendered(step));
 		popups.forEach(popup -> {
 			managerWd().beforePopup.publish(popup);
 			popup.waitForSelector();
 			popup.render();
 			managerWd().afterPopup.publish(popup);
 		});
-		tourManager.stepRendered.publish(tourManager.getStep());
+		tourManager.afterStepRendered.publish(step);
+		ProcessObservers.publish(TourManager.AfterStepRendered.class,
+				() -> new TourManager.AfterStepRendered(step));
 		return true;
 	}
 

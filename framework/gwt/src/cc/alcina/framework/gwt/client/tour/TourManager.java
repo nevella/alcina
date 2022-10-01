@@ -39,7 +39,7 @@ public abstract class TourManager {
 
 	protected Tour.Step step;
 
-	public Topic<Step> stepRendered = Topic.create();
+	public Topic<Step> afterStepRendered = Topic.create();
 
 	public Topic<Void> getElementException = Topic.create();
 
@@ -146,6 +146,23 @@ public abstract class TourManager {
 		return true;
 	}
 
+	public static class AfterStepRendered extends Step.Observable {
+		public AfterStepRendered(Step step) {
+			super(step);
+		}
+	}
+
+	public static class BeforeStepRendered extends Step.Observable {
+		public BeforeStepRendered(Step step) {
+			super(step);
+		}
+	}
+	public static class AfterActionPerformed extends Step.Observable {
+		public AfterActionPerformed(Step step) {
+			super(step);
+		}
+	}
+
 	public static enum DisplayStepPhase {
 		SETUP, WAIT_FOR, IGNORE_IF, PERFORM_ACTION, SHOW_POPUP
 	}
@@ -165,6 +182,10 @@ public abstract class TourManager {
 
 		protected abstract void clearPopups(int delay);
 
+		protected Step currentStep() {
+			return tourManager.currentTour.getCurrentStep();
+		}
+
 		protected abstract void exitTour(String message);
 
 		protected abstract boolean hasElement(List<String> selectors);
@@ -178,10 +199,6 @@ public abstract class TourManager {
 		protected abstract boolean showStepPopups();
 
 		protected abstract void startTour(TourManager tourManager);
-
-		protected Step currentStep() {
-			return tourManager.currentTour.getCurrentStep();
-		}
 	}
 
 	class DisplayStepConsort extends AllStatesConsort<DisplayStepPhase> {
