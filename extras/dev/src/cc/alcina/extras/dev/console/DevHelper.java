@@ -546,6 +546,40 @@ public abstract class DevHelper {
 				}
 			}
 		}
+		{
+			String nonTemplatePath = getNonVcsJavaProcessObserverFilePath();
+			if (nonTemplatePath == null) {
+				return;
+			}
+			File nonTemplateFile = new File(nonTemplatePath);
+			if (!nonTemplateFile.exists()) {
+				try {
+					Ax.out("Copying template %s", nonTemplateFile.getName());
+					SEUtilities.copyFile(
+							new File(nonTemplatePath + ".template"),
+							nonTemplateFile);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
+		{
+			String nonTemplatePath = getNonVcsJavaDevmodeProcessObserverFilePath();
+			if (nonTemplatePath == null) {
+				return;
+			}
+			File nonTemplateFile = new File(nonTemplatePath);
+			if (!nonTemplateFile.exists()) {
+				try {
+					Ax.out("Copying template %s", nonTemplateFile.getName());
+					SEUtilities.copyFile(
+							new File(nonTemplatePath + ".template"),
+							nonTemplateFile);
+				} catch (Exception e) {
+					throw new WrappedRuntimeException(e);
+				}
+			}
+		}
 	}
 
 	protected TransformManager createTransformManager() {
@@ -559,6 +593,14 @@ public abstract class DevHelper {
 	}
 
 	protected abstract String getJbossConfigPrompt(String path);
+
+	protected String getNonVcsJavaDevmodeProcessObserverFilePath() {
+		return null;
+	}
+
+	protected String getNonVcsJavaProcessObserverFilePath() {
+		return null;
+	}
 
 	protected String getNonVcsJavaTaskFilePath() {
 		return null;
