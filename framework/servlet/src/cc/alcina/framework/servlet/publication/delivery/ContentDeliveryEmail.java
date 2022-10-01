@@ -80,6 +80,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 	public static final transient String PROP_ATTACH_EMAIL_BODY_AS_PDF_FILENAME = ContentDeliveryEmail.class
 			.getName() + ".PROP_ATTACH_EMAIL_BODY_AS_PDF_FILENAME";
 
+	private Logger logger = LoggerFactory.getLogger(getClass());
+
 	public String deliver(final InputStream convertedContent,
 			final DeliveryModel deliveryModel, final FormatConverter hfc,
 			boolean requestorPass) throws Exception {
@@ -256,7 +258,8 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		MailAttachment pdfAttachment = null;
 		if (deliveryModel.isEmailInline()) {
 			if (deliveryModel.hasProperty(PROP_ATTACH_EMAIL_BODY_AS_PDF)) {
-				FormatConverter converter = Registry.impl(FormatConverter.class,FormatConversionTarget_PDF.class);
+				FormatConverter converter = Registry.impl(FormatConverter.class,
+						FormatConversionTarget_PDF.class);
 				InputStream stream = converter.convert(PublicationContext.get(),
 						PublicationContext.get().formatConversionModel);
 				String uuid = UUID.randomUUID().toString();
@@ -353,6 +356,7 @@ public class ContentDeliveryEmail implements ContentDelivery {
 			}
 		}
 		if (!ResourceUtilities.is(ContentDeliveryEmail.class, "smtp.enabled")) {
+			Ax.sysLogHigh("ContentDeliveryEmail - disabled!");
 			return "Disabled";
 		}
 		Transport transport = session.getTransport("smtp");
@@ -369,8 +373,6 @@ public class ContentDeliveryEmail implements ContentDelivery {
 		}
 		return "OK";
 	}
-
-	private Logger logger = LoggerFactory.getLogger(getClass());
 
 	public static class MessageSizeUndeterminedException extends Exception {
 		public MessageSizeUndeterminedException(Throwable cause) {
