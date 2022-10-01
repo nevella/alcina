@@ -67,6 +67,9 @@ public abstract class Model extends Bindable
 	 * There's a bit of an overuse of "binding" here - the superclass binds
 	 * properties to the rendered object (generally dom element), this binds
 	 * bean properties using Gwittir bindings
+	 *
+	 * FIXME - dirndl 1x1a - to 'WithPropertyBinding' - to distnguish from
+	 * model-level binding
 	 */
 	public static class WithBinding extends Model
 			implements LayoutEvents.BeforeRender.Handler {

@@ -66,7 +66,7 @@ public abstract class LeafRenderer extends DirectedRenderer {
 	protected abstract void renderNode(Node node);
 
 	protected void renderWidget(Node node) {
-		String tag = getTag(node, true, "span");
+		String tag = getTag(node, "span");
 		Preconditions.checkArgument(Ax.notBlank(tag));
 		Widget widget = new SimpleWidget(tag);
 		applyCssClass(node, widget);
@@ -213,15 +213,34 @@ public abstract class LeafRenderer extends DirectedRenderer {
 		}
 	}
 
+	@Directed(tag = "img", bindings = @Binding(from = "src", type = Type.PROPERTY))
+	public static class Image extends Model {
+		private String src;
+
+		public Image() {
+		}
+
+		public Image(String src) {
+			this.src = src;
+		}
+
+		public String getSrc() {
+			return this.src;
+		}
+
+		public void setSrc(String src) {
+			this.src = src;
+		}
+	}
+
 	@Registration({ DirectedRenderer.class, Number.class })
 	public static class NumberNodeRenderer extends Text {
 	}
 
 	public static class SafeHtml extends LeafRenderer {
 		@Override
-		protected String getTag(Node node, boolean respectPropertyNameTags,
-				String defaultTag) {
-			return super.getTag(node, respectPropertyNameTags, "span");
+		protected String getTag(Node node, String defaultTag) {
+			return super.getTag(node, "span");
 		}
 
 		@Override

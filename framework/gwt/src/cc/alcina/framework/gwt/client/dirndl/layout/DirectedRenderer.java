@@ -46,8 +46,7 @@ public abstract class DirectedRenderer {
 		}
 	}
 
-	protected String getTag(Node node, boolean respectPropertyNameTags,
-			String defaultTag) {
+	protected String getTag(Node node, String defaultTag) {
 		String tag = null;
 		if (node.model instanceof HasTag) {
 			tag = ((HasTag) node.model).provideTag();
@@ -59,11 +58,9 @@ public abstract class DirectedRenderer {
 		if (Ax.notBlank(tag)) {
 			return tag;
 		}
-		if (respectPropertyNameTags) {
-			if (node.parent != null && node.parent.has(PropertyNameTags.class)
-					&& node.getProperty().getName() != null) {
-				return CommonUtils.deInfixCss(node.getProperty().getName());
-			}
+		if (node.parent != null && node.parent.has(PropertyNameTags.class)
+				&& node.getProperty().getName() != null) {
+			return CommonUtils.deInfixCss(node.getProperty().getName());
 		}
 		if (Ax.notBlank(defaultTag)) {
 			return defaultTag;
@@ -79,8 +76,11 @@ public abstract class DirectedRenderer {
 			implements GeneratesPropertyInputs {
 		@Override
 		protected void render(RendererInput input) {
-			// could subclass container - but we're going for composition
-			new Container().render(input);
+			Node node = input.node;
+			String tag = getTag(node, null);
+			FlowPanel widget = new FlowPanel(tag);
+			node.widget = widget;
+			applyCssClass(node, widget);
 			generatePropertyInputs(input);
 		}
 	}
@@ -141,7 +141,8 @@ public abstract class DirectedRenderer {
 		@Override
 		protected void render(RendererInput input) {
 			Node node = input.node;
-			String tag = getTag(node, false, null);
+			String tag = node.directed.tag();
+			Preconditions.checkState(tag.length() > 0);
 			FlowPanel widget = new FlowPanel(tag);
 			node.widget = widget;
 			applyCssClass(node, widget);
