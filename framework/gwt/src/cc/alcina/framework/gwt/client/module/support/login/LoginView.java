@@ -8,10 +8,8 @@ import com.google.gwt.user.client.ui.SimplePanel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.gwt.client.entity.view.AbstractViewModelView;
 import cc.alcina.framework.gwt.client.entity.view.ViewModelView;
-import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsort;
 import cc.alcina.framework.gwt.client.lux.LuxStyle;
 import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
 // FIXME - directedlayout.1 - make loading async (i.e. make this a non-startup module)
@@ -41,16 +39,16 @@ public class LoginView extends AbstractViewModelView<LoginViewModel> {
 			History.newItem("");
 			return;
 		}
-		this.loginConsort = Registry.impl(LoginConsort.class);
-		this.loginConsort.init(panel, model);
-		loginConsort.exitListenerDelta(v -> {
-			if (v instanceof Throwable) {
-			} else {
-				Registry.impl(HandshakeConsort.class)
-						.handleLoggedIn(loginConsort.lastResponse);
-			}
-		}, false, true);
-		loginConsort.start();
+		// this.loginConsort = Registry.impl(LoginConsort.class);
+		// this.loginConsort.init(panel, model);
+		// loginConsort.exitListenerDelta(v -> {
+		// if (v instanceof Throwable) {
+		// } else {
+		// Registry.impl(HandshakeConsort.class)
+		// .handleLoggedIn(loginConsort.lastResponse);
+		// }
+		// }, false, true);
+		// loginConsort.start();
 	}
 
 	private void render() {

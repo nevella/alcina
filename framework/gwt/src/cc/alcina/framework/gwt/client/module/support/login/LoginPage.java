@@ -1,63 +1,198 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
-import com.google.gwt.event.dom.client.ClickEvent;
-import com.google.gwt.user.client.ui.Widget;
+import java.util.List;
 
-import cc.alcina.framework.gwt.client.lux.LuxButton;
-import cc.alcina.framework.gwt.client.lux.LuxButtonPanel;
-import cc.alcina.framework.gwt.client.lux.LuxContainer;
-import cc.alcina.framework.gwt.client.lux.LuxModalPanel;
-import cc.alcina.framework.gwt.client.lux.LuxStatusPanel;
-import cc.alcina.framework.gwt.client.lux.LuxStyle.LuxStyleHead;
-import cc.alcina.framework.gwt.client.lux.LuxStyle.LuxStyleModal;
+import com.totsp.gwittir.client.validator.ValidationException;
+import com.totsp.gwittir.client.validator.Validator;
 
-public abstract class LoginPage extends LuxModalPanel {
-	protected LoginConsort controller;
+import cc.alcina.framework.common.client.collections.IdentityArrayList;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Forward;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.PropertyNameTags;
+import cc.alcina.framework.gwt.client.dirndl.model.Link;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.module.support.login.LoginPage.Navigation.PutTo;
+import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 
-	protected LuxButtonPanel buttonsPanel;
+@Directed(cssClass = "login-page", receives = { ModelEvents.Forward.class })
+public abstract class LoginPage extends Model
+		implements ModelEvents.Forward.Handler {
+	protected LoginConsort loginConsort;
+
+	private final HeadingArea headingArea;
+
+	private Object contents;
+
+	private final ProcessStatus processStatus = new ProcessStatus();
+
+	private final Navigation navigation = new Navigation();
+
+	private Link defaultButton;
 
 	public LoginPage(LoginConsort loginConsort) {
 		super();
-		this.controller = loginConsort;
-		LoginStyles.LOGIN_PAGE.addTo(this);
+		this.loginConsort = loginConsort;
+		headingArea = new HeadingArea(loginConsort.getTitleText(),
+				getSubtitleText());
+		populateNavigation();
+		connectStatusPanel();
+	}
+
+	@Directed
+	public Object getContents() {
+		return this.contents;
+	}
+
+	@Directed
+	public HeadingArea getHeadingArea() {
+		return this.headingArea;
+	}
+
+	@Directed
+	public Navigation getNavigation() {
+		return this.navigation;
+	}
+
+	@Directed
+	public ProcessStatus getProcessStatus() {
+		return this.processStatus;
 	}
 
 	@Override
-	protected LuxButtonPanel createButtonsPanel() {
-		buttonsPanel = new LuxButtonPanel();
-		defaultButton = new LuxButton().withText("Next")
-				.withHandler(this::handleNext)
-				.withAsyncTopic(controller.topicCallingRemote);
-		buttonsPanel.addActionButton(defaultButton);
-		return buttonsPanel;
-	}
-
-	@Override
-	protected Widget createHeaderPanel() {
-		LuxContainer head = new LuxContainer(LuxStyleModal.HEAD);
-		Widget logo = controller.getLogo();
-		if (logo != null) {
-			LuxStyleHead.LOGO.addTo(logo);
-			head.add(logo);
+	public void onForward(Forward event) {
+		if (!validate()) {
+			return;
 		}
-		head.addStyledTextBlock(LuxStyleHead.TITLE, controller.getTitleText());
-		head.addStyledTextBlock(LuxStyleHead.SUBTITLE, getSubtitleText());
-		return head;
+		onForwardValidated();
 	}
 
-	@Override
-	protected void createStatusPanel() {
-		super.createStatusPanel();
-		((LuxStatusPanel) statusPanel).connectToTopics(
-				controller.topicCallingRemote, controller.topicMessage);
+	public void setContents(Object contents) {
+		this.contents = contents;
+	}
+
+	protected void connectStatusPanel() {
+		processStatus.connectToTopics(loginConsort.topicCallingRemote,
+				loginConsort.topicMessage);
+	}
+
+	protected abstract String getEnteredText();
+
+	protected String getMessage(ValidationException e) {
+		return e.getMessage();
 	}
 
 	protected abstract String getSubtitleText();
 
-	void handleNext(ClickEvent event) {
-		if (!validate()) {
-			return;
+	protected abstract Validator getValidator();
+
+	protected void onForwardValidated() {
+		loginConsort.onClickNext();
+	}
+
+	protected void populateNavigation() {
+		defaultButton = new Link().withText("Next")
+				.withModelEvent(Forward.class);
+		// FIXME
+		// .withAsyncTopic(controller.topicCallingRemote);
+		navigation.put(defaultButton, PutTo.NEXT);
+	}
+
+	protected boolean validate() {
+		Validator validator = getValidator();
+		try {
+			validator.validate(getEnteredText());
+			return true;
+		} catch (ValidationException e) {
+			processStatus.addMessage(getMessage(e), "validation");
+			return false;
 		}
-		controller.onClickNext(event);
+	}
+
+	@Directed
+	@PropertyNameTags
+	public static class HeadingArea extends Model {
+		private final String heading;
+
+		private final String subHeading;
+
+		public HeadingArea(String heading, String subHeading) {
+			this.heading = heading;
+			this.subHeading = subHeading;
+		}
+
+		@Directed
+		public String getHeading() {
+			return this.heading;
+		}
+
+		@Directed(renderer = LeafRenderer.Html.class)
+		public String getSubHeading() {
+			return this.subHeading;
+		}
+	}
+
+	@Directed
+	public static class Navigation extends Model {
+		private Link back;
+
+		private List<Link> options;
+
+		private Link next;
+
+		@Directed.Wrap("back")
+		public Link getBack() {
+			return this.back;
+		}
+
+		@Directed.Wrap("next")
+		public Link getNext() {
+			return this.next;
+		}
+
+		@Directed.Wrap("options")
+		public List<Link> getOptions() {
+			return this.options;
+		}
+
+		public void put(Link link, PutTo putTo) {
+			switch (putTo) {
+			case BACK:
+				setBack(link);
+				break;
+			case OPTIONS:
+				setOptions(IdentityArrayList.add(getOptions(), link));
+				break;
+			case NEXT:
+				setNext(link);
+				break;
+			default:
+				throw new UnsupportedOperationException();
+			}
+		}
+
+		public void setBack(Link back) {
+			var old_back = this.back;
+			this.back = back;
+			propertyChangeSupport().firePropertyChange("back", old_back, back);
+		}
+
+		public void setNext(Link next) {
+			var old_next = this.next;
+			this.next = next;
+			propertyChangeSupport().firePropertyChange("next", old_next, next);
+		}
+
+		public void setOptions(List<Link> options) {
+			var old_options = this.options;
+			this.options = options;
+			propertyChangeSupport().firePropertyChange("options", old_options,
+					options);
+		}
+
+		public enum PutTo {
+			BACK, OPTIONS, NEXT
+		}
 	}
 }

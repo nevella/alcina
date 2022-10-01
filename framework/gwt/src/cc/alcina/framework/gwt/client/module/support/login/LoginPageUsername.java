@@ -1,50 +1,53 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
-import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.validator.CompositeValidationFeedback;
+import com.totsp.gwittir.client.validator.ValidationException;
+import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.dirndl.RenderContext;
-import cc.alcina.framework.gwt.client.ide.ContentViewSections;
-import cc.alcina.framework.gwt.client.ide.ContentViewSections.ContentViewSection;
-import cc.alcina.framework.gwt.client.module.support.login.LoginPageUsernameModel.LoginPageUsernameModelBinding;
-import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
+import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
+import cc.alcina.framework.common.client.gwittir.validator.EmailAddressValidator;
+import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
+import cc.alcina.framework.gwt.client.dirndl.model.Editable;
 
 public class LoginPageUsername extends LoginPage {
-	private LoginPageUsernameModel model;
+	protected Editable.StringInput input;
 
 	public LoginPageUsername(LoginConsort loginConsort) {
 		super(loginConsort);
-		this.model = new LoginPageUsernameModel(loginConsort.request);
-		render();
+		input = new Editable.StringInput();
+		input.setFocusOnAttach(true);
+		input.setPlaceholder("ABA email address");
+		setContents(input);
 	}
 
 	@Override
-	protected Widget createContentPanel() {
-		try {
-			RenderContext.get().push();
-			LoginFormUI loginFormUI = Registry.impl(LoginFormUI.class);
-			RenderContext.get().setValidationFeedbackSupplier(fieldName -> {
-				RelativePopupValidationFeedback feedback = new RelativePopupValidationFeedback(
-						RelativePopupValidationFeedback.BOTTOM);
-				return new CompositeValidationFeedback(feedback,
-						loginFormUI.getValidationFeedback());
-			});
-			{
-				ContentViewSections sectionsBuilder = createBuilder();
-				ContentViewSection section = sectionsBuilder.section("");
-				section.fields(LoginPageUsernameModelBinding.userName);
-				section.cellRenderer(loginFormUI.getRenderer());
-				Widget table = sectionsBuilder.buildWidget(model);
-				return table;
-			}
-		} finally {
-			RenderContext.get().pop();
+	protected String getMessage(ValidationException e) {
+		if (e.getValidatorClass() == NotNullValidator.class) {
+			return "Email is required";
 		}
+		return super.getMessage(e);
 	}
 
 	@Override
 	protected String getSubtitleText() {
-		return controller.getSubtitleText();
+		return loginConsort.getUsernamePageSubtitleText();
+	}
+
+	@Override
+	protected String getEnteredText() {
+		input.sync();
+		return input.getValue();
+	}
+
+	@Override
+	protected Validator getValidator() {
+		CompositeValidator validator = new CompositeValidator()
+				.add(new NotNullValidator()).add(new EmailAddressValidator());
+		return validator;
+	}
+
+	@Override
+	protected void onForwardValidated() {
+		loginConsort.request.setUserName(getEnteredText());
+		super.onForwardValidated();
 	}
 }

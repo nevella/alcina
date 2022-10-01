@@ -1,17 +1,15 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
 import java.util.Collections;
+import java.util.function.Consumer;
 
-import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.SimplePanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.EnumPlayer;
 import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.csobjects.LoginResponseState;
-import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.module.login.LoginRequest;
@@ -19,42 +17,45 @@ import cc.alcina.framework.common.client.remote.ReflectiveLoginRemoteServiceAsyn
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.module.support.login.LoginConsort.State;
-import cc.alcina.framework.gwt.client.module.support.login.pub.LoginActivity.LoginViewModel;
 
 @Reflected
-@Registration(LoginConsort.class)
 public abstract class LoginConsort extends Consort<State> {
-	private SimplePanel container;
-
 	protected LoginRequest request = new LoginRequest();
 
-	@SuppressWarnings("unused")
-	private LoginViewModel viewModel;
+	protected Topic<Boolean> topicCallingRemote = Topic.create();
 
-	Topic<Boolean> topicCallingRemote = Topic.create();
+	protected Topic<String> topicMessage = Topic.create();
 
-	Topic<String> topicMessage = Topic.create();
+	private LoginResponse lastResponse;
 
-	protected LoginResponse lastResponse;
+	protected Consumer<Model> modelRenderer;
 
 	public LoginConsort() {
 	}
 
-	public String getSubtitleText() {
+	public LoginResponse getLastResponse() {
+		return lastResponse;
+	}
+
+	public String getPasswordPageSubtitleText() {
+		return "Please enter your password";
+	}
+
+	public String getUsernamePageSubtitleText() {
 		return "Enter your email to log in";
 	}
 
-	public void init(SimplePanel container, LoginViewModel model) {
-		this.container = container;
-		this.viewModel = model;
+	public void init(Consumer<Model> modelRenderer) {
+		this.modelRenderer = modelRenderer;
 		addPlayer(new Player_Got_username());
 		addPlayer(new Player_Got_password());
 		addPlayer(new Player_Got_2fa());
 		addEndpointPlayer();
 	}
 
-	public void onClickNext(ClickEvent event) {
+	public void onClickNext() {
 		/*
 		 * TODO - remote action builder - promises
 		 */
@@ -70,15 +71,19 @@ public abstract class LoginConsort extends Consort<State> {
 
 			@Override
 			public void onSuccess(LoginResponse loginResponse) {
-				lastResponse = loginResponse;
+				setLastResponse(loginResponse);
 				topicCallingRemote.publish(false);
 				handleSuccess(loginResponse);
 			}
 		});
 	}
 
+	public void setLastResponse(LoginResponse lastResponse) {
+		this.lastResponse = lastResponse;
+	}
+
 	public boolean shouldShowQrCode() {
-		return lastResponse.getStates()
+		return getLastResponse().getStates()
 				.contains(LoginResponseState.Two_factor_qr_code_required);
 	}
 
@@ -137,6 +142,10 @@ public abstract class LoginConsort extends Consort<State> {
 		return Registry.impl(ReflectiveLoginRemoteServiceAsync.class);
 	}
 
+	public enum State {
+		Got_username, Got_password, Got_2fa_code
+	}
+
 	class Player_Got_2fa extends EnumPlayer<State> {
 		public Player_Got_2fa() {
 			super(State.Got_2fa_code);
@@ -145,7 +154,7 @@ public abstract class LoginConsort extends Consort<State> {
 
 		@Override
 		public void run() {
-			container.setWidget(new LoginPage2FA(LoginConsort.this));
+			modelRenderer.accept(new LoginPage2FA(LoginConsort.this));
 		}
 	}
 
@@ -157,7 +166,7 @@ public abstract class LoginConsort extends Consort<State> {
 
 		@Override
 		public void run() {
-			container.setWidget(new LoginPagePassword(LoginConsort.this));
+			modelRenderer.accept(new LoginPagePassword(LoginConsort.this));
 		}
 	}
 
@@ -169,11 +178,7 @@ public abstract class LoginConsort extends Consort<State> {
 
 		@Override
 		public void run() {
-			container.setWidget(new LoginPageUsername(LoginConsort.this));
+			modelRenderer.accept(new LoginPageUsername(LoginConsort.this));
 		}
-	}
-
-	enum State {
-		Got_username, Got_password, Got_2fa_code
 	}
 }

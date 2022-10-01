@@ -1,64 +1,54 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
-import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.validator.CompositeValidationFeedback;
+import com.totsp.gwittir.client.validator.Validator;
 
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.dirndl.RenderContext;
-import cc.alcina.framework.gwt.client.ide.ContentViewSections;
-import cc.alcina.framework.gwt.client.ide.ContentViewSections.ContentViewSection;
-import cc.alcina.framework.gwt.client.lux.LuxButton;
-import cc.alcina.framework.gwt.client.module.support.login.LoginPagePasswordModel.LoginPagePasswordModelBinding;
-import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
+import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
+import cc.alcina.framework.gwt.client.dirndl.model.Editable;
 
 public class LoginPagePassword extends LoginPage {
-	private LoginPagePasswordModel model;
+	private Editable.StringInput input;
 
-	//
 	public LoginPagePassword(LoginConsort loginConsort) {
 		super(loginConsort);
-		this.model = new LoginPagePasswordModel(loginConsort.request);
-		render();
-		loginConsort.topicCallingRemote.add(calling -> {
-			if (!calling && isAttached()) {
-				buttonsPanel.removeOptionalButtons();
-				if (!loginConsort.lastResponse.isOk()) {
-					buttonsPanel.addOptionalButton(
-							new LuxButton().withText("Back").withHandler(e -> {
-								loginConsort.request.setPassword(null);
-								loginConsort.restart();
-							}));
-				}
-			}
-		});
+		input = new Editable.StringInput();
+		input.setFocusOnAttach(true);
+		input.setType("password");
+		input.setPlaceholder("Password");
+		setContents(input);
+		// TODO
+		// loginConsort.topicCallingRemote.add(calling -> {
+		// if (!calling && isAttached()) {
+		// buttonsPanel.removeOptionalButtons();
+		// if (!loginConsort.lastResponse.isOk()) {
+		// buttonsPanel.addOptionalButton(
+		// new LuxButton().withText("Back").withHandler(e -> {
+		// loginConsort.request.setPassword(null);
+		// loginConsort.restart();
+		// }));
+		// }
+		// }
+		// });
 	}
 
 	@Override
-	protected Widget createContentPanel() {
-		try {
-			RenderContext.get().push();
-			LoginFormUI loginFormUI = Registry.impl(LoginFormUI.class);
-			RenderContext.get().setValidationFeedbackSupplier(fieldName -> {
-				RelativePopupValidationFeedback feedback = new RelativePopupValidationFeedback(
-						RelativePopupValidationFeedback.BOTTOM);
-				return new CompositeValidationFeedback(feedback,
-						loginFormUI.getValidationFeedback());
-			});
-			{
-				ContentViewSections sectionsBuilder = createBuilder();
-				ContentViewSection section = sectionsBuilder.section("");
-				section.fields(LoginPagePasswordModelBinding.password);
-				section.cellRenderer(loginFormUI.getRenderer());
-				Widget table = sectionsBuilder.buildWidget(model);
-				return table;
-			}
-		} finally {
-			RenderContext.get().pop();
-		}
+	protected String getEnteredText() {
+		input.sync();
+		return input.getValue();
 	}
 
 	@Override
 	protected String getSubtitleText() {
-		return "Please enter your password";
+		return loginConsort.getPasswordPageSubtitleText();
+	}
+
+	@Override
+	protected Validator getValidator() {
+		return new NotNullValidator();
+	}
+
+	@Override
+	protected void onForwardValidated() {
+		loginConsort.request.setPassword(getEnteredText());
+		super.onForwardValidated();
 	}
 }

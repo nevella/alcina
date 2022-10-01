@@ -1,91 +1,67 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
-import com.google.gwt.dom.client.Style.Visibility;
-import com.google.gwt.safehtml.shared.UriUtils;
-import com.google.gwt.user.client.ui.FlowPanel;
-import com.google.gwt.user.client.ui.Image;
-import com.google.gwt.user.client.ui.Widget;
-import com.totsp.gwittir.client.validator.CompositeValidationFeedback;
-
-import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.gwt.client.dirndl.RenderContext;
-import cc.alcina.framework.gwt.client.ide.ContentViewSections;
-import cc.alcina.framework.gwt.client.ide.ContentViewSections.ContentViewSection;
-import cc.alcina.framework.gwt.client.lux.LuxButton;
-import cc.alcina.framework.gwt.client.lux.LuxButtonPanel;
-import cc.alcina.framework.gwt.client.lux.LuxContainer;
-import cc.alcina.framework.gwt.client.module.support.login.LoginPage2FAModel.Login2FAModelBinding;
-import cc.alcina.framework.gwt.client.widget.RelativePopupValidationFeedback;
+import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
+import cc.alcina.framework.gwt.client.dirndl.model.Editable;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class LoginPage2FA extends LoginPage {
-	private LoginPage2FAModel model;
-
-	private FlowPanel imageContainer;
-
-	int errorCounter;
-
 	public LoginPage2FA(LoginConsort loginConsort) {
 		super(loginConsort);
-		this.model = new LoginPage2FAModel(loginConsort.request);
-		render();
-	}
-
-	private void loadImage() {
-		imageContainer.clear();
-		Image image = new Image(UriUtils.fromTrustedString(
-				this.controller.lastResponse.getTwoFactorAuthQRCode()));
-		image.getElement().getStyle().setVisibility(Visibility.VISIBLE);
-		new LuxContainer(LoginStyles.TWO_FACTOR_IMAGE).add(image)
-				.addTo(imageContainer);
-	}
-
-	@Override
-	protected LuxButtonPanel createButtonsPanel() {
-		LuxButtonPanel buttons = super.createButtonsPanel();
-		if (!this.controller.shouldShowQrCode()) {
-			buttons.addOptionalButton(new LuxButton().withText("Show QA code")
-					.withHandler(e -> imageContainer.setVisible(true)));
-		}
-		return buttons;
-	}
-
-	@Override
-	protected Widget createContentPanel() {
-		try {
-			RenderContext.get().push();
-			LoginFormUI loginFormUI = Registry.impl(LoginFormUI.class);
-			RenderContext.get().setValidationFeedbackSupplier(fieldName -> {
-				RelativePopupValidationFeedback feedback = new RelativePopupValidationFeedback(
-						RelativePopupValidationFeedback.BOTTOM);
-				return new CompositeValidationFeedback(feedback,
-						loginFormUI.getValidationFeedback());
-			});
-			FlowPanel flowPanel = new FlowPanel();
-			imageContainer = new FlowPanel();
-			flowPanel.add(imageContainer);
-			loadImage();
-			imageContainer.setVisible(this.controller.shouldShowQrCode());
-			{
-				ContentViewSections sectionsBuilder = createBuilder();
-				ContentViewSection section = sectionsBuilder.section("");
-				section.fields(
-						Login2FAModelBinding.twoFactorAuthenticationCode);
-				section.cellRenderer(loginFormUI.getRenderer());
-				Widget table = sectionsBuilder.buildWidget(model);
-				flowPanel.add(table);
-			}
-			return flowPanel;
-		} finally {
-			RenderContext.get().pop();
-		}
+		setContents(new UiModel(loginConsort));
 	}
 
 	@Override
 	protected String getSubtitleText() {
-		if (this.controller.shouldShowQrCode()) {
+		if (this.loginConsort.shouldShowQrCode()) {
 			return "Scan the barcode with your Authenticator app, and enter the authentication code";
 		} else {
 			return "Enter the code from the Authenticator app";
+		}
+	}
+	// @Override
+	// protected LuxButtonPanel createButtonsPanel() {
+	// LuxButtonPanel buttons = super.createButtonsPanel();
+	// if (!this.controller.shouldShowQrCode()) {
+	// buttons.addOptionalButton(new LuxButton().withText("Show QA code")
+	// .withHandler(e -> imageContainer.setVisible(true)));
+	// }
+	// return buttons;
+	// }
+
+	@Override
+	protected String getEnteredText() {
+		return ((UiModel) getContents()).input.getValue();
+	}
+
+	@Override
+	protected CompositeValidator getValidator() {
+		return null;
+	}
+
+	@Directed
+	public static class UiModel extends Model {
+		private final LeafRenderer.Image image;
+
+		private final Editable.StringInput input;
+
+		public UiModel(LoginConsort loginConsort) {
+			input = new Editable.StringInput();
+			input.setFocusOnAttach(true);
+			input.setPlaceholder("2FA code");
+			image = new LeafRenderer.Image(
+					loginConsort.getLastResponse().getTwoFactorAuthQRCode());
+		}
+
+		@Directed
+		public LeafRenderer.Image getImage() {
+			return this.image;
+		}
+
+		@Directed
+		public Editable.StringInput getInput() {
+			return this.input;
 		}
 	}
 }
