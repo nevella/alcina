@@ -15,21 +15,32 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 
 @Registration(WebdriverTest.class)
 public abstract class WebdriverTest implements Registration.Ensure {
+	public static final String CONTEXT_CURRENT_TEST = WebdriverTest.class
+			.getName() + ".CONTEXT_CURRENT_TEST";
+
 	protected static Map<Class<? extends WebdriverTest>, WebdriverTest> testTemplates;
+
+	public static <T extends WebdriverTest> T current() {
+		return LooseContext.get(CONTEXT_CURRENT_TEST);
+	}
 
 	protected int myLevel;
 
-	@SuppressWarnings("unchecked")
 	public Class<? extends WebdriverTest>[] childTests() {
 		return new Class[0];
 	}
 
 	public Enum<?>[] depends() {
 		return new Enum[0];
+	}
+
+	public void getAndLog(WebDriver driver, String uri) {
+		getAndLog(driver, uri, null);
 	}
 
 	public List<WebdriverTest> getRequiredDependentTests(WDToken token) {
@@ -88,6 +99,55 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	}
 
 	public TestResult process(WDToken token, int level, TestResult parent)
+			throws Exception {
+		try {
+			LooseContext.pushWithKey(CONTEXT_CURRENT_TEST, this);
+			return process0(token, level, parent);
+		} finally {
+			LooseContext.pop();
+		}
+	}
+
+	/**
+	 * advertise
+	 *
+	 * @return
+	 */
+	public Enum<?>[] providesUIState() {
+		return new Enum[0];
+	}
+
+	/**
+	 * don't advertise
+	 *
+	 * @return
+	 */
+	public Enum<?>[] returnsUIState() {
+		return new Enum[0];
+	}
+
+	public abstract void run(WDToken token, TestResult result) throws Exception;
+
+	public void uiStateChange(WDToken token, Enum<?> e) {
+		token.getUiStates().put(e.getDeclaringClass(), e);
+	}
+
+	public void uiStateChange(WDToken token, Enum<?>[] enums) {
+		for (Enum<?> e : enums) {
+			uiStateChange(token, e);
+		}
+	}
+
+	private boolean cancelDueToError(WDToken token, int level) {
+		if (token.getRootResult().getResultType() == TestResultType.ERROR) {
+			token.getWriter().write("cancelled - prior error", level);
+			return true;
+		} else {
+			return false;
+		}
+	}
+
+	private TestResult process0(WDToken token, int level, TestResult parent)
 			throws Exception {
 		this.myLevel = level;
 		String oldThreadName = Thread.currentThread().getName();
@@ -182,53 +242,10 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return testResult;
 	}
 
-	/**
-	 * advertise
-	 *
-	 * @return
-	 */
-	public Enum<?>[] providesUIState() {
-		return new Enum[0];
-	}
-
-	/**
-	 * don't advertise
-	 *
-	 * @return
-	 */
-	public Enum<?>[] returnsUIState() {
-		return new Enum[0];
-	}
-
-	public abstract void run(WDToken token, TestResult result) throws Exception;
-
-	public void uiStateChange(WDToken token, Enum<?> e) {
-		token.getUiStates().put(e.getDeclaringClass(), e);
-	}
-
-	public void uiStateChange(WDToken token, Enum<?>[] enums) {
-		for (Enum<?> e : enums) {
-			uiStateChange(token, e);
-		}
-	}
-
-	private boolean cancelDueToError(WDToken token, int level) {
-		if (token.getRootResult().getResultType() == TestResultType.ERROR) {
-			token.getWriter().write("cancelled - prior error", level);
-			return true;
-		} else {
-			return false;
-		}
-	}
-
 	protected void beforeChildTests(WDToken token) {
 	}
 
 	protected void beforeDependentTests(WDToken token) {
-	}
-
-	protected void getAndLog(WebDriver driver, String uri) {
-		getAndLog(driver, uri, null);
 	}
 
 	protected void getAndLog(WebDriver driver, String uri, WDToken token) {
