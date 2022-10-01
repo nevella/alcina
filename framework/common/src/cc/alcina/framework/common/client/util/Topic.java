@@ -4,7 +4,6 @@ import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
@@ -139,30 +138,30 @@ public class Topic<T> {
 
 	/*
 	 *
-	 * Thread-safe (accesses to lookup are synchronized - defensive copy made
-	 * for publishTopic)
+	 * Thread-safe (lookup is copy-on-write)
 	 */
 	public static class Publisher {
 		// use a list - the listener may be added/removed multiple times
 		// (although
 		// that's probably not what's wanted)
-		private List<TopicListener> lookup = new ArrayList<>();
+		private List<TopicListener> lookup;
 
 		public void addListener(TopicListener listener) {
-			synchronized (lookup) {
-				lookup.add(listener);
+			synchronized (this) {
+				List<TopicListener> list = lookup == null ? new ArrayList<>()
+						: new ArrayList<>(lookup);
+				list.add(listener);
+				lookup = list;
 			}
 		}
 
 		public void clearListeners() {
 			Preconditions.checkState(GWT.isClient());
-			lookup.clear();
+			lookup = null;
 		}
 
 		public boolean hasListeners() {
-			synchronized (lookup) {
-				return lookup.size() > 0;
-			}
+			return lookup != null && lookup.size() > 0;
 		}
 
 		public void listenerDelta(TopicListener listener, boolean add) {
@@ -174,18 +173,22 @@ public class Topic<T> {
 		}
 
 		public void publishTopic(Object message) {
-			List<TopicListener> listeners = null;
-			synchronized (lookup) {
-				listeners = lookup.stream().collect(Collectors.toList());
+			if (lookup == null) {
+				return;
 			}
-			for (TopicListener listener : listeners) {
+			for (TopicListener listener : lookup) {
 				listener.topicPublished(message);
 			}
 		}
 
 		public void removeListener(TopicListener listener) {
-			synchronized (lookup) {
-				lookup.remove(listener);
+			synchronized (this) {
+				if (lookup == null) {
+					return;
+				}
+				List<TopicListener> list = new ArrayList<>(lookup);
+				list.remove(listener);
+				lookup = list;
 			}
 		}
 	}
