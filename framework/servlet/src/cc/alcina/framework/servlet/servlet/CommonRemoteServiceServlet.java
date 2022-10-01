@@ -219,6 +219,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			ReflectiveRemoteServiceHandler handler = Registry.impl(
 					ReflectiveRemoteServiceHandler.class,
 					payload.getAsyncInterfaceClass());
+			if (handler.getClass() == getClass()) {
+				handler = this;
+			}
 			Class[] methodArgumentTypes = (Class[]) payload
 					.getMethodArgumentTypes().toArray(
 							new Class[payload.getMethodArgumentTypes().size()]);
