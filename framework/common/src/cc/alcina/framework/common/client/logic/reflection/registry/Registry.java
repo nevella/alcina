@@ -372,6 +372,12 @@ public class Registry {
 					implementation, priority);
 		}
 
+		public void addDefault(Class registeringClass, Class... keys) {
+			add(registeringClass, Arrays.asList(keys),
+					Registration.Implementation.INSTANCE,
+					Registration.Priority._DEFAULT);
+		}
+
 		// FIXME - reflection.2 - trim usage
 		public void singleton(Class type, Object implementation) {
 			if (sharedImplementations != null) {
