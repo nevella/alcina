@@ -1,17 +1,12 @@
 package cc.alcina.framework.gwt.client.dirndl.behaviour;
 
 import java.lang.annotation.Annotation;
-import java.util.logging.Level;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import com.google.gwt.event.shared.EventHandler;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
-import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
@@ -33,6 +28,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
  * certainly *must* be handled immediately, since they can affect the layout
  * itself.
  *
+ * <p>
+ * FIXME - dirndl 1x1a - issue with 'Don't like' below is that NodeEvent does
+ * too much. There should be an DomBinding nested class which handles the
+ * nodeevent -> dom relation, not populated for ModelEvent
  *
  * @author nick@alcina.cc
  *
@@ -73,11 +72,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
  */
 public abstract class NodeEvent<H extends NodeEvent.Handler>
 		extends GwtEvent<H> {
-	static Logger logger = LoggerFactory.getLogger(NodeEvent.class);
-	static {
-		AlcinaLogUtils.sysLogClient(NodeEvent.class, Level.OFF);
-	}
-
 	private NodeEventReceiver eventReceiver;
 
 	protected HandlerRegistration handlerRegistration;
@@ -87,9 +81,6 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 	protected Object model;
 
 	public void bind(Widget widget, boolean bind) {
-		// logger.info("bind: {} {} {}",
-		// widget == null ? "(unbind)" : widget.getClass().getSimpleName(),
-		// getClass().getSimpleName(), bind);
 		if (!bind) {
 			if (handlerRegistration != null) {
 				handlerRegistration.removeHandler();

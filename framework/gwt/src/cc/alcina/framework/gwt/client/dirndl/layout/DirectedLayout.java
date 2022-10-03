@@ -51,13 +51,14 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *
  * <p>
  * A generative, expressive algorithm that transforms an arbitrary object into a
- * live layout tree of {@link DirectedLayout.Node} objects which encapsulate a
- * render tree (currently implemented only for HTML DOM, but easily extended to
- * arbitrary native widgets)
+ * live layout tree of {@link DirectedLayout.Node} objects. These nodes
+ * encapsulate a render tree (currently implemented only for HTML DOM, but
+ * easily extended to arbitrary native widgets)
  *
  * <p>
  * Dirndl bears some resemblance to xslt - they both use annotations to
- * transform an object tree into markup, but differs as follows:
+ * transform an object tree into markup, but the differences are what allows it
+ * to function as a UI renderer:
  *
  * <ul>
  * <li><b>generative</b>: the intermediate transform (ModelTransform) generates
@@ -68,7 +69,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  * themselves can be transformed by the {@link ContextRenderer} applicable to
  * the layout node
  * <li><b>live</b>: the DirectedLayout.Node objects are aware of changes to
- * their source model objects and mutate accordingly
+ * their source model objects and mutate both structure and attributes
  * <li><b>events</b>: UI events are transformed into NodeEvent objects, which
  * provide a generally truer-to-the-model-logic way of modelling and handling
  * interface events than dealing directly with native (DOM) events
@@ -110,15 +111,14 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *
  * Dirndl 1.1 TODO
  *
- *   at least for directed trees, simpler & better to have lowest-imperative win)
  * - Plan Registry.Context (in fact, no, discuss why not)
- *
  *
  * - Goals:
  *   - Is ContextResolver clear?
  *   - Is event propagation clear?
  *   - Justify eventpump (or not eventpump) for node, transformed node events
  *   - Document dirndl 1x2 - widget removal
+ *   - Documentation, demo app, comparison to react/angular/flutter/switfUI (that may take a while)
  *
  * - Phases:
  * 	 a. Implement TODO above to 'remove renderers'
@@ -141,6 +141,8 @@ public class DirectedLayout implements AlcinaProcess {
 	// RnederContext)
 	public static Node current = null;
 
+	private Node root = null;
+
 	/**
 	 * <p>
 	 * Input for the renderer, which transforms a model found at an
@@ -156,8 +158,6 @@ public class DirectedLayout implements AlcinaProcess {
 	 * @author nick@alcina.cc
 	 *
 	 */
-	private Node root = null;
-
 	DepthFirstTraversal<RendererInput> rendererInputs;
 
 	boolean inLayout = false;
@@ -206,7 +206,7 @@ public class DirectedLayout implements AlcinaProcess {
 		return input;
 	}
 
-	// The algorithm. Gosh.
+	// The layout loop
 	void layout() {
 		try {
 			Preconditions.checkState(!inLayout);
@@ -235,6 +235,9 @@ public class DirectedLayout implements AlcinaProcess {
 			if (transform && !(model instanceof Collection)) {
 				rendererClass = DirectedRenderer.TransformRenderer.class;
 			} else {
+				// Object.class itself (not as the root of the class hieararchy)
+				// resolves to a Container. It's generally used for images or
+				// other CSS placeholders
 				if (model.getClass() == Object.class) {
 					rendererClass = DirectedRenderer.Container.class;
 				} else {
@@ -246,33 +249,16 @@ public class DirectedLayout implements AlcinaProcess {
 	}
 
 	/**
-	 * <p>
-	 * In most cases, there is a 1-1 correspondence between a node and a widget
-	 * level (a {1,n} group of widgets with the same parent) - there are three
-	 * exceptions:
-	 * <ul>
-	 * <li>MultipleNodeRenderer - for wrapping tags for one model element -
-	 * multiple nested widgets correspond to one node
-	 * <li>ModelTransformNodeRenderer - both the original model node and the
-	 * transformed model node (its only child node) correspond to the same
-	 * widgets
-	 * <li>DelegatingNodeRenderer - as per ModelTransformNodeRenderer
-	 * <p>
 	 *
 	 * <p>
 	 * ...shades of the DOM render tree...
 	 * </p>
 	 *
-	 * <p>
-	 * FIXME - dirndl 1.1 - change documentation (since there's less
-	 * correspondence, but also fewer renderers)(and only [0,1] widgets per
-	 * node)
-	 *
 	 * Also: changeSource/property/annotationLocation can all possibly be
 	 * combined (or documented)
 	 *
 	 * <p>
-	 * FIXME - dirndl 1.2 - optimise: speicalise leafnode for performance (these
+	 * FIXME - dirndl 1.2 - optimise: specialise leafnode for performance (these
 	 * are heavyweight, and leaves need not be so much so)
 	 */
 	public static class Node {
@@ -330,11 +316,6 @@ public class DirectedLayout implements AlcinaProcess {
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			return annotationLocation.getAnnotation(clazz);
-		}
-
-		public Node childBefore(Node child) {
-			int idx = children.indexOf(child);
-			return idx == 0 ? null : children.get(idx - 1);
 		}
 
 		// FIXME - dirndl 1x2 (use models for form intermediates) (remove, let
@@ -665,6 +646,22 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
+		/*
+		 * Note that dom/inferred-dom events (NodeEvent *not* subclass
+		 * ModelEvent) of and model events have quite different event
+		 * propagation mechanisms, so there's essentially two event propagation
+		 * mechanisms:
+		 *
+		 * DOM: model -> widget -> element.addListener(x) -- Model implements
+		 * the handler mechanism, event propagation is DOM propagation (TODO -
+		 * actually explain this - possibly in javadoc)
+		 *
+		 * Model: ModelEvent.fire(...) - event fires on the current Model if it
+		 * implements the Handler class, and propagation finishes at the fired
+		 * Node unless explicitly permitted via markXXX (TODO - example)
+		 *
+		 * Actually - unify at NodeEvent
+		 */
 		class NodeEventBinding implements NodeEventReceiver {
 			Class<? extends NodeEvent> type;
 
@@ -754,7 +751,7 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 
 		/*
-		 * Similar to Gwittir Binding - but simpler
+		 * Binds a model property to an aspect of the rendered DOM
 		 */
 		class PropertyBinding {
 			Binding binding;
