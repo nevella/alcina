@@ -177,4 +177,13 @@ public class AnnotationLocation {
 					: Collections.singletonList(ensured);
 		}
 	}
+
+	public String toPropertyString() {
+		if (property != null) {
+			return Ax.format("%s.%s", classLocation.getSimpleName(),
+					property.getName());
+		} else {
+			return classLocation.getSimpleName();
+		}
+	}
 }
