@@ -714,7 +714,7 @@ public class Long2ObjectLinkedOpenHashMap <V> extends AbstractLong2ObjectSortedM
   }
   public V setValue( final V v ) {
 	  if(!allowEntrySetValue){
-		  throw new IllegalArgumentException(key[ index ] + "::" + value[ index ]+" => "+ v);
+		  throw new IllegalArgumentException("set value not permitted "+key[ index ] + "::" + value[ index ]+" => "+ v);
 	  }
    final V oldValue = value[ index ];
    value[ index ] = v;
