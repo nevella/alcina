@@ -366,6 +366,26 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			super(keyClass, valueClass);
 		}
 
+		protected Map<Long, Entity> createNonConcurrentMap() {
+			return (Map) new EntityCheckingMap();
+		}
+		
+		public  class EntityCheckingMap extends Long2ObjectLinkedOpenHashMap{
+			public EntityCheckingMap() {
+				super(Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
+			}
+			@Override
+			public Object put(long k, Object v) {
+				checkLegal(k,(Entity) v);
+				return super.put(k, v);
+			}
+			@Override
+			public Object put(Long ok, Object ov) {
+				checkLegal(ok,(Entity) ov);
+				return super.put(ok, ov);
+			}
+		}
+
 		public void ensureVersion(Long key) {
 			if (concurrent != null) {
 				TransactionalValue transactionalValue = (TransactionalValue) concurrent

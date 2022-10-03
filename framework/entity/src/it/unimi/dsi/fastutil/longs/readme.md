@@ -1,0 +1,1 @@
+Modify to allow a per-map setting which disallows EntrySet.Entry.setValue (for txmaps)
