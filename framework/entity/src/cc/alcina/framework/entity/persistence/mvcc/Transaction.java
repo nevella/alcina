@@ -56,11 +56,10 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
  * the logic of the optimisation holds.
  */
 public class Transaction implements Comparable<Transaction> {
-	public static final String CONTEXT_RETAIN_TRANSACTION_TRACES = Transaction.class
-			.getName() + ".CONTEXT_RETAIN_TRANSACTION_TRACES";
-
 	public static final String CONTEXT_ALLOW_ABORTED_TX_ACCESS = Transaction.class
 			.getName() + ".CONTEXT_ALLOW_ABORTED_TX_ACCESS";
+
+	static boolean retainStartEndTraces;
 
 	private static ThreadLocal<Supplier<Transaction>> threadLocalSupplier = new ThreadLocal() {
 	};
@@ -284,8 +283,7 @@ public class Transaction implements Comparable<Transaction> {
 	}
 
 	private static boolean retainStartEndTraces() {
-		return ResourceUtilities.is(Transaction.class, "retainTraces")
-				|| LooseContext.is(CONTEXT_RETAIN_TRANSACTION_TRACES);
+		return retainStartEndTraces;
 	}
 
 	private static void setThreadLocalTransaction(Transaction transaction) {

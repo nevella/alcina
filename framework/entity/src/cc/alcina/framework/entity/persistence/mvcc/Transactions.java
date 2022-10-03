@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.SystemoutCounter;
 import cc.alcina.framework.common.client.util.TimeConstants;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.persistence.mvcc.MvccObjectVersions.MvccObjectVersionsMvccObject;
@@ -310,6 +311,12 @@ public class Transactions {
 
 	private Set<TransactionId> committedTransactionIds = new ObjectOpenHashSet<>();
 
+	public Transactions() {
+		ResourceUtilities.propertiesInvalidated
+				.add(this::configurationInvalidated);
+		this.configurationInvalidated();
+	}
+
 	public List<Transaction> getCompletedNonDomainTransactions() {
 		synchronized (transactionMetadataLock) {
 			List<Transaction> result = completedNonDomainCommittedTransactions;
@@ -345,6 +352,11 @@ public class Transactions {
 				vacuum.enqueueVacuum(transaction);
 			}
 		}
+	}
+
+	private void configurationInvalidated() {
+		Transaction.retainStartEndTraces = Configuration.is(Transaction.class,
+				"retainTraces");
 	}
 
 	private TransactionsStats createStats() {

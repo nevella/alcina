@@ -14,8 +14,16 @@ public class UserlandProvider {
 		return Registry.impl(UserlandProvider.class);
 	}
 
+	private Entity systemUser;
+
+	private Entity anonymousUser;
+
 	public <U extends Entity & IUser> U getAnonymousUser() {
-		return getUserByName(PermissionsManager.ANONYMOUS_USER_NAME);
+		if (anonymousUser == null) {
+			anonymousUser = getUserByName(
+					PermissionsManager.ANONYMOUS_USER_NAME);
+		}
+		return (U) anonymousUser;
 	}
 
 	public <G extends Entity & IGroup> G getGroupByName(String name) {
@@ -25,7 +33,10 @@ public class UserlandProvider {
 	}
 
 	public <U extends Entity & IUser> U getSystemUser() {
-		return getUserByName(PermissionsManager.SYSTEM_USER_NAME);
+		if (systemUser == null) {
+			systemUser = getUserByName(PermissionsManager.SYSTEM_USER_NAME);
+		}
+		return (U) systemUser;
 	}
 
 	public <U extends Entity & IUser> U getUserById(Long id) {
