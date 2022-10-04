@@ -593,6 +593,7 @@ public class CommonUtils {
 		s = s.replace("$", "\\$");
 		s = s.replace("+", "\\+");
 		s = s.replace("?", "\\?");
+		s = s.replace("*", "\\*");
 		s = s.replace(".", "\\.");
 		return s;
 	}
