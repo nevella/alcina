@@ -32,6 +32,39 @@ import cc.alcina.framework.gwt.client.tour.TourImpl;
 import cc.alcina.framework.gwt.client.tour.TourManager;
 import cc.alcina.framework.gwt.client.tour.TourState;
 
+/**
+ * <h2>Debugging webdriver tours</h2>
+ * <p>
+ * Tours use the ProcessObserver module to intercept events for debugging. To
+ * say, debug a step with text "Russel" in the caption or description fields,
+ * add the following:
+ * </p>
+ * <code><pre>
+static class BeforeActionObserver
+implements ProcessObserver<TourManager.BeforeActionPerformed> {
+&#64;Override
+  public Class<BeforeActionPerformed> getObservableClass() {
+    return TourManager.BeforeActionPerformed.class;
+  }
+
+  public void topicPublished(BeforeActionPerformed observable) {
+    if (observable.contains("Russel")) {
+	  boolean breakpoint = true;//set a breakpoint on this line
+    }
+  }
+}
+
+-- and register the observer --
+
+ProcessObservers.observe(new BeforeActionObserver());
+ *
+ * </pre></code>
+ *
+ *
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public class TourManagerWd extends TourManager {
 	public static final String PROP_FIRST_SUITE_STEP_PERFORMED = TourManagerWd.class
 			.getName() + ".PROP_FIRST_STEP_PERFORMED";
