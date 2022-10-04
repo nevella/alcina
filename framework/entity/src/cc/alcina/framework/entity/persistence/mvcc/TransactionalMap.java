@@ -45,9 +45,6 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  *
  * transitions through 1-1 :-> baseLayer :-> transactional
  *
- * Note: this class currently has a few debugging blocks to track
- * incorrect insertion of entities with negative ids - can be removed once fixed
- *
  */
 public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		implements TransactionalCollection, UnboxedLongMap<V> {
@@ -364,26 +361,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 	public static class EntityIdMap extends TransactionalMap<Long, Entity> {
 		public EntityIdMap(Class<Long> keyClass, Class<Entity> valueClass) {
 			super(keyClass, valueClass);
-		}
-
-		protected Map<Long, Entity> createNonConcurrentMap() {
-			return (Map) new EntityCheckingMap();
-		}
-		
-		public  class EntityCheckingMap extends Long2ObjectLinkedOpenHashMap{
-			public EntityCheckingMap() {
-				super(Hash.DEFAULT_INITIAL_SIZE, Hash.DEFAULT_LOAD_FACTOR);
-			}
-			@Override
-			public Object put(long k, Object v) {
-				checkLegal(k,(Entity) v);
-				return super.put(k, v);
-			}
-			@Override
-			public Object put(Long ok, Object ov) {
-				checkLegal(ok,(Entity) ov);
-				return super.put(ok, ov);
-			}
 		}
 
 		public void ensureVersion(Long key) {
