@@ -576,10 +576,11 @@ public class LocalDom {
 				return (T) childNode;
 			} else {
 				if (postReparse) {
-					topicUnableToParse.publish(Ax.format(
-							"Text node reparse - remote:\n%s\n\nlocal:\n%s\n",
-							parentRemote.getOuterHtml(),
-							((Element) parent).getOuterHtml()));
+					// FIXME - Logging is extremely verbose on the server
+					// topicUnableToParse.publish(Ax.format(
+					// 		"Text node reparse - remote:\n%s\n\nlocal:\n%s\n",
+					// 		parentRemote.getOuterHtml(),
+					// 		((Element) parent).getOuterHtml()));
 					throw new RuntimeException("Text node reparse");
 				}
 				ElementRemoteIndex remoteIndex = parentRemote
