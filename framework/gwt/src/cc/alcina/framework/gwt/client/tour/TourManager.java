@@ -146,19 +146,26 @@ public abstract class TourManager {
 		return true;
 	}
 
+	public static class AfterActionPerformed extends Step.Observable {
+		public AfterActionPerformed(Step step) {
+			super(step);
+		}
+	}
+
 	public static class AfterStepRendered extends Step.Observable {
 		public AfterStepRendered(Step step) {
 			super(step);
 		}
 	}
 
-	public static class BeforeStepRendered extends Step.Observable {
-		public BeforeStepRendered(Step step) {
+	public static class BeforeActionPerformed extends Step.Observable {
+		public BeforeActionPerformed(Step step) {
 			super(step);
 		}
 	}
-	public static class AfterActionPerformed extends Step.Observable {
-		public AfterActionPerformed(Step step) {
+
+	public static class BeforeStepRendered extends Step.Observable {
+		public BeforeStepRendered(Step step) {
 			super(step);
 		}
 	}

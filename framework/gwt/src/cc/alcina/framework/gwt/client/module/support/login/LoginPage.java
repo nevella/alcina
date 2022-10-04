@@ -50,6 +50,10 @@ public abstract class LoginPage extends Model
 		return this.headingArea;
 	}
 
+	public LoginConsort getLoginConsort() {
+		return this.loginConsort;
+	}
+
 	@Directed
 	public Navigation getNavigation() {
 		return this.navigation;

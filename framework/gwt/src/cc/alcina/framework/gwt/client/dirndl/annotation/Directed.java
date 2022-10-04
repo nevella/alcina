@@ -358,6 +358,37 @@ public @interface Directed {
 		boolean transformsNull() default false;
 
 		Class<? extends ModelTransform> value();
+
+		public static class Impl implements Directed.Transform {
+			private boolean transformsNull;
+
+			private Class<? extends ModelTransform> value;
+
+			@Override
+			public Class<? extends Annotation> annotationType() {
+				return Directed.Transform.class;
+			}
+
+			@Override
+			public boolean transformsNull() {
+				return transformsNull;
+			}
+
+			@Override
+			public Class<? extends ModelTransform> value() {
+				return value;
+			}
+
+			public Impl withTransformsNull(boolean transformsNull) {
+				this.transformsNull = transformsNull;
+				return this;
+			}
+
+			public Impl withValue(Class<? extends ModelTransform> value) {
+				this.value = value;
+				return this;
+			}
+		}
 	}
 
 	/**

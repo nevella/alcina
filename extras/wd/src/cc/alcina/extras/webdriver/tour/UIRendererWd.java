@@ -127,6 +127,8 @@ public class UIRendererWd extends UIRenderer {
 		if (target == null) {
 			return false;
 		}
+		ProcessObservers.publish(TourManager.BeforeActionPerformed.class,
+				() -> new TourManager.BeforeActionPerformed(step));
 		switch (step.getAction()) {
 		case NONE:
 			break;

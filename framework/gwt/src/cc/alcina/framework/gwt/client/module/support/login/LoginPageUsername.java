@@ -15,8 +15,18 @@ public class LoginPageUsername extends LoginPage {
 		super(loginConsort);
 		input = new Editable.StringInput();
 		input.setFocusOnAttach(true);
-		input.setPlaceholder("ABA email address");
+		input.setPlaceholder(getEmailAddress());
 		setContents(input);
+	}
+
+	protected String getEmailAddress() {
+		return "Email address";
+	}
+
+	@Override
+	protected String getEnteredText() {
+		input.sync();
+		return input.getValue();
 	}
 
 	@Override
@@ -30,12 +40,6 @@ public class LoginPageUsername extends LoginPage {
 	@Override
 	protected String getSubtitleText() {
 		return loginConsort.getUsernamePageSubtitleText();
-	}
-
-	@Override
-	protected String getEnteredText() {
-		input.sync();
-		return input.getValue();
 	}
 
 	@Override
