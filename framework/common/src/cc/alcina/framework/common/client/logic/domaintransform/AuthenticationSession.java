@@ -126,7 +126,7 @@ public abstract class AuthenticationSession
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public abstract void setIid(Iid iid);

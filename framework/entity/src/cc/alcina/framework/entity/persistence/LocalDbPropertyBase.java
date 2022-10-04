@@ -90,7 +90,7 @@ public abstract class LocalDbPropertyBase extends Entity {
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public void setPropertyKey(String propertyKey) {

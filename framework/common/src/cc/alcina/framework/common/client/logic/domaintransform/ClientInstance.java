@@ -181,7 +181,7 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public void setIid(String iid) {

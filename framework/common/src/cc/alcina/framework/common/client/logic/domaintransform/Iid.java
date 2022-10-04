@@ -58,7 +58,7 @@ public abstract class Iid extends VersionableEntity<Iid> {
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public void setInstanceId(String instanceId) {

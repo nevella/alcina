@@ -783,7 +783,7 @@ public abstract class Job extends VersionableEntity<Job>
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public void setLargeResult(Object largeResult) {

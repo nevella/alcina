@@ -8,7 +8,7 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-public abstract class NodeLocal implements DomNode, LocalDomNode {
+public abstract class NodeLocal implements LocalDomNode {
 	private static Node nodeFor(NodeLocal nodeLocal) {
 		return nodeLocal == null ? null : nodeLocal.node();
 	}

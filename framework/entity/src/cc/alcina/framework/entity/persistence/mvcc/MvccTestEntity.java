@@ -60,7 +60,7 @@ public class MvccTestEntity extends MvccTestEntityBase<MvccTestEntity> {
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	/*

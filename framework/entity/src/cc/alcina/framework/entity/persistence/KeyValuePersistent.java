@@ -211,7 +211,7 @@ public abstract class KeyValuePersistent<T extends KeyValuePersistent>
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public void setKey(String key) {

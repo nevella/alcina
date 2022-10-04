@@ -62,7 +62,7 @@ public abstract class JobStateMessage<T extends JobStateMessage>
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public abstract void setJob(Job job);

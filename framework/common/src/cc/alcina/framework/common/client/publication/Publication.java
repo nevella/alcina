@@ -197,7 +197,7 @@ public abstract class Publication extends Entity<Publication>
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public void setMimeMessageId(String mimeMessageId) {

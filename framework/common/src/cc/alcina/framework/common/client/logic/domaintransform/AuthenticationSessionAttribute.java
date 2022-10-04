@@ -50,7 +50,7 @@ public abstract class AuthenticationSessionAttribute
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public void setKey(String key) {

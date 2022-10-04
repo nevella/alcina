@@ -147,7 +147,7 @@ public abstract class InternalMetric<U extends InternalMetric>
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public void setLockType(String lockType) {

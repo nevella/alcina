@@ -1,10 +1,5 @@
 package cc.alcina.framework.gwt.client.module.support.login;
 
-import com.google.gwt.core.client.GWT;
-
-import cc.alcina.framework.gwt.client.lux.LuxModule;
-import cc.alcina.framework.gwt.client.module.theme.lux1.LuxTheme1Module;
-
 public class LoginModule {
 	private static LoginModule indexModule;
 
@@ -18,10 +13,6 @@ public class LoginModule {
 		ensure();
 	}
 
-	public LoginResources resources = GWT.create(LoginResources.class);
-
 	private LoginModule() {
-		LuxTheme1Module.ensure();
-		LuxModule.get().interpolateAndInject(resources.loginStyles());
 	}
 }

@@ -9,12 +9,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasDisplayName;
-import cc.alcina.framework.gwt.client.entity.HasEntityAction;
 import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
 
 @XmlAccessorType(XmlAccessType.FIELD)
 public abstract class EntitySubPlace<E extends Enum, SD extends EntitySearchDefinition>
-		extends EntityPlace<SD> implements ClearableIdPlace, HasEntityAction {
+		extends EntityPlace<SD> {
 	public abstract E getSub();
 
 	@Override

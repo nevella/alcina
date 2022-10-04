@@ -37,7 +37,7 @@ public abstract class JobRelation<T extends JobRelation> extends Entity<T> {
 
 	@Override
 	public void setId(long id) {
-		this.id = id;
+		super.setId(id);
 	}
 
 	public abstract void setTo(Job to);

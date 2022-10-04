@@ -228,6 +228,10 @@ public abstract class Entity<T extends Entity> extends Bindable
 
 	@Override
 	public void setId(long id) {
+		if (this.id != 0 && this.id != id) {
+			throw new IllegalArgumentException(
+					Ax.format("Changing persistent id: %s => %s", this.id, id));
+		}
 		this.id = id;
 	}
 
