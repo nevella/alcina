@@ -20,6 +20,13 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+/**
+ * Ordering is defined by __comparatorString (which is cached)
+ *
+ * @author nick@alcina.cc
+ *
+ * @param <E>
+ */
 public abstract class DomainViewNodeContent<E extends Entity> extends Model
 		implements Comparable<DomainViewNodeContent<E>>, HasEntity {
 	private String name;
