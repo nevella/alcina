@@ -55,10 +55,6 @@ public class Shell {
 
 	private Process process;
 
-	public Process getProcess() {
-		return this.process;
-	}
-
 	protected boolean timedOut;
 
 	public boolean logToStdOut = true;
@@ -71,6 +67,10 @@ public class Shell {
 
 	private boolean terminated;
 
+	public Process getProcess() {
+		return this.process;
+	}
+
 	public boolean isTerminated() {
 		return this.terminated;
 	}
@@ -82,6 +82,29 @@ public class Shell {
 		launchProcess(new String[] { "/bin/bash", tmp.getPath() },
 				s -> s.length(), s -> s.length());
 		return tmp;
+	}
+
+	public void launchProcess(String[] cmdAndArgs,
+			Callback<String> outputCallback, Callback<String> errorCallback)
+			throws IOException {
+		if (cmdAndArgs[0].equals("/bin/bash") && isWindows()) {
+			List<String> rewrite = Arrays.asList(cmdAndArgs).stream()
+					.collect(Collectors.toList());
+			// just run as .bat
+			rewrite.remove(0);
+			cmdAndArgs = (String[]) rewrite.toArray(new String[rewrite.size()]);
+		}
+		if (logToStdOut) {
+			System.out.format("launching process: %s\n",
+					CommonUtils.join(cmdAndArgs, " "));
+		}
+		ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
+		process = pb.start();
+		errorBuffer = new StreamBuffer(process.getErrorStream(), errorCallback);
+		outputBuffer = new StreamBuffer(process.getInputStream(),
+				outputCallback);
+		receiveStream(errorBuffer);
+		receiveStream(outputBuffer);
 	}
 
 	public Shell noLogging() {
@@ -205,29 +228,6 @@ public class Shell {
 	private boolean isWindows() {
 		String osName = System.getProperty("os.name").toLowerCase();
 		return osName.indexOf("win") >= 0;
-	}
-
-	public void launchProcess(String[] cmdAndArgs,
-			Callback<String> outputCallback, Callback<String> errorCallback)
-			throws IOException {
-		if (cmdAndArgs[0].equals("/bin/bash") && isWindows()) {
-			List<String> rewrite = Arrays.asList(cmdAndArgs).stream()
-					.collect(Collectors.toList());
-			// just run as .bat
-			rewrite.remove(0);
-			cmdAndArgs = (String[]) rewrite.toArray(new String[rewrite.size()]);
-		}
-		if (logToStdOut) {
-			System.out.format("launching process: %s\n",
-					CommonUtils.join(cmdAndArgs, " "));
-		}
-		ProcessBuilder pb = new ProcessBuilder(cmdAndArgs);
-		process = pb.start();
-		errorBuffer = new StreamBuffer(process.getErrorStream(), errorCallback);
-		outputBuffer = new StreamBuffer(process.getInputStream(),
-				outputCallback);
-		receiveStream(errorBuffer);
-		receiveStream(outputBuffer);
 	}
 
 	public static class Output {
