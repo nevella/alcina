@@ -16,7 +16,7 @@ public interface Tour {
 
 	@Reflected
 	enum Action {
-		CLICK, SET_TEXT, NONE, SCRIPT, SELECT, EVAL, TEST
+		CLICK, SET_TEXT, NONE, SCRIPT, SELECT, EVAL, TEST, SEND_KEYS
 	}
 
 	interface Condition {

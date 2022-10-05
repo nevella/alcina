@@ -155,6 +155,9 @@ public class UIRendererWd extends UIRenderer {
 		case SET_TEXT:
 			exec.clearAndSetText(step.getActionValue());
 			break;
+		case SEND_KEYS:
+			exec.sendKeys(step.getActionValue());
+			break;
 		case TEST:
 			// a noop, but forces evaluation/popup in wd mode
 			break;
