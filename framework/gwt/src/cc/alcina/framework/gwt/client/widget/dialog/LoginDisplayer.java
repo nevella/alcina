@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -13,6 +13,7 @@
  */
 package cc.alcina.framework.gwt.client.widget.dialog;
 
+import com.google.gwt.dom.client.Style.Unit;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.user.client.ui.Button;
@@ -36,7 +37,7 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 import cc.alcina.framework.gwt.client.widget.EnterAsClickKeyboardListener;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class LoginDisplayer {
@@ -107,6 +108,9 @@ public class LoginDisplayer {
 				HasHorizontalAlignment.ALIGN_RIGHT);
 		table.getCellFormatter().setHorizontalAlignment(1, 0,
 				HasHorizontalAlignment.ALIGN_RIGHT);
+		// hard-code for approximately centered <input> elements
+		table.getCellFormatter().getElement(1, 0).getStyle().setPaddingLeft(12,
+				Unit.PX);
 		table.getCellFormatter().setHorizontalAlignment(0, 0,
 				HasHorizontalAlignment.ALIGN_RIGHT);
 		table.setWidget(2, 1, new Label("Remember me on this computer"));
@@ -119,7 +123,10 @@ public class LoginDisplayer {
 		hPanel.add(okButton);
 		okButton.addStyleName("marginRight10");
 		hPanel.add(cancelButton);
-		table.setWidget(3, 1, hPanel);
+		table.setWidget(3, 0, hPanel);
+		table.getFlexCellFormatter().setColSpan(3, 0, 2);
+		table.getCellFormatter().getElement(3, 0).setAttribute("align",
+				"center");
 		mainPanel.add(table);
 		dialogBox.setWidget(mainPanel);
 	}
@@ -179,6 +186,7 @@ public class LoginDisplayer {
 
 	public void showLoginDialog(final PermissibleActionListener listener) {
 		okButton.addClickHandler(new ClickHandler() {
+			@Override
 			public void onClick(ClickEvent event) {
 				statusLabel.setVisible(true);
 				statusLabel.setStyleName("");
@@ -196,6 +204,7 @@ public class LoginDisplayer {
 			}
 		});
 		cancelButton.addClickHandler(new ClickHandler() {
+			@Override
 			public void onClick(ClickEvent event) {
 				PermissibleAction action = new PermissibleAction();
 				action.setActionName(CANCEL_ACTION);
