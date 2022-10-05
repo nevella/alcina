@@ -184,7 +184,8 @@ public class InferredDomEvents {
         }
         var observer = new IntersectionObserver(callback, {
           root : scrollCursor,
-          threshold : 1.0
+          //fire as soon as 1 pixel is visible
+          threshold : 0.0
         });
         observer.observe(elt);
         return observer;
