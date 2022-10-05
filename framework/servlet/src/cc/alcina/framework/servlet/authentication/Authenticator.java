@@ -258,4 +258,7 @@ public abstract class Authenticator<U extends Entity & IUser> {
 			}
 		}
 	}
+
+	public void postCreateAuthenticationSession(AuthenticationSession session) {
+	}
 }
