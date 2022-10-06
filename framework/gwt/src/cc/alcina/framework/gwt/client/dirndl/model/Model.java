@@ -2,7 +2,10 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 
 import java.util.Arrays;
 
+import com.google.gwt.core.client.Scheduler;
 import com.google.gwt.dom.client.Element;
+import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.impl.FocusImpl;
 import com.totsp.gwittir.client.beans.Binding;
 import com.totsp.gwittir.client.beans.BindingBuilder;
 import com.totsp.gwittir.client.beans.Converter;
@@ -37,7 +40,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
  * @author nick@alcina.cc
  *
  */
-@ObjectPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
+@ObjectPermissions(
+	read = @Permission(access = AccessLevel.EVERYONE),
+	write = @Permission(access = AccessLevel.EVERYONE))
 public abstract class Model extends Bindable
 		implements LayoutEvents.Bind.Handler {
 	public static final transient Object MODEL_UPDATED = new Object();
@@ -52,7 +57,15 @@ public abstract class Model extends Bindable
 	 * event
 	 */
 	public void onBind(Bind event) {
-		if (!event.isBound()) {
+		if (event.isBound()) {
+			// I'm not sure that this is the best way to dispatch, but there may
+			// be no other way
+			// to call arbitrary interface methods non-reflectively?
+			if (this instanceof FocusOnBind) {
+				FocusOnBind focusOnBind = (FocusOnBind) this;
+				focusOnBind.onBind(focusOnBind, event);
+			}
+		} else {
 			if (!hasPropertyChangeSupport()) {
 				return;
 			}
@@ -60,6 +73,20 @@ public abstract class Model extends Bindable
 					.filter(pcl -> pcl instanceof RemovablePropertyChangeListener)
 					.forEach(pcl -> ((RemovablePropertyChangeListener) pcl)
 							.unbind());
+		}
+	}
+
+	public interface FocusOnBind {
+		boolean isFocusOnBind();
+
+		default void onBind(FocusOnBind dispatchMarker, Bind event) {
+			if (event.isBound() && isFocusOnBind()) {
+				Scheduler.get().scheduleFinally(() -> {
+					Widget widget = event.getContext().node.getWidget();
+					FocusImpl.getFocusImplForWidget()
+							.focus(widget.getElement());
+				});
+			}
 		}
 	}
 

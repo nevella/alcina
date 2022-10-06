@@ -48,7 +48,7 @@ public class LoginPage2FA extends LoginPage {
 
 		public UiModel(LoginConsort loginConsort) {
 			input = new Editable.StringInput();
-			input.setFocusOnAttach(true);
+			input.setFocusOnBind(true);
 			input.setPlaceholder("2FA code");
 			image = new LeafRenderer.Image(
 					loginConsort.getLastResponse().getTwoFactorAuthQRCode());

@@ -1,8 +1,11 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.util.Optional;
+
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -22,6 +25,13 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		while (cursor != null && !modelEvent.handled) {
 			cursor.fireEvent(modelEvent);
 			cursor = cursor.parent;
+		}
+		if (!modelEvent.handled) {
+			Optional<TopLevelHandler> handler = Registry
+					.optional(TopLevelHandler.class, type);
+			if (handler.isPresent()) {
+				handler.get().handle(modelEvent);
+			}
 		}
 	}
 
@@ -54,5 +64,17 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 				unbind();
 			}
 		});
+	}
+
+	/**
+	 * Marker for top-level handlers of unhandled ModelEvents (basically
+	 * links/actions where the context doesn't matter, such as 'logout' or
+	 * 'privacy')
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	public static interface TopLevelHandler {
+		void handle(ModelEvent unhandledEvent);
 	}
 }

@@ -3,23 +3,23 @@ package cc.alcina.framework.gwt.client.dirndl.model;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.FocusOnAttach;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 
 public class Editable {
-	@Directed(tag = "input", bindings = {
-			@Binding(type = Type.PROPERTY, from = "value"),
-			@Binding(type = Type.PROPERTY, from = "placeholder"),
-			@Binding(type = Type.PROPERTY, from = "type") })
+	@Directed(
+		tag = "input",
+		bindings = { @Binding(type = Type.PROPERTY, from = "value"),
+				@Binding(type = Type.PROPERTY, from = "placeholder"),
+				@Binding(type = Type.PROPERTY, from = "type") })
 	public static class StringInput extends Model.WithNode
-			implements FocusOnAttach {
+			implements FocusOnBind {
 		private String value;
 
 		private String placeholder;
 
 		private String type = "text";
 
-		private boolean focusOnAttach;
+		private boolean focusOnBind;
 
 		public String getPlaceholder() {
 			return this.placeholder;
@@ -34,18 +34,12 @@ public class Editable {
 		}
 
 		@Override
-		public boolean isFocusOnAttach() {
-			return focusOnAttach;
+		public boolean isFocusOnBind() {
+			return focusOnBind;
 		}
 
-		@Override
-		public void onBind(Bind event) {
-			FocusOnAttach.super.onBind(event);
-			super.onBind(event);
-		}
-
-		public void setFocusOnAttach(boolean focusOnAttach) {
-			this.focusOnAttach = focusOnAttach;
+		public void setFocusOnBind(boolean focusOnBind) {
+			this.focusOnBind = focusOnBind;
 		}
 
 		public void setPlaceholder(String placeholder) {

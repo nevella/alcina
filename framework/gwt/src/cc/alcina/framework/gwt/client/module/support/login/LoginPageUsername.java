@@ -14,7 +14,7 @@ public class LoginPageUsername extends LoginPage {
 	public LoginPageUsername(LoginConsort loginConsort) {
 		super(loginConsort);
 		input = new Editable.StringInput();
-		input.setFocusOnAttach(true);
+		input.setFocusOnBind(true);
 		input.setPlaceholder(getEmailAddress());
 		setContents(input);
 	}
@@ -44,8 +44,10 @@ public class LoginPageUsername extends LoginPage {
 
 	@Override
 	protected Validator getValidator() {
-		CompositeValidator validator = new CompositeValidator()
-				.add(new NotNullValidator()).add(new EmailAddressValidator());
+		Validator validator = loginConsort.isRequiresValidEmail()
+				? new CompositeValidator().add(new NotNullValidator())
+						.add(new EmailAddressValidator())
+				: new NotNullValidator();
 		return validator;
 	}
 

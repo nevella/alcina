@@ -11,7 +11,7 @@ public class LoginPagePassword extends LoginPage {
 	public LoginPagePassword(LoginConsort loginConsort) {
 		super(loginConsort);
 		input = new Editable.StringInput();
-		input.setFocusOnAttach(true);
+		input.setFocusOnBind(true);
 		input.setType("password");
 		input.setPlaceholder("Password");
 		setContents(input);

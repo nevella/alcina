@@ -199,6 +199,22 @@ public class ModelEvents {
 		}
 	}
 
+	public static class Logout extends ModelEvent<Object, Logout.Handler> {
+		@Override
+		public void dispatch(Logout.Handler handler) {
+			handler.onLogout(this);
+		}
+
+		@Override
+		public Class<Logout.Handler> getHandlerClass() {
+			return Logout.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onLogout(Logout event);
+		}
+	}
+
 	public static class Options extends ModelEvent<Object, Options.Handler> {
 		@Override
 		public void dispatch(Options.Handler handler) {

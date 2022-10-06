@@ -7,6 +7,8 @@ import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Change;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Forward;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
@@ -16,9 +18,11 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.module.support.login.LoginPage.Navigation.PutTo;
 import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 
-@Directed(cssClass = "login-page", receives = { ModelEvents.Forward.class })
+@Directed(
+	cssClass = "login-page",
+	receives = { ModelEvents.Forward.class, DomEvents.Change.class })
 public abstract class LoginPage extends Model
-		implements ModelEvents.Forward.Handler {
+		implements ModelEvents.Forward.Handler, DomEvents.Change.Handler {
 	protected LoginConsort loginConsort;
 
 	private final HeadingArea headingArea;
@@ -62,6 +66,13 @@ public abstract class LoginPage extends Model
 	@Directed
 	public ProcessStatus getProcessStatus() {
 		return this.processStatus;
+	}
+
+	@Override
+	public void onChange(Change event) {
+		// caused by an enter on a form field. Equivalent to "next" since
+		// single-input
+		onForward(null);
 	}
 
 	@Override

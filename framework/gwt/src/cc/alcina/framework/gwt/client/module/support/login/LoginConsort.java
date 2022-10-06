@@ -4,7 +4,6 @@ import java.util.Collections;
 import java.util.function.Consumer;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
-import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.consort.EnumPlayer;
@@ -55,6 +54,10 @@ public abstract class LoginConsort extends Consort<State> {
 		addEndpointPlayer();
 	}
 
+	public boolean isRequiresValidEmail() {
+		return true;
+	}
+
 	public void onClickNext() {
 		/*
 		 * TODO - remote action builder - promises
@@ -85,10 +88,6 @@ public abstract class LoginConsort extends Consort<State> {
 	public boolean shouldShowQrCode() {
 		return getLastResponse().getStates()
 				.contains(LoginResponseState.Two_factor_qr_code_required);
-	}
-
-	protected Widget getLogo() {
-		return null;
 	}
 
 	protected abstract String getTitleText();

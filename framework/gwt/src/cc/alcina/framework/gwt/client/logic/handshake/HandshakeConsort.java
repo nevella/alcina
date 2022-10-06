@@ -44,6 +44,10 @@ public class HandshakeConsort
 		extends ConsortWithSignals<HandshakeState, HandshakeSignal> {
 	public static final Topic<String> topicStartupProgress = Topic.create();
 
+	public static HandshakeConsort get() {
+		return Registry.impl(HandshakeConsort.class);
+	}
+
 	public HandshakeConsort() {
 	}
 
