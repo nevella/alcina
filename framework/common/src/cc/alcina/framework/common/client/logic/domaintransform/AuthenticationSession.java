@@ -169,6 +169,6 @@ public abstract class AuthenticationSession
 
 	public void markInvalid(String reason) {
 		setEndReason(reason);
-		setEndTime(new Date());		
+		setEndTime(new Date());
 	}
 }

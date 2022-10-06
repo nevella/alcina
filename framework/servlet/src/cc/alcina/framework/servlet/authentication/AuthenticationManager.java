@@ -86,6 +86,7 @@ public class AuthenticationManager {
 		context.tokenStore.setCookieValue(COOKIE_NAME_SESSIONID, sessionId);
 		logger.info("Created session :: cookie: {} user: {} type: {}",
 				sessionId, user, authenticationType);
+		context.localAuthenticator.postCreateAuthenticationSession(session);
 		if (createClientInstance) {
 			createClientInstance(context);
 		}
@@ -159,10 +160,28 @@ public class AuthenticationManager {
 	private void ensureAuthenticationSession(AuthenticationContext context) {
 		String sessionId = context.tokenStore
 				.getCookieValue(COOKIE_NAME_SESSIONID);
+		// note that this phase should use authSessionId reachable from the
+		// context client instance, rather than the cookie sessionId, if there
+		// is a context client instance
+		AuthenticationSession fromUnvalidatedClientInstance = getUnvalidatedClientInstanceFromHeaders(
+				context);
+		if (fromUnvalidatedClientInstance != null) {
+			sessionId = fromUnvalidatedClientInstance.getSessionId();
+		}
 		sessionId = validateClientUid(sessionId);
 		logger.trace("Ensure session: id {}", sessionId);
 		if (Ax.notBlank(sessionId)) {
 			context.session = persistence.getAuthenticationSession(sessionId);
+		}
+		if (context.session != null && context.session.getMaxInstances() != 0
+				&& fromUnvalidatedClientInstance == null) {
+			if (context.session.getMaxInstances() <= context.session
+					.getClientInstances().size()) {
+				logger.info(
+						"Ensure new session: (existing reached max instances): {}",
+						sessionId);
+				context.session = null;
+			}
 		}
 		boolean validSession = context.session != null
 				&& context.session.getUser() != null
@@ -237,6 +256,30 @@ public class AuthenticationManager {
 		return result;
 	}
 
+	private AuthenticationSession getUnvalidatedClientInstanceFromHeaders(
+			AuthenticationContext context) {
+		try {
+			String headerId = context.tokenStore.getHeaderValue(
+					AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY);
+			headerId = validateClientUid(headerId);
+			if (Ax.matches(headerId, "\\d+")) {
+				ClientInstance instance = persistence
+						.getClientInstance(Long.parseLong(headerId));
+				if (instance != null) {
+					AuthenticationSession session = instance
+							.getAuthenticationSession();
+					if (session != null) {
+						return session;
+					}
+				}
+			}
+			return null;
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		}
+	}
+
 	private void setupClientInstanceFromHeaders(AuthenticationContext context) {
 		try {
 			String headerId = context.tokenStore.getHeaderValue(
@@ -276,6 +319,9 @@ public class AuthenticationManager {
 		}
 	}
 
+	/*
+	 * Disallows a server-side 'session cookie'
+	 */
 	private String validateClientUid(String uid) {
 		return Ax.matches(uid, "server:.+") ? null : uid;
 	}
