@@ -8,7 +8,6 @@ public class ClientInstanceTransportImpl extends ClientInstance {
 			from(ClientInstance persistentInstance) {
 		ClientInstanceTransportImpl transportImpl = new ClientInstanceTransportImpl();
 		transportImpl.setAuth(persistentInstance.getAuth());
-		transportImpl.setId(persistentInstance.getId());
 		transportImpl.setHelloDate(persistentInstance.getHelloDate());
 		transportImpl.setIid(persistentInstance.getIid());
 		transportImpl.setIpAddress(persistentInstance.getIpAddress());
@@ -29,13 +28,13 @@ public class ClientInstanceTransportImpl extends ClientInstance {
 	}
 
 	@Override
-	public void setAuthenticationSession(
-			AuthenticationSession authenticationSession) {
+	public ClientInstance getReplaces() {
+		return null;
 	}
 
 	@Override
-	public ClientInstance getReplaces() {
-		return null;
+	public void setAuthenticationSession(
+			AuthenticationSession authenticationSession) {
 	}
 
 	@Override

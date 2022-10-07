@@ -660,17 +660,15 @@ public class Transaction implements Comparable<Transaction> {
 						"Ending transaction with uncommitted transforms: {} {}",
 						endPhase, transformManager.getTransforms().size());
 			}
-			// need to do this even if transforms == 0 - to clear listeners
-			// setup
-			// during the transaction
-			// the transaction
-			//
-			try {
-				LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
-				ThreadlocalTransformManager.cast().resetTltm(null);
-			} finally {
-				LooseContext.pop();
-			}
+		}
+		// need to do this even if transforms == 0 - to clear listeners
+		// setup during the transaction
+		//
+		try {
+			LooseContext.pushWithTrue(CONTEXT_ALLOW_ABORTED_TX_ACCESS);
+			ThreadlocalTransformManager.cast().resetTltm(null);
+		} finally {
+			LooseContext.pop();
 		}
 		if (retainStartEndTraces()) {
 			transactionEndTrace = SEUtilities.getCurrentThreadStacktraceSlice();

@@ -58,81 +58,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 
 	protected static int notifyInvalidReadStateCount = 100;
 
-	public static abstract class EventInterceptor {
-		public abstract boolean isRecordEvent(MvccObjectVersions versions,
-				Object domainIdentity, Type type);
-
-		void recordEvent(MvccObjectVersions mvccObjectVersions, Type type,
-				TransactionId fromTransaction, TransactionId toTransaction,
-				boolean writeable) {
-			EntityLocator locator = null;
-			Map<String, String> primitiveFieldValues = null;
-			if (mvccObjectVersions instanceof MvccObjectVersionsEntity) {
-				Entity entity = (Entity) mvccObjectVersions.domainIdentity;
-				locator = entity.toLocator();
-				Entity versioned = (Entity) mvccObjectVersions.resolve(false);
-				primitiveFieldValues = Transactions
-						.primitiveFieldValues(versioned);
-			}
-			Event event = new Event(locator, fromTransaction,
-					Transaction.current().getId(), toTransaction,
-					primitiveFieldValues, type, writeable);
-			onEvent(event);
-		}
-
-		public abstract void onEvent(Event event);
-	}
-
-	public static class Event {
-		public Type type;
-
-		public boolean writeable;
-
-		public EntityLocator locator;
-
-		public TransactionId fromTransaction;
-
-		public TransactionId currentTransaction;
-
-		public TransactionId toTransaction;
-
-		public Map<String, String> primitiveFieldValues;
-
-		public String threadName;
-
-		public Event() {
-		}
-
-		public Event(EntityLocator locator, TransactionId fromTransaction,
-				TransactionId currentTransaction, TransactionId toTransaction,
-				Map<String, String> primitiveFieldValues, Type type,
-				boolean writeable) {
-			this.locator = locator;
-			this.fromTransaction = fromTransaction;
-			this.currentTransaction = currentTransaction;
-			this.toTransaction = toTransaction;
-			this.primitiveFieldValues = primitiveFieldValues;
-			this.type = type;
-			this.writeable = writeable;
-			this.threadName = Thread.currentThread().getName();
-		}
-
-		public enum Type {
-			VERSIONS_CREATION, VERSION_CREATION, VERSION_REMOVAL,
-			VERSIONS_REMOVAL, END
-		}
-
-		@Override
-		public String toString() {
-			return GraphProjection.fieldwiseToStringOneLine(this);
-		}
-	}
-
 	private static EventInterceptor eventInterceptor;
-
-	public static void setEventInterceptor(EventInterceptor eventInterceptor) {
-		MvccObjectVersions.eventInterceptor = eventInterceptor;
-	}
 
 	private static final Object2ObjectAVLTreeMap<Transaction, ObjectVersion> EMPTY = new Object2ObjectAVLTreeMap<Transaction, ObjectVersion>() {
 		@Override
@@ -168,6 +94,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	};
 
 	static final Object MVCC_OBJECT__MVCC_OBJECT_VERSIONS_MUTATION_MONITOR = new Object();
+
+	public static void setEventInterceptor(EventInterceptor eventInterceptor) {
+		MvccObjectVersions.eventInterceptor = eventInterceptor;
+	}
 
 	// called in a synchronized block (synchronized on domainIdentity) -- or --
 	// unreachable domainIdentity unreachable from other txs
@@ -360,6 +290,15 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	protected void attach() {
 	}
 
+	protected void checkIntercept(Event.Type type,
+			TransactionId fromTransaction, TransactionId toTransaction,
+			boolean writeable) {
+		if (eventInterceptor != null
+				&& eventInterceptor.isRecordEvent(this, domainIdentity, type)) {
+			eventInterceptor.recordEvent(this, type, null, null, writeable);
+		}
+	}
+
 	protected T copyObject(T mostRecentObject) {
 		if (mostRecentObject == null) {
 			T result = (T) Transactions.copyObject((MvccObject) domainIdentity,
@@ -415,15 +354,6 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	}
 
 	protected void onVersionCreation(ObjectVersion<T> version) {
-	}
-
-	protected void checkIntercept(Event.Type type,
-			TransactionId fromTransaction, TransactionId toTransaction,
-			boolean writeable) {
-		if (eventInterceptor != null
-				&& eventInterceptor.isRecordEvent(this, domainIdentity, type)) {
-			eventInterceptor.recordEvent(this, type, null, null, writeable);
-		}
 	}
 
 	/*
@@ -527,7 +457,7 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 			/*
 			 * Must change the base before removing transaction (otherwise
 			 * there's a narrow window where we'd return an older version)
-			 * 
+			 *
 			 * Actually no longer true due to synchronisation, but still a good
 			 * principle. Also 'change the base'..?
 			 */
@@ -558,8 +488,10 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 					if (vacuumableTransactions.completedDomainTransactions
 							.contains(test)) {
 						removeWithSize(test);
-					}else{
-						//logically, completedDomainTransactions are sequential, so none more recent than this will be removable 
+					} else {
+						// logically, completedDomainTransactions are
+						// sequential, so none more recent than this will be
+						// removable
 						break;
 					}
 				}
@@ -669,6 +601,76 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 		}
 	}
 
+	public static class Event {
+		public Type type;
+
+		public boolean writeable;
+
+		public EntityLocator locator;
+
+		public TransactionId fromTransaction;
+
+		public TransactionId currentTransaction;
+
+		public TransactionId toTransaction;
+
+		public Map<String, String> primitiveFieldValues;
+
+		public String threadName;
+
+		public Event() {
+		}
+
+		public Event(EntityLocator locator, TransactionId fromTransaction,
+				TransactionId currentTransaction, TransactionId toTransaction,
+				Map<String, String> primitiveFieldValues, Type type,
+				boolean writeable) {
+			this.locator = locator;
+			this.fromTransaction = fromTransaction;
+			this.currentTransaction = currentTransaction;
+			this.toTransaction = toTransaction;
+			this.primitiveFieldValues = primitiveFieldValues;
+			this.type = type;
+			this.writeable = writeable;
+			this.threadName = Thread.currentThread().getName();
+		}
+
+		@Override
+		public String toString() {
+			return GraphProjection.fieldwiseToStringOneLine(this);
+		}
+
+		public enum Type {
+			VERSIONS_CREATION, VERSION_CREATION, VERSION_REMOVAL,
+			VERSIONS_REMOVAL, END
+		}
+	}
+
+	public static abstract class EventInterceptor {
+		public abstract boolean isRecordEvent(MvccObjectVersions versions,
+				Object domainIdentity, Type type);
+
+		public abstract void onEvent(Event event);
+
+		void recordEvent(MvccObjectVersions mvccObjectVersions, Type type,
+				TransactionId fromTransaction, TransactionId toTransaction,
+				boolean writeable) {
+			EntityLocator locator = null;
+			Map<String, String> primitiveFieldValues = null;
+			if (mvccObjectVersions instanceof MvccObjectVersionsEntity) {
+				Entity entity = (Entity) mvccObjectVersions.domainIdentity;
+				locator = entity.toLocator();
+				Entity versioned = (Entity) mvccObjectVersions.resolve(false);
+				primitiveFieldValues = Transactions
+						.primitiveFieldValues(versioned);
+			}
+			Event event = new Event(locator, fromTransaction,
+					Transaction.current().getId(), toTransaction,
+					primitiveFieldValues, type, writeable);
+			onEvent(event);
+		}
+	}
+
 	class CachedResolution {
 		private T read;
 
@@ -691,6 +693,9 @@ public abstract class MvccObjectVersions<T> implements Vacuumable {
 	// here
 	static abstract class MvccObjectVersionsMvccObject<T>
 			extends MvccObjectVersions<T> {
+		/*
+		 * Is this attached to the domain?
+		 */
 		boolean attached;
 
 		MvccObjectVersionsMvccObject(T t, Transaction initialTransaction,
