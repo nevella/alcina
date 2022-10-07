@@ -12,8 +12,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -23,6 +25,7 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.logic.EntityLayerLogging;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
+import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public abstract class AlcinaServlet extends HttpServlet {
@@ -95,6 +98,10 @@ public abstract class AlcinaServlet extends HttpServlet {
 		return false;
 	}
 
+	protected Permission getRequiredPermission() {
+		return Permission.SimplePermissions.getPermission(AccessLevel.EVERYONE);
+	}
+
 	protected void wrapRequest(HttpServletRequest request,
 			HttpServletResponse response) throws ServletException {
 		AlcinaServletContext alcinaContext = null;
@@ -112,7 +119,13 @@ public abstract class AlcinaServlet extends HttpServlet {
 						InternalMetricTypeAlcina.servlet,
 						Thread.currentThread().getName(), () -> true);
 			}
-			handleRequest(request, response);
+			String externalAuthorizationUrl = AuthenticationManager.get()
+					.getExternalAuthorizationUrl(getRequiredPermission());
+			if (externalAuthorizationUrl == null) {
+				handleRequest(request, response);
+			} else {
+				response.sendRedirect(externalAuthorizationUrl);
+			}
 		} catch (Throwable t) {
 			topicApplicationThrowables().publish(t);
 			logger.warn("Alcina servlet request issue - user {} - url {}",

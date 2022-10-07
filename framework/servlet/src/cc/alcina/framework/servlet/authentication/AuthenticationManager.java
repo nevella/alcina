@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -343,5 +344,10 @@ public class AuthenticationManager {
 		<U extends Entity & IUser> Authenticator<U> typedAuthenticator() {
 			return (Authenticator<U>) localAuthenticator;
 		}
+	}
+
+	public String getExternalAuthorizationUrl(Permission requiredPermission) {
+		return ensureContext().localAuthenticator
+				.getExternalAuthorizationUrl(requiredPermission);
 	}
 }

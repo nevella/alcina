@@ -3,6 +3,9 @@ package cc.alcina.framework.servlet.authentication;
 import java.util.Date;
 import java.util.concurrent.TimeUnit;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import com.lambdaworks.crypto.SCrypt;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -15,6 +18,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.UserWith2FA;
 import cc.alcina.framework.common.client.logic.permissions.UserlandProvider;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
@@ -65,6 +69,8 @@ public abstract class Authenticator<U extends Entity & IUser> {
 		}
 		validateAccount(loginModel.loginResponse, loginBean.getUserName());
 	}
+
+	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	public void checkExternalExpiration(AuthenticationSession session) {
 	}
@@ -260,5 +266,9 @@ public abstract class Authenticator<U extends Entity & IUser> {
 	}
 
 	public void postCreateAuthenticationSession(AuthenticationSession session) {
+	}
+
+	public String getExternalAuthorizationUrl(Permission requiredPermission) {
+		return null;
 	}
 }

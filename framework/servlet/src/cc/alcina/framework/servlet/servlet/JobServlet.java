@@ -25,7 +25,9 @@ import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.job.Task;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
@@ -77,6 +79,11 @@ public class JobServlet extends AlcinaServlet {
 
 	public static String createTaskUrl(Task task) {
 		return createTaskUrl(null, task);
+	}
+
+	@Override
+	protected Permission getRequiredPermission() {
+		return Permission.SimplePermissions.getPermission(AccessLevel.ADMIN);
 	}
 
 	public static long invokeAsSystemUser(String taskUrl) {
