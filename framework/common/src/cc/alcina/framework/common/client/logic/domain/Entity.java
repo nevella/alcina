@@ -59,6 +59,9 @@ public abstract class Entity<T extends Entity> extends Bindable
 	public static final transient String CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID = Entity.class
 			+ ".CONTEXT_USE_SYSTEM_HASH_CODE_IF_ZERO_ID_AND_LOCAL_ID";
 
+	public static final transient String CONTEXT_ALLOW_ID_MODIFICATION = Entity.class
+			+ ".CONTEXT_ALLOW_ID_MODIFICATION";
+
 	public static transient EntityClassResolver classResolver = new EntityClassResolver();
 
 	protected volatile long id = 0;
@@ -119,12 +122,16 @@ public abstract class Entity<T extends Entity> extends Bindable
 	}
 
 	@Override
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.EVERYONE),
+		write = @Permission(access = AccessLevel.ROOT))
 	@Transient
 	public abstract long getId();
 
 	@Display(name = "Local id")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT))
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.ROOT),
+		write = @Permission(access = AccessLevel.ROOT))
 	@Transient
 	public /**
 			 * Used for object referencing within a client domain. Generated
@@ -145,7 +152,9 @@ public abstract class Entity<T extends Entity> extends Bindable
 	@Override
 	@Version
 	@Column(name = "OPTLOCK")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.EVERYONE),
+		write = @Permission(access = AccessLevel.ROOT))
 	public // AccessLevel.ADMIN), orderingHint = 991)
 	int getVersionNumber() {
 		return versionNumber;
@@ -229,8 +238,12 @@ public abstract class Entity<T extends Entity> extends Bindable
 	@Override
 	public void setId(long id) {
 		if (this.id != 0 && this.id != id) {
-			throw new IllegalArgumentException(
-					Ax.format("Changing persistent id: %s => %s", this.id, id));
+			// this is allowable in non-mvcc systems (e.g. for changing
+			// untrusted client ids)
+			if (!LooseContext.is(CONTEXT_ALLOW_ID_MODIFICATION)) {
+				throw new IllegalArgumentException(Ax.format(
+						"Changing persistent id: %s => %s", this.id, id));
+			}
 		}
 		this.id = id;
 	}
