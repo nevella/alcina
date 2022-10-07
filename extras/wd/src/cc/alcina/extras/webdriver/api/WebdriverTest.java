@@ -11,10 +11,14 @@ import java.util.Set;
 import org.openqa.selenium.WebDriver;
 
 import cc.alcina.extras.webdriver.WDToken;
+import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.MetricLogging;
 
@@ -30,6 +34,8 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	}
 
 	protected int myLevel;
+
+	private TestResult testResult;
 
 	public Class<? extends WebdriverTest>[] childTests() {
 		return new Class[0];
@@ -86,6 +92,12 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return false;
 	}
 
+	public void onTimeoutException(TimedOutException timedOutException) {
+		testResult.setException(timedOutException);
+		ProcessObservers.publish(WebdriverTest.TestException.class,
+				() -> new WebdriverTest.TestException(this));
+	}
+
 	public void predelay(WDToken token, int level) {
 		try {
 			int predelayMs = token.getConfiguration().predelayMs;
@@ -128,6 +140,18 @@ public abstract class WebdriverTest implements Registration.Ensure {
 
 	public abstract void run(WDToken token, TestResult result) throws Exception;
 
+	@Override
+	public String toString() {
+		FormatBuilder builder = new FormatBuilder().separator(" :: ");
+		builder.appendIfNotBlank(getClass().getName());
+		if (testResult != null && testResult.getException() != null) {
+			builder.appendIfNotBlank(
+					testResult.getException().getClass().getSimpleName());
+			builder.appendIfNotBlank(testResult.getException().getMessage());
+		}
+		return builder.toString();
+	}
+
 	public void uiStateChange(WDToken token, Enum<?> e) {
 		token.getUiStates().put(e.getDeclaringClass(), e);
 	}
@@ -153,8 +177,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		String oldThreadName = Thread.currentThread().getName();
 		Thread.currentThread()
 				.setName("Test--" + token.getConfiguration().name);
-		// dependencies, then child tests, then me
-		TestResult testResult = new TestResult();
+		testResult = new TestResult();
 		testResult.setStartTime(System.currentTimeMillis());
 		testResult.setNoTimePayload(noTimePayload());
 		testResult.setName(getClass().getSimpleName());
@@ -233,6 +256,12 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			e.printStackTrace();
 			testResult.setResultType(TestResultType.ERROR);
 			testResult.setMessage(e.getMessage());
+			testResult.setException(e);
+			if (!(e instanceof TimedOutException)) {
+				// will have already been published
+				ProcessObservers.publish(WebdriverTest.TestException.class,
+						() -> new WebdriverTest.TestException(this));
+			}
 		} finally {
 			long endTime = System.currentTimeMillis();
 			testResult.setEndTime(endTime);
@@ -278,5 +307,26 @@ public abstract class WebdriverTest implements Registration.Ensure {
 
 	protected boolean isRequiresRefresh() {
 		return true;
+	}
+
+	public static class TestException implements ProcessObservable {
+		private WebdriverTest test;
+
+		public TestException(WebdriverTest test) {
+			this.test = test;
+		}
+
+		public WebdriverTest getTest() {
+			return this.test;
+		}
+
+		public void setTest(WebdriverTest test) {
+			this.test = test;
+		}
+
+		@Override
+		public String toString() {
+			return test.toString();
+		}
 	}
 }

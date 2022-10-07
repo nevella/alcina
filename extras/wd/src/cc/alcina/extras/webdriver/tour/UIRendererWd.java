@@ -123,12 +123,12 @@ public class UIRendererWd extends UIRenderer {
 		if (targetCondition == null) {
 			return true;
 		}
+		ProcessObservers.publish(TourManager.BeforeActionPerformed.class,
+				() -> new TourManager.BeforeActionPerformed(step));
 		final WebElement target = getElement(targetCondition.getSelectors());
 		if (target == null) {
 			return false;
 		}
-		ProcessObservers.publish(TourManager.BeforeActionPerformed.class,
-				() -> new TourManager.BeforeActionPerformed(step));
 		switch (step.getAction()) {
 		case NONE:
 			break;

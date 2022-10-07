@@ -25,6 +25,7 @@ import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
 import cc.alcina.extras.webdriver.WDConfigurationItem.WebDriverType;
+import cc.alcina.extras.webdriver.api.WebdriverTest;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
@@ -725,12 +726,24 @@ public class WDUtils {
 	public static class TimedOutException extends RuntimeException {
 		public TimedOutException() {
 			super();
+			publish();
 			setForceTimeout(false);
 		}
 
 		public TimedOutException(String message) {
 			super(message);
+			publish();
 			setForceTimeout(false);
+		}
+
+		private void publish() {
+			if (LooseContext.is(WDUtils.CONTEXT_DONT_LOG_EXCEPTION)) {
+			} else {
+				WebdriverTest currentTest = WebdriverTest.current();
+				if (currentTest != null) {
+					currentTest.onTimeoutException(this);
+				}
+			}
 		}
 	}
 }

@@ -4,6 +4,9 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
+
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class TestResult {
@@ -25,12 +28,20 @@ public class TestResult {
 
 	private TestResultType resultType = TestResultType.OK;
 
+	private transient Exception exception;
+
 	public void addResult(TestResult result) {
 		results.add(result);
 	}
 
 	public long getEndTime() {
 		return this.endTime;
+	}
+
+	@JsonIgnore
+	@AlcinaTransient
+	public Exception getException() {
+		return this.exception;
 	}
 
 	public String getMessage() {
@@ -79,6 +90,10 @@ public class TestResult {
 
 	public void setEndTime(long endTime) {
 		this.endTime = endTime;
+	}
+
+	public void setException(Exception exception) {
+		this.exception = exception;
 	}
 
 	public void setMessage(String message) {

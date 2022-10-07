@@ -352,7 +352,8 @@ public class WdExec {
 				sleep(100);
 			}
 		}
-		throw new TimedOutException();
+		throw new TimedOutException(
+				Ax.format("Timed out waiting for %s", getBy()));
 	}
 
 	public void waitForOneOf(String... paths) {
@@ -367,7 +368,8 @@ public class WdExec {
 				sleep(100);
 			}
 		}
-		throw new TimedOutException();
+		throw new TimedOutException(
+				Ax.format("Timed out waiting for %s", Arrays.asList(paths)));
 	}
 
 	public WdExec xpath(String xpath) {
