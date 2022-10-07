@@ -17,6 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Selected;
 
 @Directed(tag = "selection-model", receives = ModelEvents.Selected.class)
 // FIXME - dirndl 1x1a - change to "Choices"
+// also this should emit ModelEvents, not topic
 public abstract class SelectionModel<T> extends Model
 		implements ModelEvents.Selected.Handler {
 	protected List<SelectionModel.Choice<T>> choices;
@@ -57,7 +58,13 @@ public abstract class SelectionModel<T> extends Model
 	 * TODO - dirndl1.1 - is it possible to bind just to isSelected here? in
 	 * which case no need to wrap wdiget/elements
 	 */
-	@Directed(bindings = @Binding(type = Type.PROPERTY, from = "selected", to = "_selected"), receives = DomEvents.Click.class, reemits = ModelEvents.Selected.class)
+	@Directed(
+		bindings = @Binding(
+			type = Type.PROPERTY,
+			from = "selected",
+			to = "_selected"),
+		receives = DomEvents.Click.class,
+		reemits = ModelEvents.Selected.class)
 	public static class Choice<T> extends Model {
 		private boolean selected;
 
