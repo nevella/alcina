@@ -280,13 +280,9 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	protected void getAndLog(WebDriver driver, String uri, WDToken token) {
 		String key = "Load: " + uri;
 		MetricLogging.get().start(key);
-		if (uri.equals(driver.getCurrentUrl()) && !isRequiresRefresh()
-				&& (token != null && token.getLoadedUrl() != null)) {
-		} else {
-			driver.get(uri);
-			if (token != null) {
-				token.setLoadedUrl(uri);
-			}
+		driver.get(uri);
+		if (token != null) {
+			token.setLoadedUrl(uri);
 		}
 		MetricLogging.get().end(key);
 	}
@@ -303,10 +299,6 @@ public abstract class WebdriverTest implements Registration.Ensure {
 					.forEach(t -> testTemplates.put(t.getClass(), t));
 		}
 		return testTemplates;
-	}
-
-	protected boolean isRequiresRefresh() {
-		return true;
 	}
 
 	public static class TestException implements ProcessObservable {

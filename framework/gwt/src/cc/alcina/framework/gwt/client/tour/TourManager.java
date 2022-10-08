@@ -7,6 +7,7 @@ import java.util.Optional;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.extras.webdriver.WDUtils;
 import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -14,6 +15,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
+import cc.alcina.framework.entity.util.MethodContext;
 import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.tour.StepPopupView.Action;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
@@ -319,7 +321,9 @@ public abstract class TourManager {
 		private boolean checkIgnoreAction() {
 			Tour.Condition ignoreActionIf = step.getIgnoreActionIf();
 			if (ignoreActionIf != null) {
-				return evaluateCondition(ignoreActionIf);
+				return MethodContext.instance()
+						.withContextTrue(WDUtils.CONTEXT_DONT_LOG_EXCEPTION)
+						.call(() -> evaluateCondition(ignoreActionIf));
 			}
 			return false;
 		}
