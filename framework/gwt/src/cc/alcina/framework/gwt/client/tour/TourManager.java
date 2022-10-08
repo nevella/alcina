@@ -171,7 +171,7 @@ public abstract class TourManager {
 	}
 
 	public static enum DisplayStepPhase {
-		SETUP, WAIT_FOR, IGNORE_IF, PERFORM_ACTION, SHOW_POPUP
+		SETUP, WAIT_FOR, IGNORE_IF, SHOW_POPUP, PERFORM_ACTION
 	}
 
 	public static abstract class UIRenderer {
