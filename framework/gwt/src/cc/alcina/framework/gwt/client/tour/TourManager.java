@@ -287,19 +287,19 @@ public abstract class TourManager {
 					wasPlayed(player);
 				}
 				break;
+			case SHOW_POPUP:
+				if (showStepPopups()) {
+					wasPlayed(player);
+				} else {
+					retry(player, next, 200);
+				}
+				break;
 			case PERFORM_ACTION:
 				if (checkIgnoreAction() || performAction()) {
 					wasPlayed(player);
 					if (step.provideTarget() == null && currentTour.hasNext()) {
 						stepListener.topicPublished(Action.NEXT);
 					}
-				} else {
-					retry(player, next, 200);
-				}
-				break;
-			case SHOW_POPUP:
-				if (showStepPopups()) {
-					wasPlayed(player);
 				} else {
 					retry(player, next, 200);
 				}
