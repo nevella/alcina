@@ -39,6 +39,10 @@ public class AuthenticationManager {
 	private static final String CONTEXT_AUTHENTICATION_CONTEXT = AuthenticationManager.class
 			.getName() + ".CONTEXT_AUTHENTICATION_CONTEXT";
 
+	public static final String CONTEXT_ALLOW_EXPIRED_ANONYMOUS_AUTHENTICATION_SESSION = AuthenticationManager.class
+			.getName()
+			+ ".CONTEXT_ALLOW_EXPIRED_ANONYMOUS_AUTHENTICATION_SESSION";
+
 	public static final String COOKIE_NAME_IID = "IID";
 
 	public static final String COOKIE_NAME_SESSIONID = "alcsessionid";
@@ -99,16 +103,22 @@ public class AuthenticationManager {
 		return null;
 	}
 
-	public Optional<ClientInstance> getContextClientInstance() {
-		return Optional.ofNullable(ensureContext().clientInstance);
-	}
 	public Optional<AuthenticationSession> getAuthenticationSession() {
 		return Optional.ofNullable(ensureContext().session);
+	}
+
+	public Optional<ClientInstance> getContextClientInstance() {
+		return Optional.ofNullable(ensureContext().clientInstance);
 	}
 
 	public Long getContextClientInstanceId() {
 		return getContextClientInstance().map(ClientInstance::getId)
 				.orElse(null);
+	}
+
+	public String getExternalAuthorizationUrl(Permission requiredPermission) {
+		return ensureContext().localAuthenticator
+				.getExternalAuthorizationUrl(requiredPermission);
 	}
 
 	public LoginResponse hello() {
@@ -184,9 +194,33 @@ public class AuthenticationManager {
 				context.session = null;
 			}
 		}
+		// a session is valid if expired *and* anonymous for a grace period
+		// after expir
 		boolean validSession = context.session != null
-				&& context.session.getUser() != null
-				&& !isExpired(context.session);
+				&& context.session.getUser() != null;
+		if (validSession && isExpired(context.session)) {
+			// If a session is expired, there's probably a newer active for the
+			// same IID. So it's important not to invalidate *that* by setting a
+			// newer sesionId.
+			//
+			// The most common case will be an RPC call either
+			// inflight before a login was processed, or post- (but still with
+			// old client instance headers). In those cases, either throw
+			// (default) or permit with the old session (method-specific
+			// permission) if anonymous
+			if (context.session.getUser().provideIsAnonymous() && LooseContext
+					.is(CONTEXT_ALLOW_EXPIRED_ANONYMOUS_AUTHENTICATION_SESSION)) {
+				logger.warn(
+						"Permitting expired session - anonymous/expired explicit permission - id: {}",
+						sessionId);
+				validSession = true;
+			} else {
+				logger.warn(
+						"Throwing due to rpc exception with expired session id: {}",
+						sessionId);
+				throw new IllegalStateException("Not authorized");
+			}
+		}
 		if (validSession) {
 			IUser sessionUser = context.session.getUser();
 			boolean anonymousSession = Objects.equals(sessionUser.getUserName(),
@@ -241,22 +275,6 @@ public class AuthenticationManager {
 		}
 	}
 
-	private boolean isExpired(AuthenticationSession session) {
-		if (!Configuration.is("sessionExpirationEnabled")) {
-			return false;
-		}
-		ensureContext().localAuthenticator.checkExternalExpiration(session);
-		boolean result = session.provideIsExpired();
-		if (result && session.getEndTime() == null) {
-			logger.warn(
-					"Marking authentication session as ended (login disabled?) - {} {}",
-					session, session.getUser());
-			session.setEndTime(new Date());
-			session.setEndReason("Access not permitted");
-		}
-		return result;
-	}
-
 	private AuthenticationSession getUnvalidatedClientInstanceFromHeaders(
 			AuthenticationContext context) {
 		try {
@@ -279,6 +297,22 @@ public class AuthenticationManager {
 			e.printStackTrace();
 			return null;
 		}
+	}
+
+	private boolean isExpired(AuthenticationSession session) {
+		if (!Configuration.is("sessionExpirationEnabled")) {
+			return false;
+		}
+		ensureContext().localAuthenticator.checkExternalExpiration(session);
+		boolean result = session.provideIsExpired();
+		if (result && session.getEndTime() == null) {
+			logger.warn(
+					"Marking authentication session as ended (login disabled?) - {} {}",
+					session, session.getUser());
+			session.setEndTime(new Date());
+			session.setEndReason("Access not permitted");
+		}
+		return result;
 	}
 
 	private void setupClientInstanceFromHeaders(AuthenticationContext context) {
@@ -305,7 +339,7 @@ public class AuthenticationManager {
 							} else {
 								context.tokenStore.addHeader(
 										AlcinaRpcRequestBuilder.RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED,
-										"true");
+										headerId);
 								logger.warn(
 										"Sending client instance expired:  - {} {} {}",
 										instance, session, session.getUser());
@@ -344,10 +378,5 @@ public class AuthenticationManager {
 		<U extends Entity & IUser> Authenticator<U> typedAuthenticator() {
 			return (Authenticator<U>) localAuthenticator;
 		}
-	}
-
-	public String getExternalAuthorizationUrl(Permission requiredPermission) {
-		return ensureContext().localAuthenticator
-				.getExternalAuthorizationUrl(requiredPermission);
 	}
 }

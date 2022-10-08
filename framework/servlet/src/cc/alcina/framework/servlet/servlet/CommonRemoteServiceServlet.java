@@ -18,7 +18,9 @@ import java.io.StringWriter;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
@@ -249,7 +251,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(
+		readonlyPermitted = true,
+		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public String getJobLog(long jobId) {
 		Job job = Job.byId(jobId).domain().ensurePopulated();
 		Preconditions.checkState(
@@ -274,21 +278,27 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(
+		readonlyPermitted = true,
+		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long log(ILogRecord logRecord) {
 		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().persistLogRecord(logRecord);
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(
+		readonlyPermitted = true,
+		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString) {
 		return logClientError(exceptionToString,
 				LogMessageType.CLIENT_EXCEPTION.toString());
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(
+		readonlyPermitted = true,
+		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString, String exceptionType) {
 		String remoteAddr = getRemoteAddress();
 		try {
@@ -455,8 +465,23 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					callCounter.incrementAndGet(), suffix);
 			alcinaServletContext = new AlcinaServletContext();
 			alcinaServletContextInitialised = true;
+			Method method = null;
+			try {
+				method = this.getClass().getMethod(name,
+						rpcRequest.getMethod().getParameterTypes());
+				// bail early, since some early checks require a method
+			} catch (Exception ex) {
+				ex.printStackTrace();
+				return RPC.encodeResponseForFailure(null, ex);
+			}
+			Map<String, Object> initialContext = new LinkedHashMap<>();
+			WebMethod webMethod = method.getAnnotation(WebMethod.class);
+			initialContext.put(
+					AuthenticationManager.CONTEXT_ALLOW_EXPIRED_ANONYMOUS_AUTHENTICATION_SESSION,
+					webMethod != null && webMethod
+							.allowExpiredAnonymousAuthenticationSession());
 			alcinaServletContext.begin(getThreadLocalRequest(),
-					getThreadLocalResponse(), threadName);
+					getThreadLocalResponse(), threadName, initialContext);
 			afterAlcinaServletContextInitialisation();
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
 					getThreadLocalRequest());
@@ -490,12 +515,8 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					PermissionsManager.get().getClientInstance().getId(),
 					PermissionsManager.get().getUserId(), ServletLayerUtils
 							.robustGetRemoteAddress(getThreadLocalRequest()));
-			Method method;
 			try {
-				method = this.getClass().getMethod(name,
-						rpcRequest.getMethod().getParameterTypes());
-				if (method.isAnnotationPresent(WebMethod.class)) {
-					WebMethod webMethod = method.getAnnotation(WebMethod.class);
+				if (webMethod != null) {
 					AnnotatedPermissible ap = new AnnotatedPermissible(
 							webMethod.customPermission());
 					if (!PermissionsManager.get().isPermitted(ap)) {
@@ -521,9 +542,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					}
 				}
 			} catch (SecurityException ex) {
-				RPC.encodeResponseForFailure(null, ex);
-			} catch (NoSuchMethodException ex) {
-				RPC.encodeResponseForFailure(null, ex);
+				return RPC.encodeResponseForFailure(null, ex);
 			}
 			return invokeAndEncodeResponse(rpcRequest);
 		} catch (IncompatibleRemoteServiceException ex) {
@@ -646,7 +665,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(
+		readonlyPermitted = true,
+		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public DomainUpdate
 			waitForTransforms(DomainTransformCommitPosition position)
 					throws PermissionsException {

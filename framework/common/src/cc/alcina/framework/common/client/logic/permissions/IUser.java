@@ -48,6 +48,10 @@ public interface IUser extends IVersionable, HasDisplayName.Settable {
 
 	public abstract String getUserName();
 
+	public default boolean provideIsAnonymous() {
+		return UserlandProvider.get().getAnonymousUser() == this;
+	}
+
 	public void setPassword(String password);
 
 	public void setSalt(String salt);

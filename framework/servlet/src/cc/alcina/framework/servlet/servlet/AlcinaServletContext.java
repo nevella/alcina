@@ -1,5 +1,8 @@
 package cc.alcina.framework.servlet.servlet;
 
+import java.util.Collections;
+import java.util.Map;
+
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
@@ -18,25 +21,19 @@ import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class AlcinaServletContext {
-	private int looseContextDepth = -1;
-
-	private int permissionsManagerDepth;
-
-	private String originalThreadName;
-
 	private static final String CONTEXT_SERVLET_CONTEXT = AlcinaServletContext.class
 			.getName() + ".CONTEXT_SERVLET_CONTEXT";
+
+	public static void endContext() {
+		AlcinaServletContext threadContext = servletContext();
+		if (threadContext != null) {
+			threadContext.end();
+		}
+	}
 
 	public static HttpContext httpContext() {
 		AlcinaServletContext servletContext = servletContext();
 		return servletContext != null ? servletContext.httpContext : null;
-	}
-
-	public static AlcinaServletContext servletContext() {
-		return LooseContext.get(CONTEXT_SERVLET_CONTEXT);
-	}
-
-	public AlcinaServletContext() {
 	}
 
 	public static void removePerThreadContexts() {
@@ -49,16 +46,37 @@ public class AlcinaServletContext {
 		MetricLogging.removePerThreadContext();
 	}
 
+	public static AlcinaServletContext servletContext() {
+		return LooseContext.get(CONTEXT_SERVLET_CONTEXT);
+	}
+
+	private int looseContextDepth = -1;
+
+	private int permissionsManagerDepth;
+
+	private String originalThreadName;
+
 	private boolean rootPermissions;
 
 	private HttpContext httpContext;
 
+	public AlcinaServletContext() {
+	}
+
 	public void begin(HttpServletRequest httpServletRequest,
 			HttpServletResponse httpServletResponse, String threadName) {
+		begin(httpServletRequest, httpServletResponse, threadName,
+				Collections.emptyMap());
+	}
+
+	public void begin(HttpServletRequest httpServletRequest,
+			HttpServletResponse httpServletResponse, String threadName,
+			Map<String, ?> initialContext) {
 		Preconditions.checkState(!LooseContext.has(CONTEXT_SERVLET_CONTEXT));
 		removePerThreadContexts();
 		LooseContext.push();
 		looseContextDepth = LooseContext.depth();
+		initialContext.forEach((key, value) -> LooseContext.set(key, value));
 		LooseContext.set(CONTEXT_SERVLET_CONTEXT, this);
 		httpContext = new HttpContext(httpServletRequest, httpServletResponse);
 		originalThreadName = Thread.currentThread().getName();
@@ -113,12 +131,5 @@ public class AlcinaServletContext {
 	public AlcinaServletContext withRootPermissions(boolean rootPermissions) {
 		this.rootPermissions = rootPermissions;
 		return this;
-	}
-
-	public static void endContext() {
-		AlcinaServletContext threadContext = servletContext();
-		if (threadContext != null) {
-			threadContext.end();
-		}
 	}
 }
