@@ -208,17 +208,23 @@ public class AuthenticationManager {
 			// old client instance headers). In those cases, either throw
 			// (default) or permit with the old session (method-specific
 			// permission) if anonymous
-			if (context.session.getUser().provideIsAnonymous() && LooseContext
-					.is(CONTEXT_ALLOW_EXPIRED_ANONYMOUS_AUTHENTICATION_SESSION)) {
-				logger.warn(
-						"Permitting expired session - anonymous/expired explicit permission - id: {}",
-						sessionId);
-				validSession = true;
+			if (fromUnvalidatedClientInstance != null) {
+				if (context.session.getUser().provideIsAnonymous()
+						&& LooseContext.is(
+								CONTEXT_ALLOW_EXPIRED_ANONYMOUS_AUTHENTICATION_SESSION)) {
+					logger.warn(
+							"Permitting expired session - anonymous/expired explicit permission - id: {}",
+							sessionId);
+					validSession = true;
+				} else {
+					logger.warn(
+							"Throwing due to rpc exception with expired session id: {}",
+							sessionId);
+					throw new IllegalStateException("Not authorized");
+				}
 			} else {
-				logger.warn(
-						"Throwing due to rpc exception with expired session id: {}",
-						sessionId);
-				throw new IllegalStateException("Not authorized");
+				// new servlet/webapp - create a new session
+				validSession = false;
 			}
 		}
 		if (validSession) {
