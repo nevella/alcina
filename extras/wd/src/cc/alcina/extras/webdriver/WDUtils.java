@@ -34,6 +34,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.Shell;
+import cc.alcina.framework.gwt.client.tour.TourManager;
 
 public class WDUtils {
 	public static final Locale EN_AU = new Locale("en", "AU", "");
@@ -737,7 +738,8 @@ public class WDUtils {
 		}
 
 		private void publish() {
-			if (LooseContext.is(WDUtils.CONTEXT_DONT_LOG_EXCEPTION)) {
+			if (LooseContext.is(WDUtils.CONTEXT_DONT_LOG_EXCEPTION)
+					|| LooseContext.is(TourManager.CONTEXT_IN_IGNORE_TEST)) {
 			} else {
 				WebdriverTest currentTest = WebdriverTest.current();
 				if (currentTest != null) {

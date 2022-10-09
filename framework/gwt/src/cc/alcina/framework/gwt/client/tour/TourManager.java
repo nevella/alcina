@@ -7,7 +7,6 @@ import java.util.Optional;
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.extras.webdriver.WDUtils;
 import cc.alcina.framework.common.client.consort.AllStatesConsort;
 import cc.alcina.framework.common.client.consort.Consort;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -26,6 +25,9 @@ import cc.alcina.framework.gwt.client.tour.Tour.Step;
 public abstract class TourManager {
 	private static final transient String CONTEXT_IMMEDIATE_GET = TourManager.class
 			.getName() + ".CONTEXT_IMMEDIATE_GET";
+
+	public static final transient String CONTEXT_IN_IGNORE_TEST = TourManager.class
+			.getName() + ".CONTEXT_IN_IGNORE_TEST";
 
 	public static boolean isImmediateGet() {
 		return LooseContext.is(CONTEXT_IMMEDIATE_GET);
@@ -322,7 +324,7 @@ public abstract class TourManager {
 			Tour.Condition ignoreActionIf = step.getIgnoreActionIf();
 			if (ignoreActionIf != null) {
 				return MethodContext.instance()
-						.withContextTrue(WDUtils.CONTEXT_DONT_LOG_EXCEPTION)
+						.withContextTrue(CONTEXT_IN_IGNORE_TEST)
 						.call(() -> evaluateCondition(ignoreActionIf));
 			}
 			return false;
