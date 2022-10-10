@@ -1,6 +1,8 @@
 package cc.alcina.extras.dev.console;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
@@ -23,6 +25,7 @@ import java.util.function.Predicate;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.script.ScriptEngine;
 import javax.script.ScriptEngineManager;
@@ -53,7 +56,6 @@ import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.console.FilterArgvFlag;
 import cc.alcina.framework.entity.console.FilterArgvParam;
 import cc.alcina.framework.entity.projection.EntityPersistenceHelper;
-import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.entity.util.SqlUtils;
 import cc.alcina.framework.entity.util.StreamBuffer;
@@ -424,8 +426,7 @@ public class DevConsoleDebugCommands {
 				@Override
 				public ClientLogRecords convert(String original) {
 					try {
-						return new AlcinaBeanSerializerS()
-								.deserialize(original);
+						return TransformManager.deserialize(original);
 					} catch (Exception e) {
 						System.out.format(
 								"problem deserializing clientlogrecord:\n%s\n",
@@ -480,11 +481,7 @@ public class DevConsoleDebugCommands {
 			Pattern[] trials = browser
 					.getRenderingEngine() == RenderingEngine.GECKO ? trialsFF
 							: trialsNonFF;
-			String symbolMapContents = ResourceUtilities
-					.readFileToString(symbol);
 			String moduleContents = ResourceUtilities.readFileToString(module);
-			Matcher symbolMapMatcher = symbolMapPattern
-					.matcher(symbolMapContents);
 			// Matcher m2 = stp.matcher(stf);
 			LinkedHashMap<String, String> km = new LinkedHashMap<String, String>();
 			LinkedHashMap<String, String> stm = new LinkedHashMap<String, String>();
@@ -501,8 +498,16 @@ public class DevConsoleDebugCommands {
 			Matcher stem = stackTraceExtract.matcher(text);
 			stem.find();
 			String obfStacktrace = stem.group(1);
-			while (symbolMapMatcher.find()) {
-				km.put(symbolMapMatcher.group(1), symbolMapMatcher.group(2));
+			try (Stream<String> stream = Files.lines(symbol.toPath())) {
+				stream.forEach(line -> {
+					Matcher symbolMapMatcher = symbolMapPattern.matcher(line);
+					if (symbolMapMatcher.find()) {
+						km.put(symbolMapMatcher.group(1),
+								symbolMapMatcher.group(2));
+					}
+				});
+			} catch (IOException e) {
+				throw new WrappedRuntimeException(e);
 			}
 			CountingMap<Pattern> counter = new CountingMap<Pattern>();
 			for (Pattern trial : trials) {
@@ -592,30 +597,35 @@ public class DevConsoleDebugCommands {
 					if (defJsLines.size() > 0) {
 						ScriptEngineManager manager = new ScriptEngineManager();
 						ScriptEngine engine = manager
-								.getEngineByName("JavaScript");
-						for (Entry<String, String> jsLine : defJsLines
-								.entrySet()) {
-							List<String> result = new ArrayList<String>();
-							engine.put("result", result);
-							String script = ResourceUtilities
-									.readStreamToString(
-											getClass().getResourceAsStream(
-													"beautify.js"));
-							// String eval = String.format(
-							// "%s\nvar js='%s';result.add(js_beautify(js));",
-							// script,
-							// StringEscapeUtils.escapeJavaScript(
-							// CommonUtils.trimToWsChars(
-							// jsLine.getValue(), 500)));
-							// engine.eval(eval);
-							// firstFrame += String.format(
-							// "\n%s\n============\n%s\n", jsLine.getKey(),
-							// result.get(0));
-							firstFrame += String.format(
-									"\n%s\n============\n%s\n", jsLine.getKey(),
-									StringEscapeUtils.escapeJavaScript(
-											CommonUtils.trimToWsChars(
-													jsLine.getValue(), 500)));
+								.getEngineByMimeType("text/javascript");
+						if (engine != null) {
+							for (Entry<String, String> jsLine : defJsLines
+									.entrySet()) {
+								List<String> result = new ArrayList<String>();
+								engine.put("result", result);
+								String script = ResourceUtilities
+										.readStreamToString(
+												getClass().getResourceAsStream(
+														"beautify.js"));
+								// String eval = String.format(
+								// "%s\nvar
+								// js='%s';result.add(js_beautify(js));",
+								// script,
+								// StringEscapeUtils.escapeJavaScript(
+								// CommonUtils.trimToWsChars(
+								// jsLine.getValue(), 500)));
+								// engine.eval(eval);
+								// firstFrame += String.format(
+								// "\n%s\n============\n%s\n", jsLine.getKey(),
+								// result.get(0));
+								firstFrame += String.format(
+										"\n%s\n============\n%s\n",
+										jsLine.getKey(),
+										StringEscapeUtils.escapeJavaScript(
+												CommonUtils.trimToWsChars(
+														jsLine.getValue(),
+														500)));
+							}
 						}
 					}
 				}

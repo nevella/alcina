@@ -606,13 +606,21 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 	}
 
 	public boolean resolveRemoteDefined() {
-		if (getClassName().contains(REMOTE_DEFINED)) {
-			Ax.out("resolve remote defined: %s", hashCode());
-			ensureRemote();
-			LocalDom.syncToRemote(this);
-			UIObject.setStyleName(this, REMOTE_DEFINED, false);
-			return true;
-		} else {
+		try {
+			if (getClassName() != null
+					&& getClassName().contains(REMOTE_DEFINED)) {
+				Ax.out("resolve remote defined: %s", hashCode());
+				ensureRemote();
+				LocalDom.syncToRemote(this);
+				UIObject.setStyleName(this, REMOTE_DEFINED, false);
+				return true;
+			} else {
+				return false;
+			}
+		} catch (Exception e) {
+			// FIXME - DEVEX - localdom - probably get a sample of these. For
+			// some apps, there are a lot - but correlated to
+			// LOCALDOM_UNABLE_TO_PARSE_ISSUE
 			return false;
 		}
 	}
