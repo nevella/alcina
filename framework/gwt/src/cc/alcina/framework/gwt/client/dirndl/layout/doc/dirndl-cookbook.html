@@ -1,0 +1,39 @@
+<html>
+<head></head>
+<body>
+	<h2>The Dirndl Cookbook</h2>
+	<p>
+		<i>...or how do I wrestle this dang thing into what I want?</i>
+	</p>
+	<p>
+		The @Directed annotations have aim for the most common use cases, but that means the <i>uncommon</i>
+		cases require a little more wrangling:
+	</p>
+	<h3>Transforming a list</h3>
+	<p>The simplest transform annotation, applied to a list property, transforms the elements, not
+		the containing list. To transform the parent list, you must explicitly set the renderer on the
+		annotation:</p>
+	<div>
+		<pre>
+			<code>
+
+//transforms each Entry element of list - not what you want (since the renderer is the
+// default for a java.util.Collection subtype, DirectedRenderer.Collection)
+@Directed.Transform(Tables.Multiple.class)
+public List&lt;Entry&gt; getEntries() {
+  return this.entries;
+}
+
+//This one
+@Directed(renderer=DirectedRenderer.TransformRenderer.class)
+@Directed.Transform(Tables.Multiple.class)
+public List&lt;Entry&gt; getEntries() {
+  return this.entries;
+}		
+		
+		
+		</code>
+		</pre>
+	</div>
+</body>
+</html>

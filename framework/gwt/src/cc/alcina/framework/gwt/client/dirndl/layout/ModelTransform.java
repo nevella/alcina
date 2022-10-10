@@ -1,9 +1,12 @@
 package cc.alcina.framework.gwt.client.dirndl.layout;
 
+import java.util.Date;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -42,6 +45,14 @@ public interface ModelTransform<A, B> extends Function<A, B> {
 			extends ModelTransform<A, B> {
 		public ContextSensitiveTransform<A, B>
 				withContextNode(DirectedLayout.Node node);
+	}
+
+	public static class DateStyle_TimestampHuman
+			implements ModelTransform<Date, String> {
+		@Override
+		public String apply(Date t) {
+			return CommonUtils.formatDate(t, DateStyle.TIMESTAMP_HUMAN);
+		}
 	}
 
 	public static class Placeholder

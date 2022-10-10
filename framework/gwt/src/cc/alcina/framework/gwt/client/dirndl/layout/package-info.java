@@ -22,5 +22,7 @@
  * generated instances? Or are GC/instantiation basically as fast as caching
  * these immutables?</li>
  * </ul>
+ *
+ * @see doc/dirndl-cookbook.html
  */
 package cc.alcina.framework.gwt.client.dirndl.layout;

@@ -120,6 +120,10 @@ public class Property implements HasAnnotations {
 		return isReadWrite() && !name.equals("propertyChangeListeners");
 	}
 
+	public boolean provideRenderable() {
+		return isReadable() && provideNotDefaultIgnoreable();
+	}
+
 	public void set(Object bean, Object newValue) {
 		resolveSetter(bean).invoke(bean, new Object[] { newValue });
 	}

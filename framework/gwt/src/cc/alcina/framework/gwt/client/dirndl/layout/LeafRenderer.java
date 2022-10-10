@@ -123,7 +123,9 @@ public abstract class LeafRenderer extends DirectedRenderer {
 		}
 	}
 
-	@Directed(tag = "div", bindings = @Binding(from = "html", type = Type.INNER_HTML))
+	@Directed(
+		tag = "div",
+		bindings = @Binding(from = "html", type = Type.INNER_HTML))
 	public static class HtmlBlock extends Model {
 		private String html;
 
@@ -213,7 +215,9 @@ public abstract class LeafRenderer extends DirectedRenderer {
 		}
 	}
 
-	@Directed(tag = "img", bindings = @Binding(from = "src", type = Type.PROPERTY))
+	@Directed(
+		tag = "img",
+		bindings = @Binding(from = "src", type = Type.PROPERTY))
 	public static class Image extends Model {
 		private String src;
 
@@ -378,7 +382,9 @@ public abstract class LeafRenderer extends DirectedRenderer {
 	 * just some simple text...
 	 */
 
-	@Directed(tag = "div", bindings = @Binding(from = "text", type = Type.INNER_TEXT))
+	@Directed(
+		tag = "div",
+		bindings = @Binding(from = "text", type = Type.INNER_TEXT))
 	public static class TextString extends Model {
 		private String text;
 
