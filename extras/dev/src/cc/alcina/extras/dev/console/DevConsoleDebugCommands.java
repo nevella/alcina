@@ -35,6 +35,7 @@ import org.apache.commons.lang.StringEscapeUtils;
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.extras.dev.console.DevConsoleDebugCommands.CmdDrillClientException.DevConsoleDebugPaths;
+import cc.alcina.extras.dev.console.DevConsoleDebugCommands.CmdDrillClientException.DevConsoleDebugPaths.ModuleSymbolPaths;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.entity.ClientLogRecord;
 import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords;
@@ -381,6 +382,8 @@ public class DevConsoleDebugCommands {
 	}
 
 	public static class CmdDrillClientException extends DevConsoleCommand {
+		private static final String PATH_MARKER = "{{PATH}}";
+
 		static ILogRecord lastRecord;
 
 		private File module;
@@ -668,34 +671,39 @@ public class DevConsoleDebugCommands {
 					.collect(Collectors.joining("\n")));
 		}
 
-		private boolean ensureModuleAndSymbolMap(String mn) throws Exception {
+		private boolean ensureModuleAndSymbolMap(String moduleStrongName)
+				throws Exception {
 			DevConsoleDebugPaths paths = getPeer().getPaths(console.props);
 			File devFolder = console.devHelper.getDevFolder();
 			File gwtSymbols = SEUtilities.getChildFile(devFolder,
 					"gwt-symbols");
 			gwtSymbols.mkdir();
-			module = new File(
-					String.format("%s/%s.cache.js", gwtSymbols.getPath(), mn));
-			symbol = new File(
-					String.format("%s/%s.symbolMap", gwtSymbols.getPath(), mn));
+			module = new File(String.format("%s/%s.cache.js",
+					gwtSymbols.getPath(), moduleStrongName));
+			symbol = new File(String.format("%s/%s.symbolMap",
+					gwtSymbols.getPath(), moduleStrongName));
+			String pathMarker = PATH_MARKER;
 			if (!module.exists()) {
-				importViaRsync(String.format("%s%s/%s.cache.js",
-						paths.remoteRoot, paths.modPath, mn), module);
+				importViaRsync(
+						String.format("%s%s/%s.cache.js", paths.remoteRoot,
+								pathMarker, moduleStrongName),
+						module, paths, true);
 			}
 			if (getJs) {
 				jsfDir = new File(String.format("%s/deferredjs/%s",
-						gwtSymbols.getPath(), mn));
+						gwtSymbols.getPath(), moduleStrongName));
 				jsfDir.mkdirs();
 				if (jsfDir.listFiles().length != 9) {
-					importViaRsync(
-							String.format("%s%s/deferredjs/%s/*",
-									paths.remoteRoot, paths.modPath, mn),
-							jsfDir);
+					importViaRsync(String.format("%s%s/deferredjs/%s/*",
+							paths.remoteRoot, pathMarker, moduleStrongName),
+							jsfDir, paths, true);
 				}
 			}
 			if (!symbol.exists()) {
-				importViaRsync(String.format("%s%s/%s.symbolMap",
-						paths.remoteRoot, paths.symPath, mn), symbol);
+				importViaRsync(
+						String.format("%s%s/%s.symbolMap", paths.remoteRoot,
+								pathMarker, moduleStrongName),
+						symbol, paths, false);
 			}
 			return module.exists() && symbol.exists();
 		}
@@ -738,18 +746,26 @@ public class DevConsoleDebugCommands {
 			return jsLines;
 		}
 
-		private void importViaRsync(String from, File to) throws Exception {
-			System.out.format("rsync %s -> %s\n", from, to.getPath());
-			ProcessBuilder pb = new ProcessBuilder("/usr/bin/rsync", "-avz",
-					"--progress", from, to.getPath());
-			Process proc = pb.start();
-			StreamBuffer errorBuffer = new StreamBuffer(proc.getErrorStream(),
-					"ERROR");
-			StreamBuffer outputBuffer = new StreamBuffer(proc.getInputStream(),
-					"OUTPUT");
-			Shell.receiveStream(errorBuffer);
-			Shell.receiveStream(outputBuffer);
-			proc.waitFor();
+		private void importViaRsync(String fromOriginal, File to,
+				DevConsoleDebugPaths paths, boolean module) throws Exception {
+			for (ModuleSymbolPaths tuple : paths.modulePaths) {
+				String folderPath = module ? tuple.modPath : tuple.symPath;
+				String from = fromOriginal.replace(PATH_MARKER, folderPath);
+				System.out.format("rsync %s -> %s\n", from, to.getPath());
+				ProcessBuilder pb = new ProcessBuilder("/usr/bin/rsync", "-avz",
+						"--progress", from, to.getPath());
+				Process proc = pb.start();
+				StreamBuffer errorBuffer = new StreamBuffer(
+						proc.getErrorStream(), "ERROR");
+				StreamBuffer outputBuffer = new StreamBuffer(
+						proc.getInputStream(), "OUTPUT");
+				Shell.receiveStream(errorBuffer);
+				Shell.receiveStream(outputBuffer);
+				int returnCode = proc.waitFor();
+				if (returnCode == 0) {
+					break;
+				}
+			}
 		}
 
 		String run0(String[] argv) throws Exception {
@@ -872,11 +888,20 @@ public class DevConsoleDebugCommands {
 		}
 
 		public static class DevConsoleDebugPaths {
-			public String symPath;
-
-			public String modPath;
+			public List<ModuleSymbolPaths> modulePaths = new ArrayList<>();
 
 			public String remoteRoot;
+
+			public static class ModuleSymbolPaths {
+				public String symPath;
+
+				public String modPath;
+
+				public ModuleSymbolPaths(String symPath, String modPath) {
+					this.symPath = symPath;
+					this.modPath = modPath;
+				}
+			}
 		}
 	}
 
