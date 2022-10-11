@@ -178,7 +178,7 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		@Override
 		public final Tour.Action getAction() {
 			return CommonUtils.getEnumValueOrNull(Tour.Action.class,
-					getActionString(), true, Tour.Action.NONE);
+					getActionString(), true, Tour.Action.TEST);
 		}
 
 		@Override
@@ -214,6 +214,11 @@ public final class TourJso extends JavaScriptObject implements Tour {
 		@Override
 		final public native ConditionJso getWaitFor()/*-{
       return this.waitFor;
+		}-*/;
+
+		@Override
+		final public native boolean isActionBeforePopups()/*-{
+      return this.actionBeforePopups === true;
 		}-*/;
 
 		@Override

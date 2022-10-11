@@ -27,6 +27,7 @@ public class GalleryConfiguration {
 		element.spreadSheetId = "---";
 		element.credentialsPath = "---";
 		element.credentialsStorageLocalPath = "---";
+		element.base = "https://alcina.cc";
 		Ax.out(JaxbUtils.xmlSerialize(config));
 	}
 
@@ -39,6 +40,8 @@ public class GalleryConfiguration {
 
 	@XmlAccessorType(XmlAccessType.FIELD)
 	static class Element {
+		public String base;
+
 		String name;
 
 		String spreadSheetId;

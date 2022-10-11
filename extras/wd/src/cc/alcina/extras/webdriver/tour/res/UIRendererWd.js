@@ -9,14 +9,14 @@ class UIRendererWd {
 		style.innerText = css;
 		document.head.appendChild(style);
 	}
-	
-	getSelector(relativeTo,soleSelector){
-			return relativeTo.element?relativeTo.element:soleSelector;
+
+	getSelector(relativeTo, soleSelector) {
+		return relativeTo.element ? relativeTo.element : soleSelector;
 	}
-	renderRelative(popupInfoJson,soleSelector, html) {
+	renderRelative(popupInfoJson, soleSelector, html) {
 
 		let popupInfo = JSON.parse(popupInfoJson);
-		let relativeTo = this.evalSelector(this.getSelector(popupInfo.relativeTo,soleSelector));
+		let relativeTo = this.evalSelector(this.getSelector(popupInfo.relativeTo, soleSelector));
 		let div = document.createElement("div");
 		div.innerHTML = html;
 		let content = div.firstElementChild;
@@ -32,10 +32,11 @@ class UIRendererWd {
 		let clientWidth = document.documentElement.clientWidth;
 		let clientHeight = document.documentElement.clientHeight;
 		let directions = relativeTo.direction.split("_");
+		let popupWidth = 300;
 		let distOffset = 14;
+		let relativeToWidth = rect.right - rect.left;
 		switch (directions[0]) {
 			case "TOP":
-
 				elem.style.bottom = (clientHeight - absRect.top + distOffset) + "px";
 				break;
 			case "BOTTOM":
@@ -48,25 +49,27 @@ class UIRendererWd {
 				throw `not handled direction (axis 1): ${directions}`;
 		}
 		let bubbleOffset = 30 + 7 + 2;//offset + 1/2 triangle width + border width (although....it's transfomed??')
-		let inABit = 20; // otherwise would point right at the edge of the element, often empty
+		let inABit = relativeToWidth < 40 ? 0 : 20; // otherwise would point right at the edge of the element, often empty
 		switch (directions[1]) {
 			case "LEFT": {
+				inABit = 20;
 				elem.style.left = Math.max(0, absRect.left - bubbleOffset + inABit) + "px";
-			}
 				break;
+			}
 			case "CENTER": {
-				elem.style.right = (clientWidth - absRect.right + (absRect.right - absRect.left) / 2) + "px";
+				elem.style.right = (clientWidth - absRect.right + (relativeToWidth - popupWidth) / 2) + "px";
+				break;
 			}
 			case "RIGHT": {
-				elem.style.right = Math.max(0, clientWidth - absRect.right  + bubbleOffset - inABit) + "px";
-			}
+				elem.style.right = Math.max(0, clientWidth - absRect.right - bubbleOffset - inABit) + "px";
 				break;
+			}
 			case "TOP": {
 				let fudge = 15;
 				bubbleOffset = 30 + 7 + 2 - fudge;//offset + 1/2 triangle width + border width (although....it's transfomed??')
 				elem.style.top = Math.max(0, absRect.top - bubbleOffset) + "px";
-			}
 				break;
+			}
 			default:
 				throw `not handled direction (axis 2): ${directions}`;
 		}

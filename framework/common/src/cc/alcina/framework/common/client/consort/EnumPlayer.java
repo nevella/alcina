@@ -6,6 +6,7 @@ import java.util.Collections;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
+import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 	private E from;
@@ -34,6 +35,11 @@ public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
 	public Collection<E> getRequires() {
 		return (Collection<E>) (from == null ? Collections.emptyList()
 				: Collections.singletonList(from));
+	}
+
+	@Override
+	public String toString() {
+		return Ax.format("%s [%s->%s]", getClass().getSimpleName(), from, to);
 	}
 
 	public abstract static class EnumRunnableAsyncCallbackPlayer<C, E extends Enum>

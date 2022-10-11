@@ -16,9 +16,63 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.JaxbUtils;
 import cc.alcina.framework.servlet.google.SheetAccessor;
-import cc.alcina.framework.servlet.google.SheetAccessor.SheetAccess;
 
-@SuppressWarnings("unused")
+/**
+ * <p>
+ * The Gallery is a an extensible system for building a series of webapp UI
+ * snapshots for development and testing. It currently uploads images and a
+ * simple html viewer to GDrive, and stores snapshot metadata in a GSheet
+ *
+ * <h2>Gallery configuration and snapshotting (code)</h2>
+ *
+ * <p>
+ * See {@link GalleryConfiguration} for configuration schema details <div>
+ *
+ * <pre>
+ * <code>
+ *
+//set up the gallery
+ * Gallery.begin(
+	"my-app", "desktop",
+	//the configuration file is a jaxb/xml serialized instance of GalleryConfiguration
+	"/tmp/gallery-configuration.xml");
+	Gallery.putDriver((RemoteWebDriver) token.getWebDriver());
+
+	...
+
+//take snapshots (in this case using a TourWd json tour test series)
+ *
+protected void onStepRendered(Step step) {
+List<? extends PopupInfo> popups = step.providePopups();
+if (popups.size() > 0) {
+	Gallery.snap(popups.get(0).getCaption());
+	try {
+		Thread.sleep(200);
+	} catch (Exception e) {
+		throw new WrappedRuntimeException(e);
+	}
+}
+}
+
+...
+
+//upload etc if so configured
+
+Gallery.end();
+ *
+ *
+ * </code>
+ * </pre>
+ *
+ * </div>
+ *
+ *
+ *
+ *
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public class Gallery {
 	private static Gallery instance;
 
@@ -44,6 +98,7 @@ public class Gallery {
 		}
 	}
 
+	@SuppressWarnings("unused")
 	private String appName;
 
 	private String userAgentType;
@@ -51,8 +106,6 @@ public class Gallery {
 	private File base;
 
 	private RemoteWebDriver driver;
-
-	private SheetAccess sheetAccess;
 
 	private URL configurationUrl;
 
@@ -94,7 +147,7 @@ public class Gallery {
 	private void end0() {
 		if (galleryConfiguration != null) {
 			try {
-				new SheetPersister().persist(base, configuration,
+				new GalleryPersister().persist(base, configuration,
 						userAgentType);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);

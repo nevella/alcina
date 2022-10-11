@@ -13,7 +13,6 @@ import com.google.api.client.extensions.java6.auth.oauth2.AuthorizationCodeInsta
 import com.google.api.client.extensions.jetty.auth.oauth2.LocalServerReceiver;
 import com.google.api.client.googleapis.auth.oauth2.GoogleAuthorizationCodeFlow;
 import com.google.api.client.googleapis.auth.oauth2.GoogleClientSecrets;
-import com.google.api.client.googleapis.javanet.GoogleNetHttpTransport;
 import com.google.api.client.http.ByteArrayContent;
 import com.google.api.client.http.javanet.NetHttpTransport;
 import com.google.api.client.json.JsonFactory;
@@ -138,8 +137,14 @@ public class DriveAccessor {
 			return;
 		}
 		try {
-			final NetHttpTransport httpTransport = GoogleNetHttpTransport
-					.newTrustedTransport();
+			// final NetHttpTransport httpTransport = GoogleNetHttpTransport
+			// .newTrustedTransport();
+			// override GoogleNetHttpTransport - use default truststore
+			final NetHttpTransport httpTransport = new NetHttpTransport.Builder()
+					// .trustCertificates(GoogleUtils.getCertificateTrustStore())
+					.build();
+			// final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport
+			// .newTrustedTransport();
 			service = new Drive.Builder(httpTransport, JSON_FACTORY,
 					getCredentials(httpTransport))
 							.setApplicationName(driveAccess.applicationName)

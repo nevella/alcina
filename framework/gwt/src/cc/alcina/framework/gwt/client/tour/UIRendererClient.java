@@ -77,8 +77,6 @@ public class UIRendererClient extends UIRenderer
 		tourManager.log("Performing action %s on %s", step.getAction(),
 				CommonUtils.trimToWsChars(target.getOuterHtml(), 300));
 		switch (step.getAction()) {
-		case NONE:
-			break;
 		case CLICK:
 			setPopupsModal(false);
 			WidgetUtils.click(target);
@@ -94,6 +92,8 @@ public class UIRendererClient extends UIRenderer
 				setPopupsModal(true);
 			});
 			break;
+		default:
+			throw new UnsupportedOperationException();
 		}
 		return true;
 	}

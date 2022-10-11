@@ -261,6 +261,8 @@ public class TourImpl implements Tour {
 
 		private String comment;
 
+		private boolean actionBeforePopups;
+
 		@Override
 		public String asString() {
 			return toString();
@@ -336,6 +338,11 @@ public class TourImpl implements Tour {
 		}
 
 		@Override
+		public boolean isActionBeforePopups() {
+			return this.actionBeforePopups;
+		}
+
+		@Override
 		public List<? extends PopupInfo> providePopups() {
 			return popups.size() > 0 ? popups
 					: description == null ? Collections.emptyList()
@@ -350,6 +357,10 @@ public class TourImpl implements Tour {
 
 		public void setAction(Action action) {
 			this.action = action;
+		}
+
+		public void setActionBeforePopups(boolean actionBeforePopups) {
+			this.actionBeforePopups = actionBeforePopups;
 		}
 
 		public void setActionDelay(int actionDelay) {

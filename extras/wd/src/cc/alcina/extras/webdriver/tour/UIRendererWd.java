@@ -130,8 +130,6 @@ public class UIRendererWd extends UIRenderer {
 			return false;
 		}
 		switch (step.getAction()) {
-		case NONE:
-			break;
 		case CLICK:
 			exec.click();
 			break;

@@ -1,8 +1,11 @@
 package cc.alcina.framework.gwt.client.tour;
 
+import java.util.Arrays;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
@@ -174,7 +177,7 @@ public abstract class TourManager {
 	}
 
 	public static enum DisplayStepPhase {
-		SETUP, WAIT_FOR, IGNORE_IF, SHOW_POPUP, PERFORM_ACTION
+		SETUP, WAIT_FOR, IGNORE_IF, SHOW_POPUPS, PERFORM_ACTION
 	}
 
 	public static abstract class UIRenderer {
@@ -288,7 +291,7 @@ public abstract class TourManager {
 					wasPlayed(player);
 				}
 				break;
-			case SHOW_POPUP:
+			case SHOW_POPUPS:
 				if (showStepPopups()) {
 					wasPlayed(player);
 				} else {
@@ -392,6 +395,40 @@ public abstract class TourManager {
 				return evaluateCondition(waitFor);
 			}
 			return true;
+		}
+
+		@Override
+		protected DisplayStepPhase[]
+				getStates(Class<DisplayStepPhase> enumClass) {
+			if (currentTour.getCurrentStep().isActionBeforePopups()) {
+				Comparator<DisplayStepPhase> cmp = new Comparator<TourManager.DisplayStepPhase>() {
+					@Override
+					public int compare(DisplayStepPhase o1,
+							DisplayStepPhase o2) {
+						return swapActionPopups(o1)
+								.compareTo(swapActionPopups(o2));
+					}
+
+					private DisplayStepPhase
+							swapActionPopups(DisplayStepPhase phase) {
+						switch (phase) {
+						case SHOW_POPUPS:
+							return DisplayStepPhase.PERFORM_ACTION;
+						case PERFORM_ACTION:
+							return DisplayStepPhase.SHOW_POPUPS;
+						default:
+							return phase;
+						}
+					}
+				};
+				List<DisplayStepPhase> list = Arrays
+						.stream(enumClass.getEnumConstants()).sorted(cmp)
+						.collect(Collectors.toList());
+				return (DisplayStepPhase[]) list
+						.toArray(new DisplayStepPhase[list.size()]);
+			} else {
+				return super.getStates(enumClass);
+			}
 		}
 
 		protected boolean showStepPopups() {

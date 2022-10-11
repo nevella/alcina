@@ -16,7 +16,7 @@ public interface Tour {
 
 	@Reflected
 	enum Action {
-		CLICK, SET_TEXT, NONE, SCRIPT, SELECT, EVAL, TEST, SEND_KEYS
+		CLICK, SET_TEXT, SCRIPT, SELECT, EVAL, TEST, SEND_KEYS
 	}
 
 	interface Condition {
@@ -87,7 +87,7 @@ public interface Tour {
 	@Reflected
 	enum PositioningDirection {
 		CENTER_TOP, LEFT_BOTTOM, RIGHT_BOTTOM, RIGHT_TOP, TOP_LEFT, LEFT_TOP,
-		BOTTOM_RIGHT, BOTTOM_LEFT, TOP_RIGHT, BOTTOM_CENTER
+		BOTTOM_RIGHT, BOTTOM_LEFT, TOP_RIGHT, BOTTOM_CENTER, TOP_CENTER
 	}
 
 	interface RelativeTo {
@@ -138,6 +138,8 @@ public interface Tour {
 		public Condition getIgnoreIf();
 
 		public Condition getWaitFor();
+
+		public boolean isActionBeforePopups();
 
 		public List<? extends PopupInfo> providePopups();
 
