@@ -83,8 +83,8 @@ public class GalleryPersister {
 	private Map<String, GalleryTuple> nameTuples() {
 		Map<String, GalleryTuple> nameTuples = new LinkedHashMap<>();
 		files.forEach(file -> nameTuples
-				.computeIfAbsent(file.getName(), key -> new GalleryTuple())
-				.put(file));
+				.computeIfAbsent(file.getName(), GalleryTuple::new).put(file));
+		nameTuples.entrySet().removeIf(e -> e.getValue().isInvalid());
 		return nameTuples;
 	}
 
@@ -148,8 +148,7 @@ public class GalleryPersister {
 
 	private void updateViewer() throws IOException {
 		DomDocument doc = DomDocument.basicHtmlDoc();
-		List<Image> images = nameTuples().values().stream()
-				.filter(t -> t.image != null).map(Image::new)
+		List<Image> images = nameTuples().values().stream().map(Image::new)
 				.collect(Collectors.toList());
 		String json = JacksonUtils.serializeNoTypes(images);
 		String js = Ax.format("let __viewer_data=JSON.parse(\"%s\");",
@@ -217,20 +216,37 @@ public class GalleryPersister {
 		File index = new File(base, "index.html");
 		ResourceUtilities.write(prettyToString, index);
 		Ax.out("Wrote gallery index to: %s", index.getPath());
-		byte[] bytes = prettyToString.getBytes(StandardCharsets.UTF_8);
-		{
-			String name = Ax.format("%s.%s.%s.html", configuration.name,
-					userAgentType, dateStamp);
-			AlcinaChildRunnable.launchWithCurrentThreadContext(
-					"upload-new-version",
-					() -> driveAccessor.upload(driveAccessor.rootFolder(),
-							bytes, name, false));
+		if (Configuration.is("persistToGoogle")) {
+			byte[] bytes = prettyToString.getBytes(StandardCharsets.UTF_8);
+			{
+				String name = Ax.format("%s.%s.%s.html", configuration.name,
+						userAgentType, dateStamp);
+				AlcinaChildRunnable.launchWithCurrentThreadContext(
+						"upload-new-version", () -> {
+							com.google.api.services.drive.model.File upload = driveAccessor
+									.upload(driveAccessor.rootFolder(), bytes,
+											name, false);
+							String href = Ax.format("%s/drive?id=%s",
+									configuration.base, upload.getId());
+							Ax.out("Index %s url: <a href='%s' target='_blank'>%s</a>",
+									name, href, href);
+						});
+			}
+			{
+				String name = Ax.format("%s.%s.html", configuration.name,
+						userAgentType);
+				AlcinaChildRunnable.launchWithCurrentThreadContext(
+						"update-current-version", () -> {
+							com.google.api.services.drive.model.File upload = driveAccessor
+									.upload(driveAccessor.rootFolder(), bytes,
+											name, true);
+							String href = Ax.format("%s/drive?id=%s",
+									configuration.base, upload.getId());
+							Ax.out("Index %s (current) url: <a href='%s' target='_blank'>%s</a>",
+									name, href, href);
+						});
+			}
 		}
-		String name = Ax.format("%s.%s.html", configuration.name,
-				userAgentType);
-		AlcinaChildRunnable.launchWithCurrentThreadContext(
-				"update-current-version", () -> driveAccessor
-						.upload(driveAccessor.rootFolder(), bytes, name, true));
 	}
 
 	void uploadImages() throws IOException {
@@ -298,6 +314,20 @@ public class GalleryPersister {
 
 		GalleryFile html;
 
+		String name;
+
+		GalleryTuple(String name) {
+			this.name = name;
+		}
+
+		public boolean isInvalid() {
+			if (image == null || html == null) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
 		public void put(GalleryFile file) {
 			if (file.isImage()) {
 				image = file;
@@ -306,8 +336,13 @@ public class GalleryPersister {
 			}
 		}
 
+		@Override
+		public String toString() {
+			return name;
+		}
+
 		String name() {
-			return image.getName();
+			return name;
 		}
 	}
 

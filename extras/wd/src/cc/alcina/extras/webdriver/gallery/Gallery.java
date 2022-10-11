@@ -31,12 +31,20 @@ import cc.alcina.framework.servlet.google.SheetAccessor;
  * <pre>
  * <code>
  *
+ * <h3>Devconsole properties (in addition to the persistence configuration xml):</h3>
+GalleryPersister.persistToGoogle=true
+Gallery.defaultLocalPath=/tmp/barpub/gallery
+Gallery.preSnapPause=200
+Gallery.snap=true
+ *
+ *
 //set up the gallery
- * Gallery.begin(
-	"my-app", "desktop",
-	//the configuration file is a jaxb/xml serialized instance of GalleryConfiguration
-	"/tmp/gallery-configuration.xml");
-	Gallery.putDriver((RemoteWebDriver) token.getWebDriver());
+ *
+Gallery.begin(
+"my-app", "desktop",
+//the configuration file is a jaxb/xml serialized instance of GalleryConfiguration
+"/tmp/gallery-configuration.xml");
+Gallery.putDriver((RemoteWebDriver) token.getWebDriver());
 
 	...
 
