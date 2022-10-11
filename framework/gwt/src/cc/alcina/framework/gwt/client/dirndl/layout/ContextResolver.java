@@ -15,8 +15,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * Instances - generally suclass instances - of this class are responsible for
  * controlling and customising the transformation of a layout subtree. They
  * exercise control by modifying the declarative information provided to the
- * layout algorithm - the interaction between the layout algorithm and this
- * 'expression shaper' class reminds me of mRNA modifying the expression of DNA.
+ * layout algorithm.
+ *
+ * <p>
+ * The interaction between the layout algorithm and this 'expression shaper'
+ * class could, with a bit of a stretch, call to mind the mRNA generation
+ * process and the environmental factors which modify expression of DNA.
  *
  * @author nick@alcina.cc
  *

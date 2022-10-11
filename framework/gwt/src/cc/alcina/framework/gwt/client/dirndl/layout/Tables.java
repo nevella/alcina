@@ -9,11 +9,16 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
+
+import com.totsp.gwittir.client.ui.util.BoundWidgetTypeFactory;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -22,8 +27,11 @@ import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel.StringListModel;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.AbstractContextSensitiveModelTransform;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableTypeFactory;
 
 public class Tables {
 	@ClientVisible
@@ -227,6 +235,28 @@ public class Tables {
 					this.value = value;
 				}
 			}
+		}
+	}
+
+	public static class ColumnHeaders extends LeafModel.StringListModel {
+		public ColumnHeaders() {
+			super();
+		}
+	
+		public ColumnHeaders(Class<? extends Bindable> clazz,
+				DirectedLayout.Node node) {
+			BoundWidgetTypeFactory factory = Registry
+					.impl(TableTypeFactory.class);
+			List<String> strings = Reflections.at(clazz).properties().stream()
+					.map(p -> Annotations.resolve(p, Directed.Property.class,
+							node.getResolver()))
+					.filter(Objects::nonNull).map(Directed.Property::name)
+					.collect(Collectors.toList());
+			setList(strings);
+		}
+	
+		public ColumnHeaders(List<String> strings) {
+			super(strings);
 		}
 	}
 }

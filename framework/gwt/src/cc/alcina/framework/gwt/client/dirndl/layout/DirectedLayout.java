@@ -121,7 +121,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *   - Documentation, demo app, comparison to react/angular/flutter/switfUI (that may take a while)
  *
  * - Phases:
- * 	 a. Implement TODO above to 'remove renderers'
  *   b. rest of TODO (/)
  *   c. categorise FIXMEs, then a -> b -> c
  *   d. 1x2 switch table/form rendering to pure model
@@ -646,21 +645,47 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 		}
 
-		/*
+		/**
+		 * <p>
 		 * Note that dom/inferred-dom events (NodeEvent *not* subclass
-		 * ModelEvent) of and model events have quite different event
-		 * propagation mechanisms, so there's essentially two event propagation
-		 * mechanisms:
+		 * ModelEvent) and model events have quite different event propagation
+		 * mechanisms, so there's essentially two event propagation mechanisms:
 		 *
+		 * <p>
 		 * DOM: model -> widget -> element.addListener(x) -- Model implements
-		 * the handler mechanism, event propagation is DOM propagation (TODO -
-		 * actually explain this - possibly in javadoc)
+		 * the handler mechanism, event propagation is DOM propagation, so up
+		 * the widget tree (which mostly corresponds to the DL node tree). (TODO
+		 * - actually explain this - possibly in javadoc)
 		 *
+		 * <p>
 		 * Model: ModelEvent.fire(...) - event fires on the current Model if it
-		 * implements the Handler class, and propagation finishes at the fired
-		 * Node unless explicitly permitted via markXXX (TODO - example)
+		 * implements the Model.Handler class, and propagation finishes at the
+		 * first Node that handles the event (implements the Handler class)
+		 * unless explicitly permitted via
+		 * NodeEvent.Context.markCauseEventAsNotHandled()
 		 *
-		 * Actually - unify at NodeEvent
+		 * <h3>An example</h3>
+		 *
+		 * <pre>
+		 * <code>
+		 *
+		 *
+		 * @Override
+		 * public void onSubmitted(Submitted event) {
+		 * 	// this occurs when enter is clicked, so handle here, but also propagate
+		 * 	// to the containing form
+		 * 	event.getContext().markCauseEventAsNotHandled();
+		 * 	String value = textArea.getValue();
+		 * 	setDirty(!Objects.equals(originalOrLastSubmittedValue, value));
+		 * 	originalOrLastSubmittedValue = value;
+		 * }
+		 *
+		 * </code>
+		 * </pre>
+		 *
+		 * <p>
+		 * TODO - should these in fact be two different bindings - say a base
+		 * class and subclass?
 		 */
 		class NodeEventBinding implements NodeEventReceiver {
 			Class<? extends NodeEvent> type;
@@ -872,6 +897,13 @@ public class DirectedLayout implements AlcinaProcess {
 		public void onEvent(GwtEvent event);
 	}
 
+	/**
+	 * A resolved location in the widget tree relative to which a widget should
+	 * be inserted
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	static class InsertionPoint {
 		Point point = Point.LAST;
 
@@ -892,6 +924,13 @@ public class DirectedLayout implements AlcinaProcess {
 		}
 	}
 
+	/**
+	 * Instances act as an input and process state token for the
+	 * layout/transformation algorithm
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	class RendererInput {
 		ContextResolver resolver;
 

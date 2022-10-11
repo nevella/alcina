@@ -2,7 +2,7 @@ package cc.alcina.framework.gwt.client.module.support.login;
 
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
+import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
 import cc.alcina.framework.gwt.client.dirndl.model.Editable;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
@@ -10,6 +10,11 @@ public class LoginPage2FA extends LoginPage {
 	public LoginPage2FA(LoginConsort loginConsort) {
 		super(loginConsort);
 		setContents(new UiModel(loginConsort));
+	}
+
+	@Override
+	protected String getEnteredText() {
+		return ((UiModel) getContents()).input.getValue();
 	}
 
 	@Override
@@ -31,18 +36,13 @@ public class LoginPage2FA extends LoginPage {
 	// }
 
 	@Override
-	protected String getEnteredText() {
-		return ((UiModel) getContents()).input.getValue();
-	}
-
-	@Override
 	protected CompositeValidator getValidator() {
 		return null;
 	}
 
 	@Directed
 	public static class UiModel extends Model {
-		private final LeafRenderer.Image image;
+		private final LeafModel.Image image;
 
 		private final Editable.StringInput input;
 
@@ -50,12 +50,12 @@ public class LoginPage2FA extends LoginPage {
 			input = new Editable.StringInput();
 			input.setFocusOnBind(true);
 			input.setPlaceholder("2FA code");
-			image = new LeafRenderer.Image(
+			image = new LeafModel.Image(
 					loginConsort.getLastResponse().getTwoFactorAuthQRCode());
 		}
 
 		@Directed
-		public LeafRenderer.Image getImage() {
+		public LeafModel.Image getImage() {
 			return this.image;
 		}
 
