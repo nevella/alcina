@@ -11,7 +11,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.logging.Level;
-import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -275,9 +274,9 @@ public class DirectedLayout implements AlcinaProcess {
 
 		final AnnotationLocation annotationLocation;
 
-		public List<NodeEventBinding> eventBindings;
+		List<NodeEventBinding> eventBindings;
 
-		public List<PropertyBinding> propertyBindings;
+		PropertyBindings propertyBindings;
 
 		private ChildReplacer replacementListener;
 
@@ -403,8 +402,8 @@ public class DirectedLayout implements AlcinaProcess {
 				return;
 			}
 			if (hasWidget()) {
-				propertyBindings = Arrays.stream(directed.bindings())
-						.map(PropertyBinding::new).collect(Collectors.toList());
+				propertyBindings = new PropertyBindings();
+				propertyBindings.bind();
 			}
 			if (model instanceof LayoutEvents.Bind.Handler) {
 				((LayoutEvents.Bind.Handler) model)
@@ -485,7 +484,7 @@ public class DirectedLayout implements AlcinaProcess {
 				replacementListener = null;
 			}
 			if (propertyBindings != null) {
-				propertyBindings.forEach(PropertyBinding::unbind);
+				propertyBindings.unbind();
 			}
 		}
 
@@ -783,6 +782,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 			private RemovablePropertyChangeListener listener;
 
+			private String lastValue;
+
 			PropertyBinding(Binding binding) {
 				this.binding = binding;
 				switch (binding.type()) {
@@ -817,9 +818,9 @@ public class DirectedLayout implements AlcinaProcess {
 			}
 
 			void set() {
-				Object value = binding.from().length() > 0
-						? Reflections.at(model.getClass())
-								.property(binding.from()).get(model)
+				Property property = Reflections.at(model.getClass())
+						.property(binding.from());
+				Object value = binding.from().length() > 0 ? property.get(model)
 						: binding.literal();
 				boolean hasTransform = (Class) binding
 						.transform() != ToStringFunction.Identity.class;
@@ -853,12 +854,24 @@ public class DirectedLayout implements AlcinaProcess {
 					break;
 				case CSS_CLASS: {
 					if (hasTransform) {
-						element.setClassName(value == null ? "" : stringValue);
+						// only place we need to store the last value
+						// We'd either have to store the "added" value, or
+						// assume readonly
+						boolean present = value != null;
+						if (present) {
+							element.setClassName(stringValue, true);
+							lastValue = stringValue;
+						} else {
+							if (Ax.notBlank(lastValue)) {
+								element.setClassName(lastValue, false);
+								lastValue = null;
+							}
+						}
 					} else {
+						boolean present = (boolean) value;
 						String cssClass = binding.literal().isEmpty()
 								? CommonUtils.deInfixCss(binding.from())
 								: binding.literal();
-						boolean present = (boolean) value;
 						element.setClassName(cssClass, present);
 					}
 				}
@@ -889,6 +902,22 @@ public class DirectedLayout implements AlcinaProcess {
 				if (listener != null) {
 					listener.unbind();
 				}
+			}
+		}
+
+		class PropertyBindings {
+			List<PropertyBinding> bindings = new ArrayList<>();
+
+			PropertyBindings() {
+			}
+
+			void bind() {
+				Arrays.stream(directed.bindings()).map(PropertyBinding::new)
+						.forEach(bindings::add);
+			}
+
+			void unbind() {
+				bindings.forEach(PropertyBinding::unbind);
 			}
 		}
 	}
