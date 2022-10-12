@@ -530,7 +530,10 @@ public class ReflectiveSerializers {
 
 		@Override
 		protected Date fromJson(Class clazz, JsonValue value) {
-			return new Date(Long.parseLong(value.asString()));
+			String asString = value.asString();
+			return asString.contains(".")
+					? new ValueSerializerTimestamp().fromJson(clazz, value)
+					: new Date(Long.parseLong(asString));
 		}
 	}
 
