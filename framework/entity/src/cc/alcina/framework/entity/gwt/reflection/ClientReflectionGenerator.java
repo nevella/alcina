@@ -78,13 +78,14 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectable
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
 
 /*
- * Documentation notes
- * - note module assignment (unknown, not_reached, excluded) and how that relates to production compilation
- * - explain caching (and interaction with gwt watch service)
- * -- can probably do caching *better* - at the moment any change to files should cause initial full recalc
- * - document the evils of generics (in serializable types) when pruning reachability
- * - document why this (alignment of reflection with async modules) is needed
- * - note reachability wrinkles caused by exclusion of equal priority classes from registration (see listImplementationRegistrations)
+ * Documentation notes - note module assignment (unknown, not_reached, excluded)
+ * and how that relates to production compilation - explain caching (and
+ * interaction with gwt watch service) -- can probably do caching *better* - at
+ * the moment any change to files should cause initial full recalc - document
+ * the evils of generics (in serializable types) when pruning reachability -
+ * document why this (alignment of reflection with async modules) is needed -
+ * note reachability wrinkles caused by exclusion of equal priority classes from
+ * registration (see listImplementationRegistrations)
  *
  */
 public class ClientReflectionGenerator extends IncrementalGenerator {
@@ -624,6 +625,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 			isFinal = type.isFinal();
 			hasCallableNoArgsConstructor = !isAbstract
 					&& !type.getQualifiedSourceName().equals("java.lang.Class")
+					&& (type.isStatic() || !type.isMemberType())
 					&& Arrays.stream(type.getConstructors())
 							.filter(c -> c.getParameters().length == 0)
 							.findFirst().filter(c -> c.isPublic()).isPresent();
