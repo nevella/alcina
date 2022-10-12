@@ -44,4 +44,12 @@ public interface ToStringFunction<T> extends Function<T, String> {
 			return t;
 		}
 	}
+
+	@Reflected
+	public static class ToCssName implements ToStringFunction<String> {
+		@Override
+		public String apply(String t) {
+			return CommonUtils.deInfixCss(t);
+		}
+	}
 }
