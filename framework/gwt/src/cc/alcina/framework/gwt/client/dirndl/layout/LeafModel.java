@@ -11,13 +11,13 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 public class LeafModel {
 	@Directed(bindings = @Binding(from = "src", type = Type.PROPERTY))
-	public static class Image extends Model {
+	public static class Img extends Model {
 		private String src;
 
-		public Image() {
+		public Img() {
 		}
 
-		public Image(String src) {
+		public Img(String src) {
 			this.src = src;
 		}
 

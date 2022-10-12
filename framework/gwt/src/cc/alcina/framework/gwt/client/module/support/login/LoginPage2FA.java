@@ -42,7 +42,7 @@ public class LoginPage2FA extends LoginPage {
 
 	@Directed
 	public static class UiModel extends Model {
-		private final LeafModel.Image image;
+		private final LeafModel.Img image;
 
 		private final Editable.StringInput input;
 
@@ -50,12 +50,12 @@ public class LoginPage2FA extends LoginPage {
 			input = new Editable.StringInput();
 			input.setFocusOnBind(true);
 			input.setPlaceholder("2FA code");
-			image = new LeafModel.Image(
+			image = new LeafModel.Img(
 					loginConsort.getLastResponse().getTwoFactorAuthQRCode());
 		}
 
 		@Directed
-		public LeafModel.Image getImage() {
+		public LeafModel.Img getImage() {
 			return this.image;
 		}
 
