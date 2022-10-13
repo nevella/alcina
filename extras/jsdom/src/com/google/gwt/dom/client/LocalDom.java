@@ -37,6 +37,9 @@ import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
  * Notes re gc => we mainatin a map of remote (browser dom) nodes to local
  * nodes, but that's weak. Strong refs are via node.remote fields
  *
+ * Notes re issues with ex-gwt mutations - FIXME - dirndl 1.1a1 -
+ * https://github.com/nevella/alcina/issues/23
+ *
  * Does not support IE<11
  */
 public class LocalDom {

@@ -377,8 +377,8 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 
 	void writeAnnotationValue(SourceWriter sourceWriter, Object value,
 			Class declaredType, boolean quoted) {
-		// FIXME
 		if (value == null) {
+			// annotation has no default value
 			sourceWriter.print("null");
 			return;
 		}

@@ -109,7 +109,7 @@ public abstract class LoginPage extends Model
 	protected void populateNavigation() {
 		defaultButton = new Link().withText("Next")
 				.withModelEvent(Forward.class);
-		// FIXME
+		// FIXME - ui2 - definitely want progress here
 		// .withAsyncTopic(controller.topicCallingRemote);
 		navigation.put(defaultButton, PutTo.NEXT);
 	}
