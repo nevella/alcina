@@ -162,6 +162,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 	Map<Class, Class<? extends DirectedRenderer>> modelRenderers = new LinkedHashMap<>();
 
+	public InsertionPoint insertionPoint;
+
 	/**
 	 * Render a model object and add top-level output widgets to the parent
 	 * widget
@@ -220,6 +222,10 @@ public class DirectedLayout implements AlcinaProcess {
 		} finally {
 			inLayout = false;
 			rendererInputs = null;
+			if (insertionPoint != null) {
+				insertionPoint.clear();
+				insertionPoint = null;
+			}
 		}
 	}
 
@@ -566,7 +572,6 @@ public class DirectedLayout implements AlcinaProcess {
 				return result;// default, append
 			}
 			result.point = Point.FIRST;
-			result.pending = true;
 			Node cursor = this;
 			result.container = firstSelfOrAncestorWidget.get();
 			while (true) {
@@ -940,12 +945,10 @@ public class DirectedLayout implements AlcinaProcess {
 
 		Widget container;
 
-		boolean pending = false;
-
-		public void consume() {
+		void clear() {
+			// clear refs to possibly removed widgets
 			after = null;
 			container = null;
-			pending = false;
 		}
 
 		enum Point {
@@ -972,6 +975,8 @@ public class DirectedLayout implements AlcinaProcess {
 		final Node parentNode;
 
 		final Node node;
+
+		RendererInput next;
 
 		Node replace;
 
@@ -1019,8 +1024,13 @@ public class DirectedLayout implements AlcinaProcess {
 							? node.insertionPoint
 							: new InsertionPoint();
 					switch (insertionPoint.point) {
+					// FIRST and AFTER only occur during replace (and that not
+					// at the end of a parent's children)
 					case FIRST:
 						((ForIsWidget) panel).insert(node.widget, 0);
+						// bump insertion point
+						insertionPoint.point = Point.AFTER;
+						insertionPoint.after = node.widget;
 						break;
 					case AFTER:
 						int insertAfterIndex = panel
@@ -1028,15 +1038,21 @@ public class DirectedLayout implements AlcinaProcess {
 						if (insertAfterIndex < panel.getWidgetCount() - 1) {
 							((ForIsWidget) panel).insert(node.widget,
 									insertAfterIndex + 1);
+							// bump insertion point
+							insertionPoint.after = node.widget;
 						} else {
 							panel.add(node.widget);
+							// bump insertion point
+							insertionPoint.point = Point.LAST;
 						}
 						break;
 					case LAST:
 						panel.add(node.widget);
 						break;
 					}
-					insertionPoint.consume();
+					// the node *did* provide a widget, so its children will
+					// just insert normally (LAST), no insertionpoint required
+					node.insertionPoint = null;
 				} else {
 					// root - if this is a replace, append to root panel
 					if (replace != null) {
@@ -1083,6 +1099,7 @@ public class DirectedLayout implements AlcinaProcess {
 		void render() {
 			if (replace != null) {
 				node.insertionPoint = replace.resolveInsertionPoint();
+				DirectedLayout.this.insertionPoint = node.insertionPoint;
 				int indexInParentChildren = parentNode.children
 						.indexOf(replace);
 				replace.remove();
@@ -1092,8 +1109,7 @@ public class DirectedLayout implements AlcinaProcess {
 					// add fairly late, to ensure we're in insertion order
 					parentNode.children.add(node);
 					// complexities of delegation and child replacement
-					if (parentNode.insertionPoint != null
-							&& parentNode.insertionPoint.pending) {
+					if (parentNode.insertionPoint != null) {
 						node.insertionPoint = parentNode.insertionPoint;
 					}
 				}
