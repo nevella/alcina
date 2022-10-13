@@ -20,6 +20,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 
@@ -256,10 +257,20 @@ public class Shell {
 
 		public Output throwOnException() {
 			if (failed()) {
-				throw Ax.runtimeException("Output exit code %s\n%s", exitValue,
-						error);
+				throw Ax.runtimeException(this.toString());
 			}
 			return this;
+		}
+
+		@Override
+		public String toString() {
+			FormatBuilder fb = new FormatBuilder();
+			fb.line("Process output");
+			fb.line("==============");
+			fb.line("exit code:%s", exitValue);
+			fb.line("output:\n%s\n", output);
+			fb.line("error:\n%s\n", error);
+			return fb.toString();
 		}
 	}
 
