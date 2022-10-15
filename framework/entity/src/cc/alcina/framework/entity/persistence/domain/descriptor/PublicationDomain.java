@@ -52,6 +52,7 @@ public class PublicationDomain {
 				AdjunctTransformCollation collation = event
 						.getTransformPersistenceToken().getTransformCollation();
 				if (collation.has(iUserImpl)) {
+					event.getTransformPersistenceToken().addCascadedEvents();
 					collation.ensureApplied();
 					collation.query(iUserImpl).stream().forEach(qr -> {
 						if (qr.hasCreateTransform()) {
