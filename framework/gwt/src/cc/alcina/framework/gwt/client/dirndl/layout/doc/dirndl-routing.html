@@ -1,0 +1,29 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body class="doc-body">
+	<h2>Dirndl routing</h2>
+	<p>
+		<i>...can't I just use node?</i>
+	</p>
+	<p>Oh purlease...</p>
+	<h3>The process</h3>
+	<ul>
+		<li>The application <code>History</code> singleton fires a ValueChangeEvent, from a url
+			change (or onload)
+		<li>The <code>RegistryHistoryMapper</code> singleton determines via pattern matchinwhich <code>BasePlaceTokenizer</code>
+			can parse the url, and fires a <code>PlaceChangedEvent</code> containing the parsed <code>BasePlace</code>
+		<li>The <code>ActivityMapper</code> singleton determines which <code>Activity</code> (a
+			Dirndl model) to display, that activity is rendered and either replaces the DOM <code>body</code>
+			contents (if it's a<code>ModalActivity</code>), or replaces a content element somewhere in the
+			DOM (such as in a header/content/footer app layout).
+	</ul>
+	<h3>An example</h3>
+	<ul>
+		<li>...application renders a login page with an additional action 'Forgot password', place <code>LoginHelp</code>
+			<code-box> asdf </code-box>
+		<li>
+	</ul>
+</body>
+</html>

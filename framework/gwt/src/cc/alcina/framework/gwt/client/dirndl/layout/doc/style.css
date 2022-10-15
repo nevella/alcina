@@ -1,0 +1,70 @@
+.doc-body {
+	min-width: 838px;
+	max-width: 838px;
+	background-color: rgb(255, 255, 255);
+	overflow: auto;
+	border-width: 1px;
+	border-style: solid;
+	border-color: rgb(225, 228, 232);
+	border-image: initial;
+	padding: 32px;
+	margin: 20px auto;
+	font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
+		Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
+}
+
+.doc-body>:first-child {
+	margin-top: 0 !important;
+}
+
+.doc-body h1, .doc-body h2 {
+	font-size: 2em;
+	padding-bottom: 0.3em;
+	border-bottom: 1px solid #eaecef;
+}
+
+.doc-body h1, .doc-body h2, .doc-body h3, .doc-body h4, .doc-body h5,
+	.doc-body h6 {
+	margin-top: 24px;
+	margin-bottom: 16px;
+	font-weight: 600;
+	line-height: 1.25;
+}
+
+.doc-body h1 {
+	margin: 0.67em 0;
+}
+
+.doc-body * {
+	box-sizing: border-box;
+}
+
+code-box {
+	white-space: pre-wrap;
+	display: block;
+	margin: 1em 0;
+	padding: 16px;
+	line-height: 1.45;
+	border-radius: 6px;
+	background-color: #f6f8fa;
+	width: 60em;
+}
+
+code-box:before {
+	display: block;
+	margin: 0.2em 0.5em 0 0;
+	font-weight: bold;
+	font-size:120%;
+	color: #70a0c0;
+	content: attr(type);
+}
+
+from-to {
+	display: grid;
+	grid-template-columns: 60em 2em 60em;
+	gap: 1em;
+}
+
+code {
+	font-size: 120%
+}
