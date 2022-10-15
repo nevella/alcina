@@ -22,7 +22,7 @@ import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
 
 /**
- * 
+ *
  * <h2>Thread-safety</h2>
  * <ul>
  * <li>All methods (mostly wrapping superclass methods) that access internal
@@ -30,9 +30,9 @@ import cc.alcina.framework.gwt.client.logic.ClientExceptionHandler;
  * <li>Return collections must be iterated across/accessed within a block
  * synchroized on 'this'
  * </ul>
- * 
- * FIXME - reflection - check usage. Also FIXME - adjunct - check usage
- * 
+ *
+ * FIXME - reflection - check usage. Also FIXME - dirndl 1x2 - check usage
+ *
  * @param hasIdAndLocalId
  * @param obj
  */

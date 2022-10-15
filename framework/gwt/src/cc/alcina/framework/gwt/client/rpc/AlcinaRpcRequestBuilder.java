@@ -35,6 +35,8 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	public static final Topic<AlcinaRpcRequestBuilder> topicAlcinaRpcRequestBuilderCreated = Topic
 			.create();
 
+	public static final Topic<RequestBuilder> topicPostFlush = Topic.create();
+
 	public static AlcinaRpcRequestBuilderCreationOneOffReplayableListener
 			addOneoffReplayableCreationListener() {
 		AlcinaRpcRequestBuilderCreationOneOffReplayableListener listener = new AlcinaRpcRequestBuilderCreationOneOffReplayableListener();
@@ -103,6 +105,7 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 	protected void doFinish(RequestBuilder rb) {
 		super.doFinish(rb);
 		addAlcinaHeaders(rb);
+		topicPostFlush.publish(rb);
 	}
 
 	@Override
@@ -220,7 +223,8 @@ public class AlcinaRpcRequestBuilder extends RpcRequestBuilder {
 				List<OutOfBandMessage> messages = TransformManager.Serializer
 						.get().deserialize(outOfBandMessagesSerialized);
 				for (OutOfBandMessage outOfBandMessage : messages) {
-					Registry.impl(OutOfBandMessageHandler.class,outOfBandMessage.getClass())
+					Registry.impl(OutOfBandMessageHandler.class,
+							outOfBandMessage.getClass())
 							.handle(outOfBandMessage);
 				}
 			}

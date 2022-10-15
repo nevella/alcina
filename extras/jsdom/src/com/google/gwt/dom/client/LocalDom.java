@@ -735,7 +735,8 @@ public class LocalDom {
 								"Exception getting remoteIndex:\n%s\n",
 								e.toString());
 					}
-					// FIXME: Exception logging in this fashion can cause very
+					// FIXME - localdom Exception logging in this fashion can
+					// cause very
 					// large strings and cause an OOM on the server
 					// preface += Ax.format("Local dom tree:\n%s\n",
 					// hasNode.local().provideLocalDomTree());

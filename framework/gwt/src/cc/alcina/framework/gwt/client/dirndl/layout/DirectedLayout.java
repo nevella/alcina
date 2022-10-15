@@ -122,7 +122,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  * - Phases:
  *   b. rest of TODO (/)
  *   c. categorise FIXMEs, then a -> b -> c
- *   d. 1x2 switch table/form rendering to pure model
+ *   d. 1x2 switch table/form rendering to pure model - adjunct transformmanager
  *   e. 1x3 consider removing widget entirely (localdom)
  *
  *

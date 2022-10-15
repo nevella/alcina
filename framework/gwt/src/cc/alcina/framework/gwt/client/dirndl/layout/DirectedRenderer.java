@@ -108,7 +108,8 @@ public abstract class DirectedRenderer {
 				// @Directed :: the element's merged hierarchy @Directed)
 				AnnotationLocation location = input.location
 						.copyWithClassLocationOf(transformedModel);
-				// FIXME - *definitely* optimise. Possibly Directed.Impl should
+				// FIXME - dirndl 1.3 - *definitely* optimise. Possibly
+				// Directed.Impl should
 				// be only one instance per attribute permutation
 				//
 				// what we really want is to pass a consumed/modified arg here
@@ -199,7 +200,8 @@ public abstract class DirectedRenderer {
 			Object transformedModel = transformModel(input, input.model);
 			AnnotationLocation location = input.location
 					.copyWithClassLocationOf(transformedModel);
-			// FIXME - *definitely* optimise. Possibly Directed.Impl should
+			// FIXME - dirndl 1.3 - *definitely* optimise. Possibly
+			// Directed.Impl should
 			// be only one instance per attribute permutation
 			//
 			// what we really want is to pass a consumed/modified arg here
