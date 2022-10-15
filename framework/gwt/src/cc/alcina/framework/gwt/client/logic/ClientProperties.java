@@ -27,7 +27,7 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
  * <p>
  * The api is similar to cc.alcina.framework.entity.Configuration
  * (server-side):<br>
- * <code>booleanClientProperties.is(Class flagLocation,String flagName):boolean</code>
+ * <code>boolean ClientProperties.is(Class flagLocation,String flagName)</code>
  * </p>
  * <p>
  * An example of developer usage would be:
@@ -54,9 +54,13 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
  *
  * <p>
  * Classes which contribute keys to the client configuration will implement
- * ClientProperties.Has, and generally reference a client class visible to both
- * client and server code, which is the flagLocation class for the shared
- * configuration.
+ * ClientProperties.Has, and generally reference (or be) a client class visible
+ * to both client and server code, which is the flagLocation class for the
+ * shared configuration.
+ * </p>
+ *
+ * <p>
+ *
  * </p>
  *
  * <h2>Flag priority</h2>
@@ -72,11 +76,14 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 @Reflected
 @Registration.Singleton
 public class ClientProperties {
-
 	/**
-	 * Fetch the value from property stores. Returns the first found in order of priortiy.
-	 * @param propertyLocation Class marker on which the property was registered
-	 * @param propertyName Property name
+	 * Fetch the value from property stores. Returns the first found in order of
+	 * priortiy.
+	 *
+	 * @param propertyLocation
+	 *            Class marker on which the property was registered
+	 * @param propertyName
+	 *            Property name
 	 * @return String value stored, null if not present
 	 */
 	public static String get(Class propertyLocation, String propertyName) {
@@ -84,11 +91,14 @@ public class ClientProperties {
 		return get().resolve(key);
 	}
 
-
 	/**
-	 * Fetch the boolean value from property stores. Returns the first found in order of priortiy.
-	 * @param propertyLocation Class marker on which the property was registered
-	 * @param propertyName Property name
+	 * Fetch the boolean value from property stores. Returns the first found in
+	 * order of priortiy.
+	 *
+	 * @param propertyLocation
+	 *            Class marker on which the property was registered
+	 * @param propertyName
+	 *            Property name
 	 * @return Boolean value stored, false if not present
 	 */
 	public static boolean is(Class propertyLocation, String propertyName) {
@@ -96,9 +106,15 @@ public class ClientProperties {
 		return Boolean.valueOf(value);
 	}
 
+	public static boolean is(Class<?> clazz, Key key) {
+		return is(clazz, key.name());
+	}
+
 	/**
 	 * Register serialized server properties from the server.
-	 * @param configurationPropertiesSerialized Serialized server properties
+	 *
+	 * @param configurationPropertiesSerialized
+	 *            Serialized server properties
 	 */
 	public static void registerConfigurationProperties(
 			String configurationPropertiesSerialized) {
@@ -108,6 +124,7 @@ public class ClientProperties {
 
 	/**
 	 * Fetch singleton instance
+	 *
 	 * @return Singleton instance
 	 */
 	private static ClientProperties get() {
@@ -116,8 +133,11 @@ public class ClientProperties {
 
 	/**
 	 * Get property key for a given marker class and property name
-	 * @param propertyLocation Class marker on which the property was registered
-	 * @param propertyName Property name
+	 *
+	 * @param propertyLocation
+	 *            Class marker on which the property was registered
+	 * @param propertyName
+	 *            Property name
 	 * @return Property key
 	 */
 	private static String key(Class propertyLocation, String propertyName) {
@@ -151,12 +171,16 @@ public class ClientProperties {
 				userPropertiesMap = StringMap.fromPropertyString(
 						generalProperties.getClientProperties());
 			}
+		} else {
+			cookieMap = Registry.impl(NonClientCookies.class).getCookieMap();
 		}
 	}
 
 	/**
 	 * Register serialized server properties from the server.
-	 * @param configurationPropertiesSerialized Serialized server properties
+	 *
+	 * @param configurationPropertiesSerialized
+	 *            Serialized server properties
 	 */
 	private void registerConfigurationProperties0(
 			String configurationPropertiesSerialized) {
@@ -165,8 +189,11 @@ public class ClientProperties {
 	}
 
 	/**
-	 * Fetch the value from property stores. Returns the first found in order of priortiy.
-	 * @param key Property key 
+	 * Fetch the value from property stores. Returns the first found in order of
+	 * priortiy.
+	 *
+	 * @param key
+	 *            Property key
 	 * @return Value stored, null if not present
 	 */
 	private String resolve(String key) {
@@ -186,7 +213,13 @@ public class ClientProperties {
 		return null;
 	}
 
-	public interface Has {
-		public Map<String, String> provideConfigurationProperties();
+	// marker interface for an enum listing the per-class configuration keys
+	public interface Key {
+		String name();
+	}
+
+	@Registration(NonClientCookies.class)
+	public interface NonClientCookies {
+		Map<String, String> getCookieMap();
 	}
 }

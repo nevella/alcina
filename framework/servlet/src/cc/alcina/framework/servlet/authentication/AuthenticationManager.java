@@ -142,7 +142,8 @@ public class AuthenticationManager {
 		ensureIid(context);
 		ensureAuthenticationSession(context);
 		setupClientInstanceFromHeaders(context);
-		if (context.session.getUser() != anonymousUser) {
+		if (context.session != null
+				&& context.session.getUser() != anonymousUser) {
 			PermissionsManager.get().setUser(context.session.getUser());
 			PermissionsManager.get().setLoginState(LoginState.LOGGED_IN);
 		}

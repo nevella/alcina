@@ -20,20 +20,18 @@ import cc.alcina.framework.common.client.util.TopicListener;
 public class ProcessObservers {
 	private static ProcessObservers instance = new ProcessObservers();
 
-	public static <O extends ProcessObservable> void
-			observe(Class<O> observableClass, TopicListener<O> listener) {
-		observe(observableClass, listener, true);
-	}
-
 	public static <O extends ProcessObservable> void observe(
 			Class<O> observableClass, TopicListener<O> listener,
 			boolean register) {
 		instance.observe0(observableClass, listener, register);
 	}
 
+	public static void observe(ProcessObserver o, boolean register) {
+		observe(o.getObservableClass(), o, register);
+	}
+
 	public static void observe(ProcessObserver.HasObservers hasObservers) {
-		hasObservers.getObservers()
-				.forEach(o -> observe(o.getObservableClass(), o));
+		hasObservers.getObservers().forEach(o -> observe(o, true));
 	}
 
 	public static <O extends ProcessObservable> void

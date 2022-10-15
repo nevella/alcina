@@ -215,6 +215,20 @@ public class FormatBuilder {
 	}
 
 	/**
+	 * call format(template,args) if test is true
+	 *
+	 * @return This FormatBuilder
+	 */
+	public FormatBuilder conditionalFormat(boolean test, String template,
+			Object... args) {
+		if (test) {
+			return format(template, args);
+		} else {
+			return this;
+		}
+	}
+
+	/**
 	 * Fill the current line with a fill string, `width` times
 	 *
 	 * @param width

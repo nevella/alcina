@@ -82,6 +82,7 @@ import cc.alcina.framework.common.client.logic.permissions.WebMethod;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.publication.ContentDefinition;
 import cc.alcina.framework.common.client.publication.request.ContentRequestBase;
 import cc.alcina.framework.common.client.publication.request.PublicationResult;
@@ -117,6 +118,9 @@ import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestBox.BoundSugges
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleModel;
 import cc.alcina.framework.gwt.client.gwittir.widget.BoundSuggestOracleResponseType.BoundSuggestOracleSuggestion;
+import cc.alcina.framework.gwt.client.logic.process.ProcessMetric;
+import cc.alcina.framework.gwt.client.logic.process.ProcessMetric.Observer;
+import cc.alcina.framework.gwt.client.logic.process.ProcessMetrics;
 import cc.alcina.framework.gwt.client.rpc.AlcinaRpcRequestBuilder;
 import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage;
 import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage.ExceptionMessage;
@@ -163,6 +167,12 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS";
+
+	public static final String CONTEXT_RESOLVED_REQUEST_NAME = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_RESOLVED_REQUEST_NAME";
+
+	public static final String CONTEXT_METRIC_OBSERVER = CommonRemoteServiceServlet.class
+			.getName() + ".CONTEXT_METRIC_OBSERVER";
 
 	public static boolean DUMP_STACK_TRACE_ON_OOM = true;
 
@@ -448,15 +458,23 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	public final /*
-					 * Cannot be overridden - since it does some complex context
-					 * arrangements. To change behaviour, add subclass hooks
-					 * (e.g. afterAlcinaServletContextInitialisation)
-					 */
+	public final
+	/*
+	 * Cannot be overridden - since it does some complex context arrangements.
+	 * To change behaviour, add subclass hooks (e.g.
+	 * afterAlcinaServletContextInitialisation)
+	 */
+	/*
+	 * Does not create a LooseContext instance, relies on creation via
+	 * alcinaServletContext.begin
+	 */
 	String processCall(String payload) throws SerializationException {
+		long start = System.currentTimeMillis();
 		RPCRequest rpcRequest = null;
 		boolean alcinaServletContextInitialised = false;
 		AlcinaServletContext alcinaServletContext = null;
+		HttpServletRequest threadLocalRequest = getThreadLocalRequest();
+		int encodedLength = 0;
 		try {
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
@@ -480,26 +498,31 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					AuthenticationManager.CONTEXT_ALLOW_EXPIRED_ANONYMOUS_AUTHENTICATION_SESSION,
 					webMethod != null && webMethod
 							.allowExpiredAnonymousAuthenticationSession());
-			alcinaServletContext.begin(getThreadLocalRequest(),
+			alcinaServletContext.begin(threadLocalRequest,
 					getThreadLocalResponse(), threadName, initialContext);
 			afterAlcinaServletContextInitialisation();
+			LooseContext.set(CONTEXT_RESOLVED_REQUEST_NAME, name);
+			configureProcessObserver(threadLocalRequest,
+					rpcRequest.getParameters(), true);
+			ProcessMetric.publish(start, ProcessMetric.ServerType.rpc,
+					LooseContext.getString(CONTEXT_RESOLVED_REQUEST_NAME),
+					payload.length());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
-					getThreadLocalRequest());
+					threadLocalRequest);
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
 					getThreadLocalResponse());
-			getThreadLocalRequest().setAttribute(
+			threadLocalRequest.setAttribute(
 					CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS,
 					new StringMap());
 			if (rpcRequest
 					.getSerializationPolicy() instanceof LegacySerializationPolicy) {
 				throw new IncompatibleRemoteServiceException();
 			}
-			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_RQ, rpcRequest);
-			getThreadLocalRequest().setAttribute(THRD_LOCAL_RPC_PAYLOAD,
-					payload);
+			threadLocalRequest.setAttribute(THRD_LOCAL_RPC_RQ, rpcRequest);
+			threadLocalRequest.setAttribute(THRD_LOCAL_RPC_PAYLOAD, payload);
 			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_IP_ADDRESS,
 					ServletLayerUtils
-							.robustGetRemoteAddress(getThreadLocalRequest()));
+							.robustGetRemoteAddress(threadLocalRequest));
 			LooseContext.set(CommonPersistenceBase.CONTEXT_CLIENT_INSTANCE_ID,
 					AuthenticationManager
 							.provideAuthenticatedClientInstanceId());
@@ -514,7 +537,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			TransformCommit.prepareHttpRequestCommitContext(
 					PermissionsManager.get().getClientInstance().getId(),
 					PermissionsManager.get().getUserId(), ServletLayerUtils
-							.robustGetRemoteAddress(getThreadLocalRequest()));
+							.robustGetRemoteAddress(threadLocalRequest));
 			try {
 				if (webMethod != null) {
 					AnnotatedPermissible ap = new AnnotatedPermissible(
@@ -544,7 +567,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			} catch (SecurityException ex) {
 				return RPC.encodeResponseForFailure(null, ex);
 			}
-			return invokeAndEncodeResponse(rpcRequest);
+			ProcessMetric.end(ProcessMetric.ServerType.rpc_prepare);
+			String response = invokeAndEncodeResponse(rpcRequest);
+			encodedLength = response.length();
+			return response;
 		} catch (IncompatibleRemoteServiceException ex) {
 			getServletContext().log(
 					"An IncompatibleRemoteServiceException was thrown while processing this call.",
@@ -560,15 +586,18 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			logRpcException(rex);
 			throw rex;
 		} finally {
+			ProcessMetric.end(ProcessMetric.ServerType.rpc_process,
+					encodedLength);
 			try {
 				HttpServletResponse threadLocalResponse = getThreadLocalResponse();
 				if (threadLocalResponse != null) {
+					configureProcessObserver(threadLocalRequest, null, false);
 					OutOfBandMessages.get().addToResponse(threadLocalResponse);
 					/*
 					 * save the username for metric logging - the user will be
 					 * cleared before the metrics are output
 					 */
-					getThreadLocalRequest().setAttribute(THRD_LOCAL_USER_NAME,
+					threadLocalRequest.setAttribute(THRD_LOCAL_USER_NAME,
 							PermissionsManager.get().getUserName());
 				}
 				if (rpcRequest != null) {
@@ -681,6 +710,38 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 		return new TransformCollector().waitForTransforms(position,
 				clientInstanceId);
+	}
+
+	private void configureProcessObserver(HttpServletRequest threadLocalRequest,
+			Object[] parameters, boolean start) {
+		if (threadLocalRequest == null) {
+			return;
+		}
+		String metricRpcId = threadLocalRequest
+				.getHeader(ProcessMetrics.HEADER_RPC_METRIC_ID);
+		if (metricRpcId == null) {
+			return;
+		}
+		if (start) {
+			String resolvedRequestName = LooseContext
+					.getString(CONTEXT_RESOLVED_REQUEST_NAME);
+			if (Objects.equals(resolvedRequestName, "callRpc")) {
+				// minor performance hit, but consistent and only in metrics
+				// context
+				ReflectiveRemoteServicePayload rpcPayload = ReflectiveSerializer
+						.deserialize((String) parameters[0]);
+				LooseContext.set(CONTEXT_RESOLVED_REQUEST_NAME,
+						rpcPayload.getMethodName());
+			}
+			Observer observer = new ProcessMetric.Observer();
+			observer.setSequenceId(metricRpcId);
+			LooseContext.set(CONTEXT_METRIC_OBSERVER, observer);
+			ProcessObservers.observe(observer, start);
+		} else {
+			Observer observer = LooseContext.get(CONTEXT_METRIC_OBSERVER);
+			ProcessObservers.observe(observer, start);
+			OutOfBandMessages.get().addMessage(observer);
+		}
 	}
 
 	private void sanitiseClrString(ClientLogRecord clr) {

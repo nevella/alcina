@@ -12,11 +12,16 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.UrlComponentEncoder;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.logic.permissions.ThreadedPermissionsManager;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.transform.ThreadlocalTransformManager;
+import cc.alcina.framework.gwt.client.logic.ClientProperties;
+import cc.alcina.framework.gwt.client.logic.ClientProperties.NonClientCookies;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
 
 @Registration(ClearStaticFieldsOnAppShutdown.class)
@@ -131,5 +136,19 @@ public class AlcinaServletContext {
 	public AlcinaServletContext withRootPermissions(boolean rootPermissions) {
 		this.rootPermissions = rootPermissions;
 		return this;
+	}
+
+	public static class NonClientCookiesImpl implements NonClientCookies {
+		@Override
+		public Map<String, String> getCookieMap() {
+			String cookie = httpContext()
+					.getCookieValue(ClientProperties.class.getName());
+			if (Ax.notBlank(cookie)) {
+				cookie = UrlComponentEncoder.get().decode(cookie);
+				return StringMap.fromPropertyString(cookie);
+			} else {
+				return Collections.emptyMap();
+			}
+		}
 	}
 }

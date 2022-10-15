@@ -52,13 +52,22 @@ class SerializationSupport {
 	public static Class solePossibleImplementation(Class type) {
 		Class<?> clazz = Domain.resolveEntityClass(type);
 		return solePossibleImplementation.computeIfAbsent(clazz, valueClass -> {
-			if (Reflections.isEffectivelyFinal(clazz)
-					|| Reflections.at(clazz).isFinal()
-					|| (Reflections.isAssignableFrom(Entity.class, clazz) &&
-			// FXIME - reflection - Modifiers.nonAbstract emul
-			// non-abstract entity classes have no serializable subclasses (but
-			// do have mvcc subclass...)
-			!Reflections.at(clazz).isAbstract())) {
+			boolean effectivelyFinal = Reflections.isEffectivelyFinal(clazz);
+			if (!effectivelyFinal) {
+				ClassReflector<?> classReflector = Reflections.at(clazz);
+				effectivelyFinal = classReflector.isFinal()
+						|| (Reflections.isAssignableFrom(Entity.class, clazz) &&
+				// FXIME - reflection - Modifiers.nonAbstract emul
+				// non-abstract entity classes have no serializable subclasses
+				// (but
+				// do have mvcc subclass...)
+				//
+				// so this code says "yes, effectively final if a non-abstract
+				// entity subclass
+				//
+								!classReflector.isAbstract());
+			}
+			if (effectivelyFinal) {
 				return valueClass;
 			} else if (PersistentImpl.hasImplementation(clazz)) {
 				return PersistentImpl.getImplementation(clazz);

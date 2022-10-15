@@ -61,6 +61,10 @@ public abstract class AlcinaServlet extends HttpServlet {
 		wrapRequest(request, response);
 	}
 
+	protected Permission getRequiredPermission() {
+		return Permission.SimplePermissions.getPermission(AccessLevel.EVERYONE);
+	}
+
 	protected abstract void handleRequest(HttpServletRequest request,
 			HttpServletResponse response) throws Exception;
 
@@ -94,12 +98,12 @@ public abstract class AlcinaServlet extends HttpServlet {
 		}
 	}
 
-	protected boolean trackMetrics() {
+	protected boolean throwDetailedExceptions() {
 		return false;
 	}
 
-	protected Permission getRequiredPermission() {
-		return Permission.SimplePermissions.getPermission(AccessLevel.EVERYONE);
+	protected boolean trackMetrics() {
+		return false;
 	}
 
 	protected void wrapRequest(HttpServletRequest request,
@@ -161,10 +165,6 @@ public abstract class AlcinaServlet extends HttpServlet {
 				}
 			}
 		}
-	}
-
-	protected boolean throwDetailedExceptions() {
-		return false;
 	}
 
 	protected void writeHtmlResponse(HttpServletResponse response,
