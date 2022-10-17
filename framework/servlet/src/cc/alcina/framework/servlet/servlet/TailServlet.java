@@ -24,6 +24,7 @@ import javax.servlet.http.HttpServletResponse;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 /**
@@ -50,10 +51,11 @@ public class TailServlet extends AlcinaServlet {
 	@Override
 	protected void handleRequest(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
-		if (!PermissionsManager.get().isAdmin()) {
+		if (!isPermitted()) {
 			throw new RuntimeException("Access not permitted");
 		}
-		File logFile = new File(ResourceUtilities.get(getClass(), "file"));
+		File logFile = new File(
+				ResourceUtilities.get(TailServlet.class, "file"));
 		String message = Ax.format("Starting tail servlet - %s", logFile);
 		String filterString = request.getQueryString();
 		Pattern filter = Ax.isBlank(filterString) ? null
@@ -92,6 +94,21 @@ public class TailServlet extends AlcinaServlet {
 			response.getOutputStream().close();
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	protected boolean isPermitted() {
+		return !PermissionsManager.get().isAdmin();
+	}
+
+	/*
+	 * Use behind a 'secret' url -- /tail23090w94eu0293 say -- and use sparinly
+	 */
+	public static class NonAuthenticated extends TailServlet {
+		@Override
+		protected boolean isPermitted() {
+			return Configuration.is(TailServlet.class,
+					"permitNonAuthenticated");
 		}
 	}
 }
