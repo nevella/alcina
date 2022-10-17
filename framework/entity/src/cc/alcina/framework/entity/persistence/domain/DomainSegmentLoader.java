@@ -304,9 +304,13 @@ public abstract class DomainSegmentLoader implements ConnResultsReuse {
 		}
 
 		public ConnRsKey(ConnResults connResults) {
-			clazzName = connResults.clazz == null ? "(null)"
-					: connResults.clazz.getName();
-			sqlFilter = connResults.sqlFilter;
+			this(connResults.clazz == null ? "(null)"
+					: connResults.clazz.getName(), connResults.sqlFilter);
+		}
+
+		public ConnRsKey(String clazzName, String sqlFilter) {
+			this.clazzName = clazzName;
+			this.sqlFilter = sqlFilter;
 		}
 	}
 }

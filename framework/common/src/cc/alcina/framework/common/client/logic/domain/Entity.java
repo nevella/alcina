@@ -109,6 +109,9 @@ public abstract class Entity<T extends Entity> extends Bindable
 		}
 		if (other instanceof Entity) {
 			Entity otherEntity = (Entity) other;
+			if (otherEntity.getId() != getId()) {
+				return false;
+			}
 			Entity domainIdentity = domainIdentity();
 			Entity otherIdentity = otherEntity.domainIdentity();
 			if (domainIdentity == otherIdentity) {

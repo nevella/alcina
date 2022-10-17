@@ -635,6 +635,7 @@ public class GraphProjection {
 				return project(source, null, context);
 			} finally {
 				topicProjectCountDelta.publish(-1);
+				dataFilter.onProjectionComplete();
 				LooseContext.pop();
 				if (last != null) {
 					LooseContext.set(CONTEXT_LAST_CONTEXT_LOOKUPS, this);
@@ -896,6 +897,11 @@ public class GraphProjection {
 		Object value;
 		for (; itr.hasNext();) {
 			value = itr.next();
+			// project returning null -also- has this effect, but is slower.
+			// This is a custom optimisation
+			if (omit(value, context)) {
+				continue;
+			}
 			Object projected = project(value, context);
 			if (value == null || projected != null) {
 				if (dataFilter.projectIntoCollection(value, projected,
@@ -1014,6 +1020,10 @@ public class GraphProjection {
 			projectablePrimitiveOrDataFields.put(clazz, result);
 		}
 		return result;
+	}
+
+	private boolean omit(Object value, GraphProjectionContext context) {
+		return dataFilter.omit(value, context);
 	}
 
 	private boolean permitField(Field field, Object source) throws Exception {
@@ -1246,6 +1256,13 @@ public class GraphProjection {
 
 		default boolean ignoreObjectHasReadPermissionCheck() {
 			return false;
+		}
+
+		default boolean omit(Object value, GraphProjectionContext context) {
+			return false;
+		}
+
+		default void onProjectionComplete() {
 		}
 
 		<T> boolean projectIntoCollection(T value, T projected,

@@ -571,6 +571,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		if (joinTable == null) {
 			return;
 		}
+		Thread.currentThread().setName("loader-database-" + joinTable.name());
 		PropertyDescriptor pd = entry.getKey();
 		// get reverse
 		PropertyDescriptor rev = null;
@@ -1543,12 +1544,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			this.columnDescriptors = builder.columnDescriptors;
 			this.joinHandler = builder.joinHandler;
 			this.joinTable = clazz == null;
-			this.rsReuse = domainDescriptor.getDomainSegmentLoader() == null
-					? new ConnResultsReusePassthrough()
-					: (ConnResultsReuse) domainDescriptor
-							.getDomainSegmentLoader();
+			DomainSegmentLoader segmentLoader = domainDescriptor
+					.getDomainSegmentLoader();
+			boolean hasSegmentLoader = segmentLoader != null;
+			this.rsReuse = hasSegmentLoader ? (ConnResultsReuse) segmentLoader
+					: new ConnResultsReusePassthrough();
 			this.lazyProperties = builder.populateLazyPropertyValues;
-			itr = new ConnResultsIterator();
+			itr = new ConnResultsIterator(hasSegmentLoader);
 		}
 
 		public ResultSet ensureRs() {
@@ -1685,12 +1687,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 			boolean finished = false;
 
-			public ConnResultsIterator() {
-				int length = joinTable ? 2 : columnDescriptors.size();
-				current = new ValueContainer[length];
-				for (int idx = 0; idx < length; idx++) {
-					current[idx] = new ValueContainer();
-				}
+			private boolean hasSegmentLoader;
+
+			public ConnResultsIterator(boolean hasSegmentLoader) {
+				this.hasSegmentLoader = hasSegmentLoader;
+				createValueContainersForRow();
 			}
 
 			@Override
@@ -1719,6 +1720,9 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					ensureRs();
 					try {
 						if (rs.next()) {
+							if (hasSegmentLoader) {
+								createValueContainersForRow();
+							}
 							if (joinTable) {
 								current[0].l = rs.getLong(1);
 								if (joinHandler != null) {
@@ -1749,6 +1753,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 					} catch (Exception e) {
 						throw new WrappedRuntimeException(e);
 					}
+				}
+			}
+
+			protected void createValueContainersForRow() {
+				int length = joinTable ? 2 : columnDescriptors.size();
+				current = new ValueContainer[length];
+				for (int idx = 0; idx < length; idx++) {
+					current[idx] = new ValueContainer();
 				}
 			}
 		}
@@ -2496,6 +2508,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				return i;
 			} else {
 				return o;
+			}
+		}
+
+		@Override
+		public String toString() {
+			if (l != 0) {
+				return "long: " + l;
+			} else {
+				return "(object)";
 			}
 		}
 	}
