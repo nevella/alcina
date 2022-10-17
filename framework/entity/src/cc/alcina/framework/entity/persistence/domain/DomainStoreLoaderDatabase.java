@@ -465,7 +465,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 						.entrySet();
 				List<EntityRefs> entityRefss = new ArrayList<>();
 				for (Entry<Class, Set<Long>> entry : perClass) {
-					EntityRefs entityRefs = new EntityRefs();
+					EntityRefs entityRefs = new EntityRefs(segmentLoader);
 					entityRefss.add(entityRefs);
 					segmentClasses.add(entry.getKey());
 					calls.add(() -> {
@@ -510,7 +510,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 							segmentClasses.add(property.clazz1);
 							if (ids.size() > 0) {
 								calls.add(() -> {
-									EntityRefs entityRefs = new EntityRefs();
+									EntityRefs entityRefs = new EntityRefs(
+											segmentLoader);
 									entityRefss.add(entityRefs);
 									loadTableSegment(property.clazz1, sqlFilter,
 											entityRefs);
@@ -534,7 +535,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 									longsToIdClause(ids));
 							segmentClasses.add(property.clazz2);
 							calls.add(() -> {
-								EntityRefs entityRefs = new EntityRefs();
+								EntityRefs entityRefs = new EntityRefs(
+										segmentLoader);
 								entityRefss.add(entityRefs);
 								loadTableSegment(property.clazz2, sqlFilter,
 										entityRefs);
@@ -656,12 +658,21 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	private void loadTableSegment(Class clazz, String sqlFilter,
 			EntityRefs entityRefs) throws Exception {
 		synchronized (clazz) {
-			DomainClassDescriptor<?> descriptor = domainDescriptor.perClass
-					.get(clazz);
-			MetricLogging.get().start(clazz.getSimpleName());
-			loader().withClazz(clazz).withSqlFilter(sqlFilter)
-					.withEntityRefs(entityRefs).loadHasIds();
-			MetricLogging.get().end(clazz.getSimpleName(), store.metricLogger);
+			Connection conn = getConnection();
+			try {
+				DomainClassDescriptor<?> descriptor = domainDescriptor.perClass
+						.get(clazz);
+				MetricLogging.get().start(clazz.getSimpleName());
+				logger.info("load segment :: {} {}", clazz.getSimpleName(),
+						sqlFilter);
+				loader().withConnection(conn).withClazz(clazz)
+						.withSqlFilter(sqlFilter).withEntityRefs(entityRefs)
+						.withIgnoreDoubleCreationDueToFilter(true).loadHasIds();
+				MetricLogging.get().end(clazz.getSimpleName(),
+						store.metricLogger);
+			} finally {
+				releaseConn(conn);
+			}
 		}
 	}
 
@@ -1769,6 +1780,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private DomainSegmentLoader segmentLoader;
 
+		public EntityRefs() {
+		}
+
+		public EntityRefs(DomainSegmentLoader segmentLoader) {
+			this.segmentLoader = segmentLoader;
+		}
+
 		void add(HasId target, PdOperator pd, HasId source) {
 			list.add(new Ref(target, pd, source));
 		}
@@ -1874,13 +1892,15 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 										loadLazy = true;
 										break;
 									} else {
-										throw Ax.runtimeException(
-												"Warmup: eager loading specified of non-fully "
-														+ "loaded target entity class %s :: %s.%s",
-												type.getSimpleName(),
-												pdOperator.clazz
-														.getSimpleName(),
-												pdOperator.name);
+										if (segmentLoader == null) {
+											throw Ax.runtimeException(
+													"Warmup: eager loading specified of non-fully "
+															+ "loaded target entity class %s :: %s.%s",
+													type.getSimpleName(),
+													pdOperator.clazz
+															.getSimpleName(),
+													pdOperator.name);
+										}
 									}
 								case LAZY:
 									loadLazy = store.isInitialised();
@@ -2157,6 +2177,8 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private boolean resolveRefs;
 
+		boolean ignoreDoubleCreationDueToFilter = false;
+
 		public Loader withClazz(Class clazz) {
 			this.clazz = clazz;
 			return this;
@@ -2169,6 +2191,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		public Loader withEntityRefs(EntityRefs entityRefs) {
 			this.entityRefs = entityRefs;
+			return this;
+		}
+
+		public Loader withIgnoreDoubleCreationDueToFilter(
+				boolean ignoreDoubleCreationDueToFilter) {
+			this.ignoreDoubleCreationDueToFilter = ignoreDoubleCreationDueToFilter;
 			return this;
 		}
 
@@ -2214,6 +2242,13 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				HasId hasId = null;
 				if (transactional) {
 					if (store.initialising) {
+						if (ignoreDoubleCreationDueToFilter) {
+							// the query may return multiple copies of the
+							// entity - ignore
+							if (store.cache.contains(clazz, id)) {
+								continue;
+							}
+						}
 						hasId = transaction.create(clazz, store, id, 0L);
 						store.transformManager.store.mapObject((Entity) hasId);
 					} else {
@@ -2249,18 +2284,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 			return loaded;
 		}
 
-		private List<HasId> loadHasIds() throws Exception {
-			if (connection == null) {
-				connection = getConnection();
-			}
-			List<HasId> result = load0();
-			return result;
-		}
-
 		<T extends Entity> List<T> loadEntities() throws Exception {
 			boolean ignorePropertyChanges = TransformManager.get()
 					.isIgnorePropertyChanges();
 			try {
+				connection = getConnection();
 				TransformManager.get().setIgnorePropertyChanges(true);
 				List<T> result = (List<T>) (List<?>) loadHasIds();
 				if (store.initialised || resolveRefs) {
@@ -2275,6 +2303,12 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 				TransformManager.get()
 						.setIgnorePropertyChanges(ignorePropertyChanges);
 			}
+		}
+
+		// caller is responsible for connection acquire/release
+		List<HasId> loadHasIds() throws Exception {
+			List<HasId> result = load0();
+			return result;
 		}
 	}
 

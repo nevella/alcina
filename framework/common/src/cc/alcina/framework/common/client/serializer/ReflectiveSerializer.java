@@ -25,6 +25,8 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
+import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -111,6 +113,7 @@ public class ReflectiveSerializer {
 			JsonSerialNode.ensureValueSerializers();
 			State state = new State();
 			state.serializationSupport = SerializationSupport.deserializationInstance;
+			state.resolver = Resolver.get();
 			state.deserializerOptions = options;
 			// create json doc
 			GraphNode node = new GraphNode(null, null, null);
@@ -148,6 +151,7 @@ public class ReflectiveSerializer {
 		state.serializerOptions = options;
 		state.serializationSupport = SerializationSupport
 				.serializationInstance();
+		state.resolver = Resolver.get();
 		GraphNode node = new GraphNode(null, null, null);
 		node.state = state;
 		node.setValue(object);
@@ -486,12 +490,12 @@ public class ReflectiveSerializer {
 			this.parent = parent;
 			this.name = name;
 			this.property = property;
-			if (property != null) {
-				propertySerialization = Annotations.resolve(property,
-						PropertySerialization.class);
-			}
 			if (parent != null) {
 				state = parent.state;
+			}
+			if (property != null) {
+				propertySerialization = Annotations.resolve(property,
+						PropertySerialization.class, state.resolver);
 			}
 		}
 
@@ -903,5 +907,7 @@ public class ReflectiveSerializer {
 		Deque<GraphNode> pending = new LinkedList<>();
 
 		SerializationSupport serializationSupport;
+
+		AnnotationLocation.Resolver resolver;
 	}
 }

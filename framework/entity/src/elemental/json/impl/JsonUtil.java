@@ -31,276 +31,284 @@ import elemental.json.JsonValue;
  */
 @Deprecated
 public class JsonUtil {
+	/**
+	 * Convert special control characters into unicode escape format.
+	 */
+	public static String escapeControlChars(String text) {
+		StringBuilder toReturn = new StringBuilder();
+		for (int i = 0; i < text.length(); i++) {
+			char c = text.charAt(i);
+			if (isControlChar(c)) {
+				toReturn.append(escapeCharAsUnicode(c));
+			} else {
+				toReturn.append(c);
+			}
+		}
+		return toReturn.toString();
+	}
 
-  private static class StringifyJsonVisitor extends JsonVisitor {
+	public static <T extends JsonValue> T parse(String json)
+			throws JsonException {
+		return Json.instance().parse(json);
+	}
 
-    private static final Set<String> skipKeys;
+	/**
+	 * Safely escape an arbitrary string as a JSON string literal.
+	 */
+	public static String quote(String value) {
+		StringBuilder toReturn = new StringBuilder("\"");
+		for (int i = 0; i < value.length(); i++) {
+			char c = value.charAt(i);
+			switch (c) {
+			case '\b':
+				toReturn.append('\\');
+				toReturn.append('b');
+				break;
+			case '\t':
+				toReturn.append('\\');
+				toReturn.append('t');
+				break;
+			case '\n':
+				toReturn.append('\\');
+				toReturn.append('n');
+				break;
+			case '\f':
+				toReturn.append('\\');
+				toReturn.append('f');
+				break;
+			case '\r':
+				toReturn.append('\\');
+				toReturn.append('r');
+				break;
+			case '"':
+				toReturn.append('\\');
+				toReturn.append('"');
+				break;
+			case '\\':
+				toReturn.append('\\');
+				toReturn.append('\\');
+				break;
+			default:
+				if (isControlChar(c)) {
+					toReturn.append(escapeCharAsUnicode(c));
+				} else {
+					toReturn.append(c);
+				}
+			}
+		}
+		toReturn.append('"');
+		return toReturn.toString();
+	}
 
-    static {
-      Set<String> toSkip = new HashSet<String>();
-      toSkip.add("$H");
-      toSkip.add("__gwt_ObjectId");
-      skipKeys = Collections.unmodifiableSet(toSkip);
-    }
+	/**
+	 * Converts a Json Object to Json format.
+	 *
+	 * @param jsonValue
+	 *            json object to stringify
+	 * @return json formatted string
+	 */
+	public static String stringify(JsonValue jsonValue) {
+		return stringify(jsonValue, 0);
+	}
 
-    private String indentLevel;
+	/**
+	 * Converts a JSO to Json format.
+	 *
+	 * @param jsonValue
+	 *            json object to stringify
+	 * @param spaces
+	 *            number of spaces to indent in pretty print mode
+	 * @return json formatted string
+	 */
+	public static String stringify(JsonValue jsonValue, int spaces) {
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < spaces; i++) {
+			sb.append(' ');
+		}
+		return stringify(jsonValue, sb.toString());
+	}
 
-    private Set<JsonValue> visited;
+	/**
+	 * Converts a Json object to Json formatted String.
+	 *
+	 * @param jsonValue
+	 *            json object to stringify
+	 * @param indent
+	 *            optional indention prefix for pretty printing
+	 * @return json formatted string
+	 */
+	public static String stringify(JsonValue jsonValue, final String indent) {
+		final LengthConstrainedStringBuilder sb = new LengthConstrainedStringBuilder();
+		final boolean isPretty = indent != null && !"".equals(indent);
+		new StringifyJsonVisitor(indent, sb, isPretty).accept(jsonValue);
+		return sb.toString();
+	}
 
-    private final String indent;
+	/**
+	 * Turn a single unicode character into a 32-bit unicode hex literal.
+	 */
+	private static String escapeCharAsUnicode(char toEscape) {
+		String hexValue = Integer.toString(toEscape, 16);
+		int padding = 4 - hexValue.length();
+		return "\\u" + ("0000".substring(0, padding)) + hexValue;
+	}
 
-    private final LengthConstrainedStringBuilder sb;
+	private static boolean isControlChar(char c) {
+		return (c >= 0x00 && c <= 0x1f) || (c >= 0x7f && c <= 0x9f)
+				|| c == '\u00ad' || c == '\u070f' || c == '\u17b4'
+				|| c == '\u17b5' || c == '\ufeff'
+				|| (c >= '\u0600' && c <= '\u0604')
+				|| (c >= '\u200c' && c <= '\u200f')
+				|| (c >= '\u2028' && c <= '\u202f')
+				|| (c >= '\u2060' && c <= '\u206f')
+				|| (c >= '\ufff0' && c <= '\uffff');
+	}
 
-    private final boolean pretty;
+	private static class StringifyJsonVisitor extends JsonVisitor {
+		private static final Set<String> skipKeys;
+		static {
+			Set<String> toSkip = new HashSet<String>();
+			toSkip.add("$H");
+			toSkip.add("__gwt_ObjectId");
+			skipKeys = Collections.unmodifiableSet(toSkip);
+		}
 
-    private StringifyJsonVisitor(String indent, LengthConstrainedStringBuilder sb,
-        boolean pretty) {
-      this.indent = indent;
-      this.sb = sb;
-      this.pretty = pretty;
-      indentLevel = "";
-      visited = new HashSet<JsonValue>();
-    }
+		private String indentLevel;
 
-    @Override
-    public void endVisit(JsonArray array, JsonContext ctx) {
-      if (pretty) {
-        indentLevel = indentLevel
-            .substring(0, indentLevel.length() - indent.length());
-        sb.append('\n');
-        sb.append(indentLevel);
-      }
-      sb.append("]");
-      visited.remove(array);
-    }
+		private Set<JsonValue> visited;
 
-    @Override
-    public void endVisit(JsonObject object, JsonContext ctx) {
-      if (pretty) {
-        indentLevel = indentLevel
-            .substring(0, indentLevel.length() - indent.length());
-        sb.append('\n');
-        sb.append(indentLevel);
-      }
-      sb.append("}");
-      visited.remove(object);
-      assert !visited.contains(object);
-    }
+		private final String indent;
 
-    @Override
-    public void visit(double number, JsonContext ctx) {
-      sb.append(Double.isInfinite(number) || Double.isNaN(number) ? "null" : format(number));
-    }
+		private final LengthConstrainedStringBuilder sb;
 
-    @Override
-    public void visit(String string, JsonContext ctx) {
-      sb.append(quote(string));
-    }
+		private final boolean pretty;
 
-    @Override
-    public void visit(boolean bool, JsonContext ctx) {
-      sb.append(bool);
-    }
+		private StringifyJsonVisitor(String indent,
+				LengthConstrainedStringBuilder sb, boolean pretty) {
+			this.indent = indent;
+			this.sb = sb;
+			this.pretty = pretty;
+			indentLevel = "";
+			visited = new HashSet<JsonValue>();
+		}
 
-    @Override
-    public boolean visit(JsonArray array, JsonContext ctx) {
-      checkCycle(array);
-      sb.append("[");
-      if (pretty) {
-        sb.append('\n');
-        indentLevel += indent;
-        sb.append(indentLevel);
-      }
-      return true;
-    }
+		@Override
+		public void endVisit(JsonArray array, JsonContext ctx) {
+			if (pretty) {
+				indentLevel = indentLevel.substring(0,
+						indentLevel.length() - indent.length());
+				sb.append('\n');
+				sb.append(indentLevel);
+			}
+			sb.append("]");
+			visited.remove(array);
+		}
 
-    @Override
-    public boolean visit(JsonObject object, JsonContext ctx) {
-      checkCycle(object);
-      sb.append("{");
-      if (pretty) {
-        sb.append('\n');
-        indentLevel += indent;
-        sb.append(indentLevel);
-      }
-      return true;
-    }
+		@Override
+		public void endVisit(JsonObject object, JsonContext ctx) {
+			if (pretty) {
+				indentLevel = indentLevel.substring(0,
+						indentLevel.length() - indent.length());
+				sb.append('\n');
+				sb.append(indentLevel);
+			}
+			sb.append("}");
+			visited.remove(object);
+			assert !visited.contains(object);
+		}
 
-    @Override
-    public boolean visitIndex(int index, JsonContext ctx) {
-      commaIfNotFirst(ctx);
-      return true;
-    }
+		@Override
+		public void visit(boolean bool, JsonContext ctx) {
+			sb.append(bool);
+		}
 
-    @Override
-    public boolean visitKey(String key, JsonContext ctx) {
-      if ("".equals(key)) {
-        return true;
-      }
-      // skip properties injected by GWT runtime on JSOs
-      if (skipKeys.contains(key)) {
-        return false;
-      }
-      commaIfNotFirst(ctx);
-      sb.append(quote(key) + ":");
-      if (pretty) {
-        sb.append(' ');
-      }
-      return true;
-    }
+		@Override
+		public void visit(double number, JsonContext ctx) {
+			sb.append(Double.isInfinite(number) || Double.isNaN(number) ? "null"
+					: format(number));
+		}
 
-    @Override
-    public void visitNull(JsonContext ctx) {
-      sb.append("null");
-    }
+		@Override
+		public boolean visit(JsonArray array, JsonContext ctx) {
+			checkCycle(array);
+			sb.append("[");
+			if (pretty) {
+				sb.append('\n');
+				indentLevel += indent;
+				sb.append(indentLevel);
+			}
+			return true;
+		}
 
-    private void checkCycle(JsonValue value) {
-      if (visited.contains(value)) {
-        throw new JsonException("Cycled detected during stringify");
-      } else {
-        visited.add(value);
-      }
-    }
+		@Override
+		public boolean visit(JsonObject object, JsonContext ctx) {
+			checkCycle(object);
+			sb.append("{");
+			if (pretty) {
+				sb.append('\n');
+				indentLevel += indent;
+				sb.append(indentLevel);
+			}
+			return true;
+		}
 
-    private void commaIfNotFirst(JsonContext ctx) {
-      if (!ctx.isFirst()) {
-        sb.append(",");
-        if (pretty) {
-          sb.append('\n');
-          sb.append(indentLevel);
-        }
-      }
-    }
+		@Override
+		public void visit(String string, JsonContext ctx) {
+			sb.append(quote(string));
+		}
 
-    private String format(double number) {
-      String n = String.valueOf(number);
-      if (n.endsWith(".0")) {
-        n = n.substring(0, n.length() - 2);
-      }
-      return n;
-    }
-  }
+		@Override
+		public boolean visitIndex(int index, JsonContext ctx) {
+			commaIfNotFirst(ctx);
+			return true;
+		}
 
-  /**
-   * Convert special control characters into unicode escape format.
-   */
-  public static String escapeControlChars(String text) {
-    StringBuilder toReturn = new StringBuilder();
-    for (int i = 0; i < text.length(); i++) {
-      char c = text.charAt(i);
-      if (isControlChar(c)) {
-        toReturn.append(escapeCharAsUnicode(c));
-      } else {
-        toReturn.append(c);
-      }
-    }
-    return toReturn.toString();
-  }
+		@Override
+		public boolean visitKey(String key, JsonContext ctx) {
+			if ("".equals(key)) {
+				return true;
+			}
+			// skip properties injected by GWT runtime on JSOs
+			if (skipKeys.contains(key)) {
+				return false;
+			}
+			commaIfNotFirst(ctx);
+			sb.append(quote(key) + ":");
+			if (pretty) {
+				sb.append(' ');
+			}
+			return true;
+		}
 
-  public static <T extends JsonValue> T parse(String json) throws JsonException {
-    return Json.instance().parse(json);
-  }
+		@Override
+		public void visitNull(JsonContext ctx) {
+			sb.append("null");
+		}
 
-  /**
-   * Safely escape an arbitrary string as a JSON string literal.
-   */
-  public static String quote(String value) {
-    StringBuilder toReturn = new StringBuilder("\"");
-    for (int i = 0; i < value.length(); i++) {
-      char c = value.charAt(i);
+		private void checkCycle(JsonValue value) {
+			if (visited.contains(value)) {
+				throw new JsonException("Cycled detected during stringify");
+			} else {
+				visited.add(value);
+			}
+		}
 
-      String toAppend = String.valueOf(c);
-      switch (c) {
-        case '\b':
-          toAppend = "\\b";
-          break;
-        case '\t':
-          toAppend = "\\t";
-          break;
-        case '\n':
-          toAppend = "\\n";
-          break;
-        case '\f':
-          toAppend = "\\f";
-          break;
-        case '\r':
-          toAppend = "\\r";
-          break;
-        case '"':
-          toAppend = "\\\"";
-          break;
-        case '\\':
-          toAppend = "\\\\";
-          break;
-        default:
-          if (isControlChar(c)) {
-            toAppend = escapeCharAsUnicode(c);
-          }
-      }
-      toReturn.append(toAppend);
-    }
-    toReturn.append("\"");
-    return toReturn.toString();
-  }
+		private void commaIfNotFirst(JsonContext ctx) {
+			if (!ctx.isFirst()) {
+				sb.append(",");
+				if (pretty) {
+					sb.append('\n');
+					sb.append(indentLevel);
+				}
+			}
+		}
 
-  /**
-   * Converts a Json Object to Json format.
-   *
-   * @param jsonValue  json object to stringify
-   * @return json formatted string
-   */
-  public static String stringify(JsonValue jsonValue) {
-    return stringify(jsonValue, 0);
-  }
-
-  /**
-   * Converts a JSO to Json format.
-   *
-   * @param jsonValue    json object to stringify
-   * @param spaces number of spaces to indent in pretty print mode
-   * @return json formatted string
-   */
-  public static String stringify(JsonValue jsonValue, int spaces) {
-    StringBuilder sb = new StringBuilder();
-    for (int i = 0; i < spaces; i++) {
-      sb.append(' ');
-    }
-    return stringify(jsonValue, sb.toString());
-  }
-
-  /**
-   * Converts a Json object to Json formatted String.
-   *
-   * @param jsonValue    json object to stringify
-   * @param indent optional indention prefix for pretty printing
-   * @return json formatted string
-   */
-  public static String stringify(JsonValue jsonValue, final String indent) {
-    final LengthConstrainedStringBuilder sb = new LengthConstrainedStringBuilder();
-    final boolean isPretty = indent != null && !"".equals(indent);
-
-    new StringifyJsonVisitor(indent, sb, isPretty).accept(jsonValue);
-    return sb.toString();
-  }
-
-  /**
-   * Turn a single unicode character into a 32-bit unicode hex literal.
-   */
-  private static String escapeCharAsUnicode(char toEscape) {
-    String hexValue = Integer.toString(toEscape, 16);
-    int padding = 4 - hexValue.length();
-    return "\\u" + ("0000".substring(0, padding)) + hexValue;
-  }
-
-  private static boolean isControlChar(char c) {
-    return (c >= 0x00 && c <= 0x1f)  
-        || (c >= 0x7f && c <= 0x9f) 
-        || c == '\u00ad' || c == '\u070f' || c == '\u17b4' || c == '\u17b5'
-        || c == '\ufeff' 
-        || (c >= '\u0600' && c <= '\u0604')
-        || (c >= '\u200c' && c <= '\u200f')
-        || (c >= '\u2028' && c <= '\u202f')
-        || (c >= '\u2060' && c <= '\u206f')
-        || (c >= '\ufff0' && c <= '\uffff');
-  }
+		private String format(double number) {
+			String n = String.valueOf(number);
+			if (n.endsWith(".0")) {
+				n = n.substring(0, n.length() - 2);
+			}
+			return n;
+		}
+	}
 }
