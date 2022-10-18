@@ -9,6 +9,7 @@ import java.util.Optional;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.JsUniqueSet;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators;
 
 public class ClientReflections {
@@ -44,8 +45,9 @@ public class ClientReflections {
 				// Arrays$ArrayList - or primitive
 				return ClassReflector.emptyReflector(clazz);
 			}
-			throw new NoSuchElementException(
-					"No reflector for " + clazz.getName());
+			throw new NoSuchElementException(Ax.format(
+					"No reflector for %s - check it or a superclass has the @Bean annotation",
+					clazz.getName()));
 		}
 		return optional.get();
 	}
