@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.common.client.serializer.Serializers;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
+import cc.alcina.framework.common.client.util.Ax;
 
 public interface UserPropertyPersistable
 		extends Serializable, SourcesPropertyChangeEvents, TreeSerializable {
@@ -60,6 +61,8 @@ public interface UserPropertyPersistable
 						return null;
 					}
 				} catch (Exception e) {
+					Ax.err("Deserializing %s :: %s :: %s", property.toLocator(),
+							property.getKey(), property.getCategory());
 					// FIXME - mvcc.5 - devex
 					e.printStackTrace();
 					return null;
