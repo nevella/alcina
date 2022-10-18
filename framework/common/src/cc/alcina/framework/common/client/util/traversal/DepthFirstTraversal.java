@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.util;
+package cc.alcina.framework.common.client.util.traversal;
 
 import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
