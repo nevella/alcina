@@ -14,10 +14,14 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage;
 
 public class ProcessMetric extends Model implements ProcessObservable {
+	private static final String CONTEXT_METRIC_NAME = ProcessMetric.class
+			.getName() + ".CONTEXT_METRIC_NAME";
+
 	private static Logger logger = LoggerFactory.getLogger(ProcessMetric.class);
 
 	public static void end(Type type) {
@@ -30,9 +34,17 @@ public class ProcessMetric extends Model implements ProcessObservable {
 						true));
 	}
 
-	public static void publish(long time, Type type, String name, int bytes) {
+	public static String getContextName() {
+		return LooseContext.getString(CONTEXT_METRIC_NAME);
+	}
+
+	public static void publish(long time, Type type, int bytes) {
 		ProcessObservers.publish(ProcessMetric.class,
-				() -> new ProcessMetric(time, type, name, bytes));
+				() -> new ProcessMetric(time, type, bytes));
+	}
+
+	public static void setContextName(String name) {
+		LooseContext.set(CONTEXT_METRIC_NAME, name);
 	}
 
 	private boolean end;
@@ -50,18 +62,19 @@ public class ProcessMetric extends Model implements ProcessObservable {
 	public ProcessMetric() {
 	}
 
+	private ProcessMetric(long time, Type type, int bytes) {
+		this.time = time;
+		this.type = type;
+		this.name = LooseContext.getString(CONTEXT_METRIC_NAME);
+		this.size = bytes;
+	}
+
 	private ProcessMetric(long time, Type type, int size, boolean end) {
 		this.time = time;
 		this.type = type;
+		this.name = LooseContext.getString(CONTEXT_METRIC_NAME);
 		this.size = size;
 		this.end = end;
-	}
-
-	private ProcessMetric(long time, Type type, String name, int bytes) {
-		this.time = time;
-		this.type = type;
-		this.name = name;
-		this.size = bytes;
 	}
 
 	public String getName() {
@@ -120,9 +133,9 @@ public class ProcessMetric extends Model implements ProcessObservable {
 		fb.format("%s   ", CommonUtils.formatDate(new Date(time),
 				DateStyle.TIMESTAMP_NO_DAY));
 		fb.appendPadRight(16, name == null ? "" : name);
-		fb.conditionalFormat(!end, "start");
-		fb.conditionalFormat(size != 0, "size: %s", size);
-		fb.conditionalFormat(objectCount != 0, "objectCount: %s", objectCount);
+		fb.conditionalFormat(size != 0, "size: %s ", size);
+		fb.conditionalFormat(!end, "[start] ");
+		fb.conditionalFormat(objectCount != 0, "objectCount: %s ", objectCount);
 		return fb.toString();
 	}
 

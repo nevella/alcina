@@ -168,9 +168,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	public static final String CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS";
 
-	public static final String CONTEXT_RESOLVED_REQUEST_NAME = CommonRemoteServiceServlet.class
-			.getName() + ".CONTEXT_RESOLVED_REQUEST_NAME";
-
 	public static final String CONTEXT_METRIC_OBSERVER = CommonRemoteServiceServlet.class
 			.getName() + ".CONTEXT_METRIC_OBSERVER";
 
@@ -475,6 +472,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		AlcinaServletContext alcinaServletContext = null;
 		HttpServletRequest threadLocalRequest = getThreadLocalRequest();
 		int encodedLength = 0;
+		String resolvedName = null;
 		try {
 			rpcRequest = RPC.decodeRequest(payload, this.getClass(), this);
 			String suffix = getRpcHandlerThreadNameSuffix(rpcRequest);
@@ -501,11 +499,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			alcinaServletContext.begin(threadLocalRequest,
 					getThreadLocalResponse(), threadName, initialContext);
 			afterAlcinaServletContextInitialisation();
-			LooseContext.set(CONTEXT_RESOLVED_REQUEST_NAME, name);
+			ProcessMetric.setContextName(name);
 			configureProcessObserver(threadLocalRequest,
 					rpcRequest.getParameters(), true);
 			ProcessMetric.publish(start, ProcessMetric.ServerType.rpc,
-					LooseContext.getString(CONTEXT_RESOLVED_REQUEST_NAME),
 					payload.length());
 			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
 					threadLocalRequest);
@@ -723,16 +720,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			return;
 		}
 		if (start) {
-			String resolvedRequestName = LooseContext
-					.getString(CONTEXT_RESOLVED_REQUEST_NAME);
-			if (Objects.equals(resolvedRequestName, "callRpc")) {
+			String requestId = ProcessMetric.getContextName();
+			if (Objects.equals(requestId, "callRpc")) {
 				// minor performance hit, but consistent and only in metrics
 				// context
 				ReflectiveRemoteServicePayload rpcPayload = ReflectiveSerializer
 						.deserialize((String) parameters[0]);
-				LooseContext.set(CONTEXT_RESOLVED_REQUEST_NAME,
-						rpcPayload.getMethodName());
+				requestId = rpcPayload.getMethodName();
 			}
+			requestId += "." + metricRpcId;
+			ProcessMetric.setContextName(requestId);
 			Observer observer = new ProcessMetric.Observer();
 			observer.setSequenceId(metricRpcId);
 			LooseContext.set(CONTEXT_METRIC_OBSERVER, observer);
