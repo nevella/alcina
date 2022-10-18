@@ -16,6 +16,11 @@
 	<h3>Common cases</h3>
 	<h4>Rendering a java bean (any class with getters)</h4>
 	<h4>Transforming the entries of a list</h4>
+	<p>
+		To transform the elements of a list, add the @Directed.Transform(
+		&lt;transform-class&gt;) annotation - e.g. to transform List&lt;String&gt; to List&lt;HtmlModel&gt;,
+		add @Directed.Transform(LeafModel.HtmlModel.Transform.class)
+	</p>
 	<h4>Wrapping a container in more than one tag</h4>
 	<h4>Transforming an object</h4>
 	<h4>
