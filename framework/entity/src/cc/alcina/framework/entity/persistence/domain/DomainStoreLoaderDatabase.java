@@ -1312,11 +1312,14 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 
 		private Member getMember() {
 			long start = System.currentTimeMillis();
-			Optional<Member> o_member = getMember0();
-			if (o_member.isPresent()) {
-				return o_member.get();
+			synchronized (this) {
+				Optional<Member> o_member = getMember0();
+				if (o_member.isPresent()) {
+					return o_member.get();
+				}
 			}
 			synchronized (this) {
+				Optional<Member> o_member = null;
 				while (true) {
 					try {
 						wait(1000);
