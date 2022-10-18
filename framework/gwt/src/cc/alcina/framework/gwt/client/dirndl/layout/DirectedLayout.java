@@ -5,6 +5,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
+import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
+import cc.alcina.framework.common.client.util.traversal.Traversable;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
@@ -156,7 +159,7 @@ public class DirectedLayout implements AlcinaProcess {
 	 * @author nick@alcina.cc
 	 *
 	 */
-	DepthFirstTraversal<RendererInput> rendererInputs;
+	OneWayTraversal<RendererInput> rendererInputs;
 
 	boolean inLayout = false;
 
@@ -195,14 +198,16 @@ public class DirectedLayout implements AlcinaProcess {
 		// if (model == null) {
 		// return;
 		// }
-		RendererInput input = new RendererInput(resolver, model, location,
-				directeds, parentNode);
-		// beginning of a layout
+		RendererInput input = null;
 		if (rendererInputs == null) {
-			rendererInputs = new DepthFirstTraversal<>(input, o -> null, false);
+			input = new RendererInput();
+			// beginning of a layout
+			rendererInputs = new OneWayTraversal<DirectedLayout.RendererInput>(
+					input, RendererInput::new);
 		} else {
-			rendererInputs.add(input);
+			input = rendererInputs.add();
 		}
+		input.init(resolver, model, location, directeds, parentNode);
 		return input;
 	}
 
@@ -963,40 +968,47 @@ public class DirectedLayout implements AlcinaProcess {
 	 * @author nick@alcina.cc
 	 *
 	 */
-	class RendererInput {
+	class RendererInput implements Traversable {
 		ContextResolver resolver;
 
-		final Object model;
+		// effectively final
+		Object model;
 
-		final AnnotationLocation location;
+		AnnotationLocation location;
 
-		final List<Directed> directeds;
+		List<Directed> directeds;
 
-		final Node parentNode;
+		Node parentNode;
 
-		final Node node;
-
-		RendererInput next;
+		Node node;
 
 		Node replace;
 
-		RendererInput(ContextResolver resolver, Object model,
-				AnnotationLocation location, List<Directed> directeds,
-				Node parentNode) {
-			this.resolver = resolver;
-			this.model = model;
-			this.location = location;
-			this.parentNode = parentNode;
-			this.directeds = directeds != null ? directeds
-					: location.getAnnotations(Directed.class);
-			// generate the node (1-1 with input)
-			node = new Node(resolver, parentNode, location, model);
-			// don't add to parents yet (out of order) - but once we have a
-			// better queue, do
-			// if (parentNode != null) {
-			// parentNode.children.add(node);
-			// }
-			node.directed = firstDirected();
+		private RendererInput() {
+		}
+
+		@Override
+		public Iterator children() {
+			throw new UnsupportedOperationException();
+		}
+
+		@Override
+		public void enter() {
+		}
+
+		@Override
+		public void exit() {
+		}
+
+		@Override
+		public void release() {
+			resolver = null;
+			model = null;
+			location = null;
+			directeds = null;
+			parentNode = null;
+			node = null;
+			replace = null;
 		}
 
 		@Override
@@ -1094,6 +1106,25 @@ public class DirectedLayout implements AlcinaProcess {
 		Optional<Widget> firstAncestorWidget() {
 			return parentNode == null ? Optional.empty()
 					: parentNode.firstSelfOrAncestorWidget(true);
+		}
+
+		void init(ContextResolver resolver, Object model,
+				AnnotationLocation location, List<Directed> directeds,
+				Node parentNode) {
+			this.resolver = resolver;
+			this.model = model;
+			this.location = location;
+			this.parentNode = parentNode;
+			this.directeds = directeds != null ? directeds
+					: location.getAnnotations(Directed.class);
+			// generate the node (1-1 with input)
+			node = new Node(resolver, parentNode, location, model);
+			// don't add to parents yet (out of order) - but once we have a
+			// better queue, do
+			// if (parentNode != null) {
+			// parentNode.children.add(node);
+			// }
+			node.directed = firstDirected();
 		}
 
 		void render() {

@@ -1,5 +1,6 @@
 package cc.alcina.framework.common.client.util.traversal;
 
+import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.function.Supplier;
 
@@ -9,14 +10,14 @@ import cc.alcina.framework.common.client.util.traversal.OneWayTraversal.Traversa
 
 /**
  * <p>
- * One-off iterable/iterator tuple, models descent of a tree
+ * One-off iterable/iterator tuple, models descent of a self-generating tree
  *
  * <p>
  * This version minimises allocations (using a ringbuffer of released nodes)
  *
  * <p>
- * This does *not* throw ConcurrentModificationExceptions if traversing
- * forwards, but will if traversing lastFirst
+ * This does *not* throw a ConcurrentModificationException if modifying the
+ * children of the entered (current) node, but will in other cases
  *
  * @author nick@alcina.cc
  *
@@ -34,23 +35,25 @@ public class OneWayTraversal<T extends Traversable>
 
 	private Supplier<T> supplier;
 
-	public OneWayTraversal(T root, Supplier<T> supplier) {
-		this.supplier = supplier;
+	public OneWayTraversal(T t, Supplier<T> supplier) {
 		this.supplier = supplier;
 		buffer = new RingBuffer.TraversableBuffer<TraversalNode>(
 				(Supplier<TraversalNode>) (Supplier<?>) this);
-		// TODO - this should be buffer
-		next = new TraversalNode(null, root);
+		// the root node is ex-buffer
+		next = new TraversalNode();
+		next.value = t;
 	}
 
-	public void add(T t) {
+	public T add() {
 		Preconditions.checkState(next != null);
-		next.add(t);
+		return next.add();
 	}
 
 	@Override
 	public TraversalNode get() {
-		return null;
+		TraversalNode node = new TraversalNode();
+		node.value = supplier.get();
+		return node;
 	}
 
 	@Override
@@ -73,8 +76,9 @@ public class OneWayTraversal<T extends Traversable>
 		Preconditions.checkState(next != null);
 		entered = next;
 		T result = next.value;
-		// although result has an enter() method, let the iterator call that.
-		// exit() will be called during iteration though
+		// the consumer can either handle result, or process via next.enter() -
+		// dealer's choice
+		next.enter();
 		return result;
 	}
 
@@ -97,29 +101,41 @@ public class OneWayTraversal<T extends Traversable>
 		TraversalNode() {
 		}
 
-		public void add(T t) {
-			TraversalNode node = new TraversalNode(this, t);
+		public T add() {
+			if (entered != this) {
+				throw new ConcurrentModificationException(
+						"adding children to non-cursor node");
+			}
+			TraversalNode node = buffer.acquire();
+			node.parent = this;
 			if (descentChild == null) {
 				descentChild = node;
 			} else {
 				node.cursorSibling = lastChild;
 			}
 			lastChild = node;
+			return node.value;
 		}
 
 		@Override
+		/*
+		 * This is a 'possible' - one way to push traversal to this framework is
+		 * to populate children on enter() - but certainly this class shouldn't
+		 * do nothing...possibly pull this doc up
+		 */
 		public Iterator<TraversalNode> children() {
 			throw new UnsupportedOperationException();
 		}
 
 		@Override
 		public void enter() {
-			throw new UnsupportedOperationException();
+			value.enter();
 		}
 
 		@Override
 		public void exit() {
-			throw new UnsupportedOperationException();
+			value.exit();
+			release();
 		}
 
 		// next copying allows for release()
@@ -131,13 +147,11 @@ public class OneWayTraversal<T extends Traversable>
 			} else {
 				if (cursorSibling != null) {
 					TraversalNode next = cursorSibling;
-					value.exit();
-					release();
+					exit();
 					return next;
 				} else {
 					TraversalNode parent = this.parent;
-					value.exit();
-					release();
+					exit();
 					return parent == null ? null : parent.next();
 				}
 			}
@@ -148,12 +162,6 @@ public class OneWayTraversal<T extends Traversable>
 			value.release();
 			cursorSibling = null;
 			parent = null;
-		}
-
-		TraversalNode init(TraversalNode parent, T value) {
-			this.parent = parent;
-			this.value = value;
-			return this;
 		}
 	}
 }
