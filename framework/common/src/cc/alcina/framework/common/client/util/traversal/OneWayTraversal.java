@@ -10,7 +10,9 @@ import cc.alcina.framework.common.client.util.traversal.OneWayTraversal.Traversa
 
 /**
  * <p>
- * One-off iterable/iterator tuple, models descent of a self-generating tree
+ * One-off iterable/iterator tuple, models depth-first descent of a
+ * self-generating tree, such as a serialization process or render tree
+ * traversal
  *
  * <p>
  * This version minimises allocations (using a ringbuffer of released nodes)
@@ -45,8 +47,8 @@ public class OneWayTraversal<T extends Traversable>
 	}
 
 	public T add() {
-		Preconditions.checkState(next != null);
-		return next.add();
+		Preconditions.checkState(entered != null);
+		return entered.add();
 	}
 
 	@Override
@@ -92,7 +94,7 @@ public class OneWayTraversal<T extends Traversable>
 
 		TraversalNode parent;
 
-		TraversalNode cursorSibling;
+		TraversalNode nextSibling;
 
 		TraversalNode lastChild;
 
@@ -111,7 +113,7 @@ public class OneWayTraversal<T extends Traversable>
 			if (descentChild == null) {
 				descentChild = node;
 			} else {
-				node.cursorSibling = lastChild;
+				lastChild.nextSibling = node;
 			}
 			lastChild = node;
 			return node.value;
@@ -145,8 +147,8 @@ public class OneWayTraversal<T extends Traversable>
 				descentChild = null;
 				return next;
 			} else {
-				if (cursorSibling != null) {
-					TraversalNode next = cursorSibling;
+				if (nextSibling != null) {
+					TraversalNode next = nextSibling;
 					exit();
 					return next;
 				} else {
@@ -160,7 +162,7 @@ public class OneWayTraversal<T extends Traversable>
 		@Override
 		public void release() {
 			value.release();
-			cursorSibling = null;
+			nextSibling = null;
 			parent = null;
 		}
 	}
