@@ -190,8 +190,10 @@ public class JreJsonObject extends JreJsonValue implements JsonObject {
 			if (JsonUtil.FAST_STRINGIFY) {
 				for (String key : map.keySet()) {
 					objCtx.setCurrentKey(key);
-					visitor.accept(get(key), objCtx);
-					objCtx.setFirst(false);
+					if (visitor.visitKey(objCtx.getCurrentKey(), objCtx)) {
+						visitor.accept(get(key), objCtx);
+						objCtx.setFirst(false);
+					}
 				}
 			} else {
 				for (String key : stringifyOrder(keys())) {

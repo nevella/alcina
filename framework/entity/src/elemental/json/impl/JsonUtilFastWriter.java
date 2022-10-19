@@ -127,8 +127,9 @@ class JsonUtilFastWriter {
 		public boolean visitKey(String key, JsonContext ctx) {
 			commaIfNotFirst(ctx);
 			// key is a java identifier, so do not quote
+			builder.append("\"");
 			builder.append(key);
-			builder.append(':');
+			builder.append("\":");
 			return true;
 		}
 
@@ -155,11 +156,11 @@ class JsonUtilFastWriter {
 		 * Safely escape an arbitrary string as a JSON string literal.
 		 */
 		void quote(String value) {
-			builder.append('\'');
+			builder.append('\"');
 			int length = value.length();
 			for (int i = 0; i < length; i++) {
 				char c = value.charAt(i);
-				if (c >= 0x20 && c < 0x7F) {
+				if (c >= 0x20 && c < 0x7F && c != '"' && c != '\\') {
 					builder.append(c);
 					continue;
 				}
