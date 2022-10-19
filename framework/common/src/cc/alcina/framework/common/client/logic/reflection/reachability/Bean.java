@@ -20,18 +20,27 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+import cc.alcina.framework.common.client.reflection.ClassReflector;
+import cc.alcina.framework.common.client.reflection.Reflections;
+
 /**
- * Types with this annotation have reflection metadata available client-side -
- * including, but not limited to:
+ * <p>
+ * Types with this annotation have reflection metadata and code available
+ * client-side - including, but not limited to:
  *
- * clientInstantiable
+ * <ul>
+ * <li>instantiation {@link Reflections#newIsntance}
  *
- * forName
+ * <li>forName {@link Reflections#forName}
  *
- * bean property introspection
+ * <li>type introspection {@link Reflections#at}
  *
- * type/method annotation access
+ * <li>type property introspection {@link ClassReflector#properties}
  *
+ * <li>type/method annotation access - {@link ClassReflector#annotation},
+ * {@link Property#annotation}
+ *
+ * </ul>
  *
  * @author nick@alcina.cc
  *

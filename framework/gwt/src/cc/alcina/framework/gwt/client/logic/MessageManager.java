@@ -17,22 +17,31 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
+import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /**
- *
+ * FIXME - dirndl 1.1 - the topic payload should be a [Model,String] tuple - and
+ * possibly reduce topics to just one (plus a variant)
+ * 
  * @author Nick Reddel
  */
 @Registration.Singleton
 public class MessageManager {
 	public static final Topic<String> topicMessagePublished = Topic.create();
 
-	public static final Topic<String> topicCenterMessagePublished = Topic.create();
+	public static final Topic<Model> topicNotificationModelPublished = Topic
+			.create();
+
+	public static final Topic<String> topicCenterMessagePublished = Topic
+			.create();
 
 	public static final Topic<String> topicIcyMessagePublished = Topic.create();
 
-	public static final Topic<String> topicIcyCenterMessagePublished = Topic.create();
+	public static final Topic<String> topicIcyCenterMessagePublished = Topic
+			.create();
 
-	public static final Topic<String> topicExceptionMessagePublished = Topic.create();
+	public static final Topic<String> topicExceptionMessagePublished = Topic
+			.create();
 
 	public static final Topic<String> topicAppMessagePublished = Topic.create();
 
