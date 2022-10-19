@@ -163,42 +163,37 @@ class JsonUtilFastWriter {
 					builder.append(c);
 					continue;
 				}
+				String toAppend = null;
 				switch (c) {
 				case '\b':
-					builder.append('\\');
-					builder.append('b');
+					toAppend = "\\b";
 					break;
 				case '\t':
-					builder.append('\\');
-					builder.append('t');
+					toAppend = "\\t";
 					break;
 				case '\n':
-					builder.append('\\');
-					builder.append('n');
+					toAppend = "\\n";
 					break;
 				case '\f':
-					builder.append('\\');
-					builder.append('f');
+					toAppend = "\\f";
 					break;
 				case '\r':
-					builder.append('\\');
-					builder.append('r');
+					toAppend = "\\r";
 					break;
 				case '"':
-					builder.append('\\');
-					builder.append('"');
+					toAppend = "\\\"";
 					break;
 				case '\\':
-					builder.append('\\');
-					builder.append('\\');
+					toAppend = "\\\\";
 					break;
 				default:
 					if (isControlChar(c)) {
-						builder.append(escapeCharAsUnicode(c));
+						toAppend = escapeCharAsUnicode(c);
 					} else {
-						builder.append(c);
+						toAppend = String.valueOf(c);
 					}
 				}
+				builder.append(toAppend);
 			}
 			builder.append('"');
 		}
