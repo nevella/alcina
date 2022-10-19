@@ -10,6 +10,8 @@ import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.util.Ax;
 
 public class DomainFilter {
+	public static TestingPredicate testingPredicate;
+
 	public static List<DomainFilter> fromKvs(Object... objects) {
 		List<DomainFilter> result = new ArrayList<DomainFilter>();
 		for (int i = 0; i < objects.length; i += 2) {
@@ -50,17 +52,12 @@ public class DomainFilter {
 	}
 
 	public Predicate asPredicate() {
-		return predicate != null ? new Predicate() {
-			@Override
-			public boolean test(Object o) {
-				return predicate.test(o);
-			}
-
-			@Override
-			public String toString() {
-				return DomainFilter.this.toString();
-			}
-		} : new PropertyPathFilter(propertyPath, propertyValue, filterOperator);
+		Predicate predicate0 = asPredicate0();
+		if (testingPredicate == null) {
+			return predicate0;
+		} else {
+			return new TestingPredicate(testingPredicate.debugTest, predicate0);
+		}
 	}
 
 	public boolean canFlatten() {
@@ -114,5 +111,45 @@ public class DomainFilter {
 		}
 		return Ax.format("DomainFilter: %s %s %s", propertyPath,
 				filterOperator.operationText(), propertyValue);
+	}
+
+	private Predicate asPredicate0() {
+		return predicate != null ? new Predicate() {
+			@Override
+			public boolean test(Object o) {
+				return predicate.test(o);
+			}
+
+			@Override
+			public String toString() {
+				return DomainFilter.this.toString();
+			}
+		} : new PropertyPathFilter(propertyPath, propertyValue, filterOperator);
+	}
+
+	public static class TestingPredicate implements Predicate {
+		private Predicate debugTest;
+
+		private Predicate wrappedPredicate;
+
+		public TestingPredicate(Predicate debugTest, Predicate wrapped) {
+			this.debugTest = debugTest;
+			this.wrappedPredicate = wrapped;
+		}
+
+		@Override
+		public boolean test(Object t) {
+			boolean result = wrappedPredicate.test(t);
+			if (!result && debugTest.test(t)) {
+				String predicateName = wrappedPredicate.toString();
+				boolean debug = true;
+			}
+			return result;
+		}
+
+		@Override
+		public String toString() {
+			return wrappedPredicate.toString();
+		}
 	}
 }

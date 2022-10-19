@@ -185,8 +185,13 @@ public class DomainStoreQueryTranslator {
 			addJoinFilter(criteria, sub);
 		}
 		addFilters(criteria);
-		for (DomainStoreCriteria sub : criteria.subs) {
-			addRestrictions(sub);
+		// sub sub restrictions are currently not supported -- aliasing would
+		// have to
+		// become more involved if they were
+		if (criteria == root) {
+			for (DomainStoreCriteria sub : criteria.subs) {
+				addRestrictions(sub);
+			}
 		}
 		handleHints(criteria);
 	}
@@ -205,7 +210,8 @@ public class DomainStoreQueryTranslator {
 						DomainStoreEntityManager.ORDER_HANDLER.length());
 				OrderCriterion criterion = FlatTreeSerializer
 						.deserialize(payload);
-				Registry.impl(OrderHandler.class,criterion.getClass()).addOrder(criterion, query);
+				Registry.impl(OrderHandler.class, criterion.getClass())
+						.addOrder(criterion, query);
 			} else if (hint
 					.startsWith(DomainStoreEntityManager.CRITERION_HANDLER)) {
 				String payload = hint.substring(
@@ -214,7 +220,7 @@ public class DomainStoreQueryTranslator {
 						.deserialize(payload);
 				String className = hint.substring(
 						DomainStoreEntityManager.CRITERION_HANDLER.length());
-				Registry.impl(CriterionHandler.class,criterion.getClass())
+				Registry.impl(CriterionHandler.class, criterion.getClass())
 						.addFilter(criterion, query);
 			} else {
 				throw new UnsupportedOperationException();
@@ -876,6 +882,9 @@ public class DomainStoreQueryTranslator {
 		}
 
 		private void addProjection(Projection projection) {
+			if (projection instanceof AliasedProjection) {
+				projection = fieldHelper.getValue(projection, "projection");
+			}
 			String propertyPath = fieldHelper.getValue(projection,
 					"propertyName");
 			propertyPath = translatePropertyPath(null, null, propertyPath);
