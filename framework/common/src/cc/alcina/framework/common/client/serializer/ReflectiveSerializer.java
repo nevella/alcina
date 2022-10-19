@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
+import cc.alcina.framework.common.client.util.AlcinaCollections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CollectionCreators.ConcurrentMapCreator;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -339,17 +340,24 @@ public class ReflectiveSerializer {
 					.getProperties(node.value).iterator();
 			Object templateInstance = Reflections.at(node.type)
 					.templateInstance();
+			// optimisation to avoid double-gets
+			Map<Property, Object> propertyValues = AlcinaCollections
+					.newHashMap();
 			FilteringIterator<Property> filteringIterator = new FilteringIterator<>(
 					iterator, p -> {
+						Object childValue = p.get(node.value);
+						propertyValues.put(p, childValue);
+						// call later than needed to guarantee propertyValues is
+						// populated
 						if (!node.state.serializerOptions.elideDefaults) {
 							return true;
 						}
-						Object childValue = p.get(node.value);
 						Object templateValue = p.get(templateInstance);
 						return !Objects.equals(childValue, templateValue);
 					});
 			return new MappingIterator<Property, GraphNode>(filteringIterator,
-					new ReflectiveSerializer.GraphNodeMappingProperty(node));
+					new ReflectiveSerializer.GraphNodeMappingProperty(node,
+							propertyValues));
 		}
 
 		@Override
@@ -581,7 +589,7 @@ public class ReflectiveSerializer {
 		void ensureValueWritten() {
 			if (serialNode == null) {
 				if (serializer.isReferenceSerializer()) {
-					Object idx = state.identityIdx.get(value);
+					Integer idx = state.identityIdx.get(value);
 					if (idx != null) {
 						parent.serialNode.write(this, idx);
 						return;
@@ -640,8 +648,12 @@ public class ReflectiveSerializer {
 			implements Function<Property, GraphNode> {
 		private GraphNode node;
 
-		public GraphNodeMappingProperty(GraphNode node) {
+		private Map<Property, Object> propertyValues;
+
+		public GraphNodeMappingProperty(GraphNode node,
+				Map<Property, Object> propertyValues) {
 			this.node = node;
+			this.propertyValues = propertyValues;
 		}
 
 		@Override
@@ -649,7 +661,7 @@ public class ReflectiveSerializer {
 			Property property = Reflections.at(node.value.getClass())
 					.property(t.getName());
 			GraphNode graphNode = new GraphNode(node, t.getName(), property);
-			graphNode.setValue(property.get(node.value));
+			graphNode.setValue(propertyValues.get(t));
 			return graphNode;
 		}
 	}

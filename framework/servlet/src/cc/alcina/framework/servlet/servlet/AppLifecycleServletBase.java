@@ -98,6 +98,7 @@ import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
+import elemental.json.impl.JsonUtil;
 
 @Registration.Singleton
 public abstract class AppLifecycleServletBase extends GenericServlet {
@@ -328,6 +329,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	 */
 	protected abstract void initCommonImplServices();
 
+	@SuppressWarnings("deprecation")
 	protected void initCommonServices() {
 		PermissionsManager permissionsManager = PermissionsManager.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
@@ -341,6 +343,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				new TimerWrapperProviderJvm());
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
 		GWT.setBridge(new GWTBridgeHeadless());
+		JsonUtil.FAST_STRINGIFY = true;
 	}
 
 	protected abstract void initContainerBridge();
