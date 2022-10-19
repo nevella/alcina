@@ -33,13 +33,13 @@ public class OneWayTraversal<T extends Traversable>
 
 	private boolean iteratorConsumed;
 
-	RingBuffer.TraversableBuffer<TraversalNode> buffer;
+	RingBuffer<TraversalNode> buffer;
 
 	private Supplier<T> supplier;
 
 	public OneWayTraversal(T t, Supplier<T> supplier) {
 		this.supplier = supplier;
-		buffer = new RingBuffer.TraversableBuffer<TraversalNode>(
+		buffer = new RingBuffer<TraversalNode>(
 				(Supplier<TraversalNode>) (Supplier<?>) this);
 		// the root node is ex-buffer
 		next = new TraversalNode();
@@ -164,6 +164,7 @@ public class OneWayTraversal<T extends Traversable>
 			value.release();
 			nextSibling = null;
 			parent = null;
+			buffer.release(this);
 		}
 	}
 }

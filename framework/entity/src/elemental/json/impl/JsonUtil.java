@@ -31,6 +31,8 @@ import elemental.json.JsonValue;
  */
 @Deprecated
 public class JsonUtil {
+	public static boolean FAST_STRINGIFY = false;
+
 	/**
 	 * Convert special control characters into unicode escape format.
 	 */
@@ -59,6 +61,10 @@ public class JsonUtil {
 		StringBuilder toReturn = new StringBuilder("\"");
 		for (int i = 0; i < value.length(); i++) {
 			char c = value.charAt(i);
+			if (c >= 0x20 && c < 0x7F) {
+				toReturn.append(c);
+				continue;
+			}
 			switch (c) {
 			case '\b':
 				toReturn.append('\\');
@@ -108,7 +114,11 @@ public class JsonUtil {
 	 * @return json formatted string
 	 */
 	public static String stringify(JsonValue jsonValue) {
-		return stringify(jsonValue, 0);
+		if (FAST_STRINGIFY) {
+			return JsonUtilFastWriter.stringify(jsonValue);
+		} else {
+			return stringify(jsonValue, 0);
+		}
 	}
 
 	/**

@@ -25,6 +25,8 @@ public class RingBuffer<T> {
 
 	private Supplier<T> supplier;
 
+	private int resizeMinimumSize = 4096;
+
 	public RingBuffer(Supplier<T> supplier) {
 		this.supplier = supplier;
 	}
@@ -34,8 +36,22 @@ public class RingBuffer<T> {
 			return supplier.get();
 		} else {
 			available--;
-			return elements.get(availablePtr++);
+			T result = elements.get(availablePtr++);
+			int size = elements.size();
+			// resize (to at most half the size of the current list) if > half
+			// the list is consumed
+			if (size > resizeMinimumSize && size >> 1 < availablePtr) {
+				List<T> subList = elements.subList(availablePtr,
+						elements.size());
+				elements = new ArrayList<>(subList);
+				availablePtr = 0;
+			}
+			return result;
 		}
+	}
+
+	public int getResizeMinimumSize() {
+		return this.resizeMinimumSize;
 	}
 
 	public void release(T t) {
@@ -43,16 +59,7 @@ public class RingBuffer<T> {
 		available++;
 	}
 
-	public static class TraversableBuffer<TT extends Traversable<TT>>
-			extends RingBuffer<TT> {
-		public TraversableBuffer(Supplier<TT> supplier) {
-			super(supplier);
-		}
-
-		@Override
-		public void release(TT t) {
-			t.release();
-			super.release(t);
-		}
+	public void setResizeMinimumSize(int resizeMinimumSize) {
+		this.resizeMinimumSize = resizeMinimumSize;
 	}
 }

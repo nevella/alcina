@@ -69,6 +69,10 @@ public class LengthConstrainedStringBuilder {
 		return this.builder.append(str);
 	}
 
+	public int getMaxLength() {
+		return this.maxLength;
+	}
+
 	public boolean isEmpty() {
 		return this.builder.length() == 0;
 	}

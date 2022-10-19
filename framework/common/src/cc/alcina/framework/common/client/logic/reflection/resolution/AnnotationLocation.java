@@ -17,7 +17,8 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /*
- * TODO - probably move resolution caching from the resolver to here, since more performant (aka ThreadLocal )
+ * TODO - probably move resolution caching from the resolver to here, since more
+ * performant (aka ThreadLocal )
  */
 public class AnnotationLocation {
 	public Property property;
@@ -154,6 +155,15 @@ public class AnnotationLocation {
 		this.resolver = resolver;
 	}
 
+	public String toPropertyString() {
+		if (property != null) {
+			return Ax.format("%s.%s", classLocation.getSimpleName(),
+					property.getName());
+		} else {
+			return classLocation.getSimpleName();
+		}
+	}
+
 	@Override
 	public String toString() {
 		if (property != null) {
@@ -228,15 +238,6 @@ public class AnnotationLocation {
 			A ensured = location.getAnnotation0(annotationClass);
 			return ensured == null ? Collections.emptyList()
 					: Collections.singletonList(ensured);
-		}
-	}
-
-	public String toPropertyString() {
-		if (property != null) {
-			return Ax.format("%s.%s", classLocation.getSimpleName(),
-					property.getName());
-		} else {
-			return classLocation.getSimpleName();
 		}
 	}
 }
