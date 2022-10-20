@@ -114,7 +114,7 @@ class SerializationSupport {
 	private SerializationSupport() {
 	}
 
-	public Property getPropertyReflector(Class<?> clazz, String propertyName) {
+	public Property getProperty(Class<?> clazz, String propertyName) {
 		Map<String, Property> map = serializationPropertiesByName
 				.computeIfAbsent(clazz, c -> {
 					return getProperties0(c).stream()

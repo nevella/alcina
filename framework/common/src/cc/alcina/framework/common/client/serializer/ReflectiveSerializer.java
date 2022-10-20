@@ -471,6 +471,10 @@ public class ReflectiveSerializer {
 		protected abstract JsonValue toJson(T object);
 	}
 
+	/*
+	 * Models a java model node in the graph we're serializing + the
+	 * corresponding json node
+	 */
 	static class GraphNode {
 		boolean consumedName;
 
@@ -494,6 +498,11 @@ public class ReflectiveSerializer {
 
 		PropertySerialization propertySerialization;
 
+		PropertyNode propertyNode;
+
+		TypeNode typeNode;
+
+		// TODO - property -> PropertyNode. And early access to typeNode
 		GraphNode(GraphNode parent, String name, Property property) {
 			this.parent = parent;
 			this.name = name;
@@ -504,67 +513,6 @@ public class ReflectiveSerializer {
 			if (property != null) {
 				propertySerialization = Annotations.resolve(property,
 						PropertySerialization.class, state.resolver);
-			}
-		}
-
-		public void deserializationComplete() {
-			if (serializer != null) {
-				serializer.deserializationComplete(this);
-			} else {
-				/*
-				 * when deserializing an boject reference
-				 */
-				if (parent != null) {
-					parent.serializer.childDeserializationComplete(parent,
-							this);
-				}
-			}
-		}
-
-		public Class knownType() {
-			Class type = null;
-			if (property == null) {
-				type = parentSerialization() != null
-						&& parentSerialization().types().length == 1
-								? parentSerialization().types()[0]
-								: null;
-			} else {
-				// FIXME - dirndl 1.3 - use annotationlocation to resolve sole
-				// type of property if possible
-				type = property.getType();
-			}
-			if (type == null) {
-				return null;
-			}
-			Class solePossibleImplementation = SerializationSupport
-					.solePossibleImplementation(type);
-			if (solePossibleImplementation != null) {
-				return solePossibleImplementation;
-			} else {
-				return null;
-			}
-		}
-
-		public void readValue() {
-			if (value == null) {
-				type = knownType();
-				if (type == null || resolveSerializer(type, null)
-						.isReferenceSerializer()) {
-					int idx = serialNode.peekInt();
-					if (idx != -1) {
-						value = state.idxIdentity.get(idx);
-						return;
-					}
-				}
-				if (type == null) {
-					type = serialNode.readType(this);
-				}
-				serializer = resolveSerializer(type, null);
-				value = serializer.readValue(this);
-				if (serializer.isReferenceSerializer()) {
-					state.idxIdentity.put(state.idxIdentity.size(), value);
-				}
-				iterator = serializer.readIterator(this);
 			}
 		}
 
@@ -584,6 +532,20 @@ public class ReflectiveSerializer {
 
 		int depth() {
 			return parent == null ? 0 : parent.depth() + 1;
+		}
+
+		void deserializationComplete() {
+			if (serializer != null) {
+				serializer.deserializationComplete(this);
+			} else {
+				/*
+				 * when deserializing an boject reference
+				 */
+				if (parent != null) {
+					parent.serializer.childDeserializationComplete(parent,
+							this);
+				}
+			}
 		}
 
 		void ensureValueWritten() {
@@ -607,8 +569,56 @@ public class ReflectiveSerializer {
 			}
 		}
 
+		// TODO -> this to TypeNode -- basically, goal is to get TypeNode asap
+		Class knownType() {
+			Class type = null;
+			if (property == null) {
+				type = parentSerialization() != null
+						&& parentSerialization().types().length == 1
+								? parentSerialization().types()[0]
+								: null;
+			} else {
+				// FIXME - dirndl 1.3 - use annotationlocation to resolve sole
+				// type of property if possible
+				type = property.getType();
+			}
+			if (type == null) {
+				return null;
+			}
+			Class solePossibleImplementation = SerializationSupport
+					.solePossibleImplementation(type);
+			if (solePossibleImplementation != null) {
+				return solePossibleImplementation;
+			} else {
+				return null;
+			}
+		}
+
 		PropertySerialization parentSerialization() {
 			return parent == null ? null : parent.propertySerialization;
+		}
+
+		void readValue() {
+			if (value == null) {
+				type = knownType();
+				if (type == null || resolveSerializer(type, null)
+						.isReferenceSerializer()) {
+					int idx = serialNode.peekInt();
+					if (idx != -1) {
+						value = state.idxIdentity.get(idx);
+						return;
+					}
+				}
+				if (type == null) {
+					type = serialNode.readType(this);
+				}
+				serializer = resolveSerializer(type, null);
+				value = serializer.readValue(this);
+				if (serializer.isReferenceSerializer()) {
+					state.idxIdentity.put(state.idxIdentity.size(), value);
+				}
+				iterator = serializer.readIterator(this);
+			}
 		}
 
 		void setValue(Object value) {
@@ -658,6 +668,8 @@ public class ReflectiveSerializer {
 
 		@Override
 		public GraphNode apply(Property t) {
+			// Hmmm...not sure, can t!=property? if t is from a superclass sure,
+			// but how did we get here if so?
 			Property property = Reflections.at(node.value.getClass())
 					.property(t.getName());
 			GraphNode graphNode = new GraphNode(node, t.getName(), property);
@@ -873,6 +885,30 @@ public class ReflectiveSerializer {
 		}
 	}
 
+	/*
+	 * Encapsulates serialization info for a property in the current
+	 * serialization context.
+	 */
+	static class PropertyNode {
+		// The property type, if the property type is effectively final
+		TypeNode typeNode;
+
+		// The property type, if the property type is not effectively final
+		TypeNode lastTypeNode;
+
+		// this plus last type node are a resolution optimisation for
+		// polymorphic property seriailization
+		Class lastType;
+
+		Property property;
+
+		PropertySerialization propertySerialization;
+
+		String name() {
+			return property.getName();
+		}
+	}
+
 	interface SerialNode {
 		boolean canWriteTypeName();
 
@@ -921,5 +957,16 @@ public class ReflectiveSerializer {
 		SerializationSupport serializationSupport;
 
 		AnnotationLocation.Resolver resolver;
+	}
+
+	/*
+	 * Encapsulates serialization info for a type in the current serialization
+	 * context. Every GraphNode has a type node - if the graphnode corresponds
+	 * to Java null, the type node type will be Void
+	 */
+	static class TypeNode<T> {
+		List<PropertyNode> properties;
+
+		State state;
 	}
 }
