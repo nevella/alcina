@@ -15,6 +15,7 @@ package cc.alcina.framework.servlet.servlet;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -22,6 +23,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Collectors;
 
@@ -59,6 +61,7 @@ import cc.alcina.framework.common.client.entity.ClientLogRecord.ClientLogRecords
 import cc.alcina.framework.common.client.gwittir.validator.ServerValidator;
 import cc.alcina.framework.common.client.job.Job;
 import cc.alcina.framework.common.client.log.ILogRecord;
+import cc.alcina.framework.common.client.logic.ObfuscateOnLog;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DeltaApplicationRecord;
@@ -111,6 +114,7 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMet
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
 import cc.alcina.framework.entity.projection.GraphProjections;
+import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.LengthConstrainedStringWriter;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -258,9 +262,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	@WebMethod(
-		readonlyPermitted = true,
-		customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public String getJobLog(long jobId) {
 		Job job = Job.byId(jobId).domain().ensurePopulated();
 		Preconditions.checkState(
@@ -285,27 +287,21 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	@WebMethod(
-		readonlyPermitted = true,
-		customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long log(ILogRecord logRecord) {
 		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().persistLogRecord(logRecord);
 	}
 
 	@Override
-	@WebMethod(
-		readonlyPermitted = true,
-		customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString) {
 		return logClientError(exceptionToString,
 				LogMessageType.CLIENT_EXCEPTION.toString());
 	}
 
 	@Override
-	@WebMethod(
-		readonlyPermitted = true,
-		customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString, String exceptionType) {
 		String remoteAddr = getRemoteAddress();
 		try {
@@ -691,9 +687,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	@WebMethod(
-		readonlyPermitted = true,
-		customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public DomainUpdate
 			waitForTransforms(DomainTransformCommitPosition position)
 					throws PermissionsException {
@@ -761,14 +755,42 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				Arrays.asList(rpcRequest.getMethod().getParameters()));
 		msg += "\nParameters: \n";
 		Object[] parameters = rpcRequest.getParameters();
+		// Check for the ObfuscateOnLog annotation and
+		//  get parameter indicies to obfuscate if present
+		List<Integer> parametersToObfuscate = new ArrayList<>();
+		try {
+			Method rpcMethod = this.getClass().getMethod(
+					rpcRequest.getMethod().getName(),
+					rpcRequest.getMethod().getParameterTypes());
+			ObfuscateOnLog obfuscationAnnotation = rpcMethod
+					.getAnnotation(ObfuscateOnLog.class);
+			if (obfuscationAnnotation != null) {
+				parametersToObfuscate = Arrays.stream(obfuscationAnnotation.parameterIndiciesToRemove())
+					.boxed().collect(Collectors.toList());
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
 		if (rpcRequest.getMethod().getName().equals("transform")) {
 		} else {
 			for (int idx = 0; idx < parameters.length; idx++) {
 				try {
-					String serializedParameter = new JacksonJsonObjectSerializer()
-							.withIdRefs().withMaxLength(100000)
-							.withTruncateAtMaxLength(true)
-							.serializeNoThrow(parameters[idx]);
+					Object requestParamterValue = parameters[idx];
+					String serializedParameter = null;
+					// If the given parameter index is in the parameters to obfuscate,
+					//  don't print it
+					if (parametersToObfuscate.contains(idx)) {
+						serializedParameter = "<obfuscated>";
+					} else {
+						Object projectedParameterValue = GraphProjections
+								.defaultProjections()
+								.fieldFilter(new ObfuscateParametersFieldFilter())
+								.project(requestParamterValue);
+						serializedParameter = new JacksonJsonObjectSerializer()
+								.withIdRefs().withMaxLength(100000)
+								.withTruncateAtMaxLength(true)
+								.serializeNoThrow(projectedParameterValue);
+					}
 					msg += Ax.format("%s: %s\n", idx, serializedParameter);
 				} catch (Throwable e) {
 					e.printStackTrace();
@@ -1006,6 +1028,42 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				getContextThreadLocalRequest().setAttribute(ATTR, result);
 			}
 			return result;
+		}
+	}
+
+	/**
+	 * Obfuscate any fields or classes marked with @ObfuscateOnLog
+	 */
+	public static class ObfuscateParametersFieldFilter
+			implements GraphProjectionFieldFilter {
+		@Override
+		public Boolean permitClass(Class clazz) {
+			// Check for the ObfuscateOnLog annotation on the class
+			// If present, filter out the class
+			if (clazz.isAnnotationPresent(ObfuscateOnLog.class)) {
+				return false;
+			} else {
+				// Otherwise, delegate to default permission-based filtering
+				return null;
+			}
+		}
+
+		@Override
+		public boolean permitField(Field field,
+				Set<Field> perObjectPermissionFields, Class clazz) {
+			// Check for the ObfuscateOnLog annotation on the field
+			// If present, filter out the field
+			if (field.isAnnotationPresent(ObfuscateOnLog.class)) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+
+		@Override
+		public boolean permitTransient(Field field) {
+			// Transient fields treated as normal
+			return false;
 		}
 	}
 }
