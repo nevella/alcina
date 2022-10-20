@@ -39,16 +39,41 @@ public class GalleryConfiguration {
 
 	@XmlAccessorType(XmlAccessType.FIELD)
 	static class Element {
+		/**
+		 * For absolute links in the Persister logging output
+		 */
+		String base;
+		
+		/**
+		 * The application name (a key passed to the Gallery setup method, that
+		 * selects the configuration from GalleryConfiguration.elements)
+		 */
 		String name;
 
+		/**
+		 * GSheet id to persist gallery metadata
+		 */
 		String spreadSheetId;
 
+		/**
+		 * GDrive id to persist gallery files
+		 */
 		String folderId;
 
+		/**
+		 * Path of the Google app credentials client secrets file
+		 */
 		String credentialsPath;
 
+		/**
+		 * Cached local authentication credentials (results of developer 'ok' of
+		 * the credentials check)
+		 */
 		String credentialsStorageLocalPath;
 
+		/**
+		 * Shell command to generate a list of repo/commit hash tuples
+		 */
 		String repoHashesCommand;
 
 		public DriveAccess asDriveAccess() {

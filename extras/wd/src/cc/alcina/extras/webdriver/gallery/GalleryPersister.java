@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.JacksonUtils;
@@ -35,7 +36,7 @@ import cc.alcina.framework.entity.util.Shell;
 import cc.alcina.framework.servlet.google.DriveAccessor;
 import cc.alcina.framework.servlet.google.SheetAccessor;
 
-public class SheetPersister {
+public class GalleryPersister {
 	File base;
 
 	List<GalleryFile> files;
@@ -56,6 +57,7 @@ public class SheetPersister {
 
 	public void persist(File base, Element configuration, String userAgentType)
 			throws Exception {
+		this.base = base;
 		this.configuration = configuration;
 		this.userAgentType = userAgentType;
 		files = Arrays.stream(base.listFiles())
@@ -67,22 +69,22 @@ public class SheetPersister {
 				.ofPattern("yyyyMMdd.HHmmss").withZone(ZoneId.of("UTC")));
 		driveAccessor = new DriveAccessor()
 				.withDriveAccess(configuration.asDriveAccess());
-		if (ResourceUtilities.is("uploadImages")) {
-			uploadImages();
-		}
 		hashes = new Shell()
 				.runBashScript(configuration.repoHashesCommand).output;
 		build = BuildNumberProvider.get().getBuildNumber(configuration.name);
-		AlcinaChildRunnable.launchWithCurrentThreadContext("update-sheet",
-				() -> updateSheet());
+		if (Configuration.is("persistToGoogle")) {
+			uploadImages();
+			AlcinaChildRunnable.launchWithCurrentThreadContext("update-sheet",
+					() -> updateSheet());
+		}
 		updateViewer();
 	}
 
 	private Map<String, GalleryTuple> nameTuples() {
 		Map<String, GalleryTuple> nameTuples = new LinkedHashMap<>();
 		files.forEach(file -> nameTuples
-				.computeIfAbsent(file.getName(), key -> new GalleryTuple())
-				.put(file));
+				.computeIfAbsent(file.getName(), GalleryTuple::new).put(file));
+		nameTuples.entrySet().removeIf(e -> e.getValue().isInvalid());
 		return nameTuples;
 	}
 
@@ -185,7 +187,7 @@ public class SheetPersister {
 			// buttons.builder().tag("div").className("hint")
 			// .text("Shortcuts : , and .").append();
 			AtomicInteger counter = new AtomicInteger();
-			nameTuples().values().stream().map(Image::new).forEach(image -> {
+			images.forEach(image -> {
 				DomNode link = links.html().addLink(image.name, image.url,
 						"_blank");
 				link.setAttr("id", "link_" + counter.getAndIncrement());
@@ -211,22 +213,40 @@ public class SheetPersister {
 				Ax.format("<style>%s</style>",
 						Matcher.quoteReplacement(ResourceUtilities
 								.readRelativeResource("res/viewer.css"))));
-		ResourceUtilities.logToFile(prettyToString);
-		byte[] bytes = prettyToString.getBytes(StandardCharsets.UTF_8);
-		{
-			String name = Ax.format("%s.%s.%s.html", configuration.name,
-					userAgentType, dateStamp);
-			AlcinaChildRunnable.launchWithCurrentThreadContext(
-					"upload-new-version",
-					() -> driveAccessor.upload(driveAccessor.rootFolder(),
-							bytes, name, false));
+		File index = new File(base, "index.html");
+		ResourceUtilities.write(prettyToString, index);
+		Ax.out("Wrote gallery index to: %s", index.getPath());
+		if (Configuration.is("persistToGoogle")) {
+			byte[] bytes = prettyToString.getBytes(StandardCharsets.UTF_8);
+			{
+				String name = Ax.format("%s.%s.%s.html", configuration.name,
+						userAgentType, dateStamp);
+				AlcinaChildRunnable.launchWithCurrentThreadContext(
+						"upload-new-version", () -> {
+							com.google.api.services.drive.model.File upload = driveAccessor
+									.upload(driveAccessor.rootFolder(), bytes,
+											name, false);
+							String href = Ax.format("%s/drive?id=%s",
+									configuration.base, upload.getId());
+							Ax.out("Index %s url: <a href='%s' target='_blank'>%s</a>",
+									name, href, href);
+						});
+			}
+			{
+				String name = Ax.format("%s.%s.html", configuration.name,
+						userAgentType);
+				AlcinaChildRunnable.launchWithCurrentThreadContext(
+						"update-current-version", () -> {
+							com.google.api.services.drive.model.File upload = driveAccessor
+									.upload(driveAccessor.rootFolder(), bytes,
+											name, true);
+							String href = Ax.format("%s/drive?id=%s",
+									configuration.base, upload.getId());
+							Ax.out("Index %s (current) url: <a href='%s' target='_blank'>%s</a>",
+									name, href, href);
+						});
+			}
 		}
-		String name = Ax.format("%s.%s.html", configuration.name,
-				userAgentType);
-		AlcinaChildRunnable.launchWithCurrentThreadContext(
-				"update-current-version", () -> driveAccessor
-						.upload(driveAccessor.rootFolder(), bytes, name, true));
-		int complete = 3;
 	}
 
 	void uploadImages() throws IOException {
@@ -238,8 +258,8 @@ public class SheetPersister {
 
 	@Registration(BuildNumberProvider.class)
 	public static class BuildNumberProvider {
-		public static SheetPersister.BuildNumberProvider get() {
-			return Registry.impl(SheetPersister.BuildNumberProvider.class);
+		public static GalleryPersister.BuildNumberProvider get() {
+			return Registry.impl(GalleryPersister.BuildNumberProvider.class);
 		}
 
 		public String getBuildNumber(String name) {
@@ -257,7 +277,8 @@ public class SheetPersister {
 		}
 
 		public String toViewUrl() {
-			return Ax.format("/drive?id=%s", id);
+			return id.equals("none") ? file.getName()
+					: Ax.format("/drive?id=%s", id);
 		}
 
 		String getName() {
@@ -293,6 +314,20 @@ public class SheetPersister {
 
 		GalleryFile html;
 
+		String name;
+
+		GalleryTuple(String name) {
+			this.name = name;
+		}
+
+		public boolean isInvalid() {
+			if (image == null || html == null) {
+				return true;
+			} else {
+				return false;
+			}
+		}
+
 		public void put(GalleryFile file) {
 			if (file.isImage()) {
 				image = file;
@@ -301,8 +336,13 @@ public class SheetPersister {
 			}
 		}
 
+		@Override
+		public String toString() {
+			return name;
+		}
+
 		String name() {
-			return image.getName();
+			return name;
 		}
 	}
 

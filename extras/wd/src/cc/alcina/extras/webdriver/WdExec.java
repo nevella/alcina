@@ -57,7 +57,7 @@ public class WdExec {
 
 	public void assertContainsText(String text) {
 		String elementText = getElement().getText();
-		assert(elementText.contains(text));
+		assert (elementText.contains(text));
 	}
 
 	public void clear() {
@@ -341,6 +341,9 @@ public class WdExec {
 
 	public WdExec token(WDToken token) {
 		this.token = token;
+		if (driver == null) {
+			driver = token.getWebDriver();
+		}
 		return this;
 	}
 
