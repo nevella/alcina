@@ -102,6 +102,7 @@ public class AdjunctTransformCollation extends TransformCollation {
 	 * @return true if transforms were added to the wrapped request
 	 */
 	public boolean ensureCurrent() {
+		ensureApplied();
 		if (token.addCascadedEvents()) {
 			refreshFromRequest();
 			removeNonPersistentTransforms();
