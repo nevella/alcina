@@ -62,7 +62,16 @@ public @interface Resolution {
 	public Class<? extends MergeStrategy> mergeStrategy();
 
 	public enum Inheritance {
-		CLASS, PROPERTY, ERASED_PROPERTY, INTERFACE
+		CLASS,
+		// note that this almost always wants ERASED_PROPERTY as well, otherwise
+		// non-generic children will not receive parent annotations. But left as
+		// two selections for future-proofing
+		PROPERTY,
+		/*
+		 * for class C1<T>, C2<T1 extends T> [C2 extends C1], property C1.p1:T
+		 * -- this ensures property C2.p1:T1 inherits annotations from C1.p1
+		 */
+		ERASED_PROPERTY, INTERFACE
 	}
 
 	public interface MergeStrategy<A extends Annotation> {
