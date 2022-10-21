@@ -52,8 +52,7 @@ public class PublicationDomain {
 				AdjunctTransformCollation collation = event
 						.getTransformPersistenceToken().getTransformCollation();
 				if (collation.has(iUserImpl)) {
-					event.getTransformPersistenceToken().addCascadedEvents();
-					collation.ensureApplied();
+					collation.ensureCurrent();
 					collation.query(iUserImpl).stream().forEach(qr -> {
 						if (qr.hasCreateTransform()) {
 							if (!qr.hasDeleteTransform()) {
@@ -79,7 +78,7 @@ public class PublicationDomain {
 						}
 					});
 				}
-				event.getTransformPersistenceToken().addCascadedEvents();
+				collation.ensureCurrent();
 			}
 		}
 	}

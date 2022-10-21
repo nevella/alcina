@@ -121,10 +121,10 @@ public class SerializationSignatureListener
 					.hasProperty(signaturePropertyName)) {
 				Property serializedSignatureProperty = Reflections
 						.at(entityClass).property(signaturePropertyName);
-				AdjunctTransformCollation transformCollation = token
+				AdjunctTransformCollation collation = token
 						.getTransformCollation();
-				transformCollation.ensureApplied();
-				EntityCollation entityCollation = transformCollation
+				collation.ensureCurrent();
+				EntityCollation entityCollation = collation
 						.forLocator(transform.toObjectLocator());
 				if (entityCollation == null) {
 					logger.warn("Null collation for serialized transform : {}",
@@ -134,7 +134,7 @@ public class SerializationSignatureListener
 					if (!entityCollation.isDeleted()) {
 						serializedSignatureProperty.set(
 								entityCollation.getEntity(), ensureSignature());
-						token.addCascadedEvents();
+						collation.ensureCurrent();
 					}
 				}
 			}
