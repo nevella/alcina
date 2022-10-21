@@ -33,8 +33,9 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 @Documented
 @ClientVisible
 @Target({ ElementType.METHOD, ElementType.TYPE })
-@Resolution(inheritance = {
-		Inheritance.PROPERTY }, mergeStrategy = Display.MergeStrategy.class)
+@Resolution(
+	inheritance = { Inheritance.PROPERTY, Inheritance.ERASED_PROPERTY },
+	mergeStrategy = Display.MergeStrategy.class)
 public @interface Display {
 	public static final int DISPLAY_AS_PROPERTY = 1;
 
@@ -99,6 +100,11 @@ public @interface Display {
 	public @interface AllProperties {
 	}
 
+	@Reflected
+	public static class MergeStrategy extends
+			AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOnly<Display> {
+	}
+
 	public static class Support {
 		public static String name(Property property, Display display) {
 			if (display == null) {
@@ -112,10 +118,5 @@ public @interface Display {
 			return name.isEmpty() ? CommonUtils.deInfix(property.getName())
 					: name;
 		}
-	}
-
-	@Reflected
-	public static class MergeStrategy extends
-			AbstractMergeStrategy.SingleResultMergeStrategy.PropertyOnly<Display> {
 	}
 }
