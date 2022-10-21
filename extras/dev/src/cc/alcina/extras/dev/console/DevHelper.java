@@ -85,6 +85,7 @@ import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 import cc.alcina.framework.servlet.ServletLayerObjects;
 import elemental.json.impl.JsonUtil;
 
+@SuppressWarnings("deprecation")
 public abstract class DevHelper {
 	private static final String JBOSS_CONFIG_PATH = "jboss-config-path";
 
@@ -319,7 +320,6 @@ public abstract class DevHelper {
 		TransformManager.register(new ClientTransformManagerCommon());
 	}
 
-	@SuppressWarnings("deprecation")
 	public void initLightweightServices() {
 		AppPersistenceBase.setTest();
 		AlcinaWebappConfig config = new AlcinaWebappConfig();

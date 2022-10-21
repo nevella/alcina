@@ -28,6 +28,7 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation.Resolver;
 import cc.alcina.framework.common.client.logic.reflection.resolution.Annotations;
+import cc.alcina.framework.common.client.reflection.ClassReflector;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializers.PropertyIterator;
@@ -73,7 +74,7 @@ import elemental.json.JsonValue;
  * </P>
  * <ul>
  * <li>Create a per-property serializer, to optimise bean
- * deserialization/serialization
+ * deserialization/serialization (done)
  * <li>Look at cost of long serialization/deser (and box/unbox) in gwt -
  * possibly optimise
  * <li>Optionally (for rpc - where not concerned about in-process refactoring -
@@ -84,7 +85,10 @@ import elemental.json.JsonValue;
  * <li>Elide exact type (so if property type is nick.foo, implementation is of
  * type nick.foo, don't write, only write if implementation is
  * nick.foo_subclass)
+ *
  * </ul>
+ * <li>Server-side - rather than using elemental.json, use streams (and avoid
+ * stringbuilder by writing utf-8 directly)
  * </ul>
  * </ul>
  *
@@ -93,7 +97,7 @@ import elemental.json.JsonValue;
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializer {
 	// FIXME - reflection - jsclassmap if client (and general switch to Maps)
-	private static Map<Class, TypeSerializer> typeSerializers = Registry
+	private static Map<Class, TypeSerializerLocation> typeSerializers = Registry
 			.impl(ConcurrentMapCreator.class).create();
 
 	public static <T> T clone(T object) {
@@ -112,12 +116,12 @@ public class ReflectiveSerializer {
 				return null;
 			}
 			JsonSerialNode.ensureValueSerializers();
-			State state = new State();
-			state.serializationSupport = SerializationSupport.deserializationInstance;
-			state.resolver = Resolver.get();
+			State state = new State(
+					SerializationSupport.deserializationInstance,
+					Resolver.get());
 			state.deserializerOptions = options;
 			// create json doc
-			GraphNode node = new GraphNode(null, null, null);
+			GraphNode node = new GraphNode(null, null);
 			node.state = state;
 			SerialNode root = JsonSerialNode.fromJson(value);
 			node.serialNode = root;
@@ -148,12 +152,10 @@ public class ReflectiveSerializer {
 			return null;
 		}
 		JsonSerialNode.ensureValueSerializers();
-		State state = new State();
+		State state = new State(SerializationSupport.serializationInstance(),
+				Resolver.get());
 		state.serializerOptions = options;
-		state.serializationSupport = SerializationSupport
-				.serializationInstance();
-		state.resolver = Resolver.get();
-		GraphNode node = new GraphNode(null, null, null);
+		GraphNode node = new GraphNode(null, null);
 		node.state = state;
 		node.setValue(object);
 		SerialNode root = JsonSerialNode.empty();
@@ -170,15 +172,17 @@ public class ReflectiveSerializer {
 		return out.toJson();
 	}
 
-	static TypeSerializer resolveSerializer(Class clazz, Class declaredType) {
+	static TypeSerializerLocation resolveSerializer(Class clazz) {
 		if (typeSerializers.isEmpty()) {
 			synchronized (typeSerializers) {
 				if (typeSerializers.isEmpty()) {
 					Registry.query(TypeSerializer.class).implementations()
 							.forEach(typeSerializer -> typeSerializer
-									.handlesTypes()
-									.forEach(handled -> typeSerializers
-											.put(handled, typeSerializer)));
+									.handlesTypes().forEach(handled -> {
+										TypeSerializerLocation location = new TypeSerializerLocation(
+												handled, typeSerializer);
+										typeSerializers.put(handled, location);
+									}));
 				}
 			}
 		}
@@ -190,21 +194,7 @@ public class ReflectiveSerializer {
 						.filter(typeSerializers::containsKey).findFirst();
 				if (match.isPresent()) {
 					Class serializerType = match.get();
-					TypeSerializer typeSerializer = typeSerializers
-							.get(serializerType);
-					if (declaredType != null && !typeSerializer
-							.handlesDeclaredTypeSubclasses()) {
-						if (serializerType != Enum.class
-								&& serializerType != Entity.class
-						// i.e. declaredtype is a supertype of serializertype
-								&& !Reflections.isAssignableFrom(declaredType,
-										serializerType)) {
-							throw new IllegalStateException(Ax.format(
-									"Declared type %s cannot be serialized by resolved serializer for type %s",
-									declaredType, serializerType));
-						}
-					}
-					return typeSerializer;
+					return typeSerializers.get(serializerType);
 				}
 				List<Class<?>> next = new ArrayList<>();
 				toResolve.forEach(c2 -> {
@@ -226,7 +216,8 @@ public class ReflectiveSerializer {
 								ReflectiveSerializable.class, lookupClass);
 			}
 			if (resolveWithReflectiveTypeSerializer) {
-				return new ReflectiveTypeSerializer();
+				return new TypeSerializerLocation(null,
+						new ReflectiveTypeSerializer());
 			}
 			throw new IllegalArgumentException(
 					Ax.format("No serializer for type %s", lookupClass));
@@ -306,7 +297,7 @@ public class ReflectiveSerializer {
 		@Override
 		public void childDeserializationComplete(GraphNode graphNode,
 				GraphNode child) {
-			child.property.set(graphNode.value, child.value);
+			child.propertyNode.property.set(graphNode.value, child.value);
 		}
 
 		@Override
@@ -326,7 +317,7 @@ public class ReflectiveSerializer {
 
 		@Override
 		public Object readValue(GraphNode graphNode) {
-			return Reflections.newInstance(graphNode.type);
+			return graphNode.typeNode.newInstance();
 		}
 
 		@Override
@@ -336,26 +327,29 @@ public class ReflectiveSerializer {
 
 		@Override
 		public Iterator<GraphNode> writeIterator(GraphNode node) {
-			Iterator<Property> iterator = node.state.serializationSupport
-					.getProperties(node.value).iterator();
-			Object templateInstance = Reflections.at(node.type)
-					.templateInstance();
+			// will become mostly TypeNode
+			Iterator<PropertyNode> iterator = node.typeNode.properties
+					.iterator();
+			Object templateInstance = node.typeNode.templateInstance();
 			// optimisation to avoid double-gets
-			Map<Property, Object> propertyValues = AlcinaCollections
+			Map<PropertyNode, Object> propertyValues = AlcinaCollections
 					.newHashMap();
-			FilteringIterator<Property> filteringIterator = new FilteringIterator<>(
-					iterator, p -> {
-						Object childValue = p.get(node.value);
-						propertyValues.put(p, childValue);
-						// call later than needed to guarantee propertyValues is
-						// populated
+			FilteringIterator<PropertyNode> filteringIterator = new FilteringIterator<>(
+					iterator, propertyNode -> {
+						Property property = propertyNode.property;
+						Object childValue = property.get(node.value);
+						propertyValues.put(propertyNode, childValue);
+						// call later than needed (in this code block) to
+						// guarantee propertyValues is
+						// populated for all propertyNodes
 						if (!node.state.serializerOptions.elideDefaults) {
 							return true;
 						}
-						Object templateValue = p.get(templateInstance);
+						Object templateValue = property.get(templateInstance);
 						return !Objects.equals(childValue, templateValue);
 					});
-			return new MappingIterator<Property, GraphNode>(filteringIterator,
+			return new MappingIterator<PropertyNode, GraphNode>(
+					filteringIterator,
 					new ReflectiveSerializer.GraphNodeMappingProperty(node,
 							propertyValues));
 		}
@@ -363,7 +357,8 @@ public class ReflectiveSerializer {
 		@Override
 		public void writeValueOrContainer(GraphNode node,
 				SerialNode serialNode) {
-			node.type = serializeAs(node.value.getClass());
+			node.typeNode = node.state
+					.typeNode(serializeAs(node.value.getClass()));
 			ReflectiveSerializer.SerialNode container = serialNode
 					.createPropertyContainer();
 			serialNode.write(node, container);
@@ -408,8 +403,9 @@ public class ReflectiveSerializer {
 
 		public void deserializationComplete(GraphNode graphNode) {
 			if (graphNode.parent != null) {
-				graphNode.parent.serializer.childDeserializationComplete(
-						graphNode.parent, graphNode);
+				graphNode.parent.typeNode.serializer
+						.childDeserializationComplete(graphNode.parent,
+								graphNode);
 			}
 		}
 
@@ -486,39 +482,23 @@ public class ReflectiveSerializer {
 
 		Iterator<GraphNode> iterator;
 
-		TypeSerializer serializer;
-
-		String name;
-
-		Property property;
-
-		Class type;
-
 		State state;
-
-		PropertySerialization propertySerialization;
 
 		PropertyNode propertyNode;
 
 		TypeNode typeNode;
 
-		// TODO - property -> PropertyNode. And early access to typeNode
-		GraphNode(GraphNode parent, String name, Property property) {
+		GraphNode(GraphNode parent, PropertyNode propertyNode) {
 			this.parent = parent;
-			this.name = name;
-			this.property = property;
+			this.propertyNode = propertyNode;
 			if (parent != null) {
 				state = parent.state;
-			}
-			if (property != null) {
-				propertySerialization = Annotations.resolve(property,
-						PropertySerialization.class, state.resolver);
 			}
 		}
 
 		@Override
 		public String toString() {
-			String segment = Ax.format("[%s,%s]", name,
+			String segment = Ax.format("[%s,%s]", name(),
 					value == null ? null : value.getClass().getSimpleName());
 			return parent == null ? segment : parent.toString() + "." + segment;
 		}
@@ -527,7 +507,7 @@ public class ReflectiveSerializer {
 			if (value == null) {
 				return true;
 			}
-			return knownType() != null;
+			return exactTypeNode() != null;
 		}
 
 		int depth() {
@@ -535,22 +515,22 @@ public class ReflectiveSerializer {
 		}
 
 		void deserializationComplete() {
-			if (serializer != null) {
-				serializer.deserializationComplete(this);
+			if (typeNode != null) {
+				typeNode.serializer.deserializationComplete(this);
 			} else {
 				/*
 				 * when deserializing an boject reference
 				 */
 				if (parent != null) {
-					parent.serializer.childDeserializationComplete(parent,
-							this);
+					parent.typeNode.serializer
+							.childDeserializationComplete(parent, this);
 				}
 			}
 		}
 
 		void ensureValueWritten() {
 			if (serialNode == null) {
-				if (serializer.isReferenceSerializer()) {
+				if (typeNode.serializer.isReferenceSerializer()) {
 					Integer idx = state.identityIdx.get(value);
 					if (idx != null) {
 						parent.serialNode.write(this, idx);
@@ -560,59 +540,49 @@ public class ReflectiveSerializer {
 				if (!hasFinalClass() && !state.serializerOptions
 						.elideTypeInfo(value.getClass())) {
 					serialNode = parent.serialNode
-							.writeClassValueContainer(name);
+							.writeClassValueContainer(name());
 					consumedName = true;
 					serialNode.writeTypeName(
-							serializer.serializeAs(value.getClass()));
+							typeNode.serializer.serializeAs(value.getClass()));
 				}
 				writeValue();
 			}
 		}
 
-		// TODO -> this to TypeNode -- basically, goal is to get TypeNode asap
-		Class knownType() {
-			Class type = null;
-			if (property == null) {
-				type = parentSerialization() != null
-						&& parentSerialization().types().length == 1
-								? parentSerialization().types()[0]
-								: null;
+		TypeNode exactTypeNode() {
+			if (propertyNode == null) {
+				if (parent == null || parent.propertyNode == null) {
+					return null;
+				} else {
+					return parent.propertyNode.exactChildTypeNode;
+				}
 			} else {
-				// FIXME - dirndl 1.3 - use annotationlocation to resolve sole
-				// type of property if possible
-				type = property.getType();
-			}
-			if (type == null) {
-				return null;
-			}
-			Class solePossibleImplementation = SerializationSupport
-					.solePossibleImplementation(type);
-			if (solePossibleImplementation != null) {
-				return solePossibleImplementation;
-			} else {
-				return null;
+				return propertyNode.exactTypeNode;
 			}
 		}
 
-		PropertySerialization parentSerialization() {
-			return parent == null ? null : parent.propertySerialization;
+		String name() {
+			return propertyNode == null ? null : propertyNode.name();
 		}
 
 		void readValue() {
+			// Because the deserializer peeks, value may already have been
+			// populated
 			if (value == null) {
-				type = knownType();
-				if (type == null || resolveSerializer(type, null)
-						.isReferenceSerializer()) {
+				typeNode = exactTypeNode();
+				if (typeNode == null
+						|| typeNode.serializer.isReferenceSerializer()) {
 					int idx = serialNode.peekInt();
 					if (idx != -1) {
 						value = state.idxIdentity.get(idx);
 						return;
 					}
 				}
-				if (type == null) {
-					type = serialNode.readType(this);
+				if (typeNode == null) {
+					Class type = serialNode.readType(this);
+					typeNode = state.typeNode(type);
 				}
-				serializer = resolveSerializer(type, null);
+				TypeSerializer serializer = typeNode.serializer;
 				value = serializer.readValue(this);
 				if (serializer.isReferenceSerializer()) {
 					state.idxIdentity.put(state.idxIdentity.size(), value);
@@ -623,18 +593,29 @@ public class ReflectiveSerializer {
 
 		void setValue(Object value) {
 			this.value = value;
-			serializer = resolveSerializer(
-					value == null ? void.class : value.getClass(),
-					property == null ? null : property.getType());
+			if (value == null) {
+				typeNode = state.voidTypeNode;
+				return;
+			}
+			Class<? extends Object> type = value.getClass();
+			if (propertyNode == null) {
+				if (parent != null && parent.propertyNode != null) {
+					typeNode = parent.propertyNode.childTypeNode(type);
+				} else {
+					typeNode = state.typeNode(type);
+				}
+			} else {
+				typeNode = propertyNode.typeNode(type);
+			}
 		}
 
 		void writeValue() {
-			serializer.writeValueOrContainer(this,
+			typeNode.serializer.writeValueOrContainer(this,
 					serialNode != null ? serialNode : parent.serialNode);
-			if (serializer.isReferenceSerializer()) {
+			if (typeNode.serializer.isReferenceSerializer()) {
 				state.identityIdx.put(value, state.identityIdx.size());
 			}
-			iterator = serializer.writeIterator(this);
+			iterator = typeNode.serializer.writeIterator(this);
 		}
 	}
 
@@ -648,32 +629,30 @@ public class ReflectiveSerializer {
 
 		@Override
 		public GraphNode apply(Object t) {
-			GraphNode graphNode = new GraphNode(node, null, null);
+			GraphNode graphNode = new GraphNode(node, null);
 			graphNode.setValue(t);
 			return graphNode;
 		}
 	}
 
+	// refser - change to PropertyNode (the iteration should be across
+	// propertyNodes)
 	static class GraphNodeMappingProperty
-			implements Function<Property, GraphNode> {
+			implements Function<PropertyNode, GraphNode> {
 		private GraphNode node;
 
-		private Map<Property, Object> propertyValues;
+		private Map<PropertyNode, Object> propertyValues;
 
 		public GraphNodeMappingProperty(GraphNode node,
-				Map<Property, Object> propertyValues) {
+				Map<PropertyNode, Object> propertyValues) {
 			this.node = node;
 			this.propertyValues = propertyValues;
 		}
 
 		@Override
-		public GraphNode apply(Property t) {
-			// Hmmm...not sure, can t!=property? if t is from a superclass sure,
-			// but how did we get here if so?
-			Property property = Reflections.at(node.value.getClass())
-					.property(t.getName());
-			GraphNode graphNode = new GraphNode(node, t.getName(), property);
-			graphNode.setValue(propertyValues.get(t));
+		public GraphNode apply(PropertyNode propertyNode) {
+			GraphNode graphNode = new GraphNode(node, propertyNode);
+			graphNode.setValue(propertyValues.get(propertyNode));
 			return graphNode;
 		}
 	}
@@ -801,12 +780,13 @@ public class ReflectiveSerializer {
 			if (jsonValue.getType() == JsonType.NULL) {
 				return null;
 			}
-			ValueSerializer valueSerializer = getValueSerializer(node.type);
+			ValueSerializer valueSerializer = getValueSerializer(
+					node.typeNode.type);
 			if (valueSerializer == null) {
 				throw Ax.runtimeException("No value serializer for type %s",
-						node.type);
+						node.typeNode.type);
 			} else {
-				return valueSerializer.fromJson(node.type, jsonValue);
+				return valueSerializer.fromJson(node.typeNode.type, jsonValue);
 			}
 		}
 
@@ -822,7 +802,7 @@ public class ReflectiveSerializer {
 
 		@Override
 		public void write(GraphNode node, Object value) {
-			write(node.consumedName ? null : node.name, value);
+			write(node.consumedName ? null : node.name(), value);
 		}
 
 		@Override
@@ -868,18 +848,16 @@ public class ReflectiveSerializer {
 		}
 
 		protected ValueSerializer
-				getValueSerializer(Class<? extends Object> serializerType) {
-			ValueSerializer valueSerializer = valueSerializers
-					.get(serializerType);
+				getValueSerializer(Class<? extends Object> valueType) {
+			ValueSerializer valueSerializer = valueSerializers.get(valueType);
 			if (valueSerializer == null) {
-				if (CommonUtils.isEnumOrEnumSubclass(serializerType)) {
-					serializerType = Enum.class;
+				if (CommonUtils.isEnumOrEnumSubclass(valueType)) {
+					valueType = Enum.class;
 				}
-				if (Reflections.isAssignableFrom(BasePlace.class,
-						serializerType)) {
-					serializerType = BasePlace.class;
+				if (Reflections.isAssignableFrom(BasePlace.class, valueType)) {
+					valueType = BasePlace.class;
 				}
-				valueSerializer = valueSerializers.get(serializerType);
+				valueSerializer = valueSerializers.get(valueType);
 			}
 			return valueSerializer;
 		}
@@ -890,19 +868,55 @@ public class ReflectiveSerializer {
 	 * serialization context.
 	 */
 	static class PropertyNode {
-		// The property type, if the property type is effectively final
-		TypeNode typeNode;
+		TypeNode exactChildTypeNode;
 
-		// The property type, if the property type is not effectively final
+		TypeNode exactTypeNode;
+
+		/*
+		 * These typenode fields are resolution optimisations
+		 */
 		TypeNode lastTypeNode;
 
-		// this plus last type node are a resolution optimisation for
-		// polymorphic property seriailization
-		Class lastType;
+		TypeNode lastChildTypeNode;
 
 		Property property;
 
 		PropertySerialization propertySerialization;
+
+		private State state;
+
+		public PropertyNode(State state, Property property) {
+			this.state = state;
+			this.property = property;
+			Class type = property.getType();
+			Class exactType = SerializationSupport
+					.solePossibleImplementation(type);
+			if (exactType != null) {
+				exactTypeNode = state.typeNode(exactType);
+			}
+			propertySerialization = property
+					.annotation(PropertySerialization.class);
+			if (propertySerialization != null
+					&& propertySerialization.types().length == 1) {
+				exactChildTypeNode = state
+						.typeNode(propertySerialization.types()[0]);
+			}
+		}
+
+		public TypeNode childTypeNode(Class<? extends Object> type) {
+			if (lastChildTypeNode == null || type != lastChildTypeNode.type) {
+				lastChildTypeNode = state.typeNode(type);
+			}
+			return lastChildTypeNode;
+		}
+
+		public TypeNode typeNode(Class<? extends Object> type) {
+			if (lastTypeNode == null || type != lastTypeNode.type) {
+				lastTypeNode = state.typeNode(type);
+				lastTypeNode.serializerLocation.verifyType(property.getType());
+			}
+			return lastTypeNode;
+		}
 
 		String name() {
 			return property.getName();
@@ -940,23 +954,47 @@ public class ReflectiveSerializer {
 	}
 
 	static class State {
-		public Object value;
+		TypeNode voidTypeNode;
+
+		Object value;
 
 		Map<Object, Integer> identityIdx = new IdentityHashMap<>();
 
 		Map<Integer, Object> idxIdentity = new LinkedHashMap<>();
 
-		public SerializerOptions serializerOptions;
+		SerializerOptions serializerOptions;
 
 		IdentityHashMap<Object, Integer> visitedObjects = new IdentityHashMap();
 
-		public DeserializerOptions deserializerOptions;
+		DeserializerOptions deserializerOptions;
 
 		Deque<GraphNode> pending = new LinkedList<>();
 
 		SerializationSupport serializationSupport;
 
 		AnnotationLocation.Resolver resolver;
+
+		Map<Class, TypeNode> typeNodes = AlcinaCollections.newHashMap();
+
+		State(SerializationSupport serializationSupport, Resolver resolver) {
+			this.serializationSupport = serializationSupport;
+			this.resolver = resolver;
+			voidTypeNode = typeNode(Void.class);
+		}
+
+		PropertyNode propertyNode(Property property) {
+			return typeNode(property.getOwningType()).propertyNode(property);
+		}
+
+		TypeNode typeNode(Class type) {
+			TypeNode typeNode = typeNodes.get(type);
+			if (typeNode == null) {
+				typeNode = new TypeNode(type);
+				typeNodes.put(type, typeNode);
+				typeNode.init(this);
+			}
+			return typeNode;
+		}
 	}
 
 	/*
@@ -964,9 +1002,81 @@ public class ReflectiveSerializer {
 	 * context. Every GraphNode has a type node - if the graphnode corresponds
 	 * to Java null, the type node type will be Void
 	 */
-	static class TypeNode<T> {
-		List<PropertyNode> properties;
+	static class TypeNode {
+		Class<? extends Object> type;
 
-		State state;
+		TypeSerializerLocation serializerLocation;
+
+		List<PropertyNode> properties = new ArrayList<>();
+
+		Map<Property, PropertyNode> propertyMap = AlcinaCollections
+				.newHashMap();
+
+		Map<String, PropertyNode> propertyNameMap = AlcinaCollections
+				.newHashMap();
+
+		private ClassReflector classReflector;
+
+		TypeSerializer serializer;
+
+		TypeNode(Class type) {
+			this.type = type;
+		}
+
+		public Object newInstance() {
+			return classReflector.newInstance();
+		}
+
+		public PropertyNode propertyNode(String name) {
+			return propertyNameMap.get(name);
+		}
+
+		public Object templateInstance() {
+			return classReflector.templateInstance();
+		}
+
+		void init(State state) {
+			classReflector = Reflections.at(type);
+			serializerLocation = resolveSerializer(type);
+			serializer = serializerLocation.typeSerializer;
+			List<Property> list = state.serializationSupport
+					.getProperties(type);
+			for (Property property : list) {
+				PropertyNode propertyNode = new PropertyNode(state, property);
+				propertyMap.put(property, propertyNode);
+				propertyNameMap.put(property.getName(), propertyNode);
+				properties.add(propertyNode);
+			}
+		}
+
+		PropertyNode propertyNode(Property property) {
+			return propertyMap.get(property);
+		}
+	}
+
+	static class TypeSerializerLocation {
+		Class location;
+
+		TypeSerializer typeSerializer;
+
+		public TypeSerializerLocation(Class location,
+				TypeSerializer typeSerializer) {
+			this.location = location;
+			this.typeSerializer = typeSerializer;
+		}
+
+		public void verifyType(Class declaredType) {
+			if (declaredType != null
+					&& !typeSerializer.handlesDeclaredTypeSubclasses()) {
+				if (location != Enum.class && location != Entity.class
+				// i.e. declaredtype is a supertype of serializertype
+						&& !Reflections.isAssignableFrom(declaredType,
+								location)) {
+					throw new IllegalStateException(Ax.format(
+							"Declared type %s cannot be serialized by resolved serializer for type %s",
+							declaredType, location));
+				}
+			}
+		}
 	}
 }

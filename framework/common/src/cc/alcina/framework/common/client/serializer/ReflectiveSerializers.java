@@ -25,9 +25,9 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
-import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.GraphNode;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.PropertyNode;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Base64;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -78,7 +78,7 @@ public class ReflectiveSerializers {
 
 		@Override
 		public Object readValue(GraphNode graphNode) {
-			return Reflections.newInstance(graphNode.type);
+			return graphNode.typeNode.newInstance();
 		}
 
 		@Override
@@ -209,7 +209,7 @@ public class ReflectiveSerializers {
 
 		@Override
 		public Object readValue(GraphNode graphNode) {
-			return Reflections.newInstance(graphNode.type);
+			return graphNode.typeNode.newInstance();
 		}
 
 		@Override
@@ -282,7 +282,7 @@ public class ReflectiveSerializers {
 
 		@Override
 		public Object readValue(GraphNode graphNode) {
-			return Reflections.newInstance(graphNode.type);
+			return graphNode.typeNode.newInstance();
 		}
 
 		@Override
@@ -707,7 +707,7 @@ public class ReflectiveSerializers {
 			if (consumed) {
 				if (idx < source.serialNode.length() - 1) {
 					idx++;
-					current = new GraphNode(source, null, null);
+					current = new GraphNode(source, null);
 					current.serialNode = source.serialNode.getChild(idx);
 					consumed = false;
 				} else {
@@ -751,9 +751,9 @@ public class ReflectiveSerializers {
 				if (idx < keys.length - 1) {
 					idx++;
 					String key = keys[idx];
-					Property property = source.state.serializationSupport
-							.getProperty(source.value.getClass(), key);
-					current = new GraphNode(source, key, property);
+					PropertyNode propertyNode = source.typeNode
+							.propertyNode(key);
+					current = new GraphNode(source, propertyNode);
 					current.serialNode = source.serialNode.getChild(key);
 					consumed = false;
 				} else {

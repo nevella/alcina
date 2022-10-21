@@ -583,7 +583,8 @@ public class FlatTreeSerializer {
 							}
 						} else {
 							property = state.serializationSupport
-									.getProperties(cursor.value).stream()
+									.getProperties(cursor.value.getClass())
+									.stream()
 									.filter(p -> p.getName()
 											.equals(segmentPath))
 									.findFirst().get();
@@ -772,7 +773,8 @@ public class FlatTreeSerializer {
 		Map<String, Property> map = new LinkedHashMap<>();
 		return deSerializationClassAliasProperty
 				.computeIfAbsent(cursor.value.getClass(), clazz -> {
-					state.serializationSupport.getProperties(cursor.value)
+					state.serializationSupport
+							.getProperties(cursor.value.getClass())
 							.forEach(p -> addWithUniquenessCheck(map,
 									keyMapper.apply(p), p, cursor));
 					return map;
@@ -859,7 +861,7 @@ public class FlatTreeSerializer {
 					state.pending.add(childNode);
 				});
 			} else if (value instanceof TreeSerializable) {
-				state.serializationSupport.getProperties(value)
+				state.serializationSupport.getProperties(value.getClass())
 						.forEach(property -> {
 							Object childValue = getValue(cursor, property,
 									value);

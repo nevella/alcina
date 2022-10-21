@@ -101,6 +101,7 @@ import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener
 import elemental.json.impl.JreJsonBoolean;
 import elemental.json.impl.JsonUtil;
 
+@SuppressWarnings("deprecation")
 @Registration.Singleton
 public abstract class AppLifecycleServletBase extends GenericServlet {
 	private static Topic<Void> topicConfigurationReloaded = Topic.create();
@@ -330,7 +331,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	 */
 	protected abstract void initCommonImplServices();
 
-	@SuppressWarnings("deprecation")
 	protected void initCommonServices() {
 		PermissionsManager permissionsManager = PermissionsManager.get();
 		PermissionsManager.register(ThreadedPermissionsManager.tpmInstance());
@@ -359,7 +359,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 
 	protected abstract void initDataFolder();
 
-	@SuppressWarnings("deprecation")
 	protected void initDevConsoleAndWebApp() {
 		topicConfigurationReloaded.add(v -> {
 			/*

@@ -157,7 +157,7 @@ class SerializationSupport {
 		});
 	}
 
-	List<Property> getProperties(Object value) {
-		return getProperties0(value.getClass());
+	List<Property> getProperties(Class type) {
+		return getProperties0(type);
 	}
 }

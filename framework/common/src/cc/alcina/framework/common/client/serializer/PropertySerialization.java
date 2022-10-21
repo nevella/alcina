@@ -80,6 +80,9 @@ public @interface PropertySerialization {
 	 * -- property type can be either assignable from an element of types() or a
 	 * collection (in which case the elements are assignable from the elements
 	 * of types())
+	 *
+	 * -- note that the property value(s) *must* be one of the exact types
+	 * specified, not a subtype
 	 */
 	Class[] types() default {};
 
