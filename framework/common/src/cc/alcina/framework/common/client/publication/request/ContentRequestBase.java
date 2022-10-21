@@ -33,6 +33,7 @@ import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.publication.Publication.Definition;
+import cc.alcina.framework.common.client.publication.RepositoryCredentials;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -573,6 +574,12 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		public void
 				setContentDefinition(TestContentDefinition contentDefinition) {
 			this.contentDefinition = contentDefinition;
+		}
+
+		@Override
+		public RepositoryCredentials getRepositoryCredentials() {
+			// TODO Auto-generated method stub
+			return null;
 		}
 	}
 

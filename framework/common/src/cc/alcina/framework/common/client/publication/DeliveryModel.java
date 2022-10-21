@@ -54,6 +54,8 @@ public interface DeliveryModel extends TreeSerializable {
 	public Map<String, String> getProperties();
 
 	public String getSuggestedFileName();
+	
+	public RepositoryCredentials getRepositoryCredentials();
 
 	public String getSystemEmailAddressOfRequestor();
 
