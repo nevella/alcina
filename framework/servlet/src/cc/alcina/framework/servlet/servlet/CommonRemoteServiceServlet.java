@@ -541,7 +541,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 							webMethod.customPermission());
 					if (!PermissionsManager.get().isPermitted(ap)) {
 						WebException wex = new WebException(
-								"Action not permitted: " + name);
+								"Action not permitted: " + method.toString());
 						logRpcException(wex,
 								LogMessageType.PERMISSIONS_EXCEPTION
 										.toString());
