@@ -341,6 +341,9 @@ public class WdExec {
 
 	public WdExec token(WDToken token) {
 		this.token = token;
+		if (driver == null) {
+			driver = token.getWebDriver();
+		}
 		return this;
 	}
 

@@ -48,6 +48,8 @@ public class AdjunctTransformCollation extends TransformCollation {
 	/*
 	 * Note that there's a chance some of these requests have already applied -
 	 * but that's harmless, as long as we drop the creation events
+	 * 
+	 * TODO - make this package-private; only expose ensureCurrent
 	 */
 	public AdjunctTransformCollation ensureApplied() {
 		// should only be called by local pre-commit listeners
@@ -96,10 +98,17 @@ public class AdjunctTransformCollation extends TransformCollation {
 		return this;
 	}
 
-	public void ensureCurrent() {
+	/**
+	 * @return true if transforms were added to the wrapped request
+	 */
+	public boolean ensureCurrent() {
+		ensureApplied();
 		if (token.addCascadedEvents()) {
 			refreshFromRequest();
 			removeNonPersistentTransforms();
+			return true;
+		} else {
+			return false;
 		}
 	}
 

@@ -24,6 +24,8 @@ import javax.persistence.OptimisticLockException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
@@ -37,6 +39,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRe
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformCollation.EntityCollation;
+import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
@@ -492,6 +495,9 @@ public class TransformPersisterInPersistenceContext {
 										wrapper,
 										DomainTransformPersistenceEventType.PRE_COMMIT,
 										true));
+				// make sure that event didn't try and add transforms
+				Preconditions.checkState(
+						TransformManager.get().getTransforms().isEmpty());
 				return;
 			case RETRY_WITH_IGNORES:
 				return;
