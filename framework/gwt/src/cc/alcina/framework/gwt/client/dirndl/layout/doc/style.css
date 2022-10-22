@@ -39,6 +39,16 @@
 	box-sizing: border-box;
 }
 
+a, a:link, a:visited, a:active{
+	text-decoration:none;
+	color: #70a0c0;
+}
+
+a[disabled='true']{
+	pointer-events: none;
+	color: #777; 
+}
+
 code-box {
 	white-space: pre-wrap;
 	display: block;
