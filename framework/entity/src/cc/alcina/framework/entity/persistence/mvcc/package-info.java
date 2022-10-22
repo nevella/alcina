@@ -1,13 +1,13 @@
 /**
- * 
+ *
  * <h2>Transactional object</h2>
  * <ul>
  * <li>Every object implements MvccObject
  * <li>Every object has an MvccObjectVersions getter/setter (accessible via the
- * interface)
+ * interface).
  * </ul>
- * 
- * 
+ *
+ *
  * <h2>MvccObject identity and debugging gotchas</h2>
  * <ul>
  * <li>An mvccobject (transactional entity) has essentially two roles: a store
@@ -29,8 +29,8 @@
  * to (if it has a non-zero id value), look at:
  * entity.__mvccObjectVersions__.__mostRecentWritable
  * </ul>
- * 
- * 
+ *
+ *
  * <h2>Transaction application (db tx -> domain store) (Nick's thoughts)</h2>
  * <ul>
  * <li>Transactions application is sequential, in db order
@@ -47,7 +47,7 @@
  * commit and reduce time there where possible
  * <li>And then of course there's ... eventual consistency
  * </ul>
- * 
+ *
  * <h2>Further notes</h2>
  * <ul>
  * <li>Method access package-private is disallowed since the 'call super if
@@ -55,9 +55,9 @@
  * guaranteed
  * <li>Covariant methods are not allowed since it appears the javassist rewriter
  * doesn't rewrite both method versions
- * <ul>
- * 
- * <h2>DEVEX styles
+ * </ul>
+ *
+ * <h2>DEVEX styles</h2>
  * <table>
  * <tr>
  * <td>Ordinal</td>

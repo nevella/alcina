@@ -14,6 +14,20 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+/*
+ * @formatter:off
+ * GWT serialization integration notes:
+ *
+ * - serializer should throw on unknown property/class/enum
+ * - otherwise should not fail
+ * - this basically means "no need for policy" - since there's enough metadata
+ *   in the serialization format itself to enable success/fail logic at the serialization
+ *   recipient end
+ * - still, for versioning, we can tie gwt app hash (xor of modules) > server serialization hash
+ * - this will let us see the server serialization diff, which is a superset of the client serialization diff
+ *
+ * @formatter:om
+ */
 public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 	protected <T> void call(String methodName, Class[] methodArgumentTypes,
 			AsyncCallback callback, Object... methodArguments) {
@@ -30,7 +44,7 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 			} finally {
 				LooseContext.pop();
 			}
-			// FIXME - 2021.refactor; FIXME - dirndl 1.1 shift to a different
+			// FIXME - dirndl 1x1b - shift to a different
 			// serializationstream
 			// (but using gwt-rpc infrastructure)
 			Registry.impl(ReflectiveRpcRemoteServiceAsync.class)

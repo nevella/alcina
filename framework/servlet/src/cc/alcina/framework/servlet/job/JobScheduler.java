@@ -472,7 +472,9 @@ public class JobScheduler {
 		}
 	}
 
-	@Registration(value = ExecutionConstraints.class, implementation = Registration.Implementation.FACTORY)
+	@Registration(
+		value = ExecutionConstraints.class,
+		implementation = Registration.Implementation.FACTORY)
 	public static class DefaultExecutionConstraintsProvider
 			implements RegistryFactory<ExecutionConstraints> {
 		@Override
@@ -481,7 +483,9 @@ public class JobScheduler {
 		}
 	}
 
-	@Registration(value = ResubmitPolicy.class, implementation = Registration.Implementation.FACTORY)
+	@Registration(
+		value = ResubmitPolicy.class,
+		implementation = Registration.Implementation.FACTORY)
 	public static class DefaultRetryPolicyProvider
 			implements RegistryFactory<ResubmitPolicy> {
 		@Override
@@ -493,7 +497,9 @@ public class JobScheduler {
 	public static class DefaultSchedule extends Schedule {
 	}
 
-	@Registration(value = Schedule.class, implementation = Registration.Implementation.FACTORY)
+	@Registration(
+		value = Schedule.class,
+		implementation = Registration.Implementation.FACTORY)
 	public static class DefaultScheduleProvider
 			implements RegistryFactory<Schedule> {
 		@Override
@@ -766,8 +772,9 @@ public class JobScheduler {
 						if (TransformManager.get() == null) {
 							// shutting down
 						} else {
-							// FIXME :: DEVEX.0
-							e.printStackTrace();
+							logger.warn(
+									"DEVEX::0 - job scheduler cleanup exception",
+									e);
 						}
 					}
 				}

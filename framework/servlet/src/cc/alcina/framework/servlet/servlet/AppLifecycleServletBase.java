@@ -98,7 +98,6 @@ import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
-import elemental.json.impl.JreJsonBoolean;
 import elemental.json.impl.JsonUtil;
 
 @SuppressWarnings("deprecation")
@@ -344,10 +343,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				new TimerWrapperProviderJvm());
 		LiSet.degenerateCreator = new DegenerateCreatorMvcc();
 		GWT.setBridge(new GWTBridgeHeadless());
-		Ax.sysLogHigh("%s", JsonUtil.class.getProtectionDomain().getCodeSource()
-				.getLocation());
-		Ax.sysLogHigh("%s", JreJsonBoolean.class.getProtectionDomain()
-				.getCodeSource().getLocation());
 		JsonUtil.FAST_STRINGIFY = true;
 	}
 

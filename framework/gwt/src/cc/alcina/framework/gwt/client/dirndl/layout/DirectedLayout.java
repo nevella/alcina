@@ -98,8 +98,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  * - Construct a RendererInput model from M, AL, CR, PN, DL[]
  *
  * [Algorithm]
- * - Transform the initial object I to RendererInput RI, push onto RI stack
- * - Pop RI from stack
+ * - Transform the initial object I to RendererInput RI, push onto RI (depth-first-traversal) queue
+ * - Pop next RI from queue
  * - While RI.DL[] is non-empty, compute renderer R from DL0 (first element of RI.DL[])
  * - Apply R to RI via [DL0,CR], which (decidedly non-functional - i.e. results in multiple changes):
  * -- generates Node n which will be added to the children of PN
@@ -109,9 +109,9 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  * --- if RI.DL[].length>1, emit a copy of RI with first element of RI.DL[] removed
  * --- applying the '[Transform model object]' algo above to the children (properties,
  * collection elements)of M, applicable only to the last @Directed in RI.DL[]
- * (Repeat until no RI stack is empty)
+ * (Repeat until no RI queue is empty)
  *
- * Dirndl 1.1 TODO
+ * Dirndl 1x1 TODO
  *
  * - Plan Registry.Context (in fact, no, discuss why not)
  *
@@ -122,11 +122,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *   - Document dirndl 1x2 - widget removal
  *   - Documentation, demo app, comparison to react/angular/flutter/switfUI (that may take a while)
  *
- * - Phases:
- *   b. rest of TODO (/)
- *   c. categorise FIXMEs, then a -> b -> c
- *   d. 1x2 switch table/form rendering to pure model - adjunct transformmanager
- *   e. 1x3 consider removing widget entirely (localdom)
+ * - Phases :
+ *   1x1b rest of TODO (/)
+ *   1x1c categorise FIXMEs, then a -> b -> c
+ *   1x1d reflectiveserializer: integrate into GWT serializer framework
+ *   1x2 switch table/form rendering to pure model - adjunct transformmanager
+ *   1x3 consider removing widget entirely (localdom)
  *
  *
  *
