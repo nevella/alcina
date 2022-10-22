@@ -17,6 +17,8 @@ import java.io.Serializable;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import cc.alcina.framework.common.client.logic.ObfuscateOnLog;
+
 /**
  * 
  * @author Nick Reddel
@@ -24,6 +26,7 @@ import java.util.Map;
 public class LoginBean implements Serializable {
 	private String userName;
 
+	@ObfuscateOnLog
 	private String password;
 
 	private boolean rememberMe;
