@@ -5,6 +5,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
+import java.util.Objects;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
@@ -114,7 +115,13 @@ public class JacksonUtils {
 	}
 
 	public static void serializeToFile(Object object, File file) {
-		ResourceUtilities.write(serialize(object), file);
+		String json = serialize(object);
+		if (file.exists()
+				&& Objects.equals(ResourceUtilities.read(file), json)) {
+			// noop
+		} else {
+			ResourceUtilities.write(json, file);
+		}
 	}
 
 	public static String serializeWithDefaultsAndTypes(Object object) {

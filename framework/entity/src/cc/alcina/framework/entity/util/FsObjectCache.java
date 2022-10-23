@@ -1,6 +1,7 @@
 package cc.alcina.framework.entity.util;
 
 import java.io.File;
+import java.lang.reflect.Constructor;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -33,7 +34,9 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		return new FsObjectCache<>(
 				DataFolderProvider.get().getChildFile(forClass.getName()), type,
 				p -> {
-					return type.getDeclaredConstructor().newInstance();
+					Constructor<C> constructor = type.getDeclaredConstructor();
+					constructor.setAccessible(true);
+					return constructor.newInstance();
 				});
 	}
 
@@ -193,9 +196,20 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 		return this;
 	}
 
+	public FsObjectCache<T> withPath(String basePath) {
+		root = new File(basePath);
+		return this;
+	}
+
 	@Override
 	public PersistentObjectCache<T> withRetainInMemory(boolean retainInMemory) {
 		this.retainInMemory = retainInMemory;
+		return this;
+	}
+
+	public FsObjectCache<T> withSerializationStrategy(
+			SerializationStrategy serializationStrategy) {
+		this.serializationStrategy = serializationStrategy;
 		return this;
 	}
 

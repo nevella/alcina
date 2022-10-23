@@ -9,6 +9,7 @@
 	border-image: initial;
 	padding: 32px;
 	margin: 20px auto;
+	font-size: 16px;
 	font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Helvetica,
 		Arial, sans-serif, Apple Color Emoji, Segoe UI Emoji;
 }
@@ -39,14 +40,14 @@
 	box-sizing: border-box;
 }
 
-a, a:link, a:visited, a:active{
-	text-decoration:none;
+a, a:link, a:visited, a:active {
+	text-decoration: none;
 	color: #70a0c0;
 }
 
-a[disabled='true']{
+a[disabled='true'] {
 	pointer-events: none;
-	color: #777; 
+	color: #777;
 }
 
 code-box {
@@ -64,7 +65,7 @@ code-box:before {
 	display: block;
 	margin: 0.2em 0.5em 0 0;
 	font-weight: bold;
-	font-size:120%;
+	font-size: 120%;
 	color: #70a0c0;
 	content: attr(type);
 }

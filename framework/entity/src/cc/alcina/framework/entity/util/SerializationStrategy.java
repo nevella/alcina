@@ -15,6 +15,29 @@ public interface SerializationStrategy {
 
 	public <T> void serializeToFile(T t, File cacheFile);
 
+	public static class Jackson
+			implements SerializationStrategy {
+		@Override
+		public <T> T deserializeFromFile(File cacheFile, Class<T> clazz) {
+			return JacksonUtils.deserializeFromFile(cacheFile, clazz);
+		}
+
+		@Override
+		public String getFileSuffix() {
+			return "json";
+		}
+
+		@Override
+		public <T> byte[] serializeToByteArray(T t) {
+			return JacksonUtils.serializeToByteArray(t);
+		}
+
+		@Override
+		public <T> void serializeToFile(T t, File cacheFile) {
+			JacksonUtils.serializeToFile(t, cacheFile);
+		}
+	}
+
 	public static class SerializationStrategy_Kryo
 			implements SerializationStrategy {
 		@Override
