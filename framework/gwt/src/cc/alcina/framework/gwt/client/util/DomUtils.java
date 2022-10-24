@@ -85,7 +85,7 @@ public class DomUtils implements NodeFromXpathProvider {
 	public static Node debugNode;
 
 	public static Stream<Element> ancestorStream(Element element) {
-		// FIXME - directedlayout.2 - (not optimal)
+		// FIXME - dirndl 1x3 - (not optimal)
 		List<Element> elements = new ArrayList<>();
 		Node node = element;
 		while (node != null && node.getNodeType() == Node.ELEMENT_NODE) {
@@ -1119,7 +1119,8 @@ public class DomUtils implements NodeFromXpathProvider {
 							Preconditions
 									.checkState(nonProcesingInstructionChildren
 											.get(0).isText());
-							kids.add(nonProcesingInstructionChildren.get(0).domNode());
+							kids.add(nonProcesingInstructionChildren.get(0)
+									.domNode());
 						}
 					} else {
 						if (Ax.notBlank(currentEltUnwrapId)) {

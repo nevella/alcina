@@ -1211,7 +1211,7 @@ public class ContentViewFactory {
 																.createZeroClick(),
 														sender);
 											} else {
-												// FIXME - directedlayout.2 -
+												// FIXME - dirndl 1x2 -
 												// probably throw a dev
 												// exception - something should
 												// happen here (which means we

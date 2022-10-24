@@ -111,23 +111,25 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  * collection elements)of M, applicable only to the last @Directed in RI.DL[]
  * (Repeat until no RI queue is empty)
  *
- * Dirndl 1x1 TODO
- *
- * - Plan Registry.Context (in fact, no, discuss why not)
+ * -
  *
  * - Goals:
  *   - Is ContextResolver clear?
  *   - Is event propagation clear?
+ *   - Plan Registry.Context (in fact, no, discuss/document why not)
  *   - Justify eventpump (or not eventpump) for node, transformed node events
  *   - Document dirndl 1x2 - widget removal
  *   - Documentation, demo app, comparison to react/angular/flutter/switfUI (that may take a while)
  *
  * - Phases :
- *   1x1b rest of TODO (/)
- *   1x1c categorise FIXMEs, then a -> b -> c
- *   1x1d reflectiveserializer: integrate into GWT serializer framework
+ *   1x1b rest of TODO (complete)
+ *   1x1c categorise FIXMEs, then d -> e -> f (current, also working on [d])
+ *   1x1d initial FIXMEs
+ *   1x1e do a big localdom issue block - FIXMEs, improve tracking (with fully reproducible exceptions)
+ *   1x1f reflectiveserializer: integrate into GWT serializer framework
  *   1x2 switch table/form rendering to pure model - adjunct transformmanager
- *   1x3 consider removing widget entirely (localdom)
+ *   1x3 low priority fixmes
+ *   1x4 consider removing widget entirely (localdom)
  *
  *
  *

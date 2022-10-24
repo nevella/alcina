@@ -618,7 +618,8 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 				return false;
 			}
 		} catch (Exception e) {
-			// FIXME - DEVEX - localdom - probably get a sample of these. For
+			// FIXME - dirndl 1x1e - localdom - probably get a sample of these.
+			// For
 			// some apps, there are a lot - but correlated to
 			// LOCALDOM_UNABLE_TO_PARSE_ISSUE
 			return false;

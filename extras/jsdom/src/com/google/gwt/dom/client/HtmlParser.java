@@ -61,7 +61,7 @@ public class HtmlParser {
 
 	private String attrValue;
 
-	// FIXME - directedlayout.2 - optimise (a jsmap would probably be faster in
+	// FIXME - dirndl 1x1d - optimise (a jsmap would probably be faster in
 	// script land)
 	private LightMap<String, String> attributes = new LightMap();
 
@@ -93,6 +93,131 @@ public class HtmlParser {
 			return parse0(html, replaceContents, emitHtmlHeadBodyTags);
 		} finally {
 			LocalDom.setDisableRemoteWrite(preSet);
+		}
+	}
+
+	private void emitAttribute() {
+		attributes.put(attrName, decodeEntities(attrValue));
+	}
+
+	/*
+	 * FIXME - dirndl 1x1e - How are cdata/comment nodes passed through?
+	 */
+	private void emitCData(String string) {
+		tag = null;
+		emitText(string);
+	}
+
+	private void emitComment(String string) {
+		tag = null;
+		emitText(string);
+	}
+
+	private void emitElement() {
+		boolean closeTag = false;
+		if (tag == null) {
+			tag = builder.toString();
+			if (tag.startsWith("/")) {
+				tag = tag.substring(1);
+				closeTag = true;
+			}
+		}
+		if (!closeTag) {
+			emitStartElement(tag);
+		}
+		selfCloseTag |= isSelfClosingTag(tag);
+		if (closeTag && selfCloseTag) {
+			// exclusive or really. we'll have already emitted the close here,
+			// so ignore
+			// e.g. is gwt celltable safehtml for input
+		} else {
+			if (closeTag || selfCloseTag) {
+				emitEndElement(tag);
+			}
+		}
+		switch (tag) {
+		case "script":
+		case "style":
+			Preconditions.checkState(!closeTag);
+			String close = Ax.format("</%s>", tag);
+			String close2 = Ax.format("</%s>", tag.toUpperCase());
+			int idx2 = html.indexOf(close, idx);
+			int idx3 = html.indexOf(close2, idx);
+			if (idx2 == -1 || (idx3 != -1 && idx3 < idx2)) {
+				idx2 = idx3;
+			}
+			String textContent = html.substring(idx, idx2);
+			emitText(textContent);
+			emitEndElement(tag);
+			idx = idx2 + close.length();
+			break;
+		}
+		tokenState = TokenState.EXPECTING_NODE;
+		tag = null;
+		selfCloseTag = false;
+	}
+
+	private void emitEndElement(String tag) {
+		if (!emitHtmlHeadBodyTags) {
+			switch (tag) {
+			case "html":
+			case "head":
+			case "body":
+				return;
+			}
+		}
+		setCursor(cursor.getParentElement(), tag, -1);
+	}
+
+	private void emitEscapedText(String string) {
+		emitText(decodeEntities(string));
+	}
+
+	private void emitStartElement(String tag) {
+		if (!emitHtmlHeadBodyTags) {
+			switch (tag) {
+			case "html":
+			case "head":
+			case "body":
+				return;
+			}
+		}
+		Element element = null;
+		if (rootResult == null && replaceContents != null) {
+			element = replaceContents;
+			// ignore outer element attributes here - but this will only be
+			// called to recalculate innerHtml
+		} else {
+			element = Document.get().createElement(tag);
+			element.local().attributes = attributes;
+			if (Ax.notBlank(attributes.get("style"))) {
+				element.local().hasUnparsedStyle = true;
+			}
+		}
+		attributes = new LightMap<>();
+		if (rootResult == null) {
+			rootResult = element;
+			setCursor(element, tag, 1);
+		} else {
+			if (tag.equals("tr") && cursor.getTagName().equals("table")) {
+				Element tbody = Document.get().createElement("tbody");
+				cursor.appendChild(tbody);
+				syntheticElements.add(tbody);
+				setCursor(tbody, "tbody", 1);
+			}
+			cursor.appendChild(element);
+			setCursor(element, tag, 1);
+		}
+	}
+
+	private void emitText(String string) {
+		if (string.isEmpty()) {
+			return;
+		}
+		Text text = Document.get().createTextNode(string);
+		cursor.appendChild(text);
+		if (debugCursor) {
+			Ax.out("  tx: %s", CommonUtils.trimToWsChars(string, 50, true));
 		}
 	}
 
@@ -289,131 +414,6 @@ public class HtmlParser {
 		if (hasSyntheticContainer) {
 		}
 		return rootResult;
-	}
-
-	private void emitAttribute() {
-		attributes.put(attrName, decodeEntities(attrValue));
-	}
-
-	/*
-	 * FIXME - directedlayout.1 - How are cdata/comment nodes passed through?
-	 */
-	private void emitCData(String string) {
-		tag = null;
-		emitText(string);
-	}
-
-	private void emitComment(String string) {
-		tag = null;
-		emitText(string);
-	}
-
-	private void emitElement() {
-		boolean closeTag = false;
-		if (tag == null) {
-			tag = builder.toString();
-			if (tag.startsWith("/")) {
-				tag = tag.substring(1);
-				closeTag = true;
-			}
-		}
-		if (!closeTag) {
-			emitStartElement(tag);
-		}
-		selfCloseTag |= isSelfClosingTag(tag);
-		if (closeTag && selfCloseTag) {
-			// exclusive or really. we'll have already emitted the close here,
-			// so ignore
-			// e.g. is gwt celltable safehtml for input
-		} else {
-			if (closeTag || selfCloseTag) {
-				emitEndElement(tag);
-			}
-		}
-		switch (tag) {
-		case "script":
-		case "style":
-			Preconditions.checkState(!closeTag);
-			String close = Ax.format("</%s>", tag);
-			String close2 = Ax.format("</%s>", tag.toUpperCase());
-			int idx2 = html.indexOf(close, idx);
-			int idx3 = html.indexOf(close2, idx);
-			if (idx2 == -1 || (idx3 != -1 && idx3 < idx2)) {
-				idx2 = idx3;
-			}
-			String textContent = html.substring(idx, idx2);
-			emitText(textContent);
-			emitEndElement(tag);
-			idx = idx2 + close.length();
-			break;
-		}
-		tokenState = TokenState.EXPECTING_NODE;
-		tag = null;
-		selfCloseTag = false;
-	}
-
-	private void emitEndElement(String tag) {
-		if (!emitHtmlHeadBodyTags) {
-			switch (tag) {
-			case "html":
-			case "head":
-			case "body":
-				return;
-			}
-		}
-		setCursor(cursor.getParentElement(), tag, -1);
-	}
-
-	private void emitEscapedText(String string) {
-		emitText(decodeEntities(string));
-	}
-
-	private void emitStartElement(String tag) {
-		if (!emitHtmlHeadBodyTags) {
-			switch (tag) {
-			case "html":
-			case "head":
-			case "body":
-				return;
-			}
-		}
-		Element element = null;
-		if (rootResult == null && replaceContents != null) {
-			element = replaceContents;
-			// ignore outer element attributes here - but this will only be
-			// called to recalculate innerHtml
-		} else {
-			element = Document.get().createElement(tag);
-			element.local().attributes = attributes;
-			if (Ax.notBlank(attributes.get("style"))) {
-				element.local().hasUnparsedStyle = true;
-			}
-		}
-		attributes = new LightMap<>();
-		if (rootResult == null) {
-			rootResult = element;
-			setCursor(element, tag, 1);
-		} else {
-			if (tag.equals("tr") && cursor.getTagName().equals("table")) {
-				Element tbody = Document.get().createElement("tbody");
-				cursor.appendChild(tbody);
-				syntheticElements.add(tbody);
-				setCursor(tbody, "tbody", 1);
-			}
-			cursor.appendChild(element);
-			setCursor(element, tag, 1);
-		}
-	}
-
-	private void emitText(String string) {
-		if (string.isEmpty()) {
-			return;
-		}
-		Text text = Document.get().createTextNode(string);
-		cursor.appendChild(text);
-		if (debugCursor) {
-			Ax.out("  tx: %s", CommonUtils.trimToWsChars(string, 50, true));
-		}
 	}
 
 	private void setCursor(Element element, String tag, int delta) {

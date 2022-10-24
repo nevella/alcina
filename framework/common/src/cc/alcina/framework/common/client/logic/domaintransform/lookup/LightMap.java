@@ -14,13 +14,13 @@ import java.util.Set;
 import cc.alcina.framework.common.client.domain.DomainCollections;
 
 /**
- * 
- * @author nick@alcina.cc Minimises memory usage for small size, falls through
- *         for large
- * 
- *         Currently don't optimise with a separate array for hashes - not sure
- *         how much that would help js performance
- * 
+ *
+ * Minimises memory usage for small size, falls through for large
+ *
+ * Currently don't optimise with a separate array for hashes - not sure how much
+ * that would help js performance
+ *
+ * @author nick@alcina.cc
  * @param <H>
  */
 public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
@@ -38,25 +38,6 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 	private transient Map<K, V> degenerate;
 
 	public LightMap() {
-	}
-
-	public String toString() {
-		Iterator<Entry<K, V>> i = entrySet().iterator();
-		if (!i.hasNext())
-			return "{}";
-		StringBuilder sb = new StringBuilder();
-		sb.append('{');
-		for (;;) {
-			Entry<K, V> e = i.next();
-			K key = e.getKey();
-			V value = e.getValue();
-			sb.append(key == this ? "(this Map)" : key);
-			sb.append('=');
-			sb.append(value == this ? "(this Map)" : value);
-			if (!i.hasNext())
-				return sb.append('}').toString();
-			sb.append(',').append(' ');
-		}
 	}
 
 	@Override
@@ -209,6 +190,26 @@ public class LightMap<K, V> implements Map<K, V>, Cloneable, Serializable {
 			return degenerate.size();
 		}
 		return size;
+	}
+
+	@Override
+	public String toString() {
+		Iterator<Entry<K, V>> i = entrySet().iterator();
+		if (!i.hasNext())
+			return "{}";
+		StringBuilder sb = new StringBuilder();
+		sb.append('{');
+		for (;;) {
+			Entry<K, V> e = i.next();
+			K key = e.getKey();
+			V value = e.getValue();
+			sb.append(key == this ? "(this Map)" : key);
+			sb.append('=');
+			sb.append(value == this ? "(this Map)" : value);
+			if (!i.hasNext())
+				return sb.append('}').toString();
+			sb.append(',').append(' ');
+		}
 	}
 
 	@Override

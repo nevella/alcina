@@ -134,7 +134,7 @@ public class ChildBeanCustomiser implements Customiser {
 									.createProvisionalObject(clazz);
 					ClientTransformManager.cast().prepareObject(obj, autoSave,
 							true, editable);
-					// FIXME - directedlayout.1 - so many more elegant ways to
+					// FIXME - dirndl 1x2 - so many more elegant ways to
 					// do this...but...
 					// register with the containing savepanel
 					//

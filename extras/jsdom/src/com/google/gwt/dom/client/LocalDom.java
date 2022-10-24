@@ -28,16 +28,15 @@ import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 
 /**
- * FIXME - directedlayout.2 - Refactoring needs - there's a lot of
- * semi-duplication in the 'link remote to localdom' models - i.e. puts to
- * remoteLookup
+ * FIXME - dirndl 1x1e - Refactoring needs - there's a lot of semi-duplication
+ * in the 'link remote to localdom' models - i.e. puts to remoteLookup
  *
  * Probably need just one true path
  *
- * Notes re gc => we mainatin a map of remote (browser dom) nodes to local
+ * Notes re gc => we maintain a map of remote (browser dom) nodes to local
  * nodes, but that's weak. Strong refs are via node.remote fields
  *
- * Notes re issues with ex-gwt mutations - FIXME - dirndl 1.1a1 -
+ * Notes re issues with ex-gwt mutations - FIXME - dirndl 1x1e -
  * https://github.com/nevella/alcina/issues/23
  *
  * Does not support IE<11
@@ -566,7 +565,7 @@ public class LocalDom {
 			return node;
 		}
 		if (remote.provideIsText()) {
-			// FIXME - directedlayout.2 - non-performant, but rare (exception
+			// FIXME - dirndl 1x1e - non-performant, but rare (exception
 			// for selectionish)
 			ElementRemote parentRemote = (ElementRemote) remote
 					.getParentNodeRemote();

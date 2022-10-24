@@ -191,9 +191,8 @@ public class RenderContext extends LooseContextInstance {
 	 * work during setup), but branch()/merge() for object trees (heavier use of
 	 * alcina) (.get() *will* work during setup)
 	 *
-	 * FIXME - directedlayout.1 - - given it's single threaded, push/pop of
-	 * snapshots probably makes even more sense...although the new thinking is
-	 * "rendercontext should be widget-tree based, not call-stack-tree based
+	 * FIXME - dirndl 1x2 - removed RenderContext refs (while reworking
+	 * widget/validation)
 	 * </p>
 	 */
 	@Override

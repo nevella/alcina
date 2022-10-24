@@ -130,7 +130,7 @@ public class LocalDomMutations {
 
     var config = {
       childList : true,
-      //FIXME - directedlayout.2 - also monitor attribute changes...maybe? wouldn't hurt for conpleteness n pretty darn easy
+      //FIXME - dirndl 1x1e - also monitor attribute changes...maybe? wouldn't hurt for conpleteness n pretty darn easy
       subtree : true
     };
     this.@LocalDomMutations::observer.observe(
@@ -265,8 +265,7 @@ public class LocalDomMutations {
 			// mutationRecords).toLogString();
 			// ClientUtils.invokeJsDebugger(records);
 			if (!LocalDom.hasNode(elementRemote)) {
-				// FIXME - directedlayout.1
-				// can reproduce intermittently with drift
+				// FIXME - dirndl 1x1e - can reproduce intermittently with drift
 				// Preconditions.checkArgument(false);
 				continue;
 			}
@@ -284,8 +283,8 @@ public class LocalDomMutations {
 			 * elt exists in local children, has no removes - remove adds from
 			 * mutation list
 			 *
-			 * FIXME - directedlayout.1 - probably issue because recaptcha
-			 * called during gwt event cycle. formalise the
+			 * FIXME - dirndl 1x1e - probably issue because recaptcha called
+			 * during gwt event cycle. formalise the
 			 * "shouldn't modify dom during event cycle outside of localdom" -
 			 * or at least wrap in connect/disconnect observer calls
 			 */
