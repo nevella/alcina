@@ -29,10 +29,10 @@ public class ColumnSorter implements Comparator<Row> {
 		for (ColumnSearchOrder order : columnOrders) {
 			int idx = groupedResult.getColumnIndex(order.getColumnName());
 			Col col = groupedResult.getCols().get(idx);
-			boolean numeric = col.numeric
-					|| col.name.equalsIgnoreCase("numeric");
-			String v1 = o1.cells.get(idx).value;
-			String v2 = o2.cells.get(idx).value;
+			boolean numeric = col.isNumeric()
+					|| col.getName().equalsIgnoreCase("numeric");
+			String v1 = o1.getCells().get(idx).getValue();
+			String v2 = o2.getCells().get(idx).getValue();
 			int i = 0;
 			if (numeric) {
 				i = numericLookup.get(v1).compareTo(numericLookup.get(v2));

@@ -987,6 +987,8 @@ public class ReflectiveSerializer {
 		}
 
 		TypeNode typeNode(Class type) {
+			type = CommonUtils.isEnumSubclass(type) ? type.getSuperclass()
+					: type;
 			TypeNode typeNode = typeNodes.get(type);
 			if (typeNode == null) {
 				typeNode = new TypeNode(type);

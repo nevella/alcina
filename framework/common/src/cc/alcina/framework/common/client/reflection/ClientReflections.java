@@ -46,7 +46,7 @@ public class ClientReflections {
 				return ClassReflector.emptyReflector(clazz);
 			}
 			throw new NoSuchElementException(Ax.format(
-					"No reflector for %s - check it or a superclass has the @Bean annotation",
+					"No reflector for %s - check it or a superclass has the @Bean or @Reflected annotation",
 					clazz.getName()));
 		}
 		return optional.get();

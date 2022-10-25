@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.HashSet;
 import java.util.Set;
 
+import com.google.gwt.core.client.GWT;
+
 import cc.alcina.framework.entity.util.LengthConstrainedStringBuilder;
 import elemental.json.Json;
 import elemental.json.JsonArray;
@@ -58,52 +60,52 @@ public class JsonUtil {
 	 * Safely escape an arbitrary string as a JSON string literal.
 	 */
 	public static String quote(String value) {
-		StringBuilder toReturn = new StringBuilder("\"");
+		StringBuilder builder = new StringBuilder("\"");
 		for (int i = 0; i < value.length(); i++) {
 			char c = value.charAt(i);
-			if (c >= 0x20 && c < 0x7F) {
-				toReturn.append(c);
+			if (c >= 0x20 && c < 0x7F && c != '"' && c != '\\') {
+				builder.append(c);
 				continue;
 			}
 			switch (c) {
 			case '\b':
-				toReturn.append('\\');
-				toReturn.append('b');
+				builder.append('\\');
+				builder.append('b');
 				break;
 			case '\t':
-				toReturn.append('\\');
-				toReturn.append('t');
+				builder.append('\\');
+				builder.append('t');
 				break;
 			case '\n':
-				toReturn.append('\\');
-				toReturn.append('n');
+				builder.append('\\');
+				builder.append('n');
 				break;
 			case '\f':
-				toReturn.append('\\');
-				toReturn.append('f');
+				builder.append('\\');
+				builder.append('f');
 				break;
 			case '\r':
-				toReturn.append('\\');
-				toReturn.append('r');
+				builder.append('\\');
+				builder.append('r');
 				break;
 			case '"':
-				toReturn.append('\\');
-				toReturn.append('"');
+				builder.append('\\');
+				builder.append('"');
 				break;
 			case '\\':
-				toReturn.append('\\');
-				toReturn.append('\\');
+				builder.append('\\');
+				builder.append('\\');
 				break;
 			default:
 				if (isControlChar(c)) {
-					toReturn.append(escapeCharAsUnicode(c));
+					builder.append(escapeCharAsUnicode(c));
 				} else {
-					toReturn.append(c);
+					builder.append(c);
 				}
 			}
 		}
-		toReturn.append('"');
-		return toReturn.toString();
+		builder.append('"');
+		return builder.toString();
 	}
 
 	/**
@@ -114,7 +116,7 @@ public class JsonUtil {
 	 * @return json formatted string
 	 */
 	public static String stringify(JsonValue jsonValue) {
-		if (FAST_STRINGIFY) {
+		if (FAST_STRINGIFY || GWT.isClient()) {
 			return JsonUtilFastWriter.stringify(jsonValue);
 		} else {
 			return stringify(jsonValue, 0);

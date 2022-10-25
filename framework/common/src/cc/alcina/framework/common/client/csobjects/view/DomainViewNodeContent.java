@@ -161,6 +161,7 @@ public abstract class DomainViewNodeContent<E extends Entity> extends Model
 		BREADTH_FIRST, DEPTH_FIRST, IMMEDIATE_ONLY, NONE;
 	}
 
+	@Reflected
 	public enum DefaultReturnTypes implements ReturnType {
 		DEFAULT
 	}

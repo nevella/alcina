@@ -53,16 +53,16 @@ public class ColumnsBuilderRows {
 		List<V> list = rowModels.collect(Collectors.toList());
 		list.stream().map(rowModel -> {
 			Row resultRow = new Row(rowModel);
-			resultRow.key = keyMapper.apply(rowModel);
+			resultRow.setKey(keyMapper.apply(rowModel));
 			int idx = 0;
 			for (ColumnsBuilder<V>.ColumnBuilder cm : mappings) {
 				Cell cell = new Cell();
-				resultRow.cells.add(cell);
+				resultRow.getCells().add(cell);
 				mapValue(cm, cell, rowModel);
 				// hacky - but we don't use a numericvaluemapper anywhere else
 				if (rowModel instanceof GroupingMapperRow) {
 					GroupingMapperRow typed = (GroupingMapperRow) rowModel;
-					cell.numericValue = typed.cells.get(idx).numericValue;
+					cell.setNumericValue(typed.getCells().get(idx).getNumericValue());
 				}
 				idx++;
 			}
@@ -80,12 +80,12 @@ public class ColumnsBuilderRows {
 			int idx = 0;
 			for (ColumnsBuilder<V>.ColumnBuilder mapping : mappings) {
 				Cell cell = new Cell();
-				totalRow.cells.add(cell);
+				totalRow.getCells().add(cell);
 				if (totalBuildersByName.containsKey(mapping.getName())) {
 					mapValue(totalBuildersByName.get(mapping.getName()), cell,
 							list);
 				} else {
-					cell.value = "";
+					cell.setValue("");
 				}
 			}
 		}
@@ -93,7 +93,7 @@ public class ColumnsBuilderRows {
 			groupedResult.setTotalRow(
 					(Row) CommonUtils.last(groupedResult.getRows()));
 		}
-		groupedResult.name = name;
+		groupedResult.setName(name);
 		return groupedResult;
 	}
 
@@ -110,14 +110,14 @@ public class ColumnsBuilderRows {
 		Object value = cm.provideValueFunction().apply(rowModel);
 		cell.rawValue = value;
 		if (value instanceof Number) {
-			cell.numericValue = ((Number) value).doubleValue();
+			cell.setNumericValue(((Number) value).doubleValue());
 		}
-		cell.value = CommonUtils.nullSafeToString(value);
+		cell.setValue(CommonUtils.nullSafeToString(value));
 		if (cm.getTitleFunction() != null) {
-			cell.title = cm.getTitleFunction().apply(rowModel);
+			cell.setTitle(cm.getTitleFunction().apply(rowModel));
 		}
 		if (cm.getHrefFunction() != null) {
-			cell.href = cm.getHrefFunction().apply(rowModel);
+			cell.setHref(cm.getHrefFunction().apply(rowModel));
 		}
 	}
 
@@ -126,9 +126,9 @@ public class ColumnsBuilderRows {
 		@Override
 		public void accept(ColumnsBuilder<Row>.ColumnBuilder builder,
 				Integer idx) {
-			builder.function(row -> ((Cell) row.cells.get(idx)).value);
+			builder.function(row -> ((Cell) row.getCells().get(idx)).getValue());
 			// builder.titleFunction(row -> ((Cell) row.cells.get(idx)).title);
-			builder.href(row -> ((Cell) row.cells.get(idx)).href);
+			builder.href(row -> ((Cell) row.getCells().get(idx)).getHref());
 		}
 	}
 }

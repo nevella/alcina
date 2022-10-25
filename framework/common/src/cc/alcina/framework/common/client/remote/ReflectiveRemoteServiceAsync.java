@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
@@ -41,6 +42,13 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 				AlcinaTransient.Support
 						.setTransienceContexts(TransienceContext.RPC);
 				serializedPayload = ReflectiveSerializer.serialize(payload);
+				if(!GWT.isScript()){
+					try {
+						ReflectiveSerializer.deserialize(serializedPayload);
+					} catch (RuntimeException e) {
+						throw e;
+					}
+				}
 			} finally {
 				LooseContext.pop();
 			}

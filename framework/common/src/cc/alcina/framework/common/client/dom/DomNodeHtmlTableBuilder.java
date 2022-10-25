@@ -35,12 +35,12 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 		headers.forEach(headerBuilder::cell);
 		values.forEach(row -> {
 			DomNodeHtmlTableRowBuilder rowBuilder = tableBuilder.row();
-			((List<Cell>) row.cells).stream().forEach(cell -> {
-				String value = Ax.blankToEmpty(cell.value).replace("\\n", "\n");
+			((List<Cell>) row.getCells()).stream().forEach(cell -> {
+				String value = Ax.blankToEmpty(cell.getValue()).replace("\\n", "\n");
 				if (!LooseContext.is(CONTEXT_KEEP_NEWLINES)) {
 					value = TextUtils.normalizeWhitespaceAndTrim(value);
 				}
-				String href = cell.href;
+				String href = cell.getHref();
 				if (Ax.notBlank(href)) {
 					DomNode td = rowBuilder.cell().append();
 					td.html().addLink(value, href, "_blank");

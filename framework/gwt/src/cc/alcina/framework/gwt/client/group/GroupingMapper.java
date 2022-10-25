@@ -52,13 +52,13 @@ public class GroupingMapper<V> {
 		if (totalRow) {
 			rows.add(new GroupingMapperRow<>(GroupedTuple.<V> totalRow(data)));
 		}
-		rows.forEach(row -> row.key = rowClassifier.groupKey(row.tuple.key));
+		rows.forEach(row -> row.setKey(rowClassifier.groupKey(row.tuple.key)));
 		GroupingMapperResult result = new GroupingMapperResult();
 		result.rowModels = (Stream) rows.stream();
 		this.columnKeys = columnClassifier.allKeys(data);
 		rows.forEach(this::generateCells);
 		result.columnMapper = new GroupingColumnMapper();
-		result.keyMapper = row -> row.key;
+		result.keyMapper = row -> row.getKey();
 		return result;
 	}
 
@@ -132,32 +132,32 @@ public class GroupingMapper<V> {
 				.map(GroupedTuple::new).sorted().collect(Collectors.toList());
 		{
 			Cell cell = new Cell();
-			cell.value = applyNameRenderer(rowNameRenderer, row.tuple.key);
-			row.cells.add(cell);
+			cell.setValue(applyNameRenderer(rowNameRenderer, row.tuple.key));
+			row.getCells().add(cell);
 		}
 		if (totalColumn) {
 			Cell cell = new Cell();
 			cell.rawValue = valueTotaller.apply(values);
 			if (cell.rawValue instanceof Number) {
-				cell.numericValue = ((Number) cell.rawValue).doubleValue();
+				cell.setNumericValue(((Number) cell.rawValue).doubleValue());
 			}
-			cell.value = valueRenderer.apply(cell.rawValue);
-			row.cells.add(cell);
+			cell.setValue(valueRenderer.apply(cell.rawValue));
+			row.getCells().add(cell);
 		}
 		for (Comparable columnKey : columnKeys) {
 			Cell cell = new Cell();
 			cell.rawValue = valueTotaller
 					.apply(byColumn.getAndEnsure(columnKey));
 			if (cell.rawValue instanceof Number) {
-				cell.numericValue = ((Number) cell.rawValue).doubleValue();
+				cell.setNumericValue(((Number) cell.rawValue).doubleValue());
 			}
-			cell.value = valueRenderer.apply(cell.rawValue);
-			row.cells.add(cell);
+			cell.setValue(valueRenderer.apply(cell.rawValue));
+			row.getCells().add(cell);
 			// TODO - place/href function
 		}
 		if (sectionClassifier != null) {
 			Comparable sectionKey = sectionClassifier.apply((V) row.in);
-			row.section = applyNameRenderer(sectionNameRenderer, sectionKey);
+			row.setSection(applyNameRenderer(sectionNameRenderer, sectionKey));
 		}
 	}
 
@@ -170,7 +170,7 @@ public class GroupingMapper<V> {
 
 		public ColumnMapper<GroupingMapperRow> columnMapper;
 
-		public Function<GroupingMapperRow, GroupKey> keyMapper = gmr -> gmr.key;
+		public Function<GroupingMapperRow, GroupKey> keyMapper = gmr -> gmr.getKey();
 	}
 
 	public static class GroupingMapperRow<V> extends Row {
@@ -220,7 +220,7 @@ public class GroupingMapper<V> {
 			if (hrefSupplier == null) {
 				return null;
 			}
-			return row -> hrefSupplier.href(row.key, columnKey);
+			return row -> hrefSupplier.href(row.getKey(), columnKey);
 		}
 
 		@Override
@@ -229,13 +229,13 @@ public class GroupingMapper<V> {
 			{
 				int f_idx = idx++;
 				builder.col("Key")
-						.function(row -> ((Cell) row.cells.get(f_idx)).value)
+						.function(row -> ((Cell) row.getCells().get(f_idx)).getValue())
 						.href(hrefFunction(null)).add();
 			}
 			if (totalColumn) {
 				int f_idx = idx++;
 				builder.col("Total")
-						.function(row -> ((Cell) row.cells.get(f_idx)).value)
+						.function(row -> ((Cell) row.getCells().get(f_idx)).getValue())
 						.href(hrefFunction(null)).numeric().add();
 			}
 			int columnIndex = 0;
@@ -243,7 +243,7 @@ public class GroupingMapper<V> {
 				int f_idx = idx++;
 				int f_columnIndex = columnIndex++;
 				builder.col(columnNameRenderer.apply(key))
-						.function(row -> ((Cell) row.cells.get(f_idx)).value)
+						.function(row -> ((Cell) row.getCells().get(f_idx)).getValue())
 						.href(hrefFunction(columnClassifier
 								.groupKey(columnKeys.get(f_columnIndex))))
 						.numeric().add();
