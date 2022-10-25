@@ -346,7 +346,8 @@ public class FormModel extends Model
 
 		private Bindable model;
 
-		// FIXME - dirndl.1 - set up for object binding checks
+		// FIXME - dirndl 1x2 - general property binding rethink. Declarative?
+		// Using propertyenum?
 		public Binding formBinding = new Binding();
 
 		public Bindable getModel() {

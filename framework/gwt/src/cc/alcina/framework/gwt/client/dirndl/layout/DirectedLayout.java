@@ -453,7 +453,9 @@ public class DirectedLayout implements AlcinaProcess {
 			// created child node corresponding to the property, so we track on
 			// the child
 			//
-			// FIXME - dirndl.1 - don't add this to form/table cells
+			// FIXME - dirndl 1x2 - don't add this to form/table cells
+			// (why? not sure - optimisation of r/o tables? make the originating
+			// bean setterless I reckon)(so I reckon no, but check performance)
 			replacementListener = new ChildReplacer((Bindable) parent.model,
 					property.getName());
 		}

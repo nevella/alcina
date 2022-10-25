@@ -48,9 +48,15 @@ public class DomainTransformEventView extends DomainTransformEvent
 
 	@Override
 	@Display(name = "New Value", orderingHint = 30)
-	@Custom(customiserClass = ExpandableLabelCustomiser.class, parameters = {
-			@NamedParameter(name = ExpandableLabelCustomiser.SHOW_AS_POPUP, booleanValue = true),
-			@NamedParameter(name = ExpandableLabelCustomiser.MAX_WIDTH, intValue = 30) })
+	@Custom(
+		customiserClass = ExpandableLabelCustomiser.class,
+		parameters = {
+				@NamedParameter(
+					name = ExpandableLabelCustomiser.SHOW_AS_POPUP,
+					booleanValue = true),
+				@NamedParameter(
+					name = ExpandableLabelCustomiser.MAX_WIDTH,
+					intValue = 30) })
 	public String getNewStringValue() {
 		if (getValueId() != 0 || getValueLocalId() != 0) {
 			return Ax.format("id:%s/%s", getValueId(), getValueLocalId());
@@ -90,8 +96,11 @@ public class DomainTransformEventView extends DomainTransformEvent
 
 	@Override
 	@Display(name = "Transform", orderingHint = 25, styleName = "nowrap")
-	@Custom(customiserClass = RenderedLabelCustomiser.class, parameters = {
-			@NamedParameter(name = RenderedLabelCustomiser.RENDERER_CLASS, classValue = ShortTransformTypeRenderer.class) })
+	@Custom(
+		customiserClass = RenderedLabelCustomiser.class,
+		parameters = { @NamedParameter(
+			name = RenderedLabelCustomiser.RENDERER_CLASS,
+			classValue = ShortTransformTypeRenderer.class) })
 	public TransformType getTransformType() {
 		return super.getTransformType();
 	}
@@ -99,8 +108,9 @@ public class DomainTransformEventView extends DomainTransformEvent
 	@Transient
 	@Display(name = "User", orderingHint = 5)
 	/*
-	 * FIXME - directedlayout.2 - this sort of customisation should be in code,
-	 * not annotation
+	 * FIXME - dirndl 1x2 - this sort of customisation should be in code, not
+	 * annotation. [Strike that - why? Why here and not elsewhere? It is a
+	 * transformation - disagree]
 	 */
 	// @Custom(customiserClass = DomainObjectIdRefCustomiser.class, parameters =
 	// {

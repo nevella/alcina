@@ -29,10 +29,12 @@ import cc.alcina.framework.gwt.client.objecttree.TreeRenderer;
 
 /**
  *
+ * //FIXME - dirndlx2 - delegate to DirectedContext (if there is one), and
+ * deprecate (UI1 only)
+ *
  * @author Nick Reddel
  *
- *         //FIXME - dirndl.1 - delegate to DirectedContext (if there is one),
- *         and eventually remove
+ *
  */
 @Registration.Singleton
 public class RenderContext extends LooseContextInstance {

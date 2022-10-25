@@ -989,9 +989,9 @@ public class ElementRemote extends NodeRemote implements DomElement {
     return buffer.buf;
 	}-*/;
 
-	// FIXME - directedlayout.2 - should also check tagname for really warped
-	// dom. unlikely to be
-	// an issue though
+	// FIXME - dirndl 1x1e - should also check tagname for really warped
+	// dom. unlikely to be an issue though. Also result should be a json form
+	// (JSO)
 	final native ElementRemoteIndex provideRemoteIndex(boolean debug)/*-{
     var result = {
       hasNode : null,

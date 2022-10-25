@@ -307,7 +307,7 @@ public class GwittirBridge {
 	}
 
 	/*
-	 * FIXME - dirndl.1 - in general, pass around clazz instead of obj
+	 * FIXME - dirndl 1x2 - in general, pass around clazz instead of obj
 	 */
 	public List<Field> fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 			Object obj, BoundWidgetTypeFactory factory, boolean editableWidgets,
@@ -346,7 +346,8 @@ public class GwittirBridge {
 				obj, new DefaultAnnotationResolver());
 	}
 
-	// FIXME - dirndl.1 - clean this up - probably one code path and a bunch of
+	// FIXME - dirndl 1x2 - clean this up - probably one code path and a bunch
+	// of
 	// reflection/registry
 	public Field getField(Class<?> clazz, String propertyName,
 			boolean editableWidgets, boolean multiple,
