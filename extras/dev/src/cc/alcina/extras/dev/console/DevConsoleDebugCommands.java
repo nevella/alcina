@@ -959,90 +959,96 @@ public class DevConsoleDebugCommands {
 
 		@Override
 		public String run(String[] argv) throws Exception {
-			Connection conn = getConn();
-			int days = getIntArg(argv, 0,
-					DEFAULT_GET_EXCEPTIONS_IN_LAST_X_DAYS);
-			String ckFilter = getExceptionIgnoreClause();
-			FilterArgvFlag filterArgvResult = new FilterArgvFlag(argv, "-a");
-			argv = filterArgvResult.argv;
-			String exceptionFilter = filterArgvResult.contains ? ""
-					: "and l.component_key ='CLIENT_EXCEPTION' ";
-			filterArgvResult = new FilterArgvFlag(argv, "-ex");
-			argv = filterArgvResult.argv;
-			FilterArgvParam filterArgvParam = new FilterArgvParam(argv,
-					"-ignore");
-			regexFilter = filterArgvParam.value;
-			argv = filterArgvParam.argv;
-			filterArgvParam = new FilterArgvParam(argv, "-maxLength");
-			if (filterArgvParam.value != null) {
-				maxRecordLength = Integer.parseInt(filterArgvParam.value);
-			}
-			argv = filterArgvParam.argv;
-			List<String> exceptions = Arrays.asList(
-					"UNEXPECTED_SERVLET_EXCEPTION", "ALERT_GENERATION_FAILURE",
-					"JOB_FAILURE_EXCEPTION", "CLUSTER_EXCEPTION",
-					"CLIENT_EXCEPTION", "RPC_EXCEPTION",
-					"CLIENT_EXCEPTION_IE_CRUD", "PUBLICATION_EXCEPTION",
-					"TRANSFORM_EXCEPTION", "PARSER_EXCEPTION");
-			exceptionFilter = filterArgvResult.contains
-					? String.format("and l.component_key in %s",
-							EntityPersistenceHelper
-									.toInStringsClause(exceptions))
-					: exceptionFilter;
-			filterArgvParam = new FilterArgvParam(argv, "-extypes");
-			String customExceptionFilter = filterArgvParam.value;
-			if (customExceptionFilter != null) {
-				exceptions = Arrays.stream(customExceptionFilter.split(","))
-						.collect(Collectors.toList());
-				exceptionFilter = String.format("and l.component_key in %s",
-						EntityPersistenceHelper.toInStringsClause(exceptions));
-			}
-			argv = filterArgvParam.argv;
-			filterArgvParam = new FilterArgvParam(argv, "-gtid");
-			argv = filterArgvParam.argv;
-			String gtOnlyFilter = filterArgvParam.value == null ? ""
-					: String.format("and l.id>=%s ", filterArgvParam.value);
-			filterArgvParam = new FilterArgvParam(argv, "-limit");
-			argv = filterArgvParam.argv;
-			String limitClause = filterArgvParam.value == null ? ""
-					: Ax.format(" limit %s", filterArgvParam.value);
-			String sqlFromEtc = String.format(
-					"from logging l inner join users u on l.user_id=u.id "
-							+ "where l.created_on>? %s %s and "
-							+ " not (l.component_key in %s) and length(l.text)<%s"
-							+ " order by random() %s",
-					exceptionFilter, gtOnlyFilter, ckFilter, maxRecordLength,
-					limitClause);
-			int size = 0;
-			{
-				String sql = "select count(l.id) " + sqlFromEtc;
-				PreparedStatement ps = conn.prepareStatement(sql);
-				Calendar c = Calendar.getInstance();
-				c.add(Calendar.DATE, -days);
-				Date d = c.getTime();
-				ps.setDate(1, new java.sql.Date(d.getTime()));
-				ResultSet rs = ps.executeQuery();
-				if (rs.next()) {
-					size += rs.getLong(1);
+			boolean saveUseProd = console.props.connection_useProduction;
+			try {
+				console.props.connection_useProduction = true;
+				Connection conn = getConn();
+				int days = getIntArg(argv, 0,
+						DEFAULT_GET_EXCEPTIONS_IN_LAST_X_DAYS);
+				String ckFilter = getExceptionIgnoreClause();
+				FilterArgvFlag filterArgvResult = new FilterArgvFlag(argv, "-a");
+				argv = filterArgvResult.argv;
+				String exceptionFilter = filterArgvResult.contains ? ""
+						: "and l.component_key ='CLIENT_EXCEPTION' ";
+				filterArgvResult = new FilterArgvFlag(argv, "-ex");
+				argv = filterArgvResult.argv;
+				FilterArgvParam filterArgvParam = new FilterArgvParam(argv,
+						"-ignore");
+				regexFilter = filterArgvParam.value;
+				argv = filterArgvParam.argv;
+				filterArgvParam = new FilterArgvParam(argv, "-maxLength");
+				if (filterArgvParam.value != null) {
+					maxRecordLength = Integer.parseInt(filterArgvParam.value);
 				}
-				ps.close();
+				argv = filterArgvParam.argv;
+				List<String> exceptions = Arrays.asList(
+						"UNEXPECTED_SERVLET_EXCEPTION", "ALERT_GENERATION_FAILURE",
+						"JOB_FAILURE_EXCEPTION", "CLUSTER_EXCEPTION",
+						"CLIENT_EXCEPTION", "RPC_EXCEPTION",
+						"CLIENT_EXCEPTION_IE_CRUD", "PUBLICATION_EXCEPTION",
+						"TRANSFORM_EXCEPTION", "PARSER_EXCEPTION");
+				exceptionFilter = filterArgvResult.contains
+						? String.format("and l.component_key in %s",
+								EntityPersistenceHelper
+										.toInStringsClause(exceptions))
+						: exceptionFilter;
+				filterArgvParam = new FilterArgvParam(argv, "-extypes");
+				String customExceptionFilter = filterArgvParam.value;
+				if (customExceptionFilter != null) {
+					exceptions = Arrays.stream(customExceptionFilter.split(","))
+							.collect(Collectors.toList());
+					exceptionFilter = String.format("and l.component_key in %s",
+							EntityPersistenceHelper.toInStringsClause(exceptions));
+				}
+				argv = filterArgvParam.argv;
+				filterArgvParam = new FilterArgvParam(argv, "-gtid");
+				argv = filterArgvParam.argv;
+				String gtOnlyFilter = filterArgvParam.value == null ? ""
+						: String.format("and l.id>=%s ", filterArgvParam.value);
+				filterArgvParam = new FilterArgvParam(argv, "-limit");
+				argv = filterArgvParam.argv;
+				String limitClause = filterArgvParam.value == null ? ""
+						: Ax.format(" limit %s", filterArgvParam.value);
+				String sqlFromEtc = String.format(
+						"from logging l inner join users u on l.user_id=u.id "
+								+ "where l.created_on>? %s %s and "
+								+ " not (l.component_key in %s) and length(l.text)<%s"
+								+ " order by random() %s",
+						exceptionFilter, gtOnlyFilter, ckFilter, maxRecordLength,
+						limitClause);
+				int size = 0;
+				{
+					String sql = "select count(l.id) " + sqlFromEtc;
+					PreparedStatement ps = conn.prepareStatement(sql);
+					Calendar c = Calendar.getInstance();
+					c.add(Calendar.DATE, -days);
+					Date d = c.getTime();
+					ps.setDate(1, new java.sql.Date(d.getTime()));
+					ResultSet rs = ps.executeQuery();
+					if (rs.next()) {
+						size += rs.getLong(1);
+					}
+					ps.close();
+				}
+				Ax.out("Retrieving %s log records...", size);
+				{
+					String sql = "select l.*,u.username " + sqlFromEtc;
+					PreparedStatement ps = conn.prepareStatement(sql);
+					Calendar c = Calendar.getInstance();
+					c.add(Calendar.DATE, -days);
+					Date d = c.getTime();
+					ps.setDate(1, new java.sql.Date(d.getTime()));
+					ResultSet rs = ps.executeQuery();
+					console.state.logRecords = new ArrayList<ILogRecord>();
+					List<IL> logRecords = (List<IL>) (List<?>) console.state.logRecords;
+					addLogRecords(rs, logRecords);
+					ps.close();
+				}
+				console.serializeState();
+				return String.format("retrieved %s log records", size);
+			} finally {
+				console.props.connection_useProduction = saveUseProd;
 			}
-			Ax.out("Retrieving %s log records...", size);
-			{
-				String sql = "select l.*,u.username " + sqlFromEtc;
-				PreparedStatement ps = conn.prepareStatement(sql);
-				Calendar c = Calendar.getInstance();
-				c.add(Calendar.DATE, -days);
-				Date d = c.getTime();
-				ps.setDate(1, new java.sql.Date(d.getTime()));
-				ResultSet rs = ps.executeQuery();
-				console.state.logRecords = new ArrayList<ILogRecord>();
-				List<IL> logRecords = (List<IL>) (List<?>) console.state.logRecords;
-				addLogRecords(rs, logRecords);
-				ps.close();
-			}
-			console.serializeState();
-			return String.format("retrieved %s log records", size);
 		}
 
 		protected String getExceptionIgnoreClause() {
