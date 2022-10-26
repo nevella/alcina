@@ -11,6 +11,7 @@ import java.lang.annotation.Target;
 
 import com.google.gwt.user.client.rpc.GwtTransient;
 
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 @Documented
@@ -64,18 +65,30 @@ public @interface KnownStatusRule {
 			return errorValue;
 		}
 
-		@Override
-		public KnownStatusRuleName name() {
+		@AlcinaTransient(AlcinaTransient.TransienceContext.CLIENT)
+		public Class<? extends Annotation> getAnnotationType() {
+			return annotationType;
+		}
+
+		public KnownTagAlcina getArea() {
+			return area;
+		}
+
+		public double getErrorValue() {
+			return errorValue;
+		}
+
+		public KnownStatusRuleName getName() {
 			return name;
 		}
 
-		@Override
-		public double warnValue() {
+		public double getWarnValue() {
 			return warnValue;
 		}
 
-		public Class<? extends Annotation> getAnnotationType() {
-			return annotationType;
+		@Override
+		public KnownStatusRuleName name() {
+			return name;
 		}
 
 		public void
@@ -83,36 +96,25 @@ public @interface KnownStatusRule {
 			this.annotationType = annotationType;
 		}
 
-		public KnownTagAlcina getArea() {
-			return area;
-		}
-
 		public void setArea(KnownTagAlcina area) {
 			this.area = area;
-		}
-
-		public double getErrorValue() {
-			return errorValue;
 		}
 
 		public void setErrorValue(double errorValue) {
 			this.errorValue = errorValue;
 		}
 
-		public KnownStatusRuleName getName() {
-			return name;
-		}
-
 		public void setName(KnownStatusRuleName name) {
 			this.name = name;
 		}
 
-		public double getWarnValue() {
-			return warnValue;
-		}
-
 		public void setWarnValue(double warnValue) {
 			this.warnValue = warnValue;
+		}
+
+		@Override
+		public double warnValue() {
+			return warnValue;
 		}
 	}
 }

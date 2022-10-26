@@ -4,6 +4,9 @@ import java.util.Collection;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
+
+@ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
 public interface DomainModelDelta {
 	public String getAppInstruction();
 

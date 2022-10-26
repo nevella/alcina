@@ -6,6 +6,7 @@ import com.totsp.gwittir.client.validator.ValidationException;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Change;
@@ -21,6 +22,7 @@ import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 @Directed(
 	cssClass = "login-page",
 	receives = { ModelEvents.Forward.class, DomEvents.Change.class })
+@TypeSerialization(reflectiveSerializable = false)
 public abstract class LoginPage extends Model
 		implements ModelEvents.Forward.Handler, DomEvents.Change.Handler {
 	protected LoginConsort loginConsort;

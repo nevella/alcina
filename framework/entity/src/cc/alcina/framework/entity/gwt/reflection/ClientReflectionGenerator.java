@@ -87,6 +87,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
  * note reachability wrinkles caused by exclusion of equal priority classes from
  * registration (see listImplementationRegistrations)
  *
+ * 
  */
 public class ClientReflectionGenerator extends IncrementalGenerator {
 	/*

@@ -10,6 +10,7 @@ import cc.alcina.framework.common.client.logic.domain.DomainTransformPersistable
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation;
 import cc.alcina.framework.common.client.logic.domain.DomainTransformPropagation.PropagationType;
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.JsonObjectSerializer;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.BlackboxData;
 import cc.alcina.framework.entity.projection.GraphProjection;
@@ -19,6 +20,7 @@ import cc.alcina.framework.entity.util.JacksonUtils;
 @MappedSuperclass
 @DomainTransformPersistable
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
+@TypeSerialization(reflectiveSerializable = false)
 public abstract class InternalMetric<U extends InternalMetric>
 		extends Entity<U> {
 	private String threadName;

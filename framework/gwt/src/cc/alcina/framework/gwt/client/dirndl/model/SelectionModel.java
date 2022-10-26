@@ -7,6 +7,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -134,6 +135,7 @@ public abstract class SelectionModel<T> extends Model
 		}
 	}
 
+	@TypeSerialization(reflectiveSerializable = false)
 	public static class Single<T> extends SelectionModel<T> {
 		public Topic<T> selectionChanged = Topic.create();
 

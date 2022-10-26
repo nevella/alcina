@@ -4,8 +4,10 @@ import java.io.Serializable;
 
 import com.google.gwt.user.client.ui.SuggestOracle.Suggestion;
 
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
+@ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
 public interface BoundSuggestOracleResponseType {
 	default String toSuggestionResultString() {
 		return toSuggestionString();
@@ -13,6 +15,7 @@ public interface BoundSuggestOracleResponseType {
 
 	String toSuggestionString();
 
+	@ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
 	public interface BoundSuggestOracleModel extends Serializable {
 	}
 

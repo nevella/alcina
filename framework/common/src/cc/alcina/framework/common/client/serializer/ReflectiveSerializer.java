@@ -1,5 +1,11 @@
 package cc.alcina.framework.common.client.serializer;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Inherited;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -130,6 +136,16 @@ public class ReflectiveSerializer {
 			return (T) node.value;
 		} finally {
 			LooseContext.pop();
+		}
+	}
+
+	// public for testing
+	public static boolean hasSerializer(Class clazz) {
+		try {
+			resolveSerializer(clazz);
+			return true;
+		} catch (Exception e) {
+			return false;
 		}
 	}
 
@@ -289,6 +305,23 @@ public class ReflectiveSerializer {
 					PropertySerialization.class);
 		}
 		return annotation;
+	}
+
+	/**
+	 *
+	 * Information for edge-case serialization checks
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Retention(RetentionPolicy.RUNTIME)
+	@Inherited
+	@Documented
+	@Target({ ElementType.TYPE, ElementType.METHOD })
+	public @interface Checks {
+		boolean hasReflectedSubtypes() default false;
+
+		boolean ignore() default false;
 	}
 
 	public static class DeserializerOptions {

@@ -10,7 +10,6 @@ import com.google.gwt.user.client.ui.AcceptsOneWidget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.action.PlaceAction;
@@ -22,7 +21,6 @@ import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.place.BindablePlace;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
 
-@Reflected
 @Registration(DirectedActivity.class)
 public class DirectedActivity<P extends BasePlace> extends Model
 		implements Activity, HasPlace<P> {
@@ -46,12 +44,16 @@ public class DirectedActivity<P extends BasePlace> extends Model
 				EntityPlace entityPlace = (EntityPlace) place;
 				if (entityPlace.id != 0
 						|| entityPlace.action == EntityAction.CREATE) {
-					directedActivity = Registry.impl(DirectedEntityActivity.class,place.getClass());
+					directedActivity = Registry.impl(
+							DirectedEntityActivity.class, place.getClass());
 				} else {
-					directedActivity = Registry.impl(DirectedBindableSearchActivity.class,place.getClass());
+					directedActivity = Registry.impl(
+							DirectedBindableSearchActivity.class,
+							place.getClass());
 				}
 			} else if (place instanceof BindablePlace) {
-				directedActivity = Registry.impl(DirectedBindableSearchActivity.class,place.getClass());
+				directedActivity = Registry.impl(
+						DirectedBindableSearchActivity.class, place.getClass());
 			} else if (place instanceof CategoryNamePlace) {
 				CategoryNamePlace categoryPlace = (CategoryNamePlace) place;
 				PermissibleAction action = categoryPlace.ensureAction();
@@ -61,12 +63,15 @@ public class DirectedActivity<P extends BasePlace> extends Model
 					return ActivityManager.NULL_ACTIVITY;
 				}
 				if (categoryPlace.nodeName == null) {
-					directedActivity = Registry.impl(DirectedCategoriesActivity.class,place.getClass());
+					directedActivity = Registry.impl(
+							DirectedCategoriesActivity.class, place.getClass());
 				} else {
-					directedActivity = Registry.impl(DirectedCategoryActivity.class,place.getClass());
+					directedActivity = Registry.impl(
+							DirectedCategoryActivity.class, place.getClass());
 				}
 			} else {
-				directedActivity = Registry.impl(DirectedActivity.class,place.getClass());
+				directedActivity = Registry.impl(DirectedActivity.class,
+						place.getClass());
 			}
 		}
 		directedActivity.setPlace((BasePlace) place);

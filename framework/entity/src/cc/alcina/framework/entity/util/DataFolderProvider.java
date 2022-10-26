@@ -2,12 +2,15 @@ package cc.alcina.framework.entity.util;
 
 import java.io.File;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.SEUtilities;
 
 //
-//No registry annotation, register manually in AppLifecycleServlet.initBootstrapRegistry
+// No registry annotation, register manually in
+// AppLifecycleServlet.initBootstrapRegistry
 public abstract class DataFolderProvider {
 	public static DataFolderProvider get() {
 		return Registry.impl(DataFolderProvider.class);
@@ -18,6 +21,8 @@ public abstract class DataFolderProvider {
 	}
 
 	public File getClassDataFile(Object instance) {
+		// call with an instance, not its class
+		Preconditions.checkState(instance.getClass() != Class.class);
 		return getChildFile(Ax.format("class-data-file/%s.dat",
 				instance.getClass().getCanonicalName()));
 	}

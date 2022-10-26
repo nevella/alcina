@@ -33,7 +33,8 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 /*
- * This could be implemented with each treepath having a Map<String,Child> - but this way seems a lot slimmer
+ * This could be implemented with each treepath having a Map<String,Child> - but
+ * this way seems a lot slimmer
  */
 public class TreePath<T> extends Model
 		implements HasFilteredSelfAndDescendantCount {
@@ -191,6 +192,7 @@ public class TreePath<T> extends Model
 		return this.segment;
 	}
 
+	@AlcinaTransient
 	public int getSelfAndDescendantCount() {
 		return this.selfAndDescendantCount;
 	}

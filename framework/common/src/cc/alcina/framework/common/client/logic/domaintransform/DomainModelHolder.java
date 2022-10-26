@@ -18,12 +18,14 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 
 /**
  *
  * @author Nick Reddel
  */
+@ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
 public interface DomainModelHolder extends Serializable {
 	public Set<ClassRef> getClassRefs();
 

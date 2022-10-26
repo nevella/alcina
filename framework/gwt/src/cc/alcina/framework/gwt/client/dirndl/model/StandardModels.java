@@ -4,13 +4,20 @@ import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.reflection.PropertyEnum;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 public class StandardModels {
-	@Directed(tag = "page", bindings = @Binding(from = "className", type = Type.CSS_CLASS, transform = ToStringFunction.ExplicitIdentity.class))
+	@Directed(
+		tag = "page",
+		bindings = @Binding(
+			from = "className",
+			type = Type.CSS_CLASS,
+			transform = ToStringFunction.ExplicitIdentity.class))
+	@TypeSerialization(reflectiveSerializable = false)
 	public static class HeaderContent extends Model.WithBinding {
 		private Object header;
 

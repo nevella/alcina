@@ -16,6 +16,7 @@ import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.Tr
 import cc.alcina.framework.common.client.csobjects.view.DomainViewNodeContent.WaitPolicy;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
 import cc.alcina.framework.common.client.csobjects.view.TreePath.Operation;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.model.DomainViewTree.DomainViewNode;
@@ -37,6 +38,7 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 
 	private List<DomainViewNodeContent.Response> savedResponses = new ArrayList<>();
 
+	@AlcinaTransient
 	public DomainViewNode.LabelGenerator getLabelGenerator() {
 		return this.labelGenerator;
 	}

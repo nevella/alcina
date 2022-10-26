@@ -4,6 +4,7 @@ import java.util.List;
 
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.csobjects.view.TreePath;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
@@ -19,11 +20,14 @@ import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeLabelClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeToggleButtonClicked;
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.PaginatorVisible;
 
-@Directed(tag = "div", cssClass = "dl-tree", bindings = {
-		@Binding(from = "rootHidden", type = Type.CSS_CLASS) }, receives = {
-				TreeEvents.NodeLabelClicked.class,
-				TreeEvents.NodeToggleButtonClicked.class,
-				TreeEvents.PaginatorVisible.class }, emits = SelectionChanged.class)
+@Directed(
+	tag = "div",
+	cssClass = "dl-tree",
+	bindings = { @Binding(from = "rootHidden", type = Type.CSS_CLASS) },
+	receives = { TreeEvents.NodeLabelClicked.class,
+			TreeEvents.NodeToggleButtonClicked.class,
+			TreeEvents.PaginatorVisible.class },
+	emits = SelectionChanged.class)
 public class Tree<TN extends TreeNode<TN>> extends Model
 		implements NodeLabelClicked.Handler, NodeToggleButtonClicked.Handler,
 		PaginatorVisible.Handler {
@@ -153,7 +157,10 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 	}
 
-	@Directed(tag = "paginator", bindings = @Binding(type = Type.INNER_TEXT, from = "text"), receives = InferredDomEvents.IntersectionObserved.class)
+	@Directed(
+		tag = "paginator",
+		bindings = @Binding(type = Type.INNER_TEXT, from = "text"),
+		receives = InferredDomEvents.IntersectionObserved.class)
 	public static class Paginator extends Model
 			implements InferredDomEvents.IntersectionObserved.Handler {
 		private String text;
@@ -222,13 +229,24 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		}
 	}
 
-	@Directed(tag = "div", cssClass = "dl-tree-node", bindings = {
-			@Binding(from = "open", type = Type.CSS_CLASS, literal = "open"),
-			@Binding(from = "selected", type = Type.CSS_CLASS, literal = "selected"),
-			@Binding(from = "leaf", type = Type.CSS_CLASS, literal = "leaf") }, receives = {
-					LabelClicked.class, ToggleButtonClicked.class }, reemits = {
-							NodeLabelClicked.class,
-							NodeToggleButtonClicked.class })
+	@Directed(
+		tag = "div",
+		cssClass = "dl-tree-node",
+		bindings = {
+				@Binding(
+					from = "open",
+					type = Type.CSS_CLASS,
+					literal = "open"),
+				@Binding(
+					from = "selected",
+					type = Type.CSS_CLASS,
+					literal = "selected"),
+				@Binding(
+					from = "leaf",
+					type = Type.CSS_CLASS,
+					literal = "leaf") },
+		receives = { LabelClicked.class, ToggleButtonClicked.class },
+		reemits = { NodeLabelClicked.class, NodeToggleButtonClicked.class })
 	public static class TreeNode<NM extends TreeNode> extends Model {
 		public transient boolean populated;
 
@@ -304,8 +322,13 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 					selected);
 		}
 
-		@Directed(tag = "label", bindings = {
-				@Binding(from = "title", to = "title", type = Binding.Type.PROPERTY) })
+		@Directed(
+			tag = "label",
+			bindings = { @Binding(
+				from = "title",
+				to = "title",
+				type = Binding.Type.PROPERTY) })
+		@TypeSerialization(reflectiveSerializable = false)
 		public static class NodeLabel extends Model {
 			private Object toggle = new Object();
 
@@ -313,7 +336,10 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 
 			private String title;
 
-			@Directed(merge = true, receives = DomEvents.Click.class, reemits = LabelClicked.class)
+			@Directed(
+				merge = true,
+				receives = DomEvents.Click.class,
+				reemits = LabelClicked.class)
 			public Object getLabel() {
 				return this.label;
 			}
@@ -322,7 +348,10 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 				return this.title;
 			}
 
-			@Directed(tag = "span", receives = DomEvents.Click.class, reemits = ToggleButtonClicked.class)
+			@Directed(
+				tag = "span",
+				receives = DomEvents.Click.class,
+				reemits = ToggleButtonClicked.class)
 			public Object getToggle() {
 				return this.toggle;
 			}
@@ -342,9 +371,13 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			}
 		}
 
-		@Directed(tag = "label", bindings = {
-				@Binding(from = "text", type = Type.INNER_TEXT),
-				@Binding(from = "text", to = "title", type = Type.PROPERTY) })
+		@Directed(
+			tag = "label",
+			bindings = { @Binding(from = "text", type = Type.INNER_TEXT),
+					@Binding(
+						from = "text",
+						to = "title",
+						type = Type.PROPERTY) })
 		public static class NodeLabelText extends Model {
 			private String text;
 

@@ -8,8 +8,10 @@ import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Widget;
 
+import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionHandler.DefaultPermissibleActionHandler;
-import cc.alcina.framework.common.client.actions.instances.NonstandardObjectAction;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.gwt.client.Client;
@@ -26,17 +28,26 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
-@Directed(receives = DomEvents.Click.class, bindings = {
-		@Binding(from = "href", type = Type.PROPERTY),
-		@Binding(from = "className", to = "class", type = Type.PROPERTY),
-		@Binding(from = "innerHtml", type = Type.INNER_HTML),
-		@Binding(from = "text", type = Type.INNER_TEXT),
-		@Binding(from = "target", type = Type.PROPERTY),
-		@Binding(from = "title", type = Type.PROPERTY),
-		@Binding(from = "id", type = Type.PROPERTY) })
+@Directed(
+	receives = DomEvents.Click.class,
+	bindings = { @Binding(from = "href", type = Type.PROPERTY),
+			@Binding(from = "className", to = "class", type = Type.PROPERTY),
+			@Binding(from = "innerHtml", type = Type.INNER_HTML),
+			@Binding(from = "text", type = Type.INNER_TEXT),
+			@Binding(from = "target", type = Type.PROPERTY),
+			@Binding(from = "title", type = Type.PROPERTY),
+			@Binding(from = "id", type = Type.PROPERTY) })
 // TODO - check conflicting properties pre-render (e.g. inner, innterHtml)
 // also document why this is a "non-standard" dirndl component (and merge
 // with link)
+/*
+ * This class did - momentarily - support withRunnable(runnable) - removed,
+ * favouring withModelEvent.
+ *
+ * If the link itself must handle the event, rather than an ancestor (unlikely,
+ * but possible), subclass Link and have the subclass implement the appropriate
+ * ModelEvent.Handler
+ */
 public class Link extends Model.WithNode
 		implements DomEvents.Click.Handler, HasTag {
 	public static final transient String PRIMARY_ACTION = "primary-action";
@@ -53,8 +64,6 @@ public class Link extends Model.WithNode
 
 	private String text;
 
-	private transient Runnable runnable;
-
 	private BasePlace place;
 
 	private String tag = "a";
@@ -65,7 +74,7 @@ public class Link extends Model.WithNode
 
 	private String id;
 
-	private NonstandardObjectAction nonStandardObjectAction;
+	private Class<? extends PermissibleAction> nonStandardObjectAction;
 
 	public Link() {
 	}
@@ -91,6 +100,8 @@ public class Link extends Model.WithNode
 	}
 
 	@Directed
+	// too unbounded for serialization
+	@AlcinaTransient
 	public Object getInner() {
 		return this.inner;
 	}
@@ -103,17 +114,13 @@ public class Link extends Model.WithNode
 		return this.modelEvent;
 	}
 
-	public NonstandardObjectAction getNonStandardObjectAction() {
+	public Class<? extends PermissibleAction> getNonStandardObjectAction() {
 		return this.nonStandardObjectAction;
 	}
 
 	// only rendered via href, but useful for equivalence testing
 	public BasePlace getPlace() {
 		return this.place;
-	}
-
-	public Runnable getRunnable() {
-		return this.runnable;
 	}
 
 	public String getTarget() {
@@ -137,13 +144,11 @@ public class Link extends Model.WithNode
 				Context context = NodeEvent.Context.newModelContext(event,
 						node);
 				ModelEvent.fire(context, modelEvent, null);
-			} else if (runnable != null) {
-				WidgetUtils.squelchCurrentEvent();
-				runnable.run();
 			} else if (nonStandardObjectAction != null) {
 				WidgetUtils.squelchCurrentEvent();
 				DefaultPermissibleActionHandler.handleAction(
-						(Widget) event.getSource(), nonStandardObjectAction,
+						(Widget) event.getSource(),
+						Reflections.newInstance(nonStandardObjectAction),
 						Client.currentPlace());
 			} else {
 				// propagate href
@@ -171,7 +176,7 @@ public class Link extends Model.WithNode
 		this.id = id;
 	}
 
-	public void setInner(Model inner) {
+	public void setInner(Object inner) {
 		this.inner = inner;
 	}
 
@@ -184,7 +189,7 @@ public class Link extends Model.WithNode
 	}
 
 	public void setNonStandardObjectAction(
-			NonstandardObjectAction nonStandardObjectAction) {
+			Class<? extends PermissibleAction> nonStandardObjectAction) {
 		this.nonStandardObjectAction = nonStandardObjectAction;
 	}
 
@@ -255,18 +260,13 @@ public class Link extends Model.WithNode
 	}
 
 	public Link withNonstandardObjectAction(
-			NonstandardObjectAction nonStandardObjectAction) {
-		this.nonStandardObjectAction = nonStandardObjectAction;
+			Class<? extends PermissibleAction> clazz) {
+		this.nonStandardObjectAction = clazz;
 		return this;
 	}
 
 	public Link withPlace(BasePlace place) {
 		setPlace(place);
-		return this;
-	}
-
-	public Link withRunnable(Runnable runnable) {
-		this.runnable = runnable;
 		return this;
 	}
 

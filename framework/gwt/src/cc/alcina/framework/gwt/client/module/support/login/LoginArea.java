@@ -3,12 +3,14 @@ package cc.alcina.framework.gwt.client.module.support.login;
 import com.google.gwt.place.shared.Place;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedActivity;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsort;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
 @Directed
+@TypeSerialization(reflectiveSerializable = false)
 /*
  * Non-generic, since it ignores place
  */

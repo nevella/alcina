@@ -35,6 +35,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformType;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.IVersionable;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.JPAImplementation;
 
@@ -43,6 +44,7 @@ import cc.alcina.framework.entity.persistence.JPAImplementation;
  *
  * @author Nick Reddel
  */
+@TypeSerialization(reflectiveSerializable = false)
 public abstract class DomainTransformEventPersistent
 		extends DomainTransformEvent implements HasId {
 	private DomainTransformRequestPersistent domainTransformRequestPersistent;

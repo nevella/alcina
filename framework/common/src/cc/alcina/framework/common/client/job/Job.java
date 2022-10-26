@@ -36,6 +36,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.HasIUser;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.DomainProperty;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
 import cc.alcina.framework.common.client.logic.reflection.Permission;
@@ -52,7 +53,11 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 
 @MappedSuperclass
-@ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
+@ObjectPermissions(
+	create = @Permission(access = AccessLevel.ADMIN),
+	read = @Permission(access = AccessLevel.ADMIN),
+	write = @Permission(access = AccessLevel.ADMIN),
+	delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 @Registration({ PersistentImpl.class, Job.class })
 public abstract class Job extends VersionableEntity<Job>
@@ -294,6 +299,7 @@ public abstract class Job extends VersionableEntity<Job>
 
 	@Transient
 	@DomainProperty(serialize = true)
+	@AlcinaTransient
 	public Object getLargeResult() {
 		largeResult = TransformManager.resolveMaybeDeserialize(largeResult,
 				this.largeResultSerialized, null);
@@ -338,6 +344,7 @@ public abstract class Job extends VersionableEntity<Job>
 
 	@Transient
 	@DomainProperty(serialize = true)
+	@AlcinaTransient
 	public Object getResult() {
 		result = TransformManager.resolveMaybeDeserialize(result,
 				this.resultSerialized, null);

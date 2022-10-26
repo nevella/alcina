@@ -35,10 +35,14 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.FriendlyEnumCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.ObjectActionLinkCustomiser;
 import cc.alcina.framework.gwt.client.gwittir.customiser.StandardLabelCustomiser;
 
-@ObjectPermissions(create = @Permission(access = AccessLevel.EVERYONE), delete = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
+@ObjectPermissions(
+	create = @Permission(access = AccessLevel.EVERYONE),
+	delete = @Permission(access = AccessLevel.ADMIN_OR_OWNER))
 @MappedSuperclass
 @Bean
-@DomainTransformPropagation(value = PropagationType.NON_PERSISTENT, persistNonRoot = false)
+@DomainTransformPropagation(
+	value = PropagationType.NON_PERSISTENT,
+	persistNonRoot = false)
 @Registration({ PersistentImpl.class, Publication.class })
 public abstract class Publication extends Entity<Publication>
 		implements HasOwner, HasIUser, SearchResult {
@@ -70,15 +74,22 @@ public abstract class Publication extends Entity<Publication>
 	private String serializedPublication;
 
 	@Transient
-	@Display(name = "Actions", orderingHint = 12, visible = @Permission(access = AccessLevel.LOGGED_IN))
-	@Custom(customiserClass = ObjectActionLinkCustomiser.class, parameters = {
-			@NamedParameter(name = ObjectActionLinkCustomiser.ACTION_CLASS, classValue = PublicationRepublishLink.class) })
+	@Display(
+		name = "Actions",
+		orderingHint = 12,
+		visible = @Permission(access = AccessLevel.LOGGED_IN))
+	@Custom(
+		customiserClass = ObjectActionLinkCustomiser.class,
+		parameters = { @NamedParameter(
+			name = ObjectActionLinkCustomiser.ACTION_CLASS,
+			classValue = PublicationRepublishLink.class) })
 	public String getActions() {
 		return "actions";
 	}
 
 	@Transient
 	@DomainProperty(serialize = true)
+	@AlcinaTransient
 	public Definition getDefinition() {
 		definition = TransformManager.resolveMaybeDeserialize(definition,
 				this.definitionSerialized, null,
@@ -92,7 +103,10 @@ public abstract class Publication extends Entity<Publication>
 
 	@Lob
 	@Transient
-	@Display(name = "Content", orderingHint = 50, visible = @Permission(access = AccessLevel.LOGGED_IN))
+	@Display(
+		name = "Content",
+		orderingHint = 50,
+		visible = @Permission(access = AccessLevel.LOGGED_IN))
 	@Custom(customiserClass = StandardLabelCustomiser.class)
 	public String getDefinitionDescription() {
 		return this.definitionDescription;
@@ -122,12 +136,18 @@ public abstract class Publication extends Entity<Publication>
 		return getUser();
 	}
 
-	@Display(name = "Date", orderingHint = 20, visible = @Permission(access = AccessLevel.LOGGED_IN))
+	@Display(
+		name = "Date",
+		orderingHint = 20,
+		visible = @Permission(access = AccessLevel.LOGGED_IN))
 	public Date getPublicationDate() {
 		return publicationDate;
 	}
 
-	@Display(name = "Type", orderingHint = 30, visible = @Permission(access = AccessLevel.LOGGED_IN))
+	@Display(
+		name = "Type",
+		orderingHint = 30,
+		visible = @Permission(access = AccessLevel.LOGGED_IN))
 	@Custom(customiserClass = FriendlyEnumCustomiser.class)
 	public String getPublicationType() {
 		return this.publicationType;
@@ -147,7 +167,10 @@ public abstract class Publication extends Entity<Publication>
 	@Transient
 	public abstract IUser getUser();
 
-	@Display(name = "Publication id", orderingHint = 10, visible = @Permission(access = AccessLevel.LOGGED_IN))
+	@Display(
+		name = "Publication id",
+		orderingHint = 10,
+		visible = @Permission(access = AccessLevel.LOGGED_IN))
 	public Long getUserPublicationId() {
 		return this.userPublicationId;
 	}

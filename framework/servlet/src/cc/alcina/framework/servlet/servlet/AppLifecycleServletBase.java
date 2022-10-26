@@ -96,6 +96,7 @@ import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.logging.PerThreadLogging;
 import cc.alcina.framework.servlet.misc.AppServletStatusNotifier;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
+import cc.alcina.framework.servlet.task.TaskGenerateReflectiveSerializerSignatures;
 import cc.alcina.framework.servlet.util.logging.PerThreadAppender;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 import elemental.json.impl.JsonUtil;
@@ -579,13 +580,14 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 	}
 
 	protected void runFinalPreInitTasks() {
-		/*
-		 * If custom LifecycleService impl init is required, call it earlier
-		 * (initCustom) and don't override LifecycleService.onApplicationStartup
-		 */
 		try {
 			Transaction.begin();
 			ThreadedPermissionsManager.cast().pushSystemUser();
+			/*
+			 * If custom LifecycleService impl init is required, call it earlier
+			 * (initCustom) and don't override
+			 * LifecycleService.onApplicationStartup
+			 */
 			Registry.query(LifecycleService.class).registrations()
 					// each class implementing LifecycleService must also have a
 					// @Registration.Singleton
@@ -599,6 +601,10 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 						}
 					});
 			if (serializationSignatureListener != null) {
+				/*
+				 * throw if reflective serializer or tree serializer consistency
+				 * checks fail and production server, otherwise warn via logs
+				 */
 				boolean cancelStartupOnSignatureGenerationFailure = ResourceUtilities
 						.is(AppLifecycleServletBase.class,
 								"cancelStartupOnSignatureGenerationFailure")
@@ -608,6 +614,13 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 								!cancelStartupOnSignatureGenerationFailure)
 						.call(() -> serializationSignatureListener
 								.ensureSignature());
+				if (cancelStartupOnSignatureGenerationFailure) {
+					cancelStartupOnSignatureGenerationFailure |= new TaskGenerateReflectiveSerializerSignatures()
+							.perform().provideIsException();
+				} else {
+					new TaskGenerateReflectiveSerializerSignatures().schedule();
+					Transaction.commit();
+				}
 				if (serializationSignatureListener.isEnsureFailed()
 						&& cancelStartupOnSignatureGenerationFailure) {
 					throw new RuntimeException(

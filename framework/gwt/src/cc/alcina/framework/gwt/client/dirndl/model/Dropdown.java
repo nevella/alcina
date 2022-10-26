@@ -22,13 +22,13 @@ public class Dropdown<D extends Model> extends Model
 		OutsideDropdownClicked.Handler, InsideDropdownClicked.Handler {
 	private boolean open;
 
-	private Object button;
+	private Model button;
 
 	private D dropdown;
 
 	private D visibleDropdown;
 
-	public Dropdown(Object button, D dropdown) {
+	public Dropdown(Model button, D dropdown) {
 		this.button = button;
 		this.dropdown = dropdown;
 	}
@@ -36,7 +36,7 @@ public class Dropdown<D extends Model> extends Model
 	@Directed(
 		receives = DomEvents.Click.class,
 		reemits = DropdownEvents.DropdownButtonClicked.class)
-	public Object getButton() {
+	public Model getButton() {
 		return this.button;
 	}
 
@@ -79,7 +79,7 @@ public class Dropdown<D extends Model> extends Model
 		setOpen(false);
 	}
 
-	public void setButton(Object button) {
+	public void setButton(Model button) {
 		this.button = button;
 	}
 

@@ -44,6 +44,7 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 				serializedPayload = ReflectiveSerializer.serialize(payload);
 				if(!GWT.isScript()){
 					try {
+						//test
 						ReflectiveSerializer.deserialize(serializedPayload);
 					} catch (RuntimeException e) {
 						throw e;

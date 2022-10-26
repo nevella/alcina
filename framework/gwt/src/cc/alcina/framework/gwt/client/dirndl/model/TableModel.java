@@ -25,6 +25,7 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.HasDisplayName;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.dirndl.activity.DirectedBindableSearchActivity;
@@ -233,6 +234,7 @@ public class TableModel extends Model {
 		}
 	}
 
+	@TypeSerialization(reflectiveSerializable = false)
 	public static class TableColumn extends Model
 			implements DomEvents.Click.Handler {
 		private Field field;

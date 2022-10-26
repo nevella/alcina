@@ -1,6 +1,7 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
 import cc.alcina.framework.common.client.csobjects.Bindable;
+import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 
 /**
@@ -10,6 +11,7 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
  * Renders by delegating to the model field
  */
 @Directed.Delegating
+@TypeSerialization(reflectiveSerializable = false)
 public class TopModel extends Bindable {
 	private Object model;
 

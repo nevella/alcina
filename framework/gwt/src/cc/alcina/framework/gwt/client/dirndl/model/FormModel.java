@@ -39,6 +39,7 @@ import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformMa
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.logic.reflection.Action;
 import cc.alcina.framework.common.client.logic.reflection.ModalDisplay.ModalResolver;
 import cc.alcina.framework.common.client.logic.reflection.ObjectActions;
 import cc.alcina.framework.common.client.logic.reflection.ObjectPermissions;
@@ -415,14 +416,12 @@ public class FormModel extends Model
 							.at(state.presentationModel.getClass())
 							.annotation(ObjectActions.class);
 					if (actions != null) {
-						Arrays.stream(actions.value())
-								.map(a -> Reflections
-										.newInstance(a.actionClass()))
-								.filter(a -> a instanceof NonstandardObjectAction)
-								.map(a -> (NonstandardObjectAction) a)
-								.forEach(action -> {
+						Arrays.stream(actions.value()).map(Action::actionClass)
+								.filter(clazz -> Reflections.isAssignableFrom(
+										NonstandardObjectAction.class, clazz))
+								.forEach(clazz -> {
 									new Link()
-											.withNonstandardObjectAction(action)
+											.withNonstandardObjectAction(clazz)
 											.addTo(model.actions);
 								});
 					}

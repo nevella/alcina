@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,6 +16,7 @@ package cc.alcina.framework.common.client.gwittir.validator;
 import com.totsp.gwittir.client.validator.ValidationException;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.logic.reflection.NamedParameter;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -56,6 +57,7 @@ public class ServerUniquenessValidator extends ServerValidator {
 		initProperties();
 	}
 
+	@AlcinaTransient
 	public Class<? extends Entity> getObjectClass() {
 		if (objectClass == null && objectClassName != null) {
 			objectClass = Reflections.forName(objectClassName);

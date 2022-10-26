@@ -11,6 +11,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.process.ProcessObservable;
 import cc.alcina.framework.common.client.process.ProcessObserver;
 import cc.alcina.framework.common.client.process.ProcessObservers;
+import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
 import cc.alcina.framework.common.client.util.FormatBuilder;
@@ -183,6 +184,7 @@ public class ProcessMetric extends Model implements ProcessObservable {
 		rpc, rpc_prepare, rpc_process, authenicate, project, serialize
 	}
 
+	@ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
 	public interface Type {
 	}
 }
