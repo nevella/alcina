@@ -1,5 +1,10 @@
 package com.google.gwt.dom.client;
 
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Comment;
+import org.w3c.dom.DOMException;
+import org.w3c.dom.ProcessingInstruction;
+
 import com.google.gwt.core.client.GWT;
 
 @SuppressWarnings("deprecation")
@@ -17,7 +22,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * Gets the default document. This is the document in which the module is
 	 * running.
-	 * 
+	 *
 	 * @return the default document
 	 */
 	static DocumentRemote get() {
@@ -90,6 +95,12 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	}
 
 	@Override
+	public final CDATASection createCDATASection(String data)
+			throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final NativeEvent createChangeEvent() {
 		return DomDocumentStatic.createChangeEvent(this);
 	}
@@ -115,6 +126,12 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	@Override
 	public final TableColElement createColGroupElement() {
 		return DomDocumentStatic.createColGroupElement(this);
+	}
+
+	@Override
+	public final Comment createComment(String data) {
+		CommentRemote remote = createCommentNode0(data);
+		return LocalDom.nodeFor(remote);
 	}
 
 	@Override
@@ -430,6 +447,12 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	}
 
 	@Override
+	public final ProcessingInstruction createProcessingInstruction(
+			String target, String data) throws DOMException {
+		throw new UnsupportedOperationException();
+	}
+
+	@Override
 	public final ButtonElement createPushButtonElement() {
 		return DomDocumentStatic.createPushButtonElement(this);
 	}
@@ -531,7 +554,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	/**
 	 * Creates a text node.
-	 * 
+	 *
 	 * @param data
 	 *            the text node's initial text
 	 * @return the newly created element
@@ -574,9 +597,9 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	/**
 	 * Creates an identifier guaranteed to be unique within this document.
-	 * 
+	 *
 	 * This is useful for allocating element id's.
-	 * 
+	 *
 	 * @return a unique identifier
 	 */
 	@Override
@@ -602,7 +625,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	/**
 	 * Enables or disables scrolling of the document.
-	 * 
+	 *
 	 * @param enable
 	 *            whether scrolling should be enabled or disabled
 	 */
@@ -621,12 +644,12 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 * Returns the left offset between the absolute coordinate system and the
 	 * body's positioning context. This method is useful for positioning
 	 * children of the body element in absolute coordinates.
-	 * 
+	 *
 	 * <p>
 	 * For example, to position an element directly under the mouse cursor
 	 * (assuming you are handling a mouse event), do the following:
 	 * </p>
-	 * 
+	 *
 	 * <pre>
 	 * Event event;
 	 * Document doc;
@@ -639,7 +662,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 * child.getStyle().setPropertyPx("left", absX - doc.getBodyOffsetLeft());
 	 * child.getStyle().setPropertyPx("top", absY - doc.getBodyOffsetTop());
 	 * </pre>
-	 * 
+	 *
 	 * @return the left offset of the body's positioning coordinate system
 	 */
 	@Override
@@ -651,7 +674,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 * Returns the top offset between the absolute coordinate system and the
 	 * body's positioning context. This method is useful for positioning
 	 * children of the body element in absolute coordinates.
-	 * 
+	 *
 	 * @return the top offset of the body's positioning coordinate system
 	 * @see #getBodyOffsetLeft()
 	 */
@@ -662,7 +685,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	/**
 	 * The height of the document's client area.
-	 * 
+	 *
 	 * @return the document's client height
 	 */
 	@Override
@@ -672,7 +695,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	/**
 	 * The width of the document's client area.
-	 * 
+	 *
 	 * @return the document's client width
 	 */
 	@Override
@@ -683,7 +706,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * Gets the document's "compatibility mode", typically used for determining
 	 * whether the document is in "quirks" or "strict" mode.
-	 * 
+	 *
 	 * @return one of "BackCompat" or "CSS1Compat"
 	 */
 	@Override
@@ -693,7 +716,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	/**
 	 * Gets the document's element. This is typically the &lt;html&gt; element.
-	 * 
+	 *
 	 * @return the document element
 	 */
 	@Override
@@ -704,7 +727,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * The domain name of the server that served the document, or null if the
 	 * server cannot be identified by a domain name.
-	 * 
+	 *
 	 * @return the document's domain, or <code>null</code> if none exists
 	 */
 	@Override
@@ -716,7 +739,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 * Returns the {@link Element} whose id is given by elementId. If no such
 	 * element exists, returns null. Behavior is not defined if more than one
 	 * element has this id.
-	 * 
+	 *
 	 * @param elementId
 	 *            the unique id value for an element
 	 * @return the matching element
@@ -748,7 +771,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 * Returns the URI of the page that linked to this page. The value is an
 	 * empty string if the user navigated to the page directly (not through a
 	 * link, but, for example, via a bookmark).
-	 * 
+	 *
 	 * @return the referrer URI
 	 */
 	@Override
@@ -758,7 +781,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	/**
 	 * The height of the scrollable area of the document.
-	 * 
+	 *
 	 * @return the height of the document's scrollable area
 	 */
 	@Override
@@ -771,12 +794,12 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * The number of pixels that the document's content is scrolled from the
 	 * left.
-	 * 
+	 *
 	 * <p>
 	 * If the document is in RTL mode, this method will return a negative value
 	 * of the number of pixels scrolled from the right.
 	 * </p>
-	 * 
+	 *
 	 * @return the document's left scroll position
 	 */
 	@Override
@@ -787,7 +810,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * The number of pixels that the document's content is scrolled from the
 	 * top.
-	 * 
+	 *
 	 * @return the document's top scroll position
 	 */
 	@Override
@@ -797,7 +820,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	/**
 	 * The width of the scrollable area of the document.
-	 * 
+	 *
 	 * @return the width of the document's scrollable area
 	 */
 	@Override
@@ -810,7 +833,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * Gets the title of a document as specified by the TITLE element in the
 	 * head of the document.
-	 * 
+	 *
 	 * @return the document's title
 	 */
 	@Override
@@ -820,7 +843,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	/**
 	 * Gets the absolute URI of this document.
-	 * 
+	 *
 	 * @return the document URI
 	 */
 	@Override
@@ -833,9 +856,9 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 * used to for scrolling and client-area measurement. In quirks-mode it is
 	 * the &lt;body&gt; element, while in standards-mode it is the &lt;html&gt;
 	 * element.
-	 * 
+	 *
 	 * This is package-protected because the viewport is
-	 * 
+	 *
 	 * @return the document's viewport element
 	 */
 	@Override
@@ -850,11 +873,11 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 
 	/**
 	 * Imports a node from another document to this document.
-	 * 
+	 *
 	 * The returned node has no parent; ({@link Node#getParentNode()} is null).
 	 * The source node is not altered or removed from the original document;
 	 * this method creates a new copy of the source node.
-	 * 
+	 *
 	 * For all nodes, importing a node creates a node object owned by the
 	 * importing document, with attribute values identical to the source node's
 	 * nodeName and nodeType, plus the attributes related to namespaces (prefix,
@@ -864,7 +887,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 * if a fragment of XML or HTML source was copied from one document to
 	 * another, recognizing that the two documents may have different DTDs in
 	 * the XML case.
-	 * 
+	 *
 	 * @param node
 	 *            the node to import
 	 * @param deep
@@ -880,7 +903,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * Determines whether the document's "compatMode" is "CSS1Compat". This is
 	 * normally described as "strict" mode.
-	 * 
+	 *
 	 * @return <code>true</code> if the document is in CSS1Compat mode
 	 */
 	@Override
@@ -891,7 +914,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * Sets the number of pixels that the document's content is scrolled from
 	 * the left.
-	 * 
+	 *
 	 * @param left
 	 *            the document's left scroll position
 	 */
@@ -903,7 +926,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * Sets the number of pixels that the document's content is scrolled from
 	 * the top.
-	 * 
+	 *
 	 * @param top
 	 *            the document's top scroll position
 	 */
@@ -915,7 +938,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * Sets the title of a document as specified by the TITLE element in the
 	 * head of the document.
-	 * 
+	 *
 	 * @param title
 	 *            the document's new title
 	 */
@@ -927,11 +950,15 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	/**
 	 * The element that contains the content for the document. In documents with
 	 * BODY contents, returns the BODY element.
-	 * 
+	 *
 	 * @return the document's body
 	 */
 	private final native NodeRemote getBody0() /*-{
     return this.body;
+	}-*/;
+
+	native final CommentRemote createCommentNode0(String data) /*-{
+    return this.createComment(data);
 	}-*/;
 
 	native final TextRemote createTextNode0(String data) /*-{
@@ -956,7 +983,7 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 	 * Returns a {@link NodeList} of all the {@link Element Elements} with a
 	 * given tag name in the order in which they are encountered in a preorder
 	 * traversal of the document tree.
-	 * 
+	 *
 	 * @param tagName
 	 *            the name of the tag to match on (the special value
 	 *            <code>"*"</code> matches all tags)

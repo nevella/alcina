@@ -3,11 +3,16 @@ package com.google.gwt.dom.client;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.w3c.dom.CDATASection;
+import org.w3c.dom.Comment;
+import org.w3c.dom.ProcessingInstruction;
+
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.TextUtils;
 import cc.alcina.framework.gwt.client.util.DomUtils;
 
 public class HtmlParser {
@@ -40,6 +45,13 @@ public class HtmlParser {
 		}
 		return false;
 	}
+
+	/**
+	 * See https://developer.mozilla.org/en-US/docs/Web/API/CDATASection
+	 *
+	 * Emit processing instruction, cdata nodes as comments
+	 */
+	private boolean emitBrowserCompatibleDom = true;
 
 	StringBuilder builder = new StringBuilder();
 
@@ -79,6 +91,10 @@ public class HtmlParser {
 
 	private int lineNumber;
 
+	public boolean isEmitBrowserCompatibleDom() {
+		return this.emitBrowserCompatibleDom;
+	}
+
 	public Element parse(DomElement root, Element replaceContents,
 			boolean emitHtmlHeadBodyTags) {
 		return parse(root.getOuterHtml(), replaceContents,
@@ -96,21 +112,28 @@ public class HtmlParser {
 		}
 	}
 
+	public void setEmitBrowserCompatibleDom(boolean emitBrowserCompatibleDom) {
+		this.emitBrowserCompatibleDom = emitBrowserCompatibleDom;
+	}
+
 	private void emitAttribute() {
 		attributes.put(attrName, decodeEntities(attrValue));
 	}
 
-	/*
-	 * FIXME - dirndl 1x1e - How are cdata/comment nodes passed through?
-	 */
 	private void emitCData(String string) {
 		tag = null;
-		emitText(string);
+		if (emitBrowserCompatibleDom) {
+			emitComment(string);
+			return;
+		}
+		CDATASection cdataSection = Document.get().createCDATASection(string);
+		cursor.appendChild(cdataSection);
 	}
 
 	private void emitComment(String string) {
 		tag = null;
-		emitText(string);
+		Comment comment = Document.get().createComment(string);
+		cursor.appendChild(comment);
 	}
 
 	private void emitElement() {
@@ -173,6 +196,26 @@ public class HtmlParser {
 		emitText(decodeEntities(string));
 	}
 
+	private void emitProcessingInstruction(String string) {
+		tag = null;
+		if (emitBrowserCompatibleDom) {
+			emitComment(string);
+			return;
+		}
+		int idx = string.indexOf(" ");
+		String tag, body;
+		if (idx == -1) {
+			tag = string;
+			body = "";
+		} else {
+			tag = string.substring(0, idx);
+			body = string.substring(idx + 1);
+		}
+		ProcessingInstruction processingInstruction = Document.get()
+				.createProcessingInstruction(tag, body);
+		cursor.appendChild(processingInstruction);
+	}
+
 	private void emitStartElement(String tag) {
 		if (!emitHtmlHeadBodyTags) {
 			switch (tag) {
@@ -217,7 +260,8 @@ public class HtmlParser {
 		Text text = Document.get().createTextNode(string);
 		cursor.appendChild(text);
 		if (debugCursor) {
-			Ax.out("  tx: %s", CommonUtils.trimToWsChars(string, 50, true));
+			Ax.out("  tx: %s", CommonUtils.trimToWsChars(
+					TextUtils.normalizeWhitespaceAndTrim(string), 50, true));
 		}
 	}
 
@@ -295,6 +339,11 @@ public class HtmlParser {
 					resetBuilder();
 					builder.append(c);
 					tokenState = TokenState.EXPECTING_CDATA;
+				} else if (tagLookahead.startsWith("?")) {
+					tag = tagLookahead;
+					resetBuilder();
+					builder.append(c);
+					tokenState = TokenState.EXPECTING_PROCESSING_INSTRUCTION;
 				} else {
 					if (isWhiteSpace) {
 						tag = tagLookahead;
@@ -321,6 +370,8 @@ public class HtmlParser {
 				}
 				break;
 			case EXPECTING_COMMENT:
+				// FIXME - dirndl 1x1d - optimise end-of-builder checks (with
+				// some sort of buffering builder)
 				if (c == '>' && builder.toString().endsWith("--")) {
 					builder.setLength(builder.length() - 2);
 					emitComment(builder.toString());
@@ -334,6 +385,16 @@ public class HtmlParser {
 				if (c == '>' && builder.toString().endsWith("]]")) {
 					builder.setLength(builder.length() - 2);
 					emitCData(builder.toString());
+					resetBuilder();
+					tokenState = TokenState.EXPECTING_NODE;
+				} else {
+					builder.append(c);
+				}
+				break;
+			case EXPECTING_PROCESSING_INSTRUCTION:
+				if (c == '>' && builder.toString().endsWith("?")) {
+					builder.setLength(builder.length() - 1);
+					emitProcessingInstruction(builder.toString());
 					resetBuilder();
 					tokenState = TokenState.EXPECTING_NODE;
 				} else {
@@ -426,9 +487,10 @@ public class HtmlParser {
 		if (debugCursor) {
 			String fromTag = cursor == null ? "(null)" : cursor.getTagName();
 			String toTag = element == null ? "(null)" : element.getTagName();
-			Ax.out("%s%s -> %s: %s -> %s",
+			Ax.out("%s%s -> %s: %s -> %s [%s]",
 					CommonUtils.padStringLeft("", debugCursorDepth, ' '),
-					debugCursorDepth, debugCursorDepth + delta, fromTag, toTag);
+					debugCursorDepth, debugCursorDepth + delta, fromTag, toTag,
+					lineNumber);
 			if (delta == 1) {
 				if (!CommonUtils.equalsIgnoreCase(toTag, tag)) {
 					Ax.err(">> %s, expected %s [%s]", toTag, tag, lineNumber);
@@ -449,7 +511,8 @@ public class HtmlParser {
 
 	enum TokenState {
 		EXPECTING_NODE, EXPECTING_TAG, TEXT, EXPECTING_COMMENT,
-		EXPECTING_ATTRIBUTES, EXPECTING_ATTR_SEP, EXPECTING_ATTR_VALUE_DELIM,
-		EXPECTING_ATTR_VALUE, EXPECTING_CDATA
+		EXPECTING_PROCESSING_INSTRUCTION, EXPECTING_ATTRIBUTES,
+		EXPECTING_ATTR_SEP, EXPECTING_ATTR_VALUE_DELIM, EXPECTING_ATTR_VALUE,
+		EXPECTING_CDATA
 	}
 }

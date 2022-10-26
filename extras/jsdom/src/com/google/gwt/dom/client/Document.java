@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -16,15 +16,12 @@
 package com.google.gwt.dom.client;
 
 import org.w3c.dom.Attr;
-import org.w3c.dom.CDATASection;
-import org.w3c.dom.Comment;
 import org.w3c.dom.DOMConfiguration;
 import org.w3c.dom.DOMException;
 import org.w3c.dom.DOMImplementation;
 import org.w3c.dom.DocumentFragment;
 import org.w3c.dom.DocumentType;
 import org.w3c.dom.EntityReference;
-import org.w3c.dom.ProcessingInstruction;
 import org.w3c.dom.traversal.NodeFilter;
 import org.w3c.dom.traversal.NodeIterator;
 import org.w3c.dom.traversal.TreeWalker;
@@ -50,7 +47,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	/**
 	 * Gets the default document. This is the document in which the module is
 	 * running.
-	 * 
+	 *
 	 * @return the default document
 	 */
 	public static Document get() {
@@ -162,7 +159,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 	@Override
 	public CDATASection createCDATASection(String arg0) throws DOMException {
-		throw new UnsupportedOperationException();
+		return local.createCDATASection(arg0);
 	}
 
 	@Override
@@ -194,8 +191,8 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	}
 
 	@Override
-	public Comment createComment(String arg0) {
-		throw new UnsupportedOperationException();
+	public Comment createComment(String data) {
+		return local.createComment(data);
 	}
 
 	@Override
@@ -529,9 +526,9 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 	}
 
 	@Override
-	public ProcessingInstruction createProcessingInstruction(String arg0,
-			String arg1) throws DOMException {
-		throw new UnsupportedOperationException();
+	public ProcessingInstruction createProcessingInstruction(String target,
+			String data) throws DOMException {
+		return local.createProcessingInstruction(target, data);
 	}
 
 	@Override
@@ -1089,7 +1086,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 		@Override
 		public org.w3c.dom.Node nextNode() {
 			if (currentNode.getFirstChild() != null) {
-				return  firstChild();
+				return firstChild();
 			}
 			while (currentNode != root) {
 				org.w3c.dom.Node nextSibling = currentNode.getNextSibling();
@@ -1125,7 +1122,7 @@ public class Document extends Node implements DomDocument, org.w3c.dom.Document,
 
 		@Override
 		public org.w3c.dom.Node previousSibling() {
-			return  currentNode=currentNode.getPreviousSibling();
+			return currentNode = currentNode.getPreviousSibling();
 		}
 
 		@Override

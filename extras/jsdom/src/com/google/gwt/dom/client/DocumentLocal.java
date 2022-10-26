@@ -1,5 +1,7 @@
 package com.google.gwt.dom.client;
 
+import org.w3c.dom.DOMException;
+
 public class DocumentLocal extends NodeLocal implements DomDocument {
 	public Document document;
 
@@ -69,6 +71,14 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	}
 
 	@Override
+	public CDATASection createCDATASection(String data) throws DOMException {
+		CDATASectionLocal local = new CDATASectionLocal(this, data);
+		CDATASection cdataSection = new CDATASection(local);
+		local.putCDATASection(cdataSection);
+		return cdataSection;
+	}
+
+	@Override
 	public NativeEvent createChangeEvent() {
 		throw new UnsupportedOperationException();
 	}
@@ -93,6 +103,14 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	public final TableColElement createColGroupElement() {
 		return DomDocumentStatic.createColGroupElement(this);
+	}
+
+	@Override
+	public Comment createComment(String data) {
+		CommentLocal local = new CommentLocal(this, data);
+		Comment comment = new Comment(local);
+		local.putComment(comment);
+		return comment;
 	}
 
 	@Override
@@ -391,6 +409,17 @@ public class DocumentLocal extends NodeLocal implements DomDocument {
 	@Override
 	public final PreElement createPreElement() {
 		return DomDocumentStatic.createPreElement(this);
+	}
+
+	@Override
+	public ProcessingInstruction createProcessingInstruction(String target,
+			String data) throws DOMException {
+		ProcessingInstructionLocal local = new ProcessingInstructionLocal(this,
+				target, data);
+		ProcessingInstruction processingInstruction = new ProcessingInstruction(
+				local);
+		local.putProcessingInstruction(processingInstruction);
+		return processingInstruction;
 	}
 
 	@Override

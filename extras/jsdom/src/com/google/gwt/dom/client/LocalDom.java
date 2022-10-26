@@ -564,7 +564,7 @@ public class LocalDom {
 		if (node != null) {
 			return node;
 		}
-		if (remote.provideIsText()) {
+		if (remote.provideIsTextOrComment()) {
 			// FIXME - dirndl 1x1e - non-performant, but rare (exception
 			// for selectionish)
 			ElementRemote parentRemote = (ElementRemote) remote
