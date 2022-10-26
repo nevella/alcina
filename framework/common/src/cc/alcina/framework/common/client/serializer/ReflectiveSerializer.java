@@ -241,14 +241,18 @@ public class ReflectiveSerializer {
 	private void deserialize(GraphNode root) {
 		do {
 			GraphNode node = state.pending.peek();
-			node.readValue();
-			Iterator<GraphNode> itr = node.iterator;
-			if (itr != null && itr.hasNext()) {
-				GraphNode next = itr.next();
-				state.pending.push(next);
-			} else {
-				node.deserializationComplete();
-				state.pending.pop();
+			try {
+				node.readValue();
+				Iterator<GraphNode> itr = node.iterator;
+				if (itr != null && itr.hasNext()) {
+					GraphNode next = itr.next();
+					state.pending.push(next);
+				} else {
+					node.deserializationComplete();
+					state.pending.pop();
+				}
+			} catch (RuntimeException e) {
+				throw new SerializationException(node, e);
 			}
 		} while (state.pending.size() > 0);
 	}
@@ -363,6 +367,12 @@ public class ReflectiveSerializer {
 					.createPropertyContainer();
 			serialNode.write(node, container);
 			node.serialNode = container;
+		}
+	}
+
+	public static class SerializationException extends RuntimeException {
+		public SerializationException(GraphNode node, RuntimeException e) {
+			super(node.toString(), e);
 		}
 	}
 

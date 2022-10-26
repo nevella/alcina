@@ -6,10 +6,12 @@ import java.util.List;
 import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.permissions.IUser;
+import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 
-//ensure that domainmodeldelta will serialize
+// ensure that domainmodeldelta will serialize
 public class DomainModelObjectsPlaceholders {
+	@Bean
 	public static class DomainModelHolderPlaceholder
 			implements DomainModelHolder {
 		@Override
