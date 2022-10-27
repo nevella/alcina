@@ -64,6 +64,13 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 		return this.signature;
 	}
 
+	@Override
+	public void performAction0(Task task) throws Exception {
+		MethodContext.instance()
+				.withMetricKey("TaskGenerateReflectiveSerializerSignatures")
+				.run(this::performAction1);
+	}
+
 	private void
 			checkAllTransientFieldsWithPropertiesAreTransient(Class clazz) {
 		if (clazz.isEnum()) {
@@ -150,8 +157,7 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 				String.valueOf(crc.getValue()));
 	}
 
-	@Override
-	protected void performAction0(Task task) throws Exception {
+	private void performAction1() throws Exception {
 		try {
 			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
 					.muteClassloaderLogging(true);

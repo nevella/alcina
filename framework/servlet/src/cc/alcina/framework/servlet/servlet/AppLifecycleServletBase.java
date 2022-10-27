@@ -579,7 +579,7 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 		}
 	}
 
-	protected void runFinalPreInitTasks() {
+	protected void runFinalPreInitTasks() throws Exception {
 		try {
 			Transaction.begin();
 			ThreadedPermissionsManager.cast().pushSystemUser();
@@ -615,8 +615,12 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 						.call(() -> serializationSignatureListener
 								.ensureSignature());
 				if (cancelStartupOnSignatureGenerationFailure) {
-					cancelStartupOnSignatureGenerationFailure |= new TaskGenerateReflectiveSerializerSignatures()
-							.perform().provideIsException();
+					// will throw an exception if there's an issue. FIXME -
+					// startup - this
+					// is never performed scheduled if run as a job - probably
+					// an interplay with the signature generation? Fix it anyway
+					new TaskGenerateReflectiveSerializerSignatures()
+							.performAction0(null);
 				} else {
 					new TaskGenerateReflectiveSerializerSignatures().schedule();
 					Transaction.commit();
