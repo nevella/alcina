@@ -24,6 +24,8 @@ import cc.alcina.framework.gwt.client.entity.GeneralProperties;
 /**
  *
  * @author Nick Reddel
+ *
+ *         Note that
  */
 @ReflectiveSerializer.Checks(hasReflectedSubtypes = true)
 public interface DomainModelHolder extends Serializable {
