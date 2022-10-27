@@ -253,7 +253,7 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 					try {
 						clazz.getDeclaredFields();
 						out.isReflective = true;
-					} catch (VerifyError e) {
+					} catch (Error e) {
 						// ignore, close link to something Dommish
 						// e.printStackTrace();
 					}
