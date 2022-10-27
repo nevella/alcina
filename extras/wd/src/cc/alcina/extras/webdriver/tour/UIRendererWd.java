@@ -13,7 +13,6 @@ import org.commonmark.parser.Parser;
 import org.commonmark.renderer.html.HtmlRenderer;
 import org.openqa.selenium.WebElement;
 
-import cc.alcina.extras.webdriver.WDUtils;
 import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
 import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -83,7 +82,6 @@ public class UIRendererWd extends UIRenderer {
 	protected void clearPopups(int delay) {
 		if (delay != 0) {
 			try {
-				WDUtils.activateOsxChrome();
 				Thread.sleep(delay);
 			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
@@ -263,6 +261,7 @@ public class UIRendererWd extends UIRenderer {
 
 		void remove() {
 			try {
+				exec.clearBy();
 				wdJsInvoke("remove('%s')", id);
 			} catch (Exception e) {
 				Ax.simpleExceptionOut(e);

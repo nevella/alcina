@@ -38,6 +38,10 @@ public class TourImpl implements Tour {
 
 		private String evaluatorClassName;
 
+		public boolean contains(String s) {
+			return toString().contains(s);
+		}
+
 		@Override
 		public List<? extends Condition> getConditions() {
 			return this.conditions;
@@ -72,6 +76,12 @@ public class TourImpl implements Tour {
 
 		public void setSelectors(List<String> selectors) {
 			this.selectors = selectors;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s - %s - %s - %s", operator, selectors,
+					conditions, evaluatorClassName);
 		}
 
 		public ConditionImpl withSelector(String target) {
@@ -421,7 +431,10 @@ public class TourImpl implements Tour {
 				return Ax.format("Non-UI: %s : %s : %s", getComment(),
 						getAction(), getTarget());
 			} else {
-				return Ax.format("%s : %s", getCaption(), getRelativeTo());
+				String commentSuffix = Ax.isBlank(getComment()) ? ""
+						: " - " + getComment();
+				return Ax.format("%s : %s%s", getCaption(), getRelativeTo(),
+						commentSuffix);
 			}
 		}
 	}

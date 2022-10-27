@@ -82,28 +82,37 @@ Gallery.end();
  *
  */
 public class Gallery {
-	private static Gallery instance;
+	private static ThreadLocal<Gallery> gallery = new ThreadLocal<>();
 
 	public static void begin(String appName, String userAgentType,
 			URL configurationUrl) {
-		instance = new Gallery(appName, userAgentType, configurationUrl);
+		gallery.set(new Gallery(appName, userAgentType, configurationUrl));
+		instance().initialise();
 	}
 
 	public static void end() {
-		instance.end0();
-		instance = null;
+		instance().end0();
+		gallery.remove();
+	}
+
+	public static boolean isInitialised() {
+		return instance() != null;
 	}
 
 	public static void putDriver(RemoteWebDriver driver) {
-		if (instance != null) {
-			instance.driver = driver;
+		if (instance() != null) {
+			instance().driver = driver;
 		}
 	}
 
 	public static void snap(String snapName) {
 		if (ResourceUtilities.is("snap")) {
-			instance.snap0(snapName);
+			instance().snap0(snapName);
 		}
+	}
+
+	static Gallery instance() {
+		return gallery.get();
 	}
 
 	@SuppressWarnings("unused")
@@ -126,7 +135,20 @@ public class Gallery {
 		this.appName = appName;
 		this.userAgentType = userAgentType;
 		this.configurationUrl = configurationUrl;
-		Gallery.instance = this;
+	}
+
+	private void end0() {
+		if (galleryConfiguration != null) {
+			try {
+				new GalleryPersister().persist(base, configuration,
+						userAgentType);
+			} catch (Exception e) {
+				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	private void initialise() {
 		base = new File(
 				Ax.format("%s/%s/%s", ResourceUtilities.get("defaultLocalPath"),
 						appName, userAgentType));
@@ -147,17 +169,6 @@ public class Gallery {
 						.ensureSpreadsheet();
 			} catch (Exception e) {
 				GalleryConfiguration.dumpSampleConfiguration();
-				throw new WrappedRuntimeException(e);
-			}
-		}
-	}
-
-	private void end0() {
-		if (galleryConfiguration != null) {
-			try {
-				new GalleryPersister().persist(base, configuration,
-						userAgentType);
-			} catch (Exception e) {
 				throw new WrappedRuntimeException(e);
 			}
 		}

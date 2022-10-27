@@ -23,6 +23,7 @@ import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
 import cc.alcina.framework.gwt.client.tour.Tour.Operator;
 import cc.alcina.framework.gwt.client.tour.Tour.Step;
+import cc.alcina.framework.gwt.client.tour.TourImpl.ConditionImpl;
 
 public abstract class TourManager {
 	private static final transient String CONTEXT_IMMEDIATE_GET = TourManager.class
