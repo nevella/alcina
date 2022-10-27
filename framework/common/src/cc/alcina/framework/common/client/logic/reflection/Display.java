@@ -76,7 +76,7 @@ public @interface Display {
 	// name
 	String name() default "";
 
-	// FIXME - dirndl.1 - this should be defined in @Bean (with sections)
+	// FIXME - dirnd 1x2 - this should be defined in @Bean (with sections)
 	int orderingHint() default 100;
 
 	String rendererHint() default "";

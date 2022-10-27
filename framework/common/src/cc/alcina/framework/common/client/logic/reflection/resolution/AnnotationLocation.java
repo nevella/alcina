@@ -17,8 +17,11 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /*
- * TODO - probably move resolution caching from the resolver to here, since more
- * performant (aka ThreadLocal )
+ * FIXME - dirndl 1x1d - probably move resolution caching from the resolver to
+ * here, since more performant (aka ThreadLocal )
+ *
+ * Note - the above may be wrong (use a profiler!) - see instead (possibly)
+ * ReflectiveSerializer use of TypeNode/PropertyNode
  */
 public class AnnotationLocation {
 	public Property property;
@@ -56,7 +59,7 @@ public class AnnotationLocation {
 	// will only be applied to a thread-specific instance (constructed via
 	// copyWithClassLocationOf)
 	//
-	// FIXME - dirndl.1x1a - this should be applied during resolution, not
+	// FIXME - dirndl 1x1d - this should be applied during resolution, not
 	// getAnnotation() - probably works, but disallows Transform -> Transform
 	public void addConsumed(Annotation annotation) {
 		if (annotation == null) {
