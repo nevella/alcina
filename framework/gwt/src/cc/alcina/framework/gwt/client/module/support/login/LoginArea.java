@@ -9,8 +9,8 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.logic.handshake.HandshakeConsort;
 import cc.alcina.framework.gwt.client.place.BasePlace;
 
-@Directed
 @TypeSerialization(reflectiveSerializable = false)
+@Directed(tag = "login-area")
 /*
  * Non-generic, since it ignores place
  */

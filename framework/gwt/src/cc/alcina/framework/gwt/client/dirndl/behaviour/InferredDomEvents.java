@@ -6,6 +6,8 @@ import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.ElementRemote;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.event.dom.client.ChangeEvent;
+import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
@@ -17,6 +19,8 @@ import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
 import com.google.gwt.user.client.Event.NativePreviewHandler;
 import com.google.gwt.user.client.ui.Widget;
+
+import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 public class InferredDomEvents {
 	public static class ClickOutside extends NodeEvent<ClickOutside.Handler>
@@ -111,6 +115,53 @@ public class InferredDomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onEnterPressed(EnterPressed event);
+		}
+	}
+
+	/*
+	 * This class is basically to support "[enter] means next/submit"
+	 *
+	 * FIXME - dirndl 1x2 - even better, wrap the input in a form and intercept
+	 * submit
+	 */
+	public static class InputEnterCommit extends
+			NodeEvent<InputEnterCommit.Handler> implements ChangeHandler {
+		@Override
+		public void dispatch(InputEnterCommit.Handler handler) {
+			handler.onInputEnterCommit(this);
+		}
+
+		@Override
+		public Class<InputEnterCommit.Handler> getHandlerClass() {
+			return InputEnterCommit.Handler.class;
+		}
+
+		@Override
+		public void onChange(ChangeEvent event) {
+			handleEvent(event);
+		}
+
+		private void handleEvent(ChangeEvent event) {
+			// if the document focus is still the source element, and it's
+			// <input type='text'>, its value was cxommitted via [enter]
+			EventTarget eventTarget = event.getNativeEvent().getEventTarget();
+			if (Element.is(eventTarget)) {
+				Element focussedElement = WidgetUtils
+						.getFocussedDocumentElement();
+				if (Element.as(eventTarget) == focussedElement) {
+					fireEvent(event);
+				}
+			}
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::handleEvent,
+					ChangeEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onInputEnterCommit(InputEnterCommit event);
 		}
 	}
 

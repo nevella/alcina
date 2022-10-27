@@ -8,8 +8,8 @@ import com.totsp.gwittir.client.validator.Validator;
 import cc.alcina.framework.common.client.collections.IdentityArrayList;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Change;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.InputEnterCommit;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Forward;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafRenderer;
@@ -21,10 +21,12 @@ import cc.alcina.framework.gwt.client.module.support.login.pub.ProcessStatus;
 
 @Directed(
 	cssClass = "login-page",
-	receives = { ModelEvents.Forward.class, DomEvents.Change.class })
+	receives = { ModelEvents.Forward.class,
+			InferredDomEvents.InputEnterCommit.class })
 @TypeSerialization(reflectiveSerializable = false)
 public abstract class LoginPage extends Model
-		implements ModelEvents.Forward.Handler, DomEvents.Change.Handler {
+		implements ModelEvents.Forward.Handler,
+		InferredDomEvents.InputEnterCommit.Handler {
 	protected LoginConsort loginConsort;
 
 	private final HeadingArea headingArea;
@@ -71,18 +73,18 @@ public abstract class LoginPage extends Model
 	}
 
 	@Override
-	public void onChange(Change event) {
-		// caused by an enter on a form field. Equivalent to "next" since
-		// single-input
-		onForward(null);
-	}
-
-	@Override
 	public void onForward(Forward event) {
 		if (!validate()) {
 			return;
 		}
 		onForwardValidated();
+	}
+
+	@Override
+	public void onInputEnterCommit(InputEnterCommit event) {
+		// caused by an enter on a form field. Equivalent to "next" since
+		// single-input
+		onForward(null);
 	}
 
 	public void setContents(Object contents) {

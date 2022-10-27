@@ -61,6 +61,8 @@ public abstract class LoginConsort extends Consort<State> {
 	public void onClickNext() {
 		/*
 		 * TODO - remote action builder - promises
+		 *
+		 * FIXME - ui2 1x3 - debounce
 		 */
 		topicCallingRemote.publish(true);
 		getAsyncService().login(request, new AsyncCallback<LoginResponse>() {

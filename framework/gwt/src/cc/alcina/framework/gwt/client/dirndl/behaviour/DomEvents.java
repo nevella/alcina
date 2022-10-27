@@ -40,6 +40,13 @@ public class DomEvents {
 		}
 	}
 
+	/**
+	 * Don't use for handling form [enter] events - use
+	 * InferredDomEvents.InputEnterCommit
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public static class Change extends NodeEvent<Change.Handler> {
 		@Override
 		public void dispatch(Change.Handler handler) {
