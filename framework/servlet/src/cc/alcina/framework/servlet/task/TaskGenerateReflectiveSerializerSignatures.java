@@ -31,6 +31,7 @@ import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.EncryptionUtils;
+import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.registry.CachingScanner;
 import cc.alcina.framework.entity.registry.ClassMetadata;
@@ -151,18 +152,24 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 
 	@Override
 	protected void performAction0(Task task) throws Exception {
-		ClassMetadataCache<ClassMetadata> classes = null;
-		classes = new ServletClasspathScanner("*", true, true, null,
-				Registry.MARKER_RESOURCE, Arrays.asList(new String[] {}))
-						.getClasses();
-		Scanner scanner = new Scanner();
-		File file = DataFolderProvider.get().getClassDataFile(this);
-		file.getParentFile().mkdirs();
-		scanner.scan(classes, file.getPath());
-		serializables = scanner.getOutgoingCache().classData.values().stream()
-				.filter(m -> m.isReflective)
-				.map(m -> Reflections.forName(m.className))
-				.collect(AlcinaCollectors.toLinkedHashSet());
+		try {
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
+					.muteClassloaderLogging(true);
+			ClassMetadataCache<ClassMetadata> classes = new ServletClasspathScanner(
+					"*", true, true, null, Registry.MARKER_RESOURCE,
+					Arrays.asList(new String[] {})).getClasses();
+			Scanner scanner = new Scanner();
+			File file = DataFolderProvider.get().getClassDataFile(this);
+			file.getParentFile().mkdirs();
+			scanner.scan(classes, file.getPath());
+			serializables = scanner.getOutgoingCache().classData.values()
+					.stream().filter(m -> m.isReflective)
+					.map(m -> Reflections.forName(m.className))
+					.collect(AlcinaCollectors.toLinkedHashSet());
+		} finally {
+			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
+					.muteClassloaderLogging(false);
+		}
 		serializables.forEach(this::checkSerializationIssues);
 		Preconditions.checkState(serializationIssues.isEmpty());
 		serializables.forEach(
