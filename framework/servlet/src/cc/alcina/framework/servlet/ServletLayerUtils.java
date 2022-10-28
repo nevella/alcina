@@ -119,6 +119,8 @@ public class ServletLayerUtils {
 				.orElse(request.getScheme());
 		String host = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
 				.orElse(request.getServerName());
+		// Remove any trailing ports from the host
+		host = host.replaceFirst(":[^:]+$", "");
 		String port = Optional.ofNullable(request.getHeader("X-Forwarded-Port"))
 				.orElse(String.valueOf(request.getServerPort()));
 		int iPort = Integer.parseInt(port);
@@ -138,6 +140,60 @@ public class ServletLayerUtils {
 			throw new UnsupportedOperationException();
 		}
 		return Ax.format("%s://%s%s/", protocol, host, portString);
+	}
+
+	public static String robustRebuildRequestUrl(HttpServletRequest request, boolean withQueryString) {
+		if (request == null) {
+			return null;
+		}
+
+		StringBuilder requestUrl = new StringBuilder();
+
+		// Request protocol
+		String protocol = Optional
+				.ofNullable(request.getHeader("X-Forwarded-Proto"))
+				.orElse(request.getScheme());
+		requestUrl.append(protocol);
+		requestUrl.append("://");
+
+		// Request host
+		String host = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
+				.orElse(request.getServerName());
+		// Remove any trailing ports from the host, the next part takes care of that
+		host = host.replaceFirst(":[^:]+$", "");
+		requestUrl.append(host);
+
+		// Request port - if non-default
+		String port = Optional.ofNullable(request.getHeader("X-Forwarded-Port"))
+				.orElse(String.valueOf(request.getServerPort()));
+		int iPort = Integer.parseInt(port);
+		switch (protocol) {
+		case "http":
+			if (iPort != 80) {
+				requestUrl.append(":");
+				requestUrl.append(iPort);
+			}
+			break;
+		case "https":
+			if (iPort != 443) {
+				requestUrl.append(":");
+				requestUrl.append(iPort);
+			}
+			break;
+		default:
+			throw new UnsupportedOperationException();
+		}
+		
+		// Request location
+		requestUrl.append(request.getRequestURI());
+
+		// Request query - if present
+		if (withQueryString && request.getQueryString() != null) {
+			requestUrl.append("?");
+			requestUrl.append(request.getQueryString());
+		}
+
+		return requestUrl.toString();
 	}
 
 	public static void setAppServletInitialised(boolean appServletInitialised) {
