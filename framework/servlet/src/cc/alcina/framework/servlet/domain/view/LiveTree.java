@@ -1456,8 +1456,8 @@ public class LiveTree {
 			Optional<TreePath<LiveNode>> path1 = root.getPath(o1.getTreePath());
 			Optional<TreePath<LiveNode>> path2 = root.getPath(o2.getTreePath());
 			/*
-			 * FIXME - dirndl.2 - is there an invariant that ensures this never
-			 * occurs? Is it comparing removed nodes?
+			 * FIXME - dirndl 1x3 - is there an invariant that ensures this
+			 * never occurs? Is it comparing removed nodes?
 			 */
 			if (path1.isEmpty()) {
 				if (path2.isEmpty()) {

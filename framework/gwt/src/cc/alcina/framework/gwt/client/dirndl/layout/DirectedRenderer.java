@@ -71,6 +71,13 @@ public abstract class DirectedRenderer {
 
 	protected abstract void render(DirectedLayout.RendererInput input);
 
+	/**
+	 * Renders a container widget for the Bindable instance and layout nodes for
+	 * the
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	@Registration({ DirectedRenderer.class, Bindable.class })
 	public static class BindableRenderer extends DirectedRenderer
 			implements GeneratesPropertyInputs {
@@ -87,7 +94,9 @@ public abstract class DirectedRenderer {
 
 	/**
 	 * The most-specific @Directed at the initiating AnnotationLocation will be
-	 * applied to each Collection element
+	 * applied to each Collection element. This renderer renders no widget for
+	 * the collection itself, normally there will be one widget (or at least
+	 * dirndl node) per collection element
 	 *
 	 * @author nick@alcina.cc
 	 *
@@ -138,6 +147,12 @@ public abstract class DirectedRenderer {
 		}
 	}
 
+	/**
+	 * Renders a container widget (dom element, by default a div)
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
 	public static class Container extends DirectedRenderer {
 		@Override
 		protected void render(RendererInput input) {
@@ -150,6 +165,10 @@ public abstract class DirectedRenderer {
 		}
 	}
 
+	/**
+	 * Renders no widget for the annotated object, but renders the object
+	 * properties (so rendering is 'delegated' to the properties)
+	 */
 	public static class Delegating extends DirectedRenderer
 			implements GeneratesPropertyInputs {
 		@Override

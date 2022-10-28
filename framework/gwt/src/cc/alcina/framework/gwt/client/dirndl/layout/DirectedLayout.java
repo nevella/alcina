@@ -77,11 +77,12 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  * interface events than dealing directly with native (DOM) events
  * </ul>
  *
- * FIXME - dirndl.perf
+ * FIXME - dirndl 1xg - performance
  *
  * Minimise annotation resolution by caching an intermediate renderer object
- * which itself caches property/class annotation tuples. Also apply to
- * reflective serializer
+ * which itself caches property/class annotation tuples (very similar to
+ * reflective serializer typenode/propertynode implementation), scoped to
+ * resolver but by default copying from parent
  *
  * @author nick@alcina.cc
  *
@@ -127,6 +128,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *   1x1d initial FIXMEs
  *   1x1e do a big localdom issue block - FIXMEs, improve tracking (with fully reproducible exceptions)
  *   1x1f reflectiveserializer: integrate into GWT serializer framework
+ *   1x1g performance (possibly before 1x1e)
  *   1x2 switch table/form rendering to pure model - adjunct transformmanager
  *   1x3 low priority fixmes
  *   1x4 consider removing widget entirely (localdom)
@@ -704,10 +706,14 @@ public class DirectedLayout implements AlcinaProcess {
 		class NodeEventBinding implements NodeEventReceiver {
 			Class<? extends NodeEvent> type;
 
-			// FIXME - dirndl 1.3 - why binding? why not bound event?
+			// FIXME - dirndl 1x1d - why binding? why not bound event?
 			// also .... shouldn't we create these events on demand, and just
 			// use type? or call it 'template'?
-			NodeEvent<? extends EventHandler> eventTemplate;
+			//
+			// Actually, the event provides access to - essentially - metadata
+			// about the event. So that'd need to either go elsewhere, or keep
+			// the current behaviour (with maybe more specific naming)
+			NodeEvent<? extends EventHandler> eventInstance;
 
 			private int receiverIndex;
 
@@ -731,13 +737,16 @@ public class DirectedLayout implements AlcinaProcess {
 
 			private void bindEvent(boolean bind) {
 				if (bind) {
-					if (eventTemplate == null) {
-						eventTemplate = Reflections.newInstance(type);
-						eventTemplate.setEventReceiver(this);
+					if (eventInstance == null) {
+						eventInstance = Reflections.newInstance(type);
+						eventInstance.setEventReceiver(this);
 					}
-					eventTemplate.bind(getBindingWidget(), true);
+					// only bind to the widget if binding a non-model event
+					if (!Reflections.isAssignableFrom(ModelEvent.class, type)) {
+						eventInstance.bind(getBindingWidget(), true);
+					}
 				} else {
-					eventTemplate.bind(null, false);
+					eventInstance.bind(null, false);
 				}
 			}
 
@@ -746,7 +755,7 @@ public class DirectedLayout implements AlcinaProcess {
 				context.setNodeEvent(nodeEvent);
 				nodeEvent.setModel(model);
 				context.node = Node.this;
-				Class<? extends EventHandler> handlerClass = eventTemplate
+				Class<? extends EventHandler> handlerClass = eventInstance
 						.getHandlerClass();
 				NodeEvent.Handler handler = null;
 				if (Reflections.isAssignableFrom(handlerClass,
@@ -771,8 +780,6 @@ public class DirectedLayout implements AlcinaProcess {
 				bindEvent(true);
 			}
 
-			// FIXME - dirndl 1.1 - only required if Dom (or Gwt/InferredDom)
-			// event, *not* ModelEvent.
 			Widget getBindingWidget() {
 				return verifySingleWidget();
 			}

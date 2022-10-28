@@ -50,7 +50,7 @@ import cc.alcina.framework.gwt.client.gen.SimpleCssResource.ResolveParent;
  * Provides implementations of SimpleCssResource.
  */
 public final class SimpleCssResourceGenerator extends AbstractResourceGenerator
-// FIXME - dirndl1.1
+// FIXME - dirndl 1x1g
 // implements SupportsGeneratorResultCaching {
 {
 	public static final String IGNORE_MISSING_RESOURCE_URLS = "alcina.SimpleCssResourceGenerator.ignoreMissingResourceUrls";

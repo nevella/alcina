@@ -28,22 +28,6 @@ public class Bindable extends BaseSourcesPropertyChangeEvents
 	public static class BindableAdapter extends Bindable {
 	}
 
-	// FIXME - dirndl.2 - maybe remove?
-	public static class BindableWithContext<T> extends Bindable
-			implements HasContext<T> {
-		private transient T _context;
-
-		@Override
-		public T _getContext() {
-			return _context;
-		}
-
-		@Override
-		public void _setContext(T _context) {
-			this._context = _context;
-		}
-	}
-
 	public interface HasContext<T> {
 		public abstract T _getContext();
 

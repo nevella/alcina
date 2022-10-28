@@ -615,8 +615,9 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 						.call(() -> serializationSignatureListener
 								.ensureSignature());
 				if (cancelStartupOnSignatureGenerationFailure) {
-					// will throw an exception if there's an issue. FIXME -
-					// startup - this
+					// will throw an exception if there's an issue.
+					//
+					// FIXME - startup - this
 					// is never performed scheduled if run as a job - probably
 					// an interplay with the signature generation? Fix it anyway
 					new TaskGenerateReflectiveSerializerSignatures()

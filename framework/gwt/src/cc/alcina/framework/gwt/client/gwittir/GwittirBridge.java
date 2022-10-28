@@ -347,8 +347,7 @@ public class GwittirBridge {
 	}
 
 	// FIXME - dirndl 1x2 - clean this up - probably one code path and a bunch
-	// of
-	// reflection/registry
+	// of reflection/registry
 	public Field getField(Class<?> clazz, String propertyName,
 			boolean editableWidgets, boolean multiple,
 			BoundWidgetTypeFactory factory, Object object,
@@ -472,9 +471,7 @@ public class GwittirBridge {
 					validator = getValidator(domainType, object, propertyName,
 							validationFeedback);
 				}
-				Field field = new // FIXME - dirndl.2
-				Field(// FIXME - dirndl.2
-						propertyName,
+				Field field = new Field(propertyName,
 						TextProvider.get().getLabelText(propertyLocation), bwp,
 						validator, validationFeedback,
 						getDefaultConverter(bwp, type), clazz);
