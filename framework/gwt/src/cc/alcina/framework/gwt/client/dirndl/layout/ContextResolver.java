@@ -20,12 +20,13 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * <p>
  * The interaction between the layout algorithm and this 'expression shaper'
  * class could, with a bit of a stretch, call to mind the mRNA generation
- * process and the environmental factors which modify expression of DNA.
+ * process and all the not-so-sad environmental factors which modify expression
+ * of DNA.
  *
  * @author nick@alcina.cc
  *
  */
-// FIXME - dirndl 1.1b - document (and document annotationresolver in general,
+// FIXME - dirndl 1x1d - document (and document annotationresolver in general,
 // top & bottom)
 @Reflected
 public class ContextResolver extends AnnotationLocation.Resolver {
@@ -54,20 +55,6 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		return (T) this.rootModel;
 	}
 
-	/**
-	 * This method is sometimes simpler for controlling the annotations exposed
-	 * than {@link #resolveAnnotations0}, since it returns a property that will
-	 * be used to evaluate *all* annotations at a node. Should only be called by
-	 * {@link DirectedRenderer.GeneratesPropertyInputs}
-	 */
-	public Property resolveDirectedProperty(Property property) {
-		return property.has(Directed.class)
-				|| property.has(Directed.Multiple.class)
-				|| property.has(Directed.Wrap.class)
-				|| property.has(Directed.Delegating.class)
-				|| property.has(Directed.Transform.class) ? property : null;
-	}
-
 	// FIXME - dirndl 1x2 - remove
 	public <T> T resolveRenderContextProperty(String key) {
 		return null;
@@ -80,5 +67,24 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 		// does not use merge strategies)
 		return annotationResolver.resolveAnnotations0(annotationClass,
 				location);
+	}
+
+	protected Property resolveDirectedProperty0(Property property) {
+		return property.has(Directed.class)
+				|| property.has(Directed.Multiple.class)
+				|| property.has(Directed.Wrap.class)
+				|| property.has(Directed.Delegating.class)
+				|| property.has(Directed.Transform.class) ? property : null;
+	}
+
+	/**
+	 * This method is sometimes simpler for controlling the annotations exposed
+	 * than {@link #resolveAnnotations0}, since it returns a property that will
+	 * be used to evaluate *all* annotations at a node. Implementations are only
+	 * reachable from {@link DirectedRenderer.GeneratesPropertyInputs} via the
+	 * package/protected access route
+	 */
+	Property resolveDirectedProperty(Property property) {
+		return resolveDirectedProperty0(property);
 	}
 }
