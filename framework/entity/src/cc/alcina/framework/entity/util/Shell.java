@@ -14,6 +14,8 @@ import java.util.stream.Collectors;
 
 import org.slf4j.LoggerFactory;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -21,6 +23,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Callback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.persistence.NamedThreadFactory;
 
@@ -285,6 +288,202 @@ public class Shell {
 		public Pool() {
 			this.threadPool = Executors
 					.newCachedThreadPool(new NamedThreadFactory("shell-io"));
+		}
+	}
+
+	public static class RsyncCommand {
+		public static Builder builder() {
+			return new Builder();
+		}
+
+		private boolean keepPermissions;
+
+		private String from;
+
+		private String to;
+
+		private boolean test;
+
+		private boolean update = true;
+
+		private boolean delete = false;
+
+		private String toHost;
+
+		String sshOptions = "";
+
+		private RsyncCommand(Builder builder) {
+			this.keepPermissions = builder.keepPermissions;
+			this.from = builder.from;
+			this.to = builder.to;
+			this.test = builder.test;
+			this.update = builder.update;
+			this.delete = builder.delete;
+			this.toHost = builder.toHost;
+		}
+
+		public void sync() throws Exception {
+			Preconditions.checkNotNull(from);
+			Preconditions.checkNotNull(to);
+			if (toHost != null) {
+				String sshConfigKey = "sshCommand." + toHost;
+				String hostConfigKey = "host." + toHost;
+				if (Configuration.has(RsyncCommand.class, sshConfigKey)) {
+					sshOptions = Configuration.get(RsyncCommand.class,
+							sshConfigKey);
+				}
+				if (Configuration.has(RsyncCommand.class, hostConfigKey)) {
+					toHost = Configuration.get(RsyncCommand.class,
+							hostConfigKey);
+				}
+				to = Ax.format("root@%s:%s", toHost, to);
+			}
+			String flags = "-avz";
+			if (keepPermissions) {
+				if (update) {
+					flags = "-rlptDvzu --size-only";
+					// checksum better albeit slower
+					flags = "-rlptDvzu --checksum";
+				} else {
+					flags = "-rlptDvz  --size-only";
+					flags = "-rlptDvz  --checksum";
+				}
+			}
+			if (delete) {
+				flags += " --delete";
+			}
+			if (test) {
+				flags += " --dry-run --itemize-changes";
+			}
+			if (Ax.notBlank(sshOptions)) {
+				flags += " " + sshOptions;
+			}
+			Ax.out("Syncing:\n\t%s ->\n\t%s\n", from, to);
+			String script = Ax.format("rsync %s %s %s;", flags, from, to);
+			new Shell().runBashScript(script).throwOnException();
+		}
+
+		public static final class Builder {
+			private boolean keepPermissions;
+
+			private String from;
+
+			private String to;
+
+			private boolean test;
+
+			private boolean update;
+
+			private boolean delete = true;
+
+			private String toHost;
+
+			private Builder() {
+			}
+
+			public RsyncCommand build() {
+				return new RsyncCommand(this);
+			}
+
+			public Builder withDelete(boolean delete) {
+				this.delete = delete;
+				return this;
+			}
+
+			public Builder withFrom(String from) {
+				this.from = from;
+				return this;
+			}
+
+			public Builder withKeepPermissions(boolean keepPermissions) {
+				this.keepPermissions = keepPermissions;
+				return this;
+			}
+
+			public Builder withTest(boolean test) {
+				this.test = test;
+				return this;
+			}
+
+			public Builder withTo(String to) {
+				this.to = to;
+				return this;
+			}
+
+			public Builder withToHost(String toHost) {
+				this.toHost = toHost;
+				return this;
+			}
+
+			public Builder withUpdate(boolean update) {
+				this.update = update;
+				return this;
+			}
+		}
+	}
+
+	public static class SshCommand {
+		public static Builder builder() {
+			return new Builder();
+		}
+
+		private String command;
+
+		private String sshOptions = "";
+
+		private String host;
+
+		private SshCommand(Builder builder) {
+			command = builder.command;
+			sshOptions = builder.options;
+			host = builder.host;
+		}
+
+		public void exec() throws Exception {
+			Preconditions.checkNotNull(command);
+			Preconditions.checkNotNull(host);
+			String sshConfigKey = "sshCommand." + host;
+			String hostConfigKey = "host." + host;
+			if (Configuration.has(SshCommand.class, sshConfigKey)) {
+				sshOptions = Configuration.get(SshCommand.class, sshConfigKey);
+			}
+			if (Configuration.has(SshCommand.class, hostConfigKey)) {
+				host = Configuration.get(SshCommand.class, hostConfigKey);
+			}
+			Ax.out("Exec:\t%s :: \t%s", host, command);
+			String script = Ax.format("ssh %s %s %s;", sshOptions, host,
+					command);
+			new Shell().runBashScript(script).throwOnException();
+		}
+
+		public static final class Builder {
+			private String command;
+
+			private String host;
+
+			private String options;
+
+			private Builder() {
+			}
+
+			public SshCommand build() {
+				return new SshCommand(this);
+			}
+
+			public Builder withCommand(String command) {
+				this.command = command;
+				return this;
+			}
+
+			public Builder withHost(String host) {
+				this.host = host;
+				return this;
+			}
+
+			public Builder withOptions(String options) {
+				this.options = options;
+				return this;
+			}
 		}
 	}
 }

@@ -2,9 +2,10 @@ package cc.alcina.framework.entity;
 
 /*
  * Replacement for system configuration portion of ResourceUtilities
- * 
- * TODO - clazz name -> property path segment[s] should change from Class.simpleClassName to SeUtilities.getNestedSimpleName
- * 
+ *
+ * TODO - clazz name -> property path segment[s] should change from
+ * Class.simpleClassName to SeUtilities.getNestedSimpleName
+ *
  * ... with a regression test
  */
 public class Configuration {
@@ -24,6 +25,11 @@ public class Configuration {
 				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 				.getCallerClass(), key);
 		return Integer.parseInt(value);
+	}
+
+	public static boolean has(Class clazz, String keyPart) {
+		String key = clazz.getSimpleName() + "." + keyPart;
+		return ResourceUtilities.isDefined(key);
 	}
 
 	public static boolean is(Class clazz, String key) {
