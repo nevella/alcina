@@ -439,21 +439,23 @@ public class Shell {
 			host = builder.host;
 		}
 
-		public void exec() throws Exception {
+		public Output exec() throws Exception {
 			Preconditions.checkNotNull(command);
 			Preconditions.checkNotNull(host);
-			String sshConfigKey = "sshCommand." + host;
+			String optionsConfigKey = "options." + host;
 			String hostConfigKey = "host." + host;
-			if (Configuration.has(SshCommand.class, sshConfigKey)) {
-				sshOptions = Configuration.get(SshCommand.class, sshConfigKey);
+			if (Configuration.has(SshCommand.class, optionsConfigKey)) {
+				sshOptions = Configuration.get(SshCommand.class,
+						optionsConfigKey);
 			}
 			if (Configuration.has(SshCommand.class, hostConfigKey)) {
 				host = Configuration.get(SshCommand.class, hostConfigKey);
 			}
 			Ax.out("Exec:\t%s :: \t%s", host, command);
-			String script = Ax.format("ssh %s %s %s;", sshOptions, host,
+			String script = Ax.format("ssh %s -t root@%s %s", sshOptions, host,
 					command);
-			new Shell().runBashScript(script).throwOnException();
+			Output output = new Shell().runBashScript(script);
+			return output;
 		}
 
 		public static final class Builder {
