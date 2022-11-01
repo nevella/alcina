@@ -129,6 +129,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *   1x1e do a big localdom issue block - FIXMEs, improve tracking (with fully reproducible exceptions)
  *   1x1f reflectiveserializer: integrate into GWT serializer framework
  *   1x1g performance (possibly before 1x1e)
+ *   1x1h docs (ditto)
  *   1x2 switch table/form rendering to pure model - adjunct transformmanager
  *   1x3 low priority fixmes
  *   1x4 consider removing widget entirely (localdom)

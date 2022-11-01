@@ -12,7 +12,8 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent<H> {
-	// FIXME - dirndl 1.1 - fire on GWT/Scheduler event pump? or explain why not
+	// FIXME - dirndl 1x1h - fire on GWT/Scheduler event pump? nope, explain why
+	// not
 	public static void fire(Context context, Class<? extends ModelEvent> type,
 			Object model) {
 		ModelEvent modelEvent = Reflections.newInstance(type);
