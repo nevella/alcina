@@ -33,9 +33,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensit
  * <li>Enqueues [0,n] renderinput children
  * </ul>
  *
- * <p>
- * These replace DirectedNodeRenderer, the transition uses a registry lookup to
- * translate from DirectedNodeRenderer
  *
  */
 @Reflected
