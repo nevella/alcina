@@ -19,7 +19,7 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 
 	private AsyncCallback<Void> endpointCallback;
 
-	private boolean asynchronous;
+	private boolean asynchronous = true;
 
 	public AllStatesConsort(Class<E> enumClass,
 			AsyncCallback<Void> endpointCallback) {
