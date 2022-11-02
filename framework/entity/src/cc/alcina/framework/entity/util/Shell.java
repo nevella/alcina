@@ -34,6 +34,24 @@ public class Shell {
 			LoggerFactory.getLogger(Shell.class).info(command);
 			Shell shell = new Shell();
 			shell.logToStdOut = false;
+			shell.logLaunchMessage = false;
+			Output output = shell.runBashScript(command, false)
+					.throwOnException();
+			if (Ax.notBlank(output.error)) {
+				Ax.err(output.error);
+			}
+			return output.output;
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public static String execLogged(String command) {
+		try {
+			LoggerFactory.getLogger(Shell.class).info(command);
+			Shell shell = new Shell();
+			shell.logToStdOut = true;
+			shell.logLaunchMessage = false;
 			Output output = shell.runBashScript(command, false)
 					.throwOnException();
 			if (Ax.notBlank(output.error)) {
