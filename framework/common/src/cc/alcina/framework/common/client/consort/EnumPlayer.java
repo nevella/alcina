@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.consort.Player.RunnablePlayer;
 import cc.alcina.framework.common.client.util.Ax;
 
 public abstract class EnumPlayer<E extends Enum> extends RunnablePlayer<E> {
-	private E from;
+	protected E from;
 
 	protected E to;
 

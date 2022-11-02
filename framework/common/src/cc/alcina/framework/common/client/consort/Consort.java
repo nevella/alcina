@@ -94,6 +94,8 @@ public class Consort<D> implements AlcinaProcess {
 
 	private String lastInfoLogMessage = null;
 
+	protected TopicChannel exitChannel;
+
 	public void addEndpointPlayer() {
 		addEndpointPlayer(null, true);
 	}
@@ -225,6 +227,7 @@ public class Consort<D> implements AlcinaProcess {
 		logger.info(Ax.format("%s     [%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				"----CONSORT FINISHED"));
+		exitChannel = TopicChannel.FINISHED;
 		topics.publish(TopicChannel.FINISHED, null);
 	}
 
@@ -270,6 +273,7 @@ public class Consort<D> implements AlcinaProcess {
 	public void onFailure(Throwable throwable) {
 		running = false;
 		Ax.simpleExceptionOut(throwable);
+		exitChannel = TopicChannel.ERROR;
 		topics.publish(TopicChannel.ERROR, throwable);
 		throw new WrappedRuntimeException(throwable);
 	}
@@ -281,6 +285,9 @@ public class Consort<D> implements AlcinaProcess {
 	}
 
 	public void removeStates(Collection<D> states) {
+		if (states.isEmpty()) {
+			return;
+		}
 		logger.info(Ax.format("%s rmv:[%s]",
 				CommonUtils.padStringLeft("", depth(), '\t'),
 				CommonUtils.join(states, ", ")));
@@ -332,7 +339,8 @@ public class Consort<D> implements AlcinaProcess {
 	}
 
 	public void start() {
-		logger.info("Starting consort - {}", this);
+		logger.info("{}Starting consort - {}",
+				CommonUtils.padStringLeft("", depth(), "    "), this);
 		running = true;
 		playedCount = 0;
 		consumeQueue();
@@ -591,8 +599,7 @@ public class Consort<D> implements AlcinaProcess {
 				(playing.size() == 1 ? "    "
 						: Ax.format("[%s] ", playing.size())),
 				CommonUtils.padStringLeft("", depth(), "    "),
-				CommonUtils.simpleClassName(getClass()),
-				player.provideNameForTransitions());
+				getClass().getSimpleName(), player.provideNameForTransitions());
 		if (!CommonUtils.equalsWithNullEmptyEquality(message,
 				lastInfoLogMessage)) {
 			logger.info(message);

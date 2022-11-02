@@ -1,8 +1,11 @@
 package cc.alcina.framework.common.client.consort;
 
+import java.util.Arrays;
+
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.TimerWrapper.TimerWrapperProvider;
 
 public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
@@ -12,15 +15,20 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 
 	private long startTime;
 
+	protected Class<E> enumClass;
+
+	private AsyncCallback<Void> endpointCallback;
+
+	private boolean asynchronous;
+
 	public AllStatesConsort(Class<E> enumClass,
 			AsyncCallback<Void> endpointCallback) {
-		// may not be in the natural ordering
-		E[] states = getStates(enumClass);
-		for (int idx = 0; idx < states.length; idx++) {
-			addPlayer(new AllStatesPlayer(idx == 0 ? null : states[idx - 1],
-					states[idx]));
-		}
-		addEndpointPlayer(endpointCallback, true);
+		this.enumClass = enumClass;
+		this.endpointCallback = endpointCallback;
+	}
+
+	public boolean isAsynchronous() {
+		return this.asynchronous;
 	}
 
 	public void retry(final AllStatesPlayer allStatesPlayer, final E state,
@@ -42,13 +50,32 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 
 	public abstract void runPlayer(AllStatesPlayer allStatesPlayer, E next);
 
+	public void setAsynchronous(boolean asynchronous) {
+		this.asynchronous = asynchronous;
+	}
+
 	@Override
 	public void start() {
+		setupPlayers();
 		this.startTime = System.currentTimeMillis();
 		super.start();
 	}
 
-	protected E[] getStates(Class<E> enumClass) {
+	private void setupPlayers() {
+		// may not be in the natural ordering
+		E[] states = getStates();
+		for (int idx = 0; idx < states.length; idx++) {
+			addPlayer(new AllStatesPlayer(idx == 0 ? null : states[idx - 1],
+					states[idx]));
+		}
+		addEndpointPlayer(endpointCallback, true);
+	}
+
+	protected E finalState() {
+		return Ax.last(Arrays.asList(getStates()));
+	}
+
+	protected E[] getStates() {
 		return enumClass.getEnumConstants();
 	}
 
@@ -62,7 +89,7 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 		public AllStatesPlayer(E from, E to) {
 			super(from, to);
 			runnable = this;
-			setAsynchronous(true);
+			setAsynchronous(AllStatesConsort.this.isAsynchronous());
 		}
 
 		@Override
@@ -81,6 +108,11 @@ public abstract class AllStatesConsort<E extends Enum> extends Consort<E> {
 			if (stateConsort == null) {
 				wasPlayed();
 			}
+		}
+
+		@Override
+		public String provideNameForTransitions() {
+			return Ax.format("AllStatesPlayer [%s -> %s]", from, to);
 		}
 
 		@Override
