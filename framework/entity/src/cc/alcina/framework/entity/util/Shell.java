@@ -71,6 +71,8 @@ public class Shell {
 
 	private boolean terminated;
 
+	boolean logLaunchMessage = true;
+
 	public Process getProcess() {
 		return this.process;
 	}
@@ -98,7 +100,7 @@ public class Shell {
 			rewrite.remove(0);
 			cmdAndArgs = (String[]) rewrite.toArray(new String[rewrite.size()]);
 		}
-		if (logToStdOut) {
+		if (logToStdOut && logLaunchMessage) {
 			System.out.format("launching process: %s\n",
 					CommonUtils.join(cmdAndArgs, " "));
 		}
@@ -312,6 +314,18 @@ public class Shell {
 
 		String sshOptions = "";
 
+		private String fromHost;
+
+		private boolean zip;
+
+		private boolean progress;
+
+		private boolean checksum;
+
+		private String[] excludes;
+
+		private boolean modifyWindowNanos;
+
 		private RsyncCommand(Builder builder) {
 			this.keepPermissions = builder.keepPermissions;
 			this.from = builder.from;
@@ -320,9 +334,15 @@ public class Shell {
 			this.update = builder.update;
 			this.delete = builder.delete;
 			this.toHost = builder.toHost;
+			this.fromHost = builder.fromHost;
+			this.zip = builder.zip;
+			this.progress = builder.progress;
+			this.checksum = builder.checksum;
+			this.excludes = builder.excludes;
+			this.modifyWindowNanos = builder.modifyWindowNanos;
 		}
 
-		public void sync() throws Exception {
+		public String generateCommand() {
 			Preconditions.checkNotNull(from);
 			Preconditions.checkNotNull(to);
 			if (toHost != null) {
@@ -338,7 +358,23 @@ public class Shell {
 				}
 				to = Ax.format("root@%s:%s", toHost, to);
 			}
-			String flags = "-avz";
+			if (fromHost != null) {
+				String sshConfigKey = "sshCommand." + toHost;
+				String hostConfigKey = "host." + toHost;
+				if (Configuration.has(RsyncCommand.class, sshConfigKey)) {
+					sshOptions = Configuration.get(RsyncCommand.class,
+							sshConfigKey);
+				}
+				if (Configuration.has(RsyncCommand.class, hostConfigKey)) {
+					fromHost = Configuration.get(RsyncCommand.class,
+							hostConfigKey);
+				}
+				from = Ax.format("root@%s:%s", fromHost, from);
+			}
+			String flags = "-av";
+			if (zip) {
+				flags += "z";
+			}
 			if (keepPermissions) {
 				if (update) {
 					flags = "-rlptDvzu --size-only";
@@ -352,18 +388,37 @@ public class Shell {
 			if (delete) {
 				flags += " --delete";
 			}
+			if (modifyWindowNanos) {
+				flags += " --modify-window=-1 ";
+			}
+			if (checksum) {
+				flags += " --checksum";
+			}
+			if (progress) {
+				flags += " --progress";
+			}
 			if (test) {
 				flags += " --dry-run --itemize-changes";
+			}
+			for (String exclude : excludes) {
+				Preconditions.checkArgument(!exclude.contains("'"));
+				flags += " --exclude " + exclude;
 			}
 			if (Ax.notBlank(sshOptions)) {
 				flags += " " + sshOptions;
 			}
 			Ax.out("Syncing:\n\t%s ->\n\t%s\n", from, to);
-			String script = Ax.format("rsync %s %s %s;", flags, from, to);
-			new Shell().runBashScript(script).throwOnException();
+			String command = Ax.format("rsync %s %s %s;", flags, from, to);
+			return command;
+		}
+
+		public void sync() throws Exception {
+			new Shell().runBashScript(generateCommand()).throwOnException();
 		}
 
 		public static final class Builder {
+			private boolean modifyWindowNanos;
+
 			private boolean keepPermissions;
 
 			private String from;
@@ -378,6 +433,16 @@ public class Shell {
 
 			private String toHost;
 
+			private String fromHost;
+
+			private boolean zip = true;
+
+			private boolean progress;
+
+			private boolean checksum;
+
+			private String[] excludes = {};
+
 			private Builder() {
 			}
 
@@ -385,8 +450,18 @@ public class Shell {
 				return new RsyncCommand(this);
 			}
 
+			public Builder withChecksum(boolean checksum) {
+				this.checksum = checksum;
+				return this;
+			}
+
 			public Builder withDelete(boolean delete) {
 				this.delete = delete;
+				return this;
+			}
+
+			public Builder withExcludes(String... excludes) {
+				this.excludes = excludes;
 				return this;
 			}
 
@@ -395,8 +470,23 @@ public class Shell {
 				return this;
 			}
 
+			public Builder withFromHost(String fromHost) {
+				this.fromHost = fromHost;
+				return this;
+			}
+
 			public Builder withKeepPermissions(boolean keepPermissions) {
 				this.keepPermissions = keepPermissions;
+				return this;
+			}
+
+			public Builder withModifyWindowNanos(boolean modifyWindowNanos) {
+				this.modifyWindowNanos = modifyWindowNanos;
+				return this;
+			}
+
+			public Builder withProgress(boolean progress) {
+				this.progress = progress;
 				return this;
 			}
 
@@ -419,6 +509,11 @@ public class Shell {
 				this.update = update;
 				return this;
 			}
+
+			public Builder withZip(boolean zip) {
+				this.zip = zip;
+				return this;
+			}
 		}
 	}
 
@@ -433,9 +528,12 @@ public class Shell {
 
 		private String host;
 
+		private boolean mute;
+
 		private SshCommand(Builder builder) {
 			command = builder.command;
 			sshOptions = builder.options;
+			mute = builder.mute;
 			host = builder.host;
 		}
 
@@ -451,10 +549,15 @@ public class Shell {
 			if (Configuration.has(SshCommand.class, hostConfigKey)) {
 				host = Configuration.get(SshCommand.class, hostConfigKey);
 			}
-			Ax.out("Exec:\t%s :: \t%s", host, command);
-			String script = Ax.format("ssh %s -t root@%s %s", sshOptions, host,
-					command);
-			Output output = new Shell().runBashScript(script);
+			Ax.out("ssh : exec : %s -> %s", host, command);
+			String script = Ax.format("ssh %s root@%s %s",
+					Ax.blankToEmpty(sshOptions), host, command);
+			Shell shell = new Shell();
+			shell.logLaunchMessage = false;
+			if (mute) {
+				shell.logToStdOut = false;
+			}
+			Output output = shell.runBashScript(script);
 			return output;
 		}
 
@@ -464,6 +567,8 @@ public class Shell {
 			private String host;
 
 			private String options;
+
+			private boolean mute;
 
 			private Builder() {
 			}
@@ -479,6 +584,11 @@ public class Shell {
 
 			public Builder withHost(String host) {
 				this.host = host;
+				return this;
+			}
+
+			public Builder withMute(boolean mute) {
+				this.mute = mute;
 				return this;
 			}
 
