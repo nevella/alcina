@@ -191,9 +191,20 @@ public class DirectedLayout implements AlcinaProcess {
 	 */
 	private Class<? extends DirectedRenderer>
 			resolveModelRenderer(Object model) {
-		return modelRenderers.computeIfAbsent(model.getClass(),
-				clazz -> Registry.query(DirectedRenderer.class).addKeys(clazz)
-						.registration());
+		return modelRenderers.computeIfAbsent(model.getClass(), clazz -> {
+			try {
+				Class<? extends DirectedRenderer> registration = Registry
+						.query(DirectedRenderer.class).addKeys(clazz)
+						.registration();
+				return registration;
+			} catch (RuntimeException e) {
+				throw new RendererNotFoundException(Ax.format(
+						"Renderer for %s not found - if a class to be rendered does not extend Model.class"
+								+ ", it will require a registered DirectedRenderer class "
+								+ "- for examples of such classes, see the nested classes of LeafRenderer.class",
+						clazz.getSimpleName()), e);
+			}
+		});
 	}
 
 	RendererInput enqueueInput(ContextResolver resolver, Object model,
@@ -1174,6 +1185,12 @@ public class DirectedLayout implements AlcinaProcess {
 		Directed soleDirected() {
 			Preconditions.checkState(directeds.size() == 1);
 			return directeds.get(0);
+		}
+	}
+
+	static class RendererNotFoundException extends RuntimeException {
+		public RendererNotFoundException(String message, Throwable cause) {
+			super(message, cause);
 		}
 	}
 }
