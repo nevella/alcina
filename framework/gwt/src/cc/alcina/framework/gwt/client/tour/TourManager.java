@@ -23,7 +23,6 @@ import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluationContext;
 import cc.alcina.framework.gwt.client.tour.Tour.ConditionEvaluator;
 import cc.alcina.framework.gwt.client.tour.Tour.Operator;
 import cc.alcina.framework.gwt.client.tour.Tour.Step;
-import cc.alcina.framework.gwt.client.tour.TourImpl.ConditionImpl;
 
 public abstract class TourManager {
 	private static final transient String CONTEXT_IMMEDIATE_GET = TourManager.class
@@ -399,8 +398,7 @@ public abstract class TourManager {
 		}
 
 		@Override
-		protected DisplayStepPhase[]
-				getStates(Class<DisplayStepPhase> enumClass) {
+		protected DisplayStepPhase[] getStates() {
 			if (currentTour.getCurrentStep().isActionBeforePopups()) {
 				Comparator<DisplayStepPhase> cmp = new Comparator<TourManager.DisplayStepPhase>() {
 					@Override
@@ -428,7 +426,7 @@ public abstract class TourManager {
 				return (DisplayStepPhase[]) list
 						.toArray(new DisplayStepPhase[list.size()]);
 			} else {
-				return super.getStates(enumClass);
+				return super.getStates();
 			}
 		}
 
