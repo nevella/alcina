@@ -234,7 +234,7 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 	}
 
 	boolean permitPackage(ClassMetadata metadata) {
-		return ignorePackages.stream()
+		return !ignorePackages.stream()
 				.anyMatch(p -> metadata.className.startsWith(p));
 	}
 
