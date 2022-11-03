@@ -18,6 +18,7 @@ import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
 import java.util.TreeSet;
+import java.util.UUID;
 
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
@@ -45,7 +46,7 @@ import elemental.json.JsonValue;
 
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializers {
-	public static class ReflectiveTypeSerializer_Entity
+	public static class ReflectiveTypeSerializer_Entityx
 			extends ReflectiveSerializer.ReflectiveTypeSerializer {
 		@Override
 		public List<Class> handlesTypes() {
@@ -684,6 +685,25 @@ public class ReflectiveSerializers {
 			Timestamp timestamp = new Timestamp(Long.parseLong(parts[0]));
 			timestamp.setNanos(Integer.parseInt(parts[1]));
 			return timestamp;
+		}
+	}
+
+	public static class ValueSerializerUUID
+			extends ReflectiveSerializer.ValueSerializer<UUID> {
+		@Override
+		public List<Class> serializesTypes() {
+			return Arrays.asList(UUID.class);
+		}
+
+		@Override
+		public JsonValue toJson(UUID object) {
+			return Json.create(object.toString());
+		}
+
+		@Override
+		protected UUID fromJson(Class<? extends UUID> clazz,
+				JsonValue value) {
+			return UUID.fromString(value.asString());
 		}
 	}
 
