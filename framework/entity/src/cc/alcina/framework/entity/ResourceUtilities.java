@@ -784,6 +784,14 @@ public class ResourceUtilities {
 				Ax.format("%s=%s", key, value).getBytes()));
 	}
 
+	public static void registerCustomPropertyMap(String propertyMap) {
+		if (Ax.isBlank(propertyMap)) {
+			return;
+		}
+		ResourceUtilities.registerCustomProperties(new ByteArrayInputStream(
+				propertyMap.getBytes(StandardCharsets.UTF_8)));
+	}
+
 	public static OutputStream scaleImage(InputStream in, int width, int height,
 			OutputStream out) throws IOException {
 		byte[] b = readStreamToByteArray(in);
