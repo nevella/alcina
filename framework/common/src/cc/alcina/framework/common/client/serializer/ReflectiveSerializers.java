@@ -46,7 +46,7 @@ import elemental.json.JsonValue;
 
 @SuppressWarnings("deprecation")
 public class ReflectiveSerializers {
-	public static class ReflectiveTypeSerializer_Entityx
+	public static class ReflectiveTypeSerializer_Entity
 			extends ReflectiveSerializer.ReflectiveTypeSerializer {
 		@Override
 		public List<Class> handlesTypes() {
