@@ -30,6 +30,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.AlcinaCollectors;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.persistence.AppPersistenceBase;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
@@ -58,6 +59,8 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 	private transient String signature;
 
 	private transient Set<Class<?>> serializables;
+
+	private transient List<String> ignorePackages;
 
 	@AlcinaTransient
 	public String getSignature() {
@@ -161,6 +164,8 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 		try {
 			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
 					.muteClassloaderLogging(true);
+			ignorePackages = Arrays
+					.asList(Configuration.get("ignorePackages").split(";"));
 			ClassMetadataCache<ClassMetadata> classes = new ServletClasspathScanner(
 					"*", true, true, null, Registry.MARKER_RESOURCE,
 					Arrays.asList(new String[] {})).getClasses();
@@ -170,6 +175,7 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 			scanner.scan(classes, file.getPath());
 			serializables = scanner.getOutgoingCache().classData.values()
 					.stream().filter(m -> m.isReflective)
+					.filter(this::permitPackage)
 					.map(m -> Reflections.forName(m.className))
 					.collect(AlcinaCollectors.toLinkedHashSet());
 		} finally {
@@ -225,6 +231,11 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 			return false;
 		}
 		return true;
+	}
+
+	boolean permitPackage(ClassMetadata metadata) {
+		return ignorePackages.stream()
+				.anyMatch(p -> metadata.className.startsWith(p));
 	}
 
 	public static class ReflectiveSerializableSignatures {
