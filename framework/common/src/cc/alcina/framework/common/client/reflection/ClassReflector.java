@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.function.Supplier;
 
@@ -28,7 +29,7 @@ public class ClassReflector<T> implements HasAnnotations {
 	static {
 		Class[] stds = { Long.class, Double.class, Float.class, Short.class,
 				Byte.class, Integer.class, Boolean.class, Character.class,
-				Date.class, String.class, Timestamp.class };
+				Date.class, String.class, Timestamp.class, UUID.class };
 		for (Class std : stds) {
 			ClassReflector.stdClassMap.put(std.getName(), std);
 		}

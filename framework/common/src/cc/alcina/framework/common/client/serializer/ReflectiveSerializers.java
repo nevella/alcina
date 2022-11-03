@@ -388,7 +388,7 @@ public class ReflectiveSerializers {
 					long.class, int.class, short.class, char.class, byte.class,
 					boolean.class, double.class, float.class, Enum.class,
 					Class.class, void.class, Void.class, byte[].class,
-					BasePlace.class);
+					BasePlace.class, UUID.class);
 		}
 
 		@Override
@@ -701,8 +701,7 @@ public class ReflectiveSerializers {
 		}
 
 		@Override
-		protected UUID fromJson(Class<? extends UUID> clazz,
-				JsonValue value) {
+		protected UUID fromJson(Class<? extends UUID> clazz, JsonValue value) {
 			return UUID.fromString(value.asString());
 		}
 	}

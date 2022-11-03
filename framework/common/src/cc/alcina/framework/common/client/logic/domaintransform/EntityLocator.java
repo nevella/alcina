@@ -183,12 +183,12 @@ public class EntityLocator implements Serializable, TreeSerializable {
 		return hash;
 	}
 
-	public boolean provideIsLocal() {
-		return localId != 0;
-	}
-
 	public boolean matches(Entity entity) {
 		return entity.toLocator().equals(this);
+	}
+
+	public boolean provideIsLocal() {
+		return localId != 0;
 	}
 
 	public boolean provideIsZeroIdAndLocalId() {

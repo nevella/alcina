@@ -25,6 +25,7 @@ import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.logic.domain.Entity;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
@@ -75,9 +76,7 @@ import elemental.json.JsonValue;
  * and non-default)
  * <li>Write data-like value or back to 'for any unreached'
  * </ul>
- * <p>
- * TODO (optimisations)
- * </P>
+ * <h4>TODO (optimisations)</h4>
  * <ul>
  * <li>Create a per-property serializer, to optimise bean
  * deserialization/serialization (done)
@@ -96,6 +95,13 @@ import elemental.json.JsonValue;
  * <li>Server-side - rather than using elemental.json, use streams (and avoid
  * stringbuilder by writing utf-8 directly)
  * </ul>
+ * </ul>
+ *
+ * <h4>Notes - gotchas</h4>
+ * <ul>
+ * <li>If adding a value serializer, the value class should probably be in
+ * {@link ClassReflector#stdAndPrimitivesMap}
+ * <li>Don't serialize non-projected entities - use an {@link EntityLocator}
  * </ul>
  *
  * @author nick@alcina.cc
