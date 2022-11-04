@@ -63,10 +63,8 @@ public class ReadonlyInMemoryPersister {
 			TransformPersistenceToken token,
 			DomainTransformLayerWrapper wrapper) {
 		Registry.impl(InMemoryPersistableProvider.class).permittedClasses()
-				.map(c -> {
-					Class impl = PersistentImpl.getImplementationNonGeneric(c);
-					return impl != null && impl != Void.class ? impl : c;
-				}).forEach(inMemoryPersistable::add);
+				.map(PersistentImpl::getImplementationOrSelf)
+				.forEach(clazz -> inMemoryPersistable.add((Class) clazz));
 		this.persisterToken = persisterToken;
 		this.token = token;
 		this.wrapper = wrapper;

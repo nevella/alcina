@@ -211,11 +211,20 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 
 	@Override
 	public void changeJdbcConnectionUrl(String newUrl) {
-		String fieldPath = "emf.sessionFactory.jdbcServices.connectionProvider.dataSource.cm.pool.mcf.connectionURL";
 		try {
-			ResourceUtilities.setField(getEntityManager(), fieldPath, newUrl);
+			// try WF24 path
+			String fieldPath = "jdbcConnectionAccess.connectionProvider.dataSource.delegate.cm.pool.mcf.connectionURL";
+			ResourceUtilities.setField(getEntityManager().getDelegate(),
+					fieldPath, newUrl);
 		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
+			// try legacy WF8 path
+			String fieldPath = "emf.sessionFactory.jdbcServices.connectionProvider.dataSource.cm.pool.mcf.connectionURL";
+			try {
+				ResourceUtilities.setField(getEntityManager(), fieldPath,
+						newUrl);
+			} catch (Exception e2) {
+				throw new WrappedRuntimeException(e2);
+			}
 		}
 	}
 
@@ -599,7 +608,7 @@ public abstract class CommonPersistenceBase implements CommonPersistenceLocal {
 			throw new WrappedRuntimeException(
 					new PermissionsException(message));
 		}
-		Searcher searcher = Registry.impl(Searcher.class,def.getClass());
+		Searcher searcher = Registry.impl(Searcher.class, def.getClass());
 		SearchResultsBase result = searcher.search(def, getEntityManager());
 		return projectSearchResults(result);
 	}
