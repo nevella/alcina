@@ -1,4 +1,4 @@
-package cc.alcina.framework.common.client.util;
+package cc.alcina.framework.entity.util;
 
 import java.util.Collection;
 import java.util.Date;
@@ -7,8 +7,10 @@ import java.util.Set;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Function;
 import java.util.stream.Collectors;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -24,6 +26,8 @@ import java.util.stream.Collectors;
  * </p>
  */
 public class TimedCacheMap<K, V> implements Map<K, V> {
+	private Logger LOGGER = LoggerFactory.getLogger(TimedCacheMap.class);
+
 	private ConcurrentHashMap<K, TimedCacheValue<V>> delegate;
 
 	private long expiry;
@@ -161,7 +165,7 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 	public Collection<V> values() {
 		// Map all delegate map values to their unwrapped form
 		return delegate.values().stream().map(v -> v.value)
-				.collect(Collectors.toUnmodifiableList());
+				.collect(Collectors.toList());
 	}
 
 	@Override
@@ -183,6 +187,7 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 			if ((new Date().getTime() - tcv.created.getTime()) > expiry) {
 				// If the creation time is past expected expiry, evict the entry
 				remove(key);
+				LOGGER.debug("Evicted entry: {map={}, key={}}", this, key);
 			}
 		}
 	}
@@ -201,6 +206,7 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 				};
 				evictionTimer.scheduleAtFixedRate(evictionTimerTask,
 						evictionInterval, evictionInterval);
+				LOGGER.debug("Timed cache eviction timer started: {map={}}", this);
 			}
 		}
 	}
@@ -213,31 +219,8 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 			if (evictionTimerTask != null) {
 				evictionTimerTask.cancel();
 				evictionTimerTask = null;
+				LOGGER.debug("Timed cache eviction timer stopped: {map={}}", this);
 			}
-		}
-	}
-
-	/**
-	 * A variation of TimedCacheMap that computes the value for entries on get
-	 */
-	public static class ComputingTimedCacheMap<K, V>
-			extends TimedCacheMap<K, V> {
-		Function<K, V> supplier;
-
-		/**
-		 * Instantiate a new ComputingTimedCacheMap with given cache expiry and value supplier
-		 * @param expiry Milliseconds until an entry is expired
-		 * @param supplier Value supplier for generating values from keys
-		 */
-		public ComputingTimedCacheMap(long expiry, Function<K, V> supplier) {
-			super(expiry);
-			this.supplier = supplier;
-		}
-
-		@Override
-		public V get(Object key) {
-			// Compute the element if it's not present using the supplier
-			return computeIfAbsent((K) key, supplier);
 		}
 	}
 
