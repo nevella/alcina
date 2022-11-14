@@ -26,8 +26,8 @@ import com.google.gwt.dom.client.LocalDom;
 /**
  * Private implementation class for GWT core. This API is should not be
  * considered public or stable.
- * 
- * Alcina - not updated from 2.8.0 rc3. FIXME - dirndl 1.2 - revisit and merge
+ *
+ * Alcina - not updated from 2.8.0 rc3.
  */
 public final class Impl {
     static {
@@ -176,6 +176,10 @@ public final class Impl {
      */
     public static boolean isNestedEntry() {
         return entryDepth > 1;
+    }
+
+    public static void maybeInitializeWindowOnError() {
+    	//noop, not updated from 2.8.0
     }
 
     /**
@@ -366,9 +370,5 @@ public final class Impl {
     private static native int watchdogEntryDepthSchedule() /*-{
     return $wnd.setTimeout(@Impl::watchdogEntryDepthRun(), 10);
 	}-*/;
-    
-    public static void maybeInitializeWindowOnError() {
-    	//noop, not updated from 2.8.0
-    }
 }
 // @formatter:on

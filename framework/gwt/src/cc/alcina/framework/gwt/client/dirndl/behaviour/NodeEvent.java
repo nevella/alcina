@@ -38,7 +38,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
  * @param <H>
  */
 /*
- * FIXME - dirndl 1.3 - don't like the interplay between NodeEvent,
+ * FIXME - dirndl 1x1d - don't like the interplay between NodeEvent,
  * BehaviourBinding and NodeEventReceiver...
  *
  * but...maybe...it's right? It's an event fired on a node, so as long as

@@ -144,7 +144,6 @@ public class DownloadServlet extends HttpServlet {
 						"attachment; filename=\"" + fixedFileName + "\"");
 			}
 		}
-		// FIXME - dirndl1.2 - multiple timers here
 		try {
 			ResourceUtilities.writeStreamToStream(
 					new BufferedInputStream(new FileInputStream(f)),

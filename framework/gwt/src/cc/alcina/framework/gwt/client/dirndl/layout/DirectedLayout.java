@@ -5,6 +5,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -284,31 +285,36 @@ public class DirectedLayout implements AlcinaProcess {
 	 * combined (or documented)
 	 *
 	 * <p>
-	 * FIXME - dirndl 1.2 - optimise: specialise leafnode for performance (these
-	 * are heavyweight, and leaves need not be so much so)
+	 * FIXME - dirndl 1x1g - optimise: specialise leafnode for performance
+	 * (these are heavyweight, and leaves need not be so much so). Note that
+	 * most optimisation is probably already done/implicit (see childreplacer) -
+	 * if fields are never set (e.g. simple leaves), .js compilers will emit
+	 * simpler objects anyway
 	 */
 	public static class Node {
 		// not necessarily unchanged during the Node's lifetime - the renderer
 		// can change it if required
 		ContextResolver resolver;
 
-		final Object model;
-
 		Directed directed;
 
-		List<Node> children = new ArrayList<>();
+		final AnnotationLocation annotationLocation;
 
+		// below are nullable
 		Node parent;
 
-		final AnnotationLocation annotationLocation;
+		final Object model;
+
+		// many below may be null if a 'simple' node (particularly a leaf)
+		private List<Node> children;
+
+		Widget widget;
 
 		List<NodeEventBinding> eventBindings;
 
 		PropertyBindings propertyBindings;
 
 		private ChildReplacer replacementListener;
-
-		Widget widget;
 
 		private InsertionPoint insertionPoint;
 
@@ -350,10 +356,12 @@ public class DirectedLayout implements AlcinaProcess {
 			if (test.test(this.model)) {
 				return this;
 			}
-			for (Node child : children) {
-				Node childWithModel = child.childWithModel(test);
-				if (childWithModel != null) {
-					return childWithModel;
+			if (children != null) {
+				for (Node child : children) {
+					Node childWithModel = child.childWithModel(test);
+					if (childWithModel != null) {
+						return childWithModel;
+					}
 				}
 			}
 			return null;
@@ -429,7 +437,7 @@ public class DirectedLayout implements AlcinaProcess {
 			if (model == null) {
 				return;
 			}
-			if (hasWidget()) {
+			if (hasWidget() && directed.bindings().length > 0) {
 				propertyBindings = new PropertyBindings();
 				propertyBindings.bind();
 			}
@@ -476,7 +484,7 @@ public class DirectedLayout implements AlcinaProcess {
 
 		private Widget provideWidgetOrLastDescendantChildWidget() {
 			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
-					this, node -> node.children, true);
+					this, Node::readOnlyChildren, true);
 			for (Node node : traversal) {
 				if (node.widget != null) {
 					return node.widget;
@@ -497,8 +505,10 @@ public class DirectedLayout implements AlcinaProcess {
 			if (hasWidget()) {
 				list.add(getWidget());
 			} else {
-				for (Node child : children) {
-					child.resolveRenderedWidgets0(list);
+				if (children != null) {
+					for (Node child : children) {
+						child.resolveRenderedWidgets0(list);
+					}
 				}
 			}
 		}
@@ -508,7 +518,9 @@ public class DirectedLayout implements AlcinaProcess {
 				((LayoutEvents.Bind.Handler) model)
 						.onBind(new LayoutEvents.Bind(this, false));
 			}
-			children.forEach(Node::unbind);
+			if (children != null) {
+				children.forEach(Node::unbind);
+			}
 			if (replacementListener != null) {
 				replacementListener.unbind();
 				replacementListener = null;
@@ -520,7 +532,7 @@ public class DirectedLayout implements AlcinaProcess {
 
 		Widget firstDescendantWidget() {
 			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
-					this, node -> node.children, false);
+					this, Node::readOnlyChildren, false);
 			for (Node node : traversal) {
 				if (node.widget != null) {
 					return node.widget;
@@ -575,6 +587,10 @@ public class DirectedLayout implements AlcinaProcess {
 			bindBehaviours();
 			bindModel();
 			bindParentProperty();
+		}
+
+		List<Node> readOnlyChildren() {
+			return children != null ? children : Collections.emptyList();
 		}
 
 		// this node will disappear, so refer to predecessor nodes
@@ -1162,6 +1178,9 @@ public class DirectedLayout implements AlcinaProcess {
 			} else {
 				if (parentNode != null) {
 					// add fairly late, to ensure we're in insertion order
+					if (parentNode.children == null) {
+						parentNode.children = new ArrayList<>();
+					}
 					parentNode.children.add(node);
 					// complexities of delegation and child replacement
 					if (parentNode.insertionPoint != null) {

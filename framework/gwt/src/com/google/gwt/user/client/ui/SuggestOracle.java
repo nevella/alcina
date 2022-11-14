@@ -1,12 +1,12 @@
 /*
  * Copyright 2008 Google Inc.
- * 
+ *
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -27,7 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
  * A {@link com.google.gwt.user.client.ui.SuggestOracle} can be used to create
  * suggestions associated with a specific query string. It is currently used by
  * {@link SuggestBox}.
- * 
+ *
  * @see SuggestBox
  */
 public abstract class SuggestOracle {
@@ -43,7 +43,7 @@ public abstract class SuggestOracle {
 	 * Should {@link Suggestion} display strings be treated as HTML? If true,
 	 * this all suggestions' display strings will be interpreted as HTML,
 	 * otherwise as text.
-	 * 
+	 *
 	 * @return by default, returns false
 	 */
 	public boolean isDisplayStringHTML() {
@@ -59,7 +59,7 @@ public abstract class SuggestOracle {
 	 * {@link Callback#onSuggestionsReady(com.google.gwt.user.client.ui.SuggestOracle.Request, com.google.gwt.user.client.ui.SuggestOracle.Response)}
 	 * .
 	 * </p>
-	 * 
+	 *
 	 * @param request
 	 *            the request
 	 * @param callback
@@ -74,7 +74,7 @@ public abstract class SuggestOracle {
 	 * Generate a {@link Response} based on a specific {@link Request}. After
 	 * the {@link Response} is created, it is passed into
 	 * {@link Callback#onSuggestionsReady(com.google.gwt.user.client.ui.SuggestOracle.Request, com.google.gwt.user.client.ui.SuggestOracle.Response)}.
-	 * 
+	 *
 	 * @param request
 	 *            the request
 	 * @param callback
@@ -92,7 +92,7 @@ public abstract class SuggestOracle {
 		 * Consume the suggestions created by a
 		 * {@link com.google.gwt.user.client.ui.SuggestOracle} in response to a
 		 * {@link Request}.
-		 * 
+		 *
 		 * @param request
 		 *            the request
 		 * @param response
@@ -117,7 +117,7 @@ public abstract class SuggestOracle {
 
 		/**
 		 * Constructor for {@link Request}.
-		 * 
+		 *
 		 * @param query
 		 *            the query string
 		 */
@@ -127,7 +127,7 @@ public abstract class SuggestOracle {
 
 		/**
 		 * Constructor for {@link Request}.
-		 * 
+		 *
 		 * @param query
 		 *            the query string
 		 * @param limit
@@ -141,7 +141,7 @@ public abstract class SuggestOracle {
 
 		/**
 		 * Gets the limit on the number of suggestions that should be created.
-		 * 
+		 *
 		 * @return the limit
 		 */
 		public int getLimit() {
@@ -150,7 +150,7 @@ public abstract class SuggestOracle {
 
 		/**
 		 * Gets the query string.
-		 * 
+		 *
 		 * @return the query string
 		 */
 		public String getQuery() {
@@ -159,7 +159,7 @@ public abstract class SuggestOracle {
 
 		/**
 		 * Sets the limit on the number of suggestions that should be created.
-		 * 
+		 *
 		 * @param limit
 		 *            the limit
 		 */
@@ -169,7 +169,7 @@ public abstract class SuggestOracle {
 
 		/**
 		 * Sets the query string used for this request.
-		 * 
+		 *
 		 * @param query
 		 *            the query string
 		 */
@@ -180,21 +180,21 @@ public abstract class SuggestOracle {
 
 	/**
 	 * {@link com.google.gwt.user.client.ui.SuggestOracle} response.
-	 * 
+	 *
 	 * <p>
 	 * Can optionally have truncation information provided. To indicate that
 	 * there are more results but the number is not known, use:
-	 * 
+	 *
 	 * <p>
 	 * <code>response.setMoreSuggestions(true);</code>
-	 * 
+	 *
 	 * <p>
 	 * Or to indicate more results with an exact number, use:
-	 * 
+	 *
 	 * <p>
 	 * <code>response.setMoreSuggestionsCount(102);</code>
 	 */
-	// FIXME - dirndl 1.3 - no need to extend model, add @Bean via annotation
+	// FIXME - dirndl 1x1d - no need to extend model, add @Bean via annotation
 	// resolution (ditto BoundSuggestOracleSuggestion, Request)
 	public static class Response extends Model implements IsSerializable {
 		private Collection<? extends Suggestion> suggestions;
@@ -219,7 +219,7 @@ public abstract class SuggestOracle {
 
 		/**
 		 * Constructor for {@link Response}.
-		 * 
+		 *
 		 * @param suggestions
 		 *            each element of suggestions must implement the
 		 *            {@link Suggestion} interface
@@ -230,7 +230,7 @@ public abstract class SuggestOracle {
 
 		/**
 		 * Gets how many more suggestions there are.
-		 * 
+		 *
 		 * @return the count. if there no more suggestions or the number of more
 		 *         suggestions is unknown, returns 0.
 		 */
@@ -241,7 +241,7 @@ public abstract class SuggestOracle {
 		/**
 		 * Gets the collection of suggestions. Each suggestion must implement
 		 * the {@link Suggestion} interface.
-		 * 
+		 *
 		 * @return the collection of suggestions
 		 */
 		public Collection<? extends Suggestion> getSuggestions() {
@@ -268,7 +268,7 @@ public abstract class SuggestOracle {
 		 * Sets whether or not the suggestion list was truncated due to the
 		 * {@link Request#getLimit}, by providing an exact count of remaining
 		 * suggestions.
-		 * 
+		 *
 		 * @param count
 		 *            number of truncated suggestions. Pass 0 to indicate there
 		 *            are no other suggestions, which is equivalent to
@@ -283,7 +283,7 @@ public abstract class SuggestOracle {
 		/**
 		 * Sets the suggestions for this response. Each suggestion must
 		 * implement the {@link Suggestion} interface.
-		 * 
+		 *
 		 * @param suggestions
 		 *            the suggestions
 		 */
@@ -302,7 +302,7 @@ public abstract class SuggestOracle {
 	 * {@link SuggestOracle#isDisplayStringHTML()}. The replacement string is
 	 * the string that is entered into the SuggestBox's text box when the
 	 * suggestion is selected from the list.
-	 * 
+	 *
 	 * <p>
 	 * Replacement strings are useful when the display form of a suggestion
 	 * differs from the input format for the data. For example, suppose that a
@@ -314,7 +314,7 @@ public abstract class SuggestOracle {
 	 * suggestion, the replacement string, <i>foobar@company.com</i>, is entered
 	 * into the SuggestBox's text box.
 	 * </p>
-	 * 
+	 *
 	 * <p>
 	 * This is an example where the input data format for the suggestion is not
 	 * as user-friendly as the display format. In the event that the display of
@@ -322,7 +322,7 @@ public abstract class SuggestOracle {
 	 * <code>Suggestion</code> interface would be implemented in such a way that
 	 * the display string and replacement string would be identical.
 	 * </p>
-	 * 
+	 *
 	 * <h3>Associating Data Transfer Objects (DTOs) with Suggestion Objects</h3>
 	 * Some applications retrieve suggesstions from a server, and may want to
 	 * send back a DTO with each suggestion. In the previous example, a DTO
@@ -332,7 +332,7 @@ public abstract class SuggestOracle {
 	 * extend the <code>Suggestion</code> interface and define a getter method
 	 * that has a return value of the DTO's type. Define a class that implements
 	 * this subinterface and use it to encapsulate each suggestion.
-	 * 
+	 *
 	 * <p>
 	 * To access a suggestion's DTO when the suggestion is selected, add a
 	 * {@link com.google.gwt.event.logical.shared.SelectionHandler} to the
@@ -360,7 +360,7 @@ public abstract class SuggestOracle {
 		 * Gets the replacement string associated with this suggestion. When
 		 * this suggestion is selected, the replacement string will be entered
 		 * into the SuggestBox's text box.
-		 * 
+		 *
 		 * @return the string to be entered into the SuggestBox's text box when
 		 *         this suggestion is selected
 		 */

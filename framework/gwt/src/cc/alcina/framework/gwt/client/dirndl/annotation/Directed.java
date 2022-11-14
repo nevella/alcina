@@ -27,7 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
  *
  */
 /*
- * FIXME - dirndl1x1a - add Phase
+ * FIXME - dirndl 1x1d - phase - add Phase
  * [DEFAULT,COLLECTION,ELEMENT,PRE_TRANSFORM,POST_TRANSFORM] - which defaults to
  * DEFAULT but allows finer control over DirectedRenderer.Transform and
  * DirectedRenderer.Collection transformations
@@ -38,9 +38,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 // Not inherited - annotation resolution uses merging algorithm which would
 // conflict
 // @Inherited
-@Resolution(inheritance = { Inheritance.CLASS, Inheritance.INTERFACE,
-		Inheritance.ERASED_PROPERTY,
-		Inheritance.PROPERTY }, mergeStrategy = DirectedMergeStrategy.class)
+@Resolution(
+	inheritance = { Inheritance.CLASS, Inheritance.INTERFACE,
+			Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
+	mergeStrategy = DirectedMergeStrategy.class)
 @ClientVisible
 public @interface Directed {
 	/**

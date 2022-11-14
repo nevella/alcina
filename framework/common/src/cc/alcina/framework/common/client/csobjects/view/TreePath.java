@@ -495,7 +495,7 @@ public class TreePath<T> extends Model
 		@Override
 		public int compare(TreePath o1, TreePath o2) {
 			Preconditions.checkArgument(o1.parent == o2.parent);
-			// FIXME - dirndl 1.2 - the segmentcomparable (either side) may be
+			// FIXME - dirndl 1x3 - the segmentcomparable (either side) may be
 			// null if the path was populated pre-transform - e.g. via being the
 			// start location of a place
 			//

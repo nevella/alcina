@@ -49,7 +49,8 @@ public class GlobalKeyboardShortcuts implements NativePreviewHandler {
 			} catch (Exception e) {
 				// if under webdriver, possibly event source has already been
 				// removed
-				// FIXME - dirndl1.4 - narrow the catch
+				// FIXME - dirndl 1x3 - narrow the catch [devex, dirndl
+				// exception if not WD][via topic]
 				Ax.simpleExceptionOut(e);
 			}
 		}

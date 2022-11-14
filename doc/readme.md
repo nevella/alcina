@@ -45,8 +45,8 @@ sequence of operations ("transforms"). This has the following benefits:
 
 ##	Dirndl
 "**Dir**ectedA**ndD**irected**L**ayout - a complete UI framework, runnable client- or server-side, that uses the 
-expressive power of two tree structures (the view containment hierarchy - *more or less* the DOM - and the Java class hierarchy) 
-to generate a UI from an arbitrary model with minimal imperative code.
+expressive power of three tree structures (the view container hierarchy - *more or less* the DOM; the Java class hierarchy;
+ the class/property hierarchy) to generate a UI from an arbitrary model with minimal imperative code.
 
 Best shown by examples:
 (TBD - show a collection rendering, show event handling, show an app skeleton)
@@ -80,3 +80,4 @@ Smaller components, again in no particular order:
 ##	DomainView
 
 ##	SelectionTraversal
+
