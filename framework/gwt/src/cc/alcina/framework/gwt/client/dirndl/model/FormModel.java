@@ -564,7 +564,7 @@ public class FormModel extends Model
 	}
 
 	/*
-	 * FIXME - dirndl 1.2 - move to OlForm
+	 * FIXME - dirndl 1x2 - move to OlForm
 	 */
 	public static class SubmitHandler extends ActionHandler {
 		@Override

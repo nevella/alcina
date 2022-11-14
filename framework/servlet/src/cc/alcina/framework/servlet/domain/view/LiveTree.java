@@ -483,7 +483,7 @@ public class LiveTree {
 			Transform t) {
 		if (transformFilter.test(t)) {
 			if (t.getOperation() == Operation.CHANGE) {
-				// FIXME - dirndl1.1 - this may fail (not
+				// FIXME - dirndl 1x3 - this may fail (not
 				// properly
 				// update client) if transforms are not in tree
 				// order. need to fix navigation server-side

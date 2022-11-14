@@ -42,7 +42,8 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.Customiser;
 	inheritance = { Inheritance.PROPERTY, Inheritance.ERASED_PROPERTY },
 	mergeStrategy = Custom.MergeStrategy.class)
 public @interface Custom {
-	// FIXME - dirndl 1.2 - directed??
+	// FIXME - dirndl 1x2 - directed?? use Directed.Transform all the way
+	// through (for bean -> FormModel/field/model)
 	Class<? extends Customiser> customiserClass();
 
 	NamedParameter[] parameters() default {};
