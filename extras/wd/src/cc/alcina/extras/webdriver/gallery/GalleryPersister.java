@@ -28,7 +28,10 @@ import cc.alcina.framework.common.client.dom.DomNodeHtmlTableBuilder;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.HasEquivalenceString;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.Configuration;
+import cc.alcina.framework.entity.EncryptionUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.util.AlcinaChildRunnable;
 import cc.alcina.framework.entity.util.JacksonUtils;
@@ -37,6 +40,10 @@ import cc.alcina.framework.servlet.google.DriveAccessor;
 import cc.alcina.framework.servlet.google.SheetAccessor;
 
 public class GalleryPersister {
+	static boolean isPersistToGoogle() {
+		return Configuration.is("persistToGoogle");
+	}
+
 	File base;
 
 	List<GalleryFile> files;
@@ -72,7 +79,9 @@ public class GalleryPersister {
 		hashes = new Shell()
 				.runBashScript(configuration.repoHashesCommand).output;
 		build = BuildNumberProvider.get().getBuildNumber(configuration.name);
-		if (Configuration.is("persistToGoogle")) {
+		if (isPersistToGoogle()) {
+			new SheetAccessor().withSheetAccess(configuration.asSheetAccess())
+					.ensureSpreadsheet();
 			uploadImages();
 			AlcinaChildRunnable.launchWithCurrentThreadContext("update-sheet",
 					() -> updateSheet());
@@ -159,18 +168,17 @@ public class GalleryPersister {
 		DomNode main = doc.html().body().builder().tag("div").className("main")
 				.append();
 		DomNode left = main.builder().tag("div").className("left").append();
+		List<List<Object>> metadataValues = Arrays.asList(
+				Arrays.asList("App", configuration.name),
+				Arrays.asList("Hashes", hashes), Arrays.asList("Build", build),
+				Arrays.asList("User agent", userAgentType),
+				Arrays.asList("Timestamp (UTC)", dateStamp));
 		{
 			DomNode header = left.builder().tag("div").className("header")
 					.append();
 			header.builder().tag("h2").text("Gallery").append();
 			DomNodeHtmlTableBuilder builder = header.html().tableBuilder();
-			List<List<Object>> values = Arrays.asList(
-					Arrays.asList("App", configuration.name),
-					Arrays.asList("Hashes", hashes),
-					Arrays.asList("Build", build),
-					Arrays.asList("User agent", userAgentType),
-					Arrays.asList("Timestamp (UTC)", dateStamp));
-			for (List<Object> list : values) {
+			for (List<Object> list : metadataValues) {
 				builder.row().cell(list.get(0).toString() + ":")
 						.cell(list.get(1).toString());
 			}
@@ -213,9 +221,15 @@ public class GalleryPersister {
 				Ax.format("<style>%s</style>",
 						Matcher.quoteReplacement(ResourceUtilities
 								.readRelativeResource("res/viewer.css"))));
-		File index = new File(base, "index.html");
-		ResourceUtilities.write(prettyToString, index);
-		Ax.out("Wrote gallery index to: %s", index.getPath());
+		File indexHtml = new File(base, "index.html");
+		File indexJson = new File(base, "index.json");
+		ResourceUtilities.write(prettyToString, indexHtml);
+		StringMap metadata = new StringMap();
+		metadataValues.stream().forEach(list -> metadata
+				.put(list.get(0).toString(), list.get(1).toString()));
+		GallerySnapshot snapshot = new GallerySnapshot(images, metadata);
+		JacksonUtils.serializeToFile(snapshot, indexJson);
+		Ax.out("Wrote gallery index to: %s", indexHtml.getPath());
 		if (Configuration.is("persistToGoogle")) {
 			byte[] bytes = prettyToString.getBytes(StandardCharsets.UTF_8);
 			{
@@ -279,6 +293,10 @@ public class GalleryPersister {
 		public String toViewUrl() {
 			return id.equals("none") ? file.getName()
 					: Ax.format("/drive?id=%s", id);
+		}
+
+		String getFileName() {
+			return file.getName();
 		}
 
 		String getName() {
@@ -346,17 +364,38 @@ public class GalleryPersister {
 		}
 	}
 
-	static class Image {
+	static class Image implements HasEquivalenceString<Image> {
 		String name;
 
 		String url;
 
-		public Image() {
+		String fileName;
+
+		String sha1Hash;
+
+		Image() {
 		}
 
 		Image(GalleryTuple tuple) {
 			name = tuple.name();
 			url = tuple.image.toViewUrl();
+			fileName = tuple.image.getFileName();
+			try {
+				sha1Hash = EncryptionUtils.get().SHA1(ResourceUtilities
+						.readFileToByteArray(tuple.image.file));
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		@Override
+		public String equivalenceString() {
+			return fileName;
+		}
+
+		@Override
+		public String toString() {
+			return fileName;
 		}
 	}
 }

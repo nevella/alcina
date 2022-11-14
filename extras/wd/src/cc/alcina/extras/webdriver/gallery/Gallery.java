@@ -15,7 +15,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.JaxbUtils;
-import cc.alcina.framework.servlet.google.SheetAccessor;
 
 /**
  * <p>
@@ -164,9 +163,6 @@ public class Gallery {
 					throw Ax.runtimeException("No configuration with name '%s'",
 							appName);
 				}
-				new SheetAccessor()
-						.withSheetAccess(configuration.asSheetAccess())
-						.ensureSpreadsheet();
 			} catch (Exception e) {
 				GalleryConfiguration.dumpSampleConfiguration();
 				throw new WrappedRuntimeException(e);
@@ -184,8 +180,8 @@ public class Gallery {
 		File toFileImage = SEUtilities.getChildFile(base, snapName + ".png");
 		File toFileHtml = SEUtilities.getChildFile(base, snapName + ".html");
 		RemoteWebDriver remoteDriver = (RemoteWebDriver) driver;
-		byte[] bytes = remoteDriver.getScreenshotAs(OutputType.BYTES);
 		try {
+			byte[] bytes = remoteDriver.getScreenshotAs(OutputType.BYTES);
 			ResourceUtilities.writeBytesToFile(bytes, toFileImage);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
