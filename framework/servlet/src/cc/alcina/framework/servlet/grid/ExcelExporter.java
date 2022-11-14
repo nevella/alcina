@@ -226,7 +226,7 @@ public class ExcelExporter {
 			row.appendChild(cell);
 			cell.appendChild(data);
 			data.setAttributeNS(SS_NS, "ss:Type", "String");
-			txt = book.createTextNode(colnameFromFieldname(pdm.name()));
+			txt = book.createTextNode(pdm.columnName());
 			dataRow.add(txt.getTextContent());
 			data.appendChild(txt);
 		}
@@ -301,11 +301,6 @@ public class ExcelExporter {
 		return value == null ? "" : value.toString();
 	}
 
-	String colnameFromFieldname(String fieldName) {
-		String s = fieldName.replace(" ", "_");
-		return s.substring(0, 1).toUpperCase() + s.substring(1);
-	}
-
 	public static class ExcelEmptyBean implements Serializable {
 		private String name = "No data";
 
@@ -335,6 +330,20 @@ public class ExcelExporter {
 			this.renderer = (Renderer) (xfa == null
 					|| xfa.rendererClass() == Void.class ? null
 							: Registry.impl(xfa.rendererClass()));
+		}
+
+		public String columnName() {
+			String name = name();
+			if (hasAnnotation()) {
+				return name;
+			} else {
+				name = name.replace(" ", "_");
+				return name.substring(0, 1).toUpperCase() + name.substring(1);
+			}
+		}
+
+		public boolean hasAnnotation() {
+			return xfa != null || dia != null;
 		}
 
 		@Override
