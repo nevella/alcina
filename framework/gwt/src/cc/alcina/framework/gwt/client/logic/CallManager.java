@@ -21,7 +21,6 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
-import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 
@@ -109,9 +108,7 @@ public class CallManager {
 		if (topicListener != null) {
 			topicListener.topicPublished(message);
 		} else {
-			if (Ax.notBlank(message)) {
-				topicCallMade.publish(message);
-			}
+			topicCallMade.publish(message);
 		}
 	}
 }
