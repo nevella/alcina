@@ -6,6 +6,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Objects;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
@@ -237,39 +238,11 @@ public @interface Directed {
 
 		@Override
 		public String toString() {
-			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.append("bindings");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(bindings));
-			stringBuilder.append(", ");
-			stringBuilder.append("cssClass");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(cssClass));
-			stringBuilder.append(", ");
-			stringBuilder.append("emits");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(emits));
-			stringBuilder.append(", ");
-			stringBuilder.append("merge");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(merge));
-			stringBuilder.append(", ");
-			stringBuilder.append("receives");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(receives));
-			stringBuilder.append(", ");
-			stringBuilder.append("reemits");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(reemits));
-			stringBuilder.append(", ");
-			stringBuilder.append("renderer");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(renderer));
-			stringBuilder.append(", ");
-			stringBuilder.append("tag");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(tag));
-			return stringBuilder.toString();
+			return toString(false);
+		}
+
+		public String toStringElideDefaults() {
+			return toString(true);
 		}
 
 		private String __stringValue(Object o) {
@@ -285,10 +258,44 @@ public @interface Directed {
 			return o.toString();
 		}
 
+		private void append(StringBuilder stringBuilder, String fieldName,
+				Function<Directed, ?> function, boolean elideDefaults) {
+			Object value = function.apply(this);
+			if (elideDefaults) {
+				Object defaultValue = function.apply(DEFAULT_INSTANCE);
+				if (Objects.deepEquals(value, defaultValue)) {
+					return;
+				}
+			}
+			if (stringBuilder.length() > 0) {
+				stringBuilder.append(',');
+			}
+			stringBuilder.append(fieldName);
+			stringBuilder.append('=');
+			stringBuilder.append(__stringValue(value));
+		}
+
 		private <V> V mergeAttribute(Directed parent,
 				Function<Directed, V> function) {
 			return Resolution.MergeStrategy.mergeValues(parent, this,
 					DEFAULT_INSTANCE, function);
+		}
+
+		String toString(boolean elideDefaults) {
+			StringBuilder stringBuilder = new StringBuilder();
+			append(stringBuilder, "tag", Directed::tag, elideDefaults);
+			append(stringBuilder, "cssClass", Directed::cssClass,
+					elideDefaults);
+			append(stringBuilder, "bindings", Directed::bindings,
+					elideDefaults);
+			append(stringBuilder, "emits", Directed::emits, elideDefaults);
+			append(stringBuilder, "receives", Directed::receives,
+					elideDefaults);
+			append(stringBuilder, "reemits", Directed::reemits, elideDefaults);
+			append(stringBuilder, "renderer", Directed::renderer,
+					elideDefaults);
+			append(stringBuilder, "merge", Directed::merge, elideDefaults);
+			return stringBuilder.toString();
 		}
 	}
 

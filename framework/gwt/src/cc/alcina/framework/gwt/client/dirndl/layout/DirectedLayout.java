@@ -44,6 +44,7 @@ import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
 import cc.alcina.framework.common.client.util.traversal.Traversable;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
@@ -125,7 +126,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *
  * - Phases :
  *   1x1b rest of TODO (complete)
- *   1x1c categorise FIXMEs, then d -> e -> f (current, also working on [d])
+ *   1x1c categorise FIXMEs, then d -> e -> f  etc (current, also working on [d])
  *   1x1d initial FIXMEs
  *   1x1e do a big localdom issue block - FIXMEs, improve tracking (with fully reproducible exceptions)
  *   1x1f reflectiveserializer: integrate into GWT serializer framework
@@ -576,10 +577,12 @@ public class DirectedLayout implements AlcinaProcess {
 			String typeName = annotationLocation.classLocation.getSimpleName();
 			fb.appendPadRight(30, typeName);
 			fb.append(" ");
-			// FIXME - dirndl 1x1a - elide defaults in @Directed, add
-			// DirectedRenderer, fromTransform, indent to 50 if > say 50
-			// charwidth
-			fb.append(directed);
+			DirectedRenderer renderer = resolver.layout
+					.resolveRenderer(directed, annotationLocation, model);
+			fb.appendPadRight(30, renderer.getClass().getSimpleName());
+			fb.append(" ");
+			Impl impl = new Directed.Impl(directed);
+			fb.append(impl.toStringElideDefaults());
 			return fb.toString();
 		}
 
@@ -1053,9 +1056,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 		@Override
 		public String toString() {
-			return Ax.format("Node:\n%s\n\nLocation: %s\n\nRenderer: %s",
-					node.toParentStack(), location.toString(),
-					resolveRenderer().getClass().getSimpleName());
+			return Ax.format("Node:\n%s\n\nLocation: %s", node.toParentStack(),
+					location.toString());
 		}
 
 		private Directed firstDirected() {
