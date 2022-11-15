@@ -242,10 +242,10 @@ public class FormModel extends Model
 				ActionRefPlace place) {
 			Place currentPlace = Client.currentPlace();
 			/*
-			 * FIXME - dirndl 1x2
+			 * FIXME - dirndl 1x2 - should be an event, handled by formModel
 			 */
-			FormModel formModel = (FormModel) node
-					.ancestorModel(m -> m instanceof FormModel);
+			FormModel formModel = ((FormModel.Has) node.getResolver())
+					.getFormModel();
 			TransformManager.get()
 					.removeTransformsFor(formModel.getState().model);
 			TransformManager.get()
@@ -361,10 +361,10 @@ public class FormModel extends Model
 			AbstractContextSensitiveModelTransform<FormModelState, FormModel> {
 		@Override
 		public FormModel apply(FormModelState state) {
-			FormModel model = Registry.impl(FormModel.class);
-			model.state = state;
+			FormModel formModel = Registry.impl(FormModel.class);
+			formModel.state = state;
 			if (state.model == null && state.expectsModel) {
-				return model;
+				return formModel;
 			}
 			Args args = node.annotation(Args.class);
 			ActionsModulator actionsModulator = args != null
@@ -374,9 +374,10 @@ public class FormModel extends Model
 					? Reflections.newInstance(args.fieldModulator())
 					: new FieldModulator();
 			BoundWidgetTypeFactory factory = new BoundWidgetTypeFactory(true);
-			ModalResolver childResolver = ModalResolver.single(node,
+			ModalResolver resolver = ModalResolver.single(node,
 					!state.editable);
-			node.setResolver(childResolver);
+			resolver.setFormModel(formModel);
+			node.setResolver(resolver);
 			if (state.model != null) {
 				if (state.model instanceof UserProperty) {
 					state.presentationModel = (Bindable) ((UserProperty) state.model)
@@ -390,7 +391,7 @@ public class FormModel extends Model
 				List<Field> fields = GwittirBridge.get()
 						.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 								state.presentationModel, factory,
-								state.editable, state.adjunct, childResolver);
+								state.editable, state.adjunct, resolver);
 				fields.stream()
 						.filter(field -> fieldModulator
 								.accept(state.presentationModel, field))
@@ -402,14 +403,14 @@ public class FormModel extends Model
 								e.setFocusOnAttach(true);
 							}
 							return e;
-						}).forEach(model.elements::add);
+						}).forEach(formModel.elements::add);
 			}
 			if (state.adjunct) {
 				new Link().withPlace(new ActionRefPlace(SubmitRef.class))
 						.withClassName(Link.PRIMARY_ACTION)
-						.addTo(model.actions);
+						.addTo(formModel.actions);
 				new Link().withPlace(new ActionRefPlace(CancelRef.class))
-						.addTo(model.actions);
+						.addTo(formModel.actions);
 			} else {
 				if (state.presentationModel != null) {
 					ObjectActions actions = Reflections
@@ -422,20 +423,20 @@ public class FormModel extends Model
 								.forEach(clazz -> {
 									new Link()
 											.withNonstandardObjectAction(clazz)
-											.addTo(model.actions);
+											.addTo(formModel.actions);
 								});
 					}
 				}
 			}
-			model.actions.removeIf(actionsModulator::isRemoveAction);
-			for (Link link : model.actions) {
+			formModel.actions.removeIf(actionsModulator::isRemoveAction);
+			for (Link link : formModel.actions) {
 				String overrideLinkText = actionsModulator
 						.getOverrideLinkText(link);
 				if (overrideLinkText != null) {
 					link.withText(overrideLinkText);
 				}
 			}
-			return model;
+			return formModel;
 		}
 
 		@Reflected
@@ -497,6 +498,10 @@ public class FormModel extends Model
 		public String getGroupName() {
 			return formElement.getElementName();
 		}
+	}
+
+	public interface Has {
+		public FormModel getFormModel();
 	}
 
 	@Registration(LabelModel.class)
@@ -571,8 +576,8 @@ public class FormModel extends Model
 		public void handleAction(Node node, GwtEvent event,
 				ActionRefPlace place) {
 			((DomEvent) event).preventDefault();
-			FormModel formModel = (FormModel) node
-					.ancestorModel(m -> m instanceof FormModel);
+			FormModel formModel = ((FormModel.Has) node.getResolver())
+					.getFormModel();
 			if (formModel.submit(node)) {
 				Optional<EmitsModelEvent> emitsType = place.emitsModelEvent();
 				Class<? extends ModelEvent> type = emitsType.get().value();

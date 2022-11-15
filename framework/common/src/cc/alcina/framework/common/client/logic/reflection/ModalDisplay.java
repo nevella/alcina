@@ -22,13 +22,16 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.layout.ContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.model.FormModel;
+import cc.alcina.framework.gwt.client.dirndl.model.TableModel;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Documented
 @ClientVisible
 @Target({ ElementType.METHOD })
-@Resolution(inheritance = {
-		Inheritance.PROPERTY }, mergeStrategy = ModalDisplay.MergeStrategy.class)
+@Resolution(
+	inheritance = { Inheritance.PROPERTY },
+	mergeStrategy = ModalDisplay.MergeStrategy.class)
 public @interface ModalDisplay {
 	Modal[] value();
 
@@ -58,7 +61,8 @@ public @interface ModalDisplay {
 	 * @author nick@alcina.cc
 	 *
 	 */
-	public static class ModalResolver extends ContextResolver {
+	public static class ModalResolver extends ContextResolver
+			implements FormModel.Has {
 		public static ModalResolver multiple(Node node, boolean readOnly) {
 			return new ModalResolver(node,
 					readOnly ? Mode.MULTIPLE_READ : Mode.MULTIPLE_WRITE);
@@ -68,6 +72,10 @@ public @interface ModalDisplay {
 			return new ModalResolver(node,
 					readOnly ? Mode.SINGLE_READ : Mode.SINGLE_WRITE);
 		}
+
+		private FormModel formModel;
+
+		private TableModel tableModel;
 
 		private final Mode mode;
 
@@ -84,6 +92,15 @@ public @interface ModalDisplay {
 		public boolean equals(Object obj) {
 			return obj instanceof ModalResolver
 					&& ((ModalResolver) obj).mode == mode;
+		}
+
+		@Override
+		public FormModel getFormModel() {
+			return this.formModel;
+		}
+
+		public TableModel getTableModel() {
+			return this.tableModel;
 		}
 
 		@Override
@@ -141,6 +158,14 @@ public @interface ModalDisplay {
 			} else {
 				return defaultResolution;
 			}
+		}
+
+		public void setFormModel(FormModel formModel) {
+			this.formModel = formModel;
+		}
+
+		public void setTableModel(TableModel tableModel) {
+			this.tableModel = tableModel;
 		}
 
 		private <T> T getFirst(T[] array) {

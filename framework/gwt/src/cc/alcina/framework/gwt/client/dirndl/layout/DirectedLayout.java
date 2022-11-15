@@ -328,25 +328,6 @@ public class DirectedLayout implements AlcinaProcess {
 			current = this;
 		}
 
-		// FIXME - dirndl 1x1a - remove - switch to
-		// ContextResolver.ancestorResolver (which controls say access to
-		// editable state)
-		public <T> T ancestorModel(Class<T> clazz) {
-			return ancestorModel(model -> Reflections.isAssignableFrom(clazz,
-					model.getClass()));
-		}
-
-		// FIXME - dirndl 1x1a - remove
-		public <T> T ancestorModel(Predicate predicate) {
-			if (predicate.test(model)) {
-				return (T) model;
-			}
-			if (parent != null) {
-				return parent.ancestorModel(predicate);
-			}
-			return null;
-		}
-
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			return annotationLocation.getAnnotation(clazz);
 		}

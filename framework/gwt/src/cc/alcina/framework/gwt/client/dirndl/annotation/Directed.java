@@ -89,7 +89,7 @@ public @interface Directed {
 	public String tag() default "";
 
 	/**
-	 * Sugar for @Directed(renderer=DelegatingNodeRenderer.class)
+	 * Sugar for @Directed(renderer=DirectedRenderer.Delegating.class)
 	 *
 	 * @author nick@alcina.cc
 	 *
