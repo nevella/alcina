@@ -1,0 +1,19 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body class="doc-body">
+	<h2>Dirndl freestyle</h2>
+	<p>
+		<i>thoughts too nodular and lymphy for a fully worked narrative context</i>
+	</p>
+	<h3>Model, direction and events</h3>
+	<ul>
+		<li>DirectedLayout.Node *did* have an ancestorModel(Predicate) method which would allow child
+			nodes access to the parent model. That method was deprecated and removed - usages were replaced
+			with ModelEvent emission (where ancestor model access was used to send signals to the ancestor
+			model ) and by adding access to specific models via ContextResolver. See for example
+			<code>cc.alcina.framework.gwt.client.dirndl.model.FormModel.CancelHandler</code>
+	</ul>
+</body>
+</html>
