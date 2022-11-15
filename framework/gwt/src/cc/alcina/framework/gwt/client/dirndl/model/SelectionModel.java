@@ -17,7 +17,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Selected;
 
 @Directed(tag = "selection-model", receives = ModelEvents.Selected.class)
-// FIXME - dirndl 1x1a - change to "Choices"
+// FIXME - dirndl 1x1d - change to "Choices"
 // also this should emit ModelEvents, not topic
 public abstract class SelectionModel<T> extends Model
 		implements ModelEvents.Selected.Handler {

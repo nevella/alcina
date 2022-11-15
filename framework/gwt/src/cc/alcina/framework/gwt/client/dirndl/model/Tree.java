@@ -288,7 +288,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			return this.selected;
 		}
 
-		// FIXME - dirndl 1x1a - classic incremental collection modification,
+		// FIXME - dirndl 1x1g - classic incremental collection modification,
 		// have ChildReplacer (DirectedLayout) preserve the list (change the
 		// model, keep the node) and just handle the element delta
 		//

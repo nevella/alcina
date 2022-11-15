@@ -29,32 +29,17 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 
 /**
  *
+ *
+ * <p>
+ * Note that serialization will require type info, either by overriding
+ * get/setValue with covariant types, or via
+ * TypeSerialization/PropertySerialization annotations
+ *
+ * FIXME - dirndl 1x3 - revisit this javadoc (particularly in light of
+ * BaseEnumCriterion). 'Basically', just having a value property would be a lot
+ * simpler...
+ *
  * @author Nick Reddel
- *         <p>
- *         See JVM bugs, particularly
- *         http://bugs.sun.com/bugdatabase/view_bug.do?bug_id=4477877
- *         </p>
- *         <p>
- *         For JVMIntrospector (not compiled gwt) to work, make sure the
- *         <b>getValue, setValue</b> overrides in children are the <i>first</i>
- *         bean methods in source - i.e.<br>
- *         getValue()<br>
- *         setValue()<br>
- *         getMyEnum()<br>
- *         setMyEnum()<br>
- *         </p>
- *         <p>
- *         Also - there seems to be something dodgy wrt HasValue<E> in
- *         serialization - best to have an explicit serialverisionUID
- *         </p>
- *
- *         JDK8+ - this seems to be resolved. Note that serialization will
- *         require type info, either by overriding get/setValue with covariant
- *         types, or via TypeSerialization/PropertySerialization annotations
- *
- *         FIXME - dirndl 1.4 - revisit this javadoc (particularly in light of
- *         BaseEnumCriterion)
- *
  */
 public abstract class EnumCriterion<E extends Enum> extends SearchCriterion
 		implements HasWithNull, HasValue<E> {

@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.util.CollectionCreators;
 
 @Reflected
 @Registration.Singleton
-// FIXME - dirndl - 1 - add registration support
+// FIXME - client.module
 public class CodeModules {
 	public static CodeModules get() {
 		return Registry.impl(CodeModules.class);
