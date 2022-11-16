@@ -7,6 +7,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
@@ -43,6 +44,10 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 
 	public <T0 extends T> T0 getModel() {
 		return (T0) this.model;
+	}
+
+	public String getName() {
+		return Ax.friendly(getClass().getSimpleName());
 	}
 
 	public boolean isHandled() {

@@ -188,6 +188,10 @@ public class DirectedLayout implements AlcinaProcess {
 		return root.firstDescendantWidget();
 	}
 
+	public Widget render(Object model) {
+		return render(ContextResolver.Default.get().createResolver(), model);
+	}
+
 	/*
 	 * very simple caching, but lowers allocation *a lot*
 	 */
