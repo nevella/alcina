@@ -1,18 +1,27 @@
 package cc.alcina.framework.gwt.client.dirndl.model;
 
+import com.google.gwt.dom.client.Element;
+import com.google.gwt.user.client.ui.Widget;
+import com.google.gwt.user.client.ui.impl.TextBoxImpl;
+
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents.Bind;
+import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 
 public class Editable {
 	@Directed(
-		tag = "input",
 		bindings = { @Binding(type = Type.PROPERTY, from = "value"),
 				@Binding(type = Type.PROPERTY, from = "placeholder"),
 				@Binding(type = Type.PROPERTY, from = "type") })
+	/*
+	 * FIXME - dirndl 1x1d - should handle DOM input + change events, have r/o
+	 * currentvalue (from input)
+	 */
 	public static class StringInput extends Model.WithNode
-			implements FocusOnBind {
+			implements FocusOnBind, HasTag {
 		private String value;
 
 		private String placeholder;
@@ -21,8 +30,16 @@ public class Editable {
 
 		private boolean focusOnBind;
 
+		private String tag = "input";
+
+		private boolean selectAllOnBind;
+
 		public String getPlaceholder() {
 			return this.placeholder;
+		}
+
+		public String getTag() {
+			return this.tag;
 		}
 
 		public String getType() {
@@ -30,6 +47,10 @@ public class Editable {
 		}
 
 		public String getValue() {
+			// remove post FIXME
+			if (node != null) {
+				sync();
+			}
 			return this.value;
 		}
 
@@ -38,12 +59,40 @@ public class Editable {
 			return focusOnBind;
 		}
 
+		public boolean isSelectAllOnBind() {
+			return this.selectAllOnBind;
+		}
+
+		@Override
+		public void onBind(Bind event) {
+			super.onBind(event);
+			if (isSelectAllOnBind()) {
+				Widget widget = event.getContext().node.getWidget();
+				Element elem = widget.getElement();
+				TextBoxImpl.setTextBoxSelectionRange(elem, 0,
+						elem.getPropertyString("value").length());
+			}
+		}
+
+		@Override
+		public String provideTag() {
+			return getTag();
+		}
+
 		public void setFocusOnBind(boolean focusOnBind) {
 			this.focusOnBind = focusOnBind;
 		}
 
 		public void setPlaceholder(String placeholder) {
 			this.placeholder = placeholder;
+		}
+
+		public void setSelectAllOnBind(boolean selectAllOnBind) {
+			this.selectAllOnBind = selectAllOnBind;
+		}
+
+		public void setTag(String tag) {
+			this.tag = tag;
 		}
 
 		public void setType(String type) {
