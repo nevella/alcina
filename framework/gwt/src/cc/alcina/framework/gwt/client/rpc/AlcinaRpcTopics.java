@@ -11,5 +11,7 @@ public class AlcinaRpcTopics {
 		public ClientInstanceExpiredException exception;
 
 		public boolean handled;
+
+		public String expiredInstance;
 	}
 }

@@ -113,8 +113,8 @@ import cc.alcina.framework.entity.persistence.metric.InternalMetrics;
 import cc.alcina.framework.entity.persistence.metric.InternalMetrics.InternalMetricTypeAlcina;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.TransformCommit;
-import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.projection.GraphProjection.GraphProjectionFieldFilter;
+import cc.alcina.framework.entity.projection.GraphProjections;
 import cc.alcina.framework.entity.util.JacksonJsonObjectSerializer;
 import cc.alcina.framework.entity.util.LengthConstrainedStringWriter;
 import cc.alcina.framework.entity.util.MethodContext;
@@ -131,6 +131,7 @@ import cc.alcina.framework.gwt.client.rpc.OutOfBandMessage.ExceptionMessage;
 import cc.alcina.framework.servlet.ServletLayerUtils;
 import cc.alcina.framework.servlet.SessionProvider;
 import cc.alcina.framework.servlet.authentication.AuthenticationManager;
+import cc.alcina.framework.servlet.authentication.AuthenticationManager.ExpiredClientInstanceException;
 import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.misc.ReadonlySupportServletLayer;
 import cc.alcina.framework.servlet.task.TaskPublish;
@@ -262,7 +263,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(
+		readonlyPermitted = true,
+		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public String getJobLog(long jobId) {
 		Job job = Job.byId(jobId).domain().ensurePopulated();
 		Preconditions.checkState(
@@ -287,21 +290,27 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(
+		readonlyPermitted = true,
+		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long log(ILogRecord logRecord) {
 		return Registry.impl(CommonPersistenceProvider.class)
 				.getCommonPersistence().persistLogRecord(logRecord);
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(
+		readonlyPermitted = true,
+		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString) {
 		return logClientError(exceptionToString,
 				LogMessageType.CLIENT_EXCEPTION.toString());
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(
+		readonlyPermitted = true,
+		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public Long logClientError(String exceptionToString, String exceptionType) {
 		String remoteAddr = getRemoteAddress();
 		try {
@@ -464,7 +473,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	String processCall(String payload) throws SerializationException {
 		long start = System.currentTimeMillis();
 		RPCRequest rpcRequest = null;
-		boolean alcinaServletContextInitialised = false;
+		boolean alcinaServletContextInitCalled = false;
 		AlcinaServletContext alcinaServletContext = null;
 		HttpServletRequest threadLocalRequest = getThreadLocalRequest();
 		int encodedLength = 0;
@@ -476,7 +485,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			String threadName = Ax.format("gwt-rpc:%s:%s%s", name,
 					callCounter.incrementAndGet(), suffix);
 			alcinaServletContext = new AlcinaServletContext();
-			alcinaServletContextInitialised = true;
 			Method method = null;
 			try {
 				method = this.getClass().getMethod(name,
@@ -492,18 +500,25 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					AuthenticationManager.CONTEXT_ALLOW_EXPIRED_ANONYMOUS_AUTHENTICATION_SESSION,
 					webMethod != null && webMethod
 							.allowExpiredAnonymousAuthenticationSession());
-			alcinaServletContext.begin(threadLocalRequest,
-					getThreadLocalResponse(), threadName, initialContext);
+			try {
+				alcinaServletContextInitCalled = true;
+				alcinaServletContext.begin(threadLocalRequest,
+						getThreadLocalResponse(), threadName, initialContext);
+			} finally {
+				// if context initialisation fails (say an expired auth
+				// session), these will still be required (and there'll be a
+				// loose context)
+				LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
+						threadLocalRequest);
+				LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
+						getThreadLocalResponse());
+			}
 			afterAlcinaServletContextInitialisation();
 			ProcessMetric.setContextName(name);
 			configureProcessObserver(threadLocalRequest,
 					rpcRequest.getParameters(), true);
 			ProcessMetric.publish(start, ProcessMetric.ServerType.rpc,
 					payload.length());
-			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_REQUEST,
-					threadLocalRequest);
-			LooseContext.set(CONTEXT_THREAD_LOCAL_HTTP_RESPONSE,
-					getThreadLocalResponse());
 			threadLocalRequest.setAttribute(
 					CONTEXT_THREAD_LOCAL_HTTP_RESPONSE_HEADERS,
 					new StringMap());
@@ -569,6 +584,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					"An IncompatibleRemoteServiceException was thrown while processing this call.",
 					ex);
 			return RPC.encodeResponseForFailure(null, ex);
+		} catch (ExpiredClientInstanceException ex) {
+			ex.printStackTrace();
+			// empty response body. client will handle the headers
+			return "";
 		} catch (UnexpectedException ex) {
 			logRpcException(ex);
 			throw ex;
@@ -597,7 +616,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					InternalMetrics.get().endTracker(rpcRequest);
 				}
 			} finally {
-				if (alcinaServletContextInitialised) {
+				if (alcinaServletContextInitCalled) {
 					alcinaServletContext.end();
 				}
 			}
@@ -687,7 +706,9 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 	}
 
 	@Override
-	@WebMethod(readonlyPermitted = true, customPermission = @Permission(access = AccessLevel.EVERYONE))
+	@WebMethod(
+		readonlyPermitted = true,
+		customPermission = @Permission(access = AccessLevel.EVERYONE))
 	public DomainUpdate
 			waitForTransforms(DomainTransformCommitPosition position)
 					throws PermissionsException {
@@ -756,7 +777,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		msg += "\nParameters: \n";
 		Object[] parameters = rpcRequest.getParameters();
 		// Check for the ObfuscateOnLog annotation and
-		//  get parameter indicies to obfuscate if present
+		// get parameter indicies to obfuscate if present
 		List<Integer> parametersToObfuscate = new ArrayList<>();
 		try {
 			Method rpcMethod = this.getClass().getMethod(
@@ -765,8 +786,10 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 			ObfuscateOnLog obfuscationAnnotation = rpcMethod
 					.getAnnotation(ObfuscateOnLog.class);
 			if (obfuscationAnnotation != null) {
-				parametersToObfuscate = Arrays.stream(obfuscationAnnotation.parameterIndiciesToRemove())
-					.boxed().collect(Collectors.toList());
+				parametersToObfuscate = Arrays
+						.stream(obfuscationAnnotation
+								.parameterIndiciesToRemove())
+						.boxed().collect(Collectors.toList());
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
@@ -777,14 +800,16 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				try {
 					Object requestParamterValue = parameters[idx];
 					String serializedParameter = null;
-					// If the given parameter index is in the parameters to obfuscate,
-					//  don't print it
+					// If the given parameter index is in the parameters to
+					// obfuscate,
+					// don't print it
 					if (parametersToObfuscate.contains(idx)) {
 						serializedParameter = "<obfuscated>";
 					} else {
 						Object projectedParameterValue = GraphProjections
 								.defaultProjections()
-								.fieldFilter(new ObfuscateParametersFieldFilter())
+								.fieldFilter(
+										new ObfuscateParametersFieldFilter())
 								.project(requestParamterValue);
 						serializedParameter = new JacksonJsonObjectSerializer()
 								.withIdRefs().withMaxLength(100000)
@@ -986,6 +1011,42 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 		}
 	}
 
+	/**
+	 * Obfuscate any fields or classes marked with @ObfuscateOnLog
+	 */
+	public static class ObfuscateParametersFieldFilter
+			implements GraphProjectionFieldFilter {
+		@Override
+		public Boolean permitClass(Class clazz) {
+			// Check for the ObfuscateOnLog annotation on the class
+			// If present, filter out the class
+			if (clazz.isAnnotationPresent(ObfuscateOnLog.class)) {
+				return false;
+			} else {
+				// Otherwise, delegate to default permission-based filtering
+				return null;
+			}
+		}
+
+		@Override
+		public boolean permitField(Field field,
+				Set<Field> perObjectPermissionFields, Class clazz) {
+			// Check for the ObfuscateOnLog annotation on the field
+			// If present, filter out the field
+			if (field.isAnnotationPresent(ObfuscateOnLog.class)) {
+				return false;
+			} else {
+				return true;
+			}
+		}
+
+		@Override
+		public boolean permitTransient(Field field) {
+			// Transient fields treated as normal
+			return false;
+		}
+	}
+
 	@Registration.Singleton
 	public static class OutOfBandMessages {
 		public static final String ATTR = OutOfBandMessages.class.getName()
@@ -1028,42 +1089,6 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 				getContextThreadLocalRequest().setAttribute(ATTR, result);
 			}
 			return result;
-		}
-	}
-
-	/**
-	 * Obfuscate any fields or classes marked with @ObfuscateOnLog
-	 */
-	public static class ObfuscateParametersFieldFilter
-			implements GraphProjectionFieldFilter {
-		@Override
-		public Boolean permitClass(Class clazz) {
-			// Check for the ObfuscateOnLog annotation on the class
-			// If present, filter out the class
-			if (clazz.isAnnotationPresent(ObfuscateOnLog.class)) {
-				return false;
-			} else {
-				// Otherwise, delegate to default permission-based filtering
-				return null;
-			}
-		}
-
-		@Override
-		public boolean permitField(Field field,
-				Set<Field> perObjectPermissionFields, Class clazz) {
-			// Check for the ObfuscateOnLog annotation on the field
-			// If present, filter out the field
-			if (field.isAnnotationPresent(ObfuscateOnLog.class)) {
-				return false;
-			} else {
-				return true;
-			}
-		}
-
-		@Override
-		public boolean permitTransient(Field field) {
-			// Transient fields treated as normal
-			return false;
 		}
 	}
 }
