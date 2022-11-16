@@ -313,8 +313,6 @@ public abstract class DirectedRenderer {
 			}
 			ModelTransform modelTransform = (ModelTransform) Reflections
 					.newInstance(transform.value());
-			// FIXME - dirndl 1x1b - can this be slimmed down? Since it allows
-			// access to the whole parent chain, not just the parent
 			if (modelTransform instanceof ContextSensitiveTransform) {
 				((ContextSensitiveTransform) modelTransform)
 						.withContextNode(input.node);

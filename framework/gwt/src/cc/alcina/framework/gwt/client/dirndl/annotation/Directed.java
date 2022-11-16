@@ -336,24 +336,29 @@ public @interface Directed {
 
 	/**
 	 * <p>
-	 * FIXME - dirndl1x1 - at least two use cases: if renderer is Transform,
-	 * transforms the input model -- if renderer is Collection, transform the
-	 * elements (there's no real virtue in having x -> Collection<A> ->
-	 * Collection <B>, so this flattening makes sense). Need to doc this with
-	 * examples.
+	 * This annotation causes differently depending on which of the two possible
+	 * contexts it occurs in.
 	 *
 	 * <p>
-	 * Also - determine renderer strategy should use the presence of this
-	 * annotation to determine renderer as follows:
+	 * If the DirectedRenderer is {@link DirectedRenderer.Transform}, it causes
+	 * the generation of a new Node with model B transformed from incoming Node
+	 * model A via the ModelTransform function A -&gt; B.
+	 *
+	 * <p>
+	 * If the DirectedRenderer is {@link DirectedRenderer.Collection}, it causes
+	 * the generation of multiple Node&lt;B&gt; - one per element &lt;A&gt; of
+	 * the Collection model (there's no real virtue in having x ->
+	 * Collection&lt;A&gt; -> Collection &lt;B&gt;, so this flattening makes
+	 * sense). FIXME dirndl 1x1h - cookbook examples
+	 *
+	 * <p>
+	 * In the absence of a @Directed annotation on the same code element, the
+	 * following renderer will be used, depending on the model value:-
+	 *
 	 * <ul>
-	 * <li>Type: collection - Present: true - use DirectedRenderer.Collection,
-	 * apply to elements
-	 * <li>Type: non-collection - Present: true - use
-	 * DirectedRenderer.Transform, apply to model
-	 *
-	 * <p>
-	 * If the annotated element has no other annotation which resolve
-	 * to @Directed annotations, a default @Directed annotation will be added
+	 * <li>Type: collection - use DirectedRenderer.Collection, apply to elements
+	 * <li>Type: non-collection - use DirectedRenderer.Transform, apply to model
+	 * </ul>
 	 *
 	 * @author nick@alcina.cc
 	 *

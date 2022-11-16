@@ -53,7 +53,7 @@ public class ReflectiveRemoteServiceAsync implements AsyncSerializableTypes {
 			} finally {
 				LooseContext.pop();
 			}
-			// FIXME - dirndl 1x1b - shift to a different
+			// FIXME - dirndl 1x1f - shift to a different
 			// serializationstream
 			// (but using gwt-rpc infrastructure)
 			Registry.impl(ReflectiveRpcRemoteServiceAsync.class)
