@@ -111,7 +111,7 @@ public class Dialog extends Model.WithNode implements ModelEvents.Close.Handler,
 		}
 
 		public Actions withClose() {
-			add(new Link().withModelEvent(ModelEvents.Close.class));
+			add(new Link().withModelEventAndText(ModelEvents.Close.class));
 			return this;
 		}
 	}

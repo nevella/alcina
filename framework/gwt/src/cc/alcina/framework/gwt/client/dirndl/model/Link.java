@@ -249,6 +249,11 @@ public class Link extends Model.WithNode
 
 	public Link withModelEvent(Class<? extends ModelEvent> modelEvent) {
 		this.modelEvent = modelEvent;
+		return this;
+	}
+
+	public Link withModelEventAndText(Class<? extends ModelEvent> modelEvent) {
+		this.modelEvent = modelEvent;
 		if (this.text == null) {
 			this.text = Reflections.at(modelEvent).templateInstance().getName();
 		}
