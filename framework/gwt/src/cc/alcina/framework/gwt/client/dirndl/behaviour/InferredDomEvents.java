@@ -11,6 +11,8 @@ import com.google.gwt.event.dom.client.ChangeHandler;
 import com.google.gwt.event.dom.client.ClickEvent;
 import com.google.gwt.event.dom.client.ClickHandler;
 import com.google.gwt.event.dom.client.KeyCodes;
+import com.google.gwt.event.dom.client.KeyDownEvent;
+import com.google.gwt.event.dom.client.KeyDownHandler;
 import com.google.gwt.event.dom.client.KeyEvent;
 import com.google.gwt.event.dom.client.KeyPressEvent;
 import com.google.gwt.event.dom.client.KeyPressHandler;
@@ -79,6 +81,47 @@ public class InferredDomEvents {
 		}
 	}
 
+	public static class CtrlEnterPressed extends
+			NodeEvent<CtrlEnterPressed.Handler> implements KeyDownHandler {
+		@Override
+		public void dispatch(CtrlEnterPressed.Handler handler) {
+			handler.onCtrlEnterPressed(this);
+		}
+
+		@Override
+		public Class<CtrlEnterPressed.Handler> getHandlerClass() {
+			return CtrlEnterPressed.Handler.class;
+		}
+
+		@Override
+		public void onKeyDown(KeyDownEvent event) {
+			handleEvent(event);
+		}
+
+		private void handleEvent(KeyEvent event) {
+			char charCode = event instanceof KeyPressEvent
+					? ((KeyPressEvent) event).getCharCode()
+					: '0';
+			int keyCode = event.getNativeEvent().getKeyCode();
+			if (charCode == KeyCodes.KEY_ENTER
+					|| keyCode == KeyCodes.KEY_ENTER) {
+				if (event.isControlKeyDown() || event.isMetaKeyDown()) {
+					fireEvent(event);
+				}
+			}
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::handleEvent,
+					KeyDownEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onCtrlEnterPressed(CtrlEnterPressed event);
+		}
+	}
+
 	public static class EnterPressed extends NodeEvent<EnterPressed.Handler>
 			implements KeyPressHandler {
 		@Override
@@ -115,6 +158,45 @@ public class InferredDomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onEnterPressed(EnterPressed event);
+		}
+	}
+
+	public static class EscapePressed extends NodeEvent<EscapePressed.Handler>
+			implements KeyDownHandler {
+		@Override
+		public void dispatch(EscapePressed.Handler handler) {
+			handler.onEscapePressed(this);
+		}
+
+		@Override
+		public Class<EscapePressed.Handler> getHandlerClass() {
+			return EscapePressed.Handler.class;
+		}
+
+		@Override
+		public void onKeyDown(KeyDownEvent event) {
+			handleEvent(event);
+		}
+
+		private void handleEvent(KeyEvent event) {
+			char charCode = event instanceof KeyPressEvent
+					? ((KeyPressEvent) event).getCharCode()
+					: '0';
+			int keyCode = event.getNativeEvent().getKeyCode();
+			if (charCode == KeyCodes.KEY_ESCAPE
+					|| keyCode == KeyCodes.KEY_ESCAPE) {
+				fireEvent(event);
+			}
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::handleEvent,
+					KeyDownEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onEscapePressed(EscapePressed event);
 		}
 	}
 
