@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.w3c.dom.Document;
@@ -102,6 +103,7 @@ public class Gallery {
 	public static void putDriver(RemoteWebDriver driver) {
 		if (instance() != null) {
 			instance().driver = driver;
+			instance().setWidth();
 		}
 	}
 
@@ -170,6 +172,28 @@ public class Gallery {
 			} catch (Exception e) {
 				GalleryConfiguration.dumpSampleConfiguration();
 				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	private void setWidth() {
+		if (userAgentType != null) {
+			Dimension dim = null;
+			switch (userAgentType) {
+			case "desktop":
+				dim = new Dimension(1700, 1200);
+				break;
+			case "tablet":
+				dim = new Dimension(820, 1180);
+				break;
+			case "phone":
+				dim = new Dimension(375, 687);
+				break;
+			}
+			try {
+				driver.manage().window().setSize(dim);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}

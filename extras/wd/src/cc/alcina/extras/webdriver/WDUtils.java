@@ -298,9 +298,6 @@ public class WDUtils {
 		return forceTimeout;
 	}
 
-	public static void maximize(WebDriver driver) {
-	}
-
 	public static void maximize(WebDriver driver, WebDriverType type) {
 		switch (type) {
 		case CHROME:
@@ -393,6 +390,24 @@ public class WDUtils {
 			String value) {
 		executeScript(driver, elt,
 				Ax.format("arguments[0].%s='%s'", key, value));
+	}
+
+	public static void setScreenDimensions(WebDriver driver, WebDriverType type,
+			int width, int height) {
+		switch (type) {
+		case CHROME:
+		case CHROME_NO_PROFILE:
+			// case CHROME_LOCAL:
+			return;
+		}
+		try {
+			driver.manage().window().setPosition(new Point(0, 0));
+			org.openqa.selenium.Dimension dim = new org.openqa.selenium.Dimension(
+					width, height);
+			driver.manage().window().setSize(dim);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public static void setSelectedIndex(WDToken token, WebDriver driver,

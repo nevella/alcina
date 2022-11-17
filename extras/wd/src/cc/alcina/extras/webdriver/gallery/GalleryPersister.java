@@ -156,6 +156,7 @@ public class GalleryPersister {
 		doc.html().head().builder().tag("script").append();
 		doc.html().head().builder().tag("script").append();
 		doc.html().head().builder().tag("style").append();
+		doc.html().body().addClassName(userAgentType);
 		DomNode main = doc.html().body().builder().tag("div").className("main")
 				.append();
 		DomNode left = main.builder().tag("div").className("left").append();
