@@ -33,7 +33,7 @@ import cc.alcina.framework.common.client.publication.ContentDeliveryType;
 import cc.alcina.framework.common.client.publication.DeliveryModel;
 import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.publication.Publication.Definition;
-import cc.alcina.framework.common.client.publication.RepositoryCredentials;
+import cc.alcina.framework.common.client.repository.RepositoryConnection;
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -117,6 +117,18 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 	private String opaqueRequestClassname;
 
 	private List<MultipleDeliveryEntry> multipleDeliveryEntries = new ArrayList<>();
+
+	private RepositoryConnection repositoryConnection = new RepositoryConnection();
+
+	@Override
+	public RepositoryConnection getRepositoryConnection() {
+		return this.repositoryConnection;
+	}
+
+	public void
+			setRepositoryConnection(RepositoryConnection repositoryConnection) {
+		this.repositoryConnection = repositoryConnection;
+	}
 
 	@Override
 	public String getAttachmentMessage() {
@@ -574,12 +586,6 @@ public abstract class ContentRequestBase<CD extends ContentDefinition> extends
 		public void
 				setContentDefinition(TestContentDefinition contentDefinition) {
 			this.contentDefinition = contentDefinition;
-		}
-
-		@Override
-		public RepositoryCredentials getRepositoryCredentials() {
-			// TODO Auto-generated method stub
-			return null;
 		}
 	}
 
