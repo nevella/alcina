@@ -18,6 +18,7 @@ import java.util.function.Function;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.FilteringIterator;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.MappingIterator;
@@ -850,6 +851,10 @@ public class ReflectiveSerializer {
 				if (Reflections.isAssignableFrom(BasePlace.class,
 						serializerType)) {
 					serializerType = BasePlace.class;
+				}
+				if (Reflections.isAssignableFrom(ExtensibleEnum.class,
+						serializerType)) {
+					serializerType = ExtensibleEnum.class;
 				}
 				valueSerializer = valueSerializers.get(serializerType);
 			}

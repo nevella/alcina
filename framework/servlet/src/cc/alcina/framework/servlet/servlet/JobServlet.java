@@ -119,6 +119,7 @@ public class JobServlet extends AlcinaServlet {
 		boolean returnJobId = Objects
 				.equals(request.getParameter("return_job_id"), "true");
 		Job job = null;
+		boolean outputAsHtml = false;
 		switch (action) {
 		case list:
 			TaskListJobs logJobs = new TaskListJobs();
@@ -172,9 +173,9 @@ public class JobServlet extends AlcinaServlet {
 				} else {
 					String href = createTaskUrl(new TaskLogJobDetails()
 							.withValue(String.valueOf(job.getId())));
+					outputAsHtml = task instanceof TaskWithHtmlResult;
 					response.setContentType(
-							task instanceof TaskWithHtmlResult ? "text/html"
-									: "text/plain");
+							outputAsHtml ? "text/html" : "text/plain");
 					response.getWriter()
 							.write(Ax.format("Job started:\n%s\n", href));
 					response.flushBuffer();
@@ -187,7 +188,8 @@ public class JobServlet extends AlcinaServlet {
 		if (job.getResultType().isFail() || job.getLargeResult() == null) {
 			String message = Ax.blankTo(job.getLog(),
 					Ax.format("Job %s - complete", job));
-			if (Ax.matches(request.getHeader("User-Agent"), ".*Mozilla.*")) {
+			if (Ax.matches(request.getHeader("User-Agent"), ".*Mozilla.*")
+					&& outputAsHtml) {
 				DomDocument doc = DomDocument.basicHtmlDoc();
 				doc.html().head().builder().tag("title")
 						.text(Ax.format("Job - %s",

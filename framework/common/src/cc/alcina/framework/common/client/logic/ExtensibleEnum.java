@@ -115,7 +115,12 @@ public abstract class ExtensibleEnum {
 
 	public static <E extends ExtensibleEnum> E valueOf(Class<E> enumClass,
 			String name) {
-		return (E) valueLookup.get(enumClass, name);
+		Class<? extends ExtensibleEnum> registryPoint = enumClass;
+		if (registryPoint.getSuperclass() != ExtensibleEnum.class) {
+			registryPoint = (Class<? extends ExtensibleEnum>) registryPoint
+					.getSuperclass();
+		}
+		return (E) valueLookup.get(registryPoint, name);
 	}
 
 	public static <E extends ExtensibleEnum> List<E>
