@@ -826,8 +826,10 @@ public class FlatTreeSerializer {
 				cursor.path.verifyProvidesElementTypeInfo();
 				/*
 				 * 'Default collections' can't work in a general sense -....
-				 * FIXME - 2022 - add per-ts customisers that provide 'yes
-				 * default' to the whole collection - and thus ignore for elided
+				 * FIXME - serialization - low priority (since don't have any
+				 * people crying out for shorter urls) - add per-type-serializer
+				 * customisers that provide 'yes default' to the whole
+				 * collection - and thus ignore for elided
 				 *
 				 * Note that said collections must be guaranteed non-empty in
 				 * the application - or maybe have an __fts__EMPTY__ marker

@@ -63,8 +63,8 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceListener;
 
 /**
- * FIXME - 2022 - any non-transactional refs (particularly collections) to mvcc
- * objects should filter by Domain.notRemoved
+ * FIXME - mvcc.4 - any non-transactional refs (particularly collections) to
+ * mvcc objects should filter by Domain.notRemoved
  */
 @Registration.Singleton
 public class JobDomain {

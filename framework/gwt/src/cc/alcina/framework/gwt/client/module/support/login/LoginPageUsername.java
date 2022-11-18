@@ -6,14 +6,14 @@ import com.totsp.gwittir.client.validator.Validator;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.common.client.gwittir.validator.EmailAddressValidator;
 import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
-import cc.alcina.framework.gwt.client.dirndl.model.Editable;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 public class LoginPageUsername extends LoginPage {
-	protected Editable.StringInput input;
+	protected StringInput input;
 
 	public LoginPageUsername(LoginConsort loginConsort) {
 		super(loginConsort);
-		input = new Editable.StringInput();
+		input = new StringInput();
 		input.setFocusOnBind(true);
 		input.setPlaceholder(getEmailAddress());
 		setContents(input);

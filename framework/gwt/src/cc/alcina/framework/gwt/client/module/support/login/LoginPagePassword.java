@@ -3,14 +3,14 @@ package cc.alcina.framework.gwt.client.module.support.login;
 import com.totsp.gwittir.client.validator.Validator;
 
 import cc.alcina.framework.common.client.gwittir.validator.NotNullValidator;
-import cc.alcina.framework.gwt.client.dirndl.model.Editable;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 public class LoginPagePassword extends LoginPage {
-	private Editable.StringInput input;
+	private StringInput input;
 
 	public LoginPagePassword(LoginConsort loginConsort) {
 		super(loginConsort);
-		input = new Editable.StringInput();
+		input = new StringInput();
 		input.setFocusOnBind(true);
 		input.setType("password");
 		input.setPlaceholder("Password");
