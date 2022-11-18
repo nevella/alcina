@@ -1112,9 +1112,11 @@ public class DirectedLayout implements AlcinaProcess {
 				ContextResolver resolver = Reflections
 						.newInstance(directedContextResolver.value());
 				resolver.fromLayoutNode(node);
-				this.resolver = resolver;
-				// legal! note that new resolver will have an empty resolution
+				// legal (modifying the node's resolver, etc)! note that new
+				// resolver will have an empty resolution
 				// cache
+				node.resolver = resolver;
+				this.resolver = resolver;
 				location.setResolver(resolver);
 			}
 			if (model instanceof LayoutEvents.BeforeRender.Handler) {
