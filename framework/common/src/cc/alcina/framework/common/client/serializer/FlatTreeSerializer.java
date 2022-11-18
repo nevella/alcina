@@ -26,7 +26,6 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.domain.search.GroupingParameters;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -113,7 +112,8 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * BindableSearchDefinition.groupingParameters.grouping - if grouping is a
  * default enum value, serialization is currently incorrect. TODO: serialization
  * should fail with an unspecified type exception if a potentially polymorphic
- * type lacks constraints (NR - note: 2021 ContactSearcDefinition.groupingParameters
+ * type lacks constraints (NR - note: 2021
+ * ContactSearcDefinition.groupingParameters
  * 
  * </ul>
  *
@@ -783,9 +783,7 @@ public class FlatTreeSerializer {
 			if (isLeafValue(value)) {
 				if (!Objects.equals(value, cursor.defaultValue)
 						|| !state.serializerOptions.elideDefaults
-						|| cursor.isPutDefaultValue()
-						
-						) {
+						|| cursor.isPutDefaultValue()) {
 					cursor.putValue(state);
 				}
 				state.mergeableNode = cursor;
@@ -1492,13 +1490,21 @@ public class FlatTreeSerializer {
 		String toStringValue() {
 			if (value == null) {
 				return NULL_MARKER;
+			} else {
+				String stringValue0 = toStringValue0();
+				Preconditions.checkArgument(!NULL_MARKER.equals(stringValue0));
+				return stringValue0;
 			}
+		}
+
+		private String toStringValue0() {
 			if (path.serializer != null) {
 				return path.serializer.serializeValue(value);
 			}
 			if (value instanceof Date) {
 				return String.valueOf(((Date) value).getTime());
 			} else if (value instanceof String) {
+				String escapedValue = escapeValue(value.toString());
 				return escapeValue(value.toString());
 			} else if (value instanceof Entity) {
 				Entity entity = (Entity) value;
@@ -1549,11 +1555,11 @@ public class FlatTreeSerializer {
 		}
 
 		public boolean isPutDefaultValue(Object value) {
-			if(serializer != null
-					&& !serializer.elideDefaultValues(value)){
+			if (serializer != null && !serializer.elideDefaultValues(value)) {
 				return true;
 			}
-			if(propertySerialization!=null&&propertySerialization.serializeDefaultValue()){
+			if (propertySerialization != null
+					&& propertySerialization.serializeDefaultValue()) {
 				return true;
 			}
 			return false;

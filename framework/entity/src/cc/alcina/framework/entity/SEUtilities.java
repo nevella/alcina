@@ -85,13 +85,10 @@ import javax.swing.JTree;
 import javax.swing.tree.TreeNode;
 import javax.swing.tree.TreePath;
 
-import com.google.common.base.Preconditions;
-
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnAppShutdown;
 import cc.alcina.framework.common.client.logic.reflection.NoSuchPropertyException;
 import cc.alcina.framework.common.client.logic.reflection.PropertyOrder;
-import cc.alcina.framework.common.client.logic.reflection.PropertyOrder.Custom;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
@@ -2083,6 +2080,16 @@ public class SEUtilities {
 				return -1;
 			}
 			return 0;
+		}
+	}
+
+	public static class Paths {
+		public static String ensureSlashTerminated(String path) {
+			return path.endsWith("/") ? path : path + "/";
+		}
+
+		public static String sanitizeForUnixPaths(String fileName) {
+			return fileName.replaceAll("[:]", "").replaceAll("[ ]", "_");
 		}
 	}
 }
