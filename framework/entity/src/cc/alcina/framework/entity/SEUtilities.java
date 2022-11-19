@@ -2096,14 +2096,4 @@ public class SEUtilities {
 			return 0;
 		}
 	}
-
-	public static class Paths {
-		public static String ensureSlashTerminated(String path) {
-			return path.endsWith("/") ? path : path + "/";
-		}
-
-		public static String sanitizeForUnixPaths(String fileName) {
-			return fileName.replaceAll("[:]", "").replaceAll("[ ]", "_");
-		}
-	}
 }

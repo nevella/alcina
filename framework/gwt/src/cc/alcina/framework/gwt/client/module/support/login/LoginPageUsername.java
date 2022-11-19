@@ -25,7 +25,6 @@ public class LoginPageUsername extends LoginPage {
 
 	@Override
 	protected String getEnteredText() {
-		input.sync();
 		return input.getValue();
 	}
 

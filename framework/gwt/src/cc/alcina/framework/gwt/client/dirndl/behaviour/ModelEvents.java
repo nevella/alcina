@@ -183,6 +183,30 @@ public class ModelEvents {
 		}
 	}
 
+	/**
+	 * Model version of a DOM input event (input element value has changed, but
+	 * has not been 'committed') - see
+	 * https://developer.mozilla.org/en-US/docs/Web/API/HTMLElement/input_event
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	public static class Input extends ModelEvent<Object, Input.Handler> {
+		@Override
+		public void dispatch(Input.Handler handler) {
+			handler.onInput(this);
+		}
+
+		@Override
+		public Class<Input.Handler> getHandlerClass() {
+			return Input.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onInput(Input event);
+		}
+	}
+
 	public static class Insert extends ModelEvent<Object, Insert.Handler> {
 		@Override
 		public void dispatch(Insert.Handler handler) {

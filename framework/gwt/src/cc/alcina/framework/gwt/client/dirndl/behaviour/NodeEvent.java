@@ -184,6 +184,11 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 			return node.annotation(clazz);
 		}
 
+		// Fluent event emission
+		public void fire(Class<? extends ModelEvent> modelEvent) {
+			ModelEvent.fire(this, modelEvent, null);
+		}
+
 		public NodeEvent getNodeEvent() {
 			return nodeEvent;
 		}

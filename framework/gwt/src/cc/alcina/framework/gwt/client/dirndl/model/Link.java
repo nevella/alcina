@@ -21,7 +21,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
@@ -141,9 +140,7 @@ public class Link extends Model.WithNode
 		if (gwtEvent.getNativeButton() == NativeEvent.BUTTON_LEFT) {
 			if (modelEvent != null) {
 				WidgetUtils.squelchCurrentEvent();
-				Context context = NodeEvent.Context.newModelContext(event,
-						node);
-				ModelEvent.fire(context, modelEvent, null);
+				NodeEvent.Context.newModelContext(event, node).fire(modelEvent);
 			} else if (nonStandardObjectAction != null) {
 				WidgetUtils.squelchCurrentEvent();
 				DefaultPermissibleActionHandler.handleAction(
