@@ -7,7 +7,6 @@ import com.google.gwt.user.client.ui.HTML;
 import com.google.gwt.user.client.ui.Label;
 
 import cc.alcina.framework.common.client.actions.InlineButtonHandler;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
 
@@ -56,8 +55,7 @@ public class StepPopupView extends Composite {
 
 	class Back extends InlineButtonHandler {
 		@Override
-		@AlcinaTransient
-		public String getDisplayName() {
+		public String getActionName() {
 			return "Back";
 		}
 
@@ -69,8 +67,7 @@ public class StepPopupView extends Composite {
 
 	class Close extends InlineButtonHandler {
 		@Override
-		@AlcinaTransient
-		public String getDisplayName() {
+		public String getActionName() {
 			return "Close";
 		}
 
@@ -82,8 +79,7 @@ public class StepPopupView extends Composite {
 
 	class CloseX extends InlineButtonHandler {
 		@Override
-		@AlcinaTransient
-		public String getDisplayName() {
+		public String getActionName() {
 			return "X";
 		}
 
@@ -95,8 +91,7 @@ public class StepPopupView extends Composite {
 
 	class Next extends InlineButtonHandler {
 		@Override
-		@AlcinaTransient
-		public String getDisplayName() {
+		public String getActionName() {
 			return "Next";
 		}
 

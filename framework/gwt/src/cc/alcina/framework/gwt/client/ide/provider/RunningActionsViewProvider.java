@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -25,7 +25,6 @@ import com.google.gwt.user.client.ui.FlowPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.actions.PermissibleAction;
-import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.gwt.client.Client;
 import cc.alcina.framework.gwt.client.ide.widget.ActionProgress;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
@@ -33,7 +32,7 @@ import cc.alcina.framework.gwt.client.logic.AlcinaHistory.SimpleHistoryEventInfo
 import cc.alcina.framework.gwt.client.widget.BreadcrumbBar;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class RunningActionsViewProvider implements ViewProvider {
@@ -50,6 +49,7 @@ public class RunningActionsViewProvider implements ViewProvider {
 		}
 	};
 
+	@Override
 	public Widget getViewForObject(Object obj) {
 		progressPanels.clear();
 		wrapper = new FlowPanel() {
@@ -78,10 +78,12 @@ public class RunningActionsViewProvider implements ViewProvider {
 
 	protected void refreshActions() {
 		AsyncCallback<List<String>> callback = new AsyncCallback<List<String>>() {
+			@Override
 			public void onFailure(Throwable caught) {
 				// ignore
 			}
 
+			@Override
 			public void onSuccess(List<String> actionIds) {
 				for (String id : actionIds) {
 					if (!progressPanels.containsKey(id)) {
@@ -108,8 +110,7 @@ public class RunningActionsViewProvider implements ViewProvider {
 	public static class ShowActionsViewProviderAction
 			extends PermissibleAction {
 		@Override
-		@AlcinaTransient
-		public String getDisplayName() {
+		public String getActionName() {
 			return "Show running jobs";
 		}
 	}

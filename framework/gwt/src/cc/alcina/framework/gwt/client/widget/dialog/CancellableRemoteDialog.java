@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -29,13 +29,11 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.widget.ModalNotifier;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class CancellableRemoteDialog extends GlassDialogBox
 		implements ModalNotifier {
-	public static final String CANCEL_ACTION = "cancel";
-
 	private Label statusLabel;
 
 	protected Button cancelButton;
@@ -54,6 +52,7 @@ public class CancellableRemoteDialog extends GlassDialogBox
 			boolean autoShow) {
 		if (l == null) {
 			l = new PermissibleActionListener() {
+				@Override
 				public void vetoableAction(PermissibleActionEvent evt) {
 					CancellableRemoteDialog.this.hide();
 				}
@@ -73,10 +72,10 @@ public class CancellableRemoteDialog extends GlassDialogBox
 		cancelButton = new Button("Cancel");
 		setRetryButton(new Button("Retry"));
 		cancelButton.addClickHandler(new ClickHandler() {
+			@Override
 			public void onClick(ClickEvent event) {
-				PermissibleAction action = new PermissibleAction();
-				action.setActionName(CANCEL_ACTION);
-				lCopy.vetoableAction(new PermissibleActionEvent(this, action));
+				lCopy.vetoableAction(new PermissibleActionEvent(this,
+						new PermissibleAction.CancelAction()));
 			}
 		});
 		grr.setWidget(0, 0, statusLabel);
@@ -128,6 +127,7 @@ public class CancellableRemoteDialog extends GlassDialogBox
 		this.retryButton = retryButton;
 	}
 
+	@Override
 	public void setStatus(String status) {
 		this.status = CommonUtils.nullToEmpty(status);
 		updateStatusLabel();

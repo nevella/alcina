@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -31,18 +31,10 @@ import cc.alcina.framework.gwt.client.ide.widget.Toolbar.ToolbarButton;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public abstract class Wizard<M> implements PermissibleActionListener {
-	private static final String NEXT = "next";
-
-	private static final String PREVIOUS = "previous";
-
-	private static final String FINISH = "finish";
-
-	private static final String CANCEL = "cancel";
-
 	public static String FRAME_STYLE_NAME = "alcina-Wizard";
 
 	private List<WizardPage> pages;
@@ -59,17 +51,13 @@ public abstract class Wizard<M> implements PermissibleActionListener {
 
 	protected Toolbar toolbar;
 
-	protected PermissibleAction nextPage = new PermissibleAction("Next >",
-			NEXT);
+	protected PermissibleAction nextPage = new PermissibleAction.NextAction();
 
-	protected PermissibleAction previousPage = new PermissibleAction("< Back",
-			PREVIOUS);
+	protected PermissibleAction previousPage = new PermissibleAction.PreviousAction();
 
-	protected PermissibleAction finish = new PermissibleAction("Finish",
-			FINISH);
+	protected PermissibleAction finish = new PermissibleAction.FinishAction();
 
-	protected PermissibleAction cancel = new PermissibleAction("Cancel",
-			CANCEL);
+	protected PermissibleAction cancel = new PermissibleAction.CancelAction();
 
 	protected ArrayList<PermissibleAction> actions;
 

@@ -19,8 +19,6 @@ import java.util.List;
 import cc.alcina.framework.common.client.logic.domaintransform.spi.AccessLevel;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
-import cc.alcina.framework.common.client.serializer.PropertySerialization;
-import cc.alcina.framework.common.client.serializer.TypeSerialization;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
@@ -34,29 +32,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
  *
  * @author Nick Reddel
  */
-@TypeSerialization(
-	properties = { @PropertySerialization(ignore = true, name = "actionName"),
-			@PropertySerialization(ignore = true, name = "cssClassName"),
-			@PropertySerialization(ignore = true, name = "displayName") })
-public class PermissibleAction implements Permissible {
-	private String displayName;
-
-	private String cssClassName;
-
-	private String actionName;
-
+public abstract class PermissibleAction implements Permissible {
 	public PermissibleAction() {
-	}
-
-	public PermissibleAction(String displayName, String actionName) {
-		this(displayName, actionName, null);
-	}
-
-	public PermissibleAction(String displayName, String actionName,
-			String cssClassName) {
-		this.actionName = actionName;
-		this.displayName = displayName;
-		this.cssClassName = cssClassName;
 	}
 
 	@Override
@@ -64,26 +41,27 @@ public class PermissibleAction implements Permissible {
 		return AccessLevel.LOGGED_IN;
 	}
 
-	public String getActionName() {
-		return this.actionName;
-	}
+	@AlcinaTransient
+	public abstract String getActionName();
 
 	// FIXME - dirndl 1x1d - remove
 	// Nope - actually (because these are passed around a bunch), allowing class
 	// to be specified is a *good idea*. See DirndlDir, 'how close to the UI
 	// layer is the model'. This is not to say cssClassName should be a field -
 	// but it *should* be a property
+	@AlcinaTransient
 	public String getCssClassName() {
-		return cssClassName;
+		return "";
 	}
 
+	@AlcinaTransient
 	public String getDescription() {
 		return "";
 	}
 
-	@PropertySerialization(ignore = true)
+	@AlcinaTransient
 	public String getDisplayName() {
-		return displayName != null ? displayName : getActionName();
+		return getActionName();
 	}
 
 	public String provideId() {
@@ -99,15 +77,25 @@ public class PermissibleAction implements Permissible {
 		return null;
 	}
 
-	public void setActionName(String actionName) {
-		this.actionName = actionName;
-	}
-
-	public void setDisplayName(String displayName) {
-		this.displayName = displayName;
-	}
-
 	public void wasCalled() {
+	}
+
+	public static class CancelAction extends PermissibleAction {
+		public static final transient String CANCEL_ACTION = "Cancel";
+
+		@Override
+		public String getActionName() {
+			return CANCEL_ACTION;
+		}
+	}
+
+	public static class FinishAction extends PermissibleAction {
+		private static final transient String FINISH = "Finish";
+
+		@Override
+		public String getActionName() {
+			return FINISH;
+		}
 	}
 
 	public interface HasPermissibleActionChildren {
@@ -118,7 +106,31 @@ public class PermissibleAction implements Permissible {
 		public abstract PermissibleAction getDelegate();
 	}
 
-	public static class PermissibleActionEveryone extends PermissibleAction {
+	public static class NextAction extends PermissibleAction {
+		private static final transient String NEXT = "Next";
+
+		@Override
+		public String getActionName() {
+			return NEXT;
+		}
+
+		@Override
+		public String getDisplayName() {
+			return "Next >";
+		}
+	}
+
+	public static class OkAction extends PermissibleAction {
+		public static final transient String OK_ACTION = "OK";
+
+		@Override
+		public String getActionName() {
+			return OK_ACTION;
+		}
+	}
+
+	public static abstract class PermissibleActionEveryone
+			extends PermissibleAction {
 		@Override
 		public AccessLevel accessLevel() {
 			return AccessLevel.EVERYONE;
@@ -179,10 +191,14 @@ public class PermissibleAction implements Permissible {
 		public String rule() {
 			return this.delegate.rule();
 		}
+	}
+
+	public static class PreviousAction extends PermissibleAction {
+		private static final transient String PREVIOUS = "Previous";
 
 		@Override
-		public void setActionName(String actionName) {
-			this.delegate.setActionName(actionName);
+		public String getActionName() {
+			return PREVIOUS;
 		}
 	}
 }

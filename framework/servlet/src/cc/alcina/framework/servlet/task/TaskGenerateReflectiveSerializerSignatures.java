@@ -75,9 +75,15 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 	}
 
 	private void
-			checkAllTransientFieldsWithPropertiesAreTransient(Class clazz) {
+			checkAllTransientFieldsWithPropertiesAreTransient(Class<?> clazz) {
 		if (clazz.isEnum()) {
 			return;
+		}
+		if (clazz.isAnnotationPresent(ReflectiveSerializer.Checks.class)) {
+			if (clazz.getAnnotation(ReflectiveSerializer.Checks.class)
+					.ignore()) {
+				return;
+			}
 		}
 		Field[] fields = clazz.getDeclaredFields();
 		ClassReflector reflector = Reflections.at(clazz);
@@ -162,8 +168,8 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 
 	private void performAction1() throws Exception {
 		try {
-			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
-					.muteClassloaderLogging(true);
+			Registry.optional(AppPersistenceBase.InitRegistrySupport.class)
+					.ifPresent(r -> r.muteClassloaderLogging(true));
 			ignorePackages = Arrays
 					.asList(Configuration.get("ignorePackages").split(";"));
 			ClassMetadataCache<ClassMetadata> classes = new ServletClasspathScanner(
@@ -179,8 +185,8 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 					.map(m -> Reflections.forName(m.className))
 					.collect(AlcinaCollectors.toLinkedHashSet());
 		} finally {
-			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
-					.muteClassloaderLogging(false);
+			Registry.optional(AppPersistenceBase.InitRegistrySupport.class)
+					.ifPresent(r -> r.muteClassloaderLogging(false));
 		}
 		serializables.forEach(this::checkSerializationIssues);
 		Preconditions.checkState(serializationIssues.isEmpty());
