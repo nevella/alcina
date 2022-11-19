@@ -18,7 +18,10 @@ import cc.alcina.framework.common.client.util.trie.KeyAnalyzer;
 import cc.alcina.framework.common.client.util.trie.MultiTrie;
 
 /*
- * FIXME - 2022 - change to Maps (similar to Guava, really)
+ * FIXME - dirndl 1x1g - change to Maps, merge with AlcinaCollections (similar
+ * to Guava, really)
+ *
+ * These should use gwt (js) maps where appropriate
  */
 public class CollectionCreators {
 	public static class Bootstrap {
