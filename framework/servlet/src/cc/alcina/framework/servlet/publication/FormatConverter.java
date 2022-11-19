@@ -7,7 +7,7 @@ import java.util.List;
 
 /**
  * Implemented by format converters
- * 
+ *
  * @author nick@alcina.cc
  *
  */
@@ -31,6 +31,10 @@ public interface FormatConverter {
 		public List rows;
 
 		public InputStream stream;
+
+		public String fileExtension;
+
+		public String mimeType;
 
 		public InputStream provideByteStream() {
 			return stream != null ? stream : new ByteArrayInputStream(bytes);

@@ -133,7 +133,6 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * should fail with an unspecified type exception if a potentially polymorphic
  * type lacks constraints (NR - note: 2021
  * ContactSearcDefinition.groupingParameters
- *
  * </ul>
  *
  *
@@ -1384,6 +1383,38 @@ public class FlatTreeSerializer {
 			return Ax.format("%s=%s", path, value);
 		}
 
+		private String toStringValue0() {
+			if (path.serializer != null) {
+				return path.serializer.serializeValue(value);
+			}
+			if (value instanceof Date) {
+				return String.valueOf(((Date) value).getTime());
+			} else if (value instanceof String) {
+				String escapedValue = escapeValue(value.toString());
+				return escapeValue(value.toString());
+			} else if (value instanceof Entity) {
+				Entity entity = (Entity) value;
+				if (entity.domain().wasPersisted()) {
+					return String.valueOf(entity.getId());
+				} else {
+					Preconditions.checkArgument(entity.domain().isLocal());
+					return EntityLocator.instanceLocator(entity)
+							.toRecoverableNumericString();
+				}
+			} else if (CommonUtils.isEnumish(value)) {
+				return value.toString().replace("_", "-").toLowerCase();
+			} else if (value.getClass().isArray()
+					&& value.getClass().getComponentType() == byte.class) {
+				return Base64.encodeBytes((byte[]) value);
+			} else if (value instanceof Class) {
+				return ((Class) value).getCanonicalName();
+			} else if (value instanceof BasePlace) {
+				return ((BasePlace) value).toTokenString();
+			} else {
+				return value.toString();
+			}
+		}
+
 		String escapeValue(String str) {
 			return TextUtils.Encoder.encodeURIComponentEsque(str);
 		}
@@ -1524,34 +1555,10 @@ public class FlatTreeSerializer {
 							.format("Null collection type property: %s", path));
 				}
 				return NULL_MARKER;
-			}
-			if (path.serializer != null) {
-				return path.serializer.serializeValue(value);
-			}
-			if (value instanceof Date) {
-				return String.valueOf(((Date) value).getTime());
-			} else if (value instanceof String) {
-				return escapeValue(value.toString());
-			} else if (value instanceof Entity) {
-				Entity entity = (Entity) value;
-				if (entity.domain().wasPersisted()) {
-					return String.valueOf(entity.getId());
-				} else {
-					Preconditions.checkArgument(entity.domain().isLocal());
-					return EntityLocator.instanceLocator(entity)
-							.toRecoverableNumericString();
-				}
-			} else if (CommonUtils.isEnumish(value)) {
-				return value.toString().replace("_", "-").toLowerCase();
-			} else if (value.getClass().isArray()
-					&& value.getClass().getComponentType() == byte.class) {
-				return Base64.encodeBytes((byte[]) value);
-			} else if (value instanceof Class) {
-				return ((Class) value).getCanonicalName();
-			} else if (value instanceof BasePlace) {
-				return ((BasePlace) value).toTokenString();
 			} else {
-				return value.toString();
+				String stringValue0 = toStringValue0();
+				Preconditions.checkArgument(!NULL_MARKER.equals(stringValue0));
+				return stringValue0;
 			}
 		}
 	}
