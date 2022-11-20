@@ -48,6 +48,13 @@ import cc.alcina.framework.servlet.task.TaskGenerateReflectiveSerializerSignatur
  * FIXME - dirndl 1x1d - do a full inheritance scan to ensure all implementors
  * in the graph are serializable (ReflectiveSerializer.Checks is the current
  * workaround, but allows invalid subtypes)
+ *
+ * This class ensures that - excepting exclusions - all classes that are
+ * ReflectiveSerializable have a valid schema:
+ *
+ * - non-tranient fields have getter/setters
+ *
+ * - non-transient properties have serializable types
  */
 public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 	public transient ReflectiveSerializableSignatures signatures = new ReflectiveSerializableSignatures();

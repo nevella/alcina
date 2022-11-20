@@ -181,6 +181,10 @@ public class CsvCols
 			return Ax.isBlank(s) ? -1 : Long.parseLong(s);
 		}
 
+		public int getRowIdx() {
+			return this.rowIdx;
+		}
+
 		public boolean has(String key) {
 			return get(key).length() > 0;
 		}
