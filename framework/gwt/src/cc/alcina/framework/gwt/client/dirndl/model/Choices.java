@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -15,11 +16,12 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Selected;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 
 @Directed(tag = "choices", receives = ModelEvents.Selected.class)
 // FIXME - dirndl 1x1d - change to "Choices"
 // also this should emit ModelEvents, not topic
-public abstract class Choices<T> extends Model
+public abstract class Choices<T> extends Model.WithNode
 		implements ModelEvents.Selected.Handler {
 	protected List<Choices.Choice<T>> choices;
 
@@ -92,9 +94,8 @@ public abstract class Choices<T> extends Model
 		}
 	}
 
+	@Directed(emits = ModelEvents.SelectionChanged.class)
 	public static class Multiple<T> extends Choices<T> {
-		public Topic<List<T>> selectionChanged = Topic.create();
-
 		public Multiple() {
 		}
 
@@ -129,17 +130,17 @@ public abstract class Choices<T> extends Model
 			choices.forEach(c -> c.setSelected(valuesSet.contains(c.value)));
 			List<T> newValues = getSelectedValues();
 			if (!Objects.equals(oldValues, newValues)) {
-				selectionChanged.publish(newValues);
+				NodeEvent.Context.newNodeContext(node)
+						.fire(ModelEvents.SelectionChanged.class);
 			}
 		}
 	}
 
 	@TypeSerialization(reflectiveSerializable = false)
+	@Directed(
+		emits = { ModelEvents.SelectionChanged.class,
+				ModelEvents.Selected.class })
 	public static class Single<T> extends Choices<T> {
-		public Topic<T> selectionChanged = Topic.create();
-
-		public Topic<T> valueSelected = Topic.create();
-
 		protected boolean deselectIfSelectedClicked = false;
 
 		/*
@@ -147,11 +148,29 @@ public abstract class Choices<T> extends Model
 		 */
 		protected boolean changeOnSelectionEvent = true;
 
+		private T provisionalValue;
+
+		/*
+		 * Use ModelEvents by preference - but this allows non-ancestor
+		 * components access if required
+		 */
+		private Topic<Void> selectionChanged = Topic.create();
+
+		/*
+		 * Use ModelEvents by preference - but this allows non-ancestor
+		 * components access if required
+		 */
+		private Topic<Void> valueSelected = Topic.create();
+
 		public Single() {
 		}
 
 		public Single(List<T> values) {
 			super(values);
+		}
+
+		public T getProvisionalValue() {
+			return this.provisionalValue;
 		}
 
 		public T getSelectedValue() {
@@ -169,12 +188,18 @@ public abstract class Choices<T> extends Model
 
 		@Override
 		public void onSelected(Selected event) {
+			if (event.wasReemitted(node)) {
+				return;
+			}
 			Choices.Choice<T> choice = event == null ? null : event.getModel();
 			T value = choice == null ? null : choice.getValue();
 			if (deselectIfSelectedClicked && value == getSelectedValue()) {
 				value = null;
 			}
-			valueSelected.publish(value);
+			provisionalValue = value;
+			NodeEvent.Context.newModelContext(event.getContext(), node)
+					.fire(Selected.class);
+			valueSelected.signal();
 			if (changeOnSelectionEvent) {
 				setSelectedValue(value);
 			}
@@ -194,8 +219,18 @@ public abstract class Choices<T> extends Model
 			choices.forEach(c -> c.setSelected(c.value == value));
 			T newValue = getSelectedValue();
 			if (!Objects.equals(oldValue, newValue)) {
-				selectionChanged.publish(newValue);
+				NodeEvent.Context.newNodeContext(node)
+						.fire(ModelEvents.SelectionChanged.class);
+				selectionChanged.signal();
 			}
+		}
+
+		public ListenerReference subscribeSelectionChanged(Runnable runnable) {
+			return selectionChanged.add(runnable);
+		}
+
+		public ListenerReference subscribeValueSelected(Runnable runnable) {
+			return valueSelected.add(runnable);
 		}
 	}
 }

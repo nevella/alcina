@@ -287,6 +287,23 @@ public class ModelEvents {
 		}
 	}
 
+	public static class SelectionChanged
+			extends ModelEvent<Object, SelectionChanged.Handler> {
+		@Override
+		public void dispatch(SelectionChanged.Handler handler) {
+			handler.onSelectionChanged(this);
+		}
+
+		@Override
+		public Class<SelectionChanged.Handler> getHandlerClass() {
+			return SelectionChanged.Handler.class;
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onSelectionChanged(SelectionChanged event);
+		}
+	}
+
 	public static class Show extends ModelEvent<Object, Show.Handler> {
 		@Override
 		public void dispatch(Show.Handler handler) {

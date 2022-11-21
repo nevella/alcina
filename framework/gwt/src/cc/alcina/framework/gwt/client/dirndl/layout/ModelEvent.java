@@ -58,6 +58,11 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		this.handled = handled;
 	}
 
+	public boolean wasReemitted(Node node) {
+		return getContext().previous != null
+				&& getContext().previous.node == node;
+	}
+
 	@Override
 	// FIXME - dirndl 1x1d - events - model vs widget bindings. Look at the
 	// guarantees of
