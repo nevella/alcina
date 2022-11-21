@@ -16,25 +16,25 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Selected;
 
-@Directed(tag = "selection-model", receives = ModelEvents.Selected.class)
+@Directed(tag = "choices", receives = ModelEvents.Selected.class)
 // FIXME - dirndl 1x1d - change to "Choices"
 // also this should emit ModelEvents, not topic
-public abstract class SelectionModel<T> extends Model
+public abstract class Choices<T> extends Model
 		implements ModelEvents.Selected.Handler {
-	protected List<SelectionModel.Choice<T>> choices;
+	protected List<Choices.Choice<T>> choices;
 
 	private List<T> values;
 
-	public SelectionModel() {
+	public Choices() {
 		this(new ArrayList<>());
 	}
 
-	public SelectionModel(List<T> values) {
+	public Choices(List<T> values) {
 		setValues(values);
 	}
 
 	@Directed
-	public List<SelectionModel.Choice<T>> getChoices() {
+	public List<Choices.Choice<T>> getChoices() {
 		return this.choices;
 	}
 
@@ -42,7 +42,7 @@ public abstract class SelectionModel<T> extends Model
 		return this.values;
 	}
 
-	public void setChoices(List<SelectionModel.Choice<T>> choices) {
+	public void setChoices(List<Choices.Choice<T>> choices) {
 		var old_choices = this.choices;
 		this.choices = choices;
 		propertyChangeSupport().firePropertyChange("choices", old_choices,
@@ -51,7 +51,7 @@ public abstract class SelectionModel<T> extends Model
 
 	public void setValues(List<T> values) {
 		this.values = values;
-		setChoices(values.stream().map(SelectionModel.Choice::new)
+		setChoices(values.stream().map(Choices.Choice::new)
 				.collect(Collectors.toList()));
 	}
 
@@ -92,7 +92,7 @@ public abstract class SelectionModel<T> extends Model
 		}
 	}
 
-	public static class Multiple<T> extends SelectionModel<T> {
+	public static class Multiple<T> extends Choices<T> {
 		public Topic<List<T>> selectionChanged = Topic.create();
 
 		public Multiple() {
@@ -109,8 +109,7 @@ public abstract class SelectionModel<T> extends Model
 
 		@Override
 		public void onSelected(Selected event) {
-			SelectionModel.Choice<T> choice = event == null ? null
-					: event.getModel();
+			Choices.Choice<T> choice = event == null ? null : event.getModel();
 			T value = choice == null ? null : choice.getValue();
 			List<T> updatedValues = choices.stream().filter(c -> {
 				T choiceValue = c.getValue();
@@ -136,7 +135,7 @@ public abstract class SelectionModel<T> extends Model
 	}
 
 	@TypeSerialization(reflectiveSerializable = false)
-	public static class Single<T> extends SelectionModel<T> {
+	public static class Single<T> extends Choices<T> {
 		public Topic<T> selectionChanged = Topic.create();
 
 		public Topic<T> valueSelected = Topic.create();
@@ -170,8 +169,7 @@ public abstract class SelectionModel<T> extends Model
 
 		@Override
 		public void onSelected(Selected event) {
-			SelectionModel.Choice<T> choice = event == null ? null
-					: event.getModel();
+			Choices.Choice<T> choice = event == null ? null : event.getModel();
 			T value = choice == null ? null : choice.getValue();
 			if (deselectIfSelectedClicked && value == getSelectedValue()) {
 				value = null;
