@@ -285,6 +285,10 @@ public class Link extends Model.WithNode
 		return this;
 	}
 
+	public Link withTargetBlank() {
+		return withTarget("_blank");
+	}
+
 	public Link withText(String text) {
 		this.text = text;
 		return this;
