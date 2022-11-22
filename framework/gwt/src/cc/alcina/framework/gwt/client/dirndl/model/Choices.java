@@ -19,8 +19,14 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Selected;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 
 @Directed(tag = "choices", receives = ModelEvents.Selected.class)
-// FIXME - dirndl 1x1d - change to "Choices"
-// also this should emit ModelEvents, not topic
+/*
+ * I'm not entirely happy with 'Choices' firing 'Selection' events (could it not
+ * be "chosen" events - or revert to "Selections/Selection") - even though
+ * 'selected choice' is valid english and common parlance.
+ *
+ * But 'selection' is very heavily used in the codebase (including
+ * SelectionTraversal) - so these are the names we go with.
+ */
 public abstract class Choices<T> extends Model.WithNode
 		implements ModelEvents.Selected.Handler {
 	protected List<Choices.Choice<T>> choices;
@@ -58,8 +64,10 @@ public abstract class Choices<T> extends Model.WithNode
 	}
 
 	/*
-	 * TODO - dirndl1.1 - is it possible to bind just to isSelected here? in
-	 * which case no need to wrap wdiget/elements
+	 * It is possible to bind just to isSelected here (with a delegating
+	 * renderer) - but the css for decoration of the choice becomes a lot
+	 * simpler if there _is_ a choice > model structure, so Choice remains a
+	 * container for the moment
 	 */
 	@Directed(
 		bindings = @Binding(
@@ -151,14 +159,14 @@ public abstract class Choices<T> extends Model.WithNode
 		private T provisionalValue;
 
 		/*
-		 * Use ModelEvents by preference - but this allows non-ancestor
-		 * components access if required
+		 * Use ModelEvents by preference - this allows ex-hierarchy observation
+		 * of changes if required
 		 */
 		private Topic<Void> selectionChanged = Topic.create();
 
 		/*
-		 * Use ModelEvents by preference - but this allows non-ancestor
-		 * components access if required
+		 * Use ModelEvents by preference - this allows ex-hierarchy observation
+		 * of changes if required
 		 */
 		private Topic<Void> valueSelected = Topic.create();
 
