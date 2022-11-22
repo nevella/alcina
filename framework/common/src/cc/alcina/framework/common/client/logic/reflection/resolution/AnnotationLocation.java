@@ -17,7 +17,7 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
 /*
- * FIXME - dirndl 1x1d - probably move resolution caching from the resolver to
+ * FIXME - dirndl 1x1g - probably move resolution caching from the resolver to
  * here, since more performant (aka ThreadLocal )
  *
  * Note - the above may be wrong (use a profiler!) - see instead (possibly)
@@ -34,9 +34,7 @@ public class AnnotationLocation {
 
 	protected Resolver resolver;
 
-	public List<Annotation> resolvedPropertyAnnotations = null;
-
-	private List<Annotation> consumed;
+	public Transformations transformations;
 
 	public AnnotationLocation(Class clazz, Property property) {
 		this(clazz, property, null);
@@ -242,5 +240,17 @@ public class AnnotationLocation {
 			return ensured == null ? Collections.emptyList()
 					: Collections.singletonList(ensured);
 		}
+	}
+
+	public static class Transformations {
+		public AnnotationLocation transformationRoot;
+
+		// if an annotation type has been resolved in the transformation chain,
+		// the merge strategy may ignore later annotations
+		public List<Annotation> resolvedPropertyAnnotations = new ArrayList<>();
+
+		// if an annotation type has been consumed in the transformation chain,
+		// the merge strategy may ignore later annotations
+		private List<Annotation> consumed = new ArrayList<>();
 	}
 }

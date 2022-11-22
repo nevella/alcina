@@ -5,15 +5,22 @@
 <body class="doc-body">
 	<h2>Dirndl freestyle</h2>
 	<p>
-		<i>thoughts too nodular and lymphy for a fully worked narrative context</i>
+		<i>notes to be allocated to the document structure</i>
 	</p>
 	<h3>Model, direction and events</h3>
 	<ul>
 		<li>DirectedLayout.Node *did* have an ancestorModel(Predicate) method which would allow child
 			nodes access to the parent model. That method was deprecated and removed - usages were replaced
 			with ModelEvent emission (where ancestor model access was used to send signals to the ancestor
-			model ) and by adding access to specific models via ContextResolver. See for example
-			<code>cc.alcina.framework.gwt.client.dirndl.model.FormModel.CancelHandler</code>
+			model ) and by adding access to specific models via ContextResolver. See for example <code>cc.alcina.framework.gwt.client.dirndl.model.FormModel.CancelHandler</code>
 	</ul>
+	<h3>AnnotationLocation and transform (WIP)</h3>
+	<ul>
+		<li><p>dirndl 1x1d - the interplay between AnnotationLocation and transform is being changed
+		<p>Property P - Model A - property value A.P of type List&lt;E1&gt; - Transform T [E1 -&gt; E2]
+			<ul>
+				<li>A.P :: List&lt;E1&gt; - AnnLocation A.P[E1]
+				<li>E2 (no property)
+			</ul>
 </body>
 </html>

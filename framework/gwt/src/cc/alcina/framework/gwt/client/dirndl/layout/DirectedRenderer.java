@@ -33,6 +33,11 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensit
  * <li>Enqueues [0,n] renderinput children
  * </ul>
  *
+ * <h2>Wrinkles</h2>
+ * <p>
+ * To prevent recursive/multiple application of Transform, the algorithm needs
+ * to track the originating model of a Node, and apply a Transform at most once
+ * per originating model
  *
  */
 @Reflected

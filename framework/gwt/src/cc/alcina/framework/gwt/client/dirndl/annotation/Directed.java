@@ -360,6 +360,10 @@ public @interface Directed {
 	 * <li>Type: non-collection - use DirectedRenderer.Transform, apply to model
 	 * </ul>
 	 *
+	 * <p>
+	 * Note that a Transform can be specified and applied only once per model
+	 * property
+	 *
 	 * @author nick@alcina.cc
 	 *
 	 */
