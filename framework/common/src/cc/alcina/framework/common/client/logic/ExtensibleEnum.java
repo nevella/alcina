@@ -180,13 +180,17 @@ public abstract class ExtensibleEnum {
 		return serializedForm();
 	}
 
-	private Class<? extends ExtensibleEnum> getRegistryPoint() {
-		Class<? extends ExtensibleEnum> registryPoint = getClass();
-		if (registryPoint.getSuperclass() != ExtensibleEnum.class) {
-			registryPoint = (Class<? extends ExtensibleEnum>) registryPoint
-					.getSuperclass();
+	public static Class<? extends ExtensibleEnum>
+			registryPoint(Class<? extends ExtensibleEnum> clazz) {
+		if (clazz.getSuperclass() == ExtensibleEnum.class) {
+			return clazz;
+		} else {
+			return (Class<? extends ExtensibleEnum>) clazz.getSuperclass();
 		}
-		return registryPoint;
+	}
+
+	private Class<? extends ExtensibleEnum> getRegistryPoint() {
+		return registryPoint(getClass());
 	}
 
 	public static class FromSerializedFormConverter

@@ -2173,6 +2173,16 @@ public class CommonUtils {
 		String generate();
 	}
 
+	public static class Paths {
+		public static String ensureSlashTerminated(String path) {
+			return path.endsWith("/") ? path : path + "/";
+		}
+
+		public static String sanitizeForUnixPaths(String fileName) {
+			return fileName.replaceAll("[:]", "").replaceAll("[ ]", "_");
+		}
+	}
+
 	public static class ThreeWaySetResult<T> {
 		public Set<T> firstOnly;
 
@@ -2209,15 +2219,5 @@ public class CommonUtils {
 
 	public static interface YearResolver {
 		int getYear(Date d);
-	}
-
-	public static class Paths {
-		public static String ensureSlashTerminated(String path) {
-			return path.endsWith("/") ? path : path + "/";
-		}
-	
-		public static String sanitizeForUnixPaths(String fileName) {
-			return fileName.replaceAll("[:]", "").replaceAll("[ ]", "_");
-		}
 	}
 }
