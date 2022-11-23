@@ -139,10 +139,10 @@ public abstract class DirectedRenderer {
 				// actually no - but we'll need Directed.transformPhase
 				//
 				// probably get it working, step back and fix
-				location.resolvedPropertyAnnotations = Arrays
+				location.resolutionState.resolvedPropertyAnnotations = Arrays
 						.asList(input.soleDirected());
 				// inelegant, but works to avoid double-transform
-				location.addConsumed(
+				location.resolutionState.addConsumed(
 						input.location.getAnnotation(Directed.Transform.class));
 				input.enqueueInput(input.resolver, transformedModel, location,
 						// force resolution
@@ -259,9 +259,9 @@ public abstract class DirectedRenderer {
 				descendantResolvedPropertyAnnotation
 						.setReemits(Impl.EMPTY_CLASS_ARRAY);
 			}
-			location.resolvedPropertyAnnotations = Arrays
+			location.resolutionState.resolvedPropertyAnnotations = Arrays
 					.asList(descendantResolvedPropertyAnnotation);
-			location.addConsumed(
+			location.resolutionState.addConsumed(
 					input.location.getAnnotation(Directed.Transform.class));
 			input.enqueueInput(input.resolver, transformedModel, location, null,
 					input.node);

@@ -28,8 +28,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.gwt.reflection.AnnotationLocationTypeInfo.AbstractMergeStrategy.AdditiveMergeStrategy;
 
 /*
- * Essentially a copy/paste, replacing Class with JClassType -
- * it was either that or *really* abstract the standard java implementation
+ * Essentially a copy/paste, replacing Class with JClassType - it was either
+ * that or *really* abstract the standard java implementation
  */
 public class AnnotationLocationTypeInfo extends AnnotationLocation {
 	private JClassType type;
