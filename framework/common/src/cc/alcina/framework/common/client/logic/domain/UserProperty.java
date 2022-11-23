@@ -2,6 +2,7 @@ package cc.alcina.framework.common.client.logic.domain;
 
 import java.util.Objects;
 import java.util.Optional;
+import java.util.stream.Stream;
 
 import javax.persistence.Lob;
 import javax.persistence.MappedSuperclass;
@@ -27,13 +28,23 @@ import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 
 @MappedSuperclass
-@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN_OR_OWNER), write = @Permission(access = AccessLevel.ADMIN_OR_OWNER), delete = @Permission(access = AccessLevel.ROOT))
+@ObjectPermissions(
+	create = @Permission(access = AccessLevel.ROOT),
+	read = @Permission(access = AccessLevel.ADMIN_OR_OWNER),
+	write = @Permission(access = AccessLevel.ADMIN_OR_OWNER),
+	delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPropagation(PropagationType.PERSISTENT)
 @Registration({ PersistentImpl.class, UserProperty.class })
 public abstract class UserProperty<T extends UserProperty>
 		extends VersionableEntity<T> implements HasIUser, HasOwner {
 	public static final transient String CONTEXT_NO_COMMIT = UserProperty.class
 			.getName() + ".CONTEXT_NO_COMMIT";
+
+	public static <P extends UserProperty<?>> Stream<P>
+			allByClass(Class<? extends UserPropertyPersistable> clazz) {
+		return (Stream<P>) Domain.query(implementation())
+				.filter("key", clazz.getName()).stream();
+	}
 
 	public static <P extends UserProperty<?>> P byId(long id) {
 		return Domain.find(implementation(), id);
