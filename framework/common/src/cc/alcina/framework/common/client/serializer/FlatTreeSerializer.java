@@ -26,6 +26,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -113,7 +114,7 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * default enum value, serialization is currently incorrect. TODO: serialization
  * should fail with an unspecified type exception if a potentially polymorphic
  * type lacks constraints (NR - note: 2021
- * ContactSearcDefinition.groupingParameters
+ * ContactSearcDefinition.groupingParameters)
  * 
  * </ul>
  *
@@ -272,6 +273,9 @@ public class FlatTreeSerializer {
 			return false;
 		}
 		if (Reflections.isAssignableFrom(Entity.class, clazz)) {
+			return true;
+		}
+		if (Reflections.isAssignableFrom(ExtensibleEnum.class, clazz)) {
 			return true;
 		}
 		if (Reflections.isAssignableFrom(BasePlace.class, clazz)) {
@@ -1417,6 +1421,12 @@ public class FlatTreeSerializer {
 			if (Reflections.isAssignableFrom(BasePlace.class, valueClass)) {
 				return RegistryHistoryMapper.get().getPlace(stringValue);
 			}
+			if (Reflections.isAssignableFrom(ExtensibleEnum.class,
+					valueClass)) {
+				String[] parts = stringValue.split(",");
+				return ExtensibleEnum.valueOf(Reflections.forName(parts[0]),
+						parts[1]);
+			}
 			if (Reflections.isAssignableFrom(VersionableEntity.class,
 					valueClass)) {
 				if (stringValue.contains("/")) {
@@ -1517,6 +1527,12 @@ public class FlatTreeSerializer {
 				}
 			} else if (CommonUtils.isEnumish(value)) {
 				return value.toString().replace("_", "-").toLowerCase();
+			} else if (value instanceof ExtensibleEnum) {
+				// same data as
+				// cc.alcina.framework.common.client.serializer.ReflectiveSerializers.ValueSerializerExtensibleEnum
+				return Ax.format("%s,%s", ExtensibleEnum.registryPoint(
+						(Class<? extends ExtensibleEnum>) value.getClass())
+						.getName(), value.toString());
 			} else if (value.getClass().isArray()
 					&& value.getClass().getComponentType() == byte.class) {
 				return Base64.encodeBytes((byte[]) value);
