@@ -39,7 +39,7 @@ public abstract class ServerTask<T extends Task> implements SelfPerformer<T> {
 			throw e;
 		}
 	}
-	
+
 	public void setValue(String value) {
 		this.value = value;
 	}
@@ -56,6 +56,8 @@ public abstract class ServerTask<T extends Task> implements SelfPerformer<T> {
 		JobContext.setResultMessage(message);
 	}
 
+	// FIXME - model - subclasses shouldn't need to change to public - just call
+	// performAction
 	protected abstract void performAction0(T task) throws Exception;
 
 	protected void warn(String template, Object... args) {
