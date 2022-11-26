@@ -7,18 +7,16 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 
 public interface ObjectStore {
-	// FIXME 2022 - in application code, tend to replace with Domain.find
+	// FIXME - dirndl 1x2 - in application code, tend to replace with
+	// Domain.find
 	public <T extends Entity> T getObject(Class<? extends T> c, long id,
 			long localId);
-
-	default <T extends Entity> T getObject(EntityLocator locator) {
-		return (T) getObject(locator.getClazz(), locator.getId(),
-				locator.getLocalId());
-	}
 
 	public <T extends Entity> T getObject(T bean);
 
 	void changeMapping(Entity obj, long id, long localId);
+
+	boolean contains(Class<? extends Entity> clazz, long id);
 
 	boolean contains(Entity obj);
 
@@ -32,6 +30,11 @@ public interface ObjectStore {
 
 	Map<Class<? extends Entity>, Collection<Entity>> getCollectionMap();
 
+	default <T extends Entity> T getObject(EntityLocator locator) {
+		return (T) getObject(locator.getClazz(), locator.getId(),
+				locator.getLocalId());
+	}
+
 	void invalidate(Class<? extends Entity> clazz);
 
 	void mapObject(Entity obj);
@@ -39,6 +42,4 @@ public interface ObjectStore {
 	void registerObjects(Collection objects);
 
 	void removeListeners();
-
-	boolean contains(Class<? extends Entity> clazz, long id);
 }
