@@ -17,7 +17,6 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.RemoteService;
 
-import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
@@ -45,7 +44,7 @@ import cc.alcina.framework.common.client.search.SearchDefinition;
  */
 public interface CommonRemoteService extends RemoteService {
 	@WebMethod(customPermission = @Permission(access = AccessLevel.ADMIN))
-	public List<ActionLogItem> getLogsForAction(RemoteAction action,
+	public List<JobTracker> getLogsForAction(RemoteAction action,
 			Integer count);
 
 	public LoginResponse hello();

@@ -214,6 +214,17 @@ public class AnnotationLocation {
 	 *
 	 * Annotations on the property are 'consumed' by a given AnnotationLocation
 	 * and are not available to s descendant locations
+	 *
+	 * FIXME - dirndl 1x3 - define the rules (current dirndl behaviour works but
+	 * is not really formalised, and is implemented to a degree in the
+	 * transforming DirectedRenderer subclasses):
+	 *
+	 * - property annotations (as merge inputs) should be consumed by first
+	 * descendant level use
+	 *
+	 * - rule defining behaviour in resolvedPropertyAnnotations
+	 *
+	 * - examples
 	 */
 	public static class ResolutionState {
 		public AnnotationLocation transformationParent;

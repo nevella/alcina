@@ -39,7 +39,6 @@ import com.google.gwt.user.client.ui.VerticalPanel;
 import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.ActionLogProvider;
 import cc.alcina.framework.common.client.actions.PermissibleAction;
 import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
@@ -47,6 +46,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.SynchronousAction;
 import cc.alcina.framework.common.client.actions.instances.ViewAction;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.logic.HasParameters;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -111,8 +111,7 @@ public abstract class ActionViewProviderBase
 		return false;
 	}
 
-	protected void getActionLogs(
-			AsyncCallback<List<ActionLogItem>> outerCallback,
+	protected void getActionLogs(AsyncCallback<List<JobTracker>> outerCallback,
 			int logItemCount) {
 		Registry.impl(ActionLogProvider.class).getLogsForAction(action,
 				logItemCount, outerCallback, true);
@@ -274,16 +273,16 @@ public abstract class ActionViewProviderBase
 		protected void redraw() {
 			WidgetUtils.clearChildren(fp);
 			hasChildHandlersSupport.detachHandlers();
-			AsyncCallback<List<ActionLogItem>> outerCallback = new AsyncCallback<List<ActionLogItem>>() {
+			AsyncCallback<List<JobTracker>> outerCallback = new AsyncCallback<List<JobTracker>>() {
 				@Override
 				public void onFailure(Throwable caught) {
 					throw new WrappedRuntimeException(caught);
 				}
 
 				@Override
-				public void onSuccess(List<ActionLogItem> result) {
+				public void onSuccess(List<JobTracker> result) {
 					int idx = 0;
-					for (ActionLogItem actionLogItem : result) {
+					for (JobTracker actionLogItem : result) {
 						fp.add(new ActionLogItemVisualiser(actionLogItem,
 								idx++ == 0));
 					}
@@ -340,13 +339,12 @@ public abstract class ActionViewProviderBase
 
 		private VerticalPanel vp;
 
-		ActionLogItemVisualiser(ActionLogItem item, boolean first) {
+		ActionLogItemVisualiser(JobTracker tracker, boolean first) {
 			this.vp = new VerticalPanel();
-			this.link = new Link(CommonUtils.formatDate(item.getActionDate(),
-					DateStyle.AU_DATE_TIME) + " - "
-					+ item.getShortDescription());
+			this.link = new Link(CommonUtils.formatDate(tracker.getEndTime(),
+					DateStyle.AU_DATE_TIME) + " - " + tracker.getJobResult());
 			link.addClickHandler(this);
-			String actionLog = item.getActionLog();
+			String actionLog = tracker.getLog();
 			if (actionLog == null) {
 				actionLog = "{no log}";
 			}

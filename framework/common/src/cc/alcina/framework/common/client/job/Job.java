@@ -18,10 +18,8 @@ import javax.persistence.Transient;
 import com.google.common.base.Preconditions;
 import com.google.gwt.user.client.rpc.GwtTransient;
 
-import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
-import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadOracle;
 import cc.alcina.framework.common.client.domain.DomainStoreProperty.DomainStorePropertyLoadType;
@@ -142,34 +140,8 @@ public abstract class Job extends VersionableEntity<Job>
 		this.propertyChangeSupport().addPropertyChangeListener(listener);
 	}
 
-	// FIXME - mvcc.jobs - get rid'o'me
-	public JobResult asJobResult() {
-		JobResult result = new JobResult() {
-			@Override
-			public String getActionLog() {
-				return getLog();
-			}
-
-			@Override
-			public // FIXME - mvcc.jobs - get rid'o'me
-			ActionLogItem getActionLogItem() {
-				ActionLogItem logItem = Reflections.newInstance(
-						PersistentImpl.getImplementation(ActionLogItem.class));
-				logItem.setActionClass((Class) getTask().getClass());
-				logItem.setActionClassName(getTaskClassName());
-				logItem.setActionDate(getEndTime());
-				logItem.setActionLog(
-						CommonUtils.trimToWsChars(getLog(), 200000, true));
-				logItem.setShortDescription(getResultMessage());
-				return logItem;
-			}
-		};
-		result.setProducedObject(getResult());
-		return result;
-	}
-
 	public JobTracker asJobTracker() {
-		JobTrackerImpl tracker = new JobTrackerImpl();
+		JobTracker tracker = new JobTracker();
 		tracker.setCancelled(resolveState() == JobState.CANCELLED);
 		tracker.setComplete(resolveState().isComplete());
 		tracker.setEndTime(endTime);

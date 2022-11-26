@@ -48,7 +48,6 @@ import com.google.gwt.user.server.rpc.impl.LegacySerializationPolicy;
 import com.totsp.gwittir.client.beans.Converter;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.SynchronousAction;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
@@ -277,7 +276,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 
 	@Override
 	@WebMethod(readonlyPermitted = true)
-	public List<ActionLogItem> getLogsForAction(RemoteAction action,
+	public List<JobTracker> getLogsForAction(RemoteAction action,
 			Integer count) {
 		return JobRegistry.get().getLogsForAction(action, count);
 	}
@@ -437,7 +436,7 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 						.filter(Objects::nonNull).collect(Collectors.toList()));
 		JobTracker.Response response = new JobTracker.Response();
 		response.setTrackers(jobs.stream().map(Job::asJobTracker)
-				.collect(Collectors.toList()));
+				.peek(jt -> jt.setLog(null)).collect(Collectors.toList()));
 		return response;
 	}
 
@@ -456,7 +455,13 @@ public abstract class CommonRemoteServiceServlet extends RemoteServiceServlet
 					}
 					return job;
 				});
-		return job0 == null ? null : job0.asJobTracker();
+		if (job0 == null) {
+			return null;
+		} else {
+			JobTracker tracker = job0.asJobTracker();
+			tracker.setLog(null);
+			return tracker;
+		}
 	}
 
 	@Override

@@ -31,9 +31,9 @@ import org.slf4j.LoggerFactory;
 import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.actions.TaskPerformer;
+import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LogMessageType;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.job.Job;
@@ -41,7 +41,6 @@ import cc.alcina.framework.common.client.job.Job.ProcessState;
 import cc.alcina.framework.common.client.job.Job.ResourceRecord;
 import cc.alcina.framework.common.client.job.JobRelation;
 import cc.alcina.framework.common.client.job.JobRelation.JobRelationType;
-import cc.alcina.framework.common.client.job.JobResult;
 import cc.alcina.framework.common.client.job.JobState;
 import cc.alcina.framework.common.client.job.JobStateMessage;
 import cc.alcina.framework.common.client.job.NonRootTask;
@@ -147,7 +146,9 @@ import cc.alcina.framework.servlet.servlet.CommonRemoteServiceServlet;
  * @author nick@alcina.cc
  */
 @Registrations({
-		@Registration(value = JobRegistry.class, implementation = Registration.Implementation.SINGLETON),
+		@Registration(
+			value = JobRegistry.class,
+			implementation = Registration.Implementation.SINGLETON),
 		@Registration(ClearStaticFieldsOnAppShutdown.class) })
 public class JobRegistry {
 	public static final String CONTEXT_NO_ACTION_LOG = CommonRemoteServiceServlet.class
@@ -333,7 +334,7 @@ public class JobRegistry {
 		return this.launchedFromControlServlet;
 	}
 
-	public List<ActionLogItem> getLogsForAction(RemoteAction action,
+	public List<JobTracker> getLogsForAction(RemoteAction action,
 			Integer count) {
 		checkAnnotatedPermissions(action);
 		Set<Long> ids = JobDomain.get().getJobsForTask(action.getClass(), false)
@@ -342,8 +343,8 @@ public class JobRegistry {
 		return Domain.query(PersistentImpl.getImplementation(Job.class))
 				.contextTrue(
 						LazyPropertyLoadTask.CONTEXT_POPULATE_STREAM_ELEMENT_LAZY_PROPERTIES)
-				.filterByIds(ids).stream().map(Job::asJobResult)
-				.map(JobResult::getActionLogItem).collect(Collectors.toList());
+				.filterByIds(ids).stream().map(Job::asJobTracker)
+				.collect(Collectors.toList());
 	}
 
 	public String getPerformerThreadName(Job job) {

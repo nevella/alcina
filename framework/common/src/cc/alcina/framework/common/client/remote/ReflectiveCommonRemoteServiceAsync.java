@@ -4,7 +4,6 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
@@ -39,7 +38,7 @@ public class ReflectiveCommonRemoteServiceAsync extends
 
 	@Override
 	public void getLogsForAction(RemoteAction action, Integer count,
-			AsyncCallback<List<ActionLogItem>> callback) {
+			AsyncCallback<List<JobTracker>> callback) {
 		throw new UnsupportedOperationException();
 	}
 
