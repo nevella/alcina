@@ -1,5 +1,14 @@
 @use '../../theme/theme'
 
+// @file-doc: ui for card components
+// @filepage-review: 1 pre-theme
+
+card-container 
+  display: flex
+  max-width: 100%
+  flex-wrap: wrap
+  justify-content: center
+
 card 
   border: theme.$panel-border
   border-radius: theme.$panel-border-radius
@@ -7,6 +16,7 @@ card
   color: theme.$panel-color
   width: theme.$card-width
   margin: theme.$card-margin
+
   > header 
     border-bottom: theme.$card-header-border
     padding: theme.$card-header-padding
@@ -16,20 +26,18 @@ card
     font-family: theme.$title-font-family
     justify-content: theme.$card-header-justify
     display: flex
+
     > label 
       flex-grow: 1
+
   > footer 
     border-top: theme.$card-footer-border
     justify-content: theme.$card-header-justify
     display: block
     padding: theme.$card-footer-padding
+
   > contents 
     padding: theme.$card-body-padding
     min-height: theme.$card-body-min-height
     display: block
 
-card-container 
-  display: flex
-  max-width: 100%
-  flex-wrap: wrap
-  justify-content: center
