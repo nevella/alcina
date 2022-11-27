@@ -21,8 +21,6 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
-import java.util.Timer;
-import java.util.TimerTask;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -34,6 +32,7 @@ import cc.alcina.framework.common.client.serializer.ReflectiveSerializer;
 import cc.alcina.framework.common.client.serializer.ReflectiveSerializer.ReflectiveSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.common.client.util.TimeConstants;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.SimpleHttp;
@@ -145,22 +144,14 @@ public class DownloadServlet extends HttpServlet {
 						"attachment; filename=\"" + fixedFileName + "\"");
 			}
 		}
-		// FIXME - dirndl1.2 - multiple timers here
 		try {
 			ResourceUtilities.writeStreamToStream(
 					new BufferedInputStream(new FileInputStream(f)),
 					response.getOutputStream());
-			new Timer().schedule(new TimerTask() {
-				@Override
-				public void run() {
-					try {
-						items.remove(id);
-						f.delete();
-					} catch (Exception e) {
-						// webapp restart
-					}
-				}
-			}, 60 * 1000);
+			TimerService.get().schedule(() -> {
+				items.remove(id);
+				f.delete();
+			}, TimeConstants.ONE_MINUTE_MS);
 		} catch (IOException e) {
 			e.printStackTrace();
 		}

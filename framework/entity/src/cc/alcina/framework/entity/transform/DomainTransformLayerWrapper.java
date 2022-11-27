@@ -15,25 +15,12 @@ package cc.alcina.framework.entity.transform;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import cc.alcina.framework.common.client.domain.Domain;
-import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformEvent;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse;
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformResponse.DomainTransformResponseResult;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEventType;
 
 /**
@@ -41,14 +28,6 @@ import cc.alcina.framework.entity.transform.event.DomainTransformPersistenceEven
  * @author Nick Reddel
  */
 public class DomainTransformLayerWrapper implements Serializable {
-	static final transient long serialVersionUID = 1;
-
-	private static transient Logger logger = LoggerFactory
-			.getLogger(DomainTransformLayerWrapper.class);
-
-	private static Set<List<Class>> nonEntityWarningsEmitted = Collections
-			.synchronizedSet(new HashSet<>());
-
 	public DomainTransformResponse response;
 
 	public EntityLocatorMap locatorMap;
@@ -58,8 +37,6 @@ public class DomainTransformLayerWrapper implements Serializable {
 	public List<DomainTransformEventPersistent> persistentEvents = new ArrayList<DomainTransformEventPersistent>();
 
 	public List<DomainTransformEvent> remoteEventsPersisted = new ArrayList<DomainTransformEvent>();
-
-	private Multimap<Class, List<DomainTransformEventPersistent>> eventsByClass;
 
 	public List<DomainTransformRequestPersistent> persistentRequests = new ArrayList<DomainTransformRequestPersistent>();
 
@@ -77,32 +54,6 @@ public class DomainTransformLayerWrapper implements Serializable {
 		}
 	}
 
-	public boolean containsTransformClasses(Class... classes) {
-		return containsTransformClasses(Arrays.asList(classes));
-	}
-
-	public boolean containsTransformClasses(List<Class> classes) {
-		// FIXME - 2022 - convert to precondition
-		if (classes.stream().anyMatch(c -> !Entity.class.isAssignableFrom(c))) {
-			if (nonEntityWarningsEmitted.add(classes)) {
-				logger.warn("non-transform-classes-filter - {}", classes);
-			}
-		}
-		return !CommonUtils.intersection(getTransformedClasses(), classes)
-				.isEmpty();
-	}
-
-	public Multimap<Class, List<DomainTransformEventPersistent>>
-			getEventsByClass() {
-		if (eventsByClass == null) {
-			eventsByClass = new Multimap<Class, List<DomainTransformEventPersistent>>();
-			for (DomainTransformEventPersistent dte : persistentEvents) {
-				eventsByClass.add(dte.getObjectClass(), dte);
-			}
-		}
-		return this.eventsByClass;
-	}
-
 	// For the moment, this seems as good as than using the Kafka transform
 	// commit topic log offset - in
 	// that if this has been seen, then so has the corresponding Kafka log
@@ -112,26 +63,6 @@ public class DomainTransformLayerWrapper implements Serializable {
 			return null;
 		}
 		return String.valueOf(CommonUtils.last(persistentRequests).getId());
-	}
-
-	public <V extends Entity> Set<V> getObjectsFor(Class<V> clazz) {
-		return (Set<V>) (Set) getTransformsFor(clazz).stream()
-				.map(DomainTransformEvent::toObjectLocator).map(Domain::find)
-				.filter(Objects::nonNull).collect(Collectors.toSet());
-	}
-
-	public Set<Class> getTransformedClasses() {
-		return getEventsByClass().keySet();
-	}
-
-	public List<DomainTransformEventPersistent> getTransformsFor(Class clazz) {
-		return getEventsByClass().getAndEnsure(clazz);
-	}
-
-	public Stream<DomainTransformEventPersistent>
-			getTransformsFor(Entity entity) {
-		return getTransformsFor(entity.entityClass()).stream().filter(
-				dte -> dte.toObjectLocator().equals(entity.toLocator()));
 	}
 
 	public EntityLocatorMap locatorMapOrEmpty() {
@@ -148,7 +79,6 @@ public class DomainTransformLayerWrapper implements Serializable {
 		this.persistentRequests = toMerge.persistentRequests;
 		this.remoteEventsPersisted = toMerge.remoteEventsPersisted;
 		this.response = toMerge.response;
-		this.eventsByClass = toMerge.eventsByClass;
 		this.mergeCount = toMerge.mergeCount;
 	}
 

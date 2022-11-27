@@ -24,21 +24,21 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
  * instructed to continue up the Node ancestor tree by
  * markCauseEventAsNotHandled(), they stop.
  * <li>Events are a 'recasting' of an existing point-in-time event, so an
- * EventBus is not used. This seems to be a better choice - LayoutEvents events
- * certainly *must* be handled immediately, since they can affect the layout
- * itself.
+ * EventBus is not used. This seems to be a better choice - (explain)
  *
  * <p>
- * FIXME - dirndl 1x1a - issue with 'Don't like' below is that NodeEvent does
- * too much. There should be an DomBinding nested class which handles the
- * nodeevent -> dom relation, not populated for ModelEvent
+ * FIXME - dirndl 1x1d - events - issue with 'Don't like' below is that
+ * NodeEvent does too much. There should be an DomBinding nested class which
+ * handles the nodeevent -> dom relation, not populated for ModelEvent [Note re
+ * FIXME - pretty sure it's already implemented. Current TODO is give examples,
+ * clean up docs.
  *
  * @author nick@alcina.cc
  *
  * @param <H>
  */
 /*
- * FIXME - dirndl 1.3 - don't like the interplay between NodeEvent,
+ * FIXME - dirndl 1x1d - events - don't like the interplay between NodeEvent,
  * BehaviourBinding and NodeEventReceiver...
  *
  * but...maybe...it's right? It's an event fired on a node, so as long as
@@ -182,6 +182,11 @@ public abstract class NodeEvent<H extends NodeEvent.Handler>
 
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			return node.annotation(clazz);
+		}
+
+		// Fluent event emission
+		public void fire(Class<? extends ModelEvent> modelEvent) {
+			ModelEvent.fire(this, modelEvent, null);
 		}
 
 		public NodeEvent getNodeEvent() {

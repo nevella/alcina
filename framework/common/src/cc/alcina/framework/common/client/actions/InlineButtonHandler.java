@@ -8,22 +8,25 @@ public abstract class InlineButtonHandler extends PermissibleAction
 	public InlineButtonHandler() {
 	}
 
-	public InlineButtonHandler(String displayName, String actionName) {
-		super(displayName, actionName);
-	}
-
 	@Override
 	public String getCssClassName() {
 		return "inline";
 	}
 
 	public static class InlineButtonHandlerAdapter extends InlineButtonHandler {
+		private final String actionName;
+
 		private final ClickHandler clickHandler;
 
-		public InlineButtonHandlerAdapter(String displayName,
+		public InlineButtonHandlerAdapter(String actionName,
 				ClickHandler clickHandler) {
-			super(displayName, null);
+			this.actionName = actionName;
 			this.clickHandler = clickHandler;
+		}
+
+		@Override
+		public String getActionName() {
+			return actionName;
 		}
 
 		@Override

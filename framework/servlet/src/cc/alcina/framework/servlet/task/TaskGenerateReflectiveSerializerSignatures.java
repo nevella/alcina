@@ -48,6 +48,13 @@ import cc.alcina.framework.servlet.task.TaskGenerateReflectiveSerializerSignatur
  * FIXME - dirndl 1x1d - do a full inheritance scan to ensure all implementors
  * in the graph are serializable (ReflectiveSerializer.Checks is the current
  * workaround, but allows invalid subtypes)
+ *
+ * This class ensures that - excepting exclusions - all classes that are
+ * ReflectiveSerializable have a valid schema:
+ *
+ * - non-tranient fields have getter/setters
+ *
+ * - non-transient properties have serializable types
  */
 public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 	public transient ReflectiveSerializableSignatures signatures = new ReflectiveSerializableSignatures();
@@ -75,9 +82,15 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 	}
 
 	private void
-			checkAllTransientFieldsWithPropertiesAreTransient(Class clazz) {
+			checkAllTransientFieldsWithPropertiesAreTransient(Class<?> clazz) {
 		if (clazz.isEnum()) {
 			return;
+		}
+		if (clazz.isAnnotationPresent(ReflectiveSerializer.Checks.class)) {
+			if (clazz.getAnnotation(ReflectiveSerializer.Checks.class)
+					.ignore()) {
+				return;
+			}
 		}
 		Field[] fields = clazz.getDeclaredFields();
 		ClassReflector reflector = Reflections.at(clazz);
@@ -162,8 +175,8 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 
 	private void performAction1() throws Exception {
 		try {
-			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
-					.muteClassloaderLogging(true);
+			Registry.optional(AppPersistenceBase.InitRegistrySupport.class)
+					.ifPresent(r -> r.muteClassloaderLogging(true));
 			ignorePackages = Arrays
 					.asList(Configuration.get("ignorePackages").split(";"));
 			ClassMetadataCache<ClassMetadata> classes = new ServletClasspathScanner(
@@ -179,8 +192,8 @@ public class TaskGenerateReflectiveSerializerSignatures extends ServerTask {
 					.map(m -> Reflections.forName(m.className))
 					.collect(AlcinaCollectors.toLinkedHashSet());
 		} finally {
-			Registry.impl(AppPersistenceBase.InitRegistrySupport.class)
-					.muteClassloaderLogging(false);
+			Registry.optional(AppPersistenceBase.InitRegistrySupport.class)
+					.ifPresent(r -> r.muteClassloaderLogging(false));
 		}
 		serializables.forEach(this::checkSerializationIssues);
 		Preconditions.checkState(serializationIssues.isEmpty());

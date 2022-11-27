@@ -26,6 +26,7 @@ import com.google.gwt.core.client.GWT;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.VersionableEntity;
 import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
@@ -131,9 +132,11 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * BindableSearchDefinition.groupingParameters.grouping - if grouping is a
  * default enum value, serialization is currently incorrect. TODO: serialization
  * should fail with an unspecified type exception if a potentially polymorphic
- * type lacks constraints (NR - note: 2021
- * ContactSearcDefinition.groupingParameters
+ * type lacks constraints (NR - note: 2021 <<<<<<< HEAD
+ * ContactSearcDefinition.groupingParameters =======
+ * ContactSearcDefinition.groupingParameters)
  *
+ * >>>>>>> origin/apdm.2022.3
  * </ul>
  *
  *
@@ -218,6 +221,10 @@ public class FlatTreeSerializer {
 		return deserialize(null, value);
 	}
 
+	public static String normalizeEnumString(Object value) {
+		return value.toString().replace("_", "-").toLowerCase();
+	}
+
 	public static String serialize(TreeSerializable object) {
 		return serialize(object, new SerializerOptions()
 				.withTopLevelTypeInfo(true).withShortPaths(true));
@@ -294,6 +301,9 @@ public class FlatTreeSerializer {
 			return false;
 		}
 		if (Reflections.isAssignableFrom(Entity.class, clazz)) {
+			return true;
+		}
+		if (Reflections.isAssignableFrom(ExtensibleEnum.class, clazz)) {
 			return true;
 		}
 		if (Reflections.isAssignableFrom(BasePlace.class, clazz)) {
@@ -826,8 +836,10 @@ public class FlatTreeSerializer {
 				cursor.path.verifyProvidesElementTypeInfo();
 				/*
 				 * 'Default collections' can't work in a general sense -....
-				 * FIXME - 2022 - add per-ts customisers that provide 'yes
-				 * default' to the whole collection - and thus ignore for elided
+				 * FIXME - serialization - low priority (since don't have any
+				 * people crying out for shorter urls) - add per-type-serializer
+				 * customisers that provide 'yes default' to the whole
+				 * collection - and thus ignore for elided
 				 *
 				 * Note that said collections must be guaranteed non-empty in
 				 * the application - or maybe have an __fts__EMPTY__ marker
@@ -1382,6 +1394,44 @@ public class FlatTreeSerializer {
 			return Ax.format("%s=%s", path, value);
 		}
 
+		private String toStringValue0() {
+			if (path.serializer != null) {
+				return path.serializer.serializeValue(value);
+			}
+			if (value instanceof Date) {
+				return String.valueOf(((Date) value).getTime());
+			} else if (value instanceof String) {
+				String escapedValue = escapeValue(value.toString());
+				return escapeValue(value.toString());
+			} else if (value instanceof Entity) {
+				Entity entity = (Entity) value;
+				if (entity.domain().wasPersisted()) {
+					return String.valueOf(entity.getId());
+				} else {
+					Preconditions.checkArgument(entity.domain().isLocal());
+					return EntityLocator.instanceLocator(entity)
+							.toRecoverableNumericString();
+				}
+			} else if (CommonUtils.isEnumish(value)) {
+				return normalizeEnumString(value);
+			} else if (value instanceof ExtensibleEnum) {
+				// same data as
+				// cc.alcina.framework.common.client.serializer.ReflectiveSerializers.ValueSerializerExtensibleEnum
+				return Ax.format("%s,%s", ExtensibleEnum.registryPoint(
+						(Class<? extends ExtensibleEnum>) value.getClass())
+						.getName(), value.toString());
+			} else if (value.getClass().isArray()
+					&& value.getClass().getComponentType() == byte.class) {
+				return Base64.encodeBytes((byte[]) value);
+			} else if (value instanceof Class) {
+				return ((Class) value).getCanonicalName();
+			} else if (value instanceof BasePlace) {
+				return ((BasePlace) value).toTokenString();
+			} else {
+				return value.toString();
+			}
+		}
+
 		String escapeValue(String str) {
 			return TextUtils.Encoder.encodeURIComponentEsque(str);
 		}
@@ -1440,6 +1490,12 @@ public class FlatTreeSerializer {
 			}
 			if (Reflections.isAssignableFrom(BasePlace.class, valueClass)) {
 				return RegistryHistoryMapper.get().getPlace(stringValue);
+			}
+			if (Reflections.isAssignableFrom(ExtensibleEnum.class,
+					valueClass)) {
+				String[] parts = stringValue.split(",");
+				return ExtensibleEnum.valueOf(Reflections.forName(parts[0]),
+						parts[1]);
 			}
 			if (Reflections.isAssignableFrom(VersionableEntity.class,
 					valueClass)) {
@@ -1522,34 +1578,10 @@ public class FlatTreeSerializer {
 							.format("Null collection type property: %s", path));
 				}
 				return NULL_MARKER;
-			}
-			if (path.serializer != null) {
-				return path.serializer.serializeValue(value);
-			}
-			if (value instanceof Date) {
-				return String.valueOf(((Date) value).getTime());
-			} else if (value instanceof String) {
-				return escapeValue(value.toString());
-			} else if (value instanceof Entity) {
-				Entity entity = (Entity) value;
-				if (entity.domain().wasPersisted()) {
-					return String.valueOf(entity.getId());
-				} else {
-					Preconditions.checkArgument(entity.domain().isLocal());
-					return EntityLocator.instanceLocator(entity)
-							.toRecoverableNumericString();
-				}
-			} else if (CommonUtils.isEnumish(value)) {
-				return value.toString().replace("_", "-").toLowerCase();
-			} else if (value.getClass().isArray()
-					&& value.getClass().getComponentType() == byte.class) {
-				return Base64.encodeBytes((byte[]) value);
-			} else if (value instanceof Class) {
-				return ((Class) value).getCanonicalName();
-			} else if (value instanceof BasePlace) {
-				return ((BasePlace) value).toTokenString();
 			} else {
-				return value.toString();
+				String stringValue0 = toStringValue0();
+				Preconditions.checkArgument(!NULL_MARKER.equals(stringValue0));
+				return stringValue0;
 			}
 		}
 	}

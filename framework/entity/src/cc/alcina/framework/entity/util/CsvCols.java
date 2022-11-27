@@ -22,12 +22,12 @@ public class CsvCols
 		return new CsvCols(ResourceUtilities.read(file));
 	}
 
+	public static CsvCols parse(String xsv, boolean tsv) {
+		return new CsvCols(CsvUtils.parseCsv(xsv, tsv));
+	}
+
 	public static CsvCols parseCsv(String csv) {
 		return new CsvCols(csv);
-	}
-	
-	public static CsvCols parse(String xsv,boolean tsv) {
-		return new CsvCols(CsvUtils.parseCsv(xsv, tsv));
 	}
 
 	public static CsvCols parseTsv(String tsv) {
@@ -137,6 +137,19 @@ public class CsvCols
 				grid.subList(1, grid.size()), quoteHeaders).toString();
 	}
 
+	public String toTsv(boolean quoteHeaders) {
+		return CsvUtils
+				.headerValuesToOutput(
+						colLookup.keySet().stream()
+								.collect(Collectors.toList()),
+						grid.subList(1, grid.size()), quoteHeaders, true)
+				.toString();
+	}
+
+	public void write(String path) {
+		ResourceUtilities.write(toCsv(), path);
+	}
+
 	public static class CsvRow {
 		private int rowIdx;
 
@@ -166,6 +179,10 @@ public class CsvCols
 		public long getLong(String key) {
 			String s = get(key);
 			return Ax.isBlank(s) ? -1 : Long.parseLong(s);
+		}
+
+		public int getRowIdx() {
+			return this.rowIdx;
 		}
 
 		public boolean has(String key) {
@@ -212,9 +229,5 @@ public class CsvCols
 			}
 			return -1;
 		}
-	}
-
-	public void write(String path) {
-		ResourceUtilities.write(toCsv(), path);
 	}
 }

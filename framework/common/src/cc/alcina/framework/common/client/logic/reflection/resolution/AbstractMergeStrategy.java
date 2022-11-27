@@ -25,7 +25,8 @@ public abstract class AbstractMergeStrategy<A extends Annotation>
 	@Override
 	public List<A> resolveClass(Class<A> annotationClass, Class<?> clazz,
 			List<Inheritance> inheritance) {
-		if (!inheritance.contains(Inheritance.CLASS) || clazz == null) {
+		if (!inheritance.contains(Inheritance.CLASS) || clazz == null
+				|| clazz == void.class) {
 			return Collections.emptyList();
 		}
 		List<A> result = new ArrayList<>();

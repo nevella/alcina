@@ -77,7 +77,7 @@ public class LazyPropertyChangeSupport {
 	 * old/newvalues of the propertychangeevent should !not! be read. Indicates
 	 * "this object has changed - possibly below the child/field level"
 	 *
-	 * Normally there are other ways to skin this cat - FIXME - dirndl1.3 -
+	 * Normally there are other ways to skin this cat - FIXME - dirndl 1x3 -
 	 * possibly remove
 	 */
 	public void fireUnspecifiedPropertyChange(Object propagationId) {

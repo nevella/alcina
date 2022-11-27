@@ -277,8 +277,7 @@ public abstract class Publication extends Entity<Publication>
 	@Reflected
 	public static class PublicationRepublishLink extends PermissibleAction {
 		@Override
-		@AlcinaTransient
-		public String getDisplayName() {
+		public String getActionName() {
 			return "Republish";
 		}
 	}

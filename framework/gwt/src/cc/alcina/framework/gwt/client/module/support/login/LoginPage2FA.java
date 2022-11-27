@@ -3,8 +3,8 @@ package cc.alcina.framework.gwt.client.module.support.login;
 import cc.alcina.framework.common.client.gwittir.validator.CompositeValidator;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.LeafModel;
-import cc.alcina.framework.gwt.client.dirndl.model.Editable;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.model.edit.StringInput;
 
 public class LoginPage2FA extends LoginPage {
 	public LoginPage2FA(LoginConsort loginConsort) {
@@ -44,10 +44,10 @@ public class LoginPage2FA extends LoginPage {
 	public static class UiModel extends Model {
 		private final LeafModel.Img image;
 
-		private final Editable.StringInput input;
+		private final StringInput input;
 
 		public UiModel(LoginConsort loginConsort) {
-			input = new Editable.StringInput();
+			input = new StringInput();
 			input.setFocusOnBind(true);
 			input.setPlaceholder("2FA code");
 			image = new LeafModel.Img(
@@ -60,7 +60,7 @@ public class LoginPage2FA extends LoginPage {
 		}
 
 		@Directed
-		public Editable.StringInput getInput() {
+		public StringInput getInput() {
 			return this.input;
 		}
 	}

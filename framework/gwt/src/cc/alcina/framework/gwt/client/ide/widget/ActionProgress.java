@@ -36,7 +36,6 @@ import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.csobjects.JobResultType;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
-import cc.alcina.framework.common.client.csobjects.JobTrackerImpl;
 import cc.alcina.framework.common.client.logic.LazyPropertyChangeSupport;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.CommonUtils.DateStyle;
@@ -58,7 +57,7 @@ public class ActionProgress extends Composite
 
 	private FlowPanel fp;
 
-	private JobTracker info = new JobTrackerImpl();
+	private JobTracker info = new JobTracker();
 
 	private Grid grid;
 
@@ -156,7 +155,7 @@ public class ActionProgress extends Composite
 					public void onSuccess(JobTracker info) {
 						onReturned();
 						if (info == null) {
-							info = new JobTrackerImpl();
+							info = new JobTracker();
 							info.setJobName("Unknown job");
 							info.setComplete(true);
 							info.setProgressMessage("---");

@@ -41,6 +41,17 @@ public interface ModelTransform<A, B> extends Function<A, B> {
 			implements ModelTransform<A, B> {
 	}
 
+	/**
+	 * Note that the context DirectedLayout.Node only exposes its own properties
+	 * (not parent/children) to classes outside the main dirndl package.
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 * @param <A>
+	 *            The incoming model
+	 * @param <B>
+	 *            The outgoing model
+	 */
 	public interface ContextSensitiveTransform<A, B>
 			extends ModelTransform<A, B> {
 		public ContextSensitiveTransform<A, B>

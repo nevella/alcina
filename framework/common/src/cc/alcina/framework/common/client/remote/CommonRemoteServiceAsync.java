@@ -17,7 +17,6 @@ import java.util.List;
 
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
-import cc.alcina.framework.common.client.actions.ActionLogItem;
 import cc.alcina.framework.common.client.actions.RemoteAction;
 import cc.alcina.framework.common.client.csobjects.JobTracker;
 import cc.alcina.framework.common.client.csobjects.LoginBean;
@@ -39,7 +38,7 @@ public interface CommonRemoteServiceAsync {
 	public void getJobLog(long jobId, AsyncCallback<String> callback);
 
 	public void getLogsForAction(RemoteAction action, Integer count,
-			AsyncCallback<List<ActionLogItem>> callback);
+			AsyncCallback<List<JobTracker>> callback);
 
 	public void hello(AsyncCallback callback);
 

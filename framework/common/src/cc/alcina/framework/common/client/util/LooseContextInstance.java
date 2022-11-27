@@ -94,7 +94,7 @@ public class LooseContextInstance {
 	}
 
 	/*
-	 * FIXME - 2022 - delete (only used by rendercontext)
+	 * (Only used by rendercontext)
 	 */
 	public void pushContext(LooseContextInstance renderContext) {
 		stack.push(properties);

@@ -16,7 +16,7 @@ import cc.alcina.framework.gwt.client.entity.place.ActionRefPlace;
 
 @Registration(ActionRef.class)
 /**
- * FIXME - dirndl1x1a - remove (and
+ * FIXME - dirndl 1x1d - remove (and
  * cc.alcina.framework.gwt.client.dirndl.annotation.Reference), just use
  * ModelEvent, and Link.withDefaultEventHandler() - which is looked up by the
  * root node

@@ -21,7 +21,6 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents.Click;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent.Context;
 import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
@@ -141,9 +140,7 @@ public class Link extends Model.WithNode
 		if (gwtEvent.getNativeButton() == NativeEvent.BUTTON_LEFT) {
 			if (modelEvent != null) {
 				WidgetUtils.squelchCurrentEvent();
-				Context context = NodeEvent.Context.newModelContext(event,
-						node);
-				ModelEvent.fire(context, modelEvent, null);
+				NodeEvent.Context.newModelContext(event, node).fire(modelEvent);
 			} else if (nonStandardObjectAction != null) {
 				WidgetUtils.squelchCurrentEvent();
 				DefaultPermissibleActionHandler.handleAction(
@@ -252,6 +249,14 @@ public class Link extends Model.WithNode
 		return this;
 	}
 
+	public Link withModelEventAndText(Class<? extends ModelEvent> modelEvent) {
+		this.modelEvent = modelEvent;
+		if (this.text == null) {
+			this.text = Reflections.at(modelEvent).templateInstance().getName();
+		}
+		return this;
+	}
+
 	public Link withNewTab(boolean newTab) {
 		if (newTab) {
 			setTarget("_blank");
@@ -278,6 +283,10 @@ public class Link extends Model.WithNode
 	public Link withTarget(String target) {
 		this.target = target;
 		return this;
+	}
+
+	public Link withTargetBlank() {
+		return withTarget("_blank");
 	}
 
 	public Link withText(String text) {

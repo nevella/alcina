@@ -4,9 +4,12 @@ import java.lang.annotation.Annotation;
 import java.util.List;
 
 import cc.alcina.framework.common.client.logic.reflection.DefaultAnnotationResolver;
+import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected;
+import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.logic.reflection.resolution.AnnotationLocation;
 import cc.alcina.framework.common.client.reflection.Property;
+import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
@@ -86,5 +89,33 @@ public class ContextResolver extends AnnotationLocation.Resolver {
 	 */
 	Property resolveDirectedProperty(Property property) {
 		return resolveDirectedProperty0(property);
+	}
+
+	/**
+	 * Used for getting the default app top-level resolver
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	@Registration.Singleton
+	public static class Default {
+		public static ContextResolver.Default get() {
+			return Registry.impl(ContextResolver.Default.class);
+		}
+
+		private Class<? extends ContextResolver> defaultResolver = ContextResolver.class;
+
+		public ContextResolver createResolver() {
+			return Reflections.newInstance(defaultResolver);
+		}
+
+		public Class<? extends ContextResolver> getDefaultResolver() {
+			return this.defaultResolver;
+		}
+
+		public void setDefaultResolver(
+				Class<? extends ContextResolver> defaultResolver) {
+			this.defaultResolver = defaultResolver;
+		}
 	}
 }

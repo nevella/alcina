@@ -218,10 +218,14 @@ public class AuthenticationManager {
 							sessionId);
 					validSession = true;
 				} else {
+					// if this is an RPC request, we'll want to set up headers
+					// informing the client of the reason for the exception.
+					// so try to setup the client instance before throwing
+					setupClientInstanceFromHeaders(context);
 					logger.warn(
 							"Throwing due to rpc exception with expired session id: {}",
 							sessionId);
-					throw new IllegalStateException("Not authorized");
+					throw new ExpiredClientInstanceException();
 				}
 			} else {
 				// new servlet/webapp - create a new session
@@ -366,6 +370,13 @@ public class AuthenticationManager {
 	 */
 	private String validateClientUid(String uid) {
 		return Ax.matches(uid, "server:.+") ? null : uid;
+	}
+
+	public static class ExpiredClientInstanceException
+			extends RuntimeException {
+		public ExpiredClientInstanceException() {
+			super("Not authorized - client instance expired");
+		}
 	}
 
 	static class AuthenticationContext {

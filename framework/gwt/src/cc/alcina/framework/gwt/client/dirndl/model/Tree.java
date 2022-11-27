@@ -105,7 +105,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 		throw new UnsupportedOperationException();
 	}
 
-	// FIXME - dirndl 1.1 - this should expect a relative, not absolute path
+	// FIXME - dirndl 1x1d - this should expect a relative, not absolute path
 	public abstract static class AbstractPathNode<PN extends AbstractPathNode>
 			extends TreeNode<PN> {
 		protected TreePath<PN> treePath;
@@ -288,7 +288,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 			return this.selected;
 		}
 
-		// FIXME - dirndl 1x1a - classic incremental collection modification,
+		// FIXME - dirndl 1x1g - classic incremental collection modification,
 		// have ChildReplacer (DirectedLayout) preserve the list (change the
 		// model, keep the node) and just handle the element delta
 		//

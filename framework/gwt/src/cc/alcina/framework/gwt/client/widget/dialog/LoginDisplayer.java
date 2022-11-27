@@ -41,10 +41,6 @@ import cc.alcina.framework.gwt.client.widget.EnterAsClickKeyboardListener;
  * @author Nick Reddel
  */
 public class LoginDisplayer {
-	public static final String CANCEL_ACTION = "cancel";
-
-	public static final String LOGIN_ACTION = "ok";
-
 	private DialogBox dialogBox;
 
 	private Label statusLabel;
@@ -195,8 +191,7 @@ public class LoginDisplayer {
 				b.setUserName(nameBox.getText());
 				b.setPassword(pwdBox.getText());
 				b.setRememberMe(rememberMeBox.getValue());
-				PermissibleAction action = new PermissibleAction();
-				action.setActionName(LOGIN_ACTION);
+				PermissibleAction action = new PermissibleAction.OkAction();
 				PermissibleActionEvent evt = new PermissibleActionEvent(this,
 						action);
 				evt.setParameters(b);
@@ -206,8 +201,7 @@ public class LoginDisplayer {
 		cancelButton.addClickHandler(new ClickHandler() {
 			@Override
 			public void onClick(ClickEvent event) {
-				PermissibleAction action = new PermissibleAction();
-				action.setActionName(CANCEL_ACTION);
+				PermissibleAction action = new PermissibleAction.CancelAction();
 				listener.vetoableAction(
 						new PermissibleActionEvent(this, action));
 			}

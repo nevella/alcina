@@ -147,7 +147,8 @@ public class Publisher {
 					"Publication %s cannot be published as root",
 					deliveryModel);
 		}
-		ContentModelHandler cmh = Registry.impl(ContentModelHandler.class,contentDefinition.getClass());
+		ContentModelHandler cmh = Registry.impl(ContentModelHandler.class,
+				contentDefinition.getClass());
 		cmh.prepareContent(contentDefinition, deliveryModel);
 		if (!cmh.hasResults) {
 			// throw exception??
@@ -181,7 +182,8 @@ public class Publisher {
 			}
 		}
 		long publicationId = CommonUtils.lv(result.getPublicationId());
-		ContentRenderer crh = Registry.impl(ContentRenderer.class,publicationContent.getClass());
+		ContentRenderer crh = Registry.impl(ContentRenderer.class,
+				publicationContent.getClass());
 		ctx.getVisitorOrNoop().beforeRenderContent();
 		publicationContent = ctx.publicationContent;
 		crh.renderContent(contentDefinition, publicationContent, deliveryModel,
@@ -191,7 +193,8 @@ public class Publisher {
 			persister.persistContentRendererResults(crh.getResults(),
 					ctx.publication);
 		}
-		ContentWrapper cw = Registry.impl(ContentWrapper.class,publicationContent.getClass());
+		ContentWrapper cw = Registry.impl(ContentWrapper.class,
+				publicationContent.getClass());
 		ctx.getVisitorOrNoop().beforeWrapContent();
 		cw.wrapContent(contentDefinition, publicationContent, deliveryModel,
 				crh.getResults(), publicationId, publicationUserId);
@@ -208,7 +211,8 @@ public class Publisher {
 			}
 			return result;
 		}
-		FormatConverter fc = Registry.impl(FormatConverter.class,deliveryModel.provideTargetFormat().getClass());
+		FormatConverter fc = Registry.impl(FormatConverter.class,
+				deliveryModel.provideTargetFormat().getClass());
 		FormatConversionModel fcm = new FormatConversionModel();
 		fcm.html = cw.wrappedContent;
 		fcm.footer = cw.wrappedFooter;
@@ -217,6 +221,8 @@ public class Publisher {
 		fcm.rows = cw.wrapper.gridRows;
 		fcm.custom = cw.custom;
 		ctx.formatConversionModel = fcm;
+		fcm.fileExtension = fc.getFileExtension();
+		fcm.mimeType = fc.getMimeType();
 		InputStream convertedContent = fc.convert(ctx, fcm);
 		convertedContent = ctx.getVisitorOrNoop()
 				.transformConvertedContent(convertedContent);

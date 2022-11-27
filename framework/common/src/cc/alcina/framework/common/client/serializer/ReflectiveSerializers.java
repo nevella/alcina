@@ -21,6 +21,7 @@ import java.util.TreeSet;
 import java.util.UUID;
 
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.logic.ExtensibleEnum;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LiSet;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightMap;
@@ -388,7 +389,7 @@ public class ReflectiveSerializers {
 					long.class, int.class, short.class, char.class, byte.class,
 					boolean.class, double.class, float.class, Enum.class,
 					Class.class, void.class, Void.class, byte[].class,
-					BasePlace.class, UUID.class);
+					BasePlace.class, UUID.class, ExtensibleEnum.class);
 		}
 
 		@Override
@@ -572,6 +573,25 @@ public class ReflectiveSerializers {
 		protected Enum fromJsonString(Class<? extends Enum> clazz,
 				JsonString value) {
 			return CommonUtils.getEnumValueOrNull(clazz, value.asString());
+		}
+	}
+
+	public static class ValueSerializerExtensibleEnum
+			extends ReflectiveSerializer.ValueSerializer<ExtensibleEnum> {
+		@Override
+		public List<Class> serializesTypes() {
+			return Arrays.asList(ExtensibleEnum.class);
+		}
+
+		@Override
+		public JsonValue toJson(ExtensibleEnum object) {
+			return Json.create(object.toString());
+		}
+
+		@Override
+		protected ExtensibleEnum fromJsonString(
+				Class<? extends ExtensibleEnum> clazz, JsonString value) {
+			return ExtensibleEnum.valueOf(clazz, value.asString());
 		}
 	}
 

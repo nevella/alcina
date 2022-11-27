@@ -18,11 +18,13 @@
  * compound superclass names: <code>EntityFilter</code> -&gt;
  * <code>EntityFilterRestriction</code>
  * <p>
- * The reasoning is derived by working backwords from usage in IDE autocomplete,
+ * The reasoning is derived by working backwards from usage in IDE autocomplete,
  * that specialised subclasses of compound names are rarely referred to directly
  * in Alcina code, more often they're created reflectively and so postfix naming
  * prevents clustering around common adjectives
  *
  * @category philosophy
+ *
+ * @see alcina/doc/readme.md
  */
 package cc.alcina.framework;

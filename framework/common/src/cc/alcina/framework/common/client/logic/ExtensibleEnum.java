@@ -115,7 +115,12 @@ public abstract class ExtensibleEnum {
 
 	public static <E extends ExtensibleEnum> E valueOf(Class<E> enumClass,
 			String name) {
-		return (E) valueLookup.get(enumClass, name);
+		Class<? extends ExtensibleEnum> registryPoint = enumClass;
+		if (registryPoint.getSuperclass() != ExtensibleEnum.class) {
+			registryPoint = (Class<? extends ExtensibleEnum>) registryPoint
+					.getSuperclass();
+		}
+		return (E) valueLookup.get(registryPoint, name);
 	}
 
 	public static <E extends ExtensibleEnum> List<E>
@@ -175,13 +180,17 @@ public abstract class ExtensibleEnum {
 		return serializedForm();
 	}
 
-	private Class<? extends ExtensibleEnum> getRegistryPoint() {
-		Class<? extends ExtensibleEnum> registryPoint = getClass();
-		if (registryPoint.getSuperclass() != ExtensibleEnum.class) {
-			registryPoint = (Class<? extends ExtensibleEnum>) registryPoint
-					.getSuperclass();
+	public static Class<? extends ExtensibleEnum>
+			registryPoint(Class<? extends ExtensibleEnum> clazz) {
+		if (clazz.getSuperclass() == ExtensibleEnum.class) {
+			return clazz;
+		} else {
+			return (Class<? extends ExtensibleEnum>) clazz.getSuperclass();
 		}
-		return registryPoint;
+	}
+
+	private Class<? extends ExtensibleEnum> getRegistryPoint() {
+		return registryPoint(getClass());
 	}
 
 	public static class FromSerializedFormConverter

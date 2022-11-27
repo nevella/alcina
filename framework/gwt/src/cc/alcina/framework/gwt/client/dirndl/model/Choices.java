@@ -8,6 +8,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
+import cc.alcina.framework.common.client.util.ListenerReference;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding.Type;
@@ -15,26 +16,33 @@ import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.DomEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Selected;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 
-@Directed(tag = "selection-model", receives = ModelEvents.Selected.class)
-// FIXME - dirndl 1x1a - change to "Choices"
-// also this should emit ModelEvents, not topic
-public abstract class SelectionModel<T> extends Model
+@Directed(tag = "choices", receives = ModelEvents.Selected.class)
+/*
+ * I'm not entirely happy with 'Choices' firing 'Selection' events (could it not
+ * be "chosen" events - or revert to "Selections/Selection") - even though
+ * 'selected choice' is valid english and common parlance.
+ *
+ * But 'selection' is very heavily used in the codebase (including
+ * SelectionTraversal) - so these are the names we go with.
+ */
+public abstract class Choices<T> extends Model.WithNode
 		implements ModelEvents.Selected.Handler {
-	protected List<SelectionModel.Choice<T>> choices;
+	protected List<Choices.Choice<T>> choices;
 
 	private List<T> values;
 
-	public SelectionModel() {
+	public Choices() {
 		this(new ArrayList<>());
 	}
 
-	public SelectionModel(List<T> values) {
+	public Choices(List<T> values) {
 		setValues(values);
 	}
 
 	@Directed
-	public List<SelectionModel.Choice<T>> getChoices() {
+	public List<Choices.Choice<T>> getChoices() {
 		return this.choices;
 	}
 
@@ -42,7 +50,7 @@ public abstract class SelectionModel<T> extends Model
 		return this.values;
 	}
 
-	public void setChoices(List<SelectionModel.Choice<T>> choices) {
+	public void setChoices(List<Choices.Choice<T>> choices) {
 		var old_choices = this.choices;
 		this.choices = choices;
 		propertyChangeSupport().firePropertyChange("choices", old_choices,
@@ -51,13 +59,15 @@ public abstract class SelectionModel<T> extends Model
 
 	public void setValues(List<T> values) {
 		this.values = values;
-		setChoices(values.stream().map(SelectionModel.Choice::new)
+		setChoices(values.stream().map(Choices.Choice::new)
 				.collect(Collectors.toList()));
 	}
 
 	/*
-	 * TODO - dirndl1.1 - is it possible to bind just to isSelected here? in
-	 * which case no need to wrap wdiget/elements
+	 * It is possible to bind just to isSelected here (with a delegating
+	 * renderer) - but the css for decoration of the choice becomes a lot
+	 * simpler if there _is_ a choice > model structure, so Choice remains a
+	 * container for the moment
 	 */
 	@Directed(
 		bindings = @Binding(
@@ -92,9 +102,8 @@ public abstract class SelectionModel<T> extends Model
 		}
 	}
 
-	public static class Multiple<T> extends SelectionModel<T> {
-		public Topic<List<T>> selectionChanged = Topic.create();
-
+	@Directed(emits = ModelEvents.SelectionChanged.class)
+	public static class Multiple<T> extends Choices<T> {
 		public Multiple() {
 		}
 
@@ -109,8 +118,7 @@ public abstract class SelectionModel<T> extends Model
 
 		@Override
 		public void onSelected(Selected event) {
-			SelectionModel.Choice<T> choice = event == null ? null
-					: event.getModel();
+			Choices.Choice<T> choice = event == null ? null : event.getModel();
 			T value = choice == null ? null : choice.getValue();
 			List<T> updatedValues = choices.stream().filter(c -> {
 				T choiceValue = c.getValue();
@@ -130,17 +138,17 @@ public abstract class SelectionModel<T> extends Model
 			choices.forEach(c -> c.setSelected(valuesSet.contains(c.value)));
 			List<T> newValues = getSelectedValues();
 			if (!Objects.equals(oldValues, newValues)) {
-				selectionChanged.publish(newValues);
+				NodeEvent.Context.newNodeContext(node)
+						.fire(ModelEvents.SelectionChanged.class);
 			}
 		}
 	}
 
 	@TypeSerialization(reflectiveSerializable = false)
-	public static class Single<T> extends SelectionModel<T> {
-		public Topic<T> selectionChanged = Topic.create();
-
-		public Topic<T> valueSelected = Topic.create();
-
+	@Directed(
+		emits = { ModelEvents.SelectionChanged.class,
+				ModelEvents.Selected.class })
+	public static class Single<T> extends Choices<T> {
 		protected boolean deselectIfSelectedClicked = false;
 
 		/*
@@ -148,11 +156,29 @@ public abstract class SelectionModel<T> extends Model
 		 */
 		protected boolean changeOnSelectionEvent = true;
 
+		private T provisionalValue;
+
+		/*
+		 * Use ModelEvents by preference - this allows ex-hierarchy observation
+		 * of changes if required
+		 */
+		private Topic<Void> selectionChanged = Topic.create();
+
+		/*
+		 * Use ModelEvents by preference - this allows ex-hierarchy observation
+		 * of changes if required
+		 */
+		private Topic<Void> valueSelected = Topic.create();
+
 		public Single() {
 		}
 
 		public Single(List<T> values) {
 			super(values);
+		}
+
+		public T getProvisionalValue() {
+			return this.provisionalValue;
 		}
 
 		public T getSelectedValue() {
@@ -170,13 +196,18 @@ public abstract class SelectionModel<T> extends Model
 
 		@Override
 		public void onSelected(Selected event) {
-			SelectionModel.Choice<T> choice = event == null ? null
-					: event.getModel();
+			if (event.wasReemitted(node)) {
+				return;
+			}
+			Choices.Choice<T> choice = event == null ? null : event.getModel();
 			T value = choice == null ? null : choice.getValue();
 			if (deselectIfSelectedClicked && value == getSelectedValue()) {
 				value = null;
 			}
-			valueSelected.publish(value);
+			provisionalValue = value;
+			NodeEvent.Context.newModelContext(event.getContext(), node)
+					.fire(Selected.class);
+			valueSelected.signal();
 			if (changeOnSelectionEvent) {
 				setSelectedValue(value);
 			}
@@ -196,8 +227,18 @@ public abstract class SelectionModel<T> extends Model
 			choices.forEach(c -> c.setSelected(c.value == value));
 			T newValue = getSelectedValue();
 			if (!Objects.equals(oldValue, newValue)) {
-				selectionChanged.publish(newValue);
+				NodeEvent.Context.newNodeContext(node)
+						.fire(ModelEvents.SelectionChanged.class);
+				selectionChanged.signal();
 			}
+		}
+
+		public ListenerReference subscribeSelectionChanged(Runnable runnable) {
+			return selectionChanged.add(runnable);
+		}
+
+		public ListenerReference subscribeValueSelected(Runnable runnable) {
+			return valueSelected.add(runnable);
 		}
 	}
 }

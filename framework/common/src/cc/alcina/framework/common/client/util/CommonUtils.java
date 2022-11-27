@@ -92,8 +92,6 @@ public class CommonUtils {
 	private static UnsortedMultikeyMap<Enum> enumValueLookup = new UnsortedMultikeyMap<Enum>(
 			3);
 
-	private static Set<String> done = new LinkedHashSet<>();
-
 	// https://en.wikipedia.org/wiki/Wikipedia:Manual_of_Style/Titles
 	private static Set<String> standardLowercaseEnglish = Arrays.stream(
 			"A,An,The,And,But,Or,Nor,For,Yet,So,As,In,Of,On,To,For,From,Into,LikeExcluded,Over,With,Upon"
@@ -398,17 +396,6 @@ public class CommonUtils {
 			builder.append(c.toLowerCase());
 		}
 		return builder.toString();
-	}
-
-	// FIXME - 2022 - just use singletons
-	public static void doOnce(Class clazz, Runnable runnable) {
-		doOnce(clazz, null, runnable);
-	}
-
-	public static void doOnce(Class clazz, String key, Runnable runnable) {
-		if (done.add(format("%s::%s", clazz.getName(), key))) {
-			runnable.run();
-		}
 	}
 
 	public static void dumpAround(String text, String subString) {
@@ -2171,6 +2158,16 @@ public class CommonUtils {
 
 	public static interface IidGenerator {
 		String generate();
+	}
+
+	public static class Paths {
+		public static String ensureSlashTerminated(String path) {
+			return path.endsWith("/") ? path : path + "/";
+		}
+
+		public static String sanitizeForUnixPaths(String fileName) {
+			return fileName.replaceAll("[:]", "").replaceAll("[ ]", "_");
+		}
 	}
 
 	public static class ThreeWaySetResult<T> {

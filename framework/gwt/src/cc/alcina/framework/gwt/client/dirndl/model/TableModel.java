@@ -69,10 +69,12 @@ public class TableModel extends Model {
 			AbstractContextSensitiveModelTransform<DirectedCategoriesActivity<?>, TableModel> {
 		@Override
 		public TableModel apply(DirectedCategoriesActivity<?> activity) {
-			TableModel model = new TableModel();
+			TableModel tableModel = new TableModel();
 			BoundWidgetTypeFactory factory = Registry
 					.impl(TableTypeFactory.class);
-			node.setResolver(ModalResolver.multiple(node, true));
+			ModalResolver resolver = ModalResolver.multiple(node, true);
+			node.setResolver(resolver);
+			resolver.setTableModel(tableModel);
 			List<CategoryNamePlace> places = activity.getPlace()
 					.getNamedPlaces();
 			places.removeIf(p -> !isPermitted(p));
@@ -82,11 +84,11 @@ public class TableModel extends Model {
 							Reflections.at(resultClass).templateInstance(),
 							factory, false, true, node.getResolver())
 					.stream().map(TableColumn::new)
-					.forEach(model.header.columns::add);
+					.forEach(tableModel.header.columns::add);
 			places.stream().map(CategoryNamePlaceTableAdapter::new)
-					.map(bindable -> new TableRow(model, bindable))
-					.forEach(model.rows::add);
-			return model;
+					.map(bindable -> new TableRow(tableModel, bindable))
+					.forEach(tableModel.rows::add);
+			return tableModel;
 		}
 
 		protected boolean isPermitted(CategoryNamePlace place) {
@@ -130,14 +132,15 @@ public class TableModel extends Model {
 		@Override
 		public TableModel apply(
 				DirectedBindableSearchActivity<? extends EntityPlace, ? extends Bindable> activity) {
-			TableModel model = new TableModel();
+			TableModel tableModel = new TableModel();
 			BoundWidgetTypeFactory factory = Registry
 					.impl(TableTypeFactory.class);
 			if (activity.getSearchResults() == null) {
-				return model;
+				return tableModel;
 			}
-			ModalResolver childResolver = ModalResolver.multiple(node, true);
-			node.setResolver(childResolver);
+			ModalResolver resolver = ModalResolver.multiple(node, true);
+			resolver.setTableModel(tableModel);
+			node.setResolver(resolver);
 			BindableSearchDefinition def = activity.getSearchResults().getDef();
 			String sortFieldName = def.getSearchOrders()
 					.provideSearchOrderFieldName();
@@ -149,25 +152,25 @@ public class TableModel extends Model {
 			List<Field> fields = GwittirBridge.get()
 					.fieldsForReflectedObjectAndSetupWidgetFactoryAsList(
 							Reflections.at(resultClass).templateInstance(),
-							factory, false, true, childResolver);
+							factory, false, true, resolver);
 			fields.stream().map(field -> {
 				SortDirection fieldDirection = field.getPropertyName()
 						.equals(sortFieldName) ? sortDirection : null;
 				return new TableColumn(field, fieldDirection);
-			}).forEach(model.header.columns::add);
+			}).forEach(tableModel.header.columns::add);
 			List<? extends Bindable> rowObjects = activity.getSearchResults()
 					.getQueriedResultObjects();
 			if (rowObjects.size() == 0) {
 				Registry.impl(EmptyResultHandler.class)
 						.getEmptyResultPlaceholder(fields)
-						.forEach(model.rows::add);
+						.forEach(tableModel.rows::add);
 			} else {
 				rowObjects.stream()
-						.map(bindable -> new TableRow(model, bindable))
-						.forEach(model.rows::add);
+						.map(bindable -> new TableRow(tableModel, bindable))
+						.forEach(tableModel.rows::add);
 			}
 			// add actions if editable and adjunct
-			return model;
+			return tableModel;
 		}
 	}
 

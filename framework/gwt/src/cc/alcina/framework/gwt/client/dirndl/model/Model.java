@@ -35,7 +35,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout;
  * <p>
  * Note - above comments were early dirndl days - almost certainly that
  * mechanism can be replaced by a ModelEvent (possibly causing Model
- * replacement) - at which point remove
+ * replacement) - at which point remove. FIXME - dirndl 1x1d - model
  *
  * @author nick@alcina.cc
  *
@@ -90,15 +90,44 @@ public abstract class Model extends Bindable
 		}
 	}
 
-	/*
-	 * There's a bit of an overuse of "binding" here - the superclass binds
-	 * properties to the rendered object (generally dom element), this binds
-	 * bean properties using Gwittir bindings
+	/**
+	 * This extension of Model exposes the corresponding Node in the dirdnl
+	 * layout tree. It's mostly used to provide access to the rendered DOM for
+	 * things like focus, scroll and rendered offset handling.
 	 *
-	 * FIXME - dirndl 1x1a - to 'WithPropertyBinding' - to distnguish from
-	 * model-level binding
+	 * @author nick@alcina.cc
+	 *
 	 */
-	public static class WithBinding extends Model
+	public static class WithNode extends Model {
+		protected DirectedLayout.Node node;
+
+		@Override
+		public void onBind(Bind event) {
+			if (event.isBound()) {
+				node = event.getContext().node;
+			} else {
+				node = null;
+			}
+			super.onBind(event);
+		}
+
+		public Element provideElement() {
+			return node.getWidget().getElement();
+		}
+	}
+
+	/**
+	 * <p>
+	 * Adds support for lifecycle binding of model properties to other objects.
+	 * The property bindings (which cascade property changes with optional
+	 * validation and transformation) are set up/torn down during the model
+	 * onBind event, so are only live (and reachable from the GC point of view)
+	 * while the model is attached to the layout tree.
+	 *
+	 * @author nick@alcina.cc
+	 *
+	 */
+	public static class WithPropertyBinding extends Model
 			implements LayoutEvents.BeforeRender.Handler {
 		private Binding binding = new Binding();
 
@@ -139,22 +168,9 @@ public abstract class Model extends Bindable
 		}
 	}
 
-	// No mixins (although this effectively mixes WithNode + WithBinding)
-	public static class WithBindingAndNode extends Model.WithBinding {
-		protected DirectedLayout.Node node;
-
-		@Override
-		public void onBind(Bind event) {
-			if (event.isBound()) {
-				node = event.getContext().node;
-			} else {
-				node = null;
-			}
-			super.onBind(event);
-		}
-	}
-
-	public static class WithNode extends Model {
+	// No mixins sez Java (so this effectively mixes WithNode + WithBinding)
+	public static class WithPropertyBindingAndNode
+			extends Model.WithPropertyBinding {
 		protected DirectedLayout.Node node;
 
 		@Override

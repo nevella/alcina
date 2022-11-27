@@ -68,7 +68,7 @@ import cc.alcina.framework.servlet.domain.view.DomainViews.Key;
 import cc.alcina.framework.servlet.domain.view.DomainViews.ViewsTask;
 
 /**
- * FIXME - dirndl 1.2 - there's confusion between 'node' and 'model' here -
+ * FIXME - dirndl 1x3 - there's confusion between 'node' and 'model' here -
  * partly driven by the separation of 'node' and 'path' (which really, really
  * helps). But NodeModel -> TreeNode...the model *is* the logical node for all
  * intents n purps
@@ -483,7 +483,7 @@ public class LiveTree {
 			Transform t) {
 		if (transformFilter.test(t)) {
 			if (t.getOperation() == Operation.CHANGE) {
-				// FIXME - dirndl1.1 - this may fail (not
+				// FIXME - dirndl 1x3 - this may fail (not
 				// properly
 				// update client) if transforms are not in tree
 				// order. need to fix navigation server-side

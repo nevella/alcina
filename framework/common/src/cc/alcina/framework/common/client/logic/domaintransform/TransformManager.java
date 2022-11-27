@@ -1772,8 +1772,12 @@ public abstract class TransformManager
 
 	protected boolean ignorePropertyForObjectsToDtes(Class objectType,
 			Class propertyType, String propertyName) {
-		// FIXME - 2022 - fix AlcinaTransient usage; check 'propertyType ==
-		// Class.class'
+		/*
+		 * FIXME - dirndl 1x2 - fix AlcinaTransient usage; check 'propertyType
+		 * == Class.class. Note that Class.class was probably for GWT ser (can
+		 * be dropped), transience type is probably wrong (since this can run on
+		 * the client as well as server)
+		 */
 		return ignorePropertiesForCaching.contains(propertyName)
 				|| propertyType == Class.class
 				|| !PermissionsManager.get().checkReadable(objectType,
@@ -1792,7 +1796,7 @@ public abstract class TransformManager
 	}
 
 	protected void initObjectStore() {
-		// FIXME - 2022 - to client tm
+		// FIXME - dirndl 1x2 - to client tm
 		setObjectStore(new StandaloneObjectStoreClient(this));
 	}
 

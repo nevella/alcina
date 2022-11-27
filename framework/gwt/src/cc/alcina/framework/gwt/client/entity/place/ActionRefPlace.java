@@ -32,8 +32,8 @@ public class ActionRefPlace extends BasePlace {
 	}
 
 	public Optional<EmitsModelEvent> emitsModelEvent() {
-		return Optional
-				.ofNullable(Reflections.at(ref).annotation(EmitsModelEvent.class));
+		return Optional.ofNullable(
+				Reflections.at(ref).annotation(EmitsModelEvent.class));
 	}
 
 	public Optional<ActionHandler> getActionHandler() {
@@ -43,7 +43,7 @@ public class ActionRefPlace extends BasePlace {
 			return handler;
 		}
 		/*
-		 * FIXME - dirndl1.1 - should annotation resolution be via context?
+		 * FIXME - dirndl 1x1d - remove (actionref, actionrefplace, ref)
 		 */
 		return Optional
 				.ofNullable(

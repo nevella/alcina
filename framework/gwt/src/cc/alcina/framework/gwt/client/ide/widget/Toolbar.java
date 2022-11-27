@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -43,6 +43,7 @@ import cc.alcina.framework.common.client.actions.PermissibleActionEvent;
 import cc.alcina.framework.common.client.actions.PermissibleActionListener;
 import cc.alcina.framework.common.client.logic.permissions.Permissible;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.logic.HasHref;
@@ -57,7 +58,7 @@ import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlers;
 import cc.alcina.framework.gwt.client.widget.handlers.HasChildHandlersSupport;
 
 /**
- * 
+ *
  * @author Nick Reddel
  */
 public class Toolbar extends Composite
@@ -335,16 +336,18 @@ public class Toolbar extends Composite
 			if (asButton) {
 				button = new Button(SafeHtmlUtils
 						.htmlEscapeAllowEntities(action.getDisplayName()));
-				button.setStyleName(buttonStyleName != null ? buttonStyleName
-						: "alcina-Button");
+				button.setStyleName(
+						Ax.notBlank(buttonStyleName) ? buttonStyleName
+								: "alcina-Button");
 				w = button;
 				if (action instanceof ClickHandler) {
 					button.addClickHandler((ClickHandler) action);
 				}
 			} else {
 				aWidget = new StyledAWidget(action.getDisplayName(), false);
-				aWidget.setStyleName(buttonStyleName != null ? buttonStyleName
-						: "button-grey");
+				aWidget.setStyleName(
+						Ax.notBlank(buttonStyleName) ? buttonStyleName
+								: "button-grey");
 				aWidget.setWordWrap(false);
 				w = aWidget;
 				if (action instanceof ClickHandler) {
@@ -381,7 +384,7 @@ public class Toolbar extends Composite
 					});
 				}
 			}
-			if (cn != null) {
+			if (Ax.notBlank(cn)) {
 				w.addStyleName(cn);
 			}
 			initWidget(w);

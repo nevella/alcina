@@ -7,6 +7,7 @@ import com.google.gwt.user.client.ui.Widget;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
+import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
 
@@ -45,6 +46,10 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		return (T0) this.model;
 	}
 
+	public String getName() {
+		return Ax.friendly(getClass().getSimpleName());
+	}
+
 	public boolean isHandled() {
 		return handled;
 	}
@@ -53,12 +58,17 @@ public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		this.handled = handled;
 	}
 
+	public boolean wasReemitted(Node node) {
+		return getContext().previous != null
+				&& getContext().previous.node == node;
+	}
+
 	@Override
-	// FIXME - dirndl 1x1b - model vs widget bindings. Look at the guarantees of
+	// FIXME - dirndl 1x1d - events - model vs widget bindings. Look at the
+	// guarantees of
 	// model binding, but I *think* we can move this into layout events. Also
 	// pretty sure bind/unbind is a noop for model events - in fact,
 	//
-	// FIXME - dirndl 1x1a verify
 	protected HandlerRegistration bind0(Widget widget) {
 		return widget.addAttachHandler(evt -> {
 			if (!evt.isAttached()) {

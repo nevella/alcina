@@ -15,10 +15,11 @@ public class StandardModels {
 		tag = "page",
 		bindings = @Binding(
 			from = "className",
-			type = Type.CSS_CLASS,
+			type = Type.PROPERTY,
+			to = "class",
 			transform = ToStringFunction.ExplicitIdentity.class))
 	@TypeSerialization(reflectiveSerializable = false)
-	public static class HeaderContent extends Model.WithBinding {
+	public static class HeaderContent extends Model.WithPropertyBinding {
 		private Object header;
 
 		private Object content;

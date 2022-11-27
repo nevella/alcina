@@ -72,6 +72,12 @@ div.viewer  div.img-wrapper {
 div.viewer  div.img-wrapper img {
 	max-width: 100%;
 }
+body.phone div.viewer  div.img-wrapper img {
+	max-width: 375px;
+}
+body.tablet div.viewer  div.img-wrapper img {
+	max-width: 820px;
+}
 
 div.buttons {
 	padding: 1.5em 1em 1em 0;

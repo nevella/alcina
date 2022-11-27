@@ -10,9 +10,10 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 
 /*
- * Implementations (essentially extensible enums) require an @Ref annotation if serializable
+ * Implementations (essentially extensible enums) require an @Ref annotation if
+ * serializable
  *
- * FIXME - dirndl 1.3 - revisit
+ * FIXME - dirndl 1x1d - remove and/or merge with ExtensibleEnum
  */
 @Bean
 public abstract class Reference {

@@ -33,6 +33,11 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform.ContextSensit
  * <li>Enqueues [0,n] renderinput children
  * </ul>
  *
+ * <h2>Wrinkles</h2>
+ * <p>
+ * To prevent recursive/multiple application of Transform, the algorithm needs
+ * to track the originating model of a Node, and apply a Transform at most once
+ * per originating model
  *
  */
 @Reflected
@@ -106,17 +111,19 @@ public abstract class DirectedRenderer {
 			Preconditions
 					.checkArgument(input.model instanceof java.util.Collection);
 			// zero widgets for the container, generates input per child
-			List list = (List) ((java.util.Collection) input.model).stream()
-					.collect(Collectors.toList());
-			list.forEach(model -> {
+			((java.util.Collection) input.model).forEach(model -> {
 				Object transformedModel = transformModel(input, model);
 				// the @Directed for the collection element is merge (the input
 				// @Directed :: the element's merged hierarchy @Directed)
 				AnnotationLocation location = input.location
 						.copyWithClassLocationOf(transformedModel);
-				// FIXME - dirndl 1.3 - *definitely* optimise. Possibly
+				// FIXME - dirndl 1x1d - phase - *definitely* optimise. Possibly
 				// Directed.Impl should
 				// be only one instance per attribute permutation
+				//
+				// in 1x1d, finalise the handling of resolved annotations etc -
+				// optimise (possibly with per-resolver Type/Property nodes) in
+				// 1x1g if necessary
 				//
 				// what we really want is to pass a consumed/modified arg here
 				//
@@ -132,10 +139,10 @@ public abstract class DirectedRenderer {
 				// actually no - but we'll need Directed.transformPhase
 				//
 				// probably get it working, step back and fix
-				location.resolvedPropertyAnnotations = Arrays
+				location.resolutionState.resolvedPropertyAnnotations = Arrays
 						.asList(input.soleDirected());
 				// inelegant, but works to avoid double-transform
-				location.addConsumed(
+				location.resolutionState.addConsumed(
 						input.location.getAnnotation(Directed.Transform.class));
 				input.enqueueInput(input.resolver, transformedModel, location,
 						// force resolution
@@ -216,7 +223,7 @@ public abstract class DirectedRenderer {
 			Object transformedModel = transformModel(input, input.model);
 			AnnotationLocation location = input.location
 					.copyWithClassLocationOf(transformedModel);
-			// FIXME - dirndl 1.3 - *definitely* optimise. Possibly
+			// FIXME - dirndl 1x1g - *definitely* optimise. Possibly
 			// Directed.Impl should
 			// be only one instance per attribute permutation
 			//
@@ -252,9 +259,9 @@ public abstract class DirectedRenderer {
 				descendantResolvedPropertyAnnotation
 						.setReemits(Impl.EMPTY_CLASS_ARRAY);
 			}
-			location.resolvedPropertyAnnotations = Arrays
+			location.resolutionState.resolvedPropertyAnnotations = Arrays
 					.asList(descendantResolvedPropertyAnnotation);
-			location.addConsumed(
+			location.resolutionState.addConsumed(
 					input.location.getAnnotation(Directed.Transform.class));
 			input.enqueueInput(input.resolver, transformedModel, location, null,
 					input.node);
@@ -311,8 +318,6 @@ public abstract class DirectedRenderer {
 			}
 			ModelTransform modelTransform = (ModelTransform) Reflections
 					.newInstance(transform.value());
-			// FIXME - dirndl 1x1b - can this be slimmed down? Since it allows
-			// access to the whole parent chain, not just the parent
 			if (modelTransform instanceof ContextSensitiveTransform) {
 				((ContextSensitiveTransform) modelTransform)
 						.withContextNode(input.node);

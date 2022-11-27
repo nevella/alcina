@@ -6,6 +6,7 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
+import java.util.Objects;
 import java.util.function.Function;
 
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
@@ -27,7 +28,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
  *
  */
 /*
- * FIXME - dirndl1x1a - add Phase
+ * FIXME - dirndl 1x1d - phase - add Phase
  * [DEFAULT,COLLECTION,ELEMENT,PRE_TRANSFORM,POST_TRANSFORM] - which defaults to
  * DEFAULT but allows finer control over DirectedRenderer.Transform and
  * DirectedRenderer.Collection transformations
@@ -38,9 +39,10 @@ import cc.alcina.framework.gwt.client.dirndl.layout.ModelTransform;
 // Not inherited - annotation resolution uses merging algorithm which would
 // conflict
 // @Inherited
-@Resolution(inheritance = { Inheritance.CLASS, Inheritance.INTERFACE,
-		Inheritance.ERASED_PROPERTY,
-		Inheritance.PROPERTY }, mergeStrategy = DirectedMergeStrategy.class)
+@Resolution(
+	inheritance = { Inheritance.CLASS, Inheritance.INTERFACE,
+			Inheritance.ERASED_PROPERTY, Inheritance.PROPERTY },
+	mergeStrategy = DirectedMergeStrategy.class)
 @ClientVisible
 public @interface Directed {
 	/**
@@ -87,7 +89,7 @@ public @interface Directed {
 	public String tag() default "";
 
 	/**
-	 * Sugar for @Directed(renderer=DelegatingNodeRenderer.class)
+	 * Sugar for @Directed(renderer=DirectedRenderer.Delegating.class)
 	 *
 	 * @author nick@alcina.cc
 	 *
@@ -236,39 +238,11 @@ public @interface Directed {
 
 		@Override
 		public String toString() {
-			StringBuilder stringBuilder = new StringBuilder();
-			stringBuilder.append("bindings");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(bindings));
-			stringBuilder.append(", ");
-			stringBuilder.append("cssClass");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(cssClass));
-			stringBuilder.append(", ");
-			stringBuilder.append("emits");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(emits));
-			stringBuilder.append(", ");
-			stringBuilder.append("merge");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(merge));
-			stringBuilder.append(", ");
-			stringBuilder.append("receives");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(receives));
-			stringBuilder.append(", ");
-			stringBuilder.append("reemits");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(reemits));
-			stringBuilder.append(", ");
-			stringBuilder.append("renderer");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(renderer));
-			stringBuilder.append(", ");
-			stringBuilder.append("tag");
-			stringBuilder.append("=");
-			stringBuilder.append(__stringValue(tag));
-			return stringBuilder.toString();
+			return toString(false);
+		}
+
+		public String toStringElideDefaults() {
+			return toString(true);
 		}
 
 		private String __stringValue(Object o) {
@@ -284,10 +258,44 @@ public @interface Directed {
 			return o.toString();
 		}
 
+		private void append(StringBuilder stringBuilder, String fieldName,
+				Function<Directed, ?> function, boolean elideDefaults) {
+			Object value = function.apply(this);
+			if (elideDefaults) {
+				Object defaultValue = function.apply(DEFAULT_INSTANCE);
+				if (Objects.deepEquals(value, defaultValue)) {
+					return;
+				}
+			}
+			if (stringBuilder.length() > 0) {
+				stringBuilder.append(',');
+			}
+			stringBuilder.append(fieldName);
+			stringBuilder.append('=');
+			stringBuilder.append(__stringValue(value));
+		}
+
 		private <V> V mergeAttribute(Directed parent,
 				Function<Directed, V> function) {
 			return Resolution.MergeStrategy.mergeValues(parent, this,
 					DEFAULT_INSTANCE, function);
+		}
+
+		String toString(boolean elideDefaults) {
+			StringBuilder stringBuilder = new StringBuilder();
+			append(stringBuilder, "tag", Directed::tag, elideDefaults);
+			append(stringBuilder, "cssClass", Directed::cssClass,
+					elideDefaults);
+			append(stringBuilder, "bindings", Directed::bindings,
+					elideDefaults);
+			append(stringBuilder, "emits", Directed::emits, elideDefaults);
+			append(stringBuilder, "receives", Directed::receives,
+					elideDefaults);
+			append(stringBuilder, "reemits", Directed::reemits, elideDefaults);
+			append(stringBuilder, "renderer", Directed::renderer,
+					elideDefaults);
+			append(stringBuilder, "merge", Directed::merge, elideDefaults);
+			return stringBuilder.toString();
 		}
 	}
 
@@ -328,24 +336,33 @@ public @interface Directed {
 
 	/**
 	 * <p>
-	 * FIXME - dirndl1x1 - at least two use cases: if renderer is Transform,
-	 * transforms the input model -- if renderer is Collection, transform the
-	 * elements (there's no real virtue in having x -> Collection<A> ->
-	 * Collection <B>, so this flattening makes sense). Need to doc this with
-	 * examples.
+	 * This annotation causes differently depending on which of the two possible
+	 * contexts it occurs in.
 	 *
 	 * <p>
-	 * Also - determine renderer strategy should use the presence of this
-	 * annotation to determine renderer as follows:
+	 * If the DirectedRenderer is {@link DirectedRenderer.Transform}, it causes
+	 * the generation of a new Node with model B transformed from incoming Node
+	 * model A via the ModelTransform function A -&gt; B.
+	 *
+	 * <p>
+	 * If the DirectedRenderer is {@link DirectedRenderer.Collection}, it causes
+	 * the generation of multiple Node&lt;B&gt; - one per element &lt;A&gt; of
+	 * the Collection model (there's no real virtue in having x ->
+	 * Collection&lt;A&gt; -> Collection &lt;B&gt;, so this flattening makes
+	 * sense). FIXME dirndl 1x1h - cookbook examples
+	 *
+	 * <p>
+	 * In the absence of a @Directed annotation on the same code element, the
+	 * following renderer will be used, depending on the model value:-
+	 *
 	 * <ul>
-	 * <li>Type: collection - Present: true - use DirectedRenderer.Collection,
-	 * apply to elements
-	 * <li>Type: non-collection - Present: true - use
-	 * DirectedRenderer.Transform, apply to model
+	 * <li>Type: collection - use DirectedRenderer.Collection, apply to elements
+	 * <li>Type: non-collection - use DirectedRenderer.Transform, apply to model
+	 * </ul>
 	 *
 	 * <p>
-	 * If the annotated element has no other annotation which resolve
-	 * to @Directed annotations, a default @Directed annotation will be added
+	 * Note that a Transform can be specified and applied only once per model
+	 * property
 	 *
 	 * @author nick@alcina.cc
 	 *

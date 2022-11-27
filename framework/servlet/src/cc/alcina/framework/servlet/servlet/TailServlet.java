@@ -98,11 +98,11 @@ public class TailServlet extends AlcinaServlet {
 	}
 
 	protected boolean isPermitted() {
-		return !PermissionsManager.get().isAdmin();
+		return PermissionsManager.get().isAdmin();
 	}
 
 	/*
-	 * Use behind a 'secret' url -- /tail23090w94eu0293 say -- and use sparinly
+	 * Use behind a 'secret' url -- /tail23090w94eu0293 say -- and use sparingly
 	 */
 	public static class NonAuthenticated extends TailServlet {
 		@Override

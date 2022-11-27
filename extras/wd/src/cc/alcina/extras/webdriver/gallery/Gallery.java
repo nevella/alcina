@@ -4,6 +4,7 @@ import java.io.File;
 import java.net.URL;
 import java.util.List;
 
+import org.openqa.selenium.Dimension;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.remote.RemoteWebDriver;
 import org.w3c.dom.Document;
@@ -15,7 +16,6 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.JaxbUtils;
-import cc.alcina.framework.servlet.google.SheetAccessor;
 
 /**
  * <p>
@@ -102,6 +102,7 @@ public class Gallery {
 	public static void putDriver(RemoteWebDriver driver) {
 		if (instance() != null) {
 			instance().driver = driver;
+			instance().setWidth();
 		}
 	}
 
@@ -164,12 +165,31 @@ public class Gallery {
 					throw Ax.runtimeException("No configuration with name '%s'",
 							appName);
 				}
-				new SheetAccessor()
-						.withSheetAccess(configuration.asSheetAccess())
-						.ensureSpreadsheet();
 			} catch (Exception e) {
 				GalleryConfiguration.dumpSampleConfiguration();
 				throw new WrappedRuntimeException(e);
+			}
+		}
+	}
+
+	private void setWidth() {
+		if (userAgentType != null) {
+			Dimension dim = null;
+			switch (userAgentType) {
+			case "desktop":
+				dim = new Dimension(1700, 1200);
+				break;
+			case "tablet":
+				dim = new Dimension(820, 1180);
+				break;
+			case "phone":
+				dim = new Dimension(375, 687);
+				break;
+			}
+			try {
+				driver.manage().window().setSize(dim);
+			} catch (Exception e) {
+				e.printStackTrace();
 			}
 		}
 	}
@@ -184,8 +204,8 @@ public class Gallery {
 		File toFileImage = SEUtilities.getChildFile(base, snapName + ".png");
 		File toFileHtml = SEUtilities.getChildFile(base, snapName + ".html");
 		RemoteWebDriver remoteDriver = (RemoteWebDriver) driver;
-		byte[] bytes = remoteDriver.getScreenshotAs(OutputType.BYTES);
 		try {
+			byte[] bytes = remoteDriver.getScreenshotAs(OutputType.BYTES);
 			ResourceUtilities.writeBytesToFile(bytes, toFileImage);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);

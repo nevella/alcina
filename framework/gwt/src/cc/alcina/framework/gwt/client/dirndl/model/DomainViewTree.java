@@ -109,12 +109,12 @@ public abstract class DomainViewTree extends Tree<DomainViewNode> {
 			// delta children at the end to generate visual nodes after node
 			// tree complete
 			/*
-			 * FIXME - dirndl1.3 - what happens if changes occur at multiple
+			 * FIXME - dirndl 1x1g - what happens if changes occur at multiple
 			 * nodes?
 			 *
 			 * actually
 			 *
-			 * FIXME - dirndl 1x1a - framework this - see TreeNode.setChildren -
+			 * FIXME - dirndl 1x1g - framework this - see TreeNode.setChildren -
 			 * buffer changes
 			 */
 			if (requestPath != null) {

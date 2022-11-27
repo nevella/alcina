@@ -5,6 +5,7 @@ import java.lang.annotation.Annotation;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -43,6 +44,7 @@ import cc.alcina.framework.common.client.util.traversal.OneWayTraversal;
 import cc.alcina.framework.common.client.util.traversal.Traversable;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
+import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.annotation.DirectedContextResolver;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.LayoutEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
@@ -124,7 +126,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *
  * - Phases :
  *   1x1b rest of TODO (complete)
- *   1x1c categorise FIXMEs, then d -> e -> f (current, also working on [d])
+ *   1x1c categorise FIXMEs, then d -> e -> f  etc (current, also working on [d])
  *   1x1d initial FIXMEs
  *   1x1e do a big localdom issue block - FIXMEs, improve tracking (with fully reproducible exceptions)
  *   1x1f reflectiveserializer: integrate into GWT serializer framework
@@ -133,6 +135,7 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.InsertionPoin
  *   1x2 switch table/form rendering to pure model - adjunct transformmanager
  *   1x3 low priority fixmes
  *   1x4 consider removing widget entirely (localdom)
+ *   1x5 non-critical but desirable larger refactorings
  *
  *
  *
@@ -184,6 +187,10 @@ public class DirectedLayout implements AlcinaProcess {
 		enqueueInput(resolver, model, location, null, null);
 		layout();
 		return root.firstDescendantWidget();
+	}
+
+	public Widget render(Object model) {
+		return render(ContextResolver.Default.get().createResolver(), model);
 	}
 
 	/*
@@ -284,31 +291,36 @@ public class DirectedLayout implements AlcinaProcess {
 	 * combined (or documented)
 	 *
 	 * <p>
-	 * FIXME - dirndl 1.2 - optimise: specialise leafnode for performance (these
-	 * are heavyweight, and leaves need not be so much so)
+	 * FIXME - dirndl 1x1g - optimise: specialise leafnode for performance
+	 * (these are heavyweight, and leaves need not be so much so). Note that
+	 * most optimisation is probably already done/implicit (see childreplacer) -
+	 * if fields are never set (e.g. simple leaves), .js compilers will emit
+	 * simpler objects anyway
 	 */
 	public static class Node {
 		// not necessarily unchanged during the Node's lifetime - the renderer
 		// can change it if required
 		ContextResolver resolver;
 
-		final Object model;
-
 		Directed directed;
 
-		List<Node> children = new ArrayList<>();
+		final AnnotationLocation annotationLocation;
 
+		// below are nullable
 		Node parent;
 
-		final AnnotationLocation annotationLocation;
+		final Object model;
+
+		// many below may be null if a 'simple' node (particularly a leaf)
+		private List<Node> children;
+
+		Widget widget;
 
 		List<NodeEventBinding> eventBindings;
 
 		PropertyBindings propertyBindings;
 
 		private ChildReplacer replacementListener;
-
-		Widget widget;
 
 		private InsertionPoint insertionPoint;
 
@@ -321,25 +333,6 @@ public class DirectedLayout implements AlcinaProcess {
 			current = this;
 		}
 
-		// FIXME - dirndl 1x1a - remove - switch to
-		// ContextResolver.ancestorResolver (which controls say access to
-		// editable state)
-		public <T> T ancestorModel(Class<T> clazz) {
-			return ancestorModel(model -> Reflections.isAssignableFrom(clazz,
-					model.getClass()));
-		}
-
-		// FIXME - dirndl 1x1a - remove
-		public <T> T ancestorModel(Predicate predicate) {
-			if (predicate.test(model)) {
-				return (T) model;
-			}
-			if (parent != null) {
-				return parent.ancestorModel(predicate);
-			}
-			return null;
-		}
-
 		public <A extends Annotation> A annotation(Class<A> clazz) {
 			return annotationLocation.getAnnotation(clazz);
 		}
@@ -350,10 +343,12 @@ public class DirectedLayout implements AlcinaProcess {
 			if (test.test(this.model)) {
 				return this;
 			}
-			for (Node child : children) {
-				Node childWithModel = child.childWithModel(test);
-				if (childWithModel != null) {
-					return childWithModel;
+			if (children != null) {
+				for (Node child : children) {
+					Node childWithModel = child.childWithModel(test);
+					if (childWithModel != null) {
+						return childWithModel;
+					}
 				}
 			}
 			return null;
@@ -429,7 +424,7 @@ public class DirectedLayout implements AlcinaProcess {
 			if (model == null) {
 				return;
 			}
-			if (hasWidget()) {
+			if (hasWidget() && directed.bindings().length > 0) {
 				propertyBindings = new PropertyBindings();
 				propertyBindings.bind();
 			}
@@ -476,7 +471,7 @@ public class DirectedLayout implements AlcinaProcess {
 
 		private Widget provideWidgetOrLastDescendantChildWidget() {
 			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
-					this, node -> node.children, true);
+					this, Node::readOnlyChildren, true);
 			for (Node node : traversal) {
 				if (node.widget != null) {
 					return node.widget;
@@ -497,8 +492,10 @@ public class DirectedLayout implements AlcinaProcess {
 			if (hasWidget()) {
 				list.add(getWidget());
 			} else {
-				for (Node child : children) {
-					child.resolveRenderedWidgets0(list);
+				if (children != null) {
+					for (Node child : children) {
+						child.resolveRenderedWidgets0(list);
+					}
 				}
 			}
 		}
@@ -508,7 +505,9 @@ public class DirectedLayout implements AlcinaProcess {
 				((LayoutEvents.Bind.Handler) model)
 						.onBind(new LayoutEvents.Bind(this, false));
 			}
-			children.forEach(Node::unbind);
+			if (children != null) {
+				children.forEach(Node::unbind);
+			}
 			if (replacementListener != null) {
 				replacementListener.unbind();
 				replacementListener = null;
@@ -520,7 +519,7 @@ public class DirectedLayout implements AlcinaProcess {
 
 		Widget firstDescendantWidget() {
 			DepthFirstTraversal<Node> traversal = new DepthFirstTraversal<>(
-					this, node -> node.children, false);
+					this, Node::readOnlyChildren, false);
 			for (Node node : traversal) {
 				if (node.widget != null) {
 					return node.widget;
@@ -564,10 +563,12 @@ public class DirectedLayout implements AlcinaProcess {
 			String typeName = annotationLocation.classLocation.getSimpleName();
 			fb.appendPadRight(30, typeName);
 			fb.append(" ");
-			// FIXME - dirndl 1x1a - elide defaults in @Directed, add
-			// DirectedRenderer, fromTransform, indent to 50 if > say 50
-			// charwidth
-			fb.append(directed);
+			DirectedRenderer renderer = resolver.layout
+					.resolveRenderer(directed, annotationLocation, model);
+			fb.appendPadRight(30, renderer.getClass().getSimpleName());
+			fb.append(" ");
+			Impl impl = new Directed.Impl(directed);
+			fb.append(impl.toStringElideDefaults());
 			return fb.toString();
 		}
 
@@ -575,6 +576,10 @@ public class DirectedLayout implements AlcinaProcess {
 			bindBehaviours();
 			bindModel();
 			bindParentProperty();
+		}
+
+		List<Node> readOnlyChildren() {
+			return children != null ? children : Collections.emptyList();
 		}
 
 		// this node will disappear, so refer to predecessor nodes
@@ -1037,9 +1042,8 @@ public class DirectedLayout implements AlcinaProcess {
 
 		@Override
 		public String toString() {
-			return Ax.format("Node:\n%s\n\nLocation: %s\n\nRenderer: %s",
-					node.toParentStack(), location.toString(),
-					resolveRenderer().getClass().getSimpleName());
+			return Ax.format("Node:\n%s\n\nLocation: %s", node.toParentStack(),
+					location.toString());
 		}
 
 		private Directed firstDirected() {
@@ -1109,9 +1113,11 @@ public class DirectedLayout implements AlcinaProcess {
 				ContextResolver resolver = Reflections
 						.newInstance(directedContextResolver.value());
 				resolver.fromLayoutNode(node);
-				this.resolver = resolver;
-				// legal! note that new resolver will have an empty resolution
+				// legal (modifying the node's resolver, etc)! note that new
+				// resolver will have an empty resolution
 				// cache
+				node.resolver = resolver;
+				this.resolver = resolver;
 				location.setResolver(resolver);
 			}
 			if (model instanceof LayoutEvents.BeforeRender.Handler) {
@@ -1162,6 +1168,9 @@ public class DirectedLayout implements AlcinaProcess {
 			} else {
 				if (parentNode != null) {
 					// add fairly late, to ensure we're in insertion order
+					if (parentNode.children == null) {
+						parentNode.children = new ArrayList<>();
+					}
 					parentNode.children.add(node);
 					// complexities of delegation and child replacement
 					if (parentNode.insertionPoint != null) {

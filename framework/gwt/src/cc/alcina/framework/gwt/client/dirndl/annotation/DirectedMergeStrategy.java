@@ -49,10 +49,6 @@ public class DirectedMergeStrategy extends AbstractMergeStrategy<Directed> {
 	@Override
 	protected List<Directed> atClass(Class<Directed> annotationClass,
 			ClassReflector<?> reflector) {
-		if (reflector != null
-				&& reflector.getClass().getName().contains("Pane2")) {
-			int debug = 3;
-		}
 		return atHasAnnotations(reflector);
 	}
 
