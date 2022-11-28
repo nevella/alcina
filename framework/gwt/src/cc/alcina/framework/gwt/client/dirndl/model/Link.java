@@ -249,14 +249,6 @@ public class Link extends Model.WithNode
 		return this;
 	}
 
-	public Link withModelEventAndText(Class<? extends ModelEvent> modelEvent) {
-		this.modelEvent = modelEvent;
-		if (this.text == null) {
-			this.text = Reflections.at(modelEvent).templateInstance().getName();
-		}
-		return this;
-	}
-
 	public Link withNewTab(boolean newTab) {
 		if (newTab) {
 			setTarget("_blank");
