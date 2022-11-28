@@ -142,9 +142,13 @@ public abstract class CachingScanner<T extends ClassMetadata> {
 				}
 				outgoingCache.insert(out);
 			}
-			logger.info(
-					"Caching scanner - pass: {} - invalidated: {} - invalidated parents: {}",
-					pass, invalidatedThisPass.size(), invalidatedParentCount);
+			// only log if theres a delta
+			if (!(pass == 1 && invalidatedThisPass.size() == 0)) {
+				logger.info(
+						"Caching scanner - pass: {} - invalidated: {} - invalidated parents: {}",
+						pass, invalidatedThisPass.size(),
+						invalidatedParentCount);
+			}
 			invalidated.addAll(invalidatedThisPass);
 			invalidatedParentCount = 0;
 			passIncomingCache = outgoingCache;

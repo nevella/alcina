@@ -9,6 +9,8 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
+import com.google.common.base.Preconditions;
+
 @SuppressWarnings("unused")
 public class ArgParser {
 	private List<String> argv;
@@ -27,6 +29,10 @@ public class ArgParser {
 		// a above
 	}
 
+	public String asCommandString() {
+		return argv.stream().collect(Collectors.joining(" "));
+	}
+
 	public String get(String flag) {
 		int idx = argv.indexOf(flag);
 		if (idx != -1) {
@@ -38,6 +44,16 @@ public class ArgParser {
 
 	public boolean has(String flag) {
 		return argv.contains(flag);
+	}
+
+	public boolean hasAndRemove(String flag) {
+		Preconditions.checkState(flag.startsWith("--"));
+		if (argv.contains(flag)) {
+			argv.remove(flag);
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public void populateObject(Object object) {

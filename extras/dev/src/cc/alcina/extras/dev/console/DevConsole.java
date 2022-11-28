@@ -9,6 +9,7 @@ import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.datatransfer.UnsupportedFlavorException;
 import java.io.ByteArrayOutputStream;
+import java.io.Console;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintStream;
@@ -23,6 +24,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.Stack;
+import java.util.concurrent.CountDownLatch;
 import java.util.stream.Collectors;
 
 import org.slf4j.Logger;
@@ -42,15 +44,6 @@ import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager.LoginState;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
-/*
- * Startup speed doc
- * @formatter:off
- *
- * domainstore	prepare-domainstore	initialise-descriptor
-									mvcc
-				cluster-tr-listener	mark
- * @formatter:on
- */
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.AlcinaTopics;
@@ -64,6 +57,7 @@ import cc.alcina.framework.common.client.util.LooseContextInstance;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.ResourceUtilities;
+import cc.alcina.framework.entity.console.ArgParser;
 import cc.alcina.framework.entity.persistence.domain.DomainStore;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.persistence.transform.BackendTransformQueue;
@@ -86,6 +80,22 @@ import cc.alcina.framework.servlet.job.JobRegistry;
 import cc.alcina.framework.servlet.servlet.AppLifecycleServletBase;
 import cc.alcina.framework.servlet.util.transform.SerializationSignatureListener;
 
+/*
+ * Startup speed doc
+ * @formatter:off
+ *
+ * domainstore	prepare-domainstore	initialise-descriptor
+									mvcc
+				cluster-tr-listener	mark
+
+Command line opts:
+
+- --no-http
+- (command string)
+ * @formatter:on
+
+
+ */
 @Registration.Singleton
 public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHelper, S extends DevConsoleState>
 		implements ClipboardOwner {
@@ -198,8 +208,13 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
-	public DevConsole() {
+	protected LaunchConfiguration launchConfiguration;
+
+	CountDownLatch currentCommandLatch;
+
+	public DevConsole(String[] args) {
 		shells.push(DevConsoleCommand.class);
+		launchConfiguration = new LaunchConfiguration(args);
 		DevConsoleRunnable.console = this;
 	}
 
@@ -521,8 +536,10 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 				public void run() {
 					LooseContext.putSnapshotProperties(snapshot);
 					performCommandInThread(args, c, true);
+					currentCommandLatch.countDown();
 				}
 			};
+			currentCommandLatch = new CountDownLatch(1);
 			new AlcinaChildContextRunner(
 					"dev-runner-" + c.getClass().getSimpleName())
 							.callNewThread(runnable);
@@ -773,6 +790,24 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}.start();
 	}
 
+	private void startReadlineCommandLoop() {
+		Console c = System.console();
+		if (c == null) {
+			System.err.println("No console.");
+			System.exit(1);
+		}
+		while (true) {
+			String command = c.readLine("%s>",
+					CommonUtils.deInfixCss(getClass().getSimpleName()));
+			performCommand(command);
+			try {
+				currentCommandLatch.await();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+	}
+
 	protected abstract void createDevHelper();
 
 	protected boolean filterCommand(DevConsoleCommand command) {
@@ -823,21 +858,23 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		devHelper.loadJbossConfig(null);
 		boolean waitForUi = !devHelper.configLoaded;
 		remote = new DevConsoleRemote(this);
-		remote.start(devHelper.configLoaded);
-		this.headless = remote.isHasRemote();
-		if (headless) {
-			// -Djava.awt.headless=true
-			// -Dawt.toolkit=sun.awt.HToolkit
-			System.setProperty("java.awt.headless", "true");
-			System.setProperty("awt.toolkit", "sun.awt.HToolkit");
+		if (launchConfiguration.noHttpServer) {
+			Ax.out("STARTUP\t no-http: not serving console over http");
+			this.headless = true;
+		} else {
+			remote.start(devHelper.configLoaded);
+			this.headless = remote.isHasRemote();
+			devOut.s1 = new PrintStream(
+					new WriterOutputStream(remote.getOutWriter()));
+			devErr.s1 = new PrintStream(
+					new WriterOutputStream(remote.getErrWriter()));
 		}
-		devOut.s1 = new PrintStream(
-				new WriterOutputStream(remote.getOutWriter()));
-		devErr.s1 = new PrintStream(
-				new WriterOutputStream(remote.getErrWriter()));
 		if (!headless) {
 			throw new UnsupportedOperationException();
 		}
+		// headless
+		System.setProperty("java.awt.headless", "true");
+		System.setProperty("awt.toolkit", "sun.awt.HToolkit");
 		clear();
 		MetricLogging.get().setStart("init-console", statStartInit);
 		MetricLogging.get().end("init-console");
@@ -849,11 +886,17 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		new InitPostObjectServices().emit(System.currentTimeMillis());
 		new InitConsole().emit(System.currentTimeMillis());
 		initialised = true;
-		if (!props.lastCommand.matches("|q|re|restart")) {
+		if (launchConfiguration.hasCommandString()) {
+			performCommand(launchConfiguration.getCommandString());
+		} else if (!props.lastCommand.matches("|q|re|restart")) {
 			runningLastCommand = true;
 			performCommand(props.lastCommand);
 		} else {
 			ok("Enter 'h' for help\n\n");
+		}
+		if (launchConfiguration.noHttpServer
+				&& !launchConfiguration.exitAfterCommand) {
+			startReadlineCommandLoop();
 		}
 	}
 
@@ -917,6 +960,15 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 			Transaction.end();
 			LooseContext.pop();
 			runningJobs.remove(c);
+			if (launchConfiguration.exitAfterCommand) {
+				// delay to ensure props etc written?
+				try {
+					Thread.sleep(200);
+				} catch (InterruptedException e) {
+					e.printStackTrace();
+				}
+				System.exit(0);
+			}
 		}
 	}
 
@@ -939,11 +991,39 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		NORMAL, OK, ERR, COMMAND
 	}
 
-	@Registration.Singleton(value = LogMuter.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration.Singleton(
+		value = LogMuter.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class LogMuter_DevConsole extends LogMuter {
 		@Override
 		public void muteAllLogging(boolean muteAll) {
 			instance.setConsoleOuputMuted(muteAll);
+		}
+	}
+
+	static class LaunchConfiguration {
+		boolean noHttpServer;
+
+		private ArgParser parser;
+
+		boolean exitAfterCommand;
+
+		public LaunchConfiguration(String[] argv) {
+			parser = new ArgParser(argv);
+			noHttpServer = parser.hasAndRemove("--no-http");
+			exitAfterCommand = !parser.hasAndRemove("--no-exit")
+					&& hasCommandString();
+			if (exitAfterCommand) {
+				noHttpServer = true;
+			}
+		}
+
+		public boolean hasCommandString() {
+			return parser.asCommandString().length() > 0;
+		}
+
+		String getCommandString() {
+			return parser.asCommandString();
 		}
 	}
 }

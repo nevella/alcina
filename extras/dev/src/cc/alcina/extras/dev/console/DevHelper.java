@@ -440,7 +440,7 @@ public abstract class DevHelper {
 			new RegistryScanner().scan(classes, new ArrayList<String>(),
 					"dev-helper");
 			long t2 = System.currentTimeMillis();
-			System.out.println("Registry scan: " + (t2 - t1));
+			Ax.out("STARTUP\t registry: scan: %s ms", (t2 - t1));
 		} catch (Exception e) {
 			e.printStackTrace();
 			throw new WrappedRuntimeException(e);
