@@ -1,6 +1,5 @@
 package cc.alcina.framework.entity.console;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -18,8 +17,6 @@ public class ArgParser {
 	private Set<String> flags = new LinkedHashSet<>();
 
 	private Map<String, String> keyedValues = new LinkedHashMap<>();
-
-	private List<String> values = new ArrayList<>();
 
 	public ArgParser(String[] argv) {
 		this.argv = Arrays.asList(argv).stream().collect(Collectors.toList());
@@ -40,6 +37,10 @@ public class ArgParser {
 		} else {
 			return null;
 		}
+	}
+
+	public String getAndRemove() {
+		return argv.remove(0);
 	}
 
 	public boolean has(String flag) {

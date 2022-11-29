@@ -1,5 +1,8 @@
 package cc.alcina.framework.entity;
 
+import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.LooseContext;
+
 /*
  * Replacement for system configuration portion of ResourceUtilities
  *
@@ -42,5 +45,45 @@ public class Configuration {
 				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 				.getCallerClass(), key);
 		return Boolean.valueOf(value);
+	}
+
+	
+	public static Key key(Class clazz, String keyPart) {
+		return new Key(clazz, keyPart);
+	}
+	public static Key key( String keyPart) {
+		return new Key(StackWalker
+				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
+				.getCallerClass(), keyPart);
+	}
+
+	public static class Key {
+		private Class clazz;
+		private String keyPart;
+		
+		private boolean contextOverride;
+
+		Key(Class clazz, String keyPart) {
+			this.clazz = clazz;
+			this.keyPart = keyPart;
+		}
+		public Key contextOverride(){
+			contextOverride=true;
+			return this;
+		}
+		
+		public String get(){
+			if(contextOverride){
+				String key = Ax.format("%s.%s", clazz.getSimpleName(),keyPart);
+				if(LooseContext.has(key)){
+					return LooseContext.getString(key);
+				}
+			}
+			return Configuration.get(clazz,keyPart);
+		}
+		public boolean is(){
+			String value = get();
+			return Boolean.valueOf(value);
+		}
 	}
 }

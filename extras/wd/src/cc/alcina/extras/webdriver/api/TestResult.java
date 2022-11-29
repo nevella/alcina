@@ -9,8 +9,9 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import cc.alcina.framework.common.client.logic.reflection.AlcinaTransient;
 import cc.alcina.framework.common.client.util.Ax;
 
+// Not serializable - but certainly used to construct test reports
 public class TestResult {
-	private List<TestResult> results = new ArrayList<TestResult>();
+	private List<TestResult> children = new ArrayList<TestResult>();
 
 	private String message = "";
 
@@ -30,8 +31,14 @@ public class TestResult {
 
 	private transient Exception exception;
 
+	private transient TestResult parent;
+
 	public void addResult(TestResult result) {
-		results.add(result);
+		children.add(result);
+	}
+
+	public List<TestResult> getChildren() {
+		return children;
 	}
 
 	public long getEndTime() {
@@ -46,7 +53,7 @@ public class TestResult {
 
 	public String getMessage() {
 		StringBuffer sb = new StringBuffer();
-		for (TestResult tr : getResults()) {
+		for (TestResult tr : getChildren()) {
 			sb.append(tr.getMessage());
 		}
 		sb.append(message);
@@ -57,13 +64,15 @@ public class TestResult {
 		return name;
 	}
 
-	public List<TestResult> getResults() {
-		return results;
+	@JsonIgnore
+	@AlcinaTransient
+	public TestResult getParent() {
+		return this.parent;
 	}
 
 	public TestResultType getResultType() {
 		TestResultType rt = this.resultType;
-		for (TestResult tr : getResults()) {
+		for (TestResult tr : getChildren()) {
 			TestResultType crt = tr.getResultType();
 			if (crt.compareTo(rt) > 0) {
 				rt = crt;
@@ -88,6 +97,14 @@ public class TestResult {
 		return rootResult;
 	}
 
+	public boolean providePassed() {
+		return resultType == TestResultType.OK && exception == null;
+	}
+
+	public void setChildren(List<TestResult> children) {
+		this.children = children;
+	}
+
 	public void setEndTime(long endTime) {
 		this.endTime = endTime;
 	}
@@ -108,8 +125,8 @@ public class TestResult {
 		this.noTimePayload = noTimePayload;
 	}
 
-	public void setResults(List<TestResult> results) {
-		this.results = results;
+	public void setParent(TestResult parent) {
+		this.parent = parent;
 	}
 
 	public void setResultType(TestResultType resultType) {
@@ -153,7 +170,7 @@ public class TestResult {
 
 	long getAdminTime() {
 		long result = noTimePayload ? endTime - startTime : 0;
-		for (TestResult tr : getResults()) {
+		for (TestResult tr : getChildren()) {
 			result += tr.getAdminTime();
 		}
 		return result;

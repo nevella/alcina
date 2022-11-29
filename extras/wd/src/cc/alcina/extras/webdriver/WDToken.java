@@ -9,10 +9,18 @@ import cc.alcina.extras.webdriver.api.TestResult;
 import cc.alcina.extras.webdriver.api.WDWriter;
 import cc.alcina.framework.common.client.util.StringMap;
 
+/**
+ * <p>
+ * Test run and context state, passed through the whole test run
+ *
+ *
+ * @author nick@alcina.cc
+ *
+ */
 public class WDToken {
 	private WebDriver webDriver;
 
-	private WDConfigurationItem configuration;
+	private WDConfiguration configuration;
 
 	private WDWriter writer;
 
@@ -24,9 +32,15 @@ public class WDToken {
 
 	private String loadedUrl;
 
-	private StringMap testInfo = new StringMap();
+	private StringMap properties = new StringMap();
 
-	public WDConfigurationItem getConfiguration() {
+	public void ensureDriver() {
+		if (webDriver == null) {
+			webDriver = driverHandler.getDriver();
+		}
+	}
+
+	public WDConfiguration getConfiguration() {
 		return this.configuration;
 	}
 
@@ -38,12 +52,12 @@ public class WDToken {
 		return this.loadedUrl;
 	}
 
-	public TestResult getRootResult() {
-		return rootResult;
+	public StringMap getProperties() {
+		return this.properties;
 	}
 
-	public StringMap getTestInfo() {
-		return this.testInfo;
+	public TestResult getRootResult() {
+		return rootResult;
 	}
 
 	public Map<Class<? extends Enum>, Enum> getUiStates() {
@@ -62,7 +76,7 @@ public class WDToken {
 		return e.equals(getUiStates().get(e.getDeclaringClass()));
 	}
 
-	public void setConfiguration(WDConfigurationItem configuration) {
+	public void setConfiguration(WDConfiguration configuration) {
 		this.configuration = configuration;
 	}
 
@@ -74,12 +88,12 @@ public class WDToken {
 		this.loadedUrl = loadedUrl;
 	}
 
-	public void setRootResult(TestResult rootResult) {
-		this.rootResult = rootResult;
+	public void setProperties(StringMap properties) {
+		this.properties = properties;
 	}
 
-	public void setTestInfo(StringMap testInfo) {
-		this.testInfo = testInfo;
+	public void setRootResult(TestResult rootResult) {
+		this.rootResult = rootResult;
 	}
 
 	public void setUiStates(Map<Class<? extends Enum>, Enum> uiStates) {

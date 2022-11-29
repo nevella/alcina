@@ -24,7 +24,7 @@ import org.openqa.selenium.WebElement;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.RemoteWebDriver;
 
-import cc.alcina.extras.webdriver.WDConfigurationItem.WebDriverType;
+import cc.alcina.extras.webdriver.WDConfiguration.WebDriverType;
 import cc.alcina.extras.webdriver.api.WebdriverTest;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
@@ -230,7 +230,7 @@ public class WDUtils {
 		if (LooseContext.is(CONTEXT_FAST_ENTER_TEXT)) {
 			// faux
 			WDToken token = new WDToken();
-			WDConfigurationItem configuration = new WDConfigurationItem();
+			WDConfiguration configuration = new WDConfiguration();
 			configuration.driverType = WebDriverType.CHROME_LOCAL;
 			token.setConfiguration(configuration);
 			new WdExec().driver(driver).token(token).timeout(1000).xpath(xpath)

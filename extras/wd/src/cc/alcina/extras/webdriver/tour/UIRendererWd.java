@@ -201,6 +201,10 @@ public class UIRendererWd extends UIRenderer {
 				.readRelativeResource("res/UIRendererWd.js");
 		String css = ResourceUtilities
 				.readRelativeResource("res/UIRendererWd.css");
+		if (managerWd().hidePopups) {
+			css += "\n" + ResourceUtilities
+					.readRelativeResource("res/UIRendererWd.hidePopups.css");
+		}
 		String cmd = Ax.format(
 				"var __UIRendererWd_css=\"%s\";\n" + "%s\n"
 						+ "window.__UIRendererWd = new UIRendererWd();\n"

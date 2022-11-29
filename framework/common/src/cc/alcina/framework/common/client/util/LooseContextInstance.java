@@ -19,8 +19,13 @@ public class LooseContextInstance {
 	}
 
 	public void addProperties(Map<String, String> propertyMap) {
+		addProperties(propertyMap, true);
+	}
+
+	public void addProperties(Map<String, String> propertyMap,
+			boolean mapStringTrue) {
 		for (Entry<String, String> entry : propertyMap.entrySet()) {
-			if (entry.getValue().equals("true")) {
+			if (mapStringTrue && entry.getValue().equals("true")) {
 				setBoolean(entry.getKey());
 			} else {
 				set(entry.getKey(), entry.getValue());
@@ -50,7 +55,8 @@ public class LooseContextInstance {
 	}
 
 	public boolean getBoolean(String key) {
-		return get(key) == Boolean.TRUE;
+		Object value = get(key);
+		return value == Boolean.TRUE || Boolean.TRUE.toString().equals(value);
 	}
 
 	public boolean getBooleanDefaultTrue(String key) {

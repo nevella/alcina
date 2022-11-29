@@ -15,11 +15,12 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.misc.JaxbContextRegistration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.StringMap;
 
 @XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 @Registration(JaxbContextRegistration.class)
-public class WDConfigurationItem {
+public class WDConfiguration {
 	public String uri;
 
 	public int predelayMs;
@@ -41,6 +42,8 @@ public class WDConfigurationItem {
 	public WebDriverType driverType;
 
 	public transient long usedCacheIfFresherThan;
+
+	public transient StringMap properties = new StringMap();
 
 	public WDDriverHandler driverHandler() {
 		return WDDriverHandlerProvider.get().driverHandler(driverType);
@@ -70,10 +73,9 @@ public class WDConfigurationItem {
 	@XmlRootElement(name = "wdConfiguration")
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@Registration(JaxbContextRegistration.class)
-	public static class WDConfiguration {
-		@XmlElementWrapper(name = "items")
-		@XmlElement(name = "item")
-		public List<WDConfigurationItem> configurations;
+	public static class WDConfigurations {
+		@XmlElementWrapper(name = "items") @XmlElement(name = "item")
+		public List<WDConfiguration> configurations;
 
 		public boolean runRecurrentTests;
 
@@ -82,9 +84,8 @@ public class WDConfigurationItem {
 
 	@Registration.Singleton
 	public static abstract class WDDriverHandlerProvider {
-		public static WDConfigurationItem.WDDriverHandlerProvider get() {
-			return Registry
-					.impl(WDConfigurationItem.WDDriverHandlerProvider.class);
+		public static WDConfiguration.WDDriverHandlerProvider get() {
+			return Registry.impl(WDConfiguration.WDDriverHandlerProvider.class);
 		}
 
 		public abstract WDDriverHandler driverHandler(WebDriverType driverType);

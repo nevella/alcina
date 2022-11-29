@@ -22,6 +22,7 @@ import cc.alcina.extras.webdriver.tour.UIRendererWd.RenderedPopup;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -69,6 +70,9 @@ public class TourManagerWd extends TourManager {
 	public static final String PROP_FIRST_SUITE_STEP_PERFORMED = TourManagerWd.class
 			.getName() + ".PROP_FIRST_STEP_PERFORMED";
 
+	public static final String CONTEXT_HIDE_POPUPS = TourManagerWd.class
+			.getName() + ".CONTEXT_HIDE_POPUPS";
+
 	public static Tour deserialize(String json) {
 		try {
 			ObjectMapper mapper = new ObjectMapper();
@@ -99,6 +103,8 @@ public class TourManagerWd extends TourManager {
 
 	private WdExec exec;
 
+	boolean hidePopups;
+
 	public Topic<RenderedPopup> beforePopup = Topic.create();
 
 	public Topic<RenderedPopup> afterPopup = Topic.create();
@@ -109,6 +115,7 @@ public class TourManagerWd extends TourManager {
 		UIRendererWd.get().onTourInit();
 		// assign 'webdriver' class to body
 		this.token = token;
+		hidePopups = LooseContext.is(CONTEXT_HIDE_POPUPS);
 	}
 
 	@Override
@@ -136,7 +143,7 @@ public class TourManagerWd extends TourManager {
 
 	@Override
 	protected void onNext() {
-		token.getTestInfo().put(PROP_FIRST_SUITE_STEP_PERFORMED,
+		token.getProperties().put(PROP_FIRST_SUITE_STEP_PERFORMED,
 				Boolean.toString(true));
 	}
 
@@ -158,7 +165,7 @@ public class TourManagerWd extends TourManager {
 		@Override
 		public boolean provideIsFirstStep() {
 			boolean result = super.provideIsFirstStep() && !Boolean.valueOf(
-					token.getTestInfo().get(PROP_FIRST_SUITE_STEP_PERFORMED));
+					token.getProperties().get(PROP_FIRST_SUITE_STEP_PERFORMED));
 			return result;
 		}
 	}

@@ -41,7 +41,7 @@ public class WDManager {
 	// }
 	// return null;
 	// }
-	public WDToken getLastResult(WDConfigurationItem config,
+	public WDToken getLastResult(WDConfiguration config,
 			HttpServletResponse resp) {
 		if (config == null) {
 			System.out.println("null config - no result);");
@@ -50,7 +50,7 @@ public class WDManager {
 		return resultCache.get(config.topLevelClassName);
 	}
 
-	public synchronized WDToken runTest(WDConfigurationItem config,
+	public synchronized WDToken runTest(WDConfiguration config,
 			HttpServletResponse response, boolean persist, boolean statsOnly)
 			throws Exception {
 		WDToken token = new WDToken();
@@ -72,6 +72,7 @@ public class WDManager {
 			}
 			WebdriverTest test = (WebdriverTest) Class.forName(cn)
 					.getDeclaredConstructor().newInstance();
+			test.setConfiguration(config.properties);
 			try {
 				LooseContext.push();
 				LooseContext.set(CONTEXT_TOKEN, token);

@@ -7,11 +7,13 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 import org.openqa.selenium.WebDriver;
 
 import cc.alcina.extras.webdriver.WDToken;
 import cc.alcina.extras.webdriver.WDUtils.TimedOutException;
+import cc.alcina.extras.webdriver.WdExec;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -20,8 +22,20 @@ import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
+import cc.alcina.framework.common.client.util.StringMap;
 import cc.alcina.framework.entity.MetricLogging;
 
+/**
+ * <p>
+ * Models a test in a test tree
+ *
+ * <p>
+ * Tests are evaluated as follows: [evaluate tests which fulfil
+ * dependencies][evaluate children][evaluate self]
+ *
+ * @author nick@alcina.cc
+ *
+ */
 @Registration(WebdriverTest.class)
 public abstract class WebdriverTest implements Registration.Ensure {
 	public static final String CONTEXT_CURRENT_TEST = WebdriverTest.class
@@ -35,7 +49,13 @@ public abstract class WebdriverTest implements Registration.Ensure {
 
 	protected int myLevel;
 
-	private TestResult testResult;
+	protected TestResult result;
+
+	private StringMap configuration = new StringMap();
+
+	protected transient WDToken token;
+
+	protected transient WdExec exec;
 
 	public Class<? extends WebdriverTest>[] childTests() {
 		return new Class[0];
@@ -45,11 +65,19 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return new Enum[0];
 	}
 
-	public void getAndLog(WebDriver driver, String uri) {
-		getAndLog(driver, uri, null);
+	public void getAndLog(String uri) {
+		String key = "Load: " + uri;
+		MetricLogging.get().start(key);
+		driver().get(uri);
+		token.setLoadedUrl(uri);
+		MetricLogging.get().end(key);
 	}
 
-	public List<WebdriverTest> getRequiredDependentTests(WDToken token) {
+	public StringMap getConfiguration() {
+		return this.configuration;
+	}
+
+	public List<WebdriverTest> getRequiredDependentTests() {
 		List<WebdriverTest> results = new ArrayList<WebdriverTest>();
 		Enum<?>[] depends = depends();
 		Map<Class<? extends WebdriverTest>, WebdriverTest> templates = getTestTemplates();
@@ -78,11 +106,11 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return results;
 	}
 
-	public void goToHash(WebDriver driver, String hash) {
+	public void goToHash(String hash) {
 		try {
-			String curr = driver.getCurrentUrl();
+			String curr = driver().getCurrentUrl();
 			curr = String.format("%s#%s", curr.replaceFirst("#.*", ""), hash);
-			driver.get(curr);
+			driver().get(curr);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -93,12 +121,12 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	}
 
 	public void onTimeoutException(TimedOutException timedOutException) {
-		testResult.setException(timedOutException);
+		result.setException(timedOutException);
 		ProcessObservers.publish(WebdriverTest.TestException.class,
 				() -> new WebdriverTest.TestException(this));
 	}
 
-	public void predelay(WDToken token, int level) {
+	public void predelay(int level) {
 		try {
 			int predelayMs = token.getConfiguration().predelayMs;
 			if (predelayMs != 0) {
@@ -110,12 +138,16 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 	}
 
-	public TestResult process(WDToken token, int level, TestResult parent)
+	public final TestResult process(WDToken token, int level, TestResult parent)
 			throws Exception {
 		try {
 			LooseContext.pushWithKey(CONTEXT_CURRENT_TEST, this);
-			return process0(token, level, parent);
+			this.token = token;
+			initialiseContext();
+			beforeProcess();
+			return process0(level, parent);
 		} finally {
+			afterProcess();
 			LooseContext.pop();
 		}
 	}
@@ -138,31 +170,35 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return new Enum[0];
 	}
 
-	public abstract void run(WDToken token, TestResult result) throws Exception;
+	public abstract void run() throws Exception;
+
+	public void setConfiguration(StringMap configuration) {
+		this.configuration = configuration;
+	}
 
 	@Override
 	public String toString() {
 		FormatBuilder builder = new FormatBuilder().separator(" :: ");
 		builder.appendIfNotBlank(getClass().getName());
-		if (testResult != null && testResult.getException() != null) {
+		if (result != null && result.getException() != null) {
 			builder.appendIfNotBlank(
-					testResult.getException().getClass().getSimpleName());
-			builder.appendIfNotBlank(testResult.getException().getMessage());
+					result.getException().getClass().getSimpleName());
+			builder.appendIfNotBlank(result.getException().getMessage());
 		}
 		return builder.toString();
 	}
 
-	public void uiStateChange(WDToken token, Enum<?> e) {
+	public void uiStateChange(Enum<?> e) {
 		token.getUiStates().put(e.getDeclaringClass(), e);
 	}
 
-	public void uiStateChange(WDToken token, Enum<?>[] enums) {
+	public void uiStateChange(Enum<?>[] enums) {
 		for (Enum<?> e : enums) {
-			uiStateChange(token, e);
+			uiStateChange(e);
 		}
 	}
 
-	private boolean cancelDueToError(WDToken token, int level) {
+	private boolean cancelDueToError(int level) {
 		if (token.getRootResult().getResultType() == TestResultType.ERROR) {
 			token.getWriter().write("cancelled - prior error", level);
 			return true;
@@ -171,72 +207,70 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 	}
 
-	private TestResult process0(WDToken token, int level, TestResult parent)
-			throws Exception {
+	private TestResult process0(int level, TestResult parent) throws Exception {
 		this.myLevel = level;
 		String oldThreadName = Thread.currentThread().getName();
 		Thread.currentThread()
 				.setName("Test--" + token.getConfiguration().name);
-		testResult = new TestResult();
-		testResult.setStartTime(System.currentTimeMillis());
-		testResult.setNoTimePayload(noTimePayload());
-		testResult.setName(getClass().getSimpleName());
+		result = new TestResult();
+		result.setStartTime(System.currentTimeMillis());
+		result.setNoTimePayload(noTimePayload());
+		result.setName(getClass().getSimpleName());
+		result.setParent(parent);
 		token.getWriter().write(
 				Ax.format("Test: %s - \n", getClass().getSimpleName()), level);
 		if (parent == null) {
-			token.setRootResult(testResult);
-			testResult.setRootResult(true);
-			predelay(token, level + 1);
-			testResult.setStartTime(System.currentTimeMillis());
+			token.setRootResult(result);
+			result.setRootResult(true);
+			predelay(level + 1);
+			result.setStartTime(System.currentTimeMillis());
 		} else {
-			parent.addResult(testResult);
+			parent.addResult(result);
 		}
-		if (cancelDueToError(token, level)) {
-			return testResult;
+		if (cancelDueToError(level)) {
+			return result;
 		}
 		level++;
-		List<WebdriverTest> dependentTests = getRequiredDependentTests(token);
+		List<WebdriverTest> dependentTests = getRequiredDependentTests();
 		beforeDependentTests(token);
 		if (!dependentTests.isEmpty()) {
 			level++;
 			token.getWriter().write("Processing dependencies - \n", level);
-			for (WebdriverTest dtest : dependentTests) {
-				dtest.process(token, level, testResult);
+			for (WebdriverTest dependent : dependentTests) {
+				dependent.process(token, level, result);
 			}
 			level--;
 		}
-		if (cancelDueToError(token, level)) {
-			return testResult;
+		if (cancelDueToError(level)) {
+			return result;
 		}
 		beforeChildTests(token);
 		long startTime = System.currentTimeMillis();
 		token.getWriter().write(
 				Ax.format("Starting test: %s - \n", getClass().getSimpleName()),
 				level);
-		Class<? extends WebdriverTest>[] childTests = childTests();
-		if (childTests.length != 0) {
+		List<WebdriverTest> childTests = getChildTests();
+		if (childTests.size() != 0) {
 			level++;
 			token.getWriter().write("Processing child tests - \n", level);
-			for (Class<? extends WebdriverTest> tc : childTests) {
-				WebdriverTest childTest = tc.getDeclaredConstructor()
-						.newInstance();
-				childTest.process(token, level, testResult);
+			for (WebdriverTest childTest : childTests) {
+				childTest.process(token, level, result);
 			}
 			level--;
 		}
-		testResult.setResultType(TestResultType.OK);
+		result.setResultType(TestResultType.OK);
 		try {
 			int maxAttempts = getRetryCount();
 			int attempt = 1;
 			while (true) {
 				try {
-					testResult.setStartTimeExcludingDependent(
+					result.setStartTimeExcludingDependent(
 							System.currentTimeMillis());
 					System.err.println(
 							"running test - " + getClass().getSimpleName());
-					run(token, testResult);
-					uiStateChange(token, providesUIState());
-					uiStateChange(token, returnsUIState());
+					run();
+					uiStateChange(providesUIState());
+					uiStateChange(returnsUIState());
 					break;
 				} catch (Exception e) {
 					if (attempt >= maxAttempts) {
@@ -254,9 +288,9 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			}
 		} catch (Exception e) {
 			e.printStackTrace();
-			testResult.setResultType(TestResultType.ERROR);
-			testResult.setMessage(e.getMessage());
-			testResult.setException(e);
+			result.setResultType(TestResultType.ERROR);
+			result.setMessage(e.getMessage());
+			result.setException(e);
 			if (!(e instanceof TimedOutException)) {
 				// will have already been published
 				ProcessObservers.publish(WebdriverTest.TestException.class,
@@ -264,11 +298,14 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			}
 		} finally {
 			long endTime = System.currentTimeMillis();
-			testResult.setEndTime(endTime);
+			result.setEndTime(endTime);
 		}
-		token.getWriter().write(testResult.toString(), level);
+		token.getWriter().write(result.toString(), level);
 		Thread.currentThread().setName(oldThreadName);
-		return testResult;
+		return result;
+	}
+
+	protected void afterProcess() {
 	}
 
 	protected void beforeChildTests(WDToken token) {
@@ -277,14 +314,24 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	protected void beforeDependentTests(WDToken token) {
 	}
 
-	protected void getAndLog(WebDriver driver, String uri, WDToken token) {
-		String key = "Load: " + uri;
-		MetricLogging.get().start(key);
-		driver.get(uri);
-		if (token != null) {
-			token.setLoadedUrl(uri);
-		}
-		MetricLogging.get().end(key);
+	protected void beforeProcess() {
+		token.ensureDriver();
+		WebDriver driver = token.getWebDriver();
+		exec = new WdExec().driver(driver).token(token).timeout(5);
+	}
+
+	protected final WebDriver driver() {
+		return token.getWebDriver();
+	}
+
+	protected List<WebdriverTest> getChildTests() {
+		return Arrays.stream(childTests()).map(t -> {
+			try {
+				return t.getDeclaredConstructor().newInstance();
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}).collect(Collectors.toList());
 	}
 
 	protected int getRetryCount() {
@@ -299,6 +346,12 @@ public abstract class WebdriverTest implements Registration.Ensure {
 					.forEach(t -> testTemplates.put(t.getClass(), t));
 		}
 		return testTemplates;
+	}
+
+	protected void initialiseContext() {
+		if (configuration != null) {
+			LooseContext.getContext().addProperties(configuration, false);
+		}
 	}
 
 	public static class TestException implements ProcessObservable {

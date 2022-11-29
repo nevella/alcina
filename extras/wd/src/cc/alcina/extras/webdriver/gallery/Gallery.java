@@ -13,6 +13,8 @@ import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomNode;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.util.JaxbUtils;
@@ -82,10 +84,15 @@ Gallery.end();
  *
  */
 public class Gallery {
+	public static final String DEVICE = "device";
+
+	public static final String SNAP = "snap";
+
 	private static ThreadLocal<Gallery> gallery = new ThreadLocal<>();
 
 	public static void begin(String appName, String userAgentType,
 			URL configurationUrl) {
+		userAgentType = userAgentType.toLowerCase();
 		gallery.set(new Gallery(appName, userAgentType, configurationUrl));
 		instance().initialise();
 	}
@@ -107,7 +114,7 @@ public class Gallery {
 	}
 
 	public static void snap(String snapName) {
-		if (ResourceUtilities.is("snap")) {
+		if (Configuration.key(SNAP).contextOverride().is()) {
 			instance().snap0(snapName);
 		}
 	}
@@ -116,7 +123,6 @@ public class Gallery {
 		return gallery.get();
 	}
 
-	@SuppressWarnings("unused")
 	private String appName;
 
 	private String userAgentType;
@@ -175,16 +181,21 @@ public class Gallery {
 	private void setWidth() {
 		if (userAgentType != null) {
 			Dimension dim = null;
-			switch (userAgentType) {
-			case "desktop":
+			Device device = CommonUtils.getEnumValueOrNull(Device.class,
+					userAgentType, true, Device.DESKTOP);
+			switch (device) {
+			case DESKTOP:
 				dim = new Dimension(1700, 1200);
 				break;
-			case "tablet":
+			case TABLET:
 				dim = new Dimension(820, 1180);
 				break;
-			case "phone":
+			case PHONE:
 				dim = new Dimension(375, 687);
 				break;
+			default:
+				// never reached
+				throw new UnsupportedOperationException();
 			}
 			try {
 				driver.manage().window().setSize(dim);
@@ -240,5 +251,9 @@ public class Gallery {
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
+	}
+
+	public enum Device {
+		DESKTOP, TABLET, PHONE
 	}
 }

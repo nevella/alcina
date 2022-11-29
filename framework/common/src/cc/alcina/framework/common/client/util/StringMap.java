@@ -154,6 +154,20 @@ public class StringMap extends LinkedHashMap<String, String> {
 		return false;
 	}
 
+	public void put(Class<?> clazz, String key, String value) {
+		put(Ax.format("%s.%s", clazz.getSimpleName(), key), value);
+	}
+
+	public String put(String key, Boolean value) {
+		return put(key, value.toString());
+	}
+
+	public void putIfTrue(String key, boolean value) {
+		if (value) {
+			put(key, value);
+		}
+	}
+
 	public String replaceMatch(String string) {
 		return containsKey(string) ? get(string) : string;
 	}
@@ -175,6 +189,10 @@ public class StringMap extends LinkedHashMap<String, String> {
 		} else {
 			remove(key);
 		}
+	}
+
+	public void setTrue(String key) {
+		setBoolean(key, true);
 	}
 
 	public StringMap sorted() {
@@ -288,9 +306,5 @@ public class StringMap extends LinkedHashMap<String, String> {
 			}
 			return sb.toString();
 		}
-	}
-
-	public void setTrue(String key) {
-		setBoolean(key, true);
 	}
 }
