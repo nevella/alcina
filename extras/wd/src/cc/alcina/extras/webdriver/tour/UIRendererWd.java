@@ -249,14 +249,16 @@ public class UIRendererWd extends UIRenderer {
 
 		@Override
 		public String toString() {
-			return Ax.format("%s :: %s\n\n%s", popupInfo.getCaption(),
-					popupInfo.getRelativeTo().provideElement(currentStep()),
-					popupInfo.getDescription());
+			return Ax
+					.format("%s :: %s\n\n%s", popupInfo.getCaption(),
+							Tour.RelativeTo.provideElement(
+									popupInfo.getRelativeTo(), currentStep()),
+							popupInfo.getDescription());
 		}
 
 		public void waitForSelector() {
-			getElement(Collections.singletonList(
-					popupInfo.getRelativeTo().provideElement(currentStep())));
+			getElement(Collections.singletonList(Tour.RelativeTo
+					.provideElement(popupInfo.getRelativeTo(), currentStep())));
 		}
 
 		void remove() {
@@ -304,7 +306,7 @@ public class UIRendererWd extends UIRenderer {
 			root.setAttr("style", Ax.blankToEmpty(popupInfo.getStyle()));
 			root.setAttr("id", id);
 			String soleSelector = popupInfo.getRelativeTo().isStepTarget()
-					? currentStep().provideTarget().soleSelector()
+					? Tour.Condition.soleSelector(currentStep().provideTarget())
 					: "";
 			wdJsInvoke("renderRelative('%s','%s', '%s')",
 					JacksonUtils.serializeNoTypes(popupInfo), soleSelector,

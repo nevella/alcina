@@ -20,6 +20,22 @@ public interface Tour {
 	}
 
 	interface Condition {
+		public static Optional<ConditionEvaluator>
+				provideEvaluator(Condition condition) {
+			if (condition.getEvaluatorClassName() == null) {
+				return Optional.empty();
+			} else {
+				Class<ConditionEvaluator> evaluatorClass = Reflections
+						.forName(condition.getEvaluatorClassName());
+				return Optional.of(Reflections.newInstance(evaluatorClass));
+			}
+		}
+
+		public static String soleSelector(Condition condition) {
+			Preconditions.checkState(condition.getSelectors().size() == 1);
+			return condition.getSelectors().get(0);
+		}
+
 		List<? extends Condition> getConditions();
 
 		String getEvaluatorClassName();
@@ -27,21 +43,6 @@ public interface Tour {
 		Operator getOperator();
 
 		List<String> getSelectors();
-
-		default Optional<ConditionEvaluator> provideEvaluator() {
-			if (getEvaluatorClassName() == null) {
-				return Optional.empty();
-			} else {
-				Class<ConditionEvaluator> evaluatorClass = Reflections
-						.forName(getEvaluatorClassName());
-				return Optional.of(Reflections.newInstance(evaluatorClass));
-			}
-		}
-
-		default String soleSelector() {
-			Preconditions.checkState(getSelectors().size() == 1);
-			return getSelectors().get(0);
-		}
 	}
 
 	public static class ConditionEvaluationContext {
@@ -91,6 +92,15 @@ public interface Tour {
 	}
 
 	interface RelativeTo {
+		public static String provideElement(RelativeTo relativeTo,
+				Step currentStep) {
+			if (relativeTo.isStepTarget()) {
+				return Tour.Condition.soleSelector(currentStep.provideTarget());
+			} else {
+				return relativeTo.getElement();
+			}
+		}
+
 		public PositioningDirection getDirection();
 
 		// FIXME - to 'selector';
@@ -109,14 +119,6 @@ public interface Tour {
 		public boolean isBubble();
 
 		public boolean isStepTarget();
-
-		default String provideElement(Step currentStep) {
-			if (isStepTarget()) {
-				return currentStep.provideTarget().soleSelector();
-			} else {
-				return getElement();
-			}
-		}
 	}
 
 	// @JsonDeserialize(as = StepImpl.class)

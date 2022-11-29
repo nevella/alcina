@@ -336,8 +336,8 @@ public abstract class TourManager {
 		}
 
 		private boolean evaluateCondition(Tour.Condition condition) {
-			Optional<ConditionEvaluator> evaluator = condition
-					.provideEvaluator();
+			Optional<ConditionEvaluator> evaluator = Tour.Condition
+					.provideEvaluator(condition);
 			if (evaluator.isPresent()) {
 				return evaluator.get()
 						.evaluate(createConditionEvaluationContext());

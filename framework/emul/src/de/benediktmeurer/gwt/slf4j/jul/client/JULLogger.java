@@ -370,6 +370,9 @@ public class JULLogger extends MarkerIgnoringBase implements Logger {
 	 * @see java.util.logging.Logger#log(Level, String, Throwable)
 	 */
 	private void log(Level level, String msg, Throwable thrown) {
-		this.logger.log(level, msg, thrown);
+		System.out.println(level+"         ".substring(level.toString().length())+msg);
+		if(thrown!=null){
+			thrown.printStackTrace();	
+		}
 	}
 }
