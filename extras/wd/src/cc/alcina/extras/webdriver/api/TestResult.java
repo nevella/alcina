@@ -37,6 +37,17 @@ public class TestResult {
 		children.add(result);
 	}
 
+	public TestResultType computeTreeResultType() {
+		TestResultType rt = this.resultType;
+		for (TestResult tr : getChildren()) {
+			TestResultType crt = tr.getResultType();
+			if (crt.compareTo(rt) > 0) {
+				rt = crt;
+			}
+		}
+		return rt;
+	}
+
 	public List<TestResult> getChildren() {
 		return children;
 	}
@@ -71,14 +82,7 @@ public class TestResult {
 	}
 
 	public TestResultType getResultType() {
-		TestResultType rt = this.resultType;
-		for (TestResult tr : getChildren()) {
-			TestResultType crt = tr.getResultType();
-			if (crt.compareTo(rt) > 0) {
-				rt = crt;
-			}
-		}
-		return rt;
+		return resultType;
 	}
 
 	public long getStartTime() {
@@ -98,7 +102,7 @@ public class TestResult {
 	}
 
 	public boolean providePassed() {
-		return resultType == TestResultType.OK && exception == null;
+		return computeTreeResultType() == TestResultType.OK;
 	}
 
 	public void setChildren(List<TestResult> children) {
@@ -158,8 +162,8 @@ public class TestResult {
 	@Override
 	public String toString() {
 		String template = "%s [Result]: %s %s %sms";
-		String s = Ax.format(template, getName(), getResultType(), getMessage(),
-				testDuration(true));
+		String s = Ax.format(template, getName(), computeTreeResultType(),
+				getMessage(), testDuration(true));
 		if (isRootResult()) {
 			s += Ax.format(",  %sms excl. admin, %sms total",
 					testDurationExcludingAdmin(), testDuration(false));

@@ -81,6 +81,10 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return this.configuration;
 	}
 
+	public WdExec getExec() {
+		return this.exec;
+	}
+
 	public List<WebdriverTest> getRequiredDependentTests() {
 		List<WebdriverTest> results = new ArrayList<WebdriverTest>();
 		Enum<?>[] depends = depends();
@@ -108,6 +112,14 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			}
 		}
 		return results;
+	}
+
+	public TestResult getResult() {
+		return this.result;
+	}
+
+	public WDToken getToken() {
+		return this.token;
 	}
 
 	public void goToHash(String hash) {
@@ -203,7 +215,8 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	}
 
 	private boolean cancelDueToError(int level) {
-		if (token.getRootResult().getResultType() == TestResultType.ERROR) {
+		if (token.getRootResult()
+				.computeTreeResultType() == TestResultType.ERROR) {
 			token.getWriter().write("cancelled - prior error", level);
 			return true;
 		} else {
@@ -236,7 +249,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 		level++;
 		List<WebdriverTest> dependentTests = getRequiredDependentTests();
-		beforeDependentTests(token);
+		beforeDependentTests();
 		if (!dependentTests.isEmpty()) {
 			level++;
 			token.getWriter().write("Processing dependencies - \n", level);
@@ -248,7 +261,7 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		if (cancelDueToError(level)) {
 			return result;
 		}
-		beforeChildTests(token);
+		beforeChildTests();
 		long startTime = System.currentTimeMillis();
 		token.getWriter().write(
 				Ax.format("Starting test: %s - \n", getClass().getSimpleName()),
@@ -312,10 +325,10 @@ public abstract class WebdriverTest implements Registration.Ensure {
 	protected void afterProcess() {
 	}
 
-	protected void beforeChildTests(WDToken token) {
+	protected void beforeChildTests() {
 	}
 
-	protected void beforeDependentTests(WDToken token) {
+	protected void beforeDependentTests() {
 	}
 
 	protected void beforeProcess() {
