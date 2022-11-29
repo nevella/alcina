@@ -47,43 +47,49 @@ public class Configuration {
 		return Boolean.valueOf(value);
 	}
 
-	
 	public static Key key(Class clazz, String keyPart) {
 		return new Key(clazz, keyPart);
 	}
-	public static Key key( String keyPart) {
+
+	public static Key key(String keyPart) {
 		return new Key(StackWalker
 				.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE)
 				.getCallerClass(), keyPart);
 	}
 
+	/*
+	 * A utility mostly intended for 'context beats configuration'
+	 */
 	public static class Key {
 		private Class clazz;
+
 		private String keyPart;
-		
-		private boolean contextOverride;
+
+		private boolean contextOverride = true;
 
 		Key(Class clazz, String keyPart) {
 			this.clazz = clazz;
 			this.keyPart = keyPart;
 		}
-		public Key contextOverride(){
-			contextOverride=true;
-			return this;
-		}
-		
-		public String get(){
-			if(contextOverride){
-				String key = Ax.format("%s.%s", clazz.getSimpleName(),keyPart);
-				if(LooseContext.has(key)){
+
+		public String get() {
+			if (contextOverride) {
+				String key = Ax.format("%s.%s", clazz.getSimpleName(), keyPart);
+				if (LooseContext.has(key)) {
 					return LooseContext.getString(key);
 				}
 			}
-			return Configuration.get(clazz,keyPart);
+			return Configuration.get(clazz, keyPart);
 		}
-		public boolean is(){
+
+		public boolean is() {
 			String value = get();
 			return Boolean.valueOf(value);
+		}
+
+		public Key withContextOverride(boolean contextOverride) {
+			this.contextOverride = contextOverride;
+			return this;
 		}
 	}
 }

@@ -114,7 +114,7 @@ public class Gallery {
 	}
 
 	public static void snap(String snapName) {
-		if (Configuration.key(SNAP).contextOverride().is()) {
+		if (Configuration.key(SNAP).is()) {
 			instance().snap0(snapName);
 		}
 	}
@@ -159,6 +159,7 @@ public class Gallery {
 		base = new File(
 				Ax.format("%s/%s/%s", ResourceUtilities.get("defaultLocalPath"),
 						appName, userAgentType));
+		SEUtilities.deleteDirectory(base);
 		base.mkdirs();
 		if (this.configurationUrl != null) {
 			try {

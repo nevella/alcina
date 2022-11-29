@@ -230,7 +230,7 @@ public class GalleryPersister {
 				.put(list.get(0).toString(), list.get(1).toString()));
 		GallerySnapshot snapshot = new GallerySnapshot(images, metadata);
 		JacksonUtils.serializeToFile(snapshot, indexJson);
-		Ax.out("Wrote gallery index to: %s", indexHtml.getPath());
+		Ax.out("Wrote gallery index to: %s\n", indexHtml.getPath());
 		if (Configuration.is("persistToGoogle")) {
 			byte[] bytes = prettyToString.getBytes(StandardCharsets.UTF_8);
 			{

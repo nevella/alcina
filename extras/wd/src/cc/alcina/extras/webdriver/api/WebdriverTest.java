@@ -65,6 +65,10 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		return new Enum[0];
 	}
 
+	public final WebDriver driver() {
+		return token.getWebDriver();
+	}
+
 	public void getAndLog(String uri) {
 		String key = "Load: " + uri;
 		MetricLogging.get().start(key);
@@ -318,10 +322,6 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		token.ensureDriver();
 		WebDriver driver = token.getWebDriver();
 		exec = new WdExec().driver(driver).token(token).timeout(5);
-	}
-
-	protected final WebDriver driver() {
-		return token.getWebDriver();
 	}
 
 	protected List<WebdriverTest> getChildTests() {

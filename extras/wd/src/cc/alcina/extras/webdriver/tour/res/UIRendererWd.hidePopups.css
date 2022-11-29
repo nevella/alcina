@@ -1,3 +1,9 @@
 div.tmwd-popup, div.ol-tour-bubble {
 	visibility: hidden;
 }
+/*
+for baselines, better
+*/
+::-webkit-scrollbar {
+    display: none;
+}
