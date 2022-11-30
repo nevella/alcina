@@ -197,6 +197,7 @@ public abstract class Choices<T> extends Model.WithNode
 		@Override
 		public void onSelected(Selected event) {
 			if (event.wasReemitted(node)) {
+				event.getContext().markCauseEventAsNotHandled();
 				return;
 			}
 			Choices.Choice<T> choice = event == null ? null : event.getModel();
