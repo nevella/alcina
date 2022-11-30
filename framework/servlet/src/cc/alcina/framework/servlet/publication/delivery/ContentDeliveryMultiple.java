@@ -25,6 +25,8 @@ import cc.alcina.framework.servlet.publication.PublicationContext;
 public class ContentDeliveryMultiple implements ContentDelivery {
 	Logger logger = LoggerFactory.getLogger(getClass());
 
+	private boolean returnsDownloadToken;
+
 	@SuppressWarnings("resource")
 	@Override
 	public String deliver(PublicationContext ctx, InputStream convertedContent,
@@ -60,7 +62,14 @@ public class ContentDeliveryMultiple implements ContentDelivery {
 			logger.info("Delivering type {}",
 					entry.provideContentDeliveryType().serializedForm());
 			token = deliverer.deliver(ctx, stream, deliveryModel, fc);
+			returnsDownloadToken = deliverer.returnsDownloadToken();
 		}
 		return token;
+	}
+
+	@Override
+	// effectively the value for the last deliveryEntry
+	public boolean returnsDownloadToken() {
+		return returnsDownloadToken;
 	}
 }
