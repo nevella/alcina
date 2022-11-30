@@ -122,7 +122,7 @@ public class GroupingSupport<GP extends GroupingParameters> {
 				.noGlass().caption("Export selected").actionListener(evt -> {
 					exportDefinition.removePropertyChangeListener(
 							exportDefinitionListener);
-					if (evt.actionClassIs(OkAction.class)) {
+					if (evt.getAction() == OkAction.INSTANCE) {
 						doExport();
 					}
 				});
