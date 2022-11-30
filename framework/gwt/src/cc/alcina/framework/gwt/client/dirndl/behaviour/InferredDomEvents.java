@@ -52,7 +52,6 @@ public class InferredDomEvents {
 				// needed
 				Scheduler.get().scheduleDeferred(() -> {
 					fireEvent(null);
-					unbind();
 				});
 			}
 		}

@@ -4,7 +4,9 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
@@ -39,6 +41,11 @@ public abstract class Choices<T> extends Model.WithNode
 
 	public Choices(List<T> values) {
 		setValues(values);
+	}
+
+	public Optional<Choice> find(Predicate<Choice> predicate) {
+		return (Optional<Choice>) (Optional<?>) choices.stream()
+				.filter(predicate::test).findFirst();
 	}
 
 	@Directed
@@ -240,6 +247,14 @@ public abstract class Choices<T> extends Model.WithNode
 
 		public ListenerReference subscribeValueSelected(Runnable runnable) {
 			return valueSelected.add(runnable);
+		}
+
+		public void toggle(Choice<T> choice) {
+			if (getSelectedValue() == choice.getValue()) {
+				setSelectedValue(null);
+			} else {
+				setSelectedValue(choice.getValue());
+			}
 		}
 	}
 }
