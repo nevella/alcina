@@ -254,11 +254,30 @@ public class AuthenticationManager {
 		return result;
 	}
 
+	String getValidatedHeaderId(AuthenticationContext context) {
+		String headerId = context.tokenStore.getHeaderValue(
+				AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY);
+		String headerAuth = context.tokenStore.getHeaderValue(
+				AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY);
+		if (Ax.matches(headerId, "\\d+") && Ax.matches(headerAuth, "\\d+")) {
+			ClientInstance instance = persistence
+					.getClientInstance(Long.parseLong(headerId));
+			if (instance != null) {
+				if (instance.getAuth().intValue() == Integer
+						.parseInt(headerAuth)) {
+					return headerId;
+				}
+			}
+		}
+		return null;
+	}
+
+	// although unvalidated, the header client-instance id itself must be
+	// validated
 	private AuthenticationSession getUnvalidatedClientInstanceFromHeaders(
 			AuthenticationContext context) {
 		try {
-			String headerId = context.tokenStore.getHeaderValue(
-					AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY);
+			String headerId = getValidatedHeaderId(context);
 			headerId = validateClientUid(headerId);
 			if (Ax.matches(headerId, "\\d+")) {
 				ClientInstance instance = persistence
@@ -280,8 +299,7 @@ public class AuthenticationManager {
 
 	private void setupClientInstanceFromHeaders(AuthenticationContext context) {
 		try {
-			String headerId = context.tokenStore.getHeaderValue(
-					AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_ID_KEY);
+			String headerId = getValidatedHeaderId(context);
 			headerId = validateClientUid(headerId);
 			if (Ax.matches(headerId, "\\d+")) {
 				ClientInstance instance = persistence
@@ -292,22 +310,15 @@ public class AuthenticationManager {
 					if (session == null) {
 						persistence.putSession(instance, context.session);
 					}
-					String headerAuth = context.tokenStore.getHeaderValue(
-							AlcinaRpcRequestBuilder.REQUEST_HEADER_CLIENT_INSTANCE_AUTH_KEY);
-					if (Ax.matches(headerAuth, "\\d+")) {
-						if (instance.getAuth().intValue() == Integer
-								.parseInt(headerAuth)) {
-							if (!isExpired(session)) {
-								context.clientInstance = instance;
-							} else {
-								context.tokenStore.addHeader(
-										AlcinaRpcRequestBuilder.RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED,
-										"true");
-								logger.warn(
-										"Sending client instance expired:  - {} {} {}",
-										instance, session, session.getUser());
-							}
-						}
+					if (!isExpired(session)) {
+						context.clientInstance = instance;
+					} else {
+						context.tokenStore.addHeader(
+								AlcinaRpcRequestBuilder.RESPONSE_HEADER_CLIENT_INSTANCE_EXPIRED,
+								headerId);
+						logger.warn(
+								"Sending client instance expired:  - {} {} {}",
+								instance, session, session.getUser());
 					}
 				}
 			}
