@@ -11,7 +11,6 @@ import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import cc.alcina.framework.common.client.actions.TaskPerformer;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
@@ -43,9 +42,9 @@ public class TreeProcess {
 
 	private boolean logAsLevelledPosition;
 
-	public TreeProcess(TaskPerformer performer) {
-		root = new NodeImpl(this, null, performer);
-		logger = LoggerFactory.getLogger(performer.getClass());
+	public TreeProcess(Object owner) {
+		root = new NodeImpl(this, null, owner);
+		logger = LoggerFactory.getLogger(owner.getClass());
 		onEvent(Event.node_added, root, null);
 		onEvent(Event.node_selected, root, null);
 	}
@@ -275,6 +274,28 @@ public class TreeProcess {
 			tree().logger.info(template, args);
 		}
 
+		// depth first traversal (this structure supports *either* level
+		// traversal or depth-frst)
+		default Node next() {
+			List<Node> children = getChildren();
+			if (children.size() > 0) {
+				return children.get(0);
+			}
+			Node cursor = this;
+			for (;;) {
+				Node parent = cursor.getParent();
+				if (parent == null) {
+					return null;
+				}
+				List<Node> siblings = parent.getChildren();
+				int indexInParent = cursor.indexInParent();
+				if (indexInParent < siblings.size() - 1) {
+					return siblings.get(indexInParent + 1);
+				}
+				cursor = parent;
+			}
+		}
+
 		default Node nodeForValue(Object value) {
 			return getChildren().stream().filter(c -> c.getValue() == value)
 					.findFirst().get();
@@ -428,6 +449,11 @@ public class TreeProcess {
 		@Override
 		public void setSelfComplete(boolean selfComplete) {
 			this.selfComplete = selfComplete;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("%s :: %s", asNodeIndicies(), getValue());
 		}
 
 		@Override

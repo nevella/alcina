@@ -19,12 +19,12 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.HasEquivalence;
+import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
 @Bean
 public class SearchOrders<T> implements Comparator<T>, Serializable,
-		HasEquivalence<SearchOrders<T>>, TreeSerializable {
+		HasEquivalenceHash<SearchOrders<T>>, TreeSerializable {
 	/*
 	 * Don't access directly (use _getCmps) - even when altering (call
 	 * refreshSerializable when altering). The boolean value is true ascending;
@@ -52,6 +52,11 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		refreshSerializable();
 	}
 
+	public void clear() {
+		_getCmps().clear();
+		refreshSerializable();
+	}
+
 	@Override
 	public int compare(T o1, T o2) {
 		for (Entry<SearchOrder<T, ?>, Boolean> entry : _getCmps().entrySet()) {
@@ -65,18 +70,26 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 	}
 
 	@Override
+	public int equivalenceHash() {
+		// due to need to refresh, don't hash separately
+		return 0;
+	}
+
+	@Override
 	public boolean equivalentTo(SearchOrders<T> other) {
 		refreshSerializable();
 		other.refreshSerializable();
-		return HasEquivalenceHelper.equivalent(serializableSearchOrders,
-				other.serializableSearchOrders);
+		return HasEquivalenceHelper.equivalent((List) serializableSearchOrders,
+				(List) other.serializableSearchOrders);
 	}
 
 	public Optional<SearchOrder<T, ?>> getFirstOrder() {
 		return _getCmps().keySet().stream().findFirst();
 	}
 
-	@PropertySerialization(defaultProperty = true, types = SerializableSearchOrder.class)
+	@PropertySerialization(
+		defaultProperty = true,
+		types = SerializableSearchOrder.class)
 	public List<SerializableSearchOrder> getSerializableSearchOrders() {
 		return this.serializableSearchOrders;
 	}
@@ -92,6 +105,12 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 
 	public boolean provideIsAscending() {
 		return _getCmps().values().stream().findFirst().orElse(true);
+	}
+
+	public boolean provideIsIdAscDisplayOrder() {
+		return _getCmps().size() == 1
+				&& startsWith(new DisplaySearchOrder("id"))
+				&& _getCmps().values().iterator().next();
 	}
 
 	public String provideSearchOrderFieldName() {
@@ -263,16 +282,5 @@ public class SearchOrders<T> implements Comparator<T>, Serializable,
 		public Integer apply(H t) {
 			return sorted.indexOf(Long.valueOf(t.getId()));
 		}
-	}
-
-	public boolean provideIsIdAscDisplayOrder() {
-		return _getCmps().size() == 1
-				&& startsWith(new DisplaySearchOrder("id"))
-				&& _getCmps().values().iterator().next();
-	}
-
-	public void clear() {
-		_getCmps().clear();
-		refreshSerializable();
 	}
 }

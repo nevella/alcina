@@ -143,7 +143,7 @@ public interface HasEquivalence<T> {
 			return true;
 		}
 
-		public static <T extends HasEquivalence> boolean
+		public static <T extends HasEquivalenceHash> boolean
 				contains(Collection<T> o1, T o2) {
 			return !intersection(o1, Collections.singletonList(o2)).isEmpty();
 		}
@@ -167,7 +167,7 @@ public interface HasEquivalence<T> {
 			return new DeduplicateHasEquivalencePredicate<>();
 		}
 
-		public static <T extends HasEquivalence> boolean
+		public static <T extends HasEquivalenceHash> boolean
 				equivalent(Collection<T> o1, Collection<T> o2) {
 			if (o1 == null || o2 == null) {
 				return o1 == o2;
@@ -188,7 +188,7 @@ public interface HasEquivalence<T> {
 			}
 		}
 
-		public static <T extends HasEquivalence> T
+		public static <T extends HasEquivalenceHash> T
 				getEquivalent(Collection<T> o1, T o2) {
 			return (T) CommonUtils
 					.first(intersection(o1, Collections.singletonList(o2)));
@@ -208,28 +208,51 @@ public interface HasEquivalence<T> {
 		public static <T extends HasEquivalenceHash>
 				List<HasEquivalenceTuple<T>>
 				getEquivalents(Collection<T> left, Collection<T> right) {
+			return getEquivalents(left, right, false, true);
+		}
+
+		public static <T extends HasEquivalenceHash>
+				List<HasEquivalenceTuple<T>> getEquivalents(Collection<T> left,
+						Collection<T> right, boolean alsoUnmatched,
+						boolean requireUnique) {
 			List<HasEquivalenceTuple<T>> result = new ArrayList<HasEquivalence.HasEquivalenceTuple<T>>();
 			HasEquivalenceHashMap<T> lMap = getHashed(left);
 			HasEquivalenceHashMap<T> rMap = getHashed(right);
 			if (lMap == null || rMap == null) {
 				return result;
 			}
+			HasEquivalenceHashMap<T> leftMatched = new HasEquivalenceHashMap<>();
+			HasEquivalenceHashMap<T> rightMatched = new HasEquivalenceHashMap<>();
 			for (Entry<Integer, List<T>> entry : lMap.entrySet()) {
 				List<T> leftList = entry.getValue();
 				List<T> rightList = rMap.getAndEnsure(entry.getKey());
+				if (requireUnique) {
+					checkUnique(leftList);
+					checkUnique(rightList);
+				}
 				for (T leftItem : leftList) {
 					for (T rightItem : rightList) {
 						if (leftItem.equivalentTo(rightItem)) {
 							result.add(new HasEquivalenceTuple<T>(leftItem,
 									rightItem));
+							leftMatched.addUnique(leftItem);
+							rightMatched.addUnique(rightItem);
 						}
 					}
 				}
 			}
+			if (alsoUnmatched) {
+				left.stream().filter(t -> !leftMatched.containsHehValue(t))
+						.forEach(t -> result
+								.add(new HasEquivalenceTuple<T>(t, null)));
+				right.stream().filter(t -> !rightMatched.containsHehValue(t))
+						.forEach(t -> result
+								.add(new HasEquivalenceTuple<T>(null, t)));
+			}
 			return result;
 		}
 
-		public static <T extends HasEquivalence> HasEquivalenceHashMap<T>
+		public static <T extends HasEquivalenceHash> HasEquivalenceHashMap<T>
 				getHashed(Collection<T> coll) {
 			if (coll == null || coll.isEmpty() || (!(coll.iterator()
 					.next() instanceof HasEquivalenceHash))) {
@@ -241,13 +264,27 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
+		public static int hash(Object... args) {
+			int hash = 0;
+			for (int i = 0; i < args.length; i++) {
+				Object o = args[i];
+				if (o instanceof HasEquivalenceHash) {
+					hash ^= ((HasEquivalenceHash) o).equivalenceHash();
+				} else {
+					hash ^= Objects.hash(o);
+				}
+			}
+			return hash;
+		}
+
 		/**
 		 * Returns the objects from the first collection which have an
 		 * equivalent in the second
 		 */
-		public static <T extends HasEquivalence> List<? super HasEquivalence>
+		public static <T extends HasEquivalenceHash>
+				List<? super HasEquivalenceHash>
 				intersection(Collection<T> o1, Collection<T> o2) {
-			List<? super HasEquivalence> result = new ArrayList<HasEquivalence>();
+			List<? super HasEquivalenceHash> result = new ArrayList<>();
 			HasEquivalenceHashMap<T> hashed = getHashed(o2);
 			for (Iterator<T> itr1 = o1.iterator(); itr1.hasNext();) {
 				T t1 = itr1.next();
@@ -326,15 +363,14 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
-		public static <T extends HasEquivalence> Collection<T>
+		public static <T extends HasEquivalenceHash> Collection<T>
 				maybeHashedCorrespondents(T sameHashAs,
 						Collection<T> collection,
 						HasEquivalenceHashMap<T> hashed) {
 			if (hashed == null) {
 				return collection;
 			}
-			int equivalenceHash = ((HasEquivalenceHash<T>) sameHashAs)
-					.equivalenceHash();
+			int equivalenceHash = sameHashAs.equivalenceHash();
 			if (hashed.containsKey(equivalenceHash)) {
 				return hashed.get(equivalenceHash);
 			} else {
@@ -353,10 +389,11 @@ public interface HasEquivalence<T> {
 					.removeTransformsForObjects(split.intersection);
 		}
 
-		public static <T extends HasEquivalence> List<? super HasEquivalence>
+		public static <T extends HasEquivalenceHash>
+				List<? super HasEquivalenceHash>
 				removeAll(Collection<T> removeFrom,
 						Collection<T> equivalentsToRemove) {
-			List<? super HasEquivalence> result = new ArrayList<HasEquivalence>();
+			List<? super HasEquivalenceHash> result = new ArrayList<>();
 			HasEquivalenceHashMap<T> hashed = getHashed(equivalentsToRemove);
 			for (Iterator<T> itr1 = removeFrom.iterator(); itr1.hasNext();) {
 				T t1 = itr1.next();
@@ -406,6 +443,18 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
+		private static <T extends HasEquivalenceHash> void
+				checkUnique(List<T> list) {
+			if (list.size() < 1) {
+				return;
+			}
+			HasEquivalenceHashMap<T> lookup = new HasEquivalenceHashMap<>();
+			list.forEach(lookup::add);
+			boolean unique = list.stream()
+					.noneMatch(e -> lookup.getEquivalents(e).size() > 1);
+			Preconditions.checkState(unique);
+		}
+
 		public static class DeduplicateHasEquivalencePredicate<C extends HasEquivalence>
 				implements Predicate<C> {
 			List<C> seen = new ArrayList<>();
@@ -430,6 +479,11 @@ public interface HasEquivalence<T> {
 		public HasEquivalenceTuple(T left, T right) {
 			this.left = left;
 			this.right = right;
+		}
+
+		@Override
+		public String toString() {
+			return Ax.format("[%s :: %s]", left, right);
 		}
 	}
 
