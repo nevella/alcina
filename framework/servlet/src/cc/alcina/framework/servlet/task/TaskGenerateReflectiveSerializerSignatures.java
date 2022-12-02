@@ -45,9 +45,9 @@ import cc.alcina.framework.servlet.schedule.ServerTask;
 import cc.alcina.framework.servlet.task.TaskGenerateReflectiveSerializerSignatures.Scanner.ReflectiveScannerMetadata;
 
 /*
- * FIXME - dirndl 1x1d - do a full inheritance scan to ensure all implementors
- * in the graph are serializable (ReflectiveSerializer.Checks is the current
- * workaround, but allows invalid subtypes)
+ * FIXME - dirndl 1x1d - reflection - do a full inheritance scan to ensure all
+ * implementors in the graph are serializable (ReflectiveSerializer.Checks is
+ * the current workaround, but allows invalid subtypes)
  *
  * This class ensures that - excepting exclusions - all classes that are
  * ReflectiveSerializable have a valid schema:

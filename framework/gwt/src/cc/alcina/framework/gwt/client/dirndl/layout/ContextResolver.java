@@ -23,14 +23,29 @@ import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
  * <p>
  * The interaction between the layout algorithm and this 'expression shaper'
  * class could, with a bit of a stretch, call to mind the mRNA generation
- * process and all the not-so-sad environmental factors which modify expression
- * of DNA.
+ * process and all the not-necessarily-sad (not-sic) environmental factors which
+ * modify expression of DNA.
  *
  * @author nick@alcina.cc
  *
  */
-// FIXME - dirndl 1x1d - document (and document annotationresolver in general,
-// top & bottom)
+/*
+ * FIXME - dirndl 1x1h - document (and document annotationresolver in general,
+ * top & bottom)
+ *
+ * points:
+ *
+ * - pre-refactor (possibly remove annotationutil)
+ *
+ * - javadoc on Strategy
+ *
+ * - javadoc on Resolution
+ *
+ * - javadoc on Directed.MergeStrategy
+ *
+ * - examples (and in cookboook)
+ *
+ */
 @Reflected
 public class ContextResolver extends AnnotationLocation.Resolver {
 	protected ContextResolver parent;
