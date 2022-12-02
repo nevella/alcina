@@ -71,7 +71,7 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.Multiset;
 import cc.alcina.framework.common.client.util.ToStringComparator;
-import cc.alcina.framework.entity.ClassUtils;
+import cc.alcina.framework.entity.ClassUtil;
 import cc.alcina.framework.entity.gwt.reflection.ClientReflectionGenerator.ClassReflectorGenerator.PropertyGenerator;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppImplRegistrations;
 import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.AppReflectableTypes;
@@ -1062,7 +1062,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 						name -> fieldOrdinals.put(name, fieldOrdinals.size()));
 				propertyOrder = type.getAnnotation(PropertyOrder.class);
 				customOrder = PropertyOrder.Support.customOrder(propertyOrder,
-						ClassUtils.NO_ARGS_INSTANTIATOR);
+						ClassUtil.NO_ARGS_INSTANTIATOR);
 			}
 
 			@Override

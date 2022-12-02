@@ -85,10 +85,11 @@ import cc.alcina.framework.entity.projection.GraphProjection;
 import cc.alcina.framework.entity.util.AlcinaBeanSerializerS;
 
 /**
- * @author nick@alcina.cc
  *
- *         FIXME - 2022 - migrate property treatment to Configuration static
- *         singleton
+ * FIXME - config - migrate property treatment to Configuration static
+ * singleton; io to IO; fields to classutil
+ *
+ * @author nick@alcina.cc
  */
 @Registration(ClearStaticFieldsOnAppShutdown.class)
 public class ResourceUtilities {

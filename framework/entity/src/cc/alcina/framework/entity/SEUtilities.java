@@ -955,7 +955,7 @@ public class SEUtilities {
 							.getAnnotation(PropertyOrder.class);
 					PropertyOrder.Custom customOrder = PropertyOrder.Support
 							.customOrder(propertyOrder,
-									ClassUtils.NO_ARGS_INSTANTIATOR);
+									ClassUtil.NO_ARGS_INSTANTIATOR);
 					Comparator<PropertyDescriptor> pdComparator = new Comparator<PropertyDescriptor>() {
 						@Override
 						public int compare(PropertyDescriptor o1,
