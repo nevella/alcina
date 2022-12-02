@@ -216,27 +216,28 @@ public interface HasEquivalence<T> {
 						Collection<T> right, boolean alsoUnmatched,
 						boolean requireUnique) {
 			List<HasEquivalenceTuple<T>> result = new ArrayList<HasEquivalence.HasEquivalenceTuple<T>>();
-			HasEquivalenceHashMap<T> lMap = getHashed(left);
-			HasEquivalenceHashMap<T> rMap = getHashed(right);
-			if (lMap == null || rMap == null) {
-				return result;
-			}
+			HasEquivalenceHashMap<T> leftHashedMap = getHashed(left);
+			HasEquivalenceHashMap<T> rightHashedMap = getHashed(right);
 			HasEquivalenceHashMap<T> leftMatched = new HasEquivalenceHashMap<>();
 			HasEquivalenceHashMap<T> rightMatched = new HasEquivalenceHashMap<>();
-			for (Entry<Integer, List<T>> entry : lMap.entrySet()) {
-				List<T> leftList = entry.getValue();
-				List<T> rightList = rMap.getAndEnsure(entry.getKey());
-				if (requireUnique) {
-					checkUnique(leftList);
-					checkUnique(rightList);
-				}
-				for (T leftItem : leftList) {
-					for (T rightItem : rightList) {
-						if (leftItem.equivalentTo(rightItem)) {
-							result.add(new HasEquivalenceTuple<T>(leftItem,
-									rightItem));
-							leftMatched.addUnique(leftItem);
-							rightMatched.addUnique(rightItem);
+			if (leftHashedMap == null || rightHashedMap == null) {
+			} else {
+				for (Entry<Integer, List<T>> entry : leftHashedMap.entrySet()) {
+					List<T> leftList = entry.getValue();
+					List<T> rightList = rightHashedMap
+							.getAndEnsure(entry.getKey());
+					if (requireUnique) {
+						checkUnique(leftList);
+						checkUnique(rightList);
+					}
+					for (T leftItem : leftList) {
+						for (T rightItem : rightList) {
+							if (leftItem.equivalentTo(rightItem)) {
+								result.add(new HasEquivalenceTuple<T>(leftItem,
+										rightItem));
+								leftMatched.addUnique(leftItem);
+								rightMatched.addUnique(rightItem);
+							}
 						}
 					}
 				}
