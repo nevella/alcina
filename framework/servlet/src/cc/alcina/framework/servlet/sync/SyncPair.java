@@ -1,8 +1,6 @@
 package cc.alcina.framework.servlet.sync;
 
 import cc.alcina.framework.common.client.sync.StringKeyProvider;
-import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 
 public class SyncPair<T> {
 	private KeyedObject<T> left;
@@ -89,16 +87,7 @@ public class SyncPair<T> {
 	}
 
 	public enum SyncAction {
-		CREATE, UPDATE, DELETE, WARN;
-
-		public String asResult() {
-			switch (this) {
-			case WARN:
-				return "[Warn]";
-			default:
-				return CommonUtils.titleCase(Ax.friendly(this)) + "d";
-			}
-		}
+		CREATE, UPDATE, DELETE;
 	}
 
 	public static class SyncInstruction {

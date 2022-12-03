@@ -16,9 +16,12 @@ import com.google.common.base.Preconditions;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.process.ProcessObservable;
+import cc.alcina.framework.common.client.process.ProcessObservers;
 import cc.alcina.framework.common.client.process.TreeProcess;
 import cc.alcina.framework.common.client.process.TreeProcess.Node;
 import cc.alcina.framework.common.client.util.Ax;
+import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceTuple;
@@ -91,11 +94,78 @@ public class TreeSync<T extends TreeSyncable> {
 	 * Run prior to sync (to say optionally update cached remote values)
 	 */
 	public interface Preparer<U extends TreeSyncable> {
-		U prepare(U u, boolean from);
+		default U prepare(U u, boolean from) {
+			Context context = new Context();
+			ProcessObservers.context().publish(context);
+			updateContext(context);
+			if (context.skip) {
+				return u;
+			} else {
+				return prepare0(u, from);
+			}
+		}
+
+		U prepare0(U u, boolean from);
+
+		default void updateContext(Context context) {
+			// for transient syncables, skip should be false
+		}
+
+		public static class Context implements ProcessObservable {
+			public boolean skip = false;
+		}
+	}
+
+	public static class SyncAction {
+		public boolean performed = false;
+
+		public Type type = Type.NO_ACTION;
+
+		public String message;
+
+		public enum Type {
+			CREATE, UPDATE, DELETE, WARN, NO_ACTION;
+
+			public String asResult() {
+				switch (this) {
+				case WARN:
+					return "[Warn]";
+				default:
+					return CommonUtils.titleCase(Ax.friendly(this)) + "d";
+				}
+			}
+		}
 	}
 
 	public interface Syncer<U extends TreeSyncable> {
-		SyncResult sync(U left, U right);
+		SyncAction computeAction(U left, U right);
+
+		void performAction(SyncAction result, U left, U right);
+
+		default SyncAction sync(U left, U right) {
+			SyncAction action = computeAction(left, right);
+			Context context = new Context();
+			ProcessObservers.context().publish(context);
+			if (context.skip) {
+				//
+			} else {
+				switch (action.type) {
+				case CREATE:
+				case DELETE:
+				case UPDATE:
+					performAction(action, left, right);
+					break;
+				default:
+					//
+				}
+				action.performed = true;
+			}
+			return action;
+		}
+
+		public static class Context implements ProcessObservable {
+			public boolean skip = false;
+		}
 	}
 
 	public class SyncPosition {
@@ -105,7 +175,7 @@ public class TreeSync<T extends TreeSyncable> {
 
 		Node node;
 
-		public SyncResult result;
+		public SyncAction action;
 
 		public SyncPosition(Object fromNode, Object toNode) {
 			this.left = new SyncContainer(fromNode, true);
@@ -119,6 +189,7 @@ public class TreeSync<T extends TreeSyncable> {
 
 		// a la dirndl -- obj.field.[collection-index].obj...
 		public void process(Node node) {
+			this.node = node;
 			// may either be a syncable or a container of syncables
 			if (isTreeSyncable()) {
 				Class clazz = getClazz();
@@ -130,6 +201,7 @@ public class TreeSync<T extends TreeSyncable> {
 						clazz);
 				o_syncer.ifPresent(this::sync);
 			}
+			ProcessObservers.context().publish(new Processed());
 			List<SyncContainer> leftChildren = left.computeChildren();
 			List<SyncContainer> rightChildren = right.computeChildren();
 			List<HasEquivalenceTuple<SyncContainer>> equivalents = HasEquivalenceHelper
@@ -165,22 +237,55 @@ public class TreeSync<T extends TreeSyncable> {
 			return left.syncable.getClass();
 		}
 
+		int depth() {
+			return node.depth();
+		}
+
 		boolean isTreeSyncable() {
 			return left.isTreeSyncable() || right.isTreeSyncable();
 		}
 
+		String pathSegment() {
+			if (left.field != null) {
+				return left.field.getName();
+			}
+			if (right.field != null) {
+				return right.field.getName();
+			}
+			if (left.syncable != null) {
+				return left.syncable.getClass().getSimpleName();
+			}
+			if (right.syncable != null) {
+				return right.syncable.getClass().getSimpleName();
+			}
+			throw new IllegalStateException();
+		}
+
 		void sync(Syncer syncer) {
-			result = syncer.sync(left.treeSyncable(), right.treeSyncable());
-			if (result.message != null) {
-				logger.info(result.message);
+			action = syncer.sync(left.treeSyncable(), right.treeSyncable());
+			if (action.message != null && action.performed) {
+				logger.info(action.message);
 			}
 		}
-	}
 
-	public static class SyncResult {
-		public SyncPair.SyncAction action;
+		public class Processed implements ProcessObservable {
+			public boolean isLeaf() {
+				return node.getChildren().size() == 0;
+			}
 
-		public String message;
+			public boolean isTreeSyncable() {
+				return SyncPosition.this.isTreeSyncable();
+			}
+
+			@Override
+			public String toString() {
+				FormatBuilder format = new FormatBuilder();
+				format.appendPadLeft(depth() - 1, "");
+				format.appendPadRight(30 + 10 - depth(), pathSegment());
+				format.append(action == null ? "" : action.type);
+				return format.toString();
+			}
+		}
 	}
 
 	class SyncContainer implements HasEquivalenceString<SyncContainer> {

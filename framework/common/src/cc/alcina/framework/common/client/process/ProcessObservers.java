@@ -6,6 +6,7 @@ import java.util.function.Supplier;
 
 import com.google.gwt.core.client.GWT;
 
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.Topic;
 import cc.alcina.framework.common.client.util.TopicListener;
 
@@ -19,6 +20,11 @@ import cc.alcina.framework.common.client.util.TopicListener;
  */
 public class ProcessObservers {
 	private static ProcessObservers instance = new ProcessObservers();
+
+	public static ContextObservers context() {
+		return ContextObservers.has() ? LooseContext.get(ContextObservers.key())
+				: new ContextObservers();
+	}
 
 	public static <O extends ProcessObservable> void observe(
 			Class<O> observableClass, TopicListener<O> listener,
@@ -48,11 +54,7 @@ public class ProcessObservers {
 			Class<O> observableClass, TopicListener<O> listener,
 			boolean register) {
 		if (perObservableTopics == null) {
-			synchronized (this) {
-				if (perObservableTopics == null) {
-					perObservableTopics = new ConcurrentHashMap<>();
-				}
-			}
+			perObservableTopics = new ConcurrentHashMap<>();
 		}
 		perObservableTopics
 				.computeIfAbsent(observableClass, clazz -> Topic.create())
@@ -69,5 +71,41 @@ public class ProcessObservers {
 			return;
 		}
 		topic.publish(observableSupplier.get());
+	}
+
+	/*
+	 * Higher-cost than process observers, since the caller (if passing control)
+	 * will generally maintain a multable state that allows ancestor
+	 * modification.
+	 *
+	 * Used for context-based control, as well as observation of a process. See
+	 * e.g. TreeSync.Preparer
+	 */
+	public static class ContextObservers {
+		public static boolean has() {
+			return LooseContext.has(key());
+		}
+
+		public static String key() {
+			return ContextObservers.class.getName();
+		}
+
+		private ProcessObservers instance = new ProcessObservers();
+
+		ContextObservers() {
+		}
+
+		// deregistration is handled by the context going out of scope
+		public void observe(ProcessObserver o) {
+			if (!has()) {
+				LooseContext.set(key(), this);
+			}
+			instance.observe0(o.getObservableClass(), o, true);
+		}
+
+		public <O extends ProcessObservable> void publish(O observable) {
+			instance.publish0((Class<O>) observable.getClass(),
+					() -> observable);
+		}
 	}
 }
