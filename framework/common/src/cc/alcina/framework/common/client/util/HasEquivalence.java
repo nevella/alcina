@@ -449,11 +449,13 @@ public interface HasEquivalence<T> {
 			if (list.size() < 1) {
 				return;
 			}
-			HasEquivalenceHashMap<T> lookup = new HasEquivalenceHashMap<>();
-			list.forEach(lookup::add);
-			boolean unique = list.stream()
-					.noneMatch(e -> lookup.getEquivalents(e).size() > 1);
-			Preconditions.checkState(unique);
+			HasEquivalenceHashMap<T> lookup = new HasEquivalenceHashMap<>(list);
+			for (T element : list) {
+				List<T> equivalents = lookup.getEquivalents(element);
+				if (equivalents.size() > 1) {
+					throw new NotUniqueException(equivalents);
+				}
+			}
 		}
 
 		public static class DeduplicateHasEquivalencePredicate<C extends HasEquivalence>
@@ -468,6 +470,19 @@ public interface HasEquivalence<T> {
 					seen.add(t);
 					return true;
 				}
+			}
+		}
+
+		public static class NotUniqueException extends RuntimeException {
+			private List equivalents;
+
+			public NotUniqueException(List equivalents) {
+				this.equivalents = equivalents;
+			}
+
+			@Override
+			public String toString() {
+				return Ax.format("Not unique: %s", equivalents);
 			}
 		}
 	}

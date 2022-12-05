@@ -7,6 +7,15 @@ import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
 
 public class HasEquivalenceHashMap<T extends HasEquivalenceHash>
 		extends Multimap<Integer, List<T>> {
+	public HasEquivalenceHashMap() {
+		super();
+	}
+
+	public HasEquivalenceHashMap(List<T> values) {
+		super();
+		values.forEach(this::add);
+	}
+
 	public void add(T value) {
 		add(value.equivalenceHash(), value);
 	}

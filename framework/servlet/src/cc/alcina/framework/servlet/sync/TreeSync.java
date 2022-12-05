@@ -1,11 +1,11 @@
 package cc.alcina.framework.servlet.sync;
 
+import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.ParameterizedType;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 
@@ -26,8 +26,9 @@ import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceTuple;
 import cc.alcina.framework.common.client.util.HasEquivalenceString;
-import cc.alcina.framework.entity.SEUtilities;
-import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.common.client.util.ThrowingRunnable;
+import cc.alcina.framework.common.client.util.ThrowingSupplier;
+import cc.alcina.framework.servlet.sync.TreeSync.SyncAction.Type;
 
 /**
  * Synchronizes the states of two generative trees
@@ -95,24 +96,35 @@ public class TreeSync<T extends TreeSyncable> {
 	 */
 	public interface Preparer<U extends TreeSyncable> {
 		default U prepare(U u, boolean from) {
-			Context context = new Context();
+			Context context = new Context(u, from);
 			ProcessObservers.context().publish(context);
-			updateContext(context);
 			if (context.skip) {
 				return u;
 			} else {
-				return prepare0(u, from);
+				U prepared = prepare0(u, from);
+				Preconditions.checkNotNull(prepared);
+				context.prepared = prepared;
+				ProcessObservers.context().publish(context);
+				return prepared;
 			}
 		}
 
 		U prepare0(U u, boolean from);
 
-		default void updateContext(Context context) {
-			// for transient syncables, skip should be false
-		}
+		public class Context<U extends TreeSyncable>
+				implements ProcessObservable {
+			public U prepared;
 
-		public static class Context implements ProcessObservable {
+			public U value;
+
+			public boolean from;
+
 			public boolean skip = false;
+
+			public Context(U u, boolean from) {
+				this.value = u;
+				this.from = from;
+			}
 		}
 	}
 
@@ -122,6 +134,17 @@ public class TreeSync<T extends TreeSyncable> {
 		public Type type = Type.NO_ACTION;
 
 		public String message;
+
+		public boolean hasChange() {
+			switch (type) {
+			case CREATE:
+			case DELETE:
+			case UPDATE:
+				return true;
+			default:
+				return false;
+			}
+		}
 
 		public enum Type {
 			CREATE, UPDATE, DELETE, WARN, NO_ACTION;
@@ -137,20 +160,66 @@ public class TreeSync<T extends TreeSyncable> {
 		}
 	}
 
-	public interface Syncer<U extends TreeSyncable> {
-		SyncAction computeAction(U left, U right);
+	public static interface Syncer<U extends TreeSyncable<?>> {
+		default SyncAction computeAction(U left, U right) {
+			SyncAction action = new SyncAction();
+			U value = left;
+			if (left == null) {
+				action.type = Type.DELETE;
+				value = right;
+			} else if (right == null) {
+				action.type = Type.CREATE;
+			} else {
+				boolean update = updateIfUnequalFields()
+						? left.provideChildFields(false)
+								.anyMatch(f -> ThrowingSupplier.wrap(() -> {
+									Object leftValue = f.get(left);
+									Object rightValue = f.get(right);
+									return !Objects.equals(leftValue,
+											rightValue);
+								}))
+						: false;
+				action.type = update ? Type.UPDATE : Type.NO_ACTION;
+			}
+			if (action.hasChange()) {
+				action.message = Ax.format("%s %s %s", action.type,
+						value.getClass().getSimpleName(), value.name());
+			}
+			return action;
+		}
 
-		void performAction(SyncAction result, U left, U right);
+		default U createFromDesired(U left) {
+			try {
+				Constructor<U> constructor = (Constructor<U>) left.getClass()
+						.getDeclaredConstructor(new Class[0]);
+				constructor.setAccessible(true);
+				U right = (U) constructor.newInstance();
+				left.provideChildFields(false)
+						.forEach(f -> ThrowingRunnable.wrap(() -> {
+							f.set(right, f.get(left));
+						}));
+				return right;
+			} catch (Exception e) {
+				throw WrappedRuntimeException.wrap(e);
+			}
+		}
+
+		void performAction(SyncAction action, U left, U right);
 
 		default SyncAction sync(U left, U right) {
+			if (left != null && right != null) {
+				right.updateNonPersistent(left);
+			}
 			SyncAction action = computeAction(left, right);
-			Context context = new Context();
+			Context context = new Context(action, left, right);
 			ProcessObservers.context().publish(context);
 			if (context.skip) {
 				//
 			} else {
 				switch (action.type) {
 				case CREATE:
+					right = createFromDesired(left);
+					right.updateNonPersistent(left);
 				case DELETE:
 				case UPDATE:
 					performAction(action, left, right);
@@ -163,8 +232,25 @@ public class TreeSync<T extends TreeSyncable> {
 			return action;
 		}
 
-		public static class Context implements ProcessObservable {
+		default boolean updateIfUnequalFields() {
+			return false;
+		}
+
+		public static class Context<U extends TreeSyncable>
+				implements ProcessObservable {
+			public U left;
+
+			public U right;
+
 			public boolean skip = false;
+
+			public SyncAction action;
+
+			public Context(SyncAction action, U left, U right) {
+				this.action = action;
+				this.left = left;
+				this.right = right;
+			}
 		}
 	}
 
@@ -282,7 +368,11 @@ public class TreeSync<T extends TreeSyncable> {
 				FormatBuilder format = new FormatBuilder();
 				format.appendPadLeft(depth() - 1, "");
 				format.appendPadRight(30 + 10 - depth(), pathSegment());
-				format.append(action == null ? "" : action.type);
+				format.appendPadRight(12, action == null ? "" : action.type);
+				if (action != null && action.message != null) {
+					format.append(" ");
+					format.append(action.message);
+				}
 				return format.toString();
 			}
 		}
@@ -315,8 +405,7 @@ public class TreeSync<T extends TreeSyncable> {
 		@Override
 		public String equivalenceString() {
 			if (syncable == null) {
-				throw new UnsupportedOperationException();
-				// return "---";
+				return null;
 			}
 			if (syncable instanceof Collection) {
 				return field.getName();
@@ -370,33 +459,14 @@ public class TreeSync<T extends TreeSyncable> {
 				}
 			} else {
 				Preconditions.checkState(syncable instanceof TreeSyncable);
-				List<Field> allFields = SEUtilities
-						.allFields(syncable.getClass());
-				for (Field field : allFields) {
-					Class<?> type = field.getType();
-					boolean ts = TreeSyncable.class.isAssignableFrom(type);
-					boolean tsCollection = false;
-					if (Collection.class.isAssignableFrom(type)) {
-						Type genericType = GraphProjection
-								.getGenericType(field);
-						if (genericType instanceof ParameterizedType) {
-							Type parameterizingType = ((ParameterizedType) genericType)
-									.getActualTypeArguments()[0];
-							if (parameterizingType instanceof Class) {
-								Class parameterizingClass = (Class) parameterizingType;
-								tsCollection = TreeSyncable.class
-										.isAssignableFrom(parameterizingClass);
-							}
-						}
-					}
-					if (ts || tsCollection) {
-						SyncContainer child = new SyncContainer(
-								field.get(syncable), left);
-						child.parent = this;
-						child.field = field;
-						result.add(child);
-					}
-				}
+				((TreeSyncable<?>) syncable).provideChildFields(true)
+						.forEach(field -> ThrowingRunnable.wrap(() -> {
+							SyncContainer child = new SyncContainer(
+									field.get(syncable), left);
+							child.parent = this;
+							child.field = field;
+							result.add(child);
+						}));
 			}
 			return result;
 		}

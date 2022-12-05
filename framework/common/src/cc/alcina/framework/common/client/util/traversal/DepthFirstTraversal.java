@@ -4,7 +4,11 @@ import java.util.ArrayList;
 import java.util.ConcurrentModificationException;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.Spliterators;
 import java.util.function.Function;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 import com.google.common.base.Preconditions;
 
@@ -70,6 +74,11 @@ public class DepthFirstTraversal<T> implements Iterable<T>, Iterator<T> {
 		current = next;
 		T result = current.value;
 		return result;
+	}
+
+	public Stream<T> stream() {
+		return StreamSupport.stream(Spliterators.spliteratorUnknownSize(
+				iterator(), Spliterator.ORDERED), false);
 	}
 
 	private void prepareNext() {
