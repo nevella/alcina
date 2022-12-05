@@ -363,17 +363,26 @@ public class TreeSync<T extends TreeSyncable> {
 				return SyncPosition.this.isTreeSyncable();
 			}
 
-			@Override
-			public String toString() {
+			public String
+					toOutputString(boolean includeNoActionLeafEquivalence) {
 				FormatBuilder format = new FormatBuilder();
 				format.appendPadLeft(depth() - 1, "");
 				format.appendPadRight(30 + 10 - depth(), pathSegment());
 				format.appendPadRight(12, action == null ? "" : action.type);
+				if ((!isLeaf() || includeNoActionLeafEquivalence)
+						&& action != null && Ax.isBlank(action.message)) {
+					action.message = left.equivalenceString();
+				}
 				if (action != null && action.message != null) {
 					format.append(" ");
 					format.append(action.message);
 				}
 				return format.toString();
+			}
+
+			@Override
+			public String toString() {
+				return toOutputString(false);
 			}
 		}
 	}
