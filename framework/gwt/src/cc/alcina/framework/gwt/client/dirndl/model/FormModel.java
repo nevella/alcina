@@ -19,6 +19,7 @@ import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeRequestEvent;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 import com.google.gwt.user.client.ui.Focusable;
 import com.google.web.bindery.event.shared.HandlerRegistration;
@@ -250,9 +251,19 @@ public class FormModel extends Model implements DomEvents.Submit.Handler,
 			TransformManager.get()
 					.deregisterProvisionalObject(formModel.getState().model);
 			if (currentPlace instanceof EntityPlace) {
-				EntityPlace entityPlace = ((EntityPlace) currentPlace).copy();
-				entityPlace.action = EntityAction.VIEW;
-				Client.goTo(entityPlace);
+				/*
+				 * behaviour differs. If action was CREATE, go back - if EDIT,
+				 * VIEW
+				 */
+				EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
+				if (currentEntityPlace.action == EntityAction.CREATE) {
+					History.back();
+				} else {
+					EntityPlace entityPlace = (EntityPlace) Reflections
+							.newInstance(currentPlace.getClass());
+					entityPlace.id = currentEntityPlace.id;
+					Client.goTo(entityPlace);
+				}
 			} else if (currentPlace instanceof CategoryNamePlace) {
 				CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
 						.copy();
