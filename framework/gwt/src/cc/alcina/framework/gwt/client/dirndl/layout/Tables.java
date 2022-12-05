@@ -33,10 +33,6 @@ import cc.alcina.framework.gwt.client.dirndl.model.TableModel.TableTypeFactory;
 
 public class Tables {
 	public static class ColumnHeaders extends LeafModel.StringListModel {
-		public ColumnHeaders() {
-			super();
-		}
-
 		public ColumnHeaders(Class<? extends Bindable> clazz,
 				DirectedLayout.Node node) {
 			BoundWidgetTypeFactory factory = Registry

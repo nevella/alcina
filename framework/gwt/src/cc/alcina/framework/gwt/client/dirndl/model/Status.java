@@ -27,10 +27,20 @@ public enum Status implements ProvidesStatus {
 				.max(Comparator.naturalOrder()).orElse(OK);
 	}
 
-	@Directed(tag = "div", bindings = {
-			@Binding(from = "reason", to = "title", type = Type.PROPERTY),
-			@Binding(from = "displayText", type = Type.INNER_TEXT),
-			@Binding(from = "status", to = DomStyleConstants.STYLE_BACKGROUND_COLOR, type = Type.STYLE_ATTRIBUTE, transform = StatusTransform.class) })
+	@Override
+	public Status provideStatus() {
+		return this;
+	}
+
+	@Directed(
+		bindings = {
+				@Binding(from = "reason", to = "title", type = Type.PROPERTY),
+				@Binding(from = "displayText", type = Type.INNER_TEXT),
+				@Binding(
+					from = "status",
+					to = DomStyleConstants.STYLE_BACKGROUND_COLOR,
+					type = Type.STYLE_ATTRIBUTE,
+					transform = StatusTransform.class) })
 	public static class StatusReason extends Model implements ProvidesStatus {
 		public static StatusReason check(boolean condition,
 				String successReason, String failureReason) {
@@ -143,10 +153,5 @@ public enum Status implements ProvidesStatus {
 				}
 			}
 		}
-	}
-
-	@Override
-	public Status provideStatus() {
-		return this;
 	}
 }

@@ -75,7 +75,7 @@ ol-editor
   &.not-first 
     padding-top: 0
   &.no-labels 
-    form.ol-form 
+    form
       label 
         display: none
   &.single-line 
@@ -88,16 +88,16 @@ ol-editor
       section 
         display: inline-block
         flex: 1
-        .ol-form-field,
-        .ol-select 
+        form-element,
+        select 
           display: inline-block
-        .ol-form-field 
+        form-element 
           padding-right: 1rem
-      .ol-toolbar 
+      actions
         display: inline-block
         margin: 0
   &.wide 
-    .ol-form 
+    form
       @include subtle-form
       input,
       select,
@@ -106,7 +106,7 @@ ol-editor
       div.ol-select 
         display: inline-block
   &.grid 
-    > .ol-form 
+    > form
       display: block
       > section 
         display: grid
@@ -116,7 +116,7 @@ ol-editor
           > label 
             white-space: nowrap
             padding-right: 2em
-  .ol-toolbar 
+  actions
     margin: 1em
     > ul 
       display: flex
@@ -128,14 +128,14 @@ ol-editor
         display: inline-block
         line-height: theme.$list-element-height
         padding: 0 0.5em
-      &.ol-right 
+      &.right 
         justify-content: flex-end
-  &.over-only .ol-form 
+  &.over-only form
     @include over-only
     @include subtle-form
   &.tight 
     padding: 0.5rem 1rem
-    .ol-form-field 
+    form-element
       line-height: 1.3em
       > label.ol-label 
         display: inline-block
@@ -143,7 +143,7 @@ ol-editor
         width: 100px
   &.tight180 
     padding: 0.5rem 1rem
-    .ol-form-field 
+    form-element 
       line-height: 1.3em
       > label.ol-label 
         display: inline-block
@@ -155,7 +155,7 @@ ol-editor
    */
   &.tight230 
     padding: 0.25rem 0.5rem
-    .ol-form-field 
+    form-element
       line-height: 1.3em
       > label.ol-label 
         display: inline-block
@@ -168,7 +168,7 @@ will always have single-line ol-editor, pad label until we work out baseline ali
 edit-value 
   > label  
     padding-top: 2.0px 
-  &:not(.dirty) .ol-toolbar 
+  &:not(.dirty) actions
     visibility: hidden
   section > div 
     width: 100%
