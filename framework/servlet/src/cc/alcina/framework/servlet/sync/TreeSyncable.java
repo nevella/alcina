@@ -8,6 +8,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -80,13 +81,15 @@ public interface TreeSyncable<T extends TreeSyncable>
 	}
 
 	default Stream<TreeSyncable<?>> provideSelfAndDescendantTree() {
-		DepthFirstTraversal<TreeSyncable<?>> traversal = new DepthFirstTraversal<>(
-				this,
-				s -> s.provideChildSyncables()
-						.sorted(Comparator.comparing(
-								HasEquivalenceString::equivalenceString))
-						.collect(Collectors.toList()),
-				false);
+		// some fairly heavy casting to handle alternation between
+		// TreeSyncable<?> and TreeSyncable
+		Function<TreeSyncable<?>, List<TreeSyncable<?>>> childrenSupplier = s -> (List) s
+				.provideChildSyncables()
+				.sorted(Comparator
+						.comparing(HasEquivalenceString::equivalenceString))
+				.map(t -> (TreeSyncable) t).collect(Collectors.toList());
+		DepthFirstTraversal<TreeSyncable<?>> traversal = new DepthFirstTraversal<TreeSyncable<?>>(
+				this, childrenSupplier, false);
 		return traversal.stream();
 	}
 
