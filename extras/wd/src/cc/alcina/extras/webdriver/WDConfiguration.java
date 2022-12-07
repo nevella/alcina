@@ -17,7 +17,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.StringMap;
 
-@XmlRootElement
 @XmlAccessorType(XmlAccessType.FIELD)
 @Registration(JaxbContextRegistration.class)
 public class WDConfiguration {
@@ -70,7 +69,7 @@ public class WDConfiguration {
 				topLevelClassName, uri);
 	}
 
-	@XmlRootElement(name = "wdConfiguration")
+	@XmlRootElement(name = "wdConfigurations")
 	@XmlAccessorType(XmlAccessType.FIELD)
 	@Registration(JaxbContextRegistration.class)
 	public static class WDConfigurations {
