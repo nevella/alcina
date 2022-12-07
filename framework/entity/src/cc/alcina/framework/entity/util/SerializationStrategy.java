@@ -2,6 +2,8 @@ package cc.alcina.framework.entity.util;
 
 import java.io.File;
 
+import com.google.common.base.Preconditions;
+
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.entity.KryoUtils;
 import cc.alcina.framework.entity.ResourceUtilities;
@@ -15,10 +17,12 @@ public interface SerializationStrategy {
 
 	public <T> void serializeToFile(T t, File cacheFile);
 
-	public static class Jackson
-			implements SerializationStrategy {
+	public static class Jackson implements SerializationStrategy {
+		private boolean simple;
+
 		@Override
 		public <T> T deserializeFromFile(File cacheFile, Class<T> clazz) {
+			Preconditions.checkState(!simple);
 			return JacksonUtils.deserializeFromFile(cacheFile, clazz);
 		}
 
@@ -29,12 +33,23 @@ public interface SerializationStrategy {
 
 		@Override
 		public <T> byte[] serializeToByteArray(T t) {
+			Preconditions.checkState(!simple);
 			return JacksonUtils.serializeToByteArray(t);
 		}
 
 		@Override
 		public <T> void serializeToFile(T t, File cacheFile) {
-			JacksonUtils.serializeToFile(t, cacheFile);
+			if (simple) {
+				ResourceUtilities.write(
+						JacksonUtils.serializeNoTypesInterchange(t), cacheFile);
+			} else {
+				JacksonUtils.serializeToFile(t, cacheFile);
+			}
+		}
+
+		public SerializationStrategy withSimple() {
+			simple = true;
+			return this;
 		}
 	}
 

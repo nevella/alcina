@@ -569,12 +569,20 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 		}
 
 		public class Processed implements ProcessObservable {
+			public int depth() {
+				return node.depth();
+			}
+
 			public boolean isLeaf() {
 				return node.getChildren().size() == 0;
 			}
 
 			public boolean isTreeSyncable() {
 				return SyncPosition.this.isTreeSyncable();
+			}
+
+			public Class<? extends TreeSyncable> rootType() {
+				return ((TreeSync) node.root().getValue()).from.getClass();
 			}
 
 			public String

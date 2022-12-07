@@ -198,6 +198,7 @@ public class FsObjectCache<T> implements PersistentObjectCache<T> {
 
 	public FsObjectCache<T> withPath(String basePath) {
 		root = new File(basePath);
+		root.mkdirs();
 		return this;
 	}
 
