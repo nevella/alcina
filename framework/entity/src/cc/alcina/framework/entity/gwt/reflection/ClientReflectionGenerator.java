@@ -87,7 +87,7 @@ import cc.alcina.framework.entity.gwt.reflection.ReachabilityData.TypeHierarchy;
  * note reachability wrinkles caused by exclusion of equal priority classes from
  * registration (see listImplementationRegistrations)
  *
- * 
+ *
  */
 public class ClientReflectionGenerator extends IncrementalGenerator {
 	/*
@@ -762,9 +762,7 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				sortedPropertyGenerators = propertyGenerators.values().stream()
 						.sorted(new PropertyOrdering())
 						.collect(Collectors.toList());
-				if (reflectedTypeFqn().contains("ConsideredCaseNode")) {
-					int debug = 3;
-				}
+				
 			}
 			return sortedPropertyGenerators.stream();
 		}
