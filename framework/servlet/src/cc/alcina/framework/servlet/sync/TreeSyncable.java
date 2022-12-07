@@ -17,6 +17,7 @@ import cc.alcina.framework.common.client.util.ThrowingSupplier;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
 import cc.alcina.framework.entity.SEUtilities;
 import cc.alcina.framework.entity.projection.GraphProjection;
+import cc.alcina.framework.servlet.sync.TreeSync.Syncer.Operation;
 
 // instances should only .equals themselves -- and equivalence shd be unique
 //
@@ -90,6 +91,6 @@ public interface TreeSyncable<T extends TreeSyncable>
 	}
 
 	// copy non-persistent, non-sync-affecting fields
-	default void updateNonPersistent(TreeSyncable left) {
+	default void updateFromSyncEquivalent(Operation<T> operation, T other) {
 	}
 }

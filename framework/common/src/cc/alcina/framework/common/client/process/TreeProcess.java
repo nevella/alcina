@@ -305,6 +305,8 @@ public class TreeProcess {
 			tree().onException(exception);
 		}
 
+		void refreshChildIndicies();
+
 		default Node root() {
 			Node cursor = this;
 			while (cursor.getParent() != null) {
@@ -439,6 +441,14 @@ public class TreeProcess {
 		@Override
 		public Node nodeForValue(Object value) {
 			return childrenByValue.get(value);
+		}
+
+		@Override
+		public void refreshChildIndicies() {
+			int counter = 0;
+			for (Node child : children) {
+				((NodeImpl) child).index = counter++;
+			}
 		}
 
 		@Override
