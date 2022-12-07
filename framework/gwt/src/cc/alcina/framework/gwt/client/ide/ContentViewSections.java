@@ -380,7 +380,7 @@ public class ContentViewSections {
 	class MultiListener implements PermissibleActionListener {
 		@Override
 		public void vetoableAction(PermissibleActionEvent evt) {
-			if (evt.getAction().getClass() == OkAction.class || !cancelButton) {
+			if (evt.getAction() == OkAction.INSTANCE || !cancelButton) {
 				if (createListener != null) {
 					createListener.vetoableAction(evt);
 				}

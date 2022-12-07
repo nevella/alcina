@@ -52,7 +52,7 @@ public interface GroupedCellTableView<VM extends ViewModel> extends IsWidget {
 				.allFields(parameters,
 						f -> !f.getPropertyName().equals("format"))
 				.actionListener(evt -> {
-					if (evt.actionClassIs(OkAction.class)) {
+					if (evt.getAction() == OkAction.INSTANCE) {
 						def.setGroupingParameters(parameters);
 					} else {
 						def.setGroupingParameters(null);
