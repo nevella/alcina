@@ -762,7 +762,6 @@ public class ClientReflectionGenerator extends IncrementalGenerator {
 				sortedPropertyGenerators = propertyGenerators.values().stream()
 						.sorted(new PropertyOrdering())
 						.collect(Collectors.toList());
-				
 			}
 			return sortedPropertyGenerators.stream();
 		}
