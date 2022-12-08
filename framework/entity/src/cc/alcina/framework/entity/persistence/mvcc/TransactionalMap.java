@@ -251,14 +251,19 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			Object transactionalKey = wrapTransactionalKey(key);
 			TransactionalValue transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 					.get(transactionalKey);
+			boolean createdRemovedTransactionalValue = false;
 			if (transactionalValue == null) {
+				// WIP - need to ttest this, but it appears correct. For the
+				// moment, keep false (no change)
+				// createdRemovedTransactionalValue = true;
 				transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 						.computeIfAbsent(transactionalKey,
 								k -> new TransactionalValue((K) key,
 										ObjectWrapper.of(REMOVED_VALUE_MARKER),
 										currentTransaction));
 			}
-			if (transactionalValue.remove()) {
+			if (transactionalValue.remove()
+					|| createdRemovedTransactionalValue) {
 				sizeMetadata.delta(-1);
 			}
 		}
@@ -742,7 +747,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				return (V) baseObject.get();
 			}
 			Optional<ObjectVersion<ObjectWrapper>> version = versions().values()
-					.stream().filter(objectVersion -> notRemovedValueMarker(objectVersion.object))
+					.stream().filter(objectVersion -> notRemovedValueMarker(
+							objectVersion.object))
 					.findFirst();
 			if (version.isEmpty()) {
 				throw new IllegalStateException(Ax.format(
