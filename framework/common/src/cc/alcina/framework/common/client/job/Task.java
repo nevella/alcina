@@ -5,9 +5,9 @@ import java.util.Objects;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.serializer.FlatTreeSerializer;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
-import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
+import cc.alcina.framework.common.client.util.HasEquivalence;
 
-public interface Task extends TreeSerializable, HasEquivalenceHash {
+public interface Task extends TreeSerializable, HasEquivalence {
 	@Override
 	default int equivalenceHash() {
 		return getClass().hashCode();

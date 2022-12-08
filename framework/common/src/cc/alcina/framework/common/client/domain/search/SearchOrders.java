@@ -19,12 +19,12 @@ import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
-import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
+import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 
 @Bean
 public class SearchOrders<T> implements Comparator<T>, Serializable,
-		HasEquivalenceHash<SearchOrders<T>>, TreeSerializable {
+		HasEquivalence<SearchOrders<T>>, TreeSerializable {
 	/*
 	 * Don't access directly (use _getCmps) - even when altering (call
 	 * refreshSerializable when altering). The boolean value is true ascending;

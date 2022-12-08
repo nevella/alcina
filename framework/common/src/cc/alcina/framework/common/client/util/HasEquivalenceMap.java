@@ -3,15 +3,15 @@ package cc.alcina.framework.common.client.util;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
+import cc.alcina.framework.common.client.util.HasEquivalence;
 
-public class HasEquivalenceHashMap<T extends HasEquivalenceHash>
+public class HasEquivalenceMap<T extends HasEquivalence>
 		extends Multimap<Integer, List<T>> {
-	public HasEquivalenceHashMap() {
+	public HasEquivalenceMap() {
 		super();
 	}
 
-	public HasEquivalenceHashMap(List<T> values) {
+	public HasEquivalenceMap(List<T> values) {
 		super();
 		values.forEach(this::add);
 	}

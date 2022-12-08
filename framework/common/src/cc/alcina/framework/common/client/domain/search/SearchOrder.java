@@ -18,11 +18,6 @@ public abstract class SearchOrder<T, V extends Comparable>
 	}
 
 	@Override
-	public boolean equivalentTo(SearchOrder other) {
-		return getClass() == other.getClass();
-	}
-
-	@Override
 	public int compare(T o1, T o2) {
 		int comparison = CommonUtils.compareWithNullMinusOne(comparable(o1),
 				comparable(o2));
@@ -30,6 +25,20 @@ public abstract class SearchOrder<T, V extends Comparable>
 			return comparison;
 		}
 		return compare2(o1, o2);
+	}
+
+	@Override
+	public int equivalenceHash() {
+		return getClass().hashCode();
+	}
+
+	@Override
+	public boolean equivalentTo(SearchOrder other) {
+		return getClass() == other.getClass();
+	}
+
+	public String provideKey() {
+		return getClass().getName();
 	}
 
 	@Override
@@ -44,9 +53,5 @@ public abstract class SearchOrder<T, V extends Comparable>
 		} else {
 			return 0;
 		}
-	}
-
-	public String provideKey() {
-		return getClass().getName();
 	}
 }

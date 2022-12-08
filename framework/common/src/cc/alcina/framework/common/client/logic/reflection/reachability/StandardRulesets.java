@@ -132,7 +132,7 @@ public class StandardRulesets {
 			cc.alcina.framework.common.client.util.HasDisplayName.HasDisplayNameRendererNull.class,
 			cc.alcina.framework.common.client.util.HasDisplayName.Settable.class,
 			cc.alcina.framework.common.client.util.HasDisplayName.class,
-			cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash.class,
+			cc.alcina.framework.common.client.util.HasEquivalence.class,
 			cc.alcina.framework.common.client.util.HasEquivalence.class,
 			cc.alcina.framework.common.client.util.HasReflectiveEquivalence.class,
 			cc.alcina.framework.common.client.util.HasStringId.class,

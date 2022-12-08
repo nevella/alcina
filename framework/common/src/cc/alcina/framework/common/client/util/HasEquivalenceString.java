@@ -16,9 +16,9 @@ import java.util.stream.Stream;
 
 import com.totsp.gwittir.client.beans.Converter;
 
-import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
+import cc.alcina.framework.common.client.util.HasEquivalence;
 
-public interface HasEquivalenceString<T> extends HasEquivalenceHash<T> {
+public interface HasEquivalenceString<T> extends HasEquivalence<T> {
 	String NULL = "<--null-->";
 
 	public static <T extends HasEquivalenceString> Map<String, T>

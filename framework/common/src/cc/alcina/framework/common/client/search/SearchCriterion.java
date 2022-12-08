@@ -32,7 +32,7 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.serializer.PropertySerialization;
 import cc.alcina.framework.common.client.serializer.TreeSerializable;
 import cc.alcina.framework.common.client.util.CommonUtils;
-import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHash;
+import cc.alcina.framework.common.client.util.HasEquivalence;
 import cc.alcina.framework.common.client.util.HasReflectiveEquivalence;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.gwt.client.ide.provider.CollectionProvider;
@@ -47,7 +47,7 @@ import cc.alcina.framework.gwt.client.objecttree.search.StandardSearchOperator;
 @Registrations({ @Registration(JaxbContextRegistration.class), })
 public abstract class SearchCriterion extends Bindable
 		implements TreeRenderable, HasReflectiveEquivalence<SearchCriterion>,
-		HasEquivalenceHash<SearchCriterion>, TreeSerializable {
+		HasEquivalence<SearchCriterion>, TreeSerializable {
 	public static final transient String CONTEXT_ENSURE_DISPLAY_NAME = SearchCriterion.class
 			+ ".CONTEXT_ENSURE_DISPLAY_NAME";
 

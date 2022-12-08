@@ -6,6 +6,7 @@ import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.function.Predicate;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
@@ -151,11 +152,9 @@ public class GraphTuples {
 			this.field = field;
 		}
 
-		public Property property() {
-			if (property == null) {
-				property = Reflections.at(classRef.clazz).property(name);
-			}
-			return property;
+		@Override
+		public int equivalenceHash() {
+			return Objects.hash(name, type.name);
 		}
 
 		@Override
@@ -176,6 +175,13 @@ public class GraphTuples {
 				path = Ax.format("%s.%s", classRef.simpleName(), name);
 			}
 			return path;
+		}
+
+		public Property property() {
+			if (property == null) {
+				property = Reflections.at(classRef.clazz).property(name);
+			}
+			return property;
 		}
 
 		@Override

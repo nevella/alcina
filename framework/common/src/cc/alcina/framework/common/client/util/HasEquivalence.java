@@ -21,6 +21,10 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.util.CommonUtils.ThreeWaySetResult;
 
+/*
+ * 'equivalence' is a relation between instances of a class similar to equals -
+ * but weaker (multiple objects can be equivalent, by design)
+ */
 public interface HasEquivalence<T> {
 	public static boolean areEquivalent(HasEquivalence o1, HasEquivalence o2) {
 		if (o1 == null) {
@@ -30,10 +34,12 @@ public interface HasEquivalence<T> {
 		}
 	}
 
+	public int equivalenceHash();
+
 	public boolean equivalentTo(T other);
 
 	public abstract static class HasEquivalenceAdapter<T, E extends HasEquivalenceAdapter>
-			implements HasEquivalenceHash<E> {
+			implements HasEquivalence<E> {
 		public T o;
 
 		public T left;
@@ -97,10 +103,6 @@ public interface HasEquivalence<T> {
 		}
 	}
 
-	public static interface HasEquivalenceHash<T> extends HasEquivalence<T> {
-		public int equivalenceHash();
-	}
-
 	public static class HasEquivalenceHelper {
 		public static final String CONTEXT_IGNORE_FOR_DEBUGGING = HasEquivalenceHelper.class
 				.getName() + ".CONTEXT_IGNORE_FOR_DEBUGGING";
@@ -143,7 +145,7 @@ public interface HasEquivalence<T> {
 			return true;
 		}
 
-		public static <T extends HasEquivalenceHash> boolean
+		public static <T extends HasEquivalence> boolean
 				contains(Collection<T> o1, T o2) {
 			return !intersection(o1, Collections.singletonList(o2)).isEmpty();
 		}
@@ -167,7 +169,7 @@ public interface HasEquivalence<T> {
 			return new DeduplicateHasEquivalencePredicate<>();
 		}
 
-		public static <T extends HasEquivalenceHash> boolean
+		public static <T extends HasEquivalence> boolean
 				equivalent(Collection<T> o1, Collection<T> o2) {
 			if (o1 == null || o2 == null) {
 				return o1 == o2;
@@ -188,7 +190,7 @@ public interface HasEquivalence<T> {
 			}
 		}
 
-		public static <T extends HasEquivalenceHash> T
+		public static <T extends HasEquivalence> T
 				getEquivalent(Collection<T> o1, T o2) {
 			return (T) CommonUtils
 					.first(intersection(o1, Collections.singletonList(o2)));
@@ -205,21 +207,19 @@ public interface HasEquivalence<T> {
 					: CommonUtils.first(intersection).o;
 		}
 
-		public static <T extends HasEquivalenceHash>
-				List<HasEquivalenceTuple<T>>
+		public static <T extends HasEquivalence> List<HasEquivalenceTuple<T>>
 				getEquivalents(Collection<T> left, Collection<T> right) {
 			return getEquivalents(left, right, false, true);
 		}
 
-		public static <T extends HasEquivalenceHash>
-				List<HasEquivalenceTuple<T>> getEquivalents(Collection<T> left,
-						Collection<T> right, boolean alsoUnmatched,
-						boolean requireUnique) {
+		public static <T extends HasEquivalence> List<HasEquivalenceTuple<T>>
+				getEquivalents(Collection<T> left, Collection<T> right,
+						boolean alsoUnmatched, boolean requireUnique) {
 			List<HasEquivalenceTuple<T>> result = new ArrayList<HasEquivalence.HasEquivalenceTuple<T>>();
-			HasEquivalenceHashMap<T> leftHashedMap = getHashed(left);
-			HasEquivalenceHashMap<T> rightHashedMap = getHashed(right);
-			HasEquivalenceHashMap<T> leftMatched = new HasEquivalenceHashMap<>();
-			HasEquivalenceHashMap<T> rightMatched = new HasEquivalenceHashMap<>();
+			HasEquivalenceMap<T> leftHashedMap = getHashed(left);
+			HasEquivalenceMap<T> rightHashedMap = getHashed(right);
+			HasEquivalenceMap<T> leftMatched = new HasEquivalenceMap<>();
+			HasEquivalenceMap<T> rightMatched = new HasEquivalenceMap<>();
 			if (leftHashedMap == null || rightHashedMap == null) {
 			} else {
 				for (Entry<Integer, List<T>> entry : leftHashedMap.entrySet()) {
@@ -253,15 +253,15 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
-		public static <T extends HasEquivalenceHash> HasEquivalenceHashMap<T>
+		public static <T extends HasEquivalence> HasEquivalenceMap<T>
 				getHashed(Collection<T> coll) {
-			if (coll == null || coll.isEmpty() || (!(coll.iterator()
-					.next() instanceof HasEquivalenceHash))) {
+			if (coll == null || coll.isEmpty()
+					|| (!(coll.iterator().next() instanceof HasEquivalence))) {
 				return null;
 			}
-			HasEquivalenceHashMap<T> result = new HasEquivalenceHashMap<T>();
+			HasEquivalenceMap<T> result = new HasEquivalenceMap<T>();
 			result.putAll(coll.stream().collect(AlcinaCollectors.toKeyMultimap(
-					o -> ((HasEquivalenceHash<T>) o).equivalenceHash())));
+					o -> ((HasEquivalence<T>) o).equivalenceHash())));
 			return result;
 		}
 
@@ -269,8 +269,8 @@ public interface HasEquivalence<T> {
 			int hash = 0;
 			for (int i = 0; i < args.length; i++) {
 				Object o = args[i];
-				if (o instanceof HasEquivalenceHash) {
-					hash ^= ((HasEquivalenceHash) o).equivalenceHash();
+				if (o instanceof HasEquivalence) {
+					hash ^= ((HasEquivalence) o).equivalenceHash();
 				} else {
 					hash ^= Objects.hash(o);
 				}
@@ -282,11 +282,10 @@ public interface HasEquivalence<T> {
 		 * Returns the objects from the first collection which have an
 		 * equivalent in the second
 		 */
-		public static <T extends HasEquivalenceHash>
-				List<? super HasEquivalenceHash>
+		public static <T extends HasEquivalence> List<? super HasEquivalence>
 				intersection(Collection<T> o1, Collection<T> o2) {
-			List<? super HasEquivalenceHash> result = new ArrayList<>();
-			HasEquivalenceHashMap<T> hashed = getHashed(o2);
+			List<? super HasEquivalence> result = new ArrayList<>();
+			HasEquivalenceMap<T> hashed = getHashed(o2);
 			for (Iterator<T> itr1 = o1.iterator(); itr1.hasNext();) {
 				T t1 = itr1.next();
 				for (Iterator<T> itr2 = maybeHashedCorrespondents(t1, o2,
@@ -321,9 +320,9 @@ public interface HasEquivalence<T> {
 			return duplicates;
 		}
 
-		public static <T extends HasEquivalenceHash> List<T>
+		public static <T extends HasEquivalence> List<T>
 				listDuplicatesHashed(Collection<T> o1) {
-			HasEquivalenceHashMap<T> passed = new HasEquivalenceHashMap<T>();
+			HasEquivalenceMap<T> passed = new HasEquivalenceMap<T>();
 			List<T> duplicates = new ArrayList<T>();
 			for (T t : o1) {
 				boolean duplicate = false;
@@ -364,10 +363,9 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
-		public static <T extends HasEquivalenceHash> Collection<T>
+		public static <T extends HasEquivalence> Collection<T>
 				maybeHashedCorrespondents(T sameHashAs,
-						Collection<T> collection,
-						HasEquivalenceHashMap<T> hashed) {
+						Collection<T> collection, HasEquivalenceMap<T> hashed) {
 			if (hashed == null) {
 				return collection;
 			}
@@ -379,9 +377,8 @@ public interface HasEquivalence<T> {
 			}
 		}
 
-		public static <T extends Entity & HasEquivalenceHash> void
-				mergeTransforms(Collection<T> existing,
-						Collection<T> generated) {
+		public static <T extends Entity & HasEquivalence> void mergeTransforms(
+				Collection<T> existing, Collection<T> generated) {
 			// compare in order (generated,existing) so the intersection will be
 			// the generated objects (for which we remove transforms)
 			ThreeWaySetResult<T> split = threeWaySplit(generated, existing);
@@ -390,12 +387,11 @@ public interface HasEquivalence<T> {
 					.removeTransformsForObjects(split.intersection);
 		}
 
-		public static <T extends HasEquivalenceHash>
-				List<? super HasEquivalenceHash>
+		public static <T extends HasEquivalence> List<? super HasEquivalence>
 				removeAll(Collection<T> removeFrom,
 						Collection<T> equivalentsToRemove) {
-			List<? super HasEquivalenceHash> result = new ArrayList<>();
-			HasEquivalenceHashMap<T> hashed = getHashed(equivalentsToRemove);
+			List<? super HasEquivalence> result = new ArrayList<>();
+			HasEquivalenceMap<T> hashed = getHashed(equivalentsToRemove);
 			for (Iterator<T> itr1 = removeFrom.iterator(); itr1.hasNext();) {
 				T t1 = itr1.next();
 				boolean add = true;
@@ -414,7 +410,7 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
-		public static <T extends HasEquivalenceHash> ThreeWaySetResult<T>
+		public static <T extends HasEquivalence> ThreeWaySetResult<T>
 				threeWaySplit(Collection<T> c1, Collection<T> c2) {
 			ThreeWaySetResult<T> result = new ThreeWaySetResult<>();
 			Set intersection = new LinkedHashSet<>((List) intersection(c1, c2));
@@ -444,12 +440,12 @@ public interface HasEquivalence<T> {
 			return result;
 		}
 
-		private static <T extends HasEquivalenceHash> void
+		private static <T extends HasEquivalence> void
 				checkUnique(List<T> list) {
 			if (list.size() < 1) {
 				return;
 			}
-			HasEquivalenceHashMap<T> lookup = new HasEquivalenceHashMap<>(list);
+			HasEquivalenceMap<T> lookup = new HasEquivalenceMap<>(list);
 			for (T element : list) {
 				List<T> equivalents = lookup.getEquivalents(element);
 				if (equivalents.size() > 1) {

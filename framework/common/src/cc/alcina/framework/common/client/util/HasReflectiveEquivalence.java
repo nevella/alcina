@@ -9,7 +9,6 @@ import java.lang.annotation.Target;
 import java.util.Collection;
 import java.util.List;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.reachability.ClientVisible;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
@@ -26,54 +25,64 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 	}
 
 	@Override
+	default int equivalenceHash() {
+		int hash = 0;
+		List<Property> properties = Reflections.at(getClass()).properties();
+		for (Property property : properties) {
+			if (property.isReadOnly() || property.isWriteOnly()
+					|| property.has(HasReflectiveEquivalence.Ignore.class)) {
+				continue;
+			}
+			Object o1 = property.get(this);
+			hash ^= HasEquivalenceHelper.hash(o1);
+		}
+		return hash;
+	}
+
+	@Override
 	default boolean equivalentTo(T other) {
 		if (other == null || getClass() != other.getClass()) {
 			return false;
 		}
 		List<Property> properties = Reflections.at(getClass()).properties();
-		try {
-			for (Property property : properties) {
-				if (property.isReadOnly() || property.isWriteOnly() || property
-						.has(HasReflectiveEquivalence.Ignore.class)) {
-					continue;
+		for (Property property : properties) {
+			if (property.isReadOnly() || property.isWriteOnly()
+					|| property.has(HasReflectiveEquivalence.Ignore.class)) {
+				continue;
+			}
+			Object o1 = property.get(this);
+			Object o2 = property.get(other);
+			if (CommonUtils.equalsWithNullEquality(o1, o2)) {
+				continue;
+			} else {
+				if (o1 == null || o2 == null) {
+					return debugInequivalence(property, o1, o2);
 				}
-				Object o1 = property.get(this);
-				Object o2 = property.get(other);
-				if (CommonUtils.equalsWithNullEquality(o1, o2)) {
-					continue;
-				} else {
-					if (o1 == null || o2 == null) {
-						return debugInequivalence(property, o1, o2);
-					}
-					boolean bothCollections = o1 instanceof Collection
-							&& o2 instanceof Collection;
-					if (o1.getClass() != o2.getClass() && !bothCollections) {
-						return debugInequivalence(property, o1, o2);
-					} else if (o1 instanceof HasEquivalence) {
-						if (((HasEquivalence) o1)
-								.equivalentTo((HasEquivalence) o2)) {
-							continue;
-						} else {
-							return debugInequivalence(property, o1, o2);
-						}
-					} else if (bothCollections) {
-						Collection c1 = (Collection) o1;
-						Collection c2 = (Collection) o2;
-						if (c1.size() == c2.size()
-								&& (c1.iterator()
-										.next() instanceof HasEquivalence)
-								&& HasEquivalenceHelper.equivalent(c1, c2)) {
-							continue;
-						} else {
-							return debugInequivalence(property, o1, o2);
-						}
+				boolean bothCollections = o1 instanceof Collection
+						&& o2 instanceof Collection;
+				if (o1.getClass() != o2.getClass() && !bothCollections) {
+					return debugInequivalence(property, o1, o2);
+				} else if (o1 instanceof HasEquivalence) {
+					if (((HasEquivalence) o1)
+							.equivalentTo((HasEquivalence) o2)) {
+						continue;
 					} else {
 						return debugInequivalence(property, o1, o2);
 					}
+				} else if (bothCollections) {
+					Collection c1 = (Collection) o1;
+					Collection c2 = (Collection) o2;
+					if (c1.size() == c2.size()
+							&& (c1.iterator().next() instanceof HasEquivalence)
+							&& HasEquivalenceHelper.equivalent(c1, c2)) {
+						continue;
+					} else {
+						return debugInequivalence(property, o1, o2);
+					}
+				} else {
+					return debugInequivalence(property, o1, o2);
 				}
 			}
-		} catch (Exception e) {
-			throw new WrappedRuntimeException(e);
 		}
 		return true;
 	}
