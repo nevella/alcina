@@ -114,7 +114,7 @@ public class Gallery {
 	}
 
 	public static void snap(String snapName) {
-		if (Configuration.key(SNAP).is()) {
+		if (instance() != null && Configuration.key(SNAP).is()) {
 			instance().snap0(snapName);
 		}
 	}
