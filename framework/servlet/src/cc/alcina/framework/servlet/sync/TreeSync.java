@@ -44,6 +44,8 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 
 	private Predicate<Node> exitTest = n -> false;
 
+	private Predicate<Class<? extends TreeSyncable>> treeFilter = t -> true;
+
 	private T from;
 
 	private T to;
@@ -76,6 +78,12 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 
 	public void setExitTest(Predicate<Node> exitTest) {
 		this.exitTest = exitTest;
+	}
+
+	public TreeSync<T> withTreeFilter(
+			Predicate<Class<? extends TreeSyncable>> treeFilter) {
+		this.treeFilter = treeFilter;
+		return this;
 	}
 
 	private void init() {
@@ -114,13 +122,14 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 	 * Run prior to sync (to say optionally update cached remote values)
 	 */
 	public interface Preparer<U extends TreeSyncable> {
-		default U prepare(U u, boolean from) {
-			Context context = new Context(u, from);
+		default U prepare(TreeSync.SyncContainer syncContainer, U u,
+				boolean from) {
+			Context context = new Context(syncContainer, u, from);
 			ProcessObservers.context().publish(context);
-			if (context.skip) {
+			if (context.syncContainer.position.skip) {
 				return u;
 			} else {
-				U prepared = prepare0(u, from);
+				U prepared = prepare0(context, u, from);
 				Preconditions.checkNotNull(prepared);
 				context.prepared = prepared;
 				ProcessObservers.context().publish(context);
@@ -128,7 +137,7 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			}
 		}
 
-		U prepare0(U u, boolean from);
+		U prepare0(Context context, U u, boolean from);
 
 		public class Context<U extends TreeSyncable>
 				implements ProcessObservable {
@@ -138,11 +147,21 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 
 			public boolean from;
 
-			public boolean skip = false;
+			public TreeSync.SyncContainer syncContainer;
 
-			public Context(U u, boolean from) {
+			public Context(TreeSync.SyncContainer syncContainer, U u,
+					boolean from) {
+				this.syncContainer = syncContainer;
 				this.value = u;
 				this.from = from;
+			}
+
+			public U contextValue() {
+				return prepared != null ? prepared : value;
+			}
+
+			public void skip() {
+				syncContainer.position.skip = true;
 			}
 		}
 	}
@@ -153,9 +172,6 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 		public Type type = Type.NO_ACTION;
 
 		public String message;
-
-		// do not perform action
-		public boolean skip;
 
 		public SyncAction() {
 		}
@@ -206,6 +222,8 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 
 		private Field field;
 
+		public TreeSync<T>.SyncPosition position;
+
 		public SyncContainer(Object syncable, boolean left) {
 			this.syncable = syncable;
 			this.left = left;
@@ -248,7 +266,7 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			if (syncable == null) {
 				return;
 			}
-			TreeSyncable updated = preparer.prepare(treeSyncable(), left);
+			TreeSyncable updated = preparer.prepare(this, treeSyncable(), left);
 			if (updated != syncable) {
 				// replace. but this depends on how we model parent paths
 				throw new UnsupportedOperationException();
@@ -268,6 +286,21 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			return this;
 		}
 
+		private void addWithFilter(List<SyncContainer> list,
+				SyncContainer child) {
+			if (child.isTreeSyncable()) {
+				if (!treeFilter
+						.test((Class<? extends TreeSyncable>) child.syncable
+								.getClass())) {
+					treeFilter
+							.test((Class<? extends TreeSyncable>) child.syncable
+									.getClass());
+					return;
+				}
+			}
+			list.add(child);
+		}
+
 		private List<SyncContainer> computeChildren0() throws Exception {
 			List<SyncContainer> result = new ArrayList<>();
 			/*
@@ -281,12 +314,12 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			}
 			if (syncable instanceof Collection) {
 				int idx = 0;
-				Collection collection = (Collection) syncable;
+				Collection<?> collection = (Collection) syncable;
 				for (Object object : collection) {
 					SyncContainer child = new SyncContainer(object, left);
 					child.parent = this;
 					child.idx = idx++;
-					result.add(child);
+					addWithFilter(result, child);
 				}
 			} else {
 				Preconditions.checkState(syncable instanceof TreeSyncable);
@@ -298,7 +331,7 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 									syncableChild, left);
 							child.parent = this;
 							child.field = field;
-							result.add(child);
+							addWithFilter(result, child);
 						}));
 			}
 			return result;
@@ -377,7 +410,7 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 					operation.action);
 			ProcessObservers.context().publish(operation);
 			SyncAction action = operation.action;
-			if (action.skip) {
+			if (syncPosition.skip) {
 				//
 			} else {
 				switch (action.type) {
@@ -420,12 +453,17 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			}
 
 			public void skip() {
-				action.skip = true;
+				syncPosition.skip = true;
 			}
 		}
 	}
 
+	// naming - SyncPair is used - and this is also a 'position in the sync
+	// tree'
 	public class SyncPosition {
+		// do not perform action
+		public boolean skip;
+
 		public SyncContainer left;
 
 		public SyncContainer right;
@@ -451,6 +489,8 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 		// a la dirndl -- obj.field.[collection-index].obj...
 		public void process(Node node) {
 			this.node = node;
+			left.position = this;
+			right.position = this;
 			// may either be a syncable or a container of syncables
 			if (isTreeSyncable()) {
 				Class clazz = getClazz();
@@ -480,6 +520,7 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 				}
 				SyncPosition childPosition = new SyncPosition(tuple.left,
 						tuple.right, orderingAction);
+				childPosition.skip = skip;
 				node.add(childPosition);
 			}
 			List<Node> children = node.getChildren();
