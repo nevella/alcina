@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -26,7 +26,7 @@ import java.util.stream.Collectors;
 
 import com.totsp.gwittir.client.beans.SourcesPropertyChangeEvents;
 
-import cc.alcina.framework.common.client.collections.IsClassFilter;
+import cc.alcina.framework.common.client.collections.IsInstanceFilter;
 import cc.alcina.framework.common.client.csobjects.Bindable;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.permissions.HasPermissionsValidation;
@@ -116,7 +116,8 @@ public abstract class SearchDefinition extends Bindable
 
 	public <SC extends SearchCriterion> List<SC> allCriteria(Class<SC> clazz) {
 		return (List<SC>) allCriteria().stream()
-				.filter(new IsClassFilter(clazz)).collect(Collectors.toList());
+				.filter(new IsInstanceFilter(clazz))
+				.collect(Collectors.toList());
 	}
 
 	public Set<OrderCriterion> allOrderCriteria() {

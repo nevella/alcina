@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.google.gwt.user.client.rpc.AsyncCallback;
 
 import cc.alcina.framework.common.client.WrappedRuntimeException;
-import cc.alcina.framework.common.client.collections.IsClassFilter;
+import cc.alcina.framework.common.client.collections.IsInstanceFilter;
 import cc.alcina.framework.common.client.log.AlcinaLogUtils;
 import cc.alcina.framework.common.client.logic.domaintransform.lookup.LightSet;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
@@ -240,7 +240,7 @@ public class Consort<D> implements AlcinaProcess {
 	}
 
 	public <P extends Player> List<P> getTasksForClass(Class<P> clazz) {
-		return (List) players.stream().filter(new IsClassFilter(clazz))
+		return (List) players.stream().filter(new IsInstanceFilter(clazz))
 				.collect(Collectors.toList());
 	}
 
