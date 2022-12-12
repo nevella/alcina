@@ -3,6 +3,7 @@ package cc.alcina.framework.common.client.util;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.core.client.GWT;
 import com.google.gwt.regexp.shared.MatchResult;
 import com.google.gwt.regexp.shared.RegExp;
 
@@ -15,6 +16,7 @@ public class TextUtils {
 	public static final String DATE_REGEX_FULL = Ax
 			.format("(\\d{1,2}) (%s) (\\d{4})\\s*", MONTHS);
 
+	// keep in sync with normaliseWhitespaceOpt;
 	public static final String WS_PATTERN_STR = "(?:[\\u0009\\u000A\\u000B\\u000C\\u000D\\u0020\\u00A0\\u0085\\u2000\\u2001\\u2002\\u2003])";
 
 	public static final RegExp WS_PATTERN = RegExp.compile(WS_PATTERN_STR + "+",
@@ -70,7 +72,9 @@ public class TextUtils {
 	}
 
 	public static String normalizeWhitespace(String input) {
-		return input == null ? null : WS_PATTERN.replace(input, " ");
+		return input == null ? null
+				: GWT.isScript() ? WS_PATTERN.replace(input, " ")
+						: normaliseWhitespaceOpt(input);
 	}
 
 	public static String normalizeWhitespaceAndTrim(String text) {
@@ -90,6 +94,61 @@ public class TextUtils {
 			return null;
 		}
 		return key.trim();
+	}
+
+	private static String normaliseWhitespaceOpt(String input) {
+		StringBuilder out = null;
+		int len = input.length();
+		boolean inWhitespace = false;
+		boolean inWhitespacePrior = false;
+		boolean ensureBuilder = false;
+		for (int idx = 0; idx < len; idx++) {
+			char c = input.charAt(idx);
+			switch (c) {
+			case '\u0009':
+			case '\n':
+			case '\u000B':
+			case '\u000C':
+			case '\r':
+			case '\u00A0':
+			case '\u0085':
+			case '\u2000':
+			case '\u2001':
+			case '\u2002':
+			case '\u2003':
+				ensureBuilder = true;
+				inWhitespace = true;
+				break;
+			case ' ':
+				ensureBuilder |= inWhitespace;
+				inWhitespace = true;
+				break;
+			default:
+				inWhitespace = false;
+				inWhitespacePrior = false;
+				break;
+			}
+			if (inWhitespace) {
+				if (ensureBuilder) {
+					if (out == null) {
+						out = new StringBuilder();
+						out.append(input, 0, idx);
+						// force append first time (may be 1 or 2 ws chars)
+						out.append(' ');
+						inWhitespacePrior = true;
+					}
+				}
+				if (!inWhitespacePrior && out != null) {
+					out.append(' ');
+				}
+				inWhitespacePrior = true;
+			} else {
+				if (out != null) {
+					out.append(c);
+				}
+			}
+		}
+		return out != null ? out.toString() : input;
 	}
 
 	public static class Encoder {

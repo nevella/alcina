@@ -1424,24 +1424,24 @@ public class DomNode {
 		}
 
 		public void clearContents() {
-			List<DomNode> kids = document.getDocumentElementNode().children
-					.stream().collect(Collectors.toList());
 			boolean inRange = false;
 			List<DomNode> toRemoveNodes = new ArrayList<>();
 			Objects.requireNonNull(end);
 			DomNode keepAncestorsOf = end;
 			if (!endBefore) {
-				TreeWalker tw = ((DocumentTraversal) document.domDoc())
-						.createTreeWalker(document.domDoc(),
-								NodeFilter.SHOW_ALL, null, true);
-				tw.setCurrentNode(end.node);
-				Node keep = tw.nextNode();
+				DomNodeTree tree = end.tree();
+				DomNode next = tree.nextLogicalNode();
+				Node keep = next == null ? null : next.node;
 				keepAncestorsOf = keep == null ? null : document.nodeFor(keep);
 			}
-			for (DomNode cursor : kids) {
+			DomNodeTree tree = tree();
+			List<DomNode> remove = new ArrayList<>();
+			while (true) {
+				DomNode cursor = tree.currentNode();
 				if (cursor == DomNode.this) {
 					inRange = true;
 					if (startAfterThis) {
+						tree.nextLogicalNode();
 						continue;
 					}
 				}
@@ -1451,13 +1451,16 @@ public class DomNode {
 				if (inRange) {
 					if (keepAncestorsOf == null
 							|| !cursor.isAncestorOf(keepAncestorsOf)) {
-						cursor.removeFromParent();
+						remove.add(cursor);
 					}
 				}
 				if (cursor == end) {
 					break;
 				}
+				tree.nextLogicalNode();
 			}
+			remove.stream().filter(n -> n.parent() != null)
+					.forEach(DomNode::removeFromParent);
 		}
 
 		public DomRange end(DomNode end) {
