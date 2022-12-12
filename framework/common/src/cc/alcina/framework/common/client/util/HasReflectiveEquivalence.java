@@ -77,6 +77,9 @@ public interface HasReflectiveEquivalence<T> extends HasEquivalence<T> {
 							&& HasEquivalenceHelper.equivalent(c1, c2)) {
 						continue;
 					} else {
+						if (c1.size() == c2.size()) {
+							HasEquivalenceHelper.equivalent(c1, c2);
+						}
 						return debugInequivalence(property, o1, o2);
 					}
 				} else {

@@ -271,6 +271,10 @@ public interface HasEquivalence<T> {
 				Object o = args[i];
 				if (o instanceof HasEquivalence) {
 					hash ^= ((HasEquivalence) o).equivalenceHash();
+				} else if (o instanceof Collection) {
+					for (Object o2 : (Collection) o) {
+						hash ^= hash(o2);
+					}
 				} else {
 					hash ^= Objects.hash(o);
 				}
