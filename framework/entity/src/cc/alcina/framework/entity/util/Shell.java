@@ -575,7 +575,7 @@ public class Shell {
 				host = Configuration.get(SshCommand.class, hostConfigKey);
 			}
 			Ax.out("ssh : exec : %s -> %s", host, command);
-			String script = Ax.format("ssh %s root@%s %s",
+			String script = Ax.format("ssh %s root@%s \"%s\"",
 					Ax.blankToEmpty(sshOptions), host, command);
 			Shell shell = new Shell();
 			shell.logLaunchMessage = false;
