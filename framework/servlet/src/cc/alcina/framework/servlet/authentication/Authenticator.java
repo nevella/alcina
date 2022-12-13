@@ -14,6 +14,7 @@ import cc.alcina.framework.common.client.csobjects.LoginResponse;
 import cc.alcina.framework.common.client.domain.Domain;
 import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domaintransform.AuthenticationSession;
+import cc.alcina.framework.common.client.logic.domaintransform.ClientInstance;
 import cc.alcina.framework.common.client.logic.domaintransform.PersistentImpl;
 import cc.alcina.framework.common.client.logic.permissions.IUser;
 import cc.alcina.framework.common.client.logic.permissions.UserWith2FA;
@@ -270,5 +271,8 @@ public abstract class Authenticator<U extends Entity & IUser> {
 
 	public String getExternalAuthorizationUrl(Permission requiredPermission) {
 		return null;
+	}
+
+	public void postCreateClientInstance(ClientInstance clientInstance) {
 	}
 }
