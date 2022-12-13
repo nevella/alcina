@@ -431,7 +431,14 @@ public class Shell {
 		}
 
 		public void sync() throws Exception {
-			new Shell().runBashScript(generateCommand()).throwOnException();
+			sync(true);
+		}
+
+		public void sync(boolean throwOnException) throws Exception {
+			Output output = new Shell().runBashScript(generateCommand());
+			if (throwOnException) {
+				output.throwOnException();
+			}
 		}
 
 		public static final class Builder {
