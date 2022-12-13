@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -28,9 +28,9 @@ import cc.alcina.framework.common.client.util.LooseContext;
 
 /**
  * Support for localisations. Defaults to a simple provider
- * 
+ *
  * @author nick@alcina.cc
- * 
+ *
  */
 public class TextProvider {
 	public static final String DISPLAY_NAME = "displayName";
@@ -38,6 +38,10 @@ public class TextProvider {
 	protected static final int TRIMMED_LENGTH = 60;
 
 	private static TextProvider instance;
+
+	// FIXME - 2024 - remove once all usages removed
+	public static final String CONTEXT_NAME_TRANSLATOR = TextProvider.class
+			.getName() + ".CONTEXT_NAME_TRANSLATOR";
 
 	public static TextProvider get() {
 		if (instance == null) {
@@ -71,14 +75,10 @@ public class TextProvider {
 		return new InlineLabel(text);
 	}
 
-	// FIXME - 2022 - remove once all usages removed
-	public static final String CONTEXT_NAME_TRANSLATOR = TextProvider.class
-			.getName() + ".CONTEXT_NAME_TRANSLATOR";
-
 	public String getLabelText(AnnotationLocation location) {
 		Display display = location.getAnnotation(Display.class);
 		String rawName = display == null ? location.property.getName()
-				: Display.Support.name(location.property,display);
+				: Display.Support.name(location.property, display);
 		if (LooseContext.has(CONTEXT_NAME_TRANSLATOR)) {
 			rawName = ((Function<String, String>) LooseContext
 					.get(CONTEXT_NAME_TRANSLATOR))
