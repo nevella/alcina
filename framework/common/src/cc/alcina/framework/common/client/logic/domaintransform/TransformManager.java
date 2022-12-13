@@ -32,7 +32,6 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 import com.google.common.base.Preconditions;
@@ -794,17 +793,6 @@ public abstract class TransformManager
 			}
 		}
 		return false;
-	}
-
-	// FIXME - 2022 - remove (move to domain/domain.query)
-	public <V extends Entity> List<V> filter(Class<V> clazz,
-			Predicate<V> filter) {
-		List<V> result = getObjectStore().getCollection(clazz).stream()
-				.filter(filter).collect(Collectors.toList());
-		if (!result.isEmpty() && result.get(0) instanceof Comparable) {
-			Collections.sort((List) result);
-		}
-		return result;
 	}
 
 	public void

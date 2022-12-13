@@ -1,10 +1,10 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -15,8 +15,11 @@ package cc.alcina.framework.common.client.search;
 
 import java.util.Collection;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
+import org.apache.commons.collections.comparators.ComparableComparator;
+
+import cc.alcina.framework.common.client.domain.Domain;
 
 /**
  *
@@ -30,8 +33,9 @@ public abstract class LocalSearchDefinition extends SearchDefinition {
 	}
 
 	public Collection search() {
-		Predicate filter = buildFilter();
-		return TransformManager.get().filter(getResultClass(), filter);
+		return (Collection) Domain.stream(getResultClass())
+				.filter(buildFilter()).sorted(new ComparableComparator())
+				.collect(Collectors.toList());
 	}
 
 	public void setResultClass(Class resultClass) {
