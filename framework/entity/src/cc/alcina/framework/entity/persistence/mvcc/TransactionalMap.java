@@ -13,6 +13,7 @@ import java.util.Set;
 import java.util.Spliterator;
 import java.util.Spliterators;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Predicate;
 
@@ -212,6 +213,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		} else {
 			boolean hasExisting = containsKey(key);
 			ensureConcurrent(currentTransaction);
+			// just store for 'created this thread', controlled by
+			// computeIfAbsent algorithm
+			AtomicBoolean createdTransactionalValue = new AtomicBoolean();
 			Object transactionalKey = wrapTransactionalKey(key);
 			/*
 			 * https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8161372
@@ -220,17 +224,20 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 					.get(transactionalKey);
 			if (transactionalValue == null) {
 				transactionalValue = (TransactionalValue) concurrent
-						.computeIfAbsent(transactionalKey,
-								k -> new TransactionalValue(key,
-										ObjectWrapper.of(value),
-										currentTransaction));
+						.computeIfAbsent(transactionalKey, k -> {
+							createdTransactionalValue.set(true);
+							return new TransactionalValue(key,
+									ObjectWrapper.of(value),
+									currentTransaction);
+						});
 			}
 			boolean success = transactionalValue.put(value);
 			if (!success) {
 				// concurrent vacuum - retry
 				return put(key, value);
 			}
-			if (!hasExisting) {
+			if (!hasExisting
+					&& createdTransactionalValue.compareAndSet(true, false)) {
 				sizeMetadata.delta(1);
 			}
 		}
@@ -253,9 +260,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 					.get(transactionalKey);
 			boolean createdRemovedTransactionalValue = false;
 			if (transactionalValue == null) {
-				// WIP - need to ttest this, but it appears correct. For the
-				// moment, keep false (no change)
-				// createdRemovedTransactionalValue = true;
+				createdRemovedTransactionalValue = true;
 				transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 						.computeIfAbsent(transactionalKey,
 								k -> new TransactionalValue((K) key,
@@ -340,6 +345,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				}
 			}
 		}
+		// the below *looks* questionable but works and, I think, fixed a race
+		// bug. There may be a better way to do it (exit of the preceding sync
+		// block should ensure both sizeMetadata and concurrent are non null,
+		// IMO) - the following block is harmless in any event
 		if (sizeMetadata == null) {
 			synchronized (this) {
 				// force wait for other sync block (this is needed because
