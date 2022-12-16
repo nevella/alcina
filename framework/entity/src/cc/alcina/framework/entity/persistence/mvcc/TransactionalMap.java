@@ -213,12 +213,9 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		if (currentTransaction.isBaseTransaction()) {
 			nonConcurrent.put(key, value);
 		} else {
+			// note this is transactional (as is size)
 			boolean hasExisting = containsKey(key);
 			ensureConcurrent(currentTransaction);
-			// just store for 'created this thread', controlled by
-			// computeIfAbsent algorithm
-			ObjectWrapper<Boolean> createdTransactionalValue = new ObjectWrapper<>();
-			createdTransactionalValue.set(false);
 			Object transactionalKey = wrapTransactionalKey(key);
 			/*
 			 * https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8161372
@@ -228,7 +225,6 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			if (transactionalValue == null) {
 				transactionalValue = (TransactionalValue) concurrent
 						.computeIfAbsent(transactionalKey, k -> {
-							createdTransactionalValue.set(true);
 							return new TransactionalValue(key,
 									ObjectWrapper.of(value),
 									currentTransaction);
@@ -239,8 +235,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				// concurrent vacuum - retry
 				return put(key, value);
 			}
-			if (!hasExisting
-					&& createdTransactionalValue.get().booleanValue()) {
+			if (!hasExisting) {
 				sizeMetadata.delta(1);
 			}
 		}
@@ -262,6 +257,7 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			TransactionalValue transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 					.get(transactionalKey);
 			ObjectWrapper<Boolean> createdTransactionalValue = new ObjectWrapper<>();
+			createdTransactionalValue.set(false);
 			if (transactionalValue == null) {
 				transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 						.computeIfAbsent(transactionalKey, k -> {
@@ -271,9 +267,14 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 									currentTransaction);
 						});
 			}
+			// if, prior to this call the key only existed in the
+			// nonConcurrent map, createdTransactionalValue.get() will return
+			// true and transactionalValue.remove() false - this handles the
+			// case where the key only exists in nonConcurrent prior to this
+			// call
 			if (transactionalValue.remove()
 					|| createdTransactionalValue.get().booleanValue()) {
-				sizeMetadata.delta(-1);
+				int size = sizeMetadata.delta(-1);
 			}
 		}
 		return existing;
@@ -651,8 +652,8 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			super(t, initialTransaction, false);
 		}
 
-		public void delta(int delta) {
-			resolve(true).addAndGet(delta);
+		public int delta(int delta) {
+			return resolve(true).addAndGet(delta);
 		}
 
 		@Override
