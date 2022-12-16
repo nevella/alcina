@@ -40,8 +40,8 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
  *
  * This class is intended for transaction-aware indices and lookups.
  *
-* It replaces TransactionalMapOld - the layer-based implementation did not scale during long-running txs
- * ***(v2)
+ * It replaces TransactionalMapOld - the layer-based implementation did not
+ * scale during long-running txs ***(v2)
  *
  * transitions through 1-1 :-> baseLayer :-> transactional
  *
@@ -261,17 +261,18 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			Object transactionalKey = wrapTransactionalKey(key);
 			TransactionalValue transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 					.get(transactionalKey);
-			boolean createdRemovedTransactionalValue = false;
+			ObjectWrapper<Boolean> createdTransactionalValue = new ObjectWrapper<>();
 			if (transactionalValue == null) {
-				createdRemovedTransactionalValue = true;
 				transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
-						.computeIfAbsent(transactionalKey,
-								k -> new TransactionalValue((K) key,
-										ObjectWrapper.of(REMOVED_VALUE_MARKER),
-										currentTransaction));
+						.computeIfAbsent(transactionalKey, k -> {
+							createdTransactionalValue.set(true);
+							return new TransactionalValue((K) key,
+									ObjectWrapper.of(REMOVED_VALUE_MARKER),
+									currentTransaction);
+						});
 			}
 			if (transactionalValue.remove()
-					|| createdRemovedTransactionalValue) {
+					|| createdTransactionalValue.get().booleanValue()) {
 				sizeMetadata.delta(-1);
 			}
 		}
