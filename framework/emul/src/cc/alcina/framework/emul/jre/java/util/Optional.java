@@ -167,4 +167,20 @@ public final class Optional<T> {
 			return Stream.of(ref);
 		}
 	}
+
+	/**
+	 * If a value is present, returns the value, otherwise throws
+	 * {@code NoSuchElementException}.
+	 *
+	 * @return the non-{@code null} value described by this {@code Optional}
+	 * @throws NoSuchElementException
+	 *             if no value is present
+	 * @since 10
+	 */
+	public T orElseThrow() {
+		if (ref == null) {
+			throw new NoSuchElementException("No value present");
+		}
+		return ref;
+	}
 }
