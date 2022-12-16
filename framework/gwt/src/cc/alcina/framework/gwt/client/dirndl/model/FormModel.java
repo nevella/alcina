@@ -19,7 +19,7 @@ import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.shared.GwtEvent;
 import com.google.gwt.place.shared.Place;
 import com.google.gwt.place.shared.PlaceChangeRequestEvent;
-import com.google.gwt.user.client.rpc.AsyncCallback;
+import com.google.gwt.user.client.History;
 import com.google.gwt.user.client.ui.Focusable;
 import com.google.web.bindery.event.shared.HandlerRegistration;
 import com.totsp.gwittir.client.beans.Binding;
@@ -37,6 +37,7 @@ import cc.alcina.framework.common.client.logic.domain.Entity;
 import cc.alcina.framework.common.client.logic.domain.UserProperty;
 import cc.alcina.framework.common.client.logic.domaintransform.ClientTransformManager;
 import cc.alcina.framework.common.client.logic.domaintransform.CommitType;
+import cc.alcina.framework.common.client.logic.domaintransform.EntityLocator;
 import cc.alcina.framework.common.client.logic.domaintransform.TransformManager;
 import cc.alcina.framework.common.client.logic.permissions.PermissionsManager;
 import cc.alcina.framework.common.client.logic.reflection.Action;
@@ -74,7 +75,6 @@ import cc.alcina.framework.gwt.client.gwittir.GwittirBridge;
 import cc.alcina.framework.gwt.client.gwittir.GwittirUtils;
 import cc.alcina.framework.gwt.client.logic.CommitToStorageTransformListener;
 import cc.alcina.framework.gwt.client.place.CategoryNamePlace;
-import cc.alcina.framework.gwt.client.util.Async;
 
 @Directed(receives = { DomEvents.KeyDown.class })
 @Registration(FormModel.class)
@@ -149,14 +149,29 @@ public class FormModel extends Model
 			if (getState().model instanceof Entity) {
 				ClientTransformManager.cast()
 						.promoteToDomainObject(getState().model);
-				AsyncCallback callback = Async.callbackBuilder().success(o2 -> {
+				Consumer<EntityLocator> callback = createdLocator -> {
+					// see somewhat similar handling in cancelhandler
+					Place currentPlace = Client.currentPlace();
+					if (currentPlace instanceof EntityPlace) {
+						/*
+						 * behaviour currently identical for either CREATE or
+						 * EDIT ( -> view)
+						 */
+						EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
+						EntityPlace entityPlace = (EntityPlace) Reflections
+								.newInstance(currentPlace.getClass());
+						entityPlace.id = currentEntityPlace.action == EntityAction.CREATE
+								? createdLocator.id
+								: currentEntityPlace.id;
+						Client.goTo(entityPlace);
+					}
 					EntityPlace entityPlace = ((EntityPlace) Client
 							.currentPlace()).copy();
 					entityPlace.action = EntityAction.VIEW;
 					Client.goTo(entityPlace);
-				}).build();
-				CommitToStorageTransformListener.get()
-						.flushWithOneoffCallback(callback);
+				};
+				CommitToStorageTransformListener
+						.flushAndRunWithFirstCreationConsumer(callback);
 			}
 			if (Client.currentPlace() instanceof EntityPlace) {
 			} else if (Client.currentPlace() instanceof CategoryNamePlace) {
@@ -251,9 +266,19 @@ public class FormModel extends Model
 			TransformManager.get()
 					.deregisterProvisionalObject(formModel.getState().model);
 			if (currentPlace instanceof EntityPlace) {
-				EntityPlace entityPlace = ((EntityPlace) currentPlace).copy();
-				entityPlace.action = EntityAction.VIEW;
-				Client.goTo(entityPlace);
+				/*
+				 * behaviour differs. If action was CREATE, go back - if EDIT,
+				 * VIEW
+				 */
+				EntityPlace currentEntityPlace = (EntityPlace) currentPlace;
+				if (currentEntityPlace.action == EntityAction.CREATE) {
+					History.back();
+				} else {
+					EntityPlace entityPlace = (EntityPlace) Reflections
+							.newInstance(currentPlace.getClass());
+					entityPlace.id = currentEntityPlace.id;
+					Client.goTo(entityPlace);
+				}
 			} else if (currentPlace instanceof CategoryNamePlace) {
 				CategoryNamePlace categoryNamePlace = ((CategoryNamePlace) currentPlace)
 						.copy();

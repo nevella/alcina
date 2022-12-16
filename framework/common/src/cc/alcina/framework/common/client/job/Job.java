@@ -46,6 +46,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.HasEquivalence.HasEquivalenceHelper;
 import cc.alcina.framework.common.client.util.HasEquivalenceString;
+import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess;
 import cc.alcina.framework.entity.persistence.mvcc.MvccAccess.MvccAccessType;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
@@ -60,6 +61,9 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model;
 @Registration({ PersistentImpl.class, Job.class })
 public abstract class Job extends VersionableEntity<Job>
 		implements HasIUser, Comparable<Job> {
+	public static final transient String CONTEXT_DO_NOT_POPULATE_DURING_TRACKER_CREATION = Job.class
+			.getName() + ".CONTEXT_DO_NOT_POPULATE_DURING_TRACKER_CREATION";
+
 	private static final transient String CONSISTENCY_PRIORITY_DEFAULT = "_default";
 
 	public static final transient String PROPERTY_STATE = "state";
@@ -154,7 +158,10 @@ public abstract class Job extends VersionableEntity<Job>
 		tracker.setProgressMessage(statusMessage);
 		tracker.setStartTime(startTime);
 		if (tracker.isComplete()) {
-			domain().ensurePopulated();
+			if (!LooseContext
+					.is(CONTEXT_DO_NOT_POPULATE_DURING_TRACKER_CREATION)) {
+				domain().ensurePopulated();
+			}
 			tracker.setSerializedResult(getResultSerialized());
 		}
 		return tracker;

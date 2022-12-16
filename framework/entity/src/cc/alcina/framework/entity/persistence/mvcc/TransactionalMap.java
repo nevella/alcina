@@ -215,6 +215,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 		} else {
 			boolean hasExisting = containsKey(key);
 			ensureConcurrent(currentTransaction);
+			// just store for 'created this thread', controlled by
+			// computeIfAbsent algorithm
+			ObjectWrapper<Boolean> createdTransactionalValue = new ObjectWrapper<>();
+			createdTransactionalValue.set(false);
 			Object transactionalKey = wrapTransactionalKey(key);
 			/*
 			 * https://bugs.java.com/bugdatabase/view_bug.do?bug_id=8161372
@@ -223,17 +227,20 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 					.get(transactionalKey);
 			if (transactionalValue == null) {
 				transactionalValue = (TransactionalValue) concurrent
-						.computeIfAbsent(transactionalKey,
-								k -> new TransactionalValue(key,
-										ObjectWrapper.of(value),
-										currentTransaction));
+						.computeIfAbsent(transactionalKey, k -> {
+							createdTransactionalValue.set(true);
+							return new TransactionalValue(key,
+									ObjectWrapper.of(value),
+									currentTransaction);
+						});
 			}
 			boolean success = transactionalValue.put(value);
 			if (!success) {
 				// concurrent vacuum - retry
 				return put(key, value);
 			}
-			if (!hasExisting) {
+			if (!hasExisting
+					&& createdTransactionalValue.get().booleanValue()) {
 				sizeMetadata.delta(1);
 			}
 		}
@@ -254,14 +261,17 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 			Object transactionalKey = wrapTransactionalKey(key);
 			TransactionalValue transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 					.get(transactionalKey);
+			boolean createdRemovedTransactionalValue = false;
 			if (transactionalValue == null) {
+				createdRemovedTransactionalValue = true;
 				transactionalValue = (TransactionalMap<K, V>.TransactionalValue) concurrent
 						.computeIfAbsent(transactionalKey,
 								k -> new TransactionalValue((K) key,
 										ObjectWrapper.of(REMOVED_VALUE_MARKER),
 										currentTransaction));
 			}
-			if (transactionalValue.remove()) {
+			if (transactionalValue.remove()
+					|| createdRemovedTransactionalValue) {
 				sizeMetadata.delta(-1);
 			}
 		}
@@ -345,6 +355,10 @@ public class TransactionalMap<K, V> extends AbstractMap<K, V>
 				}
 			}
 		}
+		// the below *looks* questionable but works and, I think, fixed a race
+		// bug. There may be a better way to do it (exit of the preceding sync
+		// block should ensure both sizeMetadata and concurrent are non null,
+		// IMO) - the following block is harmless in any event
 		if (sizeMetadata == null) {
 			synchronized (this) {
 				// force wait for other sync block (this is needed because

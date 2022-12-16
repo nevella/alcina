@@ -774,7 +774,9 @@ public abstract class TransformManager
 	}
 
 	public void deregisterProvisionalObjects(Collection c) {
-		provisionalObjects.keySet().removeAll(c);
+		if (c == null) {
+			return;
+		}
 		for (Object b : c) {
 			if (b instanceof SourcesPropertyChangeEvents) {
 				SourcesPropertyChangeEvents sb = (SourcesPropertyChangeEvents) b;

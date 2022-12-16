@@ -167,6 +167,8 @@ public class AuthenticationManager {
 				context.session, userAgent,
 				context.tokenStore.getRemoteAddress(),
 				context.tokenStore.getReferrer(), context.tokenStore.getUrl());
+		context.localAuthenticator
+				.postCreateClientInstance(context.clientInstance);
 	}
 
 	private void ensureAuthenticationSession(AuthenticationContext context) {

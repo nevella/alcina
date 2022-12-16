@@ -144,8 +144,8 @@ public abstract class ClientInstance extends VersionableEntity<ClientInstance> {
 		return userAgent.substring(SERVLET_PREFIX.length());
 	}
 
-	public IUser provideUser() {
-		return Optional.ofNullable(getAuthenticationSession())
+	public <U extends IUser> U provideUser() {
+		return (U) Optional.ofNullable(getAuthenticationSession())
 				.map(AuthenticationSession::getUser).orElse(null);
 	}
 

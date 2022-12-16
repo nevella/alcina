@@ -208,7 +208,7 @@ public class DomainLookup<T, E extends Entity>
 		return normaliser == null ? key : normaliser.convert(key);
 	}
 
-	private boolean remove(T key, E value) {
+	protected boolean remove(T key, E value) {
 		Set<E> set = get(key);
 		if (set != null) {
 			return set.remove(value);
