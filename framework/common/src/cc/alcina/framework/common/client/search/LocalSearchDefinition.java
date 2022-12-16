@@ -17,9 +17,8 @@ import java.util.Collection;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
-import org.apache.commons.collections.comparators.ComparableComparator;
-
 import cc.alcina.framework.common.client.domain.Domain;
+import cc.alcina.framework.common.client.util.ComparableComparator;
 
 /**
  *
