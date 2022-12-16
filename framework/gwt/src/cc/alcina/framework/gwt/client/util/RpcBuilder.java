@@ -25,17 +25,17 @@ public class RpcBuilder<T> {
 		callWithModal();
 	}
 
-	public RpcBuilder caption(String caption) {
+	public RpcBuilder<T> caption(String caption) {
 		this.caption = caption;
 		return this;
 	}
 
-	public RpcBuilder notifySuccessAsMessage() {
+	public RpcBuilder<T> notifySuccessAsMessage() {
 		notifySuccessAsMessage = true;
 		return this;
 	}
 
-	public RpcBuilder onSuccess(Consumer<T> inner) {
+	public RpcBuilder<T> onSuccess(Consumer<T> inner) {
 		this.inner = inner;
 		return this;
 	}
