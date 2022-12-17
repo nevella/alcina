@@ -382,7 +382,6 @@ public abstract class AppLifecycleServletBase extends GenericServlet {
 				Registration.Implementation.INSTANCE,
 				Registration.Priority._DEFAULT);
 		initLoggers();
-		Topic.THROW_EXCEPTIONS = EntityLayerUtils.isTestOrTestServer();
 	}
 
 	protected abstract void initEntityLayer() throws Exception;

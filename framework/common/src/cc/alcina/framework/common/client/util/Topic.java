@@ -8,18 +8,14 @@ import java.util.Map;
 import com.google.common.base.Preconditions;
 import com.google.gwt.core.client.GWT;
 
-import cc.alcina.framework.common.client.WrappedRuntimeException;
-
 /*
- * A message passing mechanism. Previously topics also had a string key -
- * this was abandoned, instead use multiple topics. Topics are useful both
- * as static class members (app-level messages) and instance members, and
- * are generally public fields (since they're initialised on class
- * instantiation and generally final)
+ * A message passing mechanism. Previously topics also had a string key - this
+ * was abandoned, instead use multiple topics. Topics are useful both as static
+ * class members (app-level messages) and instance members, and are generally
+ * public fields (since they're initialised on class instantiation and generally
+ * final)
  */
 public class Topic<T> {
-	public static boolean THROW_EXCEPTIONS = false;
-
 	public static <T> Topic<T> create() {
 		return new Topic<>();
 	}
@@ -27,8 +23,6 @@ public class Topic<T> {
 	private Publisher publisher;
 
 	private boolean wasPublished;
-
-	private boolean throwExceptions = THROW_EXCEPTIONS;
 
 	private Topic() {
 		publisher = new Publisher();
@@ -81,18 +75,9 @@ public class Topic<T> {
 		return publisher.hasListeners();
 	}
 
-	// FIXME - 2022 - remove try/catch
 	public void publish(T t) {
-		try {
-			publisher.publishTopic(t);
-			wasPublished = true;
-		} catch (Throwable e) {
-			if (throwExceptions) {
-				throw WrappedRuntimeException.wrap(e);
-			} else {
-				e.printStackTrace();
-			}
-		}
+		publisher.publishTopic(t);
+		wasPublished = true;
 	}
 
 	public void remove(TopicListener<T> listener) {
@@ -101,11 +86,6 @@ public class Topic<T> {
 
 	public void signal() {
 		publish(null);
-	}
-
-	public <S> Topic<S> withThrowExceptions() {
-		throwExceptions = true;
-		return (Topic<S>) this;
 	}
 
 	public static class MultichannelTopics<TC> {

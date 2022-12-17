@@ -64,17 +64,13 @@ import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
  */
 public class SelectionTraversal
 		implements ProcessContextProvider, AlcinaProcess {
-	public Topic<Selection> selectionAdded = Topic.create()
-			.withThrowExceptions();
+	public Topic<Selection> selectionAdded = Topic.create();
 
-	public Topic<Selection> selectionProcessed = Topic.create()
-			.withThrowExceptions();
+	public Topic<Selection> selectionProcessed = Topic.create();
 
-	public Topic<SelectionException> selectionException = Topic.create()
-			.withThrowExceptions();
+	public Topic<SelectionException> selectionException = Topic.create();
 
-	public Topic<Selection> beforeSelectionProcessed = Topic.create()
-			.withThrowExceptions();
+	public Topic<Selection> beforeSelectionProcessed = Topic.create();
 
 	Selection rootSelection;
 
