@@ -9,7 +9,10 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry.Regi
 
 public class Implementations {
 	@Reflected
-	@Registration(value = UIObject.DebugIdImpl.class, priority = Registration.Priority.APP, implementation = Registration.Implementation.FACTORY)
+	@Registration(
+		value = UIObject.DebugIdImpl.class,
+		priority = Registration.Priority.APP,
+		implementation = Registration.Implementation.FACTORY)
 	public static class DebugIdImplFactory
 			implements RegistryFactory<DebugIdImpl> {
 		@Override

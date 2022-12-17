@@ -227,7 +227,9 @@ public final class UnsafeHtmlBuilder {
 	 * this method, because the {@code <a>} tag is incomplete:
 	 *
 	 * <pre class="code">
-	 * {@code shb.appendHtmlConstant("<a href='").append(url)}
+	 * {@code
+	 * shb.appendHtmlConstant("<a href='").append(url)
+	 * }
 	 * </pre>
 	 *
 	 * </ol>

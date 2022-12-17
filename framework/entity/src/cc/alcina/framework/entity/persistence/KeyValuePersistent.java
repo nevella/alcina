@@ -31,7 +31,11 @@ import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 import cc.alcina.framework.entity.util.PersistentObjectCache.CacheMetadata;
 
 @MappedSuperclass
-@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
+@ObjectPermissions(
+	create = @Permission(access = AccessLevel.ROOT),
+	read = @Permission(access = AccessLevel.ADMIN),
+	write = @Permission(access = AccessLevel.ADMIN),
+	delete = @Permission(access = AccessLevel.ROOT))
 @DomainTransformPersistable
 @Registration({ PersistentImpl.class, KeyValuePersistent.class })
 public abstract class KeyValuePersistent<T extends KeyValuePersistent>

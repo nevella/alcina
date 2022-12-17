@@ -1,31 +1,27 @@
 /*
- * $Log$
- * Revision 1.2  2011/01/25 07:59:39  nreddel
- * - pdf parser
- * - improve html diff
+ * $Log$ Revision 1.2 2011/01/25 07:59:39 nreddel - pdf parser - improve html
+ * diff
  *
- * Revision 1.1  2010/09/04 10:59:20  nreddel
- * move urlbuilder access due to classloader issues
+ * Revision 1.1 2010/09/04 10:59:20 nreddel move urlbuilder access due to
+ * classloader issues
  *
- * Revision 1.7  2009/01/19 03:05:26  stuart
- * Fix StackOverflow bug with heuristic on reported by Jimmy Han.
+ * Revision 1.7 2009/01/19 03:05:26 stuart Fix StackOverflow bug with heuristic
+ * on reported by Jimmy Han.
  *
- * Revision 1.6  2003/03/06 22:51:32  stuart
- * Convert to CVS
+ * Revision 1.6 2003/03/06 22:51:32 stuart Convert to CVS
  *
- * Revision 1.5  2002/07/19  19:14:40  stuart
- * fix reverseScript, make change ctor public, update docs
+ * Revision 1.5 2002/07/19 19:14:40 stuart fix reverseScript, make change ctor
+ * public, update docs
  *
- * Revision 1.4  2002/04/09  17:53:39  stuart
- * More flexible interface for diff() function.
+ * Revision 1.4 2002/04/09 17:53:39 stuart More flexible interface for diff()
+ * function.
  *
- * Revision 1.3  2000/03/03 21:58:03  stuart
- * move discard_confusing_lines and shift_boundaries to class file_data
+ * Revision 1.3 2000/03/03 21:58:03 stuart move discard_confusing_lines and
+ * shift_boundaries to class file_data
  *
- * Revision 1.2  2000/03/02  16:37:38  stuart
- * Add GPL and copyright
+ * Revision 1.2 2000/03/02 16:37:38 stuart Add GPL and copyright
  *
- *Modified - Nick - convert to GWT compatible
+ * Modified - Nick - convert to GWT compatible
  */
 package cc.alcina.framework.common.client.util;
 

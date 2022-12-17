@@ -83,7 +83,8 @@ public class CommitToStorageTransformListener
 	public static final transient String CONTEXT_COMMITTING_REQUEST = CommitToStorageTransformListener.class
 			.getName() + ".CONTEXT_COMMITTING_REQUEST";
 
-	public static final Topic<Throwable> topicCommitDomainException = Topic.create();
+	public static final Topic<Throwable> topicCommitDomainException = Topic
+			.create();
 
 	public static final Topic<DomainTransformResponse> topicTransformsCommitted = Topic
 			.create();

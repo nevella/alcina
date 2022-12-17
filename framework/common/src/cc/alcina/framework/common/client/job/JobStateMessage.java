@@ -20,7 +20,11 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 @MappedSuperclass
-@ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
+@ObjectPermissions(
+	create = @Permission(access = AccessLevel.ADMIN),
+	read = @Permission(access = AccessLevel.ADMIN),
+	write = @Permission(access = AccessLevel.ADMIN),
+	delete = @Permission(access = AccessLevel.ROOT))
 @Bean
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 @Registration({ PersistentImpl.class, JobStateMessage.class })

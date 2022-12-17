@@ -25,16 +25,22 @@ public class DevConsoleProperties {
 
 	public boolean useMountSshfsFs;
 
-	@SetPropInfo(key = "preferred-height", description = "Preferred console height")
+	@SetPropInfo(
+		key = "preferred-height",
+		description = "Preferred console height")
 	public int preferredHeight = 850;
 
 	@SetPropInfo(key = "max-id", description = "Max id for id list creation")
 	public long maxId = 999999;
 
-	@SetPropInfo(key = "diff-file-1", description = "First file for a regression test diff")
+	@SetPropInfo(
+		key = "diff-file-1",
+		description = "First file for a regression test diff")
 	public String diffFile1 = "";
 
-	@SetPropInfo(key = "diff-file-2", description = "Second file for a regression test diff")
+	@SetPropInfo(
+		key = "diff-file-2",
+		description = "Second file for a regression test diff")
 	public String diffFile2 = "";
 
 	@SetPropInfo(key = "last-command")
@@ -46,9 +52,11 @@ public class DevConsoleProperties {
 	@SetPropInfo(key = "conn-local")
 	public String connection_local = "jdbc:postgresql://127.0.0.1:5432/jade,jade,jade";
 
-	@SetPropInfo(key = "conn-production", description = "obviously never write - also, you'll need to tunnel (pg_hba.conf): \n"
-			+ "ssh -A nreddel@nat2.barnet.com.au -L 5434:jade.int.barnet.com.au:5432\n"
-			+ "ssh -A nreddel@nat2.barnet.com.au -L 5434:cosa.int.barnet.com.au:5432")
+	@SetPropInfo(
+		key = "conn-production",
+		description = "obviously never write - also, you'll need to tunnel (pg_hba.conf): \n"
+				+ "ssh -A nreddel@nat2.barnet.com.au -L 5434:jade.int.barnet.com.au:5432\n"
+				+ "ssh -A nreddel@nat2.barnet.com.au -L 5434:cosa.int.barnet.com.au:5432")
 	public String connection_production = "jdbc:postgresql://127.0.0.1:5434/jade,jade,jade";
 
 	@SetPropInfo(key = "remote-home-dir")
@@ -66,10 +74,14 @@ public class DevConsoleProperties {
 					 */
 	fontName = "Courier New";
 
-	@SetPropInfo(key = "conn-production-tunnel-cmd", description = "e.g. (rundeck) run -j jade/db/production_tunnel")
+	@SetPropInfo(
+		key = "conn-production-tunnel-cmd",
+		description = "e.g. (rundeck) run -j jade/db/production_tunnel")
 	public String connectionProductionTunnelCmd = "";
 
-	@SetPropInfo(key = "list-uploaded-requests", description = "see class file comment")
+	@SetPropInfo(
+		key = "list-uploaded-requests",
+		description = "see class file comment")
 	public String /**
 					 * <pre>
 					 * /Users/ouiji/Documents/lib/java/rundeck/tools/bin/dispatch  -I cosa.int.barnet.com.au -f -- 'ls /root/.alcina/cosa-server/offlineTransforms-partial > /root/off-trans.txt; echo ok'
@@ -77,7 +89,9 @@ public class DevConsoleProperties {
 					 */
 	productionListUploadedRequests = "";
 
-	@SetPropInfo(key = "restart-command", description = "Remote control command to restart console server")
+	@SetPropInfo(
+		key = "restart-command",
+		description = "Remote control command to restart console server")
 	public String restartCommand = "";
 
 	@Retention(RetentionPolicy.RUNTIME)

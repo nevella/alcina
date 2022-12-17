@@ -28,8 +28,9 @@ public class TaskReapProcessLogs extends ServerTask<TaskReapProcessLogs> {
 				}).forEach(ProcessLogFolder::reap);
 	}
 
-	@Registration(value = { Schedule.class,
-			TaskReapProcessLogs.class }, implementation = Registration.Implementation.FACTORY)
+	@Registration(
+		value = { Schedule.class, TaskReapProcessLogs.class },
+		implementation = Registration.Implementation.FACTORY)
 	public static class ScheduleFactory extends HourlyScheduleFactory {
 	}
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
@@ -35,7 +35,6 @@ import cc.alcina.framework.gwt.client.place.RegistryHistoryMapper;
  * @author Nick Reddel
  */
 public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
-
 	@Override
 	public BoundWidgetProvider getProvider(boolean editable, Class objectClass,
 			boolean multiple, Custom info) {
@@ -52,12 +51,11 @@ public class ModelPlaceCustomiser implements Customiser, BoundWidgetProvider {
 		return html;
 	}
 
-	public ModelPlaceRenderer provideRenderer( ) {
+	public ModelPlaceRenderer provideRenderer() {
 		return new ModelPlaceRenderer();
 	}
 
-	public static class ModelPlaceRenderer
-			implements Renderer<Object, String> {
+	public static class ModelPlaceRenderer implements Renderer<Object, String> {
 		private RenderingHtml html;
 
 		@Override

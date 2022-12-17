@@ -22,7 +22,7 @@ public class LoginRequest extends Bindable {
 	public LoginRequest() {
 	}
 
-	@Display(name = "Password", autocompleteName = "password")
+	@Display(autocompleteName = "password")
 	public String getPassword() {
 		return this.password;
 	}
@@ -35,7 +35,7 @@ public class LoginRequest extends Bindable {
 		return this.twoFactorAuthenticationCode;
 	}
 
-	@Display(name = "User name", autocompleteName = "email")
+	@Display(autocompleteName = "email")
 	public String getUserName() {
 		return this.userName;
 	}
@@ -44,7 +44,7 @@ public class LoginRequest extends Bindable {
 		return this.recoverPassword;
 	}
 
-	@Display(name = "Remember me")
+	@Display()
 	public boolean isRememberMe() {
 		return this.rememberMe;
 	}

@@ -8,11 +8,13 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 @Bean
-@ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
+@ObjectPermissions(
+	read = @Permission(access = AccessLevel.ADMIN),
+	write = @Permission(access = AccessLevel.ADMIN))
 public class RemoteDebugParams extends Bindable implements RemoteParameters {
 	private String command;
 
-	@Display(name = "Command", orderingHint = 20, styleName = "wide-text", focus = true)
+	@Display(orderingHint = 20, styleName = "wide-text", focus = true)
 	public String getCommand() {
 		return this.command;
 	}

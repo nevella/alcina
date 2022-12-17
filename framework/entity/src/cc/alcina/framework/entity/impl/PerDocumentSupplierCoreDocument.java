@@ -7,7 +7,9 @@ import cc.alcina.framework.common.client.dom.DomDocument;
 import cc.alcina.framework.common.client.dom.DomDocument.PerDocumentSupplier;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 
-@Registration.Singleton(value = PerDocumentSupplier.class, priority = Registration.Priority.APP)
+@Registration.Singleton(
+	value = PerDocumentSupplier.class,
+	priority = Registration.Priority.APP)
 public class PerDocumentSupplierCoreDocument extends PerDocumentSupplier {
 	public static final transient String CORE_DOCUMENT_DOM_DOC_KEY = PerDocumentSupplierCoreDocument.class
 			.getName() + ".CORE_DOCUMENT_DOM_DOC_KEY";

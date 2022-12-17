@@ -14,9 +14,9 @@ import com.google.gwt.user.client.rpc.AsyncCallback;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
 /*
- * -- dependencies :: always attempt to resolve
- * -- preconditions :: if non-null, wait til met before player becomes active
- * -- provides :: use to satisfy other dependencies (only run if required, as well)
+ * -- dependencies :: always attempt to resolve -- preconditions :: if non-null,
+ * wait til met before player becomes active -- provides :: use to satisfy other
+ * dependencies (only run if required, as well)
  *
  */
 public abstract class Player<D> {

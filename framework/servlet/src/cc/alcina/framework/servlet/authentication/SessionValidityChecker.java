@@ -10,23 +10,30 @@ import cc.alcina.framework.entity.util.TimedCacheMap;
  * Abstracted session validity checker that caches results
  */
 public abstract class SessionValidityChecker<A extends AuthenticationSession> {
-
 	private TimedCacheMap<A, StateCheck> checks;
 
 	protected Logger logger = LoggerFactory.getLogger(getClass());
 
 	/**
 	 * Instantiate a new session validity checker with given cache duration
-	 * @param cacheExpiry Milliseconds to persist cached check results
+	 * 
+	 * @param cacheExpiry
+	 *            Milliseconds to persist cached check results
 	 */
 	public SessionValidityChecker(long cacheExpiry) {
 		this.checks = new TimedCacheMap<>(cacheExpiry);
 	}
 
 	/**
-	 * <p>Check session is valid</p>
-	 * <p>Returns cached responses if present</p>
-	 * @param session AuthenticationSession
+	 * <p>
+	 * Check session is valid
+	 * </p>
+	 * <p>
+	 * Returns cached responses if present
+	 * </p>
+	 * 
+	 * @param session
+	 *            AuthenticationSession
 	 * @return Session validity
 	 */
 	public boolean isValid(A session) {
@@ -34,13 +41,19 @@ public abstract class SessionValidityChecker<A extends AuthenticationSession> {
 	}
 
 	/**
-	 * <p>Check the session validity, calling external services if needed</p>
-	 * <p>Results are cached temporarily</p>
-	 * @param session AuthenticationSession
+	 * <p>
+	 * Check the session validity, calling external services if needed
+	 * </p>
+	 * <p>
+	 * Results are cached temporarily
+	 * </p>
+	 * 
+	 * @param session
+	 *            AuthenticationSession
 	 * @return Session validity
 	 */
 	protected abstract boolean checkValidity(A session);
-	
+
 	/**
 	 * Validity state cached entry
 	 */
@@ -67,7 +80,9 @@ public abstract class SessionValidityChecker<A extends AuthenticationSession> {
 					if (inflight) {
 						wait();
 					} else {
-						logger.debug("Checking session validity: {sessionId={}}", session.getId());
+						logger.debug(
+								"Checking session validity: {sessionId={}}",
+								session.getId());
 						inflight = true;
 						result = checkValidity(session);
 						inflight = false;

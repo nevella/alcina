@@ -9,7 +9,8 @@ import com.google.gwt.core.client.GWT;
 
 /*
  *
- * Thread-safe (accesses to lookup are synchronized - defensive copy made for publishTopic)
+ * Thread-safe (accesses to lookup are synchronized - defensive copy made for
+ * publishTopic)
  */
 public class TopicPublisher {
 	// use a list - the listener may be added/removed multiple times (although

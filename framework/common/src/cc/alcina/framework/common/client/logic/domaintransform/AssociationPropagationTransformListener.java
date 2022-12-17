@@ -14,9 +14,8 @@ import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 
 /*
- * Called directly on the client (from
- * CommitToLocalDomainTransformListener), during mvcc transactions after
- * property changes (server)
+ * Called directly on the client (from CommitToLocalDomainTransformListener),
+ * during mvcc transactions after property changes (server)
  */
 public class AssociationPropagationTransformListener
 		implements DomainTransformListener {

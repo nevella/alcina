@@ -30,7 +30,8 @@ import cc.alcina.framework.entity.util.Shell.Output;
 import cc.alcina.framework.gwt.client.util.AtEndOfEventSeriesTimer;
 
 /*
- * Locking - only have one system-wide compile job run at once - use the file "/tmp/classmeta-anthandler.lock" to lock externally
+ * Locking - only have one system-wide compile job run at once - use the file
+ * "/tmp/classmeta-anthandler.lock" to lock externally
  */
 public class AntHandler extends AbstractHandler {
 	static Logger logger = LoggerFactory.getLogger(AntHandler.class);

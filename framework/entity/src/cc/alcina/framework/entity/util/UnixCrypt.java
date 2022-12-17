@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
@@ -14,14 +14,14 @@
 package cc.alcina.framework.entity.util;
 
 /*
- * This class provides us with the ability to encrypt passwords when sent
- * over the network stream
+ * This class provides us with the ability to encrypt passwords when sent over
+ * the network stream
  *
- * <P>Contains static methods to encrypt and compare
- * passwords with Unix encrypted passwords.</P>
+ * <P>Contains static methods to encrypt and compare passwords with Unix
+ * encrypted passwords.</P>
  *
- * <P>See <A HREF="http://www.zeh.com/local/jfd/crypt.html">
- * John Dumas's Java Crypt page</A> for the original source.</P>
+ * <P>See <A HREF="http://www.zeh.com/local/jfd/crypt.html"> John Dumas's Java
+ * Crypt page</A> for the original source.</P>
  *
  * @author jdumas@zgs.com (John Dumas)
  */

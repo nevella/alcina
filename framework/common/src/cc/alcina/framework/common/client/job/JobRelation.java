@@ -16,7 +16,11 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 import cc.alcina.framework.common.client.util.Ax;
 
 @MappedSuperclass
-@ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ROOT))
+@ObjectPermissions(
+	create = @Permission(access = AccessLevel.ADMIN),
+	read = @Permission(access = AccessLevel.ADMIN),
+	write = @Permission(access = AccessLevel.ADMIN),
+	delete = @Permission(access = AccessLevel.ROOT))
 @Bean
 @DomainTransformPropagation(PropagationType.NON_PERSISTENT)
 @Registration({ PersistentImpl.class, JobRelation.class })

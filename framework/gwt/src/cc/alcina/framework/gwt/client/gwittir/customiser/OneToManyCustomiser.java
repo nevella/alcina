@@ -92,7 +92,8 @@ public class OneToManyCustomiser implements Customiser, BoundWidgetProvider {
 			Args args = propertyLocation.getAnnotation(Args.class);
 			EntityPlace searchPlace = (EntityPlace) RegistryHistoryMapper.get()
 					.getPlaceByModelClass(args.entityClass());
-			TruncatedObjectCriterion objectCriterion = Registry.impl(TruncatedObjectCriterion.class,source.entityClass());
+			TruncatedObjectCriterion objectCriterion = Registry
+					.impl(TruncatedObjectCriterion.class, source.entityClass());
 			objectCriterion.withObject(source);
 			searchPlace.def.addCriterionToSoleCriteriaGroup(objectCriterion);
 			String template = "<a href='#%s'>%s</a>";

@@ -9,7 +9,7 @@ import java.nio.file.WatchService;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 
-abstract class AbstractNonSunWatchService  implements WatchService {
+abstract class AbstractNonSunWatchService implements WatchService {
 	// signaled keys waiting to be dequeued
 	private final LinkedBlockingDeque<WatchKey> pendingKeys = new LinkedBlockingDeque<WatchKey>();
 
@@ -31,7 +31,7 @@ abstract class AbstractNonSunWatchService  implements WatchService {
 	private final Object closeLock = new Object();
 
 	protected AbstractNonSunWatchService() {
-    }
+	}
 
 	/**
 	 * Register the given object with this watch service
@@ -53,8 +53,8 @@ abstract class AbstractNonSunWatchService  implements WatchService {
 	}
 
 	/**
-	 * Checks the key isn't the special CLOSE_KEY used to unblock threads
-	 * when the watch service is closed.
+	 * Checks the key isn't the special CLOSE_KEY used to unblock threads when
+	 * the watch service is closed.
 	 */
 	private void checkKey(WatchKey key) {
 		if (key == CLOSE_KEY) {
@@ -104,8 +104,8 @@ abstract class AbstractNonSunWatchService  implements WatchService {
 	}
 
 	/**
-	 * Closes this watch service. This method is invoked by the close method
-	 * to perform the actual work of closing the watch service.
+	 * Closes this watch service. This method is invoked by the close method to
+	 * perform the actual work of closing the watch service.
 	 */
 	abstract void implClose() throws IOException;
 

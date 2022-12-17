@@ -9,7 +9,7 @@ import cc.alcina.framework.common.client.util.LooseContext;
  * Marker for dev remoteservice call handlers
  */
 public interface ReflectiveRemoteServiceHandler {
-	public static String serializeForClient(Object payload){
+	public static String serializeForClient(Object payload) {
 		try {
 			LooseContext.push();
 			AlcinaTransient.Support.setTransienceContexts(
@@ -17,6 +17,6 @@ public interface ReflectiveRemoteServiceHandler {
 			return ReflectiveSerializer.serialize(payload);
 		} finally {
 			LooseContext.pop();
-		}	
+		}
 	}
 }

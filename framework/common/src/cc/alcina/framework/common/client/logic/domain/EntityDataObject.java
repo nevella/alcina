@@ -59,7 +59,8 @@ public interface EntityDataObject {
 			size = collection.size();
 			place = (EntityPlace) RegistryHistoryMapper.get()
 					.getPlaceByModelClass(entityClass);
-			TruncatedObjectCriterion objectCriterion = Registry.impl(TruncatedObjectCriterion.class,source.entityClass());
+			TruncatedObjectCriterion objectCriterion = Registry
+					.impl(TruncatedObjectCriterion.class, source.entityClass());
 			objectCriterion.withObject(source);
 			place.def.addCriterionToSoleCriteriaGroup(objectCriterion);
 		}

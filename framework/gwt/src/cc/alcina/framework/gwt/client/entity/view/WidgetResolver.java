@@ -8,6 +8,6 @@ import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 @Registration(WidgetResolver.class)
 public class WidgetResolver {
 	public IsWidget resolve(Class modelClass, Class context) {
-		return (IsWidget) Registry.impl(WidgetResolver.class,modelClass);
+		return (IsWidget) Registry.impl(WidgetResolver.class, modelClass);
 	}
 }

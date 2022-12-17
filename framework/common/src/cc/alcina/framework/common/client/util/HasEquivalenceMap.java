@@ -3,8 +3,6 @@ package cc.alcina.framework.common.client.util;
 import java.util.List;
 import java.util.stream.Collectors;
 
-import cc.alcina.framework.common.client.util.HasEquivalence;
-
 public class HasEquivalenceMap<T extends HasEquivalence>
 		extends Multimap<Integer, List<T>> {
 	public HasEquivalenceMap() {

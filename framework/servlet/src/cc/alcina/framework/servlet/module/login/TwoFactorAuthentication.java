@@ -16,7 +16,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.entity.ResourceUtilities;
 
 /*
- * https://www.javacodegeeks.com/2011/12/google-authenticator-using-it-with-your.html
+ * https://www.javacodegeeks.com/2011/12/google-authenticator-using-it-with-your
+ * .html
  */
 public class TwoFactorAuthentication {
 	public boolean checkCode(String secret, long code, long t)
@@ -61,16 +62,18 @@ public class TwoFactorAuthentication {
 
 	/**
 	 * Generate a TOTP code to authenticate with 2FA on a remote application
-	 * @param secret 2FA secret
+	 * 
+	 * @param secret
+	 *            2FA secret
 	 * @return TOTP code
 	 * @throws NoSuchAlgorithmException
 	 * @throws InvalidKeyException
 	 */
-	public long generateTOTPCode(String secret) 
+	public long generateTOTPCode(String secret)
 			throws InvalidKeyException, NoSuchAlgorithmException {
 		// Get `t` value for the current point in time
 		long t = new Date().getTime() / TimeUnit.SECONDS.toMillis(30);
-		// Decode secret string from a base 32 string 
+		// Decode secret string from a base 32 string
 		Base32 codec = new Base32();
 		byte[] decodedKey = codec.decode(secret);
 		// Generate the TOTP code

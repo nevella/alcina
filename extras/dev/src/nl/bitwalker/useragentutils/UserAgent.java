@@ -1,59 +1,64 @@
 /*
- * Copyright (c) 2008, Harald Walker (bitwalker.nl) 
- * All rights reserved.
+ * Copyright (c) 2008, Harald Walker (bitwalker.nl) All rights reserved.
  * 
- * Redistribution and use in source and binary forms, with or
- * without modification, are permitted provided that the
- * following conditions are met:
+ * Redistribution and use in source and binary forms, with or without
+ * modification, are permitted provided that the following conditions are met:
  * 
- * * Redistributions of source code must retain the above
- * copyright notice, this list of conditions and the following
- * disclaimer.
+ * * Redistributions of source code must retain the above copyright notice, this
+ * list of conditions and the following disclaimer.
  * 
- * * Redistributions in binary form must reproduce the above
- * copyright notice, this list of conditions and the following
- * disclaimer in the documentation and/or other materials
- * provided with the distribution.
+ * * Redistributions in binary form must reproduce the above copyright notice,
+ * this list of conditions and the following disclaimer in the documentation
+ * and/or other materials provided with the distribution.
  * 
- * * Neither the name of bitwalker nor the names of its
- * contributors may be used to endorse or promote products
- * derived from this software without specific prior written
- * permission.
+ * * Neither the name of bitwalker nor the names of its contributors may be used
+ * to endorse or promote products derived from this software without specific
+ * prior written permission.
  * 
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND
- * CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES,
- * INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF
- * MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
- * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR
- * CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL,
- * SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
- * NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
- * LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
- * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
- * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR
- * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
- * SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT OWNER OR CONTRIBUTORS BE
+ * LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+ * CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+ * SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+ * INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+ * CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+ * ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+ * POSSIBILITY OF SUCH DAMAGE.
  */
 package nl.bitwalker.useragentutils;
 
 /**
- * Container class for user-agent information with operating system and browser details. 
- * Can decode user-agent strings.
- * <br><br>
+ * Container class for user-agent information with operating system and browser
+ * details. Can decode user-agent strings. <br>
+ * <br>
  * Resources:<br>
  * <a href="http://www.useragentstring.com">User Agent String.Com</a><br>
  * <a href="http://www.user-agents.org">List of User-Agents</a><br>
- * <a href="http://www.zytrax.com/tech/web/browser_ids.htm">Browser ID (User-Agent) Strings</a><br>
- * <a href="http://www.zytrax.com/tech/web/mobile_ids.html">Mobile Browser ID (User-Agent) Strings</a><br>
- * <a href="http://www.joergkrusesweb.de/internet/browser/user-agent.html">Browser-Kennungen</a><br>
- * <a href="http://deviceatlas.com/devices">Device Atlas - Mobile Device Intelligence</a><br>
- * <a href="http://mobileopera.com/reference/ua">Mobile Opera user-agent strings</a><br>
+ * <a href="http://www.zytrax.com/tech/web/browser_ids.htm">Browser ID
+ * (User-Agent) Strings</a><br>
+ * <a href="http://www.zytrax.com/tech/web/mobile_ids.html">Mobile Browser ID
+ * (User-Agent) Strings</a><br>
+ * <a href=
+ * "http://www.joergkrusesweb.de/internet/browser/user-agent.html">Browser-Kennungen</a><br>
+ * <a href="http://deviceatlas.com/devices">Device Atlas - Mobile Device
+ * Intelligence</a><br>
+ * <a href="http://mobileopera.com/reference/ua">Mobile Opera user-agent
+ * strings</a><br>
  * <a href="http://en.wikipedia.org/wiki/S60_platform">S60 platform</a><br>
- * <a href="http://msdn.microsoft.com/en-us/library/ms537503.aspx">Understanding User-Agent Strings</a><br>
- * <a href="http://developer.sonyericsson.com/site/global/docstools/browsing/p_browsing.jsp">Sony Ericsson Web Docs & Tools</a><br>
- * <a href="http://developer.apple.com/internet/safari/faq.html#anchor2">What is the Safari user-agent string</a><br>
- * <a href="http://www.pgts.com.au/pgtsj/pgtsj0208c.html">List of User Agent Strings</a><br>
- * <a href="http://blogs.msdn.com/iemobile/archive/2006/08/03/Detecting_IE_Mobile.aspx">Detecting Internet Explorer Mobile's User-Agent on the server</a>
+ * <a href="http://msdn.microsoft.com/en-us/library/ms537503.aspx">Understanding
+ * User-Agent Strings</a><br>
+ * <a href=
+ * "http://developer.sonyericsson.com/site/global/docstools/browsing/p_browsing.jsp">Sony
+ * Ericsson Web Docs & Tools</a><br>
+ * <a href="http://developer.apple.com/internet/safari/faq.html#anchor2">What is
+ * the Safari user-agent string</a><br>
+ * <a href="http://www.pgts.com.au/pgtsj/pgtsj0208c.html">List of User Agent
+ * Strings</a><br>
+ * <a href=
+ * "http://blogs.msdn.com/iemobile/archive/2006/08/03/Detecting_IE_Mobile.aspx">Detecting
+ * Internet Explorer Mobile's User-Agent on the server</a>
  */
 /**
  * @author harald

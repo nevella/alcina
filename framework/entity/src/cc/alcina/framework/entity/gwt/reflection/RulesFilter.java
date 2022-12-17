@@ -80,9 +80,10 @@ public class RulesFilter extends ReachabilityLinkerPeer {
 	 * @author nick@alcina.cc
 	 *
 	 */
-	@Condition(classes = {
-			cc.alcina.framework.common.client.logic.reflection.Registration.MergeStrategy.class,
-			cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy.class })
+	@Condition(
+		classes = {
+				cc.alcina.framework.common.client.logic.reflection.Registration.MergeStrategy.class,
+				cc.alcina.framework.common.client.logic.reflection.resolution.AbstractMergeStrategy.AdditiveMergeStrategy.class })
 	public static class IncludedAlcinaMergeStrategies implements RuleSet {
 	}
 

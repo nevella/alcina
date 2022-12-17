@@ -23,7 +23,7 @@ public class DomainHandlerClient implements DomainHandler {
 			if (objectId == 0) {
 				resultConsumer.accept(null);
 			} else {
-				Registry.impl(DomainHandlerClientRemoteResolver.class,clazz)
+				Registry.impl(DomainHandlerClientRemoteResolver.class, clazz)
 						.resolve(clazz, objectId, resultConsumer);
 			}
 		}

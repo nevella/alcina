@@ -13,7 +13,8 @@
  * License for the specific language governing permissions and limitations under
  * the License.
  * 
- * moved to Alcina by Nick (since the mobile gwt project hasn't changed in a year)
+ * moved to Alcina by Nick (since the mobile gwt project hasn't changed in a
+ * year)
  */
 package cc.alcina.framework.gwt.appcache.client;
 

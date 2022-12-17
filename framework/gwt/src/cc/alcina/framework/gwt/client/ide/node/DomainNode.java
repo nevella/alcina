@@ -118,7 +118,7 @@ public class DomainNode<T extends SourcesPropertyChangeEvents> extends
 	@Override
 	protected boolean satisfiesFilter(String filterText) {
 		T userObject = getUserObject();
-		return Registry.impl(HasSatisfiesFilter.class,userObject.getClass())
+		return Registry.impl(HasSatisfiesFilter.class, userObject.getClass())
 				.satisfiesFilter(userObject, filterText);
 	}
 

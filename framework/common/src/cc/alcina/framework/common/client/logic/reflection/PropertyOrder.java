@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
@@ -31,7 +31,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Reflected
 @Inherited
 @Target({ ElementType.TYPE })
 /**
- * If inheriting, the annotation should have an empty value() and non-default custom() 
+ * If inheriting, the annotation should have an empty value() and non-default
+ * custom()
  * 
  * @author Nick Reddel
  */
@@ -42,7 +43,8 @@ public @interface PropertyOrder {
 				Function<Class, Object> instantiator) {
 			return propertyOrder == null
 					|| propertyOrder.custom() == Custom.Default.class ? null
-							: (Custom) instantiator.apply(propertyOrder.custom());
+							: (Custom) instantiator
+									.apply(propertyOrder.custom());
 		}
 	}
 

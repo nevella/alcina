@@ -66,7 +66,8 @@ public class OneToManySummaryCustomiser
 					.get().getPlaceByModelClass(
 							Reflections.forName(o.getEntityClassName()));
 			EntityPlace searchPlace = instancePlace.copy();
-			TruncatedObjectCriterion objectCriterion = Registry.impl(TruncatedObjectCriterion.class,source.entityClass());
+			TruncatedObjectCriterion objectCriterion = Registry
+					.impl(TruncatedObjectCriterion.class, source.entityClass());
 			objectCriterion.withObject(source);
 			searchPlace.def.addCriterionToSoleCriteriaGroup(objectCriterion);
 			if (mostRecent == null) {

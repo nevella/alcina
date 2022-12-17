@@ -18,7 +18,9 @@ import it.unimi.dsi.fastutil.objects.ObjectLinkedOpenHashSet;
 
 public class CollectionCreatorsJvm {
 	@Reflected
-	@Registration.Singleton(value = ConcurrentMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration.Singleton(
+		value = ConcurrentMapCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class ConcurrentMapCreatorJvm extends ConcurrentMapCreator {
 		@Override
 		public <K, V> Map<K, V> create() {
@@ -35,7 +37,9 @@ public class CollectionCreatorsJvm {
 	}
 
 	@Reflected
-	@Registration.Singleton(value = CollectionCreators.HashMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration.Singleton(
+		value = CollectionCreators.HashMapCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class HashMapCreatorJvm extends HashMapCreator {
 		@Override
 		public <K, V> Map<K, V> copy(Map<K, V> toClone) {
@@ -59,7 +63,9 @@ public class CollectionCreatorsJvm {
 	}
 
 	@Reflected
-	@Registration.Singleton(value = CollectionCreators.HashSetCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration.Singleton(
+		value = CollectionCreators.HashSetCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class HashSetCreatorJvm extends HashSetCreator {
 		@Override
 		public <T> Set<T> create() {
@@ -67,7 +73,9 @@ public class CollectionCreatorsJvm {
 		}
 	}
 
-	@Registration.Singleton(value = UnsortedMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration.Singleton(
+		value = UnsortedMapCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class UnsortedMapCreatorJvm extends UnsortedMapCreator {
 		@Override
 		public Map createDelegateMap(int depthFromRoot, int depth) {

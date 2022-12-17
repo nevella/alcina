@@ -62,7 +62,8 @@ public class ColumnsBuilderRows {
 				// hacky - but we don't use a numericvaluemapper anywhere else
 				if (rowModel instanceof GroupingMapperRow) {
 					GroupingMapperRow typed = (GroupingMapperRow) rowModel;
-					cell.setNumericValue(typed.getCells().get(idx).getNumericValue());
+					cell.setNumericValue(
+							typed.getCells().get(idx).getNumericValue());
 				}
 				idx++;
 			}
@@ -126,7 +127,8 @@ public class ColumnsBuilderRows {
 		@Override
 		public void accept(ColumnsBuilder<Row>.ColumnBuilder builder,
 				Integer idx) {
-			builder.function(row -> ((Cell) row.getCells().get(idx)).getValue());
+			builder.function(
+					row -> ((Cell) row.getCells().get(idx)).getValue());
 			// builder.titleFunction(row -> ((Cell) row.cells.get(idx)).title);
 			builder.href(row -> ((Cell) row.getCells().get(idx)).getHref());
 		}

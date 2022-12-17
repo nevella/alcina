@@ -8,7 +8,8 @@ import cc.alcina.framework.gwt.client.ClientNotifications;
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.logic.AlcinaDebugIds;
 
-//This should stay (because a JVM client won't want the GWT classloader kerfuffle of ClientUtils)
+// This should stay (because a JVM client won't want the GWT classloader
+// kerfuffle of ClientUtils)
 public class ClientUtilsNonGwt {
 	public static boolean maybeOffline(Throwable t) {
 		while (t instanceof WrappedRuntimeException) {

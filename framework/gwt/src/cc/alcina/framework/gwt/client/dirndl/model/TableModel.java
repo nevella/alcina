@@ -112,7 +112,7 @@ public class TableModel extends Model {
 				return place.ensureAction().getDisplayName();
 			}
 
-			@Display(name = "Description", orderingHint = 20)
+			@Display(orderingHint = 20)
 			public String getDescription() {
 				return Objects.equals(place.ensureAction().getDisplayName(),
 						place.ensureAction().getDescription()) ? ""

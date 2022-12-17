@@ -66,28 +66,43 @@ public class GeneralProperties extends Bindable
 	public GeneralProperties() {
 	}
 
-	@Display(helpText = "User configuration flags (xxx=yyy, newline separated)", name = "Configuration")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN))
+	@Display(
+		helpText = "User configuration flags (xxx=yyy, newline separated)",
+		name = "Configuration")
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.EVERYONE),
+		write = @Permission(access = AccessLevel.ADMIN))
 	@Custom(customiserClass = TextAreaCustomiser.class)
 	public String getClientProperties() {
 		return this.clientProperties;
 	}
 
 	@Display(name = "ui.filterComponentActuationDelay")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.EVERYONE),
+		write = @Permission(access = AccessLevel.DEVELOPER))
 	public int getFilterDelayMs() {
 		return filterDelayMs;
 	}
 
-	@Display(helpText = "CSS which will be saved on the server, and reapplied each time you log in", name = "designer.persistentCss")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
+	@Display(
+		helpText = "CSS which will be saved on the server, and reapplied each time you log in",
+		name = "designer.persistentCss")
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.EVERYONE),
+		write = @Permission(access = AccessLevel.DEVELOPER))
 	@Custom(customiserClass = TextAreaCustomiser.class)
 	public String getPersistentCss() {
 		return this.persistentCss;
 	}
 
-	@Display(helpText = "CSS which will be applied in this session, but not saved on the server", name = "designer.transientCss", focus = true)
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.EVERYONE))
+	@Display(
+		helpText = "CSS which will be applied in this session, but not saved on the server",
+		name = "designer.transientCss",
+		focus = true)
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.EVERYONE),
+		write = @Permission(access = AccessLevel.EVERYONE))
 	@Custom(customiserClass = TextAreaCustomiser.class)
 	@XmlTransient
 	public String getTransientCss() {
@@ -108,13 +123,17 @@ public class GeneralProperties extends Bindable
 	}
 
 	@Display(name = "admin.allowAdminInvalidObjectWrite")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.EVERYONE),
+		write = @Permission(access = AccessLevel.DEVELOPER))
 	public boolean isAllowAdminInvalidObjectWrite() {
 		return allowAdminInvalidObjectWrite;
 	}
 
 	@Display(name = "domain.autoSaveChanges")
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.DEVELOPER))
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.EVERYONE),
+		write = @Permission(access = AccessLevel.DEVELOPER))
 	public boolean isAutoSave() {
 		return autoSave;
 	}

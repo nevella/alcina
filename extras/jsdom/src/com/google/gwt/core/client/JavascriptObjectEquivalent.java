@@ -1,7 +1,8 @@
 package com.google.gwt.core.client;
 
 /*
- * Either a javascript object, or has a permanent 1-1 correspondence with a js object
+ * Either a javascript object, or has a permanent 1-1 correspondence with a js
+ * object
  * 
  */
 public interface JavascriptObjectEquivalent {

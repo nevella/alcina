@@ -9,7 +9,8 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.entity.XmlUtils;
 import cc.alcina.framework.entity.parser.token.ParserContext.TextRange;
 
-//from before the days of default interfaace methods - could totes be folded into ParserToken
+// from before the days of default interfaace methods - could totes be folded
+// into ParserToken
 public class TokenParserHelper<T extends ParserToken, C extends ParserContext, S extends AbstractParserSlice<T>> {
 	private static final int MAX_CHARS_PATTERN_HELPER = 2000;
 

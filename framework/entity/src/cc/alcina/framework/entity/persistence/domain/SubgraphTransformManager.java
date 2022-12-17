@@ -9,17 +9,11 @@ import cc.alcina.framework.common.client.logic.domaintransform.lookup.DetachedEn
 /*
  * FIXME - reflection
  * 
- * @Override
-		public <T> T newInstance(Class<T> clazz, long objectId, long localId) {
-			try {
-				Entity newInstance = Transaction.current().create((Class) clazz,
-						DomainStore.stores().storeFor(clazz), objectId,
-						localId);
-				return (T) newInstance;
-			} catch (Exception e) {
-				throw new WrappedRuntimeException(e);
-			}
-		}
+ * @Override public <T> T newInstance(Class<T> clazz, long objectId, long
+ * localId) { try { Entity newInstance = Transaction.current().create((Class)
+ * clazz, DomainStore.stores().storeFor(clazz), objectId, localId); return (T)
+ * newInstance; } catch (Exception e) { throw new WrappedRuntimeException(e); }
+ * }
  */
 public class SubgraphTransformManager extends TransformManager {
 	protected DetachedCacheObjectStore store;

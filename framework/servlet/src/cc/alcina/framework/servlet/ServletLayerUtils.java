@@ -142,27 +142,25 @@ public class ServletLayerUtils {
 		return Ax.format("%s://%s%s/", protocol, host, portString);
 	}
 
-	public static String robustRebuildRequestUrl(HttpServletRequest request, boolean withQueryString) {
+	public static String robustRebuildRequestUrl(HttpServletRequest request,
+			boolean withQueryString) {
 		if (request == null) {
 			return null;
 		}
-
 		StringBuilder requestUrl = new StringBuilder();
-
 		// Request protocol
 		String protocol = Optional
 				.ofNullable(request.getHeader("X-Forwarded-Proto"))
 				.orElse(request.getScheme());
 		requestUrl.append(protocol);
 		requestUrl.append("://");
-
 		// Request host
 		String host = Optional.ofNullable(request.getHeader("X-Forwarded-Host"))
 				.orElse(request.getServerName());
-		// Remove any trailing ports from the host, the next part takes care of that
+		// Remove any trailing ports from the host, the next part takes care of
+		// that
 		host = host.replaceFirst(":[^:]+$", "");
 		requestUrl.append(host);
-
 		// Request port - if non-default
 		String port = Optional.ofNullable(request.getHeader("X-Forwarded-Port"))
 				.orElse(String.valueOf(request.getServerPort()));
@@ -183,16 +181,13 @@ public class ServletLayerUtils {
 		default:
 			throw new UnsupportedOperationException();
 		}
-		
 		// Request location
 		requestUrl.append(request.getRequestURI());
-
 		// Request query - if present
 		if (withQueryString && request.getQueryString() != null) {
 			requestUrl.append("?");
 			requestUrl.append(request.getQueryString());
 		}
-
 		return requestUrl.toString();
 	}
 

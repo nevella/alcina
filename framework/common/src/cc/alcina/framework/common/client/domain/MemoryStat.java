@@ -100,8 +100,7 @@ public class MemoryStat {
 					c1.accumulate(o1);
 					Counter c2 = new Counter();
 					c2.accumulate(o2);
-					return -CommonUtils.compareLongs(c1.size,
-							c2.size);
+					return -CommonUtils.compareLongs(c1.size, c2.size);
 				default:
 					throw new UnsupportedOperationException();
 				}
@@ -137,7 +136,7 @@ public class MemoryStat {
 				deep.accumulate(stat);
 				builder.appendPadLeft(14, deep.size);
 				builder.appendPadLeft(10, deep.count);
-				builder.appendPadLeft(stat.depth()*2+2, "");
+				builder.appendPadLeft(stat.depth() * 2 + 2, "");
 				builder.appendBlock(stat.root.toString());
 				if (classFilter != null && deep.perClassCount.keySet().stream()
 						.anyMatch(classFilter::test)) {

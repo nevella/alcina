@@ -40,7 +40,8 @@ import cc.alcina.framework.servlet.job.JobScheduler.ExecutionConstraints;
 import cc.alcina.framework.servlet.job.JobScheduler.ResubmitPolicy;
 
 /*
- * Start the wrapped thread either on creation - if a 'self-starter' (top-level, first in sequence), or once the job has reached stage 'processing'
+ * Start the wrapped thread either on creation - if a 'self-starter' (top-level,
+ * first in sequence), or once the job has reached stage 'processing'
  */
 class JobAllocator {
 	static void commit() {

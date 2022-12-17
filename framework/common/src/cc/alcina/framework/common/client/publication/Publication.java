@@ -75,7 +75,6 @@ public abstract class Publication extends Entity<Publication>
 
 	@Transient
 	@Display(
-		name = "Actions",
 		orderingHint = 12,
 		visible = @Permission(access = AccessLevel.LOGGED_IN))
 	@Custom(

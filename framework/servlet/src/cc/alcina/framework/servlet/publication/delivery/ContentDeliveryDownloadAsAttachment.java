@@ -42,12 +42,12 @@ public class ContentDeliveryDownloadAsAttachment implements ContentDelivery {
 		file.deleteOnExit();
 		ResourceUtilities.writeStreamToStream(stream,
 				new FileOutputStream(file));
-		String fileTypeSuffix= "." + suffix;
-		if(!suggestedFileName.endsWith(fileTypeSuffix)){
-			suggestedFileName+=fileTypeSuffix;
+		String fileTypeSuffix = "." + suffix;
+		if (!suggestedFileName.endsWith(fileTypeSuffix)) {
+			suggestedFileName += fileTypeSuffix;
 		}
 		DownloadItem item = new DownloadServlet.DownloadItem(mimeType,
-				suggestedFileName , file.getPath());
+				suggestedFileName, file.getPath());
 		return DownloadServlet.add(item);
 	}
 

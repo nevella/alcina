@@ -19,7 +19,8 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.ThrowingRunnable;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 /*
- * For infrastructure components where blocking due to log emission > writer speed can cause feedback
+ * For infrastructure components where blocking due to log emission > writer
+ * speed can cause feedback
  */
 
 @Registration.Singleton

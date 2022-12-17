@@ -170,7 +170,8 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 
 	@Override
 	public Set<Map.Entry<K, V>> entrySet() {
-		// Map all delegate map entries to TimedCacheEntry's with the unwrapped value
+		// Map all delegate map entries to TimedCacheEntry's with the unwrapped
+		// value
 		return delegate.entrySet().stream()
 				.map(es -> new TimedCacheEntry<K, V>(es))
 				.collect(Collectors.toSet());
@@ -206,7 +207,8 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 				};
 				evictionTimer.scheduleAtFixedRate(evictionTimerTask,
 						evictionInterval, evictionInterval);
-				LOGGER.debug("Timed cache eviction timer started: {map={}}", this);
+				LOGGER.debug("Timed cache eviction timer started: {map={}}",
+						this);
 			}
 		}
 	}
@@ -219,7 +221,8 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 			if (evictionTimerTask != null) {
 				evictionTimerTask.cancel();
 				evictionTimerTask = null;
-				LOGGER.debug("Timed cache eviction timer stopped: {map={}}", this);
+				LOGGER.debug("Timed cache eviction timer stopped: {map={}}",
+						this);
 			}
 		}
 	}
@@ -262,7 +265,8 @@ public class TimedCacheMap<K, V> implements Map<K, V> {
 		@Override
 		public V setValue(V value) {
 			// Create a new TimedCacheValue and set it on the delegate entry
-			TimedCacheValue<V> old = delegateEntry.setValue(new TimedCacheValue<V>(value));
+			TimedCacheValue<V> old = delegateEntry
+					.setValue(new TimedCacheValue<V>(value));
 			// Return the old value unwrapped if present
 			return old != null ? old.value : null;
 		}

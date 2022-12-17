@@ -23,7 +23,8 @@ import cc.alcina.framework.entity.MetricLogging;
 import cc.alcina.framework.entity.persistence.domain.DomainStoreLoaderDatabase.Loader;
 
 /*
- * With mvcc and lazy properties, some of the motivation for this has left. Left in the codebase for reference rather than the expectation it'll ever be used
+ * With mvcc and lazy properties, some of the motivation for this has left. Left
+ * in the codebase for reference rather than the expectation it'll ever be used
  */
 public abstract class LazyLoadProvideTask<T extends Entity>
 		implements PreProvideTask<T> {

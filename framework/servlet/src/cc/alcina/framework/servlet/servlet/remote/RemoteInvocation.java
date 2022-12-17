@@ -76,7 +76,7 @@ public class RemoteInvocation {
 			RemoteInvocationParameters params) throws Exception {
 		try {
 			LooseContext.pushWithBoolean(
-					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER,false);
+					KryoUtils.CONTEXT_USE_COMPATIBLE_FIELD_SERIALIZER, false);
 			LooseContext.setTrue(KryoUtils.CONTEXT_USE_UNSAFE_FIELD_SERIALIZER);
 			LooseContext.setTrue(KryoUtils.CONTEXT_BYPASS_POOL);
 			LooseContext.setTrue(KryoSupport.CONTEXT_FORCE_ENTITY_SERIALIZER);

@@ -9,6 +9,8 @@ import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 @Bean
 @Display.AllProperties
-@ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
+@ObjectPermissions(
+	read = @Permission(access = AccessLevel.ADMIN),
+	write = @Permission(access = AccessLevel.ADMIN))
 public class EmptyParams extends Bindable implements RemoteParameters {
 }

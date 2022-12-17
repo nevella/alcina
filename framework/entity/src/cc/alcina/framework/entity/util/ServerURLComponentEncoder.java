@@ -23,7 +23,9 @@ import cc.alcina.framework.entity.SEUtilities;
  */
 // only used in hosted mode
 @Reflected
-@Registration.Singleton(value = UrlComponentEncoder.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+@Registration.Singleton(
+	value = UrlComponentEncoder.class,
+	priority = Registration.Priority.PREFERRED_LIBRARY)
 public class ServerURLComponentEncoder implements UrlComponentEncoder {
 	public String decode(String componentText) {
 		return SEUtilities.decUtf8(componentText);

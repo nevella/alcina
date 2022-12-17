@@ -131,7 +131,7 @@ public abstract class Entity<T extends Entity> extends Bindable
 	@Transient
 	public abstract long getId();
 
-	@Display(name = "Local id")
+	@Display()
 	@PropertyPermissions(
 		read = @Permission(access = AccessLevel.ROOT),
 		write = @Permission(access = AccessLevel.ROOT))

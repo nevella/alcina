@@ -16,16 +16,18 @@ public class StyleUtil {
 
 	public static class Action {
 		private Element target;
+
 		private boolean smoothScroll;
 
 		public Action(Element target) {
 			this.target = target;
 		}
 
-		public Action withSmoothScroll(boolean smoothScroll){
-		this.smoothScroll = smoothScroll;
-		return this;	
+		public Action withSmoothScroll(boolean smoothScroll) {
+			this.smoothScroll = smoothScroll;
+			return this;
 		}
+
 		public void ensureDistanceFromViewportBottom(int px) {
 			// there may well be a modern DOM way to do this...
 			int top = target.getAbsoluteTop();
@@ -34,9 +36,8 @@ public class StyleUtil {
 			int fromTop = top - viewportTop;
 			if (px < viewportHeight && fromTop > 0 && fromTop < viewportHeight
 					&& fromTop + px > viewportHeight) {
-				int to = viewportTop + ( (fromTop+px)-viewportHeight);
-				Window.scrollTo(Window.getScrollLeft(),
-						to,smoothScroll);
+				int to = viewportTop + ((fromTop + px) - viewportHeight);
+				Window.scrollTo(Window.getScrollLeft(), to, smoothScroll);
 			}
 		}
 	}

@@ -71,6 +71,7 @@ public class RemoteExec {
 	public void setThrowOnException(boolean throwOnException) {
 		this.throwOnException = throwOnException;
 	}
+
 	public RemoteExec withThrowOnException(boolean throwOnException) {
 		this.throwOnException = throwOnException;
 		return this;

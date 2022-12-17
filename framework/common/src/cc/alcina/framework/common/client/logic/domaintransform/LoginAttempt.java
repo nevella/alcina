@@ -14,7 +14,11 @@ import cc.alcina.framework.common.client.logic.reflection.Permission;
 
 @MappedSuperclass
 @DomainTransformPersistable
-@ObjectPermissions(create = @Permission(access = AccessLevel.ROOT), read = @Permission(access = AccessLevel.ROOT), write = @Permission(access = AccessLevel.ROOT), delete = @Permission(access = AccessLevel.ROOT))
+@ObjectPermissions(
+	create = @Permission(access = AccessLevel.ROOT),
+	read = @Permission(access = AccessLevel.ROOT),
+	write = @Permission(access = AccessLevel.ROOT),
+	delete = @Permission(access = AccessLevel.ROOT))
 public abstract class LoginAttempt extends Entity<LoginAttempt> {
 	private String userNameLowerCase;
 

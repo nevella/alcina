@@ -102,7 +102,7 @@ public abstract class AlcinaBeanSerializer {
 		return typeName;
 	}
 
-		public static class SerializationHolder extends Bindable {
+	public static class SerializationHolder extends Bindable {
 		private List listValue;
 
 		private Map mapValue;

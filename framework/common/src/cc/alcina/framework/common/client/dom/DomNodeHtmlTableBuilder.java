@@ -36,7 +36,8 @@ public class DomNodeHtmlTableBuilder extends DomNodeBuilder {
 		values.forEach(row -> {
 			DomNodeHtmlTableRowBuilder rowBuilder = tableBuilder.row();
 			((List<Cell>) row.getCells()).stream().forEach(cell -> {
-				String value = Ax.blankToEmpty(cell.getValue()).replace("\\n", "\n");
+				String value = Ax.blankToEmpty(cell.getValue()).replace("\\n",
+						"\n");
 				if (!LooseContext.is(CONTEXT_KEEP_NEWLINES)) {
 					value = TextUtils.normalizeWhitespaceAndTrim(value);
 				}

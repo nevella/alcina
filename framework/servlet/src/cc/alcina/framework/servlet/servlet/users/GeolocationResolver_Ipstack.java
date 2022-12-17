@@ -45,12 +45,11 @@ public class GeolocationResolver_Ipstack implements GeolocationResolver {
 					.get(GeolocationResolver_Ipstack.class, "apiKey");
 			// Generate query
 			String url = Ax.format("http://api.ipstack.com/%s", ipAddress);
-			StringMap params = StringMap.properties(
-				"access_key", apiKey,
-				"output", "json");
+			StringMap params = StringMap.properties("access_key", apiKey,
+					"output", "json");
 			SimpleHttp query = new SimpleHttp(url)
-				.withQueryStringParameters(params)
-				.withTimeout(QUERY_TIMEOUT);
+					.withQueryStringParameters(params)
+					.withTimeout(QUERY_TIMEOUT);
 			String result = query.asString();
 			ObjectNode node = (ObjectNode) new ObjectMapper().readTree(result);
 			if (node.has("success") && !node.get("success").asBoolean()) {

@@ -25,7 +25,7 @@ import cc.alcina.framework.common.client.util.MultikeyMap;
 import cc.alcina.framework.common.client.util.Multimap;
 import cc.alcina.framework.common.client.util.UnsortedMultikeyMap;
 
-//FIXME - mvcc.jobs.2 - make query/queryresult typed?
+// FIXME - mvcc.jobs.2 - make query/queryresult typed?
 public class TransformCollation {
 	private static transient Class<? extends UserProperty> userPropertyPersistableImpl;
 

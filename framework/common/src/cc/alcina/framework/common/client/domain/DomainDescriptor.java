@@ -122,7 +122,9 @@ public abstract class DomainDescriptor {
 		Stream<T> wrap(Stream<T> stream);
 	}
 
-	@Registration(value = AnnotationLocation.Resolver.class, priority = Priority.REMOVE)
+	@Registration(
+		value = AnnotationLocation.Resolver.class,
+		priority = Priority.REMOVE)
 	public static class StorePropertyResolver
 			extends DefaultAnnotationResolver {
 	}

@@ -15,7 +15,8 @@ import org.apache.tools.ant.types.FileSet;
 import org.apache.tools.ant.util.FileNameMapper;
 
 /*
- * a complement to javacex - so that mvcc/classtransformer has the correct sources 
+ * a complement to javacex - so that mvcc/classtransformer has the correct
+ * sources
  */
 public class CopyEx extends Copy {
 	List<FileSet> orderedFileSets = new ArrayList<>();

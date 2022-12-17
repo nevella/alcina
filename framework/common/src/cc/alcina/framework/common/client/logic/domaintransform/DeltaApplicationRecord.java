@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
@@ -35,7 +35,7 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.TextAreaCustomiser;
 /**
  * TODO - this can either be a wrapper for a DomainTransformRequest, *or* a
  * gwt-rpc payload a lot of refactoring should be done to make that meaningful
- * 
+ *
  * @author Nick Reddel
  */
 @ReflectionModule("Admin")
@@ -120,12 +120,12 @@ public class DeltaApplicationRecord extends Bindable
 		return this.chunkUuidString;
 	}
 
-	@Display(name = "Client instance auth", orderingHint = 30)
+	@Display(orderingHint = 30)
 	public int getClientInstanceAuth() {
 		return clientInstanceAuth;
 	}
 
-	@Display(name = "Client instance id", orderingHint = 20)
+	@Display(orderingHint = 20)
 	public long getClientInstanceId() {
 		return this.clientInstanceId;
 	}
@@ -138,20 +138,24 @@ public class DeltaApplicationRecord extends Bindable
 		return protocolVersion;
 	}
 
-	@Display(name = "Request id", orderingHint = 10)
+	@Display(orderingHint = 10)
 	public int getRequestId() {
 		return this.requestId;
 	}
 
-	@Display(name = "Tag", orderingHint = 35)
+	@Display(orderingHint = 35)
 	public String getTag() {
 		return tag;
 	}
 
 	@Display(name = "Transforms", orderingHint = 40)
-	@Custom(customiserClass = TextAreaCustomiser.class, parameters = {
-			@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 10),
-			@NamedParameter(name = TextAreaCustomiser.WIDTH, intValue = 400) })
+	@Custom(
+		customiserClass = TextAreaCustomiser.class,
+		parameters = {
+				@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 10),
+				@NamedParameter(
+					name = TextAreaCustomiser.WIDTH,
+					intValue = 400) })
 	public String getText() {
 		return this.text;
 	}

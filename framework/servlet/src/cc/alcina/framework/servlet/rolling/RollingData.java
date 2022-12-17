@@ -17,7 +17,8 @@ import cc.alcina.framework.entity.persistence.RollingDataItem;
 import cc.alcina.framework.entity.persistence.domain.LazyPropertyLoadTask;
 import cc.alcina.framework.entity.persistence.mvcc.Transaction;
 
-//REVIEW - lowpri - formal support for "go back a bit" in transform sequence - probably using transform utc date
+// REVIEW - lowpri - formal support for "go back a bit" in transform sequence -
+// probably using transform utc date
 public abstract class RollingData<K extends Comparable, V> {
 	protected String typeKey;
 

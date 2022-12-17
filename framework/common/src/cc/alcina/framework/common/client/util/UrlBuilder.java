@@ -5,7 +5,7 @@ import com.google.common.base.Preconditions;
 import cc.alcina.framework.common.client.WrappedRuntimeException;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
-//yet another URL builder - but mine!
+// yet another URL builder - but mine!
 public class UrlBuilder {
 	private String host;
 

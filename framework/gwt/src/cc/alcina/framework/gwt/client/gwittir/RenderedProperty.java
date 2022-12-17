@@ -6,7 +6,8 @@ import cc.alcina.framework.common.client.reflection.Property;
 
 public class RenderedProperty {
 	public static String displayName(Property property) {
-		return TextProvider.get().getLabelText(property.getOwningType(), property);
+		return TextProvider.get().getLabelText(property.getOwningType(),
+				property);
 	}
 
 	public static int orderingHint(Property p) {

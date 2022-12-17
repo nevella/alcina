@@ -17,7 +17,11 @@ import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.LooseContext;
 
-@ObjectPermissions(create = @Permission(access = AccessLevel.ADMIN), read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ADMIN), delete = @Permission(access = AccessLevel.ADMIN))
+@ObjectPermissions(
+	create = @Permission(access = AccessLevel.ADMIN),
+	read = @Permission(access = AccessLevel.EVERYONE),
+	write = @Permission(access = AccessLevel.ADMIN),
+	delete = @Permission(access = AccessLevel.ADMIN))
 @MappedSuperclass
 @Registration(VersionableEntity.class)
 public abstract class VersionableEntity<T extends VersionableEntity>
@@ -42,20 +46,31 @@ public abstract class VersionableEntity<T extends VersionableEntity>
 	}
 
 	@Override
-	@Display(name = "Creation date", displayMask = Display.DISPLAY_RO_PROPERTY)
+	@Display(displayMask = Display.DISPLAY_RO_PROPERTY)
 	public Date getCreationDate() {
 		return this.creationDate;
 	}
 
 	@Override
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
-	@Display(name = "Id", displayMask = Display.DISPLAY_RO_PROPERTY, styleName = "nowrap id", orderingHint = 5, visible = @Permission(access = AccessLevel.ADMIN))
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.EVERYONE),
+		write = @Permission(access = AccessLevel.ROOT))
+	@Display(
+		displayMask = Display.DISPLAY_RO_PROPERTY,
+		styleName = "nowrap id",
+		orderingHint = 5,
+		visible = @Permission(access = AccessLevel.ADMIN))
 	@Transient
 	public abstract long getId();
 
 	@Override
-	@Display(name = "Last modified", orderingHint = 999, visible = @Permission(access = AccessLevel.ADMIN))
-	@PropertyPermissions(read = @Permission(access = AccessLevel.EVERYONE), write = @Permission(access = AccessLevel.ROOT))
+	@Display(
+		name = "Last modified",
+		orderingHint = 999,
+		visible = @Permission(access = AccessLevel.ADMIN))
+	@PropertyPermissions(
+		read = @Permission(access = AccessLevel.EVERYONE),
+		write = @Permission(access = AccessLevel.ROOT))
 	public Date getLastModificationDate() {
 		return this.lastModificationDate;
 	}

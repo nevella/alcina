@@ -24,11 +24,17 @@ public class EditableStringModel extends Model {
 		return this.originalValue;
 	}
 
-	@Display(name = "String")
+	@Display()
 	@Validator(validator = NotBlankValidator.class)
-	@Custom(customiserClass = TextAreaCustomiser.class, parameters = {
-			@NamedParameter(name = TextAreaCustomiser.ENSURE_ALL_LINES_VISIBLE, booleanValue = true),
-			@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 1) })
+	@Custom(
+		customiserClass = TextAreaCustomiser.class,
+		parameters = {
+				@NamedParameter(
+					name = TextAreaCustomiser.ENSURE_ALL_LINES_VISIBLE,
+					booleanValue = true),
+				@NamedParameter(
+					name = TextAreaCustomiser.LINES,
+					intValue = 1) })
 	public String getString() {
 		return this.string;
 	}
@@ -49,7 +55,7 @@ public class EditableStringModel extends Model {
 		}
 
 		@Override
-		@Display(name = "String")
+		@Display()
 		@Validator(validator = NotBlankValidator.class)
 		public String getString() {
 			return super.getString();
@@ -65,10 +71,16 @@ public class EditableStringModel extends Model {
 		}
 
 		@Override
-		@Display(name = "String")
-		@Custom(customiserClass = TextAreaCustomiser.class, parameters = {
-				@NamedParameter(name = TextAreaCustomiser.ENSURE_ALL_LINES_VISIBLE, booleanValue = false),
-				@NamedParameter(name = TextAreaCustomiser.LINES, intValue = 1) })
+		@Display()
+		@Custom(
+			customiserClass = TextAreaCustomiser.class,
+			parameters = {
+					@NamedParameter(
+						name = TextAreaCustomiser.ENSURE_ALL_LINES_VISIBLE,
+						booleanValue = false),
+					@NamedParameter(
+						name = TextAreaCustomiser.LINES,
+						intValue = 1) })
 		public String getString() {
 			return super.getString();
 		}

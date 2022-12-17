@@ -43,7 +43,7 @@ public class GalleryConfiguration {
 		 * For absolute links in the Persister logging output
 		 */
 		String base;
-		
+
 		/**
 		 * The application name (a key passed to the Gallery setup method, that
 		 * selects the configuration from GalleryConfiguration.elements)

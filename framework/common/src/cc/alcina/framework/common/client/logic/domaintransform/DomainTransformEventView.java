@@ -24,8 +24,8 @@ import cc.alcina.framework.gwt.client.gwittir.customiser.RenderedLabelCustomiser
 public class DomainTransformEventView extends DomainTransformEvent
 		implements SourcesPropertyChangeEvents, SearchResult {
 	private long id;
-	// used for returning persistent dtes
 
+	// used for returning persistent dtes
 	// used for returning persistent dtes
 	private long userId;
 
@@ -40,7 +40,7 @@ public class DomainTransformEventView extends DomainTransformEvent
 			PropertyChangeListener l) {
 	}
 
-	@Display(name = "Id", orderingHint = 1)
+	@Display(orderingHint = 1)
 	@Transient
 	public long getId() {
 		return id;
@@ -73,7 +73,7 @@ public class DomainTransformEventView extends DomainTransformEvent
 	}
 
 	@Override
-	@Display(name = "Object id", orderingHint = 15)
+	@Display(orderingHint = 15)
 	public long getObjectId() {
 		return super.getObjectId();
 	}
@@ -107,16 +107,8 @@ public class DomainTransformEventView extends DomainTransformEvent
 
 	@Transient
 	@Display(name = "User", orderingHint = 5)
-	/*
-	 * FIXME - dirndl 1x2 - this sort of customisation should be in code, not
-	 * annotation. [Strike that - why? Why here and not elsewhere? It is a
-	 * transformation - disagree]
-	 */
-	// @Custom(customiserClass = DomainObjectIdRefCustomiser.class, parameters =
-	// {
-	// @NamedParameter(name = DomainObjectIdRefCustomiser.TARGET_CLASS,
-	// classValue = IUser.class) })
-	public long getUserId() {
+	public // classValue = IUser.class) })
+	long getUserId() {
 		return userId;
 	}
 

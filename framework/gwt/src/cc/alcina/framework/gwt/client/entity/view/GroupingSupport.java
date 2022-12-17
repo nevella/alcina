@@ -90,7 +90,8 @@ public class GroupingSupport<GP extends GroupingParameters> {
 		if (groupedResult == null) {
 			groupingLink.setText("Grouping");
 		} else {
-			groupingLink.setText(Ax.format("Grouping: %s", groupedResult.getName()));
+			groupingLink.setText(
+					Ax.format("Grouping: %s", groupedResult.getName()));
 		}
 	}
 

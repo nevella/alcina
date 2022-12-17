@@ -6,7 +6,9 @@ import cc.alcina.framework.common.client.util.FastLcProvider;
 import cc.alcina.framework.entity.util.CachingConcurrentMap.CachingConcurrentLcMap;
 
 @Reflected
-@Registration(value = FastLcProvider.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+@Registration(
+	value = FastLcProvider.class,
+	priority = Registration.Priority.PREFERRED_LIBRARY)
 public class FastLcProviderConcurrent extends FastLcProvider {
 	private CachingConcurrentLcMap map = new CachingConcurrentLcMap();
 

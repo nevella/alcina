@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
@@ -31,8 +31,9 @@ import cc.alcina.framework.common.client.logic.reflection.resolution.Resolution.
 @Documented
 @Target({ ElementType.METHOD, ElementType.TYPE })
 @ClientVisible
-@Resolution(inheritance = {
-		Inheritance.PROPERTY }, mergeStrategy = Validator.MergeStrategy.class)
+@Resolution(
+	inheritance = { Inheritance.PROPERTY },
+	mergeStrategy = Validator.MergeStrategy.class)
 /**
  *
  * @author Nick Reddel

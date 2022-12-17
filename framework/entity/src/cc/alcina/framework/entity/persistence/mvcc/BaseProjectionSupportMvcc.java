@@ -28,7 +28,9 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	@Registration(value = BplDelegateMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration(
+		value = BplDelegateMapCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class BplDelegateMapCreatorTransactional
 			extends BplDelegateMapCreator {
 		private boolean nonTransactionalDomain;
@@ -74,7 +76,9 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	@Registration(value = CollectionCreators.MultiTrieCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration(
+		value = CollectionCreators.MultiTrieCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class MultiTrieCreatorImpl
 			extends CollectionCreators.MultiTrieCreator {
 		@Override
@@ -100,7 +104,9 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	@Registration(value = CollectionCreators.TreeMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration(
+		value = CollectionCreators.TreeMapCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class TreeMapCreatorImpl
 			extends CollectionCreators.TreeMapCreator {
 		@Override
@@ -128,7 +134,9 @@ public class BaseProjectionSupportMvcc {
 		}
 	}
 
-	@Registration(value = CollectionCreators.TreeMapRevCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration(
+		value = CollectionCreators.TreeMapRevCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class TreeMapRevCreatorImpl
 			extends CollectionCreators.TreeMapRevCreator {
 		@Override

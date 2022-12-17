@@ -966,7 +966,8 @@ public class DevConsoleDebugCommands {
 				int days = getIntArg(argv, 0,
 						DEFAULT_GET_EXCEPTIONS_IN_LAST_X_DAYS);
 				String ckFilter = getExceptionIgnoreClause();
-				FilterArgvFlag filterArgvResult = new FilterArgvFlag(argv, "-a");
+				FilterArgvFlag filterArgvResult = new FilterArgvFlag(argv,
+						"-a");
 				argv = filterArgvResult.argv;
 				String exceptionFilter = filterArgvResult.contains ? ""
 						: "and l.component_key ='CLIENT_EXCEPTION' ";
@@ -982,11 +983,12 @@ public class DevConsoleDebugCommands {
 				}
 				argv = filterArgvParam.argv;
 				List<String> exceptions = Arrays.asList(
-						"UNEXPECTED_SERVLET_EXCEPTION", "ALERT_GENERATION_FAILURE",
-						"JOB_FAILURE_EXCEPTION", "CLUSTER_EXCEPTION",
-						"CLIENT_EXCEPTION", "RPC_EXCEPTION",
-						"CLIENT_EXCEPTION_IE_CRUD", "PUBLICATION_EXCEPTION",
-						"TRANSFORM_EXCEPTION", "PARSER_EXCEPTION");
+						"UNEXPECTED_SERVLET_EXCEPTION",
+						"ALERT_GENERATION_FAILURE", "JOB_FAILURE_EXCEPTION",
+						"CLUSTER_EXCEPTION", "CLIENT_EXCEPTION",
+						"RPC_EXCEPTION", "CLIENT_EXCEPTION_IE_CRUD",
+						"PUBLICATION_EXCEPTION", "TRANSFORM_EXCEPTION",
+						"PARSER_EXCEPTION");
 				exceptionFilter = filterArgvResult.contains
 						? String.format("and l.component_key in %s",
 								EntityPersistenceHelper
@@ -998,7 +1000,8 @@ public class DevConsoleDebugCommands {
 					exceptions = Arrays.stream(customExceptionFilter.split(","))
 							.collect(Collectors.toList());
 					exceptionFilter = String.format("and l.component_key in %s",
-							EntityPersistenceHelper.toInStringsClause(exceptions));
+							EntityPersistenceHelper
+									.toInStringsClause(exceptions));
 				}
 				argv = filterArgvParam.argv;
 				filterArgvParam = new FilterArgvParam(argv, "-gtid");
@@ -1014,8 +1017,8 @@ public class DevConsoleDebugCommands {
 								+ "where l.created_on>? %s %s and "
 								+ " not (l.component_key in %s) and length(l.text)<%s"
 								+ " order by random() %s",
-						exceptionFilter, gtOnlyFilter, ckFilter, maxRecordLength,
-						limitClause);
+						exceptionFilter, gtOnlyFilter, ckFilter,
+						maxRecordLength, limitClause);
 				int size = 0;
 				{
 					String sql = "select count(l.id) " + sqlFromEtc;

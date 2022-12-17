@@ -51,7 +51,9 @@ import cc.alcina.framework.common.client.logic.reflection.ClearStaticFieldsOnApp
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 
-/*The "large" functions assume a byte structure of [first 128] public-key RSA encrypted 3DES key, byte 129 onwards 3dse encrypted data
+/*
+ * The "large" functions assume a byte structure of [first 128] public-key RSA
+ * encrypted 3DES key, byte 129 onwards 3dse encrypted data
  *
  */
 /**

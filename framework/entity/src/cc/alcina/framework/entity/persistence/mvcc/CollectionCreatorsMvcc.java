@@ -26,7 +26,9 @@ public class CollectionCreatorsMvcc {
 		}
 	}
 
-	@Registration(value = CollectionCreators.MultisetCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration(
+		value = CollectionCreators.MultisetCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class DomainStoreMultisetCreator<K, V>
 			implements CollectionCreators.MultisetCreator<K, V> {
 		private boolean nonTransactionalDomain;
@@ -50,7 +52,9 @@ public class CollectionCreatorsMvcc {
 	}
 
 	@Reflected
-	@Registration.Singleton(value = CollectionCreators.TypedMapCreator.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+	@Registration.Singleton(
+		value = CollectionCreators.TypedMapCreator.class,
+		priority = Registration.Priority.PREFERRED_LIBRARY)
 	public static class TypedMapCreatorCreatorMvcc<K, V>
 			implements CollectionCreators.TypedMapCreator<K, V> {
 		@Override

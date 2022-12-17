@@ -19,7 +19,9 @@ import cc.alcina.framework.entity.projection.GraphProjections;
 import it.unimi.dsi.fastutil.objects.ReferenceOpenHashSet;
 
 /*
- * Deliberately does not extend SearchResultProjector. To use this, create a subclass of SearchResultProjector (with a higher registry priority) and delegate to this
+ * Deliberately does not extend SearchResultProjector. To use this, create a
+ * subclass of SearchResultProjector (with a higher registry priority) and
+ * delegate to this
  */
 public class EntityDataObjectProjector {
 	ReferenceOpenHashSet<Entity> projectable = new ReferenceOpenHashSet<>();

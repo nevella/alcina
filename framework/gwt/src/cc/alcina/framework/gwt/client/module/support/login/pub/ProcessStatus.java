@@ -74,8 +74,9 @@ public class ProcessStatus extends Model {
 		setMessages(new IdentityArrayList<>());
 	}
 
-	@Directed(bindings = { @Binding(from = "text", type = Type.INNER_TEXT),
-			@Binding(from = "type", type = Type.PROPERTY, to = "class") })
+	@Directed(
+		bindings = { @Binding(from = "text", type = Type.INNER_TEXT),
+				@Binding(from = "type", type = Type.PROPERTY, to = "class") })
 	public static class Message extends Model {
 		private final String text;
 

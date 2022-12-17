@@ -52,7 +52,8 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 				}
 			} else {
 				try {
-					RetentionPolicy policy = Registry.impl(RetentionPolicy.class,job.getTask().getClass());
+					RetentionPolicy policy = Registry.impl(
+							RetentionPolicy.class, job.getTask().getClass());
 					delete = !policy.retain(job);
 				} catch (Exception e) {
 					if (exceptions.incrementAndGet() < 20) {
@@ -81,8 +82,9 @@ public class TaskReapJobs extends ServerTask<TaskReapJobs> {
 		logger.info("Reaped {} jobs", reaped.get());
 	}
 
-	@Registration(value = { Schedule.class,
-			TaskReapJobs.class }, implementation = Registration.Implementation.FACTORY)
+	@Registration(
+		value = { Schedule.class, TaskReapJobs.class },
+		implementation = Registration.Implementation.FACTORY)
 	public static class ScheduleFactory extends HourlyScheduleFactory {
 	}
 }

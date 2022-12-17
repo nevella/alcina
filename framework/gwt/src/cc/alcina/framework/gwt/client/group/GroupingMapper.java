@@ -170,7 +170,8 @@ public class GroupingMapper<V> {
 
 		public ColumnMapper<GroupingMapperRow> columnMapper;
 
-		public Function<GroupingMapperRow, GroupKey> keyMapper = gmr -> gmr.getKey();
+		public Function<GroupingMapperRow, GroupKey> keyMapper = gmr -> gmr
+				.getKey();
 	}
 
 	public static class GroupingMapperRow<V> extends Row {
@@ -228,14 +229,15 @@ public class GroupingMapper<V> {
 			int idx = 0;
 			{
 				int f_idx = idx++;
-				builder.col("Key")
-						.function(row -> ((Cell) row.getCells().get(f_idx)).getValue())
+				builder.col("Key").function(
+						row -> ((Cell) row.getCells().get(f_idx)).getValue())
 						.href(hrefFunction(null)).add();
 			}
 			if (totalColumn) {
 				int f_idx = idx++;
 				builder.col("Total")
-						.function(row -> ((Cell) row.getCells().get(f_idx)).getValue())
+						.function(row -> ((Cell) row.getCells().get(f_idx))
+								.getValue())
 						.href(hrefFunction(null)).numeric().add();
 			}
 			int columnIndex = 0;
@@ -243,7 +245,8 @@ public class GroupingMapper<V> {
 				int f_idx = idx++;
 				int f_columnIndex = columnIndex++;
 				builder.col(columnNameRenderer.apply(key))
-						.function(row -> ((Cell) row.getCells().get(f_idx)).getValue())
+						.function(row -> ((Cell) row.getCells().get(f_idx))
+								.getValue())
 						.href(hrefFunction(columnClassifier
 								.groupKey(columnKeys.get(f_columnIndex))))
 						.numeric().add();

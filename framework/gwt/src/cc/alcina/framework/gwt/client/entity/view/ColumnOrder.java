@@ -13,7 +13,7 @@ import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.cell.ColumnsBuilder.SortableColumn;
 import cc.alcina.framework.gwt.client.cell.DirectedComparator;
 
-//non-typed, to avoid gwt type checks on native comparators
+// non-typed, to avoid gwt type checks on native comparators
 public class ColumnOrder implements Comparator {
 	List<Comparator> cmps = new ArrayList<>();
 

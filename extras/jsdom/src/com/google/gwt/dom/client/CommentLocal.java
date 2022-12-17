@@ -89,8 +89,8 @@ public class CommentLocal extends NodeLocal implements DomComment {
 
 	@Override
 	void appendTextContent(StringBuilder builder) {
-		//builder.append(getData());
-		//definitely not part of innertext
+		// builder.append(getData());
+		// definitely not part of innertext
 	}
 
 	void appendUnescaped(UnsafeHtmlBuilder builder) {

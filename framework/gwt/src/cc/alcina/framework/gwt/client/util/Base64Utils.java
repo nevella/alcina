@@ -14,7 +14,7 @@
  * the License.
  */
 /**
- * Copied to Alcina (since non-public) 
+ * Copied to Alcina (since non-public)
  */
 package cc.alcina.framework.gwt.client.util;
 

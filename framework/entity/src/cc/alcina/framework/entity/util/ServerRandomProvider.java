@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
@@ -23,7 +23,9 @@ import cc.alcina.framework.common.client.util.RandomProvider;
  * @author Nick Reddel
  */
 @IgnoreIntrospectionChecks
-@Registration.Singleton(value = RandomProvider.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+@Registration.Singleton(
+	value = RandomProvider.class,
+	priority = Registration.Priority.PREFERRED_LIBRARY)
 public class ServerRandomProvider implements RandomProvider {
 	Random random = new Random();
 

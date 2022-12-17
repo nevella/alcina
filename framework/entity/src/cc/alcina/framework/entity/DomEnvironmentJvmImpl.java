@@ -16,7 +16,9 @@ import cc.alcina.framework.common.client.dom.DomNode.XpathEvaluator;
 import cc.alcina.framework.common.client.logic.reflection.Registration;
 import cc.alcina.framework.common.client.util.CommonUtils;
 
-@Registration.Singleton(value = DomEnvironment.class, priority = Registration.Priority.PREFERRED_LIBRARY)
+@Registration.Singleton(
+	value = DomEnvironment.class,
+	priority = Registration.Priority.PREFERRED_LIBRARY)
 public class DomEnvironmentJvmImpl implements DomEnvironment {
 	@Override
 	public XpathEvaluator createXpathEvaluator(DomNode xmlNode,

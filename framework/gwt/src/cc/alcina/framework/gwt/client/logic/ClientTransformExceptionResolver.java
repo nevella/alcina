@@ -5,14 +5,14 @@ import java.util.Set;
 
 import cc.alcina.framework.common.client.logic.domaintransform.DomainTransformRequestException;
 /*
- * REVISIT: At the moment, there's a mismatch between local and remote 
- * in terms of exception resolution - i.e. if some transforms are skipped
- * for remote commit due to resolution, they're still stored locally.
+ * REVISIT: At the moment, there's a mismatch between local and remote in terms
+ * of exception resolution - i.e. if some transforms are skipped for remote
+ * commit due to resolution, they're still stored locally.
  * 
- * This is actually a little tricky to decide - particularly without
- * local undo. Probably best leave for now (the transforms will be
- * marked as all_committed locally, so they won't be retried and shouldn't
- * cause inconsistency...I think). 
+ * This is actually a little tricky to decide - particularly without local undo.
+ * Probably best leave for now (the transforms will be marked as all_committed
+ * locally, so they won't be retried and shouldn't cause inconsistency...I
+ * think).
  */
 import cc.alcina.framework.common.client.util.Callback;
 

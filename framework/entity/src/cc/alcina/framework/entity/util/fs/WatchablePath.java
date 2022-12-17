@@ -126,8 +126,8 @@ public class WatchablePath implements Path {
 	public WatchKey register(WatchService watcher, Kind<?>... events)
 			throws IOException {
 		if (watcher instanceof AbstractNonSunWatchService) {
-			return ((AbstractNonSunWatchService) watcher).register(this, events
-					);
+			return ((AbstractNonSunWatchService) watcher).register(this,
+					events);
 		} else {
 			return this.delegate.register(watcher, events);
 		}

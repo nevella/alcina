@@ -14,7 +14,8 @@ import cc.alcina.framework.gwt.client.widget.UsefulWidgetFactory;
 
 public abstract class DetailView<DVM extends DetailViewModel>
 		extends AbstractViewModelView<DVM> {
-	public static final Topic<Entity> topicDetailModelObjectSet = Topic.create();
+	public static final Topic<Entity> topicDetailModelObjectSet = Topic
+			.create();
 
 	protected FlowPanel fp;
 

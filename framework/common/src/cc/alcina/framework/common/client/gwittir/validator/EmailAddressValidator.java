@@ -1,4 +1,4 @@
-/* 
+/*
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
@@ -42,7 +42,7 @@ public class EmailAddressValidator implements ParameterisedValidator {
 
 	public static final transient String PARAM_IGNORE_EMPTIES = "ignore-empties";
 
-	public static  List<String>
+	public static List<String>
 			provideAddressesForDefaultSeparator(String addresses) {
 		addresses = TextUtils.normalizeWhitespaceAndTrim(addresses);
 		return Arrays.asList(addresses.split(STANDARD_MULTIPLE_SEPARATOR))

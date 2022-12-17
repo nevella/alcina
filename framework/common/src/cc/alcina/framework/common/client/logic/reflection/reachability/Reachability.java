@@ -7,7 +7,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /*
- * Rules which limit or explain reflective class reachability for a given filter peer.
+ * Rules which limit or explain reflective class reachability for a given filter
+ * peer.
  */
 public class Reachability {
 	@Retention(RetentionPolicy.RUNTIME)
@@ -30,8 +31,8 @@ public class Reachability {
 		String packageName() default "";
 
 		Class[] subtypes() default {};
-		Class<? extends RuleSet> ruleSet() default RuleSet.Empty.class;
 
+		Class<? extends RuleSet> ruleSet() default RuleSet.Empty.class;
 	}
 
 	public enum Action {

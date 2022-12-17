@@ -64,7 +64,9 @@ public abstract class DomainTransformRequestPersistent
 		return this.startPersistTime;
 	}
 
-	@Column(name = "transactionCommitTime", columnDefinition = "timestamp with time zone")
+	@Column(
+		name = "transactionCommitTime",
+		columnDefinition = "timestamp with time zone")
 	public Date getTransactionCommitTime() {
 		return this.transactionCommitTime;
 	}

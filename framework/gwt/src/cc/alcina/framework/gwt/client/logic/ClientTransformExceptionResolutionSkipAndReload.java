@@ -263,19 +263,31 @@ public class ClientTransformExceptionResolutionSkipAndReload
 			}
 		}
 
-		@Display(name = "Exception text", orderingHint = 50)
-		@Custom(customiserClass = ExpandableLabelCustomiser.class, parameters = {
-				@NamedParameter(name = ExpandableLabelCustomiser.FORCE_COLUMN_WIDTH, booleanValue = true),
-				@NamedParameter(name = ExpandableLabelCustomiser.MAX_WIDTH, intValue = 30) })
+		@Display(orderingHint = 50)
+		@Custom(
+			customiserClass = ExpandableLabelCustomiser.class,
+			parameters = {
+					@NamedParameter(
+						name = ExpandableLabelCustomiser.FORCE_COLUMN_WIDTH,
+						booleanValue = true),
+					@NamedParameter(
+						name = ExpandableLabelCustomiser.MAX_WIDTH,
+						intValue = 30) })
 		@PropertyPermissions(read = @Permission(access = AccessLevel.ADMIN))
 		public String getExceptionText() {
 			return exception.getMessage();
 		}
 
 		@Display(name = "New Value", orderingHint = 30)
-		@Custom(customiserClass = ExpandableLabelCustomiser.class, parameters = {
-				@NamedParameter(name = ExpandableLabelCustomiser.FORCE_COLUMN_WIDTH, booleanValue = true),
-				@NamedParameter(name = ExpandableLabelCustomiser.MAX_WIDTH, intValue = 30) })
+		@Custom(
+			customiserClass = ExpandableLabelCustomiser.class,
+			parameters = {
+					@NamedParameter(
+						name = ExpandableLabelCustomiser.FORCE_COLUMN_WIDTH,
+						booleanValue = true),
+					@NamedParameter(
+						name = ExpandableLabelCustomiser.MAX_WIDTH,
+						intValue = 30) })
 		public String getNewStringValue() {
 			return event.getNewStringValue();
 		}
@@ -294,12 +306,12 @@ public class ClientTransformExceptionResolutionSkipAndReload
 			return null;
 		}
 
-		@Display(name = "Object id", orderingHint = 15)
+		@Display(orderingHint = 15)
 		public long getObjectId() {
 			return event.getObjectId();
 		}
 
-		@Display(name = "Object name", orderingHint = 17)
+		@Display(orderingHint = 17)
 		public String getObjectName() {
 			return exception.getSourceObjectName();
 		}

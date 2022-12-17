@@ -5,9 +5,8 @@ import java.io.Serializable;
 import cc.alcina.framework.common.client.logic.reflection.reachability.Bean;
 
 /*
- * Either delta will be null, or all the other fields
- *  - delta non-null if we know the client will use it 
- *  immediately, saves an unnecessary double eval()
+ * Either delta will be null, or all the other fields - delta non-null if we
+ * know the client will use it immediately, saves an unnecessary double eval()
  */
 @Bean
 public class DomainModelDeltaTransport implements Serializable, Cloneable {

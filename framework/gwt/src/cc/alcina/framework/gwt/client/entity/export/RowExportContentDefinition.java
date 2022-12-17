@@ -16,7 +16,9 @@ import cc.alcina.framework.common.client.publication.FormatConversionTarget;
 import cc.alcina.framework.common.client.serializer.TypeSerialization;
 
 @XmlRootElement
-@ObjectPermissions(read = @Permission(access = AccessLevel.ADMIN), write = @Permission(access = AccessLevel.ADMIN))
+@ObjectPermissions(
+	read = @Permission(access = AccessLevel.ADMIN),
+	write = @Permission(access = AccessLevel.ADMIN))
 @TypeSerialization(flatSerializable = false)
 @Registration(JaxbContextRegistration.class)
 public class RowExportContentDefinition extends Bindable
@@ -28,7 +30,7 @@ public class RowExportContentDefinition extends Bindable
 	public RowExportContentDefinition() {
 	}
 
-	@Display(name = "Format", orderingHint = 100)
+	@Display(orderingHint = 100)
 	public RowExportFormat getFormat() {
 		return this.format;
 	}

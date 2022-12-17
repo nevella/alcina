@@ -31,8 +31,9 @@ import cc.alcina.framework.entity.ResourceUtilities;
 import cc.alcina.framework.entity.registry.RegistryScanner.RegistryScannerMetadata;
 
 /*
- * Considered, as per seam etc, use javaassist to avoid loading every class in the app here...
- * But the caching idea works better, because we need to check method annotations etc...and simpler
+ * Considered, as per seam etc, use javaassist to avoid loading every class in
+ * the app here... But the caching idea works better, because we need to check
+ * method annotations etc...and simpler
  */
 /**
  *

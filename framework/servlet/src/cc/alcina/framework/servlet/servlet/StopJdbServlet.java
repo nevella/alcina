@@ -24,13 +24,10 @@ import cc.alcina.framework.servlet.actionhandlers.jdb.RemoteDebugHandler;
  * @author Nick Reddel
  */
 public class StopJdbServlet extends AlcinaServlet {
-
-
-
 	@Override
 	protected void handleRequest(HttpServletRequest request,
 			HttpServletResponse response) throws Exception {
-		try  {
+		try {
 			String message = RemoteDebugHandler.JdbWrapper.get().stopJdb();
 			writeTextResponse(response, message);
 		} catch (Exception e) {

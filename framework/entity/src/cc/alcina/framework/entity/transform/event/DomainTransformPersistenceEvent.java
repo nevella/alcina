@@ -19,7 +19,7 @@ import cc.alcina.framework.entity.transform.DomainTransformLayerWrapper;
 import cc.alcina.framework.entity.transform.DomainTransformRequestPersistent;
 import cc.alcina.framework.entity.transform.TransformPersistenceToken;
 
-//non-bean and never serialized, so 'get' rather than 'provide'
+// non-bean and never serialized, so 'get' rather than 'provide'
 public class DomainTransformPersistenceEvent {
 	private final TransformPersistenceToken transformPersistenceToken;
 
