@@ -572,7 +572,7 @@ public class TaskFlatSerializerMetadata
 
 	static class SourceMods {
 		static Logger logger = LoggerFactory
-				.getLogger(TaskFlatSerializerMetadata.class);
+				.getLogger(TaskRefactorDisplayName.class);
 
 		public static void ensureNoGetCriteriaGroupsMethod(
 				ClassOrInterfaceDeclarationWrapper declarationWrapper) {

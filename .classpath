@@ -54,9 +54,6 @@
 	<classpathentry kind="lib" path="lib/framework/entity/jackson-core-2.7.1.jar" sourcepath="/g/minor/jackson-core"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jackson-databind-2.7.1.jar" sourcepath="/g/minor/jackson-databind"/>
 	<classpathentry kind="lib" path="lib/framework/gwt/gwt-dev-patch.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-3.20.0.jar" sourcepath="/g/minor/javaparser/"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-generators-3.20.0.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-core-3.20.0.jar" sourcepath="/g/minor/javaparser"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/barbary-watchservice-2.1-SNAPSHOT.jar" sourcepath="/private/var/local/git/minor/BarbaryWatchService"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/jna-5.10.0.jar" sourcepath="/g/minor/jna"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/jna-platform-5.10.0.jar"/>
@@ -68,8 +65,6 @@
 	<classpathentry kind="lib" path="lib/extras/webdriver/selenium-server-standalone-3.7.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/javax.transaction-api-1.3.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/tools.jar" sourcepath="/g/minor/jdk"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-metamodel-generator-3.20.0.jar"/>
-	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-serialization-3.20.0.jar"/>
 	<classpathentry kind="lib" path="lib/framework/classmeta/javassist-3.18.1-GA.jar" sourcepath="/g/minor/javassist"/>
 	<classpathentry kind="lib" path="lib/framework/servlet/scrypt-1.4.0.jar"/>
 	<classpathentry kind="lib" path="lib/framework/google/google-api-client-1.25.0.jar" sourcepath="/g/minor/google-api-java-client"/>
@@ -93,5 +88,12 @@
 	<classpathentry kind="lib" path="lib/framework/entity/javax.ws.rs-api-2.1.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/jol-core-0.17-SNAPSHOT.jar"/>
 	<classpathentry kind="lib" path="lib/framework/entity/slf4j-reload4j-1.7.36.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-generators-3.24.9.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-metamodel-generator-3.24.9.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-serialization-3.24.9.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-testing-3.24.9.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-core-testing-bdd-3.24.9.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-core-3.24.9.jar"/>
+	<classpathentry kind="lib" path="lib/framework/classmeta/javaparser-symbol-solver-testing-3.24.9.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

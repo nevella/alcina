@@ -72,8 +72,6 @@ public @interface Display {
 
 	String helpText() default "";
 
-	// FIXME - 2022 - task to remove name() where equal to deinfixed property
-	// name
 	String name() default "";
 
 	// FIXME - dirndl 1x2 - this should be defined in @Bean (with sections)

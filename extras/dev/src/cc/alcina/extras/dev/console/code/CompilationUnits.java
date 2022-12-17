@@ -243,6 +243,8 @@ public class CompilationUnits {
 		File outDir = new File("/tmp/refactor");
 		SEUtilities.deleteDirectory(outDir);
 		outDir.mkdirs();
+		long dirtyCount = units.stream().filter(u -> u.dirty).count();
+		Ax.out("Writing: %s/%s units dirty", dirtyCount, units.size());
 		units.stream().filter(u -> u.dirty).forEach(u -> {
 			u.writeTo(test ? outDir : null, mapper);
 		});

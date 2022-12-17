@@ -59,10 +59,10 @@ import com.github.javaparser.resolution.declarations.ResolvedFieldDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedMethodDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedReferenceTypeDeclaration;
 import com.github.javaparser.resolution.declarations.ResolvedValueDeclaration;
+import com.github.javaparser.resolution.model.SymbolReference;
 import com.github.javaparser.resolution.types.ResolvedType;
 import com.github.javaparser.symbolsolver.javaparsermodel.JavaParserFacade;
 import com.github.javaparser.symbolsolver.javaparsermodel.declarations.JavaParserClassDeclaration;
-import com.github.javaparser.symbolsolver.model.resolution.SymbolReference;
 import com.github.javaparser.symbolsolver.reflectionmodel.ReflectionClassDeclaration;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.ClassLoaderTypeSolver;
 import com.github.javaparser.symbolsolver.resolution.typesolvers.CombinedTypeSolver;
@@ -102,9 +102,8 @@ import javassist.bytecode.MethodInfo;
  *
  * VERSIONS:
  *
- * (just historical interest)
- * 17 - model READ_INVALID resolvedVersionState
- * 16 - disallow covariant return types
+ * (just historical interest) 17 - model READ_INVALID resolvedVersionState 16 -
+ * disallow covariant return types
  *
  *
  */
@@ -670,7 +669,7 @@ class ClassTransformer {
 							.getCorrespondingDeclaration();
 					boolean privateOrPackageMethod = decl
 							.accessSpecifier() == AccessSpecifier.PRIVATE
-							|| decl.accessSpecifier() == AccessSpecifier.PACKAGE_PRIVATE;
+							|| decl.accessSpecifier() == AccessSpecifier.NONE;
 					boolean staticMethod = decl.isStatic();
 					boolean entityMethod = decl.declaringType()
 							.getQualifiedName().equals(originalClass.getName());
