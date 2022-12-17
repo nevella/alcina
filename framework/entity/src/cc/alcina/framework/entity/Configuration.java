@@ -91,5 +91,10 @@ public class Configuration {
 			this.contextOverride = contextOverride;
 			return this;
 		}
+
+		public void set(String value) {
+			String key = Ax.format("%s.%s", clazz.getSimpleName(), keyPart);
+			LooseContext.set(key, value);
+		}
 	}
 }
