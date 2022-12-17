@@ -24,3 +24,7 @@ Then compare xxx.short (a little more involved)
 
 # debug a large string (by writing to fs)
 java.nio.file.Files.write(java.nio.file.Path.of("/tmp/tmp.txt"), result.getBytes());
+
+# where's that md5 get generated
+SerializationUtils.getSerializationSignature
+	- note that first thing to try is clear gwt unit cache (above)
