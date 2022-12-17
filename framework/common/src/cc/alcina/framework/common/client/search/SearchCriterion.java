@@ -14,6 +14,7 @@
 package cc.alcina.framework.common.client.search;
 
 import java.util.Collection;
+import java.util.Objects;
 
 import javax.xml.bind.annotation.XmlTransient;
 
@@ -92,7 +93,7 @@ public abstract class SearchCriterion extends Bindable
 
 	@Override
 	public int equivalenceHash() {
-		return toString().hashCode();
+		return Objects.hash(toString());
 	}
 
 	@Override
