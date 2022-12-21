@@ -29,7 +29,17 @@ public class Topic<T> {
 	}
 
 	public ListenerReference add(Runnable runnable) {
-		return addRunnable(runnable, false);
+		return add(runnable, false);
+	}
+
+	public ListenerReference add(Runnable runnable,
+			boolean fireIfWasPublished) {
+		return add(new TopicListener() {
+			@Override
+			public void topicPublished(Object message) {
+				runnable.run();
+			}
+		}, fireIfWasPublished);
 	}
 
 	public ListenerReference add(TopicListener<T> listener) {
@@ -47,20 +57,6 @@ public class Topic<T> {
 			listener.topicPublished(null);
 		}
 		return new Topic.Reference(this, listener);
-	}
-
-	public ListenerReference addRunnable(Runnable runnable) {
-		return addRunnable(runnable, false);
-	}
-
-	public ListenerReference addRunnable(Runnable runnable,
-			boolean fireIfWasPublished) {
-		return add(new TopicListener() {
-			@Override
-			public void topicPublished(Object message) {
-				runnable.run();
-			}
-		}, fireIfWasPublished);
 	}
 
 	public void clearListeners() {

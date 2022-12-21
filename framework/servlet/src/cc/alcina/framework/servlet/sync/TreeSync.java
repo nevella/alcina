@@ -126,7 +126,8 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 				boolean from) {
 			Context context = new Context(syncContainer, u, from);
 			ProcessObservers.context().publish(context);
-			if (context.syncContainer.position.skip) {
+			if (context.syncContainer != null
+					&& context.syncContainer.position.skip) {
 				return u;
 			} else {
 				U prepared = prepare0(context, u, from);
@@ -181,6 +182,12 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			this.type = type;
 		}
 
+		@Override
+		public String toString() {
+			return Ax.format("%s - performed: %s - message: %s", type,
+					performed, message);
+		}
+
 		/*
 		 * the latter three are really about logging/observing:
 		 *
@@ -233,6 +240,21 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 			SyncContainer cursor = parent;
 			while (true) {
 				if (cursor.syncable instanceof TreeSyncable) {
+					return (A) cursor.syncable;
+				} else {
+					cursor = cursor.parent;
+					if (cursor == null) {
+						return null;
+					}
+				}
+			}
+		}
+
+		public <A extends TreeSyncable> A ancestorSyncable(Class<A> clazz) {
+			SyncContainer cursor = parent;
+			while (true) {
+				if (cursor.syncable != null
+						&& clazz.isAssignableFrom(cursor.syncable.getClass())) {
 					return (A) cursor.syncable;
 				} else {
 					cursor = cursor.parent;
@@ -384,6 +406,8 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 				U right = (U) constructor.newInstance();
 				operation.right = right;
 				left.provideChildFields(false)
+						.filter(f -> f.getAnnotation(
+								TreeSyncable.CreateIgnore.class) == null)
 						.forEach(f -> ThrowingRunnable.wrap(() -> {
 							f.set(right, f.get(left));
 						}));
@@ -496,6 +520,11 @@ public class TreeSync<T extends TreeSyncable> implements ProcessObservable {
 				Class clazz = getClazz();
 				Optional<Preparer> preparer = Registry.optional(Preparer.class,
 						clazz);
+				if (left.syncable != null && right.syncable != null
+						&& (left.syncable instanceof TreeSyncable)) {
+					((TreeSyncable) right.syncable).updateFromSyncEquivalent(
+							null, (TreeSyncable) left.syncable);
+				}
 				preparer.ifPresent(left::prepare);
 				preparer.ifPresent(right::prepare);
 				Optional<Syncer> o_syncer = Registry.optional(Syncer.class,

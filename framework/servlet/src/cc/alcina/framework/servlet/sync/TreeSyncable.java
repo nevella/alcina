@@ -1,5 +1,10 @@
 package cc.alcina.framework.servlet.sync;
 
+import java.lang.annotation.Documented;
+import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.ParameterizedType;
@@ -93,7 +98,20 @@ public interface TreeSyncable<T extends TreeSyncable>
 		return traversal.stream();
 	}
 
-	// copy non-persistent, non-sync-affecting fields
+	// copy non-persistent, non-stateful fields
+	//
+	// this is called to ease logic concerning remote objects (since local
+	// objects will often have a richer transient model)
+	//
+	// mark any non-treesync but stateful fields (e.g. remote state) as
+	// @CreateIgnore to ensure CREATE (which uses reflective field replication)
+	// and this are synced
 	default void updateFromSyncEquivalent(Operation<T> operation, T other) {
+	}
+
+	@Retention(RetentionPolicy.RUNTIME)
+	@Documented
+	@Target(ElementType.FIELD)
+	public @interface CreateIgnore {
 	}
 }

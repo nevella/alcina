@@ -344,6 +344,8 @@ public class Shell {
 
 		private boolean modifyWindowNanos;
 
+		private boolean mute;
+
 		private RsyncCommand(Builder builder) {
 			this.keepPermissions = builder.keepPermissions;
 			this.from = builder.from;
@@ -358,6 +360,7 @@ public class Shell {
 			this.checksum = builder.checksum;
 			this.excludes = builder.excludes;
 			this.modifyWindowNanos = builder.modifyWindowNanos;
+			this.mute = builder.mute;
 		}
 
 		public String generateCommand() {
@@ -425,7 +428,7 @@ public class Shell {
 			if (Ax.notBlank(sshOptions)) {
 				flags += " " + sshOptions;
 			}
-			Ax.out("Syncing:\n\t%s ->\n\t%s\n", from, to);
+			Ax.out("rsync: %s -> %s", from, to);
 			String command = Ax.format("rsync %s %s %s;", flags, from, to);
 			return command;
 		}
@@ -435,7 +438,9 @@ public class Shell {
 		}
 
 		public void sync(boolean throwOnException) throws Exception {
-			Output output = new Shell().runBashScript(generateCommand());
+			Shell shell = new Shell();
+			shell.logToStdOut = !mute;
+			Output output = shell.runBashScript(generateCommand());
 			if (throwOnException) {
 				output.throwOnException();
 			}
@@ -467,6 +472,8 @@ public class Shell {
 			private boolean checksum;
 
 			private String[] excludes = {};
+
+			private boolean mute;
 
 			private Builder() {
 			}
@@ -507,6 +514,11 @@ public class Shell {
 
 			public Builder withModifyWindowNanos(boolean modifyWindowNanos) {
 				this.modifyWindowNanos = modifyWindowNanos;
+				return this;
+			}
+
+			public Builder withMute(boolean mute) {
+				this.mute = mute;
 				return this;
 			}
 
@@ -602,8 +614,8 @@ public class Shell {
 				return new SshCommand(this);
 			}
 
-			public Builder withCommand(String command) {
-				this.command = command;
+			public Builder withCommand(String command, Object... args) {
+				this.command = Ax.format(command, args);
 				return this;
 			}
 
