@@ -29,6 +29,8 @@ public class DomainTransformEventView extends DomainTransformEvent
 	// used for returning persistent dtes
 	private long userId;
 
+	private String userName;
+
 	private Date serverCommitDate;
 
 	@Override
@@ -106,10 +108,16 @@ public class DomainTransformEventView extends DomainTransformEvent
 	}
 
 	@Transient
-	@Display(name = "User", orderingHint = 5)
+	@Display(name = "User Id", orderingHint = 5)
 	public // classValue = IUser.class) })
 	long getUserId() {
 		return userId;
+	}
+
+	@Transient
+	@Display(name = "User name", orderingHint = 6)
+	public String getUserName() {
+		return this.userName;
 	}
 
 	@Override
@@ -131,6 +139,10 @@ public class DomainTransformEventView extends DomainTransformEvent
 
 	public void setUserId(long userId) {
 		this.userId = userId;
+	}
+
+	public void setUserName(String userName) {
+		this.userName = userName;
 	}
 
 	@Reflected
