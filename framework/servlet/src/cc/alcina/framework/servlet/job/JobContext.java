@@ -127,7 +127,7 @@ public class JobContext {
 
 	public static void info(String template, Object... args) {
 		if (get() == null) {
-			String message = Ax.format(template.replace("{}", "%"), args);
+			String message = Ax.format(template.replace("{}", "%s"), args);
 			if (LooseContext.is(CONTEXT_KNOWN_OUTSIDE_JOB)) {
 				Ax.out(message);
 			} else {
