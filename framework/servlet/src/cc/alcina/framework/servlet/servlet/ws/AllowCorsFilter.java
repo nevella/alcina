@@ -10,6 +10,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
+import cc.alcina.framework.common.client.util.Ax;
 
 @Provider
 public class AllowCorsFilter implements ContainerRequestFilter {
@@ -25,7 +26,7 @@ public class AllowCorsFilter implements ContainerRequestFilter {
 		String explicitRegex = configuration.getAllowExplicitRegex();
 		if (explicitRegex != null) {
 			String origin = httpRequest.getHeader("origin");
-			if (origin.matches(explicitRegex)) {
+			if (Ax.matches(origin, explicitRegex)) {
 				httpResponse.addHeader("Access-Control-Allow-Origin", origin);
 				return;
 			}
