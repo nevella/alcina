@@ -740,7 +740,9 @@ public class ThreadlocalTransformManager extends TransformManager {
 
 	private void listenTo(Entity entity) {
 		if (!listeningTo.containsKey(entity)) {
-			TransactionId transactionId = Transaction.current().getId();
+			Transaction current = Transaction.current();
+			Preconditions.checkState(!current.isReadOnly());
+			TransactionId transactionId = current.getId();
 			if (listeningToTransactionId == null) {
 				listeningToTransactionId = transactionId;
 			} else {
@@ -748,7 +750,7 @@ public class ThreadlocalTransformManager extends TransformManager {
 					logger.warn(
 							"DEVEX:0 - Listening to object from wrong tx: {} - current : {} - incoming : {}",
 							entity.toStringEntity(), listeningToTransactionId,
-							Transaction.current());
+							current);
 					throw new IllegalStateException();
 				}
 			}

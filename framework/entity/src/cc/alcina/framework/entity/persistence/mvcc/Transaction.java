@@ -473,6 +473,10 @@ public class Transaction implements Comparable<Transaction> {
 		return phase == TransactionPhase.TO_DB_PREPARING;
 	}
 
+	public boolean isReadOnly() {
+		return this.phase == TransactionPhase.READ_ONLY;
+	}
+
 	public boolean isToDomainCommitted() {
 		return phase == TransactionPhase.TO_DOMAIN_COMMITTED;
 	}
