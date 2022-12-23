@@ -120,6 +120,10 @@ public class StringMap extends LinkedHashMap<String, String> {
 		super(otherMap);
 	}
 
+	public void addProperty(String kvString) {
+		putAll(fromPropertyString(kvString));
+	}
+
 	public Map<String, String> asLinkedHashMap() {
 		return new LinkedHashMap<>(this);
 	}
