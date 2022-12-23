@@ -30,6 +30,7 @@ public class KnownJob extends KnownNode {
 		}
 		status = OpStatus.FAILED;
 		logProcessTime();
+		e.printStackTrace();
 		persist();
 	}
 
@@ -51,6 +52,17 @@ public class KnownJob extends KnownNode {
 		logProcessTime();
 		lastOk = end;
 		persist();
+	}
+
+	@Override
+	public void persist() {
+		// zk nodesize 1mb, allow for some unicode
+		if (log.length() > 800000) {
+			Ax.err("Warn: truncating zknode/known %s", path());
+			log = log.substring(0, 800000);
+		}
+		// TODO Auto-generated method stub
+		super.persist();
 	}
 
 	public void startJob() {
