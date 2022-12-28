@@ -44,6 +44,7 @@ public class DomainModelObjectsPlaceholders {
 		}
 	}
 
+	@Bean
 	public static class DomainModelObjectsPlaceholder
 			implements DomainModelObject {
 		@Override
