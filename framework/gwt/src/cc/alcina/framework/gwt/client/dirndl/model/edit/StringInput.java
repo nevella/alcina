@@ -18,11 +18,6 @@ import cc.alcina.framework.gwt.client.dirndl.layout.HasTag;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
 import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
 
-@Directed(
-	bindings = { @Binding(type = Type.PROPERTY, from = "value"),
-			@Binding(type = Type.PROPERTY, from = "placeholder"),
-			@Binding(type = Type.PROPERTY, from = "type") },
-	receives = { DomEvents.Change.class, DomEvents.Input.class })
 /**
  * <p>
  * This class models an editable text field, rendering as either an
@@ -55,6 +50,12 @@ import cc.alcina.framework.gwt.client.dirndl.model.Model.FocusOnBind;
  * More specifically: emit inputchanged, changed events (from DOM input/change).
  * Don't reemit those transformed events
  */
+@Directed(
+	bindings = { @Binding(type = Type.PROPERTY, from = "value"),
+			@Binding(type = Type.PROPERTY, from = "placeholder"),
+			@Binding(type = Type.PROPERTY, from = "type"),
+			@Binding(type = Type.PROPERTY, from = "spellcheck") },
+	receives = { DomEvents.Change.class, DomEvents.Input.class })
 public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 		DomEvents.Change.Handler, DomEvents.Input.Handler {
 	private String value;
@@ -71,6 +72,8 @@ public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 
 	private boolean selectAllOnBind;
 
+	private String spellcheck;
+
 	public String getCurrentValue() {
 		if (currentValue == null) {
 			currentValue = elementValue();
@@ -80,6 +83,10 @@ public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 
 	public String getPlaceholder() {
 		return this.placeholder;
+	}
+
+	public String getSpellcheck() {
+		return this.spellcheck;
 	}
 
 	public String getTag() {
@@ -144,6 +151,10 @@ public class StringInput extends Model.WithNode implements FocusOnBind, HasTag,
 
 	public void setSelectAllOnBind(boolean selectAllOnBind) {
 		this.selectAllOnBind = selectAllOnBind;
+	}
+
+	public void setSpellcheck(String spellcheck) {
+		this.spellcheck = spellcheck;
 	}
 
 	public void setTag(String tag) {
