@@ -27,6 +27,11 @@ public class EntityLayerLogging {
 	public static final transient String CONTEXT_MUTE_PERSISTENT_LOGGING = EntityLayerLogging.class
 			.getName() + ".CONTEXT_MUTE_PERSISTENT_LOGGING";
 
+	private static org.slf4j.Logger logger = LoggerFactory
+			.getLogger(EntityLayerLogging.class);
+
+	private static ConcurrentHashMap<Object, Boolean> loggerRefs = new ConcurrentHashMap<>();
+
 	public static void log(LogMessageType componentKey, String message) {
 		EntityLayerObjects.get().getPersistentLogger()
 				.info(componentKey + " - " + message);
@@ -75,9 +80,6 @@ public class EntityLayerLogging {
 		}
 	}
 
-	private static org.slf4j.Logger logger = LoggerFactory
-			.getLogger(EntityLayerLogging.class);
-
 	public static void persistentLog(Exception e, Object logMessageType) {
 		try {
 			if (ResourceUtilities.is("useCommonPersistence")) {
@@ -93,8 +95,11 @@ public class EntityLayerLogging {
 
 	// convenience
 	public static void persistentLog(String message, Object componentKey) {
-		Registry.impl(CommonPersistenceProvider.class).getCommonPersistence()
-				.log(message, componentKey.toString());
+		if (ResourceUtilities.is("useCommonPersistence")) {
+			Registry.impl(CommonPersistenceProvider.class)
+					.getCommonPersistence()
+					.log(message, componentKey.toString());
+		}
 	}
 
 	public static void setLevel(Class clazz, Level level) {
@@ -140,8 +145,6 @@ public class EntityLayerLogging {
 			setLevel0(slf4jlogger.getName(), level);
 		}
 	}
-
-	private static ConcurrentHashMap<Object, Boolean> loggerRefs = new ConcurrentHashMap<>();
 
 	public static void setLevel(String key, Level level) {
 		setLevel(LoggerFactory.getLogger(key), level);
