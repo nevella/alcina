@@ -2,9 +2,9 @@
  * Licensed under the Apache License, Version 2.0 (the "License"); you may not
  * use this file except in compliance with the License. You may obtain a copy of
  * the License at
- * 
+ *
  * http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS, WITHOUT
  * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. See the
@@ -32,21 +32,21 @@ import cc.alcina.framework.common.client.collections.BidiConverter.BidiIdentityC
 /**
  * This class is a bit hacked, to support Gwittir validation. It requires an
  * outgoing ShortDate validator
- * 
+ *
  * If the string date field is invalid (determined by gwt datebox validation),
  * instances emit an (invalid) String (via property change listeners) to trigger
  * Gwittir validation feedback, otherwise they emit a date. If there's no
  * validator to catch the String, you'd probably get a classcast somewhere - the
  * validator is automatically added by gwittir bridge but must be added manually
  * if using in imperative code
- * 
- * FIXME - 2022 - the structure of this is sort of wrong - it'd be better to
- * have a textbox, converter, and popdown date selector (i.e. getValue() returns
- * text, not a date))
- * 
+ *
+ * FIXME - dirndl 1x2 - the structure of this is sort of wrong - it'd be better
+ * to have a textbox, converter, and popdown date selector (i.e. getValue()
+ * returns text, not a date))
+ *
  * ...and Dirndlise. That'll fix issues like "form validation works" for invalid
  * strings
- * 
+ *
  * @author Nick Reddel
  */
 public class DateBox extends AbstractBoundWidget<Date>

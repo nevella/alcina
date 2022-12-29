@@ -95,7 +95,7 @@ public class DomainStoreQueryTranslator {
 	}
 
 	/*
-	 * FIXME - 2022 - there's a lot of hackery with remapping/resolving -
+	 * FIXME - search - there's a lot of hackery with remapping/resolving -
 	 * possibly revisit 'context' etc
 	 */
 	public String translatePropertyPath(Criterion criterion,

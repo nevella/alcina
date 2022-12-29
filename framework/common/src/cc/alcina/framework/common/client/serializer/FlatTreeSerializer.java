@@ -1664,7 +1664,8 @@ public class FlatTreeSerializer {
 		private void addMaybeWithoutSeparator(FormatBuilder fb, String path) {
 			if (path.startsWith("-")) {
 				// tricky bit of defaulting here - for searchdefinitions.
-				// FIXME - 2022 - think about doing this better (although it
+				// FIXME - reflection - think about doing this better (although
+				// it
 				// works as-is)
 				fb.separator("");
 			}

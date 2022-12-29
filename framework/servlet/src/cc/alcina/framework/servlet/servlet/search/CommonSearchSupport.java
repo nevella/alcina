@@ -44,7 +44,7 @@ import cc.alcina.framework.gwt.client.entity.place.EntityPlace;
  * context (including custom entity sources if the search criteria require),
  * calls the query executor {@link DomainSearcher}, projects the results and
  * calls any grouping handlers
- * 
+ *
  * @author nick@alcina.cc
  *
  */
@@ -171,7 +171,8 @@ public class CommonSearchSupport {
 					clazz, searchContext.orders);
 			Registry.impl(SearcherCollectionSource.class).beforeQuery(clazz,
 					def);
-			// FIXME - 2022 - there may be places where we can get result set
+			// FIXME - domainsearch - there may be places where we can get
+			// result set
 			// size without collecting (i.e. index-only)
 			ObjectWrapper<Stream<? extends Entity>> streamRef = ObjectWrapper
 					.of(search);
