@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -23,6 +24,7 @@ import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.LooseContext;
 import cc.alcina.framework.common.client.util.StringMap;
+import cc.alcina.framework.entity.Configuration;
 import cc.alcina.framework.entity.MetricLogging;
 
 /**
@@ -43,8 +45,17 @@ public abstract class WebdriverTest implements Registration.Ensure {
 
 	protected static Map<Class<? extends WebdriverTest>, WebdriverTest> testTemplates;
 
+	private static final String ADD_GWT_CLIENT_SUFFIX = "addGwtClientSuffix";
+
 	public static <T extends WebdriverTest> T current() {
 		return LooseContext.get(CONTEXT_CURRENT_TEST);
+	}
+
+	private static String addGwtClientUrl(String url) {
+		if (Configuration.key(ADD_GWT_CLIENT_SUFFIX).is()) {
+			url += "?gwt.codesvr=127.0.0.1:9997";
+		}
+		return url;
 	}
 
 	protected int myLevel;
@@ -67,6 +78,18 @@ public abstract class WebdriverTest implements Registration.Ensure {
 
 	public final WebDriver driver() {
 		return token.getWebDriver();
+	}
+
+	public void ensurePath(String path) {
+		try {
+			String url = pathToUrl(path);
+			String curr = driver().getCurrentUrl();
+			if (!Objects.equals(curr, url)) {
+				driver().get(url);
+			}
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
 	}
 
 	public void getAndLog(String uri) {
@@ -127,6 +150,15 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			String curr = driver().getCurrentUrl();
 			curr = String.format("%s#%s", curr.replaceFirst("#.*", ""), hash);
 			driver().get(curr);
+		} catch (Exception e) {
+			throw new WrappedRuntimeException(e);
+		}
+	}
+
+	public void goToPath(String path) {
+		try {
+			String url = pathToUrl(path);
+			driver().get(url);
 		} catch (Exception e) {
 			throw new WrappedRuntimeException(e);
 		}
@@ -224,6 +256,17 @@ public abstract class WebdriverTest implements Registration.Ensure {
 		}
 	}
 
+	private String pathToUrl(String path) {
+		if (!path.startsWith("/")) {
+			path = "/" + path;
+		}
+		String curr = driver().getCurrentUrl();
+		String hostAndProtocol = curr.replaceFirst("(http.?://[^/]+).*", "$1");
+		String url = hostAndProtocol + path;
+		url = addGwtClientUrl(url);
+		return url;
+	}
+
 	private TestResult process0(int level, TestResult parent) throws Exception {
 		this.myLevel = level;
 		String oldThreadName = Thread.currentThread().getName();
@@ -254,7 +297,13 @@ public abstract class WebdriverTest implements Registration.Ensure {
 			level++;
 			token.getWriter().write("Processing dependencies - \n", level);
 			for (WebdriverTest dependent : dependentTests) {
-				dependent.process(token, level, result);
+				// confirm still required (may have been processed by a
+				// dependency)
+				List<WebdriverTest> recheck = getRequiredDependentTests();
+				if (recheck.stream()
+						.anyMatch(r -> r.getClass() == dependent.getClass())) {
+					dependent.process(token, level, result);
+				}
 			}
 			level--;
 		}

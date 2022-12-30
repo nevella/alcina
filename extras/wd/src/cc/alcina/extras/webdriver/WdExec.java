@@ -47,6 +47,10 @@ public class WdExec {
 
 	private WebElement fromElement;
 
+	public Actions actions() {
+		return new Actions(driver);
+	}
+
 	public void assertContainsText(String text) {
 		String elementText = getElement().getText();
 		assert (elementText.contains(text));
