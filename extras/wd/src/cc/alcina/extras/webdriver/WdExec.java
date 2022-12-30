@@ -48,7 +48,10 @@ public class WdExec {
 	private WebElement fromElement;
 
 	public Actions actions() {
-		return new Actions(driver);
+		Actions actions = new Actions(driver);
+		java.util.logging.Logger.getLogger(Actions.class.getName())
+				.setLevel(java.util.logging.Level.WARNING);
+		return actions;
 	}
 
 	public void assertContainsText(String text) {
