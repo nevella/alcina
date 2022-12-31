@@ -14,6 +14,7 @@ import com.google.gwt.event.dom.client.FocusoutEvent;
 import com.google.gwt.event.dom.client.InputEvent;
 import com.google.gwt.event.dom.client.KeyDownEvent;
 import com.google.gwt.event.dom.client.KeyUpEvent;
+import com.google.gwt.event.dom.client.MouseUpEvent;
 import com.google.gwt.event.dom.client.ScrollEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.ui.Widget;
@@ -241,6 +242,28 @@ public class DomEvents {
 
 		public interface Handler extends NodeEvent.Handler {
 			void onKeyUp(KeyUp event);
+		}
+	}
+
+	public static class MouseUp extends NodeEvent<MouseUp.Handler> {
+		@Override
+		public void dispatch(MouseUp.Handler handler) {
+			handler.onMouseUp(this);
+		}
+
+		@Override
+		public Class<MouseUp.Handler> getHandlerClass() {
+			return MouseUp.Handler.class;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			return widget.addDomHandler(this::fireEvent,
+					MouseUpEvent.getType());
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onMouseUp(MouseUp event);
 		}
 	}
 
