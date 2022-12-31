@@ -733,11 +733,6 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		}
 	}
 
-	public void setInnerHTMLWithValidation(String html) {
-		String validatedHtml = LocalDom.validateHtml(html);
-		setInnerHTML(validatedHtml);
-	}
-
 	@Override
 	public void setInnerSafeHtml(SafeHtml html) {
 		setInnerSafeHtml(html, true);

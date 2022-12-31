@@ -830,6 +830,10 @@ public class DocumentRemote extends NodeRemote implements DomDocument {
 		return getViewportElement().getScrollWidth();
 	}
 
+	public native final SelectionRemote getSelection()/*-{
+    return this.getSelection();
+	}-*/;
+
 	/**
 	 * Gets the title of a document as specified by the TITLE element in the
 	 * head of the document.
