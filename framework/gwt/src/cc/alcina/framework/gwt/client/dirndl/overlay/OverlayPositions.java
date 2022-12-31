@@ -34,6 +34,8 @@ public class OverlayPositions {
 	}
 
 	@Directed
+	// TODO - intercept preview events a la GWT Dialog class (if modal). Or
+	// assign to overlay
 	public static class OverlayContainer extends Model {
 		private final Model contents;
 

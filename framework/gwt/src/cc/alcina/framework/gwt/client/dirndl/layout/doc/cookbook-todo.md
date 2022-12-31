@@ -48,3 +48,14 @@ public void onSelected(Selected event) {
 		return;
 	}
 ```
+
+### Dialogs
+
+[TODO] - see Overlay.java - an example:
+
+```
+Overlay.builder().withContents(editor)
+.withCloseHandler(
+	evt -> closeHandler.accept(editor.value.getValue()))
+.build().open();
+```

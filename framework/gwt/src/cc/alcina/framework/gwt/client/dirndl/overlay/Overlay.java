@@ -7,6 +7,7 @@ import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.ClickOutside;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.CtrlEnterPressed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.EscapePressed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
@@ -20,16 +21,19 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 /**
  * Does not use standard HTML dialog support (Safari 15.4 required)
  *
+ * Models all popups + dialogs
+ *
  * @author nick@alcina.cc
  *
  */
 @Directed(
-	tag = "dl-dialog",
 	receives = { ModelEvents.Close.class, InferredDomEvents.EscapePressed.class,
-			InferredDomEvents.CtrlEnterPressed.class })
-public class Dialog extends Model.WithNode implements ModelEvents.Close.Handler,
-		InferredDomEvents.EscapePressed.Handler,
-		InferredDomEvents.CtrlEnterPressed.Handler {
+			InferredDomEvents.CtrlEnterPressed.class,
+			InferredDomEvents.ClickOutside.class })
+public class Overlay extends Model.WithNode implements
+		ModelEvents.Close.Handler, InferredDomEvents.EscapePressed.Handler,
+		InferredDomEvents.CtrlEnterPressed.Handler,
+		InferredDomEvents.ClickOutside.Handler {
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -42,7 +46,7 @@ public class Dialog extends Model.WithNode implements ModelEvents.Close.Handler,
 
 	private Handler closeHandler;
 
-	private Dialog(Builder builder) {
+	private Overlay(Builder builder) {
 		contents = builder.contents;
 		position = builder.position;
 		actions = builder.actions;
@@ -75,6 +79,11 @@ public class Dialog extends Model.WithNode implements ModelEvents.Close.Handler,
 
 	public OverlayPosition getPosition() {
 		return this.position;
+	}
+
+	@Override
+	public void onClickOutside(ClickOutside event) {
+		// TODO Auto-generated method stub
 	}
 
 	@Override
@@ -126,8 +135,8 @@ public class Dialog extends Model.WithNode implements ModelEvents.Close.Handler,
 
 		private ModelEvents.Close.Handler closeHandler;
 
-		public Dialog build() {
-			return new Dialog(this);
+		public Overlay build() {
+			return new Overlay(this);
 		}
 
 		public Builder withClose() {
