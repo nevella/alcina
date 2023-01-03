@@ -94,6 +94,7 @@ Command line opts:
 - (command string)
  * @formatter:on
 
+FIXME - console - search for "FIXME - console" in markdown files
 
  */
 @Registration.Singleton

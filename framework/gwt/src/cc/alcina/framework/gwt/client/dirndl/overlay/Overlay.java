@@ -16,6 +16,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Close.Handler
 import cc.alcina.framework.gwt.client.dirndl.model.HasLinks;
 import cc.alcina.framework.gwt.client.dirndl.model.Link;
 import cc.alcina.framework.gwt.client.dirndl.model.Model;
+import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerOptions;
 import cc.alcina.framework.gwt.client.util.WidgetUtils;
 
 /**
@@ -46,10 +47,16 @@ public class Overlay extends Model.WithNode implements
 
 	private Handler closeHandler;
 
+	private boolean modal;
+
+	private boolean viewportCentered;
+
 	private Overlay(Builder builder) {
 		contents = builder.contents;
 		position = builder.position;
 		actions = builder.actions;
+		modal = builder.modal;
+		viewportCentered = builder.viewportCentered;
 		closeHandler = builder.closeHandler;
 	}
 
@@ -64,7 +71,7 @@ public class Overlay extends Model.WithNode implements
 			}
 			closeHandler.onClose(null);
 		}
-		OverlayPositions.get().show(this, false);
+		OverlayPositions.get().hide(this);
 	}
 
 	@Directed
@@ -104,7 +111,9 @@ public class Overlay extends Model.WithNode implements
 	}
 
 	public void open() {
-		OverlayPositions.get().show(this, true);
+		ContainerOptions options = new ContainerOptions().withModal(modal)
+				.withViewportCentered(viewportCentered);
+		OverlayPositions.get().show(this, options);
 	}
 
 	public static class Actions implements HasLinks {
@@ -135,6 +144,10 @@ public class Overlay extends Model.WithNode implements
 
 		private ModelEvents.Close.Handler closeHandler;
 
+		private boolean modal;
+
+		private boolean viewportCentered;
+
 		public Overlay build() {
 			return new Overlay(this);
 		}
@@ -152,6 +165,16 @@ public class Overlay extends Model.WithNode implements
 
 		public Builder withContents(Model contents) {
 			this.contents = contents;
+			return this;
+		}
+
+		public Builder withModal(boolean modal) {
+			this.modal = modal;
+			return this;
+		}
+
+		public Builder withViewportCentered(boolean viewportCentered) {
+			this.viewportCentered = viewportCentered;
 			return this;
 		}
 	}

@@ -27,7 +27,7 @@ import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
  * 'selected choice' is valid english and common parlance.
  *
  * But 'selection' is very heavily used in the codebase (including
- * SelectionTraversal) - so these are the names we go with.
+ * SelectionTraversal) - so 'Choices+Selection' are the names we have.
  */
 public abstract class Choices<T> extends Model.WithNode
 		implements ModelEvents.Selected.Handler {

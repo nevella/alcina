@@ -28,3 +28,6 @@ java.nio.file.Files.write(java.nio.file.Path.of("/tmp/tmp.txt"), result.getBytes
 # where's that md5 get generated
 SerializationUtils.getSerializationSignature
 	- note that first thing to try is clear gwt unit cache (above)
+	
+# where are all the alcina caches n how do I clear them
+FIXME console - use registry (probably) to model caches + deletion

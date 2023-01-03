@@ -60,18 +60,23 @@ import cc.alcina.framework.gwt.client.util.ClientUtils;
 
 /**
  *
+ *
+ * <h2>Thread-safety notes (applicable to JVM variant
+ * CommitToStorageTransformListenerJvm)</h2>
+ * <ul>
+ * <li>Topic publishers are thread-safe
+ * <li>QueueingFinished timer only accessed in synchronized methods, ditto
+ * localRequestId ditto committingRequest
+ * </ul>
+ *
+ * <p>
+ * FIXME - mvcc.5 - flush() and friends shouldn't return (call callbacks) until
+ * all inflight dtrs are committed
+ *
+ * <p>
+ * FIXME - dirndl 1x2 - does submit block? offline?
+ *
  * @author Nick Reddel
- *
- *         <h2>Thread-safety notes (applicable to JVM variant
- *         CommitToStorageTransformListenerJvm)</h2>
- *         <ul>
- *         <li>Topic publishers are thread-safe
- *         <li>QueueingFinished timer only accessed in synchronized methods,
- *         ditto localRequestId ditto committingRequest
- *         </ul>
- *
- *         FIXME - mvcc.5 - flush() and friends shouldn't return (call
- *         callbacks) until all inflight dtrs are committed
  */
 public class CommitToStorageTransformListener
 		implements DomainTransformListener {

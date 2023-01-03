@@ -10,7 +10,21 @@ import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.NodeEvent;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
+import cc.alcina.framework.gwt.client.dirndl.model.Choices;
 
+/**
+ * <h2>Gotchas</h2>
+ * <p>
+ * Event reemission: if a model reeemits an event (say it receives a Selected
+ * event and, in consequence, emits a Selected event - see {@link Choices}) then
+ * it must check for reemission to avoid an infinite loop with a call to
+ * {@link ModelEvent#wasReemitted}. See {@link Choices.Single#onSelected}
+ *
+ * @author nick@alcina.cc
+ *
+ * @param <T>
+ * @param <H>
+ */
 public abstract class ModelEvent<T, H extends NodeEvent.Handler>
 		extends NodeEvent<H> {
 	// FIXME - dirndl 1x1h - fire on GWT/Scheduler event pump? nope, explain why
