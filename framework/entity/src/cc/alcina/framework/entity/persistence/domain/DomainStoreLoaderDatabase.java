@@ -143,6 +143,11 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 	private UnsortedMultikeyMap<Field> domainStorePropertyFields = new UnsortedMultikeyMap<Field>(
 			2);
 
+	@Override
+	public void close() {
+		connectionPool.drain();
+	}
+
 	//
 	MultikeyMap<PdOperator> operatorsByClass = new UnsortedMultikeyMap<>(2);
 
@@ -369,6 +374,7 @@ public class DomainStoreLoaderDatabase implements DomainStoreLoader {
 		new StatCategory_DomainStore.Warmup.Loader.Projections().emit();
 		store.initialising = false;
 		connectionPool.drain();
+		warmupExecutor.shutdown();
 		warmupExecutor = null;
 		warmupTransaction = null;
 		Transaction.current().toDomainCommitted(highestVisibleCommitPosition);

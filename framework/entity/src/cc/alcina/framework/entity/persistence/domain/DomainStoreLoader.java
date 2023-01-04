@@ -16,4 +16,6 @@ public interface DomainStoreLoader {
 	DomainTransformRequestPersistent loadTransformRequest(long id);
 
 	void warmup() throws Exception;
+
+	void close();
 }
