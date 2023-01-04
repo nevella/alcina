@@ -41,6 +41,10 @@ public class SelectionRemote extends JavaScriptObject {
     return this.baseOffset;
 	}-*/;
 
+	public final native DomRect getClientRect()/*-{
+    return this.getRangeAt(0).getBoundingClientRect();
+	}-*/;
+
 	public final native NodeRemote getExtentNode() /*-{
     return this.extentNode;
 	}-*/;

@@ -2,8 +2,8 @@ package com.google.gwt.dom.client;
 
 import com.google.gwt.core.client.JavaScriptObject;
 
-public class DOMRect extends JavaScriptObject {
-	protected DOMRect() {
+public class DomRect extends JavaScriptObject {
+	protected DomRect() {
 	}
 
 	public final native double getBottom() /*-{

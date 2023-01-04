@@ -259,7 +259,7 @@ public class Element extends Node implements DomElement, org.w3c.dom.Element {
 		throw new UnsupportedOperationException();
 	}
 
-	public DOMRect getBoundingClientRect() {
+	public DomRect getBoundingClientRect() {
 		return ensureRemote().getBoundingClientRect();
 	}
 

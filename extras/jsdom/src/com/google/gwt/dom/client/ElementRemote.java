@@ -230,7 +230,7 @@ public class ElementRemote extends NodeRemote implements DomElement {
 		return result;
 	}
 
-	public final native DOMRect getBoundingClientRect()/*-{
+	public final native DomRect getBoundingClientRect()/*-{
     return this.getBoundingClientRect();
 	}-*/;
 

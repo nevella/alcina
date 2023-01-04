@@ -56,4 +56,13 @@ public @interface Binding {
 			return rem + "rem";
 		}
 	}
+
+	@Reflected
+	public static class VisibilityVisibleHidden
+			implements ToStringFunction<Boolean> {
+		@Override
+		public String apply(Boolean t) {
+			return CommonUtils.bv(t) ? "visible" : "hidden";
+		}
+	}
 }

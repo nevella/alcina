@@ -49,14 +49,11 @@ public class Overlay extends Model.WithNode implements
 
 	private boolean modal;
 
-	private boolean viewportCentered;
-
 	private Overlay(Builder builder) {
 		contents = builder.contents;
 		position = builder.position;
 		actions = builder.actions;
 		modal = builder.modal;
-		viewportCentered = builder.viewportCentered;
 		closeHandler = builder.closeHandler;
 	}
 
@@ -112,7 +109,7 @@ public class Overlay extends Model.WithNode implements
 
 	public void open() {
 		ContainerOptions options = new ContainerOptions().withModal(modal)
-				.withViewportCentered(viewportCentered);
+				.withPosition(position);
 		OverlayPositions.get().show(this, options);
 	}
 
@@ -138,7 +135,7 @@ public class Overlay extends Model.WithNode implements
 	public static class Builder {
 		private Model contents;
 
-		private OverlayPosition position;
+		private OverlayPosition position = new OverlayPosition();
 
 		private Actions actions;
 
@@ -146,10 +143,17 @@ public class Overlay extends Model.WithNode implements
 
 		private boolean modal;
 
-		private boolean viewportCentered;
-
 		public Overlay build() {
 			return new Overlay(this);
+		}
+
+		public OverlayPosition getPosition() {
+			return this.position;
+		}
+
+		public Builder positionViewportCentered() {
+			position.viewportCentered(true);
+			return this;
 		}
 
 		public Builder withClose() {
@@ -170,11 +174,6 @@ public class Overlay extends Model.WithNode implements
 
 		public Builder withModal(boolean modal) {
 			this.modal = modal;
-			return this;
-		}
-
-		public Builder withViewportCentered(boolean viewportCentered) {
-			this.viewportCentered = viewportCentered;
 			return this;
 		}
 	}
