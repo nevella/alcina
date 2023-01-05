@@ -21,8 +21,7 @@ import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.NodeToggleButtonCl
 import cc.alcina.framework.gwt.client.dirndl.model.TreeEvents.PaginatorVisible;
 
 @Directed(
-	tag = "div",
-	cssClass = "dl-tree",
+	tag = "tree",
 	bindings = { @Binding(from = "rootHidden", type = Type.CSS_CLASS) },
 	receives = { TreeEvents.NodeLabelClicked.class,
 			TreeEvents.NodeToggleButtonClicked.class,
@@ -230,8 +229,7 @@ public class Tree<TN extends TreeNode<TN>> extends Model
 	}
 
 	@Directed(
-		tag = "div",
-		cssClass = "dl-tree-node",
+		tag = "tree-node",
 		bindings = {
 				@Binding(
 					from = "open",
