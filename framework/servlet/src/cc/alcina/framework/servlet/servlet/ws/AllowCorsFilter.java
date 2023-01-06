@@ -6,14 +6,19 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.container.ContainerRequestContext;
 import javax.ws.rs.container.ContainerRequestFilter;
+import javax.ws.rs.container.ContainerResponseContext;
+import javax.ws.rs.container.ContainerResponseFilter;
+import javax.ws.rs.container.PreMatching;
 import javax.ws.rs.core.Context;
 import javax.ws.rs.ext.Provider;
 
 import cc.alcina.framework.common.client.logic.reflection.registry.Registry;
 import cc.alcina.framework.common.client.util.Ax;
 
+@PreMatching
 @Provider
-public class AllowCorsFilter implements ContainerRequestFilter {
+public class AllowCorsFilter
+		implements ContainerRequestFilter, ContainerResponseFilter {
 	@Context
 	private HttpServletResponse httpResponse;
 
@@ -34,6 +39,12 @@ public class AllowCorsFilter implements ContainerRequestFilter {
 		if (configuration.isAllowWildcard()) {
 			httpResponse.addHeader("Access-Control-Allow-Origin", "*");
 		}
+	}
+
+	@Override
+	public void filter(ContainerRequestContext arg0,
+			ContainerResponseContext arg1) throws IOException {
+		// TODO Auto-generated method stub
 	}
 
 	public static class Configuration {
