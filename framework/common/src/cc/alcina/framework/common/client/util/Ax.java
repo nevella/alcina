@@ -239,6 +239,20 @@ public class Ax {
 		return CommonUtils.roundNumeric(d, 2);
 	}
 
+	public static String cssify(String s) {
+		if (CommonUtils.isNullOrEmpty(s)) {
+			return s;
+		}
+		StringBuilder builder = new StringBuilder();
+		builder.append(s.substring(0, 1).toLowerCase());
+		for (int i = 1; i < s.length(); i++) {
+			String c = s.substring(i, i + 1);
+			builder.append(c.toUpperCase().equals(c) ? "-" : "");
+			builder.append(c.toLowerCase());
+		}
+		return builder.toString();
+	}
+
 	private static class ReversedListIterator<E> implements Iterator<E> {
 		private ListIterator<E> listIterator;
 

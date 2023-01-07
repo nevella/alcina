@@ -38,7 +38,7 @@ public class OverlayPosition {
 	public void centerDropdown(DomRect rect) {
 		fromRect(rect);
 		addConstraint(Direction.X_AXIS, Position.CENTER, Position.CENTER, 0);
-		addConstraint(Direction.Y_AXIS, Position.END, Position.START, 5);
+		addConstraint(Direction.Y_AXIS, Position.END, Position.START, 6);
 	}
 
 	public OverlayPosition fromRect(DomRect fromRect) {

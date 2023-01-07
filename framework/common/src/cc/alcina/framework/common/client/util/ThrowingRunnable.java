@@ -37,4 +37,11 @@ public interface ThrowingRunnable {
 	}
 
 	public void run() throws Exception;
+
+	default ThrowingSupplier<Void> asSupplier() {
+		return () -> {
+			run();
+			return null;
+		};
+	}
 }

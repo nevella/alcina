@@ -1,0 +1,42 @@
+<html>
+<head>
+<link rel="stylesheet" type="text/css" href="style.css">
+</head>
+<body class="doc-body">
+	<h2>Dirndl names</h2>
+	<h3>Goals</h3>
+	<ul>
+		<li>Minimise rendered html size
+		<li>Mininmise generated css size
+		<li>Make html legible (tags reflect model classes)
+	</ul>
+	<h3>Guidelines</h3>
+	<ul>
+		<li>If the rendered model class has no subclasses, don't use a tag or cssClass attribute
+			(rendered tag name will be the css-ified simple class name)
+		<li>If the rendered model class has subclasses, but no UI attributes (css styles) which
+			should be shared by subclasses, ditto
+		<li>Otherwise: if it's known that <b>sub</b>-classes have no subclass-specific styles -and-
+			subclass tag names wouldn't appreciably improve html legibility , set the tag attribute of the
+			parent class @Directed annotation
+		<li>Otherwise set the cssClass attribute of the parent class @Directed annotation - almost
+			always <b>don't</b> use scss mixins to replicates styles to the different subclass tags (unless,
+			say, the hierarchy is final/sealed - but even then the resultant css is probably )
+	</ul>
+	<h3>Example - the Dirndl Tree</h3>
+	<p>
+		Both the container -
+		<code>Tree</code>
+		- and the node class -
+		<code>TreeNode</code>
+		are intended for subclassing. Both base classes have styles. Since the container occurs only once,
+		definitely uss cssClass (not tag) since it will only bulk the html a few bytes and will improve
+		legibility.
+	</p>
+	<p>
+		Each tree can contain potentially many treenode instances, so using cssClass -
+		<code>&lt;my-node class="node"&gt;</code>
+		- is a little more wordy tha <code>&lt;node"&gt;</code> - but it's necessary for custom styling of subclass nodes - <code>.my-node label {color: blue};</code>
+	</p>
+</body>
+</html>

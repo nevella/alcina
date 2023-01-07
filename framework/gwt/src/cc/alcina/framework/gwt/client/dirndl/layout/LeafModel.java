@@ -145,23 +145,63 @@ public class LeafModel {
 		}
 	}
 
-	@Directed(bindings = @Binding(from = "string", type = Type.INNER_TEXT))
-	public static class StringTagModel extends Model implements HasTag {
-		private final String string;
+	@Directed(
+		bindings = @Binding(
+			from = "className",
+			type = Type.PROPERTY,
+			to = "class"))
+	public static class TagClassModel extends Model implements HasTag {
+		private String className;
 
-		private final String tag;
+		private String tag;
 
-		public StringTagModel(String string, String tag) {
-			this.string = string;
-			this.tag = tag;
+		public TagClassModel() {
 		}
 
-		public String getString() {
-			return this.string;
+		public TagClassModel(String tag, String className) {
+			this.tag = tag;
+			this.className = className;
+		}
+
+		public String getClassName() {
+			return this.className;
 		}
 
 		public String getTag() {
 			return this.tag;
+		}
+
+		@Override
+		public String provideTag() {
+			return getTag();
+		}
+
+		public void setClassName(String className) {
+			this.className = className;
+		}
+
+		public void setTag(String tag) {
+			this.tag = tag;
+		}
+	}
+
+	@Directed(bindings = @Binding(from = "text", type = Type.INNER_TEXT))
+	public static class TagTextModel extends Model implements HasTag {
+		private final String text;
+
+		private final String tag;
+
+		public TagTextModel(String tag, String text) {
+			this.tag = tag;
+			this.text = text;
+		}
+
+		public String getTag() {
+			return this.tag;
+		}
+
+		public String getText() {
+			return this.text;
 		}
 
 		@Override

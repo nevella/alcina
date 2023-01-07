@@ -384,20 +384,6 @@ public class CommonUtils {
 		return buf.toString();
 	}
 
-	public static String deInfixCss(String s) {
-		if (isNullOrEmpty(s)) {
-			return s;
-		}
-		StringBuilder builder = new StringBuilder();
-		builder.append(s.substring(0, 1).toLowerCase());
-		for (int i = 1; i < s.length(); i++) {
-			String c = s.substring(i, i + 1);
-			builder.append(c.toUpperCase().equals(c) ? "-" : "");
-			builder.append(c.toLowerCase());
-		}
-		return builder.toString();
-	}
-
 	public static void dumpAround(String text, String subString) {
 		int idx = text.indexOf(subString);
 		if (idx != -1) {

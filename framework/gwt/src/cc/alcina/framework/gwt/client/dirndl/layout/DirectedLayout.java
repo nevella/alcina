@@ -36,7 +36,6 @@ import cc.alcina.framework.common.client.process.AlcinaProcess;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.common.client.util.FormatBuilder;
 import cc.alcina.framework.common.client.util.ToStringFunction;
 import cc.alcina.framework.common.client.util.traversal.DepthFirstTraversal;
@@ -909,7 +908,7 @@ public class DirectedLayout implements AlcinaProcess {
 					} else {
 						boolean present = (boolean) value;
 						String cssClass = binding.literal().isEmpty()
-								? CommonUtils.deInfixCss(binding.from())
+								? Ax.cssify(binding.from())
 								: binding.literal();
 						element.setClassName(cssClass, present);
 					}

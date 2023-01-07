@@ -5,10 +5,12 @@ import com.google.gwt.dom.client.BrowserEvents;
 import com.google.gwt.dom.client.Element;
 import com.google.gwt.dom.client.EventTarget;
 import com.google.gwt.dom.client.NativeEvent;
+import com.google.gwt.event.logical.shared.ResizeEvent;
 import com.google.gwt.event.shared.HandlerRegistration;
 import com.google.gwt.user.client.DOM;
 import com.google.gwt.user.client.Event;
 import com.google.gwt.user.client.Event.NativePreviewEvent;
+import com.google.gwt.user.client.Window;
 
 import cc.alcina.framework.gwt.client.browsermod.BrowserMod;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Binding;
@@ -27,11 +29,18 @@ import cc.alcina.framework.gwt.client.dirndl.overlay.OverlayPositions.ContainerO
 				to = "visibility",
 				transform = Binding.VisibilityVisibleHidden.class,
 				type = Type.STYLE_ATTRIBUTE) })
+// FIXME - 2022 - move preview etc handling to overlay (this is just the glass)
+// - in fact, to an inferred dom event ('actionoutside') that is either dropped
+// or causes close(), depending on modality
+//
 // TODO - intercept preview events a la GWT Dialog class (if modal). Or
 // assign to overlay
 //
 // Note - event preview handling was essentially copied-and-truncated from
 // GWT PopupPanel - it may be a little excessive
+//
+// Note - should observe source resize events and close if non-modal
+//
 //
 public class OverlayContainer extends Model.WithNode implements HasTag {
 	/**
@@ -50,6 +59,8 @@ public class OverlayContainer extends Model.WithNode implements HasTag {
 	Boolean cachedIsMobile = null;
 
 	private boolean visible = false;
+
+	private HandlerRegistration resizeRegistration;
 
 	OverlayContainer(OverlayPositions overlayPositions, Overlay contents,
 			ContainerOptions containerOptions) {
@@ -75,14 +86,14 @@ public class OverlayContainer extends Model.WithNode implements HasTag {
 	@Override
 	public void onBind(Bind event) {
 		super.onBind(event);
-		if (modal) {
-			if (event.isBound()) {
-				nativePreviewHandlerRegistration = Event
-						.addNativePreviewHandler(this::previewNativeEvent);
-			}
-		}
 		if (event.isBound()) {
+			nativePreviewHandlerRegistration = Event
+					.addNativePreviewHandler(this::previewNativeEvent);
+			this.resizeRegistration = Window.addResizeHandler(this::onResize);
 			Scheduler.get().scheduleFinally(this::position);
+		} else {
+			nativePreviewHandlerRegistration.removeHandler();
+			resizeRegistration.removeHandler();
 		}
 	}
 
@@ -221,6 +232,12 @@ public class OverlayContainer extends Model.WithNode implements HasTag {
 			}
 			break;
 		}
+		}
+	}
+
+	void onResize(ResizeEvent event) {
+		if (!modal) {
+			contents.close();
 		}
 	}
 

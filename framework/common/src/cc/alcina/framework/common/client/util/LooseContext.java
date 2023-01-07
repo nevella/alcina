@@ -144,6 +144,10 @@ public abstract class LooseContext {
 		}
 	}
 
+	public static void runWithTrue(String key, ThrowingRunnable runnable) {
+		runWithKeyValue(key, Boolean.TRUE, runnable.asSupplier());
+	}
+
 	public static <T> T runWithTrue(String key, ThrowingSupplier<T> supplier) {
 		return runWithKeyValue(key, Boolean.TRUE, supplier);
 	}

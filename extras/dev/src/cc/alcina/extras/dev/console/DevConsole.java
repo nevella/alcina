@@ -799,7 +799,7 @@ public abstract class DevConsole<P extends DevConsoleProperties, D extends DevHe
 		}
 		while (true) {
 			String command = c.readLine("%s>",
-					CommonUtils.deInfixCss(getClass().getSimpleName()));
+					Ax.cssify(getClass().getSimpleName()));
 			performCommand(command);
 			try {
 				currentCommandLatch.await();

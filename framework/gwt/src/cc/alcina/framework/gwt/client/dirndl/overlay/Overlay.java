@@ -3,13 +3,14 @@ package cc.alcina.framework.gwt.client.dirndl.overlay;
 import java.util.ArrayList;
 import java.util.List;
 
+import com.google.gwt.dom.client.DomRect;
 import com.google.gwt.dom.client.Element;
 
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents;
-import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.ClickOutside;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.CtrlEnterPressed;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.EscapePressed;
+import cc.alcina.framework.gwt.client.dirndl.behaviour.InferredDomEvents.MouseUpOutside;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Close;
 import cc.alcina.framework.gwt.client.dirndl.behaviour.ModelEvents.Close.Handler;
@@ -30,11 +31,11 @@ import cc.alcina.framework.gwt.client.util.WidgetUtils;
 @Directed(
 	receives = { ModelEvents.Close.class, InferredDomEvents.EscapePressed.class,
 			InferredDomEvents.CtrlEnterPressed.class,
-			InferredDomEvents.ClickOutside.class })
+			InferredDomEvents.MouseUpOutside.class })
 public class Overlay extends Model.WithNode implements
 		ModelEvents.Close.Handler, InferredDomEvents.EscapePressed.Handler,
 		InferredDomEvents.CtrlEnterPressed.Handler,
-		InferredDomEvents.ClickOutside.Handler {
+		InferredDomEvents.MouseUpOutside.Handler {
 	public static Builder builder() {
 		return new Builder();
 	}
@@ -49,12 +50,15 @@ public class Overlay extends Model.WithNode implements
 
 	private boolean modal;
 
+	private boolean removeOnMouseupOutside;
+
 	private Overlay(Builder builder) {
 		contents = builder.contents;
 		position = builder.position;
 		actions = builder.actions;
 		modal = builder.modal;
 		closeHandler = builder.closeHandler;
+		removeOnMouseupOutside = builder.removeOnMouseupOutside;
 	}
 
 	public void close() {
@@ -86,11 +90,6 @@ public class Overlay extends Model.WithNode implements
 	}
 
 	@Override
-	public void onClickOutside(ClickOutside event) {
-		// TODO Auto-generated method stub
-	}
-
-	@Override
 	public void onClose(Close event) {
 		close();
 	}
@@ -105,6 +104,13 @@ public class Overlay extends Model.WithNode implements
 	@Override
 	public void onEscapePressed(EscapePressed event) {
 		close();
+	}
+
+	@Override
+	public void onMouseUpOutside(MouseUpOutside event) {
+		if (removeOnMouseupOutside) {
+			close();
+		}
 	}
 
 	public void open() {
@@ -143,8 +149,16 @@ public class Overlay extends Model.WithNode implements
 
 		private boolean modal;
 
+		boolean removeOnMouseupOutside = true;
+
 		public Overlay build() {
 			return new Overlay(this);
+		}
+
+		public Builder centerDropdown(DomRect rect, Model model) {
+			position.centerDropdown(rect);
+			withContents(model);
+			return this;
 		}
 
 		public OverlayPosition getPosition() {
@@ -174,6 +188,14 @@ public class Overlay extends Model.WithNode implements
 
 		public Builder withModal(boolean modal) {
 			this.modal = modal;
+			// removeOnClickOutside will be ignored (since the click event will
+			// be cancelled by preview)
+			return this;
+		}
+
+		public Builder
+				withRemoveOnMouseupOutside(boolean removeOnMouseupOutside) {
+			this.removeOnMouseupOutside = removeOnMouseupOutside;
 			return this;
 		}
 	}

@@ -37,6 +37,8 @@ public class OverlayPositions {
 
 		OverlayPosition position;
 
+		boolean removeOnClickOutside;
+
 		ContainerOptions withModal(boolean modal) {
 			this.modal = modal;
 			return this;
@@ -44,6 +46,12 @@ public class OverlayPositions {
 
 		ContainerOptions withPosition(OverlayPosition position) {
 			this.position = position;
+			return this;
+		}
+
+		ContainerOptions
+				withRemoveOnClickOutside(boolean removeOnClickOutside) {
+			this.removeOnClickOutside = removeOnClickOutside;
 			return this;
 		}
 	}

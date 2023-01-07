@@ -6,19 +6,19 @@
   */
 
 @mixin tree
-  tree,
-  flat-tree
+  .tree,
+  .flat-tree
     font-size: 15px
     line-height: 23px
     padding: 0.5rem
 
-  tree
-    &.root-hidden>tree-node
+  .tree
+    &.root-hidden>.node
       >label
         display: none
       >div
         padding-left: 0
-    tree-node
+    .node
       >label
         position: relative
         display: block
@@ -60,7 +60,7 @@
       &.open>div
         display: block
 
-  flat-tree
+  .flat-tree
     >paginator
       display: block
       padding: 1em
@@ -68,5 +68,5 @@
       color: #bbb
 
 @mixin open-toggle-hidden()
-  tree-node > label > span:first-child
+  .node > label > span:first-child
     display: none

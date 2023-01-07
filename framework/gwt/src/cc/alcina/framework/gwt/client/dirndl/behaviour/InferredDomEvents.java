@@ -373,6 +373,62 @@ public class InferredDomEvents {
 		}
 	}
 
+	// as per clickoutside
+	public static class MouseUpOutside extends NodeEvent<MouseUpOutside.Handler>
+			implements NativePreviewHandler {
+		private Widget widget;
+
+		@Override
+		public void dispatch(MouseUpOutside.Handler handler) {
+			handler.onMouseUpOutside(this);
+		}
+
+		@Override
+		public Class<MouseUpOutside.Handler> getHandlerClass() {
+			return MouseUpOutside.Handler.class;
+		}
+
+		@Override
+		public void onPreviewNativeEvent(NativePreviewEvent event) {
+			if (Event.as(event.getNativeEvent())
+					.getTypeInt() != Event.ONMOUSEUP) {
+				return;
+			}
+			if (!eventTargetsWidget(event)) {
+				// could do some jiggery-pokery to get
+				// DomEvent.fireNativeEvent to get us a
+				// mouseUpEvent...if
+				// needed
+				Scheduler.get().scheduleDeferred(() -> {
+					fireEvent(null);
+				});
+			}
+		}
+
+		private boolean eventTargetsWidget(NativePreviewEvent event) {
+			EventTarget target = event.getNativeEvent().getEventTarget();
+			if (Element.is(target)) {
+				return widget.getElement().isOrHasChild(Element.as(target));
+			}
+			return false;
+		}
+
+		@Override
+		protected HandlerRegistration bind0(Widget widget) {
+			this.widget = widget;
+			widget.addAttachHandler(evt -> {
+				if (!evt.isAttached()) {
+					unbind();
+				}
+			});
+			return Event.addNativePreviewHandler(this);
+		}
+
+		public interface Handler extends NodeEvent.Handler {
+			void onMouseUpOutside(MouseUpOutside event);
+		}
+	}
+
 	/**
 	 * Unless it's guaranteed that the callback will be inexpensive, use the
 	 * RequestAnimation subclass, which ensures smoothness

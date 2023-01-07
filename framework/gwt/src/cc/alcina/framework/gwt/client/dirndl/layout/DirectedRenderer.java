@@ -17,7 +17,6 @@ import cc.alcina.framework.common.client.reflection.HasAnnotations;
 import cc.alcina.framework.common.client.reflection.Property;
 import cc.alcina.framework.common.client.reflection.Reflections;
 import cc.alcina.framework.common.client.util.Ax;
-import cc.alcina.framework.common.client.util.CommonUtils;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed;
 import cc.alcina.framework.gwt.client.dirndl.annotation.Directed.Impl;
 import cc.alcina.framework.gwt.client.dirndl.layout.DirectedLayout.Node;
@@ -62,13 +61,13 @@ public abstract class DirectedRenderer {
 		}
 		if (node.parent != null && node.parent.has(PropertyNameTags.class)
 				&& node.getProperty().getName() != null) {
-			return CommonUtils.deInfixCss(node.getProperty().getName());
+			return Ax.cssify(node.getProperty().getName());
 		}
 		if (Ax.notBlank(defaultTag)) {
 			return defaultTag;
 		}
 		return Ax.blankTo(tag,
-				CommonUtils.deInfixCss(node.model.getClass().getSimpleName()));
+				Ax.cssify(node.model.getClass().getSimpleName()));
 	}
 
 	protected abstract void render(DirectedLayout.RendererInput input);
